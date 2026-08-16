@@ -1,0 +1,54 @@
+# Implements STACKSPEC §12's secret-scanning requirement, which mandates
+# gitleaks (or equivalent) as a pre-commit hook *and* a CI gate. The same config
+# serves both: .githooks/pre-commit reads it locally, .github/workflows/ci.yml
+# passes it via GITLEAKS_CONFIG.
+#
+# Extends gitleaks' built-in rules (private keys, provider-specific token
+# formats, high-entropy generic secrets) with explicit rules for this project's
+# own env-var naming convention, so both layers catch these even if gitleaks'
+# generic heuristics happen to miss a particular value's shape.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "project-database-url"
+description = "DATABASE_URL assignment"
+regex = '''(?i)DATABASE_URL\s*[:=]\s*['"]?[^\s'"]+'''
+tags = ["project", "database"]
+
+[[rules]]
+id = "project-named-secret"
+description = "Assignment to a var ending in _TOKEN, _SECRET, _PASS, or _KEY"
+regex = '''(?i)[A-Z0-9_]*_(TOKEN|SECRET|PASS|KEY)\s*[:=]\s*['"]?[^\s'"]+'''
+tags = ["project", "secret"]
+
+[allowlist]
+regexTarget = "line"
+description = """
+Three narrow exemptions. Each is allowlisted by the *shape of the line*, not by
+path, so a real credential committed anywhere — including into these same files
+— is still caught.
+
+1. The ephemeral Postgres service container in CI (§5.5) uses throwaway
+   credentials published in the workflow by design; they address a database
+   that exists for the length of one job.
+
+2. `${{ secrets.NAME }}` is a GitHub Actions expression. It is a *reference*
+   resolved at runtime by the runner, and is the only supported way to consume
+   a secret in a workflow — the literal text is never the value. Without this,
+   ci.yml's own gitleaks step (`GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}`)
+   trips project-named-secret and the pre-commit hook blocks the very first
+   commit of a freshly generated repo.
+
+3. An assignment whose value is a bare `...` is documentation, not a secret.
+   .githooks/pre-commit documents the patterns it detects (`FOO_TOKEN=...`,
+   `const FOO_KEY = ...`) and gitleaks reads those comments as findings — the
+   scanner matching its own description of what it matches. The hook's layer-1
+   grep skips comment-only lines; gitleaks does not, which is why this belongs
+   here rather than there.
+"""
+regexes = [
+  '''postgres://postgres:postgres@localhost:5432/[a-z0-9_]+''',
+  '''\$\{\{\s*secrets\.[A-Za-z0-9_]+\s*\}\}''',
+  '''[:=]\s*\.\.\.''',
+]

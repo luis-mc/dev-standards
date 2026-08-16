@@ -1,0 +1,158 @@
+name: CI
+
+# Implements STACKSPEC §13.1's twelve required gates for the .NET track.
+#
+# The gates are the requirement; Roslyn analyzers, xUnit and NetArchTest are this
+# generator's choices (§13.1 names no tool). Record them in the Stack Profile.
+on:
+  pull_request:
+    paths-ignore: ['apps/ios/**', 'apps/android/**', '**/*.md', 'docs/**']
+  push:
+    branches: [main]
+    paths-ignore: ['apps/ios/**', 'apps/android/**', '**/*.md', 'docs/**']
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  verify:
+    name: analyzers, format, build, unit + contract tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # §2.2: the toolchain version is pinned in the repository. global.json is
+      # that pin, and setup-dotnet reads it — no second place to update.
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      # §2.2: install from the committed lockfile in frozen mode. --locked-mode
+      # fails rather than silently resolving a different graph, which requires
+      # packages.lock.json to be committed. Without RestorePackagesWithLockFile
+      # in Directory.Build.props there is no lockfile and this gate is vacuous.
+      - name: Install (locked)
+        run: dotnet restore --locked-mode
+
+      # §4.1: generated clients regenerated and committed. Asserting a clean
+      # tree is the only check a stale committed artifact cannot satisfy.
+      - name: Codegen drift check
+        run: |
+          dotnet run --project tools/Codegen --no-restore
+          if ! git diff --exit-code; then
+            echo "::error::Generated output differs from what is committed."
+            echo "Run the codegen project and commit the result (STACKSPEC §4.1)."
+            exit 1
+          fi
+
+      - name: Format check
+        run: dotnet format --verify-no-changes --no-restore
+
+      # Build is both the typecheck and the analyzer gate. TreatWarningsAsErrors
+      # in Directory.Build.props is what makes analyzer findings fail the build
+      # rather than scroll past — without it this step lints nothing.
+      - name: Build (typecheck + analyzers)
+        run: dotnet build --no-restore --configuration Release
+
+      # §11.1: unit tests over core and service logic. Pure, fast, no I/O.
+      - name: Unit tests
+        run: dotnet test --no-build --configuration Release --filter "Category=Unit"
+
+      # §11.1: contract tests — every client and the server against the same
+      # fixtures. The highest-value control in the repository.
+      - name: Contract tests
+        run: dotnet test --no-build --configuration Release --filter "Category=Contract"
+
+      # §3.2 + §3.3: the layer rules and the adapter rule, enforced as a test so
+      # they fail the build rather than being reviewed. NetArchTest asserts on
+      # the assembly graph — see tests/Architecture. A documented convention
+      # without enforcement decays.
+      - name: Boundary check (§3.2, §3.3)
+        run: dotnet test --no-build --configuration Release --filter "Category=Architecture"
+
+      # §12: dependency scanning, failing on known-exploitable advisories.
+      # `dotnet list package --vulnerable` exits 0 even when it finds things, so
+      # the output has to be inspected — a bare invocation is a gate that never
+      # fails, which is worse than no gate.
+      - name: Dependency scan
+        run: |
+          dotnet list package --vulnerable --include-transitive 2>&1 | tee vuln.txt
+          if grep -qE '\s(Critical|High)\s' vuln.txt; then
+            echo "::error::Known-exploitable advisories in dependencies (STACKSPEC §12)."
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # §11.1 + §5.5: integration tests against an ephemeral real instance of the
+  # chosen engine, seeded through the migration chain. Not mocks.
+  #
+  # Swap the service image if the product's engine is not Postgres — §5.5 wants a
+  # real instance of WHATEVER was chosen. For SQL Server use
+  # mcr.microsoft.com/mssql/server with ACCEPT_EULA and a health check on sqlcmd.
+  # ---------------------------------------------------------------------------
+  integration:
+    name: integration tests (ephemeral database)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      # Throwaway service-container credentials, not a secret. The shared
+      # gitleaks config allowlists this exact DSN shape.
+      ConnectionStrings__Default: "Host=localhost;Port=5432;Database=app_test;Username=postgres;Password=postgres"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - run: dotnet restore --locked-mode
+
+      # §5.4: migrations applied in order by a dedicated runner. EF Core's
+      # bundle is that runner — it is a self-contained executable, which is what
+      # §5.4 means by "not ad-hoc scripts".
+      - name: Migrate (seed through the migration chain)
+        run: |
+          dotnet tool restore
+          dotnet ef database update --project src/Db
+
+      - name: Integration tests
+        run: dotnet test --configuration Release --filter "Category=Integration"
+
+      # §11.1: route coverage — authorization declarations AND rate-limit
+      # buckets (§4.6). Needs the registered endpoints, so it runs here.
+      - name: Route coverage (authorization + rate limits)
+        run: dotnet test --configuration Release --filter "Category=RouteCoverage"
+
+  secret-scan:
+    name: secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # gitleaks scans history. At the default clone depth it examines one
+          # commit and reports clean — an absent check that looks like a pass.
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml

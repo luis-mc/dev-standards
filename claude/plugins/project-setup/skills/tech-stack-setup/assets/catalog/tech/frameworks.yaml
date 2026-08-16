@@ -1,0 +1,150 @@
+# Web client and API frameworks, keyed by track.
+#
+# The decision that matters here is not which framework but whether the web
+# client is RICH (holds state, consumes the generated client — §9.3 binds) or
+# SERVER-RENDERED (holds no client-side copy of server state — §9.3 is
+# satisfied by construction).
+
+version: 1
+roles: [web_framework, api_framework]
+
+# ---------------------------------------------------------------------------
+# Web client frameworks
+# ---------------------------------------------------------------------------
+
+web:
+
+  - id: nextjs
+    name: Next.js (App Router)
+    track: typescript
+    kind: rich
+    summary: React with server components. Largest ecosystem, and the only option that can also be the API deployable.
+    strengths: [ecosystem depth, RSC, static generation for §4.5's marketing pages, mature image and font handling]
+    weaknesses: [framework churn between majors, bundle size relative to Svelte]
+    can_serve_api: true
+    hosting: {vercel: native, cloudflare: supported, containers: supported, aws_lambda: supported}
+
+  - id: sveltekit
+    name: SvelteKit
+    track: typescript
+    kind: rich
+    summary: Smallest bundles of the JS options, with adapters for every host.
+    strengths: [smallest shipped JS — helps §14's LCP and INP budgets, excellent DX, host-agnostic adapters]
+    weaknesses: [smaller component ecosystem than React]
+    can_serve_api: true
+    hosting: {vercel: supported, cloudflare: native, containers: supported}
+
+  - id: react_router
+    name: React Router v7 / Remix
+    track: typescript
+    kind: rich
+    summary: Web-standards-oriented React with nested routing. Host-agnostic by design.
+    strengths: [progressive enhancement, no vendor gravity, straightforward data loading]
+    can_serve_api: true
+    hosting: {vercel: supported, cloudflare: supported, containers: supported}
+
+  - id: astro
+    name: Astro
+    track: typescript
+    kind: content
+    summary: Content-first with islands. Ships near-zero JS by default.
+    strengths: ["Best possible §14 LCP for content sites", island architecture, any UI library inside islands]
+    weaknesses: [wrong tool for a heavily interactive app]
+    best_when: [marketing and documentation dominate, light interactivity]
+
+  - id: nuxt
+    name: Nuxt (Vue)
+    track: typescript
+    kind: rich
+    strengths: [Vue ecosystem, strong conventions]
+    can_serve_api: true
+
+  - id: angular
+    name: Angular
+    track: typescript
+    kind: rich
+    summary: Opinionated and batteries-included. Common in organizations that already run .NET.
+    strengths: [strong conventions for large teams, DI and structure out of the box, first-class TypeScript]
+    weaknesses: [heaviest of the JS options]
+
+  - id: blazor
+    name: Blazor (.NET 8+ render modes)
+    track: dotnet
+    kind: rich
+    summary: >
+      C# in the browser, or on the server, per component. The modern answer is
+      static SSR by default with interactivity opted into per component.
+    strengths: [one language across server and web, no codegen seam for web, full .NET type sharing]
+    variants:
+      - id: blazor_static_ssr
+        note: Server-rendered, no persistent connection. No hosting constraint.
+      - id: blazor_server
+        weakens:
+          - clause: "§13.2"
+            what: Requires a sticky, long-lived connection per client and graceful draining on deploy.
+            control: A host supporting sticky routing and connection draining; in-flight session behaviour stated in the release runbook.
+        conflicts: [vercel, cloudflare, aws_lambda]
+        note: "§7.7 exempts this from the realtime-channel deviation — it is a rendering transport, not a data channel."
+      - id: blazor_wasm
+        weakens:
+          - clause: "§14"
+            what: Ships a .NET runtime to the browser; first-load LCP suffers materially.
+            control: Interactive-auto render mode, or accept and record a revised LCP budget.
+
+  - id: razor_pages
+    name: Razor Pages / ASP.NET MVC
+    track: dotnet
+    kind: server_rendered
+    summary: Classic server-rendered .NET. Boring, productive, and underrated for CRUD.
+    satisfies: ["§9.3 by construction — no client-side copy of server state"]
+
+  - id: templ_htmx
+    name: templ + HTMX
+    track: go
+    kind: server_rendered
+    summary: Type-safe Go templates with hypermedia interactivity. Excellent for admin and internal tools.
+    satisfies: ["§9.3 by construction"]
+    strengths: [almost no shipped JS, one language, very fast to build CRUD]
+
+  - id: leptos
+    name: Leptos / Dioxus
+    track: rust
+    kind: rich
+    summary: Fine-grained reactive Rust compiled to WASM.
+    requires_reason: true
+    weaknesses: [small ecosystem, hiring risk, limited component libraries]
+
+# ---------------------------------------------------------------------------
+# API frameworks
+# ---------------------------------------------------------------------------
+
+api:
+  - {id: next_handlers, name: Next.js route handlers, track: typescript, note: "Same deployable as the web app. No network seam for web; §4.1's contract still required if mobile ships."}
+  - {id: hono,     name: Hono,               track: typescript, note: "Runs on every JS runtime including Workers. Excellent OpenAPI integration."}
+  - {id: fastify,  name: Fastify,            track: typescript, note: "Node-native, schema-first, fast."}
+  - {id: nestjs,   name: NestJS,             track: typescript, note: "Opinionated DI and module structure; suits larger teams."}
+  - {id: chi,      name: chi,                track: go,     note: "stdlib-shaped router. Least magic."}
+  - {id: echo,     name: Echo,               track: go}
+  - {id: gin,      name: Gin,                track: go}
+  - {id: axum,     name: Axum,               track: rust,   note: "The default Rust choice. Tower middleware ecosystem."}
+  - {id: actix,    name: Actix Web,          track: rust}
+  - {id: aspnet_minimal, name: ASP.NET Core Minimal APIs, track: dotnet, note: "First-class OpenAPI generation, which §4.1 depends on."}
+  - {id: aspnet_controllers, name: ASP.NET Core controllers, track: dotnet}
+
+# ---------------------------------------------------------------------------
+# The cross-constraint that decides the web framework.
+# ---------------------------------------------------------------------------
+
+notes:
+  mobile_vs_hypermedia: >
+    If mobile ships, the JSON API exists regardless (§4.1). A hypermedia or
+    server-interactive web client then means maintaining TWO server surfaces:
+    the rendering path and the JSON contract. That is real duplicated work and
+    the wizard must say so before the pick, not after.
+
+    Web-only, hypermedia is often the better choice and will out-ship a rich
+    client for CRUD. Say that too — it is not a lesser option.
+
+  api_only_products: >
+    web_framework may be absent entirely. An API-only product still owes §4
+    in full and still needs the generated clients its consumers use.

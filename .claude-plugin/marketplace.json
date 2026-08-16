@@ -1,0 +1,29 @@
+{
+  "name": "luismc-dev-tools",
+  "owner": {
+    "name": "Luis Carvalho"
+  },
+  "description": "Personal Claude Code plugin marketplace (luismc-dev-tools): plugins that scaffold security, compliance, and performance tooling into new or existing repos, author normative specs, and generate or audit whole products against the binding STACKSPEC/AUTHSPEC specifications.",
+  "plugins": [
+    {
+      "name": "luismc-agents",
+      "source": "./claude/plugins/agents",
+      "description": "Shared custom agents (e.g. architect) for hard design judgment calls and audit-finding review, available across any project."
+    },
+    {
+      "name": "luismc-audits",
+      "source": "./claude/plugins/audits",
+      "description": "Security, performance, and compliance audit skills (security-audit, performance-audit, compliance-audit) — systematic checklists producing severity-ranked findings, no auto-fix."
+    },
+    {
+      "name": "luismc-project-setup",
+      "source": "./claude/plugins/project-setup",
+      "description": "Generates a new product monorepo conforming to the binding STACKSPEC/AUTHSPEC specifications, or audits an existing product against them. Ships the specs as references — products carry only a Stack Profile naming the version they conform to."
+    },
+    {
+      "name": "luismc-specs",
+      "source": "./claude/plugins/specs",
+      "description": "Interviews the user and writes a normative specification to specs/ — IDed, testable requirements — before implementation starts."
+    }
+  ]
+}

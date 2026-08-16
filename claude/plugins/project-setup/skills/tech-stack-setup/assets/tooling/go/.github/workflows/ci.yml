@@ -1,0 +1,192 @@
+name: CI
+
+# Implements STACKSPEC §13.1's twelve required gates for the Go track.
+#
+# The gates are the requirement; golangci-lint, govulncheck and go-arch-lint are
+# this generator's choices (§13.1 names no tool). A product satisfying the same
+# twelve with different tools conforms — record the tools in the Stack Profile,
+# not here.
+#
+# Path filters are part of §13.1. Mobile has its own workflow on macOS runners
+# (§13.3), and expensive runners must not run on unrelated changes.
+on:
+  pull_request:
+    paths-ignore: ['apps/ios/**', 'apps/android/**', '**/*.md', 'docs/**']
+  push:
+    branches: [main]
+    paths-ignore: ['apps/ios/**', 'apps/android/**', '**/*.md', 'docs/**']
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Static gates: everything that needs no database.
+  # ---------------------------------------------------------------------------
+  verify:
+    name: lint, vet, boundaries, unit + contract tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # §2.2: the toolchain version is pinned in the repository, not inherited
+      # from the machine. go.mod's `toolchain` directive is that pin, and
+      # go-version-file reads it so there is no second place to update.
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # §2.2: CI installs from the committed lockfile in frozen mode. `go mod
+      # download` honours go.sum; `verify` then asserts nothing in the module
+      # cache was tampered with. Without the second step a poisoned cache
+      # passes silently.
+      - name: Install (locked)
+        run: |
+          go mod download
+          go mod verify
+
+      # §2.2: a CI install that can resolve a different dependency graph than
+      # the developer's is not a build. `go mod tidy` writing anything means
+      # go.mod and go.sum were not committed in a consistent state.
+      - name: Lockfile is current
+        run: |
+          go mod tidy
+          if ! git diff --exit-code go.mod go.sum; then
+            echo "::error::go.mod/go.sum are not tidy. Run 'go mod tidy' and commit."
+            exit 1
+          fi
+
+      # §4.1: all generated clients must be regenerated and committed. Running
+      # codegen and asserting a clean tree is the only check that a stale
+      # committed artifact cannot satisfy.
+      - name: Codegen drift check
+        run: |
+          go generate ./...
+          if ! git diff --exit-code; then
+            echo "::error::Generated output differs from what is committed."
+            echo "Run 'go generate ./...' and commit the result (STACKSPEC §4.1)."
+            exit 1
+          fi
+
+      - name: Format check
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "::error::gofmt found unformatted files:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      # Lint and the §3.2 boundary check are the same invocation here:
+      # golangci-lint runs depguard, whose rules encode the layer graph. See
+      # .golangci.yml — a documented convention without enforcement decays.
+      - name: Lint + boundary check (§3.2)
+        uses: golangci/golangci-lint-action@v6
+        with:
+          args: --timeout=5m
+
+      # Go has no separate typecheck step; `go build` is it.
+      - name: Build (typecheck)
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      # §11.1: unit tests over core and service-package logic. -race because a
+      # data race that only manifests under load is exactly what §5.3's
+      # read-modify-write rule exists to prevent, and the detector is free here.
+      - name: Unit tests
+        run: go test -race -short ./...
+
+      # §11.1: "the highest-value control in the entire repository" — every
+      # client and the server verified against the same contract fixtures.
+      - name: Contract tests
+        run: go test -race -run TestContract ./...
+
+      # §12: dependency scanning on every PR, failing on known-exploitable
+      # advisories. govulncheck reports only vulnerabilities actually reachable
+      # from your code, so it does not drown the gate in unreachable CVEs.
+      - name: Dependency scan
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+  # ---------------------------------------------------------------------------
+  # §11.1 + §5.5: integration tests against an ephemeral real instance of the
+  # chosen engine, seeded through the migration chain. Not mocks, and not a
+  # shared long-lived test database — those hide exactly the migration, index,
+  # transaction and constraint bugs this job exists to catch.
+  #
+  # Swap the service image if the product's engine is not Postgres. §5.5 requires
+  # a real instance of WHATEVER was chosen, not a substitute.
+  # ---------------------------------------------------------------------------
+  integration:
+    name: integration tests (ephemeral database)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      # Throwaway service-container credentials, not a secret. The shared
+      # gitleaks config allowlists this exact DSN shape so it does not trip the
+      # scan.
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - run: go mod download
+
+      # §5.4: migrations are applied by a dedicated runner, in order. Seeding
+      # through the chain is what makes this instance representative.
+      - name: Migrate (seed through the migration chain)
+        run: go run ./tools/migrate up
+
+      - name: Integration tests
+        run: go test -race -run TestIntegration ./...
+
+      # §11.1: the route-coverage test fails the build when any route ships
+      # without an explicit authorization declaration OR without a declared
+      # rate-limit bucket (§4.6). It needs the registered routes, so it runs
+      # here rather than in the static job.
+      - name: Route coverage (authorization + rate limits)
+        run: go test -race -run TestRouteCoverage ./...
+
+  # ---------------------------------------------------------------------------
+  # §12: secret scanning as a CI gate. The pre-commit hook is the other half of
+  # that requirement and lives in .githooks/pre-commit.
+  # ---------------------------------------------------------------------------
+  secret-scan:
+    name: secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # gitleaks scans history, not just the diff. At the default clone
+          # depth it silently examines a single commit and reports clean —
+          # an absent check masquerading as a passing one.
+          fetch-depth: 0
+
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml

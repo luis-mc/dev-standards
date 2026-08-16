@@ -1,0 +1,8 @@
+{
+  "name": "luismc-specs",
+  "description": "Specification authoring and validation. `spec-new` interviews the user and writes a normative spec to specs/ with IDed, testable requirements before any implementation begins; `spec-check` validates any spec's numbering and cross-references — duplicate or out-of-order headings and requirement IDs, orphan subsections, gaps, and dangling §/R references including citations into other registered documents. One writes to a numbering discipline, the other proves it held.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Luis Carvalho"
+  }
+}

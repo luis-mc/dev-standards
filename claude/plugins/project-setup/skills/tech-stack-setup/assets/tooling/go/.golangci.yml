@@ -1,0 +1,70 @@
+# Lint and the §3.2 boundary check in one invocation.
+#
+# STACKSPEC §3.2 requires the layer rules to be enforced by a check that fails
+# the build, not by review. depguard is that check for the Go track: it works on
+# import paths, which is exactly the granularity the layer graph is expressed in.
+#
+# Replace <module> with the product's module path before use.
+
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - depguard      # §3.2 layer boundaries
+    - errcheck      # an unchecked error is how §8.4's degraded behaviour goes missing
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - bodyclose     # §8.4: leaked response bodies exhaust connections
+    - noctx         # §8.4: an outbound call with no context has no timeout
+    - rowserrcheck  # §5.6: a swallowed rows.Err() hides a truncated result set
+    - sqlclosecheck
+
+  settings:
+    depguard:
+      rules:
+        # §3.2: core imports nothing outside core. It is pure functions and
+        # types — no framework, no I/O, no environment, no clock. This is what
+        # makes it testable, reusable by the worker, and safe to reason about.
+        core:
+          files: ["**/internal/core/**"]
+          deny:
+            - pkg: "database/sql"
+              desc: "core MUST NOT do I/O (§3.2)"
+            - pkg: "net/http"
+              desc: "core MUST NOT do I/O (§3.2)"
+            - pkg: "os"
+              desc: "core MUST NOT read the environment (§3.2)"
+            - pkg: "time"
+              desc: "core MUST NOT read the clock — inject it (§3.2)"
+            - pkg: "<module>/internal/db"
+              desc: "core imports nothing outside core (§3.2)"
+
+        # §3.2: the data module is the only one that imports the driver or query
+        # builder. A driver import anywhere else is the erosion this prevents.
+        driver-confinement:
+          files: ["**", "!**/internal/db/**"]
+          deny:
+            - pkg: "github.com/jackc/pgx"
+              desc: "only internal/db may import the database driver (§3.2)"
+            - pkg: "database/sql"
+              desc: "only internal/db may import the database driver (§3.2)"
+
+        # §3.3: every external service SDK lives in exactly one adapter module.
+        # This is the rule that keeps a wrong vendor choice cheap — it turns a
+        # provider swap into one file. Add one entry per vendor SDK adopted.
+        adapter-confinement:
+          files: ["**", "!**/internal/mail/**", "!**/internal/storage/**", "!**/internal/notify/**"]
+          deny:
+            - pkg: "github.com/aws/aws-sdk-go-v2/service/s3"
+              desc: "storage SDK belongs only in internal/storage (§3.3)"
+            - pkg: "github.com/resend/resend-go"
+              desc: "mail SDK belongs only in internal/mail (§3.3)"
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

@@ -1,0 +1,15 @@
+# `pnpm prettier --check .` is a CI gate (§13.1). Without this file it fails on
+# a freshly generated repo: pnpm-lock.yaml is machine-written and Prettier
+# reformats it, so the gate reports a violation nobody introduced.
+#
+# Generated clients are handled in .prettierrc instead, via a requirePragma
+# override — they are diff-checked by the codegen gate (§4.1) and their format
+# belongs to the generator, not to us.
+pnpm-lock.yaml
+node_modules/
+dist/
+build/
+.next/
+.turbo/
+coverage/
+playwright-report/

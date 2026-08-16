@@ -1,0 +1,154 @@
+name: CI
+
+# Implements STACKSPEC §13.1's twelve required gates for the Rust track.
+#
+# The gates are the requirement; clippy, cargo-deny and cargo-nextest are this
+# generator's choices (§13.1 names no tool). Record them in the Stack Profile.
+on:
+  pull_request:
+    paths-ignore: ['apps/ios/**', 'apps/android/**', '**/*.md', 'docs/**']
+  push:
+    branches: [main]
+    paths-ignore: ['apps/ios/**', 'apps/android/**', '**/*.md', 'docs/**']
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  # Fail on warnings everywhere, not only under clippy. A warning that only
+  # appears in one job is a warning nobody reads.
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  verify:
+    name: clippy, fmt, build, unit + contract tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # §2.2: the toolchain version is pinned in the repository. rust-toolchain.toml
+      # is that pin and the action reads it, so there is no second place to update.
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - uses: Swatinem/rust-cache@v2
+
+      # §2.2: install from the committed lockfile in frozen mode. --locked fails
+      # rather than silently updating Cargo.lock, which is the whole point — a CI
+      # install that can resolve a different graph than the developer's is not a
+      # build.
+      - name: Install (locked)
+        run: cargo fetch --locked
+
+      # §4.1: generated clients regenerated and committed. Asserting a clean tree
+      # is the only check a stale committed artifact cannot satisfy.
+      - name: Codegen drift check
+        run: |
+          cargo run --locked --bin codegen
+          if ! git diff --exit-code; then
+            echo "::error::Generated output differs from what is committed."
+            echo "Run 'cargo run --bin codegen' and commit the result (STACKSPEC §4.1)."
+            exit 1
+          fi
+
+      - name: Format check
+        run: cargo fmt --all --check
+
+      # Rust has no separate typecheck step; `cargo check` is it, and it is much
+      # faster than a full build for gate purposes.
+      - name: Check (typecheck)
+        run: cargo check --locked --all-targets
+
+      - name: Lint
+        run: cargo clippy --locked --all-targets -- -D warnings
+
+      # §3.2 + §3.3: the layer rules and the adapter rule are enforced by crate
+      # boundaries plus cargo-deny's `bans` section — see deny.toml. Cargo will
+      # not compile an import a crate does not depend on, so the workspace graph
+      # IS the enforcement; deny.toml catches the case where someone adds the
+      # dependency to make the import compile.
+      - name: Boundary check (§3.2, §3.3)
+        run: |
+          cargo install --locked cargo-deny || true
+          cargo deny check bans
+
+      # §11.1: unit tests over core and service logic. Pure, fast, no I/O.
+      - name: Unit tests
+        run: cargo test --locked --lib
+
+      # §11.1: contract tests — every client and the server against the same
+      # fixtures. The highest-value control in the repository.
+      - name: Contract tests
+        run: cargo test --locked --test contract
+
+      # §12: dependency scanning, failing on known-exploitable advisories.
+      - name: Dependency scan
+        run: cargo deny check advisories
+
+  # ---------------------------------------------------------------------------
+  # §11.1 + §5.5: integration tests against an ephemeral real instance of the
+  # chosen engine, seeded through the migration chain. Not mocks.
+  #
+  # sqlx additionally needs a live schema at COMPILE time for its query macros,
+  # so this job builds as well as runs — the compile itself is part of the check.
+  # ---------------------------------------------------------------------------
+  integration:
+    name: integration tests (ephemeral database)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      # Throwaway service-container credentials, not a secret. The shared
+      # gitleaks config allowlists this exact DSN shape.
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      # §5.4: migrations applied in order by a dedicated runner. This must run
+      # before any sqlx compile step, because the macros check against the live
+      # schema — an unmigrated database fails the build with a confusing error.
+      - name: Migrate (seed through the migration chain)
+        run: |
+          cargo install --locked sqlx-cli --no-default-features --features postgres || true
+          sqlx migrate run
+
+      - name: Integration tests
+        run: cargo test --locked --test integration
+
+      # §11.1: route coverage — authorization declarations AND rate-limit
+      # buckets (§4.6). Needs the registered routes, so it runs here.
+      - name: Route coverage (authorization + rate limits)
+        run: cargo test --locked --test route_coverage
+
+  secret-scan:
+    name: secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # gitleaks scans history. At the default clone depth it examines one
+          # commit and reports clean — an absent check that looks like a pass.
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml

@@ -1,0 +1,12 @@
+{
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 90,
+  "semi": true,
+  "overrides": [
+    {
+      "files": ["**/generated/**", "**/*.gen.ts"],
+      "options": { "requirePragma": true }
+    }
+  ]
+}

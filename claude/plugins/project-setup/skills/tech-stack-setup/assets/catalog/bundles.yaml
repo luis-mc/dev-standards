@@ -1,0 +1,237 @@
+# Pre-pinned coherent stacks.
+#
+# A bundle is not a different kind of thing from a hand-picked stack — it is the
+# same role assignments, filled in advance. Selecting one skips the per-role
+# interview; it does not skip being TOLD what was selected.
+#
+# Rule for every bundle: show the user the table. "No per-vendor questions"
+# means the user is not ASKED, not that they are not TOLD.
+
+version: 1
+
+bundles:
+
+  - id: vercel_ts
+    name: All Vercel, TypeScript
+    fits: [zero-budget, cost-sensitive, never-touch-a-server, ship-fastest]
+    summary: The fastest path to a running product for a small team. Every row is either the platform default or forced by a clause.
+    selections:
+      language: typescript
+      web_framework: nextjs
+      api_framework: next_handlers
+      hosting: vercel
+      db_engine: postgres
+      db_host: neon
+      cache: upstash
+      object_storage: vercel_blob
+      queue_substrate: datastore-resident
+      push: apns-fcm-direct
+      analytics: first-party
+    still_asked: [mail, error_tracking]
+    capability_gaps: []
+    say_out_loud:
+      - "Vercel Web Analytics and Speed Insights are excluded by §10.3. Not a preference, not a recordable deviation — a vendor SDK reporting to its own backend cannot be gated on your server-side consent state."
+      - "Consequence: §14's field-vitals budgets need first-party web-vitals collection to your own endpoint. Real work, and it is §10.3's 'dashboards are yours to build' being cashed in."
+      - "Push cannot be Vercel. §8.3 requires server-owned delivery direct to APNs and FCM."
+      - "Choosing Vercel does not make this one processor. Neon, Upstash, the mail provider and the error tracker are separate sub-processors and each needs a §10.4 register entry with region and DPA status. The Marketplace changes billing and env-var wiring, not compliance."
+
+  - id: aws_ts
+    name: All AWS, TypeScript
+    fits: [enterprise, soc2, hipaa, cost-is-not-the-constraint, existing-aws-footprint]
+    summary: Everything in one account and one compliance boundary. More assembly than Vercel, fewer vendor relationships.
+    selections:
+      language: typescript
+      web_framework: nextjs
+      api_framework: next_handlers
+      hosting: aws_lambda
+      db_engine: postgres
+      db_host: rds_aurora
+      cache: elasticache
+      object_storage: s3
+      mail: ses
+      queue_substrate: datastore-resident
+    still_asked: [error_tracking]
+    capability_gaps: []
+    say_out_loud:
+      - "ElastiCache is VPC-only. This puts Lambda inside a VPC, which then needs NAT or VPC endpoints for S3, SES and Secrets Manager, adding cold-start latency and cost. It is the single largest architectural consequence of this bundle. Keeping Upstash instead is cheaper and architecturally simpler — offer it."
+      - "CloudFront invalidation becomes the storage adapter's job (§8.2). S3 behind CloudFront does not absorb it, so the erasure path must issue and wait on the invalidation."
+      - "SQS is not the job queue. Postgres supports transactional enqueue, so §7.2 keeps the queue in the datastore; EventBridge only triggers the drains."
+      - "Push cannot be SNS. §8.3 requires direct APNs and FCM — SNS mobile push is exactly the intermediary that clause excludes."
+      - "CloudWatch RUM and Pinpoint are excluded by §10.3, same reason as Vercel Analytics."
+      - "§10.1 uptime checks should not live in the account they watch. CloudWatch Synthetics in the same account and region is weak."
+      - "CloudWatch Logs is not an error tracker — no grouping, no alerting to a human, no mobile symbolication. That row stays third-party however all-AWS the rest is."
+
+  - id: go_containers
+    name: Go API + JS frontend, containers
+    fits: [cost-sensitive, high-throughput, containers-are-fine, long-lived-services]
+    summary: Best cost-per-request without Rust's development tax. Split hosting — the frontend can still be on an edge platform.
+    selections:
+      language: go
+      api_framework: chi
+      web_framework: nextjs
+      hosting: [fly, railway, cloud_run]
+      db_engine: postgres
+      db_host: neon
+      cache: upstash
+      object_storage: r2
+      queue_substrate: datastore-resident
+    still_asked: [mail, error_tracking, web_hosting]
+    capability_gaps: []
+    say_out_loud:
+      - "Two deployables, and the OpenAPI contract is the seam. §4.1 already requires it, so this is not a compromise against the spec."
+      - "sqlc generates type-safe Go from raw SQL. It is the closest analogue to a typed query builder without adopting an ORM."
+      - "The web app can still live on Vercel or Cloudflare Pages. Split hosting is normal; do not treat it as a failure to consolidate."
+
+  - id: dotnet_azure
+    name: .NET on Azure
+    fits: [enterprise, existing-csharp-team, complex-domain, azure-mandate]
+    summary: The strongest option for teams that already write C#, and the only track with a credible same-language web client.
+    selections:
+      language: dotnet
+      api_framework: aspnet_minimal
+      web_framework: blazor
+      hosting: azure_container_apps
+      db_engine: sqlserver
+      db_host: azure_sql
+      object_storage: azure_blob
+      mail: azure_communication
+      queue_substrate: datastore-resident
+    still_asked: [cache, error_tracking, blazor_render_mode]
+    capability_gaps: []
+    say_out_loud:
+      - "Decide the Blazor render mode explicitly. Static SSR has no hosting constraint; Blazor Server needs sticky routing and connection draining (§13.2); Blazor WASM ships a runtime to the browser and hurts §14's LCP budget."
+      - "If mobile ships, Blazor's no-codegen advantage applies only to web. The Swift and Kotlin clients still come from §4.1's contract."
+      - "EF Core migrations are the most mature of the four tracks — this is a genuine strength of the bundle, not a neutral row."
+
+  - id: cloudflare_ts
+    name: All Cloudflare
+    fits: [zero-budget, cost-sensitive, media-heavy, edge-first, global-reads]
+    summary: Cheapest at scale of any bundle here, with the tightest runtime constraints.
+    selections:
+      language: typescript
+      web_framework: sveltekit
+      api_framework: hono
+      hosting: cloudflare
+      object_storage: r2
+      cache: cloudflare_kv
+      queue_substrate: external-with-outbox
+    still_asked: [db_engine, db_host, mail, error_tracking]
+    capability_gaps:
+      - clause: "§7.2"
+        when: db_engine is D1
+        control: Outbox with a relay to Cloudflare Queues.
+    say_out_loud:
+      - "Zero egress on R2 is the strongest reason to choose this bundle."
+      - "Workers historically have no raw TCP. A Postgres driver needs Hyperdrive or an HTTP-capable driver — check §5.1's transaction requirement against whichever is used, because an HTTP-only driver cannot do the multi-statement transactions §5.3 requires on write paths."
+      - "D1 has no interactive transactions, only batches. If D1 is chosen, §5.3 and §7.2 both need compensating controls recorded as capability gaps."
+      - "KV is eventually consistent, so it cannot back §4.6's fail-closed rate limits on credential endpoints."
+
+  - id: supabase
+    name: Supabase-centric
+    fits: [ship-fastest, zero-budget, fewest-sub-processors, eu-only]
+    summary: Datastore and object storage in one processor. Fewest §10.4 register entries of any bundle.
+    selections:
+      language: typescript
+      web_framework: nextjs
+      db_engine: postgres
+      db_host: supabase
+      object_storage: supabase_storage
+      queue_substrate: datastore-resident
+    still_asked: [hosting, api_framework, cache, mail, error_tracking]
+    capability_gaps: []
+    say_out_loud:
+      - "Supabase Auth overlaps AUTHSPEC, which auth-setup owns. Choosing Supabase for data and storage does NOT decide authentication — leave that to auth-setup."
+
+  - id: free
+    name: Full free stack
+    fits: [zero-budget, side-project, prototype]
+    summary: Runs at zero cost until it does not. Every ceiling is stated below because they arrive without warning.
+    selections:
+      language: typescript
+      web_framework: nextjs
+      hosting: vercel
+      db_engine: postgres
+      db_host: neon
+      cache: upstash
+      object_storage: r2
+      mail: resend
+      error_tracking: sentry
+      queue_substrate: datastore-resident
+    weakens:
+      - clause: "§10.4"
+        what: Free tiers rarely offer a DPA, and often pin no region.
+        control: Not usable where compliance is eu-only, hipaa or soc2. Block that combination.
+      - clause: "§5.5"
+        what: Free-tier PITR windows are short or absent.
+        control: Verify the actual retention against the declared RPO before first real user.
+    say_out_loud:
+      - "Vercel's Hobby tier forbids commercial use. If this becomes a business, the plan changes before the first paying customer, not after."
+      - "State the upgrade path now: which tier each vendor moves to, and roughly at what usage. A free stack with no known exit is a decision deferred, not avoided."
+      - "Compliance requirements eliminate this bundle outright. Check that first."
+
+  - id: rust_perf
+    name: Rust API, performance-critical
+    fits: [latency-critical, very-high-volume, correctness-critical]
+    requires_reason: true
+    summary: Lowest latency and memory of any option. Costs development velocity; pick it for a stated reason.
+    selections:
+      language: rust
+      api_framework: axum
+      web_framework: sveltekit
+      hosting: [fly, containers_aws, cloud_run]
+      db_engine: postgres
+      db_host: neon
+      queue_substrate: datastore-resident
+    still_asked: [cache, object_storage, mail, error_tracking]
+    say_out_loud:
+      - "sqlx checks SQL against a live schema at compile time — the strongest correctness story in the catalog."
+      - "Record the reason for Rust in the Stack Profile. Velocity is the cost and it should be a visible decision."
+
+  - id: vps_sovereign
+    name: Own everything (VPS)
+    fits: [data-sovereignty, eu-only, fixed-predictable-load, happy-to-run-my-own-datastore]
+    summary: No sub-processors beyond the hosting provider. Highest operational surface of any bundle.
+    selections:
+      hosting: vps
+      db_host: self_hosted
+      object_storage: minio
+      cache: self_hosted_redis
+      error_tracking: glitchtip
+      queue_substrate: datastore-resident
+    still_asked: [language, web_framework, api_framework, db_engine, mail]
+    weakens:
+      - clause: "§5.5"
+        what: PITR, encrypted backups and the quarterly restore drill become your job.
+        control: Automated backup pipeline with a proven restore drill before first release.
+      - clause: "§10.1"
+        what: Uptime checks must not run on the infrastructure they watch.
+        control: A third-party uptime checker. This one vendor cannot be eliminated.
+      - clause: "§13.2"
+        what: Per-PR previews are not automatic.
+        control: Ephemeral compose stacks per PR, or a documented shared pre-merge environment.
+    say_out_loud:
+      - "Mail still leaves your boundary — §8.1 forbids raw SMTP, so a provider API is required and that provider is a sub-processor."
+      - "This bundle trades money and vendors for time. Be honest about the operational load before selecting it."
+
+# ---------------------------------------------------------------------------
+# Combinations to block or warn on.
+# ---------------------------------------------------------------------------
+
+anti_combinations:
+  block:
+    - [go|rust|dotnet, vercel]         # no viable API runtime
+    - [dotnet, cloudflare]
+    - [blazor_server, vercel|cloudflare|aws_lambda]
+    - [elasticache, vercel|cloudflare]
+    - [free, eu-only|hipaa|soc2]
+  warn:
+    - pair: [rust|go, cloudflare]
+      why: WASM only. Real but constrained, and not what either language is good at.
+    - pair: [astro, heavily-interactive]
+      why: Wrong tool. Astro is for content.
+    - pair: [templ_htmx|razor_pages|blazor, mobile-ships]
+      why: Two server surfaces to maintain — the rendering path and the JSON contract.
+    - pair: [cloudflare_kv, credential-rate-limits]
+      why: Eventually consistent; §4.6 requires fail-closed on credential endpoints.
+    - pair: [want-a-clean-exit, vercel|cloudflare]
+      why: Single-vendor bundles are the highest-lock-in options in the catalog.

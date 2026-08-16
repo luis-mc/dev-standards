@@ -1,0 +1,8 @@
+{
+  "name": "luismc-agents",
+  "description": "Shared custom agents (architect) for hard design judgment calls and audit-finding review, available across any project.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Luis Carvalho"
+  }
+}

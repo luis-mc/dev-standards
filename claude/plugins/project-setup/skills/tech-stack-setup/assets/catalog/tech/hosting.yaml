@@ -1,0 +1,196 @@
+# Hosting and compute platforms.
+#
+# `languages` uses the scores defined in tech/languages.yaml:
+#   native / supported / degraded / none
+#
+# Split hosting is normal: web on an edge platform, API in containers. The
+# wizard must offer it rather than treating "not all one vendor" as a failure.
+
+version: 1
+role: hosting
+
+technologies:
+
+  - id: vercel
+    name: Vercel
+    class: serverless_js
+    summary: Serverless JS platform with per-PR previews built in. The path of least resistance for a TypeScript product.
+    cost_band: free-tier-then-low
+    cost_note: Hobby tier forbids commercial use. Pro is per-seat plus usage.
+    ops_burden: none
+    lock_in: medium
+    languages: {typescript: native, go: degraded, rust: degraded, dotnet: none}
+    language_note: >
+      Go and Rust runtimes exist but are community-maintained, function-per-file,
+      and have no framework story. Fine for an isolated handler; not a place to
+      put a real API deployable. Treat as a hard no for the api_framework role.
+    provides: [per-pr-preview, edge-cdn, cron, env-var-management, blob-storage]
+    satisfies: ["§13.2 three-tier promotion natively"]
+    conflicts:
+      - with: [blazor-server]
+        why: Requires sticky routing and a long-lived connection per client. Serverless invocations supply neither.
+      - with: [elasticache]
+        why: VPC-only cache is unreachable from Vercel functions.
+    implies:
+      - "Serverless execution: §5.1 requires a pooler for any non-HTTP database driver."
+      - "§14 cold-start budget applies."
+    excludes_by_spec:
+      - what: Vercel Web Analytics, Speed Insights
+        clause: "§10.3"
+        why: >
+          A vendor SDK reporting to its own backend cannot be gated on your
+          server-side consent state. This is a consent-lawfulness rule, not a
+          vendor preference — do NOT offer it as a recorded deviation.
+        consequence: "§14's field-vitals budgets need first-party web-vitals collection to your own endpoint."
+
+  - id: cloudflare
+    name: Cloudflare Workers + Pages
+    class: edge_workers
+    summary: Edge-first. Cheapest at scale of any option here, with the tightest runtime constraints.
+    cost_band: free-tier-then-lowest
+    ops_burden: none
+    lock_in: high
+    languages: {typescript: native, go: degraded, rust: degraded, dotnet: none}
+    language_note: Rust via workers-rs (WASM) is real but constrained. Go via TinyGo is painful. Neither is recommended.
+    provides: [edge-cdn, cron-triggers, queues, kv, r2-storage, d1, hyperdrive]
+    conflicts:
+      - with: [blazor-server]
+        why: No long-lived stateful connections in the Workers model.
+    implies:
+      - "Historically no raw TCP: a Postgres driver needs Hyperdrive or an HTTP-capable driver. Check §5.1's transaction requirement against whichever is used."
+      - "Zero egress fees on R2 — the strongest reason to choose this for media-heavy products."
+    excludes_by_spec:
+      - what: Cloudflare Web Analytics
+        clause: "§10.3"
+        why: Same consent-gating reason as Vercel Analytics.
+
+  - id: aws_lambda
+    name: AWS Lambda (SST / CDK / OpenNext)
+    class: lambda
+    summary: Serverless on AWS. Every language, at the cost of more assembly than a PaaS.
+    cost_band: low-to-medium
+    ops_burden: medium
+    lock_in: medium
+    languages: {typescript: native, go: supported, rust: supported, dotnet: supported}
+    language_note: Go via provided.al2; Rust via cargo-lambda; .NET strongly prefers native AOT for start times.
+    provides: [ephemeral-stage-per-pr, eventbridge-scheduler, secrets-manager, iam]
+    implies:
+      - "OIDC role assumption in CI — no long-lived AWS keys."
+      - "Serverless execution: §5.1 requires RDS Proxy or an equivalent pooler."
+      - "A VPC-only cache pulls Lambda into a VPC, which then needs NAT or VPC endpoints for S3, SES and Secrets Manager. Largest single cost driver of an AWS bundle."
+    excludes_by_spec:
+      - what: CloudWatch RUM, Pinpoint
+        clause: "§10.3"
+      - what: SNS mobile push
+        clause: "§8.3"
+        why: An intermediary holding device tokens becomes a sub-processor.
+      - what: SQS as the primary queue where the datastore supports transactional enqueue
+        clause: "§7.2"
+        why: >
+          Not forbidden — but it replaces a transactional substrate with one
+          needing an outbox. If the engine can do transactional enqueue, using
+          SQS instead is a capability gap to record, not an upgrade.
+
+  - id: containers_aws
+    name: AWS containers (ECS Fargate / App Runner)
+    class: containers
+    cost_band: medium
+    ops_burden: medium
+    lock_in: medium
+    languages: {typescript: supported, go: native, rust: native, dotnet: native}
+    provides: [long-running-processes, persistent-connections, vpc]
+
+  - id: cloud_run
+    name: Google Cloud Run
+    class: containers
+    summary: Containers with scale-to-zero and very little assembly. The least painful serverless-container option.
+    cost_band: free-tier-then-low
+    ops_burden: low
+    lock_in: low
+    languages: {typescript: supported, go: native, rust: native, dotnet: native}
+    provides: [scale-to-zero, long-running-processes, cloud-scheduler]
+    implies:
+      - "Scale-to-zero plus containers is the closest thing to serverless without a language penalty."
+
+  - id: azure_container_apps
+    name: Azure Container Apps / App Service
+    class: containers
+    cost_band: medium
+    ops_burden: low
+    lock_in: medium
+    languages: {typescript: supported, go: supported, rust: supported, dotnet: native}
+    provides: [long-running-processes, persistent-connections, sticky-sessions, managed-identity]
+    satisfies: ["Blazor Server's sticky-routing and connection-draining requirement (§13.2)"]
+
+  - id: fly
+    name: Fly.io
+    class: containers
+    summary: Containers close to users, with real persistent connections and cheap small instances.
+    cost_band: low
+    ops_burden: low
+    lock_in: low
+    languages: {typescript: supported, go: native, rust: native, dotnet: supported}
+    provides: [long-running-processes, persistent-connections, multi-region, managed-postgres]
+
+  - id: railway
+    name: Railway
+    class: containers
+    summary: The lowest-friction container PaaS. Good default for a Go or Rust API when ops appetite is low.
+    cost_band: low
+    ops_burden: none
+    lock_in: low
+    languages: {typescript: supported, go: native, rust: native, dotnet: supported}
+    provides: [long-running-processes, managed-postgres, managed-redis, cron]
+
+  - id: render
+    name: Render
+    class: containers
+    cost_band: low
+    ops_burden: none
+    lock_in: low
+    languages: {typescript: supported, go: native, rust: native, dotnet: supported}
+    provides: [long-running-processes, managed-postgres, managed-redis, cron, preview-environments]
+
+  - id: vps
+    name: Self-hosted VPS (Hetzner / OVH + Docker or Coolify)
+    class: vps
+    summary: Own everything. Cheapest at any fixed scale, highest operational surface.
+    cost_band: lowest-fixed
+    ops_burden: high
+    lock_in: none
+    languages: {typescript: supported, go: native, rust: native, dotnet: native}
+    provides: [everything, full-data-sovereignty]
+    weakens:
+      - clause: "§5.5"
+        what: PITR, encrypted backups and quarterly restore drills become your job, not the host's.
+        control: A documented, automated backup pipeline with a proven restore drill before first release.
+      - clause: "§10.1"
+        what: Uptime checks must not run on the box they watch.
+        control: A third-party uptime checker.
+      - clause: "§13.2"
+        what: Per-PR preview environments are not automatic.
+        control: Ephemeral compose stacks per PR, or a documented shared pre-merge environment.
+    best_when:
+      - Data sovereignty is a hard requirement
+      - Fixed, predictable load where per-request pricing loses
+      - The team genuinely wants to run infrastructure
+
+# ---------------------------------------------------------------------------
+# Consequences the wizard must state at selection time.
+# ---------------------------------------------------------------------------
+
+notes:
+  language_gates_hosting: >
+    Picking Vercel or Cloudflare first eliminates Go, Rust and .NET for the API.
+    Picking Go, Rust or .NET first eliminates them as API hosts — but NOT as web
+    hosts. Say both at the moment of the pick, not three questions later.
+
+  split_hosting_is_fine: >
+    Web on Vercel or Cloudflare Pages, API on Fly, Cloud Run or Railway is a
+    normal, good architecture. §4.1's generated client is the seam and it
+    already has to exist.
+
+  lock_in_contradiction: >
+    "Want a clean exit" plus a single-vendor bundle is a contradiction. Surface
+    it rather than letting both stand. §3.3's adapter rule mitigates vendor
+    lock-in for services, but not for the compute platform itself.

@@ -1,0 +1,292 @@
+# Database engines, hosts, and the capabilities STACKSPEC 5.0.0 asks of them.
+#
+# This is the highest-cascade choice in the wizard. The engine decides the
+# migration tool, the transaction semantics, and — via §7.2 — whether the job
+# queue can live in the product's own datastore at all.
+#
+# `capabilities` maps to the clauses that need them. A `false` or `partial` is
+# not a veto: §0.4 requires the wizard to state the compensating control and
+# record it as a §18 item 14 capability gap.
+
+version: 1
+roles: [db_engine, db_host, queue_substrate]
+
+capability_definitions:
+  multi_statement_transactions:
+    clause: "§5.3"
+    why: Read-modify-write without one is a race. Credential and one-time-token handling break first.
+  transactional_enqueue:
+    clause: "§7.2"
+    why: >
+      Enqueue must commit atomically with the business write. Without it, an
+      outbox plus a relay is mandatory — the dual-write bug is not optional to fix.
+  referential_constraints:
+    clause: "§5.2"
+    why: Domain invariants enforced by the engine, not only by application code.
+  partial_indexes:
+    clause: "§5.2, §7.3"
+    why: The queue claim predicate needs one, or every drain is a full scan.
+  statement_timeout:
+    clause: "§5.6"
+    why: Without it one slow query pins a pooled connection and stalls everything behind it.
+  pitr:
+    clause: "§5.5"
+    why: Point-in-time recovery with a declared retention window.
+  ad_hoc_query:
+    clause: "§5.6"
+    why: Pushing aggregation down, and inspecting the queue with ordinary queries.
+
+# ---------------------------------------------------------------------------
+# Engines
+# ---------------------------------------------------------------------------
+
+engines:
+
+  - id: postgres
+    name: PostgreSQL
+    recommended: true
+    summary: >
+      The default recommendation, and still the best all-round answer — but a
+      CHOICE, not a MUST. Every track has mature tooling, and it is the only
+      engine here that satisfies every capability without a caveat.
+    capabilities:
+      multi_statement_transactions: true
+      transactional_enqueue: true
+      referential_constraints: true
+      partial_indexes: true
+      statement_timeout: true
+      pitr: host-dependent
+      ad_hoc_query: true
+    strengths: [JSONB, extensions, LISTEN/NOTIFY, SELECT FOR UPDATE SKIP LOCKED, cheapest exit]
+    queue_substrate: A table in the product's own database. Claim with SELECT … FOR UPDATE SKIP LOCKED.
+    data_access:
+      typescript: Drizzle + drizzle-kit
+      go: sqlc + pgx, goose or Atlas
+      rust: sqlx (compile-time checked) + sqlx migrate
+      dotnet: EF Core + EF Core migrations, or Dapper on hot paths
+
+  - id: mysql
+    name: MySQL / MariaDB
+    capabilities:
+      multi_statement_transactions: true
+      transactional_enqueue: true
+      referential_constraints: true
+      partial_indexes: false
+      statement_timeout: partial
+      pitr: host-dependent
+      ad_hoc_query: true
+    caveats:
+      - "No partial indexes. §7.3's claim-predicate index must be a full index on (status, run_after), which is larger and less selective."
+      - "max_execution_time applies to SELECT only — §5.6 needs a client-side deadline for writes."
+      - "Weaker JSON support and no extension ecosystem."
+    queue_substrate: A table in the product's own database. Claim with SELECT … FOR UPDATE SKIP LOCKED (8.0+).
+    data_access:
+      typescript: Drizzle + drizzle-kit
+      go: sqlc, goose
+      rust: sqlx
+      dotnet: EF Core
+
+  - id: sqlserver
+    name: SQL Server / Azure SQL
+    capabilities:
+      multi_statement_transactions: true
+      transactional_enqueue: true
+      referential_constraints: true
+      partial_indexes: true      # filtered indexes
+      statement_timeout: true    # command timeout / query governor
+      pitr: true
+      ad_hoc_query: true
+    best_with: [dotnet]
+    strengths: [EF Core's native home, mature tooling, strong query optimizer]
+    caveats: ["Licensing cost outside Azure SQL's serverless tier."]
+    queue_substrate: A table in the product's own database. Claim with UPDATE … OUTPUT and READPAST.
+    data_access:
+      dotnet: EF Core + EF Core migrations
+
+  - id: sqlite_family
+    name: SQLite family (libSQL / Turso, Cloudflare D1)
+    capabilities:
+      multi_statement_transactions: partial
+      transactional_enqueue: partial
+      referential_constraints: true
+      partial_indexes: true
+      statement_timeout: false
+      pitr: host-dependent
+      ad_hoc_query: true
+    caveats:
+      - "D1 has no interactive transactions — only batched statements. A read-then-write across an await is not atomic, which §5.3 forbids on write paths."
+      - "Single-writer model: concurrent write throughput is the ceiling, not read latency."
+      - "No server-side statement timeout; §5.6 needs a client-side deadline."
+    weakens:
+      - clause: "§5.3"
+        control: Restructure every multi-record write so a single statement or one batch is the commit point.
+      - clause: "§7.2"
+        control: Where batching cannot cover it, an outbox with a relay.
+    best_when: [edge-first reads, very low cost, read-heavy workloads, embedded replicas]
+
+  - id: dynamodb
+    name: DynamoDB
+    capabilities:
+      multi_statement_transactions: partial   # TransactWriteItems, bounded item count
+      transactional_enqueue: partial
+      referential_constraints: false
+      partial_indexes: false
+      statement_timeout: false
+      pitr: true
+      ad_hoc_query: false
+    caveats:
+      - "Access-pattern-first modelling: the schema is designed around queries, and changing access patterns later is a migration."
+      - "No ad-hoc queries — §5.6's push-computation-down rule has to be satisfied at write time instead."
+      - "TransactWriteItems is atomic but bounded and cannot span an interactive read-decide-write."
+    weakens:
+      - clause: "§5.2"
+        control: Domain invariants enforced at a single application chokepoint, recorded in the Stack Profile.
+      - clause: "§5.6"
+        control: Denormalize and precompute; there is no query planner to push work into.
+      - clause: "§7.2"
+        control: TransactWriteItems writing the business item and an outbox item together, with a relay to SQS.
+    queue_substrate: External (SQS) with an outbox. Not a table in the datastore.
+    best_when: [predictable latency at any scale, no pooling problem, AWS-native serverless]
+
+  - id: mongodb
+    name: MongoDB
+    capabilities:
+      multi_statement_transactions: true    # replica sets, 4.0+
+      transactional_enqueue: true
+      referential_constraints: false
+      partial_indexes: true
+      statement_timeout: true               # maxTimeMS
+      pitr: host-dependent
+      ad_hoc_query: true
+    caveats:
+      - "No referential integrity. Every relationship invariant becomes application code."
+      - "Transactions require a replica set and carry a performance cost relative to single-document writes."
+    weakens:
+      - clause: "§5.2"
+        control: Invariants enforced at one application chokepoint, recorded in the Stack Profile.
+    best_when: [genuinely document-shaped domains, schema still moving fast]
+
+  - id: cockroachdb
+    name: CockroachDB
+    capabilities:
+      multi_statement_transactions: true
+      transactional_enqueue: true
+      referential_constraints: true
+      partial_indexes: true
+      statement_timeout: true
+      pitr: true
+      ad_hoc_query: true
+    summary: Postgres wire-compatible and horizontally distributed. Most Postgres tooling works unchanged.
+    caveats:
+      - "Serializable isolation by default — retry loops on contention are expected and must be handled."
+      - "Higher per-statement latency than single-node Postgres."
+    best_when: [multi-region writes, very high availability requirements]
+
+# ---------------------------------------------------------------------------
+# Hosts
+# ---------------------------------------------------------------------------
+
+hosts:
+
+  - id: neon
+    engine: postgres
+    cost_band: free-tier-then-low
+    ops_burden: none
+    provides: [scale-to-zero, branching, pooled-endpoint, pitr, eu-regions]
+    strengths: ["Database branch per PR maps directly onto §13.2's preview tier and §5.5's ephemeral CI instance."]
+    cli: "neonctl projects create / neonctl connection-string"
+
+  - id: supabase
+    engine: postgres
+    cost_band: free-tier-then-low
+    ops_burden: none
+    provides: [postgres, object-storage, pooler, pitr, eu-regions]
+    strengths: ["Fewest sub-processors — datastore and object storage in one §10.4 register entry."]
+    note: >
+      Supabase Auth overlaps AUTHSPEC, which auth-setup owns. Selecting Supabase
+      for data and storage does NOT decide authentication. Flag it and leave the
+      decision to auth-setup.
+    cli: "supabase projects create / supabase secrets set"
+
+  - id: rds_aurora
+    engine: [postgres, mysql]
+    cost_band: medium
+    ops_burden: low
+    provides: [pitr, rds-proxy, vpc, every-aws-region]
+    requires:
+      - what: RDS Proxy or equivalent pooling
+        when: hosting is serverless
+        clause: "§5.1"
+
+  - id: planetscale
+    engine: mysql
+    cost_band: medium
+    ops_burden: none
+    provides: [vitess-scaling, online-schema-change, branching]
+    caveats: ["Historically discouraged foreign keys; confirm the current posture before relying on §5.2's engine-enforced invariants."]
+
+  - id: turso
+    engine: sqlite_family
+    cost_band: free-tier-then-lowest
+    ops_burden: none
+    provides: [embedded-replicas, edge-reads, many-databases-per-tenant]
+
+  - id: d1
+    engine: sqlite_family
+    cost_band: free-tier-then-lowest
+    ops_burden: none
+    only_with: [cloudflare]
+    caveats: ["No interactive transactions — see the engine caveats. Size limits per database."]
+
+  - id: azure_sql
+    engine: sqlserver
+    cost_band: medium
+    ops_burden: none
+    provides: [pitr, serverless-tier, auto-pause]
+    best_with: [dotnet, azure_container_apps]
+
+  - id: mongodb_atlas
+    engine: mongodb
+    cost_band: free-tier-then-medium
+    ops_burden: none
+    provides: [pitr, replica-sets, eu-regions]
+
+  - id: managed_by_platform
+    engine: [postgres, mysql]
+    name: Platform-managed (Fly / Railway / Render Postgres)
+    cost_band: low
+    ops_burden: low
+    provides: [colocated-with-compute, simple-wiring]
+    caveats: ["Backup and PITR guarantees vary by platform and tier — verify against §5.5 before selecting, do not assume."]
+
+  - id: self_hosted
+    engine: [postgres, mysql, mongodb]
+    cost_band: lowest-fixed
+    ops_burden: high
+    weakens:
+      - clause: "§5.5"
+        what: PITR, encrypted backups, access control and the quarterly restore drill become your job.
+        control: An automated backup pipeline with a proven restore drill before first release.
+
+# ---------------------------------------------------------------------------
+# Derived: the queue substrate. Announced, never asked.
+# ---------------------------------------------------------------------------
+
+queue_derivation:
+  rule: |
+    if engine.capabilities.transactional_enqueue == true:
+        substrate = "a table in the product's own datastore"
+        enqueue   = "inside the same transaction as the business write"
+        note      = "§7.3's polling rules apply: claim-predicate index, bounded
+                     batches, empty-drain backoff, terminal-row pruning."
+    else:
+        substrate = "an external queue"
+        enqueue   = "outbox record committed with the business write, relayed after"
+        record_as = "§18 item 14 capability gap"
+        note      = "§7.2 forbids publishing directly to an external queue
+                     alongside a separately-committed business write. That is
+                     the dual-write bug and it must not ship."
+  say_out_loud: >
+    An external queue is not an upgrade over a datastore-resident one. Where the
+    engine supports transactional enqueue, moving the queue out ADDS a
+    sub-processor and a dual-write problem that the outbox then has to solve.

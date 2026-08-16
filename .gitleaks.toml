@@ -1,0 +1,60 @@
+# Secret scanning for this repo — the marketplace itself, which is not a
+# STACKSPEC product and so gets no tooling from product-standards. Kept byte-
+# aligned with the template that plugin ships
+# (product-standards/.../assets/tooling/.gitleaks.toml) apart from this header
+# and the CI-DSN allowlist entry, which no workflow here needs. The rules must
+# stay identical: this repo is where a bad rule gets noticed first.
+#
+# .githooks/pre-commit reads it locally; .github/workflows/secret-scan.yml
+# passes it via GITLEAKS_CONFIG.
+#
+# Extends gitleaks' built-in rules (private keys, provider-specific token
+# formats, high-entropy generic secrets) with explicit rules for this project's
+# own env-var naming convention, so both layers catch these even if gitleaks'
+# generic heuristics happen to miss a particular value's shape.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "project-database-url"
+description = "DATABASE_URL assignment"
+regex = '''(?i)DATABASE_URL\s*[:=]\s*['"]?[^\s'"]+'''
+tags = ["project", "database"]
+
+[[rules]]
+id = "project-named-secret"
+description = "Assignment to a var ending in _TOKEN, _SECRET, _PASS, or _KEY"
+regex = '''(?i)[A-Z0-9_]*_(TOKEN|SECRET|PASS|KEY)\s*[:=]\s*['"]?[^\s'"]+'''
+tags = ["project", "secret"]
+
+[allowlist]
+regexTarget = "line"
+description = """
+Two exemptions, allowlisted by the shape of the line rather than by path, so a
+real credential committed into any of these files is still caught.
+
+1. `${{ secrets.NAME }}` is a GitHub Actions expression — a reference resolved
+   at runtime by the runner, and the only supported way to consume a secret in
+   a workflow. The literal text is never the value. secret-scan.yml's own
+   `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}` trips project-named-secret
+   without this.
+
+2. An assignment whose value is a bare `...` is documentation. .githooks/pre-
+   commit documents the patterns it detects (`FOO_TOKEN=...`, `const FOO_KEY =
+   ...`) and gitleaks reads those comments as findings — the scanner matching
+   its own description of what it matches. The hook's layer-1 grep skips
+   comment-only lines; gitleaks does not, which is why this belongs here.
+
+3. The ephemeral Postgres service container in the CI workflow template this
+   repo ships as a product asset. Those credentials are throwaway and are
+   published in the workflow by design — they address a database that lives
+   for one job. This entry was omitted at first, on the grounds that no
+   workflow *here* runs a database. That stopped being true the moment the
+   repo began vendoring a product's ci.yml under assets/tooling/, and the
+   pre-commit hook is what caught it.
+"""
+regexes = [
+  '''\$\{\{\s*secrets\.[A-Za-z0-9_]+\s*\}\}''',
+  '''[:=]\s*\.\.\.''',
+  '''postgres://postgres:postgres@localhost:5432/[a-z0-9_]+''',
+]

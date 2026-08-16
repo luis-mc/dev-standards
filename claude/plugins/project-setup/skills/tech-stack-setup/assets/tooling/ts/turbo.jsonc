@@ -1,0 +1,59 @@
+// Defines the task names .github/workflows/ci.yml invokes. STACKSPEC names
+// Turborepo (§2) and requires that codegen, lint, typecheck, and the tests run
+// in CI (§13.1, §4.1, §11.1) — it does not name the tasks themselves, so these
+// names are this generator's contract between the workflow and the packages.
+// Renaming one here means renaming it in ci.yml.
+//
+// Every package that participates declares the matching script; a package that
+// does not is simply skipped by turbo, which is why ci.yml asserts on outcomes
+// (git diff for codegen, passWithNoTests:false for vitest) rather than trusting
+// a task to have run.
+//
+// This is turbo.jsonc, not turbo.json, because Turborepo validates its config
+// strictly: a `"//"` key inside a task is rejected as an unknown key, and a
+// top-level `"//"` must be a string. The first version of this file used `"//"`
+// arrays for the rationale above and every `pnpm turbo` command failed to
+// parse it. .jsonc takes real comments and needs Turborepo >= 2.1.
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    // §4.1: the OpenAPI document is the source for every generated client. CI
+    // runs this then asserts a clean tree, so the outputs must be committed,
+    // not cached away from the working directory.
+    "codegen": {
+      "outputs": ["**/generated/**", "**/*.gen.ts"],
+      "cache": false,
+    },
+    "lint": {
+      "dependsOn": ["^codegen"],
+      "outputs": [],
+    },
+    // Needs upstream packages built for their declaration files, and codegen
+    // for the generated clients it type-checks against.
+    "typecheck": {
+      "dependsOn": ["^build", "^codegen"],
+      "outputs": [],
+    },
+    "build": {
+      "dependsOn": ["^build", "^codegen"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+    },
+    // §5.5: seeds the ephemeral CI Postgres through the migration chain. Never
+    // cached — it mutates a database, and a cache hit would skip the schema
+    // the integration tests need.
+    "migrate": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": false,
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+    },
+  },
+  "globalEnv": ["DATABASE_URL", "NODE_ENV"],
+}

@@ -1,0 +1,234 @@
+name: CI
+
+# Implements STACKSPEC §13.1: every PR runs install (frozen lockfile), codegen
+# drift check, lint, typecheck, unit tests, integration tests against an
+# ephemeral database, contract tests, dependency scan, secret scan, and the §3.2
+# boundary check.
+#
+# Path filters are part of that requirement. Mobile has its own workflow on
+# macOS runners (§13.3), and §13.3 states mobile CI MUST be path-filtered and
+# MUST NOT run on documentation-only changes; excluding those paths here is the
+# other half — a mobile-only change does not rebuild the web apps.
+on:
+  pull_request:
+    paths-ignore:
+      - 'apps/ios/**'
+      - 'apps/android/**'
+      - '**/*.md'
+      - 'docs/**'
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'apps/ios/**'
+      - 'apps/android/**'
+      - '**/*.md'
+      - 'docs/**'
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Static gates: everything that needs no database.
+  # ---------------------------------------------------------------------------
+  verify:
+    name: lint, types, boundaries, unit + contract tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # §2.2: pnpm is mandatory and its version is pinned via `packageManager`
+      # in the root manifest. corepack reads that field, so the pinned version
+      # is the one that runs — no second place to update.
+      #
+      # This MUST come before setup-node. `cache: pnpm` makes setup-node run
+      # `pnpm store path` to find the cache directory, and ubuntu-latest does
+      # not ship pnpm — verified on a real runner: `which pnpm` finds nothing,
+      # and setup-node then fails with "Unable to locate executable file:
+      # pnpm". Reversing these two steps broke every job in this file.
+      - name: Enable corepack (pnpm from packageManager)
+        run: corepack enable
+
+      # §2.2: Node is the current active LTS, pinned in .nvmrc and used by every
+      # CI job. Reading the file rather than hardcoding here is what keeps the
+      # two from drifting.
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      # §4.1: all generated clients must be regenerated and committed. Running
+      # codegen and asserting a clean tree is the only check that cannot be
+      # fooled by a stale committed artifact.
+      - name: Codegen drift check
+        run: |
+          pnpm turbo codegen
+          if ! git diff --exit-code; then
+            echo "::error::Generated output differs from what is committed."
+            echo "Run 'pnpm turbo codegen' and commit the result (STACKSPEC §4.1)."
+            exit 1
+          fi
+
+      - name: Lint
+        run: pnpm turbo lint
+
+      - name: Format check
+        run: pnpm prettier --check .
+
+      - name: Typecheck
+        run: pnpm turbo typecheck
+
+      # §3.2: the layer rules MUST be enforced by a lint rule or dependency-graph
+      # check that fails the build, not by review. dependency-cruiser covers all
+      # six, including circular workspace dependencies, which an import-scoped
+      # lint rule cannot see.
+      - name: Boundary check (§3.2)
+        run: pnpm depcruise --config .dependency-cruiser.cjs apps packages
+
+      # §11.1: server unit tests over core and service-package logic. Pure, fast,
+      # no I/O — integration lives in the job below.
+      - name: Unit tests
+        run: pnpm vitest run --project unit
+
+      # §11.1: "the highest-value control in the entire repository" — every
+      # client and the server verified against the same contract fixtures.
+      - name: Contract tests
+        run: pnpm vitest run --project contract
+
+      # §12: dependency scanning on every PR, failing on known-exploitable
+      # advisories in production dependencies. --prod scopes it to shipped code;
+      # a dev-only advisory should not block a release.
+      - name: Dependency scan
+        run: pnpm audit --prod --audit-level=high
+
+  # ---------------------------------------------------------------------------
+  # §11.1 + §5.5: integration tests against an ephemeral real Postgres, seeded
+  # through the migration chain. Not mocks, and not a shared long-lived test
+  # database — those hide exactly the migration, index, transaction, and
+  # constraint bugs this job exists to catch.
+  # ---------------------------------------------------------------------------
+  integration:
+    name: integration tests (ephemeral Postgres)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      # Throwaway service-container credentials, not a secret. The gitleaks
+      # config allowlists this exact DSN shape so it does not trip the scan.
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
+    steps:
+      - uses: actions/checkout@v4
+
+      # corepack before setup-node — see the verify job for why.
+      - run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Migrate (seed through the migration chain)
+        run: pnpm turbo migrate
+
+      - name: Integration tests
+        run: pnpm vitest run --project integration
+
+      # §11.1: the route-authorization coverage test MUST fail the build when
+      # any route ships without an explicit authorization declaration. It needs
+      # the registered routes, so it runs here rather than in the static job.
+      - name: Route authorization coverage
+        run: pnpm vitest run --project authz
+
+  # ---------------------------------------------------------------------------
+  # §12: secret scanning as a CI gate. The pre-commit hook is the other half of
+  # that requirement and lives in .githooks/pre-commit.
+  # ---------------------------------------------------------------------------
+  secret-scan:
+    name: secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # gitleaks scans history, not just the diff. Without full depth it
+          # silently checks a single commit and reports clean.
+          fetch-depth: 0
+
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  # ---------------------------------------------------------------------------
+  # §11.2: web E2E is SHOULD, not gated. This job reports and never blocks. If
+  # you delete it, §11.2 requires the release checklist to name the manual
+  # journeys verified before each submission — an untested release path is a
+  # decision, and it should be a visible one.
+  # ---------------------------------------------------------------------------
+  #
+  # The presence check is a step, not a job-level `if`. `hashFiles()` is not a
+  # valid function in a job-level `if` — GitHub rejects the *entire workflow
+  # file*, so nothing in it runs, including the required gates above. Verified
+  # on a real runner: a workflow whose only unusual construct was a job-level
+  # `if: hashFiles('README.md') != ''` failed to load with "This run likely
+  # failed because of a workflow file issue", while the identical workflow
+  # using `if: github.event_name == 'push'` ran fine. hashFiles also resolves
+  # against the workspace, which is empty until checkout has run.
+  e2e:
+    name: web E2E (advisory, §11.2)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Is there an E2E suite?
+        id: probe
+        run: |
+          if [ -f playwright.config.ts ]; then
+            echo 'present=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'present=false' >> "$GITHUB_OUTPUT"
+            echo "No playwright.config.ts — skipping E2E (§11.2 is SHOULD)."
+          fi
+
+      # corepack before setup-node — see the verify job for why.
+      - if: steps.probe.outputs.present == 'true'
+        run: corepack enable
+
+      - if: steps.probe.outputs.present == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install (frozen lockfile)
+        if: steps.probe.outputs.present == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        if: steps.probe.outputs.present == 'true'
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: E2E
+        if: steps.probe.outputs.present == 'true'
+        run: pnpm exec playwright test

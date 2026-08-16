@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# Blocks a commit if any staged change looks like it introduces a live
+# secret. Two layers:
+#
+#   1. A dependency-free pattern check for common env-var shapes
+#      (DATABASE_URL, *_TOKEN, *_SECRET, *_PASS, *_KEY) — always runs, no
+#      install required.
+#   2. gitleaks, if it's installed locally (`brew install gitleaks`), for
+#      broader coverage (private keys, provider-specific token formats,
+#      high-entropy strings) beyond the naming convention above. Uses
+#      .gitleaks.toml at the repo root if present (same config CI uses).
+#
+# This is one half of STACKSPEC §12, which requires secret scanning as a
+# pre-commit hook *and* a CI gate; .github/workflows/ci.yml is the other half,
+# reading the same .gitleaks.toml.
+#
+# Installed automatically via `core.hooksPath` — see the root package.json
+# "prepare" script, which pnpm runs on install. Bypass (should be rare, and
+# only for an actual false positive, e.g. a workflow file referencing
+# `secrets.GITHUB_TOKEN` by name):
+#   git commit --no-verify
+
+set -euo pipefail
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+staged_files=$(git diff --cached --name-only --diff-filter=ACM)
+if [ -z "$staged_files" ]; then
+  exit 0
+fi
+
+fail=0
+
+# --- Layer 1: naming-convention patterns ------------------------------------
+# Matches an assignment/definition of DATABASE_URL, or any NAME ending in
+# _TOKEN / _SECRET / _PASS / _KEY, e.g. `FOO_TOKEN=...`, `FOO_TOKEN: ...`,
+# `const FOO_KEY = ...`. Deliberately loose (no attempt to validate the value
+# looks like a real secret) — false positives are expected; two escape
+# hatches below before falling back to --no-verify:
+#   - Comment-only lines are skipped (usage docs like `# DATABASE_URL=...`
+#     in a script header are common and aren't a leaked value).
+#   - A line with a trailing `secret-scan:ignore` marker comment is skipped
+#     for genuine non-secret matches (e.g. a constant named `*_KEY` that's a
+#     storage/cache key, not a credential) — annotate *why* inline.
+#   - Two line shapes are skipped outright, matching .gitleaks.toml's allowlist
+#     exactly: `${{ secrets.NAME }}` (a GitHub Actions reference resolved at
+#     runtime, never a value) and an assignment whose value is a bare `...`
+#     (documentation, including this file's own examples above). The two layers
+#     MUST agree on these — one skipping by path while the other allowlists by
+#     shape is how .gitleaks.toml itself ended up blocked by this hook while
+#     gitleaks reported it clean, and how a contributor learns to reach for
+#     --no-verify.
+pattern='(DATABASE_URL|[A-Za-z0-9_]*_(TOKEN|SECRET|PASS|KEY))[[:space:]]*[:=]'
+# Matched lines are piped through `grep -n` first (for the "file:line" output
+# below), so this must allow for the "<lineno>:" prefix grep -n adds.
+comment_line='^[0-9]+:[[:space:]]*(//|#|\*)'
+ignore_marker='secret-scan:ignore'
+doc_shape='[:=][[:space:]]*(\.\.\.|\$\{\{[[:space:]]*secrets\.)'
+# The throwaway CI Postgres service-container DSN, allowlisted identically in
+# .gitleaks.toml. Layer 1 skips .github/workflows/* by path, which covers a
+# product's own workflow but not a copy vendored elsewhere in the tree — this
+# repo ships one under assets/tooling/. Matched by shape, the way layer 2
+# matches it, so the two layers agree wherever the file happens to live.
+ci_dsn='postgres://postgres:postgres@localhost:5432/[a-z0-9_]*'
+
+for f in $staged_files; do
+  case "$f" in
+    # The hook itself, docs, and lockfiles/CI workflows that legitimately
+    # reference secret *names* (e.g. `secrets.GITHUB_TOKEN` in a workflow,
+    # or this file's own comments) rather than literal values.
+    .githooks/*|*.md|pnpm-lock.yaml|.github/workflows/*) continue ;;
+  esac
+  # Scan the staged blob (what's about to be committed), not the working
+  # tree, so an unstaged local edit can't false-fail the commit.
+  content=$(git show ":$f" 2>/dev/null) || continue
+  matches=$(printf '%s\n' "$content" | grep -Ein "$pattern" | grep -Ev "$comment_line" | grep -Ev "$doc_shape" | grep -Ev "$ci_dsn" | grep -v "$ignore_marker" || true)
+  if [ -n "$matches" ]; then
+    echo "pre-commit: possible secret in '$f':" >&2
+    echo "$matches" | sed 's/^/    /' >&2
+    fail=1
+  fi
+done
+
+# --- Layer 2: gitleaks, if available ---------------------------------------
+if command -v gitleaks >/dev/null 2>&1; then
+  config_arg=()
+  if [ -f "$repo_root/.gitleaks.toml" ]; then
+    config_arg=(--config "$repo_root/.gitleaks.toml")
+  fi
+  if ! gitleaks protect --staged --redact --no-banner "${config_arg[@]}"; then
+    echo "pre-commit: gitleaks found a likely secret in staged changes." >&2
+    fail=1
+  fi
+else
+  echo "pre-commit: gitleaks not installed locally — skipping that layer (pattern check above still ran)." >&2
+  echo "  Install with: brew install gitleaks" >&2
+fi
+
+if [ "$fail" -ne 0 ]; then
+  echo "" >&2
+  echo "Commit blocked by pre-commit secret scan." >&2
+  echo "If every match above is a false positive, bypass with: git commit --no-verify" >&2
+  exit 1
+fi

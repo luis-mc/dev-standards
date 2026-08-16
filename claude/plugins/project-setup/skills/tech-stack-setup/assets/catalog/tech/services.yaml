@@ -1,0 +1,212 @@
+# Cache, object storage, mail and error tracking.
+#
+# Every one of these is a CHOICE (§0.2). None is graded, none produces a
+# deviation. What binds is the clause listed against each role, and §3.3's
+# adapter rule — which is what makes any of these cheap to change later.
+
+version: 1
+roles: [cache, object_storage, mail, error_tracking]
+
+# ---------------------------------------------------------------------------
+# Cache — §6
+# ---------------------------------------------------------------------------
+
+cache:
+  note: >
+    "No cache" is a legitimate answer for a small product. §6 still binds the
+    in-process caches it will grow: bounded size, eviction policy, and
+    request-scoped memoization.
+
+  technologies:
+    - id: upstash
+      name: Upstash Redis
+      cost_band: free-tier-then-low
+      ops_burden: none
+      provides: [http-rest-client, reachable-from-anywhere, per-request-pricing]
+      strengths: ["Reachable over HTTP from serverless and edge runtimes with no VPC."]
+      hosting: {vercel: native, cloudflare: supported, aws_lambda: supported, containers: supported}
+
+    - id: elasticache
+      name: AWS ElastiCache Serverless (Valkey / Redis)
+      cost_band: medium
+      ops_burden: low
+      vpc_only: true
+      implies:
+        - "VPC-only. Choosing this puts Lambda inside a VPC, which then needs NAT or VPC endpoints for S3, SES and Secrets Manager, and adds cold-start latency and cost. This is the single largest architectural consequence of an all-AWS bundle."
+      alternative_note: >
+        If the user does not want the VPC, keeping Upstash is both cheaper and
+        architecturally simpler. Offer it; do not decide it silently.
+
+    - id: cloudflare_kv
+      name: Cloudflare KV
+      only_with: [cloudflare]
+      cost_band: free-tier-then-lowest
+      caveats: ["Eventually consistent. Not suitable for rate-limit counters where §4.6 requires fail-closed behaviour on credential endpoints."]
+
+    - id: platform_redis
+      name: Platform-managed Redis (Railway / Render / Fly)
+      cost_band: low
+      ops_burden: none
+      strengths: [colocated with compute, one fewer vendor relationship]
+
+    - id: self_hosted_redis
+      name: Self-hosted Redis / Valkey
+      cost_band: lowest-fixed
+      ops_burden: high
+
+    - id: none
+      name: No external cache
+      note: Valid. §6's in-process rules still apply, and §4.6's rate limiting needs somewhere to count.
+
+# ---------------------------------------------------------------------------
+# Object storage — §8.2
+# ---------------------------------------------------------------------------
+
+object_storage:
+  binding_rules:
+    - "Accessed only through the storage adapter (§3.3)."
+    - "Signed-URL uploads issued by the API. Clients never hold storage credentials."
+    - "Server-side content sniffing, size cap, allow-list."
+    - "Deleting an object MUST invalidate its CDN cache entry, or erasure is cosmetic."
+    - "Streaming for large payloads — exports grow with account age."
+
+  technologies:
+    - id: r2
+      name: Cloudflare R2
+      cost_band: lowest
+      strengths: ["Zero egress fees — the strongest cost argument for media-heavy products.", S3-compatible API]
+      provides: [s3-compatible, integrated-cdn]
+
+    - id: s3
+      name: AWS S3
+      cost_band: low-plus-egress
+      provides: [s3-compatible, every-region, lifecycle-policies]
+      implies:
+        - "Behind CloudFront, CDN invalidation on delete becomes the adapter's job (§8.2). The erasure path must wait on it."
+
+    - id: vercel_blob
+      name: Vercel Blob
+      cost_band: low
+      ops_burden: none
+      strengths: [CDN invalidation on delete handled by the platform, simplest wiring on Vercel]
+
+    - id: supabase_storage
+      name: Supabase Storage
+      cost_band: free-tier-then-low
+      strengths: ["Same sub-processor as the database — one §10.4 register entry instead of two."]
+
+    - id: azure_blob
+      name: Azure Blob Storage
+      cost_band: low
+      best_with: [dotnet, azure_container_apps]
+
+    - id: gcs
+      name: Google Cloud Storage
+      cost_band: low
+      best_with: [cloud_run]
+
+    - id: minio
+      name: MinIO (self-hosted)
+      cost_band: lowest-fixed
+      ops_burden: high
+      provides: [s3-compatible, full-sovereignty]
+
+# ---------------------------------------------------------------------------
+# Mail — §8.1
+# ---------------------------------------------------------------------------
+
+mail:
+  property:
+    - "Bounce and complaint feedback must reach the product, authenticated, and update a suppression list the adapter consults before every send (§8.1)."
+    - "All sends enqueued as jobs, never awaited inline."
+  note: >
+    The provider and the transport are both open. The feedback loop is what
+    binds — a transport with no event channel cannot supply it, which is how
+    bare SMTP falls out. SMTP paired with a feedback source that does satisfy
+    the loop is conforming; the clause names no technology.
+
+  technologies:
+    - id: resend
+      name: Resend
+      cost_band: free-tier-then-low
+      provides: [webhooks, good-dx, react-email-templates]
+    - id: postmark
+      name: Postmark
+      cost_band: low
+      strengths: [best-in-class transactional deliverability and support]
+    - id: ses
+      name: Amazon SES
+      cost_band: lowest
+      requires:
+        - what: SNS event notifications with message-signature verification, feeding the suppression list
+          clause: "§8.1"
+          why: SES with no event destination configured does not satisfy §8.1's webhook requirement.
+    - id: mailgun
+      name: Mailgun
+      cost_band: low
+    - id: azure_communication
+      name: Azure Communication Services Email
+      cost_band: low
+      best_with: [azure_container_apps]
+
+# ---------------------------------------------------------------------------
+# Error tracking — §10.1, §10.4
+# ---------------------------------------------------------------------------
+
+error_tracking:
+  note: >
+    STACKSPEC names no vendor. Genuinely open, and it stays third-party however
+    consolidated the rest of the stack is. §10.1 records why this is permitted
+    where a third-party analytics SDK is not: error reporting is strictly
+    necessary for service delivery and security, so it does not depend on
+    consent to be lawful.
+
+  requirements:
+    - "Grouping and alerting that reach a human (§10.1)."
+    - "Crash reporting with symbolication on iOS and Android, where mobile ships."
+    - "A §10.4 register entry with region and DPA status, explicit retention, and coverage by erasure and export."
+
+  not_substitutes:
+    - id: cloudwatch_logs
+      why: Log aggregation is not error tracking. No grouping, no alerting to a human, no mobile crash symbolication.
+    - id: platform_logs
+      why: Same. Every platform's log viewer fails the §10.1 requirements.
+
+  technologies:
+    - id: sentry
+      name: Sentry
+      cost_band: free-tier-then-medium
+      provides: [grouping, alerting, ios-android-symbolication, source-maps, tracing]
+      note: The usual proposal. The spec names nothing, so say plainly that this is a recommendation.
+    - id: bugsnag
+      name: Bugsnag
+      provides: [grouping, alerting, mobile-symbolication]
+    - id: rollbar
+      name: Rollbar
+      provides: [grouping, alerting]
+    - id: honeybadger
+      name: Honeybadger
+      provides: [grouping, alerting, uptime-checks]
+    - id: glitchtip
+      name: GlitchTip (self-hosted)
+      cost_band: lowest-fixed
+      ops_burden: high
+      provides: [grouping, alerting, sentry-sdk-compatible]
+      strengths: ["Removes a sub-processor entirely — the only option here that does."]
+      caveats: ["Mobile symbolication is weaker than Sentry's. Verify against §10.1 before selecting when mobile ships."]
+
+# ---------------------------------------------------------------------------
+# Uptime checks — §10.1
+# ---------------------------------------------------------------------------
+
+uptime:
+  rule: >
+    An external check is only external if it survives the provider's outage.
+    A checker running in the same account and region as the thing it watches is
+    weak; the wizard must say so and propose a third-party checker, or at
+    minimum a separate account and region.
+  technologies:
+    - {id: betterstack, name: Better Stack}
+    - {id: uptimerobot, name: UptimeRobot, cost_band: free-tier}
+    - {id: honeybadger_uptime, name: Honeybadger, note: Bundles with error tracking — one fewer vendor.}
+    - {id: cloudwatch_synthetics, name: CloudWatch Synthetics, caveat: "Same-account, same-region checks fail the survives-the-outage test."}

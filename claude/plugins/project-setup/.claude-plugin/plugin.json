@@ -1,0 +1,8 @@
+{
+  "name": "luismc-project-setup",
+  "description": "Setting a project up to the organization's standards, one concern per skill. `tech-stack-setup` is a guided wizard that helps pick a coherent technology stack \u2014 language, frameworks, database, host and providers that work well together \u2014 then scaffolds a repository conforming to STACKSPEC, a technology-neutral invariants spec, or audits an existing repo against it. `auth-setup` then builds the authentication and authorization stack to the binding AUTHSPEC, and refuses to run until the first has. `claude-setup` applies the Claude Code configuration to the project and/or ~/.claude/. One sets up the repo, one sets up auth in it, one sets up the agent working on it.",
+  "version": "11.0.0",
+  "author": {
+    "name": "Luis Carvalho"
+  }
+}

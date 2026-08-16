@@ -1,0 +1,302 @@
+# The slots a product must fill, and how the wizard fills them.
+#
+# Every role is one of:
+#   asked    — the wizard puts it to the user, filtered by prior answers
+#   derived  — computed from an earlier answer; announced, never asked
+#   fixed    — part of the foundation; announced once, never asked
+#
+# `binds` lists the STACKSPEC 5.0.0 clauses that constrain whatever is chosen.
+# The wizard reads those clauses aloud when the choice has consequences.
+
+version: 1
+spec: STACKSPEC 5.0.0
+
+# ---------------------------------------------------------------------------
+# Fixed foundation — announced in Phase 0, never asked.
+# ---------------------------------------------------------------------------
+
+fixed:
+  - id: vcs
+    name: Version control
+    value: Git
+  - id: topology
+    name: Repository topology
+    value: One repository per product, apps/ + packages/, docs/specs + docs/notes
+    binds: ["§2.1"]
+  - id: contract_first
+    name: Contract-first development
+    value: One machine-readable contract, authored and reviewed first, all clients generated from it
+    binds: ["§4.1"]
+    note: >
+      The PRACTICE is fixed; the format is a CHOICE asked in Phase 3. What binds
+      the format is generator coverage for every language this product ships a
+      client in — verify that before selecting, because a format with no
+      generator for the mobile languages makes the generated-client rule
+      unsatisfiable. OpenAPI is the usual answer, not the required one.
+  - id: ci_platform
+    name: CI platform
+    value: GitHub Actions
+    binds: ["§13.1"]
+    note: >
+      The twelve gates in §13.1 are the actual requirement; GitHub Actions is
+      the foundation's answer for how they run. A product satisfying the same
+      gates on another CI platform conforms.
+  - id: secret_scanning
+    name: Secret scanning
+    value: gitleaks, pre-commit hook and CI gate over full history
+    binds: ["§12"]
+  - id: promotion
+    name: Promotion flow
+    value: preview per PR, staging on merge, production on explicit release
+    binds: ["§13.2"]
+  - id: secret_tiers
+    name: Secret hygiene
+    value: three tiers, one validated config schema, value-free example env file
+    binds: ["§15"]
+
+# ---------------------------------------------------------------------------
+# Product profile — Phase 1. Asked before any technology.
+# These drive the recommendations; they are not themselves technology choices.
+# ---------------------------------------------------------------------------
+
+profile:
+  - id: expertise
+    question: What does the team already know well?
+    why: Strongest single predictor of whether a product ships. A familiar stack beats a better unfamiliar one.
+    affects: [language, web_framework, api_framework]
+  - id: cost_posture
+    question: What is the cost posture?
+    options: [zero-budget, cost-sensitive, cost-is-not-the-constraint]
+    affects: [hosting, db_host, cache, object_storage, error_tracking]
+  - id: ops_appetite
+    question: How much operational surface is acceptable?
+    options: [never-touch-a-server, containers-are-fine, happy-to-run-my-own-datastore]
+    affects: [hosting, db_host, cache]
+  - id: compliance
+    question: Any data-residency or regulatory constraint?
+    options: [none, eu-only, hipaa, soc2, other]
+    why: Eliminates most free tiers outright — they rarely offer a DPA or region pinning.
+    affects: [db_host, hosting, mail, error_tracking, cache, object_storage]
+  - id: lock_in_tolerance
+    question: How much vendor lock-in is acceptable?
+    options: [want-a-clean-exit, pragmatic, dont-care]
+    why: >
+      "Clean exit" contradicts the single-vendor bundles. Say so at the moment
+      both are selected rather than letting the contradiction stand.
+    affects: [hosting, db_engine, db_host, object_storage]
+  - id: mobile
+    question: Does mobile ship, now or later?
+    why: >
+      Largest cascade of the six. Mobile means generated Swift and Kotlin
+      clients, push credentials, store declarations, and it makes hypermedia
+      web approaches cost double.
+    affects: [web_framework, api_framework, push, analytics]
+
+# ---------------------------------------------------------------------------
+# Entry fork — Phase 2.
+# ---------------------------------------------------------------------------
+
+entry_paths:
+  recommend:
+    label: Recommend me a stack
+    describe: Derive 2-3 complete candidates from the profile and compare them side by side.
+    order: [derived]
+  infrastructure_first:
+    label: Infrastructure first
+    describe: Host constrains language. Pick where it runs, then what runs on it.
+    order: [hosting, language, api_framework, web_framework, db_engine, db_host,
+            cache, object_storage, mail, error_tracking]
+  language_first:
+    label: Language first
+    describe: Language constrains host. Pick what you write, then where it runs.
+    order: [language, api_framework, web_framework, hosting, db_engine, db_host,
+            cache, object_storage, mail, error_tracking]
+
+# ---------------------------------------------------------------------------
+# The roles themselves.
+# ---------------------------------------------------------------------------
+
+roles:
+  - id: language
+    name: Server language and runtime
+    kind: asked
+    required: true
+    catalog: tech/languages.yaml
+    binds: ["§2.2", "§2.3"]
+
+  - id: api_framework
+    name: API framework
+    kind: asked
+    required: true
+    catalog: tech/frameworks.yaml
+    constrained_by: [language]
+    binds: ["§4.2"]
+
+  - id: web_framework
+    name: Web client framework
+    kind: asked
+    required: false
+    catalog: tech/frameworks.yaml
+    constrained_by: [language, mobile]
+    binds: ["§9.2", "§9.3"]
+    note: Absent for an API-only product.
+
+  - id: hosting
+    name: Hosting and compute
+    kind: asked
+    required: true
+    catalog: tech/hosting.yaml
+    constrained_by: [language, web_framework, cache]
+    binds: ["§13.2"]
+    note: >
+      Split hosting is normal and good — web on an edge platform, API in
+      containers. Do not treat "not all one vendor" as a failure.
+
+  - id: db_engine
+    name: Database engine
+    kind: asked
+    required: true
+    catalog: tech/data.yaml
+    binds: ["§5.1", "§5.2", "§5.3", "§5.5", "§5.6"]
+    note: >
+      Highest-cascade choice in the wizard. It decides the migration tool, the
+      transaction semantics, and whether the job queue can live in the datastore
+      at all (§7.2).
+
+  - id: db_host
+    name: Database host
+    kind: asked
+    required: true
+    catalog: tech/data.yaml
+    constrained_by: [db_engine, hosting, compliance, cost_posture]
+    binds: ["§5.1", "§5.5"]
+
+  - id: data_access
+    name: Data access and migrations
+    kind: derived
+    from: language
+    binds: ["§3.2", "§5.2", "§5.4"]
+    note: One per track. Announced, never asked.
+
+  - id: queue_substrate
+    name: Job queue substrate
+    kind: derived
+    from: db_engine
+    binds: ["§7.1", "§7.2", "§7.3"]
+    rule: >
+      If the engine supplies transactional enqueue, the queue lives in the
+      product's own datastore. If it does not, an external queue plus an outbox
+      with a relay is required, and that becomes a §18 item 14 capability gap.
+
+  - id: cache
+    name: Cache and ephemeral state
+    kind: asked
+    required: false
+    catalog: tech/services.yaml
+    constrained_by: [hosting]
+    binds: ["§6"]
+    note: >
+      "No cache" is a valid answer for a small product. §6 still binds the
+      in-process caches it will inevitably grow.
+
+  - id: object_storage
+    name: Object storage
+    kind: asked
+    required: false
+    catalog: tech/services.yaml
+    constrained_by: [hosting, compliance]
+    binds: ["§8.2"]
+
+  - id: mail
+    name: Transactional mail
+    kind: asked
+    required: true
+    catalog: tech/services.yaml
+    constrained_by: [compliance]
+    binds: ["§8.1"]
+    note: Transport class is fixed by §8.1 — provider API with webhooks, never raw SMTP.
+
+  - id: error_tracking
+    name: Error and crash reporting
+    kind: asked
+    required: true
+    catalog: tech/services.yaml
+    binds: ["§10.1", "§10.4"]
+    note: >
+      STACKSPEC names no vendor. Genuinely open. Stays third-party however
+      consolidated the rest of the stack is — §10.1 explains why this is
+      permitted where analytics is not.
+
+  - id: push
+    name: Push notifications
+    kind: asked
+    required: false
+    constrained_by: [mobile]
+    binds: ["§8.3"]
+    default: APNs and FCM directly, server-owned, behind the notify adapter
+    property: >
+      Device tokens and the principal they belong to MUST NOT be disclosed to
+      any party outside the §10.4 sub-processor register, with a signed
+      agreement, a declared region, and coverage by erasure and export.
+    note: >
+      Server-owned direct delivery satisfies the property with no additional
+      processor, which is why it is the default. A push vendor (SNS mobile push,
+      OneSignal) is not forbidden — it is priced, exactly as the error tracker
+      is. Selecting one adds a register entry and its obligations; say that, then
+      let the user decide.
+
+  - id: analytics
+    name: Product analytics
+    kind: asked
+    required: true
+    binds: ["§10.3"]
+    default: First-party, into the product's own datastore
+    property: >
+      Non-essential events MUST NOT leave the device before server-side consent
+      is recorded, and the classification MUST be enforced at an ingestion
+      endpoint the product controls.
+    note: >
+      Most vendor SDKs fail this by architecture, not by brand: an SDK reporting
+      to a backend the product does not control cannot be gated on consent state
+      that backend never sees. Vercel Web Analytics, CloudWatch RUM, Pinpoint and
+      GA fall out on those grounds. A vendor offering consent-gated ingestion
+      under the product's control passes. First-party collection is the default
+      because it passes trivially and costs only the dashboards.
+
+  - id: package_manager
+    kind: derived
+    from: language
+    binds: ["§2.2"]
+  - id: task_runner
+    kind: derived
+    from: language
+    binds: ["§2.2"]
+  - id: lint_format
+    kind: derived
+    from: language
+    binds: ["§13.1"]
+  - id: test_runner
+    kind: derived
+    from: language
+    binds: ["§13.1", "§11"]
+  - id: boundary_check
+    kind: derived
+    from: language
+    binds: ["§3.2"]
+
+# ---------------------------------------------------------------------------
+# How the wizard treats a conflict.
+# ---------------------------------------------------------------------------
+
+pushback:
+  hard_conflict:
+    action: block
+    describe: The combination cannot be built. Offer the nearest working alternative.
+  weakens_invariant:
+    action: require_reason
+    describe: >
+      Explain the consequence, capture a one-line reason, write it to the Stack
+      Profile as a §18 item 14 capability gap or an item 15 deviation.
+  tradeoff:
+    action: explain_and_proceed
+    describe: State the consequence once, then proceed. No ceremony, no record.

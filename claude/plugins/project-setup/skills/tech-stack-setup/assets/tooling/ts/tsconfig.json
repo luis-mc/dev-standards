@@ -1,0 +1,33 @@
+{
+  // The root TypeScript config. It exists for two reasons beyond being the
+  // base every workspace package extends:
+  //
+  //   * .dependency-cruiser.cjs points `tsConfig.fileName` at it. Without a
+  //     root tsconfig.json, `depcruise` exits with "error TS5083: Cannot read
+  //     file 'tsconfig.json'" and the §3.2 boundary gate never runs at all.
+  //   * `paths`/`moduleResolution` here decide whether workspace imports
+  //     resolve. An import dependency-cruiser cannot resolve is reported as
+  //     valid, so a resolution problem silently empties the boundary check
+  //     rather than failing it. The `no-unresolvable` rule in that config is
+  //     the backstop.
+  //
+  // §2.2 requires strict mode with no escape hatches.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "verbatimModuleSyntax": true
+  },
+  "exclude": ["node_modules", "dist", "build", ".next", ".turbo"]
+}

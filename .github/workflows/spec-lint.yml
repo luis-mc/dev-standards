@@ -1,0 +1,136 @@
+name: spec-lint
+
+# The specs in luismc-project-setup are the input to code generation. A dangling
+# cross-reference is not cosmetic — it means a generated implementation is
+# written against a clause that does not exist. This gate runs on every change
+# to them.
+
+on:
+  push:
+    paths:
+      - 'claude/plugins/project-setup/skills/tech-stack-setup/references/**'
+      - 'claude/plugins/project-setup/skills/auth-setup/references/**'
+      - 'claude/plugins/specs/skills/spec-new/assets/spec-template.md'
+      - 'claude/plugins/specs/skills/spec-check/assets/spec_check.py'
+      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/stack-profile.md'
+      - 'tools/**'
+      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/preflight.py'
+      - '.github/workflows/spec-lint.yml'
+  pull_request:
+    paths:
+      - 'claude/plugins/project-setup/skills/tech-stack-setup/references/**'
+      - 'claude/plugins/project-setup/skills/auth-setup/references/**'
+      - 'claude/plugins/specs/skills/spec-new/assets/spec-template.md'
+      - 'claude/plugins/specs/skills/spec-check/assets/spec_check.py'
+      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/stack-profile.md'
+      - 'tools/**'
+      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/preflight.py'
+      - '.github/workflows/spec-lint.yml'
+  workflow_dispatch:
+
+env:
+  AUTHSPEC: claude/plugins/project-setup/skills/auth-setup/references/authentication.md
+
+jobs:
+  structure:
+    name: numbering and internal references (all specs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # Blocking, and the only gate that applies to EVERY spec. spec_check.py
+      # owns all numbering and reference validation: heading numbers, identifier
+      # numbering, and the resolution of both `§n.n` and `Rn.n`. Those last two
+      # look alike but are different namespaces — a section heading versus a
+      # requirement definition — and they used to be validated in two separate
+      # scripts, which made it easy to assume either covered the other.
+      - name: Check numbering and internal references
+        run: python3 tools/spec_check.py
+
+      # The spec-new template teaches the numbering rules, so it has to obey
+      # them — a template that violates its own rule 11 teaches the violation
+      # to every spec generated from it. Checked explicitly rather than by
+      # default, because it is a skeleton rather than a binding spec.
+      - name: Check the spec-new template obeys its own numbering rules
+        run: |
+          python3 tools/spec_check.py \
+            claude/plugins/specs/skills/spec-new/assets/spec-template.md
+
+      # The Stack Profile template is the document products copy, and nearly
+      # every reference in it is outbound at STACKSPEC. It became checkable
+      # only once spec_check learned to resolve `STACKSPEC §n.n` against the
+      # real STACKSPEC; before that it reported 23 false errors, and six of its
+      # references resolved silently against a local heading of the same number
+      # that meant something else entirely.
+      - name: Check the Stack Profile template
+        run: |
+          python3 tools/spec_check.py \
+            claude/plugins/project-setup/skills/tech-stack-setup/assets/stack-profile.md
+
+      # Also blocking, and it guards the gate itself. Every check in
+      # spec_check.py has a case here that must make it fire. A check that goes
+      # quiet — drifted regex, unreachable branch — fails this step instead of
+      # reporting a clean spec forever. Two checks in authspec_check.py did exactly
+      # that for their whole existence before this test existed.
+      - name: Prove every check still fires
+        run: python3 tools/test_spec_check.py
+
+      # auth-setup refuses to run on a repository tech-stack-setup has not
+      # prepared, and that refusal is a script rather than a sentence in a
+      # SKILL.md because a prose precondition is advisory. A guard nobody has
+      # watched fail is indistinguishable from one that always exits 0.
+      - name: Prove the setup preflight still blocks
+        run: python3 tools/test_preflight.py
+
+  authspec:
+    name: authentication.md content consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # Blocking, and now the whole check set. authspec_check.py holds the
+      # checks that need AUTHSPEC's own content — §4 entity tables, §19.4
+      # routes, §23 retention, §24.2 configuration. All of them run against the
+      # current document and pass, so a failure here is a regression introduced
+      # by the change under review.
+      #
+      # There is no advisory tier any more. Four checks used to sit outside this
+      # loop emitting 101 warnings nobody could act on, and every one of those
+      # warnings turned out to be the check's fault rather than the document's:
+      # `config` asked whether each §24.2 key appeared backticked elsewhere,
+      # which was false for all 27 rows by construction; `enum-values` and
+      # `attributes` did not know that the spec states consequences in prose and
+      # declares role names in its own catalog. A tier of findings that are
+      # always wrong is not a lower confidence level, it is a broken check with
+      # somewhere to hide.
+      #
+      # `--only` takes a fixed set of names (argparse `choices`), so a renamed
+      # or removed check fails this step with exit 2 instead of silently running
+      # nothing and passing.
+      # The same guard for this file's checks, and the reason it exists is
+      # specific: `erasure` passed on entities that were only *mentioned* near
+      # §15.4, and `config` reported all 27 rows unconditionally. Both looked
+      # like working checks from their output alone. Each mutates the real
+      # AUTHSPEC — these checks read its actual tables, so a synthetic fixture
+      # would not exercise the parsing that breaks.
+      - name: Prove every AUTHSPEC check still fires
+        run: python3 tools/test_authspec_check.py
+
+      - name: Lint AUTHSPEC (blocking checks)
+        run: |
+          set -e
+          for check in retired attributes enum-values erasure retention \
+                       routes indexes gate-citations config; do
+            echo "--- $check ---"
+            python3 tools/authspec_check.py "$AUTHSPEC" \
+              --route-map tools/route-ratelimit-map.json --only "$check"
+          done
+

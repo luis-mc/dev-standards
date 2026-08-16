@@ -1,0 +1,191 @@
+# Server language tracks.
+#
+# `derives` is the per-track fixed foundation: announced in Phase 4, never asked.
+# `hosting` scores each compute platform for this track:
+#   native   — first-class, the platform is built for it
+#   supported — works properly, officially supported
+#   degraded — technically possible, materially worse; require a reason
+#   none     — does not work; hard block
+
+version: 1
+role: language
+
+technologies:
+
+  - id: typescript
+    name: TypeScript / Node
+    summary: >
+      One language across server and browser. Largest ecosystem of the four,
+      fastest iteration, and the only track where a single deployable can serve
+      both the API and the web app.
+    maturity: mature
+    velocity: highest
+    hiring: easiest
+    derives:
+      package_manager: pnpm, version pinned via packageManager, frozen-lockfile CI
+      task_runner: Turborepo
+      lint_format: ESLint + Prettier, or Biome
+      test_runner: Vitest, projects per suite kind, passWithNoTests false
+      boundary_check: dependency-cruiser
+      runtime_pin: Node current active LTS, pinned in .nvmrc and every CI job
+      data_access: Drizzle ORM + drizzle-kit  # see tech/data.yaml for engine coverage
+    strengths:
+      - Shared types between server and browser without a codegen step
+      - Single deployable possible — no network seam for a web-only product
+      - Every vendor ships a first-class SDK
+      - Serverless-native; the only track with no cold-start penalty story to tell
+    weaknesses:
+      - CPU-bound work is slow relative to the other three
+      - Memory ceilings and GC pauses under sustained load
+      - Long-running processes need more care than a compiled track
+    hosting:
+      serverless_js: native
+      containers: supported
+      edge_workers: native
+      vps: supported
+    best_when:
+      - Small team, time-to-market dominates
+      - The product is mostly I/O — CRUD, orchestration, vendor calls
+      - Web-only, or web-first with mobile later
+
+  - id: go
+    name: Go
+    summary: >
+      The boring, fast, cheap-to-run choice. Single static binary, tiny
+      containers, millisecond starts, trivial concurrency. Best cost-per-request
+      of the four at scale without Rust's development tax.
+    maturity: mature
+    velocity: high
+    hiring: moderate
+    derives:
+      package_manager: go mod, toolchain directive pinned in go.mod
+      task_runner: Taskfile or Make, invoked by the repo's root commands
+      lint_format: golangci-lint + gofmt
+      test_runner: go test, with -race in CI
+      boundary_check: go-arch-lint or depguard rules in golangci-lint
+      data_access: sqlc + pgx, migrations via goose or Atlas
+    strengths:
+      - ~10 MB container images, millisecond cold starts, low memory
+      - sqlc generates type-safe Go from raw SQL — arguably better than an ORM,
+        and the closest analogue to a typed query builder without one
+      - Excellent standard library; very few dependencies needed
+      - Concurrency is a language feature, not a library concern
+    weaknesses:
+      - More boilerplate than TypeScript for the same endpoint
+      - Thinner SDK coverage for niche SaaS vendors
+      - No serverless-JS platform will host it well
+    hosting:
+      serverless_js: none
+      containers: native
+      edge_workers: degraded   # TinyGo to WASM; painful and constrained
+      vps: native
+      lambda: supported        # custom runtime / provided.al2
+    best_when:
+      - Infrastructure cost at scale is a real constraint
+      - High-throughput API, long-lived service
+      - The team wants predictable, boring operations
+
+  - id: dotnet
+    name: .NET / C#
+    summary: >
+      Best-in-class tooling and the most mature migration story of the four.
+      Genuinely top-tier performance now. Strongest option for complex domain
+      models and for teams that already have C# people.
+    maturity: mature
+    velocity: high
+    hiring: moderate
+    derives:
+      package_manager: NuGet with central package management, versions pinned
+      task_runner: dotnet CLI, orchestrated by Nuke or Cake
+      lint_format: Roslyn analyzers + dotnet format
+      test_runner: xUnit
+      boundary_check: NetArchTest or ArchUnitNET
+      data_access: EF Core with EF Core migrations, or Dapper where hot paths need it
+    strengths:
+      - EF Core migrations are the most mature of the four tracks
+      - First-class OpenAPI generation from Minimal APIs
+      - Native AOT gives fast starts and small footprints when needed
+      - Debugging and profiling tooling is the best of the four
+      - The only track with a credible same-language web client story (Blazor)
+    weaknesses:
+      - Heavier runtime than Go or Rust unless AOT is used
+      - Gravitates toward Azure; other clouds work but the path is less worn
+      - Least serverless-native of the four
+    hosting:
+      serverless_js: none
+      containers: native
+      edge_workers: none
+      vps: native
+      lambda: supported        # native AOT strongly recommended
+      azure: native
+    best_when:
+      - The team already writes C#
+      - Complex domain model with a lot of invariants
+      - Enterprise or Azure mandate
+
+  - id: rust
+    name: Rust
+    summary: >
+      Lowest memory and latency of the four, with compile-time-checked SQL.
+      Choose it for a stated reason — performance, correctness, or cost at very
+      high volume — never as a default.
+    maturity: established
+    velocity: lowest
+    hiring: hardest
+    derives:
+      package_manager: cargo, toolchain pinned in rust-toolchain.toml
+      task_runner: cargo with an xtask crate
+      lint_format: clippy (deny warnings) + rustfmt
+      test_runner: cargo test, or cargo-nextest in CI
+      boundary_check: cargo-deny plus workspace crate boundaries
+      data_access: sqlx with compile-time query checking, sqlx migrate
+    strengths:
+      - No GC pauses; lowest and most predictable latency
+      - sqlx checks SQL against a live schema at compile time
+      - Smallest memory footprint — cheapest per request at high volume
+      - The type system eliminates whole classes of bug before runtime
+    weaknesses:
+      - Slowest development velocity of the four, by a wide margin
+      - Compile times affect iteration
+      - Hiring is materially harder
+      - Ecosystem gaps for vendor SDKs; more hand-rolled integration
+    requires_reason: true
+    reason_prompt: >
+      Rust costs development velocity. What is the specific reason — latency
+      target, memory ceiling, cost at volume, correctness requirement? Recorded
+      in the Stack Profile.
+    hosting:
+      serverless_js: none
+      containers: native
+      edge_workers: degraded   # workers-rs via WASM; real, but constrained
+      vps: native
+      lambda: supported        # cargo-lambda
+    best_when:
+      - A stated latency or memory target the other tracks miss
+      - Small, well-defined API surface
+      - Very high request volume where per-request cost dominates
+
+# ---------------------------------------------------------------------------
+# Cross-cutting notes the wizard should say out loud.
+# ---------------------------------------------------------------------------
+
+notes:
+  frontend_is_javascript: >
+    In every track except .NET-with-Blazor and the hypermedia options, the web
+    client is JavaScript regardless of the server language. So a Go or Rust
+    product still has a pnpm workspace for its web app — the fixed JS tooling
+    applies to that workspace, and the server track brings its own alongside.
+    §2.3 covers this: each project stays natively buildable, with a thin task
+    shim so one root command still drives everything.
+
+  the_real_fork: >
+    The decision that matters is not which language but ONE DEPLOYABLE OR TWO.
+    Same-language full-stack means no network seam and no codegen for web.
+    Split means two deployables with the OpenAPI contract as the seam — which
+    §4.1 already requires, so polyglot is not a compromise against the spec.
+    The spec is built for it.
+
+  mobile_changes_the_answer: >
+    If mobile ships, the JSON API exists no matter what. Hypermedia-first web
+    approaches then mean maintaining two server surfaces. Say this before the
+    user picks, not after.
