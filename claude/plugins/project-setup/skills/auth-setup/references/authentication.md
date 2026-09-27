@@ -1,7 +1,7 @@
 # Authentication & Authorization Framework Specification
 
 **Status:** Normative
-**Version:** 3.0.0
+**Version:** 3.1.0
 **Applies to:** every web and mobile application in this organization
 **Audience:** Claude Code (as a generation guide) and human implementers/reviewers
 
@@ -298,7 +298,7 @@ Polymorphic authentication credentials for `user` and `admin` principals.
 | `aaguid` | `bytes?` | Passkey authenticator model identifier |
 | `transports` | `json?` | Passkey transport hints |
 | `sign_count` | `int?` | Passkey signature counter (§7.3.4) |
-| `backup_eligible` | `bool?` | Passkey BE flag — governs admin acceptance (§7.3.5) |
+| `backup_eligible` | `bool?` | Passkey BE flag, fixed at registration — drives `amr`/`acr` and admin acceptance (§7.3.5) |
 | `backup_state` | `bool?` | Passkey BS flag |
 | `is_verified` | `bool` | TOTP: enrollment confirmed. Federated: provider asserted a verified email |
 | `last_used_at` | `timestamp?` | |
@@ -331,8 +331,8 @@ The authoritative session record for `user` and `admin` principals.
 | `principal_id` | `id` | |
 | `device_id` | `id?` | FK → `device`. Required for native clients (§6.7) |
 | `transport` | `enum(cookie, bearer)` | Fixed at issuance; a session **MUST NOT** be presentable over the other transport |
-| `amr` | `json` | Authentication methods actually used, e.g. `["pwd","otp"]`. Ordered, deduplicated |
-| `acr` | `enum(aal1, aal2)` | Assurance level reached (§8.6) |
+| `amr` | `json` | Authentication methods actually used, e.g. `["pwd","otp"]`, or `["hwk","user"]` for a device-bound passkey (R7.12b). Ordered, deduplicated |
+| `acr` | `enum(aal1, aal2, aal3)` | Assurance level reached (§8.6) |
 | `csrf_token_hash` | `bytes?` **[HASH]** | Cookie transport only (§6.5.4) |
 | `created_at` | `timestamp` | |
 | `last_seen_at` | `timestamp` | Drives idle timeout; write-throttled (§6.6.4) |
@@ -684,7 +684,7 @@ If the project has no cache tier (§2.2), validation reads the authoritative sto
 | Enterprise SAML | `federated` | yes | **never** |
 | TOTP | `totp` | as second factor | **never** (not phishing-resistant) |
 
-- **R7.6** — The admin plane accepts **exactly one** authentication method: WebAuthn assertion with user verification. Every other method **MUST** be absent from the admin routing table — not merely disabled by configuration. Any code path that could authenticate an admin by password, OTP, or TOTP is a P0 defect against the phishing-resistance mandate (NIST SP 800-63B AAL3 / IA-2).
+- **R7.6** — The admin plane accepts **exactly one** authentication method: WebAuthn assertion with user verification. Every other method **MUST** be absent from the admin routing table — not merely disabled by configuration. Any code path that could authenticate an admin by password, OTP, or TOTP is a P0 defect against the phishing-resistance mandate (NIST SP 800-63B / IA-2). The admin plane's floor is phishing-resistant AAL2; sessions established with a device-bound passkey reach AAL3 (§7.3.5, §8.6).
 
 ### 7.3 Passkey / WebAuthn
 
@@ -706,19 +706,24 @@ Same verification with `type = 'webauthn.get'`, plus signature verification agai
 #### 7.3.3 User verification
 
 - **R7.9** — Admin plane: `userVerification: "required"`, and the UV flag **MUST** be asserted in the response. An admin assertion without UV **MUST** be rejected.
-- **R7.10** — User plane: `"preferred"`. When UV is present, the session records `acr = aal2` (§8.6).
+- **R7.10** — User plane: `"preferred"`. When UV is present, the session records `acr = aal2`, or `aal3` for a device-bound credential (R7.12b, §8.6).
 
 #### 7.3.4 Signature counter
 
 - **R7.11** — If the stored counter is non-zero and the presented counter is not greater, the assertion **MUST** be rejected and a security event emitted. This is the specified cloned-authenticator signal. Authenticators legitimately reporting 0 are exempt.
 
-#### 7.3.5 Backup eligibility — admin constraint
+#### 7.3.5 Backup eligibility — synced and device-bound passkeys
 
-- **R7.12** — Admin credentials **MUST** be device-bound: `backup_eligible = false`. A synced/multi-device passkey (`BE = true`) extends the admin trust boundary into a consumer cloud account and **MUST** be rejected at admin enrollment unless explicitly approved and recorded as a documented deviation in the configuration reference.
+A passkey is either **device-bound** (`BE = false`: the private key never leaves one authenticator) or **synced** (`BE = true`: the key is copied to every device signed into a passkey provider's account — iCloud Keychain, Google Password Manager, a password manager vault). Both are phishing-resistant. They differ in who else holds the key: a synced passkey extends the trust boundary into the provider account, its recovery flows, and every device enrolled in it.
+
+- **R7.12** — Admin passkeys **MAY** be synced or device-bound. Acceptance of synced passkeys on the admin plane is governed by `admin.passkey.allow_synced` (§24.2, default `true`). When it is `false`, an admin registration presenting `BE = true` **MUST** be rejected. The BE flag **MUST** be read from the verified authenticator data at registration and persisted in `backup_eligible`; it **MUST NOT** be taken from any client-supplied field.
+- **R7.12a** — Registering a synced passkey (`BE = true`) on an admin account **MUST** raise a staff alert (§18.3), in addition to the `passkey_added` notification to the admin. The provider account is now part of the admin trust boundary, and a second person must see every expansion of it.
+- **R7.12b** — Every passkey assertion, on either plane, **MUST** record the credential's sync status on the session and in access assertions (R8.17): `amr` includes `hwk` for a device-bound credential and `swk` for a synced one, alongside `user` when UV was asserted. With UV, a device-bound credential yields `acr = aal3` and a synced one `acr = aal2` (§8.6). BE is authenticator-reported: under `none` attestation it is unverified, so a deployment that must evidence AAL3 to an auditor verifies the attestation statement (§7.3.1 step 4) against a trusted root.
+- **R7.12c** — BE is fixed for the life of a credential. An assertion whose BE flag differs from the stored `backup_eligible` **MUST** be rejected and recorded as a failed `auth_attempt`.
 
 #### 7.3.6 Enrollment minimum
 
-- **R7.13** — An admin **MUST** register **at least two** (`2`) authenticators before `status` leaves `pending_enrollment`. This is the primary defense against the admin lockout scenario (§9.4).
+- **R7.13** — An admin **MUST** register **at least two** (`2`) authenticators before `status` leaves `pending_enrollment`. This is the primary defense against the admin lockout scenario (§9.4). The authenticators **SHOULD** be independent: not two synced passkeys held by the same provider account, which fail together if that account is lost or compromised. A device-bound authenticator alongside a synced one, or synced passkeys from two different providers, satisfies this.
 
 ### 7.4 Magic link and email OTP
 
@@ -863,9 +868,10 @@ Sensitive operations require a **fresh** authentication, not merely a valid sess
 | `acr` | Meaning |
 |---|---|
 | `aal1` | Single factor: password, email OTP, or federated without a verified strong factor |
-| `aal2` | Multi-factor, or a single phishing-resistant factor with user verification (passkey + UV) |
+| `aal2` | Multi-factor, or a single phishing-resistant factor with user verification (passkey + UV), including a synced passkey |
+| `aal3` | A device-bound passkey (`BE = false`) with user verification (R7.12b) |
 
-- **R8.16** — Admin sessions **MUST** always be `aal2`. An admin session recorded at `aal1` is a defect.
+- **R8.16** — Admin sessions **MUST** be `aal2` or `aal3`. An admin session recorded at `aal1` is a defect.
 - **R8.17** — `acr` and `amr` **MUST** be recorded on the session and propagated into access assertions so downstream services can enforce their own assurance requirements.
 
 ---
@@ -1377,7 +1383,7 @@ Every user-facing notification is derived from a `security_event` row (R18.3), s
 
 ### 18.3 Staff alerts
 
-Immediate alerts, on a channel outside the application (R12.14), for: break-glass activation; admin login from a new device; admin login failures exceeding the threshold; any admin role grant or revocation; administrative MFA reset; admin recovery request and approval; audit chain verification failure (**critical**); service credential creation or rotation; rate-limit counter store unavailability; and detection of an active development key provider in a deployed environment.
+Immediate alerts, on a channel outside the application (R12.14), for: break-glass activation; admin login from a new device; registration of a synced passkey on an admin account (R7.12a); admin login failures exceeding the threshold; any admin role grant or revocation; administrative MFA reset; admin recovery request and approval; audit chain verification failure (**critical**); service credential creation or rotation; rate-limit counter store unavailability; and detection of an active development key provider in a deployed environment.
 
 - **R18.7** — Alert delivery **MUST** be independent of the application's own database and mail path where possible; an alert that depends on the compromised system is not an alert.
 
@@ -1875,6 +1881,7 @@ Normative for **every** visual interface built against this API. Accessibility i
 | `breakglass.max_duration` | 60 min | 60 min | §12.5 |
 | `admin.recovery.enrollment_window` | 15 min | 15 min | R9.11 |
 | `admin.min_authenticators` | 2 | — (floor) | R7.13 |
+| `admin.passkey.allow_synced` | true | — | R7.12 |
 | `ratelimit.*` | §17.3 | §17.3 | §17.3 |
 | `retention.audit` | 6 y | legal max | §23.2 |
 | `keys.signing.rotation` | 90 d | 90 d | R5.30 |
@@ -2020,7 +2027,10 @@ All of these **MUST** exist and pass.
 - A TOTP code cannot be replayed within its window (R7.23).
 - A WebAuthn assertion with a non-increasing sign counter is rejected (R7.11).
 - An admin authentication attempt via password, OTP, or TOTP has no reachable route (R7.6).
-- An admin passkey with `backup_eligible = true` is rejected at enrollment (R7.12).
+- With `admin.passkey.allow_synced = false`, an admin passkey with `backup_eligible = true` is rejected at enrollment; with `true`, it is accepted (R7.12).
+- Registering a synced passkey on an admin account raises a staff alert (R7.12a).
+- A passkey session records `hwk`/`swk` in `amr` and `aal3`/`aal2` in `acr` according to the credential's BE flag, and both reach the access assertion (R7.12b).
+- An assertion whose BE flag differs from the stored `backup_eligible` is rejected (R7.12c).
 - An admin cannot leave `pending_enrollment` with fewer than two authenticators (R7.13).
 - Password reset does not bypass enrolled MFA (R9.1).
 - Password reset does not remove a second factor (R9.2).
@@ -2178,6 +2188,7 @@ Decisions most likely to be questioned later, and why they were made.
 | Server-side sessions over stateless tokens | Immediate, complete revocation. Lock, logout-all, credential-change invalidation, and deletion are all only as real as revocation is. The cache tier (§6.6) recovers the performance a stateless design would have given. |
 | Separate admin plane | INV-1 makes admin compromise structurally independent of user compromise. A role flag on a shared user table means one user-plane bug can reach admin scope. |
 | Passkey-only admins | FedRAMP High / NIST SP 800-63B require phishing-resistant MFA for privileged access. TOTP is not phishing-resistant — it is relayable in real time. Admitting TOTP for admins would be a knowing deviation. |
+| Synced admin passkeys permitted | A synced passkey is still phishing-resistant; what it adds is the provider account to the admin trust boundary. Requiring hardware keys for every admin was judged a larger operational cost than that risk. It is bounded instead: every synced admin registration alerts staff (R7.12a), every session states its sync status so downstream services can demand `aal3` (R7.12b), and `admin.passkey.allow_synced` restores the device-bound-only posture for deployments that need it. |
 | No impersonation | It is the single most dangerous feature in an auth system and was not requested. A partial implementation is worse than none (R12.20). |
 | Crypto-erasure after a grace period | The grace period prevents irreversible loss from a moment's frustration; crypto-erasure makes deletion real across backups, which soft-delete and row-delete both fail to do. |
 | No personal data in audit records | Audit records must survive erasure for 6 years. Personal data there would be unerasable, creating a direct and unresolvable conflict between two mandatory obligations (R15.13). |

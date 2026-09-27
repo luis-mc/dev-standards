@@ -6,7 +6,7 @@ description: Build the authentication and authorization stack for a repository a
 
 Builds authentication and authorization to **`AUTHSPEC`**, the binding
 specification at `references/authentication.md` alongside this file. Version
-3.0.0. It governs authentication flows, authorization, sessions, MFA and
+3.1.0. It governs authentication flows, authorization, sessions, MFA and
 step-up, account recovery, consent, data-subject rights, abuse prevention,
 notifications, audit, and retention.
 
@@ -52,7 +52,7 @@ does, so use this one. Each step is a dependency of the next.
    (`AUTHSPEC §2.1`). Note the database, runtime, package manager, and the
    `AUTHSPEC` version it claims. If it claims a version older than
    `references/`, say so before generating — the delta is a finding, and
-   generating 3.0.0 code into a repo that declares 1.0.0 conformance silently
+   generating 3.1.0 code into a repo that declares 1.0.0 conformance silently
    makes the profile wrong.
 
 2. **Interview for the decisions the spec refuses to default.** Do not guess
