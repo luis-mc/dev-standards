@@ -1,7 +1,9 @@
 {
+  "model": "opus",
   "outputStyle": "Caveman",
   "env": {
-    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "500000"
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "500000",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
   },
   "statusLine": {
     "type": "command",

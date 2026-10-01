@@ -40,14 +40,21 @@ machine) behaves consistently.
 
 Sets up:
 - A `CLAUDE.md` with your working conventions
-- `.claude/settings.json` — auto-compact window, output style
+- `.claude/settings.json` — auto-compact window, output style, model split
 - A status line showing model, context, and rate-limit info
 - The Caveman output style
+- `.claude/rules/model-delegation.md` — the model split's working rule
+
+**Model split:** the main session runs on Opus and does the thinking and
+planning; subagents run on Sonnet and write the code. Every project gets it,
+and the skill asks whether to enforce it for all your projects too.
 
 You choose whether this applies to the current **project**, your **user-level**
 `~/.claude/` config, or both. It never overwrites a `CLAUDE.md` you've already
 written by hand, and never changes a settings key you've already set — your
-deliberate choices are always left alone.
+deliberate choices are always left alone. The one exception is the two
+model-split keys: if one holds a different model, it's shown to you as a
+conflict to resolve rather than left or replaced silently.
 
 ### `/luismc-project-setup:tech-stack-setup`
 
