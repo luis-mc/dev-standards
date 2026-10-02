@@ -3,8 +3,8 @@ name: CI
 # Implements STACKSPEC §13.1's twelve required gates for the .NET track.
 #
 # The gates are the requirement; Roslyn analyzers, xUnit and NetArchTest are this
-# generator's choices (§13.1 names no tool). Record them in the Stack Profile. The secret scan
-# (§12) is a step in `verify`, not a separate job.
+# generator's choices (§13.1 names no tool). Record them in the Stack Profile.
+# The secret scan (§12) is a step in `verify`, not a separate job.
 on:
   pull_request:
     # CI runs when the PR is marked ready: drafts are skipped (see the job-level

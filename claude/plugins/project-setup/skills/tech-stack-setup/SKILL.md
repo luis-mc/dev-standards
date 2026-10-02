@@ -394,8 +394,8 @@ check, performed by reading.
    - **Diff before replacing.** If the file exists but differs, show the diff and
      ask. An existing CI workflow may carry project-specific jobs a blind
      overwrite destroys — generation and repair MUST NOT touch those jobs, only
-     the gates and CI-cost settings the template owns; an existing `.gitleaks.toml` may carry allowlist entries
-     added for real false positives.
+     the gates and CI-cost settings the template owns. An existing
+     `.gitleaks.toml` may carry allowlist entries added for real false positives.
    - **Never touch a conforming file**, even if it differs from the template. The
      template is one way to satisfy a clause, not the only one.
    - **Re-run the check afterwards.** A repair that was not re-verified is a
