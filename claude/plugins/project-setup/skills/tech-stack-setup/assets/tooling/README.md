@@ -63,12 +63,27 @@ one. Preserve these when adapting any track:
 
 ## Required status checks
 
-The secret scan is a step in `verify`, not a job, so there is no `secret scan`
-check any more. On a protected branch require `verify` and `integration`
-(`e2e` is advisory and should not be required). Draft pull requests skip every
-job, which GitHub reports as skipped; drafts cannot merge, and marking the PR
-ready (`ready_for_review`) re-runs CI. If you had `secret scan` as a required
-check, remove it or the PR will wait on a check that never reports.
+GitHub names a check after the job's `name:`, not its job id, so require these
+exact strings — requiring `verify` or `integration` waits on checks that never
+report, and every pull request hangs.
+
+| Track | Required checks |
+|---|---|
+| ts | `lint, types, boundaries, unit + contract tests` · `integration tests (ephemeral Postgres)` |
+| go | `lint, vet, boundaries, unit + contract tests` · `integration tests (ephemeral database)` |
+| rust | `clippy, fmt, build, unit + contract tests` · `integration tests (ephemeral database)` |
+| dotnet | `analyzers, format, build, unit + contract tests` · `integration tests (ephemeral database)` |
+
+Renaming a job's `name:` renames its check; update branch protection in the same
+change.
+
+- **E2E is advisory.** The TS track's `web E2E (advisory, §11.2)` must not be
+  required.
+- **Drafts report as skipped.** Draft pull requests skip every job; drafts cannot
+  merge, and marking the PR ready (`ready_for_review`) re-runs CI.
+- **No `secret scan` check any more.** The secret scan is a step in the `verify`
+  job. If `secret scan` is still a required check, remove it or the PR will wait
+  on a check that never reports.
 
 ## CI cost
 
