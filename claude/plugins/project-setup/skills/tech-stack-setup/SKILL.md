@@ -9,12 +9,12 @@ This skill does two things:
 1. **Guides the user to a coherent stack.** Not a menu — a filtered interview
    where every option offered is compatible with everything already chosen, and
    every consequence is stated at the moment of the choice.
-2. **Generates a repository** conforming to **`STACKSPEC` 5.1.0**, the binding
+2. **Generates a repository** conforming to **`STACKSPEC` 5.2.0**, the binding
    invariants specification at `references/invariants.md`.
 
 ## The two halves, and why they are separate
 
-`STACKSPEC` 5.1.0 contains **no technology names**. It specifies properties —
+`STACKSPEC` 5.2.0 contains **no technology names**. It specifies properties —
 contract-first APIs, atomic enqueue, adapter boundaries, retention and erasure,
 consent-gated analytics, three-tier promotion — that hold whether the product is
 TypeScript on Vercel or Rust in a container.
@@ -341,6 +341,12 @@ check, performed by reading.
    - contract drift: all generated clients regenerated and committed (`§4.1`)
    - a test suite finding zero tests fails rather than passes (`§11.3`)
    - secret scan covers full history (`§12`)
+   - CI cost (`SHOULD`, `§13.1`'s CI-cost clause) — drift findings at `SHOULD`
+     severity, so each needs a recorded reason or it is a violation (step 5):
+     a separate secret-scan job where a step in another job would do; the
+     gitleaks step without `pull-requests: read` (it 403s on a PR before
+     scanning); `cancel-in-progress: true` that also applies to the default
+     branch; no draft-PR skip; no task-runner result cache
    - field classification, retention declaration, export inclusion (`§5.7`)
    - data-collection inventory vs. generated artifacts (`§9.7`)
 
@@ -377,7 +383,8 @@ check, performed by reading.
    listed explicitly, as one confirmation:
 
    - `.gitleaks.toml`, pre-commit hook missing → `§12` secret scanning
-   - CI workflow missing or short of `§13.1`'s twelve gates
+   - CI workflow missing or short of `§13.1`'s twelve gates, or drifting from
+     its CI-cost clause (the `SHOULD` findings from step 4)
    - boundary-check config missing → `§3.2` has no enforcement, so the layer
      rules are decaying by default
    - lint, format, test and task-runner configs missing
@@ -386,7 +393,8 @@ check, performed by reading.
 
    - **Diff before replacing.** If the file exists but differs, show the diff and
      ask. An existing CI workflow may carry project-specific jobs a blind
-     overwrite destroys; an existing `.gitleaks.toml` may carry allowlist entries
+     overwrite destroys — generation and repair MUST NOT touch those jobs, only
+     the gates and CI-cost settings the template owns; an existing `.gitleaks.toml` may carry allowlist entries
      added for real false positives.
    - **Never touch a conforming file**, even if it differs from the template. The
      template is one way to satisfy a clause, not the only one.
@@ -443,7 +451,8 @@ absent check cannot masquerade as a passing one:
 - **The codegen drift check regenerates then diffs**, so a stale committed
   artifact cannot satisfy it.
 - **The secret scan checks out full history.** At the default clone depth
-  gitleaks silently examines one commit and reports clean.
+  gitleaks silently examines one commit and reports clean. It is a step in the
+  `verify` job, not a job of its own: a few-second job bills a full minute.
 
 ### The tool names are this generator's choice, not the spec's
 

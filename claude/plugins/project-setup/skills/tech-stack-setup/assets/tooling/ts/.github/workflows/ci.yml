@@ -3,7 +3,8 @@ name: CI
 # Implements STACKSPEC §13.1: every PR runs install (frozen lockfile), codegen
 # drift check, lint, typecheck, unit tests, integration tests against an
 # ephemeral database, contract tests, dependency scan, secret scan, and the §3.2
-# boundary check.
+# boundary check. The secret scan is a step in `verify`, not a job of its own
+# (billing rounds each job up to a whole minute).
 #
 # Path filters are part of that requirement. Mobile has its own workflow on
 # macOS runners (§13.3), and §13.3 states mobile CI MUST be path-filtered and
@@ -11,6 +12,9 @@ name: CI
 # other half — a mobile-only change does not rebuild the web apps.
 on:
   pull_request:
+    # CI runs when the PR is marked ready: drafts are skipped (see the job-level
+    # `if`) and `ready_for_review` is what triggers the run on that transition.
+    types: [opened, synchronize, reopened, ready_for_review]
     paths-ignore:
       - 'apps/ios/**'
       - 'apps/android/**'
@@ -26,7 +30,10 @@ on:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Outdated PR runs are cancelled. Runs on main never are: every commit on main
+  # must finish its run, because cancelling one can leave a merged commit
+  # unverified.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -37,9 +44,32 @@ jobs:
   # ---------------------------------------------------------------------------
   verify:
     name: lint, types, boundaries, unit + contract tests
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
+    # gitleaks-action lists a PR's commits through the API. With only the
+    # workflow-level `contents: read` that call returns 403 and the job fails
+    # before scanning anything. Job-level permissions replace the workflow
+    # block rather than merge with it, so `contents: read` is repeated here.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          # gitleaks scans history, not just the diff. Without full depth it
+          # silently checks a single commit and reports clean.
+          fetch-depth: 0
+
+      # §12: secret scanning as a CI gate. The pre-commit hook is the other half
+      # of that requirement and lives in .githooks/pre-commit.
+      #
+      # A step in this job, not a job of its own: a scan that takes a few seconds
+      # would still bill a full minute as a separate job. It runs first so a
+      # leaked secret fails fast, before the slow gates below.
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
 
       # §2.2: pnpm is mandatory and its version is pinned via `packageManager`
       # in the root manifest. corepack reads that field, so the pinned version
@@ -63,6 +93,22 @@ jobs:
 
       - name: Install (frozen lockfile)
         run: pnpm install --frozen-lockfile
+
+      # Cache turbo's task results. turbo's own input hashing decides hits, so a
+      # gate is skipped only when its inputs are byte-identical; that is sound
+      # only because STACKSPEC §2.2 requires every env var a task reads to be
+      # declared in the task runner's config (turbo.jsonc `globalEnv`/`env`).
+      # codegen and migrate are `cache: false` in turbo.jsonc, so they always
+      # run. Non-turbo steps (prettier --check, depcruise, `vitest run`
+      # projects, pnpm audit) are deliberately direct invocations: uncached,
+      # run every time.
+      - uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            turbo-${{ runner.os }}-
 
       # §4.1: all generated clients must be regenerated and committed. Running
       # codegen and asserting a clean tree is the only check that cannot be
@@ -116,6 +162,7 @@ jobs:
   # ---------------------------------------------------------------------------
   integration:
     name: integration tests (ephemeral Postgres)
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -148,6 +195,15 @@ jobs:
       - name: Install (frozen lockfile)
         run: pnpm install --frozen-lockfile
 
+      # turbo result cache — see the verify job for why it is sound.
+      - uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            turbo-${{ runner.os }}-
+
       - name: Migrate (seed through the migration chain)
         run: pnpm turbo migrate
 
@@ -159,25 +215,6 @@ jobs:
       # the registered routes, so it runs here rather than in the static job.
       - name: Route authorization coverage
         run: pnpm vitest run --project authz
-
-  # ---------------------------------------------------------------------------
-  # §12: secret scanning as a CI gate. The pre-commit hook is the other half of
-  # that requirement and lives in .githooks/pre-commit.
-  # ---------------------------------------------------------------------------
-  secret-scan:
-    name: secret scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          # gitleaks scans history, not just the diff. Without full depth it
-          # silently checks a single commit and reports clean.
-          fetch-depth: 0
-
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
 
   # ---------------------------------------------------------------------------
   # §11.2: web E2E is SHOULD, not gated. This job reports and never blocks. If
@@ -196,6 +233,7 @@ jobs:
   # against the workspace, which is empty until checkout has run.
   e2e:
     name: web E2E (advisory, §11.2)
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:

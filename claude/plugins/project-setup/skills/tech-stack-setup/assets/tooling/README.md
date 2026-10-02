@@ -35,7 +35,7 @@ allowlist entry and three of them going stale.
 | 8. Contract | Vitest `contract` | `TestContract` | `--test contract` | `Category=Contract` |
 | 9. Route coverage | Vitest `authz` | `TestRouteCoverage` | `--test route_coverage` | `Category=RouteCoverage` |
 | 10. Dependency scan | `pnpm audit --prod` | govulncheck | `cargo deny check advisories` | `dotnet list package --vulnerable` |
-| 11. Secret scan | gitleaks, `fetch-depth: 0` | same | same | same |
+| 11. Secret scan | gitleaks step in `verify`, `fetch-depth: 0` | same | same | same |
 | 12. Boundaries | dependency-cruiser | depguard in golangci-lint | `cargo deny check bans` | NetArchTest |
 
 **The tool names are this generator's choice, not the spec's.** `§13.1` requires
@@ -49,7 +49,8 @@ conforming.
 Four places exist specifically so an absent check cannot masquerade as a passing
 one. Preserve these when adapting any track:
 
-- **`fetch-depth: 0` on the secret scan.** gitleaks scans history. At the
+- **`fetch-depth: 0` on the `verify` job's checkout.** The secret scan is a step
+  there, and gitleaks scans history. At the
   default clone depth it silently examines one commit and reports clean.
 - **Codegen drift regenerates, then diffs.** Checking only that generated files
   exist would let a stale committed artifact pass.
@@ -59,6 +60,30 @@ one. Preserve these when adapting any track:
 - **The .NET dependency scan greps its own output.** `dotnet list package
   --vulnerable` exits 0 even when it finds vulnerabilities, so a bare invocation
   is a gate that can never fail — worse than no gate, because it reports success.
+
+## Required status checks
+
+The secret scan is a step in `verify`, not a job, so there is no `secret scan`
+check any more. On a protected branch require `verify` and `integration`
+(`e2e` is advisory and should not be required). Draft pull requests skip every
+job, which GitHub reports as skipped; drafts cannot merge, and marking the PR
+ready (`ready_for_review`) re-runs CI. If you had `secret scan` as a required
+check, remove it or the PR will wait on a check that never reports.
+
+## CI cost
+
+GitHub bills each job rounded up to a whole minute, so the templates cut minutes
+without dropping a `§13.1` gate (`§13.1`'s CI-cost clause):
+
+- **Fewer jobs.** The secret scan is a step in `verify`, run first so a leak
+  fails fast. Its job-level `pull-requests: read` fixes a 403 gitleaks-action hit
+  on pull requests under the workflow-level `contents: read`.
+- **Caching.** Go and Rust use their setup/cache actions; .NET caches NuGet on
+  `packages.lock.json`; TS caches turbo's `.turbo` results (sound because `§2.2`
+  requires every env var a task reads to be declared in `turbo.jsonc`).
+- **Cancel superseded runs, only on pull requests.** Runs on `main` always finish.
+- **Skip drafts.** `types` includes `ready_for_review`; every job is guarded by a
+  draft check.
 
 ## Adapting a track
 

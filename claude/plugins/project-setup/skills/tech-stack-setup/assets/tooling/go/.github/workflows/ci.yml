@@ -5,12 +5,15 @@ name: CI
 # The gates are the requirement; golangci-lint, govulncheck and go-arch-lint are
 # this generator's choices (§13.1 names no tool). A product satisfying the same
 # twelve with different tools conforms — record the tools in the Stack Profile,
-# not here.
+# not here. The secret scan (§12) is a step in `verify`, not a separate job.
 #
 # Path filters are part of §13.1. Mobile has its own workflow on macOS runners
 # (§13.3), and expensive runners must not run on unrelated changes.
 on:
   pull_request:
+    # CI runs when the PR is marked ready: drafts are skipped (see the job-level
+    # `if`) and `ready_for_review` is what triggers the run on that transition.
+    types: [opened, synchronize, reopened, ready_for_review]
     paths-ignore: ['apps/ios/**', 'apps/android/**', '**/*.md', 'docs/**']
   push:
     branches: [main]
@@ -18,7 +21,10 @@ on:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Outdated PR runs are cancelled. Runs on main never are: every commit on main
+  # must finish its run, because cancelling one can leave a merged commit
+  # unverified.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -29,9 +35,33 @@ jobs:
   # ---------------------------------------------------------------------------
   verify:
     name: lint, vet, boundaries, unit + contract tests
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
+    # gitleaks-action lists a PR's commits through the API. With only the
+    # workflow-level `contents: read` that call returns 403 and the job fails
+    # before scanning anything. Job-level permissions replace the workflow
+    # block rather than merge with it, so `contents: read` is repeated here.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          # gitleaks scans history, not just the diff. At the default clone
+          # depth it silently examines a single commit and reports clean —
+          # an absent check masquerading as a passing one.
+          fetch-depth: 0
+
+      # §12: secret scanning as a CI gate. The pre-commit hook is the other half
+      # of that requirement and lives in .githooks/pre-commit.
+      #
+      # A step in this job, not a job of its own: a scan that takes a few seconds
+      # would still bill a full minute as a separate job. It runs first so a
+      # leaked secret fails fast, before the slow gates below.
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
 
       # §2.2: the toolchain version is pinned in the repository, not inherited
       # from the machine. go.mod's `toolchain` directive is that pin, and
@@ -127,6 +157,7 @@ jobs:
   # ---------------------------------------------------------------------------
   integration:
     name: integration tests (ephemeral database)
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -170,23 +201,3 @@ jobs:
       # here rather than in the static job.
       - name: Route coverage (authorization + rate limits)
         run: go test -race -run TestRouteCoverage ./...
-
-  # ---------------------------------------------------------------------------
-  # §12: secret scanning as a CI gate. The pre-commit hook is the other half of
-  # that requirement and lives in .githooks/pre-commit.
-  # ---------------------------------------------------------------------------
-  secret-scan:
-    name: secret scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          # gitleaks scans history, not just the diff. At the default clone
-          # depth it silently examines a single commit and reports clean —
-          # an absent check masquerading as a passing one.
-          fetch-depth: 0
-
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml

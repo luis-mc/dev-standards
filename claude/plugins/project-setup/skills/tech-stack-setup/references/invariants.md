@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 5.1.0
+**Version:** 5.2.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -23,6 +23,15 @@ recorded in the product's Stack Profile (§18). This document does not name
 vendors and does not rank them.
 
 ### 0.1 What changed in 5.x, and why
+
+**5.2.0 — CI cost became a SHOULD.** §13.1 now says how to keep CI cheap: fold
+short checks into the job that runs beside them, cancel superseded pull-request
+runs but never default-branch runs, skip drafts, and cache installs and the task
+runner's results. The twelve §13.1 gates are unchanged, and no existing MUST moved.
+
+This is a minor version because §20 reserves a major version for a new MUST. A
+product conforming to 5.1.0 still conforms; one that does not follow the new
+SHOULD needs a recorded reason, as with any SHOULD.
 
 **5.1.0 — the last four technology mandates became properties.** 5.0.0 removed
 every vendor name but left four clauses that still constrained technology
@@ -1203,6 +1212,20 @@ Workflows MUST be path-filtered so a change to one surface does not rebuild
 unrelated ones. Where a track's runners are materially more expensive — macOS
 runners for iOS builds — path filtering is mandatory rather than an optimization.
 
+CI cost SHOULD be kept down without dropping a gate, because CI platforms bill
+per job, rounded up to a whole unit of time:
+
+- No job runs for much less than a minute when it could be a step in another job.
+  A few-second check as its own job is billed as a full minute.
+- A run superseded by a newer push to the same pull request is cancelled. A run on
+  the default branch is never cancelled — a merged commit should never be left
+  unverified.
+- Draft pull requests skip CI until they are marked ready for review.
+- Dependency installs are cached, and so are the task runner's results. The latter
+  is sound only because §2.2 requires every environment variable a task reads to
+  be declared in the runner's configuration; otherwise a cache hit can replay a
+  result computed under different inputs.
+
 ### 13.2 Promotion
 
 **The three-tier promotion flow is not optional**, whichever host is chosen:
@@ -1499,6 +1522,7 @@ Every item is checkable regardless of stack.
 - [ ] All twelve §13.1 gates present and failing the build
 - [ ] Secret scan covers full history
 - [ ] Workflows path-filtered; expensive runners not used on unrelated changes
+- [ ] CI cost kept down (SHOULD): no sub-minute job that could be a step, superseded PR runs cancelled but never default-branch runs, drafts skip CI, installs and task-runner results cached
 - [ ] Three-tier promotion; migrations before serving; rollback documented and rehearsed
 - [ ] Release order enforced: additive API → web/admin → mobile submission
 - [ ] Mobile signing material stored reproducibly with a tested recovery procedure
