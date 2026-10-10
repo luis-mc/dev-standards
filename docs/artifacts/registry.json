@@ -16,11 +16,11 @@
       "id": "AR3",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "Moved to dev-standards and rewritten",
       "detail": "This artifact now belongs to dev-standards and describes the agreed design; Full Progress: dev-standards created.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T22:54+01:00"
     },
     {
       "id": "AR4",
