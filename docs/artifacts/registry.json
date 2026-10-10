@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T23:08+01:00",
+  "updated": "2026-10-10T23:13+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -241,6 +241,16 @@
       "detail": "Built in draft #31, joined, not released: Full Progress publishes once per turn; feature pages are standalone HTML files with the CSS inlined, never published; Full Progress links them as file:/// paths (relative in the committed copy); only Live rows fold; only background work arms the end-of-turn check. 132 + 68 + 91 tests on Windows and Linux.",
       "expected": "10 Oct",
       "changed": "2026-10-10T23:07+01:00"
+    },
+    {
+      "id": "AR27",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "Repair a record one artifact at a time",
+      "detail": "Found migrating this repo to 1.1.0: every writing command refuses while the record has any finding, so two hand-written Decisions sections block each other's fix and the record cannot be migrated (even task-add is refused). Fix: a change may leave findings that were already there but may not add new ones. Recorded with the 1.0.0 script meanwhile.",
+      "expected": "11 Oct ~00:45",
+      "changed": "2026-10-10T23:13+01:00"
     },
     {
       "id": "DS1",
