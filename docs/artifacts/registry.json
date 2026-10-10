@@ -2,7 +2,7 @@
  "registry": "draft for ARTIFACTSPEC 1.0.0",
  "project": "dev-standards",
  "timezone": "Europe/Lisbon",
- "updated": "2026-10-10T10:23+01:00",
+ "updated": "2026-10-10T10:35+01:00",
  "feature_artifacts": [
   {
    "title": "Feature: Project artifacts standard",
@@ -68,28 +68,28 @@
    "id": "DS9",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Running",
+   "status": "Waiting",
    "item": "CI scripts and workflows",
-   "detail": "ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files.",
-   "expected": "today"
+   "detail": "ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files. Built: draft PR #6, 33 tests pass. Waiting for the join.",
+   "expected": "join today"
   },
   {
    "id": "DS10",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Running",
+   "status": "Waiting",
    "item": "claude-setup rules and profiles",
-   "detail": "The agents-and-integration rule file (replaces model-delegation.md), the docs/ rule, per-skill model and effort, the alias-drift hook. Covers MP3, MP4, MP5 and DS7.",
-   "expected": "today"
+   "detail": "The agents-and-integration rule file (replaces model-delegation.md), the docs/ rule, per-skill model and effort, the alias-drift hook. Covers MP3, MP4, MP5 and DS7. Built: draft PR #4. Waiting for the join.",
+   "expected": "join today"
   },
   {
    "id": "DS11",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Running",
+   "status": "Waiting",
    "item": "tech-stack-setup wiring",
-   "detail": "Generate and audit paths for STACKSPEC 6.0.0, spec-lint CI steps for the new tests, luismc-project-setup 12.0.0.",
-   "expected": "today"
+   "detail": "Generate and audit paths for STACKSPEC 6.0.0, spec-lint CI steps for the new tests, luismc-project-setup 12.0.0. Built: draft PR #3; also limits spec-lint and secret-scan to main and ready PRs, and fixes the 23 stack-profile references that kept spec-lint red on main since July. Waiting for the join.",
+   "expected": "join today"
   },
   {
    "id": "DS12",
@@ -113,7 +113,7 @@
    "id": "DS7",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Running",
+   "status": "Waiting",
    "item": "docs/ folder rule",
    "detail": "A project-setup rule: every doc a session creates goes under docs/. Built in DS10.",
    "expected": "with DS6"
@@ -302,28 +302,28 @@
    "id": "MP3",
    "owner": "Feature: Model and effort profiles",
    "app": "luismc-project-setup",
-   "status": "Running",
+   "status": "Waiting",
    "item": "Role rules",
    "detail": "One line per role in the agents-and-integration rule file: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts a script cannot resolve, Haiku for log triage.",
-   "expected": "today, in DS10"
+   "expected": "join today (DS10, PR #4)"
   },
   {
    "id": "MP4",
    "owner": "Feature: Model and effort profiles",
    "app": "luismc-project-setup",
-   "status": "Running",
+   "status": "Waiting",
    "item": "Per-skill model and effort",
    "detail": "model and effort in every plugin SKILL.md, by kind of work (section 5), with a test that compares them to the profile table.",
-   "expected": "today, in DS10"
+   "expected": "join today (DS10, PR #4)"
   },
   {
    "id": "MP5",
    "owner": "Feature: Model and effort profiles",
    "app": "luismc-project-setup",
-   "status": "Running",
+   "status": "Waiting",
    "item": "Alias-drift warning",
    "detail": "A session-start hook that warns when the current Opus or Sonnet ID has no saved effort entry (figure 3).",
-   "expected": "today, in DS10"
+   "expected": "join today (DS10, PR #4)"
   },
   {
    "id": "MP6",
