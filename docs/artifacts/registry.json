@@ -453,6 +453,16 @@
       "changed": "2026-10-10T21:35+01:00"
     },
     {
+      "id": "DS24",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Template build check",
+      "detail": "A dev-standards CI job compiles and runs the Go and Rust guard starters (and checks the Go setup command against a stale go.sum) whenever those template files change. Rides the 7.0.0 release, so the uncompiled DS18 edits are proved before release.",
+      "expected": "10 Oct ~23:00",
+      "changed": "2026-10-10T21:35+01:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
