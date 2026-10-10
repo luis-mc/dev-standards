@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 /**
  * STACKSPEC §11.1 makes four test kinds mandatory, and CI runs them in two
@@ -11,6 +11,17 @@ import { defineConfig } from 'vitest/config';
  * mis-globbed suite indistinguishable from a passing one, so `passWithNoTests`
  * is false everywhere below: an absent suite fails loudly.
  */
+
+/**
+ * Other checkouts nested under this one (agent worktrees under
+ * `.claude/worktrees`, a second clone in `.worktrees`) hold their own copy of
+ * every test file. A `**` glob from the root would run all of them, once per
+ * checkout, against whatever state those checkouts are in at that moment. A
+ * project whose include starts with `**` excludes them; `exclude` replaces
+ * Vitest's defaults, so those are spread in.
+ */
+const nestedCheckouts = ['**/.claude/worktrees/**', '**/.worktrees/**'];
+
 export default defineConfig({
   test: {
     passWithNoTests: false,
@@ -42,8 +53,15 @@ export default defineConfig({
         test: {
           name: 'guard',
           include: ['**/*.guard.test.ts'],
+          exclude: [...configDefaults.exclude, ...nestedCheckouts],
           environment: 'node',
           passWithNoTests: false,
+          // A guard reads the whole repository. Vitest's 5 s default test
+          // timeout is a race on a big tree or a busy machine (parallel agents,
+          // a cold file cache); a guard that is really stuck is caught by the
+          // gate's own limit on the step, not by this.
+          testTimeout: 60_000,
+          hookTimeout: 60_000,
         },
       },
       {
@@ -65,6 +83,7 @@ export default defineConfig({
         test: {
           name: 'integration',
           include: ['**/*.integration.test.ts'],
+          exclude: [...configDefaults.exclude, ...nestedCheckouts],
           environment: 'node',
           passWithNoTests: false,
           // Migrations and fixtures share one database per run; parallel files
