@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T00:44+01:00",
+  "updated": "2026-10-11T00:48+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -266,11 +266,11 @@
       "id": "AR29",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Bring both feature pages' text up to date",
-      "detail": "Owner asked to update the feature pages. Their prose still describes the state before tonight: feature artifacts published on claude.ai, Done instead of Built, profiles at Opus high / Sonnet medium. Rewriting ledes, sections and history for luismc-artifacts 1.1.x and the medium-effort defaults (MP7).",
-      "expected": "11 Oct ~01:30",
-      "changed": "2026-10-11T00:44+01:00"
+      "detail": "Done at 01:00: both feature pages describe tonight's state. Project artifacts standard: luismc-artifacts 1.1.2, feature pages as local files, Built, decisions as option cards, every activity a task, the 1.1.1 repair rule. Model and effort profiles: Opus and Sonnet at medium everywhere (MP7). New history entries on both.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:48+01:00"
     },
     {
       "id": "DS1",
