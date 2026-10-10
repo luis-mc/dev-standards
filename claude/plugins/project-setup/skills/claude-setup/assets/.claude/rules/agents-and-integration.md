@@ -1,6 +1,7 @@
 ## Agents
 - Orchestrator (strongest model): plan, write contracts, decide, review risky diffs. Never do mechanical work.
 - Code agents: Sonnet at {{SUBAGENT_EFFORT}} effort; pass `effort: "{{SUBAGENT_EFFORT}}"` on every implementation Agent call.
+- Opus agents (`model: "opus"`) and Sonnet agents both pass `effort: "medium"` unless the user chose otherwise in claude-setup.
 - Merges and checks: scripts. Conflicts a script cannot resolve: one Sonnet agent. Log triage: `model: "haiku"`.
 - Agents whose definition pins a model or effort keep it.
 - Trivial edits (a typo, a one-line value): do them directly.

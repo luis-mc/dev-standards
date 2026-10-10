@@ -1,7 +1,7 @@
 ---
 description: Advanced, production-grade systems and runtime performance audit of the current repo. Universally applicable across multi-paradigm database architectures, caching models, and full-stack execution environments. Grounded in Core Web Vitals (LCP, INP, CLS), execution planning, memory leaks, and edge/serverless boundaries. Detects database round-trip waste, connection pool exhaustion, retry-amplified load storms, and cross-service network/IO overhead. Produces severity-ranked findings. Does not auto-fix. Use when the user requests a performance audit, latency review, reports slow APIs or an overloaded database, or invokes /luismc-audits:performance-audit.
 model: opus
-effort: high
+effort: medium
 ---
 
 # Expert-Level Systems & Runtime Performance Audit
