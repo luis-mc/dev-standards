@@ -57,7 +57,7 @@ EXPECTED_RE = re.compile(
     r'^(0?[1-9]|[12][0-9]|3[01]) (?:' + '|'.join(MONTHS) + r')( ~([01][0-9]|2[0-3]):[0-5][0-9])?(; \S.*)?$')
 TIME_EL_RE = re.compile(r'<time\b[^>]*\bdatetime="([^"]+)"')
 RULE_NAME = 'project-artifacts.md'
-GITIGNORE_LINES = ['.claude/artifacts-queue.json', '.claude/worktrees/']
+GITIGNORE_LINES = ['.claude/artifacts-queue.json', '.claude/artifacts-stop-state.json', '.claude/worktrees/']
 
 # Test seam (tests only): called as hook(ctx, attempt) right before each push.
 _TEST_BEFORE_PUSH = None

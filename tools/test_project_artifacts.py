@@ -1288,7 +1288,7 @@ def test_check_fixtures(env):
     n = 0
 
     def fresh(name):
-        d = base.parent.parent / ('fx-%s-%d' % (env.kind, n))
+        d = TMP / ('fx-%s-%d' % (env.kind, n))
         if d.exists():
             _rmtree(d)
         shutil.copytree(str(base.parent.parent), str(d))
@@ -1320,8 +1320,8 @@ def test_check_fixtures(env):
     # the lines have the documented shape: "<REQ>  <file>: <message>"
     rec = fresh('shape')
     edit_json(rec / 'registry.json', lambda r: task(r, 'AR1').update(expected='today'))
-    line = check_record(env, rec).out.strip().splitlines()[0]
-    assert line.startswith('R6.6  registry.json: AR1'), line
+    lines = check_record(env, rec).out.strip().splitlines()
+    assert any(ln.startswith('R6.6  registry.json: AR1') for ln in lines), lines
 
 
 @case(fake_only=True)
