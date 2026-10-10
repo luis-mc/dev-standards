@@ -2,7 +2,7 @@
  "registry": "draft for ARTIFACTSPEC 1.0.0",
  "project": "dev-standards",
  "timezone": "Europe/Lisbon",
- "updated": "2026-10-10T11:07+01:00",
+ "updated": "2026-10-10T12:23+01:00",
  "feature_artifacts": [
   {
    "title": "Feature: Project artifacts standard",
@@ -52,8 +52,8 @@
    "app": "luismc-project-setup",
    "status": "Running",
    "item": "Agent and integration rules",
-   "detail": "17 changes from the 9–10 Oct evidence in comics-organizer. Contract committed to DS6-agent-delivery (02535cd): STACKSPEC 6.0.0 and the delivery-scripts contract. Building DS8 to DS11 in parallel; then a test on a clone of comics-organizer, the join, and one ready PR merged on green.",
-   "expected": "today"
+   "detail": "17 changes from the 9–10 Oct evidence of a real project’s sessions. Contract committed to DS6-agent-delivery (02535cd): STACKSPEC 6.0.0 and the delivery-scripts contract. Building DS8 to DS11 in parallel; then a test on a real repository, the join, and one ready PR merged on green.",
+   "expected": "10 Oct ~13:15"
   },
   {
    "id": "DS8",
@@ -62,7 +62,7 @@
    "status": "Waiting",
    "item": "Branch gate scripts",
    "detail": "branch_gate, gate_verify, fast_guards, join, agent_setup, gate.json per track, the pre-push hook, a starter guard test per track; tested against throwaway repos (303 checks, 23 mutants). Joined into DS6-agent-delivery at 0b967a3; waiting for release.",
-   "expected": "release today"
+   "expected": "10 Oct ~13:15"
   },
   {
    "id": "DS9",
@@ -71,7 +71,7 @@
    "status": "Waiting",
    "item": "CI scripts and workflows",
    "detail": "ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files. Built: draft PR #6, 33 tests pass. Joined at 0b967a3; waiting for release.",
-   "expected": "release today"
+   "expected": "10 Oct ~13:15"
   },
   {
    "id": "DS10",
@@ -80,7 +80,7 @@
    "status": "Waiting",
    "item": "claude-setup rules and profiles",
    "detail": "The agents-and-integration rule file (replaces model-delegation.md), the docs/ rule, per-skill model and effort, the alias-drift hook. Covers MP3, MP4, MP5 and DS7. Built: draft PR #4. Joined at 0b967a3; waiting for release.",
-   "expected": "release today"
+   "expected": "10 Oct ~13:15"
   },
   {
    "id": "DS11",
@@ -89,16 +89,16 @@
    "status": "Waiting",
    "item": "tech-stack-setup wiring",
    "detail": "Generate and audit paths for STACKSPEC 6.0.0, spec-lint CI steps for the new tests, luismc-project-setup 12.0.0. Built: draft PR #3; also limits spec-lint and secret-scan to main and ready PRs, and fixes the 23 stack-profile references that kept spec-lint red on main since July. Joined at 0b967a3; waiting for release.",
-   "expected": "release today"
+   "expected": "10 Oct ~13:15"
   },
   {
    "id": "DS12",
    "owner": "project",
    "app": "luismc-project-setup",
    "status": "Running",
-   "item": "Test on comics-organizer",
-   "detail": "Run the gate, verify, join and CI scripts on a local clone of the evidence project; nothing pushed there.",
-   "expected": "today"
+   "item": "Test on a real repository",
+   "detail": "Run the gate, verify, join and CI scripts on a local scratch clone of a real repository; nothing pushed.",
+   "expected": "10 Oct ~12:45"
   },
   {
    "id": "DS13",
@@ -107,7 +107,7 @@
    "status": "Running",
    "item": "Join and release",
    "detail": "Joined DS8 to DS11 at 0b967a3 with every local check passing; contract and SKILL.md cleanups next, then one ready PR to main, ci_watch on its head, merge on green. Then move the Agents and Integrate sections of the owner’s CLAUDE.md into the rule file.",
-   "expected": "today, after DS12"
+   "expected": "10 Oct ~13:15; your CLAUDE.md ~13:25"
   },
   {
    "id": "DS7",
@@ -116,7 +116,7 @@
    "status": "Waiting",
    "item": "docs/ folder rule",
    "detail": "A project-setup rule: every doc a session creates goes under docs/. Built in DS10.",
-   "expected": "with DS6"
+   "expected": "10 Oct ~13:15"
   },
   {
    "id": "AR16",
@@ -164,22 +164,13 @@
    "expected": "10 Oct"
   },
   {
-   "id": "AR1",
-   "owner": "Feature: Project artifacts standard",
-   "app": "luismc-artifacts",
-   "status": "Done",
-   "item": "Rules adopted in Comics Organizer",
-   "detail": "Seven Comics Organizer pages moved to template v1; the rule saved for that project.",
-   "expected": "09 Oct"
-  },
-  {
    "id": "AR5",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
    "status": "To do",
    "item": "ARTIFACTSPEC 1.0.0",
    "detail": "The standard as a numbered, versioned spec; section 3 is its draft. Must pass spec_check.py.",
-   "expected": "first; ~1 h after your answers (spec writing)"
+   "expected": "10 Oct ~14:15"
   },
   {
    "id": "AR6",
@@ -188,7 +179,7 @@
    "status": "To do",
    "item": "Templates",
    "detail": "feature-artifact.html and full-progress-artifact.html built on the AR14 stylesheet, plus finding a project's own design.",
-   "expected": "~1 h after AR5"
+   "expected": "10 Oct ~15:30"
   },
   {
    "id": "AR7",
@@ -197,7 +188,7 @@
    "status": "To do",
    "item": "project_artifacts.py",
    "detail": "Task registry, rendering, add-task, set-task-status, stamp, check. Stdlib only; Windows timezone fallback.",
-   "expected": "~3 h after AR5, alongside AR6"
+   "expected": "10 Oct ~15:30"
   },
   {
    "id": "AR8",
@@ -206,7 +197,7 @@
    "status": "To do",
    "item": "Hooks",
    "detail": "After-command, end-of-turn and session-start hooks in hooks/hooks.json.",
-   "expected": "~2 h after AR7"
+   "expected": "10 Oct ~16:30"
   },
   {
    "id": "AR9",
@@ -215,7 +206,7 @@
    "status": "To do",
    "item": "Tests and CI",
    "detail": "A fixture per check that proves it fires, hook tests, spec-lint.yml path filters.",
-   "expected": "~2 h, alongside AR8"
+   "expected": "10 Oct ~16:30"
   },
   {
    "id": "AR10",
@@ -224,7 +215,7 @@
    "status": "To do",
    "item": "Skills and rule file",
    "detail": "The five skills and .claude/rules/project-artifacts.md.",
-   "expected": "~2 h after AR6 and AR7"
+   "expected": "10 Oct ~16:30"
   },
   {
    "id": "AR11",
@@ -233,7 +224,7 @@
    "status": "To do",
    "item": "Plugin wiring",
    "detail": "plugin.json 1.0.0, the marketplace entry, the README section and install line.",
-   "expected": "~30 min after AR8 and AR10"
+   "expected": "10 Oct ~16:45"
   },
   {
    "id": "AR12",
@@ -241,17 +232,8 @@
    "app": "luismc-artifacts",
    "status": "To do",
    "item": "Integrate and release",
-   "detail": "Full suite once on artifacts/integration, then one ready PR to main: one CI run, one release.",
-   "expected": "after AR5 to AR11"
-  },
-  {
-   "id": "AR13",
-   "owner": "Feature: Project artifacts standard",
-   "app": "luismc-artifacts",
-   "status": "To do",
-   "item": "Comics Organizer onto the plugin",
-   "detail": "Turn its checklists into a task registry; run one real status change end to end.",
-   "expected": "after AR12 is merged"
+   "detail": "Full suite once on artifacts/integration, then one ready PR to main: one CI run, one release. Built by Sonnet agents from about 13:30; merged on green.",
+   "expected": "10 Oct ~17:15"
   },
   {
    "id": "AR15",
@@ -260,7 +242,7 @@
    "status": "To do",
    "item": "Repo record and recreate",
    "detail": "Each project keeps its artifacts' record in docs/artifacts/: manifest, task registry, each artifact's content and last published HTML. A deleted artifact is recreated from it without duplicates. Built into project_artifacts.py.",
-   "expected": "with AR7"
+   "expected": "10 Oct ~15:30"
   },
   {
    "id": "DS5",
@@ -305,7 +287,7 @@
    "status": "Waiting",
    "item": "Role rules",
    "detail": "One line per role in the agents-and-integration rule file: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts a script cannot resolve, Haiku for log triage.",
-   "expected": "joined (0b967a3); release today"
+   "expected": "10 Oct ~13:15"
   },
   {
    "id": "MP4",
@@ -314,7 +296,7 @@
    "status": "Waiting",
    "item": "Per-skill model and effort",
    "detail": "model and effort in every plugin SKILL.md, by kind of work (section 5), with a test that compares them to the profile table.",
-   "expected": "joined (0b967a3); release today"
+   "expected": "10 Oct ~13:15"
   },
   {
    "id": "MP5",
@@ -323,7 +305,7 @@
    "status": "Waiting",
    "item": "Alias-drift warning",
    "detail": "A session-start hook that warns when the current Opus or Sonnet ID has no saved effort entry (figure 3).",
-   "expected": "joined (0b967a3); release today"
+   "expected": "10 Oct ~13:15"
   },
   {
    "id": "MP6",
@@ -332,7 +314,7 @@
    "status": "To do",
    "item": "Tests and release",
    "detail": "Profile test, hook test, claude-setup checks; released in the DS6 ready PR.",
-   "expected": "with DS6"
+   "expected": "10 Oct ~13:15"
   }
  ]
 }

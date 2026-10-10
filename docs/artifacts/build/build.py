@@ -111,7 +111,7 @@ MONTHS = {m: n for n, m in enumerate(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
 def date_key(expected):
     """(month, day) of an 'DD Mon' expected value; (0, 0) when it is not a date. Same-year only."""
     parts = expected.split()
-    if len(parts) == 2 and parts[0].isdigit() and parts[1] in MONTHS:
+    if len(parts) in (2, 3) and parts[0].isdigit() and parts[1] in MONTHS:
         return (MONTHS[parts[1]], int(parts[0]))
     return (0, 0)
 
@@ -128,29 +128,29 @@ PROJECT_TASKS = [
          detail='Synced passkeys allowed on the admin plane. Plugin: luismc-project-setup.', expected='27 Sep'),
     # Running now and next, earliest first
     dict(id='DS6', status='Running', item='Agent and integration rules',
-         detail='17 changes from the 9–10 Oct evidence in comics-organizer. Contract committed to DS6-agent-delivery (02535cd): STACKSPEC 6.0.0 and the delivery-scripts contract. Building DS8 to DS11 in parallel; then a test on a clone of comics-organizer, the join, and one ready PR merged on green.',
-         expected='today'),
+         detail='17 changes from the 9–10 Oct evidence of a real project’s sessions. Contract committed to DS6-agent-delivery (02535cd): STACKSPEC 6.0.0 and the delivery-scripts contract. Building DS8 to DS11 in parallel; then a test on a real repository, the join, and one ready PR merged on green.',
+         expected='10 Oct ~13:15'),
     dict(id='DS8', status='Waiting', item='Branch gate scripts',
          detail='branch_gate, gate_verify, fast_guards, join, agent_setup, gate.json per track, the pre-push hook, a starter guard test per track; tested against throwaway repos (303 checks, 23 mutants). Joined into DS6-agent-delivery at 0b967a3; waiting for release.',
-         expected='release today', app='luismc-project-setup'),
+         expected='10 Oct ~13:15', app='luismc-project-setup'),
     dict(id='DS9', status='Waiting', item='CI scripts and workflows',
          detail='ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files. Built: draft PR #6, 33 tests pass. Joined at 0b967a3; waiting for release.',
-         expected='release today', app='luismc-project-setup'),
+         expected='10 Oct ~13:15', app='luismc-project-setup'),
     dict(id='DS10', status='Waiting', item='claude-setup rules and profiles',
          detail='The agents-and-integration rule file (replaces model-delegation.md), the docs/ rule, per-skill model and effort, the alias-drift hook. Covers MP3, MP4, MP5 and DS7. Built: draft PR #4. Joined at 0b967a3; waiting for release.',
-         expected='release today', app='luismc-project-setup'),
+         expected='10 Oct ~13:15', app='luismc-project-setup'),
     dict(id='DS11', status='Waiting', item='tech-stack-setup wiring',
          detail='Generate and audit paths for STACKSPEC 6.0.0, spec-lint CI steps for the new tests, luismc-project-setup 12.0.0. Built: draft PR #3; also limits spec-lint and secret-scan to main and ready PRs, and fixes the 23 stack-profile references that kept spec-lint red on main since July. Joined at 0b967a3; waiting for release.',
-         expected='release today', app='luismc-project-setup'),
-    dict(id='DS12', status='Running', item='Test on comics-organizer',
-         detail='Run the gate, verify, join and CI scripts on a local clone of the evidence project; nothing pushed there.',
-         expected='today', app='luismc-project-setup'),
+         expected='10 Oct ~13:15', app='luismc-project-setup'),
+    dict(id='DS12', status='Running', item='Test on a real repository',
+         detail='Run the gate, verify, join and CI scripts on a local scratch clone of a real repository; nothing pushed.',
+         expected='10 Oct ~12:45', app='luismc-project-setup'),
     dict(id='DS13', status='Running', item='Join and release',
          detail='Joined DS8 to DS11 at 0b967a3 with every local check passing; contract and SKILL.md cleanups next, then one ready PR to main, ci_watch on its head, merge on green. Then move the Agents and Integrate sections of the owner’s CLAUDE.md into the rule file.',
-         expected='today, after DS12', app='luismc-project-setup'),
+         expected='10 Oct ~13:15; your CLAUDE.md ~13:25', app='luismc-project-setup'),
     dict(id='DS7', status='Waiting', item='docs/ folder rule',
          detail='A project-setup rule: every doc a session creates goes under docs/. Built in DS10.',
-         expected='with DS6', app='luismc-project-setup'),
+         expected='10 Oct ~13:15', app='luismc-project-setup'),
 ]
 
 
@@ -198,7 +198,7 @@ def checklist(tasks, link_feature, with_app=False):
                 t['id'], chip(t['status']), item, app_cell, H.escape(t['detail']), H.escape(t['expected'])))
     return ('<div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th>'
             + ('<th>App / service</th>' if with_app else '') + '<th>Detail</th>'
-            '<th>Expected</th></tr></thead><tbody>\n' + '\n'.join(rows) + '\n</tbody></table></div>')
+            '<th>Expected (Lisbon)</th></tr></thead><tbody>\n' + '\n'.join(rows) + '\n</tbody></table></div>')
 
 
 def tiles(tasks):
@@ -261,7 +261,7 @@ def build_feature(module):
 
 # ---------------------------------------------------------------- full-progress artifact
 p_lede = ('<p class="lede">All ongoing work in dev-standards, across every plugin. <strong>Nothing needs you right now.</strong> '
-          'Running: <span class="task-id">DS6</span>, the agent and integration round, with DS8 to DS11 joined and the real-repo test on comics-organizer running. '
+          'Running: <span class="task-id">DS6</span>, the agent and integration round, with DS8 to DS11 joined and the real-repo test running. '
           'Live today: <span class="task-id">DS5</span>, the effort question (luismc-project-setup 11.3.0).</p>')
 
 p_s1 = table(['Feature artifact', 'Tasks', 'Where it stands'], [

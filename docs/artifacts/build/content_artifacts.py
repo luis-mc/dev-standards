@@ -15,7 +15,7 @@ HERO = ('How every project gets the same status artifacts: a feature artifact pe
 EXTRA_CSS = ''
 
 LEDE = ('<p class="lede">The design is agreed and the default design is built (AR14). <strong>Nothing needs you</strong> on this feature. '
-        'Next is AR5, the spec. Every task here is also on {fp_link}.</p>')
+        'The build starts at about 13:30 with AR5, the spec, and merges on green at about 17:15. Every task here is also on {fp_link}.</p>')
 
 # status, item, detail, expected. Done/Live newest first, then the rest earliest first.
 TASKS = [
@@ -33,36 +33,31 @@ TASKS = [
          expected='10 Oct'),
     dict(id='AR2', status='Done', item='Proposal reviewed',
          detail='Twelve findings; each one and the change it led to is in section 7.', expected='10 Oct'),
-    dict(id='AR1', status='Done', item='Rules adopted in Comics Organizer',
-         detail='Seven Comics Organizer pages moved to template v1; the rule saved for that project.', expected='09 Oct'),
     dict(id='AR5', status='To do', item='ARTIFACTSPEC 1.0.0',
          detail='The standard as a numbered, versioned spec; section 3 is its draft. Must pass spec_check.py.',
-         expected='first; ~1 h after your answers (spec writing)'),
+         expected='10 Oct ~14:15'),
     dict(id='AR6', status='To do', item='Templates',
          detail='feature-artifact.html and full-progress-artifact.html built on the AR14 stylesheet, plus finding a project\'s own design.',
-         expected='~1 h after AR5'),
+         expected='10 Oct ~15:30'),
     dict(id='AR7', status='To do', item='project_artifacts.py',
          detail='Task registry, rendering, add-task, set-task-status, stamp, check. Stdlib only; Windows timezone fallback.',
-         expected='~3 h after AR5, alongside AR6'),
+         expected='10 Oct ~15:30'),
     dict(id='AR8', status='To do', item='Hooks',
-         detail='After-command, end-of-turn and session-start hooks in hooks/hooks.json.', expected='~2 h after AR7'),
+         detail='After-command, end-of-turn and session-start hooks in hooks/hooks.json.', expected='10 Oct ~16:30'),
     dict(id='AR9', status='To do', item='Tests and CI',
          detail='A fixture per check that proves it fires, hook tests, spec-lint.yml path filters.',
-         expected='~2 h, alongside AR8'),
+         expected='10 Oct ~16:30'),
     dict(id='AR10', status='To do', item='Skills and rule file',
-         detail='The five skills and .claude/rules/project-artifacts.md.', expected='~2 h after AR6 and AR7'),
+         detail='The five skills and .claude/rules/project-artifacts.md.', expected='10 Oct ~16:30'),
     dict(id='AR11', status='To do', item='Plugin wiring',
          detail='plugin.json 1.0.0, the marketplace entry, the README section and install line.',
-         expected='~30 min after AR8 and AR10'),
+         expected='10 Oct ~16:45'),
     dict(id='AR12', status='To do', item='Integrate and release',
-         detail='Full suite once on artifacts/integration, then one ready PR to main: one CI run, one release.',
-         expected='after AR5 to AR11'),
-    dict(id='AR13', status='To do', item='Comics Organizer onto the plugin',
-         detail='Turn its checklists into a task registry; run one real status change end to end.',
-         expected='after AR12 is merged'),
+         detail='Full suite once on artifacts/integration, then one ready PR to main: one CI run, one release. Built by Sonnet agents from about 13:30; merged on green.',
+         expected='10 Oct ~17:15'),
     dict(id='AR15', status='To do', item='Repo record and recreate',
          detail='Each project keeps its artifacts\' record in docs/artifacts/: manifest, task registry, each artifact\'s content and last published HTML. A deleted artifact is recreated from it without duplicates. Built into project_artifacts.py.',
-         expected='with AR7'),
+         expected='10 Oct ~15:30'),
 ]
 
 _CLS = {'Live': 'status-live', 'Done': 'status-done', 'Running': 'status-running', 'Needs you': 'status-needs-you',
@@ -88,7 +83,7 @@ S1 = """<p class="lede">A project builds many things at once. Its owner needs to
  <li>Status changes update the artifacts <strong>automatically</strong>: a feature task&rsquo;s change updates its feature artifact, and any project task&rsquo;s change updates the full-progress artifact.</li>
  <li>Built in dev-standards as the plugin <code>luismc-artifacts</code>, with <strong>explicit names in the code</strong>: feature artifact and full-progress artifact, never a generic &ldquo;page&rdquo;.</li>
 </ul>
-<p><strong>Why it matters.</strong> In Comics Organizer the pages drifted: a feature page still said &ldquo;Needs you&rdquo; for a step finished hours before. The status was typed by hand in two places. This design writes each status once and generates every view of it.</p>"""
+<p><strong>Why it matters.</strong> In an earlier project the pages drifted: a feature page still said &ldquo;Needs you&rdquo; for a step finished hours before. The status was typed by hand in two places. This design writes each status once and generates every view of it.</p>"""
 
 S2 = """<p class="lede">Each task&rsquo;s status is stored once, in a task registry inside the full-progress artifact. One command changes it, regenerates every checklist that shows the task, and a hook makes sure both artifacts are published before the turn ends.</p>
 <h3>Two kinds of project artifact</h3>
@@ -133,7 +128,7 @@ rules_look = [
     ['AS8', 'Sections are numbered from 0 in order with no gaps; the contents list shows the same numbers. Section 0 is <strong>Status and checklist</strong>: stamp, lede, tiles, key and checklist, in that order.'],
     ['AS9', 'The stamp reads <code>Last update: DD Mon HH:MM (&lt;timezone label&gt;)</code>, with the full ISO time in its <code>datetime</code> attribute, taken from the real clock at the moment of the change.'],
     ['AS10', 'The lede says in plain words what stands and <strong>what needs the owner</strong>, or &ldquo;Nothing needs you&rdquo;.'],
-    ['AS11', 'The checklist columns are <strong>Status | Item | Detail | Expected</strong>. Rows are grouped: <em>Running now and next</em> (Running, Waiting, To do), <em>Needs you, failed or on hold</em> (Needs you, Failed, On hold), <em>Live or done</em>, newest first. The full-progress artifact adds an <strong>App / service</strong> column after Item.'],
+    ['AS11', 'The checklist columns are <strong>Status | Item | Detail | Expected</strong>. Rows are grouped: <em>Running now and next</em> (Running, Waiting, To do), <em>Needs you, failed or on hold</em> (Needs you, Failed, On hold), <em>Live or done</em>, newest first. The full-progress artifact adds an <strong>App / service</strong> column after Item. <strong>Expected</strong> is a date, with a time for work due within a day (<code>10 Oct ~14:15</code>), in the owner&rsquo;s time zone. The zone is set once in the manifest and named in the column header. Never &ldquo;today&rdquo; or &ldquo;soon&rdquo;. When an expected time passes, a new estimate replaces it.'],
     ['AS12', 'Eight statuses with fixed colours and meanings: ' + _chip('Live') + ' released or in production; ' + _chip('Done') + ' finished, nothing to release; ' + _chip('Running') + ' being worked on now; ' + _chip('Needs you') + ' waits on the owner; ' + _chip('Waiting') + ' waits on something else (CI, a dependency, a time); ' + _chip('To do') + ' planned, not started; ' + _chip('On hold') + ' paused by decision; ' + _chip('Failed') + ' broke and needs a fix or a decision.'],
     ['AS13', 'Artifacts work in light and dark themes, and at phone width with a 16 px side gutter and no sideways page scroll; wide tables scroll inside their box.'],
 ]
@@ -193,7 +188,7 @@ reqs = [
     ['R3', 'Section 0 first and named &ldquo;Status and checklist&rdquo; (AS8).', 'Section 0 named &ldquo;Status&rdquo; fails.'],
     ['R4', 'Sections numbered from 0, in order, no gaps (AS8).', 'A gap, a repeat and an unnumbered section each fail with their line.'],
     ['R5', 'Stamp format, ISO attribute and timezone label (AS9, AS18).', '&ldquo;Last update: 9/10 7am&rdquo; fails; a stamp without <code>datetime</code> or label fails.'],
-    ['R6', 'Checklist columns: Status | Item | Detail | Expected on a feature artifact; Status | Item | App / service | Detail | Expected on the full-progress artifact (AS11).', 'A fifth column, or reordered columns, fails.'],
+    ['R6', 'Checklist columns: Status | Item | Detail | Expected on a feature artifact; Status | Item | App / service | Detail | Expected on the full-progress artifact (AS11).', 'A fifth column, or reordered columns, fails. An Expected value on an open row that is not a date (<code>today</code>, <code>soon</code>) fails.'],
     ['R7', 'Only the eight statuses (AS12).', '&ldquo;Merged&rdquo; as a status fails and names the nearest allowed word.'],
     ['R8', 'Every row sits in its status&rsquo;s group (AS11).', 'A Live row under &ldquo;Running now and next&rdquo; fails.'],
     ['R9', 'Checklists and tiles equal the registry (AS5).', 'A hand-edited row, or a tile saying 3 Live over 2, fails.'],
@@ -212,9 +207,12 @@ S6 = _table(['#', 'Question', 'Decision (10 Oct)'], [
     ['1', 'How is a task&rsquo;s status stored so both artifacts update automatically?', '<strong>One task registry</strong> inside the full-progress artifact; both checklists are generated from it.'],
     ['2', 'Do branch names start with the task ID?', '<strong>Yes</strong> (<code>AR5-artifactspec</code>), so hooks can match events to tasks.'],
     ['3', 'How do changes made outside a session reach the artifacts?', '<strong>At the next session start</strong>, through the session-start hook. No cloud routine in 1.0.'],
-    ['4', 'What look do artifacts get?', '<strong>The project&rsquo;s own design</strong>, found by scanning its design files, theme configuration, CSS custom properties or live site. A project with no design gets the plugin&rsquo;s <strong>default design</strong>. The Comics Organizer look is dropped. dev-standards uses the default.'],
+    ['4', 'What look do artifacts get?', '<strong>The project&rsquo;s own design</strong>, found by scanning its design files, theme configuration, CSS custom properties or live site. A project with no design gets the plugin&rsquo;s <strong>default design</strong>. dev-standards uses the default.'],
     ['5', 'An App / service column on the full-progress artifact?', '<strong>Yes</strong>, on the full-progress artifact only.'],
     ['6', 'Where is the record kept?', '<strong>In the repo</strong>, <code>docs/artifacts/</code>, committed to the default branch as docs-only commits; a deleted artifact is recreated from it without duplicates. Replaces the first answer that the published artifact is the record.'],
+    ['7', 'How does a project get the plugin?', '<strong>luismc-project-setup installs it</strong> in every project it sets up; it can also be installed on its own in any project. No artifact is created until the first feature artifact.'],
+    ['8', 'Which clock do Expected times use?', '<strong>The owner&rsquo;s time zone, per project</strong>, set in the manifest and named in the column header.'],
+    ['9', 'Does dev-standards move other projects onto the plugin?', '<strong>No.</strong> dev-standards ships the plugin and names or changes no other project; each project adopts it in its own sessions.'],
 ])
 
 S7 = ('<p class="lede">The review of the first proposal on 10 October found twelve problems. Each one changed the design above.</p>'
@@ -223,7 +221,7 @@ S7 = ('<p class="lede">The review of the first proposal on 10 October found twel
             ['The discipline was a sentence in CLAUDE.md, the form that already failed.', 'Hooks queue status changes and block the turn until artifacts are published (AS17).'],
             ['No source of truth and no list of a project&rsquo;s pages.', 'The repo record in <code>docs/artifacts/</code> is the source; the manifest lists every artifact, and a deleted one is recreated from it (AS5, AS6, AS19).'],
             ['Per-project look contradicted the byte-identical stylesheet check.', 'Structure stylesheet fixed, theme tokens free (AS7, R13).'],
-            ['&ldquo;Comics Organizer&rdquo; and &ldquo;Lisbon&rdquo; hard-coded; old and duplicate CSS rules.', 'Project name and timezone come from the manifest; the stylesheet is rebuilt clean (AR6).'],
+            ['A project name and &ldquo;Lisbon&rdquo; hard-coded; old and duplicate CSS rules.', 'Project name and timezone come from the manifest; the stylesheet is rebuilt clean (AR6).'],
             ['Spec and code disagreed on the groups and the History columns.', 'One definition each (AS2, AS11).'],
             ['HTML parsed with regular expressions; it left broken CSS on this artifact.', 'The script uses Python&rsquo;s built-in HTML parser.'],
             ['Python&rsquo;s zoneinfo has no timezone data on Windows without the tzdata package.', 'Fallback to the machine&rsquo;s local time, with a warning.'],
@@ -238,10 +236,11 @@ S7 = ('<p class="lede">The review of the first proposal on 10 October found twel
 
 def history(stamp):
     return _table(['Date', 'Change'], [
-        [stamp, 'The repo becomes the record: docs/artifacts/ holds the manifest, the task registry, each artifact&rsquo;s content and last published HTML, committed to the default branch as docs-only commits; a deleted artifact is recreated from it without duplicates (AS19, AS20, AR15). dev-standards&rsquo; record saved (AR16). Model and effort profiles split into their own feature artifact.'],
+        [stamp, 'Expected times are now a date and a time on the owner&rsquo;s clock (AS11, R6). Decisions 7 to 9: luismc-project-setup installs the plugin, which also installs on its own; the owner&rsquo;s time zone per project; dev-standards names and changes no other project, so AR1 and AR13 are out of this list. The build runs from about 13:30 and merges on green.'],
+        ['10 Oct 11:07', 'The repo becomes the record: docs/artifacts/ holds the manifest, the task registry, each artifact&rsquo;s content and last published HTML, committed to the default branch as docs-only commits; a deleted artifact is recreated from it without duplicates (AS19, AS20, AR15). dev-standards&rsquo; record saved (AR16). Model and effort profiles split into their own feature artifact.'],
         ['10 Oct 09:47', 'Decisions answered (AR4): one task registry, task-ID branch names, catch-up at session start, an App / service column on the full-progress artifact. The look now comes from each project&rsquo;s own design, with a plugin default for projects without one; dev-standards uses the default design (AR14), applied to this artifact.'],
-        ['10 Oct 09:24', 'Moved from Comics Organizer to dev-standards, where it is built. Rewritten to the agreed design: plugin <code>luismc-artifacts</code>; explicit names (feature artifact, full-progress artifact); the full-progress artifact shows all project work and is created with the first feature artifact; one task registry with automatic updates and hooks; task IDs AR1 to AR13; the review findings (section 7); five open decisions. Full Progress: dev-standards created.'],
-        ['09 Oct 06:48', 'Created in the Comics Organizer session, after the owner asked for one template, numbered sections, Feature and Full Progress pages, and a dev-standards version.'],
+        ['10 Oct 09:24', 'Moved to dev-standards, where it is built. Rewritten to the agreed design: plugin <code>luismc-artifacts</code>; explicit names (feature artifact, full-progress artifact); the full-progress artifact shows all project work and is created with the first feature artifact; one task registry with automatic updates and hooks; task IDs AR1 to AR13; the review findings (section 7); five open decisions. Full Progress: dev-standards created.'],
+        ['09 Oct 06:48', 'Created as a proposal, after the owner asked for one template, numbered sections, Feature and Full Progress pages, and a dev-standards version.'],
     ]).replace('<table>', '<table class="history-table">')
 
 
