@@ -450,7 +450,7 @@ li { margin: .25em 0; }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-10T20:58+01:00",
+ "updated": "2026-10-10T20:59+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -858,9 +858,9 @@ li { margin: .25em 0; }
    "app": "",
    "status": "Running",
    "item": "Integrate and release STACKSPEC 7.0.0",
-   "detail": "DS17 to DS21 joined into DS17-integration. Running: the full test suites on the joined head; next, one ready PR, its CI watched by commit, merge on green (luismc-project-setup 13.0.0). Then: delete-branch-on-merge on, old branches cleaned up, global rules updated.",
-   "expected": "10 Oct ~21:45",
-   "changed": "2026-10-10T20:33+01:00"
+   "detail": "DS17 to DS21 joined; joined head passed every suite (gate 530/0, cleanup 175/0, CI 33/0, prune 20/0, spec 19/19, authspec 25/25). Ready PR #27 open; its CI is running (spec-lint, secret-scan), watched by commit. Next: merge on green, then delete-branch-on-merge on, old branches cleaned up, global rules updated.",
+   "expected": "10 Oct ~22:00",
+   "changed": "2026-10-10T20:59+01:00"
   },
   {
    "id": "MP1",
@@ -928,13 +928,13 @@ li { margin: .25em 0; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-10T20:58+01:00">10 Oct 20:58</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-10T20:59+01:00">10 Oct 20:59</time> (Lisbon)</p>
 <p class="lede">All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class="task-id">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class="task-id">AR12</span>), and the secret-scan fixes (<span class="task-id">DS15</span>, <span class="task-id">AR19</span>, <span class="task-id">DS16</span>). Not released yet: the round toward STACKSPEC 7.0.0 (<span class="task-id">DS17</span> to <span class="task-id">DS21</span>) is built and joined, so those rows say Done. The tests on the joined branch are running; then one ready PR, its CI, and the merge, about 21:45. Each row turns Live only when the merge lands. <strong>Nothing needs you.</strong></p>
 <div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">34</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">11</div><div class="label">done</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-done">Done</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
-<tr data-task="DS22"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS22</span>Integrate and release STACKSPEC 7.0.0</td><td></td><td>DS17 to DS21 joined into DS17-integration. Running: the full test suites on the joined head; next, one ready PR, its CI watched by commit, merge on green (luismc-project-setup 13.0.0). Then: delete-branch-on-merge on, old branches cleaned up, global rules updated.</td><td>10 Oct ~21:45</td></tr>
+<tr data-task="DS22"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS22</span>Integrate and release STACKSPEC 7.0.0</td><td></td><td>DS17 to DS21 joined; joined head passed every suite (gate 530/0, cleanup 175/0, CI 33/0, prune 20/0, spec 19/19, authspec 25/25). Ready PR #27 open; its CI is running (spec-lint, secret-scan), watched by commit. Next: merge on green, then delete-branch-on-merge on, old branches cleaned up, global rules updated.</td><td>10 Oct ~22:00</td></tr>
 <tr data-task="AR21"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR21</span>Every activity is a task, in every project</a></td><td><code>luismc-artifacts</code></td><td>Rule and ARTIFACTSPEC 1.1.0: all work, the session&#x27;s own included (contracts, reviews, joins, test runs, releases, cleanup), is a task row before it starts and stays Running while it runs; Done means nothing is left. The plugin delivers its rule to every project it is installed in at each session start, so an installed project never keeps an old copy; the end-of-turn hook blocks a turn that starts background work with no Running task. Rides the train after 7.0.0.</td><td>10 Oct ~22:45</td></tr>
 <tr class="status-group" data-group="done"><td colspan="5"><strong>Live or done</strong></td></tr>
 <tr data-task="DS17"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">DS17</span>Branch gate: setup first, 30-minute limit, fail fast</td><td></td><td>Built in draft #25: the gate runs a frozen-lockfile setup step first, stops at the first failure (--keep-going runs everything), stops after 30 min with exit 4 (whole process tree killed) and writes a log per step; gate_verify never trusts a timed-out or setup-failed result. Joined.</td><td>10 Oct ~21:45</td></tr>
