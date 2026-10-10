@@ -429,8 +429,8 @@
       "status": "Done",
       "item": "Automatic branch and worktree cleanup",
       "detail": "Built in draft #24: cleanup.py removes a merged train's branches, gate-result refs, local branches and worktrees. It keeps open, unmerged, dirty or unpushed work and anything gh cannot classify. train-cleanup.yml runs it on a merge into main; join.py runs it locally first. 175 checks, 36 mutants. Waiting for the join.",
-      "expected": "10 Oct ~21:30",
-      "changed": "2026-10-10T19:56+01:00"
+      "expected": "10 Oct",
+      "changed": "2026-10-10T22:53+01:00"
     },
     {
       "id": "DS20",
