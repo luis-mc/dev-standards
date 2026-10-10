@@ -1,9 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{title}}</title>
 <meta name="artifact-kind" content="feature-artifact">
 {{fonts_link}}
 <style id="design-tokens">{{design_css}}</style>
 <style id="structure-css">{{structure_css}}</style>
 <style id="extra-css">{{extra_css}}</style>
+</head>
+<body>
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links">{{contents}}</div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">{{kind_label}} &middot; {{project}}</div><h1>{{title}}</h1><p>{{hero}}</p><div class="artifact-meta">{{project}} &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
@@ -54,3 +61,5 @@
   } catch (error) {}
 })();
 </script>
+</body>
+</html>

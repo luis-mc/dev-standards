@@ -7,6 +7,10 @@ Public API (imported by project_artifacts.py):
     ContentError, load_content, artifact_file, render_artifact, check_html,
     structure_css, design_css, check_tokens, REQUIRED_TOKENS, STATUSES
 
+A feature artifact is rendered as a complete, standalone HTML document (R5.27, R5.28); the
+full-progress artifact is rendered as a fragment beginning with <title> (R5.29). Both link to the
+feature files by relative link unless render_artifact is given `links` (the publish copy, R5.31).
+
 Templates hold {{placeholders}}. Section 0 is in the template; its parts come from the
 placeholders stamp, lede, tiles, key and checklist. The other placeholders are title,
 fonts_link, design_css, structure_css, extra_css, kind_label, project, hero, contents,
@@ -761,7 +765,8 @@ def _tasks_of(kind: str, key: str, tasks: list) -> list:
 
 
 def group_tasks(tasks: list, ref: datetime, kind: str) -> list:
-    """R6.2 and R6.3: [(group key, group title, shown tasks, folded tasks)], empty groups omitted."""
+    """R6.2 and R6.3: [(group key, group title, shown tasks, folded tasks)], empty groups omitted.
+    Only Live rows fold into Earlier; Built rows never do (unreleased work stays visible)."""
     out = []
     for gkey, title, statuses in GROUPS:
         mine = [t for t in tasks if t['status'] in statuses]
@@ -778,7 +783,7 @@ def group_tasks(tasks: list, ref: datetime, kind: str) -> list:
         folded = []
         if gkey == 'built' and kind == 'full-progress':
             cutoff = ref - timedelta(days=EARLIER_DAYS)
-            folded = [t for t in mine if (_parse_iso(t.get('changed')) or ref) < cutoff]
+            folded = [t for t in mine if t['status'] == 'Live' and (_parse_iso(t.get('changed')) or ref) < cutoff]
             mine = [t for t in mine if t not in folded]
         if mine or folded:
             out.append((gkey, title, mine, folded))
@@ -846,11 +851,21 @@ def _columns(kind: str, label: str) -> list:
     return base + ['Expected (%s)' % label]
 
 
-def _row(task: dict, kind: str, feature_urls: dict) -> str:
+def _local_path(text: str) -> str:
+    """The path of a linked feature file, shown as text beside its link so it can be copied (R5.31)."""
+    return ' <span class="local-path">%s</span>' % esc(text)
+
+
+def _link(link, label: str) -> str:
+    """`label` as a link to a feature file; `link` is (href, path text or '')."""
+    return '<a href="%s">%s</a>%s' % (esc(link[0]), label, _local_path(link[1]) if link[1] else '')
+
+
+def _row(task: dict, kind: str, feature_links: dict) -> str:
     item = '<span class="task-id">%s</span>%s' % (esc(task['id']), esc(task['item']))
-    url = feature_urls.get(task.get('owner'), '') if kind == 'full-progress' else ''
-    if url:
-        item = '<a href="%s">%s</a>' % (esc(url), item)
+    link = feature_links.get(task.get('owner')) if kind == 'full-progress' else None
+    if link:
+        item = _link(link, item)
     app = '<td>%s</td>' % ('<code>%s</code>' % esc(task['app']) if task.get('app') else '') if kind == 'full-progress' else ''
     return '<tr data-task="%s"><td>%s</td><td>%s</td>%s<td>%s</td><td>%s</td></tr>' % (
         esc(task['id']), _chip(task['status']), item, app, esc(task['detail']), esc(task['expected']))
@@ -862,7 +877,7 @@ def _table(body_rows: list, kind: str, label: str) -> str:
             % (head, '\n'.join(body_rows)))
 
 
-def _checklist(tasks: list, kind: str, label: str, ref: datetime, feature_urls: dict) -> str:
+def _checklist(tasks: list, kind: str, label: str, ref: datetime, feature_links: dict) -> str:
     groups = group_tasks(tasks, ref, kind)
     width = len(_columns(kind, label))
     rows, folded = [], []
@@ -870,12 +885,12 @@ def _checklist(tasks: list, kind: str, label: str, ref: datetime, feature_urls: 
         if shown:
             rows.append('<tr class="status-group" data-group="%s"><td colspan="%d"><strong>%s</strong></td></tr>'
                         % (gkey, width, esc(title)))
-            rows += [_row(t, kind, feature_urls) for t in shown]
+            rows += [_row(t, kind, feature_links) for t in shown]
         folded += old
     out = _table(rows, kind, label) if rows or not folded else ''
     if folded:
         out += ('\n<details class="earlier"><summary>Earlier</summary>\n%s\n</details>'
-                % _table([_row(t, kind, feature_urls) for t in folded], kind, label))
+                % _table([_row(t, kind, feature_links) for t in folded], kind, label))
     return out
 
 
@@ -974,7 +989,7 @@ def _decisions_open_line(decisions) -> str:
     return '' if not count else ' %d decision%s open.' % (count, '' if count == 1 else 's')
 
 
-def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list) -> str:
+def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list, feature_links: dict) -> str:
     rows = []
     for entry in manifest.get('feature_artifacts') or []:
         content = contents.get(entry['key'])
@@ -982,7 +997,7 @@ def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list
             problems.append('no content loaded for feature artifact %r (needed for R5.6)' % entry['key'])
             continue
         title = esc(entry['title'])
-        link = '<a href="%s">%s</a>' % (esc(entry['url']), title) if entry.get('url') else title
+        link = _link(feature_links[entry['key']], title)
         rows.append('<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % (
             link, esc(_id_ranges(entry['key'], entry.get('prefix', ''), tasks)),
             esc(_first_sentence(content['meta']['lede']) + _decisions_open_line(content.get('decisions')))))
@@ -1004,9 +1019,27 @@ def _fill(template: str, values: dict) -> str:
     return re.sub(r'\{\{(\w+)\}\}', replace, template)
 
 
+def feature_links_of(manifest: dict, links=None) -> dict:
+    """{feature key: (href, path text)}: by default the relative file name with no path text (R5.30);
+    `links` maps a key to (href, path text) for the publish copy (R5.31)."""
+    out = {}
+    for entry in manifest.get('feature_artifacts') or []:
+        key = entry.get('key')
+        if links is not None and key in links:
+            href, shown = links[key]
+            out[key] = (str(href), str(shown))
+        else:
+            out[key] = (str(entry.get('file', '')), '')
+    return out
+
+
 def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, plugin_dir: str,
-                    record_dir: str, stamp_text: str, stamp_iso: str) -> str:
-    """The artifact's HTML, a fragment beginning with <title>. Same inputs, same bytes (R7.4)."""
+                    record_dir: str, stamp_text: str, stamp_iso: str, links=None) -> str:
+    """The artifact's HTML: a complete document for a feature artifact (R5.27), a fragment beginning
+    with <title> for the full-progress artifact (R5.29). Same inputs, same bytes (R7.4).
+
+    `links` is None for the committed render, whose links to feature files are relative (R5.30); the
+    publish copy passes {feature key: (href, path text)} (R5.31)."""
     kind, entry = _kind_entry(manifest, key)
     problems = []
     title = str(entry.get('title', ''))
@@ -1050,7 +1083,7 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
         raise ContentError(problems)
 
     mine = _tasks_of(kind, key, tasks)
-    feature_urls = {e['key']: e.get('url', '') for e in manifest.get('feature_artifacts') or []}
+    feature_links = feature_links_of(manifest, links)
     project = str(manifest.get('project', ''))
     meta = content['meta']
 
@@ -1061,7 +1094,7 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
     sections = []  # (title, inner html) for sections 1..N
     if kind == 'full-progress':
         feature_problems = []
-        sections.append(('Feature artifacts', _feature_section(manifest, tasks, contents, feature_problems)))
+        sections.append(('Feature artifacts', _feature_section(manifest, tasks, contents, feature_problems, feature_links)))
         if feature_problems:
             raise ContentError(feature_problems)
     sections += [(s['title'], s['html']) for s in content['sections']]
@@ -1089,7 +1122,7 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
         'lede': lede,
         'tiles': _tiles(mine),
         'key': _key(label),
-        'checklist': _checklist(mine, kind, label, ref, feature_urls),
+        'checklist': _checklist(mine, kind, label, ref, feature_links),
         'sections': body,
         'registry': _registry_script(registry) if kind == 'full-progress' else '',
     }
@@ -1155,6 +1188,56 @@ def _check_decisions(node, decisions, add) -> None:
             add('R5.23', '%s shows the Needs you chip exactly when it is open and not replaced' % did)
 
 
+FONT_HOST_RE = re.compile(r'^https://fonts\.(googleapis|gstatic)\.com(/|$)')
+
+
+def _check_document(html: str, root, kind: str, add) -> None:
+    """R5.27 to R5.29: a feature artifact is a complete document that needs nothing but a browser; the
+    full-progress artifact is a fragment beginning with <title>."""
+    text = html.lstrip('\ufeff')
+    if kind == 'full-progress':
+        if re.match(r'\s*<!doctype', text, re.I) or any(find(root, tag) is not None for tag in ('html', 'head', 'body')):
+            add('R5.29', 'the full-progress artifact is a fragment: no doctype, <html>, <head> or <body>')
+        if not text.startswith('<title>'):
+            add('R5.29', 'the full-progress artifact must begin with <title>')
+        return
+    if not re.match(r'\s*<!doctype html>', text, re.I):
+        add('R5.27', 'a feature artifact must begin with <!doctype html>')
+    html_node, head, body = find(root, 'html'), find(root, 'head'), find(root, 'body')
+    if html_node is None or not html_node.attrs.get('lang'):
+        add('R5.27', 'a feature artifact needs <html lang="...">')
+    if head is None or body is None:
+        add('R5.27', 'a feature artifact needs a <head> and a <body>')
+    else:
+        metas = find_all(head, 'meta')
+        if not any(m.attrs.get('charset', '').lower() == 'utf-8' for m in metas):
+            add('R5.27', 'the <head> needs <meta charset="utf-8">')
+        if not any(m.attrs.get('name') == 'viewport' and 'width=device-width' in m.attrs.get('content', '') for m in metas):
+            add('R5.27', 'the <head> needs <meta name="viewport" content="width=device-width, initial-scale=1">')
+        if find(head, 'title') is None:
+            add('R5.27', 'the <title> belongs in the <head>')
+        if find(body, 'main') is None:
+            add('R5.27', 'the page (<main>) belongs in the <body>')
+    for link in find_all(root, 'link'):
+        href, rel = link.attrs.get('href', ''), link.attrs.get('rel', '').lower()
+        if rel not in ('preconnect', 'stylesheet') or not FONT_HOST_RE.match(href):
+            add('R5.28', 'the only <link> a feature artifact may hold is the Google Fonts link; found rel=%r href=%r' % (rel, href))
+        elif rel == 'stylesheet' and not href.startswith('https://fonts.googleapis.com/'):
+            add('R5.28', 'the only stylesheet link allowed is on fonts.googleapis.com; found %r' % href)
+    for script in find_all(root, 'script'):
+        if 'src' in script.attrs:
+            add('R5.28', 'a feature artifact loads no external script (<script src=%r>)' % script.attrs['src'])
+    for node in elements(root):
+        for attr in ('src', 'srcset', 'poster', 'data'):
+            value = node.attrs.get(attr)
+            if value and node.tag != 'script' and not value.lower().startswith('data:'):
+                add('R5.28', 'a feature artifact references no file outside itself (<%s %s=%r>)' % (node.tag, attr, value))
+    for style in find_all(root, 'style'):
+        css = _strip_comments(''.join(c.text for c in style.children))
+        if re.search(r'@import|url\(\s*[\'"]?\s*(https?:|//|file:)', css, re.I):
+            add('R5.28', 'the <style> %r imports or loads an external resource' % style.attrs.get('id', '?'))
+
+
 def _ui_script(plugin_dir: str, kind: str):
     try:
         root = parse_dom(_template(plugin_dir, kind))
@@ -1181,8 +1264,9 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
     except ContentError as exc:
         return [('R6.1' if 'status' in p else 'R4.7', p) for p in exc.problems]
     mine = _tasks_of(kind, key, all_tasks)
-    feature_urls = {e['key']: e.get('url', '') for e in manifest.get('feature_artifacts') or []}
+    feature_files = {e['key']: e.get('file', '') for e in manifest.get('feature_artifacts') or []}
     root = parse_dom(html)
+    _check_document(html, root, kind, add)
     decisions = []
     if kind == 'feature':
         try:
@@ -1349,7 +1433,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         add('R6.3', 'only the full-progress artifact has an Earlier fold')
     if kind == 'full-progress':
         if folded_found != folded_wanted:
-            add('R6.3', 'Live or built rows older than %d days belong in Earlier: expected %s, found %s'
+            add('R6.3', 'Live rows older than %d days (and only Live rows) belong in Earlier: expected %s, found %s'
                 % (EARLIER_DAYS, sorted(folded_wanted), sorted(folded_found)))
         for node in details:
             summary = find(node, 'summary')
@@ -1402,17 +1486,20 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         add('R5.8', 'the tiles read %s; the registry needs %s' % (
             [(a, b) for a, b, _ in have_tiles], [(a, b) for a, b, _ in want_tiles]))
 
-    # R6.5 full-progress links
+    # R6.5 and R5.30 full-progress links: relative, to the feature file
     if kind == 'full-progress':
         for task in mine:
             owner = task.get('owner')
-            if owner == 'project' or owner not in feature_urls:
+            if owner == 'project' or owner not in feature_files:
                 continue
             row = seen.get(task.get('id'), [None])[0]
             if row is None:
                 add('R6.5', 'feature task %s is missing from the full-progress artifact' % task.get('id'))
-            elif feature_urls[owner] and row['href'] != feature_urls[owner]:
-                add('R6.5', 'feature task %s must link to %s; it links to %r' % (task.get('id'), feature_urls[owner], row['href']))
+            elif row['href'] is None:
+                add('R6.5', 'feature task %s must link to its feature file %s' % (task.get('id'), feature_files[owner]))
+            elif row['href'] != feature_files[owner]:
+                add('R5.30', 'feature task %s must link to %s, relative to this file; it links to %r'
+                    % (task.get('id'), feature_files[owner], row['href']))
 
     # R5.6 feature list on the full-progress artifact
     if kind == 'full-progress':
@@ -1423,8 +1510,11 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             shown = text_of(s1)
             for e in manifest.get('feature_artifacts') or []:
                 anchors = [a for a in find_all(s1, 'a') if text_of(a) == e.get('title')]
-                if e.get('title') not in shown or (e.get('url') and not any(a.attrs.get('href') == e['url'] for a in anchors)):
+                if e.get('title') not in shown or not anchors:
                     add('R5.6', 'section 1 must list %r with its link' % e.get('title'))
+                elif not any(a.attrs.get('href') == e.get('file') for a in anchors):
+                    add('R5.30', 'section 1 must link %r to %s, relative to this file; it links to %r'
+                        % (e.get('title'), e.get('file'), anchors[0].attrs.get('href')))
 
     # R5.4 History
     history_sections = [i for i in info if i['title'] == 'History']
