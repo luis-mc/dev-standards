@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T21:07+01:00",
+  "updated": "2026-10-10T21:09+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -438,9 +438,9 @@
       "app": "",
       "status": "Running",
       "item": "Integrate and release STACKSPEC 7.0.0",
-      "detail": "DS17 to DS21 joined; joined head passed every suite (gate 530/0, cleanup 175/0, CI 33/0, prune 20/0, spec 19/19, authspec 25/25). Ready PR #27 open; its CI is running (spec-lint, secret-scan), watched by commit. Next: merge on green, then delete-branch-on-merge on, old branches cleaned up, global rules updated.",
-      "expected": "10 Oct ~22:00",
-      "changed": "2026-10-10T20:59+01:00"
+      "detail": "Ready PR #27: CI failed twice. secret-scan: a regex line in the artifact-prune test read as a token assignment (fixed, old commit's fingerprint ignored). spec-lint: the cleanup tests fail on Linux (cleanup.py exits 2; passes on Windows); the DS19 agent is fixing it. Then rejoin, re-run CI, merge on green.",
+      "expected": "10 Oct ~22:30",
+      "changed": "2026-10-10T21:09+01:00"
     },
     {
       "id": "MP1",
