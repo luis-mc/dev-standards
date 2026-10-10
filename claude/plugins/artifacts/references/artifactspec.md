@@ -1,11 +1,12 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
 **Last reviewed:** 2026-10-10
+**Changes in 1.1.0:** §5.4 Decisions (`decisions.json`, R5.14 to R5.26).
 
 ---
 
@@ -63,6 +64,7 @@ sections are never renumbered to close a gap. Invariants are numbered
 | D7 | How does a project get the plugin? | `luismc-project-setup` installs it in every project it sets up; it also installs on its own. | Installing creates nothing until the first artifact (§10). |
 | D8 | Which clock do times use? | The owner's time zone, per project, from the manifest. | Expected and stamps name the zone (§6.4). |
 | D9 | Does the plugin's home repository touch other projects? | No. | Each project adopts the plugin in its own sessions. |
+| D10 | How are the owner's choices between options kept? | Every option offered and the one chosen, in the feature's `decisions.json`; the script draws the Decisions section. | The options, the recommendation and the choice are never lost in free text (§5.4). |
 
 ---
 
@@ -170,6 +172,8 @@ docs/artifacts/
   content/<key>/meta.json        one folder per artifact; full-progress key is "full-progress"
   content/<key>/NN-<slug>.html   one file per section 1..N, in order
   content/<key>/history.json     feature artifacts only
+  content/<key>/decisions.json   feature artifacts only, optional (§5.4)
+  content/<key>/assets/<file>    images of decision options, optional (§5.4)
   <file>.html                    the last rendered HTML of each artifact
   README.md                      how to recreate (generated)
 ```
@@ -235,6 +239,7 @@ sentence about where the work stands; the script appends the needs-you line
 (§5.2). Each `NN-<slug>.html` is an HTML fragment whose first line is an HTML
 comment holding the section title: `<!-- title: The design -->`.
 `history.json`: `[{"date": "10 Oct 12:23", "change": "..."}]`, newest first.
+`decisions.json` is described in §5.4.
 
 - **R4.10** — Content fragments contain no `<script>`, no `<style>` (styles go
   in `extra_css`) and no section numbers; the renderer numbers sections.
@@ -328,6 +333,97 @@ The templates hold `{{placeholders}}`: `title`, `fonts_link`, `design_css`,
   16 px side gutter and no sideways page scroll; tables scroll inside their
   own box.
 
+### 5.4 Decisions
+
+A feature artifact shows the owner's choices between options (designs,
+approaches, names) so that what the owner was offered, what was recommended and
+what was chosen stay visible. They are kept in `content/<key>/decisions.json`
+and drawn by the renderer; they are never written as a content section.
+
+```json
+{"decisions": [
+  {"id": "D1", "question": "Which layout for the checkout page?", "asked": "2026-10-10",
+   "status": "decided",
+   "options": [
+     {"label": "Single page", "summary": "One scroll, all fields.", "recommended": true,
+      "preview": "<pre>...</pre>"},
+     {"label": "Three steps", "summary": "Address, delivery, payment."}],
+   "chosen": "Single page", "decided": "2026-10-10",
+   "owner_words": "single page, fewer clicks", "task": "AR9"}]}
+```
+
+**Data**
+
+- **R5.14** — A feature artifact MAY hold `content/<key>/decisions.json`: an
+  object with one key, `decisions`, a list of decision objects. A decision has
+  `id`, `question` (1 to 200 characters), `asked` (a date, `YYYY-MM-DD`),
+  `status`, `options`, `chosen` and `decided`, and optionally `owner_words`
+  (the owner's own words, verbatim), `task` and `replaces`. An option has
+  `label` (1 to 60 characters), `summary` (1 to 400) and optionally
+  `recommended` (true or false), `preview` and `image`. Other fields are
+  refused. The full-progress artifact has no `decisions.json`. The file is part
+  of the artifact's content: `export-content` and `edit-content` carry it, and
+  the script validates it.
+- **R5.15** — Decision IDs are `D1`, `D2`, ... in file order, oldest first,
+  with no gap; an ID is never reused and a decision is never removed.
+  `edit-content` refuses an edit that removes a decision or changes the status,
+  choice or date of a decided one. A changed mind is a new decision that names
+  the one it replaces (R5.18).
+- **R5.16** — A decision has 2 to 6 options with unique labels (compared
+  without case); a yes/no question lists Yes and No as its options. At most one
+  option is `recommended`. `status` is `decided` or `open`. A `decided`
+  decision has `chosen` equal to one option's label and `decided` a date not
+  before `asked`. An `open` decision has `chosen` and `decided` null and no
+  `owner_words`.
+- **R5.17** — `preview` is a small HTML fragment of at most 4000 characters
+  with no `<script>`, `<style>`, `<iframe>`, form, `on*` attribute, `id`, script
+  URL or external URL (`http:`, `https:` or `//`); an inline `style` attribute
+  may not use `url()`, `@import` or fixed positions; a `data:` URL must be a
+  base64 image. `image` is `assets/<file>` under the artifact's content folder:
+  the file exists, is a png, jpg, gif or webp, and is at most 300 KB; the
+  renderer embeds it as a `data:` URL. An option has a preview or an image, not
+  both.
+- **R5.18** — `replaces` names an existing earlier decision of the same
+  artifact. `task` is a task ID that exists in the registry.
+- **R5.19** — A content file whose `<!-- title: -->` is `Decisions` is refused
+  (R4.10 applies to fragments in general); decisions are drawn only from
+  `decisions.json`.
+
+**Rendering**
+
+- **R5.20** — When `decisions.json` has any decision, the renderer draws a
+  generated section titled `Decisions` just before `History`, numbered with the
+  other sections (R5.2). Decisions are listed newest first (highest ID first).
+  A feature artifact with no decision has no such section.
+- **R5.21** — Each decision shows its ID and question, and its options side by
+  side as cards: one column at phone width (R5.13), several where there is
+  room. Each card shows the label, the summary and the preview or image, all in
+  full.
+- **R5.22** — In a decided decision the chosen card is marked: an accent
+  border, a chip `Chosen by the owner · DD Mon` (the `decided` date) and, when
+  given, the owner's words as a quote. Every other card is shown in full but
+  muted, with a chip `Not chosen`. The recommended option carries a
+  `Recommended` tag whether or not it was chosen.
+- **R5.23** — An open decision has a `Needs you` chip on its question and no
+  chosen card; its options carry no `Not chosen` chip. A replaced decision (one
+  that a later decision names in `replaces`) is collapsed in a closed
+  `<details>` whose summary reads `Replaced by Dn`, and has no `Needs you`
+  chip.
+- **R5.24** — Colour comes only from the design tokens (R5.10); the structure
+  stylesheet holds the section's layout. The section adds no script (R5.9) and
+  is part of the render, so INV-3 covers it.
+
+**Where decisions surface**
+
+- **R5.25** — The generated needs-you sentence (R5.7) also lists every open,
+  unreplaced decision after the tasks, as `<ID> <question>`; the sentence is
+  `Nothing needs you.` only when no task and no decision waits. In the
+  full-progress artifact's section 1 a feature's line ends with `n decisions
+  open.` (`1 decision open.`) when it has any.
+- **R5.26** — `check` warns, without failing, for an open, unreplaced decision
+  whose `task` is not a task of that feature in Needs you, or, when it names no
+  task, when the feature has no task in Needs you.
+
 ---
 
 ## 6. Statuses and the checklist
@@ -393,11 +489,11 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
 | `feature-new --key K --title NAME --prefix P --apps a,b [--hero TEXT] [init flags]` | Adds a feature artifact (content folder with `meta.json`, a section `01-what-and-why.html` stub and a first History row). Runs `init` first, with the same `init` flags, when there is no manifest; `--project` is then required. |
 | `task-add --owner K\|project --item TEXT --detail TEXT --expected TEXT [--app A] [--status S] [--prefix P]` | Adds a task with the next free number; prints its ID. For `--owner project`, `--prefix` picks one of `project_prefixes`, and a new prefix not used by any feature is registered. |
 | `set-task-status ID STATUS [--detail TEXT] [--expected TEXT] [--history TEXT]` | Changes one task; adds a History row to its feature artifact when `--history` is given. |
-| `export-content KEY --to DIR` | Copies the artifact's content files from the record to DIR for editing. |
-| `edit-content KEY --from DIR` | Replaces the artifact's content files in the record with those in DIR (after the fetch and reset of R4.13), validates, renders and commits. The session never edits the record worktree directly; the reset would discard it. |
+| `export-content KEY --to DIR` | Copies the artifact's content files from the record to DIR for editing, `decisions.json` and its `assets/` folder included. |
+| `edit-content KEY --from DIR` | Replaces the artifact's content files in the record with those in DIR (after the fetch and reset of R4.13), validates, renders and commits. The session never edits the record worktree directly; the reset would discard it. It refuses an edit that removes a decision or changes the choice of a decided one (R5.15). |
 | `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design`, renders and commits; `default` removes it. |
 | `render [--all]` | Renders every artifact whose output would change. |
-| `check [--record PATH]` | The conformance checks of §14; lists findings with their requirement ID. |
+| `check [--record PATH]` | The conformance checks of §14; lists findings with their requirement ID, then any warnings (R5.26), which do not change the exit code. |
 | `pending` | Lists artifacts whose rendered HTML hash differs from `published_sha256`, and queued events. Exit 1 when anything is listed. `--json` prints `{"artifacts": [{"key", "title", "file", "path", "url", "reason"}], "queue": [events]}`; `path` is the absolute path of the HTML to publish. |
 | `mark-published KEY --url URL` | Records the URL and the hash of the current HTML. |
 | `queue list\|clear [--id ID]` | Shows or removes queued events. |
@@ -502,7 +598,9 @@ Reads the hook input; takes the task ID from the current branch name
 - **R10.3** — The rule file holds one short imperative line per rule: record
   work as a task before starting it; start branch names with the task ID;
   change status only with `set-task-status`; publish what `pending` lists in
-  the same turn; never type a status row by hand; put every doc under `docs/`.
+  the same turn; never type a status row by hand; put every doc under `docs/`;
+  record the options the owner chose between, and the choice, in the feature's
+  `decisions.json` in the same turn (§5.4).
 
 ---
 
@@ -568,6 +666,11 @@ Reads the hook input; takes the task ID from the current branch name
 | Every feature task on the full-progress artifact, linked | R6.5 |
 | IDs unique, prefixes registered | R4.5, R4.6 |
 | History last on feature artifacts, Date / Change | R5.4 |
+| `decisions.json` valid: fields, IDs, options, choice, previews, images, task | R5.14 to R5.18 |
+| No hand-written Decisions section | R5.19 |
+| Decisions section just before History, newest first, one card per option, the choice marked, open and replaced decisions shown | R5.20 to R5.23 |
+| Needs-you sentence lists open decisions | R5.25 |
+| Warning: open decision with no task in Needs you | R5.26 |
 | Structure stylesheet byte-identical; token block complete | R5.10, R5.11 |
 | `extra_css` redefines no structure selector | R4.11 |
 | Rendered HTML equals a fresh render | INV-3 |

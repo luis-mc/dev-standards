@@ -62,6 +62,8 @@ the repository instead (the session's scratchpad directory, in a new folder).
      `<!-- title: Section title -->`. No `<script>`, no `<style>`, no section
      numbers. `extra_css` must never redefine a selector of the structure
      stylesheet.
+   The full-progress artifact has no `decisions.json`; decisions belong to the
+   feature artifacts.
    Write only what is true now. Then run
    `edit-content full-progress --from <scratch dir>` and fix any validation
    error in the scratch files.

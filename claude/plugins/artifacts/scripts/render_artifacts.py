@@ -14,12 +14,13 @@ sections, and registry (full-progress template only).
 """
 from __future__ import annotations
 
+import base64
 import html as _html
 import json
 import os
 import re
 import unicodedata
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from html.parser import HTMLParser
 
 SPEC = 'ARTIFACTSPEC 1.0.0'
@@ -55,6 +56,17 @@ EXPECTED_RE = re.compile(
 STAMP_TEXT_RE = re.compile(r'^(\d{2}) (' + '|'.join(MONTHS) + r') (\d{2}):(\d{2})$')
 ISO_OFFSET_RE = re.compile(r'^\d{4}-\d\d-\d\dT\d\d:\d\d(:\d\d)?[+-]\d\d:\d\d$')
 TASK_ID_RE = re.compile(r'^([A-Z]{2,5})(\d+)$')
+
+# Decisions (section 5.4)
+DECISION_ID_RE = re.compile(r'^D([1-9]\d*)$')
+ISO_DAY_RE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+DECISION_KEYS = ('id', 'question', 'asked', 'status', 'options', 'chosen', 'decided', 'owner_words', 'task', 'replaces')
+OPTION_KEYS = ('label', 'summary', 'recommended', 'preview', 'image')
+DECISION_LIMITS = {'question': 200, 'label': 60, 'summary': 400, 'owner_words': 400, 'preview': 4000}
+MAX_OPTIONS = 6
+IMAGE_TYPES = {'.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp'}
+MAX_IMAGE_BYTES = 300_000
+IMAGE_PATH_RE = re.compile(r'^assets/([A-Za-z0-9][A-Za-z0-9._-]*)$')
 
 
 class ContentError(Exception):
@@ -398,10 +410,215 @@ def _scan_fragment(markup: str) -> list:
     return scanner.finish()
 
 
-def load_content(record_dir: str, key: str, plugin_dir: str = PLUGIN_DIR) -> dict:
-    """Read and validate content/<key>/ of the record (R4.4, R4.10, R4.11).
+# Tags a decision preview may not hold, and attributes that never belong in one (R5.17).
+PREVIEW_BAD_TAGS = frozenset({
+    'script', 'style', 'iframe', 'frame', 'frameset', 'object', 'embed', 'applet', 'link', 'meta', 'base', 'form',
+    'input', 'button', 'select', 'textarea', 'noscript', 'template', 'math', 'foreignobject', 'use', 'animate', 'set',
+    'animatetransform', 'animatemotion', 'title', 'html', 'head', 'body', 'main', 'nav', 'header', 'footer', 'section',
+    'h1', 'h2', 'audio', 'video', 'source', 'track', 'canvas'})
+PREVIEW_BAD_ATTRS = frozenset({'id', 'name', 'srcdoc', 'formaction', 'ping'})
+DATA_IMAGE_RE = re.compile(r'^data:image/(png|jpeg|gif|webp);base64,[a-z0-9+/=]*$')
 
-    Returns {"meta": {title, hero, lede, extra_css}, "sections": [{title, html}], "history": [{date, change}]}.
+
+class _Preview(_Fragment):
+    """A decision preview: the fragment rules of R4.10 plus no unsafe tag, attribute or URL (R5.17)."""
+
+    def _look(self, tag, attrs):
+        if tag in PREVIEW_BAD_TAGS:
+            self.problems.append('<%s> is not allowed in a preview (R5.17)' % tag)
+        for name, value in attrs:
+            name, value = name.lower(), value or ''
+            compact = re.sub(r'[\x00-\x20]+', '', value).lower()
+            if name.startswith('on'):
+                self.problems.append('the attribute %s is not allowed in a preview (R5.17)' % name)
+            elif name in PREVIEW_BAD_ATTRS:
+                self.problems.append('the attribute %s is not allowed in a preview (R5.17)' % name)
+            if re.search(r'(javascript|vbscript):', compact):
+                self.problems.append('a script URL is not allowed in a preview (R5.17)')
+            elif re.search(r'https?:|^//', compact):
+                self.problems.append('an external URL (%s) is not allowed in a preview (R5.17)' % name)
+            elif 'data:' in compact and not DATA_IMAGE_RE.match(compact):
+                self.problems.append('a data: URL in a preview must be a base64 png, jpeg, gif or webp image (R5.17)')
+            if name == 'style' and re.search(r'url\(|@import|expression\(|behavior|-moz-binding|position:(fixed|sticky)', compact):
+                self.problems.append('style="..." in a preview may not use url(), @import, expression() or fixed positions (R5.17)')
+            if 'section-number' in value.split() and name == 'class':
+                self.problems.append('a section number element is not allowed in a preview (R5.17)')
+
+    def handle_starttag(self, tag, attrs):
+        self._look(tag, attrs)
+        super().handle_starttag(tag, attrs)
+
+    def handle_startendtag(self, tag, attrs):
+        self._look(tag, attrs)
+        super().handle_startendtag(tag, attrs)
+
+
+def preview_problems(markup: str) -> list:
+    """R5.17: what is wrong with a decision preview fragment; [] when it is clean."""
+    scanner = _Preview()
+    scanner.feed(markup)
+    return list(dict.fromkeys(p.replace('(R4.10)', '(R5.17)').replace('in content', 'in a preview') for p in scanner.finish()))
+
+
+def _is_text(value, limit, empty_ok=False) -> bool:
+    return isinstance(value, str) and len(value) <= limit and (empty_ok or bool(value.strip()))
+
+
+def _real_day(value) -> bool:
+    if not (isinstance(value, str) and ISO_DAY_RE.match(value)):
+        return False
+    try:
+        date.fromisoformat(value)
+    except ValueError:
+        return False
+    return True
+
+
+def load_decisions(folder: str, key: str):
+    """Read and validate content/<key>/decisions.json (R5.14 to R5.19).
+
+    Returns (decisions, problems). A decision is normalised: every key of DECISION_KEYS present, each option
+    with label, summary, recommended (bool), preview and image ('' when absent) and image_uri (the image as a
+    data: URI, '' when none). Problems are messages that end with their requirement ID.
+    """
+    where = 'content/%s/decisions.json' % key
+    problems = []
+    try:
+        data = json.loads(_read(os.path.join(folder, 'decisions.json')))
+    except (OSError, ValueError) as exc:
+        return [], ['%s: %s (R5.14)' % (where, exc)]
+    if not (isinstance(data, dict) and list(data) == ['decisions'] and isinstance(data['decisions'], list)):
+        return [], ['%s: it must hold exactly {"decisions": [...]} (R5.14)' % where]
+    out, seen = [], []
+    for position, raw in enumerate(data['decisions'], 1):
+        tag = '%s decision %d' % (where, position)
+        if not isinstance(raw, dict):
+            problems.append('%s is not an object (R5.14)' % tag)
+            continue
+        unknown = sorted(set(raw) - set(DECISION_KEYS))
+        if unknown:
+            problems.append('%s: unknown field(s) %s; the fields are %s (R5.14)' % (tag, ', '.join(unknown), ', '.join(DECISION_KEYS)))
+        did = raw.get('id')
+        if not (isinstance(did, str) and DECISION_ID_RE.match(did)):
+            problems.append('%s: id %r must be D1, D2, ... (R5.15)' % (tag, did))
+            did = '#%d' % position
+        else:
+            tag = '%s %s' % (where, did)
+            if did != 'D%d' % position:
+                problems.append('%s: ids run D1, D2, ... in file order with no gap, none reused or removed; this is decision %d (R5.15)'
+                                % (tag, position))
+        if not _is_text(raw.get('question'), DECISION_LIMITS['question']):
+            problems.append('%s: "question" must be text of 1 to %d characters (R5.14)' % (tag, DECISION_LIMITS['question']))
+        if not _real_day(raw.get('asked')):
+            problems.append('%s: "asked" must be a date, YYYY-MM-DD (R5.14)' % tag)
+        status = raw.get('status')
+        if status not in ('decided', 'open'):
+            problems.append('%s: "status" must be "decided" or "open" (R5.16)' % tag)
+        options, labels, recommended = [], [], 0
+        raw_options = raw.get('options')
+        if not isinstance(raw_options, list) or not 2 <= len(raw_options) <= MAX_OPTIONS:
+            problems.append('%s: "options" must list 2 to %d options; a yes/no question lists Yes and No (R5.16)' % (tag, MAX_OPTIONS))
+            raw_options = []
+        for number, option in enumerate(raw_options, 1):
+            otag = '%s option %d' % (tag, number)
+            if not isinstance(option, dict):
+                problems.append('%s is not an object (R5.14)' % otag)
+                continue
+            extra = sorted(set(option) - set(OPTION_KEYS))
+            if extra:
+                problems.append('%s: unknown field(s) %s; the fields are %s (R5.14)' % (otag, ', '.join(extra), ', '.join(OPTION_KEYS)))
+            label = option.get('label')
+            if not _is_text(label, DECISION_LIMITS['label']):
+                problems.append('%s: "label" must be text of 1 to %d characters (R5.16)' % (otag, DECISION_LIMITS['label']))
+                label = ''
+            elif label.strip().casefold() in labels:
+                problems.append('%s: the label %r is used twice; labels are unique (R5.16)' % (otag, label))
+            labels.append(label.strip().casefold())
+            if not _is_text(option.get('summary'), DECISION_LIMITS['summary']):
+                problems.append('%s: "summary" must be text of 1 to %d characters (R5.14)' % (otag, DECISION_LIMITS['summary']))
+            flag = option.get('recommended', False)
+            if not isinstance(flag, bool):
+                problems.append('%s: "recommended" must be true or false (R5.16)' % otag)
+                flag = False
+            recommended += flag
+            preview, image, uri = option.get('preview', ''), option.get('image', ''), ''
+            if preview != '' and not _is_text(preview, DECISION_LIMITS['preview']):
+                problems.append('%s: "preview" must be an HTML fragment of at most %d characters (R5.17)' % (otag, DECISION_LIMITS['preview']))
+                preview = ''
+            elif preview:
+                problems += ['%s preview: %s' % (otag, p) if '(R5.17)' in p else '%s preview: %s (R5.17)' % (otag, p)
+                             for p in preview_problems(preview)]
+            if image != '':
+                uri = _image_uri(folder, image, otag, problems)
+                if preview:
+                    problems.append('%s: give a preview or an image, not both (R5.17)' % otag)
+            options.append({'label': label.strip() if isinstance(label, str) else '',
+                            'summary': option.get('summary', '').strip() if isinstance(option.get('summary'), str) else '',
+                            'recommended': flag, 'preview': preview if isinstance(preview, str) else '',
+                            'image': image if isinstance(image, str) else '', 'image_uri': uri})
+        if recommended > 1:
+            problems.append('%s: %d options are marked recommended; at most one (R5.16)' % (tag, recommended))
+        chosen, decided = raw.get('chosen'), raw.get('decided')
+        if status == 'decided':
+            if not (isinstance(chosen, str) and chosen in [o['label'] for o in options]):
+                problems.append('%s: it is decided, so "chosen" must be the label of one of its options (R5.16)' % tag)
+            if not _real_day(decided):
+                problems.append('%s: it is decided, so "decided" must be a date, YYYY-MM-DD (R5.16)' % tag)
+            elif _real_day(raw.get('asked')) and decided < raw['asked']:
+                problems.append('%s: "decided" is before "asked" (R5.16)' % tag)
+        elif status == 'open':
+            if chosen is not None or decided is not None:
+                problems.append('%s: it is open, so "chosen" and "decided" must be null (R5.16)' % tag)
+        words = raw.get('owner_words')
+        if words is not None:
+            if not _is_text(words, DECISION_LIMITS['owner_words']):
+                problems.append('%s: "owner_words" must be text of 1 to %d characters (R5.14)' % (tag, DECISION_LIMITS['owner_words']))
+            elif status == 'open':
+                problems.append('%s: it is open, so it has no "owner_words" (R5.16)' % tag)
+        task = raw.get('task')
+        if task is not None and not (isinstance(task, str) and re.match(r'^[A-Z]{2,5}[1-9]\d*$', task)):
+            problems.append('%s: "task" must be a task ID such as AR9 (R5.18)' % tag)
+        replaces = raw.get('replaces')
+        if replaces is not None and replaces not in seen:
+            problems.append('%s: "replaces" %r must name an earlier decision of this artifact (R5.18)' % (tag, replaces))
+        seen.append(did)
+        out.append({'id': did, 'question': raw.get('question', '').strip() if isinstance(raw.get('question'), str) else '',
+                    'asked': raw.get('asked'), 'status': status, 'options': options,
+                    'chosen': chosen if status == 'decided' else None, 'decided': decided if status == 'decided' else None,
+                    'owner_words': words.strip() if isinstance(words, str) and words.strip() else None,
+                    'task': task if isinstance(task, str) else None,
+                    'replaces': replaces if isinstance(replaces, str) else None})
+    return out, problems
+
+
+def _image_uri(folder: str, rel, where: str, problems: list) -> str:
+    """The image under content/<key>/assets/ as a data: URI; '' (and a problem) when it cannot be used (R5.17)."""
+    match = IMAGE_PATH_RE.match(rel) if isinstance(rel, str) else None
+    if not match:
+        problems.append('%s: "image" %r must be assets/<file name> inside the content folder (R5.17)' % (where, rel))
+        return ''
+    kind = IMAGE_TYPES.get(os.path.splitext(match.group(1))[1].lower())
+    if kind is None:
+        problems.append('%s: the image %s must be png, jpg, gif or webp (R5.17)' % (where, rel))
+        return ''
+    path = os.path.join(folder, 'assets', match.group(1))
+    try:
+        with open(path, 'rb') as handle:
+            data = handle.read()
+    except OSError:
+        problems.append('%s: the image %s does not exist in the content folder (R5.17)' % (where, rel))
+        return ''
+    if len(data) > MAX_IMAGE_BYTES:
+        problems.append('%s: the image %s is %d bytes; at most %d (R5.17)' % (where, rel, len(data), MAX_IMAGE_BYTES))
+        return ''
+    return 'data:%s;base64,%s' % (kind, base64.b64encode(data).decode('ascii'))
+
+
+def load_content(record_dir: str, key: str, plugin_dir: str = PLUGIN_DIR) -> dict:
+    """Read and validate content/<key>/ of the record (R4.4, R4.10, R4.11, section 5.4).
+
+    Returns {"meta": {title, hero, lede, extra_css}, "sections": [{title, html}], "history": [{date, change}],
+    "decisions": [decision]}; decisions is [] when the artifact has no decisions.json.
     Raises ContentError listing every problem.
     """
     folder = os.path.join(record_dir, 'content', key)
@@ -450,7 +667,7 @@ def load_content(record_dir: str, key: str, plugin_dir: str = PLUGIN_DIR) -> dic
 
     sections, numbers = [], []
     for name in sorted(os.listdir(folder)):
-        if name in ('meta.json', 'history.json'):
+        if name in ('meta.json', 'history.json', 'decisions.json') or (name == 'assets' and os.path.isdir(os.path.join(folder, name))):
             continue
         match = SECTION_FILE_RE.match(name)
         if not name.endswith('.html'):
@@ -471,6 +688,9 @@ def load_content(record_dir: str, key: str, plugin_dir: str = PLUGIN_DIR) -> dic
             problems.append('content/%s/%s: the first line must be <!-- title: Section title -->' % (key, name))
             continue
         title, body = head.group(1), raw[head.end():].strip('\n')
+        if title.strip().casefold() == 'decisions' and key != FULL_PROGRESS_NAME:
+            problems.append('content/%s/%s: a section titled Decisions is drawn from decisions.json only; move it there (R5.19)'
+                            % (key, name))
         if TITLE_NUMBER_RE.match(title):
             problems.append('content/%s/%s: the title "%s" starts with a section number; the renderer numbers sections (R4.10)'
                             % (key, name, title))
@@ -499,9 +719,16 @@ def load_content(record_dir: str, key: str, plugin_dir: str = PLUGIN_DIR) -> dic
                         history.append({'date': row['date'].strip(), 'change': row['change'].strip()})
             except (OSError, ValueError) as exc:
                 problems.append('content/%s/history.json: %s' % (key, exc))
+    decisions = []
+    if os.path.exists(os.path.join(folder, 'decisions.json')):
+        if key == FULL_PROGRESS_NAME:
+            problems.append('content/%s/decisions.json: the full-progress artifact has no decisions (R5.14)' % key)
+        else:
+            decisions, found = load_decisions(folder, key)
+            problems += found
     if problems:
         raise ContentError(problems)
-    return {'meta': meta, 'sections': sections, 'history': history}
+    return {'meta': meta, 'sections': sections, 'history': history, 'decisions': decisions}
 
 
 # ------------------------------------------------------------------ the record: kinds and tasks
@@ -558,13 +785,21 @@ def group_tasks(tasks: list, ref: datetime, kind: str) -> list:
     return out
 
 
-def needs_you_sentence(tasks: list) -> str:
-    """R5.7."""
+def open_decisions(decisions) -> list:
+    """The decisions that wait on the owner: open and not replaced (R5.23), oldest first."""
+    replaced = {d.get('replaces') for d in decisions or [] if d.get('replaces')}
+    return [d for d in decisions or [] if d.get('status') == 'open' and d.get('id') not in replaced]
+
+
+def needs_you_sentence(tasks: list, decisions=()) -> str:
+    """R5.7 and R5.25: tasks in Needs you or Failed, then open decisions."""
     waiting = [t for t in sorted(tasks, key=lambda t: YOU_ORDER.index(t['status']) if t['status'] in YOU_ORDER else 9)
                if t['status'] in ('Needs you', 'Failed')]
-    if not waiting:
+    parts = ['%s %s' % (t['id'], _norm(t['item'])) for t in waiting]
+    parts += ['%s %s' % (d['id'], _norm(d['question'])) for d in open_decisions(decisions)]
+    if not parts:
         return 'Nothing needs you.'
-    return 'Needs you: ' + '; '.join('%s %s' % (t['id'], _norm(t['item'])) for t in waiting) + '.'
+    return 'Needs you: ' + '; '.join(parts) + ('' if parts[-1].endswith('?') else '.')
 
 
 def _first_sentence(lede_html: str) -> str:
@@ -669,6 +904,76 @@ def _history(rows: list) -> str:
             '<tbody>\n%s\n</tbody></table></div>\n' % body)
 
 
+def _fmt_day(iso: str) -> str:
+    year, month, day = iso.split('-')
+    return '%02d %s' % (int(day), MONTHS[int(month) - 1])
+
+
+def _decision_number(decision: dict) -> int:
+    return int(decision['id'][1:])
+
+
+def _option_card(option: dict, decision: dict, replaced: bool) -> str:
+    """One option as a card (R5.21, R5.22). A closed decision marks the chosen card and mutes the rest."""
+    closed = decision['status'] == 'decided'
+    chosen = closed and option['label'] == decision['chosen']
+    cls = 'decision-option' + (' decision-chosen' if chosen else ' decision-muted' if closed else '')
+    head = '<span class="decision-label">%s</span>' % esc(option['label'])
+    if option['recommended']:
+        head += ' <span class="decision-tag">Recommended</span>'
+    if chosen:
+        head += ' <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; %s</span>' % esc(_fmt_day(decision['decided']))
+    elif closed:
+        head += ' <span class="decision-chip decision-chip-muted">Not chosen</span>'
+    out = ['<div class="%s">' % cls, '<div class="decision-option-head">%s</div>' % head,
+           '<p class="decision-summary">%s</p>' % esc(option['summary'])]
+    if option['preview']:
+        out.append('<div class="decision-preview">%s</div>' % option['preview'])
+    elif option['image_uri']:
+        out.append('<div class="decision-preview"><img class="decision-image" src="%s" alt="%s"></div>'
+                   % (esc(option['image_uri']), esc(option['label'])))
+    if chosen and decision['owner_words']:
+        out.append('<blockquote class="decision-words">&ldquo;%s&rdquo;</blockquote>' % esc(decision['owner_words']))
+    out.append('</div>')
+    return '\n'.join(out)
+
+
+def _decisions(decisions: list) -> str:
+    """The generated Decisions section, newest decision first (R5.20 to R5.23)."""
+    replaced_by = {}
+    for decision in sorted(decisions, key=_decision_number):
+        if decision.get('replaces'):
+            replaced_by[decision['replaces']] = decision['id']
+    blocks = []
+    for decision in sorted(decisions, key=_decision_number, reverse=True):
+        did = decision['id']
+        replaced = did in replaced_by
+        meta = ['Asked %s' % _fmt_day(decision['asked'])]
+        if decision['status'] == 'decided':
+            meta.append('Decided %s' % _fmt_day(decision['decided']))
+        if decision['task']:
+            meta.append('Task %s' % decision['task'])
+        if decision['replaces']:
+            meta.append('Replaces %s' % decision['replaces'])
+        question = '<span class="decision-id">%s</span> <span class="decision-question">%s</span>' % (esc(did), esc(decision['question']))
+        if decision['status'] == 'open' and not replaced:
+            question += ' ' + _chip('Needs you')
+        body = ('<p class="decision-meta">%s</p>\n<div class="decision-options">\n%s\n</div>'
+                % (esc(' \u00b7 '.join(meta)), '\n'.join(_option_card(o, decision, replaced) for o in decision['options'])))
+        if replaced:
+            blocks.append('<details class="decision decision-replaced" data-decision="%s"><summary>%s <span class="decision-replaced-by">'
+                          'Replaced by %s</span></summary>\n%s\n</details>' % (esc(did), question, esc(replaced_by[did]), body))
+        else:
+            blocks.append('<article class="decision decision-%s" data-decision="%s">\n<h3 class="decision-head">%s</h3>\n%s\n</article>'
+                          % (decision['status'], esc(did), question, body))
+    return '<div class="decision-list">\n%s\n</div>\n' % '\n'.join(blocks)
+
+
+def _decisions_open_line(decisions) -> str:
+    count = len(open_decisions(decisions))
+    return '' if not count else ' %d decision%s open.' % (count, '' if count == 1 else 's')
+
+
 def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list) -> str:
     rows = []
     for entry in manifest.get('feature_artifacts') or []:
@@ -680,7 +985,7 @@ def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list
         link = '<a href="%s">%s</a>' % (esc(entry['url']), title) if entry.get('url') else title
         rows.append('<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % (
             link, esc(_id_ranges(entry['key'], entry.get('prefix', ''), tasks)),
-            esc(_first_sentence(content['meta']['lede']))))
+            esc(_first_sentence(content['meta']['lede']) + _decisions_open_line(content.get('decisions')))))
     return ('<div class="table-scroll"><table class="feature-list"><thead><tr><th>Feature artifact</th><th>Tasks</th>'
             '<th>Where it stands</th></tr></thead><tbody>\n%s\n</tbody></table></div>\n' % '\n'.join(rows))
 
@@ -749,7 +1054,8 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
     project = str(manifest.get('project', ''))
     meta = content['meta']
 
-    sentence = needs_you_sentence(mine)
+    decisions = content.get('decisions') or []
+    sentence = needs_you_sentence(mine, decisions)
     lede = '<p class="lede">%s<strong>%s</strong></p>' % (meta['lede'] + ' ' if meta['lede'] else '', esc(sentence))
 
     sections = []  # (title, inner html) for sections 1..N
@@ -760,6 +1066,8 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
             raise ContentError(feature_problems)
     sections += [(s['title'], s['html']) for s in content['sections']]
     if kind == 'feature':
+        if decisions:
+            sections.append(('Decisions', _decisions(decisions)))
         sections.append(('History', _history(content['history'])))
 
     all_titles = ['Status and checklist'] + [t for t, _ in sections]
@@ -790,6 +1098,63 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
 
 
 # ------------------------------------------------------------------ checks on one artifact's HTML (section 14)
+def _check_decisions(node, decisions, add) -> None:
+    """R5.20 to R5.23 on the Decisions section: order, one card per option, the choice marked, open and replaced."""
+    replaced_by = {d['replaces']: d['id'] for d in sorted(decisions, key=_decision_number) if d.get('replaces')}
+    want = [d['id'] for d in sorted(decisions, key=_decision_number, reverse=True)]
+    blocks = find_all(node, pred=lambda n: 'data-decision' in n.attrs)
+    have = [b.attrs['data-decision'] for b in blocks]
+    if have != want:
+        add('R5.20', 'the decisions must be listed newest first, %s; found %s' % (want, have))
+    by_id = {b.attrs['data-decision']: b for b in blocks}
+    for decision in decisions:
+        block = by_id.get(decision['id'])
+        if block is None:
+            continue
+        did, closed = decision['id'], decision['status'] == 'decided'
+        replaced = did in replaced_by
+        if replaced:
+            summary = find(block, 'summary')
+            if block.tag != 'details' or 'open' in block.attrs or summary is None \
+                    or 'Replaced by %s' % replaced_by[did] not in text_of(summary):
+                add('R5.23', '%s is replaced by %s and must be a closed <details> with a "Replaced by %s" line'
+                    % (did, replaced_by[did], replaced_by[did]))
+        elif block.tag != 'article':
+            add('R5.23', '%s is not replaced and must not be collapsed' % did)
+        question = find(block, 'span', 'decision-question')
+        if question is None or text_of(question) != decision['question'] or text_of(find(block, 'span', 'decision-id') or block) != did:
+            add('R5.21', '%s must show its ID and question' % did)
+        cards = find_all(block, 'div', 'decision-option')
+        shown = [text_of(find(c, 'span', 'decision-label') or c) for c in cards]
+        if shown != [o['label'] for o in decision['options']]:
+            add('R5.21', '%s must show one card per option, in order: %s; found %s' % (did, [o['label'] for o in decision['options']], shown))
+            continue
+        chosen_cards = [c for c in cards if has_class(c, 'decision-chosen')]
+        if closed:
+            marked = [text_of(find(c, 'span', 'decision-label')) for c in chosen_cards]
+            if marked != [decision['chosen']]:
+                add('R5.22', '%s must mark only %r as chosen; it marks %s' % (did, decision['chosen'], marked))
+            words = [text_of(q) for c in chosen_cards for q in find_all(c, 'blockquote', 'decision-words')]
+            if words != ([u'\u201c%s\u201d' % decision['owner_words']] if decision['owner_words'] else []):
+                add('R5.22', '%s must quote the owner\'s words on the chosen card, and only there' % did)
+        elif chosen_cards:
+            add('R5.23', '%s is open and must have no chosen card' % did)
+        for card, option in zip(cards, decision['options']):
+            chips = [text_of(c) for c in find_all(card, 'span', 'decision-chip')]
+            is_chosen = has_class(card, 'decision-chosen')
+            want_chip = [] if not closed else (['Chosen by the owner \u00b7 %s' % _fmt_day(decision['decided'])] if is_chosen else ['Not chosen'])
+            if chips != want_chip:
+                add('R5.22', '%s option %r has the chips %s; it needs %s' % (did, option['label'], chips, want_chip))
+            if closed and not is_chosen and not has_class(card, 'decision-muted'):
+                add('R5.22', '%s option %r was not chosen and must be muted' % (did, option['label']))
+            tags = [text_of(t) for t in find_all(card, 'span', 'decision-tag')]
+            if tags != (['Recommended'] if option['recommended'] else []):
+                add('R5.22', '%s option %r must carry the Recommended tag exactly when it is recommended' % (did, option['label']))
+        needs = find_all(find(block, 'h3') or find(block, 'summary') or block, 'span', 'status-needs-you')
+        if (decision['status'] == 'open' and not replaced) != bool(needs):
+            add('R5.23', '%s shows the Needs you chip exactly when it is open and not replaced' % did)
+
+
 def _ui_script(plugin_dir: str, kind: str):
     try:
         root = parse_dom(_template(plugin_dir, kind))
@@ -818,6 +1183,12 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
     mine = _tasks_of(kind, key, all_tasks)
     feature_urls = {e['key']: e.get('url', '') for e in manifest.get('feature_artifacts') or []}
     root = parse_dom(html)
+    decisions = []
+    if kind == 'feature':
+        try:
+            decisions = load_content(record_dir, key, plugin_dir).get('decisions') or []
+        except (ContentError, OSError):
+            decisions = []       # an invalid content folder is reported by the record checks
 
     # R5.1 titles
     prefix = KIND_PREFIX[kind]
@@ -898,7 +1269,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
 
     # R5.7 lede
     lede = find(s0, 'p', 'lede') if s0 is not None else None
-    sentence = needs_you_sentence([t for t in mine if t.get('status') in STATUSES])
+    sentence = needs_you_sentence([t for t in mine if t.get('status') in STATUSES], decisions)
     if lede is not None and not text_of(lede).endswith(sentence):
         add('R5.7', 'the lede must end with %r; it reads %r' % (sentence, text_of(lede)[-120:]))
 
@@ -1078,6 +1449,16 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
                     add('R5.4', 'History must be newest first')
     elif history_sections:
         add('R5.4', 'the full-progress artifact has no History')
+
+    # R5.20 to R5.23 Decisions
+    decision_sections = [i for i in info if i['title'] == 'Decisions']
+    if kind == 'feature' and decisions:
+        if len(info) < 3 or info[-2]['title'] != 'Decisions' or len(decision_sections) != 1:
+            add('R5.20', 'when decisions.json has decisions, one section named Decisions must come just before History')
+        else:
+            _check_decisions(info[-2]['node'], decisions, add)
+    elif kind == 'feature' and decision_sections:
+        add('R5.20', 'a Decisions section may only be drawn from the decisions.json of a feature artifact')
 
     # R5.9, R4.10 scripts; R4.10 styles
     scripts = find_all(root, 'script')
