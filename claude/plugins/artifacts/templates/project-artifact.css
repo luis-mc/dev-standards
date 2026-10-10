@@ -227,6 +227,7 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
   line-height: 1.4;
 }
 table.status-checklist td:first-child { white-space: nowrap; }
+table.status-checklist td code { white-space: nowrap; overflow-wrap: normal; }
 tr.status-group td {
   background: var(--paper);
   font-family: var(--font-mono);
