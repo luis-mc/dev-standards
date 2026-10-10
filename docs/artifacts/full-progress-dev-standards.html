@@ -826,11 +826,11 @@ li { margin: .25em 0; }
    "id": "DS20",
    "owner": "project",
    "app": "",
-   "status": "To do",
+   "status": "Running",
    "item": "Keep only the newest build artifact",
-   "detail": "Build outputs uploaded to GitHub Actions (installers such as MSI, bundles, reports): only the newest of each name is kept; older ones are deleted after every run. A STACKSPEC rule and an agent rule.",
+   "detail": "Agent building artifact_prune.py and the artifact-prune workflow for GitHub Actions build outputs (MSI installers, bundles, reports): only the newest of each name is kept. Rule written in STACKSPEC 7.0.0 §13.1 and the agent rules.",
    "expected": "10 Oct ~21:30",
-   "changed": "2026-10-10T19:04+01:00"
+   "changed": "2026-10-10T19:09+01:00"
   },
   {
    "id": "DS21",
@@ -910,14 +910,14 @@ li { margin: .25em 0; }
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
 <p class="last-update">Last update: <time datetime="2026-10-10T19:09+01:00">10 Oct 19:09</time> (Lisbon)</p>
 <p class="lede">All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class="task-id">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class="task-id">AR12</span>), and the secret-scan fixes (<span class="task-id">DS15</span>, <span class="task-id">AR19</span>, <span class="task-id">DS16</span>). Nothing is running. <strong>Nothing needs you.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">34</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">6</div><div class="label">done</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">34</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">6</div><div class="label">done</div></div><div class="status-count-tile status-running"><div class="count">4</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-done">Done</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
 <tr data-task="DS17"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS17</span>Branch gate: setup first, 30-minute limit, fail fast</td><td></td><td>Agent building: setup step first (frozen lockfile), 30-minute limit with exit 4, fail fast by default with --keep-going, per-step logs.</td><td>10 Oct ~21:30</td></tr>
 <tr data-task="DS18"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS18</span>Pre-push guard flakes</td><td></td><td>Agent investigating the two pre-push guard failures after DS17; every guard failure will name the check, the reason and the log.</td><td>10 Oct ~21:30</td></tr>
 <tr data-task="DS19"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS19</span>Automatic branch and worktree cleanup</td><td></td><td>Agent building cleanup.py and the train-cleanup workflow: a merged train&#x27;s branches, gate-result refs, local branches and worktrees go; open, unmerged or dirty ones are kept and listed.</td><td>10 Oct ~21:30</td></tr>
-<tr data-task="DS20"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS20</span>Keep only the newest build artifact</td><td></td><td>Build outputs uploaded to GitHub Actions (installers such as MSI, bundles, reports): only the newest of each name is kept; older ones are deleted after every run. A STACKSPEC rule and an agent rule.</td><td>10 Oct ~21:30</td></tr>
+<tr data-task="DS20"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS20</span>Keep only the newest build artifact</td><td></td><td>Agent building artifact_prune.py and the artifact-prune workflow for GitHub Actions build outputs (MSI installers, bundles, reports): only the newest of each name is kept. Rule written in STACKSPEC 7.0.0 §13.1 and the agent rules.</td><td>10 Oct ~21:30</td></tr>
 <tr data-task="DS21"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS21</span>Windows-only test failures</td><td></td><td>test_spec_check (a symlink) and test_authspec_check (needs UTF-8) pass on Windows as they do on Linux CI.</td><td>10 Oct ~21:30</td></tr>
 <tr class="status-group" data-group="done"><td colspan="5"><strong>Live or done</strong></td></tr>
 <tr data-task="AR20"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR20</span>mark-published leaves the registry alone</a></td><td><code>luismc-artifacts</code></td><td>mark-published, design set, edit-content, render and feature-new no longer bump the registry, so the full-progress artifact stays clean after publishing; three regression tests. dev-standards also got its rule file and gitignore entries. #21.</td><td>10 Oct</td></tr>

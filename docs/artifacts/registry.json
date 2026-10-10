@@ -376,11 +376,11 @@
       "id": "DS20",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Keep only the newest build artifact",
-      "detail": "Build outputs uploaded to GitHub Actions (installers such as MSI, bundles, reports): only the newest of each name is kept; older ones are deleted after every run. A STACKSPEC rule and an agent rule.",
+      "detail": "Agent building artifact_prune.py and the artifact-prune workflow for GitHub Actions build outputs (MSI installers, bundles, reports): only the newest of each name is kept. Rule written in STACKSPEC 7.0.0 §13.1 and the agent rules.",
       "expected": "10 Oct ~21:30",
-      "changed": "2026-10-10T19:04+01:00"
+      "changed": "2026-10-10T19:09+01:00"
     },
     {
       "id": "DS21",
