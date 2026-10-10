@@ -476,11 +476,11 @@
       "id": "DS22",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Integrate and release STACKSPEC 7.0.0",
-      "detail": "Every part is joined into PR #27: DS17-DS21, DS23, DS24, DS25 and MP7, with main (luismc-artifacts 1.1.x) merged in. CI running on e8f468b (spec-lint, secret-scan, and the new template build), watched by commit; merge on green, fixes forward until green.",
-      "expected": "11 Oct ~01:00",
-      "changed": "2026-10-11T00:19+01:00"
+      "detail": "Released: PR #27 squash 137e0d0 at 00:31 on green CI (spec-lint, secret-scan, template build): STACKSPEC 7.0.0 and luismc-project-setup 13.0.0, with specs 1.2.0, audits 1.2.0, agents 1.1.0, artifacts 1.1.2. Two CI failures were fixed on the way (a secret-scan hit, a Linux-only test harness bug).",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:33+01:00"
     },
     {
       "id": "DS23",
