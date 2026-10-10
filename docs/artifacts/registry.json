@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T20:22+01:00",
+  "updated": "2026-10-10T20:33+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -391,6 +391,16 @@
       "detail": "Built in draft #22: test_spec_check loads spec_check through the symlink placeholder Windows checks out; test_authspec_check reads the spec as UTF-8. Both pass on Windows with no environment variable; every other tools/ suite passes there too. Waiting for the join.",
       "expected": "10 Oct ~21:30",
       "changed": "2026-10-10T19:33+01:00"
+    },
+    {
+      "id": "DS22",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Integrate and release STACKSPEC 7.0.0",
+      "detail": "DS17 to DS21 joined into DS17-integration. Running: the full test suites on the joined head; next, one ready PR, its CI watched by commit, merge on green (luismc-project-setup 13.0.0). Then: delete-branch-on-merge on, old branches cleaned up, global rules updated.",
+      "expected": "10 Oct ~21:45",
+      "changed": "2026-10-10T20:33+01:00"
     },
     {
       "id": "MP1",
