@@ -2,7 +2,7 @@
 name: feature-artifact-new
 description: Create a feature artifact — the standalone HTML file `docs/artifacts/feature-<slug>.html` of one feature, titled `Feature: <name>`, with a status checklist, written content and a history. It opens by double-click in any browser and is never published. Use when the user starts a feature and wants it tracked, asks for a feature artifact or feature page, or says a feature needs its own status view. Creates the project's full-progress artifact first when it does not exist yet.
 model: opus
-effort: high
+effort: medium
 ---
 
 # Feature artifact — new
