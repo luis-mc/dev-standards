@@ -3,7 +3,7 @@
 - Record work as a task before starting it.
 - Start branch names with the task ID.
 - Change status only with `set-task-status`.
-- Publish what `pending` lists in the same turn.
+- Publish Full Progress once, at the end of the turn, never mid-turn; feature artifacts are files in the repo (`docs/artifacts/feature-<slug>.html`) and are never published.
 - Never type a status row by hand.
 - Put every doc under `docs/`.
 - Every activity is a task before it starts, whoever does it: work given to agents and the session's own (contracts, specs, reviews, joins, test runs, releases, deploys, cleanup).

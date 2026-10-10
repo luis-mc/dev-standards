@@ -44,19 +44,10 @@ read the message, fix the cause and rerun.
    For `--owner project`, `--prefix` picks one of the project's prefixes; a new
    prefix that no feature uses is registered by the command. The command prints the new ID and renders and commits the
    record.
-4. **Publish** what `pending` lists, in this turn:
-   - Run `pending --json`. Handle every entry of `artifacts`, feature artifacts
-     before the full-progress artifact. Each carries `key`, `title`, `path` (the
-     absolute path of the HTML to publish) and `url`.
-   - Publish with the Artifact tool: `file_path` is the entry's `path`,
-     unchanged; `url` is the entry's `url` when it is not empty. If it is
-     refused because the artifact does not exist, list the owner's artifacts and
-     match the exact `title`; publish to that one, and only when none matches
-     publish a new one (with an `icon` such as `tracker`). If it is refused
-     because the artifact changed elsewhere, `read` the live version once, copy
-     content-section changes through `export-content <key> --to <dir>` and
-     `edit-content <key> --from <dir>`, and retry once with the new `path`.
-   - Run `mark-published <key> --url <URL>` for each, with the URL the publish
-     returned. Rerun `pending` until it exits 0.
+4. **Do not publish now.** Status changes accumulate during the turn;
+   Full Progress is published once, at the end of the turn, per "Publishing" in
+   the `task-status-update` skill (claude.ai allows 200 publishes per account
+   per day). Feature artifacts are files in the repository and are never
+   published.
 5. **Tell the owner** the new task ID, and that its branch name must start with
    it (`<ID>-short-name`).

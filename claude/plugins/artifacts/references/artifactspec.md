@@ -6,7 +6,7 @@
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
 **Last reviewed:** 2026-10-10
-**Changes in 1.1.0:** the activity rule and the status `Built` (R3.2 to R3.5, R6.1, R6.9), the rule delivered at session start (R8.9, R10.4, R10.5), the end-of-turn check on background work (R8.8, R8.10), and §5.4 Decisions (`decisions.json`, R5.14 to R5.26). The record format string in `manifest.json` and `registry.json` stays `ARTIFACTSPEC 1.0.0`: existing records stay valid.
+**Changes in 1.1.0:** the activity rule and the status `Built` (R3.2 to R3.5, R6.1, R6.9), the rule delivered at session start (R8.9, R10.4, R10.5), the end-of-turn check on background work (R8.8, R8.10), §5.4 Decisions (`decisions.json`, R5.14 to R5.26), feature artifacts as standalone HTML files in the repository that are never published (R5.27 to R5.29, R9.5), Full Progress published once per turn, at its end (R3.1, R9.1), with local-file links to the feature files (§5.5, R5.30 to R5.32), the Earlier fold for `Live` rows only (R6.3), and the end-of-turn background check armed by background agents only (R8.8). The record format string in `manifest.json` and `registry.json` stays `ARTIFACTSPEC 1.0.0`: existing records stay valid.
 
 ---
 
@@ -66,7 +66,15 @@ nothing was running while much was. 1.1.0 adds:
 - an end-of-turn check that background work has a Running task (R8.8, R8.10).
 - decisions: a feature artifact records every option the owner was offered and
   the one chosen in `decisions.json`, drawn as a Decisions section (§5.4,
-  R5.14 to R5.26).
+  R5.14 to R5.26);
+- a publish budget: claude.ai allows 200 artifact publishes per account per
+  day and every republish counts, so only Full Progress is published, once at
+  the end of each turn (R3.1, R9.1); a feature artifact is a standalone HTML
+  file in the repository that opens by double-click and is never published
+  (R5.27 to R5.29, R9.5), and Full Progress links to the feature files as
+  local files (§5.5);
+- only `Live` rows fold into `Earlier`, so unreleased `Built` work is never
+  hidden (R6.3); and only background agents arm the end-of-turn check (R8.8).
 
 The record format is unchanged: `spec` in the manifest and the registry stays
 `"ARTIFACTSPEC 1.0.0"`, so a 1.0.0 record is valid under 1.1.0.
@@ -89,6 +97,10 @@ The record format is unchanged: `spec` in the manifest and the registry stays
 | D10 | How does the activity rule reach a project? | The session-start hook prints the plugin's rule file as context, every session, in any project with a record. | No copy goes stale; a rule update reaches every project with the next plugin version (R8.9, R10.4). |
 | D11 | Does the record format change in 1.1.0? | No. | `spec` in the manifest and the registry stays `"ARTIFACTSPEC 1.0.0"` (§4.2). |
 | D12 | How are the owner's choices between options kept? | Every option offered and the one chosen, in the feature's `decisions.json`; the script draws the Decisions section. | The options, the recommendation and the choice are never lost in free text (§5.4). |
+| D13 | How often is Full Progress published? | Once per turn, at the end of it, never mid-turn. | Status changes accumulate during the turn and cost one of the account's 200 publishes a day, not one per change (R3.1, R9.1). |
+| D14 | Are feature artifacts published? | No. Each is a standalone HTML file in the repository, `docs/artifacts/feature-<slug>.html`. | It opens by double-click in any browser and costs no publish; Full Progress links to it as a local file (R5.27, §5.5, R9.5). |
+| D15 | Which rows fold into Earlier? | `Live` rows older than 14 days; `Built` rows never fold. | Unreleased work is never hidden (R6.3). |
+| D16 | What arms the end-of-turn background check? | A background `Agent`, `Task` or `Bash` call: `tool_input.run_in_background` is true. | A foreground sub-agent no longer asks for a Running task (R8.8). |
 
 ---
 
@@ -124,9 +136,10 @@ The record format is unchanged: `spec` in the manifest and the registry stays
 
 | Term | Meaning |
 |---|---|
-| project artifact | A claude.ai artifact that belongs to a project: a feature artifact or the full-progress artifact. Never "page". |
-| feature artifact | The artifact of one feature, titled `Feature: <name>`. |
-| full-progress artifact | The project's one artifact of all ongoing work, titled `Full Progress: <project>`. |
+| project artifact | A feature artifact or the full-progress artifact of a project. Never "page". |
+| feature artifact | The artifact of one feature, titled `Feature: <name>`: a standalone HTML file in the repository, `docs/artifacts/feature-<slug>.html`, never published (§5.1, R9.5). |
+| full-progress artifact | The project's one artifact of all ongoing work, titled `Full Progress: <project>`: the only claude.ai artifact of the project, published once per turn (R9.1). |
+| publish copy | The full-progress artifact rendered for publishing, with absolute `file:///` links to the feature files, written by `pending` to a git-ignored path (R5.31). |
 | task | One unit of work with an ID, a status and an owner. |
 | owner (of a task) | The feature artifact it belongs to (its `key`), or `project`. |
 | project task | A task whose owner is `project`. |
@@ -135,7 +148,7 @@ The record format is unchanged: `spec` in the manifest and the registry stays
 | record | Everything under `docs/artifacts/`. |
 | record worktree | A git worktree of the default branch where the script writes and commits the record (§4.6). |
 | render | Generating an artifact's HTML from the record. |
-| publish | Sending rendered HTML to claude.ai through the session's Artifact tool. |
+| publish | Sending the full-progress artifact's publish copy to claude.ai through the session's Artifact tool. |
 | queue | Status events waiting for the session to apply (§8.1). |
 | the script | `scripts/project_artifacts.py` in the plugin. |
 
@@ -151,7 +164,7 @@ The record format is unchanged: `spec` in the manifest and the registry stays
 | `scripts/render_artifacts.py` | Pure functions: record in, HTML out (§5). Imported by the script. |
 | `scripts/artifact_queue.py` | Reads and writes the queue (§8.1). Imported by the hooks and the script. |
 | `scripts/hook_after_command.py`, `hook_end_of_turn.py`, `hook_session_start.py` | The three hooks (§8). |
-| `templates/feature-artifact.html`, `templates/full-progress-artifact.html` | Page skeletons with placeholders (§5.1). |
+| `templates/feature-artifact.html`, `templates/full-progress-artifact.html` | Skeletons with placeholders: the first is a complete HTML document, the second a fragment (§5.1). |
 | `templates/project-artifact.css` | The fixed structure stylesheet. |
 | `design/default-design.css`, `design/DESIGN.md` | Default tokens and the token contract (§5.3). |
 | `rules/project-artifacts.md` | The rule file the session-start hook delivers to every project with a record (§10). |
@@ -164,7 +177,10 @@ The record format is unchanged: `spec` in the manifest and the registry stays
 - **INV-2** — A project has at most one full-progress artifact, and has one
   whenever it has a feature artifact. Verified by `test_one_full_progress`.
 - **INV-3** — Every rendered HTML file in the record equals what rendering the
-  record produces now. Verified by `test_rendered_matches_record`.
+  record produces now: a feature artifact's standalone document and the
+  full-progress artifact with relative links. The publish copy (R5.31) is not in
+  the record; it differs from the committed render only in its links. Verified
+  by `test_rendered_matches_record`.
 - **INV-4** — No hook modifies the record. Verified by
   `test_hooks_never_write_record`.
 
@@ -175,13 +191,20 @@ The record format is unchanged: `spec` in the manifest and the registry stays
    session acts directly.
 3. Apply: the session runs `set-task-status`; the script updates the registry,
    renders every artifact that shows the task, and commits the record.
-4. Publish: the session publishes every artifact `pending` lists and runs
-   `mark-published` for each.
+4. Publish, once, at the end of the turn: the session publishes the
+   full-progress artifact's publish copy when `pending` lists it, and runs
+   `mark-published`. A feature artifact is a file in the repository and is
+   never published (R9.5).
 5. End of turn: the end-of-turn hook lets the turn end only when the queue is
-   empty, nothing is pending, and background work started in the turn has a
-   Running task (R8.10).
+   empty, Full Progress is not pending, and background work started in the turn
+   has a Running task (R8.10).
 
-- **R3.1** — Steps 3 to 5 complete in the same turn as the event.
+- **R3.1** — Steps 3 to 5 complete in the same turn as the event. Status
+  changes accumulate during the turn: the session publishes Full Progress once,
+  at the end of the turn, and never mid-turn, because claude.ai allows 200
+  artifact publishes per account per day and every republish counts. The
+  end-of-turn hook keeps blocking until it is published (R8.3). Verified by
+  `stop_blocks_when_an_artifact_is_pending` and `test_session_sequence_ends_clean`.
 - **R3.2** — Every activity is a task before it starts, whoever does it: work
   given to agents and the session's own work (contracts, specs, reviews, joins,
   test runs, releases, deploys, cleanup). The rule file has a line saying so.
@@ -213,12 +236,14 @@ docs/artifacts/
   content/<key>/history.json     feature artifacts only
   content/<key>/decisions.json   feature artifacts only, optional (§5.4)
   content/<key>/assets/<file>    images of decision options, optional (§5.4)
-  <file>.html                    the last rendered HTML of each artifact
+  feature-<slug>.html            a feature artifact: a standalone HTML document (§5.1)
+  full-progress-<slug>.html      the full-progress artifact: a fragment, relative links (§5.5)
   README.md                      how to recreate (generated)
 ```
 
-- **R4.1** — The record lives under `docs/artifacts/` and nowhere else. Section
-  0 of every artifact is generated and has no content file.
+- **R4.1** — The record lives under `docs/artifacts/` and nowhere else, except
+  the publish copy (R5.31), which is not part of the record. Section 0 of every
+  artifact is generated and has no content file.
 
 ### 4.2 Manifest
 
@@ -233,16 +258,18 @@ docs/artifacts/
 | `default_branch` | string | Where the record is committed, e.g. `main`. |
 | `merged_status` | string | Status a merge suggests: `"Live"` (default) or `"Built"`. |
 | `full_progress_artifact` | object | `{key:"full-progress", title, url, file, published_sha256}` |
-| `feature_artifacts` | array | `{key, title, url, file, prefix, apps:[...], published_sha256}` each |
+| `feature_artifacts` | array | `{key, title, file, prefix, apps:[...]}` each: no `url` and no `published_sha256`, because a feature artifact is never published |
 | `project_prefixes` | array | Task prefixes owned by the project, e.g. `["DS"]`. |
 | `updated` | string | ISO time of the last change, with offset. |
 
 - **R4.2** — `key` is lowercase letters, digits and hyphens; `prefix` is 2 to 5
   capital letters; every prefix appears once across the manifest.
-- **R4.3** — `url` is empty until the first publish; `published_sha256` is the
-  SHA-256 of the HTML that was last published, empty before that. A `url` with
+- **R4.3** — The full-progress entry's `url` is empty until the first publish;
+  its `published_sha256` is the SHA-256 of the committed render (not of the
+  publish copy, R5.32) that was last published, empty before that. A `url` with
   an empty `published_sha256` is valid: an existing artifact adopted by a new
-  record, listed by `pending` until it is published from the record.
+  record, listed by `pending` until it is published from the record. A feature
+  entry has neither field (R4.18).
 - **R4.4** — `file` is `<kind>-<slug>.html` with kind `feature` or
   `full-progress`; the slug is the title's words, lowercase, hyphenated.
 
@@ -314,6 +341,17 @@ comment holding the section title: `<!-- title: The design -->`.
 - **R4.17** — With `--no-push` (tests and the real-repo test), the script
   commits in the record worktree and does not push.
 
+### 4.7 Older records
+
+- **R4.18** — A manifest whose feature entry still holds `url` or
+  `published_sha256` (a record made before feature artifacts stopped being
+  published) is read as if the entry did not have them. The next writing
+  command rewrites the manifest without them and renders every artifact again
+  (a feature artifact as a standalone document, Full Progress with relative
+  links); `check` reports the dropped fields as a note, not a finding, and
+  `mark-published` never records a feature URL (R9.5). Verified by
+  `test_old_feature_urls_migrate`.
+
 ---
 
 ## 5. Artifact structure and look
@@ -322,8 +360,10 @@ comment holding the section title: `<!-- title: The design -->`.
 
 The templates hold `{{placeholders}}`: `title`, `fonts_link`, `design_css`,
 `structure_css`, `extra_css`, `kind_label`, `project`, `hero`, `contents`,
-`sections`, `stamp`. The rendered file is an HTML fragment beginning with
-`<title>`, as the Artifact tool expects (no `<html>`, `<head>` or `<body>`).
+`sections`, `stamp`. A feature artifact is rendered as a complete HTML document
+that opens in any browser on its own; the full-progress artifact is rendered as
+an HTML fragment beginning with `<title>`, as the Artifact tool expects (no
+`<html>`, `<head>` or `<body>`). Both are described in §5.5.
 
 - **R5.1** — A feature artifact's title is `Feature: <name>`; the full-progress
   artifact's is `Full Progress: <project>`.
@@ -336,10 +376,10 @@ The templates hold `{{placeholders}}`: `title`, `fonts_link`, `design_css`,
 - **R5.5** — The stamp reads `Last update: DD Mon HH:MM (<timezone_label>)` in
   a `<time>` element whose `datetime` attribute is the ISO time with offset.
 - **R5.6** — The full-progress artifact's section 1 lists every feature
-  artifact with its link, its task ID range and one line on where it stands
-  (taken from its `meta.json` lede's first sentence). Section 1 is generated,
-  so the full-progress artifact's content files `01-*.html` onward render as
-  sections 2 and up.
+  artifact with its link to the feature's file (R5.30, R5.31), its task ID
+  range and one line on where it stands (taken from its `meta.json` lede's
+  first sentence). Section 1 is generated, so the full-progress artifact's
+  content files `01-*.html` onward render as sections 2 and up.
 
 ### 5.2 Lede and tiles
 
@@ -463,6 +503,63 @@ and drawn by the renderer; they are never written as a content section.
   whose `task` is not a task of that feature in Needs you, or, when it names no
   task, when the feature has no task in Needs you.
 
+### 5.5 Standalone files, the publish copy and links
+
+claude.ai allows 200 artifact publishes per account per day, and every
+republish counts. Only the full-progress artifact is published; a feature
+artifact is a file in the repository that anyone with a checkout opens by
+double-click.
+
+**The feature file**
+
+- **R5.27** — A feature artifact's rendered file is a complete HTML document:
+  it begins with `<!doctype html>` and has `<html lang="en">`, a `<head>` and a
+  `<body>`. The `<head>` holds `<meta charset="utf-8">`, a viewport meta
+  (`width=device-width, initial-scale=1`), the `<title>` (R5.1), the
+  `artifact-kind` meta, the fonts link and the three `<style>` blocks of
+  R5.10; the body holds the page and the template's own script (R5.9). Verified
+  by `feature_artifact_is_a_standalone_document` and `check_r527_standalone_document`.
+- **R5.28** — That document needs nothing but a browser. The structure
+  stylesheet and the token block (R5.10, R5.11) are inlined in `<style>`
+  elements; the only `<link>` elements are the preconnect and stylesheet links
+  to Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) that the token
+  block's font URL gives; no `<script src>`, no other stylesheet and no image or
+  font file of the record is referenced. It looks the same in light and dark as
+  it did as a claude.ai artifact: both themes' tokens are present (R5.11) and the
+  theme-toggle script is the template's own (R5.9). Verified by
+  `feature_artifact_needs_no_host` and `check_r528_no_external_resources`.
+- **R5.29** — The full-progress artifact's rendered file stays a fragment
+  beginning with `<title>`, with no `<html>`, `<head>` or `<body>`, as the
+  Artifact tool expects. Verified by `full_progress_is_a_fragment_beginning_with_title`
+  and `check_r529_full_progress_fragment`.
+
+**Links to the feature files**
+
+- **R5.30** — In the committed full-progress file, section 1 and every task's
+  Item link to a feature artifact by its file name relative to the file,
+  `feature-<slug>.html` (a `href` with no scheme and no folder), so the links
+  work when the file is opened from a checkout. Every task of a feature has this
+  link; a project task has none. Verified by `full_progress_links_are_relative`
+  and `check_r530_relative_links`.
+- **R5.31** — `pending` hands the session a separate publish copy: the same
+  render with the same stamp, written to `.claude/artifacts-publish/<file>` in
+  the session's repository (git-ignored, R10.2), in which every link of R5.30 is
+  an absolute `file:///` URL built from the repository root on this machine:
+  `file:///` plus the absolute path with forward slashes, each segment
+  percent-encoded (a space is `%20`), for example
+  `file:///C:/GitHub/dev-standards/docs/artifacts/feature-x.html`. The target is
+  the feature file in the session's checkout (`<root>/docs/artifacts/`) when
+  that file exists there, else the same file in the record worktree. Next to each
+  link the publish copy shows the path as text (`<span class="local-path">`),
+  because some browsers block `file:` links from a web page; the text can be
+  copied. The publish copy is never committed. Verified by
+  `publish_copy_has_file_links`, `publish_copy_path_encoding` and
+  `test_pending_and_mark_published`.
+- **R5.32** — `mark-published` records the SHA-256 of the committed render, not
+  of the publish copy (R4.3), so writing a publish copy never makes the record
+  look stale: `pending` compares the committed file with `published_sha256`.
+  Verified by `test_pending_and_mark_published`.
+
 ---
 
 ## 6. Statuses and the checklist
@@ -489,8 +586,10 @@ and drawn by the renderer; they are never written as a content section.
   (Running, Waiting, To do — earliest expected first), `Needs you, failed or
   on hold` (Needs you, Failed, On hold), `Live or built` (newest `changed`
   first). An empty group is omitted.
-- **R6.3** — In the full-progress artifact, Live or Built rows whose `changed`
-  is more than 14 days old fold into a closed `<details>` titled `Earlier`.
+- **R6.3** — In the full-progress artifact, `Live` rows whose `changed` is more
+  than 14 days old fold into a closed `<details>` titled `Earlier`. `Built` rows
+  never fold, however old: unreleased work must not be hidden. Verified by
+  `earlier_fold_older_than_14_days` and `built_rows_never_fold`.
 
 ### 6.3 Columns
 
@@ -499,7 +598,7 @@ and drawn by the renderer; they are never written as a content section.
   artifact's are `Status | Item | App / service | Detail | Expected
   (<timezone_label>)`.
 - **R6.5** — In the full-progress artifact a feature task's Item links to its
-  feature artifact (when it has a URL); every feature task appears there.
+  feature artifact's file (R5.30); every feature task appears there.
 
 ### 6.4 Expected
 
@@ -536,16 +635,16 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
 | Command | Does |
 |---|---|
 | `init --project NAME [--timezone IANA] [--label L] [--windows-timezone ID] [--default-branch B]` | Creates the manifest, an empty registry and the full-progress artifact's content. Refuses if a manifest exists. Zone defaults to the machine's. |
-| `feature-new --key K --title NAME --prefix P --apps a,b [--hero TEXT] [init flags]` | Adds a feature artifact (content folder with `meta.json`, a section `01-what-and-why.html` stub and a first History row). Runs `init` first, with the same `init` flags, when there is no manifest; `--project` is then required. |
+| `feature-new --key K --title NAME --prefix P --apps a,b [--hero TEXT] [init flags]` | Adds a feature artifact (content folder with `meta.json`, a section `01-what-and-why.html` stub and a first History row; its manifest entry has no `url`). Runs `init` first, with the same `init` flags, when there is no manifest; `--project` is then required. |
 | `task-add --owner K\|project --item TEXT --detail TEXT --expected TEXT [--app A] [--status S] [--prefix P]` | Adds a task with the next free number; prints its ID. For `--owner project`, `--prefix` picks one of `project_prefixes`, and a new prefix not used by any feature is registered. |
 | `set-task-status ID STATUS [--detail TEXT] [--expected TEXT] [--history TEXT]` | Changes one task; adds a History row to its feature artifact when `--history` is given. |
 | `export-content KEY --to DIR` | Copies the artifact's content files from the record to DIR for editing, `decisions.json` and its `assets/` folder included. |
 | `edit-content KEY --from DIR` | Replaces the artifact's content files in the record with those in DIR (after the fetch and reset of R4.13), validates, renders and commits. The session never edits the record worktree directly; the reset would discard it. It refuses an edit that removes a decision or changes the choice of a decided one (R5.15). |
 | `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design`, renders and commits; `default` removes it. |
-| `render [--all]` | Renders every artifact whose output would change. |
+| `render [--all]` | Renders every artifact whose output would change (committed renders, with relative links). |
 | `check [--record PATH]` | The conformance checks of §14; lists findings with their requirement ID, then any warnings (R5.26), which do not change the exit code. |
-| `pending` | Lists artifacts whose rendered HTML hash differs from `published_sha256`, and queued events. Exit 1 when anything is listed. `--json` prints `{"artifacts": [{"key", "title", "file", "path", "url", "reason"}], "queue": [events]}`; `path` is the absolute path of the HTML to publish. |
-| `mark-published KEY --url URL` | Records the URL and the hash of the current HTML. |
+| `pending` | Lists the full-progress artifact when the hash of its committed render differs from `published_sha256` (a feature artifact is never listed, R9.5), and queued events. When it lists Full Progress it writes the publish copy (R5.31). Exit 1 when anything is listed. `--json` prints `{"artifacts": [{"key", "kind", "title", "file", "path", "url", "reason"}], "queue": [events]}`; `path` is the absolute path of the publish copy to publish. |
+| `mark-published KEY --url URL` | Records the URL and the hash of the committed render (R5.32). Refuses a feature artifact (R9.5). |
 | `queue list\|clear [--id ID]` | Shows or removes queued events. |
 | `commit [--retry] [--message M]` | Commits and pushes the record (also done by every writing command). |
 
@@ -592,9 +691,13 @@ Reads the hook input; takes the task ID from the current branch name
 
 ### 8.2 End-of-turn hook (Stop)
 
-- **R8.3** — When the queue is not empty or `pending` lists an artifact, the
-  hook blocks the stop (`{"decision": "block", "reason": ...}`) with a reason
-  that names each item and the exact commands to run.
+- **R8.3** — When the queue is not empty or `pending` lists Full Progress (the
+  only artifact it lists), the hook blocks the stop (`{"decision": "block",
+  "reason": ...}`) with a reason that names each item and the exact commands to
+  run, Full Progress's as one publish of its publish copy (R5.31) and a
+  `mark-published`. It keeps blocking until Full Progress is published, so
+  a status change made at any point of the turn is published once, at its end
+  (R3.1).
 - **R8.4** — After 3 consecutive blocks in one session with no change in what
   is pending, the hook lets the turn end and prints a `systemMessage` naming
   what is still unpublished — a session that cannot publish (no Artifact tool)
@@ -615,14 +718,15 @@ Reads the hook input; takes the task ID from the current branch name
 ### 8.4 Background work and the rule
 
 - **R8.8** — The after-command hook records that background work started when
-  the tool is `Agent` or `Task` (any call), or `Bash` with
-  `tool_input.run_in_background` true: it stamps the session's entry in
+  the tool is `Agent`, `Task` or `Bash` and `tool_input.run_in_background` is
+  true (a foreground `Agent` or `Task` call, which finishes within the turn,
+  records nothing): it stamps the session's entry in
   `<repo>/.claude/artifacts-stop-state.json` (gitignored) with the time and the
   session ID. It writes that file only, never the record (INV-4), needs no task
   ID in the branch name, and does nothing in a project without a manifest. A
-  foreground `Bash` call, or a call that failed, records nothing. Verified by
-  `after_agent_and_background_bash_mark_the_session` and
-  `after_foreground_bash_does_not_mark_the_session`.
+  foreground call of any of the three tools, or a call that failed, records
+  nothing. Verified by `after_background_agent_and_bash_mark_the_session` and
+  `after_foreground_calls_do_not_mark_the_session`.
 - **R8.9** — In any repository that has a record manifest, the session-start
   hook prints the plugin's `rules/project-artifacts.md` text as
   `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext":
@@ -642,24 +746,38 @@ Reads the hook input; takes the task ID from the current branch name
   `stop_blocks_background_work_without_an_active_task`,
   `stop_allows_background_work_with_an_active_task_and_clears_the_marker` and
   `stop_background_gives_up_after_three_blocks`.
+- **R8.11** — The end-of-turn hook acts on Full Progress only. An entry of
+  `pending` for a feature artifact (from a script older than R9.5) is ignored:
+  it neither blocks the stop nor counts towards R8.4's give-up. Verified by
+  `stop_counts_only_full_progress`.
 
 ---
 
 ## 9. Publishing and recreation
 
-- **R9.1** — The session publishes an artifact with the Artifact tool, passing
-  the manifest URL when there is one, then runs `mark-published`.
+- **R9.1** — The session publishes the full-progress artifact with the Artifact
+  tool once per turn, at the end of the turn, never mid-turn (R3.1): it
+  publishes the publish copy that `pending` names in `path` (R5.31), unedited,
+  passing the manifest URL when there is one, then runs `mark-published`. No
+  other artifact is published.
 - **R9.2** — When the manifest URL no longer opens (the publish is refused
   because the artifact does not exist), the session lists the owner's
   artifacts; if one has the same title, it publishes to that one and runs
   `mark-published` with its URL; only if none does, it publishes a new one.
   At most one artifact per title is ever created.
-- **R9.3** — An artifact deleted on claude.ai is recreated from the record
-  alone: `render`, then R9.1 and R9.2.
+- **R9.3** — The full-progress artifact deleted on claude.ai is recreated from
+  the record alone: `render`, then R9.1 and R9.2. A feature artifact cannot be
+  lost that way: it is a file in the repository.
 - **R9.4** — A publish refused because the artifact changed elsewhere is
   retried once after reading the live version; changes made by others to a
   generated section are not kept (section 0 is always generated), changes to
   content sections are copied into `content/` first.
+- **R9.5** — A feature artifact is never published and has no URL.
+  `mark-published` refuses its key with a message saying that feature
+  artifacts are files in the repository and only Full Progress is published,
+  and changes nothing; `pending` never lists one. Verified by
+  `test_mark_published_refuses_a_feature_artifact` and
+  `test_pending_never_lists_a_feature_artifact`.
 
 ---
 
@@ -675,13 +793,15 @@ Reads the hook input; takes the task ID from the current branch name
   a marketplace the owner registered differently enables nothing.
 - **R10.2** — Installing creates no file in the project. The first
   `feature-new` or `init` adds `.claude/artifacts-queue.json`,
-  `.claude/artifacts-stop-state.json` and `.claude/worktrees/` to `.gitignore`.
+  `.claude/artifacts-stop-state.json`, `.claude/artifacts-publish/` (the
+  publish copy, R5.31) and `.claude/worktrees/` to `.gitignore`.
   Since 1.1.0 it no longer copies the rule file (R10.4). Verified by
   `test_init_session_files`.
 - **R10.3** — The rule file holds one short imperative line per rule: record
   work as a task before starting it; start branch names with the task ID;
-  change status only with `set-task-status`; publish what `pending` lists in
-  the same turn; never type a status row by hand; put every doc under `docs/`;
+  change status only with `set-task-status`; publish Full Progress once, at
+  the end of the turn, never mid-turn, and never publish a feature artifact;
+  never type a status row by hand; put every doc under `docs/`;
   record the options the owner chose between, and the choice, in the feature's
   `decisions.json` in the same turn (§5.4); and the four lines of R3.2 to R3.5.
 - **R10.4** — The plugin delivers the rule file itself: the session-start hook
@@ -700,6 +820,7 @@ Reads the hook input; takes the task ID from the current branch name
 | Dependency | Unavailable → | Rationale |
 |---|---|---|
 | Artifact tool | **fail closed** for the turn, then open after 3 blocks (R8.4) | Unpublished status is the drift this exists to stop; a loop is worse. |
+| `file:` links from a claude.ai page | **fall back** to the path shown as text (R5.31) | Some browsers block `file:` links from a web page; the path beside each link can be copied and opened by hand. |
 | `git push` of the record | **fail closed** (exit 3 or 4) | A status change that is not in the repo is lost on the next reset. |
 | `gh` at session start | **fail open** (R8.6) | Catch-up is a convenience; the next session tries again. |
 | Time zone data | **fall back** (R4.12) | A slightly wrong label beats no stamp; the warning says so. |
@@ -715,7 +836,7 @@ Reads the hook input; takes the task ID from the current branch name
 | Key | Default | Ceiling | Direction | Section |
 |---|---|---|---|---|
 | `merged_status` | `Live` | — | `Live` or `Built` | §8.1 |
-| Earlier fold age | 14 days | 60 days | may only be lengthened | §6.2 |
+| Earlier fold age (`Live` rows only) | 14 days | 60 days | may only be lengthened | §6.2 |
 | End-of-turn blocks | 3 | 3 | fixed | §8.2 |
 | Push retries | 3 | 5 | — | §4.6 |
 | `CLAUDE_ARTIFACTS_HOOKS` | `on` | — | `off` disables all hooks | §8 |
@@ -726,10 +847,11 @@ Reads the hook input; takes the task ID from the current branch name
 
 - **R13.1** — `tools/test_project_artifacts.py` builds throwaway git repos with
   a bare remote and proves each command, each check of §14 (one fixture per
-  check that fails without it), INV-1 to INV-3, R4.13 to R4.17 and R7.4.
+  check that fails without it), INV-1 to INV-3, R4.13 to R4.18, R5.31, R5.32,
+  R7.4 and R9.5.
 - **R13.2** — `tools/test_project_artifacts_hooks.py` feeds sample hook input
   to each hook and asserts the queue, the exit code and the output, including
-  R8.4, R8.8 to R8.10 and INV-4, and that every hook does nothing without a
+  R8.4, R8.8 to R8.11 and INV-4, and that every hook does nothing without a
   manifest.
 - **R13.3** — Before release, the plugin is run on a scratch clone of the
   plugin's own repository: its existing record is converted to this format,
@@ -752,10 +874,11 @@ Reads the hook input; takes the task ID from the current branch name
 | Sections numbered 0..N without gaps; contents match | R5.2 |
 | Stamp format, `datetime` attribute and zone label | R5.5 |
 | Checklist columns per kind | R6.4 |
-| Only the eight statuses; each row in its group | R6.1, R6.2 |
+| Only the eight statuses; each row in its group; only `Live` rows older than 14 days in Earlier | R6.1, R6.2, R6.3 |
 | Expected format on open rows | R6.6 |
 | Checklists and tiles equal the registry | INV-1, R5.8 |
-| Every feature task on the full-progress artifact, linked | R6.5 |
+| Every feature task on the full-progress artifact, linked to the feature file by a relative link | R6.5, R5.30 |
+| A feature artifact is a complete HTML document with its CSS inlined and no external resource but the fonts link; Full Progress is a fragment beginning with `<title>` | R5.27, R5.28, R5.29 |
 | IDs unique, prefixes registered | R4.5, R4.6 |
 | History last on feature artifacts, Date / Change | R5.4 |
 | `decisions.json` valid: fields, IDs, options, choice, previews, images, task | R5.14 to R5.18 |
@@ -790,6 +913,21 @@ keeps the record linear and the session's tree clean.
 current is what already failed. The end-of-turn hook makes "published" a
 condition of finishing, and the 3-block limit keeps it from trapping a session
 that cannot publish.
+
+**Why only Full Progress is published, once per turn.** claude.ai allows 200
+artifact publishes per account per day and every republish counts. Publishing
+every artifact after every change used the whole day's budget in one day. The
+status the owner needs at a glance is Full Progress; the feature pages are
+reference material, read from a checkout. Changes accumulate during the turn
+and cost one publish at its end.
+
+**Why a feature artifact is a standalone file.** A complete document with its
+CSS inlined opens by double-click in any browser, light and dark, with the same
+look it had on claude.ai, and it is versioned with the repository. Full
+Progress links to it by relative link in the committed file (works from a
+checkout) and by absolute `file:///` link in the publish copy (works from the
+owner's machine); browsers that block `file:` links from a web page still show
+the path as text.
 
 **Why Expected is a date.** "today" is true when written and wrong the next
 morning without anyone changing it. A date goes visibly stale.
