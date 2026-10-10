@@ -163,6 +163,16 @@
       "changed": "2026-10-10T14:47+01:00"
     },
     {
+      "id": "AR19",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Live",
+      "item": "Names the secret rule does not read as credentials",
+      "detail": "Main's secret-scan failed after #18: the project-named-secret rule read FP_KEY-style identifiers and a test command as credentials. Renamed; fixed forward in #19.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T14:47+01:00"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
