@@ -1,0 +1,47 @@
+name: Artifact prune
+
+# Implements STACKSPEC §13.1 "Build artifacts": the platform keeps only the
+# newest build artifact of each name. Installers, bundles and test reports that
+# a workflow uploads are billed for storage, so older ones are deleted after
+# every run of a workflow that uploads one, and a daily sweep deletes any the
+# per-run pruning missed.
+#
+# PRODUCT: `workflows:` below must list the `name:` of EVERY workflow of this
+# repository that uploads an artifact (actions/upload-artifact). The template
+# lists `CI`; add each release or installer workflow you create, or its
+# artifacts are only caught by the daily sweep.
+#
+# Artifact names must be stable per kind (`windows-installer`, never
+# `windows-installer-1.4.2-run-812`), or the pruning cannot group them. A build
+# that must outlive the next one is a release asset, not an artifact.
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+  schedule:
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+
+# Two prunes never overlap; a second one waits instead of cancelling the first,
+# so a deletion is never cut off half way.
+concurrency:
+  group: artifact-prune
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  prune:
+    name: prune build artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Delete all but the newest artifact of each name
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/delivery/artifact_prune.py
