@@ -8,8 +8,10 @@
 # Branch deletions, tags and the refs/gate-results/* refs that branch_gate.py
 # publishes are skipped. For every other ref this runs
 #   scripts/delivery/fast_guards.py
-# once; it runs the steps marked "pre_push": true in scripts/delivery/gate.json.
-# It checks the checked-out commit, so push the branch you are standing on.
+# once, with --commit <the pushed sha>; it runs the steps marked "pre_push": true in
+# scripts/delivery/gate.json. The pushed commit is what gets checked: when it is not
+# the checked-out one, fast_guards.py checks it out in a temporary worktree and
+# removes that afterwards, so any branch can be pushed from anywhere.
 #
 # A project's own pre-push check lives beside this file as `pre-push.local` (an
 # existing hook is moved there at install, never overwritten). After the guards
@@ -90,7 +92,7 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   fi
   # stdin is the ref list; guards must not read it.
   # shellcheck disable=SC2086
-  if ! "$py" scripts/delivery/fast_guards.py $base_args </dev/null; then
+  if ! "$py" scripts/delivery/fast_guards.py --commit "$local_sha" $base_args </dev/null; then
     fail=1
   fi
 done < "$stdin_file"

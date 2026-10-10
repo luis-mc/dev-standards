@@ -1,6 +1,7 @@
 ## Agents
 - Orchestrator (strongest model): plan, write contracts, decide, review risky diffs. Never do mechanical work.
 - Code agents: Sonnet at {{SUBAGENT_EFFORT}} effort; pass `effort: "{{SUBAGENT_EFFORT}}"` on every implementation Agent call.
+- Opus agents (`model: "opus"`) and Sonnet agents both pass `effort: "medium"` unless the user chose otherwise in claude-setup.
 - Merges and checks: scripts. Conflicts a script cannot resolve: one Sonnet agent. Log triage: `model: "haiku"`.
 - Agents whose definition pins a model or effort keep it.
 - Trivial edits (a typo, a one-line value): do them directly.
@@ -18,6 +19,9 @@
 - A train leaves when its cargo is green; late branches ride the next train.
 - One deploy per merge; smoke-test production; fix forward on a new branch.
 - No preview deploys for agent branches. Never merge mid-round to "see it deployed".
+- A gate that fails at `setup` means a stale lockfile: regenerate and commit it, never install unfrozen.
+- After the ready PR merges, run `scripts/delivery/cleanup.py --pr <N>`: it removes the train's branches, gate-result refs and worktrees. Leave nothing behind.
+- Build artifacts on GitHub (installers such as MSI, bundles, reports): keep only the newest of each name. Give each kind a stable name; `artifact-prune.yml` deletes the older ones after every run.
 
 ## Docs
 - Create every doc under `docs/`.

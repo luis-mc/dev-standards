@@ -11,7 +11,8 @@ tooling/
 ├── shared/     copied for every product, whatever the track
 │   ├── .gitleaks.toml
 │   ├── .githooks/pre-commit
-│   └── scripts/delivery/   branch gate, CI watch and skip, reach check
+│   ├── .github/workflows/  artifact pruning, train cleanup
+│   └── scripts/delivery/   branch gate, CI watch and skip, reach check, cleanup
 ├── ts/         TypeScript / Node
 ├── go/         Go
 ├── rust/       Rust
@@ -153,6 +154,15 @@ Copied to `scripts/delivery/` (see `shared/scripts/delivery/CONTRACT.md`):
 - `reach_check.py URL...`: GETs each URL from where it runs and prints status or
   error. Run it in an agent sandbox before relying on a registry, API or preview
   host being reachable.
+- `artifact_prune.py`: keeps only the newest build artifact of each name and
+  deletes the rest (`§13.1`). `shared/.github/workflows/artifact-prune.yml` runs
+  it after every `CI` run and daily; add any other workflow that uploads an
+  artifact (an installer, a bundle) to its `workflows:` list, and give each kind
+  a stable name.
+- `cleanup.py`: removes a merged train's branches, gate-result refs, local
+  branches and worktrees, and keeps anything open, unmerged or dirty (`§13.6`).
+  `shared/.github/workflows/train-cleanup.yml` does the remote part when the
+  ready pull request merges; `join.py` does the local part before each join.
 
 ## Adapting a track
 

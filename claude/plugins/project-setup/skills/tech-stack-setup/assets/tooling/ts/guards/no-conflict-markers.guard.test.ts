@@ -27,17 +27,24 @@ const START = new RegExp('^' + '<'.repeat(7) + '( |$)');
 const SEPARATOR = new RegExp('^' + '='.repeat(7) + '$');
 const END = new RegExp('^' + '>'.repeat(7) + '( |$)');
 
+// Listed once per run: both tests below use it, and `git` is the slow part to start.
+// Another checkout nested in this one (an agent worktree) shows up in the listing as
+// one `dir/` entry, which has no scanned extension, so its files are never read.
+let listed: string[] | undefined;
+
 function repositoryFiles(): string[] {
+  if (listed) return listed;
   const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
-  const listed = execFileSync(
+  const out = execFileSync(
     'git',
     ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
     { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
   );
-  return listed
+  listed = out
     .split('\0')
     .filter((f) => f !== '' && SCANNED.has(extname(f).toLowerCase()))
     .map((f) => join(root, f));
+  return listed;
 }
 
 describe('guard: no merge-conflict markers', () => {

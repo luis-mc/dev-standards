@@ -2,7 +2,7 @@
 name: architect
 description: Use for hard architectural or design judgment calls in any project — ambiguous technology/library/pattern tradeoffs, cross-cutting design decisions, or a second opinion on a risky approach — and for reviewing findings from security, performance, or compliance audits (severity assessment, prioritization, synthesis). Do NOT use for routine implementation, mechanical coding, or well-specified work where the approach is already decided — that stays on the default model.
 model: opus
-effort: high
+effort: medium
 disallowedTools: Edit, Write, NotebookEdit
 ---
 

@@ -3,7 +3,8 @@
 
     join.py --into INTEGRATION BRANCH [BRANCH ...] [--no-gate] [--push] [--remote origin]
 
-Fetches, checks out INTEGRATION at its remote head, and for each BRANCH in order:
+Runs `cleanup.py --local` (best effort), fetches, checks out INTEGRATION at its
+remote head, and for each BRANCH in order:
 requires a trusted, passing gate result (a base older than INTEGRATION's head is
 fine), then merges it with `git merge --no-ff -m "Join BRANCH"`. A conflict that
 touches only a lockfile is resolved by taking INTEGRATION's version and re-running
@@ -86,6 +87,16 @@ def main(argv: list[str] | None = None) -> int:
         raise dc.DeliveryError("a merge is already in progress; finish or abort it first")
 
     remote, into = args.remote, args.into
+    # Worktrees of trains already merged go first. Best effort: it never stops a join.
+    try:
+        cleaned = subprocess.run(
+            [sys.executable, str(Path(__file__).resolve().parent / "cleanup.py"), "--local", "--remote", remote],
+            cwd=root,
+        ).returncode
+        if cleaned != 0:
+            dc.eprint("join: cleanup.py --local exited %d; going on" % cleaned)
+    except OSError as exc:
+        dc.eprint("join: cleanup.py --local could not run (%s); going on" % exc)
     dc.git(["fetch", "--quiet", remote], cwd=root)
     integ_ref = "%s/%s" % (remote, into)
     if dc.rev(integ_ref, root) is None:
@@ -162,7 +173,7 @@ def main(argv: list[str] | None = None) -> int:
         code = subprocess.run(cmd, cwd=root).returncode
         if code != 0:
             dc.eprint("join: the gate on the joined head did not pass (exit %d); nothing pushed" % code)
-            return code if code in (dc.EXIT_FAIL, dc.EXIT_USAGE) else dc.EXIT_FAIL
+            return code if code in (dc.EXIT_FAIL, dc.EXIT_USAGE, dc.EXIT_TIMEOUT) else dc.EXIT_FAIL
 
     if args.push:
         pushed = dc.run_git(["push", "--quiet", "--no-verify", remote, into], cwd=root, check=False)

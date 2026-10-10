@@ -19,6 +19,10 @@ are built against; change it first, then the code.
 | `scripts/delivery/ci_watch.py` | same | ci |
 | `scripts/delivery/ci_skip_check.py` | same | ci |
 | `scripts/delivery/reach_check.py` | same | ci |
+| `scripts/delivery/cleanup.py` | same | cleanup |
+| `scripts/delivery/artifact_prune.py` | same | ci |
+| `.github/workflows/train-cleanup.yml` | `tooling/shared/.github/workflows/train-cleanup.yml` | cleanup |
+| `.github/workflows/artifact-prune.yml` | `tooling/shared/.github/workflows/artifact-prune.yml` | ci |
 | `scripts/delivery/tools.json` | same | gate |
 | `scripts/delivery/gate.json` | `tooling/<track>/scripts/delivery/gate.json` | gate |
 | `.githooks/pre-push` | `tooling/shared/.githooks/pre-push` | gate |
@@ -30,7 +34,12 @@ are built against; change it first, then the code.
 | `e2e/quarantine.json` (ts only) | `tooling/ts/e2e/quarantine.json` | ci |
 | `.github/workflows/ci.yml` | `tooling/<track>/.github/workflows/ci.yml` | ci |
 
-`.delivery/` (local results) is added to the generated `.gitignore`.
+`.delivery/` (local results and step logs) is added to the generated `.gitignore`.
+
+Repository setting, applied by tech-stack-setup with
+`gh api -X PATCH repos/{owner}/{repo} -F delete_branch_on_merge=true`: the
+platform deletes a merged pull request's head branch. `train-cleanup.yml` covers
+the branches that setting cannot see (drafts merged into an integration branch).
 
 Exit codes are shared by every script: `0` pass, `1` checks failed or result not
 trusted, `2` usage or configuration error, `3` join stopped at a conflict, `4`
@@ -44,6 +53,7 @@ timed out. A script never exits 0 when it could not decide.
   "track": "ts",
   "default_branch": "main",
   "setup": ["pnpm install --frozen-lockfile"],
+  "timeout_minutes": 30,
   "packages": {"kind": "pnpm-workspace"},
   "widen_on": ["pnpm-lock.yaml", "package.json", "turbo.jsonc", ".github/", "scripts/delivery/"],
   "ui_paths": ["apps/web/", "apps/admin/", "packages/ui/"],
@@ -98,6 +108,15 @@ timed out. A script never exits 0 when it could not decide.
   `guard`; Go tests named `TestGuard*`; Rust tests named `guard_*`; .NET
   `Category=Guard`.
 - `pre_push: true` marks the steps `fast_guards.py` runs.
+- `setup`: commands that install dependencies from the lockfile in frozen mode
+  (`pnpm install --frozen-lockfile`, `go mod download` with `-mod=readonly`
+  builds, `cargo fetch --locked`, `dotnet restore --locked-mode`).
+  `branch_gate.py` runs them, in order, as its first step, named `setup`; a
+  stale lockfile fails there. `agent_setup.sh` and `join.py` run the same
+  commands. Never a non-frozen install: a branch that changes dependencies
+  commits the regenerated lockfile.
+- `timeout_minutes` (optional, integer >= 1, default 30): the wall-clock limit
+  for one `branch_gate.py` run, setup included.
 - .NET has one `typecheck` step (build with warnings as errors, analyzers
   included) and no separate `lint` step.
 - Lockfiles `join.py` recognises: `pnpm-lock.yaml`, `package-lock.json`,
@@ -124,10 +143,13 @@ gate and CI run the same scanner.
   "partial": false,
   "changed_dirs": ["apps/web"],
   "steps": [
+    {"name": "setup", "outcome": "pass", "seconds": 6.0, "command": "pnpm install --frozen-lockfile",
+     "reason": null, "exit_code": 0, "log": ".delivery/logs/setup.log"},
     {"name": "typecheck", "outcome": "pass", "seconds": 41.2, "command": "pnpm turbo ...",
-     "reason": null, "exit_code": 0}
+     "reason": null, "exit_code": 0, "log": ".delivery/logs/typecheck.log"}
   ],
   "pass": true,
+  "timed_out": false,
   "started_at": "2026-10-10T10:12:03Z",
   "finished_at": "2026-10-10T10:19:47Z",
   "tool": "branch_gate.py 1"
@@ -136,7 +158,10 @@ gate and CI run the same scanner.
 
 `outcome` is `pass`, `fail` or `skip`. `reason` says why a step was skipped or
 failed; `exit_code` is the command's exit code; `command` is null for a skipped
-step. `pass` is true only when no step failed and at least one step ran.
+step. `log` is the step's combined output, relative to the root (absent for a
+skipped step). `pass` is true only when no step failed, the `setup` step passed,
+at least one other step ran, and `timed_out` is false. `timed_out` is true when
+the time limit stopped the gate.
 `widened` is true when a `widen_on` entry changed or `--full` was given. A run
 with `--only` or `--skip` is `"partial": true`: it is written to
 `.delivery/gate-result.json`, never published, and never trusted by
@@ -156,13 +181,36 @@ the joined head anyway).
 ## Command lines
 
 ```
-branch_gate.py [--base-ref REF] [--full] [--only a,b] [--skip a,b] [--no-publish] [--fail-fast]
+branch_gate.py [--base-ref REF] [--full] [--only a,b] [--skip a,b] [--no-publish]
+               [--keep-going] [--no-setup] [--timeout-minutes N]
 ```
 `--base-ref` defaults to `origin/<default_branch>`; the base commit is
-`git merge-base HEAD <base-ref>`. Runs every selected step even after a failure
-unless `--fail-fast`. `--only`/`--skip` select steps by name and make the run
-partial. Prints a summary table, writes the result, publishes it unless
-`--no-publish` or partial. Refuses (exit 2) on a dirty working tree.
+`git merge-base HEAD <base-ref>`.
+
+- **Setup first.** Runs `gate.json`'s `setup` commands as the step `setup`
+  before any other. When it fails, every other step is `skip` with reason
+  `setup failed`, and the summary says a stale lockfile is the usual cause.
+  `--no-setup` skips it and makes the run partial (never trusted), for repeated
+  local runs.
+- **Fail fast.** Stops at the first failed step; the steps after it are `skip`
+  with reason `an earlier step failed`. `--keep-going` runs every selected step
+  (a failed setup still stops the run). `--fail-fast` is still accepted and
+  does nothing.
+- **Time limit.** `--timeout-minutes` overrides `timeout_minutes` (default 30).
+  When the limit is reached, the running step's whole process tree is killed
+  (a new process group on POSIX; `taskkill /T /F` on Windows), that step is
+  `fail` with reason `timed out after N min`, the rest are `skip` with reason
+  `gate timed out`, `timed_out` is true, the result is written and published,
+  and the exit code is 4.
+- **Logs.** Each step's combined output goes to the terminal and to
+  `.delivery/logs/<step>.log`. A failed step prints
+  `FAIL <step>: <reason> (exit N, Ns) - log: <path>` and the last 40 lines of
+  its output after the summary table.
+
+`--only`/`--skip` select steps by name and make the run partial. Prints a
+summary table, writes the result, publishes it unless `--no-publish` or
+partial. Refuses (exit 2) on a dirty working tree. Exit 0 pass, 1 a step
+failed, 2 usage, 4 timed out.
 
 ```
 gate_verify.py BRANCH [--base-ref REF] [--remote origin] [--allow-older-base] [--json]
@@ -171,11 +219,22 @@ Fetches the branch, the base ref and `refs/gate-results/BRANCH`; prints why a
 result is or is not trusted. Exit 0 trusted and passing, 1 otherwise, 2 no result.
 
 ```
-fast_guards.py [--base-ref REF]
+fast_guards.py [--base-ref REF] [--commit SHA]
 ```
-Runs the `pre_push: true` steps on the checked-out commit (it takes no ref),
-continuing past a failure. The `pre-push` hook calls it once per pushed ref,
-passing the remote sha as `--base-ref` on an update; it skips tags, deletions
+Runs the `pre_push: true` steps, continuing past a failure. With `--commit SHA`
+different from `HEAD`, it checks that commit out in a temporary detached
+worktree under `.delivery/push-check/` (shared object store, no install: the
+main checkout's dependency directories, such as every `node_modules`, are
+linked into it with a symlink or a Windows junction, and Rust builds share the
+main checkout's target directory through `CARGO_TARGET_DIR`), runs the steps
+there, and always
+removes the worktree afterwards, also on failure or interruption. Without
+`--commit`, or when it equals `HEAD`, it runs in place as before. Each step has a limit of 5 minutes (killed like a
+gate step, outcome `fail`, reason `timed out after 5 min`). A failure is
+reported the way the gate reports one (`FAIL <step>: ...`, the log path, the
+last 40 lines), so a blocked push always says which check failed and why. The `pre-push` hook calls it once per pushed ref,
+passing the pushed sha as `--commit` and the remote sha as `--base-ref` on an
+update; it skips tags, deletions
 and every ref outside `refs/heads/`. A first push with no `origin/<default>`
 exits 2. Never publishes a result.
 
@@ -199,7 +258,55 @@ join exits 3 (the conflict goes to one agent). `.delivery/join-result.json`
 `reason` when a branch is refused or a step fails) is written on success and on
 failure. After the last merge it runs `branch_gate.py --base-ref origin/<default_branch>`
 on the joined head (unless `--no-gate`) and pushes INTEGRATION and its result
-with `--push`.
+with `--push`. Before the first fetch it runs `cleanup.py --local` (best effort:
+its failure is printed and never stops the join), so worktrees of trains
+already merged are gone before new ones are made.
+
+```
+cleanup.py [--pr N] [--remote NAME] [--local] [--remote-only] [--dry-run] [--json] [--repo OWNER/NAME]
+```
+Removes what a merged train leaves behind (STACKSPEC §13.6). A branch is
+**finished** when it is not the default branch, has no open pull request, and
+either (a) a pull request with it as head is merged, or (b) it is the head of a
+draft whose base is a finished integration branch and whose commits are
+contained in that branch. A branch whose pull requests were all closed without
+merging is **kept** and listed. For each finished branch:
+
+- remote (skipped with `--local`): delete the branch and
+  `refs/gate-results/<branch>` (`git push --no-verify REMOTE --delete ...`; a
+  ref already gone is not an error);
+- local (skipped with `--remote-only`): remove every worktree checked out on it
+  (`git worktree remove`, with `--force --force` for a locked one) unless the
+  worktree has uncommitted changes or commits not on the remote, in which case
+  it is kept and listed; then delete the local branch (`git branch -D`, since
+  squash merges are not ancestors) unless a kept worktree still holds it;
+  finally `git worktree prune`.
+
+Never touches the default branch, a detached worktree (such as
+`.claude/worktrees/artifacts-record`), the main working tree, or a branch it
+cannot classify (an error from `gh` keeps the branch). With `--pr N` only the
+train of that pull request is considered (exit 2 unless N is merged into the
+default branch) (its head branch and every
+branch whose pull request had that head as base); without it, every branch on
+the remote. `--local` treats only local branches and worktrees: after
+`git fetch --prune`, a local branch is finished when its pull request is merged.
+Without a working `gh`, `--local` deletes nothing: it lists each branch whose
+upstream is gone as `would delete (needs gh to confirm)` and exits 0.
+Prints one row per branch: `deleted`, `kept: <reason>`, or `would delete` with
+`--dry-run`. Exit 0 when it ran (kept branches are not a failure), 1 when a
+deletion it attempted failed, 2 usage or no repository.
+
+```
+artifact_prune.py [--repo OWNER/NAME] [--keep 1] [--dry-run] [--json]
+```
+Lists the repository's build artifacts with
+`gh api --paginate "repos/{repo}/actions/artifacts?per_page=100"`, ignores
+expired ones, groups the rest by `name`, keeps the newest `--keep` of each name
+(by `created_at`, then `id`, descending) and deletes the others with
+`gh api --method DELETE repos/{repo}/actions/artifacts/{id}`. `--repo`
+defaults to `GITHUB_REPOSITORY`, then `gh repo view --json nameWithOwner`.
+Prints one row per name: kept id(s), deleted count, bytes freed. Exit 0 done,
+1 a deletion failed, 2 `gh` failed to list, or usage.
 
 ```
 ci_watch.py SHA [--workflow ci.yml] [--timeout 3600] [--interval 30] [--repo OWNER/NAME]
@@ -253,6 +360,22 @@ then runs `gate.json`'s `setup` commands. Idempotent.
   `spec` relative to the repository root) run in a separate non-blocking step.
   It becomes a required check.
 - Gitleaks in CI installs the version in `tools.json` (checksum verified).
+- `artifact-prune.yml` (every track): `on: workflow_run` (`workflows:` lists
+  every workflow of the repository that uploads an artifact: `CI` in the
+  template; a product that adds a release workflow adds its name here),
+  `types: [completed]`; plus a daily `schedule` and `workflow_dispatch`. One
+  job, `permissions: actions: write`, `GH_TOKEN: ${{ github.token }}`, runs
+  `python3 scripts/delivery/artifact_prune.py`. Artifact names are stable per
+  kind (no version, run number or sha in the name), or pruning cannot group
+  them.
+- `train-cleanup.yml` (every track): `on: pull_request: types: [closed]`, job
+  `if: github.event.pull_request.merged && github.event.pull_request.base.ref == github.event.repository.default_branch`
+  (a draft into an integration branch also closes as merged when `join.py`
+  pushes; the train goes only when the ready pull request merges),
+  `permissions: contents: write,
+  pull-requests: read`, checkout with `fetch-depth: 0`, then
+  `python3 scripts/delivery/cleanup.py --remote-only --pr ${{ github.event.pull_request.number }}`
+  with `GH_TOKEN: ${{ github.token }}`.
 
 ## Tests (in `tools/` of this repository)
 
@@ -265,5 +388,13 @@ then runs `gate.json`'s `setup` commands. Idempotent.
   four `ci.yml` files (decide job, job conditions, e2e not advisory).
 - `tools/test_model_profiles.py` — every SKILL.md's `model` and `effort` match
   the profile table.
+- `tools/test_delivery_cleanup.py` — cleanup.py against throwaway repositories
+  with a local bare remote, linked worktrees and a stub `gh`: finished, kept,
+  locked, dirty and detached cases, `--pr`, `--local`, `--remote-only`,
+  `--dry-run`, join.py's best-effort call, and the structure of
+  `train-cleanup.yml`.
+- `tools/test_artifact_prune.py` — artifact_prune.py with a stub `gh` serving
+  artifact pages: grouping, ties, expired, `--keep`, `--dry-run`, a failed
+  deletion, pagination, and the structure of `artifact-prune.yml`.
 
 Each test proves its check can fail, like `tools/test_spec_check.py`.

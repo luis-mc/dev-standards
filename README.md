@@ -55,10 +55,11 @@ Sets up:
 **Model split:** the main session runs on Opus and does the thinking and
 planning; subagents run on Sonnet and write the code. Every project gets it,
 and the skill asks whether to enforce it for all your projects too. Each run
-it also asks whether each model should run at medium or high effort, with high
-preselected for the code agents, and writes your answer to the settings and to
-the rule file. Cloud agents, which have no per-model entry, default to
-high through a top-level `effortLevel`.
+it also asks whether each model should run at medium or high effort, with
+medium preselected for both Opus and the code agents (Sonnet), and writes
+your answer to the settings and to the rule file. Cloud agents, which run Opus
+and have no per-model entry, default to medium through a top-level
+`effortLevel`.
 
 The rule file also carries the integrate-once, deploy-once workflow and cites
 the `scripts/delivery/*` tools that `tech-stack-setup` 12+ generates. The
@@ -100,6 +101,11 @@ joins branches and stops at a conflict it cannot resolve. The ready pull request
 runs the only full CI run, end-to-end tests included, and a CI watcher follows it
 by commit; the default-branch run that follows skips a tree CI has already
 tested.
+
+Since 7.0.0 the gate installs from the lockfile before it checks anything, stops
+at the first failure and gives up after 30 minutes. A merged train's branches,
+gate results and worktrees are removed automatically, and only the newest build
+artifact of each name (an installer, a bundle, a report) is kept on GitHub.
 
 Supports four language tracks: **TypeScript, Go, Rust, and .NET**. Every
 vendor choice — Postgres or MySQL, Neon or RDS, Vercel or Fly — is yours;

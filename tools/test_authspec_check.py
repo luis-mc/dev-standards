@@ -26,10 +26,17 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import authspec_check as AC  # noqa: E402
 
+# Findings and PASS/FAIL lines carry non-ASCII (§, em dashes); a Windows console
+# defaults to cp1252 and would raise on them. Reconfigure rather than require
+# PYTHONUTF8.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8")
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SPEC = (ROOT / "claude/plugins/project-setup/skills/auth-setup"
         / "references/authentication.md")
-BASE = SPEC.read_text()
+BASE = SPEC.read_text(encoding="utf-8")
 ROUTE_MAP = ROOT / "tools" / "route-ratelimit-map.json"
 
 

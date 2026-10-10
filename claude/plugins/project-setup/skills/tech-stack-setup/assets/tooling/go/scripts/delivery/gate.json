@@ -2,7 +2,8 @@
   "schema": 1,
   "track": "go",
   "default_branch": "main",
-  "setup": ["go mod download", "go mod verify"],
+  "setup": ["go mod download", "go mod verify", "go list -mod=readonly -m all", "go list -mod=readonly -deps -test ./..."],
+  "timeout_minutes": 30,
   "packages": {"kind": "go-modules"},
   "widen_on": [
     "go.mod",

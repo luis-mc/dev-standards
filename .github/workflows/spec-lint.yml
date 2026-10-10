@@ -122,6 +122,21 @@ jobs:
       - name: Prove the CI scripts and workflow templates still hold
         run: python3 tools/test_delivery_ci.py
 
+      # STACKSPEC 7.0.0 §13.6: once a train merges, cleanup.py removes its
+      # branches, gate-result refs and worktrees. A cleanup that deletes a
+      # branch with an open pull request, unmerged work, or a worktree holding
+      # uncommitted changes destroys work nobody can get back, so every safety
+      # rule is proved against throwaway repositories and a stub `gh`.
+      - name: Prove train cleanup removes only what is finished
+        run: python3 tools/test_delivery_cleanup.py
+
+      # STACKSPEC 7.0.0 §13.1: only the newest build artifact of each name is
+      # kept, because artifact storage is billed. A pruner that keeps the oldest,
+      # misses a page or keeps nothing either costs money or loses the latest
+      # build. Stub `gh` on PATH keeps this offline.
+      - name: Prove artifact pruning keeps exactly the newest of each name
+        run: python3 tools/test_artifact_prune.py
+
       # Every SKILL.md names the model and effort it runs at, and the profile
       # table is the single statement of what each skill needs. A skill whose
       # frontmatter drifted from the table runs on the wrong model silently: the

@@ -1,4 +1,4 @@
-# Database engines, hosts, and the capabilities STACKSPEC 6.0.0 asks of them.
+# Database engines, hosts, and the capabilities STACKSPEC 7.0.0 asks of them.
 #
 # This is the highest-cascade choice in the wizard. The engine decides the
 # migration tool, the transaction semantics, and — via §7.2 — whether the job

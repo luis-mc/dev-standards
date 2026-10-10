@@ -47,7 +47,10 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
         let path = entry.path();
         let name = entry.file_name().to_string_lossy().into_owned();
         if path.is_dir() {
-            if !SKIP_DIRS.contains(&name.as_str()) {
+            // A directory with its own `.git` is another checkout (an agent's
+            // worktree under .claude/worktrees, a submodule): its files are in
+            // whatever state that work is in right now, mid-merge included.
+            if !SKIP_DIRS.contains(&name.as_str()) && !path.join(".git").exists() {
                 walk(&path, out);
             }
         } else if path
