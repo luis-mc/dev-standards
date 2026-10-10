@@ -814,6 +814,8 @@ def sc_join_clean(t: T, shared: Path) -> None:
     r = join(box, "--into", "integ", "feat/a", "--push")
     t.eq("--push: exit 0", r.code, 0)
     head = box.g("rev-parse", "HEAD")
+    t.eq("a branch that could fast-forward still gets a merge commit",
+         box.g("log", "--merges", "--format=%s", "integ").splitlines(), ["Join feat/a"])
     t.eq("--push: integration pushed", box.g("rev-parse", "origin/integ"), head)
     ref = box.remote_ref("refs/gate-results/integ")
     t.check("--push: its gate result published", ref is not None)

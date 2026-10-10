@@ -110,7 +110,10 @@ if [ -n "$dry_run" ]; then
 fi
 
 mkdir -p "$bin_dir"
-export PATH="$bin_dir:$PATH"
+bin_path=$bin_dir
+# Git Bash on Windows: a PATH entry must be /c/..., not C:/... (the colon splits it).
+if command -v cygpath >/dev/null 2>&1; then bin_path=$(cygpath -u "$bin_dir"); fi
+export PATH="$bin_path:$PATH"
 if command -v gitleaks >/dev/null 2>&1 && gitleaks version 2>/dev/null | grep -qF "$gl_version"; then
   say "gitleaks $gl_version already installed"
 else
