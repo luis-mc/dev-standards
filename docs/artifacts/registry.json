@@ -446,11 +446,11 @@
       "id": "DS19",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Automatic branch and worktree cleanup",
-      "detail": "Built in draft #24: cleanup.py removes a merged train's branches, gate-result refs, local branches and worktrees. It keeps open, unmerged, dirty or unpushed work and anything gh cannot classify. train-cleanup.yml runs it on a merge into main; join.py runs it locally first. 175 checks, 36 mutants. Waiting for the join.",
-      "expected": "10 Oct",
-      "changed": "2026-10-10T22:53+01:00"
+      "detail": "Released in STACKSPEC 7.0.0 (#27, 137e0d0, 00:31). Built in draft #24: cleanup.py removes a merged train's branches, gate-result refs, local branches and worktrees. It keeps open, unmerged, dirty or unpushed work and anything gh cannot classify. train-cleanup.yml runs it on a merge into main; join.py runs it locally first. 175 checks, 36 mutants. Waiting for the join.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:32+01:00"
     },
     {
       "id": "DS20",
