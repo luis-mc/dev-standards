@@ -1,7 +1,7 @@
 ---
 description: Apply Claude Code configuration — statusline, settings.json (auto-compact window, output style, Opus-plans/Sonnet-codes model split with a medium-or-high effort level per model), output styles, rules, and CLAUDE.md — to this project and/or the user-level ~/.claude/. Use when the user asks to set up Claude, configure the statusline, fix their Claude settings, add a CLAUDE.md, or apply their Claude config to a repo or a new machine, or invokes /luismc-project-setup:claude-setup. Not for repo or product tooling (hooks, gitleaks, CI, playwright) — that is /luismc-project-setup:tech-stack-setup.
 model: sonnet
-effort: high
+effort: medium
 ---
 
 # Claude setup
@@ -24,7 +24,9 @@ Every project this skill touches gets the same division of labour: the **main
 session runs on Opus** and does the thinking — understanding, planning,
 designing, reviewing — and **subagents run on Sonnet** and write the code. Each
 model also gets an **effort level**, **medium** or **high**, chosen by the user
-on every run. Five pieces carry it, and all are needed:
+on every run. The owner's default is **medium for both**, Opus and Sonnet;
+it is what the question below preselects and what the shipped files carry.
+Six pieces carry it, and all are needed:
 
 | Piece | Enforces |
 |---|---|
@@ -65,13 +67,15 @@ file tells the main loop to pass the subagent effort explicitly. Anything that
 overrides saved settings overrides the entries too: the env var
 `CLAUDE_CODE_EFFORT_LEVEL` (every model, every setting), and `--effort` or
 `/effort` for the session. The skill only offers **medium** (the default for
-Opus 5.5 and Sonnet 5.5) and **high** (more tokens and time); `effortLevel` also
-accepts `low` and `xhigh`, which are left to the user to set by hand.
+Opus 5.5 and Sonnet 5.5, and the owner's default for both) and **high** (more
+tokens and time); `effortLevel` also accepts `low` and `xhigh`, which are left
+to the user to set by hand.
 
-The shipped settings also carry a top-level `"effortLevel": "high"`. A
+The shipped settings also carry a top-level `"effortLevel": "medium"`. A
 per-model `modelSettings` entry beats it, so the main session still runs at the
 effort chosen for Opus; the top-level key is what applies to sessions whose
-model has no entry, such as cloud agents, which then run at high.
+model has no entry, such as cloud agents, which run Opus and so get the Opus
+default, medium.
 
 ## Scope this plugin does NOT cover
 
@@ -110,20 +114,20 @@ since the split is then applied there anyway.
 
 Then ask the **effort question**, once for each model of the split:
 
-- the **main session (Opus)** — medium or high?
+- the **main session (Opus)** — medium or high? **Recommend medium**: the
+  owner's default is Opus at medium effort.
 - the **code-writing subagents (Sonnet)** — medium or high? **Recommend
-  high**: code agents run at high effort unless the user picks medium.
+  medium**: the owner's default is Sonnet at medium effort, so code agents run
+  at medium unless the user picks high.
 
-Present the Opus options neutrally: medium is the model default, high costs
-more tokens and time. Do not recommend one for Opus. If a target's settings
-already hold a `modelSettings.<model ID>.effortLevel` for that model (see
-step 2 for the IDs), show it and offer it as the default answer. If none is
-saved, there is no default. For Sonnet the default answer is `high`; when a
-saved value exists, show it as well, but still mark `high` as the recommended
-answer. **Ask both every run**, even when a value is already saved: effort is
-the user's per-run choice, and one answer covers every target that gets the
-split. If the targets disagree on a saved value, show each and offer none as
-the default (for Sonnet, `high` stays the recommended answer).
+Preselect medium for both models and say that this is the owner's default;
+high costs more tokens and time. If a
+target's settings already hold a `modelSettings.<model ID>.effortLevel` for
+that model (see step 2 for the IDs), show it as well, but still mark the
+recommended answer. **Ask both every run**, even when a value is already saved:
+effort is the user's per-run choice, and one answer covers every target that
+gets the split. If the targets disagree on a saved value, show each; the
+recommended answer stays preselected.
 
 ## Step 2 — Build a change plan per target
 
@@ -160,7 +164,7 @@ to avoid. The keys, and what each is for:
 | `env.CLAUDE_CODE_SUBAGENT_MODEL` | `"sonnet"` | subagents write code on Sonnet |
 | `modelSettings.<Opus ID>.effortLevel` | the step 1 answer, `"medium"` or `"high"` | the main loop's effort |
 | `modelSettings.<Sonnet ID>.effortLevel` | the step 1 answer, `"medium"` or `"high"` | the Sonnet effort for the session itself (subagents: see the rule file below) |
-| `effortLevel` | `"high"` | the effort for sessions whose model has no `modelSettings` entry, such as cloud agents; the per-model entries beat it |
+| `effortLevel` | `"medium"` | the effort for sessions whose model has no `modelSettings` entry, such as cloud agents, which run Opus; the per-model entries beat it |
 | `hooks.SessionStart` | the drift-hook entry, see path note below | runs `hooks/effort_drift.py` at session start |
 | `enabledPlugins."luismc-artifacts@<marketplace>"` | `true`, project target only; marketplace as found below | enables the project-artifacts plugin (ARTIFACTSPEC R10.1) |
 
@@ -383,7 +387,7 @@ identical afterwards. What the user declined, including any model-split
 conflict left in place. Whether the model split is now enforced for this
 project only or for all projects. The effort chosen for each model (Opus main
 session, Sonnet subagents) and where it was written, and the top-level
-`effortLevel` (added as `high`, or the existing value left alone) that cloud
+`effortLevel` (added as `medium`, or the existing value left alone) that cloud
 agents fall back to. Whether `luismc-artifacts` was enabled for the project, and
 that the marketplace must be added on the machine for it to load. Anything
 removed (the old
@@ -438,9 +442,10 @@ keep it off, set the variable.
 
 `assets/model-profiles.json` is the single source of truth for which model and
 effort each skill in this marketplace runs at, in three groups: `judgment`
-(Opus, high: specs, audits, stack setup, auth, writing a feature artifact),
+(Opus, medium: specs, audits, stack setup, auth, writing a feature artifact),
 `mechanical` (Sonnet, medium: checks and task bookkeeping, the other artifacts
-skills) and `setup` (Sonnet, high: this skill). Every
+skills) and `setup` (Sonnet, medium: this skill). Every profile is medium,
+the owner's default for both models. Every
 skill's `model:` and `effort:` frontmatter must match its group; this skill's
 own frontmatter does. `tools/test_model_profiles.py` enforces that, so change
 the JSON first and the skill files after. The file is not copied to a target

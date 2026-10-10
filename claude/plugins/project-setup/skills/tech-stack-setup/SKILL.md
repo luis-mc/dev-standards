@@ -1,6 +1,6 @@
 ---
 model: opus
-effort: high
+effort: medium
 description: Guide a user to a coherent technology stack — language, frameworks, database, host, and providers that work well together — then generate a repository conforming to STACKSPEC, the organization's technology-neutral invariants specification. Also audits an existing repo against those invariants and reports drift by section. Use when the user wants to start a new product, asks "help me pick a stack", "scaffold a conforming repo", "bootstrap a new product", "set up the tech stack", "does this repo conform", "check conformance", or invokes /luismc-project-setup:tech-stack-setup. This skill does NOT build authentication — that is the auth-setup skill, and it only runs if the user asks for it at the end.
 ---
 

@@ -14,14 +14,18 @@ What is checked against a repo root:
   M1  no model-delegation.md remains in the claude-setup assets
   E1  the settings template enables luismc-artifacts@{{MARKETPLACE}} and
       SKILL.md says how the placeholder is filled
+  D1  the owner's default, medium for Opus and Sonnet alike: every profile
+      is medium, the architect agent (Opus) is medium, the settings
+      template's top-level effortLevel is medium, and claude-setup recommends
+      medium for both models
 
 Each check is then proved able to fail: a clean copy of the relevant files is
 mutated one way at a time, and the mutation must produce the matching finding.
 The hook is exercised the same way, on small settings fixtures.
 
-Until the branch that sets tech-stack-setup's frontmatter is joined, the real
-tree reports that one skill as a failure. That is expected; every other check
-passes.
+feature-artifact-new belongs to the luismc-artifacts plugin, which is edited
+on its own branch; until it is joined, the real tree reports its old effort as
+a P2 failure. That is expected; every other check passes.
 
 Run:  python3 tools/test_model_profiles.py
 """
@@ -50,6 +54,8 @@ RULE_LINES = [
     "pass `effort: \"{{SUBAGENT_EFFORT}}\"` on every implementation Agent call.",
     "- Merges and checks: scripts.",
     "Log triage: `model: \"haiku\"`.",
+    "- Opus agents (`model: \"opus\"`) and Sonnet agents both pass "
+    "`effort: \"medium\"` unless the user chose otherwise in claude-setup.",
     "- Agents whose definition pins a model or effort keep it.",
     "- Trivial edits",
     "- Max 5 agents at once.",
@@ -60,6 +66,8 @@ RULE_LINES = [
 PLACEHOLDER = "{{SUBAGENT_EFFORT}}"
 ARTIFACTS_PLUGIN = "luismc-artifacts@{{MARKETPLACE}}"
 SKILL = SETUP + "/SKILL.md"
+ARCHITECT = "claude/plugins/agents/agents/architect.md"
+EXPECTED_PENDING = ("P2 feature-artifact-new",)
 
 
 def frontmatter(text):
@@ -85,6 +93,46 @@ def profile_table(root):
         for skill in group["skills"]:
             table[skill] = (group["model"], group["effort"])
     return table
+
+
+DEFAULT_EFFORT = {"opus": "medium", "sonnet": "medium"}
+
+
+def defaults(root):
+    """D1 findings: the owner's default, medium for Opus and Sonnet."""
+    found = []
+    try:
+        data = json.loads((root / PROFILES).read_text(encoding="utf-8"))
+        for name, group in data.items():
+            want = DEFAULT_EFFORT.get(group["model"])
+            if want and group["effort"] != want:
+                found.append(f"D1 profile {name}: {group['model']} is "
+                             f"{group['effort']}, want {want}")
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        pass  # P0 already reports an unreadable table
+    try:
+        fm = frontmatter((root / ARCHITECT).read_text(encoding="utf-8"))
+    except OSError:
+        fm = {}
+    if fm.get("model") != "opus" or fm.get("effort") != "medium":
+        found.append("D1 architect agent is not opus at medium effort")
+    try:
+        top = json.loads((root / SETTINGS).read_text(encoding="utf-8")).get("effortLevel")
+    except (OSError, ValueError, AttributeError):
+        top = None
+    if top != "medium":
+        found.append(f"D1 settings top-level effortLevel is {top}, want medium")
+    try:
+        text = " ".join((root / SKILL).read_text(encoding="utf-8").split())
+    except OSError:
+        text = ""
+    if text.count("**Recommend medium**") < 2:
+        found.append("D1 SKILL.md does not recommend medium for both models")
+    if "**Recommend high**" in text:
+        found.append("D1 SKILL.md recommends high for a model")
+    if '| `effortLevel` | `"medium"` |' not in text:
+        found.append("D1 SKILL.md effortLevel row is not medium")
+    return found
 
 
 def check(root):
@@ -148,6 +196,7 @@ def check(root):
         skill_text = ""
     if "{{MARKETPLACE}}" not in skill_text or "luismc-project-setup@" not in skill_text:
         found.append("E1 SKILL.md does not say how {{MARKETPLACE}} is filled")
+    found += defaults(root)
     return found
 
 
@@ -158,6 +207,8 @@ def copy_tree(dest):
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(path, target)
     shutil.copytree(ROOT / ASSETS, dest / ASSETS)
+    (dest / ARCHITECT).parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(ROOT / ARCHITECT, dest / ARCHITECT)
     # Make the copy clean: give every SKILL.md on disk its profile, so each
     # mutation below is the only defect in the tree.
     table = profile_table(dest)
@@ -214,6 +265,44 @@ def m_role_line(r):
     edit(r / RULE, "- Code agents: Sonnet at", "- Code workers: Sonnet at")
 
 
+def m_opus_agent_line(r):
+    edit(r / RULE, 'both pass `effort: "medium"`', 'both pass `effort: "high"`')
+
+
+def m_opus_profile_high(r):
+    p = r / PROFILES
+    p.write_text(p.read_text(encoding="utf-8").replace(
+        '"model": "opus", "effort": "medium"', '"model": "opus", "effort": "high"'),
+        encoding="utf-8")
+
+
+def m_sonnet_profile_high(r):
+    p = r / PROFILES
+    p.write_text(p.read_text(encoding="utf-8").replace(
+        '"model": "sonnet", "effort": "medium"', '"model": "sonnet", "effort": "high"'),
+        encoding="utf-8")
+
+
+def m_architect_high(r):
+    edit(r / ARCHITECT, "effort: medium", "effort: high")
+
+
+def m_top_level_high(r):
+    edit(r / SETTINGS, '"effortLevel": "medium"', '"effortLevel": "high"')
+
+
+def m_skill_opus_high(r):
+    edit(r / SKILL, "**Recommend medium**", "**Recommend high**")
+
+
+def m_skill_sonnet_high(r):
+    edit(r / SKILL, "**Recommend\n  medium**", "**Recommend high**")
+
+
+def m_skill_table_high(r):
+    edit(r / SKILL, '| `effortLevel` | `"medium"` |', '| `effortLevel` | `"high"` |')
+
+
 def m_placeholder(r):
     p = r / RULE
     p.write_text(p.read_text(encoding="utf-8").replace(PLACEHOLDER, "high"),
@@ -268,6 +357,14 @@ MUTATIONS = [
     ("P2 missing model line", m_no_model_line, "security-audit: frontmatter has no model"),
     ("P1 skill not in table", m_unknown_skill, "brand-new-skill: SKILL.md is not in"),
     ("R1 role line gone", m_role_line, "rule file lacks: - Code agents"),
+    ("R1 Opus agent line wrong", m_opus_agent_line, "rule file lacks: - Opus agents"),
+    ("D1 Opus profile high", m_opus_profile_high, "D1 profile judgment: opus is high"),
+    ("D1 Sonnet profile high", m_sonnet_profile_high, "D1 profile mechanical: sonnet is high"),
+    ("D1 architect high", m_architect_high, "D1 architect agent"),
+    ("D1 top-level effort high", m_top_level_high, "top-level effortLevel is high"),
+    ("D1 SKILL Opus recommends high", m_skill_opus_high, "SKILL.md does not recommend medium for both"),
+    ("D1 SKILL Sonnet recommends high", m_skill_sonnet_high, "SKILL.md does not recommend medium for both"),
+    ("D1 SKILL table row high", m_skill_table_high, "effortLevel row is not medium"),
     ("R1 placeholder gone", m_placeholder, "lacks the {{SUBAGENT_EFFORT}}"),
     ("R1 rule file missing", m_rule_missing, "agents-and-integration.md is missing"),
     ("S1 hook not registered", m_no_hook_registration, "registers no SessionStart"),
@@ -354,7 +451,7 @@ def main():
     fails = 0
 
     real = check(ROOT)
-    expected = [f for f in real if f.startswith("P2 tech-stack-setup")]
+    expected = [f for f in real if f.startswith(EXPECTED_PENDING)]
     other = [f for f in real if f not in expected]
     print("Real tree:")
     for f in expected:
@@ -388,7 +485,7 @@ def main():
             fails += not ok
 
     print(f"\n{'FAILED' if fails else 'OK'}: {fails} failing group(s)"
-          f" ({len(expected)} expected tech-stack-setup finding(s))")
+          f" ({len(expected)} expected artifacts-plugin finding(s))")
     return 1 if fails else 0
 
 

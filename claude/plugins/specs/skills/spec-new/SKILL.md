@@ -2,7 +2,7 @@
 name: spec-new
 description: Interview the user and write a normative specification to specs/ before any implementation begins. Use this whenever the user wants to plan, design, or spec out a feature, component, service, migration, or refactor — including phrasings like "I want to build X", "how should we approach Y", "let's design Z", "write a spec for", "plan out", or when they describe a non-trivial change without having written anything down yet. Also use it when an existing spec needs revising or extending. Prefer this over jumping straight to implementation for anything touching more than one file.
 model: opus
-effort: high
+effort: medium
 ---
 
 # Spec — New
