@@ -1038,6 +1038,7 @@ def test_protection_refusal_and_retry(env):
     assert p.task('AR1')['status'] == 'Waiting'
     # a later change after a refusal keeps the kept commit and pushes both
     hook.write_bytes(b'#!/bin/sh\nexit 1\n')
+    os.chmod(str(hook), 0o755)
     assert p.run('set-task-status', 'SI1', 'Waiting').code == 4
     hook.unlink()
     p.ok('set-task-status', 'AR2', 'Done')
