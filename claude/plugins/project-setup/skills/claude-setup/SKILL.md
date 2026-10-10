@@ -55,6 +55,11 @@ overrides saved settings overrides the entries too: the env var
 Opus 5.5 and Sonnet 5.5) and **high** (more tokens and time); `effortLevel` also
 accepts `low` and `xhigh`, which are left to the user to set by hand.
 
+The shipped settings also carry a top-level `"effortLevel": "high"`. A
+per-model `modelSettings` entry beats it, so the main session still runs at the
+effort chosen for Opus; the top-level key is what applies to sessions whose
+model has no entry, such as cloud agents, which then run at high.
+
 ## Scope this plugin does NOT cover
 
 Repo and product tooling — `.githooks/pre-commit`, `.gitleaks.toml`,
@@ -91,15 +96,19 @@ since the split is then applied there anyway.
 Then ask the **effort question**, once for each model of the split:
 
 - the **main session (Opus)** — medium or high?
-- the **code-writing subagents (Sonnet)** — medium or high?
+- the **code-writing subagents (Sonnet)** — medium or high? **Recommend
+  high**: code agents run at high effort unless the user picks medium.
 
-Present both options neutrally: medium is the model default, high costs more
-tokens and time. Do not recommend one. If a target's settings already hold a
-`modelSettings.<model ID>.effortLevel` for that model (see step 2 for the IDs),
-show it and offer it as the default answer. **Ask every run**, even when a
-value is already saved: effort is the user's per-run choice, and one answer
-covers every target that gets the split. If the targets disagree on the saved
-value, show each and offer none as the default.
+Present the Opus options neutrally: medium is the model default, high costs
+more tokens and time. Do not recommend one for Opus. If a target's settings
+already hold a `modelSettings.<model ID>.effortLevel` for that model (see
+step 2 for the IDs), show it and offer it as the default answer. If none is
+saved, there is no default. For Sonnet the default answer is `high`; when a
+saved value exists, show it as well, but still mark `high` as the recommended
+answer. **Ask both every run**, even when a value is already saved: effort is
+the user's per-run choice, and one answer covers every target that gets the
+split. If the targets disagree on a saved value, show each and offer none as
+the default (for Sonnet, `high` stays the recommended answer).
 
 ## Step 2 — Build a change plan per target
 
@@ -134,6 +143,7 @@ to avoid. The keys, and what each is for:
 | `env.CLAUDE_CODE_SUBAGENT_MODEL` | `"sonnet"` | subagents write code on Sonnet |
 | `modelSettings.<Opus ID>.effortLevel` | the step 1 answer, `"medium"` or `"high"` | the main loop's effort |
 | `modelSettings.<Sonnet ID>.effortLevel` | the step 1 answer, `"medium"` or `"high"` | the Sonnet effort for the session itself (subagents: see the rule file below) |
+| `effortLevel` | `"high"` | the effort for sessions whose model has no `modelSettings` entry, such as cloud agents; the per-model entries beat it |
 
 **The effort keys are written from the user's answer, not queued as missing.**
 They are an explicit choice made this run, so they are written into every
@@ -257,6 +267,8 @@ Apply what was confirmed, then check the result rather than assuming it worked:
   declined non-Opus value defeats a user-level enforcement; say so.
 - Every target that got the split has both `modelSettings` entries, under the
   canonical IDs, with the value `medium` or `high`.
+- The target's settings contain a top-level `effortLevel` (unless an existing
+  value was left alone) and still parse as JSON.
 - The written `rules/model-delegation.md` contains no `{{SUBAGENT_EFFORT}}`
   placeholder and names the chosen Sonnet effort.
 - No `CLAUDE_CODE_EFFORT_LEVEL` remains in the target's `env` block, unless the
@@ -271,5 +283,7 @@ alone — that list matters, because "already set" and "just set by me" look
 identical afterwards. What the user declined, including any model-split
 conflict left in place. Whether the model split is now enforced for this
 project only or for all projects. The effort chosen for each model (Opus main
-session, Sonnet subagents) and where it was written. If both targets were
+session, Sonnet subagents) and where it was written, and the top-level
+`effortLevel` (added as `high`, or the existing value left alone) that cloud
+agents fall back to. If both targets were
 written, note which keys the project file now shadows.
