@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T22:54+01:00",
+  "updated": "2026-10-10T22:55+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -26,11 +26,11 @@
       "id": "AR4",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "Answer the open decisions",
       "detail": "Answered: one task registry; branch names start with the task ID; catch-up at session start; each project's own design, the plugin's default when it has none; an App / service column on the full-progress artifact.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T22:55+01:00"
     },
     {
       "id": "AR5",
