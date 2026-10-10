@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T22:04+01:00",
+  "updated": "2026-10-10T22:05+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -236,11 +236,11 @@
       "id": "AR26",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Waiting",
+      "status": "Running",
       "item": "Feature pages as repo files; fewer publishes",
-      "detail": "Decided: Full Progress stays on claude.ai and publishes once per turn; feature pages become standalone HTML files in docs/artifacts/ with the same look, never published; Full Progress links to them as files on this PC (file:///…; the committed copy uses relative links); the two feature artifacts on claude.ai are deleted after release, each with your confirmation. Starts when AR21, AR22 and AR25 are joined, since it touches the same files.",
-      "expected": "11 Oct ~00:30",
-      "changed": "2026-10-10T21:40+01:00"
+      "detail": "Agent joining AR21/AR25 and AR22 (spec, rule, script conflicts), then building: Full Progress published once per turn; feature pages as standalone HTML files in docs/artifacts with the same look, never published; Full Progress links them as local files; only Live rows fold into Earlier; only background agents arm the end-of-turn check.",
+      "expected": "11 Oct ~00:45",
+      "changed": "2026-10-10T22:05+01:00"
     },
     {
       "id": "DS1",
