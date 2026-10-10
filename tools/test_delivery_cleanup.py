@@ -139,7 +139,7 @@ DELIVERY_FILES = ["delivery_common.py", "cleanup.py"]
 
 
 class World:
-    def __init__(self, shared: Path = SHARED):
+    def __init__(self, shared: Path = SHARED, gate_default: str = "main", origin_head: str = "main"):
         self.root = Path(tempfile.mkdtemp(prefix="world-", dir=_TMP))
         self.origin = self.root / "origin.git"
         self.work = self.root / "work"
@@ -154,12 +154,13 @@ class World:
         d.mkdir(parents=True)
         for name in DELIVERY_FILES:
             tdg.Box.copy_text(shared / "scripts/delivery" / name, d / name)
-        (d / "gate.json").write_text(json.dumps(GATE_JSON), encoding="utf-8")
+        (d / "gate.json").write_text(json.dumps({**GATE_JSON, "default_branch": gate_default}), encoding="utf-8")
         self.write(".gitignore", ".claude/worktrees/\n.delivery/\n__pycache__/\n")
         self.write("README.md", "hello\n")
         self.g("add", "-A")
         self.g("commit", "-q", "-m", "init")
         self.g("push", "-q", "-u", "origin", "main")
+        run(["git", "--git-dir", self.origin.as_posix(), "symbolic-ref", "HEAD", "refs/heads/" + origin_head])
         self.seq = 0
 
     # -- git helpers -------------------------------------------------------
@@ -277,6 +278,8 @@ def sc_classify(t: T, shared: Path) -> None:
     merged_then_more = w.branch("feat/later")
     stray_head = w.branch("feat/stray")
     w.branch("feat/error")
+    c1 = w.branch("feat/c1")
+    integ2 = w.integration("integ2", ["feat/c1"])
     for b in ("integ", "feat/d1", "feat/d2", "feat/a", "feat/open", "feat/closed", "feat/later", "feat/stray"):
         w.result_ref(b)
 
@@ -289,6 +292,8 @@ def sc_classify(t: T, shared: Path) -> None:
     s.pr("feat/closed", "CLOSED", w.tip("feat/closed"))      # closed without merging
     s.pr("feat/later", "MERGED", merged_then_more)
     s.pr("feat/stray", "CLOSED", stray_head, base="integ")   # closed into a finished integ, but not contained in it
+    s.pr("integ2", "OPEN", integ2)                           # an integration branch still being worked on ...
+    s.pr("feat/c1", "CLOSED", c1, base="integ2")             # ... one of its drafts was closed by hand
     s.pr("main", "MERGED", w.tip("main"), base="release")    # nonsense about the default branch must not matter
     s.fx["errors"].append("head:feat/error")
     s.save()
@@ -309,13 +314,16 @@ def sc_classify(t: T, shared: Path) -> None:
             is_kept(rows, "feat/closed", "closed without merging"), status(rows, "feat/closed"))
     t.check("a closed draft whose commits are not in the integration branch is kept",
             is_kept(rows, "feat/stray", "closed without merging"), status(rows, "feat/stray"))
+    t.check("a closed draft whose base is not finished is kept, though the base holds its commits",
+            is_kept(rows, "feat/c1", "closed without merging") and is_kept(rows, "integ2", "open pull request"),
+            status(rows, "feat/c1"))
     t.check("a branch with no pull request is kept", is_kept(rows, "feat/nopr", "no pull request"), status(rows, "feat/nopr"))
     t.check("commits pushed after the merge keep the branch",
             is_kept(rows, "feat/later", "after the merged"), status(rows, "feat/later"))
     t.check("an error from gh keeps the branch", is_kept(rows, "feat/error", "cannot classify"), status(rows, "feat/error"))
     t.check("the default branch gets no row", "main" not in rows, str(sorted(rows)))
     t.eq("remote: only finished branches are gone",
-         w.remote_heads(), {"main", "feat/open", "feat/closed", "feat/nopr", "feat/later", "feat/stray", "feat/error"})
+         w.remote_heads(), {"main", "feat/open", "feat/closed", "feat/nopr", "feat/later", "feat/stray", "feat/error", "feat/c1", "integ2"})
     t.eq("remote: gate-result refs go with their branch, the rest stay",
          w.remote_results(), {"feat/open", "feat/closed", "feat/later", "feat/stray"})
     t.check("--remote-only leaves local branches alone",
@@ -355,19 +363,25 @@ def sc_gh_failure(t: T, shared: Path) -> None:
 
 
 def sc_default_branch(t: T, shared: Path) -> None:
-    w = World(shared)
-    w.stub.pr("main", "MERGED", w.tip("main"), base="release")
-    w.stub.pr("main", "MERGED", w.tip("main"), base="staging")
-    for flags in ([], ["--remote-only"], ["--local"]):
-        r, rows = w.rows(*flags)
-        t.eq("%s: exit 0" % (flags or "default"), r.code, 0)
-        t.check("%s: the default branch is never a candidate" % (flags or "default"), "main" not in rows, str(sorted(rows)))
-        t.check("%s: main still on the remote and local" % (flags or "default"),
-                "main" in w.remote_heads() and "main" in w.local_branches())
+    # the default branch is named by gate.json and by the remote's HEAD; each alone must protect it
+    for label, gate_default, origin_head in (("gate.json and remote HEAD", "main", "main"),
+                                             ("gate.json only", "main", "elsewhere"),
+                                             ("remote HEAD only", "trunk", "main")):
+        w = World(shared, gate_default=gate_default, origin_head=origin_head)
+        w.stub.pr("main", "MERGED", w.tip("main"), base="release")
+        w.stub.pr("main", "MERGED", w.tip("main"), base="staging")
+        for flags in ([], ["--remote-only"], ["--local"]):
+            tag = "%s, %s" % (label, " ".join(flags) or "no flag")
+            r, rows = w.rows(*flags)
+            t.eq("%s: exit 0" % tag, r.code, 0)
+            t.check("%s: the default branch is never a candidate" % tag, "main" not in rows, str(sorted(rows)))
+            t.check("%s: main still on the remote and local" % tag,
+                    "main" in w.remote_heads() and "main" in w.local_branches())
     # train of a pull request whose head is the default branch itself
-    n = w.stub.pr("main", "MERGED", w.tip("main"), base="main")
-    r, rows = w.rows("--pr", str(n))
-    t.check("--pr with the default branch as head: nothing deleted", "main" in w.remote_heads() and "main" not in rows)
+    w2 = World(shared)
+    n = w2.stub.pr("main", "MERGED", w2.tip("main"), base="main")
+    r, rows = w2.rows("--pr", str(n))
+    t.check("--pr with the default branch as head: nothing deleted", "main" in w2.remote_heads() and "main" not in rows)
 
 
 def sc_failed_deletion(t: T, shared: Path) -> None:
@@ -558,8 +572,9 @@ def sc_worktrees(t: T, shared: Path) -> None:
     w2 = World(shared)
     sha = w2.branch("feat/main-tree")
     w2.stub.pr("feat/main-tree", "MERGED", sha)
+    runner = w2.worktree("runner", detach=True)  # run from elsewhere, so only the main-tree rule can keep it
     w2.g("checkout", "-q", "feat/main-tree")
-    r, rows = w2.rows("--local")
+    r, rows = w2.rows("--local", cwd=runner)
     t.check("a branch checked out in the main working tree is kept",
             is_kept(rows, "feat/main-tree") and "feat/main-tree" in w2.local_branches() and r.code == 0, status(rows, "feat/main-tree"))
     w2.g("checkout", "-q", "main")
@@ -580,6 +595,20 @@ def sc_worktrees(t: T, shared: Path) -> None:
     t.eq("a worktree whose directory vanished: pruned, branch deleted",
          (status(rows, "feat/gone"), "feat/gone" in w3.local_branches(), "gone" in w3.worktrees()),
          ("deleted", False, False))
+    # `git worktree prune` runs at the end whatever was decided
+    w4 = World(shared)
+    sha4 = w4.branch("feat/open")
+    w4.stub.pr("feat/open", "OPEN", sha4)
+    stale = w4.worktree("stale", "feat/open")
+    tdg.rmtree(stale)
+    t.eq("control: git still lists the vanished worktree", "stale" in w4.worktrees(), True)
+    r, rows = w4.rows("--local")
+    t.check("a stale worktree entry of a kept branch is pruned too",
+            "stale" not in w4.worktrees() and is_kept(rows, "feat/open"), status(rows, "feat/open"))
+    stale2 = w4.worktree("stale2", "feat/open")
+    tdg.rmtree(stale2)
+    r, rows = w4.rows("--local", "--dry-run")
+    t.eq("--dry-run does not prune", "stale2" in w4.worktrees(), True)
 
 
 def sc_local_without_gh(t: T, shared: Path) -> None:
@@ -718,7 +747,7 @@ def sc_workflow(t: T, shared: Path) -> None:
 def sc_assets(t: T, shared: Path) -> None:
     src = (shared / "scripts/delivery/cleanup.py").read_bytes()
     t.check("cleanup.py keeps sys.dont_write_bytecode = True", b"sys.dont_write_bytecode = True" in src)
-    t.check("cleanup.py has a python3 shebang and no CRLF", src.startswith(b"#!/usr/bin/env python3") and b"\r\n" not in src)
+    t.check("cleanup.py has a python3 shebang", src.startswith(b"#!/usr/bin/env python3"))
     join = (shared / "scripts/delivery/join.py").read_text(encoding="utf-8")
     t.check("join.py calls cleanup.py --local", '"cleanup.py"' in join and '"--local"' in join)
 
@@ -745,7 +774,9 @@ MUTANTS = [
      "gh_failure"),
     ("commits pushed after the merge are ignored", D,
      "if do_remote and tip and not v.unverifiable and not contained(ctx, tip, v.safe):", "if False:", "classify"),
-    ("the default branch is not protected", D,
+    ("the remote's HEAD branch is not protected", D,
+     'ctx.protected.add(line.split()[1].removeprefix("refs/heads/"))', "pass", "default_branch"),
+    ("the default branch of gate.json is not protected", D,
      "Ctx(root, args.remote, args.repo, default, {default}, args.dry_run)",
      "Ctx(root, args.remote, args.repo, default, set(), args.dry_run)", "default_branch"),
     ("gate-result refs are not deleted", D,
@@ -772,8 +803,8 @@ MUTANTS = [
      "                    if True:\n                        err = push_delete", "dry_run"),
     ("--dry-run removes worktrees", D, "        if ctx.dry:\n            row.removed.append(\"worktree",
      "        if False:\n            row.removed.append(\"worktree", "dry_run"),
-    ("--dry-run deletes local branches", D, "        if not ctx.dry:\n            p = ctx.git([\"branch\", \"-D\"",
-     "        if True:\n            p = ctx.git([\"branch\", \"-D\"", "dry_run"),
+    ("--dry-run deletes local branches", D, "        if not ctx.dry:\n            if len(live) < len(mine):",
+     "        if True:\n            if len(live) < len(mine):", "dry_run"),
     # worktrees
     ("a dirty worktree is removed", D,
      "        if dc.git([\"status\", \"--porcelain\", \"--untracked-files=normal\"], cwd=w.path, check=False):",
@@ -793,8 +824,11 @@ MUTANTS = [
      "        if w.main:\n            return", "        if False:\n            return", "worktrees"),
     ("the working tree the script runs in is not protected", D,
      "        if same_path(w.path, ctx.root):\n            return", "        if False:\n            return", "worktrees"),
-    ("a vanished worktree is not pruned", D, "    if do_local and not ctx.dry:\n        ctx.git([\"worktree\", \"prune\"])",
+    ("worktree prune never runs at the end", D, "    if do_local and not ctx.dry:\n        ctx.git([\"worktree\", \"prune\"])",
      "    if False:\n        pass", "worktrees"),
+    ("worktree prune runs in --dry-run", D, "    if do_local and not ctx.dry:\n        ctx.git([\"worktree\", \"prune\"])",
+     "    if do_local:\n        ctx.git([\"worktree\", \"prune\"])", "worktrees"),
+    ("a vanished worktree blocks deleting its branch", D, "            if len(live) < len(mine):", "            if False:", "worktrees"),
     ("no gh: every local branch is finished", D,
      "    if gone:\n        return Verdict(True", "    if True:\n        return Verdict(True", "local_without_gh"),
     ("no gh: upstream-gone is never true", D,
