@@ -109,6 +109,12 @@ def check_html(html, key, manifest, registry, plugin_dir, record_dir):
         out.append(('R5.1', 'title must start with "%s"' % want))
     if 'FAKE-BAD-HTML' in html:
         out.append(('R5.3', 'the fake checker found its marker'))
+    m = re.search(r'<script type="application/json" id="task-registry">(.*?)</script>', html, re.S)
+    if key == 'full-progress':
+        if not m:
+            out.append(('R5.9', 'the full-progress artifact must embed the registry'))
+        elif json.loads(m.group(1).replace('<\\/', '</')) != registry:
+            out.append(('R5.9', 'the embedded registry differs from the task registry'))
     return out
 
 
@@ -157,6 +163,9 @@ def render_artifact(manifest, registry, contents, key, plugin_dir, record_dir, s
         for h in c['history']:
             out.append('<tr><td>%s</td><td>%s</td></tr>' % (esc(h['date']), esc(h['change'])))
         out.append('</table>')
+    if fp:      # R5.9: the whole registry, `updated` included
+        out.append('<script type="application/json" id="task-registry">%s</script>' %
+                   json.dumps(registry, ensure_ascii=False, indent=1).replace('</', '<\\/'))
     return '\n'.join(out) + '\n'
 '''
 
@@ -1574,6 +1583,78 @@ def test_design_set_validates_tokens(env):
     (rec / 'design.css').unlink()
     r = check_record(env, rec)
     assert r.code == 1 and has_line(r.out, 'R5.10'), r.all
+
+
+# --------------------------------------------------------------------------
+# the registry's `updated` moves only when a task changes (AR20)
+# --------------------------------------------------------------------------
+
+def later(n):
+    """A clock n hours after NOW, so a stray `updated` bump shows."""
+    return {'CLAUDE_ARTIFACTS_NOW': '2026-10-%02dT%02d:00:00+00:00' % (11 + n // 24, 9 + n % 24)}
+
+
+@case
+def test_session_sequence_ends_clean(env):
+    """set-task-status -> pending -> mark-published (features, then full-progress) -> pending 0 and check 0."""
+    p = env.baseline()
+    for k, u in (('full-progress', 'c'), ('artifacts', 'a'), ('site', 'b')):     # a published starting point
+        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + u, env=later(0))
+    for k, u in (('artifacts', 'a'), ('site', 'b'), ('full-progress', 'c')):
+        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + u, env=later(1))
+    assert p.run('pending').code == 0 and p.run('check').code == 0
+    p.ok('set-task-status', 'AR1', 'Waiting', env=later(2))
+    p.ok('set-task-status', 'SI1', 'Live', env=later(3))
+    r = p.run('pending', '--json', env=later(4))
+    assert r.code == 1, r.out
+    pend = [a['key'] for a in r.json()['artifacts']]
+    assert pend == ['full-progress', 'artifacts', 'site'], pend
+    for i, k in enumerate(['artifacts', 'site', 'full-progress']):
+        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + {'artifacts': 'a', 'site': 'b',
+                                                                              'full-progress': 'c'}[k], env=later(5 + i))
+    r = p.run('pending', '--json', env=later(9))
+    assert r.code == 0 and r.json() == {'artifacts': [], 'queue': []}, r.out
+    r = p.run('check', env=later(9))
+    assert r.code == 0, r.all
+
+
+@case
+def test_mark_published_leaves_registry_byte_identical(env):
+    p = env.baseline()
+    before = p.show('docs/artifacts/registry.json')
+    upd = p.reg()['updated']
+    for i, k in enumerate(['artifacts', 'site', 'full-progress']):
+        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + k, env=later(1 + i))
+        assert p.show('docs/artifacts/registry.json') == before, k
+        assert p.man()['updated'] != upd                      # the manifest's own `updated` does move
+    assert p.reg()['updated'] == upd
+    assert p.man()['updated'] == '2026-10-11T13:00+01:00', p.man()['updated']      # 12:00 UTC, Lisbon summer time
+    assert p.run('check').code == 0
+
+
+@case
+def test_non_task_commands_leave_registry_alone(env):
+    p = env.baseline()
+    before = p.show('docs/artifacts/registry.json')
+    f = TMP / ('regdesign-%s-%d.css' % (env.kind, env.n))
+    env.n += 1
+    f.write_text(valid_design(env, '#abcdef'), encoding='utf-8')
+    p.ok('design', 'set', f, env=later(1))
+    assert p.show('docs/artifacts/registry.json') == before and p.run('check').code == 0
+    p.ok('design', 'set', 'default', env=later(2))
+    assert p.show('docs/artifacts/registry.json') == before and p.run('check').code == 0
+    d = export(p, 'artifacts', 'reg')
+    (d / '02-more.html').write_text('<!-- title: More -->\n<p>More.</p>\n', encoding='utf-8')
+    p.ok('edit-content', 'artifacts', '--from', d, env=later(3))
+    assert p.show('docs/artifacts/registry.json') == before and p.run('check').code == 0
+    p.ok('render', '--all', env=later(4))
+    assert p.show('docs/artifacts/registry.json') == before and p.run('check').code == 0
+    p.ok('feature-new', '--key', 'extra', '--title', 'Extra', '--prefix', 'EX', '--apps', 'web', env=later(5))
+    assert p.show('docs/artifacts/registry.json') == before and p.run('check').code == 0
+    # a task change does move it, and the embedded copy follows
+    p.ok('set-task-status', 'AR1', 'Waiting', env=later(6))
+    assert p.show('docs/artifacts/registry.json') != before and p.reg()['updated'] == '2026-10-11T16:00+01:00', p.reg()['updated']
+    assert p.run('check').code == 0
 
 
 # --------------------------------------------------------------------------

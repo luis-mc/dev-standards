@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import copy
 import difflib
 import hashlib
 import inspect
@@ -543,6 +544,7 @@ class Record:
         self.dir = Path(d)
         self.manifest = manifest
         self.registry = registry
+        self._tasks0 = (copy.deepcopy(self.tasks()) if isinstance(registry, dict) else None)
         self.exists = exists
         self._now = None
         self._contents = None
@@ -598,10 +600,22 @@ class Record:
             self._now = now_in_zone(m.get('timezone'), m.get('windows_timezone'))
         return self._now
 
+    def registry_changed(self):
+        """True when the task list differs from what was loaded (or the registry is new)."""
+        reg = self.registry
+        return (self._tasks0 is None or not isinstance(reg, dict) or not reg.get('updated')
+                or self.tasks() != self._tasks0)
+
     def touch(self):
+        """Stamp `updated`: the manifest always; the registry only when a task changed.
+
+        The full-progress artifact embeds the whole registry (R5.9), so its `updated`
+        must not move on commands that change no task (mark-published, design, ...).
+        """
         iso = self.now().iso
         self.manifest['updated'] = iso
-        self.registry['updated'] = iso
+        if self.registry_changed():
+            self.registry['updated'] = iso
 
     def sort_tasks(self):
         self.registry['tasks'] = sorted(self.tasks(), key=task_sort_key)
@@ -1048,6 +1062,8 @@ def finish_change(ctx, rec, result):
         result['rendered'] = []
         return result
     rec.sort_tasks()
+    if rec.registry_changed() and rec.entry(FP_NAME) is not None:
+        rec.render_keys.setdefault(FP_NAME, 'new')     # it embeds the registry (R5.9)
     rec.touch()
     now = rec.now()
     write_text(rec.dir / 'manifest.json', dump_json(rec.manifest))
