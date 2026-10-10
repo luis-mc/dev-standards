@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T19:04+01:00",
+  "updated": "2026-10-10T19:09+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -346,11 +346,11 @@
       "id": "DS17",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Branch gate: setup first, 30-minute limit, fail fast",
-      "detail": "The gate installs from the lockfile in frozen mode before any step, so a stale lockfile fails it; it stops after 30 minutes (exit 4); it stops at the first failed step unless --keep-going.",
+      "detail": "Agent building: setup step first (frozen lockfile), 30-minute limit with exit 4, fail fast by default with --keep-going, per-step logs.",
       "expected": "10 Oct ~21:30",
-      "changed": "2026-10-10T19:03+01:00"
+      "changed": "2026-10-10T19:09+01:00"
     },
     {
       "id": "DS18",
