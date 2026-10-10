@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T22:05+01:00",
+  "updated": "2026-10-10T22:53+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -409,8 +409,8 @@
       "status": "Done",
       "item": "Branch gate: setup first, 30-minute limit, fail fast",
       "detail": "Built in draft #25: the gate runs a frozen-lockfile setup step first, stops at the first failure (--keep-going runs everything), stops after 30 min with exit 4 (whole process tree killed) and writes a log per step; gate_verify never trusts a timed-out or setup-failed result. Joined.",
-      "expected": "10 Oct ~21:45",
-      "changed": "2026-10-10T20:22+01:00"
+      "expected": "10 Oct",
+      "changed": "2026-10-10T22:53+01:00"
     },
     {
       "id": "DS18",
