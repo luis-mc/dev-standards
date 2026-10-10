@@ -22,6 +22,11 @@ are built against; change it first, then the code.
 | `scripts/delivery/tools.json` | same | gate |
 | `scripts/delivery/gate.json` | `tooling/<track>/scripts/delivery/gate.json` | gate |
 | `.githooks/pre-push` | `tooling/shared/.githooks/pre-push` | gate |
+| `.gitattributes` | `tooling/shared/.gitattributes` (LF for scripts and hooks) | gate |
+| guard starter, TS | `tooling/ts/guards/*.guard.test.ts`, run by the Vitest `guard` project in `vitest.config.ts` | gate |
+| guard starter, Go | `tooling/go/guards/` | gate |
+| guard starter, Rust | `tooling/rust/crates/guards/`, a member crate; add `crates/guards` to the workspace `members` | gate |
+| guard starter, .NET | `tooling/dotnet/tests/Guards/`; add the project to the solution | gate |
 | `e2e/quarantine.json` (ts only) | `tooling/ts/e2e/quarantine.json` | ci |
 | `.github/workflows/ci.yml` | `tooling/<track>/.github/workflows/ci.yml` | ci |
 
@@ -57,7 +62,7 @@ timed out. A script never exits 0 when it could not decide.
     {"name": "secret-scan", "scope": "always", "pre_push": true,
      "run": "gitleaks git --log-opts={base}..HEAD --redact --no-banner"},
     {"name": "e2e", "scope": "ui-changed",
-     "run": "pnpm e2e"}
+     "run": "pnpm exec playwright install chromium && pnpm exec playwright test"}
   ]
 }
 ```
@@ -67,6 +72,10 @@ timed out. A script never exits 0 when it could not decide.
   `--full`), and are skipped (outcome `skip`) when no package changed;
   `ui-changed` runs only when a changed file is under a `ui_paths` prefix or the
   gate is widened.
+- `widen_on` entries: one ending in `/` is a path prefix; one containing `*` is a
+  glob over the full path; anything else is a root-level file only (a nested
+  `package.json` does not widen). Per-package lockfiles use globs (`*go.sum`,
+  `*packages.lock.json`).
 - Placeholders: `{base}` (base commit sha), `{changed_dirs}` (space-separated
   package directories that changed, POSIX paths relative to the root).
 - `packages.kind`: `pnpm-workspace` (globs under `packages:` in
@@ -78,11 +87,17 @@ timed out. A script never exits 0 when it could not decide.
   `guard`; Go tests named `TestGuard*`; Rust tests named `guard_*`; .NET
   `Category=Guard`.
 - `pre_push: true` marks the steps `fast_guards.py` runs.
+- .NET has one `typecheck` step (build with warnings as errors, analyzers
+  included) and no separate `lint` step.
+- Lockfiles `join.py` recognises: `pnpm-lock.yaml`, `package-lock.json`,
+  `yarn.lock`, `go.sum`, `go.work.sum`, `Cargo.lock`, `packages.lock.json`, plus
+  an optional `lockfiles` array in `gate.json`.
 
 ## `tools.json`
 
-`{"gitleaks": "8.x.y"}` — the exact scanner versions CI installs. `ci.yml` and
-`agent_setup.sh` read the same file, so the gate and CI run the same scanner.
+`{"gitleaks": "8.30.1"}` — the exact scanner versions CI installs (8.19 or newer,
+for `gitleaks git`). `ci.yml` and `agent_setup.sh` read the same file, so the
+gate and CI run the same scanner.
 
 ## Result: `gate-result.json`
 
@@ -95,9 +110,11 @@ timed out. A script never exits 0 when it could not decide.
   "base": "<40-hex sha>",
   "base_ref": "origin/DS6-agent-delivery",
   "widened": false,
+  "partial": false,
   "changed_dirs": ["apps/web"],
   "steps": [
-    {"name": "typecheck", "outcome": "pass", "seconds": 41.2, "command": "pnpm turbo ..."}
+    {"name": "typecheck", "outcome": "pass", "seconds": 41.2, "command": "pnpm turbo ...",
+     "reason": null, "exit_code": 0}
   ],
   "pass": true,
   "started_at": "2026-10-10T10:12:03Z",
@@ -106,8 +123,13 @@ timed out. A script never exits 0 when it could not decide.
 }
 ```
 
-`outcome` is `pass`, `fail` or `skip`. `pass` is true only when no step failed
-and at least one step ran. Written to `.delivery/gate-result.json`.
+`outcome` is `pass`, `fail` or `skip`. `reason` says why a step was skipped or
+failed; `exit_code` is the command's exit code; `command` is null for a skipped
+step. `pass` is true only when no step failed and at least one step ran.
+`widened` is true when a `widen_on` entry changed or `--full` was given. A run
+with `--only` or `--skip` is `"partial": true`: it is written to
+`.delivery/gate-result.json`, never published, and never trusted by
+`gate_verify.py`. Written to `.delivery/gate-result.json`.
 
 **Publishing.** The result travels as a ref, never as a commit on the branch and
 never as a pull-request comment: a parentless commit whose tree holds only
@@ -116,7 +138,7 @@ One ref per branch, so parallel agents never contend.
 
 **Trust rule** (`gate_verify.py`): a result is trusted when `head` equals the
 branch's current head on the remote, `base` equals the current head of the branch
-it joins, and `pass` is true. `--allow-older-base` relaxes the second condition
+it joins, `pass` is true and `partial` is not. `--allow-older-base` relaxes the second condition
 to "`base` is an ancestor of the current head" (used by `join.py`, which re-gates
 the joined head anyway).
 
@@ -127,8 +149,9 @@ branch_gate.py [--base-ref REF] [--full] [--only a,b] [--skip a,b] [--no-publish
 ```
 `--base-ref` defaults to `origin/<default_branch>`; the base commit is
 `git merge-base HEAD <base-ref>`. Runs every selected step even after a failure
-unless `--fail-fast`. Prints a summary table, writes the result, publishes it
-unless `--no-publish`. Refuses (exit 2) on a dirty working tree.
+unless `--fail-fast`. `--only`/`--skip` select steps by name and make the run
+partial. Prints a summary table, writes the result, publishes it unless
+`--no-publish` or partial. Refuses (exit 2) on a dirty working tree.
 
 ```
 gate_verify.py BRANCH [--base-ref REF] [--remote origin] [--allow-older-base] [--json]
@@ -139,30 +162,36 @@ result is or is not trusted. Exit 0 trusted and passing, 1 otherwise, 2 no resul
 ```
 fast_guards.py [--base-ref REF]
 ```
-Runs the `pre_push: true` steps. The `pre-push` hook calls it once per pushed
-ref; it is skipped for deletions. Never publishes a result.
+Runs the `pre_push: true` steps on the checked-out commit (it takes no ref),
+continuing past a failure. The `pre-push` hook calls it once per pushed ref,
+passing the remote sha as `--base-ref` on an update; it skips tags, deletions
+and every ref outside `refs/heads/`. A first push with no `origin/<default>`
+exits 2. Never publishes a result.
 
 ```
 join.py --into INTEGRATION BRANCH [BRANCH ...] [--no-gate] [--push]
 ```
 Fetches, checks out INTEGRATION at its remote head, and for each BRANCH in order:
 requires a trusted, passing result (`--allow-older-base`), then
-`git merge --no-ff -m "Join BRANCH"`. A conflict touching only the lockfile is
-resolved by taking INTEGRATION's version and re-running `setup`; any other
-conflict aborts that merge, writes `.delivery/join-result.json`
-(`{"joined": [...], "stopped_at": BRANCH, "conflicts": [paths]}`) and exits 3.
-After the last merge it runs `branch_gate.py --base-ref origin/<default_branch>`
+`git merge --no-ff -m "Join BRANCH"`. For an untrusted branch it exits with
+`gate_verify.py`'s code (1, or 2 for no result). A conflict touching only the
+lockfile is resolved by taking INTEGRATION's version and re-running `setup`; if
+`setup` fails, or the conflict touches anything else, the merge is aborted and
+join exits 3 (the conflict goes to one agent). `.delivery/join-result.json`
+(`{"joined": [...], "stopped_at": BRANCH|null, "conflicts": [paths]}`, plus a
+`reason` when a branch is refused or a step fails) is written on success and on
+failure. After the last merge it runs `branch_gate.py --base-ref origin/<default_branch>`
 on the joined head (unless `--no-gate`) and pushes INTEGRATION and its result
 with `--push`.
 
 ```
 ci_watch.py SHA [--workflow ci.yml] [--timeout 3600] [--interval 30] [--repo OWNER/NAME]
 ```
-Polls `gh run list --commit SHA --json databaseId,workflowName,status,conclusion,event,headSha`.
+Polls `gh run list --workflow WORKFLOW --commit SHA --json databaseId,workflowName,status,conclusion,event,headSha`.
 Waits until at least one run of the workflow exists for SHA and every run of it
 for SHA is completed. Exit 0 all `success` (or `skipped`), 1 any other
-conclusion (prints the failed jobs from `gh run view --json jobs`), 4 timeout.
-It never reads a pull request's check list.
+conclusion (prints the failed jobs from `gh run view --json jobs`), 2 after 5
+consecutive `gh` failures, 4 timeout. It never reads a pull request's check list.
 
 ```
 ci_skip_check.py
@@ -170,7 +199,9 @@ ci_skip_check.py
 For the `decide` job on a default-branch push. Reads `GITHUB_SHA`,
 `GITHUB_REPOSITORY`, `GITHUB_WORKFLOW_REF`; uses `gh api` to find the pull
 request(s) merged as this commit, their head sha, and a successful
-`pull_request` run of the same workflow file for that head. If
+`pull_request` run of the same workflow file for that head, with at least one
+passed job and no failed job (a draft's all-skipped run reports `success`).
+Query parameters go as `gh api --method GET -f key=value` fields. If
 `tree(GITHUB_SHA) == tree(head)`, writes `skip=true` and the reason to
 `$GITHUB_OUTPUT`; otherwise, or on any error, `skip=false`. Always exits 0
 (failing open means running the suite).
@@ -179,7 +210,8 @@ request(s) merged as this commit, their head sha, and a successful
 reach_check.py URL [URL ...] [--timeout 10]
 ```
 GETs each URL from wherever it runs (an agent sandbox) and prints a table of
-status or error. Exit 0 when all answered with a status below 500, 1 otherwise.
+status or error. Exit 0 when all answered with a status below 500 (a 4xx means
+the host answered), 1 otherwise.
 
 ```
 agent_setup.sh
@@ -200,9 +232,10 @@ then runs `gate.json`'s `setup` commands. Idempotent.
   default-branch runs.
 - TS `e2e` job: name `web E2E (§11.2)`, no `continue-on-error`; runs on ready
   pull requests; specs in `e2e/quarantine.json`
-  (`[{"spec": "path", "owner": "name", "since": "YYYY-MM-DD", "reason": "..."}]`)
-  run in a separate non-blocking step. It becomes a required check.
-- Gitleaks in CI installs the version in `tools.json`.
+  (`[{"spec": "path", "owner": "name", "since": "YYYY-MM-DD", "reason": "..."}]`,
+  `spec` relative to the repository root) run in a separate non-blocking step.
+  It becomes a required check.
+- Gitleaks in CI installs the version in `tools.json` (checksum verified).
 
 ## Tests (in `tools/` of this repository)
 
