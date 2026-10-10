@@ -32,7 +32,7 @@ def main(argv: list[str] | None = None) -> int:
 
     ctx = dc.build_context(root, cfg, args.base_ref)
     print("fast_guards: head %s, base %s" % (ctx.head[:10], ctx.base[:10]))
-    entries = dc.execute_steps(steps, ctx)
+    entries, _ = dc.execute_steps(steps, ctx, keep_going=True, log_dir=dc.FAST_LOG_DIR)
     print("\n" + dc.summary_table(entries))
     if dc.overall_pass(entries):
         return dc.EXIT_OK

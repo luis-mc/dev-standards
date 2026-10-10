@@ -3,6 +3,7 @@
   "track": "rust",
   "default_branch": "main",
   "setup": ["cargo fetch --locked"],
+  "timeout_minutes": 30,
   "packages": {"kind": "cargo-workspace"},
   "widen_on": [
     "Cargo.toml",

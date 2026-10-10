@@ -3,6 +3,7 @@
   "track": "ts",
   "default_branch": "main",
   "setup": ["pnpm install --frozen-lockfile"],
+  "timeout_minutes": 30,
   "packages": {"kind": "pnpm-workspace"},
   "widen_on": [
     "pnpm-lock.yaml",

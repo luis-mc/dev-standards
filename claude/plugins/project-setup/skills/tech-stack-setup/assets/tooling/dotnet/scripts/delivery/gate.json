@@ -3,6 +3,7 @@
   "track": "dotnet",
   "default_branch": "main",
   "setup": ["dotnet restore --locked-mode"],
+  "timeout_minutes": 30,
   "packages": {"kind": "dotnet-sln"},
   "widen_on": [
     "global.json",

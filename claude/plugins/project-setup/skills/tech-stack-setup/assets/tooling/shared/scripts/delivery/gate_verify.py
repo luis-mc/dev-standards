@@ -121,9 +121,14 @@ def verify(
                 )
 
     if result.get("partial"):
-        reasons.append("partial result (--only/--skip was used)")
+        reasons.append("partial result (--only/--skip/--no-setup was used)")
+    if result.get("timed_out"):
+        reasons.append("the gate timed out")
+    steps = result.get("steps") if isinstance(result.get("steps"), list) else []
+    if any(isinstance(s, dict) and s.get("name") == dc.SETUP_STEP and s.get("outcome") != "pass" for s in steps):
+        reasons.append("setup did not pass (a stale lockfile is the usual cause)")
     if result.get("pass") is not True:
-        failed = [s.get("name") for s in result.get("steps", []) if s.get("outcome") == "fail"]
+        failed = [s.get("name") for s in steps if isinstance(s, dict) and s.get("outcome") == "fail"]
         reasons.append("result is failing" + (" (failed: %s)" % ", ".join(failed) if failed else ""))
 
     verdict["trusted"] = not reasons
