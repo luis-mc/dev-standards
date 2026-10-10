@@ -1,6 +1,6 @@
 {
  "title": "Full Progress: dev-standards",
  "hero": "All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.",
- "lede": "All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class=\"task-id\">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class=\"task-id\">AR12</span>), and the secret-scan fixes (<span class=\"task-id\">DS15</span>, <span class=\"task-id\">AR19</span>, <span class=\"task-id\">DS16</span>). Nothing is running.",
+ "lede": "All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class=\"task-id\">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class=\"task-id\">AR12</span>), and the secret-scan fixes (<span class=\"task-id\">DS15</span>, <span class=\"task-id\">AR19</span>, <span class=\"task-id\">DS16</span>). Running now: one round toward STACKSPEC 7.0.0. It covers the branch gate (<span class=\"task-id\">DS17</span>), the pre-push guard failures (<span class=\"task-id\">DS18</span>), automatic cleanup after a merge (<span class=\"task-id\">DS19</span>), keeping only the newest build artifact (<span class=\"task-id\">DS20</span>) and the Windows-only tests (<span class=\"task-id\">DS21</span>). Expected 21:30.",
  "extra_css": ""
 }
