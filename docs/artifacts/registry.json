@@ -506,11 +506,11 @@
       "id": "MP2",
       "owner": "models",
       "app": "luismc-project-setup",
-      "status": "Done",
+      "status": "Live",
       "item": "Profile decisions",
       "detail": "Explore and Plan stay on Opus; skills profiled by kind of work; a session-start warning for alias drift. Section 7.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T22:55+01:00"
     },
     {
       "id": "MP3",
