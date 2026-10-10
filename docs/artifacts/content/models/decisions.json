@@ -1,0 +1,106 @@
+{
+ "decisions": [
+  {
+   "id": "D1",
+   "question": "Effort for each model of the split?",
+   "asked": "2026-10-10",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Fixed: Sonnet high, Opus asked",
+     "summary": "Code agents always high (per-model entry + the Agent call's effort), plus top-level effortLevel high for cloud agents. The setup asks only the Opus main-session effort. DS5 is reworked to this and folded into DS6."
+    },
+    {
+     "label": "Fixed: everything high",
+     "summary": "No question at all. Top-level effortLevel high and both per-model entries high. DS5's question is dropped."
+    },
+    {
+     "label": "Keep asking, high preselected",
+     "summary": "DS5 ships as built, but high is offered as the default answer for code agents, and top-level effortLevel high is added for cloud agents."
+    }
+   ],
+   "chosen": "Keep asking, high preselected",
+   "decided": "2026-10-10"
+  },
+  {
+   "id": "D2",
+   "question": "Where do the role rules live?",
+   "asked": "2026-10-10",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Plugin-owned rule file",
+     "summary": "Install the block as .claude/rules/agents-and-integration.md, replaced on every run like model-delegation.md. Reaches every project, including ones with a hand-written CLAUDE.md. The CLAUDE.md template drops those sections.",
+     "recommended": true
+    },
+    {
+     "label": "CLAUDE.md template only",
+     "summary": "Put the block in the CLAUDE.md template. Only projects without a CLAUDE.md get it."
+    }
+   ],
+   "chosen": "Plugin-owned rule file",
+   "decided": "2026-10-10"
+  },
+  {
+   "id": "D3",
+   "question": "Override Explore and Plan?",
+   "asked": "2026-10-10",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Explore on Sonnet, Plan on Opus",
+     "summary": "The plugin ships an agent named Explore pinned to Sonnet (search is mechanical); Plan stays on Opus (it is design work).",
+     "recommended": true
+    },
+    {
+     "label": "Explore on Haiku, Plan on Opus",
+     "summary": "Cheapest search; Haiku may miss subtle matches in large repos."
+    },
+    {
+     "label": "Leave both on Opus",
+     "summary": "No override; highest quality, highest cost."
+    }
+   ],
+   "chosen": "Leave both on Opus",
+   "decided": "2026-10-10"
+  },
+  {
+   "id": "D4",
+   "question": "Per-skill profiles?",
+   "asked": "2026-10-10",
+   "status": "decided",
+   "options": [
+    {
+     "label": "By kind of work",
+     "summary": "Judgment skills (spec-new, the three audits, tech-stack-setup, auth-setup) on Opus at high; mechanical skills (spec-check, project-artifact-check, task-add, task-status-update) on Sonnet at medium; claude-setup on Sonnet at high.",
+     "recommended": true
+    },
+    {
+     "label": "All inherit the session",
+     "summary": "No per-skill model or effort; every skill runs on whatever the main session uses."
+    }
+   ],
+   "chosen": "By kind of work",
+   "decided": "2026-10-10"
+  },
+  {
+   "id": "D5",
+   "question": "Saved effort when an alias moves?",
+   "asked": "2026-10-10",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Warn at session start",
+     "summary": "A session-start hook checks that the current Opus and Sonnet IDs have an effort entry and tells you to re-run claude-setup if not. Aliases keep following new models.",
+     "recommended": true
+    },
+    {
+     "label": "Pin full model IDs",
+     "summary": "Settings name exact IDs (claude-opus-5-5) everywhere, so nothing drifts; new models are adopted only when claude-setup is re-run."
+    }
+   ],
+   "chosen": "Warn at session start",
+   "decided": "2026-10-10"
+  }
+ ]
+}

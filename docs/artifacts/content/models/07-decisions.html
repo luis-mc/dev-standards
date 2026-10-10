@@ -1,8 +1,0 @@
-<!-- title: Decisions -->
-<div class="table-scroll"><table><thead><tr><th>#</th><th>Question</th><th>Decision (10 Oct)</th></tr></thead><tbody>
-<tr><td>1</td><td>Effort for each model of the split?</td><td>Asked on every setup, <strong>high preselected for code agents</strong>; top-level <code>effortLevel</code> high for cloud agents.</td></tr>
-<tr><td>2</td><td>Where do the role rules live?</td><td>In a plugin-owned rule file, <code>.claude/rules/agents-and-integration.md</code>, replaced on every run.</td></tr>
-<tr><td>3</td><td>Override Explore and Plan?</td><td><strong>No</strong>; both stay on the main session&rsquo;s model (Opus).</td></tr>
-<tr><td>4</td><td>Per-skill profiles?</td><td><strong>By kind of work</strong>: judgment on Opus high, mechanical on Sonnet medium, claude-setup on Sonnet high.</td></tr>
-<tr><td>5</td><td>Saved effort when an alias moves?</td><td><strong>Warn at session start</strong> and ask to re-run claude-setup; aliases keep following new models.</td></tr>
-</tbody></table></div>
