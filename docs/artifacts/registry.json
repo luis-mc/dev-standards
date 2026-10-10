@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T00:41+01:00",
+  "updated": "2026-10-11T00:42+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -256,11 +256,11 @@
       "id": "AR28",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Live",
       "item": "Update the installed plugins",
-      "detail": "Approved by you for tonight: after 7.0.0 and 1.1.1 merge, refresh the dev-standards marketplace and update luismc-artifacts and luismc-project-setup in ~/.claude (backups first), so every session stops publishing after each change once restarted.",
-      "expected": "11 Oct ~01:30",
-      "changed": "2026-10-10T23:22+01:00"
+      "detail": "Done at 00:52 (backups first): the dev-standards marketplace refreshed; luismc-project-setup 11.2.1 -> 13.0.0, luismc-agents 1.0.0 -> 1.1.0, luismc-audits 1.0.1 -> 1.2.0, luismc-specs 1.0.0 -> 1.2.0 (user scope). luismc-artifacts was not installed anywhere; it is now enabled for dev-standards on this machine (local scope, .claude/settings.local.json, nothing committed). Sessions pick the updates up when they restart. Other projects get luismc-artifacts when claude-setup runs there.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:42+01:00"
     },
     {
       "id": "DS1",
