@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T23:20+01:00",
+  "updated": "2026-10-10T23:22+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -501,6 +501,16 @@
       "detail": "Agent building (same agent as DS23): without gh, cleanup.py --local lists and deletes nothing.",
       "expected": "10 Oct ~23:45",
       "changed": "2026-10-10T23:15+01:00"
+    },
+    {
+      "id": "DS26",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "After 7.0.0: repo setting, cleanup, global rules",
+      "detail": "Approved by you for tonight: turn on delete-branch-after-merge for dev-standards; run cleanup.py on dev-standards (merged DS*/AR* branches, gate refs, finished worktrees; open, unmerged or dirty work is kept); add the new rule lines to ~/.claude/rules/agents-and-integration.md, with a backup.",
+      "expected": "11 Oct ~01:00",
+      "changed": "2026-10-10T23:22+01:00"
     },
     {
       "id": "MP1",
