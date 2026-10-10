@@ -8,5 +8,7 @@
  <li>Creating a feature artifact when the project has no full-progress artifact <strong>creates the full-progress artifact too</strong>.</li>
  <li>Status changes update the artifacts <strong>automatically</strong>: a feature task&rsquo;s change updates its feature artifact, and any project task&rsquo;s change updates the full-progress artifact.</li>
  <li>Built in dev-standards as the plugin <code>luismc-artifacts</code>, with <strong>explicit names in the code</strong>: feature artifact and full-progress artifact, never a generic &ldquo;page&rdquo;.</li>
+ <li><strong>Every activity is a task</strong> before it starts, the session&rsquo;s own work included (11 October). A task is <strong>Running</strong> while its work runs.</li>
+ <li><strong>Few publishes.</strong> claude.ai allows 200 artifact publishes a day per account and every republish counts. So only Full Progress is a claude.ai artifact; feature artifacts are files you open in a browser (10 October).</li>
 </ul>
 <p><strong>Why it matters.</strong> In an earlier project the pages drifted: a feature page still said &ldquo;Needs you&rdquo; for a step finished hours before. The status was typed by hand in two places. This design writes each status once and generates every view of it.</p>

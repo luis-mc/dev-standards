@@ -1,5 +1,9 @@
 [
   {
+    "date": "11 Oct 01:10",
+    "change": "Page brought up to date with luismc-artifacts 1.1.0 to 1.1.2 (#33, #36, #27): every activity is a task, Built replaces Done, the rule is delivered at session start, only Full Progress is published, and the plugin is enabled for dev-standards."
+  },
+  {
     "date": "10 Oct 23:30",
     "change": "Decisions rebuilt in the 1.1.0 form: every option you were offered, the recommendation, and your choice in your words (AR23). The page is now a file in docs/artifacts, no longer a claude.ai artifact (AR26)."
   },

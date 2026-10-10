@@ -6,7 +6,7 @@
 <tr><td>R4</td><td>Sections numbered from 0, in order, no gaps (AS8).</td><td>A gap, a repeat and an unnumbered section each fail with their line.</td></tr>
 <tr><td>R5</td><td>Stamp format, ISO attribute and timezone label (AS9, AS18).</td><td>&ldquo;Last update: 9/10 7am&rdquo; fails; a stamp without <code>datetime</code> or label fails.</td></tr>
 <tr><td>R6</td><td>Checklist columns: Status | Item | Detail | Expected on a feature artifact; Status | Item | App / service | Detail | Expected on the full-progress artifact (AS11).</td><td>A fifth column, or reordered columns, fails. An Expected value on an open row that is not a date (<code>today</code>, <code>soon</code>) fails.</td></tr>
-<tr><td>R7</td><td>Only the eight statuses (AS12).</td><td>&ldquo;Merged&rdquo; as a status fails and names the nearest allowed word.</td></tr>
+<tr><td>R7</td><td>Only the eight statuses (AS12).</td><td>&ldquo;Merged&rdquo; as a status fails and names the nearest allowed word. &ldquo;Done&rdquo; fails too: the word is now <code>Built</code>.</td></tr>
 <tr><td>R8</td><td>Every row sits in its status&rsquo;s group (AS11).</td><td>A Live row under &ldquo;Running now and next&rdquo; fails.</td></tr>
 <tr><td>R9</td><td>Checklists and tiles equal the registry (AS5).</td><td>A hand-edited row, or a tile saying 3 Live over 2, fails.</td></tr>
 <tr><td>R10</td><td>Every feature task is on the full-progress artifact, linked to its feature artifact (AS3).</td><td>A feature task missing from the full-progress artifact fails.</td></tr>
@@ -17,4 +17,10 @@
 <tr><td>R15</td><td>Hooks queue and block (AS16, AS17).</td><td><code>gh pr merge</code> on branch AR5-x queues AR5; the end-of-turn hook blocks with a queue and passes without one; no manifest, no effect.</td></tr>
 <tr><td>R16</td><td>Phone width and both themes (AS13).</td><td>A fixture artifact at 360 px wide has no sideways scroll in light and dark (manual check listed in the skill).</td></tr>
 <tr><td>R17</td><td>Recreate without duplicates (AS19).</td><td>Manifest link deleted: one new artifact, manifest updated. Link alive: nothing created. Same title exists: no new artifact, manifest repaired.</td></tr>
+<tr><td>R18</td><td>Only <code>Live</code> rows fold into Earlier; <code>Built</code> never does (AS3, AS12).</td><td>A Live row older than 14 days folds; a Built row of the same age stays in view.</td></tr>
+<tr><td>R19</td><td>Feature artifacts are never published; Full Progress links them as local files and the committed copy uses relative links (AS23).</td><td>A manifest feature entry with a claude.ai link is read as if it had none and rewritten; links in the committed file have no scheme.</td></tr>
+<tr><td>R20</td><td>The end-of-turn hook blocks a turn that started background work with no Running task (AS17).</td><td>Background agent started, no Running task: blocked. With a Running task: passes.</td></tr>
+<tr><td>R21</td><td>The rule is delivered at session start and no rule file is copied (AS21).</td><td>The session-start hook returns the rule as context; <code>init</code> writes no rule file; a stale copy is noted.</td></tr>
+<tr><td>R22</td><td>Decisions are drawn from <code>decisions.json</code> as option cards (AS22).</td><td>Every option appears, the chosen one is marked, and an open decision renders as Needs you.</td></tr>
+<tr><td>R23</td><td>A writing command may leave earlier findings but not add new ones (AS24).</td><td>A record with one old finding accepts an edit that adds none, and refuses an edit that adds one.</td></tr>
 </tbody></table></div>

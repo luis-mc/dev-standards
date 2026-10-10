@@ -1,6 +1,6 @@
 {
  "title": "Feature: Project artifacts standard",
  "hero": "How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.",
- "lede": "luismc-artifacts 1.0.0 is live (AR12, #18), and these artifacts are now kept with it (AR17). Every task here is also on <a href=\"https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv\">Full Progress: dev-standards</a>.",
+ "lede": "luismc-artifacts 1.1.2 is live (ARTIFACTSPEC 1.1.0, released 10&ndash;11 October) and is enabled for dev-standards on the owner&rsquo;s machine. Every activity is a task, <em>Built</em> replaces <em>Done</em>, decisions are shown as option cards, and only Full Progress is published: <a href=\"https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv\">Full Progress: dev-standards</a>. Feature artifacts, this one included, are HTML files in <code>docs/artifacts/</code>.",
  "extra_css": ""
 }

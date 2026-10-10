@@ -2,19 +2,21 @@
 <p class="lede">A new plugin, <strong><code>luismc-artifacts</code></strong>, beside <code>luismc-specs</code>. One script does the work; the skills and hooks call it.</p>
 <h3>Layout</h3>
 <pre><code>claude/plugins/artifacts/
-  .claude-plugin/plugin.json            name luismc-artifacts, version 1.0.0
+  .claude-plugin/plugin.json            name luismc-artifacts, version 1.1.2
   design/default-design.css             the default design tokens (AR14)
   design/DESIGN.md                      how a project's own design is found; the token contract
-  references/ARTIFACTSPEC.md            the standard (section 3 here), versioned like STACKSPEC and AUTHSPEC
-  scripts/project_artifacts.py          registry, rendering, add-task, set-task-status, stamp, check (stdlib only)
+  references/artifactspec.md            the standard, ARTIFACTSPEC 1.1.0 (section 3 here), versioned like STACKSPEC and AUTHSPEC
+  scripts/project_artifacts.py          registry, add-task, set-task-status, stamp, check (stdlib only)
+  scripts/render_artifacts.py           renders the artifacts from the record
+  scripts/artifact_queue.py             the shared queue module
   scripts/hook_after_command.py         queues status changes from git, gh and deploy commands
-  scripts/hook_end_of_turn.py           blocks the turn while anything is queued or unpublished
-  scripts/hook_session_start.py         queues changes made between sessions
+  scripts/hook_end_of_turn.py           blocks the turn while anything is queued, Full Progress is unpublished, or background work has no Running task
+  scripts/hook_session_start.py         delivers the rule, queues changes made between sessions
   hooks/hooks.json
   templates/feature-artifact.html
   templates/full-progress-artifact.html
   templates/project-artifact.css        the fixed structure stylesheet
-  rules/project-artifacts.md            installed into a project by the first creation skill
+  rules/project-artifacts.md            the rule, delivered at session start (not copied into projects)
   skills/feature-artifact-new/SKILL.md
   skills/full-progress-artifact-new/SKILL.md
   skills/task-add/SKILL.md
@@ -27,10 +29,10 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
 .github/workflows/spec-lint.yml         path filters and steps for the above</code></pre>
 <h3>The five skills</h3>
 <div class="table-scroll"><table><thead><tr><th>Skill</th><th>What it does</th></tr></thead><tbody>
-<tr><td><code>/luismc-artifacts:feature-artifact-new</code></td><td>Asks the feature name and the apps it covers, writes a feature artifact with section 0 started and a first History row, registers it in the manifest, and adds its tasks to the registry. Creates the full-progress artifact first if the project has none.</td></tr>
+<tr><td><code>/luismc-artifacts:feature-artifact-new</code></td><td>Asks the feature name and the apps it covers, writes a feature artifact (a standalone HTML file in <code>docs/artifacts/</code>) with section 0 started and a first History row, registers it in the manifest, and adds its tasks to the registry. Creates the full-progress artifact first if the project has none.</td></tr>
 <tr><td><code>/luismc-artifacts:full-progress-artifact-new</code></td><td>Writes the project&rsquo;s one full-progress artifact with an empty task registry; refuses if one exists. For a project with ongoing work but no feature artifact yet.</td></tr>
 <tr><td><code>/luismc-artifacts:task-add</code></td><td>Records new work as a task, asking which artifact owns it (a feature artifact, or the project), and gives it the next ID.</td></tr>
 <tr><td><code>/luismc-artifacts:task-status-update</code></td><td>Reads the artifacts, runs <code>set-task-status</code>, runs the check, and publishes every artifact that changed. Retries after a publish conflict.</td></tr>
 <tr><td><code>/luismc-artifacts:project-artifact-check</code></td><td>Checks a project&rsquo;s artifacts against ARTIFACTSPEC. Exit 0 clean, 1 findings, 2 unreadable, like <code>spec_check.py</code>.</td></tr>
 </tbody></table></div>
-<p class="note">The default design is in <code>design/default-design.css</code> and <code>templates/project-artifact.css</code> on branch AR14-default-design; these two artifacts use it.</p>
+<p class="note">Releases: 1.1.0 at 23:12 on 10 October (#33), 1.1.1 at 00:05 on 11 October (#36), 1.1.2 at 00:31 with STACKSPEC 7.0.0 (#27, the effort line only). The plugin is enabled for dev-standards on the owner&rsquo;s machine, at local scope.</p>
