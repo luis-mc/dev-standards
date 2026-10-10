@@ -905,6 +905,11 @@ def validate_structure(rec):
     # -- content
     _c, cf = load_contents(rec)
     F.extend(cf)
+    task_ids = {t.get('id') for t in tasks if isinstance(t, dict)}
+    for ckey, content in sorted(_c.items()):
+        for d in content.get('decisions') or []:
+            if d.get('task') and d['task'] not in task_ids:
+                f('R5.18', 'content/%s' % ckey, '%s: task %s is not in the task registry' % (d.get('id'), d['task']))
     known = {k for k in keys if isinstance(k, str)}
     cdir = rec.dir / 'content'
     if cdir.is_dir():
@@ -1372,16 +1377,46 @@ def cmd_set_task_status(args):
 
 
 def content_files(d):
-    """{name: bytes} of the regular files directly in a content folder; refuses anything else."""
+    """{name: bytes} of the regular files in a content folder, and of its assets/ folder as 'assets/<name>'
+    (images of decision options, section 5.4); refuses anything else."""
     d = Path(d)
     if not d.is_dir():
         raise Fail(1, '%s is not a folder' % d)
     out = {}
     for p in sorted(d.iterdir()):
+        if p.name == 'assets' and p.is_dir():
+            for q in sorted(p.iterdir()):
+                if not q.is_file():
+                    raise Fail(1, '%s: assets/ holds files only, found %s' % (d, q.name))
+                out['assets/' + q.name] = q.read_bytes()
+            continue
         if not p.is_file():
-            raise Fail(1, '%s: content folders hold files only, found %s' % (d, p.name))
+            raise Fail(1, '%s: content folders hold files only (and assets/), found %s' % (d, p.name))
         out[p.name] = p.read_bytes()
     return out
+
+
+def decisions_edit_problems(old, new):
+    """R5.15: an edit never removes a decision and never changes the choice of a decided one."""
+    try:
+        before = json.loads(old.decode('utf-8-sig'))['decisions']
+        before = [x for x in before if isinstance(x, dict)]
+    except (ValueError, KeyError, TypeError, AttributeError):
+        return []                     # nothing valid to hold the edit to
+    try:
+        after = {x.get('id'): x for x in json.loads(new.decode('utf-8-sig'))['decisions'] if isinstance(x, dict)}
+    except (ValueError, KeyError, TypeError, AttributeError):
+        after = {}
+    problems = []
+    for was in before:
+        now = after.get(was.get('id'))
+        if now is None:
+            problems.append('%s was removed; decisions are never removed (a changed mind is a new decision with "replaces")'
+                            % was.get('id'))
+        elif was.get('status') == 'decided' and any(now.get(k) != was.get(k) for k in ('status', 'chosen', 'decided')):
+            problems.append('%s is decided; its choice cannot change (a changed mind is a new decision with "replaces")'
+                            % was.get('id'))
+    return problems
 
 
 def cmd_export_content(args):
@@ -1400,6 +1435,7 @@ def cmd_export_content(args):
     dest.mkdir(parents=True, exist_ok=True)
     names = []
     for name, data in content_files(src).items():
+        (dest / name).parent.mkdir(parents=True, exist_ok=True)
         (dest / name).write_bytes(data)
         names.append(name)
     emit(args, {'command': 'export-content', 'key': key, 'to': str(dest), 'files': names},
@@ -1418,15 +1454,21 @@ def cmd_edit_content(args):
         if rec.entry(key) is None:
             raise Fail(1, 'unknown artifact key "%s"' % key)
         d = rec.dir / 'content' / key
-        new = {n: b.replace(b'\r\n', b'\n') for n, b in src.items()}
+        new = {n: (b if n.startswith('assets/') else b.replace(b'\r\n', b'\n')) for n, b in src.items()}
         if d.is_dir() and new == content_files(d):
             rec.noop = True
             return {'command': 'edit-content', 'key': key, 'files': sorted(src), 'no_change': True}
+        if (d / 'decisions.json').is_file():
+            bad = decisions_edit_problems((d / 'decisions.json').read_bytes(), new.get('decisions.json', b''))
+            if bad:
+                raise Fail(1, 'content is invalid; nothing written',
+                           [('R5.15', 'content/%s/decisions.json' % key, b) for b in bad])
         if d.exists():
             shutil.rmtree(str(d))
         d.mkdir(parents=True)
-        for name, data in src.items():
-            (d / name).write_bytes(data.replace(b'\r\n', b'\n'))
+        for name, data in new.items():
+            (d / name).parent.mkdir(parents=True, exist_ok=True)
+            (d / name).write_bytes(data)
         rec.invalidate()
         rec.contents()                       # validates what the session supplied
         rec.render_keys[key] = 'new'
@@ -1638,17 +1680,43 @@ def cmd_check(args):
         findings += fresh_render_findings(rec, key)
     findings = sorted(set(findings))
     notes = rule_copy_notes() + done_notes(rec)
+    warnings = decision_warnings(rec)
     if getattr(args, 'json_out', False):
-        print(json.dumps({'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],
-                          'notes': notes}, indent=2, ensure_ascii=False))
+        result = {'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],
+                  'notes': notes}
+        if warnings:
+            result['warnings'] = [{'file': f, 'message': m} for f, m in warnings]
+        print(json.dumps(result, indent=2, ensure_ascii=False))
     else:
-        if findings:
-            print('\n'.join(fmt_finding(x) for x in findings))
-        else:
-            print('record is clean')
+        print('\n'.join(fmt_finding(x) for x in findings) if findings else 'record is clean')
         for n in notes:
             print('note: ' + n)
+        for f, m in warnings:
+            print('warning  %s: %s' % (f, m))
     return 1 if findings else 0
+
+
+def decision_warnings(rec):
+    """Section 5.4 (R5.26): an open decision with no task in Needs you in its feature. [(file, message)]"""
+    open_of = getattr(R, 'open_decisions', None)
+    if open_of is None:
+        return []
+    contents, _findings = load_contents(rec)
+    by_id = {t.get('id'): t for t in rec.tasks() if isinstance(t, dict)}
+    out = []
+    for key, content in sorted(contents.items()):
+        needs = [t for t in by_id.values() if t.get('owner') == key and t.get('status') == 'Needs you']
+        for d in open_of(content.get('decisions') or []):
+            tid = d.get('task')
+            if tid:
+                t = by_id.get(tid)
+                if t is None or t.get('owner') != key or t.get('status') != 'Needs you':
+                    out.append(('content/%s' % key, '%s is open, but its task %s is not in Needs you in this feature; '
+                                'set it to Needs you' % (d['id'], tid)))
+            elif not needs:
+                out.append(('content/%s' % key, '%s is open, but no task in this feature is in Needs you; add one or set '
+                            'the decision\'s "task"' % d['id']))
+    return out
 
 
 def cmd_pending(args):

@@ -35,6 +35,10 @@ structure stylesheet by hand.
    - A content fragment, `meta.json` or `extra_css` problem (R4.10, R4.11,
      R5.2): run `export-content <key> --to <scratch dir>`, fix the file there,
      then run `edit-content <key> --from <scratch dir>`.
+   - A `decisions.json` problem (R5.14 to R5.19: options, choice, IDs, previews,
+     or a hand-written Decisions section): export the content, fix
+     `decisions.json` there, then `edit-content`. A warning that an open decision
+     has no task in Needs you (R5.26) is fixed with `set-task-status <ID> "Needs you"`.
    - A task row that is wrong (R6.6 expected format, R4.5 or R4.6 IDs and
      prefixes, R6.1 status): change it with `set-task-status` or `task-add`,
      never by hand.

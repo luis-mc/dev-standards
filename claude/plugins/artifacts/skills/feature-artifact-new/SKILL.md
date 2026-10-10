@@ -60,13 +60,16 @@ the repository instead (the session's scratchpad directory, in a new folder).
      (one or two sentences on where the work stands now; the script appends the
      needs-you line), `extra_css` (empty unless needed).
    - Replace the stub `01-what-and-why.html` and add `02-...`, `03-...` as the
-     feature needs (design, how it works, decisions, links). Number files from
-     `01-` upward, with no gaps.
+     feature needs (design, how it works, links). Number files from
+     `01-` upward, with no gaps. Do not write a section titled Decisions: the
+     script refuses it, because decisions are drawn from `decisions.json` (below).
    - Each file is an HTML fragment whose first line is `<!-- title: Section title -->`.
      No `<script>`, no `<style>` and no section numbers in fragments. Section 0
      (status and checklist) and the last section (History) are generated.
    - `extra_css` may add classes; it must never redefine a selector of the
      structure stylesheet.
+   - `decisions.json` (optional, feature artifacts only): the owner's choices
+     between options, see "Decisions" below.
    Write what is true now, from the code and the owner's words. Do not invent
    status, dates or results.
 5. **Apply and validate:** `edit-content <key> --from <scratch dir>`. Fix any
@@ -87,6 +90,35 @@ the repository instead (the session's scratchpad directory, in a new folder).
    or a push fails, say so and stop.
 9. **Tell the owner** the artifact's URL, its task IDs, and that branch names
    for these tasks must start with the task ID (`<ID>-short-name`).
+
+## Decisions
+
+Whenever the owner chooses between options (designs, approaches, names), record
+every option you offered and the one chosen, in the same turn. An option the
+owner has not chosen yet is an open decision. The script draws the section
+`Decisions` (just before History) from `content/<key>/decisions.json`; never
+write that section by hand.
+
+1. `export-content <key> --to <scratch dir>`, then edit `decisions.json` there
+   (create it when absent): `{"decisions": [...]}`, oldest first.
+2. To **add** one, append `{"id": "D<next>", "question": "...", "asked":
+   "YYYY-MM-DD", "status": "open" or "decided", "options": [...], "chosen":
+   null or a label, "decided": null or "YYYY-MM-DD"}`. IDs run D1, D2, ... with
+   no gap; never reuse or remove one. At least two options, each with a unique
+   `label` and a `summary`; a yes/no question lists Yes and No. Mark at most one
+   option `"recommended": true`. Put the owner's own words, verbatim, in
+   `owner_words` when decided. Put the task the decision belongs to in `task`;
+   for an open decision, set that task to Needs you with `set-task-status`.
+3. Whatever the owner was shown goes into the option's `preview`: the mockup or
+   the AskUserQuestion preview text, as a small HTML fragment (usually
+   `<pre>...</pre>`). No script, style, iframe, `on*` attribute or external URL.
+   Or `"image": "assets/name.png"` with the file in an `assets/` folder next to
+   the other files (png, jpg, gif or webp, at most 300 KB).
+4. To **close** an open decision, set `status` to `decided`, `chosen` to the
+   option's label and `decided` to the date. A closed decision never changes: a
+   changed mind is a new decision with `"replaces": "D<n>"`.
+5. `edit-content <key> --from <scratch dir>`; fix what it reports and run it
+   again. Then publish as below.
 
 ## Publishing
 
