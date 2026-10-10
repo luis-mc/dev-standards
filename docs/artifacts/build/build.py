@@ -128,10 +128,28 @@ PROJECT_TASKS = [
          detail='Synced passkeys allowed on the admin plane. Plugin: luismc-project-setup.', expected='27 Sep'),
     # Running now and next, earliest first
     dict(id='DS6', status='Running', item='Agent and integration rules',
-         detail='17 changes from the 9–10 Oct evidence in comics-organizer: one full CI run, gate-result.json, merge script, pre-push guards, push-CI skip, gated e2e, at most 5 agents, contract first. Round started 10 Oct: spec and contracts first, then at most five Sonnet agents; tested on a local clone of comics-organizer; one ready PR, merged on green.',
+         detail='17 changes from the 9–10 Oct evidence in comics-organizer. Contract committed to DS6-agent-delivery (02535cd): STACKSPEC 6.0.0 and the delivery-scripts contract. Building DS8 to DS11 in parallel; then a test on a clone of comics-organizer, the join, and one ready PR merged on green.',
          expected='today'),
-    dict(id='DS7', status='To do', item='docs/ folder rule',
-         detail='A project-setup rule: every doc a session creates goes under docs/.',
+    dict(id='DS8', status='Running', item='Branch gate scripts',
+         detail='branch_gate, gate_verify, fast_guards, join, agent_setup, gate.json per track, the pre-push hook, a starter guard test per track; tested against throwaway repos.',
+         expected='today', app='luismc-project-setup'),
+    dict(id='DS9', status='Running', item='CI scripts and workflows',
+         detail='ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files.',
+         expected='today', app='luismc-project-setup'),
+    dict(id='DS10', status='Running', item='claude-setup rules and profiles',
+         detail='The agents-and-integration rule file (replaces model-delegation.md), the docs/ rule, per-skill model and effort, the alias-drift hook. Covers MP3, MP4, MP5 and DS7.',
+         expected='today', app='luismc-project-setup'),
+    dict(id='DS11', status='Running', item='tech-stack-setup wiring',
+         detail='Generate and audit paths for STACKSPEC 6.0.0, spec-lint CI steps for the new tests, luismc-project-setup 12.0.0.',
+         expected='today', app='luismc-project-setup'),
+    dict(id='DS12', status='To do', item='Test on comics-organizer',
+         detail='Run the gate, verify, join and CI scripts on a local clone of the evidence project; nothing pushed there.',
+         expected='after DS8 and DS9', app='luismc-project-setup'),
+    dict(id='DS13', status='To do', item='Join and release',
+         detail='join.py over DS8 to DS11, one ready PR to main, ci_watch on its head, merge on green. Then move the Agents and Integrate sections of the owner’s CLAUDE.md into the rule file.',
+         expected='after DS12', app='luismc-project-setup'),
+    dict(id='DS7', status='Running', item='docs/ folder rule',
+         detail='A project-setup rule: every doc a session creates goes under docs/. Built in DS10.',
          expected='with DS6', app='luismc-project-setup'),
 ]
 
@@ -243,7 +261,7 @@ def build_feature(module):
 
 # ---------------------------------------------------------------- full-progress artifact
 p_lede = ('<p class="lede">All ongoing work in dev-standards, across every plugin. <strong>Nothing needs you right now.</strong> '
-          'Running: <span class="task-id">DS6</span>, the agent and integration round. '
+          'Running: <span class="task-id">DS6</span>, the agent and integration round, with four agents building DS8 to DS11. '
           'Live today: <span class="task-id">DS5</span>, the effort question (luismc-project-setup 11.3.0).</p>')
 
 p_s1 = table(['Feature artifact', 'Tasks', 'Where it stands'], [

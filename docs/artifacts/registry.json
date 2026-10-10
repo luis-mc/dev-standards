@@ -2,7 +2,7 @@
  "registry": "draft for ARTIFACTSPEC 1.0.0",
  "project": "dev-standards",
  "timezone": "Europe/Lisbon",
- "updated": "2026-10-10T10:17+01:00",
+ "updated": "2026-10-10T10:23+01:00",
  "feature_artifacts": [
   {
    "title": "Feature: Project artifacts standard",
@@ -52,16 +52,70 @@
    "app": "luismc-project-setup",
    "status": "Running",
    "item": "Agent and integration rules",
-   "detail": "17 changes from the 9–10 Oct evidence in comics-organizer: one full CI run, gate-result.json, merge script, pre-push guards, push-CI skip, gated e2e, at most 5 agents, contract first. Round started 10 Oct: spec and contracts first, then at most five Sonnet agents; tested on a local clone of comics-organizer; one ready PR, merged on green.",
+   "detail": "17 changes from the 9–10 Oct evidence in comics-organizer. Contract committed to DS6-agent-delivery (02535cd): STACKSPEC 6.0.0 and the delivery-scripts contract. Building DS8 to DS11 in parallel; then a test on a clone of comics-organizer, the join, and one ready PR merged on green.",
    "expected": "today"
+  },
+  {
+   "id": "DS8",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "Running",
+   "item": "Branch gate scripts",
+   "detail": "branch_gate, gate_verify, fast_guards, join, agent_setup, gate.json per track, the pre-push hook, a starter guard test per track; tested against throwaway repos.",
+   "expected": "today"
+  },
+  {
+   "id": "DS9",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "Running",
+   "item": "CI scripts and workflows",
+   "detail": "ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files.",
+   "expected": "today"
+  },
+  {
+   "id": "DS10",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "Running",
+   "item": "claude-setup rules and profiles",
+   "detail": "The agents-and-integration rule file (replaces model-delegation.md), the docs/ rule, per-skill model and effort, the alias-drift hook. Covers MP3, MP4, MP5 and DS7.",
+   "expected": "today"
+  },
+  {
+   "id": "DS11",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "Running",
+   "item": "tech-stack-setup wiring",
+   "detail": "Generate and audit paths for STACKSPEC 6.0.0, spec-lint CI steps for the new tests, luismc-project-setup 12.0.0.",
+   "expected": "today"
+  },
+  {
+   "id": "DS12",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "To do",
+   "item": "Test on comics-organizer",
+   "detail": "Run the gate, verify, join and CI scripts on a local clone of the evidence project; nothing pushed there.",
+   "expected": "after DS8 and DS9"
+  },
+  {
+   "id": "DS13",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "To do",
+   "item": "Join and release",
+   "detail": "join.py over DS8 to DS11, one ready PR to main, ci_watch on its head, merge on green. Then move the Agents and Integrate sections of the owner’s CLAUDE.md into the rule file.",
+   "expected": "after DS12"
   },
   {
    "id": "DS7",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "To do",
+   "status": "Running",
    "item": "docs/ folder rule",
-   "detail": "A project-setup rule: every doc a session creates goes under docs/.",
+   "detail": "A project-setup rule: every doc a session creates goes under docs/. Built in DS10.",
    "expected": "with DS6"
   },
   {
@@ -248,28 +302,28 @@
    "id": "MP3",
    "owner": "Feature: Model and effort profiles",
    "app": "luismc-project-setup",
-   "status": "To do",
+   "status": "Running",
    "item": "Role rules",
    "detail": "One line per role in the agents-and-integration rule file: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts a script cannot resolve, Haiku for log triage.",
-   "expected": "with DS6"
+   "expected": "today, in DS10"
   },
   {
    "id": "MP4",
    "owner": "Feature: Model and effort profiles",
    "app": "luismc-project-setup",
-   "status": "To do",
+   "status": "Running",
    "item": "Per-skill model and effort",
    "detail": "model and effort in every plugin SKILL.md, by kind of work (section 5), with a test that compares them to the profile table.",
-   "expected": "with DS6"
+   "expected": "today, in DS10"
   },
   {
    "id": "MP5",
    "owner": "Feature: Model and effort profiles",
    "app": "luismc-project-setup",
-   "status": "To do",
+   "status": "Running",
    "item": "Alias-drift warning",
    "detail": "A session-start hook that warns when the current Opus or Sonnet ID has no saved effort entry (figure 3).",
-   "expected": "with DS6"
+   "expected": "today, in DS10"
   },
   {
    "id": "MP6",
