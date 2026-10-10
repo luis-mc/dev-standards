@@ -47,6 +47,7 @@ class ContentError(Exception):
     def __init__(self, problems):
         super().__init__('; '.join(problems))
         self.problems = list(problems)
+        self.partial = None
 
 
 def _read(p):
@@ -93,13 +94,19 @@ def load_content(record_dir, key, plugin_dir=None):
             continue
         if re.search(r'<script|<style', text, re.I):
             problems.append('R4.10 %s contains <script> or <style>' % p.name)
+        if mt.group(1).strip().lower() == 'decisions' and key != 'full-progress':
+            problems.append('R5.19 %s: a section titled Decisions is drawn from decisions.json only' % p.name)
         sections.append({'title': mt.group(1), 'html': rest})
     hp = d / 'history.json'
     if hp.is_file():
         history = json.loads(_read(hp))
+    content = {'meta': meta, 'sections': sections, 'history': history}
     if problems:
-        raise ContentError(problems)
-    return {'meta': meta, 'sections': sections, 'history': history}
+        err = ContentError(problems)
+        if meta:
+            err.partial = content
+        raise err
+    return content
 
 
 def check_html(html, key, manifest, registry, plugin_dir, record_dir):
@@ -1681,21 +1688,81 @@ def test_one_full_progress(env):
     assert q.man()['full_progress_artifact']['key'] == 'full-progress'
 
 
+def hand_break_registry(p, tag='hand'):
+    """Push to main a registry that has a finding (R6.6), as a hand edit or an older version could leave."""
+    other = p.clone_again(tag)
+    edit_json(other / 'docs' / 'artifacts' / 'registry.json', lambda r: task(r, 'AR1').update(expected='today'))
+    git(other, 'commit', '-qam', 'break it')
+    git(other, 'push', '-q', 'origin', 'main')
+
+
+def hand_decisions_sections(p, keys, tag='hand-d'):
+    """Push to main a hand-written section titled Decisions in each of the features (R5.19), as a 1.0.0 record can have."""
+    other = p.clone_again(tag)
+    for key in keys:
+        d = other / 'docs' / 'artifacts' / 'content' / key
+        n = len(list(d.glob('[0-9][0-9]-*.html'))) + 1
+        (d / ('%02d-decisions.html' % n)).write_text('<!-- title: Decisions -->\n<p>By hand.</p>\n', encoding='utf-8')
+    git(other, 'add', '-A')
+    git(other, 'commit', '-q', '-m', 'hand-written Decisions sections')
+    git(other, 'push', '-q', 'origin', 'main')
+
+
+@case
+def test_earlier_findings_do_not_block_a_change(env):
+    """R7.1: a writing command may leave the findings the record already had; it says so and writes the change."""
+    p = env.baseline()
+    hand_break_registry(p)
+    before = p.head()
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'R6.6'), r.all
+    r = p.ok('set-task-status', 'SI1', 'Waiting')
+    assert p.head() != before and p.task('SI1')['status'] == 'Waiting'
+    assert re.search(r'note: \d earlier findings? remains?; run check', r.out), r.all
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'R6.6'), r.all
+    # the fixing command is allowed, and ends the finding
+    r = p.ok('set-task-status', 'AR1', 'Waiting', '--expected', '14 Oct')
+    assert 'earlier finding' not in r.all
+    assert p.run('check').code == 0
+    assert dirty(p) == []
+
+
+@case
+def test_a_new_finding_is_refused_beside_earlier_ones(env):
+    """R7.1: a change that adds a finding is refused and writes nothing, even when the record has others."""
+    p = env.baseline()
+    hand_break_registry(p)
+    before = p.head()
+    # the same rule in the same file again: counted, so it is an added finding
+    r = p.run('set-task-status', 'SI1', 'Waiting', '--expected', 'soon')
+    assert r.code == 1 and has_line(r.err, 'R6.6') and 'nothing written' in r.err, r.err
+    assert p.head() == before and dirty(p) == []
+    # another rule
+    r = p.run('set-task-status', 'SI1', 'Waiting', '--detail', 'x' * 700)
+    assert r.code == 1 and has_line(r.err, 'R4.8'), r.err
+    assert p.head() == before and dirty(p) == []
+    r = p.run('set-task-status', 'SI1', 'Waiting', '--json', '--expected', 'next week')
+    out = r.json()
+    assert r.code == 1 and out['ok'] is False and {f['req'] for f in out['findings']} == {'R6.6'}, out
+    assert not [f for f in out['findings'] if 'AR1' in f['message']], 'only what the change added is printed'
+    assert p.head() == before
+
+
 @case
 def test_validation_before_blocks_writes(env):
-    """R7.1: a record that is invalid before the change is not written to."""
+    """R7.1: a record the change cannot work with is not written to."""
     p = env.baseline()
     other = p.clone_again('hand')
-    f = other / 'docs' / 'artifacts' / 'registry.json'
-    edit_json(f, lambda r: task(r, 'AR1').update(expected='today'))
+    (other / 'docs' / 'artifacts' / 'registry.json').write_text('{"spec": "x", "tasks": 5}', encoding='utf-8')
     git(other, 'commit', '-qam', 'break it')
     git(other, 'push', '-q', 'origin', 'main')
     before = p.head()
-    r = p.run('set-task-status', 'SI1', 'Waiting')
-    assert r.code == 1 and has_line(r.err, 'R6.6') and 'nothing written' in r.err, r.err
-    assert p.head() == before
-    r = p.run('set-task-status', 'AR1', 'Waiting', '--expected', '14 Oct')
-    assert r.code == 1, 'even the fixing command is refused: the record must be repaired first'
+    for args in (('set-task-status', 'SI1', 'Waiting'),
+                 ('task-add', '--owner', 'project', '--prefix', 'DS', '--item', 'X', '--detail', 'x', '--expected', '12 Oct')):
+        r = p.run(*args)
+        assert r.code == 1 and 'Traceback' not in r.err, (args, r.all)
+        assert p.head() == before and dirty(p) == []
 
 
 @case
@@ -1712,6 +1779,126 @@ def test_validation_after_blocks_writes(env):
     assert p.head() == before and dirty(p) == []
     r = p.run('set-task-status', 'AR1', 'Waiting', '--json', '--expected', 'next week')
     assert r.code == 1 and r.json()['ok'] is False and r.json()['findings'][0]['req'] == 'R6.6'
+
+
+@case
+def test_a_record_with_two_stuck_features_repairs_in_two_edits(env):
+    """R7.1: two features each hold a hand-written Decisions section (R5.19). Fixing one used to be refused
+    because the other still had its finding, so the record could not be migrated."""
+    p = env.baseline()
+    hand_decisions_sections(p, ['artifacts', 'site'])
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'R5.19', 'content/artifacts') and has_line(r.out, 'R5.19', 'content/site'), r.all
+    # the other writing commands work meanwhile, for tasks that need no stuck feature's file
+    r = p.ok('task-add', '--owner', 'project', '--prefix', 'DS', '--item', 'More', '--detail', 'Later.', '--expected', '14 Oct')
+    assert 'note: 2 earlier findings remain; run check' in r.out, r.all
+    r = p.ok('set-task-status', 'DS1', 'Waiting', '--json')
+    assert r.json()['notes'] == ['2 earlier findings remain; run check'], r.out
+    assert 'Waiting' in p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
+    # a task of a stuck feature would leave that feature's file out of date: refused, nothing written
+    before = p.head()
+    r = p.run('set-task-status', 'AR1', 'Waiting')
+    assert r.code == 1 and 'content/artifacts is invalid; fix it with edit-content' in r.err, r.all
+    assert has_line(r.err, 'R5.19', 'content/artifacts') and p.head() == before and dirty(p) == []
+    # edit one: allowed, and the other finding stays
+    d = export(p, 'artifacts', 'stuck1')
+    (d / '02-decisions.html').unlink()
+    r = p.ok('edit-content', 'artifacts', '--from', d)
+    assert 'note: 1 earlier finding remains; run check' in r.out, r.all
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'R5.19', 'content/site') and not has_line(r.out, 'R5.19', 'content/artifacts'), r.all
+    assert not has_line(r.out, 'INV-3'), r.all           # the repaired feature was rendered again
+    # its tasks can change again, while the other feature is still stuck
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    assert 'Waiting' in p.show('docs/artifacts/feature-artifacts.html')
+    # edit the other: the record is clean
+    d = export(p, 'site', 'stuck2')
+    (d / '02-decisions.html').unlink()
+    r = p.ok('edit-content', 'site', '--from', d)
+    assert 'earlier finding' not in r.all
+    r = p.run('check')
+    assert r.code == 0 and 'clean' in r.out, r.all
+    assert dirty(p) == []
+
+
+@case
+def test_a_stuck_feature_is_not_edited_into_a_stuck_one(env):
+    """R7.1: edit-content refuses content that is still invalid, and one that adds a second finding."""
+    p = env.baseline()
+    hand_decisions_sections(p, ['artifacts', 'site'])
+    before = p.head()
+    d = export(p, 'artifacts', 'still')          # still holds the Decisions section
+    (d / 'meta.json').write_text(json.dumps({**json.loads((d / 'meta.json').read_text(encoding='utf-8')),
+                                             'lede': 'Changed.'}), encoding='utf-8')
+    r = p.run('edit-content', 'artifacts', '--from', d)
+    assert r.code == 1 and has_line(r.err, 'R5.19', 'content/artifacts') and 'nothing written' in r.err, r.err
+    assert p.head() == before and dirty(p) == []
+    d = export(p, 'artifacts', 'worse')
+    (d / '03-more.html').write_text('<!-- title: Decisions -->\n<p>again</p>\n', encoding='utf-8')
+    r = p.run('edit-content', 'artifacts', '--from', d)
+    assert r.code == 1 and 'nothing written' in r.err and p.head() == before, r.all
+    # a clean feature cannot be edited into a stuck one either
+    q = env.baseline()
+    q.ok('feature-new', '--key', 'third', '--title', 'Third', '--prefix', 'TH', '--apps', 'x')
+    hand_decisions_sections(q, ['artifacts'], 'hand-q')
+    qb = q.head()
+    d = export(q, 'third', 'third')
+    (d / '02-decisions.html').write_text('<!-- title: Decisions -->\n<p>no</p>\n', encoding='utf-8')
+    r = q.run('edit-content', 'third', '--from', d)
+    assert r.code == 1 and has_line(r.err, 'R5.19', 'content/third') and q.head() == qb, r.err
+    assert not has_line(r.err, 'R5.19', 'content/artifacts'), 'only the added finding is printed'
+
+
+@case
+def test_a_record_that_is_migrating_and_stuck_repairs_one_edit_at_a_time(env):
+    """R7.1a: the first writing command on a 1.0.0 record migrates it; a stuck feature waits for its own edit."""
+    p = env.baseline()
+    hand_decisions_sections(p, ['artifacts', 'site'])
+    other = p.clone_again('old-done')
+    rp = other / 'docs' / 'artifacts' / 'registry.json'
+    edit_json(rp, lambda r: task(r, 'AR2').update(status='Done'))
+    git(other, 'commit', '-q', '-a', '-m', 'age the record to 1.0.0 statuses')
+    git(other, 'push', '-q', 'origin', 'main')
+    d = export(p, 'artifacts', 'mig1')
+    (d / '02-decisions.html').unlink()
+    r = p.ok('edit-content', 'artifacts', '--from', d)
+    assert p.task('AR2')['status'] == 'Built', p.task('AR2')
+    assert 'note: 1 earlier finding remains; run check' in r.out and 'not rendered' in r.out and 'site' in r.out, r.all
+    r = p.run('check', '--json')
+    assert [(f['req'], f['file']) for f in r.json()['findings']] == [('R5.19', 'content/site')], r.out
+    d = export(p, 'site', 'mig2')
+    (d / '02-decisions.html').unlink()
+    p.ok('edit-content', 'site', '--from', d)
+    r = p.run('check')
+    assert r.code == 0 and 'clean' in r.out, r.all
+
+
+@case
+def test_render_with_earlier_findings(env):
+    """R7.1: render repairs what it can and leaves a feature with invalid content alone."""
+    p = env.baseline()
+    hand_decisions_sections(p, ['site'])
+    other = p.clone_again('hand-reg')
+    edit_json(other / 'docs' / 'artifacts' / 'registry.json', lambda r: task(r, 'AR1').update(detail='Edited by hand.'))
+    git(other, 'commit', '-qam', 'hand edit')
+    git(other, 'push', '-q', 'origin', 'main')
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'INV-3', 'feature-artifacts.html') and has_line(r.out, 'R5.19', 'content/site'), r.all
+    site_html = p.show('docs/artifacts/feature-the-site.html')
+    r = p.ok('render', '--json')
+    assert 'artifacts' in r.json()['rendered'] and 'site' not in r.json()['rendered'], r.out
+    assert r.json()['notes'][0] == '1 earlier finding remains; run check', r.out
+    assert 'not rendered, because its content is invalid: site' in r.json()['notes'][1], r.out
+    assert 'Edited by hand.' in p.show('docs/artifacts/feature-artifacts.html')
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'R5.19', 'content/site') and not has_line(r.out, 'INV-3'), r.all
+    before = p.head()
+    r = p.ok('render', '--all', '--json', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-11T08:00:00+00:00'})
+    assert sorted(r.json()['rendered']) == ['artifacts', 'full-progress'], r.out
+    assert p.show('docs/artifacts/feature-the-site.html') == site_html and p.head() != before
+    r = p.ok('render')
+    assert 'nothing to do' in r.out and 'note: 1 earlier finding remains; run check' in r.out, r.all
+    assert dirty(p) == []
 
 
 @case
@@ -2096,7 +2283,8 @@ def test_check_decisions_against_the_record(env):
 
 
 @case
-def test_every_writing_command_refuses_an_invalid_decisions_file(env):
+def test_an_invalid_decisions_file_is_left_alone_until_edit_content_fixes_it(env):
+    """R7.1: the other writing commands neither refuse nor render the feature; edit-content repairs it."""
     need_real(env)
     p = env.baseline()
     p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1)], 'wc1'))
@@ -2109,13 +2297,24 @@ def test_every_writing_command_refuses_an_invalid_decisions_file(env):
     git(other, 'add', '-A')
     git(other, 'commit', '-q', '-m', 'break the decisions')
     git(other, 'push', '-q', 'origin', 'main')
+    html = p.show('docs/artifacts/feature-artifacts.html')
+    for args in (('set-task-status', 'SI1', 'Waiting'), ('task-add', '--owner', 'project', '--prefix', 'DS', '--item', 'X',
+                                                          '--detail', 'x', '--expected', '12 Oct'),
+                 ('render', '--all')):
+        r = p.run(*args, env=later(5) if args[0] == 'render' else None)
+        assert r.code == 0 and re.search(r'note: \d earlier findings? remains?; run check', r.out), (args, r.all)
+        assert p.show('docs/artifacts/feature-artifacts.html') == html, args
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'R5.16', 'content/artifacts'), r.all
     before = p.head()
-    for args in (('set-task-status', 'AR1', 'Waiting'), ('task-add', '--owner', 'artifacts', '--item', 'X', '--detail', 'x',
-                                                          '--expected', '12 Oct'),
-                 ('render', '--all'), ('mark-published', 'artifacts', '--url', 'https://claude.ai/artifact/x')):
-        r = p.run(*args)
-        assert r.code == 1 and 'the record is invalid; nothing written' in r.err and 'R5.16' in r.err, (args, r.all)
-        assert p.head() == before, args
+    r = p.run('set-task-status', 'AR1', 'Waiting')          # it would leave the feature's file out of date
+    assert r.code == 1 and 'edit-content' in r.err and p.head() == before, r.all
+    # the edit that fixes it is the way out
+    r = p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1)], 'wc2'))
+    assert 'earlier finding' not in r.all
+    assert p.run('check').code == 0
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    assert 'Waiting' in p.show('docs/artifacts/feature-artifacts.html')
 
 
 # --------------------------------------------------------------------------

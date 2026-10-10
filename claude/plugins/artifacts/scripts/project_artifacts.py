@@ -100,6 +100,8 @@ def emit(args, result, human=None):
         print(json.dumps(result, indent=2, ensure_ascii=False))
     elif human is not None:
         print(human if isinstance(human, str) else '\n'.join(human))
+        for n in (result or {}).get('notes') or []:
+            print('note: ' + n)
 
 
 # --------------------------------------------------------------------------
@@ -580,6 +582,10 @@ class Record:
         self.exists = exists
         self._now = None
         self._contents = None
+        self._broken = {}            # key -> content findings (R4.4, R4.10, ...) of an artifact that cannot load
+        self._partial = {}           # key -> what could be read of such an artifact (its lede, for Full Progress)
+        self.pre_findings = []       # the findings the record had before this change (R7.1)
+        self.skipped = []            # artifacts left as they are because their content is invalid (R7.1a)
         self.render_keys = {}        # key -> 'new': render with a new stamp
         self.rendered = set()
         self.message = None
@@ -667,13 +673,27 @@ class Record:
     def sort_tasks(self):
         self.registry['tasks'] = sorted(self.tasks(), key=task_sort_key)
 
-    def contents(self):
+    def _load(self):
         if self._contents is None:
-            c, findings = load_contents(self)
-            if findings:
-                raise Fail(1, 'content is invalid; nothing written', findings)
-            self._contents = c
+            self._contents, self._broken, self._partial = load_contents_by_key(self)
+
+    def contents(self):
+        """{key: content} of the artifacts whose content loads."""
+        self._load()
         return self._contents
+
+    def broken(self):
+        """{key: [findings]} of the artifacts whose content does not load."""
+        self._load()
+        return self._broken
+
+    def render_contents(self):
+        """What Full Progress renders from: the loaded contents, and for an artifact that does not load, what could
+        be read of it (its lede and decisions), so one broken feature does not stop the others being changed."""
+        self._load()
+        out = dict(self._partial)
+        out.update(self._contents)
+        return out
 
     def invalidate(self):
         self._contents = None
@@ -710,25 +730,36 @@ def _load_content(record_dir, key):
     return R.load_content(record_dir, key)
 
 
-def load_contents(rec):
-    contents, findings = {}, []
+def load_contents_by_key(rec):
+    """(contents, broken, partial): the content of each artifact that loads, the findings of each that does not,
+    and what the renderer could read of those."""
+    contents, broken, partial = {}, {}, {}
     for key, _kind, _e in rec.artifacts():
         if not isinstance(key, str) or not KEY_RE.match(key):
             continue
         try:
             contents[key] = _load_content(rec.dir, key)
         except R.ContentError as ce:
-            findings += problems_to_findings(getattr(ce, 'problems', None) or [str(ce)], key)
+            broken[key] = problems_to_findings(getattr(ce, 'problems', None) or [str(ce)], key)
+            if isinstance(getattr(ce, 'partial', None), dict):
+                partial[key] = ce.partial
         except Exception as e:  # unreadable content of any kind
-            findings.append(('R4.1', 'content/%s' % key, 'content cannot be read: %s' % e))
-    return contents, findings
+            broken[key] = [('R4.1', 'content/%s' % key, 'content cannot be read: %s' % e)]
+    return contents, broken, partial
+
+
+def load_contents(rec):
+    contents, broken, _partial = load_contents_by_key(rec)
+    return contents, [f for fs in broken.values() for f in fs]
 
 
 def render_one(rec, key, stamp_t, stamp_i, links=None):
     """Render one artifact; `links` ({feature key: (href, path text)}) is only for the publish copy."""
     try:
+        if key in rec.broken():
+            raise Fail(1, 'content/%s is invalid; fix it with edit-content; nothing written' % key, rec.broken()[key])
         extra = {} if links is None else {'links': links}
-        return R.render_artifact(rec.manifest, rec.registry, rec.contents(), key, PLUGIN_DIR,
+        return R.render_artifact(rec.manifest, rec.registry, rec.render_contents(), key, PLUGIN_DIR,
                                  rec.dir, stamp_t, stamp_i, **extra)
     except Fail:
         raise
@@ -931,9 +962,10 @@ def validate_structure(rec):
     return sorted(set(F))
 
 
-def check_html_findings(rec, key):
+def check_html_findings(rec, key, html=None):
     e = rec.entry(key)
-    html = read_html(rec.dir / e['file'])
+    if html is None:
+        html = read_html(rec.dir / e['file'])
     if html is None:
         return [('INV-3', e['file'], 'rendered file is missing; run render')]
     out = []
@@ -1071,9 +1103,7 @@ def run_change(ctx, apply, new_ok=False):
                 if isinstance(mb, str) and mb and mb != ctx.branch:
                     ctx.branch = mb
                     continue
-                pre = validate_structure(rec)
-                if pre:
-                    raise Fail(1, 'the record is invalid; nothing written', pre)
+                rec.pre_findings = all_findings(rec)           # earlier findings may stay; new ones may not (R7.1)
             else:
                 if not new_ok:
                     raise no_record_fail(ctx)
@@ -1081,8 +1111,11 @@ def run_change(ctx, apply, new_ok=False):
             try:
                 result = apply(rec) or {}
                 result = finish_change(ctx, rec, result)
-            except BaseException:
+            except BaseException as ex:
                 clean_worktree(ctx, base)
+                if rec.pre_findings and isinstance(ex, Exception) and not isinstance(ex, Fail):
+                    raise Fail(1, 'the record has earlier findings this change cannot work around (%s: %s); '
+                                  'nothing written' % (type(ex).__name__, ex), rec.pre_findings) from ex
                 raise
             sha = commit_record(ctx, rec.message or 'docs/artifacts: update')
             result['commit'] = sha or head_sha(ctx)
@@ -1113,13 +1146,17 @@ def finish_change(ctx, rec, result):
     """Write manifest/registry, render, README; validate the result (R7.1)."""
     if getattr(rec, 'noop', False):
         result['rendered'] = []
-        return result
+        return add_notes(result, len(rec.pre_findings), rec.skipped)
     rec.sort_tasks()
     if rec.registry_changed() and rec.entry(FP_NAME) is not None:
         rec.render_keys.setdefault(FP_NAME, 'new')     # it embeds the registry (R5.9)
     if rec.migrated:
+        rec.invalidate()
         for key, _kind, _e in rec.artifacts():
-            rec.render_keys.setdefault(key, 'new')
+            if key in rec.broken():          # migrates when edit-content fixes it (R7.1a)
+                rec.skipped.append(key)
+            else:
+                rec.render_keys.setdefault(key, 'new')
     rec.touch()
     now = rec.now()
     write_text(rec.dir / 'manifest.json', dump_json(rec.manifest))
@@ -1131,10 +1168,69 @@ def finish_change(ctx, rec, result):
     post = validate_structure(rec)
     for key in sorted(rec.rendered):
         post += check_html_findings(rec, key)
-    if post:
-        raise Fail(1, 'the change would make the record invalid; nothing written', sorted(set(post)))
+    # a file this change did not write has the findings it had before
+    files = {e['file'] for _k, _kind, e in rec.artifacts() if isinstance(e.get('file'), str)}
+    written = {rec.entry(k)['file'] for k in rec.rendered}
+    post += [fd for fd in rec.pre_findings if fd[1] in files and fd[1] not in written]
+    added, remaining = compare_findings(rec.pre_findings, post)
+    if added:
+        raise Fail(1, 'the change would make the record invalid; nothing written', added)
     result['rendered'] = sorted(rec.rendered)
     result['stamp'] = now.iso
+    return add_notes(result, remaining, sorted(set(rec.skipped)))
+
+
+def all_findings(rec):
+    """What a writing command compares before and after a change (R7.1): the record-level findings, those of
+    every rendered file, and those a fresh render would show (a registry finding reappears in the file drawn from
+    it, and is not an added one). An unreadable or unrenderable file is left to `check`."""
+    out = validate_structure(rec)
+    stamp = rec.now()
+    for key, _kind, e in rec.artifacts():
+        if not isinstance(key, str) or not KEY_RE.match(key) or not isinstance(e.get('file'), str):
+            continue
+        try:
+            out += check_html_findings(rec, key)
+            if key not in rec.broken():
+                out += check_html_findings(rec, key, render_one(rec, key, stamp.text, stamp.iso))
+        except Fail:
+            pass
+    return sorted(set(out))
+
+
+def compare_findings(pre, post):
+    """(added, remaining): the findings `post` has beyond `pre`, and how many of `pre` remain (R7.1).
+
+    A finding is identified by its requirement and its file, never by its message, and counted: a second
+    finding of the same kind in the same file is an added one."""
+    def group(findings):
+        out = {}
+        for fd in sorted(set(findings)):
+            out.setdefault((fd[0], fd[1]), []).append(fd)
+        return out
+    before, after = group(pre), group(post)
+    added, remaining = [], 0
+    for ident, fs in sorted(after.items()):
+        old = before.get(ident, [])
+        extra = len(fs) - len(old)
+        remaining += min(len(fs), len(old))
+        if extra > 0:
+            old_msgs = {fd[2] for fd in old}
+            new = [fd for fd in fs if fd[2] not in old_msgs]
+            added += new if len(new) >= extra else fs[-extra:]
+    return added, remaining
+
+
+def add_notes(result, remaining, skipped):
+    notes = []
+    if remaining:
+        notes.append('%d earlier finding%s remain%s; run check' % (remaining, '' if remaining == 1 else 's',
+                                                                   's' if remaining == 1 else ''))
+    if skipped:
+        notes.append('not rendered, because its content is invalid: %s; edit-content renders it once fixed'
+                     % ', '.join(skipped))
+    if notes:
+        result['notes'] = notes
     return result
 
 
@@ -1490,7 +1586,8 @@ def cmd_edit_content(args):
             (d / name).parent.mkdir(parents=True, exist_ok=True)
             (d / name).write_bytes(data)
         rec.invalidate()
-        rec.contents()                       # validates what the session supplied
+        if key in rec.broken():              # validates what the session supplied; other artifacts may stay as they are
+            raise Fail(1, 'content is invalid; nothing written', rec.broken()[key])
         rec.render_keys[key] = 'new'
         if key != FP_NAME:
             rec.render_keys[FP_NAME] = 'new'   # section 1 quotes each lede
@@ -1549,6 +1646,9 @@ def cmd_render(args):
     def apply(rec):
         now = rec.now()
         for key, _kind, e in rec.artifacts():
+            if key in rec.broken():          # cannot be rendered until edit-content fixes it (R7.1a)
+                rec.skipped.append(key)
+                continue
             old = read_html(rec.dir / e['file'])
             if args.all or old is None:
                 rec.render_keys[key] = 'new'
