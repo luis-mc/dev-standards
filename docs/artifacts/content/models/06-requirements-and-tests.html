@@ -1,9 +1,9 @@
 <!-- title: Requirements and tests -->
 <div class="table-scroll"><table><thead><tr><th>ID</th><th>Requirement</th><th>Test that proves it</th></tr></thead><tbody>
 <tr><td>R1</td><td>Every plugin SKILL.md declares the model and effort of its kind (section 5).</td><td>A test reads every SKILL.md frontmatter and compares it with the profile table; a missing or different value fails.</td></tr>
-<tr><td>R2</td><td>claude-setup writes both <code>modelSettings</code> entries and the delegation rule with the chosen subagent effort.</td><td>The claude-setup checks (DS5): canonical IDs, medium or high, no placeholder left.</td></tr>
+<tr><td>R2</td><td>claude-setup writes both <code>modelSettings</code> entries and the delegation rule with the chosen subagent effort.</td><td>The claude-setup checks (DS5): canonical IDs, medium or high accepted, medium preselected (MP7), no placeholder left.</td></tr>
 <tr><td>R3</td><td>The rule file has one line per role.</td><td>The rule-file test finds each role line.</td></tr>
 <tr><td>R4</td><td>The session-start hook warns when the current Opus or Sonnet ID has no effort entry.</td><td>Hook test: settings with an entry for an older ID produce the warning; settings with the current ID do not.</td></tr>
 <tr><td>R5</td><td>Explore and Plan are not overridden.</td><td>No plugin ships an agent named Explore or Plan.</td></tr>
-<tr><td>R6</td><td>Whether a skill&rsquo;s effort reverts after its turn is known.</td><td>A manual check, recorded in History: run a skill with effort high, then check the next turn&rsquo;s effort.</td></tr>
+<tr><td>R6</td><td>Whether a skill&rsquo;s effort reverts after its turn is known.</td><td>A manual check, recorded in History: run a skill with an effort that differs from the session&rsquo;s, then check the next turn&rsquo;s effort.</td></tr>
 </tbody></table></div>

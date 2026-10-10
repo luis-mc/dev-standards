@@ -1,5 +1,9 @@
 [
   {
+    "date": "11 Oct 01:10",
+    "change": "MP7 released in luismc-project-setup 13.0.0 with STACKSPEC 7.0.0 (00:31): Opus at medium and Sonnet at medium everywhere, replacing the earlier high defaults. The owner first asked for Sonnet at high, then confirmed medium; his own ~/.claude and the installed plugins were updated."
+  },
+  {
     "date": "10 Oct 23:30",
     "change": "Decisions rebuilt in the 1.1.0 form: every option you were offered, the recommendation, and your choice in your words (AR23). The page is now a file in docs/artifacts, no longer a claude.ai artifact (AR26)."
   },
