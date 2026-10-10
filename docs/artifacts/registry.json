@@ -2,7 +2,7 @@
  "registry": "draft for ARTIFACTSPEC 1.0.0",
  "project": "dev-standards",
  "timezone": "Europe/Lisbon",
- "updated": "2026-10-10T13:03+01:00",
+ "updated": "2026-10-10T13:32+01:00",
  "feature_artifacts": [
   {
    "title": "Feature: Project artifacts standard",
@@ -212,10 +212,10 @@
    "id": "AR8",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Done",
    "item": "Hooks",
-   "detail": "The after-command, end-of-turn and session-start hooks and hooks/hooks.json; a Sonnet agent on AR8-hooks.",
-   "expected": "10 Oct ~15:30"
+   "detail": "Three hooks and hooks/hooks.json (PostToolUse and PostToolUseFailure, Stop, SessionStart); 47 tests, mutation-checked; joined into AR12-integration.",
+   "expected": "10 Oct"
   },
   {
    "id": "AR9",
@@ -223,26 +223,26 @@
    "app": "luismc-artifacts",
    "status": "Running",
    "item": "Tests and CI",
-   "detail": "Each build agent writes the tests for its part; the spec-lint steps are being added on AR10-skills-wiring.",
+   "detail": "Renderer 57 tests, hooks 47 tests and the spec-lint steps are in; the script tests come with AR7.",
    "expected": "10 Oct ~16:30"
   },
   {
    "id": "AR10",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Done",
    "item": "Skills and rule file",
-   "detail": "The five skills and .claude/rules/project-artifacts.md; a Sonnet agent on AR10-skills-wiring.",
-   "expected": "10 Oct ~16:30"
+   "detail": "The five skills (feature-artifact-new on Opus high, the rest Sonnet medium) and the rule file; joined at fb1edf2.",
+   "expected": "10 Oct"
   },
   {
    "id": "AR11",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Done",
    "item": "Plugin wiring",
-   "detail": "plugin.json 1.0.0, the marketplace entry, the README section; claude-setup enables the plugin in every project (luismc-project-setup 12.1.0). Same agent as AR10.",
-   "expected": "10 Oct ~16:45"
+   "detail": "plugin.json 1.0.0, marketplace entry, README; claude-setup enables the plugin under the marketplace name the owner registered (luismc-project-setup 12.1.0); joined at fb1edf2.",
+   "expected": "10 Oct"
   },
   {
    "id": "AR12",

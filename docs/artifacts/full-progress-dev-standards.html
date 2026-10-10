@@ -436,7 +436,7 @@ li { margin: .25em 0; }
  "registry": "draft for ARTIFACTSPEC 1.0.0",
  "project": "dev-standards",
  "timezone": "Europe/Lisbon",
- "updated": "2026-10-10T13:03+01:00",
+ "updated": "2026-10-10T13:32+01:00",
  "feature_artifacts": [
   {
    "title": "Feature: Project artifacts standard",
@@ -646,10 +646,10 @@ li { margin: .25em 0; }
    "id": "AR8",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Done",
    "item": "Hooks",
-   "detail": "The after-command, end-of-turn and session-start hooks and hooks/hooks.json; a Sonnet agent on AR8-hooks.",
-   "expected": "10 Oct ~15:30"
+   "detail": "Three hooks and hooks/hooks.json (PostToolUse and PostToolUseFailure, Stop, SessionStart); 47 tests, mutation-checked; joined into AR12-integration.",
+   "expected": "10 Oct"
   },
   {
    "id": "AR9",
@@ -657,26 +657,26 @@ li { margin: .25em 0; }
    "app": "luismc-artifacts",
    "status": "Running",
    "item": "Tests and CI",
-   "detail": "Each build agent writes the tests for its part; the spec-lint steps are being added on AR10-skills-wiring.",
+   "detail": "Renderer 57 tests, hooks 47 tests and the spec-lint steps are in; the script tests come with AR7.",
    "expected": "10 Oct ~16:30"
   },
   {
    "id": "AR10",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Done",
    "item": "Skills and rule file",
-   "detail": "The five skills and .claude/rules/project-artifacts.md; a Sonnet agent on AR10-skills-wiring.",
-   "expected": "10 Oct ~16:30"
+   "detail": "The five skills (feature-artifact-new on Opus high, the rest Sonnet medium) and the rule file; joined at fb1edf2.",
+   "expected": "10 Oct"
   },
   {
    "id": "AR11",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Done",
    "item": "Plugin wiring",
-   "detail": "plugin.json 1.0.0, the marketplace entry, the README section; claude-setup enables the plugin in every project (luismc-project-setup 12.1.0). Same agent as AR10.",
-   "expected": "10 Oct ~16:45"
+   "detail": "plugin.json 1.0.0, marketplace entry, README; claude-setup enables the plugin under the marketplace name the owner registered (luismc-project-setup 12.1.0); joined at fb1edf2.",
+   "expected": "10 Oct"
   },
   {
    "id": "AR12",
@@ -772,17 +772,14 @@ li { margin: .25em 0; }
 }</script>
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every plugin &middot; default design</div></header>
-<section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2><p class="last-update">Last update: <time datetime="2026-10-10T13:03+01:00">10 Oct 13:03</time> (Lisbon)</p>
+<section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2><p class="last-update">Last update: <time datetime="2026-10-10T13:32+01:00">10 Oct 13:32</time> (Lisbon)</p>
 <p class="lede">All ongoing work in dev-standards, across every plugin. <strong>Nothing needs you right now.</strong> Live: <span class="task-id">DS6</span>, STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (12:56), and the DS15 fix to the secret scan. Running: the luismc-artifacts build, merge on green at about 17:15. </p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">19</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">9</div><div class="label">done</div></div><div class="status-count-tile status-running"><div class="count">6</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">19</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">12</div><div class="label">done</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-done">Done</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next, earliest first</strong></td></tr>
 <tr data-task="AR7"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR7</span>project_artifacts.py</a></td><td><code>luismc-artifacts</code></td><td>project_artifacts.py: the record worktree, every command, pending and mark-published, the record checks; a Sonnet agent on AR7-project-artifacts.</td><td>10 Oct ~15:30</td></tr>
-<tr data-task="AR8"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR8</span>Hooks</a></td><td><code>luismc-artifacts</code></td><td>The after-command, end-of-turn and session-start hooks and hooks/hooks.json; a Sonnet agent on AR8-hooks.</td><td>10 Oct ~15:30</td></tr>
-<tr data-task="AR9"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR9</span>Tests and CI</a></td><td><code>luismc-artifacts</code></td><td>Each build agent writes the tests for its part; the spec-lint steps are being added on AR10-skills-wiring.</td><td>10 Oct ~16:30</td></tr>
-<tr data-task="AR10"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR10</span>Skills and rule file</a></td><td><code>luismc-artifacts</code></td><td>The five skills and .claude/rules/project-artifacts.md; a Sonnet agent on AR10-skills-wiring.</td><td>10 Oct ~16:30</td></tr>
-<tr data-task="AR11"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR11</span>Plugin wiring</a></td><td><code>luismc-artifacts</code></td><td>plugin.json 1.0.0, the marketplace entry, the README section; claude-setup enables the plugin in every project (luismc-project-setup 12.1.0). Same agent as AR10.</td><td>10 Oct ~16:45</td></tr>
+<tr data-task="AR9"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR9</span>Tests and CI</a></td><td><code>luismc-artifacts</code></td><td>Renderer 57 tests, hooks 47 tests and the spec-lint steps are in; the script tests come with AR7.</td><td>10 Oct ~16:30</td></tr>
 <tr data-task="AR12"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR12</span>Integrate and release</a></td><td><code>luismc-artifacts</code></td><td>Full suite once on AR12-integration, then one ready PR to main: one CI run, one release; merged on green.</td><td>10 Oct ~17:15</td></tr>
 <tr data-task="AR15"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR15</span>Repo record and recreate</a></td><td><code>luismc-artifacts</code></td><td>The record in docs/artifacts and recreation without duplicates; built into project_artifacts.py by the AR7 agent.</td><td>10 Oct ~15:30</td></tr>
 <tr class="status-group" data-group="done"><td colspan="5"><strong>Live or done, newest first</strong></td></tr>
@@ -803,6 +800,9 @@ li { margin: .25em 0; }
 <tr data-task="AR2"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR2</span>Proposal reviewed</a></td><td><code>luismc-artifacts</code></td><td>Twelve findings; each one and the change it led to is in section 7.</td><td>10 Oct</td></tr>
 <tr data-task="AR5"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR5</span>ARTIFACTSPEC 1.0.0</a></td><td><code>luismc-artifacts</code></td><td>ARTIFACTSPEC 1.0.0 on AR12-integration (b8bd29b): the record, statuses and checklist, commands, hooks, publishing and recreation, test and conformance gates; spec_check clean. Plus the shared queue module (43150da).</td><td>10 Oct</td></tr>
 <tr data-task="AR6"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR6</span>Templates</a></td><td><code>luismc-artifacts</code></td><td>render_artifacts.py and the two templates: deterministic rendering, the HTML checks, the Earlier fold; 57 tests; joined at 39cb8c3.</td><td>10 Oct</td></tr>
+<tr data-task="AR8"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR8</span>Hooks</a></td><td><code>luismc-artifacts</code></td><td>Three hooks and hooks/hooks.json (PostToolUse and PostToolUseFailure, Stop, SessionStart); 47 tests, mutation-checked; joined into AR12-integration.</td><td>10 Oct</td></tr>
+<tr data-task="AR10"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR10</span>Skills and rule file</a></td><td><code>luismc-artifacts</code></td><td>The five skills (feature-artifact-new on Opus high, the rest Sonnet medium) and the rule file; joined at fb1edf2.</td><td>10 Oct</td></tr>
+<tr data-task="AR11"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR11</span>Plugin wiring</a></td><td><code>luismc-artifacts</code></td><td>plugin.json 1.0.0, marketplace entry, README; claude-setup enables the plugin under the marketplace name the owner registered (luismc-project-setup 12.1.0); joined at fb1edf2.</td><td>10 Oct</td></tr>
 <tr data-task="DS5"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">DS5</span>claude-setup: medium or high effort per model</a></td><td><code>luismc-project-setup</code></td><td>Asked on every run, high preselected for code agents; written to modelSettings and the delegation rule; top-level effortLevel high for cloud agents. luismc-project-setup 11.3.0, PR #2.</td><td>10 Oct</td></tr>
 <tr data-task="MP2"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP2</span>Profile decisions</a></td><td><code>luismc-project-setup</code></td><td>Explore and Plan stay on Opus; skills profiled by kind of work; a session-start warning for alias drift. Section 7.</td><td>10 Oct</td></tr>
 <tr data-task="MP1"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP1</span>Inventory of models per agent type</a></td><td><code>luismc-project-setup</code></td><td>Checked against the Claude Code docs; corrects the first answer (Explore and Plan run on the main session’s model). Figure 1.</td><td>10 Oct</td></tr>
