@@ -66,11 +66,11 @@
       "id": "AR8",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "Hooks",
-      "detail": "Three hooks and hooks/hooks.json (PostToolUse and PostToolUseFailure, Stop, SessionStart); 47 tests, mutation-checked; joined into AR12-integration.",
+      "detail": "Three hooks and hooks/hooks.json (PostToolUse and PostToolUseFailure, Stop, SessionStart); 47 tests, mutation-checked. Released in #18.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T14:46+01:00"
     },
     {
       "id": "AR9",
