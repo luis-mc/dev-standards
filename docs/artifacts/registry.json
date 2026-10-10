@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T00:51+01:00",
+  "updated": "2026-10-11T00:52+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -556,11 +556,11 @@
       "id": "DS28",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Document the pre-push worktree's borrowed dependencies",
-      "detail": "Your decision: accept that the pre-push check of a pushed commit borrows the checkout's node_modules, so a guard importing a workspace package reads the checked-out version; written into CONTRACT.md so nobody relies on it.",
-      "expected": "11 Oct ~01:30",
-      "changed": "2026-10-11T00:51+01:00"
+      "detail": "Written into CONTRACT.md on DS27-integration (6e794ba): the pre-push worktree borrows node_modules, so a guard importing a workspace package reads the checked-out version; the branch gate, which installs, checks it properly. Ships with DS27.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:52+01:00"
     },
     {
       "id": "MP1",
