@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "track": "rust",
+  "default_branch": "main",
+  "setup": ["cargo fetch --locked"],
+  "packages": {"kind": "cargo-workspace"},
+  "widen_on": [
+    "Cargo.toml",
+    "Cargo.lock",
+    "rust-toolchain.toml",
+    "deny.toml",
+    ".cargo/",
+    ".github/",
+    "scripts/delivery/"
+  ],
+  "ui_paths": [],
+  "steps": [
+    {
+      "name": "typecheck",
+      "scope": "changed+dependents",
+      "run": "cargo check --locked --workspace --all-targets"
+    },
+    {
+      "name": "lint",
+      "scope": "changed+dependents",
+      "run": "cargo clippy --locked --workspace --all-targets -- -D warnings"
+    },
+    {
+      "name": "unit",
+      "scope": "changed",
+      "run": "cargo test --locked --workspace --lib"
+    },
+    {
+      "name": "guards",
+      "scope": "always",
+      "pre_push": true,
+      "run": "cargo test --locked --workspace guard_"
+    },
+    {
+      "name": "secret-scan",
+      "scope": "always",
+      "pre_push": true,
+      "run": "gitleaks git --log-opts={base}..HEAD --redact --no-banner"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 5.2.0
+**Version:** 6.0.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -22,7 +22,34 @@ chosen per product through the selection catalog that accompanies this spec, and
 recorded in the product's Stack Profile (§18). This document does not name
 vendors and does not rank them.
 
-### 0.1 What changed in 5.x, and why
+### 0.1 What changed in 6.0 and 5.x, and why
+
+**6.0.0 — one full CI run per release, and the checks that make it safe.** On
+one product each change passed up to four full suites: an agent's branch check,
+the integration run, a local copy of CI, then pull-request CI. Failures still
+reached pull-request CI. Lint stopped at the first failing package, a guard that
+scans all source ran only when its own package changed, and agents reported
+"green" for a base that later merges had changed. The default-branch run
+re-tested trees that pull-request CI had already passed, and was cancelled by
+hand fourteen times.
+
+6.0.0 makes the ready pull request's CI the only full suite, and moves the rest
+to fast, scoped checks with a result that can be verified:
+
+- §11.2: end-to-end tests of the critical web journeys gate the ready pull
+  request; flaky specs go to a committed quarantine list.
+- §13.1: a default-branch run skips its suite when the merged tree is one a
+  pull-request run already passed.
+- §13.2: the per-PR preview is for ready pull requests only; draft pull
+  requests never deploy a preview.
+- §13.5 (new): a branch gate with a machine-readable result, and fast guards as
+  a pre-push hook.
+- §13.6 (new): the integration flow — task-named branches, a merge script, one
+  ready pull request, CI watched by commit.
+
+These are new `MUST`s, so this is a major version (§20). A product conforming to
+5.2.0 needs the §13.5 gate and hook, the §11.2 gate and the §13.1 skip to
+conform to 6.0.0.
 
 **5.2.0 — CI cost became a SHOULD.** §13.1 now says how to keep CI cheap: fold
 short checks into the job that runs beside them, cancel superseded pull-request
@@ -1123,12 +1150,18 @@ hide.
 ships without an explicit authorization declaration, and when any route ships
 without a declared rate-limit bucket (§4.6).
 
-### 11.2 Recommended, not gated
+### 11.2 End-to-end tests
 
-End-to-end tests on critical web journeys and mobile smoke journeys are `SHOULD`.
-Where they are not automated, the release checklist MUST name the manual journeys
-verified before each release — an untested release path is a decision, and it
-should be a visible one.
+End-to-end tests of the critical web journeys MUST run in the CI of every ready
+pull request to the default branch, and MUST fail it. A spec that fails
+intermittently is moved to a committed quarantine list, with an owner, a date
+and a reason, and is fixed; it is never retried until green (§11.3). A
+quarantined spec still runs and reports, but cannot fail the build. Branch gates
+(§13.5) run end-to-end tests only when a user-facing app changed.
+
+Mobile smoke journeys are `SHOULD`. Where they are not automated, the release
+checklist MUST name the manual journeys verified before each release — an
+untested release path is a decision, and it should be a visible one.
 
 ### 11.3 Discipline
 
@@ -1226,11 +1259,20 @@ per job, rounded up to a whole unit of time:
   be declared in the runner's configuration; otherwise a cache hit can replay a
   result computed under different inputs.
 
+A push run on the default branch MUST NOT repeat a suite that already passed.
+When the pushed commit's tree is identical to the tree of a pull-request head
+whose run of the same workflow passed, the default-branch run records that and
+skips its jobs; otherwise it runs in full. The comparison is by tree, so a merge
+that changed anything runs the suite, and a failure to decide runs it too.
+
 ### 13.2 Promotion
 
 **The three-tier promotion flow is not optional**, whichever host is chosen:
-preview per pull request, staging on merge to the default branch, production on
-an explicit release action.
+preview per ready pull request, staging on merge to the default branch,
+production on an explicit release action.
+
+- Draft pull requests MUST NOT deploy a preview; agent branches are verified by
+  the branch gate (§13.5), and only the one ready pull request (§13.6) gets one.
 
 - Migrations run in the deploy pipeline **before** the new code is serving.
 - Every deploy is traceable to a commit, and rollback is a documented, rehearsed
@@ -1261,6 +1303,55 @@ The API MUST be deployed before clients that depend on new endpoints. Because
 mobile release timing is controlled by store review, the sequence is always
 **additive API → web/admin → mobile submission**. A mobile binary MUST NOT depend
 on an unreleased endpoint.
+
+### 13.5 Branch gate
+
+Every repository MUST ship a branch gate: one command that an agent or a person
+runs on a branch before it is joined. Against the merge base with the branch it
+will join, it runs:
+
+1. Type check of the changed packages and every package that depends on them.
+2. Lint of the same set, continuing past a failing package so that one run
+   reports every error.
+3. Unit tests of the changed packages.
+4. Every guard test, whatever changed. A guard test scans the source or the
+   specs as a whole (retired vocabulary, design rules, duplication ratchets,
+   spec-note rules); scoping it by package lets a change elsewhere break it
+   unseen.
+5. The secret scan over the branch's new commits.
+6. End-to-end tests, only when a user-facing app, or a package it renders,
+   changed.
+
+A change to the lockfile, the task runner's configuration or the CI workflows
+widens the gate to every package.
+
+The gate MUST write a machine-readable result: the head commit, the base commit,
+each step with its outcome, and an overall pass. A result is trusted only when
+its head is the branch's current head and its base is the current head of the
+branch it joins. A claim in prose, such as a report saying "green", is not a
+result. Results travel with the repository, never in pull-request comments.
+
+The guard tests and the secret scan MUST also run as a pre-push hook. They take
+seconds and catch the failures that otherwise reach pull-request CI. Every
+scanner CI uses MUST be installed by the repository's agent setup script, so the
+gate runs the scanner CI runs.
+
+### 13.6 Integration flow
+
+- Each change is a branch named after its task ID, with a draft pull request into
+  an integration branch. Drafts skip CI (§13.1); the branch gate is their check.
+- Shared contracts (types, schemas, interfaces that several branches build on)
+  are committed to the integration branch before parallel work starts.
+- Branches join the integration branch through a merge script. It merges each
+  branch in turn, stops at a conflict it cannot resolve, and runs the branch gate
+  on the joined head. No other full suite runs at the join.
+- When the last join is pushed, one ready pull request goes from the integration
+  branch to the default branch. Its CI is the only full suite, end-to-end tests
+  included (§11.2). It merges when that run is green, never by auto-merge.
+- A branch that is not green when the ready pull request opens waits for the
+  next one.
+- CI is watched through the workflow runs for the head commit, never through a
+  pull request's check list, which can be read before the new run is listed.
 
 ---
 
@@ -1523,6 +1614,12 @@ Every item is checkable regardless of stack.
 - [ ] Secret scan covers full history
 - [ ] Workflows path-filtered; expensive runners not used on unrelated changes
 - [ ] CI cost kept down (SHOULD): no sub-minute job that could be a step, superseded PR runs cancelled but never default-branch runs, drafts skip CI, installs and task-runner results cached
+- [ ] Default-branch push runs skip a tree a pull-request run already passed
+- [ ] End-to-end tests of critical web journeys gate the ready pull request; flaky specs quarantined, never retried until green
+- [ ] Branch gate: dependents type-checked and linted with every error reported, guard tests always run, secret scan, E2E only when a UI app changed
+- [ ] Gate results machine-readable and trusted only against the current head and base
+- [ ] Guard tests and secret scan run as a pre-push hook; the agent setup script installs every scanner CI uses
+- [ ] Integration through a merge script and one ready pull request; CI watched by commit
 - [ ] Three-tier promotion; migrations before serving; rollback documented and rehearsed
 - [ ] Release order enforced: additive API → web/admin → mobile submission
 - [ ] Mobile signing material stored reproducibly with a tested recovery procedure

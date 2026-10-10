@@ -1,0 +1,103 @@
+#!/bin/sh
+# Runs the branch gate's seconds-long checks (the guard tests and the secret
+# scan) before a push, so the failures that would otherwise reach pull-request CI
+# stop here. STACKSPEC 13.5.
+#
+# git passes one line per pushed ref on stdin:
+#   <local ref> <local sha> <remote ref> <remote sha>
+# Branch deletions, tags and the refs/gate-results/* refs that branch_gate.py
+# publishes are skipped. For every other ref this runs
+#   scripts/delivery/fast_guards.py
+# once; it runs the steps marked "pre_push": true in scripts/delivery/gate.json.
+# It checks the checked-out commit, so push the branch you are standing on.
+#
+# A project's own pre-push check lives beside this file as `pre-push.local` (an
+# existing hook is moved there at install, never overwritten). After the guards
+# pass, this runs it with the same arguments and the same stdin; if it fails, the
+# push fails.
+#
+# Installed with the other hooks through `core.hooksPath` (agent_setup.sh sets it;
+# so does the root package.json "prepare" script in the TS track). Bypass only for
+# a reason you can state:
+#   git push --no-verify
+
+zero=0000000000000000000000000000000000000000
+
+hooks_dir=$(cd "$(dirname "$0")" 2>/dev/null && pwd) || hooks_dir=""
+
+# stdin is read once; the guards loop and pre-push.local both get the same lines.
+stdin_file=$(mktemp 2>/dev/null) || stdin_file=""
+if [ -n "$stdin_file" ]; then
+  trap 'rm -f "$stdin_file"' EXIT
+  cat > "$stdin_file"
+else
+  stdin_file=/dev/null
+fi
+
+# Runs the project's own pre-push.local, if there is one; a failure ends the push.
+run_local() {
+  [ -n "$hooks_dir" ] && [ -f "$hooks_dir/pre-push.local" ] || return 0
+  if [ -x "$hooks_dir/pre-push.local" ]; then
+    "$hooks_dir/pre-push.local" "$@" < "$stdin_file"
+  else
+    sh "$hooks_dir/pre-push.local" "$@" < "$stdin_file"
+  fi || {
+    echo "pre-push: blocked by pre-push.local." >&2
+    exit 1
+  }
+}
+
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+cd "$repo_root" || exit 0
+
+if [ ! -d scripts/delivery ]; then
+  echo "pre-push: scripts/delivery/ is absent; the branch-gate guards were NOT run." >&2
+  echo "  Add the delivery scripts (see STACKSPEC 13.5), or this warning stays." >&2
+  run_local "$@"
+  exit 0
+fi
+
+# Python 3.11 or newer, as `python3` or `python`.
+py=""
+for candidate in python3 python; do
+  if command -v "$candidate" >/dev/null 2>&1 &&
+     "$candidate" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' >/dev/null 2>&1; then
+    py=$candidate
+    break
+  fi
+done
+
+fail=0
+checked=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -n "$local_ref" ] || continue
+  [ "$local_sha" = "$zero" ] && continue          # deleting a ref
+  case "$remote_ref" in
+    refs/heads/*) ;;
+    *) continue ;;                                 # tags, gate results, notes
+  esac
+
+  if [ -z "$py" ]; then
+    echo "pre-push: blocked. scripts/delivery/ is present but Python 3.11+ was not found." >&2
+    echo "  Run scripts/delivery/agent_setup.sh to install it, or push with --no-verify." >&2
+    exit 1
+  fi
+
+  checked=$((checked + 1))
+  base_args=""
+  if [ "$remote_sha" != "$zero" ] && git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then
+    base_args="--base-ref $remote_sha"            # only what this push adds
+  fi
+  # stdin is the ref list; guards must not read it.
+  # shellcheck disable=SC2086
+  if ! "$py" scripts/delivery/fast_guards.py $base_args </dev/null; then
+    fail=1
+  fi
+done < "$stdin_file"
+
+if [ "$fail" -ne 0 ]; then
+  echo "pre-push: blocked. Fix the failing guard above, or run: $py scripts/delivery/fast_guards.py" >&2
+  exit 1
+fi
+run_local "$@"
+exit 0

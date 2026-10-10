@@ -10,7 +10,8 @@ already gated.
 tooling/
 ├── shared/     copied for every product, whatever the track
 │   ├── .gitleaks.toml
-│   └── .githooks/pre-commit
+│   ├── .githooks/pre-commit
+│   └── scripts/delivery/   branch gate, CI watch and skip, reach check
 ├── ts/         TypeScript / Node
 ├── go/         Go
 ├── rust/       Rust
@@ -69,7 +70,7 @@ report, and every pull request hangs.
 
 | Track | Required checks |
 |---|---|
-| ts | `lint, types, boundaries, unit + contract tests` · `integration tests (ephemeral Postgres)` |
+| ts | `lint, types, boundaries, unit + contract tests` · `integration tests (ephemeral Postgres)` · `web E2E (§11.2)` |
 | go | `lint, vet, boundaries, unit + contract tests` · `integration tests (ephemeral database)` |
 | rust | `clippy, fmt, build, unit + contract tests` · `integration tests (ephemeral database)` |
 | dotnet | `analyzers, format, build, unit + contract tests` · `integration tests (ephemeral database)` |
@@ -77,8 +78,12 @@ report, and every pull request hangs.
 Renaming a job's `name:` renames its check; update branch protection in the same
 change.
 
-- **E2E is advisory.** The TS track's `web E2E (advisory, §11.2)` must not be
-  required.
+- **E2E gates.** The TS track's `web E2E (§11.2)` is required: `§11.2` makes
+  end-to-end tests of the critical web journeys fail a ready pull request. A
+  flaky spec is quarantined, not retried (see below).
+- **`decide: skip a tree already tested` is not required.** It exists to skip
+  work and gates nothing. Requiring it would also hang pull requests, where it
+  never runs.
 - **Drafts report as skipped.** Draft pull requests skip every job; drafts cannot
   merge, and marking the PR ready (`ready_for_review`) re-runs CI.
 - **No `secret scan` check any more.** The secret scan is a step in the `verify`
@@ -91,14 +96,63 @@ GitHub bills each job rounded up to a whole minute, so the templates cut minutes
 without dropping a `§13.1` gate (`§13.1`'s CI-cost clause):
 
 - **Fewer jobs.** The secret scan is a step in `verify`, run first so a leak
-  fails fast. Its job-level `pull-requests: read` fixes a 403 gitleaks-action hit
-  on pull requests under the workflow-level `contents: read`.
+  fails fast. It installs the gitleaks release pinned in
+  `scripts/delivery/tools.json` (checksum verified) rather than an unpinned
+  action, so CI runs the scanner the agent setup script installed (`§13.5`).
 - **Caching.** Go and Rust use their setup/cache actions; .NET caches NuGet on
   `packages.lock.json`; TS caches turbo's `.turbo` results (sound because `§2.2`
   requires every env var a task reads to be declared in `turbo.jsonc`).
 - **Cancel superseded runs, only on pull requests.** Runs on `main` always finish.
 - **Skip drafts.** `types` includes `ready_for_review`; every job is guarded by a
   draft check.
+- **Skip a tree already tested.** See the next section.
+
+## The `decide` job
+
+A push to `main` must not repeat a suite that already passed (`§13.1`). Each
+`ci.yml` starts with `decide: skip a tree already tested`, which runs only on
+`push`, runs `scripts/delivery/ci_skip_check.py`, and outputs `skip`. The script
+finds the pull request merged as this commit and its head, and a successful
+`pull_request` run of this same workflow file for that head. If the two commits
+have the same git **tree**, `skip=true` and every other job is skipped; a merge
+that changed anything, no pull request, a failed or all-skipped run, or any error
+at all gives `skip=false` and the suite runs. It fails open, never closed.
+
+Every other job has `needs: decide` and
+`if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}`.
+`!cancelled()` is what lets pull requests run: there `decide` is skipped, and a
+skipped dependency would otherwise skip its dependents too. `decide` needs
+`actions: read` and `pull-requests: read` besides `contents: read`, and a full
+checkout so the pull-request head commit can be fetched.
+
+## E2E and the quarantine list (TS)
+
+`web E2E (§11.2)` runs on every ready pull request with no `continue-on-error`.
+Specs listed in `e2e/quarantine.json` are the exception:
+
+```json
+[{"spec": "tests/checkout.spec.ts", "owner": "name", "since": "2026-10-10", "reason": "flaky on slow runners"}]
+```
+
+`playwright.config.ts` reads the list. By default it ignores the quarantined
+specs, so everything else gates; with `E2E_QUARANTINE=only` it runs only them, in
+a separate `continue-on-error` step, so they still run and report but cannot fail
+the build. Retries stay at 0: `§11.3` says a flaky spec is quarantined and fixed,
+never re-run until green. An entry without an owner, a date and a reason is
+rejected by the config.
+
+## Delivery scripts used by CI and agents
+
+Copied to `scripts/delivery/` (see `shared/scripts/delivery/CONTRACT.md`):
+
+- `ci_skip_check.py`: the `decide` job's script, above.
+- `ci_watch.py SHA`: waits for the workflow runs of one commit and exits 0, 1 (it
+  prints the failed jobs), or 4 (timeout). It reads workflow runs, never a pull
+  request's check list, which can be read before the new run is listed
+  (`§13.6`). Use it after pushing the ready pull request's head.
+- `reach_check.py URL...`: GETs each URL from where it runs and prints status or
+  error. Run it in an agent sandbox before relying on a registry, API or preview
+  host being reachable.
 
 ## Adapting a track
 
@@ -113,10 +167,10 @@ Two things to change before first use:
 
 ## What is not here
 
-**E2E tests.** `§11.2` makes them `SHOULD`, not gated. The TS track carries a
-Playwright config as a starting point; no track gates on it. Where E2E is not
-automated, `§11.2` requires the release checklist to name the manual journeys
-verified before each release.
+**E2E specs and other tracks' E2E.** The TS track gates on Playwright (above) but
+ships no specs: the journeys are the product's. The other tracks have no web E2E
+job; where mobile journeys are not automated, `§11.2` requires the release
+checklist to name the manual journeys verified before each release.
 
 **Mobile CI.** `§13.3` needs macOS runners for iOS and its own path filters.
 Generated per-product, because signing material and store configuration are

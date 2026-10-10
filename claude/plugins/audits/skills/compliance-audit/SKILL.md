@@ -1,5 +1,7 @@
 ---
 description: Advanced, production-grade regulatory and data privacy compliance audit of the current repo. Grounded in GDPR, CCPA/CPRA, HIPAA, SOC 2 Type II, NIST SP 800-53 Rev. 5, FedRAMP High, and NIS2 frameworks. Produces severity-ranked, statutory-mapped engineering findings. Does not auto-fix. Use when the user requests a compliance audit, privacy review, GDPR assessment, or invokes /luismc-audits:compliance-audit.
+model: opus
+effort: high
 ---
 
 # Expert-Level Regulatory & Data Privacy Compliance Audit

@@ -31,19 +31,45 @@ permissions:
 
 jobs:
   # ---------------------------------------------------------------------------
+  # §13.1: a push to the default branch must not repeat a suite that already
+  # passed. When this commit's tree equals the tree of a pull-request head whose
+  # run of this workflow passed, `skip` is true and every job below is skipped.
+  # Any doubt, or any error, leaves `skip` false and the suite runs. Pull
+  # requests never run this job; `!cancelled()` on the jobs below lets them run
+  # when `decide` is skipped. Not a required check: it never gates anything.
+  # ---------------------------------------------------------------------------
+  decide:
+    name: 'decide: skip a tree already tested'
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The pull-request head commit must be present to compare trees.
+          fetch-depth: 0
+
+      - name: Has this tree already passed?
+        id: check
+        run: python3 scripts/delivery/ci_skip_check.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  # ---------------------------------------------------------------------------
   # Static gates: everything that needs no database.
   # ---------------------------------------------------------------------------
   verify:
     name: lint, vet, boundaries, unit + contract tests
-    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    needs: decide
+    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ubuntu-latest
-    # gitleaks-action lists a PR's commits through the API. With only the
-    # workflow-level `contents: read` that call returns 403 and the job fails
-    # before scanning anything. Job-level permissions replace the workflow
-    # block rather than merge with it, so `contents: read` is repeated here.
     permissions:
       contents: read
-      pull-requests: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -58,10 +84,22 @@ jobs:
       # A step in this job, not a job of its own: a scan that takes a few seconds
       # would still bill a full minute as a separate job. It runs first so a
       # leaked secret fails fast, before the slow gates below.
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
+      # Installed from the release archive at the version pinned in
+      # scripts/delivery/tools.json, checksum verified, so CI runs the scanner
+      # the agent setup script installed locally (§13.5). `gitleaks git` with no
+      # log options scans the whole history, which `fetch-depth: 0` provides.
+      - name: Secret scan (gitleaks, full history)
+        run: |
+          version="$(python3 -c "import json; print(json.load(open('scripts/delivery/tools.json'))['gitleaks'])")"
+          archive="gitleaks_${version}_linux_x64.tar.gz"
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${version}"
+          cd "$RUNNER_TEMP"
+          curl -sSfL -O "${base}/${archive}"
+          curl -sSfL -O "${base}/gitleaks_${version}_checksums.txt"
+          grep " ${archive}\$" "gitleaks_${version}_checksums.txt" | sha256sum -c -
+          tar -xzf "${archive}" gitleaks
+          cd "$GITHUB_WORKSPACE"
+          "$RUNNER_TEMP/gitleaks" git --config .gitleaks.toml --redact --no-banner
 
       # §2.2: the toolchain version is pinned in the repository, not inherited
       # from the machine. go.mod's `toolchain` directive is that pin, and
@@ -157,7 +195,8 @@ jobs:
   # ---------------------------------------------------------------------------
   integration:
     name: integration tests (ephemeral database)
-    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    needs: decide
+    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ubuntu-latest
     services:
       postgres:

@@ -1,0 +1,5 @@
+# Scripts and hooks must keep LF: a CRLF checkout on Windows breaks them.
+* text=auto
+*.sh text eol=lf
+.githooks/* text eol=lf
+scripts/delivery/*.py text eol=lf

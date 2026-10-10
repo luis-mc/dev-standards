@@ -21,7 +21,27 @@ export default defineConfig({
         test: {
           name: 'unit',
           include: ['packages/*/src/**/*.test.ts'],
-          exclude: ['packages/*/src/**/*.integration.test.ts'],
+          exclude: [
+            'packages/*/src/**/*.integration.test.ts',
+            // Guard tests belong to the `guard` project below, never to a
+            // package-scoped run.
+            'packages/*/src/**/*.guard.test.ts',
+          ],
+          environment: 'node',
+          passWithNoTests: false,
+        },
+      },
+      {
+        // §13.5 guard tests: each scans the source or the specs as a whole
+        // (conflict markers, retired vocabulary, design rules, duplication
+        // ratchets). The branch gate and the pre-push hook run this project
+        // whatever changed, because scoping a guard by package lets a change
+        // elsewhere break it unseen. Add a guard by adding a `*.guard.test.ts`
+        // file anywhere; `guards/no-conflict-markers.guard.test.ts` is the
+        // starter, and keeps this project from ever finding zero tests.
+        test: {
+          name: 'guard',
+          include: ['**/*.guard.test.ts'],
           environment: 'node',
           passWithNoTests: false,
         },

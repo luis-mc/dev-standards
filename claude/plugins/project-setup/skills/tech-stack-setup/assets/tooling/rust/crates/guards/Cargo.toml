@@ -1,0 +1,12 @@
+# Repository-wide guard tests (STACKSPEC 13.5). Add `crates/guards` to the
+# workspace `members`. The branch gate and the pre-push hook run every test whose
+# name contains `guard_` (`cargo test --workspace guard_`) whatever changed, so a
+# guard scans the repository as a whole and is never scoped by crate.
+[package]
+name = "guards"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+doctest = false
