@@ -1,5 +1,9 @@
 [
   {
+    "date": "10 Oct 14:45",
+    "change": "luismc-artifacts 1.0.0 released (#18). dev-standards now keeps these artifacts with the plugin: the record converted (AR17), the interim generator retired. Two secret-scan fixes followed on main (AR19, DS16)."
+  },
+  {
     "date": "10 Oct 13:40",
     "change": "AR7 and AR15 done and joined; every part of the plugin is on AR12-integration. AR17 added: dev-standards moves onto the plugin as the real-repo test. Release now expected about 15:30."
   },

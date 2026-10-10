@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T14:05+01:00",
+  "updated": "2026-10-10T14:45+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -106,11 +106,11 @@
       "id": "AR12",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Integrate and release",
-      "detail": "All parts joined on AR12-integration; full local suite running; the real-repo test converts dev-standards’ own record on a scratch clone (AR17). Then one ready PR to main, merged on green.",
-      "expected": "10 Oct ~15:30",
-      "changed": "2026-10-10T14:05+01:00"
+      "detail": "Released as luismc-artifacts 1.0.0, ARTIFACTSPEC 1.0.0 and luismc-project-setup 12.1.0 in one ready PR (#18, 3a5ad29), merged on green after a Linux-only test fix.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T14:45+01:00"
     },
     {
       "id": "AR14",
