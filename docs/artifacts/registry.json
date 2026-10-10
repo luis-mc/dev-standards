@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T20:59+01:00",
+  "updated": "2026-10-10T21:06+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -191,6 +191,16 @@
       "detail": "Rule and ARTIFACTSPEC 1.1.0: all work, the session's own included (contracts, reviews, joins, test runs, releases, cleanup), is a task row before it starts and stays Running while it runs; Done means nothing is left. The plugin delivers its rule to every project it is installed in at each session start, so an installed project never keeps an old copy; the end-of-turn hook blocks a turn that starts background work with no Running task. Rides the train after 7.0.0.",
       "expected": "10 Oct ~22:45",
       "changed": "2026-10-10T20:58+01:00"
+    },
+    {
+      "id": "AR22",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "Decisions show every option and the owner's choice",
+      "detail": "Rule and ARTIFACTSPEC 1.1.0: when the owner chooses between options (designs, approaches, names), the feature artifact shows every option offered, with its preview, the recommended one, the one the owner chose (marked, dated, in their words when given) and the ones not chosen; an open choice shows as Needs you. Decisions are structured data the renderer draws and check validates, not free HTML.",
+      "expected": "10 Oct ~23:00",
+      "changed": "2026-10-10T21:06+01:00"
     },
     {
       "id": "DS1",
