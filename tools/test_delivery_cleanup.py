@@ -44,6 +44,13 @@ GATE_JSON = {
     "steps": [{"name": "guards", "scope": "always", "run": "true"}],
 }
 
+def exit_is(t: T, label: str, r, want: int) -> bool:
+    """Check an exit code; on a mismatch the detail carries the script's own output."""
+    return t.check(label, r.code == want,
+                   "expected exit %d, got %d\n--- stderr ---\n%s\n--- stdout ---\n%s"
+                   % (want, r.code, r.err.strip(), r.out.strip()[:600]))
+
+
 # --------------------------------------------------------------------------
 # stub gh
 # --------------------------------------------------------------------------
@@ -120,10 +127,35 @@ class Stub:
         return n
 
     def env(self, with_gh: bool = True) -> dict:
-        dirs = [d for d in os.environ.get("PATH", "").split(os.pathsep)
-                if d and not any((Path(d) / n).exists() for n in ("gh", "gh.exe", "gh.cmd"))]
-        path = os.pathsep.join(([str(self.dir)] if with_gh else []) + dirs)
-        return {"PATH": path, "GH_STUB_FIXTURE": str(self.fixture), "GH_STUB_LOG": str(self.log), "PYTHONUTF8": "1"}
+        extra: dict = {}
+        if with_gh:  # the stub's directory comes first, so it shadows any real gh
+            path = os.pathsep.join([str(self.dir), os.environ.get("PATH", "")])
+        else:
+            path, extra = self._path_without_gh()
+        return {"PATH": path, "GH_STUB_FIXTURE": str(self.fixture), "GH_STUB_LOG": str(self.log),
+                "PYTHONUTF8": "1", **extra}
+
+    def _path_without_gh(self) -> tuple[str, dict]:
+        """A PATH on which `gh` cannot be found but git still can. A directory that
+        holds both (/usr/bin on a Linux runner) cannot simply be dropped: git would go
+        with it. On POSIX the tools git needs are linked into a directory of their own;
+        on Windows (Git for Windows keeps git and gh apart) the offending directories
+        are dropped."""
+        def has_gh(d: str) -> bool:
+            return any((Path(d) / n).exists() for n in ("gh", "gh.exe", "gh.cmd"))
+
+        dirs = [d for d in os.environ.get("PATH", "").split(os.pathsep) if d]
+        kept = [d for d in dirs if not has_gh(d)]
+        if os.name == "nt" or len(kept) == len(dirs):
+            return os.pathsep.join(kept), {}
+        bin_dir = self.dir / "nogh-bin"
+        bin_dir.mkdir(exist_ok=True)
+        for tool in ("git", "sh"):
+            found = shutil.which(tool)
+            if found and not (bin_dir / tool).exists():
+                (bin_dir / tool).symlink_to(found)
+        exec_path = run(["git", "--exec-path"]).out.strip()
+        return os.pathsep.join([str(bin_dir), *kept]), {"GIT_EXEC_PATH": exec_path}
 
     def calls(self) -> list[list[str]]:
         if not self.log.exists():
@@ -304,7 +336,7 @@ def sc_classify(t: T, shared: Path) -> None:
     w.g("checkout", "-q", "main")
 
     r, rows = w.rows("--remote-only")
-    t.eq("exit 0 although branches were kept", r.code, 0)
+    exit_is(t, "exit 0 although branches were kept", r, 0)
     for b in ("feat/a", "integ", "feat/d1"):
         t.eq("finished (merged pull request): %s" % b, status(rows, b), "deleted")
     t.eq("finished (b): closed draft contained in a finished integration branch", status(rows, "feat/d2"), "deleted")
@@ -346,7 +378,7 @@ def sc_gh_failure(t: T, shared: Path) -> None:
     s.save()
     before = w.snapshot()
     r, rows = w.rows()
-    t.eq("gh down: exit 0 (nothing decided is not a failure)", r.code, 0)
+    exit_is(t, "gh down: exit 0 (nothing decided is not a failure)", r, 0)
     t.check("gh down: the branch is kept", is_kept(rows, "feat/x", "cannot classify"), status(rows, "feat/x"))
     t.eq("gh down: nothing removed anywhere", w.snapshot(), before)
     s.fx["all_error"] = False
@@ -373,7 +405,7 @@ def sc_default_branch(t: T, shared: Path) -> None:
         for flags in ([], ["--remote-only"], ["--local"]):
             tag = "%s, %s" % (label, " ".join(flags) or "no flag")
             r, rows = w.rows(*flags)
-            t.eq("%s: exit 0" % tag, r.code, 0)
+            exit_is(t, "%s: exit 0" % tag, r, 0)
             t.check("%s: the default branch is never a candidate" % tag, "main" not in rows, str(sorted(rows)))
             t.check("%s: main still on the remote and local" % tag,
                     "main" in w.remote_heads() and "main" in w.local_branches())
@@ -395,7 +427,7 @@ def sc_failed_deletion(t: T, shared: Path) -> None:
     w.stub.pr("feat/a", "MERGED", a)
     w.stub.pr("feat/keepme", "MERGED", k)
     r, rows = w.rows("--remote-only")
-    t.eq("a deletion the remote refuses: exit 1", r.code, 1)
+    exit_is(t, "a deletion the remote refuses: exit 1", r, 1)
     t.check("... that row says failed", rows.get("feat/keepme", {}).get("status") == "failed", status(rows, "feat/keepme"))
     t.eq("... and the other branch was still deleted", status(rows, "feat/a"), "deleted")
     t.eq("... the refused branch is still there", "feat/keepme" in w.remote_heads(), True)
@@ -421,17 +453,17 @@ def sc_pr(t: T, shared: Path) -> None:
     s.save()
     before = w.snapshot()
     r = w.cleanup("--pr", "8")
-    t.eq("--pr of a pull request that is not merged: exit 2", r.code, 2)
+    exit_is(t, "--pr of a pull request that is not merged: exit 2", r, 2)
     t.has("... says why", r.text, "not merged")
     r = w.cleanup("--pr", "9")
-    t.eq("--pr of a pull request merged into an integration branch: exit 2", r.code, 2)
+    exit_is(t, "--pr of a pull request merged into an integration branch: exit 2", r, 2)
     t.has("... says it is not the default branch", r.text, "default branch")
     r = w.cleanup("--pr", "999")
-    t.eq("--pr of an unknown pull request: exit 2", r.code, 2)
+    exit_is(t, "--pr of an unknown pull request: exit 2", r, 2)
     t.eq("refusals removed nothing", w.snapshot(), before)
 
     r, rows = w.rows("--remote-only", "--pr", str(n))
-    t.eq("--pr N (merged into the default branch): exit 0", r.code, 0)
+    exit_is(t, "--pr N (merged into the default branch): exit 0", r, 0)
     t.eq("the train is exactly the head branch and the branches that had it as base",
          sorted(rows), ["feat/d1", "feat/d2", "integ"])
     t.eq("remote: the train is gone, a finished branch outside it is not",
@@ -458,7 +490,7 @@ def sc_modes(t: T, shared: Path) -> None:
     w.stub.pr("feat/b", "MERGED", b)
     w.result_ref("feat/a")
     r = w.cleanup("--local", "--remote-only")
-    t.eq("--local with --remote-only: exit 2", r.code, 2)
+    exit_is(t, "--local with --remote-only: exit 2", r, 2)
 
     r, rows = w.rows("--remote-only")
     t.eq("--remote-only: remote branches removed", "feat/a" in w.remote_heads() or "feat/b" in w.remote_heads(), False)
@@ -495,7 +527,7 @@ def sc_dry_run(t: T, shared: Path) -> None:
     w.stub.pr("feat/open", "OPEN", w.tip("feat/open"))
     before = w.snapshot()
     r, rows = w.rows("--dry-run")
-    t.eq("--dry-run: exit 0", r.code, 0)
+    exit_is(t, "--dry-run: exit 0", r, 0)
     t.eq("--dry-run: a finished branch is 'would delete'", status(rows, "feat/a"), "would delete")
     t.check("--dry-run: the row names what would go",
             all(x in rows["feat/a"]["removed"] for x in ("remote branch", "gate-result ref", "local branch")),
@@ -539,7 +571,7 @@ def sc_worktrees(t: T, shared: Path) -> None:
     main_head = w.g("rev-parse", "HEAD")
 
     r, rows = w.rows("--local")
-    t.eq("exit 0 with worktrees kept", r.code, 0)
+    exit_is(t, "exit 0 with worktrees kept", r, 0)
     t.eq("clean worktree on a finished branch: removed", (status(rows, "agent/clean"), paths["clean"].exists()),
          ("deleted", False))
     t.eq("... and its branch", "agent/clean" in w.local_branches(), False)
@@ -620,7 +652,7 @@ def sc_local_without_gh(t: T, shared: Path) -> None:
     w.g("push", "-q", "origin", "--delete", "feat/gone")
     before = w.snapshot()
     r, rows = w.rows("--local", gh=False)
-    t.eq("no gh, --local: exit 0", r.code, 0)
+    exit_is(t, "no gh, --local: exit 0", r, 0)
     t.eq("no gh: a branch whose upstream is gone is finished", status(rows, "feat/gone"), "deleted")
     t.eq("... branch and worktree removed", ("feat/gone" in w.local_branches(), "gone" in w.worktrees()), (False, False))
     t.check("no gh: a branch whose upstream exists is kept", is_kept(rows, "feat/live"), status(rows, "feat/live"))
@@ -666,7 +698,7 @@ def sc_join_cleanup(t: T, shared: Path) -> None:
     box.g("worktree", "add", "-q", str(wt), "agent/old")
     box.gated("feat/a", {"apps/web/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
     r = box.script("join.py", "--into", "integ", "feat/a", env=stub.env())
-    t.eq("join with a finished local branch: exit 0", r.code, 0)
+    exit_is(t, "join with a finished local branch: exit 0", r, 0)
     t.eq("... cleanup.py --local ran before the join: worktree and branch gone",
          (wt.exists(), "agent/old" in box.g("branch", "--format=%(refname:short)").split()), (False, False))
     t.check("... and it ran before the first fetch (gh was asked before any merge)", len(stub.calls()) > 0)
@@ -676,7 +708,7 @@ def sc_join_cleanup(t: T, shared: Path) -> None:
     box = join_box(shared, "import sys\nprint('cleanup exploded', file=sys.stderr)\nsys.exit(2)\n")
     box.gated("feat/a", {"apps/web/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
     r = box.script("join.py", "--into", "integ", "feat/a")
-    t.eq("cleanup.py exits 2: the join still succeeds", r.code, 0)
+    exit_is(t, "cleanup.py exits 2: the join still succeeds", r, 0)
     t.has("... and says it went on", r.text, "going on")
     t.eq("... and joined", box.g("log", "--merges", "--format=%s", "integ").splitlines(), ["Join feat/a"])
 
@@ -684,7 +716,7 @@ def sc_join_cleanup(t: T, shared: Path) -> None:
     box = join_box(shared)
     box.gated("feat/a", {"apps/web/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
     r = box.script("join.py", "--into", "integ", "feat/a", env=Stub().env(with_gh=False))
-    t.eq("join without gh: exit 0", r.code, 0)
+    exit_is(t, "join without gh: exit 0", r, 0)
 
 
 # --------------------------------------------------------------------------
