@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T14:50+01:00",
+  "updated": "2026-10-10T15:19+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -176,11 +176,11 @@
       "id": "AR20",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "mark-published leaves the registry alone",
-      "detail": "Found in first real use: marking the full-progress artifact published bumped the registry's updated time, which the artifact embeds, so check failed right after publishing. A Sonnet agent is fixing it with a regression test; ready PR to main.",
-      "expected": "10 Oct ~15:30",
-      "changed": "2026-10-10T14:49+01:00"
+      "detail": "mark-published, design set, edit-content, render and feature-new no longer bump the registry, so the full-progress artifact stays clean after publishing; three regression tests. dev-standards also got its rule file and gitignore entries. #21.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T15:19+01:00"
     },
     {
       "id": "DS1",
