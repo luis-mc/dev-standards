@@ -11,6 +11,11 @@
       "description": "Shared custom agents (e.g. architect) for hard design judgment calls and audit-finding review, available across any project."
     },
     {
+      "name": "luismc-artifacts",
+      "source": "./claude/plugins/artifacts",
+      "description": "Project artifacts generated from a record in the repository: a feature artifact per feature and one full-progress artifact per project, kept current by a script, hooks and five skills, to ARTIFACTSPEC."
+    },
+    {
       "name": "luismc-audits",
       "source": "./claude/plugins/audits",
       "description": "Security, performance, and compliance audit skills (security-audit, performance-audit, compliance-audit) — systematic checklists producing severity-ranked findings, no auto-fix."

@@ -1,0 +1,51 @@
+{
+  "description": "luismc-artifacts: queue status events after commands, keep project artifacts published at the end of a turn, catch up at session start (ARTIFACTSPEC section 8)",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_after_command.py\" || python \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_after_command.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_after_command.py\" || python \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_after_command.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_end_of_turn.py\" || python \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_end_of_turn.py\"",
+            "timeout": 120
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_session_start.py\" || python \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_session_start.py\"",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

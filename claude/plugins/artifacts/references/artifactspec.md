@@ -417,7 +417,7 @@ All three hooks are registered in the plugin's `hooks/hooks.json`, run
 project has no `docs/artifacts/manifest.json` in the current checkout or on
 `origin/<default branch>`.
 
-### 8.1 After-command hook (PostToolUse, Bash)
+### 8.1 After-command hook (PostToolUse and PostToolUseFailure, Bash)
 
 Reads the hook input; takes the task ID from the current branch name
 (`^([A-Z]{2,5}[0-9]+)-`); on a matching command, appends an event to the queue
@@ -428,7 +428,7 @@ Reads the hook input; takes the task ID from the current branch name
 |---|---|
 | `gh pr create` | Running |
 | `gh pr ready` | Waiting |
-| `gh pr merge` | `merged_status` |
+| `gh pr merge` (not `--auto`, which only schedules) | `merged_status` |
 | `scripts/delivery/ci_watch.py`, `gh run watch` with exit ≠ 0 | Failed |
 | `scripts/delivery/ci_watch.py`, `gh run watch` with exit 0 | Waiting |
 | a production deploy (`vercel deploy --prod`, `fly deploy`, `wrangler deploy`, `firebase deploy`) | Live |
@@ -492,8 +492,8 @@ Reads the hook input; takes the task ID from the current branch name
   a marketplace the owner registered differently enables nothing.
 - **R10.2** — Installing creates no file in the project. The first
   `feature-new` or `init` copies `rules/project-artifacts.md` to
-  `.claude/rules/project-artifacts.md` and adds `.claude/artifacts-queue.json`
-  and `.claude/worktrees/` to `.gitignore`.
+  `.claude/rules/project-artifacts.md` and adds `.claude/artifacts-queue.json`,
+  `.claude/artifacts-stop-state.json` and `.claude/worktrees/` to `.gitignore`.
 - **R10.3** — The rule file holds one short imperative line per rule: record
   work as a task before starting it; start branch names with the task ID;
   change status only with `set-task-status`; publish what `pending` lists in
@@ -522,7 +522,7 @@ Reads the hook input; takes the task ID from the current branch name
 |---|---|---|---|---|
 | `merged_status` | `Live` | — | `Live` or `Done` | §8.1 |
 | Earlier fold age | 14 days | 60 days | may only be lengthened | §6.2 |
-| End-of-turn blocks | 3 | 5 | may only be lowered | §8.2 |
+| End-of-turn blocks | 3 | 3 | fixed | §8.2 |
 | Push retries | 3 | 5 | — | §4.6 |
 | `CLAUDE_ARTIFACTS_HOOKS` | `on` | — | `off` disables all hooks | §8 |
 
