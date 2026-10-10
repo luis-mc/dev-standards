@@ -218,9 +218,9 @@
       "app": "luismc-artifacts",
       "status": "Running",
       "item": "Integrate and release luismc-artifacts 1.1.0",
-      "detail": "AR21/AR25, AR22 and AR26 joined into AR21-integration (conflicts in the spec, rule, script and plugin.json resolved, both sides kept). Ready PR #33 open; CI running, watched by commit. Then merge on green, apply AR23, migrate this repo's record, delete the two claude.ai feature artifacts with your confirmation.",
-      "expected": "11 Oct ~00:30",
-      "changed": "2026-10-10T23:08+01:00"
+      "detail": "Merged: PR #33 squash 054eafb at 23:20, CI green. Migrating this repo's record to 1.1.0 is blocked by AR27; then AR23 is applied, the record re-rendered, and the two claude.ai feature artifacts deleted with your confirmation.",
+      "expected": "11 Oct ~01:00",
+      "changed": "2026-10-10T23:13+01:00"
     },
     {
       "id": "AR25",
