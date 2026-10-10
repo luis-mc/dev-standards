@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T23:33+01:00",
+  "updated": "2026-10-11T00:00+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -248,9 +248,9 @@
       "app": "luismc-artifacts",
       "status": "Running",
       "item": "Repair a record one artifact at a time",
-      "detail": "Found migrating this repo to 1.1.0: every writing command refuses while the record has any finding, so two hand-written Decisions sections block each other's fix and the record cannot be migrated (even task-add is refused). Fix: a change may leave findings that were already there but may not add new ones. Recorded with the 1.0.0 script meanwhile.",
-      "expected": "11 Oct ~00:45",
-      "changed": "2026-10-10T23:13+01:00"
+      "detail": "Built (PR #36, 27548a0): a change may leave earlier findings but may not add new ones; the two-Decisions deadlock now repairs in two edit-content runs; plugin 1.1.1. 144 + 68 + 91 tests on Windows and Linux. PR marked ready; CI running, watched by commit; merge on green.",
+      "expected": "11 Oct ~00:30",
+      "changed": "2026-10-11T00:00+01:00"
     },
     {
       "id": "AR28",
