@@ -76,11 +76,11 @@
       "id": "AR9",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Tests and CI",
-      "detail": "Renderer 57 tests, hooks 47 tests and the spec-lint steps are in; the script tests come with AR7.",
-      "expected": "10 Oct ~16:30",
-      "changed": "2026-10-10T14:05+01:00"
+      "detail": "Script 105, renderer 57 and hook 47 tests, each check proven by a fixture; spec-lint runs them on main and ready PRs. Released in #18.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T14:46+01:00"
     },
     {
       "id": "AR10",
