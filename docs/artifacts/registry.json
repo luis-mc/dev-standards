@@ -126,11 +126,11 @@
       "id": "AR15",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "Repo record and recreate",
-      "detail": "The record in docs/artifacts and recreation without duplicates, built into project_artifacts.py; joined with AR7.",
+      "detail": "The record in docs/artifacts and recreation without duplicates, built into project_artifacts.py. Released in #18.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T14:46+01:00"
     },
     {
       "id": "AR16",
