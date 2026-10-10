@@ -2,8 +2,8 @@
 <meta name="artifact-kind" content="feature-artifact">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600;700&display=swap">
-<style>/*
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Public+Sans:wght@400;500;600;700&amp;display=swap">
+<style id="design-tokens">/*
   Default design for project artifacts.
 
   Layout concept: Spec sheet: a contents rail on the left, numbered sections, the status checklist first.
@@ -85,8 +85,8 @@
   --focus: #8EA2FF;
   color-scheme: dark;
 }
-
-/*
+</style>
+<style id="structure-css">/*
   Structure stylesheet for project artifacts.
   Fixed for every project. It uses design tokens only and never holds a colour.
   Tokens come from the project's design file, or design/default-design.css.
@@ -315,6 +315,7 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
   line-height: 1.4;
 }
 table.status-checklist td:first-child { white-space: nowrap; }
+table.status-checklist td code { white-space: nowrap; overflow-wrap: normal; }
 tr.status-group td {
   background: var(--paper);
   font-family: var(--font-mono);
@@ -325,6 +326,20 @@ tr.status-group td {
   padding-top: 1em;
 }
 table.history-table td:first-child { font-family: var(--font-mono); white-space: nowrap; }
+
+/* Earlier fold: Live or done rows older than the fold age, closed by default */
+details.earlier { margin: .9em 0; }
+details.earlier > summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink-muted);
+  padding: .5em 0;
+}
+details.earlier > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+details.earlier[open] > summary { margin-bottom: .2em; }
 
 .task-id {
   font-family: var(--font-mono);
@@ -432,29 +447,32 @@ li { margin: .25em 0; }
   nav.contents a.current { border-color: var(--signal); }
 }
 </style>
+<style id="extra-css"></style>
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>Decisions</a><a href="#s7"><b>7</b>What the review changed</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact &middot; default design</div></header>
-<section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2><p class="last-update">Last update: <time datetime="2026-10-10T12:46+01:00">10 Oct 12:46</time> (Lisbon)</p>
-<p class="lede">The design is agreed and the default design is built (AR14). <strong>Nothing needs you</strong> on this feature. The spec is written (AR5); three Sonnet agents are building the renderer, the script and the hooks. Merge on green at about 17:15. Every task here is also on <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">Full Progress: dev-standards</a>.</p>
-<div class="status-count-tiles"><div class="status-count-tile status-done"><div class="count">6</div><div class="label">done</div></div><div class="status-count-tile status-running"><div class="count">4</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">4</div><div class="label">to do</div></div></div>
+<header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
+<section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
+<p class="last-update">Last update: <time datetime="2026-10-10T13:44+01:00">10 Oct 13:44</time> (Lisbon)</p>
+<p class="lede">The design is agreed and the default design is built (AR14). The spec is written (AR5); three Sonnet agents are building the renderer, the script and the hooks. Merge on green at about 15:30. Every task here is also on <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">Full Progress: dev-standards</a>. <strong>Nothing needs you.</strong></p>
+<div class="status-count-tiles"><div class="status-count-tile status-done"><div class="count">12</div><div class="label">done</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-done">Done</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next, earliest first</strong></td></tr>
-<tr data-task="AR6"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">AR6</span>Templates</td><td>render_artifacts.py, the two templates and the HTML checks; a Sonnet agent on AR6-templates.</td><td>10 Oct ~15:30</td></tr>
-<tr data-task="AR7"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">AR7</span>project_artifacts.py</td><td>project_artifacts.py: the record worktree, every command, pending and mark-published, the record checks; a Sonnet agent on AR7-project-artifacts.</td><td>10 Oct ~15:30</td></tr>
-<tr data-task="AR8"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">AR8</span>Hooks</td><td>The after-command, end-of-turn and session-start hooks and hooks/hooks.json; a Sonnet agent on AR8-hooks.</td><td>10 Oct ~15:30</td></tr>
-<tr data-task="AR9"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR9</span>Tests and CI</td><td>A fixture per check that proves it fires, hook tests, spec-lint.yml path filters.</td><td>10 Oct ~16:30</td></tr>
-<tr data-task="AR10"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR10</span>Skills and rule file</td><td>The five skills and .claude/rules/project-artifacts.md.</td><td>10 Oct ~16:30</td></tr>
-<tr data-task="AR11"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR11</span>Plugin wiring</td><td>plugin.json 1.0.0, the marketplace entry, the README section and install line.</td><td>10 Oct ~16:45</td></tr>
-<tr data-task="AR12"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR12</span>Integrate and release</td><td>Full suite once on AR12-integration, then one ready PR to main: one CI run, one release; merged on green.</td><td>10 Oct ~17:15</td></tr>
-<tr data-task="AR15"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">AR15</span>Repo record and recreate</td><td>The record in docs/artifacts and recreation without duplicates; built into project_artifacts.py by the AR7 agent.</td><td>10 Oct ~15:30</td></tr>
-<tr class="status-group" data-group="done"><td colspan="4"><strong>Live or done, newest first</strong></td></tr>
-<tr data-task="AR16"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR16</span>dev-standards record in docs/artifacts</td><td>Manifest, registry, HTML and the interim generator committed to main as docs-only commits.</td><td>10 Oct</td></tr>
-<tr data-task="AR4"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR4</span>Answer the open decisions</td><td>Answered: one task registry; branch names start with the task ID; catch-up at session start; each project&#x27;s own design, the plugin&#x27;s default when it has none; an App / service column on the full-progress artifact.</td><td>10 Oct</td></tr>
-<tr data-task="AR14"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR14</span>Default design</td><td>design/default-design.css, DESIGN.md and templates/project-artifact.css on branch AR14-default-design; applied to both dev-standards artifacts.</td><td>10 Oct</td></tr>
-<tr data-task="AR3"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR3</span>Moved to dev-standards and rewritten</td><td>This artifact now belongs to dev-standards and describes the agreed design; Full Progress: dev-standards created.</td><td>10 Oct</td></tr>
+<tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next</strong></td></tr>
+<tr data-task="AR17"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">AR17</span>dev-standards onto the plugin</td><td>Real-repo test (R13.3): convert this record to ARTIFACTSPEC 1.0.0 on a scratch clone, render, check, one status change end to end, nothing pushed. The converted record ships in the AR12 ready PR and retires the interim generator.</td><td>10 Oct ~15:00</td></tr>
+<tr data-task="AR12"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">AR12</span>Integrate and release</td><td>All parts joined on AR12-integration; full local suite running; the real-repo test converts dev-standards’ own record on a scratch clone (AR17). Then one ready PR to main, merged on green.</td><td>10 Oct ~15:30</td></tr>
+<tr data-task="AR9"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">AR9</span>Tests and CI</td><td>Renderer 57 tests, hooks 47 tests and the spec-lint steps are in; the script tests come with AR7.</td><td>10 Oct ~16:30</td></tr>
+<tr class="status-group" data-group="done"><td colspan="4"><strong>Live or done</strong></td></tr>
 <tr data-task="AR2"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR2</span>Proposal reviewed</td><td>Twelve findings; each one and the change it led to is in section 7.</td><td>10 Oct</td></tr>
+<tr data-task="AR3"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR3</span>Moved to dev-standards and rewritten</td><td>This artifact now belongs to dev-standards and describes the agreed design; Full Progress: dev-standards created.</td><td>10 Oct</td></tr>
+<tr data-task="AR4"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR4</span>Answer the open decisions</td><td>Answered: one task registry; branch names start with the task ID; catch-up at session start; each project&#x27;s own design, the plugin&#x27;s default when it has none; an App / service column on the full-progress artifact.</td><td>10 Oct</td></tr>
 <tr data-task="AR5"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR5</span>ARTIFACTSPEC 1.0.0</td><td>ARTIFACTSPEC 1.0.0 on AR12-integration (b8bd29b): the record, statuses and checklist, commands, hooks, publishing and recreation, test and conformance gates; spec_check clean. Plus the shared queue module (43150da).</td><td>10 Oct</td></tr>
+<tr data-task="AR6"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR6</span>Templates</td><td>render_artifacts.py and the two templates: deterministic rendering, the HTML checks, the Earlier fold; 57 tests; joined at 39cb8c3.</td><td>10 Oct</td></tr>
+<tr data-task="AR7"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR7</span>project_artifacts.py</td><td>project_artifacts.py: the record worktree with push retries, every §7 command, pending and mark-published, the record checks; 97 tests with the fake and the real renderer; joined.</td><td>10 Oct</td></tr>
+<tr data-task="AR8"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR8</span>Hooks</td><td>Three hooks and hooks/hooks.json (PostToolUse and PostToolUseFailure, Stop, SessionStart); 47 tests, mutation-checked; joined into AR12-integration.</td><td>10 Oct</td></tr>
+<tr data-task="AR10"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR10</span>Skills and rule file</td><td>The five skills (feature-artifact-new on Opus high, the rest Sonnet medium) and the rule file; joined at fb1edf2.</td><td>10 Oct</td></tr>
+<tr data-task="AR11"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR11</span>Plugin wiring</td><td>plugin.json 1.0.0, marketplace entry, README; claude-setup enables the plugin under the marketplace name the owner registered (luismc-project-setup 12.1.0); joined at fb1edf2.</td><td>10 Oct</td></tr>
+<tr data-task="AR14"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR14</span>Default design</td><td>design/default-design.css, DESIGN.md and templates/project-artifact.css on branch AR14-default-design; applied to both dev-standards artifacts.</td><td>10 Oct</td></tr>
+<tr data-task="AR15"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR15</span>Repo record and recreate</td><td>The record in docs/artifacts and recreation without duplicates, built into project_artifacts.py; joined with AR7.</td><td>10 Oct</td></tr>
+<tr data-task="AR16"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR16</span>dev-standards record in docs/artifacts</td><td>Manifest, registry, HTML and the interim generator committed to main as docs-only commits.</td><td>10 Oct</td></tr>
 </tbody></table></div>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>What and why</h2>
@@ -468,7 +486,8 @@ li { margin: .25em 0; }
  <li>Status changes update the artifacts <strong>automatically</strong>: a feature task&rsquo;s change updates its feature artifact, and any project task&rsquo;s change updates the full-progress artifact.</li>
  <li>Built in dev-standards as the plugin <code>luismc-artifacts</code>, with <strong>explicit names in the code</strong>: feature artifact and full-progress artifact, never a generic &ldquo;page&rdquo;.</li>
 </ul>
-<p><strong>Why it matters.</strong> In an earlier project the pages drifted: a feature page still said &ldquo;Needs you&rdquo; for a step finished hours before. The status was typed by hand in two places. This design writes each status once and generates every view of it.</p></section>
+<p><strong>Why it matters.</strong> In an earlier project the pages drifted: a feature page still said &ldquo;Needs you&rdquo; for a step finished hours before. The status was typed by hand in two places. This design writes each status once and generates every view of it.</p>
+</section>
 <section id="s2"><h2><span class="section-number">&sect; 2</span>The design</h2>
 <p class="lede">Each task&rsquo;s status is stored once, in a task registry inside the full-progress artifact. One command changes it, regenerates every checklist that shows the task, and a hook makes sure both artifacts are published before the turn ends.</p>
 <h3>Two kinds of project artifact</h3>
@@ -498,7 +517,8 @@ li { margin: .25em 0; }
  <li><strong>No duplicates.</strong> An artifact is created only when its manifest link no longer opens and no artifact with the same title exists; the new link is written back to the manifest.</li>
  <li><strong>Status changes commit to the default branch</strong> as docs-only commits. CI ignores <code>docs/**</code>, and hosting skips docs-only deploys.</li>
  <li><strong>Task IDs</strong> are a registered prefix plus a number (<span class="task-id">AR5</span>, <span class="task-id">DS4</span>), unique across the project. Branch names start with one: <code>AR5-artifactspec</code>.</li>
-</ul></section>
+</ul>
+</section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>The rules</h2>
 <p class="lede">The draft of ARTIFACTSPEC 1.0.0. Each rule has an ID so the spec, the checks and reviews can cite it.</p><h3>Kinds and tasks</h3><div class="table-scroll"><table><thead><tr><th>ID</th><th>Rule</th></tr></thead><tbody>
 <tr><td>AS1</td><td>A project has feature artifacts and <strong>exactly one full-progress artifact</strong>. Creating the first feature artifact creates the full-progress artifact if none exists.</td></tr>
@@ -523,7 +543,8 @@ li { margin: .25em 0; }
 <tr><td>AS18</td><td>Times are shown in the owner&rsquo;s timezone and labelled with it.</td></tr>
 <tr><td>AS19</td><td>A project&rsquo;s artifacts can be recreated from <code>docs/artifacts/</code> alone. A new artifact is created only when the manifest link no longer opens and no artifact with the same title exists.</td></tr>
 <tr><td>AS20</td><td>Status changes are committed to the default branch as docs-only commits; CI and hosting skip docs-only changes.</td></tr>
-</tbody></table></div></section>
+</tbody></table></div>
+</section>
 <section id="s4"><h2><span class="section-number">&sect; 4</span>In dev-standards</h2>
 <p class="lede">A new plugin, <strong><code>luismc-artifacts</code></strong>, beside <code>luismc-specs</code>. One script does the work; the skills and hooks call it.</p>
 <h3>Layout</h3>
@@ -559,7 +580,8 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
 <tr><td><code>/luismc-artifacts:task-status-update</code></td><td>Reads the artifacts, runs <code>set-task-status</code>, runs the check, and publishes every artifact that changed. Retries after a publish conflict.</td></tr>
 <tr><td><code>/luismc-artifacts:project-artifact-check</code></td><td>Checks a project&rsquo;s artifacts against ARTIFACTSPEC. Exit 0 clean, 1 findings, 2 unreadable, like <code>spec_check.py</code>.</td></tr>
 </tbody></table></div>
-<p class="note">The default design is in <code>design/default-design.css</code> and <code>templates/project-artifact.css</code> on branch AR14-default-design; these two artifacts use it.</p></section>
+<p class="note">The default design is in <code>design/default-design.css</code> and <code>templates/project-artifact.css</code> on branch AR14-default-design; these two artifacts use it.</p>
+</section>
 <section id="s5"><h2><span class="section-number">&sect; 5</span>Requirements and tests</h2>
 <div class="table-scroll"><table><thead><tr><th>ID</th><th>Requirement</th><th>Test that proves it</th></tr></thead><tbody>
 <tr><td>R1</td><td>Titles start with &ldquo;Feature: &rdquo; or &ldquo;Full Progress: &rdquo; (AS2, AS3).</td><td>A feature artifact titled &ldquo;Manga&rdquo; fails; &ldquo;Feature: Manga&rdquo; passes.</td></tr>
@@ -579,7 +601,8 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
 <tr><td>R15</td><td>Hooks queue and block (AS16, AS17).</td><td><code>gh pr merge</code> on branch AR5-x queues AR5; the end-of-turn hook blocks with a queue and passes without one; no manifest, no effect.</td></tr>
 <tr><td>R16</td><td>Phone width and both themes (AS13).</td><td>A fixture artifact at 360 px wide has no sideways scroll in light and dark (manual check listed in the skill).</td></tr>
 <tr><td>R17</td><td>Recreate without duplicates (AS19).</td><td>Manifest link deleted: one new artifact, manifest updated. Link alive: nothing created. Same title exists: no new artifact, manifest repaired.</td></tr>
-</tbody></table></div></section>
+</tbody></table></div>
+</section>
 <section id="s6"><h2><span class="section-number">&sect; 6</span>Decisions</h2>
 <div class="table-scroll"><table><thead><tr><th>#</th><th>Question</th><th>Decision (10 Oct)</th></tr></thead><tbody>
 <tr><td>1</td><td>How is a task&rsquo;s status stored so both artifacts update automatically?</td><td><strong>One task registry</strong> inside the full-progress artifact; both checklists are generated from it.</td></tr>
@@ -591,7 +614,8 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
 <tr><td>7</td><td>How does a project get the plugin?</td><td><strong>luismc-project-setup installs it</strong> in every project it sets up; it can also be installed on its own in any project. No artifact is created until the first feature artifact.</td></tr>
 <tr><td>8</td><td>Which clock do Expected times use?</td><td><strong>The owner&rsquo;s time zone, per project</strong>, set in the manifest and named in the column header.</td></tr>
 <tr><td>9</td><td>Does dev-standards move other projects onto the plugin?</td><td><strong>No.</strong> dev-standards ships the plugin and names or changes no other project; each project adopts it in its own sessions.</td></tr>
-</tbody></table></div></section>
+</tbody></table></div>
+</section>
 <section id="s7"><h2><span class="section-number">&sect; 7</span>What the review changed</h2>
 <p class="lede">The review of the first proposal on 10 October found twelve problems. Each one changed the design above.</p><div class="table-scroll"><table><thead><tr><th>Finding</th><th>Change</th></tr></thead><tbody>
 <tr><td>A status was typed by hand in two places, the cause of the drift.</td><td>One task registry; one command regenerates every checklist (AS5, AS14).</td></tr>
@@ -606,16 +630,21 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
 <tr><td>The rule would have gone into every project&rsquo;s CLAUDE.md.</td><td>A rule file installed only where project artifacts are used.</td></tr>
 <tr><td>The progress page would grow forever.</td><td>Live or Done rows older than 14 days fold into &ldquo;Earlier&rdquo; (AS3).</td></tr>
 <tr><td>Generic names: &ldquo;page&rdquo;, <code>luismc-pages</code>, <code>.st</code>.</td><td>Feature artifact and full-progress artifact throughout; plugin <code>luismc-artifacts</code>; readable class names in AR6.</td></tr>
-</tbody></table></div></section>
+</tbody></table></div>
+</section>
 <section id="s8"><h2><span class="section-number">&sect; 8</span>History</h2>
 <div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
+<tr><td>10 Oct 13:40</td><td>AR7 and AR15 done and joined; every part of the plugin is on AR12-integration. AR17 added: dev-standards moves onto the plugin as the real-repo test. Release now expected about 15:30.</td></tr>
+<tr><td>10 Oct 13:32</td><td>AR8, AR10 and AR11 done and joined. ARTIFACTSPEC settled what the agents asked: content edited through a folder (export-content, edit-content --from), design set, project prefixes, the pending JSON, the marketplace name, the hooks as built.</td></tr>
+<tr><td>10 Oct 13:03</td><td>AR6 done and joined; ARTIFACTSPEC says the full-progress artifact’s section 1 is generated and allows the template’s theme script (R5.6, R5.9). AR9 to AR11 started.</td></tr>
 <tr><td>10 Oct 12:46</td><td>AR5 done: ARTIFACTSPEC 1.0.0 committed to AR12-integration with the shared queue module; AR6, AR7, AR8 and AR15 started.</td></tr>
-<tr><td>10 Oct 12:23</td><td>Expected times are now a date and a time on the owner&rsquo;s clock (AS11, R6). Decisions 7 to 9: luismc-project-setup installs the plugin, which also installs on its own; the owner&rsquo;s time zone per project; dev-standards names and changes no other project, so AR1 and AR13 are out of this list. The build runs from about 13:30 and merges on green.</td></tr>
-<tr><td>10 Oct 11:07</td><td>The repo becomes the record: docs/artifacts/ holds the manifest, the task registry, each artifact&rsquo;s content and last published HTML, committed to the default branch as docs-only commits; a deleted artifact is recreated from it without duplicates (AS19, AS20, AR15). dev-standards&rsquo; record saved (AR16). Model and effort profiles split into their own feature artifact.</td></tr>
-<tr><td>10 Oct 09:47</td><td>Decisions answered (AR4): one task registry, task-ID branch names, catch-up at session start, an App / service column on the full-progress artifact. The look now comes from each project&rsquo;s own design, with a plugin default for projects without one; dev-standards uses the default design (AR14), applied to this artifact.</td></tr>
-<tr><td>10 Oct 09:24</td><td>Moved to dev-standards, where it is built. Rewritten to the agreed design: plugin <code>luismc-artifacts</code>; explicit names (feature artifact, full-progress artifact); the full-progress artifact shows all project work and is created with the first feature artifact; one task registry with automatic updates and hooks; task IDs AR1 to AR13; the review findings (section 7); five open decisions. Full Progress: dev-standards created.</td></tr>
+<tr><td>10 Oct 12:23</td><td>Expected times are now a date and a time on the owner’s clock (AS11, R6). Decisions 7 to 9: luismc-project-setup installs the plugin, which also installs on its own; the owner’s time zone per project; dev-standards names and changes no other project, so AR1 and AR13 are out of this list. The build runs from about 13:30 and merges on green.</td></tr>
+<tr><td>10 Oct 11:07</td><td>The repo becomes the record: docs/artifacts/ holds the manifest, the task registry, each artifact’s content and last published HTML, committed to the default branch as docs-only commits; a deleted artifact is recreated from it without duplicates (AS19, AS20, AR15). dev-standards’ record saved (AR16). Model and effort profiles split into their own feature artifact.</td></tr>
+<tr><td>10 Oct 09:47</td><td>Decisions answered (AR4): one task registry, task-ID branch names, catch-up at session start, an App / service column on the full-progress artifact. The look now comes from each project’s own design, with a plugin default for projects without one; dev-standards uses the default design (AR14), applied to this artifact.</td></tr>
+<tr><td>10 Oct 09:24</td><td>Moved to dev-standards, where it is built. Rewritten to the agreed design: plugin luismc-artifacts; explicit names (feature artifact, full-progress artifact); the full-progress artifact shows all project work and is created with the first feature artifact; one task registry with automatic updates and hooks; task IDs AR1 to AR13; the review findings (section 7); five open decisions. Full Progress: dev-standards created.</td></tr>
 <tr><td>09 Oct 06:48</td><td>Created as a proposal, after the owner asked for one template, numbered sections, Feature and Full Progress pages, and a dev-standards version.</td></tr>
-</tbody></table></div></section>
+</tbody></table></div>
+</section>
 </main></div>
 <script>
 (function () {

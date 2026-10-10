@@ -1,0 +1,6 @@
+{
+  "title": "Feature: Project artifacts standard",
+  "hero": "How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.",
+  "lede": "The design is agreed and the default design is built (AR14). The spec is written (AR5); three Sonnet agents are building the renderer, the script and the hooks. Merge on green at about 15:30. Every task here is also on <a href=\"https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv\">Full Progress: dev-standards</a>.",
+  "extra_css": ""
+}

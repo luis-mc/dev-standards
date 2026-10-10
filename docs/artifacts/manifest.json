@@ -1,32 +1,45 @@
 {
+  "spec": "ARTIFACTSPEC 1.0.0",
   "project": "dev-standards",
   "timezone": "Europe/Lisbon",
+  "timezone_label": "Lisbon",
+  "windows_timezone": "GMT Standard Time",
   "design": "default",
+  "default_branch": "main",
+  "merged_status": "Live",
   "full_progress_artifact": {
+    "key": "full-progress",
     "title": "Full Progress: dev-standards",
     "url": "https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv",
-    "file": "full-progress-dev-standards.html"
+    "file": "full-progress-dev-standards.html",
+    "published_sha256": "5299b280091d887d2d4ec3f5408feb0aa71b9b3ca235b824bba4f7ce1f05aae6"
   },
   "feature_artifacts": [
     {
       "key": "artifacts",
       "title": "Feature: Project artifacts standard",
       "url": "https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq",
+      "file": "feature-project-artifacts-standard.html",
       "prefix": "AR",
-      "app": "luismc-artifacts",
-      "file": "feature-project-artifacts-standard.html"
+      "apps": [
+        "luismc-artifacts"
+      ],
+      "published_sha256": "124080877426868003522b380cf129de187143e18ba53e0c3f1c4082ca0a492c"
     },
     {
       "key": "models",
       "title": "Feature: Model and effort profiles",
       "url": "https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn",
+      "file": "feature-model-and-effort-profiles.html",
       "prefix": "MP",
-      "app": "luismc-project-setup",
-      "file": "feature-model-and-effort-profiles.html"
+      "apps": [
+        "luismc-project-setup"
+      ],
+      "published_sha256": "625d54b66d1a354f785405de323da64340ce99bae45d32198ac3db4c143340cf"
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-10-10T12:46+01:00"
+  "updated": "2026-10-10T13:44+01:00"
 }

@@ -1,0 +1,6 @@
+{
+  "title": "Full Progress: dev-standards",
+  "hero": "All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.",
+  "lede": "All ongoing work in dev-standards, across every plugin. Live: <span class=\"task-id\">DS6</span>, STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (12:56), and the DS15 fix to the secret scan. Running: the luismc-artifacts build, merge on green at about 15:30.",
+  "extra_css": ""
+}

@@ -1,31 +1,28 @@
-# Artifact record: dev-standards
+# Project artifacts
 
-This folder is the record of the dev-standards project artifacts: the repo record is the
-source, and the published artifacts are generated from it. It holds:
+This folder is the record of dev-standards's project artifacts (ARTIFACTSPEC 1.0.0). It is generated and committed by
+`scripts/project_artifacts.py` of the `luismc-artifacts` plugin; do not edit the JSON or the
+rendered HTML by hand.
 
-- `manifest.json`: the project, its timezone and design, the full-progress artifact and each
-  feature artifact with its link, task prefix, app and file.
-- `registry.json`: the task registry, the same one embedded in the full-progress artifact.
-- the last published HTML of every artifact.
-- `build/`: the generator (`build.py`, the content modules, `check.py`) and the two stylesheets
-  it needs under `build/design/` and `build/templates/`.
+| Artifact | File | URL |
+|---|---|---|
+| Full Progress: dev-standards | `full-progress-dev-standards.html` | https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv |
+| Feature: Project artifacts standard | `feature-project-artifacts-standard.html` | https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq |
+| Feature: Model and effort profiles | `feature-model-and-effort-profiles.html` | https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn |
 
-## Rebuild
+## Recreate an artifact that was deleted on claude.ai
 
-    python -I build/build.py <out> <dir containing design/ and templates/> "<DD Mon HH:MM>" <iso> <fp-url> --models-url <url>
+The artifacts are disposable views; the record here is the source (R9.3).
 
-`build/` itself contains `design/` and `templates/`, so it can be its own CSS root:
+1. `python <plugin>/scripts/project_artifacts.py render` writes the HTML again from `content/`,
+   `registry.json` and `manifest.json`.
+2. `python <plugin>/scripts/project_artifacts.py pending` lists what must be published.
+3. Publish each listed file with the Artifact tool, to the URL in `manifest.json` when it still
+   opens. When the publish is refused because the artifact no longer exists, list your artifacts:
+   if one has the same title, publish to that one; only if none does, publish a new one.
+   At most one artifact per title is ever created.
+4. `python <plugin>/scripts/project_artifacts.py mark-published KEY --url URL` records the URL
+   and the hash of what was published.
 
-    python -I build/build.py out build "10 Oct 12:00" 2026-10-10T12:00+01:00 <fp-url> --models-url <url>
-
-`<out>` gets the HTML files and a fresh `record/`. Run `python -I build/check.py <out>` to check them.
-
-## Recreate a deleted artifact without duplicates
-
-1. Try to open the link in `manifest.json`. If it opens, republish the HTML to that link.
-2. If it no longer opens, list your artifacts and look for one with the same title. If you find
-   one, write its link to the manifest.
-3. Only if none exists, publish the HTML as a new artifact and write the new link to the manifest.
-4. Commit the manifest to the default branch as a docs-only commit.
-
-This manual procedure is replaced by the luismc-artifacts plugin (AR7, AR15) once it is built.
+Change a task only with `set-task-status`; edit prose only under `content/<key>/` and then run
+`edit-content <key>`.
