@@ -1,6 +1,8 @@
 ---
 name: spec-check
 description: Validate a specification document's numbering and cross-references — duplicate or out-of-order headings and requirement IDs, orphan subsections, gaps, malformed identifiers, and dangling §/R references including citations into other specs. Use after writing or revising any spec, before handing it to anyone, and whenever a spec cites another document by name. Also use when asked to check, lint, or verify a spec, or when a spec has been renumbered, split, merged, or had sections deleted.
+model: sonnet
+effort: medium
 ---
 
 # Spec Check

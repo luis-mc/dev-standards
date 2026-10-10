@@ -43,15 +43,24 @@ Sets up:
 - `.claude/settings.json` — auto-compact window, output style, model split
 - A status line showing model, context, and rate-limit info
 - The Caveman output style
-- `.claude/rules/model-delegation.md` — the model split's working rule
+- `.claude/rules/agents-and-integration.md` — how agents are run and work is
+  integrated (replaces `model-delegation.md`)
+- `.claude/hooks/effort_drift.py` — a SessionStart alias-drift warning
 
 **Model split:** the main session runs on Opus and does the thinking and
 planning; subagents run on Sonnet and write the code. Every project gets it,
 and the skill asks whether to enforce it for all your projects too. Each run
 it also asks whether each model should run at medium or high effort, with high
 preselected for the code agents, and writes your answer to the settings and to
-the delegation rule. Cloud agents, which have no per-model entry, default to
+the rule file. Cloud agents, which have no per-model entry, default to
 high through a top-level `effortLevel`.
+
+The rule file also carries the integrate-once, deploy-once workflow and cites
+the `scripts/delivery/*` tools that `tech-stack-setup` 12+ generates. The
+alias-drift warning tells you at session start when the model an alias now
+resolves to has no saved effort, so you can re-run the skill. Every skill in
+the marketplace also pins its own model and effort in its frontmatter, from
+one table in `claude-setup/assets/model-profiles.json`.
 
 You choose whether this applies to the current **project**, your **user-level**
 `~/.claude/` config, or both. It never overwrites a `CLAUDE.md` you've already
