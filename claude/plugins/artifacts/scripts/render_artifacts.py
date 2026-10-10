@@ -39,7 +39,7 @@ DARK_TOKENS = tuple(t for t in REQUIRED_TOKENS if not t.startswith('--font'))  #
 
 KIND_PREFIX = {'feature': 'Feature: ', 'full-progress': 'Full Progress: '}
 KIND_LABEL = {'feature': 'Feature artifact', 'full-progress': 'Full-progress artifact'}
-FULL_PROGRESS_KEY = 'full-progress'
+FULL_PROGRESS_NAME = 'full-progress'
 EARLIER_DAYS = 14  # R6.3; may only be lengthened (section 12)
 MONTHS = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
 
@@ -484,7 +484,7 @@ def load_content(record_dir: str, key: str, plugin_dir: str = PLUGIN_DIR) -> dic
     history = []
     history_path = os.path.join(folder, 'history.json')
     if os.path.exists(history_path):
-        if key == FULL_PROGRESS_KEY:
+        if key == FULL_PROGRESS_NAME:
             problems.append('content/%s/history.json: the full-progress artifact has no History (R5.4)' % key)
         else:
             try:
@@ -507,7 +507,7 @@ def load_content(record_dir: str, key: str, plugin_dir: str = PLUGIN_DIR) -> dic
 # ------------------------------------------------------------------ the record: kinds and tasks
 def _kind_entry(manifest: dict, key: str):
     full = manifest.get('full_progress_artifact') or {}
-    if key == full.get('key', FULL_PROGRESS_KEY) and full:
+    if key == full.get('key', FULL_PROGRESS_NAME) and full:
         return 'full-progress', full
     for entry in manifest.get('feature_artifacts') or []:
         if entry.get('key') == key:
