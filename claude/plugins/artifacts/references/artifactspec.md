@@ -288,7 +288,9 @@ The templates hold `{{placeholders}}`: `title`, `fonts_link`, `design_css`,
   a `<time>` element whose `datetime` attribute is the ISO time with offset.
 - **R5.6** — The full-progress artifact's section 1 lists every feature
   artifact with its link, its task ID range and one line on where it stands
-  (taken from its `meta.json` lede's first sentence).
+  (taken from its `meta.json` lede's first sentence). Section 1 is generated,
+  so the full-progress artifact's content files `01-*.html` onward render as
+  sections 2 and up.
 
 ### 5.2 Lede and tiles
 
@@ -298,8 +300,10 @@ The templates hold `{{placeholders}}`: `title`, `fonts_link`, `design_css`,
 - **R5.8** — Tiles show the count of each status that has at least one task,
   in the order of §6.1, computed from the registry.
 - **R5.9** — The full-progress artifact embeds the registry as
-  `<script type="application/json" id="task-registry">`, the only script it
-  contains.
+  `<script type="application/json" id="task-registry">`, the only JSON
+  script it contains. The only other script allowed in any artifact is the
+  template's own theme-toggle and contents script, byte-identical to the
+  template.
 
 ### 5.3 Design
 
