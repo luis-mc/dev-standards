@@ -19,3 +19,4 @@
 3a5ad29e15cfe7998bdea3143fc1acde8b6d012d:claude/plugins/artifacts/scripts/render_artifacts.py:project-named-secret:42
 3a5ad29e15cfe7998bdea3143fc1acde8b6d012d:claude/plugins/artifacts/scripts/render_artifacts.py:project-named-secret:487
 3a5ad29e15cfe7998bdea3143fc1acde8b6d012d:tools/test_project_artifacts_hooks.py:project-named-secret:242
+c11c82c19c798cde397c31bbac44a9283aca3a8e:tools/test_artifact_prune.py:project-named-secret:732

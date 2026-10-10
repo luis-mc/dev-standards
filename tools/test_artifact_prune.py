@@ -729,7 +729,7 @@ def workflow_problems(text: str) -> list[str]:
     if not re.search(r"^    permissions:\s*\n(?:      .*\n)*?      contents:\s*read\s*$",
                      body, re.M):
         p.append("the job needs `contents: read` to check out")
-    if not re.search(r"^\s*GH_TOKEN:\s*\$\{\{\s*github\.token\s*\}\}", body, re.M):
+    if not any(line.strip() == "GH_TOKEN: ${{ github.token }}" for line in body.splitlines()):
         p.append("GH_TOKEN must be ${{ github.token }}")
     if not re.search(r"^\s*run:\s*python3 scripts/delivery/artifact_prune\.py\s*$", body, re.M):
         p.append("the job must run `python3 scripts/delivery/artifact_prune.py`")
