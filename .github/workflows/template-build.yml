@@ -1,0 +1,110 @@
+name: template-build
+
+# The Go, Rust and .NET tooling starters (guard tests, gate.json setup commands)
+# are copied into every repository tech-stack-setup generates, and nothing else
+# here compiles them. A typo in a guard or a setup command that cannot fail
+# would ship to every product generated afterwards. Each job below scaffolds a
+# minimal throwaway product around one track's template, compiles and runs the
+# guard, proves the guard can fail, and proves the gate.json setup commands fail
+# on a stale lockfile. The logic lives in tools/template_build_check.py so it can
+# be run locally with the toolchain installed:
+#
+#   python3 tools/template_build_check.py --track go|rust|dotnet
+
+# Only the default branch and ready pull requests run this. Agent branches and
+# draft pull requests are checked in the agent's sandbox (STACKSPEC 13.6);
+# running Actions on every push of every branch bills minutes for checks the
+# branch gate already ran. Only a change to a template (or to this check) runs
+# it at all.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/go/**'
+      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/rust/**'
+      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/dotnet/**'
+      - 'tools/template_build_check.py'
+      - '.github/workflows/template-build.yml'
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/go/**'
+      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/rust/**'
+      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/dotnet/**'
+      - 'tools/template_build_check.py'
+      - '.github/workflows/template-build.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: template-build-${{ github.workflow }}-${{ github.ref }}
+  # Superseded pull-request runs are cancelled. Runs on main never are: a
+  # cancelled run can leave a merged commit unverified.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  go:
+    name: Go starter compiles, guard can fail, setup catches a stale go.sum
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # The scaffold's go.mod is written by the check, so there is no
+      # go-version-file to read; the version is pinned here and in that go.mod.
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: false
+
+      - name: Scaffold the Go template and run its guard and setup checks
+        run: python3 tools/template_build_check.py --track go
+
+  rust:
+    name: Rust starter compiles, guard can fail, setup catches a stale Cargo.lock
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # An exact version, so the check does not change under an unrelated pull
+      # request. clippy is installed because the gate's lint step runs it.
+      - uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: clippy
+
+      - name: Scaffold the Rust template and run its guard and setup checks
+        run: python3 tools/template_build_check.py --track rust
+
+  dotnet:
+    name: .NET starter compiles, guard can fail, setup catches a stale lock file
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # The scaffold's global.json pins the 8.0 feature band, as the starter's
+      # TargetFramework (net8.0) requires.
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Scaffold the .NET template and run its guard and setup checks
+        run: python3 tools/template_build_check.py --track dotnet
