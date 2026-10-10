@@ -496,11 +496,11 @@
       "id": "DS24",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Template build check",
-      "detail": "Built in draft #30, joined, not released: template-build.yml and tools/template_build_check.py compile and run the Go, Rust and .NET guard starters in a scaffold, prove each guard fails on a planted conflict marker and ignores nested checkouts, and prove setup fails on a stale lockfile. Ran in Docker for all three. Found and fixed: Go's setup passed a stale go.sum; it now runs go list -mod=readonly -deps -test ./....",
-      "expected": "10 Oct",
-      "changed": "2026-10-10T21:58+01:00"
+      "detail": "Released in STACKSPEC 7.0.0 (#27, 137e0d0, 00:31). Built in draft #30, joined, not released: template-build.yml and tools/template_build_check.py compile and run the Go, Rust and .NET guard starters in a scaffold, prove each guard fails on a planted conflict marker and ignores nested checkouts, and prove setup fails on a stale lockfile. Ran in Docker for all three. Found and fixed: Go's setup passed a stale go.sum; it now runs go list -mod=readonly -deps -test ./....",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:32+01:00"
     },
     {
       "id": "DS25",
