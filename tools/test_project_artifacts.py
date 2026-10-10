@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prove project_artifacts.py does what ARTIFACTSPEC 1.0.0 section 7 says (R13.1).
+"""Prove project_artifacts.py does what ARTIFACTSPEC 1.1.0 section 7 says (R13.1).
 
 Every case builds throwaway git repositories with a local bare remote and runs
 the real command line against them. Nothing here pushes to any real remote.
@@ -1655,6 +1655,253 @@ def test_non_task_commands_leave_registry_alone(env):
     p.ok('set-task-status', 'AR1', 'Waiting', env=later(6))
     assert p.show('docs/artifacts/registry.json') != before and p.reg()['updated'] == '2026-10-11T16:00+01:00', p.reg()['updated']
     assert p.run('check').code == 0
+
+
+# --------------------------------------------------------------------------
+# decisions (section 5.4; the real renderer only)
+# --------------------------------------------------------------------------
+
+def d_opt(label, **kw):
+    out = {'label': label, 'summary': '%s, in a sentence.' % label}
+    out.update(kw)
+    return out
+
+
+def d_dec(n, **kw):
+    out = {'id': 'D%d' % n, 'question': 'Which layout for the checkout page?', 'asked': '2026-10-09', 'status': 'decided',
+           'options': [d_opt('Single page', recommended=True, preview='<pre>+------+\n| Pay  |\n+------+</pre>'), d_opt('Three steps')],
+           'chosen': 'Single page', 'decided': '2026-10-10', 'owner_words': 'single page, fewer clicks', 'task': 'AR1'}
+    out.update(kw)
+    return out
+
+
+def d_open(n, **kw):
+    out = d_dec(n, question='Should History also list decisions?', status='open', chosen=None, decided=None,
+                owner_words=None, options=[d_opt('Yes'), d_opt('No', recommended=True)])
+    out.update(kw)
+    return out
+
+
+def edit_decisions(p, decisions, name, key='artifacts', extra=None):
+    """export-content, write decisions.json (and extra files), return the folder."""
+    d = export(p, key, name)
+    (d / 'decisions.json').write_text(json.dumps({'decisions': decisions}, indent=1), encoding='utf-8')
+    for rel, data in (extra or {}).items():
+        (d / rel).parent.mkdir(parents=True, exist_ok=True)
+        (d / rel).write_bytes(data)
+    return d
+
+
+def need_real(env):
+    if env.kind == 'fake':
+        SKIP('the stand-in renderer does not know decisions')
+
+
+@case
+def test_decisions_edit_content_renders_and_checks(env):
+    need_real(env)
+    p = env.baseline()
+    d = edit_decisions(p, [d_dec(1), d_open(2, task='AR1')], 'dec1')
+    p.ok('set-task-status', 'AR1', 'Needs you', '--expected', '11 Oct')
+    r = p.ok('edit-content', 'artifacts', '--from', d)
+    assert 'edit-content artifacts' in r.out
+    saved = json.loads(p.show('docs/artifacts/content/artifacts/decisions.json'))
+    assert [x['id'] for x in saved['decisions']] == ['D1', 'D2']
+    html = p.show('docs/artifacts/feature-artifacts.html')
+    assert 'Chosen by the owner &middot; 10 Oct' in html and 'single page, fewer clicks' in html and 'Not chosen' in html
+    assert html.index('>Decisions</h2>') < html.index('>History</h2>')
+    assert 'Needs you: AR1 Spec; D2 Should History also list decisions?' in html, html[html.index('class="lede"'):][:300]
+    assert '1 decision open' in p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
+    r = p.run('check')
+    assert r.code == 0 and 'record is clean' in r.out and 'warning' not in r.out, r.all
+    assert dirty(p) == [], dirty(p)
+    # an export carries decisions.json back out, and writing it back changes nothing
+    d2 = export(p, 'artifacts', 'dec1b')
+    assert (d2 / 'decisions.json').is_file()
+    head = p.head()
+    assert 'no change' in p.ok('edit-content', 'artifacts', '--from', d2).out and p.head() == head
+
+
+@case
+def test_decisions_invalid_file_writes_nothing(env):
+    need_real(env)
+    p = env.baseline()
+    before = p.head()
+    bad = [
+        ('one option', [d_dec(1, options=[d_opt('Single page')])], 'R5.16'),
+        ('decided without a choice', [d_dec(1, chosen=None)], 'R5.16'),
+        ('duplicate labels', [d_dec(1, options=[d_opt('A'), d_opt('A')], chosen='A')], 'R5.16'),
+        ('open with a choice', [d_open(1, chosen='Yes')], 'R5.16'),
+        ('two recommended', [d_dec(1, options=[d_opt('A', recommended=True), d_opt('B', recommended=True)], chosen='A')], 'R5.16'),
+        ('replaces nothing', [d_dec(1, replaces='D4')], 'R5.18'),
+        ('script in a preview', [d_dec(1, options=[d_opt('A', preview='<script>x()</script>'), d_opt('B')], chosen='B')], 'R5.17'),
+        ('external image in a preview', [d_dec(1, options=[d_opt('A', preview='<img src="https://x.test/a.png">'), d_opt('B')], chosen='B')], 'R5.17'),
+        ('missing image file', [d_dec(1, options=[d_opt('A', image='assets/none.png'), d_opt('B')], chosen='B')], 'R5.17'),
+        ('id gap', [d_dec(1), d_dec(3)], 'R5.15'),
+    ]
+    for name, decisions, req in bad:
+        d = edit_decisions(p, decisions, 'bad-' + name.replace(' ', '-'))
+        r = p.run('edit-content', 'artifacts', '--from', d)
+        assert r.code == 1 and 'nothing written' in r.err and has_line(r.err, req, 'content/artifacts'), (name, r.err)
+        assert p.head() == before and dirty(p) == [] and p.show('docs/artifacts/content/artifacts/decisions.json') is None, name
+    # a hand-written Decisions section is refused, in any case
+    d = export(p, 'artifacts', 'hand')
+    (d / '02-decisions.html').write_text('<!-- title: Decisions -->\n<table><tr><td>1</td></tr></table>\n', encoding='utf-8')
+    r = p.run('edit-content', 'artifacts', '--from', d)
+    assert r.code == 1 and has_line(r.err, 'R5.19', 'content/artifacts') and 'decisions.json' in r.err, r.err
+    assert p.head() == before
+    # the full-progress artifact has no decisions.json
+    d = edit_decisions(p, [d_dec(1)], 'fp-dec', key='full-progress')
+    r = p.run('edit-content', 'full-progress', '--from', d)
+    assert r.code == 1 and has_line(r.err, 'R5.14', 'content/full-progress'), r.err
+    assert p.head() == before
+
+
+@case
+def test_decisions_are_append_only_through_edit_content(env):
+    need_real(env)
+    p = env.baseline()
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1), d_open(2)], 'ao1'))
+    before = p.head()
+    # a decision cannot be removed
+    r = p.run('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1)], 'ao2'))
+    assert r.code == 1 and has_line(r.err, 'R5.15') and 'D2 was removed' in r.err, r.err
+    d = export(p, 'artifacts', 'ao3')
+    (d / 'decisions.json').unlink()
+    r = p.run('edit-content', 'artifacts', '--from', d)
+    assert r.code == 1 and 'D1 was removed' in r.err, r.err
+    # a decided one cannot change its choice
+    r = p.run('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1, chosen='Three steps', owner_words=None), d_open(2)], 'ao4'))
+    assert r.code == 1 and 'D1 is decided; its choice cannot change' in r.err, r.err
+    assert p.head() == before
+    # but an open one can be closed, and a changed mind is a new decision that replaces the old
+    closed = d_open(2, status='decided', chosen='No', decided='2026-10-11', owner_words='no, keep them apart')
+    new = d_dec(3, question='Which layout, second thoughts?', replaces='D1', options=[d_opt('Single page'), d_opt('Wizard')],
+                chosen='Wizard', owner_words='wizard', asked='2026-10-11', decided='2026-10-11')
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1), closed, new], 'ao5'))
+    html = p.show('docs/artifacts/feature-artifacts.html')
+    assert 'Replaced by D3' in html and 'no, keep them apart' in html
+    assert p.run('check').code == 0
+
+
+@case
+def test_decisions_image_assets_round_trip_byte_for_byte(env):
+    need_real(env)
+    p = env.baseline()
+    png = b'\x89PNG\r\n\x1a\n' + b'\r\n' * 5 + bytes(range(256))
+    dec = [d_dec(1, options=[d_opt('A', image='assets/a.png'), d_opt('B')], chosen='B', owner_words=None)]
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, dec, 'img1', extra={'assets/a.png': png}))
+    r = git(p.bare, 'show', 'main:docs/artifacts/content/artifacts/assets/a.png', check=False)
+    shown = subprocess.run(['git', 'show', 'main:docs/artifacts/content/artifacts/assets/a.png'], cwd=str(p.bare),
+                           capture_output=True).stdout
+    assert shown == png, 'binary assets must not be line-ending converted'
+    html = p.show('docs/artifacts/feature-artifacts.html')
+    assert 'src="data:image/png;base64,' in html and 'http' not in html[html.index('decision-image'):][:60]
+    d = export(p, 'artifacts', 'img2')
+    assert (d / 'assets' / 'a.png').read_bytes() == png
+    assert 'no change' in p.ok('edit-content', 'artifacts', '--from', d).out
+    # an image the decisions do not name may stay in assets/; dropping the folder drops the file
+    r = p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, dec, 'img3', extra={'assets/a.png': png, 'assets/b.png': png}))
+    assert p.run('check').code == 0
+    # assets/ holds files only
+    d = export(p, 'artifacts', 'img4')
+    (d / 'assets' / 'sub').mkdir()
+    r = p.run('edit-content', 'artifacts', '--from', d)
+    assert r.code == 1 and 'assets/ holds files only' in r.err, r.err
+
+
+@case
+def test_check_warns_about_an_open_decision_without_a_needs_you_task(env):
+    need_real(env)
+    p = env.baseline()
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_open(1, task=None)], 'w1'))
+    r = p.run('check')
+    assert r.code == 0 and 'record is clean' in r.out, r.all                         # a warning is not a finding
+    assert 'warning  content/artifacts: D1 is open, but no task in this feature is in Needs you' in r.out, r.out
+    j = p.run('check', '--json')
+    assert j.code == 0 and j.json()['findings'] == [] and len(j.json()['warnings']) == 1, j.out
+    # naming a task that is not in Needs you still warns, and says which
+    d = edit_decisions(p, [d_open(1, task='AR1')], 'w1b')
+    # D1 exists with task None: only fields other than the choice may change
+    p.ok('edit-content', 'artifacts', '--from', d)
+    assert 'its task AR1 is not in Needs you' in p.run('check').out
+    # a task of another feature does not count
+    p.ok('set-task-status', 'SI1', 'Needs you', '--expected', '12 Oct')
+    assert 'its task AR1 is not in Needs you' in p.run('check').out
+    # once the task waits on the owner, the warning goes
+    p.ok('set-task-status', 'AR1', 'Needs you', '--expected', '12 Oct')
+    r = p.run('check')
+    assert r.code == 0 and r.out.strip() == 'record is clean', r.out
+    assert p.run('check', '--json').json() == {'findings': []}
+    # a decision with no task is satisfied by any Needs you task of its feature
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_open(1, task=None), d_open(2, task=None)], 'w2'))
+    assert p.run('check').out.strip() == 'record is clean'
+    # a closed decision never warns
+    p.ok('set-task-status', 'AR1', 'Running', '--expected', '12 Oct')
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(
+        p, [d_dec(1, question='Q?', task=None, options=[d_opt('Yes'), d_opt('No')], chosen='Yes', owner_words=None), d_dec(2, task=None)], 'w3'))
+    assert p.run('check').out.strip() == 'record is clean'
+
+
+@case
+def test_check_decisions_against_the_record(env):
+    need_real(env)
+    p = env.baseline()
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1), d_open(2, task='AR1')], 'c1'))
+    base = p.record_copy('decisions')
+    assert check_record(env, base).code == 0
+
+    def fresh(name):
+        dest = TMP / ('dfx-%s-%s' % (env.kind, name))
+        if dest.exists():
+            _rmtree(dest)
+        shutil.copytree(str(base.parent.parent), str(dest))
+        return dest / 'docs' / 'artifacts'
+
+    def broken(name, mutate, req, needle):
+        rec = fresh(name)
+        path = rec / 'content' / 'artifacts' / 'decisions.json'
+        data = json.loads(path.read_text(encoding='utf-8'))
+        mutate(data['decisions'])
+        path.write_text(json.dumps(data), encoding='utf-8')
+        r = check_record(env, rec)
+        assert r.code == 1 and has_line(r.out, req, 'content/artifacts') and needle in r.out, '%s:\n%s' % (name, r.all)
+
+    broken('task-unknown', lambda ds: ds[0].update(task='AR99'), 'R5.18', 'AR99 is not in the task registry')
+    broken('choice', lambda ds: ds[0].update(chosen='Zero steps'), 'R5.16', 'label of one of its options')
+    broken('script', lambda ds: ds[0]['options'][0].update(preview='<p onclick="x()">a</p>'), 'R5.17', 'onclick')
+    broken('gap', lambda ds: ds.pop(0), 'R5.15', 'no gap')
+    # the rendered file is stale after decisions.json changes by hand: INV-3
+    rec = fresh('stale')
+    path = rec / 'content' / 'artifacts' / 'decisions.json'
+    data = json.loads(path.read_text(encoding='utf-8'))
+    data['decisions'][0]['owner_words'] = 'changed after the render'
+    path.write_text(json.dumps(data), encoding='utf-8')
+    r = check_record(env, rec)
+    assert r.code == 1 and has_line(r.out, 'INV-3', 'feature-artifacts.html'), r.all
+
+
+@case
+def test_every_writing_command_refuses_an_invalid_decisions_file(env):
+    need_real(env)
+    p = env.baseline()
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1)], 'wc1'))
+    other = p.clone_again('other')
+    path = other / 'docs' / 'artifacts' / 'content' / 'artifacts' / 'decisions.json'
+    git(other, 'config', 'core.sparseCheckout', 'false', check=False)
+    data = json.loads(path.read_text(encoding='utf-8'))
+    data['decisions'][0]['options'] = data['decisions'][0]['options'][:1]       # a single option: invalid
+    path.write_text(json.dumps(data), encoding='utf-8')
+    git(other, 'add', '-A')
+    git(other, 'commit', '-q', '-m', 'break the decisions')
+    git(other, 'push', '-q', 'origin', 'main')
+    before = p.head()
+    for args in (('set-task-status', 'AR1', 'Waiting'), ('task-add', '--owner', 'artifacts', '--item', 'X', '--detail', 'x',
+                                                          '--expected', '12 Oct'),
+                 ('render', '--all'), ('mark-published', 'artifacts', '--url', 'https://claude.ai/artifact/x')):
+        r = p.run(*args)
+        assert r.code == 1 and 'the record is invalid; nothing written' in r.err and 'R5.16' in r.err, (args, r.all)
+        assert p.head() == before, args
 
 
 # --------------------------------------------------------------------------

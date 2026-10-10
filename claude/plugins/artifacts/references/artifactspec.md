@@ -6,7 +6,7 @@
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
 **Last reviewed:** 2026-10-10
-**Changes in 1.1.0:** §5.4 Decisions (`decisions.json`, R5.14 to R5.26).
+**Changes in 1.1.0:** §5.4 Decisions (`decisions.json`, R5.14 to R5.26). The record format string in `manifest.json` and `registry.json` stays `ARTIFACTSPEC 1.0.0`: existing records stay valid.
 
 ---
 
