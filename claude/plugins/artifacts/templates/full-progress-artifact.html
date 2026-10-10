@@ -1,0 +1,57 @@
+<title>{{title}}</title>
+<meta name="artifact-kind" content="full-progress-artifact">
+{{fonts_link}}
+<style id="design-tokens">{{design_css}}</style>
+<style id="structure-css">{{structure_css}}</style>
+<style id="extra-css">{{extra_css}}</style>
+{{registry}}
+<div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links">{{contents}}</div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
+<header class="artifact-header"><div class="artifact-kind">{{kind_label}} &middot; {{project}}</div><h1>{{title}}</h1><p>{{hero}}</p><div class="artifact-meta">{{project}} &middot; full progress, every part of the project</div></header>
+<section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
+<p class="last-update">Last update: {{stamp}}</p>
+{{lede}}
+{{tiles}}
+{{key}}
+{{checklist}}
+</section>
+{{sections}}
+</main></div>
+<script>
+(function () {
+  try {
+    var root = document.documentElement;
+    var toggle = document.getElementById('theme-toggle');
+    if (toggle) {
+      toggle.addEventListener('click', function () {
+        var dark = root.getAttribute('data-theme') === 'dark' ||
+          (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        root.setAttribute('data-theme', dark ? 'light' : 'dark');
+      });
+    }
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.contents a'));
+    var sections = links.map(function (link) {
+      return document.getElementById(link.getAttribute('href').slice(1));
+    });
+    function markCurrent() {
+      var index = 0;
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i] && sections[i].getBoundingClientRect().top <= 120) index = i;
+      }
+      links.forEach(function (link, i) {
+        var isCurrent = i === index;
+        link.classList.toggle('current', isCurrent);
+        if (isCurrent) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      });
+      var row = document.querySelector('nav.contents .contents-links');
+      var current = links[index];
+      if (row && current && row.scrollWidth > row.clientWidth && getComputedStyle(row).display === 'flex') {
+        row.scrollLeft = current.offsetLeft - row.clientWidth / 2 + current.offsetWidth / 2;
+      }
+    }
+    window.addEventListener('scroll', markCurrent, { passive: true });
+    window.addEventListener('resize', markCurrent);
+    markCurrent();
+  } catch (error) {}
+})();
+</script>
