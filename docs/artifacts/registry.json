@@ -2,7 +2,7 @@
  "registry": "draft for ARTIFACTSPEC 1.0.0",
  "project": "dev-standards",
  "timezone": "Europe/Lisbon",
- "updated": "2026-10-10T10:35+01:00",
+ "updated": "2026-10-10T11:07+01:00",
  "feature_artifacts": [
   {
    "title": "Feature: Project artifacts standard",
@@ -59,10 +59,10 @@
    "id": "DS8",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Running",
+   "status": "Waiting",
    "item": "Branch gate scripts",
-   "detail": "branch_gate, gate_verify, fast_guards, join, agent_setup, gate.json per track, the pre-push hook, a starter guard test per track; tested against throwaway repos.",
-   "expected": "today"
+   "detail": "branch_gate, gate_verify, fast_guards, join, agent_setup, gate.json per track, the pre-push hook, a starter guard test per track; tested against throwaway repos (303 checks, 23 mutants). Joined into DS6-agent-delivery at 0b967a3; waiting for release.",
+   "expected": "release today"
   },
   {
    "id": "DS9",
@@ -70,8 +70,8 @@
    "app": "luismc-project-setup",
    "status": "Waiting",
    "item": "CI scripts and workflows",
-   "detail": "ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files. Built: draft PR #6, 33 tests pass. Waiting for the join.",
-   "expected": "join today"
+   "detail": "ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files. Built: draft PR #6, 33 tests pass. Joined at 0b967a3; waiting for release.",
+   "expected": "release today"
   },
   {
    "id": "DS10",
@@ -79,8 +79,8 @@
    "app": "luismc-project-setup",
    "status": "Waiting",
    "item": "claude-setup rules and profiles",
-   "detail": "The agents-and-integration rule file (replaces model-delegation.md), the docs/ rule, per-skill model and effort, the alias-drift hook. Covers MP3, MP4, MP5 and DS7. Built: draft PR #4. Waiting for the join.",
-   "expected": "join today"
+   "detail": "The agents-and-integration rule file (replaces model-delegation.md), the docs/ rule, per-skill model and effort, the alias-drift hook. Covers MP3, MP4, MP5 and DS7. Built: draft PR #4. Joined at 0b967a3; waiting for release.",
+   "expected": "release today"
   },
   {
    "id": "DS11",
@@ -88,26 +88,26 @@
    "app": "luismc-project-setup",
    "status": "Waiting",
    "item": "tech-stack-setup wiring",
-   "detail": "Generate and audit paths for STACKSPEC 6.0.0, spec-lint CI steps for the new tests, luismc-project-setup 12.0.0. Built: draft PR #3; also limits spec-lint and secret-scan to main and ready PRs, and fixes the 23 stack-profile references that kept spec-lint red on main since July. Waiting for the join.",
-   "expected": "join today"
+   "detail": "Generate and audit paths for STACKSPEC 6.0.0, spec-lint CI steps for the new tests, luismc-project-setup 12.0.0. Built: draft PR #3; also limits spec-lint and secret-scan to main and ready PRs, and fixes the 23 stack-profile references that kept spec-lint red on main since July. Joined at 0b967a3; waiting for release.",
+   "expected": "release today"
   },
   {
    "id": "DS12",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "To do",
+   "status": "Running",
    "item": "Test on comics-organizer",
    "detail": "Run the gate, verify, join and CI scripts on a local clone of the evidence project; nothing pushed there.",
-   "expected": "after DS8 and DS9"
+   "expected": "today"
   },
   {
    "id": "DS13",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "To do",
+   "status": "Running",
    "item": "Join and release",
-   "detail": "join.py over DS8 to DS11, one ready PR to main, ci_watch on its head, merge on green. Then move the Agents and Integrate sections of the owner’s CLAUDE.md into the rule file.",
-   "expected": "after DS12"
+   "detail": "Joined DS8 to DS11 at 0b967a3 with every local check passing; contract and SKILL.md cleanups next, then one ready PR to main, ci_watch on its head, merge on green. Then move the Agents and Integrate sections of the owner’s CLAUDE.md into the rule file.",
+   "expected": "today, after DS12"
   },
   {
    "id": "DS7",
@@ -305,7 +305,7 @@
    "status": "Waiting",
    "item": "Role rules",
    "detail": "One line per role in the agents-and-integration rule file: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts a script cannot resolve, Haiku for log triage.",
-   "expected": "join today (DS10, PR #4)"
+   "expected": "joined (0b967a3); release today"
   },
   {
    "id": "MP4",
@@ -314,7 +314,7 @@
    "status": "Waiting",
    "item": "Per-skill model and effort",
    "detail": "model and effort in every plugin SKILL.md, by kind of work (section 5), with a test that compares them to the profile table.",
-   "expected": "join today (DS10, PR #4)"
+   "expected": "joined (0b967a3); release today"
   },
   {
    "id": "MP5",
@@ -323,7 +323,7 @@
    "status": "Waiting",
    "item": "Alias-drift warning",
    "detail": "A session-start hook that warns when the current Opus or Sonnet ID has no saved effort entry (figure 3).",
-   "expected": "join today (DS10, PR #4)"
+   "expected": "joined (0b967a3); release today"
   },
   {
    "id": "MP6",
