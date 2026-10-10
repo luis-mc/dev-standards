@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T22:53+01:00",
+  "updated": "2026-10-10T22:54+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -449,8 +449,8 @@
       "status": "Done",
       "item": "Windows-only test failures",
       "detail": "Built in draft #22: test_spec_check loads spec_check through the symlink placeholder Windows checks out; test_authspec_check reads the spec as UTF-8. Both pass on Windows with no environment variable; every other tools/ suite passes there too. Waiting for the join.",
-      "expected": "10 Oct ~21:30",
-      "changed": "2026-10-10T19:33+01:00"
+      "expected": "10 Oct",
+      "changed": "2026-10-10T22:54+01:00"
     },
     {
       "id": "DS22",
