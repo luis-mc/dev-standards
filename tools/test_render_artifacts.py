@@ -34,10 +34,10 @@ def task(tid, owner, status, item, expected, changed='', app='', detail=None):
 
 def base_registry():
     return {'spec': R.SPEC, 'updated': STAMP_ISO, 'tasks': [
-        task('AR5', 'artifacts', 'Done', 'ARTIFACTSPEC 1.0.0', '10 Oct', '2026-10-10T11:00+01:00', 'luismc-artifacts'),
+        task('AR5', 'artifacts', 'Built', 'ARTIFACTSPEC 1.0.0', '10 Oct', '2026-10-10T11:00+01:00', 'luismc-artifacts'),
         task('AR6', 'artifacts', 'Running', 'Templates', '10 Oct ~15:30', '2026-10-10T12:00+01:00', 'luismc-artifacts'),
         task('AR7', 'artifacts', 'To do', 'project_artifacts.py', '11 Oct', '2026-10-09T09:00+01:00', 'luismc-artifacts'),
-        task('AR16', 'artifacts', 'Done', 'Record saved', '20 Sep', '2026-09-20T10:00+01:00', 'luismc-artifacts'),
+        task('AR16', 'artifacts', 'Built', 'Record saved', '20 Sep', '2026-09-20T10:00+01:00', 'luismc-artifacts'),
         task('DS1', 'project', 'Live', 'AUTHSPEC 3.1.0', '24 Sep', '2026-09-24T10:00+01:00', 'luismc-project-setup'),
         task('DS2', 'models', 'Live', 'Effort question', '05 Oct', '2026-10-05T10:00+01:00', 'luismc-project-setup'),
         task('DS3', 'project', 'Live', 'tech-stack-setup 11.2.0', '02 Oct', '2026-10-02T10:00+01:00', 'luismc-project-setup'),
@@ -286,8 +286,8 @@ def table_rows(html, which=0):
 def groups_and_order_on_the_feature_artifact(fx):
     rows = table_rows(fx.render('artifacts'))
     assert rows == [('group', 'now', 'Running now and next'), ('task', 'AR6'), ('task', 'AR7'),
-                    ('group', 'done', 'Live or done'), ('task', 'AR5'), ('task', 'AR16')], rows
-    # the "you" group is omitted when empty; Live or done is newest changed first (AR5 11 Oct 10 > AR16 20 Sep)
+                    ('group', 'built', 'Live or built'), ('task', 'AR5'), ('task', 'AR16')], rows
+    # the "you" group is omitted when empty; Live or built is newest changed first (AR5 11 Oct 10 > AR16 20 Sep)
 
 
 @test
@@ -300,7 +300,7 @@ def groups_and_order_on_the_full_progress_artifact(fx):
         ('task', 'AR7'), ('task', 'DS8'), ('task', 'MP2'),      # 11 Oct, 12 Oct, 13 Oct
         ('group', 'you', 'Needs you, failed or on hold'),
         ('task', 'DS9'), ('task', 'DS11'), ('task', 'DS10'),    # Needs you, Failed, On hold
-        ('group', 'done', 'Live or done'),
+        ('group', 'built', 'Live or built'),
         ('task', 'AR5'), ('task', 'MP1'), ('task', 'DS2'), ('task', 'DS3'),   # newest changed first
     ], rows
 
@@ -339,10 +339,10 @@ def earlier_fold_follows_the_stamp_not_the_clock(fx):
 @test
 @with_fixture
 def a_group_with_only_folded_rows_is_still_closed_correctly(fx):
-    fx.registry['tasks'] = [t for t in fx.registry['tasks'] if t['status'] not in ('Live', 'Done') or t['id'] in ('AR16', 'DS1')]
+    fx.registry['tasks'] = [t for t in fx.registry['tasks'] if t['status'] not in ('Live', 'Built') or t['id'] in ('AR16', 'DS1')]
     out = fx.render('full-progress')
     rows = table_rows(out, 0)
-    assert ('group', 'done', 'Live or done') not in rows, rows
+    assert ('group', 'built', 'Live or built') not in rows, rows
     assert table_rows(out, 1) == [('task', 'DS1'), ('task', 'AR16')]
     assert fx.check(out, 'full-progress') == []
 
@@ -375,14 +375,14 @@ def tiles_count_each_status_in_order_and_skip_empty(fx):
     dom = R.parse_dom(fx.render('full-progress'))
     tiles = [(R.text_of(R.find(t, 'div', 'label')), R.text_of(R.find(t, 'div', 'count')), t.attrs['class'])
              for t in R.find_all(dom, 'div', 'status-count-tile')]
-    assert tiles == [('live', '4', 'status-count-tile status-live'), ('done', '2', 'status-count-tile status-done'),
+    assert tiles == [('live', '4', 'status-count-tile status-live'), ('built', '2', 'status-count-tile status-built'),
                      ('running', '3', 'status-count-tile status-running'),
                      ('needs you', '1', 'status-count-tile status-needs-you'), ('waiting', '1', 'status-count-tile status-waiting'),
                      ('to do', '2', 'status-count-tile status-to-do'), ('on hold', '1', 'status-count-tile status-on-hold'),
                      ('failed', '1', 'status-count-tile status-failed')], tiles
     feature = R.parse_dom(fx.render('artifacts'))
     got = [(R.text_of(R.find(t, 'div', 'label')), R.text_of(R.find(t, 'div', 'count'))) for t in R.find_all(feature, 'div', 'status-count-tile')]
-    assert got == [('done', '2'), ('running', '1'), ('to do', '1')], got
+    assert got == [('built', '2'), ('running', '1'), ('to do', '1')], got
 
 
 @test
@@ -471,7 +471,7 @@ def check_r64_columns(fx):
     expect(fx, sub1(fp, '<th>App / service</th>', '', count=2), 'full-progress', ['R6.4'])
     # a feature artifact must not carry the App / service column
     expect(fx, sub1(out, '<th>Detail</th>', '<th>App / service</th><th>Detail</th>'), 'artifacts', ['R6.4'])
-    expect(fx, sub1(out, '<td colspan="4"><strong>Live or done', '<td colspan="5"><strong>Live or done'), 'artifacts', ['R6.4'])
+    expect(fx, sub1(out, '<td colspan="4"><strong>Live or built', '<td colspan="5"><strong>Live or built'), 'artifacts', ['R6.4'])
 
 
 @test
@@ -507,12 +507,12 @@ def check_r62_groups(fx):
     expect(fx, move_row(fp, 'AR7', 'data-group="now"'), 'full-progress', ['R6.2'])
     # two groups swapped
     a, b = fp.index('<tr class="status-group" data-group="now">'), fp.index('<tr class="status-group" data-group="you">')
-    c = fp.index('<tr class="status-group" data-group="done">')
+    c = fp.index('<tr class="status-group" data-group="built">')
     swapped = fp[:a] + fp[b:c] + fp[a:b] + fp[c:]
     expect(fx, swapped, 'full-progress', ['R6.2'])
-    # Live or done not newest first
+    # Live or built not newest first
     out = fx.render('artifacts')
-    expect(fx, move_row(out, 'AR16', 'data-group="done"'), 'artifacts', ['R6.2'])
+    expect(fx, move_row(out, 'AR16', 'data-group="built"'), 'artifacts', ['R6.2'])
 
 
 @test
@@ -549,7 +549,7 @@ def check_r66_expected_format(fx):
         registry = copy.deepcopy(fx.registry)
         registry['tasks'][1]['expected'] = good
         assert fx.check(fx.render('artifacts', registry=registry), 'artifacts', registry=registry) == [], good
-    # Live and Done rows are not held to the open-row format; Failed is not an open status
+    # Live and Built rows are not held to the open-row format; Failed is not an open status
     registry = copy.deepcopy(fx.registry)
     registry['tasks'][0]['expected'] = 'yesterday'
     registry['tasks'][12]['expected'] = 'soon'
@@ -597,11 +597,11 @@ def check_inv1_other_artifacts_tasks_do_not_leak(fx):
 @with_fixture
 def check_r58_tiles(fx):
     out = fx.render('artifacts')
-    expect(fx, sub1(out, '<div class="count">2</div><div class="label">done</div>', '<div class="count">3</div><div class="label">done</div>'),
+    expect(fx, sub1(out, '<div class="count">2</div><div class="label">built</div>', '<div class="count">3</div><div class="label">built</div>'),
            'artifacts', ['R5.8'])
     expect(fx, sub1(out, '<div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div>', ''),
            'artifacts', ['R5.8'])
-    expect(fx, sub1(out, '<div class="label">done</div>', '<div class="label">live</div>'), 'artifacts', ['R5.8'])
+    expect(fx, sub1(out, '<div class="label">built</div>', '<div class="label">live</div>'), 'artifacts', ['R5.8'])
     expect(fx, sub1(out, '</div></div>\n<p class="note">Key', '</div><div class="status-count-tile status-failed"><div class="count">0</div><div class="label">failed</div></div></div>\n<p class="note">Key'),
            'artifacts', ['R5.8'])
 
@@ -659,7 +659,7 @@ def check_r54_history(fx):
 def check_r59_registry_script(fx):
     fp = fx.render('full-progress')
     expect(fx, sub1(fp, 'id="task-registry"', 'id="registry"'), 'full-progress', ['R5.9'])
-    expect(fx, sub1(fp, '"status": "Running"', '"status": "Done"', count=fp.count('"status": "Running"')), 'full-progress', ['R5.9'])
+    expect(fx, sub1(fp, '"status": "Running"', '"status": "Built"', count=fp.count('"status": "Running"')), 'full-progress', ['R5.9'])
     start = fp.index('<script type="application/json"')
     end = fp.index('</script>', start) + 9
     expect(fx, fp[:start] + fp[end:], 'full-progress', ['R5.9'])
@@ -951,7 +951,7 @@ def artifact_file_names():
 
 @test
 def constants_follow_the_contract():
-    assert R.STATUSES == ('Live', 'Done', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed')
+    assert R.STATUSES == ('Live', 'Built', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed')
     assert len(R.REQUIRED_TOKENS) == 22 and len(set(R.REQUIRED_TOKENS)) == 22
     design = open(os.path.join(PLUGIN, 'design', 'DESIGN.md'), encoding='utf-8').read()
     for token in R.REQUIRED_TOKENS:

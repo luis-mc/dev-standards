@@ -208,10 +208,13 @@ for _c, _e, _s in TABLE:
 
 
 @test
-def after_merged_status_done_from_manifest():
-    work = make_repo(merged_status='Done')
+def after_merged_status_built_from_manifest():
+    work = make_repo(merged_status='Built')
     after(work, 'gh pr merge 3')
-    assert statuses(work) == [('AR5', 'Done')], queue_of(work)
+    assert statuses(work) == [('AR5', 'Built')], queue_of(work)
+    old = make_repo(merged_status='Done')          # the retired name reads as Built (R6.9)
+    after(old, 'gh pr merge 3')
+    assert statuses(old) == [('AR5', 'Built')], queue_of(old)
 
 
 @test
@@ -587,7 +590,7 @@ def stop_garbage_stdin_exits_zero():
 
 # --- end-of-turn hook: background work (R8.10) -----------------------------------------
 
-NO_ACTIVE = ['Live', 'Done', 'To do', 'On hold', 'Failed']
+NO_ACTIVE = ['Live', 'Built', 'To do', 'On hold', 'Failed']
 BG_REASON = 'started in the background'
 
 
@@ -623,7 +626,7 @@ def stop_background_blocks_for_background_bash_and_task_calls_too():
 @test
 def stop_allows_background_work_with_an_active_task_and_clears_the_marker():
     for status in ('Running', 'Waiting', 'Needs you'):
-        work = make_repo(statuses=['Done', status])
+        work = make_repo(statuses=['Built', status])
         env = set_pending(work)
         bg_started(work)
         rc, out, err, _ = stop(work, env)
@@ -650,7 +653,7 @@ def stop_background_clears_once_a_task_becomes_running_in_the_record_worktree():
     stale = make_repo(statuses=['Running'])
     write(os.path.join(stale, '.claude', 'worktrees', 'artifacts-record', 'docs', 'artifacts', 'registry.json'),
           json.dumps({'spec': 'ARTIFACTSPEC 1.0.0', 'tasks': [{'id': 'AR5', 'owner': 'project',
-                                                              'status': 'Done', 'item': 'x'}]}))
+                                                              'status': 'Built', 'item': 'x'}]}))
     bg_started(stale)
     assert parse_stop(stop(stale, set_pending(stale))[1]).get('decision') == 'block'
 
@@ -786,11 +789,11 @@ def start_queues_merged_closed_and_ignores_the_rest():
 
 
 @test
-def start_uses_merged_status_done_from_manifest():
-    work = make_repo(branch='main', merged_status='Done')
+def start_uses_merged_status_built_from_manifest():
+    work = make_repo(branch='main', merged_status='Built')
     start(work, gh_env(work))
     got = dict(statuses(work))
-    assert got['AR5'] == 'Done' and got['AR9'] == 'On hold', got
+    assert got['AR5'] == 'Built' and got['AR9'] == 'On hold', got
 
 
 @test
@@ -928,7 +931,8 @@ def rule_file_carries_the_activity_rules():
                  "the session's own", 'contracts', 'joins', 'test runs', 'releases', 'deploys', 'cleanup',
                  'A task is Running while any work for it runs',
                  'Waiting or Needs you when blocked on something or someone',
-                 'Done means nothing is left to do for it', 'is its own task, Running or To do',
+                 'Built means the work is finished but not released', 'release work still to come',
+                 'is its own task, Running or To do',
                  'Before ending a turn that leaves work running in the background, its task is Running'):
         assert frag in joined, frag
     assert all(len(ln) < 260 for ln in lines), 'one short imperative line per rule'

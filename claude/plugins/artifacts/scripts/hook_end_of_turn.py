@@ -152,7 +152,7 @@ def build_background_reason(script):
             '(%s task-add --owner <key|project> --item ... --detail ... --expected ... --status Running) or '
             'set the task that covers it Running (%s set-task-status <ID> Running), then publish what '
             'pending lists. If the work is already finished, there is nothing to record: set its task '
-            'Done only when nothing is left to do for it.' % (py, py))
+            'Built only when it is finished, and release work still to come is its own task.' % (py, py))
 
 
 def main():

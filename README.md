@@ -166,7 +166,8 @@ Hooks queue status changes when a pull request is opened, readied or merged,
 when CI finishes, and on a production deploy, and the end of a turn waits until
 those are applied and published; it also asks for a Running task when work
 was started in the background without one. Every activity is a task, the
-session's own included, and Done means nothing is left to do. The plugin
+session's own included, and Built means finished but not yet released (Live
+means released). The plugin
 delivers that rule itself at every session start in any project with a record,
 so it is always current; installing creates nothing in a project.
 `luismc-project-setup`'s `claude-setup` enables the plugin in every project it

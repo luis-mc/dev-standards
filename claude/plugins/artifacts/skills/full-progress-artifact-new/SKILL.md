@@ -73,7 +73,7 @@ the repository instead (the session's scratchpad directory, in a new folder).
    optionally followed by `; ` and a note; never `today`, `soon` or `next`
    alone. This artifact shows all work, so every activity is a task here, the
    session's own included (contracts, joins, test runs, releases, cleanup);
-   `Done` means nothing is left to do for it.
+   `Built` means finished but not released; release work still to come is a task of its own.
 7. **Publish** every artifact `pending` lists, per "Publishing" below.
 8. **Check:** run `check` and report any finding with its requirement ID.
 9. **Tell the owner** the artifact's URL, and that every feature artifact

@@ -129,6 +129,12 @@ def load_manifest(root):
     return None
 
 
+def merged_status_of(manifest):
+    """The status a merge suggests: `Live` (default) or `Built`; the old `Done` reads as `Built`."""
+    value = manifest.get('merged_status')
+    return 'Built' if value in ('Built', 'Done') else 'Live'
+
+
 def read_state(path):
     """The per-session stop state (see hook_end_of_turn); {} when missing or unreadable."""
     try:
@@ -320,7 +326,7 @@ def main():
     if manifest is None:
         return 0
     from artifact_queue import append_event
-    merged_status = manifest.get('merged_status') if manifest.get('merged_status') in ('Live', 'Done') else 'Live'
+    merged_status = merged_status_of(manifest)
     for status, event in events:
         append_event(root, task_id, merged_status if status is MERGED else status, event, command)
     return 0

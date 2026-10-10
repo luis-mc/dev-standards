@@ -51,11 +51,14 @@ sections are never renumbered to close a gap. Invariants are numbered
 ### 0.4 What changed in 1.1.0
 
 Version 1.0.0 recorded the work given to agents but not the session's own, and
-left built-but-unreleased work marked Done, so the full-progress artifact said
+left built-but-unreleased work marked Done (finished-sounding), so the full-progress artifact said
 nothing was running while much was. 1.1.0 adds:
 
 - the activity rule: every activity is a task, a task is Running while any work
-  for it runs, Done means nothing is left (R3.2 to R3.5);
+  for it runs, Built means finished but not released (R3.2 to R3.5);
+- the status `Done` is renamed `Built`: finished, not merged or released yet;
+  `Live` is released, so no status reads as finished while something is left
+  (R6.1, R6.9);
 - the rule reaches every project, always current: the session-start hook
   delivers it as context, `init` no longer copies it, and `check` notes a stale
   copy (R8.9, R10.2, R10.4, R10.5);
@@ -181,9 +184,9 @@ The record format is unchanged: `spec` in the manifest and the registry stays
 - **R3.3** — A task is Running while any work for it runs, and Waiting or Needs
   you when it is blocked on something or someone. The rule file has a line
   saying so. Verified by `rule_file_carries_the_activity_rules`.
-- **R3.4** — Done means nothing is left to do for the task. Work still to come
-  (join, CI, release) is its own task, Running or To do. The rule file has a
-  line saying so. Verified by `rule_file_carries_the_activity_rules`.
+- **R3.4** — Built means the work is finished but not released. Release work
+  still to come (join, CI, release) is its own task, Running or To do. The rule
+  file has a line saying so. Verified by `rule_file_carries_the_activity_rules`.
 - **R3.5** — Before ending a turn that leaves work running in the background,
   its task is Running. The rule file has a line saying so, and R8.10 enforces
   it. Verified by `rule_file_carries_the_activity_rules` and
@@ -221,7 +224,7 @@ docs/artifacts/
 | `windows_timezone` | string | Windows zone ID for the fallback, e.g. `GMT Standard Time`. |
 | `design` | string | `"default"` or `"design.css"`. |
 | `default_branch` | string | Where the record is committed, e.g. `main`. |
-| `merged_status` | string | Status a merge suggests: `"Live"` (default) or `"Done"`. |
+| `merged_status` | string | Status a merge suggests: `"Live"` (default) or `"Built"`. |
 | `full_progress_artifact` | object | `{key:"full-progress", title, url, file, published_sha256}` |
 | `feature_artifacts` | array | `{key, title, url, file, prefix, apps:[...], published_sha256}` each |
 | `project_prefixes` | array | Task prefixes owned by the project, e.g. `["DS"]`. |
@@ -248,7 +251,7 @@ docs/artifacts/
 
 - **R4.5** — A task's `id` is a registered prefix plus a positive integer; IDs
   are unique and never reused. A task is never removed from the registry (there
-  is no remove command); dropped work is set On hold or Done with a detail
+  is no remove command); dropped work is set On hold or Built with a detail
   saying so, so the next number, the highest plus one, is always unused.
 - **R4.6** — `owner` is a feature `key` from the manifest or `project`. A
   feature task's prefix is its feature's prefix; a project task's prefix is
@@ -370,7 +373,7 @@ The templates hold `{{placeholders}}`: `title`, `fonts_link`, `design_css`,
 | Status | Meaning |
 |---|---|
 | Live | Released or in production. |
-| Done | Finished; nothing to release. |
+| Built | Finished, but not merged or released yet. |
 | Running | Being worked on now. |
 | Needs you | Waits on the owner. |
 | Waiting | Waits on something else: CI, a dependency, a time. |
@@ -385,9 +388,9 @@ The templates hold `{{placeholders}}`: `title`, `fonts_link`, `design_css`,
 
 - **R6.2** — Checklist rows are grouped, in this order: `Running now and next`
   (Running, Waiting, To do — earliest expected first), `Needs you, failed or
-  on hold` (Needs you, Failed, On hold), `Live or done` (newest `changed`
+  on hold` (Needs you, Failed, On hold), `Live or built` (newest `changed`
   first). An empty group is omitted.
-- **R6.3** — In the full-progress artifact, Live or Done rows whose `changed`
+- **R6.3** — In the full-progress artifact, Live or Built rows whose `changed`
   is more than 14 days old fold into a closed `<details>` titled `Earlier`.
 
 ### 6.3 Columns
@@ -406,9 +409,20 @@ The templates hold `{{placeholders}}`: `title`, `fonts_link`, `design_css`,
   owner's zone, optionally followed by `; ` and a short note. Words such as
   `today`, `soon`, `tomorrow` or `next` alone fail — a relative word goes stale
   without anyone changing it.
-- **R6.7** — On a Live or Done row, Expected is the date it happened.
-- **R6.8** — `set-task-status` to Live or Done sets Expected to the current
+- **R6.7** — On a Live or Built row, Expected is the date it happened.
+- **R6.8** — `set-task-status` to Live or Built sets Expected to the current
   date when no `--expected` is given.
+
+### 6.5 The retired status Done
+
+- **R6.9** — `Done`, a status of 1.0.0, is retired: it meant "finished" even
+  when merging, releasing or deploying was still to come, and `Built` and `Live`
+  say which. `set-task-status` and `task-add` accept `Done` as a deprecated
+  alias, store `Built` and print a note. A record that still holds `Done` (a
+  task status, or `merged_status`) is read as `Built`, the next writing command
+  rewrites it as `Built`, and `check` reports the old values as a note, not a
+  finding. Verified by `test_done_is_a_deprecated_alias_of_built` and
+  `test_old_done_records_migrate_to_built`.
 
 ---
 
@@ -600,7 +614,7 @@ Reads the hook input; takes the task ID from the current branch name
 
 | Key | Default | Ceiling | Direction | Section |
 |---|---|---|---|---|
-| `merged_status` | `Live` | — | `Live` or `Done` | §8.1 |
+| `merged_status` | `Live` | — | `Live` or `Built` | §8.1 |
 | Earlier fold age | 14 days | 60 days | may only be lengthened | §6.2 |
 | End-of-turn blocks | 3 | 3 | fixed | §8.2 |
 | Push retries | 3 | 5 | — | §4.6 |

@@ -15,7 +15,8 @@ Every activity is a task before it starts, whoever does it: work given to
 agents and the session's own (contracts, specs, reviews, joins, test runs,
 releases, deploys, cleanup). A task is Running while any work for it runs.
 Work still to come after it (join, CI, release) is a task of its own, Running
-or To do, never a reason to leave the first one open.
+or To do. `Built` means finished but not released; `Live` means released.
+(`Done` is a retired name for `Built`.)
 
 Every command below is
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/project_artifacts.py" <command>`, run from
@@ -30,7 +31,7 @@ read the message, fix the cause and rerun.
    `project`. If the manifest does not exist, stop and offer
    `feature-artifact-new` or `full-progress-artifact-new`.
 2. **Collect** the item (at most 80 characters), the detail (plain text, at
-   most 600 characters), the status (default `To do`; one of Live, Done,
+   most 600 characters), the status (default `To do`; one of Live, Built,
    Running, Needs you, Waiting, To do, On hold, Failed), the expected date and,
    for a project task, the app or service. Ask only for what is missing. Use `Running` for work that is running as you
    add it.

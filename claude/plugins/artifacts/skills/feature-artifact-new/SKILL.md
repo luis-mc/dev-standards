@@ -77,8 +77,8 @@ the repository instead (the session's scratchpad directory, in a new folder).
    most 80 characters. `expected` is a real date from `date` in the project's
    zone, `DD Mon` or `DD Mon ~HH:MM`, optionally followed by `; ` and a note;
    never `today`, `soon` or `next` alone. Every activity is a task, the
-   session's own included; `Done` means nothing is left to do for it, and work
-   still to come (join, release) is a task of its own.
+   session's own included; `Built` means finished but not released, and
+   release work still to come (join, release) is a task of its own.
 7. **Publish** every artifact `pending` lists, per "Publishing" below. The new
    feature artifact comes first, then the full-progress artifact, which links
    to it.

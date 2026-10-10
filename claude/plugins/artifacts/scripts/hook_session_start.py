@@ -22,8 +22,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from hook_after_command import (TASK_ID_RE, command_for, git, hook_root, hooks_off,  # noqa: E402
-                                load_manifest, origin_record_file, parse_json, read_input,
-                                run, warn)
+                                load_manifest, merged_status_of, origin_record_file, parse_json,
+                                read_input, run, warn)
 
 OPEN_STATUSES = ('Running', 'Waiting', 'To do')
 RULE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -99,7 +99,7 @@ def catch_up(root, manifest):
     """The pull request catch-up (R8.5 to R8.7); returns the systemMessage lines."""
     from artifact_queue import append_event, read_queue
     branch = manifest.get('default_branch') if isinstance(manifest.get('default_branch'), str) else 'main'
-    merged_status = manifest.get('merged_status') if manifest.get('merged_status') in ('Live', 'Done') else 'Live'
+    merged_status = merged_status_of(manifest)
     messages = []
 
     f = git(root, 'fetch', 'origin', branch, timeout=FETCH_TIMEOUT)
