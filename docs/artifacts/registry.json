@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T23:28+01:00",
+  "updated": "2026-10-10T23:33+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -588,9 +588,9 @@
       "app": "luismc-project-setup",
       "status": "Running",
       "item": "Defaults: Opus at medium, Sonnet at high",
-      "detail": "Agent changing the shipped defaults (skill profiles: Opus medium, Sonnet high; claude-setup preselects Opus medium and Sonnet high, top-level effort medium; architect agent medium; the rule's agent line). Rides the 7.0.0 release. Already applied to your own ~/.claude: Opus medium, Sonnet high, top-level medium, and the rule line (backups in the session scratchpad).",
+      "detail": "Owner confirmed: Opus at medium and Sonnet at medium everywhere (replaces 'Sonnet at high' in this row's title). Agent changing the shipped defaults (skill profiles, claude-setup's preselected answers, top-level effort, the architect agent, the rule's agent lines). Rides the 7.0.0 release. Already applied to your own ~/.claude: both models medium, top-level medium, rule lines medium (backups in the session scratchpad).",
       "expected": "11 Oct ~01:00",
-      "changed": "2026-10-10T23:28+01:00"
+      "changed": "2026-10-10T23:33+01:00"
     }
   ]
 }
