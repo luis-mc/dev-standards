@@ -827,6 +827,16 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "changed": "2026-10-11T00:48+01:00"
   },
   {
+   "id": "AR30",
+   "owner": "artifacts",
+   "app": "luismc-artifacts",
+   "status": "Running",
+   "item": "Enable luismc-artifacts in dev-standards' project settings",
+   "detail": "Your decision: luismc-artifacts@dev-standards goes into the repo's .claude/settings.json, so every session of this repo (cloud, other machines) gets its rule and hooks; the local-only setting is removed.",
+   "expected": "11 Oct ~02:00",
+   "changed": "2026-10-11T00:51+01:00"
+  },
+  {
    "id": "DS1",
    "owner": "project",
    "app": "luismc-project-setup",
@@ -1184,12 +1194,13 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
 <p class="last-update">Last update: <time datetime="2026-10-11T00:51+01:00">11 Oct 00:51</time> (Lisbon)</p>
 <p class="lede">All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class="task-id">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class="task-id">AR12</span>), and the secret-scan fixes (<span class="task-id">DS15</span>, <span class="task-id">AR19</span>, <span class="task-id">DS16</span>). Not released yet: the round toward STACKSPEC 7.0.0 (<span class="task-id">DS17</span> to <span class="task-id">DS21</span>) is built and joined, so those rows say Done. The tests on the joined branch are running; then one ready PR, its CI, and the merge, about 21:45. Each row turns Live only when the merge lands. <strong>Nothing needs you.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">59</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">59</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">4</div><div class="label">running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
 <tr data-task="AR24"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR24</span>Integrate and release luismc-artifacts 1.1.0</a></td><td><code>luismc-artifacts</code></td><td>Merged (#33, 23:12; 1.1.1 #36, 00:05). The record is migrated to 1.1 and clean; the feature pages are local files; the two old claude.ai feature artifacts were deleted with your confirmation. Left: publish Full Progress once after the 01:00 reset.</td><td>11 Oct ~01:05</td></tr>
 <tr data-task="DS28"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS28</span>Document the pre-push worktree&#x27;s borrowed dependencies</td><td></td><td>Your decision: accept that the pre-push check of a pushed commit borrows the checkout&#x27;s node_modules, so a guard importing a workspace package reads the checked-out version; written into CONTRACT.md so nobody relies on it.</td><td>11 Oct ~01:30</td></tr>
+<tr data-task="AR30"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR30</span>Enable luismc-artifacts in dev-standards&#x27; project settings</a></td><td><code>luismc-artifacts</code></td><td>Your decision: luismc-artifacts@dev-standards goes into the repo&#x27;s .claude/settings.json, so every session of this repo (cloud, other machines) gets its rule and hooks; the local-only setting is removed.</td><td>11 Oct ~02:00</td></tr>
 <tr data-task="DS27"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS27</span>Cleanup removes agent scaffolding branches</td><td></td><td>Found tonight: Claude Code leaves a local worktree-agent-&lt;id&gt; branch for every isolated agent; cleanup.py keeps them (&#x27;no pull request&#x27;), so they pile up (27 here). It should remove a local branch with no pull request, no worktree and no commits outside the default branch, and sweep stale .delivery/push-check folders (DS23&#x27;s open point). Approved at 01:00; one agent building it.</td><td>11 Oct ~02:00</td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR29"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR29</span>Bring both feature pages&#x27; text up to date</a></td><td><code>luismc-artifacts</code></td><td>Done at 01:00: both feature pages describe tonight&#x27;s state. Project artifacts standard: luismc-artifacts 1.1.2, feature pages as local files, Built, decisions as option cards, every activity a task, the 1.1.1 repair rule. Model and effort profiles: Opus and Sonnet at medium everywhere (MP7). New history entries on both.</td><td>11 Oct</td></tr>
@@ -1255,7 +1266,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th>Feature artifact</th><th>Tasks</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td>AR2 to AR29</td><td>luismc-artifacts 1.1.2 is live (ARTIFACTSPEC 1.1.0, released 10–11 October) and is enabled for dev-standards on the owner’s machine.</td></tr>
+<tr><td><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td>AR2 to AR30</td><td>luismc-artifacts 1.1.2 is live (ARTIFACTSPEC 1.1.0, released 10–11 October) and is enabled for dev-standards on the owner’s machine.</td></tr>
 <tr><td><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td>MP1 to MP7, DS2 to DS5</td><td>The owner’s default is now Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 with STACKSPEC 7.0.0 (MP7, 11 October).</td></tr>
 </tbody></table></div>
 </section>
