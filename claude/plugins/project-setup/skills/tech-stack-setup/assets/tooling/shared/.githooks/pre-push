@@ -8,8 +8,10 @@
 # Branch deletions, tags and the refs/gate-results/* refs that branch_gate.py
 # publishes are skipped. For every other ref this runs
 #   scripts/delivery/fast_guards.py
-# once; it runs the steps marked "pre_push": true in scripts/delivery/gate.json.
-# It checks the checked-out commit, so push the branch you are standing on.
+# once, with --commit <the pushed sha>; it runs the steps marked "pre_push": true in
+# scripts/delivery/gate.json. The pushed commit is what gets checked: when it is not
+# the checked-out one, fast_guards.py checks it out in a temporary worktree and
+# removes that afterwards, so any branch can be pushed from anywhere.
 #
 # A project's own pre-push check lives beside this file as `pre-push.local` (an
 # existing hook is moved there at install, never overwritten). After the guards
@@ -67,8 +69,6 @@ for candidate in python3 python; do
   fi
 done
 
-head_sha=$(git rev-parse HEAD 2>/dev/null)
-
 fail=0
 checked=0
 while read -r local_ref local_sha remote_ref remote_sha; do
@@ -86,17 +86,13 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   fi
 
   checked=$((checked + 1))
-  if [ -n "$head_sha" ] && [ "$local_sha" != "$head_sha" ]; then
-    # The guards read the working tree, so they judge HEAD, not the commit pushed.
-    echo "pre-push: note: pushing $local_ref ($(printf %.10s "$local_sha")) but the checked-out commit is $(printf %.10s "$head_sha"); the guards check the checked-out one." >&2
-  fi
   base_args=""
   if [ "$remote_sha" != "$zero" ] && git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then
     base_args="--base-ref $remote_sha"            # only what this push adds
   fi
   # stdin is the ref list; guards must not read it.
   # shellcheck disable=SC2086
-  if ! "$py" scripts/delivery/fast_guards.py $base_args </dev/null; then
+  if ! "$py" scripts/delivery/fast_guards.py --commit "$local_sha" $base_args </dev/null; then
     fail=1
   fi
 done < "$stdin_file"

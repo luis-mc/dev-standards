@@ -31,6 +31,7 @@ import os
 import platform
 import re
 import shutil
+import signal
 import stat
 import subprocess
 import sys
@@ -77,7 +78,7 @@ _GITCONFIG.write_text(
 
 def env_with(extra: dict | None = None) -> dict:
     env = os.environ.copy()
-    for var in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GATE_TEST_FAIL", "GIT_PREFIX"):
+    for var in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GATE_TEST_FAIL", "GIT_PREFIX", "CARGO_TARGET_DIR"):
         env.pop(var, None)
     env.update(
         GIT_CONFIG_GLOBAL=str(_GITCONFIG),
@@ -172,8 +173,26 @@ class Box:
         "os.makedirs('.delivery', exist_ok=True)\n"
         "with open('.delivery/ran.log', 'a') as f:\n"
         "    f.write(json.dumps([name] + args) + '\\n')\n"
+        # Where the step ran and what it could see, in a file outside the checkout (a
+        # step run in a temporary worktree leaves nothing behind there).
+        "cl = os.environ.get('GATE_TEST_CWDLOG')\n"
+        "if cl:\n"
+        "    nm = 'node_modules'\n"
+        "    here = os.path.realpath('.')\n"
+        "    rec = {'step': name, 'args': args, 'cwd': os.getcwd().replace(os.sep, '/'),\n"
+        "           'cargo': os.environ.get('CARGO_TARGET_DIR'),\n"
+        "           'nm': sorted(os.listdir(nm)) if os.path.isdir(nm) else None,\n"
+        "           'nm_link': os.path.isdir(nm) and os.path.realpath(nm) != os.path.join(here, nm),\n"
+        "           'deep': sorted(os.listdir('apps/web/node_modules')) if os.path.isdir('apps/web/node_modules') else None,\n"
+        "           'ghost': os.path.exists('apps/ghost/node_modules')}\n"
+        "    if os.environ.get('GATE_TEST_NMWRITE') and os.path.isdir(nm):\n"
+        "        open(os.path.join(nm, 'probe.txt'), 'w').write('p')\n"
+        "    open(cl, 'a').write(json.dumps(rec) + '\\n')\n"
         "print('[%s] stdout' % name, flush=True)\n"
         "print('[%s] stderr' % name, file=sys.stderr, flush=True)\n"
+        "if name == 'guards' and os.path.exists('BAD_GUARD'):\n"
+        "    print('BAD_GUARD file present', flush=True)\n"
+        "    sys.exit(1)\n"
         "if name in os.environ.get('GATE_TEST_NOISE', '').split(','):\n"
         "    for i in range(1, 101):\n"
         "        print('noise line %03d' % i, flush=True)\n"
@@ -1079,6 +1098,185 @@ def sc_fast_guards(t: T, shared: Path) -> None:
     t.eq("no pre_push step configured: exit 2", r.code, 2)
 
 
+def push_leftovers(box: Box) -> list:
+    """What a finished fast_guards.py --commit run must not leave: directories under
+    .delivery/push-check/, and worktrees registered with the repository."""
+    d = box.work / ".delivery/push-check"
+    names = sorted(p.name for p in d.iterdir()) if d.is_dir() else []
+    listed = [x for x in box.g("worktree", "list").splitlines() if x.strip()]
+    return names + ["registered worktree"] * (len(listed) - 1)
+
+
+def sc_push_check(t: T, shared: Path) -> None:
+    """fast_guards.py --commit: the guards judge a commit that is not checked out."""
+    box = Box(shared)
+    (box.work / ".git/info/exclude").write_text("node_modules/\n", encoding="utf-8")
+    clean = box.branch("feat/clean", {"apps/web/a.txt": "a\n"})
+    bad = box.branch("feat/bad", {"BAD_GUARD": "x\n", "apps/web/b.txt": "b\n"})
+    box.g("checkout", "-q", "feat/clean")
+    # dependency directories of the main checkout: two that the commit has a place for, one it has not
+    nm = box.work / "node_modules"
+    (nm / "pkg").mkdir(parents=True)
+    (nm / "pkg/index.js").write_text("keep\n", encoding="utf-8")
+    deep = box.work / "apps/web/node_modules/dep"
+    deep.mkdir(parents=True)
+    (deep / "x.js").write_text("keep\n", encoding="utf-8")
+    ghost = box.work / "apps/ghost/node_modules/z"
+    ghost.mkdir(parents=True)
+    (ghost / "z.js").write_text("keep\n", encoding="utf-8")
+    log = box.root / "cwd.log"
+
+    def rows() -> list:
+        out = [json.loads(x) for x in log.read_text().splitlines()] if log.exists() else []
+        if log.exists():
+            log.unlink()
+        return out
+
+    def survives(label: str) -> None:
+        t.check("... node_modules contents survive (%s)" % label,
+                (nm / "pkg/index.js").read_text(encoding="utf-8") == "keep\n"
+                and (deep / "x.js").is_file() and (ghost / "z.js").is_file())
+
+    def fg(*args: str, env: dict | None = None) -> R:
+        return box.script("fast_guards.py", "--base-ref", "origin/main", *args,
+                          env={"GATE_TEST_CWDLOG": str(log), **(env or {})})
+
+    # HEAD (feat/clean) is fine, the commit named is not
+    r = fg("--commit", bad, env={"GATE_TEST_NMWRITE": "1"})
+    got = rows()
+    t.eq("a failing pushed commit, clean HEAD: exit 1", r.code, 1)
+    t.has("... the failing guard is named", r.out, "FAIL guards: command failed")
+    t.has("... with its output", r.out.split("FAIL guards:", 1)[-1], "BAD_GUARD file present")
+    t.has("... and says where it checks", r.out, "checking pushed commit %s" % bad[:10])
+    t.eq("... both guards ran", [x["step"] for x in got], ["guards", "secret-scan"])
+    t.check("... in a worktree under .delivery/push-check/ named after the commit",
+            all((".delivery/push-check/%s-" % bad[:12]) in x["cwd"] for x in got), str(got))
+    t.eq("... {base} is still the merge base", got[1]["args"] if len(got) > 1 else None, [box.main_sha])
+    t.check("... the logs are in the main checkout",
+            (box.work / ".delivery/logs/pre-push/guards.log").is_file())
+    t.eq("... no Rust target directory to share: CARGO_TARGET_DIR unset", got[0]["cargo"] if got else 1, None)
+    t.eq("... node_modules of the main checkout is there, at the same place", got[0]["nm"] if got else 1, ["pkg"])
+    t.eq("... so is a nested one", got[0]["deep"] if got else 1, ["dep"])
+    t.eq("... one the commit has no place for is not", got[0]["ghost"] if got else 1, False)
+    t.eq("... they are links, not copies", got[0]["nm_link"] if got else None, True)
+    t.check("... without a warning about a link that could not be made", "warning" not in r.text, r.text)
+    t.check("... a write through the link reached the main checkout", (nm / "probe.txt").is_file())
+    (nm / "probe.txt").unlink(missing_ok=True)
+    t.eq("... the worktree is gone", push_leftovers(box), [])
+    survives("failing commit")
+    t.check("... the checkout is as it was",
+            box.g("rev-parse", "HEAD") == clean and box.clean() and not (box.work / "BAD_GUARD").exists())
+
+    # the reverse: HEAD fails, the commit named is clean
+    box.g("checkout", "-q", "feat/bad")
+    r = fg("--commit", clean)
+    got = rows()
+    t.eq("HEAD failing, the commit named clean: exit 0", r.code, 0)
+    t.check("... judged in a worktree of the named commit",
+            bool(got) and all((".delivery/push-check/%s-" % clean[:12]) in x["cwd"] for x in got), str(got))
+    t.eq("... the worktree is gone", push_leftovers(box), [])
+    survives("clean commit")
+
+    # --commit with the checked-out commit, and no --commit: in place
+    for label, extra in (("--commit HEAD", ["--commit", "HEAD"]), ("--commit <HEAD sha>", ["--commit", bad]),
+                         ("no --commit", [])):
+        r = fg(*extra)
+        got = rows()
+        t.eq("%s: judges the checked-out (failing) commit" % label, r.code, 1)
+        t.check("... in place", bool(got) and all(
+            os.path.realpath(x["cwd"]) == os.path.realpath(str(box.work)) for x in got), str(got))
+        t.eq("... without a worktree", push_leftovers(box), [])
+        t.check("... or a push-check directory", not (box.work / ".delivery/push-check").exists())
+
+    r = fg("--commit", "no-such-commit")
+    t.eq("an unknown --commit: exit 2", r.code, 2)
+    t.has("... and says so", r.err, "--commit")
+
+    # Rust: the main checkout's target directory is shared
+    (box.work / "target").mkdir()
+    r = fg("--commit", clean)
+    got = rows()
+    t.check("a target/ in the main checkout becomes CARGO_TARGET_DIR",
+            bool(got) and got[0]["cargo"] is not None
+            and os.path.realpath(got[0]["cargo"]) == os.path.realpath(str(box.work / "target")), str(got))
+    fg("--commit", clean, env={"CARGO_TARGET_DIR": "somewhere-else"})
+    got = rows()
+    t.eq("... unless the caller already set one", got[0]["cargo"] if got else None, "somewhere-else")
+    fg("--commit", clean)
+    rows()
+    (box.work / "target").rmdir()
+
+    # an interrupt (Ctrl-C) while the steps run: driven in-process, so it works everywhere
+    driver = box.root / "_interrupt.py"
+    driver.write_text(
+        "import signal, sys\n"
+        "sys.path.insert(0, 'scripts/delivery')\n"
+        "import delivery_common as dc\n"
+        "import fast_guards\n"
+        "def boom(*a, **k):\n"
+        "    if sys.argv[2] == 'term':\n"
+        "        signal.raise_signal(signal.SIGTERM)\n"
+        "    raise KeyboardInterrupt\n"
+        "dc.execute_steps = boom\n"
+        "dc.main_guard(lambda: fast_guards.main(['--base-ref', 'origin/main', '--commit', sys.argv[1]]))\n",
+        encoding="utf-8")
+    r = run([PY, driver, clean, "int"], cwd=box.work)
+    t.eq("an interrupt during the steps: exit 130", r.code, 130)
+    t.eq("... the worktree is gone", push_leftovers(box), [])
+    survives("interrupt")
+    r = run([PY, driver, clean, "term"], cwd=box.work)
+    t.eq("a termination signal during the steps: exit 130", r.code, 130)
+    t.eq("... the worktree is gone", push_leftovers(box), [])
+    survives("termination")
+
+    # a guard that hangs, with a child that would outlive it
+    cfg = Box.gate_json()
+    for st_ in cfg["steps"]:
+        if st_["name"] == "guards":
+            st_["run"] = '"%s" scripts/delivery/_slow.py' % PY
+    box = Box(shared, gate_json=cfg)
+    (box.work / ".git/info/exclude").write_text("node_modules/\n", encoding="utf-8")
+    other = box.branch("feat/other", {"apps/web/a.txt": "a\n"})
+    box.branch("feat/here", {"apps/web/b.txt": "b\n"})
+    nm = box.work / "node_modules"
+    (nm / "pkg").mkdir(parents=True)
+    (nm / "pkg/index.js").write_text("keep\n", encoding="utf-8")
+    deep = box.work / "apps/web/node_modules/dep"
+    deep.mkdir(parents=True)
+    (deep / "x.js").write_text("keep\n", encoding="utf-8")
+    ghost = box.work / "apps/ghost/node_modules/z"
+    ghost.mkdir(parents=True)
+    (ghost / "z.js").write_text("keep\n", encoding="utf-8")
+    started = time.monotonic()
+    r = box.script("fast_guards.py", "--base-ref", "origin/main", "--commit", other, "--timeout-minutes", "0.05")
+    elapsed = time.monotonic() - started
+    t.eq("a step over its limit in the pushed commit's worktree: exit 1", r.code, 1)
+    t.check("... stopped near the limit, not when the child ends", elapsed < 25, "%.1f s" % elapsed)
+    t.has("... the FAIL line says it timed out", r.out, "FAIL guards: timed out after 0.05 min")
+    t.eq("... the worktree is gone", push_leftovers(box), [])
+    survives("timeout")
+
+    if os.name != "nt":  # a real signal; Windows has no catchable equivalent for a child process
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            proc = subprocess.Popen(
+                [PY, "scripts/delivery/fast_guards.py", "--base-ref", "origin/main", "--commit", other],
+                cwd=box.work, env=env_with(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            pc = box.work / ".delivery/push-check"
+            deadline = time.monotonic() + 20
+            while time.monotonic() < deadline and not (pc.is_dir() and any(pc.iterdir())):
+                time.sleep(0.1)
+            time.sleep(1.5)  # inside the slow step now
+            proc.send_signal(sig)
+            try:
+                proc.communicate(timeout=30)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.communicate()
+            t.eq("%s while a step runs: the run ends (130)" % sig.name, proc.returncode, 130)
+            t.eq("... the worktree is gone", push_leftovers(box), [])
+            survives(sig.name)
+
+
 def sc_hook(t: T, shared: Path) -> None:
     box = Box(shared)
     box.g("config", "core.hooksPath", ".githooks")
@@ -1122,15 +1320,68 @@ def sc_hook(t: T, shared: Path) -> None:
     t.eq("... and the hook did not run the guards again",
          len([x for x in box.ran() if x[0] == "guards"]), 1)
 
-    # pushing a branch that is not checked out: the guards judge HEAD, and say so
+    # pushing a branch that is not checked out: the guards judge the pushed commit
+    # (a temporary worktree), not whatever is checked out
+    cwd_log = box.root / "hook-cwd.log"
+    env = {"GATE_TEST_CWDLOG": str(cwd_log)}
+    cl = box.branch("feat/cl", {"apps/web/o.txt": "o\n"})
+    bad = box.branch("feat/bad", {"BAD_GUARD": "x\n", "apps/web/p.txt": "p\n"})
+
+    def rows() -> list:
+        return [json.loads(l) for l in cwd_log.read_text().splitlines()] if cwd_log.exists() else []
+
+    def reset() -> None:
+        if cwd_log.exists():
+            cwd_log.unlink()
+
+    box.g("checkout", "-q", "feat/cl")
+    r = run(["git", "push", "origin", "feat/bad"], cwd=box.work, extra_env=env)
+    t.check("pushing another branch whose commit fails a guard: blocked", r.code != 0, r.text)
+    t.has("... the failing guard is named", r.text, "FAIL guards")
+    t.eq("... and the remote did not get it", box.remote_ref("refs/heads/feat/bad"), None)
+    t.check("... the guards ran in a temporary worktree of the pushed commit",
+            bool(rows()) and all((".delivery/push-check/%s-" % bad[:12]) in x["cwd"] for x in rows()), str(rows()))
+    t.check("... which is gone", not push_leftovers(box), str(push_leftovers(box)))
+    t.check("... and the checked-out branch was not touched",
+            box.g("rev-parse", "HEAD") == cl and box.clean() and not (box.work / "BAD_GUARD").exists())
+    t.check("... no 'checked-out commit' note any more", "checked-out commit" not in r.text, r.text)
+
+    reset()
+    r = run(["git", "push", "-q", "origin", "feat/cl"], cwd=box.work, extra_env=env)
+    t.eq("pushing the checked-out branch when clean: allowed", r.code, 0)
+    t.check("... the guards ran in place",
+            bool(rows()) and all(os.path.realpath(x["cwd"]) == os.path.realpath(str(box.work)) for x in rows()), str(rows()))
+    t.eq("... and made no worktree", push_leftovers(box), [])
+
+    box.g("checkout", "-q", "feat/bad")
+    reset()
+    r = run(["git", "push", "origin", "feat/bad"], cwd=box.work, extra_env=env)
+    t.check("pushing the checked-out branch when its commit fails: blocked", r.code != 0, r.text)
+    t.eq("... and the remote did not get it", box.remote_ref("refs/heads/feat/bad"), None)
+
+    # the reverse: HEAD fails, the pushed commit is clean
+    cl2 = box.branch("feat/cl2", {"apps/web/r.txt": "r\n"})
+    box.g("checkout", "-q", "feat/bad")
+    reset()
+    r = run(["git", "push", "-q", "origin", "feat/cl2"], cwd=box.work, extra_env=env)
+    t.eq("HEAD fails a guard, the pushed branch is clean: allowed", r.code, 0)
+    t.eq("... the branch arrived", box.remote_ref("refs/heads/feat/cl2"), cl2)
+    t.check("... it was judged in a worktree, not in the failing checkout",
+            bool(rows()) and all((".delivery/push-check/%s-" % cl2[:12]) in x["cwd"] for x in rows()), str(rows()))
+    t.eq("... which is gone", push_leftovers(box), [])
+
+    # two refs in one push: each is judged, one failure blocks the push
+    reset()
+    box.g("checkout", "-q", "feat/cl")
+    fresh = box.branch("feat/fresh", {"apps/web/q.txt": "q\n"})
+    box.g("checkout", "-q", "feat/cl")
+    r = run(["git", "push", "origin", "feat/fresh", "feat/bad"], cwd=box.work, extra_env=env)
+    t.check("two refs in one push, one failing: blocked", r.code != 0, r.text)
+    t.eq("... neither arrived", (box.remote_ref("refs/heads/feat/fresh"), box.remote_ref("refs/heads/feat/bad")), (None, None))
+    t.eq("... each was judged in a worktree of its own commit",
+         sorted({x["cwd"].rsplit("/", 1)[-1].rsplit("-", 1)[0] for x in rows()}), sorted([fresh[:12], bad[:12]]))
+    t.eq("... and no worktree is left", push_leftovers(box), [])
     box.g("checkout", "-q", "feat/hk2")
-    box.branch("feat/other", {"apps/web/o.txt": "o\n"})
-    box.g("checkout", "-q", "feat/hk2")
-    r = run(["git", "push", "-q", "origin", "feat/other"], cwd=box.work)
-    t.eq("pushing another branch than the checked-out one: allowed", r.code, 0)
-    t.has("... with a note that the guards check the checked-out commit", r.text, "checked-out commit")
-    r = run(["git", "push", "-q", "origin", "feat/hk2"], cwd=box.work)
-    t.check("pushing the checked-out branch: no such note", "checked-out commit" not in r.text, r.text)
 
     # no usable Python
     stubs = box.root / "stubs"
@@ -2001,8 +2252,38 @@ MUTANTS = [
      "if not args.no_gate:", "if False:", "join_clean"),
     ("pre-push runs for deletions", ".githooks/pre-push",
      '[ "$local_sha" = "$zero" ] && continue', "false", "hook"),
-    ("pre-push stays silent about pushing another commit than HEAD", ".githooks/pre-push",
-     'if [ -n "$head_sha" ] && [ "$local_sha" != "$head_sha" ]; then', "if false; then", "hook"),
+    ("pre-push does not hand the pushed commit to the guards", ".githooks/pre-push",
+     'fast_guards.py --commit "$local_sha" $base_args', "fast_guards.py $base_args", "hook"),
+    ("fast_guards judges the checked-out commit, not the one named", "scripts/delivery/fast_guards.py",
+     'if commit != dc.rev("HEAD", root):', "if False:", "push_check"),
+    ("an unknown --commit is not refused", "scripts/delivery/fast_guards.py",
+     "        if commit is None:", "        if False:", "push_check"),
+    ("the worktree stays after a failed or timed-out run", "scripts/delivery/fast_guards.py",
+     "        return run_guards(root, path, args)\n    finally:\n        remove_worktree(root, path, links)\n",
+     "        code = run_guards(root, path, args)\n        if code == 0:\n            remove_worktree(root, path, links)\n"
+     "        return code\n    finally:\n        pass\n", "push_check"),
+    ("the worktree stays after an interrupt", "scripts/delivery/fast_guards.py",
+     "    finally:\n        remove_worktree(root, path, links)\n",
+     "    finally:\n        if sys.exc_info()[0] is None:\n            remove_worktree(root, path, links)\n", "push_check"),
+    ("a terminated run leaves its worktree", "scripts/delivery/fast_guards.py",
+     'for name in ("SIGTERM", "SIGHUP", "SIGBREAK"):', "for name in ():", "push_check"),
+    ("node_modules is not linked", "scripts/delivery/fast_guards.py",
+     "for rel in find_dependency_dirs(root):", "for rel in []:", "push_check"),
+    ("node_modules is copied, not linked", "scripts/delivery/fast_guards.py",
+     "if make_link(dest, root / rel):", "if shutil.copytree(root / rel, dest):", "push_check"),
+    ("a link is removed by deleting what it points to", "scripts/delivery/fast_guards.py",
+     "    try:\n        if os.path.islink(link):",
+     "    shutil.rmtree(os.path.realpath(link), ignore_errors=True)\n    try:\n        if os.path.islink(link):", "push_check"),
+    ("a link to a directory the commit lacks is made anyway", "scripts/delivery/fast_guards.py",
+     "if dest.parent.is_dir() and not os.path.lexists(dest):", "if True:", "push_check"),
+    ("CARGO_TARGET_DIR is not shared", "scripts/delivery/fast_guards.py",
+     'os.environ["CARGO_TARGET_DIR"] = str(root / "target")', "pass", "push_check"),
+    ("CARGO_TARGET_DIR of the caller is overwritten", "scripts/delivery/fast_guards.py",
+     'if (root / "target").is_dir() and "CARGO_TARGET_DIR" not in os.environ:', 'if (root / "target").is_dir():', "push_check"),
+    ("the steps run in the main checkout", "scripts/delivery/delivery_common.py",
+     "                    cmd, cwd, env, log,", "                    cmd, root, env, log,", "push_check"),
+    ("the logs are kept in the worktree", "scripts/delivery/fast_guards.py",
+     "        log_root=root,\n", "        log_root=None,\n", "push_check"),
     ("pre-push never blocks", ".githooks/pre-push",
      'if [ "$fail" -ne 0 ]; then', "if false; then", "hook"),
     ("pre-push runs for result refs", ".githooks/pre-push",
@@ -2036,6 +2317,7 @@ SCENARIOS = {
     "publish": sc_publish,
     "verify": sc_verify,
     "fast_guards": sc_fast_guards,
+    "push_check": sc_push_check,
     "fast_report": sc_fast_report,
     "parallel": sc_parallel,
     "hook_ranges": sc_hook_ranges,
