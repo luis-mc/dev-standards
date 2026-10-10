@@ -173,7 +173,7 @@ def main(argv: list[str] | None = None) -> int:
         code = subprocess.run(cmd, cwd=root).returncode
         if code != 0:
             dc.eprint("join: the gate on the joined head did not pass (exit %d); nothing pushed" % code)
-            return code if code in (dc.EXIT_FAIL, dc.EXIT_USAGE) else dc.EXIT_FAIL
+            return code if code in (dc.EXIT_FAIL, dc.EXIT_USAGE, dc.EXIT_TIMEOUT) else dc.EXIT_FAIL
 
     if args.push:
         pushed = dc.run_git(["push", "--quiet", "--no-verify", remote, into], cwd=root, check=False)
