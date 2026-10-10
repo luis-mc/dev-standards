@@ -436,11 +436,11 @@
       "id": "DS18",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Pre-push guard flakes",
-      "detail": "Built in draft #26. Causes shown: Vitest's 5 s default timeout on the whole-repo guard scan (no CI=true), and guards scanning other agents' worktrees nested under .claude/worktrees (a conflict marker there failed this push). Fixed in every track; fast_guards now has a 5-min limit per step, logs, and a FAIL line naming the check. gitleaks timing not proven. Joined.",
-      "expected": "10 Oct",
-      "changed": "2026-10-10T22:53+01:00"
+      "detail": "Released in STACKSPEC 7.0.0 (#27, 137e0d0, 00:31). Built in draft #26. Causes shown: Vitest's 5 s default timeout on the whole-repo guard scan (no CI=true), and guards scanning other agents' worktrees nested under .claude/worktrees (a conflict marker there failed this push). Fixed in every track; fast_guards now has a 5-min limit per step, logs, and a FAIL line naming the check. gitleaks timing not proven. Joined.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:32+01:00"
     },
     {
       "id": "DS19",
