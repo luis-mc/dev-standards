@@ -24,7 +24,7 @@
       "apps": [
         "luismc-artifacts"
       ],
-      "published_sha256": "b05229d1e51c3def60fc938947b29a9d6993d370681a32c2593df17bd754aa2f"
+      "published_sha256": "53ad95d0796b4ee12aebe71ad1a5106219be07a5d121f3dce02c0a4ce9687cf3"
     },
     {
       "key": "models",
