@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T22:55+01:00",
+  "updated": "2026-10-10T23:07+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -236,11 +236,11 @@
       "id": "AR26",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Done",
       "item": "Feature pages as repo files; fewer publishes",
-      "detail": "Agent joining AR21/AR25 and AR22 (spec, rule, script conflicts), then building: Full Progress published once per turn; feature pages as standalone HTML files in docs/artifacts with the same look, never published; Full Progress links them as local files; only Live rows fold into Earlier; only background agents arm the end-of-turn check.",
-      "expected": "11 Oct ~00:45",
-      "changed": "2026-10-10T22:05+01:00"
+      "detail": "Built in draft #31, joined, not released: Full Progress publishes once per turn; feature pages are standalone HTML files with the CSS inlined, never published; Full Progress links them as file:/// paths (relative in the committed copy); only Live rows fold; only background work arms the end-of-turn check. 132 + 68 + 91 tests on Windows and Linux.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T23:07+01:00"
     },
     {
       "id": "DS1",
