@@ -506,11 +506,11 @@
       "id": "DS25",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Cleanup needs gh to delete local work",
-      "detail": "Built in #34 and joined (not released): without a working gh, cleanup.py --local deletes nothing and lists 'would delete (needs gh to confirm)'. 200 checks on Windows and Linux.",
+      "detail": "Released in STACKSPEC 7.0.0 (#27, 137e0d0, 00:31). without a working gh, cleanup.py --local deletes nothing and lists 'would delete (needs gh to confirm)'. 200 checks on Windows and Linux.",
       "expected": "11 Oct",
-      "changed": "2026-10-11T00:19+01:00"
+      "changed": "2026-10-11T00:32+01:00"
     },
     {
       "id": "DS26",
