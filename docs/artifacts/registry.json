@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T00:05+01:00",
+  "updated": "2026-10-11T00:06+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -206,11 +206,11 @@
       "id": "AR23",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Convert dev-standards' decisions",
-      "detail": "Extracted from this session: 9 decisions for Project artifacts standard and 5 for Model and effort profiles, each with the options offered, the recommendation and your answer; four of your answers were free text and are kept in your words. One earlier 'decision' was dropped: I had settled it myself, so it was never your choice. Applied to the record right after the 1.1.0 release.",
-      "expected": "11 Oct ~00:45",
-      "changed": "2026-10-10T21:52+01:00"
+      "detail": "Applied at 00:10: both feature pages show their decisions as option cards, every option offered, the recommendation, and your choice in your words (9 for Project artifacts standard, 5 for Model and effort profiles).",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:06+01:00"
     },
     {
       "id": "AR24",
