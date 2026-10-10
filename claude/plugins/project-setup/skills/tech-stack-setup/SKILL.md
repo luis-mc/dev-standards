@@ -1,4 +1,6 @@
 ---
+model: opus
+effort: high
 description: Guide a user to a coherent technology stack — language, frameworks, database, host, and providers that work well together — then generate a repository conforming to STACKSPEC, the organization's technology-neutral invariants specification. Also audits an existing repo against those invariants and reports drift by section. Use when the user wants to start a new product, asks "help me pick a stack", "scaffold a conforming repo", "bootstrap a new product", "set up the tech stack", "does this repo conform", "check conformance", or invokes /luismc-project-setup:tech-stack-setup. This skill does NOT build authentication — that is the auth-setup skill, and it only runs if the user asks for it at the end.
 ---
 
@@ -9,12 +11,12 @@ This skill does two things:
 1. **Guides the user to a coherent stack.** Not a menu — a filtered interview
    where every option offered is compatible with everything already chosen, and
    every consequence is stated at the moment of the choice.
-2. **Generates a repository** conforming to **`STACKSPEC` 5.2.0**, the binding
+2. **Generates a repository** conforming to **`STACKSPEC` 6.0.0**, the binding
    invariants specification at `references/invariants.md`.
 
 ## The two halves, and why they are separate
 
-`STACKSPEC` 5.2.0 contains **no technology names**. It specifies properties —
+`STACKSPEC` 6.0.0 contains **no technology names**. It specifies properties —
 contract-first APIs, atomic enqueue, adapter boundaries, retention and erasure,
 consent-gated analytics, three-tier promotion — that hold whether the product is
 TypeScript on Vercel or Rust in a container.
@@ -74,7 +76,8 @@ Then **show the fixed foundation and ask nothing about it.** From
 | Layer | Fixed |
 |---|---|
 | Repo | Git, monorepo `apps/` + `packages/`, `docs/specs` + `docs/notes` |
-| CI | GitHub Actions, path-filtered, twelve required gates (`§13.1`) |
+| CI | GitHub Actions, path-filtered, twelve required gates (`§13.1`), gated E2E (`§11.2`), a default-branch run that skips a tree already tested |
+| Delivery | a branch gate with a verifiable result, a pre-push guard hook, a merge script and a CI watcher (`§13.5`, `§13.6`) |
 | Promotion | preview per PR, staging on merge, production on release (`§13.2`) |
 | Security | gitleaks pre-commit + CI over full history, dependency scanning |
 | Contract | One machine-readable contract, authored first, all clients generated from it (`§4.1`) — the *format* is chosen in Phase 3 |
@@ -247,7 +250,7 @@ Build in dependency order. Each step is a precondition of the next:
 
 | Step | Owner |
 |---|---|
-| 1. Repository skeleton, workspace, CI, hooks, secret scanning — copy `assets/tooling/<track>/` | this skill |
+| 1. Repository skeleton, workspace, CI, hooks, secret scanning, branch gate and delivery scripts — copy `assets/tooling/shared/` and `assets/tooling/<track>/` (see below) | this skill |
 | 2. `core`, then the data module with initial schema and migration runner | this skill |
 | 3. `contract` — the OpenAPI document and generators | this skill |
 | 4. *(auth)* | **`auth-setup`** — skip entirely |
@@ -258,6 +261,43 @@ Build in dependency order. Each step is a precondition of the next:
 | 9. `apps/web`, `apps/admin` | this skill |
 | 10. `apps/ios`, `apps/android` — whenever wanted | this skill |
 | 11. Stack Profile, runbooks, conformance run | this skill |
+
+### Step 1 in detail — what is copied where
+
+Paths and owners are fixed by `assets/tooling/shared/scripts/delivery/CONTRACT.md`.
+Copy all of this in the first commit, so the first branch is already gated:
+
+| Into the repository | From `assets/tooling/` | Clause |
+|---|---|---|
+| `scripts/delivery/*` | `shared/scripts/delivery/` — every file **except** `CONTRACT.md`, which stays in the plugin | `§13.5`, `§13.6`, `§13.1` |
+| `scripts/delivery/gate.json` | `<track>/scripts/delivery/gate.json` — set `default_branch` to the repo's own, and `ui_paths` to the apps that exist | `§13.5` |
+| `.githooks/pre-push` | `shared/.githooks/pre-push`, beside `pre-commit` | `§13.5` |
+| `e2e/quarantine.json` (TypeScript track only) | `ts/e2e/quarantine.json` | `§11.2` |
+| the guard-test starter | the track's starter under `<track>/` (a Vitest `guard` project, `TestGuard*`, `guard_*` or `Category=Guard`) | `§13.5` item 4 |
+| `.github/workflows/ci.yml` | `<track>/.github/workflows/ci.yml` — carries the `decide` job and the gated E2E job | `§11.2`, `§13.1` |
+| a `.gitignore` line `.delivery/` | no asset: append it to the generated `.gitignore` | `§13.5` |
+
+The pre-push hook is activated the same way as pre-commit, one setting for both
+(`git config core.hooksPath .githooks`); say so in the repo's setup notes. Mark
+`agent_setup.sh` and both hooks executable (`git update-index --chmod=+x`), or a
+checkout on another machine cannot run them.
+
+**`scripts/delivery/agent_setup.sh` is the first step for any cloud agent.** It
+installs Python 3.11+ if missing, the scanners pinned in `tools.json` (the version
+CI installs, so the gate runs the scanner CI runs) and `gate.json`'s `setup`
+commands, and it is idempotent. Put one line in the repo's agent instructions:
+run it before the first gate.
+
+Do not write the delivery scripts yourself and do not edit them in the
+generated repo to fit a product; they are the plugin's, versioned with
+`STACKSPEC`. Product differences belong in `gate.json`.
+
+**Hosting.** A change that touches only `docs/` has nothing to deploy, so
+configure the host to skip it, using whatever the host offers for deciding
+whether to build (an ignored-build-step command, a path filter). For example, a
+host that runs a command and skips the build on exit 0 can be given
+`git diff --quiet HEAD^ HEAD -- . ':!docs'`. This is a hosting setting, not a
+repository file; record it in the Stack Profile's environment inventory.
 
 ### The seam is at steps 4 and 5 — do not paper over it
 
@@ -282,7 +322,9 @@ packages for a product with one app is a defect.
 
 Run Mode 2 against what you generated. A generation that has not been checked is
 not finished. Expect and ignore auth-shaped absences — they are the declared gap,
-not findings.
+not findings. Also run the branch gate once (`python3 scripts/delivery/branch_gate.py
+--no-publish`) so the first result is a real one, and fix `gate.json` if a step
+cannot run.
 
 Report: what was generated · what was deferred and why · every profile field the
 user still has to fill · every open ledger row · the Mode 2 findings.
@@ -311,6 +353,14 @@ check, performed by reading.
    `STACKSPEC` version it claims. If it is behind the version in `references/`,
    say so first — every finding is relative to the version the product claims,
    and the delta between versions is itself a finding.
+
+   A profile claiming **5.x** (5.2.0 and earlier) predates `STACKSPEC` 6.0.0's
+   four new `MUST`s, listed in the spec's `§0.1` 6.0.0 entry: the `§11.2` E2E
+   gate, the `§13.1` default-branch skip, the `§13.5` branch gate and pre-push
+   hook, and the `§13.6` integration flow. Report the product as conforming to
+   its claimed version and list each of the four as an upgrade item. Upgrading is
+   the repair pass in step 7 plus a profile edit: change the claimed version to
+   6.0.0 only after the re-check passes, never before.
 
    A profile claiming **4.x or earlier** predates the technology-neutral split.
    Report that its technology clauses no longer exist as requirements, and that
@@ -349,6 +399,29 @@ check, performed by reading.
      branch; no draft-PR skip; no task-runner result cache
    - field classification, retention declaration, export inclusion (`§5.7`)
    - data-collection inventory vs. generated artifacts (`§9.7`)
+   - **E2E gate (`§11.2`)** — the web E2E job runs on ready pull requests and is
+     not advisory (no `continue-on-error`, and it is a required check); a
+     committed quarantine file exists (`e2e/quarantine.json` on the TS track),
+     each entry with an owner, a date and a reason; quarantined specs run in a
+     separate non-blocking step; nothing retries a spec until green
+   - **Default-branch skip (`§13.1`)** — a `decide` job runs first on a push to
+     the default branch, every other job needs it and runs unless it says skip,
+     `ci_skip_check.py` is present, and a skipped or failed `decide` still runs
+     the suite. Default-branch runs are never cancelled
+   - **Branch gate (`§13.5`)** — `scripts/delivery/` holds the gate scripts;
+     `gate.json` parses and its steps cover typecheck, lint, unit, guards (scope
+     `always`), secret scan and E2E (scope `ui-changed`), with `widen_on` naming
+     the lockfile, the task-runner config and the CI workflows; a guard-test
+     suite exists and is selected by the track's convention; `.githooks/pre-push`
+     exists and `core.hooksPath` points at `.githooks`; `agent_setup.sh` installs
+     the scanner at the version in `tools.json`, and CI installs that same
+     version; `.delivery/` is git-ignored. A branch result that is not tied to
+     the current head and base is not a result
+   - **Integration flow (`§13.6`)** — advisory, because it is process: read the
+     repo's rules and agent instructions for task-ID branches, draft pull
+     requests into an integration branch, the merge script, one ready pull
+     request, and CI watched by commit with no auto-merge. Report documented or
+     not documented; do not infer a violation from the absence of a file
 
 5. **Classify divergence correctly.** This is where Mode 2 most often produces
    false positives, and 5.x changed the rules:
@@ -388,6 +461,15 @@ check, performed by reading.
    - boundary-check config missing → `§3.2` has no enforcement, so the layer
      rules are decaying by default
    - lint, format, test and task-runner configs missing
+   - `scripts/delivery/`, `gate.json`, `tools.json` or `.githooks/pre-push`
+     missing → `§13.5`; the `.delivery/` line missing from `.gitignore`
+   - `ci.yml` without the `decide` job or its job conditions → `§13.1`; E2E
+     advisory or `e2e/quarantine.json` missing → `§11.2`
+
+   Copy the delivery assets the same way as the others (`assets/tooling/shared/`
+   and `assets/tooling/<track>/`, paths per `CONTRACT.md`), keep the repo's own
+   `default_branch` in `gate.json`, and leave the `§13.6` documentation to the
+   user: offer to draft the text for the repo's rules file, as a diff.
 
    Rules for the repair pass:
 
@@ -441,7 +523,11 @@ user's choice on it.
 
 `assets/tooling/<track>/` holds working implementations of `§13.1`'s twelve
 gates, one set per track. Copy in Phase 7 step 1 — before any module exists, so
-the first commit is already gated.
+the first commit is already gated. `assets/tooling/shared/scripts/delivery/`
+holds the track-independent delivery scripts (branch gate, verifier, pre-push
+guards, merge script, CI watcher, default-branch skip check, agent setup), and
+its `CONTRACT.md` is the one place their paths, exit codes and file formats are
+defined.
 
 Three properties every track's templates must preserve, because they exist so an
 absent check cannot masquerade as a passing one:
