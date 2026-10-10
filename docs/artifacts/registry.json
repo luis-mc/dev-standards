@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T21:52+01:00",
+  "updated": "2026-10-10T21:58+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -476,11 +476,11 @@
       "id": "DS24",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Done",
       "item": "Template build check",
-      "detail": "A dev-standards CI job compiles and runs the Go and Rust guard starters (and checks the Go setup command against a stale go.sum) whenever those template files change. Rides the 7.0.0 release, so the uncompiled DS18 edits are proved before release.",
-      "expected": "10 Oct ~23:00",
-      "changed": "2026-10-10T21:35+01:00"
+      "detail": "Built in draft #30, joined, not released: template-build.yml and tools/template_build_check.py compile and run the Go, Rust and .NET guard starters in a scaffold, prove each guard fails on a planted conflict marker and ignores nested checkouts, and prove setup fails on a stale lockfile. Ran in Docker for all three. Found and fixed: Go's setup passed a stale go.sum; it now runs go list -mod=readonly -deps -test ./....",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T21:58+01:00"
     },
     {
       "id": "DS25",
