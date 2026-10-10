@@ -8,8 +8,14 @@ effort: medium
 # Task — add
 
 Records work as a task in the registry (`docs/artifacts/registry.json`,
-ARTIFACTSPEC 1.0.0) before the work starts. Only the script writes the
+ARTIFACTSPEC 1.1.0) before the work starts. Only the script writes the
 registry; never edit `registry.json` or `manifest.json` by hand.
+
+Every activity is a task before it starts, whoever does it: work given to
+agents and the session's own (contracts, specs, reviews, joins, test runs,
+releases, deploys, cleanup). A task is Running while any work for it runs.
+Work still to come after it (join, CI, release) is a task of its own, Running
+or To do, never a reason to leave the first one open.
 
 Every command below is
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/project_artifacts.py" <command>`, run from
@@ -26,7 +32,8 @@ read the message, fix the cause and rerun.
 2. **Collect** the item (at most 80 characters), the detail (plain text, at
    most 600 characters), the status (default `To do`; one of Live, Done,
    Running, Needs you, Waiting, To do, On hold, Failed), the expected date and,
-   for a project task, the app or service. Ask only for what is missing.
+   for a project task, the app or service. Ask only for what is missing. Use `Running` for work that is running as you
+   add it.
    `expected` is a real date from `date` in the project's zone (the manifest's
    `timezone`): `DD Mon`, or `DD Mon ~HH:MM` for work due within a day,
    optionally followed by `; ` and a short note. Never `today`, `soon`,

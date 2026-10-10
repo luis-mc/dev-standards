@@ -8,7 +8,12 @@ effort: medium
 # Task — status update
 
 Changes a task's status through the script and publishes every artifact that
-shows it, in the same turn. Only the script writes the registry; never edit
+shows it, in the same turn. Every activity is a task, the session's own
+included (contracts, joins, test runs, releases, cleanup): a task is `Running`
+while any work for it runs, `Waiting` or `Needs you` when blocked on
+something or someone. `Done` means nothing is left to do for it; work still
+to come (join, CI, release) is its own task, Running or To do. Before a turn
+ends with work still running in the background, its task is `Running`. Only the script writes the registry; never edit
 `registry.json` or `manifest.json` by hand, and never type a status row into an
 artifact.
 

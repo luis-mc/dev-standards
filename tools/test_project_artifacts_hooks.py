@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the three luismc-artifacts hooks (ARTIFACTSPEC 1.0.0 section 8, R13.2).
+"""Tests for the three luismc-artifacts hooks (ARTIFACTSPEC 1.1.0 section 8, R13.2).
 
 Feeds sample hook input to each hook in throwaway git repos (with a bare remote)
 and asserts the queue, the exit code and the output, including R8.2, R8.4, R8.5,
@@ -80,8 +80,10 @@ REGISTRY = {'spec': 'ARTIFACTSPEC 1.0.0', 'tasks': [{'id': i, 'owner': 'project'
 _counter = [0]
 
 
-def make_repo(manifest=True, branch='AR5-x', merged_status='Live', manifest_on_origin_only=False):
-    """A working clone with a bare remote. Returns the work directory."""
+def make_repo(manifest=True, branch='AR5-x', merged_status='Live', manifest_on_origin_only=False,
+              statuses=None):
+    """A working clone with a bare remote. Returns the work directory. `statuses` replaces the
+    registry's task statuses (a list of status strings) in the committed record."""
     _counter[0] += 1
     base = os.path.join(TMP_ROOT, 'r%d' % _counter[0])
     remote, work = os.path.join(base, 'remote.git'), os.path.join(base, 'work')
@@ -96,7 +98,10 @@ def make_repo(manifest=True, branch='AR5-x', merged_status='Live', manifest_on_o
     if manifest:
         m = dict(MANIFEST, merged_status=merged_status)
         write(os.path.join(work, 'docs', 'artifacts', 'manifest.json'), json.dumps(m))
-        write(os.path.join(work, 'docs', 'artifacts', 'registry.json'), json.dumps(REGISTRY))
+        registry = REGISTRY if statuses is None else dict(REGISTRY, tasks=[
+            {'id': 'AR%d' % (20 + n), 'owner': 'project', 'status': s, 'item': 'x'}
+            for n, s in enumerate(statuses)])
+        write(os.path.join(work, 'docs', 'artifacts', 'registry.json'), json.dumps(registry))
         write(os.path.join(work, 'docs', 'artifacts', 'feature-demo.html'), '<title>Feature: Demo</title>\n')
         sh(['add', '-A'], work)
         sh(['commit', '-q', '-m', 'record'], work)
@@ -309,6 +314,89 @@ def after_hooks_off_queues_nothing():
     assert queue_of(work) != []
 
 
+# --- after-command hook: background work (R8.8) ----------------------------------------
+
+def tool_input_for(work, tool, session='s1', failed=False, **tool_input):
+    d = {'session_id': session, 'cwd': work, 'tool_name': tool, 'tool_input': tool_input,
+         'hook_event_name': 'PostToolUseFailure' if failed else 'PostToolUse'}
+    if failed:
+        d['error'] = 'Exit code 1\nboom'
+    else:
+        d['tool_response'] = {'stdout': 'ok', 'stderr': '', 'interrupted': False}
+    return d
+
+
+def marker(work, session='s1'):
+    entry = stop_state(work).get(session)
+    return entry.get('background') if isinstance(entry, dict) else None
+
+
+def background(work, tool, **kw):
+    session = kw.pop('session', 's1')
+    return run_hook(AFTER, tool_input_for(work, tool, session, **kw), work)
+
+
+@test
+def after_agent_and_background_bash_mark_the_session():
+    for tool, args in (('Agent', {'prompt': 'do it', 'subagent_type': 'general-purpose'}),
+                       ('Task', {'prompt': 'do it'}),
+                       ('Agent', {}),
+                       ('Bash', {'command': 'sleep 600', 'run_in_background': True})):
+        work = make_repo(branch='main')       # no task ID in the branch is needed
+        rc, out, err, _ = background(work, tool, **args)
+        assert rc == 0 and out == '', (tool, rc, out, err)
+        m = marker(work)
+        assert m and m['session_id'] == 's1' and m['started'], (tool, stop_state(work))
+        assert queue_of(work) == [], 'the marker is not a queued status change'
+    # another session has its own marker
+    background(work, 'Agent', session='s2')
+    assert marker(work, 's2') and marker(work, 's1')
+
+
+@test
+def after_foreground_bash_does_not_mark_the_session():
+    work = make_repo()
+    for ti in ({'command': 'ls'}, {'command': 'ls', 'run_in_background': False},
+               {'command': 'ls', 'run_in_background': 'true'}):
+        assert after_raw(work, ti)[0] == 0
+    assert stop_state(work) == {}, stop_state(work)
+    other = tool_input_for(work, 'Read', file_path='x')       # tools the hook is not registered for
+    assert run_hook(AFTER, other, work)[0] == 0 and stop_state(work) == {}
+    # a launch that failed started nothing
+    rc = background(work, 'Bash', failed=True, command='sleep 9', run_in_background=True)[0]
+    assert rc == 0 and stop_state(work) == {}, stop_state(work)
+    rc = background(work, 'Agent', failed=True, prompt='x')[0]
+    assert rc == 0 and stop_state(work) == {}, stop_state(work)
+
+
+def after_raw(work, tool_input):
+    return run_hook(AFTER, tool_input_for(work, 'Bash', **tool_input), work)
+
+
+@test
+def after_background_marker_needs_a_manifest():
+    work = make_repo(manifest=False)
+    assert background(work, 'Agent', prompt='x')[0] == 0
+    assert stop_state(work) == {} and not os.path.exists(os.path.join(work, '.claude')), 'wrote without a manifest'
+
+
+@test
+def after_background_bash_still_queues_its_status_event():
+    work = make_repo()
+    background(work, 'Bash', command='gh pr create --title t', run_in_background=True)
+    assert statuses(work) == [('AR5', 'Running')] and marker(work), (queue_of(work), stop_state(work))
+
+
+@test
+def after_background_marker_survives_a_broken_state_file_and_hooks_off():
+    work = make_repo()
+    write(os.path.join(work, '.claude', 'artifacts-stop-state.json'), '{not json')
+    assert background(work, 'Agent', prompt='x')[0] == 0 and marker(work)
+    off = make_repo()
+    run_hook(AFTER, tool_input_for(off, 'Agent', prompt='x'), off, {'CLAUDE_ARTIFACTS_HOOKS': 'off'})
+    assert stop_state(off) == {}
+
+
 # --- end-of-turn hook -----------------------------------------------------------------
 
 STUB_SCRIPT = '''import json, os, sys
@@ -497,6 +585,143 @@ def stop_garbage_stdin_exits_zero():
         assert run_hook(STOP, raw, work, env)[0] == 0, raw
 
 
+# --- end-of-turn hook: background work (R8.10) -----------------------------------------
+
+NO_ACTIVE = ['Live', 'Done', 'To do', 'On hold', 'Failed']
+BG_REASON = 'started in the background'
+
+
+def bg_started(work, session='s1'):
+    assert background(work, 'Agent', prompt='x', session=session)[0] == 0
+
+
+@test
+def stop_blocks_background_work_without_an_active_task():
+    work = make_repo(statuses=NO_ACTIVE)
+    env = set_pending(work)
+    assert stop(work, env)[1].strip() == ''          # nothing started: nothing asked
+    bg_started(work)
+    rc, out, err, _ = stop(work, env)
+    res = parse_stop(out)
+    assert rc == 0 and res.get('decision') == 'block', (rc, out, err)
+    r = res['reason']
+    assert BG_REASON in r and 'no task is Running' in r and 'task-add' in r and 'set-task-status' in r, r
+    assert marker(work), 'the marker stays until a task is Running'
+    assert stop_state(work)['s1']['blocks'] == 1
+    assert parse_stop(stop(work, env)[1]).get('decision') == 'block'     # still no task: blocks again
+
+
+@test
+def stop_background_blocks_for_background_bash_and_task_calls_too():
+    for tool, args in (('Task', {'prompt': 'x'}), ('Bash', {'command': 'x', 'run_in_background': True})):
+        work = make_repo(statuses=NO_ACTIVE)
+        env = set_pending(work)
+        assert background(work, tool, **args)[0] == 0
+        assert parse_stop(stop(work, env)[1]).get('decision') == 'block', tool
+
+
+@test
+def stop_allows_background_work_with_an_active_task_and_clears_the_marker():
+    for status in ('Running', 'Waiting', 'Needs you'):
+        work = make_repo(statuses=['Done', status])
+        env = set_pending(work)
+        bg_started(work)
+        rc, out, err, _ = stop(work, env)
+        assert rc == 0 and out.strip() == '', (status, rc, out, err)
+        assert 's1' not in stop_state(work), (status, stop_state(work))
+        # armed again by the next background launch
+        bg_started(work)
+        assert marker(work)
+
+
+@test
+def stop_background_clears_once_a_task_becomes_running_in_the_record_worktree():
+    work = make_repo(statuses=NO_ACTIVE)
+    env = set_pending(work)
+    bg_started(work)
+    assert parse_stop(stop(work, env)[1]).get('decision') == 'block'
+    # the session records the task: the script commits to the record worktree (freshest source)
+    record = os.path.join(work, '.claude', 'worktrees', 'artifacts-record', 'docs', 'artifacts', 'registry.json')
+    write(record, json.dumps({'spec': 'ARTIFACTSPEC 1.0.0', 'tasks': [
+        {'id': 'AR30', 'owner': 'project', 'status': 'Running', 'item': 'y'}]}))
+    rc, out, _e, _ = stop(work, env)
+    assert rc == 0 and out.strip() == '' and 's1' not in stop_state(work), (out, stop_state(work))
+    # ... and a stale Running task in the session checkout does not count over a fresher source
+    stale = make_repo(statuses=['Running'])
+    write(os.path.join(stale, '.claude', 'worktrees', 'artifacts-record', 'docs', 'artifacts', 'registry.json'),
+          json.dumps({'spec': 'ARTIFACTSPEC 1.0.0', 'tasks': [{'id': 'AR5', 'owner': 'project',
+                                                              'status': 'Done', 'item': 'x'}]}))
+    bg_started(stale)
+    assert parse_stop(stop(stale, set_pending(stale))[1]).get('decision') == 'block'
+
+
+@test
+def stop_background_gives_up_after_three_blocks():
+    work = make_repo(statuses=NO_ACTIVE)
+    env = set_pending(work)
+    bg_started(work)
+    for n in (1, 2, 3):
+        res = parse_stop(stop(work, env)[1])
+        assert res.get('decision') == 'block', (n, res)
+        assert stop_state(work)['s1']['blocks'] == n, stop_state(work)
+    rc, out, _e, _ = stop(work, env)
+    res = parse_stop(out)
+    assert rc == 0 and 'decision' not in res and BG_REASON in res['systemMessage'], res
+
+
+@test
+def stop_background_shares_the_give_up_rule_with_pending_artifacts():
+    work = make_repo(statuses=NO_ACTIVE)
+    env = set_pending(work, artifacts=[art('demo')])
+    bg_started(work)
+    res = parse_stop(stop(work, env)[1])
+    assert res['decision'] == 'block' and 'Feature: Demo' in res['reason'] and BG_REASON in res['reason'], res
+    stop(work, env)
+    stop(work, env)
+    res = parse_stop(stop(work, env)[1])
+    assert 'decision' not in res and 'Feature: Demo' in res['systemMessage'] and BG_REASON in res['systemMessage'], res
+    # the artifact gets published: what is pending changed, so the count restarts
+    env = set_pending(work)
+    assert parse_stop(stop(work, env)[1]).get('decision') == 'block'
+    assert stop_state(work)['s1']['blocks'] == 1
+
+
+@test
+def stop_background_is_per_session():
+    work = make_repo(statuses=NO_ACTIVE)
+    env = set_pending(work)
+    bg_started(work, 'a')
+    assert parse_stop(stop(work, env, session='a')[1]).get('decision') == 'block'
+    assert stop(work, env, session='b')[1].strip() == ''
+
+
+@test
+def stop_background_is_a_no_op_without_a_manifest_or_when_off():
+    work = make_repo(manifest=False)
+    write(os.path.join(work, '.claude', 'artifacts-stop-state.json'),
+          json.dumps({'s1': {'background': {'started': 'now', 'session_id': 's1'}}}))
+    env = set_pending(work)
+    rc, out, _e, _ = stop(work, env)
+    assert rc == 0 and out.strip() == '', (rc, out)
+    off = make_repo(statuses=NO_ACTIVE)
+    bg_started(off)
+    env = set_pending(off)
+    env['CLAUDE_ARTIFACTS_HOOKS'] = 'off'
+    assert stop(off, env)[1].strip() == ''
+
+
+@test
+def stop_background_fails_open_when_the_registry_cannot_be_read():
+    work = make_repo(statuses=NO_ACTIVE)
+    bg_started(work)
+    # no registry in any source: the check cannot tell, so the turn may end
+    sh(['rm', '-q', '-f', 'docs/artifacts/registry.json'], work)
+    sh(['commit', '-q', '-m', 'drop registry'], work)
+    sh(['push', '-q', 'origin', 'HEAD:main'], work)
+    rc, out, err, _ = stop(work, set_pending(work))
+    assert rc == 0 and out.strip() == '', (rc, out, err)
+
+
 # --- session-start hook ---------------------------------------------------------------
 
 GH_STUB = '''import json, os, sys
@@ -553,7 +778,7 @@ def start_queues_merged_closed_and_ignores_the_rest():
                           ('AR13', 'Live')]), got
     # AR8 (Needs you), AR10 (open PR), AR11 (already Live), AR12 (no task), feature/plain: nothing
     res = json.loads(out)
-    assert list(res) == ['systemMessage'], res
+    assert sorted(res) == ['hookSpecificOutput', 'systemMessage'], res
     for frag in ('AR5 -> Live', 'AR9 -> On hold'):
         assert frag in res['systemMessage'], res
     args = open(os.path.join(os.path.dirname(work), 'ghstub', 'gh.log')).read().split('\n')
@@ -584,7 +809,7 @@ def start_skips_with_one_system_message_when_gh_fails():
     rc, out, err, _ = start(work, gh_env(work, fail=True))
     assert rc == 0 and queue_of(work) == [], (rc, queue_of(work))
     res = json.loads(out)
-    assert list(res) == ['systemMessage'] and 'skipped' in res['systemMessage'], res
+    assert sorted(res) == ['hookSpecificOutput', 'systemMessage'] and 'skipped' in res['systemMessage'], res
     assert out.strip().count('\n') == 0   # one message, one line
     assert 'exit 4' in res['systemMessage'], res
 
@@ -607,10 +832,10 @@ def start_lists_events_already_queued():
 
 
 @test
-def start_is_silent_with_nothing_to_report():
+def start_prints_only_the_rule_with_nothing_to_report():
     work = make_repo(branch='main')
     rc, out, _e, _ = start(work, gh_env(work, prs=[]))
-    assert rc == 0 and out.strip() == '', (rc, out)
+    assert rc == 0 and list(json.loads(out)) == ['hookSpecificOutput'], (rc, out)
 
 
 @test
@@ -638,6 +863,77 @@ def start_garbage_stdin_exits_zero():
         assert start(work, gh_env(work, prs=[]), raw=raw)[0] == 0, raw
 
 
+@test
+def start_delivers_the_rule_as_additional_context():
+    rule = open(os.path.join(PLUGIN, 'rules', 'project-artifacts.md'), encoding='utf-8').read().strip()
+    work = make_repo(branch='main')
+    rc, out, err, _ = start(work, gh_env(work, prs=[]))
+    res = json.loads(out)
+    assert rc == 0 and out.strip().count('\n') == 0, (rc, out, err)
+    hso = res['hookSpecificOutput']
+    assert hso['hookEventName'] == 'SessionStart' and rule in hso['additionalContext'], hso
+    # with a system message too, still in one document
+    res = json.loads(start(make_repo(branch='main'), gh_env(work))[1])
+    assert 'AR5 -> Live' in res['systemMessage'] and rule in res['hookSpecificOutput']['additionalContext'], res
+    # every session: a second start prints it again
+    assert rule in json.loads(start(work, gh_env(work, prs=[]))[1])['hookSpecificOutput']['additionalContext']
+
+
+@test
+def start_delivers_the_rule_when_gh_is_missing():
+    rule = open(os.path.join(PLUGIN, 'rules', 'project-artifacts.md'), encoding='utf-8').read().strip()
+    work = make_repo(branch='main')
+    for env in ({'CLAUDE_ARTIFACTS_GH': os.path.join(work, 'no-such-gh-binary')}, gh_env(work, fail=True)):
+        rc, out, _e, _ = start(work, env)
+        res = json.loads(out)
+        assert rc == 0 and 'skipped' in res['systemMessage'], out
+        assert rule in res['hookSpecificOutput']['additionalContext'], out
+
+
+@test
+def start_delivers_the_rule_even_when_the_catch_up_breaks():
+    rule = open(os.path.join(PLUGIN, 'rules', 'project-artifacts.md'), encoding='utf-8').read().strip()
+    work = make_repo(branch='main')
+    write(os.path.join(work, '.claude', 'artifacts-queue.json'), '{"events": 5}')
+    rc, out, _e, _ = start(work, gh_env(work, prs=[{'headRefName': 'AR5-x', 'state': 'MERGED'}]))
+    assert rc == 0 and rule in json.loads(out)['hookSpecificOutput']['additionalContext'], out
+
+
+@test
+def start_delivers_the_rule_on_a_task_branch_with_the_manifest_only_on_origin():
+    rule = open(os.path.join(PLUGIN, 'rules', 'project-artifacts.md'), encoding='utf-8').read().strip()
+    work = make_repo(manifest_on_origin_only=True)
+    rc, out, _e, _ = start(work, gh_env(work, prs=[]))
+    assert rc == 0 and rule in json.loads(out)['hookSpecificOutput']['additionalContext'], out
+
+
+@test
+def start_delivers_no_rule_without_a_manifest():
+    work = make_repo(manifest=False, branch='main')
+    rc, out, _e, _ = start(work, gh_env(work, prs=[]))
+    assert rc == 0 and out.strip() == '', (rc, out)
+
+
+@test
+def rule_file_carries_the_activity_rules():
+    """R3.2 to R3.5, R10.3: each of the four lines is in the plugin's rule file."""
+    lines = [ln[2:] for ln in open(os.path.join(PLUGIN, 'rules', 'project-artifacts.md'),
+                                   encoding='utf-8').read().splitlines() if ln.startswith('- ')]
+    for old in ('Record work as a task before starting it.', 'Start branch names with the task ID.',
+                'Change status only with `set-task-status`.', 'Publish what `pending` lists in the same turn.',
+                'Never type a status row by hand.', 'Put every doc under `docs/`.'):
+        assert old in lines, old
+    joined = '\n'.join(lines)
+    for frag in ('Every activity is a task before it starts, whoever does it',
+                 "the session's own", 'contracts', 'joins', 'test runs', 'releases', 'deploys', 'cleanup',
+                 'A task is Running while any work for it runs',
+                 'Waiting or Needs you when blocked on something or someone',
+                 'Done means nothing is left to do for it', 'is its own task, Running or To do',
+                 'Before ending a turn that leaves work running in the background, its task is Running'):
+        assert frag in joined, frag
+    assert all(len(ln) < 260 for ln in lines), 'one short imperative line per rule'
+
+
 # --- registration and invariants ------------------------------------------------------
 
 @test
@@ -653,8 +949,9 @@ def hooks_json_registers_the_three_hooks():
         assert cmds and all('${CLAUDE_PLUGIN_ROOT}/scripts/' + script in c for c in cmds), (event, cmds)
         assert all(c.startswith('python3 ') and ' || python ' in c for c in cmds), cmds
         assert os.path.isfile(os.path.join(SCRIPTS, script)), script
-    for event in ('PostToolUse', 'PostToolUseFailure'):
-        assert [g.get('matcher') for g in cfg['hooks'][event]] == ['Bash'], event
+    # R8.8: Agent and Task start background work, so PostToolUse also covers them
+    assert [g.get('matcher') for g in cfg['hooks']['PostToolUse']] == ['Bash|Agent|Task']
+    assert [g.get('matcher') for g in cfg['hooks']['PostToolUseFailure']] == ['Bash']
 
 
 @test
@@ -664,6 +961,7 @@ def hooks_never_write_record():
     env = set_pending(work, artifacts=[art('demo')])
     env.update(gh_env(work))
     after(work, 'gh pr ready')
+    background(work, 'Agent', prompt='x')
     stop(work, env)
     start(work, env)
     assert INV4['runs'] > 40, INV4['runs']

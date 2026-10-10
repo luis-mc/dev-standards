@@ -427,11 +427,9 @@ def test_init_session_files(env):
     r = p.init()
     gi = (p.clone / '.gitignore').read_text(encoding='utf-8')
     assert '.claude/artifacts-queue.json' in gi and '.claude/worktrees/' in gi
-    if (env.plugin / 'rules' / 'project-artifacts.md').is_file():
-        assert (p.clone / '.claude' / 'rules' / 'project-artifacts.md').is_file()
-        assert '.claude/rules/project-artifacts.md' in r.out
-    else:
-        assert 'not in the plugin yet' in r.out
+    # R10.2, R10.4: the plugin delivers the rule at session start; init copies nothing
+    assert not (p.clone / '.claude' / 'rules').exists(), list((p.clone / '.claude').iterdir())
+    assert 'rules/' not in r.out, r.out
     status = git(p.clone, 'status', '--porcelain').stdout
     assert 'docs/' not in status and 'worktrees' not in status, status
     # idempotent: a second command reports no session changes
@@ -1372,10 +1370,32 @@ def test_check_baseline_clean(env):
     r = p.run('check')
     assert r.code == 0 and 'clean' in r.out, r.all
     r = p.run('check', '--json')
-    assert r.code == 0 and r.json() == {'findings': []}
+    assert r.code == 0 and r.json() == {'findings': [], 'notes': []}
     rec = p.record_copy('baseline')
     assert check_record(env, rec).code == 0
     assert check_record(env, rec.parent.parent).code == 0, 'a repository root is accepted for --record'
+
+
+@case
+def test_check_notes_a_differing_rule_copy(env):
+    """R10.5: a project's own copy of the rule that differs is a note, never a finding."""
+    p = env.baseline()
+    rules = p.clone / '.claude' / 'rules'
+    rules.mkdir(parents=True)
+    mine = rules / 'project-artifacts.md'
+    plugin_rule = env.plugin / 'rules' / 'project-artifacts.md'
+    mine.write_bytes(plugin_rule.read_bytes())
+    r = p.run('check', '--json')
+    assert r.code == 0 and r.json()['notes'] == [], r.all       # identical: nothing to say
+    mine.write_text('- An old rule.\n', encoding='utf-8')
+    r = p.run('check')
+    assert r.code == 0 and 'record is clean' in r.out, r.all    # not a failure
+    assert 'note: ' in r.out and '.claude/rules/project-artifacts.md differs' in r.out, r.out
+    assert 'delivers the rule at session start' in r.out and 'can be deleted' in r.out, r.out
+    r = p.run('check', '--json')
+    assert r.code == 0 and r.json()['findings'] == [] and len(r.json()['notes']) == 1, r.all
+    mine.unlink()
+    assert p.run('check', '--json').json()['notes'] == []
 
 
 @case

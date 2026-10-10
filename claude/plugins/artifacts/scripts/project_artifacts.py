@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """project_artifacts.py - the only writer of a project's artifact record.
 
-Implements ARTIFACTSPEC 1.0.0: section 4 (the record, time, the record
+Implements ARTIFACTSPEC 1.1.0: section 4 (the record, time, the record
 worktree and its commits), section 7 (every command), the bookkeeping of
 section 9 (`pending`, `mark-published`) and the record-level checks of
 section 14. Rendering lives in render_artifacts.py, the queue in
@@ -1083,23 +1083,13 @@ def finish_change(ctx, rec, result):
 
 
 # --------------------------------------------------------------------------
-# session checkout files (R10.2)
+# session checkout files (R10.2) and the rule copy note (R10.5)
 # --------------------------------------------------------------------------
 
 def install_session_files(root):
-    """Copy the rule file and extend .gitignore. Returns (changed paths, notes)."""
+    """Extend .gitignore. Returns (changed paths, notes). The rule is not copied: the
+    session-start hook delivers it (R10.4)."""
     changed, notes = [], []
-    src = PLUGIN_DIR / 'rules' / RULE_NAME
-    dst = Path(root) / '.claude' / 'rules' / RULE_NAME
-    if not src.is_file():
-        notes.append('rules/%s is not in the plugin yet; the rule file was not copied' % RULE_NAME)
-    elif dst.is_file():
-        if dst.read_bytes() != src.read_bytes():
-            notes.append('.claude/rules/%s exists and differs from the plugin\'s; left as it is' % RULE_NAME)
-    else:
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(str(src), str(dst))
-        changed.append('.claude/rules/%s' % RULE_NAME)
     gi = Path(root) / '.gitignore'
     text = gi.read_text(encoding='utf-8') if gi.is_file() else ''
     have = {ln.strip().lstrip('/').rstrip('/') for ln in text.splitlines()}
@@ -1572,6 +1562,20 @@ def load_for_read(args):
             sync(ctx, readonly=True)
         rec = Record.load(ctx.record_dir)
     return ctx, rec
+
+
+def rule_copy_notes():
+    """A note (never a finding) when the project keeps its own, differing copy of the rule (R10.5)."""
+    root = session_root() if artifact_queue is not None else None
+    src = PLUGIN_DIR / 'rules' / RULE_NAME
+    dst = Path(root) / '.claude' / 'rules' / RULE_NAME if root else None
+    try:
+        if dst is not None and dst.is_file() and src.is_file() and dst.read_bytes() != src.read_bytes():
+            return ['.claude/rules/%s differs from the plugin\'s rules/%s; the plugin now delivers the rule '
+                    'at session start, so this copy can be deleted' % (RULE_NAME, RULE_NAME)]
+    except OSError:
+        pass
+    return []
 
 
 def cmd_check(args):

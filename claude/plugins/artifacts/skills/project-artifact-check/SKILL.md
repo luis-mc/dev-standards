@@ -19,6 +19,10 @@ structure stylesheet by hand.
    from anywhere inside the project's repository. Add `--record PATH` to check
    a record somewhere else (a scratch clone, for example). Exit 0 is clean,
    exit 1 means findings, exit 2 means the record is unreadable.
+   The JSON also lists `notes`. A note is not a finding: a project's own
+   `.claude/rules/project-artifacts.md` that differs from the plugin's means the
+   plugin now delivers the rule at session start and the copy can be deleted;
+   offer to delete it.
 2. **Clean:** say so in one line and stop.
 3. **Unreadable (exit 2):** quote the script's message. Say which file it could
    not read, and stop; do not guess at the record's contents.

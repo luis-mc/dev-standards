@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -48,6 +48,22 @@ publication. Numbering is append-only: a retired number is never reused, and
 sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
+### 0.4 What changed in 1.1.0
+
+Version 1.0.0 recorded the work given to agents but not the session's own, and
+left built-but-unreleased work marked Done, so the full-progress artifact said
+nothing was running while much was. 1.1.0 adds:
+
+- the activity rule: every activity is a task, a task is Running while any work
+  for it runs, Done means nothing is left (R3.2 to R3.5);
+- the rule reaches every project, always current: the session-start hook
+  delivers it as context, `init` no longer copies it, and `check` notes a stale
+  copy (R8.9, R10.2, R10.4, R10.5);
+- an end-of-turn check that background work has a Running task (R8.8, R8.10).
+
+The record format is unchanged: `spec` in the manifest and the registry stays
+`"ARTIFACTSPEC 1.0.0"`, so a 1.0.0 record is valid under 1.1.0.
+
 ---
 
 ## Decision record
@@ -63,6 +79,8 @@ sections are never renumbered to close a gap. Invariants are numbered
 | D7 | How does a project get the plugin? | `luismc-project-setup` installs it in every project it sets up; it also installs on its own. | Installing creates nothing until the first artifact (§10). |
 | D8 | Which clock do times use? | The owner's time zone, per project, from the manifest. | Expected and stamps name the zone (§6.4). |
 | D9 | Does the plugin's home repository touch other projects? | No. | Each project adopts the plugin in its own sessions. |
+| D10 | How does the activity rule reach a project? | The session-start hook prints the plugin's rule file as context, every session, in any project with a record. | No copy goes stale; a rule update reaches every project with the next plugin version (R8.9, R10.4). |
+| D11 | Does the record format change in 1.1.0? | No. | `spec` in the manifest and the registry stays `"ARTIFACTSPEC 1.0.0"` (§4.2). |
 
 ---
 
@@ -128,7 +146,7 @@ sections are never renumbered to close a gap. Invariants are numbered
 | `templates/feature-artifact.html`, `templates/full-progress-artifact.html` | Page skeletons with placeholders (§5.1). |
 | `templates/project-artifact.css` | The fixed structure stylesheet. |
 | `design/default-design.css`, `design/DESIGN.md` | Default tokens and the token contract (§5.3). |
-| `rules/project-artifacts.md` | The rule file a project gets on its first artifact (§10). |
+| `rules/project-artifacts.md` | The rule file the session-start hook delivers to every project with a record (§10). |
 | Five skills | `feature-artifact-new`, `full-progress-artifact-new`, `task-add`, `task-status-update`, `project-artifact-check`. |
 
 ### 3.2 Invariants
@@ -152,9 +170,24 @@ sections are never renumbered to close a gap. Invariants are numbered
 4. Publish: the session publishes every artifact `pending` lists and runs
    `mark-published` for each.
 5. End of turn: the end-of-turn hook lets the turn end only when the queue is
-   empty and nothing is pending.
+   empty, nothing is pending, and background work started in the turn has a
+   Running task (R8.10).
 
 - **R3.1** — Steps 3 to 5 complete in the same turn as the event.
+- **R3.2** — Every activity is a task before it starts, whoever does it: work
+  given to agents and the session's own work (contracts, specs, reviews, joins,
+  test runs, releases, deploys, cleanup). The rule file has a line saying so.
+  Verified by `rule_file_carries_the_activity_rules`.
+- **R3.3** — A task is Running while any work for it runs, and Waiting or Needs
+  you when it is blocked on something or someone. The rule file has a line
+  saying so. Verified by `rule_file_carries_the_activity_rules`.
+- **R3.4** — Done means nothing is left to do for the task. Work still to come
+  (join, CI, release) is its own task, Running or To do. The rule file has a
+  line saying so. Verified by `rule_file_carries_the_activity_rules`.
+- **R3.5** — Before ending a turn that leaves work running in the background,
+  its task is Running. The rule file has a line saying so, and R8.10 enforces
+  it. Verified by `rule_file_carries_the_activity_rules` and
+  `stop_blocks_background_work_without_an_active_task`.
 
 ---
 
@@ -417,12 +450,13 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
 
 ## 8. Hooks
 
-All three hooks are registered in the plugin's `hooks/hooks.json`, run
+All three hooks are registered in the plugin's `hooks/hooks.json` (the
+after-command hook for `Bash`, `Agent` and `Task`), run
 `python <plugin>/scripts/hook_*.py`, and exit 0 doing nothing when the
 project has no `docs/artifacts/manifest.json` in the current checkout or on
 `origin/<default branch>`.
 
-### 8.1 After-command hook (PostToolUse and PostToolUseFailure, Bash)
+### 8.1 After-command hook (PostToolUse and PostToolUseFailure for Bash; PostToolUse for Agent and Task)
 
 Reads the hook input; takes the task ID from the current branch name
 (`^([A-Z]{2,5}[0-9]+)-`); on a matching command, appends an event to the queue
@@ -465,6 +499,37 @@ Reads the hook input; takes the task ID from the current branch name
   informational, so it fails open.
 - **R8.7** — The hook prints a `systemMessage` listing queued events, if any.
 
+### 8.4 Background work and the rule
+
+- **R8.8** — The after-command hook records that background work started when
+  the tool is `Agent` or `Task` (any call), or `Bash` with
+  `tool_input.run_in_background` true: it stamps the session's entry in
+  `<repo>/.claude/artifacts-stop-state.json` (gitignored) with the time and the
+  session ID. It writes that file only, never the record (INV-4), needs no task
+  ID in the branch name, and does nothing in a project without a manifest. A
+  foreground `Bash` call, or a call that failed, records nothing. Verified by
+  `after_agent_and_background_bash_mark_the_session` and
+  `after_foreground_bash_does_not_mark_the_session`.
+- **R8.9** — In any repository that has a record manifest, the session-start
+  hook prints the plugin's `rules/project-artifacts.md` text as
+  `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext":
+  ...}}`, alongside the `systemMessage` when there is one, every session,
+  whether or not `gh` works. Without a manifest it prints nothing. It stays
+  inside R8.2's rule of never failing. Verified by
+  `start_delivers_the_rule_as_additional_context` and
+  `start_delivers_the_rule_when_gh_is_missing`.
+- **R8.10** — The end-of-turn hook blocks the stop when the session has
+  recorded background work (R8.8) since the check was last satisfied and the
+  registry has no task in Running, Waiting or Needs you; the reason says that
+  work was started in the background with no Running task and to record it with
+  `task-add` or `set-task-status`, then publish. Once such a task exists the
+  marker is cleared. The check shares R8.4's give-up rule: after 3 consecutive
+  blocks with no change it lets the turn end with a `systemMessage`. Without a
+  manifest it does nothing. Verified by
+  `stop_blocks_background_work_without_an_active_task`,
+  `stop_allows_background_work_with_an_active_task_and_clears_the_marker` and
+  `stop_background_gives_up_after_three_blocks`.
+
 ---
 
 ## 9. Publishing and recreation
@@ -496,13 +561,23 @@ Reads the hook input; takes the task ID from the current branch name
   `enabledPlugins`, else the marketplace file's own name. A project that names
   a marketplace the owner registered differently enables nothing.
 - **R10.2** — Installing creates no file in the project. The first
-  `feature-new` or `init` copies `rules/project-artifacts.md` to
-  `.claude/rules/project-artifacts.md` and adds `.claude/artifacts-queue.json`,
+  `feature-new` or `init` adds `.claude/artifacts-queue.json`,
   `.claude/artifacts-stop-state.json` and `.claude/worktrees/` to `.gitignore`.
+  Since 1.1.0 it no longer copies the rule file (R10.4). Verified by
+  `test_init_session_files`.
 - **R10.3** — The rule file holds one short imperative line per rule: record
   work as a task before starting it; start branch names with the task ID;
   change status only with `set-task-status`; publish what `pending` lists in
-  the same turn; never type a status row by hand; put every doc under `docs/`.
+  the same turn; never type a status row by hand; put every doc under `docs/`;
+  and the four lines of R3.2 to R3.5.
+- **R10.4** — The plugin delivers the rule file itself: the session-start hook
+  (R8.9) prints it in every project that has a record, every session, so a rule
+  change reaches every project with the plugin and no copy can go stale.
+- **R10.5** — `check` reports a `.claude/rules/project-artifacts.md` that
+  differs from the plugin's `rules/project-artifacts.md` as a note, not a
+  finding: it does not change the exit code, and it says that the plugin now
+  delivers the rule at session start and the copy can be deleted. Verified by
+  `test_check_notes_a_differing_rule_copy`.
 
 ---
 
@@ -540,7 +615,8 @@ Reads the hook input; takes the task ID from the current branch name
   check that fails without it), INV-1 to INV-3, R4.13 to R4.17 and R7.4.
 - **R13.2** — `tools/test_project_artifacts_hooks.py` feeds sample hook input
   to each hook and asserts the queue, the exit code and the output, including
-  R8.4 and INV-4, and that every hook does nothing without a manifest.
+  R8.4, R8.8 to R8.10 and INV-4, and that every hook does nothing without a
+  manifest.
 - **R13.3** — Before release, the plugin is run on a scratch clone of the
   plugin's own repository: its existing record is converted to this format,
   rendered and checked with no findings, and a status change runs end to end

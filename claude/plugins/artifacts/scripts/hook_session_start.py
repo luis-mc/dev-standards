@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Session-start hook (SessionStart).
 
-ARTIFACTSPEC 1.0.0 section 8.3. Catches up on changes made outside a session:
-fetches the default branch, lists pull requests with `gh pr list`, and queues
+ARTIFACTSPEC 1.1.0 section 8.3. Delivers the plugin's rule file as
+`hookSpecificOutput.additionalContext` in any repository that has a record
+manifest, every session, whether or not `gh` works (R8.9). Then catches up on
+changes made outside a session: fetches the default branch, lists pull requests with `gh pr list`, and queues
 `merged_status` for every task in Running, Waiting or To do whose branch `<ID>-*`
 was merged, and `On hold` for one whose only pull requests were closed unmerged
 (R8.5). When `gh` is missing or not signed in it queues nothing and prints one
@@ -24,6 +26,9 @@ from hook_after_command import (TASK_ID_RE, command_for, git, hook_root, hooks_o
                                 run, warn)
 
 OPEN_STATUSES = ('Running', 'Waiting', 'To do')
+RULE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         'rules', 'project-artifacts.md')
+RULE_HEADING = 'luismc-artifacts: rules for work in this project (ARTIFACTSPEC 1.1.0)'
 GH_TIMEOUT = 30
 FETCH_TIMEOUT = 25
 
@@ -79,16 +84,19 @@ def outcomes_by_task(prs):
     return result
 
 
-def main():
-    if hooks_off():
-        return 0
-    data = read_input()
-    root = hook_root(data)
-    if not root:
-        return 0
-    manifest = load_manifest(root)
-    if manifest is None:
-        return 0
+def rule_context():
+    """The rule file's text for additionalContext; '' when the plugin has none (R8.9)."""
+    try:
+        with open(RULE_PATH, encoding='utf-8') as f:
+            text = f.read().strip()
+    except OSError:
+        warn('rules/project-artifacts.md cannot be read; the rule was not delivered')
+        return ''
+    return '%s\n\n%s' % (RULE_HEADING, text) if text else ''
+
+
+def catch_up(root, manifest):
+    """The pull request catch-up (R8.5 to R8.7); returns the systemMessage lines."""
     from artifact_queue import append_event, read_queue
     branch = manifest.get('default_branch') if isinstance(manifest.get('default_branch'), str) else 'main'
     merged_status = manifest.get('merged_status') if manifest.get('merged_status') in ('Live', 'Done') else 'Live'
@@ -125,8 +133,32 @@ def main():
                            for e in events)
         messages.append('luismc-artifacts: queued status changes waiting for this session: %s. '
                         'Apply or drop each before the turn ends.' % listed)
+    return messages
+
+
+def main():
+    if hooks_off():
+        return 0
+    data = read_input()
+    root = hook_root(data)
+    if not root:
+        return 0
+    manifest = load_manifest(root)
+    if manifest is None:
+        return 0
+    try:
+        messages = catch_up(root, manifest)
+    except Exception as exc:   # the rule below is still delivered
+        warn('catch-up skipped (%s: %s)' % (type(exc).__name__, exc))
+        messages = []
+    out = {}
     if messages:
-        print(json.dumps({'systemMessage': '\n'.join(messages)}))
+        out['systemMessage'] = '\n'.join(messages)
+    context = rule_context()
+    if context:
+        out['hookSpecificOutput'] = {'hookEventName': 'SessionStart', 'additionalContext': context}
+    if out:
+        print(json.dumps(out))
     return 0
 
 

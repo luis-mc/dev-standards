@@ -8,7 +8,7 @@ effort: high
 # Feature artifact — new
 
 Creates one feature artifact from the project's record (`docs/artifacts/`,
-ARTIFACTSPEC 1.0.0). The script is the only writer of `manifest.json` and
+ARTIFACTSPEC 1.1.0). The script is the only writer of `manifest.json` and
 `registry.json`; never edit either by hand.
 
 Every command below is
@@ -39,7 +39,8 @@ the repository instead (the session's scratchpad directory, in a new folder).
    (`--project NAME --timezone IANA --label LABEL`, plus `--windows-timezone ID`
    and `--default-branch B` when given); the script runs `init` itself, so the
    full-progress artifact exists afterwards. Do not run `init` separately. The
-   command also installs the rule file and the gitignore lines on first use.
+   command also adds the gitignore lines on first use. It does not copy the rule
+   file: the plugin delivers the rule at every session start.
 3. **Find the project's design** (R5.12), only when the manifest says
    `"design": "default"`. Look in this order and stop at the first hit:
    design-token files; Tailwind or theme configuration; CSS custom properties
@@ -75,7 +76,9 @@ the repository instead (the session's scratchpad directory, in a new folder).
    (or the status it truly has). The command prints each task's ID. `item` is at
    most 80 characters. `expected` is a real date from `date` in the project's
    zone, `DD Mon` or `DD Mon ~HH:MM`, optionally followed by `; ` and a note;
-   never `today`, `soon` or `next` alone.
+   never `today`, `soon` or `next` alone. Every activity is a task, the
+   session's own included; `Done` means nothing is left to do for it, and work
+   still to come (join, release) is a task of its own.
 7. **Publish** every artifact `pending` lists, per "Publishing" below. The new
    feature artifact comes first, then the full-progress artifact, which links
    to it.
