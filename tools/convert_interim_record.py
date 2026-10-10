@@ -208,14 +208,12 @@ def convert(build_dir, out_dir, now_iso, clean):
         raw.append(dict(t, owner='project', app=t.get('app', 'luismc-project-setup')))
     for m in modules:
         for t in m.TASKS:
-            owner = m.KEY
             if not t['id'].startswith(m.PREFIX):
-                # R4.6: a feature task carries its feature's prefix. DS2 and DS5 sit in the models feature
-                # under the project prefix, so they become project tasks and keep their IDs.
-                if re.match(r'^(%s)\d+$' % '|'.join(project_prefixes), t['id']):
-                    owner = 'project'
-                    notes.append('%s: owner models -> project (its ID carries the project prefix; R4.6)' % t['id'])
-            raw.append(dict(t, owner=owner, app=m.APP))
+                # R4.6: a task moved into a feature keeps its project prefix (DS2, DS5 in the models feature)
+                if not re.match(r'^(%s)\d+$' % '|'.join(project_prefixes), t['id']):
+                    raise SystemExit('%s: prefix is neither %s nor a project prefix' % (t['id'], m.PREFIX))
+                notes.append('%s: stays owned by %s with its project-prefix ID (R4.6)' % (t['id'], m.KEY))
+            raw.append(dict(t, owner=m.KEY, app=m.APP))
     tasks = []
     for t in raw:
         changed_expected = re.match(r'^(\d{2}) (%s)' % '|'.join(MONTHS), t['expected'])
@@ -266,14 +264,8 @@ def convert(build_dir, out_dir, now_iso, clean):
         'project_prefixes': project_prefixes,
         'updated': now_iso,
     }
-    for entry, file_name in [(manifest['full_progress_artifact'], fp['FP_FILE'])] + \
-            [(e, e['file']) for e in manifest['feature_artifacts']]:
-        # the hash of the HTML that is published today (the interim page), so url and hash are both set (R4.3)
-        path = os.path.join(os.path.dirname(build_dir), file_name)
-        if os.path.isfile(path):
-            import hashlib
-            with open(path, 'rb') as handle:
-                entry['published_sha256'] = hashlib.sha256(handle.read()).hexdigest()
+    # The three artifacts are adopted: their URLs exist, the HTML published there was made by the interim
+    # generator, so published_sha256 stays empty and `pending` lists them until they are published (R4.3).
     registry = {'spec': SPEC, 'updated': now_iso, 'tasks': tasks}
 
     if clean:
