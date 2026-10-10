@@ -516,11 +516,11 @@
       "id": "DS26",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "After 7.0.0: repo setting, cleanup, global rules",
-      "detail": "Approved by you for tonight: turn on delete-branch-after-merge for dev-standards; run cleanup.py on dev-standards (merged DS*/AR* branches, gate refs, finished worktrees; open, unmerged or dirty work is kept); add the new rule lines to ~/.claude/rules/agents-and-integration.md, with a backup.",
+      "detail": "Started after the 7.0.0 merge: turning on delete-branch-after-merge; the train-cleanup workflow is removing the train's GitHub branches; then cleanup.py locally (dry run first) and the new rule lines in your ~/.claude rules file.",
       "expected": "11 Oct ~01:00",
-      "changed": "2026-10-10T23:22+01:00"
+      "changed": "2026-10-11T00:33+01:00"
     },
     {
       "id": "MP1",
