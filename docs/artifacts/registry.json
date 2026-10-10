@@ -173,6 +173,16 @@
       "changed": "2026-10-10T14:47+01:00"
     },
     {
+      "id": "AR20",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "mark-published leaves the registry alone",
+      "detail": "Found in first real use: marking the full-progress artifact published bumped the registry's updated time, which the artifact embeds, so check failed right after publishing. A Sonnet agent is fixing it with a regression test; ready PR to main.",
+      "expected": "10 Oct ~15:30",
+      "changed": "2026-10-10T14:49+01:00"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
