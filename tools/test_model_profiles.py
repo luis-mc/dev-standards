@@ -1,0 +1,356 @@
+#!/usr/bin/env python3
+"""Check the per-skill model profiles and the claude-setup assets that carry
+the agent rules.
+
+What is checked against a repo root:
+  P1  every claude/plugins/*/skills/*/SKILL.md names its skill in
+      claude-setup/assets/model-profiles.json (a skill on disk but not in the
+      table fails; a skill in the table but not on disk is skipped)
+  P2  its `model:` and `effort:` frontmatter match its profile
+  R1  agents-and-integration.md has the role lines, the section headings and
+      the {{SUBAGENT_EFFORT}} placeholder
+  S1  the settings template registers the SessionStart effort_drift.py hook
+      and the hook file ships next to it
+  M1  no model-delegation.md remains in the claude-setup assets
+
+Each check is then proved able to fail: a clean copy of the relevant files is
+mutated one way at a time, and the mutation must produce the matching finding.
+The hook is exercised the same way, on small settings fixtures.
+
+Until the branch that sets tech-stack-setup's frontmatter is joined, the real
+tree reports that one skill as a failure. That is expected; every other check
+passes.
+
+Run:  python3 tools/test_model_profiles.py
+"""
+import importlib.util
+import json
+import os
+import pathlib
+import shutil
+import subprocess
+import sys
+import tempfile
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+SETUP = "claude/plugins/project-setup/skills/claude-setup"
+ASSETS = SETUP + "/assets"
+PROFILES = ASSETS + "/model-profiles.json"
+RULE = ASSETS + "/.claude/rules/agents-and-integration.md"
+OLD_RULE = ASSETS + "/.claude/rules/model-delegation.md"
+SETTINGS = ASSETS + "/.claude/settings.json"
+HOOK = ASSETS + "/.claude/hooks/effort_drift.py"
+
+RULE_LINES = [
+    "## Agents",
+    "- Orchestrator (strongest model):",
+    "- Code agents: Sonnet at {{SUBAGENT_EFFORT}} effort;",
+    "pass `effort: \"{{SUBAGENT_EFFORT}}\"` on every implementation Agent call.",
+    "- Merges and checks: scripts.",
+    "Log triage: `model: \"haiku\"`.",
+    "- Agents whose definition pins a model or effort keep it.",
+    "- Trivial edits",
+    "- Max 5 agents at once.",
+    "## Integrate once, deploy once",
+    "## Docs",
+    "- Create every doc under `docs/`.",
+]
+PLACEHOLDER = "{{SUBAGENT_EFFORT}}"
+
+
+def frontmatter(text):
+    """`key: value` lines between the first two `---` fences."""
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return {}
+    out = {}
+    for line in lines[1:]:
+        if line.strip() == "---":
+            return out
+        if ":" in line and not line.startswith((" ", "\t")):
+            key, _, value = line.partition(":")
+            out[key.strip()] = value.strip()
+    return out
+
+
+def profile_table(root):
+    """{skill: (model, effort)} from model-profiles.json."""
+    data = json.loads((root / PROFILES).read_text(encoding="utf-8"))
+    table = {}
+    for group in data.values():
+        for skill in group["skills"]:
+            table[skill] = (group["model"], group["effort"])
+    return table
+
+
+def check(root):
+    """Every finding for the tree at `root`, as a list of strings."""
+    root = pathlib.Path(root)
+    found = []
+    try:
+        table = profile_table(root)
+    except (OSError, ValueError, KeyError) as exc:
+        return [f"P0 model-profiles.json unreadable: {exc}"]
+
+    for path in sorted((root / "claude/plugins").glob("*/skills/*/SKILL.md")):
+        skill = path.parent.name
+        if skill not in table:
+            found.append(f"P1 {skill}: SKILL.md is not in model-profiles.json")
+            continue
+        fm = frontmatter(path.read_text(encoding="utf-8"))
+        want_model, want_effort = table[skill]
+        for key, want in (("model", want_model), ("effort", want_effort)):
+            have = fm.get(key)
+            if have is None:
+                found.append(f"P2 {skill}: frontmatter has no {key} (want {want})")
+            elif have != want:
+                found.append(f"P2 {skill}: {key} is {have}, want {want}")
+
+    rule = root / RULE
+    if not rule.is_file():
+        found.append("R1 agents-and-integration.md is missing")
+    else:
+        text = rule.read_text(encoding="utf-8")
+        for needle in RULE_LINES:
+            if needle not in text:
+                found.append(f"R1 rule file lacks: {needle}")
+        if PLACEHOLDER not in text:
+            found.append("R1 rule file lacks the {{SUBAGENT_EFFORT}} placeholder")
+
+    try:
+        settings = json.loads((root / SETTINGS).read_text(encoding="utf-8"))
+        entries = settings["hooks"]["SessionStart"]
+        commands = [h.get("command", "") for e in entries for h in e["hooks"]]
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        commands = []
+    if not any("effort_drift.py" in c for c in commands):
+        found.append("S1 settings template registers no SessionStart effort_drift.py")
+    if not (root / HOOK).is_file():
+        found.append("S1 hooks/effort_drift.py is missing from the assets")
+
+    if (root / OLD_RULE).exists():
+        found.append("M1 model-delegation.md is still in the assets")
+    return found
+
+
+def copy_tree(dest):
+    """The files check() reads, copied from the real repo into `dest`."""
+    for path in (ROOT / "claude/plugins").glob("*/skills/*/SKILL.md"):
+        target = dest / path.relative_to(ROOT)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(path, target)
+    shutil.copytree(ROOT / ASSETS, dest / ASSETS)
+    # Make the copy clean: give every SKILL.md on disk its profile, so each
+    # mutation below is the only defect in the tree.
+    table = profile_table(dest)
+    for path in (dest / "claude/plugins").glob("*/skills/*/SKILL.md"):
+        model, effort = table.get(path.parent.name, (None, None))
+        if model is None:
+            continue
+        text = path.read_text(encoding="utf-8")
+        fm = frontmatter(text)
+        if fm.get("model") != model or fm.get("effort") != effort:
+            set_frontmatter(path, model, effort)
+
+
+def set_frontmatter(path, model, effort):
+    lines = [l for l in path.read_text(encoding="utf-8").splitlines()
+             if not l.startswith(("model:", "effort:"))]
+    end = lines.index("---", 1)
+    lines[end:end] = [f"model: {model}", f"effort: {effort}"]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def edit(path, old, new):
+    text = path.read_text(encoding="utf-8")
+    assert old in text, f"fixture drift: {old!r} not in {path.name}"
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+
+# (name, mutation(root), substring the findings must contain)
+def m_wrong_model(r):
+    set_frontmatter(r / "claude/plugins/specs/skills/spec-new/SKILL.md",
+                    "sonnet", "high")
+
+
+def m_wrong_effort(r):
+    set_frontmatter(r / "claude/plugins/specs/skills/spec-check/SKILL.md",
+                    "sonnet", "high")
+
+
+def m_no_model_line(r):
+    p = r / "claude/plugins/audits/skills/security-audit/SKILL.md"
+    p.write_text("\n".join(l for l in p.read_text(encoding="utf-8").splitlines()
+                           if not l.startswith("model:")) + "\n",
+                 encoding="utf-8")
+
+
+def m_unknown_skill(r):
+    d = r / "claude/plugins/specs/skills/brand-new-skill"
+    d.mkdir(parents=True)
+    (d / "SKILL.md").write_text("---\nmodel: opus\neffort: high\n---\n",
+                                encoding="utf-8")
+
+
+def m_role_line(r):
+    edit(r / RULE, "- Code agents: Sonnet at", "- Code workers: Sonnet at")
+
+
+def m_placeholder(r):
+    p = r / RULE
+    p.write_text(p.read_text(encoding="utf-8").replace(PLACEHOLDER, "high"),
+                 encoding="utf-8")
+
+
+def m_rule_missing(r):
+    (r / RULE).unlink()
+
+
+def m_no_hook_registration(r):
+    p = r / SETTINGS
+    data = json.loads(p.read_text(encoding="utf-8"))
+    del data["hooks"]
+    p.write_text(json.dumps(data), encoding="utf-8")
+
+
+def m_no_hook_file(r):
+    (r / HOOK).unlink()
+
+
+def m_old_rule(r):
+    (r / OLD_RULE).write_text("old\n", encoding="utf-8")
+
+
+def m_bad_json(r):
+    (r / PROFILES).write_text("{", encoding="utf-8")
+
+
+MUTATIONS = [
+    ("P2 wrong model", m_wrong_model, "spec-new: model is sonnet, want opus"),
+    ("P2 wrong effort", m_wrong_effort, "spec-check: effort is high, want medium"),
+    ("P2 missing model line", m_no_model_line, "security-audit: frontmatter has no model"),
+    ("P1 skill not in table", m_unknown_skill, "brand-new-skill: SKILL.md is not in"),
+    ("R1 role line gone", m_role_line, "rule file lacks: - Code agents"),
+    ("R1 placeholder gone", m_placeholder, "lacks the {{SUBAGENT_EFFORT}}"),
+    ("R1 rule file missing", m_rule_missing, "agents-and-integration.md is missing"),
+    ("S1 hook not registered", m_no_hook_registration, "registers no SessionStart"),
+    ("S1 hook file missing", m_no_hook_file, "effort_drift.py is missing"),
+    ("M1 old rule file present", m_old_rule, "model-delegation.md is still"),
+    ("P0 profiles unreadable", m_bad_json, "model-profiles.json unreadable"),
+]
+
+
+def load_hook():
+    spec = importlib.util.spec_from_file_location("effort_drift", ROOT / HOOK)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def hook_cases(tmp):
+    """(name, ok, detail) for the SessionStart hook on settings fixtures."""
+    hook = load_hook()
+    home, project = tmp / "home", tmp / "proj"
+    for d in (home / ".claude", project / ".claude"):
+        d.mkdir(parents=True)
+
+    def settings(path, ids):
+        body = {"modelSettings": {i: {"effortLevel": "high"} for i in ids}}
+        (path).write_text(json.dumps(body), encoding="utf-8")
+
+    user_file = home / ".claude/settings.json"
+    proj_file = project / ".claude/settings.json"
+    local_file = project / ".claude/settings.local.json"
+    base_env = {"CLAUDE_PROJECT_DIR": str(project)}
+    cases = []
+
+    def case(name, data, env, want_warning, contains=None):
+        msg = hook.evaluate(data, {**base_env, **env}, str(home))
+        ok = bool(msg) == want_warning and (contains is None or contains in (msg or ""))
+        cases.append((name, ok, msg or "silent"))
+
+    case("hook warns: model has no entry", {"model": "claude-opus-6"}, {},
+         True, "claude-opus-6")
+    settings(user_file, ["claude-opus-6"])
+    case("hook silent: entry in user settings", {"model": "claude-opus-6"}, {}, False)
+    settings(user_file, [])
+    settings(proj_file, ["claude-opus-6"])
+    case("hook silent: entry in project settings", {"model": "claude-opus-6"}, {}, False)
+    proj_file.unlink()
+    settings(local_file, ["claude-opus-6"])
+    case("hook silent: entry in local settings", {"model": "claude-opus-6"}, {}, False)
+    case("hook ignores a [1m] suffix", {"model": "claude-opus-6[1m]"}, {}, False)
+    case("hook still warns for another ID", {"model": "claude-sonnet-6"}, {}, True)
+    case("hook silent for a non-split model", {"model": "claude-haiku-5"}, {}, False)
+    case("hook silent when disabled", {"model": "claude-sonnet-6"},
+         {"CLAUDE_SETUP_EFFORT_DRIFT": "off"}, False)
+    case("hook silent: no model and no env IDs", {}, {}, False)
+    case("hook falls back to env IDs", {},
+         {"ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-6"}, True, "claude-sonnet-6")
+    case("hook env fallback silent when saved", {},
+         {"ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-6"}, False)
+
+    # The real entry point: stdin in, a systemMessage JSON out, exit 0.
+    env = {**os.environ, "HOME": str(home), "USERPROFILE": str(home),
+           "CLAUDE_PROJECT_DIR": str(project)}
+    env.pop("CLAUDE_SETUP_EFFORT_DRIFT", None)
+    run = subprocess.run([sys.executable, "-I", str(ROOT / HOOK)],
+                         input=json.dumps({"model": "claude-sonnet-6"}),
+                         capture_output=True, text=True, env=env)
+    try:
+        out = json.loads(run.stdout)
+        ok = run.returncode == 0 and "systemMessage" in out
+    except ValueError:
+        ok = False
+    cases.append(("hook process: systemMessage JSON, exit 0", ok, run.stdout.strip()))
+    run = subprocess.run([sys.executable, "-I", str(ROOT / HOOK)],
+                         input="not json", capture_output=True, text=True, env=env)
+    cases.append(("hook process: bad stdin is harmless",
+                  run.returncode == 0 and not run.stdout.strip(), run.stdout.strip()))
+    return cases
+
+
+def main():
+    fails = 0
+
+    real = check(ROOT)
+    expected = [f for f in real if f.startswith("P2 tech-stack-setup")]
+    other = [f for f in real if f not in expected]
+    print("Real tree:")
+    for f in expected:
+        print(f"  EXPECTED until the branches join: {f}")
+    for f in other:
+        print(f"  FAIL  {f}")
+    if not real:
+        print("  clean")
+    fails += bool(real)
+
+    print("\nChecks can fail:")
+    for name, mutate, want in MUTATIONS:
+        with tempfile.TemporaryDirectory() as tmp:
+            tree = pathlib.Path(tmp)
+            copy_tree(tree)
+            clean = check(tree)
+            if clean:
+                ok, detail = False, f"baseline not clean: {clean}"
+            else:
+                mutate(tree)
+                got = check(tree)
+                ok = any(want in f for f in got)
+                detail = "fired" if ok else f"DID NOT FIRE (got: {got or 'nothing'})"
+        print(f"  {'PASS' if ok else 'FAIL'}  {name:28} {detail}")
+        fails += not ok
+
+    print("\nSessionStart hook:")
+    with tempfile.TemporaryDirectory() as tmp:
+        for name, ok, detail in hook_cases(pathlib.Path(tmp)):
+            print(f"  {'PASS' if ok else 'FAIL'}  {name:42} {detail[:60]}")
+            fails += not ok
+
+    print(f"\n{'FAILED' if fails else 'OK'}: {fails} failing group(s)"
+          f" ({len(expected)} expected tech-stack-setup finding(s))")
+    return 1 if fails else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

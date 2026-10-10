@@ -1,7 +1,7 @@
 # Stack Profile — `<PRODUCT>`
 
 **Status:** Binding for this product
-**Conforms to:** `STACKSPEC <VERSION>`, `AUTHSPEC <VERSION>`
+**Conforms to:** `STACKSPEC <6.0.0>`, `AUTHSPEC <VERSION>`
 **Last reviewed:** `<YYYY-MM-DD>` by `<NAME>`
 
 This is the declared stack document for this product. It is what `AUTHSPEC §2.1`
@@ -26,12 +26,12 @@ aligned so a conformance run can check them positionally.
 
 | Spec | Version implemented | Notes |
 |---|---|---|
-| `STACKSPEC` | `<x.y.z>` | |
+| `STACKSPEC` | `<6.0.0>` | |
 | `AUTHSPEC` | `<x.y.z>` | |
 
 ## 2. Track and selections
 
-Every `CHOICE` the spec defers (`§0.2`). **Recording a selection here is not a
+Every `CHOICE` the spec defers (`STACKSPEC §0.2`). **Recording a selection here is not a
 deviation** — it is the only thing required of it. Section 15 is for graded
 clauses only.
 
@@ -46,28 +46,28 @@ clauses only.
 | Database host | `<...>` | |
 | Data access / ORM | `<...>` | |
 | Migration tool | `<...>` | |
-| Queue substrate | `<...>` | derived from the engine — see §7.2 and section 11 |
+| Queue substrate | `<...>` | derived from the engine — see STACKSPEC §7.2 and section 11 |
 | Cache | `<...>` | or `none` |
 | Object storage | `<...>` | or `none` |
-| Mail provider | `<...>` | transport class is fixed by `§8.1` |
+| Mail provider | `<...>` | transport class is fixed by `STACKSPEC §8.1` |
 | Error / crash tracker | `<...>` | |
-| Uptime checker | `<...>` | must survive an outage of what it watches (`§10.1`) |
+| Uptime checker | `<...>` | must survive an outage of what it watches (`STACKSPEC §10.1`) |
 | CI platform | `<...>` | |
 | Package manager | `<...>` | |
 | Task runner | `<...>` | |
 | Lint / format | `<...>` | |
 | Test runner | `<...>` | |
-| Boundary check | `<...>` | `§3.2` requires enforcement, not the tool |
+| Boundary check | `<...>` | `STACKSPEC §3.2` requires enforcement, not the tool |
 
 Four roles are choices constrained by a property. Record the selection **and how
 it satisfies the property** — a selection alone does not show the bar was met:
 
 | Role | Selection | How it satisfies the property | Clause |
 |---|---|---|---|
-| API contract format | `<...>` | generators for `<languages>` | `§4.1` |
-| Push transport | `<...>` | who holds device tokens, and their register entry | `§8.3` |
-| Mail feedback loop | `<...>` | how bounce/complaint reaches the suppression list | `§8.1` |
-| Product analytics | `<...>` | where consent is enforced at ingestion | `§10.3` |
+| API contract format | `<...>` | generators for `<languages>` | `STACKSPEC §4.1` |
+| Push transport | `<...>` | who holds device tokens, and their register entry | `STACKSPEC §8.3` |
+| Mail feedback loop | `<...>` | how bounce/complaint reaches the suppression list | `STACKSPEC §8.1` |
+| Product analytics | `<...>` | where consent is enforced at ingestion | `STACKSPEC §10.3` |
 
 ## 3. Pinned versions
 
@@ -88,7 +88,7 @@ the toolchain pins.
 
 ## 4. Minimum supported OS versions
 
-A product decision, not a default (`§0.3`). Changing one is a deliberate,
+A product decision, not a default (`STACKSPEC §0.3`). Changing one is a deliberate,
 recorded act.
 
 | Platform | Minimum | Set on | Review due |
@@ -97,7 +97,7 @@ recorded act.
 | Android | API `<nn>` | `<YYYY-MM-DD>` | `<YYYY-MM-DD>` |
 | Browsers | `<baseline>` | `<YYYY-MM-DD>` | `<YYYY-MM-DD>` |
 
-Mobile ships: `<yes / no / later>`. The rules apply either way (`§0.3`).
+Mobile ships: `<yes / no / later>`. The rules apply either way (`STACKSPEC §0.3`).
 
 ## 5. Environment inventory
 
@@ -126,7 +126,7 @@ product cannot deploy to that tier. Track them here rather than in a chat log.
 
 ## 7. Data-collection inventory
 
-Location: `<path>` (`§9.7`). Single source for privacy artifacts and the
+Location: `<path>` (`STACKSPEC §9.7`). Single source for privacy artifacts and the
 processing record.
 
 ## 8. Data residency
@@ -148,7 +148,7 @@ Jurisdictional boundary this product commits to: `<...>`
 | Last successful restore drill | `<YYYY-MM-DD>` |
 
 Backup retention is the outer bound on the erasure guarantee given to data
-subjects (`§5.5`). The restore runbook replays the erasure suppression list.
+subjects (`STACKSPEC §5.5`). The restore runbook replays the erasure suppression list.
 
 ## 10. Classification and retention
 
@@ -175,7 +175,7 @@ as a capability gap.
 | iOS | `<yes/no>` | `<...>` | `<... or n/a>` |
 | Android | `<yes/no>` | `<...>` | `<... or n/a>` |
 
-A declared decision, not a default (`§9.8`). Unrotatable pins have bricked more
+A declared decision, not a default (`STACKSPEC §9.8`). Unrotatable pins have bricked more
 apps than they have saved.
 
 ## 13. Assurance cadence
@@ -189,17 +189,17 @@ apps than they have saved.
 
 ## 14. Capability gaps
 
-Every place a `CHOICE` could not supply a capability the spec requires (`§0.4`),
+Every place a `CHOICE` could not supply a capability the spec requires (`STACKSPEC §0.4`),
 and the compensating control adopted. **A gap with no control recorded is a
 violation**, not a gap.
 
 | Clause | Capability missing | Compensating control | Approved by | Date |
 |---|---|---|---|---|
-| `<§7.2>` | `<transactional enqueue>` | `<outbox + relay>` | `<...>` | `<...>` |
+| `<STACKSPEC §7.2>` | `<transactional enqueue>` | `<outbox + relay>` | `<...>` | `<...>` |
 
-Gaps this spec anticipates: non-transactional enqueue (`§7.2`), absent datastore
-constraints (`§5.2`), absent PITR (`§5.5`), absent statement timeouts (`§5.6`),
-absent per-PR previews (`§13.2`).
+Gaps this spec anticipates: non-transactional enqueue (`STACKSPEC §7.2`), absent datastore
+constraints (`STACKSPEC §5.2`), absent PITR (`STACKSPEC §5.5`), absent statement timeouts (`STACKSPEC §5.6`),
+absent per-PR previews (`STACKSPEC §13.2`).
 
 ## 15. Deviations
 
@@ -209,10 +209,10 @@ meaningful.
 
 | Clause | Level | What we do instead | Reason | Approved by | Date |
 |---|---|---|---|---|---|
-| `<§n.n>` | `<SHOULD/MUST>` | `<...>` | `<...>` | `<...>` | `<...>` |
+| `<STACKSPEC §n.n>` | `<SHOULD/MUST>` | `<...>` | `<...>` | `<...>` | `<...>` |
 
 Two things that are **never** recordable here:
 
-- **Third-party analytics** (`§10.3`). A consent-lawfulness rule, not a vendor
+- **Third-party analytics** (`STACKSPEC §10.3`). A consent-lawfulness rule, not a vendor
   preference. There is no approver who can waive it.
-- **A third-party push vendor** (`§8.3`). Server-owned delivery is a `MUST`.
+- **A third-party push vendor** (`STACKSPEC §8.3`). Server-owned delivery is a `MUST`.

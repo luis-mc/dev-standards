@@ -2,7 +2,7 @@
  "registry": "draft for ARTIFACTSPEC 1.0.0",
  "project": "dev-standards",
  "timezone": "Europe/Lisbon",
- "updated": "2026-10-10T12:39+01:00",
+ "updated": "2026-10-10T12:46+01:00",
  "feature_artifacts": [
   {
    "title": "Feature: Project artifacts standard",
@@ -176,37 +176,37 @@
    "id": "AR5",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Done",
    "item": "ARTIFACTSPEC 1.0.0",
-   "detail": "The standard as a numbered, versioned spec; section 3 is its draft. Must pass spec_check.py.",
-   "expected": "10 Oct ~14:15"
+   "detail": "ARTIFACTSPEC 1.0.0 on AR12-integration (b8bd29b): the record, statuses and checklist, commands, hooks, publishing and recreation, test and conformance gates; spec_check clean. Plus the shared queue module (43150da).",
+   "expected": "10 Oct"
   },
   {
    "id": "AR6",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Running",
    "item": "Templates",
-   "detail": "feature-artifact.html and full-progress-artifact.html built on the AR14 stylesheet, plus finding a project's own design.",
+   "detail": "render_artifacts.py, the two templates and the HTML checks; a Sonnet agent on AR6-templates.",
    "expected": "10 Oct ~15:30"
   },
   {
    "id": "AR7",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Running",
    "item": "project_artifacts.py",
-   "detail": "Task registry, rendering, add-task, set-task-status, stamp, check. Stdlib only; Windows timezone fallback.",
+   "detail": "project_artifacts.py: the record worktree, every command, pending and mark-published, the record checks; a Sonnet agent on AR7-project-artifacts.",
    "expected": "10 Oct ~15:30"
   },
   {
    "id": "AR8",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Running",
    "item": "Hooks",
-   "detail": "After-command, end-of-turn and session-start hooks in hooks/hooks.json.",
-   "expected": "10 Oct ~16:30"
+   "detail": "The after-command, end-of-turn and session-start hooks and hooks/hooks.json; a Sonnet agent on AR8-hooks.",
+   "expected": "10 Oct ~15:30"
   },
   {
    "id": "AR9",
@@ -241,16 +241,16 @@
    "app": "luismc-artifacts",
    "status": "To do",
    "item": "Integrate and release",
-   "detail": "Full suite once on artifacts/integration, then one ready PR to main: one CI run, one release. Built by Sonnet agents from about 13:30; merged on green.",
+   "detail": "Full suite once on AR12-integration, then one ready PR to main: one CI run, one release; merged on green.",
    "expected": "10 Oct ~17:15"
   },
   {
    "id": "AR15",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Running",
    "item": "Repo record and recreate",
-   "detail": "Each project keeps its artifacts' record in docs/artifacts/: manifest, task registry, each artifact's content and last published HTML. A deleted artifact is recreated from it without duplicates. Built into project_artifacts.py.",
+   "detail": "The record in docs/artifacts and recreation without duplicates; built into project_artifacts.py by the AR7 agent.",
    "expected": "10 Oct ~15:30"
   },
   {

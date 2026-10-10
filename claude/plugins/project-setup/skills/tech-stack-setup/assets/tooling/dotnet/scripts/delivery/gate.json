@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "track": "dotnet",
+  "default_branch": "main",
+  "setup": ["dotnet restore --locked-mode"],
+  "packages": {"kind": "dotnet-sln"},
+  "widen_on": [
+    "global.json",
+    "Directory.Build.props",
+    "Directory.Build.targets",
+    "Directory.Packages.props",
+    "nuget.config",
+    ".editorconfig",
+    "*.sln",
+    "*packages.lock.json",
+    ".github/",
+    "scripts/delivery/"
+  ],
+  "ui_paths": [],
+  "steps": [
+    {
+      "name": "typecheck",
+      "scope": "changed+dependents",
+      "run": "dotnet build --no-restore --configuration Release -warnaserror"
+    },
+    {
+      "name": "unit",
+      "scope": "changed",
+      "run": "dotnet test --configuration Release --filter \"Category=Unit\""
+    },
+    {
+      "name": "guards",
+      "scope": "always",
+      "pre_push": true,
+      "run": "dotnet test --configuration Release --filter \"Category=Guard\""
+    },
+    {
+      "name": "secret-scan",
+      "scope": "always",
+      "pre_push": true,
+      "run": "gitleaks git --log-opts={base}..HEAD --redact --no-banner"
+    }
+  ]
+}

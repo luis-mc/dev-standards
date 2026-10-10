@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "track": "go",
+  "default_branch": "main",
+  "setup": ["go mod download", "go mod verify"],
+  "packages": {"kind": "go-modules"},
+  "widen_on": [
+    "go.mod",
+    "go.work",
+    "go.work.sum",
+    "*go.sum",
+    ".golangci.yml",
+    ".github/",
+    "scripts/delivery/"
+  ],
+  "ui_paths": [],
+  "steps": [
+    {
+      "name": "typecheck",
+      "scope": "changed+dependents",
+      "run": "go vet ./..."
+    },
+    {
+      "name": "lint",
+      "scope": "changed+dependents",
+      "run": "golangci-lint run --timeout=5m ./..."
+    },
+    {
+      "name": "unit",
+      "scope": "changed",
+      "run": "go test -short ./..."
+    },
+    {
+      "name": "guards",
+      "scope": "always",
+      "pre_push": true,
+      "run": "go test -run \"^TestGuard\" ./..."
+    },
+    {
+      "name": "secret-scan",
+      "scope": "always",
+      "pre_push": true,
+      "run": "gitleaks git --log-opts={base}..HEAD --redact --no-banner"
+    }
+  ]
+}

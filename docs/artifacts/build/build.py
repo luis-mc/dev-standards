@@ -269,7 +269,7 @@ p_lede = ('<p class="lede">All ongoing work in dev-standards, across every plugi
 
 p_s1 = table(['Feature artifact', 'Tasks', 'Where it stands'], [
     [link_or_text(content_artifacts), 'AR1 to AR16',
-     'Design agreed; default design built; repo record saved; next is AR5, the spec.'],
+     'ARTIFACTSPEC 1.0.0 written (AR5); renderer, script and hooks being built; merge on green at about 17:15.'],
     [link_or_text(content_models), 'MP1 to MP6, DS2, DS5',
      'Effort question live; role rules, skill profiles and the alias warning ship with DS6.'],
 ])
