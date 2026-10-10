@@ -17,5 +17,9 @@ Delegate the actual code writing to subagents, which run on Sonnet
 - Do not override a subagent's model to Opus for implementation work. Agents
   whose definition pins a model (e.g. `architect` on Opus for judgment calls)
   keep it.
+- Code-writing subagents run at `{{SUBAGENT_EFFORT}}` effort: pass
+  `effort: "{{SUBAGENT_EFFORT}}"` on every Agent call that launches a non-fork
+  subagent for implementation. Agents whose definition sets its own `effort`
+  keep it.
 - Trivial edits (a typo, a one-line config value) may be done directly — a
   subagent round-trip costs more than it saves.
