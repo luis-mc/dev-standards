@@ -496,11 +496,11 @@
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
-      "status": "Done",
+      "status": "Live",
       "item": "Inventory of models per agent type",
       "detail": "Checked against the Claude Code docs; corrects the first answer (Explore and Plan run on the main session’s model). Figure 1.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T22:55+01:00"
     },
     {
       "id": "MP2",
