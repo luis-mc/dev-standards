@@ -223,6 +223,16 @@
       "changed": "2026-10-10T21:07+01:00"
     },
     {
+      "id": "AR25",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "Rename Done to Built",
+      "detail": "The status for finished-but-not-released work is Built, so no status reads as finished while something is left; Live means released. Existing Done rows become Built. Part of luismc-artifacts 1.1.0.",
+      "expected": "10 Oct ~23:15",
+      "changed": "2026-10-10T21:35+01:00"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
