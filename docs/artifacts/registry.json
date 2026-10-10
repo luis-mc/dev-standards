@@ -218,9 +218,9 @@
       "app": "luismc-artifacts",
       "status": "Running",
       "item": "Integrate and release luismc-artifacts 1.1.0",
-      "detail": "AR21 and AR22 join into AR21-integration; then one ready PR, CI watched by commit, merge on green.",
-      "expected": "10 Oct ~23:15",
-      "changed": "2026-10-10T21:07+01:00"
+      "detail": "AR21/AR25 and AR22 are being joined into AR21-integration; AR26 is built on top. Then one ready PR, CI watched by commit, merge on green; then AR23 is applied to the record and the two old claude.ai feature artifacts are deleted with your confirmation.",
+      "expected": "11 Oct ~01:00",
+      "changed": "2026-10-10T22:54+01:00"
     },
     {
       "id": "AR25",
