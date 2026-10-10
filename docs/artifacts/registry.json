@@ -588,9 +588,9 @@
       "app": "luismc-project-setup",
       "status": "Live",
       "item": "Defaults: Opus at medium, Sonnet at high",
-      "detail": "Released in STACKSPEC 7.0.0 (#27, 137e0d0, 00:31). yet): every skill, the architect agent, claude-setup's preselected answers and the top-level effort default to medium for Opus and Sonnet; the rule's agent lines say medium. Plugins: project-setup 13.0.0, specs 1.2.0, audits 1.2.0, agents 1.1.0, artifacts 1.1.2. Your own ~/.claude already uses medium for both.",
+      "detail": "Released in STACKSPEC 7.0.0 (#27, 137e0d0, 00:31). Opus and Sonnet at medium effort everywhere: skill profiles, claude-setup's preselected answers, top-level effort, the architect agent and the rule's agent lines (specs 1.2.0, audits 1.2.0, agents 1.1.0, artifacts 1.1.2). Your ~/.claude already uses medium for both.",
       "expected": "11 Oct",
-      "changed": "2026-10-11T00:33+01:00"
+      "changed": "2026-10-11T00:34+01:00"
     }
   ]
 }
