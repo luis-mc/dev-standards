@@ -773,6 +773,16 @@ li { margin: .25em 0; }
    "changed": "2026-10-10T12:00+01:00"
   },
   {
+   "id": "DS16",
+   "owner": "project",
+   "app": "dev-standards",
+   "status": "Live",
+   "item": "secret-scan over HEAD's full history",
+   "detail": "The PR scan passed twice where main's failed: gitleaks-action scans first-parent commits only, so work joined by merge commits went unscanned. The pinned gitleaks CLI now scans every commit HEAD reaches; reviewed false positives in .gitleaksignore. #20.",
+   "expected": "10 Oct",
+   "changed": "2026-10-10T14:47+01:00"
+  },
+  {
    "id": "MP1",
    "owner": "models",
    "app": "luismc-project-setup",
@@ -840,12 +850,13 @@ li { margin: .25em 0; }
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
 <p class="last-update">Last update: <time datetime="2026-10-10T14:47+01:00">10 Oct 14:47</time> (Lisbon)</p>
 <p class="lede">All ongoing work in dev-standards, across every plugin. Live: <span class="task-id">DS6</span>, STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (12:56), and the DS15 fix to the secret scan. Running: the luismc-artifacts build, merge on green at about 15:30. <strong>Nothing needs you.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">32</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">6</div><div class="label">done</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">33</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">6</div><div class="label">done</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-done">Done</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="done"><td colspan="5"><strong>Live or done</strong></td></tr>
 <tr data-task="AR18"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR18</span>Script fixes from the real-repo test</a></td><td><code>luismc-artifacts</code></td><td>Adopted URLs, no-op content edits, two-digit Expected days, a sparse record worktree with long paths, no worktree without a record. Released in #18.</td><td>10 Oct</td></tr>
 <tr data-task="AR19"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR19</span>Names the secret rule does not read as credentials</a></td><td><code>luismc-artifacts</code></td><td>Main&#x27;s secret-scan failed after #18: the project-named-secret rule read FP_KEY-style identifiers and a test command as credentials. Renamed; fixed forward in #19.</td><td>10 Oct</td></tr>
+<tr data-task="DS16"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS16</span>secret-scan over HEAD&#x27;s full history</td><td><code>dev-standards</code></td><td>The PR scan passed twice where main&#x27;s failed: gitleaks-action scans first-parent commits only, so work joined by merge commits went unscanned. The pinned gitleaks CLI now scans every commit HEAD reaches; reviewed false positives in .gitleaksignore. #20.</td><td>10 Oct</td></tr>
 <tr data-task="AR5"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR5</span>ARTIFACTSPEC 1.0.0</a></td><td><code>luismc-artifacts</code></td><td>ARTIFACTSPEC 1.0.0 (b8bd29b): the record, statuses and checklist, commands, hooks, publishing and recreation, test and conformance gates; spec_check clean. Plus the shared queue module (43150da). Released in #18.</td><td>10 Oct</td></tr>
 <tr data-task="AR6"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR6</span>Templates</a></td><td><code>luismc-artifacts</code></td><td>render_artifacts.py and the two templates: deterministic rendering, the HTML checks, the Earlier fold; 57 tests. Released in #18.</td><td>10 Oct</td></tr>
 <tr data-task="AR7"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR7</span>project_artifacts.py</a></td><td><code>luismc-artifacts</code></td><td>project_artifacts.py: the record worktree with push retries, every §7 command, pending and mark-published, the record checks; 97 tests with the fake and the real renderer. Released in #18.</td><td>10 Oct</td></tr>

@@ -323,6 +323,16 @@
       "changed": "2026-10-10T12:00+01:00"
     },
     {
+      "id": "DS16",
+      "owner": "project",
+      "app": "dev-standards",
+      "status": "Live",
+      "item": "secret-scan over HEAD's full history",
+      "detail": "The PR scan passed twice where main's failed: gitleaks-action scans first-parent commits only, so work joined by merge commits went unscanned. The pinned gitleaks CLI now scans every commit HEAD reaches; reviewed false positives in .gitleaksignore. #20.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T14:47+01:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
