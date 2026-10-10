@@ -3,3 +3,6 @@ node_modules/
 .claude/settings.local.json
 __pycache__/
 *.pyc
+.claude/artifacts-queue.json
+.claude/artifacts-stop-state.json
+.claude/worktrees/
