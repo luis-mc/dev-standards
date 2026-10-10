@@ -35,8 +35,9 @@ on every run. Five pieces carry it, and all are needed:
 Settings alone only pick models and effort; without the rule the Opus session
 would still write all the code itself and the Sonnet default would rarely be
 exercised. The rule alone is advice with nothing behind it. Agents whose
-definition pins a model (e.g. `luismc-agents:architect` → `opus`) keep it: a frontmatter `model`
-takes precedence over `CLAUDE_CODE_SUBAGENT_MODEL`, which is the intent —
+definition pins a model (e.g. `luismc-agents:architect` → `opus`) keep it: a
+frontmatter `model` takes precedence over `CLAUDE_CODE_SUBAGENT_MODEL`, which
+is the intent —
 judgment-call agents stay on Opus. Forked subagents always inherit the parent's
 model; that is acceptable, since a fork is for continuing the parent's
 reasoning, not for implementation.
@@ -232,8 +233,9 @@ being overwritten unconditionally, and which individual settings keys are being
 added. List each model-split conflict separately as `key: current → policy`.
 List the two effort keys per target as `modelSettings.<ID>.effortLevel:
 current → chosen` (`none → chosen` when absent), and any
-`CLAUDE_CODE_EFFORT_LEVEL` conflict with where it is set. Ask for one confirmation: apply everything (conflicts included), apply a named
-subset, or cancel.
+`CLAUDE_CODE_EFFORT_LEVEL` conflict with where it is set. Ask for one
+confirmation: apply everything (conflicts included), apply a named subset, or
+cancel.
 
 State plainly which writes land outside the repo. If the user declines part of
 it, leave those files untouched and report them as skipped — never quietly drop
@@ -269,5 +271,5 @@ alone — that list matters, because "already set" and "just set by me" look
 identical afterwards. What the user declined, including any model-split
 conflict left in place. Whether the model split is now enforced for this
 project only or for all projects. The effort chosen for each model (Opus main
-session, Sonnet subagents) and where it was written. If both targets were written, note which keys
-the project file now shadows.
+session, Sonnet subagents) and where it was written. If both targets were
+written, note which keys the project file now shadows.
