@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T15:19+01:00",
+  "updated": "2026-10-10T19:03+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -341,6 +341,16 @@
       "detail": "The PR scan passed twice where main's failed: gitleaks-action scans first-parent commits only, so work joined by merge commits went unscanned. The pinned gitleaks CLI now scans every commit HEAD reaches; reviewed false positives in .gitleaksignore. #20.",
       "expected": "10 Oct",
       "changed": "2026-10-10T14:47+01:00"
+    },
+    {
+      "id": "DS17",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Branch gate: setup first, 30-minute limit, fail fast",
+      "detail": "The gate installs from the lockfile in frozen mode before any step, so a stale lockfile fails it; it stops after 30 minutes (exit 4); it stops at the first failed step unless --keep-going.",
+      "expected": "10 Oct ~21:30",
+      "changed": "2026-10-10T19:03+01:00"
     },
     {
       "id": "MP1",
