@@ -246,11 +246,11 @@
       "id": "AR27",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Repair a record one artifact at a time",
-      "detail": "Built (PR #36, 27548a0): a change may leave earlier findings but may not add new ones; the two-Decisions deadlock now repairs in two edit-content runs; plugin 1.1.1. 144 + 68 + 91 tests on Windows and Linux. PR marked ready; CI running, watched by commit; merge on green.",
-      "expected": "11 Oct ~00:30",
-      "changed": "2026-10-11T00:00+01:00"
+      "detail": "Released in luismc-artifacts 1.1.1 (#36, 0a6264f, 00:05): a change may leave earlier findings but may not add new ones, so a record repairs one artifact at a time. This repo's record migrated with it.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:05+01:00"
     },
     {
       "id": "AR28",
