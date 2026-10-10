@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T13:44+01:00",
+  "updated": "2026-10-10T14:05+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -80,7 +80,7 @@
       "item": "Tests and CI",
       "detail": "Renderer 57 tests, hooks 47 tests and the spec-lint steps are in; the script tests come with AR7.",
       "expected": "10 Oct ~16:30",
-      "changed": "2026-10-10T13:44+01:00"
+      "changed": "2026-10-10T14:05+01:00"
     },
     {
       "id": "AR10",
@@ -110,7 +110,7 @@
       "item": "Integrate and release",
       "detail": "All parts joined on AR12-integration; full local suite running; the real-repo test converts dev-standards’ own record on a scratch clone (AR17). Then one ready PR to main, merged on green.",
       "expected": "10 Oct ~15:30",
-      "changed": "2026-10-10T13:44+01:00"
+      "changed": "2026-10-10T14:05+01:00"
     },
     {
       "id": "AR14",
@@ -150,7 +150,7 @@
       "item": "dev-standards onto the plugin",
       "detail": "Real-repo test (R13.3): convert this record to ARTIFACTSPEC 1.0.0 on a scratch clone, render, check, one status change end to end, nothing pushed. The converted record ships in the AR12 ready PR and retires the interim generator.",
       "expected": "10 Oct ~15:00",
-      "changed": "2026-10-10T13:44+01:00"
+      "changed": "2026-10-10T14:05+01:00"
     },
     {
       "id": "DS1",
@@ -164,7 +164,7 @@
     },
     {
       "id": "DS2",
-      "owner": "project",
+      "owner": "models",
       "app": "luismc-project-setup",
       "status": "Live",
       "item": "Opus plans, Sonnet codes",
@@ -194,7 +194,7 @@
     },
     {
       "id": "DS5",
-      "owner": "project",
+      "owner": "models",
       "app": "luismc-project-setup",
       "status": "Live",
       "item": "claude-setup: medium or high effort per model",
