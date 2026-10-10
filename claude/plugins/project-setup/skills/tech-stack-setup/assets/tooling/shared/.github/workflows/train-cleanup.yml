@@ -1,0 +1,37 @@
+name: Train cleanup
+
+# STACKSPEC §13.6: once the ready pull request merges into the default branch,
+# its train (the integration branch, every branch joined into it, and their
+# gate-result refs) is deleted. `delete_branch_on_merge` covers the merged
+# branch itself; this covers the drafts it cannot see. A draft into an
+# integration branch also closes as merged when join.py pushes; the condition
+# below waits for the merge into the default branch.
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: train-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    name: remove the merged train
+    if: github.event.pull_request.merged && github.event.pull_request.base.ref == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Delete the train's branches and gate-result refs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/delivery/cleanup.py --remote-only --pr ${{ github.event.pull_request.number }}
