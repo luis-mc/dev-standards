@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T00:52+01:00",
+  "updated": "2026-10-11T00:53+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -276,11 +276,11 @@
       "id": "AR30",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "Enable luismc-artifacts in dev-standards' project settings",
-      "detail": "Your decision: luismc-artifacts@dev-standards goes into the repo's .claude/settings.json, so every session of this repo (cloud, other machines) gets its rule and hooks; the local-only setting is removed.",
-      "expected": "11 Oct ~02:00",
-      "changed": "2026-10-11T00:51+01:00"
+      "detail": "Committed on DS27-integration (6e794ba): .claude/settings.json enables luismc-artifacts@dev-standards for every session of this repo. Ships with DS27; then the local-only setting is removed.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:53+01:00"
     },
     {
       "id": "DS1",
