@@ -54,7 +54,7 @@ PREFIX_RE = re.compile(r'^[A-Z]{2,5}$')
 ID_RE = re.compile(r'^([A-Z]{2,5})([1-9][0-9]*)$')
 SHA_RE = re.compile(r'^[0-9a-f]{64}$')
 EXPECTED_RE = re.compile(
-    r'^(0?[1-9]|[12][0-9]|3[01]) (?:' + '|'.join(MONTHS) + r')( ~([01][0-9]|2[0-3]):[0-5][0-9])?(; \S.*)?$')
+    r'^(0[1-9]|[12][0-9]|3[01]) (?:' + '|'.join(MONTHS) + r')( ~([01][0-9]|2[0-3]):[0-5][0-9])?(; \S.*)?$')
 TIME_EL_RE = re.compile(r'<time\b[^>]*\bdatetime="([^"]+)"')
 RULE_NAME = 'project-artifacts.md'
 GITIGNORE_LINES = ['.claude/artifacts-queue.json', '.claude/artifacts-stop-state.json', '.claude/worktrees/']
@@ -259,7 +259,7 @@ def parse_iso(s):
 
 def git(cwd, *a, check=False, ok=(0,)):
     cmd = ['git', '-c', 'core.autocrlf=false', '-c', 'core.safecrlf=false',
-           '-c', 'core.quotepath=off'] + list(a)
+           '-c', 'core.quotepath=off', '-c', 'core.longpaths=true'] + list(a)
     env = dict(os.environ, GIT_TERMINAL_PROMPT='0')
     try:
         r = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True,
@@ -364,19 +364,40 @@ def fetch(ctx, tolerant=False):
     return True
 
 
-def ensure_worktree(ctx, tolerant=False):
-    """Fetch and create the detached record worktree on first use."""
+def no_record_fail(ctx):
+    return Fail(2, 'no record in this repository (origin/%s has no %s/manifest.json); run init' % (ctx.branch, RECORD_REL))
+
+
+def ensure_sparse(ctx):
+    """Check out docs/artifacts/ only (a long path elsewhere must not break the worktree)."""
+    r = git(ctx.wt, 'config', '--get', 'core.sparseCheckout')
+    if r.stdout.strip() != 'true':
+        git(ctx.wt, 'sparse-checkout', 'set', '--no-cone', '/%s/' % RECORD_REL, check=True)
+
+
+def ensure_worktree(ctx, tolerant=False, create=False):
+    """Fetch and create the detached, sparse record worktree on first use.
+
+    Only init and feature-new (create=True) may create it; any other command
+    exits 2 when origin/<default> has no record, leaving no worktree behind.
+    """
     fetched = fetch(ctx, tolerant)
     wt = ctx.wt
     if (wt / '.git').exists():
+        ensure_sparse(ctx)
         return fetched
     if git(ctx.root, 'rev-parse', '--verify', '-q', 'refs/remotes/origin/' + ctx.branch).returncode != 0:
         raise Fail(2, 'origin/%s does not exist' % ctx.branch)
+    if not create and git(ctx.root, 'cat-file', '-e',
+                          'refs/remotes/origin/%s:%s/manifest.json' % (ctx.branch, RECORD_REL)).returncode != 0:
+        raise no_record_fail(ctx)
     git(ctx.root, 'worktree', 'prune')
     if wt.exists() and any(wt.iterdir()):
         raise Fail(2, '%s exists but is not a git worktree; remove it' % wt)
     wt.parent.mkdir(parents=True, exist_ok=True)
-    git(ctx.root, 'worktree', 'add', '--detach', '--quiet', str(wt), 'origin/' + ctx.branch, check=True)
+    git(ctx.root, 'worktree', 'add', '--detach', '--no-checkout', '--quiet', str(wt), 'origin/' + ctx.branch, check=True)
+    ensure_sparse(ctx)
+    git(ctx.wt, 'reset', '--hard', '--quiet', 'origin/' + ctx.branch, check=True)
     return fetched
 
 
@@ -402,14 +423,14 @@ def clean_worktree(ctx, to=None):
     git(ctx.wt, 'clean', '-fdq', '--', RECORD_REL)
 
 
-def sync(ctx, readonly=False):
+def sync(ctx, readonly=False, create=False):
     """Fetch and reset the record worktree to origin/<default_branch> (R4.13).
 
     Unpushed record commits (kept after a refused push or --no-push) are
     rebased onto it, not dropped. Uncommitted edits are discarded: the session
     never edits this worktree (it uses export-content / edit-content).
     """
-    ensure_worktree(ctx, tolerant=readonly)
+    ensure_worktree(ctx, tolerant=readonly, create=create)
     if dirty_paths(ctx):
         clean_worktree(ctx)
     if git(ctx.wt, 'rev-parse', '--verify', '-q', 'origin/' + ctx.branch).returncode != 0:
@@ -750,8 +771,8 @@ def validate_structure(rec):
             f('R4.3', 'manifest.json', '%s: url is not an http(s) URL' % label)
         if isinstance(h, str) and h and not SHA_RE.match(h):
             f('R4.3', 'manifest.json', '%s: published_sha256 is not a SHA-256' % label)
-        if bool(url) != bool(h):
-            f('R4.3', 'manifest.json', '%s: url and published_sha256 must be both set or both empty' % label)
+        if h and not url:
+            f('R4.3', 'manifest.json', '%s: published_sha256 is set but url is empty' % label)
         title = e.get('title')
         want = 'Full Progress: ' if kind == 'full-progress' else 'Feature: '
         if isinstance(title, str):
@@ -813,8 +834,8 @@ def validate_structure(rec):
             if mt and mt.group(1) not in pp:
                 f('R4.6', 'registry.json', '%s: prefix %s is not a project prefix' % (label, mt.group(1)))
         elif owner in feat_by_key:
-            if mt and mt.group(1) != feat_by_key[owner].get('prefix'):
-                f('R4.6', 'registry.json', '%s: prefix %s is not the prefix of "%s" (%s)'
+            if mt and mt.group(1) != feat_by_key[owner].get('prefix') and mt.group(1) not in pp:
+                f('R4.6', 'registry.json', '%s: prefix %s is neither the prefix of "%s" (%s) nor a project prefix'
                   % (label, mt.group(1), owner, feat_by_key[owner].get('prefix')))
         elif isinstance(owner, str):
             f('R4.6', 'registry.json', '%s: owner "%s" is neither project nor a feature key' % (label, owner))
@@ -975,7 +996,7 @@ def run_change(ctx, apply, new_ok=False):
         retries = 0
         while True:
             ctx.attempt = retries + 1
-            sync(ctx)
+            sync(ctx, create=new_ok)
             base = head_sha(ctx)
             if (ctx.record_dir / 'manifest.json').is_file():
                 rec = Record.load(ctx.record_dir)
@@ -988,7 +1009,7 @@ def run_change(ctx, apply, new_ok=False):
                     raise Fail(1, 'the record is invalid; nothing written', pre)
             else:
                 if not new_ok:
-                    raise Fail(2, 'no artifact record on origin/%s (run init)' % ctx.branch)
+                    raise no_record_fail(ctx)
                 rec = Record(ctx.record_dir, exists=False)
             try:
                 result = apply(rec) or {}
@@ -1360,6 +1381,10 @@ def cmd_edit_content(args):
         if rec.entry(key) is None:
             raise Fail(1, 'unknown artifact key "%s"' % key)
         d = rec.dir / 'content' / key
+        new = {n: b.replace(b'\r\n', b'\n') for n, b in src.items()}
+        if d.is_dir() and new == content_files(d):
+            rec.noop = True
+            return {'command': 'edit-content', 'key': key, 'files': sorted(src), 'no_change': True}
         if d.exists():
             shutil.rmtree(str(d))
         d.mkdir(parents=True)
@@ -1374,7 +1399,7 @@ def cmd_edit_content(args):
         return {'command': 'edit-content', 'key': key, 'files': sorted(src)}
 
     res = run_change(ctx, apply)
-    emit(args, res, 'edit-content %s (%s)' % (key, short(res)))
+    emit(args, res, 'edit-content %s: %s' % (key, 'no change' if res.get('no_change') else short(res)))
     return 0
 
 
@@ -1516,15 +1541,13 @@ def cmd_commit(args):
     return 0
 
 
-def load_for_read(args, tolerant_missing=False):
+def load_for_read(args):
     """Return (ctx, Record or None) for a read-only command, from the synced record worktree."""
     ctx = make_ctx(args)
     with locked(ctx):
         sync(ctx, readonly=True)
     if not (ctx.record_dir / 'manifest.json').is_file():
-        if tolerant_missing:
-            return ctx, None
-        raise Fail(2, 'no artifact record on origin/%s (run init)' % ctx.branch)
+        raise no_record_fail(ctx)
     rec = Record.load(ctx.record_dir)
     mb = rec.manifest.get('default_branch')
     if isinstance(mb, str) and mb and mb != ctx.branch:
@@ -1563,7 +1586,7 @@ def cmd_check(args):
 
 
 def cmd_pending(args):
-    ctx, rec = load_for_read(args, tolerant_missing=True)
+    ctx, rec = load_for_read(args)
     arts = []
     if rec is not None:
         for key, _kind, e in rec.artifacts():
@@ -1574,6 +1597,8 @@ def cmd_pending(args):
                 h = sha_of_file(p)
                 if not e.get('published_sha256') and not e.get('url'):
                     reason = 'never published'
+                elif e.get('url') and not e.get('published_sha256'):
+                    reason = 'adopted, not yet published from the record'
                 elif h != e.get('published_sha256'):
                     reason = 'changed since last publish'
                 else:
@@ -1621,7 +1646,7 @@ def cmd_queue(args):
 
 
 def cmd_path(args):
-    ctx, _rec = load_for_read(args, tolerant_missing=True)
+    ctx, _rec = load_for_read(args)
     emit(args, {'record_dir': str(ctx.record_dir), 'worktree': str(ctx.wt)}, str(ctx.record_dir))
     return 0
 
