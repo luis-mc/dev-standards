@@ -366,11 +366,11 @@
       "id": "DS19",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Automatic branch and worktree cleanup",
-      "detail": "Once a train merges, its branches, gate-result refs, local branches and agent worktrees are removed automatically.",
+      "detail": "Agent building cleanup.py and the train-cleanup workflow: a merged train's branches, gate-result refs, local branches and worktrees go; open, unmerged or dirty ones are kept and listed.",
       "expected": "10 Oct ~21:30",
-      "changed": "2026-10-10T19:03+01:00"
+      "changed": "2026-10-10T19:09+01:00"
     },
     {
       "id": "DS20",
