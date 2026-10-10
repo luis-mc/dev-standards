@@ -6,11 +6,11 @@
       "id": "AR2",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "Proposal reviewed",
       "detail": "Twelve findings; each one and the change it led to is in section 7.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T22:54+01:00"
     },
     {
       "id": "AR3",
