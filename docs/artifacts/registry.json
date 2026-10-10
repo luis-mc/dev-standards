@@ -459,8 +459,8 @@
       "status": "Running",
       "item": "Integrate and release STACKSPEC 7.0.0",
       "detail": "Ready PR #27. Fixed so far: the secret-scan hit and the Linux-only cleanup test failure (the test harness dropped /usr/bin from PATH). Waiting for DS23-DS25, which ride this release (pre-push on the pushed commit, a template build check that compiles the Go/Rust/.NET guard edits, cleanup needs gh). Then rejoin, CI watched by commit, merge on green.",
-      "expected": "10 Oct ~23:15",
-      "changed": "2026-10-10T21:37+01:00"
+      "expected": "10 Oct ~23:45",
+      "changed": "2026-10-10T22:54+01:00"
     },
     {
       "id": "DS23",
