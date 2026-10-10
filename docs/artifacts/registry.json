@@ -428,9 +428,9 @@
       "app": "",
       "status": "Live",
       "item": "Branch gate: setup first, 30-minute limit, fail fast",
-      "detail": "Released in STACKSPEC 7.0.0 (#27, 137e0d0, 00:31). Built in draft #25: the gate runs a frozen-lockfile setup step first, stops at the first failure (--keep-going runs everything), stops after 30 min with exit 4 (whole process tree killed) and writes a log per step; gate_verify never trusts a timed-out or setup-failed result. Joined.",
+      "detail": "Released in STACKSPEC 7.0.0 (#27, 137e0d0, 00:31). The branch gate installs from the lockfile in frozen mode first, stops at the first failed step (--keep-going runs all), stops after 30 min with exit 4 and the process tree killed, and logs each step; gate_verify never trusts a timed-out or setup-failed result.",
       "expected": "11 Oct",
-      "changed": "2026-10-11T00:32+01:00"
+      "changed": "2026-10-11T00:33+01:00"
     },
     {
       "id": "DS18",
