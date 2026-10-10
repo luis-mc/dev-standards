@@ -721,7 +721,11 @@ def execute_steps(
         nonlocal timed_out
         log_rel = "%s/%s.log" % (log_dir, _log_name(name))
         log_path = root / log_rel
-        log_path.parent.mkdir(parents=True, exist_ok=True)
+        # Written under a name of its own and renamed when the step ends, so two
+        # runs in one checkout (two pushes at once) never mix their output and
+        # the tail printed after a failure is always this run's.
+        part = root / ("%s.%d.part" % (log_rel, os.getpid()))
+        part.parent.mkdir(parents=True, exist_ok=True)
         entry = {
             "name": name,
             "outcome": "pass",
@@ -732,7 +736,7 @@ def execute_steps(
             "log": log_rel,
         }
         print("\n==> %s (%s)" % (name, why), flush=True)
-        with open(log_path, "wb") as log:
+        with open(part, "wb") as log:
             for cmd in commands:
                 print("    $ %s" % cmd, flush=True)
                 left = budget()
@@ -749,6 +753,10 @@ def execute_steps(
                 else:
                     entry["reason"] = "command failed" + (": " + cmd if len(commands) > 1 else "")
                 break
+        try:
+            os.replace(part, log_path)
+        except OSError:  # the final name is busy (Windows): keep this run's file
+            entry["log"] = posix(part.relative_to(root))
         return entry
 
     if setup_cmds:

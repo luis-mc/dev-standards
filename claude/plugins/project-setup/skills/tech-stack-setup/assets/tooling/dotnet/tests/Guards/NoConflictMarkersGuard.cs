@@ -57,9 +57,18 @@ public class NoConflictMarkersGuard
         foreach (var sub in Directory.EnumerateDirectories(dir))
         {
             if (SkipDirs.Contains(Path.GetFileName(sub))) continue;
+            if (IsOtherCheckout(sub)) continue;
             foreach (var file in SourceFiles(sub)) yield return file;
         }
     }
+
+    /// <summary>
+    /// A directory holding its own .git is another checkout (an agent's worktree
+    /// under .claude/worktrees, a submodule). Its files are in whatever state that
+    /// work is in right now, mid-merge included; they are not this tree.
+    /// </summary>
+    private static bool IsOtherCheckout(string dir) =>
+        Directory.Exists(Path.Combine(dir, ".git")) || File.Exists(Path.Combine(dir, ".git"));
 
     [Fact]
     public void NoSourceFileContainsAConflictMarker()

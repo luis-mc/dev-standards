@@ -67,6 +67,15 @@ func moduleRoot(t *testing.T) string {
 	return topModule
 }
 
+// otherCheckout reports whether dir holds its own .git: another checkout (an
+// agent's worktree under .claude/worktrees, a submodule). Its files are in
+// whatever state that work is in right now, mid-merge included; they are not
+// this tree.
+func otherCheckout(dir string) bool {
+	_, err := os.Stat(filepath.Join(dir, ".git"))
+	return err == nil
+}
+
 func TestGuardNoConflictMarkers(t *testing.T) {
 	root := moduleRoot(t)
 	files := 0
@@ -78,6 +87,9 @@ func TestGuardNoConflictMarkers(t *testing.T) {
 		}
 		if d.IsDir() {
 			if skipDirs[d.Name()] {
+				return filepath.SkipDir
+			}
+			if path != root && otherCheckout(path) {
 				return filepath.SkipDir
 			}
 			return nil

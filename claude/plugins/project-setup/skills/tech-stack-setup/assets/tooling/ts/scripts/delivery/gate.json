@@ -34,13 +34,15 @@
       "name": "unit",
       "scope": "changed+dependents",
       "run": "pnpm vitest run --project unit --passWithNoTests {affected_dirs}",
-      "run_full": "pnpm vitest run --project unit"
+      "run_full": "pnpm vitest run --project unit",
+      "env": {"CI": "true"}
     },
     {
       "name": "guards",
       "scope": "always",
       "pre_push": true,
-      "run": "pnpm vitest run --project guard"
+      "run": "pnpm vitest run --project guard",
+      "env": {"CI": "true"}
     },
     {
       "name": "secret-scan",
@@ -51,7 +53,8 @@
     {
       "name": "e2e",
       "scope": "ui-changed",
-      "run": "pnpm exec playwright install chromium && pnpm exec playwright test"
+      "run": "pnpm exec playwright install chromium && pnpm exec playwright test",
+      "env": {"CI": "true"}
     }
   ]
 }

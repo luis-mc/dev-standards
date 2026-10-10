@@ -167,7 +167,7 @@ class Box:
     }
 
     STEP_SCRIPT = (
-        "import json, os, sys\n"
+        "import json, os, sys, time\n"
         "name, args = sys.argv[1], sys.argv[2:]\n"
         "os.makedirs('.delivery', exist_ok=True)\n"
         "with open('.delivery/ran.log', 'a') as f:\n"
@@ -177,8 +177,14 @@ class Box:
         "if name in os.environ.get('GATE_TEST_NOISE', '').split(','):\n"
         "    for i in range(1, 101):\n"
         "        print('noise line %03d' % i, flush=True)\n"
+        "if os.environ.get('GATE_TEST_MARK'):\n"
+        "    print('mark ' + os.environ['GATE_TEST_MARK'], flush=True)\n"
+        "time.sleep(float(os.environ.get('GATE_TEST_HOLD', '0')))\n"
         "sys.exit(1 if name in os.environ.get('GATE_TEST_FAIL', '').split(',') else 0)\n"
     )
+
+    # Reports how much it could read from its stdin (0 when stdin is closed).
+    STDIN_SCRIPT = "import sys\nprint('stdin bytes', len(sys.stdin.read()), flush=True)\n"
 
     # A step that never finishes on its own and leaves a child behind that would
     # outlive it: the child appends to .delivery/child.beat every 0.1 s for 30 s.
@@ -219,7 +225,8 @@ class Box:
         for name in SCRIPT_FILES:
             self.copy_text(shared / "scripts/delivery" / name, d / name)
         for fname, body in (("_t.py", self.STEP_SCRIPT), ("_slow.py", self.SLOW_SCRIPT),
-                            ("_beat.py", self.BEAT_SCRIPT), ("_lock.py", self.LOCK_SCRIPT)):
+                            ("_beat.py", self.BEAT_SCRIPT), ("_lock.py", self.LOCK_SCRIPT),
+                            ("_stdin.py", self.STDIN_SCRIPT)):
             (d / fname).write_text(body, encoding="utf-8", newline="\n")
         (d / "gate.json").write_text(json.dumps(gate_json or self.gate_json(), indent=2) + "\n", encoding="utf-8")
         if hooks:
@@ -851,6 +858,17 @@ def sc_logs(t: T, shared: Path) -> None:
     t.has("... and the logs are rewritten", (logs / "lint.log").read_text(encoding="utf-8"), "[lint] stdout")
     t.check("... not appended", "noise line" not in (logs / "lint.log").read_text(encoding="utf-8"))
 
+    # a step never inherits the caller's stdin (it would hang waiting for input)
+    cfg = Box.gate_json()
+    for st_ in cfg["steps"]:
+        if st_["name"] == "guards":
+            st_["run"] = '"%s" scripts/delivery/_stdin.py' % PY
+    box3 = Box(shared, gate_json=cfg)
+    box3.branch("feat/stdin", {"apps/web/a.txt": "a\n"})
+    r = run([PY, "scripts/delivery/branch_gate.py", "--base-ref", "origin/main", "--no-publish", "--only", "guards"],
+            cwd=box3.work, input_text="x" * 10)
+    t.has("a step's stdin is closed, not inherited", r.out, "stdin bytes 0")
+
     # a step name that is not a safe file name
     cfg = Box.gate_json()
     cfg["steps"][0]["name"] = "type check/ts"
@@ -1104,6 +1122,16 @@ def sc_hook(t: T, shared: Path) -> None:
     t.eq("... and the hook did not run the guards again",
          len([x for x in box.ran() if x[0] == "guards"]), 1)
 
+    # pushing a branch that is not checked out: the guards judge HEAD, and say so
+    box.g("checkout", "-q", "feat/hk2")
+    box.branch("feat/other", {"apps/web/o.txt": "o\n"})
+    box.g("checkout", "-q", "feat/hk2")
+    r = run(["git", "push", "-q", "origin", "feat/other"], cwd=box.work)
+    t.eq("pushing another branch than the checked-out one: allowed", r.code, 0)
+    t.has("... with a note that the guards check the checked-out commit", r.text, "checked-out commit")
+    r = run(["git", "push", "-q", "origin", "feat/hk2"], cwd=box.work)
+    t.check("pushing the checked-out branch: no such note", "checked-out commit" not in r.text, r.text)
+
     # no usable Python
     stubs = box.root / "stubs"
     stubs.mkdir()
@@ -1195,6 +1223,167 @@ def sc_hook_local(t: T, shared: Path) -> None:
     reset()
     r = run(["git", "push", "origin", "feat/loc"], cwd=box.work)
     t.check("scripts/delivery absent: a failing pre-push.local still blocks", r.code != 0 and stdin_log.exists(), r.text)
+
+
+def sc_fast_report(t: T, shared: Path) -> None:
+    """fast_guards.py reports a failure like the gate, limits each step, keeps logs of its own."""
+    box = Box(shared)
+    box.branch("feat/fr", {"apps/web/a.txt": "a\n"})
+    r = box.script("fast_guards.py", "--base-ref", "origin/main",
+                   env={"GATE_TEST_FAIL": "guards", "GATE_TEST_NOISE": "guards"})
+    t.eq("a failing guard: exit 1", r.code, 1)
+    m = re.search(r"^FAIL guards: command failed \(exit 1, [\d.]+s\) - log: \.delivery/logs/pre-push/guards\.log\r?$",
+                  r.out, re.M)
+    t.check("the FAIL line names the step, the reason, the exit code and the log", m is not None, r.out[-500:])
+    after = r.out.split("FAIL guards:", 1)[-1]
+    t.eq("... followed by the last 40 lines of its output", len(re.findall(r"noise line \d+", after)), 40)
+    t.check("... which are the last ones", "noise line 100" in after and "noise line 060" not in after)
+    t.check("a passing step prints no FAIL line", "FAIL secret-scan" not in r.out)
+    t.check("the log is where the line says",
+            (box.work / ".delivery/logs/pre-push/guards.log").is_file())
+    t.eq("... and is not the branch gate's", (box.work / ".delivery/logs/guards.log").exists(), False)
+    t.has("the limit is shown: 5 min per step by default", r.out, "limit 5 min per step")
+    t.eq("the other step still ran after the failure", [x[0] for x in box.ran()], ["guards", "secret-scan"])
+    r = box.script("fast_guards.py", "--base-ref", "origin/main")
+    t.eq("passing guards: exit 0, no FAIL line", (r.code, "FAIL " in r.out), (0, False))
+    t.eq("--timeout-minutes 0: exit 2", box.script("fast_guards.py", "--timeout-minutes", "0").code, 2)
+
+    # a guard that hangs, with a child that would outlive it
+    cfg = Box.gate_json()
+    for st_ in cfg["steps"]:
+        if st_["name"] == "guards":
+            st_["run"] = '"%s" scripts/delivery/_slow.py' % PY
+    box = Box(shared, gate_json=cfg)
+    box.branch("feat/frslow", {"apps/web/a.txt": "a\n"})
+    started = time.monotonic()
+    r = box.script("fast_guards.py", "--base-ref", "origin/main", "--timeout-minutes", "0.05")
+    elapsed = time.monotonic() - started
+    t.eq("a step over its limit: exit 1", r.code, 1)
+    t.check("... stopped near the limit (3 s), not when the child ends (30 s)", elapsed < 25, "%.1f s" % elapsed)
+    t.has("... the FAIL line says it timed out", r.out, "FAIL guards: timed out after 0.05 min")
+    t.has("... and the output so far is shown", r.out.split("FAIL guards:", 1)[-1], "slow step started")
+    t.eq("... the next step still ran", [x[0] for x in box.ran()], ["secret-scan"])
+    beat = box.work / ".delivery/child.beat"
+    before = beat.stat().st_size if beat.exists() else 0
+    time.sleep(1.5)
+    t.check("... and the child ran, then was killed with the step",
+            before > 0 and (beat.stat().st_size if beat.exists() else 0) == before)
+
+    # two runs at once in one checkout (two pushes): each reports its own output
+    box = Box(shared)
+    box.branch("feat/frpar", {"apps/web/a.txt": "a\n"})
+
+    def start(mark: str, hold: str) -> subprocess.Popen:
+        return subprocess.Popen(
+            [PY, "scripts/delivery/fast_guards.py", "--base-ref", "origin/main"], cwd=box.work,
+            env=env_with({"GATE_TEST_FAIL": "guards", "GATE_TEST_MARK": mark, "GATE_TEST_HOLD": hold}),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    first = start("AAA", "4")
+    time.sleep(1.5)  # the first is inside its guards step now
+    second = start("BBB", "0")
+    out_b = second.communicate()[0].decode("utf-8", "replace")
+    out_a = first.communicate()[0].decode("utf-8", "replace")
+    tail_a = out_a.split("FAIL guards:", 1)[-1]
+    tail_b = out_b.split("FAIL guards:", 1)[-1]
+    t.eq("two runs at once: both report the failure", ("FAIL guards:" in out_a, "FAIL guards:" in out_b), (True, True))
+    t.check("... each tail is its own run's output, not the other's",
+            "mark AAA" in tail_a and "mark BBB" not in tail_a and "mark BBB" in tail_b and "mark AAA" not in tail_b,
+            "A:\n%s\nB:\n%s" % (tail_a[-400:], tail_b[-400:]))
+
+
+def sc_parallel(t: T, shared: Path) -> None:
+    """Pushes from several worktrees at once: nothing is shared between the hook runs."""
+    box = Box(shared)
+    box.g("config", "core.hooksPath", ".githooks")
+    trees = {}
+    for name in ("a", "b", "c"):
+        wt = box.root / ("wt-" + name)
+        box.g("worktree", "add", "-q", wt.as_posix(), "-b", "par/" + name, "main")
+        (wt / "apps/web").mkdir(parents=True, exist_ok=True)
+        (wt / ("apps/web/%s.txt" % name)).write_text(name + "\n", encoding="utf-8")
+        box.g("add", "-A", cwd=wt)
+        box.g("commit", "-q", "-m", "work " + name, cwd=wt)
+        trees[name] = wt
+    procs = {
+        n: subprocess.Popen(["git", "push", "-q", "-u", "origin", "par/" + n], cwd=wt,
+                            env=env_with({"GATE_TEST_HOLD": "2.5"}),
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        for n, wt in trees.items()
+    }
+    out = {n: pr.communicate() for n, pr in procs.items()}
+    t.eq("three pushes at once, each through the hook: all allowed",
+         {n: pr.returncode for n, pr in procs.items()}, {"a": 0, "b": 0, "c": 0})
+    t.eq("... every branch arrived", [box.remote_ref("refs/heads/par/" + n) is not None for n in trees], [True] * 3)
+    ran = {}
+    for n, wt in trees.items():
+        log = wt / ".delivery/ran.log"
+        ran[n] = [json.loads(l)[0] for l in log.read_text().splitlines()] if log.exists() else []
+    t.eq("... each worktree ran its own guards once", ran, {n: ["guards", "secret-scan"] for n in trees})
+    t.check("... each with logs of its own",
+            all((wt / ".delivery/logs/pre-push/guards.log").is_file() for wt in trees.values()))
+
+    # one failing in the middle of the others does not leak into them
+    for n, wt in trees.items():
+        (wt / ("apps/web/%s2.txt" % n)).write_text("2\n", encoding="utf-8")
+        box.g("add", "-A", cwd=wt)
+        box.g("commit", "-q", "-m", "more " + n, cwd=wt)
+    procs = {
+        n: subprocess.Popen(["git", "push", "-q", "origin", "par/" + n], cwd=wt,
+                            env=env_with({"GATE_TEST_HOLD": "1.5", **({"GATE_TEST_FAIL": "guards"} if n == "b" else {})}),
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        for n, wt in trees.items()
+    }
+    for pr in procs.values():
+        pr.communicate()
+    t.eq("a guard failing in one worktree blocks only that push",
+         {n: pr.returncode == 0 for n, pr in procs.items()}, {"a": True, "b": False, "c": True})
+
+
+def sc_hook_ranges(t: T, shared: Path) -> None:
+    """What the secret scan covers: first push, update, force-push, a remote sha we do not have."""
+    box = Box(shared)
+    box.g("config", "core.hooksPath", ".githooks")
+    box.branch("feat/r", {"apps/web/a.txt": "a\n"})
+    r = run(["git", "push", "-q", "-u", "origin", "feat/r"], cwd=box.work)
+    t.eq("first push of a branch: allowed", r.code, 0)
+    t.eq("... the scan covers everything since the default branch", box.ran()[1], ["secret-scan", box.main_sha])
+    tip1 = box.g("rev-parse", "HEAD")
+
+    box.g("commit", "-q", "--amend", "-m", "rewritten")
+    box.clear_log()
+    r = run(["git", "push", "-q", "--force", "origin", "feat/r"], cwd=box.work)
+    t.eq("force-push of rewritten history: allowed", r.code, 0)
+    t.eq("... the scan starts at the fork point, not at the old tip", box.ran()[1], ["secret-scan", box.main_sha])
+    t.check("... which is not the discarded commit", tip1 != box.g("rev-parse", "HEAD"))
+
+    # someone else moved the branch: its tip is not in this clone
+    other = box.root / "other"
+    run(["git", "clone", "-q", box.origin.as_posix(), other.as_posix()])
+    run(["git", "checkout", "-q", "feat/r"], cwd=other)
+    (other / "apps/web").mkdir(parents=True, exist_ok=True)
+    (other / "apps/web/theirs.txt").write_text("t\n", encoding="utf-8")
+    run(["git", "add", "-A"], cwd=other)
+    run(["git", "commit", "-q", "-m", "theirs"], cwd=other)
+    run(["git", "push", "-q", "origin", "feat/r"], cwd=other)
+    theirs = run(["git", "rev-parse", "HEAD"], cwd=other).out.strip()
+    t.eq("(the other clone moved the branch)", box.remote_ref("refs/heads/feat/r"), theirs)
+    t.eq("(and this clone does not have its tip)",
+         run(["git", "cat-file", "-e", theirs + "^{commit}"], cwd=box.work).code != 0, True)
+    box.commit({"apps/web/mine.txt": "m\n"}, "mine")
+    box.clear_log()
+    r = run(["git", "push", "-q", "--force", "origin", "feat/r"], cwd=box.work)
+    t.eq("force-push over a tip this clone does not have: allowed", r.code, 0)
+    t.eq("... the scan falls back to the default branch", box.ran()[1], ["secret-scan", box.main_sha])
+
+    # no default branch to compare with: the push is blocked, and says why
+    box.branch("feat/r2", {"apps/web/b.txt": "b\n"})
+    box.g("update-ref", "-d", "refs/remotes/origin/main")
+    box.clear_log()
+    r = run(["git", "push", "-q", "-u", "origin", "feat/r2"], cwd=box.work)
+    t.check("a first push with no origin/main: blocked", r.code != 0, r.text)
+    t.has("... and says which ref is missing", r.text, "base ref")
+    t.eq("... no step ran", box.ran(), [])
 
 
 # --------------------------------------------------------------------------
@@ -1574,6 +1763,10 @@ def sc_assets(t: T, shared: Path) -> None:
     t.check("ts gate.json matches the contract example commands",
             any("--filter" in s["run"] and "{base}" in s["run"] for s in ts["steps"] if s["name"] == "typecheck")
             and any(s["name"] == "unit" and "{affected_dirs}" in s["run"] and "--project unit" in s["run"] and "--passWithNoTests" in s["run"] for s in ts["steps"]))
+    runners = {s["name"]: s for s in ts["steps"]}
+    t.check("ts: the test-runner steps run with CI=true, as CI does (timeouts, forbidOnly)",
+            all(runners[n].get("env") == {"CI": "true"} for n in ("unit", "guards", "e2e")),
+            str({n: runners[n].get("env") for n in ("unit", "guards", "e2e")}))
     t.check("go guards select TestGuard*",
             "TestGuard" in next(s for s in json.loads((TOOLING / "go/scripts/delivery/gate.json").read_text())["steps"] if s["name"] == "guards")["run"])
     t.check("rust guards select guard_*",
@@ -1599,6 +1792,22 @@ def sc_assets(t: T, shared: Path) -> None:
                 not any(marker.match(l) for l in text.splitlines()))
     t.check("rust guard crate has a lib target", (TOOLING / "rust/crates/guards/src/lib.rs").is_file())
     t.check("dotnet guard project exists", (TOOLING / "dotnet/tests/Guards/Guards.csproj").is_file())
+    guard_cfg = vitest[vitest.index("name: 'guard'"):]
+    guard_cfg = guard_cfg[:guard_cfg.index("name: 'contract'")]
+    t.check("ts guard project has a test timeout of its own, well above Vitest's 5 s default",
+            (m := re.search(r"testTimeout:\s*([\d_]+)", guard_cfg)) is not None and int(m.group(1).replace("_", "")) >= 30000,
+            guard_cfg)
+    t.check("ts guard project does not run the copies in nested checkouts",
+            "configDefaults.exclude" in guard_cfg and "nestedCheckouts" in guard_cfg
+            and "'**/.claude/worktrees/**'" in vitest)
+    ts_guard = (TOOLING / "ts/guards/no-conflict-markers.guard.test.ts").read_text(encoding="utf-8")
+    t.check("ts guard lists the files once per run", ts_guard.count("'ls-files'") == 1 and "listed" in ts_guard)
+    t.check("go guard skips another checkout (a directory holding .git)",
+            "otherCheckout(path)" in starters["go"][0].read_text(encoding="utf-8"))
+    t.check("rust guard skips another checkout (a directory holding .git)",
+            'path.join(".git").exists()' in starters["rust"][0].read_text(encoding="utf-8"))
+    t.check("dotnet guard skips another checkout (a directory holding .git)",
+            "IsOtherCheckout(sub)" in starters["dotnet"][0].read_text(encoding="utf-8"))
     hook = (shared / ".githooks/pre-push").read_text(encoding="utf-8")
     t.check("pre-push is a POSIX sh script", hook.startswith("#!/bin/sh"))
     # a Windows checkout must not turn the hook or the scripts into CRLF (sh: not found)
@@ -1766,6 +1975,22 @@ MUTANTS = [
      '"--force", remote', "remote", "publish"),
     ("fast_guards runs every step", "scripts/delivery/fast_guards.py",
      'if s["pre_push"]]', "if True]", "fast_guards"),
+    ("fast_guards stops at the first failure", "scripts/delivery/fast_guards.py",
+     "keep_going=True,", "keep_going=False,", "fast_report"),
+    ("fast_guards has no time limit", "scripts/delivery/fast_guards.py",
+     "limit_seconds=args.timeout_minutes * 60,", "limit_seconds=None,", "fast_report"),
+    ("fast_guards limit is not per step", "scripts/delivery/fast_guards.py",
+     "per_step=True,", "per_step=False,", "fast_report"),
+    ("fast_guards default limit is 50 minutes", "scripts/delivery/delivery_common.py",
+     "FAST_STEP_TIMEOUT_MINUTES = 5 ", "FAST_STEP_TIMEOUT_MINUTES = 50 ", "fast_report"),
+    ("fast_guards prints no failure report", "scripts/delivery/fast_guards.py",
+     "    dc.print_failures(entries, root)\n", "", "fast_report"),
+    ("fast_guards logs into the gate's log directory", "scripts/delivery/fast_guards.py",
+     "log_dir=dc.FAST_LOG_DIR,", "log_dir=dc.LOG_DIR,", "fast_report"),
+    ("two runs share one log file", "scripts/delivery/delivery_common.py",
+     'with open(part, "wb") as log:', 'with open(log_path, "wb") as log:', "fast_report"),
+    ("a step inherits the caller's stdin", "scripts/delivery/delivery_common.py",
+     "stdin=subprocess.DEVNULL,", "stdin=None,", "logs"),
     ("join merges an untrusted branch", "scripts/delivery/join.py",
      'if not verdict["trusted"]:', "if False:", "join_untrusted"),
     ("join never resolves lockfile conflicts", "scripts/delivery/join.py",
@@ -1776,6 +2001,8 @@ MUTANTS = [
      "if not args.no_gate:", "if False:", "join_clean"),
     ("pre-push runs for deletions", ".githooks/pre-push",
      '[ "$local_sha" = "$zero" ] && continue', "false", "hook"),
+    ("pre-push stays silent about pushing another commit than HEAD", ".githooks/pre-push",
+     'if [ -n "$head_sha" ] && [ "$local_sha" != "$head_sha" ]; then', "if false; then", "hook"),
     ("pre-push never blocks", ".githooks/pre-push",
      'if [ "$fail" -ne 0 ]; then', "if false; then", "hook"),
     ("pre-push runs for result refs", ".githooks/pre-push",
@@ -1809,6 +2036,9 @@ SCENARIOS = {
     "publish": sc_publish,
     "verify": sc_verify,
     "fast_guards": sc_fast_guards,
+    "fast_report": sc_fast_report,
+    "parallel": sc_parallel,
+    "hook_ranges": sc_hook_ranges,
     "hook": sc_hook,
     "hook_local": sc_hook_local,
     "join_clean": sc_join_clean,
