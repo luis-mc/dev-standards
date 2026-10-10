@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T21:09+01:00",
+  "updated": "2026-10-10T21:35+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -441,6 +441,16 @@
       "detail": "Ready PR #27: CI failed twice. secret-scan: a regex line in the artifact-prune test read as a token assignment (fixed, old commit's fingerprint ignored). spec-lint: the cleanup tests fail on Linux (cleanup.py exits 2; passes on Windows); the DS19 agent is fixing it. Then rejoin, re-run CI, merge on green.",
       "expected": "10 Oct ~22:30",
       "changed": "2026-10-10T21:09+01:00"
+    },
+    {
+      "id": "DS23",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Pre-push checks the pushed commit",
+      "detail": "When the pushed commit is not the checked-out one, the pre-push guards run on the pushed commit in a temporary worktree instead of warning. Rides the 7.0.0 release.",
+      "expected": "10 Oct ~23:00",
+      "changed": "2026-10-10T21:35+01:00"
     },
     {
       "id": "MP1",
