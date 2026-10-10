@@ -47,7 +47,11 @@ Sets up:
 
 **Model split:** the main session runs on Opus and does the thinking and
 planning; subagents run on Sonnet and write the code. Every project gets it,
-and the skill asks whether to enforce it for all your projects too.
+and the skill asks whether to enforce it for all your projects too. Each run
+it also asks whether each model should run at medium or high effort, with high
+preselected for the code agents, and writes your answer to the settings and to
+the delegation rule. Cloud agents, which have no per-model entry, default to
+high through a top-level `effortLevel`.
 
 You choose whether this applies to the current **project**, your **user-level**
 `~/.claude/` config, or both. It never overwrites a `CLAUDE.md` you've already
