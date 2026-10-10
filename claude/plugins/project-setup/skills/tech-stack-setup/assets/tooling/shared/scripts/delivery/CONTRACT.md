@@ -277,7 +277,8 @@ merging is **kept** and listed. For each finished branch:
 Never touches the default branch, a detached worktree (such as
 `.claude/worktrees/artifacts-record`), the main working tree, or a branch it
 cannot classify (an error from `gh` keeps the branch). With `--pr N` only the
-train of that merged pull request is considered (its head branch and every
+train of that pull request is considered (exit 2 unless N is merged into the
+default branch) (its head branch and every
 branch whose pull request had that head as base); without it, every branch on
 the remote. `--local` treats only local branches and worktrees: after
 `git fetch --prune`, a local branch is finished when its pull request is merged
@@ -359,7 +360,10 @@ then runs `gate.json`'s `setup` commands. Idempotent.
   kind (no version, run number or sha in the name), or pruning cannot group
   them.
 - `train-cleanup.yml` (every track): `on: pull_request: types: [closed]`, job
-  `if: github.event.pull_request.merged`, `permissions: contents: write,
+  `if: github.event.pull_request.merged && github.event.pull_request.base.ref == github.event.repository.default_branch`
+  (a draft into an integration branch also closes as merged when `join.py`
+  pushes; the train goes only when the ready pull request merges),
+  `permissions: contents: write,
   pull-requests: read`, checkout with `fetch-depth: 0`, then
   `python3 scripts/delivery/cleanup.py --remote-only --pr ${{ github.event.pull_request.number }}`
   with `GH_TOKEN: ${{ github.token }}`.

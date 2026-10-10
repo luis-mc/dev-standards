@@ -101,6 +101,11 @@ runs the only full CI run, end-to-end tests included, and a CI watcher follows i
 by commit; the default-branch run that follows skips a tree CI has already
 tested.
 
+Since 7.0.0 the gate installs from the lockfile before it checks anything, stops
+at the first failure and gives up after 30 minutes. A merged train's branches,
+gate results and worktrees are removed automatically, and only the newest build
+artifact of each name (an installer, a bundle, a report) is kept on GitHub.
+
 Supports four language tracks: **TypeScript, Go, Rust, and .NET**. Every
 vendor choice — Postgres or MySQL, Neon or RDS, Vercel or Fly — is yours;
 the wizard never tells you which one to pick, only which ones are compatible

@@ -11,12 +11,12 @@ This skill does two things:
 1. **Guides the user to a coherent stack.** Not a menu — a filtered interview
    where every option offered is compatible with everything already chosen, and
    every consequence is stated at the moment of the choice.
-2. **Generates a repository** conforming to **`STACKSPEC` 6.0.0**, the binding
+2. **Generates a repository** conforming to **`STACKSPEC` 7.0.0**, the binding
    invariants specification at `references/invariants.md`.
 
 ## The two halves, and why they are separate
 
-`STACKSPEC` 6.0.0 contains **no technology names**. It specifies properties —
+`STACKSPEC` 7.0.0 contains **no technology names**. It specifies properties —
 contract-first APIs, atomic enqueue, adapter boundaries, retention and erasure,
 consent-gated analytics, three-tier promotion — that hold whether the product is
 TypeScript on Vercel or Rust in a container.
@@ -279,7 +279,20 @@ Copy all of this in the first commit, so the first branch is already gated:
 | the guard-test starter, Rust | `rust/crates/guards/` — a member crate (`guard_*` tests); add `crates/guards` to the workspace `members` in the root `Cargo.toml` | `§13.5` item 4 |
 | the guard-test starter, .NET | `dotnet/tests/Guards/` (`Category=Guard`); add `Guards.csproj` to the solution and match its `TargetFramework` to `global.json` | `§13.5` item 4 |
 | `.github/workflows/ci.yml` | `<track>/.github/workflows/ci.yml` — carries the `decide` job and the gated E2E job | `§11.2`, `§13.1` |
+| `.github/workflows/artifact-prune.yml` | `shared/.github/workflows/artifact-prune.yml` — keeps only the newest build artifact of each name; add every workflow that uploads one to its `workflows:` list | `§13.1` |
+| `.github/workflows/train-cleanup.yml` | `shared/.github/workflows/train-cleanup.yml` — removes a merged train's remote branches and gate-result refs | `§13.6` |
 | a `.gitignore` line `.delivery/` | no asset: append it to the generated `.gitignore` | `§13.5` |
+
+Turn on the repository setting that deletes a merged pull request's head
+branch, so the platform does its part of the `§13.6` cleanup:
+`gh api -X PATCH repos/{owner}/{repo} -F delete_branch_on_merge=true`. It is a
+repository setting the user owns: ask before changing it on an existing
+repository.
+
+Any workflow the product adds that uploads a build artifact (an installer such
+as an MSI, a bundle, a report) gives each kind a stable name, with no version,
+run number or commit in it, and is added to `artifact-prune.yml`'s
+`workflows:` list (`§13.1`).
 
 Install the pre-push hook so a project's existing check survives:
 
@@ -375,6 +388,14 @@ check, performed by reading.
    the repair pass in step 7 plus a profile edit: change the claimed version to
    6.0.0 only after the re-check passes, never before.
 
+   A profile claiming **6.x** predates `STACKSPEC` 7.0.0's new `MUST`s, listed
+   in the spec's `§0.1` 7.0.0 entry: `§13.1` keeps only the newest build
+   artifact of each name, the `§13.5` gate installs from the lockfile in frozen
+   mode first, stops at the first failure and has a time limit, and `§13.6`
+   removes a merged train automatically. Report each as an upgrade item, the
+   same way; the repair is copying the current delivery scripts, the two new
+   workflows and the setting above.
+
    A profile claiming **4.x or earlier** predates the technology-neutral split.
    Report that its technology clauses no longer exist as requirements, and that
    its recorded vendor deviations are now `CHOICE`s needing recording, not
@@ -434,8 +455,18 @@ check, performed by reading.
      `.githooks/*` and `scripts/delivery/*.py`, so the hooks run on every OS
      (a CRLF shebang line fails on Linux and macOS). The guard starter is
      registered: the Rust `crates/guards` is in the workspace `members`, the
-     .NET `tests/Guards` project is in the solution. A branch result that is
-     not tied to the current head and base is not a result
+     .NET `tests/Guards` project is in the solution. `gate.json`'s `setup`
+     installs in frozen or locked mode, and its `timeout_minutes`, when set, is
+     a positive integer. A branch result that is not tied to the current head
+     and base is not a result
+   - **Build artifacts (`§13.1`)** — `artifact-prune.yml` is present and its
+     `workflows:` list names every workflow that uploads an artifact; every
+     `upload-artifact` name is stable for its kind (no version, run number or
+     commit in it)
+   - **Train cleanup (`§13.6`)** — `train-cleanup.yml` and
+     `scripts/delivery/cleanup.py` are present; the repository setting
+     `delete_branch_on_merge` is on (`gh api repos/{owner}/{repo} --jq
+     .delete_branch_on_merge`)
    - **Integration flow (`§13.6`)** — advisory, because it is process: read the
      repo's rules and agent instructions for task-ID branches, draft pull
      requests into an integration branch, the merge script, one ready pull
@@ -485,6 +516,8 @@ check, performed by reading.
      `.gitattributes` missing or not forcing LF on the hooks and scripts
    - `ci.yml` without the `decide` job or its job conditions → `§13.1`; E2E
      advisory or `e2e/quarantine.json` missing → `§11.2`
+   - `artifact-prune.yml` missing, or an upload with a per-run name → `§13.1`;
+     `train-cleanup.yml` or `cleanup.py` missing → `§13.6`
 
    Copy the delivery assets the same way as the others (`assets/tooling/shared/`
    and `assets/tooling/<track>/`, paths per `CONTRACT.md`), keep the repo's own
