@@ -116,11 +116,11 @@
       "id": "AR14",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "Default design",
-      "detail": "design/default-design.css, DESIGN.md and templates/project-artifact.css on branch AR14-default-design; applied to both dev-standards artifacts.",
+      "detail": "design/default-design.css, DESIGN.md and templates/project-artifact.css; applied to both dev-standards artifacts. Released in #18.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T14:46+01:00"
     },
     {
       "id": "AR15",
