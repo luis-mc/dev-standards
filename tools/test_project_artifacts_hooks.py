@@ -340,10 +340,10 @@ def background(work, tool, **kw):
 
 
 @test
-def after_agent_and_background_bash_mark_the_session():
-    for tool, args in (('Agent', {'prompt': 'do it', 'subagent_type': 'general-purpose'}),
-                       ('Task', {'prompt': 'do it'}),
-                       ('Agent', {}),
+def after_background_agent_and_bash_mark_the_session():
+    for tool, args in (('Agent', {'prompt': 'do it', 'subagent_type': 'general-purpose', 'run_in_background': True}),
+                       ('Task', {'prompt': 'do it', 'run_in_background': True}),
+                       ('Agent', {'run_in_background': True}),
                        ('Bash', {'command': 'sleep 600', 'run_in_background': True})):
         work = make_repo(branch='main')       # no task ID in the branch is needed
         rc, out, err, _ = background(work, tool, **args)
@@ -352,23 +352,30 @@ def after_agent_and_background_bash_mark_the_session():
         assert m and m['session_id'] == 's1' and m['started'], (tool, stop_state(work))
         assert queue_of(work) == [], 'the marker is not a queued status change'
     # another session has its own marker
-    background(work, 'Agent', session='s2')
+    background(work, 'Agent', session='s2', run_in_background=True)
     assert marker(work, 's2') and marker(work, 's1')
 
 
 @test
-def after_foreground_bash_does_not_mark_the_session():
+def after_foreground_calls_do_not_mark_the_session():
+    """R8.8: only run_in_background true arms the check; a foreground Agent or Task finishes within the turn."""
     work = make_repo()
     for ti in ({'command': 'ls'}, {'command': 'ls', 'run_in_background': False},
                {'command': 'ls', 'run_in_background': 'true'}):
         assert after_raw(work, ti)[0] == 0
     assert stop_state(work) == {}, stop_state(work)
+    for tool in ('Agent', 'Task'):
+        for args in ({'prompt': 'do it'}, {}, {'prompt': 'x', 'run_in_background': False},
+                     {'prompt': 'x', 'run_in_background': 'true'}, {'prompt': 'x', 'run_in_background': None},
+                     {'prompt': 'x', 'run_in_background': 1}):
+            rc, out, err, _ = background(work, tool, **args)
+            assert rc == 0 and out == '' and stop_state(work) == {}, (tool, args, stop_state(work), err)
     other = tool_input_for(work, 'Read', file_path='x')       # tools the hook is not registered for
     assert run_hook(AFTER, other, work)[0] == 0 and stop_state(work) == {}
     # a launch that failed started nothing
     rc = background(work, 'Bash', failed=True, command='sleep 9', run_in_background=True)[0]
     assert rc == 0 and stop_state(work) == {}, stop_state(work)
-    rc = background(work, 'Agent', failed=True, prompt='x')[0]
+    rc = background(work, 'Agent', failed=True, prompt='x', run_in_background=True)[0]
     assert rc == 0 and stop_state(work) == {}, stop_state(work)
 
 
@@ -379,7 +386,7 @@ def after_raw(work, tool_input):
 @test
 def after_background_marker_needs_a_manifest():
     work = make_repo(manifest=False)
-    assert background(work, 'Agent', prompt='x')[0] == 0
+    assert background(work, 'Agent', prompt='x', run_in_background=True)[0] == 0
     assert stop_state(work) == {} and not os.path.exists(os.path.join(work, '.claude')), 'wrote without a manifest'
 
 
@@ -394,9 +401,10 @@ def after_background_bash_still_queues_its_status_event():
 def after_background_marker_survives_a_broken_state_file_and_hooks_off():
     work = make_repo()
     write(os.path.join(work, '.claude', 'artifacts-stop-state.json'), '{not json')
-    assert background(work, 'Agent', prompt='x')[0] == 0 and marker(work)
+    assert background(work, 'Agent', prompt='x', run_in_background=True)[0] == 0 and marker(work)
     off = make_repo()
-    run_hook(AFTER, tool_input_for(off, 'Agent', prompt='x'), off, {'CLAUDE_ARTIFACTS_HOOKS': 'off'})
+    run_hook(AFTER, tool_input_for(off, 'Agent', prompt='x', run_in_background=True), off,
+             {'CLAUDE_ARTIFACTS_HOOKS': 'off'})
     assert stop_state(off) == {}
 
 
@@ -434,8 +442,17 @@ def set_pending(work, artifacts=(), queue=(), mode=''):
 
 
 def art(key, reason='html changed since the last publish'):
-    return {'key': key, 'title': 'Feature: ' + key.title(), 'file': 'feature-%s.html' % key,
+    """A `pending` entry for Full Progress (the only artifact pending lists, R9.5); `key` only tells two
+    different pending sets apart."""
+    return {'key': key, 'kind': 'full-progress', 'title': 'Full Progress: ' + key.title(),
+            'file': 'full-progress-%s.html' % key, 'path': '/publish/copy/full-progress-%s.html' % key,
             'url': 'https://claude.ai/artifact/' + key, 'reason': reason}
+
+
+def feature_entry(key='site'):
+    """What an older script would still list: a feature artifact (R8.11 ignores it)."""
+    return {'key': key, 'kind': 'feature', 'title': 'Feature: ' + key.title(), 'file': 'feature-%s.html' % key,
+            'path': '/record/feature-%s.html' % key, 'url': '', 'reason': 'never published'}
 
 
 def stop(work, env, session='s1', extra=None):
@@ -460,10 +477,41 @@ def stop_blocks_when_an_artifact_is_pending():
     res = parse_stop(out)
     assert rc == 0 and res.get('decision') == 'block', (rc, out, err)
     r = res['reason']
-    assert 'Feature: Demo' in r and 'mark-published demo' in r and 'feature-demo.html' in r, r
+    assert 'Full Progress: Demo' in r and 'mark-published demo' in r and 'full-progress-demo.html' in r, r
     assert 'https://claude.ai/artifact/demo' in r, r
+    assert '/publish/copy/full-progress-demo.html' in r and 'once' in r and 'end of the turn' in r, r   # R3.1, R5.31
+    assert 'never published' in r, r
     calls = open(os.path.join(os.path.dirname(work), 'stubs', 'calls.log')).read().split('\n')
     assert 'pending --json' in calls, calls
+
+
+@test
+def stop_counts_only_full_progress():
+    """R8.11: a feature artifact in `pending` neither blocks the stop nor counts towards the give-up."""
+    work = make_repo()
+    env = set_pending(work, artifacts=[feature_entry('site'), feature_entry('other')])
+    rc, out, err, _ = stop(work, env)
+    assert rc == 0 and out.strip() == '' and stop_state(work) == {}, (rc, out, err, stop_state(work))
+    # an entry with no kind and a key that is not full-progress is a feature too
+    legacy = {'key': 'site', 'title': 'Feature: Site', 'file': 'feature-site.html', 'url': '', 'reason': 'x'}
+    env = set_pending(work, artifacts=[legacy])
+    assert stop(work, env)[1].strip() == ''
+    # beside Full Progress it is left out of the reason, the fingerprint and the count
+    env = set_pending(work, artifacts=[feature_entry('site'), art('demo')])
+    res = parse_stop(stop(work, env)[1])
+    assert res['decision'] == 'block' and 'Full Progress: Demo' in res['reason'], res
+    assert 'Feature: Site' not in res['reason'] and 'feature-site.html' not in res['reason'], res['reason']
+    first = stop_state(work)['s1']['last']
+    set_pending(work, artifacts=[art('demo')])
+    stop(work, env)
+    assert stop_state(work)['s1']['last'] == first and stop_state(work)['s1']['blocks'] == 2, stop_state(work)
+    # a feature artifact appearing later does not restart the count
+    set_pending(work, artifacts=[feature_entry('late'), art('demo')])
+    stop(work, env)
+    assert stop_state(work)['s1']['blocks'] == 3
+    res = parse_stop(stop(work, env)[1])
+    assert 'decision' not in res and 'Full Progress: Demo' in res['systemMessage'], res
+    assert 'Feature' not in res['systemMessage'], res
 
 
 @test
@@ -522,7 +570,7 @@ def stop_lets_go_after_three_unchanged_blocks_with_a_system_message():
     rc, out, _e, _ = stop(work, env)
     res = parse_stop(out)
     assert rc == 0 and 'decision' not in res, res
-    assert 'Feature: Demo' in res['systemMessage'] and 'feature-demo.html' in res['systemMessage'], res
+    assert 'Full Progress: Demo' in res['systemMessage'] and 'full-progress-demo.html' in res['systemMessage'], res
     assert 'decision' not in parse_stop(stop(work, env)[1])   # stays open while unchanged
 
 
@@ -595,7 +643,7 @@ BG_REASON = 'started in the background'
 
 
 def bg_started(work, session='s1'):
-    assert background(work, 'Agent', prompt='x', session=session)[0] == 0
+    assert background(work, 'Agent', prompt='x', session=session, run_in_background=True)[0] == 0
 
 
 @test
@@ -616,7 +664,14 @@ def stop_blocks_background_work_without_an_active_task():
 
 @test
 def stop_background_blocks_for_background_bash_and_task_calls_too():
-    for tool, args in (('Task', {'prompt': 'x'}), ('Bash', {'command': 'x', 'run_in_background': True})):
+    """... and a foreground sub-agent, however many, asks for nothing."""
+    quiet = make_repo(statuses=NO_ACTIVE)
+    for tool in ('Agent', 'Task'):
+        assert background(quiet, tool, prompt='x')[0] == 0
+    assert stop(quiet, set_pending(quiet))[1].strip() == ''
+    assert stop_state(quiet) == {}
+    for tool, args in (('Task', {'prompt': 'x', 'run_in_background': True}),
+                       ('Bash', {'command': 'x', 'run_in_background': True})):
         work = make_repo(statuses=NO_ACTIVE)
         env = set_pending(work)
         assert background(work, tool, **args)[0] == 0
@@ -678,11 +733,11 @@ def stop_background_shares_the_give_up_rule_with_pending_artifacts():
     env = set_pending(work, artifacts=[art('demo')])
     bg_started(work)
     res = parse_stop(stop(work, env)[1])
-    assert res['decision'] == 'block' and 'Feature: Demo' in res['reason'] and BG_REASON in res['reason'], res
+    assert res['decision'] == 'block' and 'Full Progress: Demo' in res['reason'] and BG_REASON in res['reason'], res
     stop(work, env)
     stop(work, env)
     res = parse_stop(stop(work, env)[1])
-    assert 'decision' not in res and 'Feature: Demo' in res['systemMessage'] and BG_REASON in res['systemMessage'], res
+    assert 'decision' not in res and 'Full Progress: Demo' in res['systemMessage'] and BG_REASON in res['systemMessage'], res
     # the artifact gets published: what is pending changed, so the count restarts
     env = set_pending(work)
     assert parse_stop(stop(work, env)[1]).get('decision') == 'block'
@@ -923,9 +978,13 @@ def rule_file_carries_the_activity_rules():
     lines = [ln[2:] for ln in open(os.path.join(PLUGIN, 'rules', 'project-artifacts.md'),
                                    encoding='utf-8').read().splitlines() if ln.startswith('- ')]
     for old in ('Record work as a task before starting it.', 'Start branch names with the task ID.',
-                'Change status only with `set-task-status`.', 'Publish what `pending` lists in the same turn.',
+                'Change status only with `set-task-status`.',
                 'Never type a status row by hand.', 'Put every doc under `docs/`.'):
         assert old in lines, old
+    assert 'Publish what `pending` lists in the same turn.' not in lines        # R3.1: not after every change
+    publish = [ln for ln in lines if ln.startswith('Publish Full Progress')]
+    assert len(publish) == 1 and 'once, at the end of the turn, never mid-turn' in publish[0], publish
+    assert 'feature artifacts are files in the repo' in publish[0] and 'never published' in publish[0], publish
     joined = '\n'.join(lines)
     for frag in ('Every activity is a task before it starts, whoever does it',
                  "the session's own", 'contracts', 'joins', 'test runs', 'releases', 'deploys', 'cleanup',
@@ -965,7 +1024,7 @@ def hooks_never_write_record():
     env = set_pending(work, artifacts=[art('demo')])
     env.update(gh_env(work))
     after(work, 'gh pr ready')
-    background(work, 'Agent', prompt='x')
+    background(work, 'Agent', prompt='x', run_in_background=True)
     stop(work, env)
     start(work, env)
     assert INV4['runs'] > 40, INV4['runs']

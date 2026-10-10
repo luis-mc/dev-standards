@@ -3,7 +3,8 @@
 
 Implements ARTIFACTSPEC 1.1.0: section 4 (the record, time, the record
 worktree and its commits), section 7 (every command), the bookkeeping of
-section 9 (`pending`, `mark-published`) and the record-level checks of
+section 9 (`pending`, `mark-published`; only Full Progress is published, a
+feature artifact is a standalone file) and the record-level checks of
 section 14. Rendering lives in render_artifacts.py, the queue in
 artifact_queue.py. Python 3.10+, standard library only.
 
@@ -58,7 +59,9 @@ EXPECTED_RE = re.compile(
     r'^(0[1-9]|[12][0-9]|3[01]) (?:' + '|'.join(MONTHS) + r')( ~([01][0-9]|2[0-3]):[0-5][0-9])?(; \S.*)?$')
 TIME_EL_RE = re.compile(r'<time\b[^>]*\bdatetime="([^"]+)"')
 RULE_NAME = 'project-artifacts.md'
-GITIGNORE_LINES = ['.claude/artifacts-queue.json', '.claude/artifacts-stop-state.json', '.claude/worktrees/']
+PUBLISH_REL = os.path.join('.claude', 'artifacts-publish')      # the publish copy of Full Progress (R5.31)
+GITIGNORE_LINES = ['.claude/artifacts-queue.json', '.claude/artifacts-stop-state.json', '.claude/artifacts-publish/',
+                   '.claude/worktrees/']
 
 # Test seam (tests only): called as hook(ctx, attempt) right before each push.
 _TEST_BEFORE_PUSH = None
@@ -554,6 +557,20 @@ def migrate_done(manifest, registry):
     return ids, bool(ids) or merged
 
 
+def migrate_feature_urls(manifest):
+    """R4.18: a feature artifact is never published, so a feature entry holds no url and no
+    published_sha256. Drops them from an older manifest; returns the keys changed. The next writing
+    command writes the manifest and renders every artifact again."""
+    keys = []
+    feats = manifest.get('feature_artifacts')
+    for e in feats if isinstance(feats, list) else []:
+        if isinstance(e, dict) and ('url' in e or 'published_sha256' in e):
+            e.pop('url', None)
+            e.pop('published_sha256', None)
+            keys.append(str(e.get('key')))
+    return keys
+
+
 class Record:
     def __init__(self, d, manifest=None, registry=None, exists=True):
         self.dir = Path(d)
@@ -567,6 +584,8 @@ class Record:
         self.rendered = set()
         self.message = None
         self.old_done = []           # IDs read from the file with the retired status Done
+        self.old_merged = False      # merged_status read from the file as the retired Done
+        self.old_urls = []           # feature keys read from the file with a url (R4.18)
         self.migrated = False
 
     @classmethod
@@ -582,11 +601,16 @@ class Record:
         if not isinstance(manifest, dict) or not isinstance(registry, dict):
             raise Fail(2, 'unreadable record: manifest.json and registry.json must be objects')
         raw_tasks = copy.deepcopy(registry.get('tasks')) if isinstance(registry.get('tasks'), list) else None
+        old_merged = manifest.get('merged_status') == 'Done'
         old_done, migrated = migrate_done(manifest, registry)
+        old_urls = migrate_feature_urls(manifest)
         rec = cls(d, manifest, registry)
         if migrated:
             rec._tasks0 = raw_tasks      # the registry differs from the file, so it is rewritten
-            rec.old_done, rec.migrated = old_done, True
+            rec.old_done, rec.old_merged = old_done, old_merged
+        if migrated or old_urls:
+            rec.migrated = True
+            rec.old_urls = old_urls
         return rec
 
     def artifacts(self):
@@ -700,10 +724,12 @@ def load_contents(rec):
     return contents, findings
 
 
-def render_one(rec, key, stamp_t, stamp_i):
+def render_one(rec, key, stamp_t, stamp_i, links=None):
+    """Render one artifact; `links` ({feature key: (href, path text)}) is only for the publish copy."""
     try:
+        extra = {} if links is None else {'links': links}
         return R.render_artifact(rec.manifest, rec.registry, rec.contents(), key, PLUGIN_DIR,
-                                 rec.dir, stamp_t, stamp_i)
+                                 rec.dir, stamp_t, stamp_i, **extra)
     except Fail:
         raise
     except R.ContentError as ce:
@@ -711,21 +737,6 @@ def render_one(rec, key, stamp_t, stamp_i):
                    problems_to_findings(getattr(ce, 'problems', None) or [str(ce)], key))
     except Exception as e:
         raise Fail(2, 'render of %s failed: %s: %s' % (key, type(e).__name__, e))
-
-
-def rerender_existing(rec):
-    """Re-render every artifact that has a file, keeping its stamp; returns keys written."""
-    written = []
-    for key, _kind, e in rec.artifacts():
-        old = read_html(rec.dir / e['file'])
-        st = existing_stamp(old)
-        if st is None:
-            continue
-        html = render_one(rec, key, stamp_text_from_iso(st), st)
-        if html.replace('\r\n', '\n') != old:
-            rec.write_html(key, html)
-            written.append(key)
-    return written
 
 
 # --------------------------------------------------------------------------
@@ -799,7 +810,8 @@ def validate_structure(rec):
         label = key if isinstance(key, str) else '?'
         if not isinstance(key, str) or not KEY_RE.match(key):
             f('R4.2', 'manifest.json', 'artifact key %r is not lowercase letters, digits and hyphens' % key)
-        for fld in ('title', 'file', 'url', 'published_sha256'):
+        # only the full-progress entry is published, so only it has a url and a hash (R4.3)
+        for fld in ('title', 'file') + (('url', 'published_sha256') if kind == 'full-progress' else ()):
             if not isinstance(e.get(fld), str):
                 f('R4.3' if fld in ('url', 'published_sha256') else 'R4.2', 'manifest.json',
                   '%s: field "%s" is missing or not a string' % (label, fld))
@@ -1014,25 +1026,33 @@ def readme_text(manifest):
     fp = manifest.get('full_progress_artifact') or {}
     arts = ([fp] if fp else []) + [e for e in manifest.get('feature_artifacts', []) if isinstance(e, dict)]
     for e in arts:
-        rows.append('| %s | `%s` | %s |' % (e.get('title', ''), e.get('file', ''), e.get('url') or '(not published)'))
-    table = '\n'.join(['| Artifact | File | URL |', '|---|---|---|'] + rows)
+        if e is fp:
+            where = e.get('url') or '(not published)'
+        else:
+            where = 'a file in the repository, open it in a browser; never published'
+        rows.append('| %s | `%s` | %s |' % (e.get('title', ''), e.get('file', ''), where))
+    table = '\n'.join(['| Artifact | File | Where |', '|---|---|---|'] + rows)
     return (
         '# Project artifacts\n\n'
         'This folder is the record of %s\'s project artifacts (%s). It is generated and committed by\n'
         '`scripts/project_artifacts.py` of the `luismc-artifacts` plugin; do not edit the JSON or the\n'
         'rendered HTML by hand.\n\n'
         '%s\n\n'
-        '## Recreate an artifact that was deleted on claude.ai\n\n'
-        'The artifacts are disposable views; the record here is the source (R9.3).\n\n'
+        'A feature artifact is a standalone HTML file: open it in a browser, no server needed. It is\n'
+        'never published. Only the full-progress artifact is a claude.ai artifact; it links to the\n'
+        'feature files as local files.\n\n'
+        '## Recreate the full-progress artifact if it was deleted on claude.ai\n\n'
+        'The artifact is a disposable view; the record here is the source (R9.3).\n\n'
         '1. `python <plugin>/scripts/project_artifacts.py render` writes the HTML again from `content/`,\n'
         '   `registry.json` and `manifest.json`.\n'
-        '2. `python <plugin>/scripts/project_artifacts.py pending` lists what must be published.\n'
-        '3. Publish each listed file with the Artifact tool, to the URL in `manifest.json` when it still\n'
-        '   opens. When the publish is refused because the artifact no longer exists, list your artifacts:\n'
-        '   if one has the same title, publish to that one; only if none does, publish a new one.\n'
-        '   At most one artifact per title is ever created.\n'
-        '4. `python <plugin>/scripts/project_artifacts.py mark-published KEY --url URL` records the URL\n'
-        '   and the hash of what was published.\n\n'
+        '2. `python <plugin>/scripts/project_artifacts.py pending` lists Full Progress when it must be\n'
+        '   published and writes the publish copy (`.claude/artifacts-publish/`, not committed).\n'
+        '3. Publish that file with the Artifact tool, once at the end of the turn, to the URL in\n'
+        '   `manifest.json` when it still opens. When the publish is refused because the artifact no\n'
+        '   longer exists, list your artifacts: if one has the same title, publish to that one; only if\n'
+        '   none does, publish a new one. At most one artifact per title is ever created.\n'
+        '4. `python <plugin>/scripts/project_artifacts.py mark-published full-progress --url URL` records\n'
+        '   the URL and the hash of the committed render.\n\n'
         'Change a task only with `set-task-status`; edit prose only under `content/<key>/` and then run\n'
         '`edit-content <key>`.\n' % (manifest.get('project', 'the project'), SPEC, table))
 
@@ -1246,9 +1266,9 @@ def cmd_feature_new(args):
         if prefix in taken:
             raise Fail(1, 'prefix %s is already registered' % prefix)
         title = 'Feature: %s' % name
-        m['feature_artifacts'].append({
-            'key': key, 'title': title, 'url': '', 'file': R.artifact_file('feature', title),
-            'prefix': prefix, 'apps': apps, 'published_sha256': ''})
+        m['feature_artifacts'].append({      # never published: no url, no published_sha256 (R4.3)
+            'key': key, 'title': title, 'file': R.artifact_file('feature', title),
+            'prefix': prefix, 'apps': apps})
         d = rec.dir / 'content' / key
         if d.exists():
             raise Fail(1, 'content/%s already exists' % key)
@@ -1555,6 +1575,9 @@ def cmd_mark_published(args):
         e = rec.entry(key)
         if e is None:
             raise Fail(1, 'unknown artifact key "%s"' % key)
+        if rec.kind(key) != 'full-progress':
+            raise Fail(1, '%s is a feature artifact: feature artifacts are standalone files in the repository (%s) '
+                          'and are never published; only the full-progress artifact is (R9.5)' % (key, e.get('file', '')))
         old = read_html(rec.dir / e['file'])
         st = existing_stamp(old)
         if old is None or st is None:
@@ -1562,13 +1585,11 @@ def cmd_mark_published(args):
         if render_one(rec, key, stamp_text_from_iso(st), st).replace('\r\n', '\n') != old:
             raise Fail(1, '%s differs from a fresh render; run render first' % e['file'])
         e['url'] = url
-        rec.invalidate()
-        # other artifacts may link to this url; refresh them keeping their stamps
-        stale = rerender_existing(rec)
+        # the hash of the committed render, not of the publish copy (R5.32): nothing links to the url,
+        # so no other artifact changes
         e['published_sha256'] = sha_of_file(rec.html_path(key))
         rec.message = 'docs/artifacts: published %s' % key
-        return {'command': 'mark-published', 'key': key, 'url': url,
-                'sha256': e['published_sha256'], 'refreshed': sorted(k for k in stale if k != key)}
+        return {'command': 'mark-published', 'key': key, 'url': url, 'sha256': e['published_sha256']}
 
     res = run_change(ctx, apply)
     emit(args, res, 'recorded %s -> %s (%s)' % (key, url, short(res)))
@@ -1657,9 +1678,18 @@ def done_notes(rec):
     if rec.old_done:
         out.append('registry.json: %s still use the retired status Done; they are read as Built and the next '
                    'writing command rewrites them' % ', '.join(sorted(rec.old_done)))
-    if rec.migrated and not rec.old_done:
+    if rec.old_merged and not rec.old_done:
         out.append('manifest.json: merged_status Done is read as Built; the next writing command rewrites it')
     return out
+
+
+def feature_url_notes(rec):
+    """A note (never a finding) for an older manifest whose feature entries hold a url (R4.18)."""
+    if not rec.old_urls:
+        return []
+    return ['manifest.json: feature artifact(s) %s hold a url or published_sha256; feature artifacts are no longer '
+            'published, so the next writing command drops them and renders every artifact again'
+            % ', '.join(sorted(rec.old_urls))]
 
 
 def cmd_check(args):
@@ -1679,7 +1709,7 @@ def cmd_check(args):
         findings += check_html_findings(rec, key)
         findings += fresh_render_findings(rec, key)
     findings = sorted(set(findings))
-    notes = rule_copy_notes() + done_notes(rec)
+    notes = rule_copy_notes() + done_notes(rec) + feature_url_notes(rec)
     warnings = decision_warnings(rec)
     if getattr(args, 'json_out', False):
         result = {'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],
@@ -1719,12 +1749,53 @@ def decision_warnings(rec):
     return out
 
 
+def feature_link_map(root, rec):
+    """R5.31: {feature key: (file:/// URL, path as text)} for the publish copy. The target is the feature
+    file in the session's checkout (`<root>/docs/artifacts/`) when it exists there, else the same file in
+    the record worktree, which always has it. The URL is the absolute path with forward slashes,
+    percent-encoded by pathlib (a space is %20)."""
+    out = {}
+    for key, kind, e in rec.artifacts():
+        if kind != 'feature' or not isinstance(e.get('file'), str):
+            continue
+        target = Path(root) / RECORD_REL / e['file']
+        if not target.is_file():
+            target = rec.dir / e['file']
+        absolute = Path(os.path.abspath(str(target)))
+        out[key] = (absolute.as_uri(), absolute.as_posix())
+    return out
+
+
+def write_publish_copy(ctx, rec, key, e):
+    """R5.31: render Full Progress, from the committed render's stamp, with absolute links to the feature
+    files, to .claude/artifacts-publish/<file> (git-ignored). Returns its path, or None when it cannot be made."""
+    old = read_html(rec.dir / e['file'])
+    st = existing_stamp(old)
+    if st is None:
+        return None
+    try:
+        html = render_one(rec, key, stamp_text_from_iso(st), st, links=feature_link_map(ctx.root, rec))
+    except Fail as fl:
+        warn('the publish copy of %s was not written (%s); publish the committed file as it is' % (key, fl.msg))
+        return None
+    dest = ctx.root / PUBLISH_REL / e['file']
+    write_text(dest, html)
+    if git(ctx.root, 'check-ignore', '-q', str(dest)).returncode == 1:
+        warn('.gitignore does not ignore %s/ (the publish copy); add that line' % PUBLISH_REL.replace(os.sep, '/'))
+    return str(dest)
+
+
 def cmd_pending(args):
+    """Lists Full Progress when its committed render changed since the last publish, and queued events.
+    A feature artifact is never listed (R9.5)."""
     ctx, rec = load_for_read(args)
     arts = []
     if rec is not None:
-        for key, _kind, e in rec.artifacts():
+        for key, kind, e in rec.artifacts():
+            if kind != 'full-progress':
+                continue
             p = rec.dir / str(e.get('file', ''))
+            copy_path = None
             if not p.is_file():
                 reason = 'not rendered yet; run render'
             else:
@@ -1737,8 +1808,9 @@ def cmd_pending(args):
                     reason = 'changed since last publish'
                 else:
                     continue
-            arts.append({'key': key, 'title': e.get('title', ''), 'file': e.get('file', ''), 'path': str(p),
-                         'url': e.get('url', ''), 'reason': reason})
+                copy_path = write_publish_copy(ctx, rec, key, e)
+            arts.append({'key': key, 'kind': kind, 'title': e.get('title', ''), 'file': e.get('file', ''),
+                         'path': copy_path or str(p), 'url': e.get('url', ''), 'reason': reason})
     queue = artifact_queue.read_queue(str(ctx.root))
     if args.json_out:
         print(json.dumps({'artifacts': arts, 'queue': queue}, indent=2, ensure_ascii=False))
@@ -1862,10 +1934,10 @@ def build_parser():
     s.add_argument('--record', help='a docs/artifacts folder (or the repository containing it)')
     s.set_defaults(func=cmd_check)
 
-    s = sub.add_parser('pending', parents=[j], help='artifacts to publish and queued events; exit 1 when any')
+    s = sub.add_parser('pending', parents=[j], help='Full Progress to publish (with its publish copy) and queued events; exit 1 when any')
     s.set_defaults(func=cmd_pending)
 
-    s = sub.add_parser('mark-published', parents=[w], help='record the URL and hash of what was published')
+    s = sub.add_parser('mark-published', parents=[w], help='record the URL and the hash of the committed render of Full Progress')
     s.add_argument('key')
     s.add_argument('--url', required=True)
     s.set_defaults(func=cmd_mark_published)

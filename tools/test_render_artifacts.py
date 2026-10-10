@@ -1206,6 +1206,25 @@ def check_r529_full_progress_fragment(fx):
     assert fx.check(fp, 'full-progress') == []
 
 
+@test
+@with_fixture
+def check_r530_relative_links(fx):
+    """R5.30: the committed full-progress file links by file name; the publish copy's links fail the check."""
+    fp = fx.render('full-progress')
+    assert fx.check(fp, 'full-progress') == []
+    copy_ = fx.render('full-progress', links=publish_links(fx))
+    got = fx.check(copy_, 'full-progress')
+    assert 'R5.30' in reqs(got), got                                     # absolute links are not what is committed
+    assert any('file:///' in m for _, m in got)
+    # section 1 and a task link, each broken alone
+    expect(fx, sub1(fp, '<a href="%s">Feature: Project artifacts standard</a>' % AR_FILE,
+                    '<a href="./%s">Feature: Project artifacts standard</a>' % AR_FILE), 'full-progress', ['R5.30'])
+    expect(fx, sub1(fp, '<a href="%s"><span class="task-id">MP2</span>' % MP_FILE,
+                    '<a href="../%s"><span class="task-id">MP2</span>' % MP_FILE), 'full-progress', ['R5.30'])
+    # a feature artifact has no such links to check
+    assert fx.check(fx.render('artifacts'), 'artifacts') == []
+
+
 def publish_links(fx, root='/home/me/my repo'):
     """What project_artifacts.py hands render_artifact for the publish copy (R5.31)."""
     out = {}

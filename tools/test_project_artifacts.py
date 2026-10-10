@@ -19,6 +19,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -118,7 +119,7 @@ def check_html(html, key, manifest, registry, plugin_dir, record_dir):
     return out
 
 
-def render_artifact(manifest, registry, contents, key, plugin_dir, record_dir, stamp_text, stamp_iso):
+def render_artifact(manifest, registry, contents, key, plugin_dir, record_dir, stamp_text, stamp_iso, links=None):
     esc = _h.escape
     if manifest.get('design') == 'design.css':
         bad = check_tokens((Path(record_dir) / 'design.css').read_text(encoding='utf-8'))
@@ -131,7 +132,8 @@ def render_artifact(manifest, registry, contents, key, plugin_dir, record_dir, s
     tasks = registry['tasks'] if fp else [t for t in registry['tasks'] if t['owner'] == key]
     order = {s: i for i, s in enumerate(STATUSES)}
     tasks = sorted(tasks, key=lambda t: (order[t['status']], t['id']))
-    urls = {e['key']: e['url'] for e in manifest['feature_artifacts']}
+    hrefs = {e['key']: (links or {}).get(e['key'], (e['file'], ''))[0] for e in manifest['feature_artifacts']}
+    shown = {e['key']: (links or {}).get(e['key'], (e['file'], ''))[1] for e in manifest['feature_artifacts']}
     needs = ['%s %s' % (t['id'], t['item']) for t in tasks if t['status'] in ('Needs you', 'Failed')]
     out = ['<title>%s</title>' % esc(entry['title']),
            '<h1>%s</h1>' % esc(c['meta'].get('hero', '')),
@@ -143,8 +145,10 @@ def render_artifact(manifest, registry, contents, key, plugin_dir, record_dir, s
     out.append('<table><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected</th></tr>')
     for t in tasks:
         item = esc(t['item'])
-        if fp and t['owner'] in urls and urls[t['owner']]:
-            item = '<a href="%s">%s</a>' % (esc(urls[t['owner']]), item)
+        if fp and t['owner'] in hrefs:
+            item = '<a href="%s">%s</a>' % (esc(hrefs[t['owner']]), item)
+            if shown[t['owner']]:
+                item += ' <span class="local-path">%s</span>' % esc(shown[t['owner']])
         out.append('<tr><td>%s</td><td>%s %s</td><td>%s</td><td>%s</td></tr>' % (
             esc(t['status']), esc(t['id']), item, esc(t['detail']), esc(t['expected'])))
     out.append('</table>')
@@ -152,7 +156,7 @@ def render_artifact(manifest, registry, contents, key, plugin_dir, record_dir, s
     if fp:
         out.append('<h2>1. Features</h2>')
         for e in manifest['feature_artifacts']:
-            out.append('<p>%s %s %s</p>' % (esc(e['title']), esc(e['url']),
+            out.append('<p>%s %s %s</p>' % (esc(e['title']), esc(hrefs[e['key']]),
                                           esc(contents[e['key']]['meta'].get('lede', '').split('.')[0])))
         n = 2
     for s in c['sections']:
@@ -427,6 +431,7 @@ def test_init_session_files(env):
     r = p.init()
     gi = (p.clone / '.gitignore').read_text(encoding='utf-8')
     assert '.claude/artifacts-queue.json' in gi and '.claude/worktrees/' in gi
+    assert '.claude/artifacts-publish/' in gi, gi                      # the publish copy is never committed (R5.31)
     # R10.2, R10.4: the plugin delivers the rule at session start; init copies nothing
     assert not (p.clone / '.claude' / 'rules').exists(), list((p.clone / '.claude').iterdir())
     assert 'rules/' not in r.out, r.out
@@ -457,7 +462,7 @@ def test_feature_new_runs_init_first(env):
     m = p.man()
     e = m['feature_artifacts'][0]
     assert e['key'] == 'artifacts' and e['title'] == 'Feature: Artifacts' and e['prefix'] == 'AR'
-    assert e['apps'] == ['plugin', 'docs'] and e['url'] == '' and e['published_sha256'] == ''
+    assert e['apps'] == ['plugin', 'docs'] and 'url' not in e and 'published_sha256' not in e   # never published (R4.3)
     assert e['file'] == 'feature-artifacts.html', e['file']
     meta = json.loads(p.show('docs/artifacts/content/artifacts/meta.json'))
     assert meta['hero'] == 'The hero.' and meta['title'] == 'Feature: Artifacts'
@@ -751,58 +756,203 @@ def test_render_repairs_stale_html(env):
 # pending, mark-published, queue
 # --------------------------------------------------------------------------
 
+def url_path(url):
+    """The filesystem path a file:/// URL names (percent-decoded)."""
+    from urllib.parse import unquote, urlparse
+    assert url.startswith('file:///'), url
+    s = unquote(urlparse(url).path)
+    return s[1:] if os.name == 'nt' and re.match(r'^/[A-Za-z]:', s) else s
+
+
+def sha(text):
+    import hashlib
+    return hashlib.sha256(text.encode('utf-8')).hexdigest()
+
+
 @case
 def test_pending_and_mark_published(env):
+    """R9.1, R5.31, R5.32: only Full Progress is listed, as its publish copy; the hash is of the committed render."""
     p = env.baseline()
     r = p.run('pending', '--json')
     assert r.code == 1
     j = r.json()
     assert sorted(j) == ['artifacts', 'queue'] and j['queue'] == []
-    assert [a['key'] for a in j['artifacts']] == ['full-progress', 'artifacts', 'site']
-    for a in j['artifacts']:
-        assert sorted(a) == ['file', 'key', 'path', 'reason', 'title', 'url']
-        assert a['reason'] == 'never published' and a['url'] == ''
-        assert '/' not in a['file'] and os.sep not in a['file'] and a['file'].endswith('.html')
-        assert Path(a['path']).is_absolute() and Path(a['path']).name == a['file']
-        assert Path(a['path']).is_file() and Path(a['path']).read_text(encoding='utf-8').startswith('<title>')
-    assert j['artifacts'][1]['title'] == 'Feature: Artifacts'
-    assert 'pending' in p.run('pending').out or 'publish' in p.run('pending').out
-    # publish the features, then the full-progress last
-    p.ok('mark-published', 'artifacts', '--url', 'https://claude.ai/artifact/aaa')
-    after = p.run('pending', '--json').json()['artifacts']
-    # the full-progress artifact links to the feature url, so it changed and is still pending
-    assert [a['key'] for a in after] == ['full-progress', 'site'], after
-    p.ok('mark-published', 'site', '--url', 'https://claude.ai/artifact/bbb')
+    assert [a['key'] for a in j['artifacts']] == ['full-progress'], j['artifacts']          # a feature is never listed (R9.5)
+    a = j['artifacts'][0]
+    assert sorted(a) == ['file', 'key', 'kind', 'path', 'reason', 'title', 'url'] and a['kind'] == 'full-progress'
+    assert a['reason'] == 'never published' and a['url'] == ''
+    assert '/' not in a['file'] and os.sep not in a['file'] and a['file'].endswith('.html')
+    copy = Path(a['path'])
+    assert copy.is_absolute() and copy.name == a['file'] and copy.is_file()
+    assert os.path.samefile(str(copy.parent), str(p.clone / '.claude' / 'artifacts-publish')), copy
+    assert 'publish' in p.run('pending').out
+    committed = p.show('docs/artifacts/' + a['file'])
+    text = copy.read_text(encoding='utf-8')
+    assert text.startswith('<title>') and text != committed, 'the copy differs from the committed render in its links'
+    # mark Full Progress published; the copy does not make the record look stale (R5.32)
     p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
     r = p.run('pending', '--json')
     assert r.code == 0 and r.json() == {'artifacts': [], 'queue': []}, r.out
     m = p.man()
-    assert m['feature_artifacts'][0]['url'].endswith('/aaa') and len(m['feature_artifacts'][0]['published_sha256']) == 64
-    # the recorded hash is the hash of the pushed file
-    import hashlib
-    h = hashlib.sha256(p.show('docs/artifacts/feature-artifacts.html').encode('utf-8')).hexdigest()
-    assert m['feature_artifacts'][0]['published_sha256'] == h
+    fp = m['full_progress_artifact']
+    assert fp['url'].endswith('/ccc') and fp['published_sha256'] == sha(p.show('docs/artifacts/' + fp['file']))
+    assert fp['published_sha256'] != sha(copy.read_text(encoding='utf-8')), 'the hash is of the committed render, not of the copy'
+    for e in m['feature_artifacts']:
+        assert 'url' not in e and 'published_sha256' not in e, e
     assert p.run('check').code == 0
-    # a status change makes the touched artifacts pending again with the right reason
+    # a status change makes Full Progress pending again, with the right reason and the url to publish to
     p.ok('set-task-status', 'AR1', 'Waiting')
-    again = {a['key']: a for a in p.run('pending', '--json').json()['artifacts']}
-    assert sorted(again) == ['artifacts', 'full-progress'], again
-    assert again['artifacts']['reason'] == 'changed since last publish'
-    assert again['artifacts']['url'].endswith('/aaa')
+    again = p.run('pending', '--json').json()['artifacts']
+    assert [x['key'] for x in again] == ['full-progress'], again
+    assert again[0]['reason'] == 'changed since last publish' and again[0]['url'].endswith('/ccc')
+    # a feature status change lists Full Progress only
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
+    p.ok('set-task-status', 'SI1', 'Live')
+    assert [x['key'] for x in p.run('pending', '--json').json()['artifacts']] == ['full-progress']
     # url must be http(s)
-    r = p.run('mark-published', 'site', '--url', 'nope')
+    r = p.run('mark-published', 'full-progress', '--url', 'nope')
     assert r.code == 1 and 'http' in r.err
     r = p.run('mark-published', 'ghost', '--url', 'https://x.example/a')
     assert r.code == 1 and 'unknown artifact key' in r.err
 
 
 @case
+def test_pending_never_lists_a_feature_artifact(env):
+    """R9.5: not when it is new, not when its file or content changed, not when it was never published."""
+    p = env.baseline()
+    assert [a['key'] for a in p.run('pending', '--json').json()['artifacts']] == ['full-progress']
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
+    assert p.run('pending').code == 0
+    d = export(p, 'site', 'pendfeat')
+    meta = json.loads((d / 'meta.json').read_text(encoding='utf-8'))
+    meta['lede'] = 'The site changed. More follows.'
+    (d / 'meta.json').write_text(json.dumps(meta), encoding='utf-8')
+    p.ok('edit-content', 'site', '--from', d)
+    assert [a['key'] for a in p.run('pending', '--json').json()['artifacts']] == ['full-progress']   # its lede is quoted in section 1
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
+    p.ok('feature-new', '--key', 'fresh', '--title', 'Fresh', '--prefix', 'FR', '--apps', 'x')
+    assert [a['key'] for a in p.run('pending', '--json').json()['artifacts']] == ['full-progress']
+    assert 'feature-fresh.html' not in p.run('pending').out
+
+
+@case
+def test_mark_published_refuses_a_feature_artifact(env):
+    """R9.5: a clear message, nothing written."""
+    p = env.baseline()
+    before = p.head()
+    for key in ('artifacts', 'site'):
+        r = p.run('mark-published', key, '--url', 'https://claude.ai/artifact/zzz')
+        assert r.code == 1 and 'feature artifact' in r.err and 'never published' in r.err, r.all
+        assert 'only the full-progress artifact is' in r.err and 'feature-' in r.err, r.err
+        assert p.head() == before and dirty(p) == []
+    r = p.run('mark-published', 'site', '--url', 'https://claude.ai/artifact/zzz', '--json')
+    assert r.code == 1 and r.json()['ok'] is False and 'never published' in r.json()['error']
+    assert all('url' not in e for e in p.man()['feature_artifacts'])
+
+
+@case
+def test_publish_copy_links_and_committed_links(env):
+    """R5.30, R5.31: relative in the committed file, absolute file:/// in the copy, path text beside each link."""
+    need_real(env)
+    p = env.baseline()
+    a = p.run('pending', '--json').json()['artifacts'][0]
+    copy = Path(a['path']).read_text(encoding='utf-8')
+    committed = p.show('docs/artifacts/' + a['file'])
+    # committed: relative file names only
+    assert 'href="feature-artifacts.html"' in committed and 'href="feature-the-site.html"' in committed
+    assert 'file:' not in committed and 'class="local-path"' not in committed
+    # the copy: absolute file:/// URLs to the feature files, in section 1 and on every feature task
+    hrefs = sorted(set(re.findall(r'href="(file:///[^"]+)"', copy)))
+    assert [h.rsplit('/', 1)[1] for h in hrefs] == ['feature-artifacts.html', 'feature-the-site.html'], hrefs
+    for h in hrefs:
+        target = Path(url_path(h))
+        assert target.is_absolute() and target.is_file() and target.parent.name == 'artifacts'
+        assert os.path.samefile(str(target), str(p.clone / 'docs' / 'artifacts' / target.name)), (h, target)   # the session's checkout
+        assert '<span class="local-path">%s</span>' % target.as_posix().replace('&', '&amp;') in copy or \
+            re.search(r'<span class="local-path">[^<]*%s</span>' % re.escape(target.name), copy), target
+    assert copy.count('class="local-path"') == 2 + 3, copy.count('class="local-path"')   # section 1 (2) + AR1, AR2, SI1
+    assert 'href="feature-' not in copy
+    # the same page: undo the links and it is the committed render
+    back = re.sub(r' <span class="local-path">[^<]*</span>', '', copy)
+    for h in hrefs:
+        back = back.replace('href="%s"' % h, 'href="%s"' % h.rsplit('/', 1)[1])
+    assert back == committed
+    # the copy is outside the record and ignored once .gitignore says so (R10.2)
+    assert 'does not ignore' in p.run('pending').err
+    (p.clone / '.gitignore').write_text('.claude/artifacts-publish/\n', encoding='utf-8')
+    assert 'does not ignore' not in p.run('pending').err
+    assert 'artifacts-publish' not in git(p.clone, 'status', '--porcelain', '--untracked-files=all').stdout
+
+
+@case
+def test_publish_copy_path_encoding_with_spaces(env):
+    """R5.31: a space in the path is %20 in the URL and a plain space in the text; `&` is %26 / &amp;."""
+    need_real(env)
+    env.baseline()
+    q = Project(env, 'a b&c %d' % env.n, env._template)
+    a = q.run('pending', '--json').json()['artifacts'][0]
+    copy = Path(a['path']).read_text(encoding='utf-8')
+    hrefs = sorted(set(re.findall(r'href="(file:///[^"]+)"', copy)))
+    assert len(hrefs) == 2 and all('%20' in h and ' ' not in h and '%26' in h and '&' not in h for h in hrefs), hrefs
+    for h in hrefs:
+        assert os.path.samefile(url_path(h), str(q.clone / 'docs' / 'artifacts' / h.rsplit('/', 1)[1])), h
+        assert '\\' not in h                                              # forward slashes only
+    assert re.search(r'<span class="local-path">[^<]*a b&amp;c[^<]*feature-artifacts\.html</span>', copy), 'path text keeps the space'
+    assert q.run('check').code == 0
+
+
+@case
+def test_publish_copy_falls_back_to_the_record_worktree(env):
+    """R5.31: a session checkout that does not have the feature file yet links to the record worktree's."""
+    need_real(env)
+    p = env.project()
+    p.init()
+    p.ok('feature-new', '--key', 'a', '--title', 'A', '--prefix', 'AA', '--apps', 'x')
+    assert not (p.clone / 'docs').exists()                                  # the session is on a checkout without the record
+    a = p.run('pending', '--json').json()['artifacts'][0]
+    copy = Path(a['path']).read_text(encoding='utf-8')
+    (href,) = sorted(set(re.findall(r'href="(file:///[^"]+)"', copy)))
+    target = Path(url_path(href))
+    assert target.is_file() and os.path.samefile(str(target), str(p.rdir / 'feature-a.html')), (href, target)
+
+
+@case
+def test_old_feature_urls_migrate(env):
+    """R4.18: a manifest whose feature entries hold a url or a hash is read without them, noted by check,
+    rewritten by the next writing command, and its feature pages and Full Progress links are rendered again."""
+    need_real(env)
+    p = env.baseline()
+    other = p.clone_again('legacy')
+    f = other / 'docs' / 'artifacts' / 'manifest.json'
+    edit_json(f, lambda m: (feat(m).update(url='https://claude.ai/artifact/old-a', published_sha256='a' * 64),
+                            feat(m, 'site').update(url='https://claude.ai/artifact/old-b')))
+    page = other / 'docs' / 'artifacts' / 'feature-artifacts.html'
+    page.write_text('<title>Feature: Artifacts</title>\n<time datetime="2026-10-10T12:39+01:00">x</time>\n', encoding='utf-8')
+    git(other, 'commit', '-qam', 'a record from before feature artifacts stopped being published')
+    git(other, 'push', '-q', 'origin', 'main')
+    # check reads it, notes the old fields and finds the old page form
+    r = p.run('check', '--json')
+    assert r.code == 1, r.all
+    j = r.json()
+    assert any('artifacts' in n and 'no longer published' in n and 'site' in n for n in j['notes']), j['notes']
+    assert any(x['req'] == 'INV-3' and x['file'] == 'feature-artifacts.html' for x in j['findings']), j['findings']
+    assert 'note: manifest.json: feature artifact(s) artifacts, site' in p.run('check').out
+    # nothing lists a feature artifact, whatever its url said
+    assert [x['key'] for x in p.run('pending', '--json').json()['artifacts']] == ['full-progress']
+    # the next writing command drops the fields and renders everything again
+    p.ok('set-task-status', 'SI1', 'Running')
+    m = p.man()
+    assert all('url' not in e and 'published_sha256' not in e for e in m['feature_artifacts']), m['feature_artifacts']
+    assert p.show('docs/artifacts/feature-artifacts.html').startswith('<!doctype html>')
+    assert 'href="feature-artifacts.html"' in p.show('docs/artifacts/' + m['full_progress_artifact']['file'])
+    r = p.run('check', '--json')
+    assert r.code == 0 and r.json() == {'findings': [], 'notes': []}, r.out
+
+
+@case
 def test_pending_queue(env):
     p = env.baseline()
-    for k, u in (('full-progress', 'c'), ('artifacts', 'a'), ('site', 'b')):
-        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + u)
-    for k, u in (('artifacts', 'a'), ('site', 'b'), ('full-progress', 'c')):    # settle link churn
-        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + u)
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/c')
     assert p.run('pending').code == 0
     q = p.clone / '.claude' / 'artifacts-queue.json'
     q.parent.mkdir(exist_ok=True)
@@ -851,23 +1001,22 @@ def test_pending_without_record(env):
 
 @case
 def test_adopted_url_without_hash(env):
-    """R4.3: a url with an empty published_sha256 is an adopted artifact; pending says so."""
+    """R4.3: a full-progress url with an empty published_sha256 is an adopted artifact; pending says so."""
     p = env.baseline()
     other = p.clone_again('adopt')
     f = other / 'docs' / 'artifacts' / 'manifest.json'
-    edit_json(f, lambda m: feat(m).update(url='https://claude.ai/artifact/adopted'))
+    edit_json(f, lambda m: m['full_progress_artifact'].update(url='https://claude.ai/artifact/adopted'))
     git(other, 'commit', '-qam', 'adopt an existing artifact')
     git(other, 'push', '-q', 'origin', 'main')
-    p.ok('render')                      # the full-progress artifact links to the adopted url
-    assert p.man()['feature_artifacts'][0]['published_sha256'] == ''
+    assert p.man()['full_progress_artifact']['published_sha256'] == ''
     r = p.run('check')
     assert r.code == 0, r.all
     got = {a['key']: a for a in p.run('pending', '--json').json()['artifacts']}
-    assert got['artifacts']['reason'] == 'adopted, not yet published from the record', got
-    assert got['artifacts']['url'].endswith('/adopted')
-    assert got['site']['reason'] == 'never published'
-    p.ok('mark-published', 'artifacts', '--url', 'https://claude.ai/artifact/adopted')
-    assert 'artifacts' not in {a['key'] for a in p.run('pending', '--json').json()['artifacts']}
+    assert list(got) == ['full-progress'], got
+    assert got['full-progress']['reason'] == 'adopted, not yet published from the record', got
+    assert got['full-progress']['url'].endswith('/adopted')
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/adopted')
+    assert p.run('pending', '--json').json()['artifacts'] == []
 
 
 @case
@@ -1258,9 +1407,8 @@ def _drop_fp(m):
 
 
 def _second_fp_entry(m):
-    m['feature_artifacts'].append({'key': 'full-progress-2', 'title': 'Full Progress: Again', 'url': '',
-                                   'file': 'full-progress-again.html', 'prefix': 'FP', 'apps': [],
-                                   'published_sha256': ''})
+    m['feature_artifacts'].append({'key': 'full-progress-2', 'title': 'Full Progress: Again',
+                                   'file': 'full-progress-again.html', 'prefix': 'FP', 'apps': []})
 
 
 def _stray_fp_file(rec):
@@ -1325,9 +1473,10 @@ MANIFEST_FIXTURES = [
     ('wrong spec', 'R4.2', lambda m: m.update(spec='ARTIFACTSPEC 0.9')),
     ('merged_status', 'R4.2', lambda m: m.update(merged_status='Shipped')),
     ('design value', 'R4.2', lambda m: m.update(design='fancy')),
-    ('bad hash', 'R4.3', lambda m: feat(m).update(url='https://claude.ai/artifact/x', published_sha256='abc')),
-    ('hash without url', 'R4.3', lambda m: feat(m).update(published_sha256='a' * 64)),
-    ('bad url', 'R4.3', lambda m: feat(m).update(url='ftp://x', published_sha256='a' * 64)),
+    ('bad hash', 'R4.3', lambda m: m['full_progress_artifact'].update(url='https://claude.ai/artifact/x', published_sha256='abc')),
+    ('hash without url', 'R4.3', lambda m: m['full_progress_artifact'].update(published_sha256='a' * 64)),
+    ('bad url', 'R4.3', lambda m: m['full_progress_artifact'].update(url='ftp://x', published_sha256='a' * 64)),
+    ('full-progress url missing', 'R4.3', lambda m: m['full_progress_artifact'].pop('url')),
     ('file name', 'R4.4', lambda m: feat(m).update(file='artifacts.html')),
     ('design.css missing', 'R5.10', _design_missing),
 ]
@@ -1571,7 +1720,8 @@ def test_readme_generated(env):
     t = p.show('docs/artifacts/README.md')
     assert '# Project artifacts' in t and 'Feature: Artifacts' in t and '(not published)' in t
     assert 'render' in t and 'mark-published' in t and 'same title' in t
-    p.ok('mark-published', 'artifacts', '--url', 'https://claude.ai/artifact/aaa')
+    assert 'never published' in t and 'standalone HTML file' in t        # R9.5: a feature is a file
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/aaa')
     assert 'https://claude.ai/artifact/aaa' in p.show('docs/artifacts/README.md')
 
 
@@ -1666,22 +1816,17 @@ def later(n):
 
 @case
 def test_session_sequence_ends_clean(env):
-    """set-task-status -> pending -> mark-published (features, then full-progress) -> pending 0 and check 0."""
+    """set-task-status (several) -> pending lists Full Progress once -> mark-published -> pending 0 and check 0."""
     p = env.baseline()
-    for k, u in (('full-progress', 'c'), ('artifacts', 'a'), ('site', 'b')):     # a published starting point
-        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + u, env=later(0))
-    for k, u in (('artifacts', 'a'), ('site', 'b'), ('full-progress', 'c')):
-        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + u, env=later(1))
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/c', env=later(0))   # a published starting point
     assert p.run('pending').code == 0 and p.run('check').code == 0
     p.ok('set-task-status', 'AR1', 'Waiting', env=later(2))
     p.ok('set-task-status', 'SI1', 'Live', env=later(3))
     r = p.run('pending', '--json', env=later(4))
     assert r.code == 1, r.out
     pend = [a['key'] for a in r.json()['artifacts']]
-    assert pend == ['full-progress', 'artifacts', 'site'], pend
-    for i, k in enumerate(['artifacts', 'site', 'full-progress']):
-        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + {'artifacts': 'a', 'site': 'b',
-                                                                              'full-progress': 'c'}[k], env=later(5 + i))
+    assert pend == ['full-progress'], pend                                  # two changes, one publish (R3.1)
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/c', env=later(5))
     r = p.run('pending', '--json', env=later(9))
     assert r.code == 0 and r.json() == {'artifacts': [], 'queue': []}, r.out
     r = p.run('check', env=later(9))
@@ -1693,10 +1838,9 @@ def test_mark_published_leaves_registry_byte_identical(env):
     p = env.baseline()
     before = p.show('docs/artifacts/registry.json')
     upd = p.reg()['updated']
-    for i, k in enumerate(['artifacts', 'site', 'full-progress']):
-        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + k, env=later(1 + i))
-        assert p.show('docs/artifacts/registry.json') == before, k
-        assert p.man()['updated'] != upd                      # the manifest's own `updated` does move
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/full-progress', env=later(3))
+    assert p.show('docs/artifacts/registry.json') == before
+    assert p.man()['updated'] != upd                          # the manifest's own `updated` does move
     assert p.reg()['updated'] == upd
     assert p.man()['updated'] == '2026-10-11T13:00+01:00', p.man()['updated']      # 12:00 UTC, Lisbon summer time
     assert p.run('check').code == 0

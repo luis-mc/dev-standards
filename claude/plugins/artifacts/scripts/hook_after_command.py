@@ -7,10 +7,11 @@ event to the queue <repo>/.claude/artifacts-queue.json. It only queues: it never
 writes the record (INV-4, R8.1), finishes fast and never fails the tool call
 (R8.2): every error is one line on stderr and exit 0.
 
-It also notes background work (R8.8): an `Agent` or `Task` call, or a `Bash` call
-with `run_in_background` true, stamps the session's entry in
+It also notes background work (R8.8): an `Agent`, `Task` or `Bash` call whose
+`tool_input.run_in_background` is true stamps the session's entry in
 <repo>/.claude/artifacts-stop-state.json so the end-of-turn hook can ask for a
-Running task. That file is session state, not the record.
+Running task. A foreground call finishes within the turn and records nothing.
+That file is session state, not the record.
 
 Claude Code sends a successful Bash call as PostToolUse and a failed one (exit
 code not 0) as PostToolUseFailure, whose `error` field starts with
@@ -269,14 +270,14 @@ def current_task_id(root):
 
 
 def starts_background_work(data):
-    """True for a successful Agent or Task call, or a Bash call run in the background (R8.8)."""
+    """True for a successful Agent, Task or Bash call run in the background (R8.8): only
+    `tool_input.run_in_background` true arms the end-of-turn check."""
     if data.get('hook_event_name') == 'PostToolUseFailure' or data.get('error'):
         return False   # nothing was started
     tool = data.get('tool_name', 'Bash')
-    if tool in BACKGROUND_TOOLS:
-        return True
     tool_input = data.get('tool_input')
-    return tool == 'Bash' and isinstance(tool_input, dict) and tool_input.get('run_in_background') is True
+    return (tool in BACKGROUND_TOOLS + ('Bash',) and isinstance(tool_input, dict)
+            and tool_input.get('run_in_background') is True)
 
 
 def note_background_work(data):
