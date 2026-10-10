@@ -15,6 +15,9 @@ on:
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/stack-profile.md'
       - 'tools/**'
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/preflight.py'
+      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/**'
+      - 'claude/plugins/**/SKILL.md'
+      - 'claude/plugins/project-setup/skills/claude-setup/assets/**'
       - '.github/workflows/spec-lint.yml'
   pull_request:
     paths:
@@ -25,6 +28,9 @@ on:
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/stack-profile.md'
       - 'tools/**'
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/preflight.py'
+      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/**'
+      - 'claude/plugins/**/SKILL.md'
+      - 'claude/plugins/project-setup/skills/claude-setup/assets/**'
       - '.github/workflows/spec-lint.yml'
   workflow_dispatch:
 
@@ -85,6 +91,35 @@ jobs:
       # watched fail is indistinguishable from one that always exits 0.
       - name: Prove the setup preflight still blocks
         run: python3 tools/test_preflight.py
+
+      # tech-stack-setup copies the delivery scripts into every repository it
+      # generates, and an agent trusts the gate's result as the only check a
+      # branch gets before it joins. A gate that exits 0 when it could not decide,
+      # or a trust rule that accepts a stale head or base, makes every generated
+      # repository report green over work nobody tested. The test builds
+      # throwaway repositories with a local bare remote and runs each script
+      # through every trust-rule branch and exit code, and proves each check can
+      # fail.
+      - name: Prove the branch gate and its trust rule still hold
+        run: python3 tools/test_delivery_gate.py
+
+      # The CI half of the same scripts: the watcher that waits for a commit's
+      # workflow runs, the default-branch skip check, and the reachability check,
+      # plus a structural check of the four ci.yml templates (a decide job, the
+      # job conditions, E2E not advisory). A watcher that returns early reads a
+      # pull request's checks before the new run is listed, and a ci.yml that lost
+      # its decide job re-runs a suite that already passed, which is the cost
+      # 6.0.0 exists to remove. Stub `gh` on PATH keeps this offline.
+      - name: Prove the CI scripts and workflow templates still hold
+        run: python3 tools/test_delivery_ci.py
+
+      # Every SKILL.md names the model and effort it runs at, and the profile
+      # table is the single statement of what each skill needs. A skill whose
+      # frontmatter drifted from the table runs on the wrong model silently: the
+      # expensive reasoning skills fall to a cheaper default, or a mechanical one
+      # burns the larger model. The test reads every SKILL.md and compares.
+      - name: Prove every skill's model and effort match the profile table
+        run: python3 tools/test_model_profiles.py
 
   authspec:
     name: authentication.md content consistency

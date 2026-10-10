@@ -79,6 +79,14 @@ What you get, once it's done generating:
 - Consent-gated analytics wired to an endpoint you control, not a vendor's
 - Three-tier environment promotion (dev → staging → production)
 
+Since `STACKSPEC` 6.0.0 it also generates how work gets delivered. Every branch
+runs one gate command that writes a result you can verify against the branch's
+current head and base, a pre-push hook runs the fast guards, and a merge script
+joins branches and stops at a conflict it cannot resolve. The ready pull request
+runs the only full CI run, end-to-end tests included, and a CI watcher follows it
+by commit; the default-branch run that follows skips a tree CI has already
+tested.
+
 Supports four language tracks: **TypeScript, Go, Rust, and .NET**. Every
 vendor choice — Postgres or MySQL, Neon or RDS, Vercel or Fly — is yours;
 the wizard never tells you which one to pick, only which ones are compatible
