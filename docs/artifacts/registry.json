@@ -498,9 +498,9 @@
       "app": "",
       "status": "Running",
       "item": "Cleanup needs gh to delete local work",
-      "detail": "Without the gh CLI, cleanup.py --local only lists what it would remove and deletes nothing. Rides the 7.0.0 release.",
-      "expected": "10 Oct ~23:00",
-      "changed": "2026-10-10T21:35+01:00"
+      "detail": "Agent building (same agent as DS23): without gh, cleanup.py --local lists and deletes nothing.",
+      "expected": "10 Oct ~23:45",
+      "changed": "2026-10-10T23:15+01:00"
     },
     {
       "id": "MP1",
