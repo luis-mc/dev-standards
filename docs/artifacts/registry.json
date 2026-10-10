@@ -456,11 +456,11 @@
       "id": "DS20",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Keep only the newest build artifact",
-      "detail": "Built in draft #23: artifact_prune.py keeps the newest GitHub Actions build artifact of each name (expired skipped, 404 means already gone, --keep below 1 refused); artifact-prune.yml runs after every CI run and daily. 20 tests with 12 mutants. Waiting for the join.",
-      "expected": "10 Oct",
-      "changed": "2026-10-10T22:53+01:00"
+      "detail": "Released in STACKSPEC 7.0.0 (#27, 137e0d0, 00:31). Built in draft #23: artifact_prune.py keeps the newest GitHub Actions build artifact of each name (expired skipped, 404 means already gone, --keep below 1 refused); artifact-prune.yml runs after every CI run and daily. 20 tests with 12 mutants. Waiting for the join.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:32+01:00"
     },
     {
       "id": "DS21",
