@@ -698,6 +698,7 @@ def execute_steps(
     limit_seconds: float | None = None,
     per_step: bool = False,
     log_dir: str = LOG_DIR,
+    log_root: Path | None = None,
 ) -> tuple[list[dict], bool]:
     """Run `setup_cmds` as the step "setup", then `steps` in order. Returns the
     result's step entries and whether the time limit stopped the run.
@@ -705,8 +706,11 @@ def execute_steps(
     Stops at the first failed step unless `keep_going`; a failed setup or an
     exhausted time limit always stops. `limit_seconds` is for the whole run, or for
     each step with `per_step` (a step over it fails and the run goes on). Each step's
-    output goes to <log_dir>/<step>.log."""
-    root = ctx.root
+    output goes to <log_dir>/<step>.log under `log_root` (default: the context's
+    root; fast_guards.py checking a pushed commit in a temporary worktree keeps the
+    logs in the main checkout, which outlives it). Commands run in ctx.root."""
+    cwd = ctx.root
+    root = log_root or ctx.root
     entries: list[dict] = []
     timed_out = False
     halt: str | None = None  # why every later step is skipped
@@ -741,7 +745,7 @@ def execute_steps(
                 print("    $ %s" % cmd, flush=True)
                 left = budget()
                 code, secs, hit = run_logged(
-                    cmd, root, env, log, None if left is None else max(left, 0.01)
+                    cmd, cwd, env, log, None if left is None else max(left, 0.01)
                 )
                 entry["seconds"] = round(entry["seconds"] + secs, 1)
                 if code == 0 and not hit:
