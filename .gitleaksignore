@@ -1,0 +1,21 @@
+# Reviewed false positives already in main's history, by gitleaks fingerprint.
+# project-named-secret read these as credentials; none is a secret:
+# 0751e61: the GitHub token passed as an Actions expression (now allowlisted).
+# 3a5ad29: identifiers ending in "key" and a test command that set a token variable (renamed in #19).
+# Add an entry only after reviewing the finding; never for a real credential.
+0751e61feaf431380c474274fdb32f957f97ebbb:claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/dotnet/.github/workflows/ci.yml:project-named-secret:61
+0751e61feaf431380c474274fdb32f957f97ebbb:claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/go/.github/workflows/ci.yml:project-named-secret:61
+0751e61feaf431380c474274fdb32f957f97ebbb:claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/rust/.github/workflows/ci.yml:project-named-secret:63
+0751e61feaf431380c474274fdb32f957f97ebbb:claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/ts/.github/workflows/ci.yml:project-named-secret:70
+0751e61feaf431380c474274fdb32f957f97ebbb:tools/test_delivery_ci.py:project-named-secret:824
+0751e61feaf431380c474274fdb32f957f97ebbb:tools/test_delivery_ci.py:project-named-secret:825
+0751e61feaf431380c474274fdb32f957f97ebbb:tools/test_delivery_ci.py:project-named-secret:935
+3a5ad29e15cfe7998bdea3143fc1acde8b6d012d:claude/plugins/artifacts/scripts/project_artifacts.py:project-named-secret:1183
+3a5ad29e15cfe7998bdea3143fc1acde8b6d012d:claude/plugins/artifacts/scripts/project_artifacts.py:project-named-secret:1396
+3a5ad29e15cfe7998bdea3143fc1acde8b6d012d:claude/plugins/artifacts/scripts/project_artifacts.py:project-named-secret:47
+3a5ad29e15cfe7998bdea3143fc1acde8b6d012d:claude/plugins/artifacts/scripts/project_artifacts.py:project-named-secret:750
+3a5ad29e15cfe7998bdea3143fc1acde8b6d012d:claude/plugins/artifacts/scripts/project_artifacts.py:project-named-secret:815
+3a5ad29e15cfe7998bdea3143fc1acde8b6d012d:claude/plugins/artifacts/scripts/project_artifacts.py:project-named-secret:836
+3a5ad29e15cfe7998bdea3143fc1acde8b6d012d:claude/plugins/artifacts/scripts/render_artifacts.py:project-named-secret:42
+3a5ad29e15cfe7998bdea3143fc1acde8b6d012d:claude/plugins/artifacts/scripts/render_artifacts.py:project-named-secret:487
+3a5ad29e15cfe7998bdea3143fc1acde8b6d012d:tools/test_project_artifacts_hooks.py:project-named-secret:242
