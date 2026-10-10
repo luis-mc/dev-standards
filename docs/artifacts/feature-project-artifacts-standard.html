@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Feature: Project artifacts standard</title>
 <meta name="artifact-kind" content="feature-artifact">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -251,7 +256,7 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
 }
 .status-count-tile .label { font-size: .82rem; color: var(--ink-muted); }
 .status-count-tile.status-live { border-top-color: var(--live); }
-.status-count-tile.status-done { border-top-color: var(--live); }
+.status-count-tile.status-built { border-top-color: var(--live); }
 .status-count-tile.status-running { border-top-color: var(--running-mark); }
 .status-count-tile.status-needs-you { border-top-color: var(--signal); }
 .status-count-tile.status-waiting { border-top-color: var(--rule-strong); }
@@ -274,7 +279,7 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
   background: var(--surface);
 }
 .status-chip.status-live { background: var(--live); color: var(--on-live); border-color: var(--live); }
-.status-chip.status-done { background: var(--done-bg); }
+.status-chip.status-built { background: var(--done-bg); }
 .status-chip.status-running { background: var(--running-bg); border-left: 3px solid var(--running-mark); }
 .status-chip.status-needs-you { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
 .status-chip.status-waiting { background: var(--waiting-bg); }
@@ -327,7 +332,7 @@ tr.status-group td {
 }
 table.history-table td:first-child { font-family: var(--font-mono); white-space: nowrap; }
 
-/* Earlier fold: Live or done rows older than the fold age, closed by default */
+/* Earlier fold: Live rows older than the fold age, closed by default */
 details.earlier { margin: .9em 0; }
 details.earlier > summary {
   cursor: pointer;
@@ -349,6 +354,17 @@ details.earlier[open] > summary { margin-bottom: .2em; }
   color: var(--ink-muted);
 }
 a .task-id { color: inherit; }
+
+/* The path of a linked feature file, beside its link in the publish copy, to copy by hand */
+.local-path {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: .7rem;
+  line-height: 1.3;
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
 
 /* Links and focus */
 a { color: var(--signal); text-underline-offset: .15em; }
@@ -417,7 +433,100 @@ li { margin: .25em 0; }
   font-family: var(--font-mono);
 }
 
+/* Decisions: the options the owner was shown, side by side, the chosen one marked */
+.decision-list { margin: 1em 0; }
+.decision {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 1rem;
+  margin: 0 0 1.2rem;
+}
+.decision-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .7rem;
+  align-items: baseline;
+  margin: 0;
+  font-size: 1.12rem;
+}
+.decision-id {
+  font-family: var(--font-mono);
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+.decision-question { flex: 1 1 14rem; min-width: 0; overflow-wrap: anywhere; }
+.decision-meta {
+  font-family: var(--font-mono);
+  font-size: .76rem;
+  color: var(--ink-muted);
+  margin: .4em 0 .8em;
+}
+.decision-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: .75rem;
+}
+.decision-option {
+  min-width: 0;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: .8rem .9rem;
+}
+.decision-option.decision-chosen {
+  background: var(--surface);
+  border: 3px solid var(--signal);
+  padding: calc(.8rem - 2px) calc(.9rem - 2px);
+}
+.decision-option.decision-muted { background: var(--surface-2); color: var(--ink-muted); }
+.decision-option-head { display: flex; flex-wrap: wrap; gap: .35rem .5rem; align-items: baseline; }
+.decision-label {
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.decision-chip, .decision-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding: .1em .45em;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+  background: var(--surface);
+}
+.decision-chip-chosen { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
+.decision-chip-muted { background: var(--surface-2); border-style: dashed; color: var(--ink-muted); }
+.decision-tag { border-color: var(--signal); }
+.decision-summary { margin: .5em 0 0; }
+.decision-preview { margin-top: .7em; max-width: 100%; overflow-x: auto; }
+.decision-image { display: block; max-width: 100%; height: auto; border: 1px solid var(--rule); }
+.decision-words {
+  margin: .8em 0 0;
+  padding-left: .8em;
+  border-left: 3px solid var(--signal);
+  font-style: italic;
+  color: var(--ink);
+}
+details.decision-replaced { padding: .6rem 1rem; }
+details.decision-replaced > summary { cursor: pointer; color: var(--ink-muted); }
+details.decision-replaced > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+details.decision-replaced[open] > summary { margin-bottom: .6em; }
+.decision-replaced-by {
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
 /* Phone width */
+@media (max-width: 40rem) {
+  .decision-options { grid-template-columns: 1fr; }
+  .decision { padding: .8rem; }
+}
 @media (max-width: 56rem) {
   .layout { display: block; padding-inline: 1rem; }
   nav.contents {
@@ -448,15 +557,30 @@ li { margin: .25em 0; }
 }
 </style>
 <style id="extra-css"></style>
-<div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>Decisions</a><a href="#s7"><b>7</b>What the review changed</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
+</head>
+<body>
+<div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-10T15:19+01:00">10 Oct 15:19</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T00:06+01:00">11 Oct 00:06</time> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.0.0 is live (AR12, #18), and these artifacts are now kept with it (AR17). Every task here is also on <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">Full Progress: dev-standards</a>. <strong>Nothing needs you.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">14</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">4</div><div class="label">done</div></div></div>
-<p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-done">Done</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">24</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
+<p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group" data-group="done"><td colspan="4"><strong>Live or done</strong></td></tr>
+<tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next</strong></td></tr>
+<tr data-task="AR24"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">AR24</span>Integrate and release luismc-artifacts 1.1.0</td><td>Merged (#33, 23:12; 1.1.1 #36, 00:05). The record is migrated to 1.1 and clean; the feature pages are local files; the two old claude.ai feature artifacts were deleted with your confirmation. Left: publish Full Progress once after the 01:00 reset.</td><td>11 Oct ~01:05</td></tr>
+<tr data-task="AR28"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR28</span>Update the installed plugins</td><td>Approved by you for tonight: after 7.0.0 and 1.1.1 merge, refresh the dev-standards marketplace and update luismc-artifacts and luismc-project-setup in ~/.claude (backups first), so every session stops publishing after each change once restarted.</td><td>11 Oct ~01:30</td></tr>
+<tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
+<tr data-task="AR23"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR23</span>Convert dev-standards&#x27; decisions</td><td>Applied at 00:10: both feature pages show their decisions as option cards, every option offered, the recommendation, and your choice in your words (9 for Project artifacts standard, 5 for Model and effort profiles).</td><td>11 Oct</td></tr>
+<tr data-task="AR27"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR27</span>Repair a record one artifact at a time</td><td>Released in luismc-artifacts 1.1.1 (#36, 0a6264f, 00:05): a change may leave earlier findings but may not add new ones, so a record repairs one artifact at a time. This repo&#x27;s record migrated with it.</td><td>11 Oct</td></tr>
+<tr data-task="AR22"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR22</span>Decisions show every option and the owner&#x27;s choice</td><td>Released in luismc-artifacts 1.1.0 (#33, 23:12): decisions.json drawn as option cards with the owner&#x27;s choice, Not chosen, Recommended, open = Needs you.</td><td>10 Oct</td></tr>
+<tr data-task="AR25"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR25</span>Rename Done to Built</td><td>Released in luismc-artifacts 1.1.0 (#33, 23:12): Done is now Built (finished, not released).</td><td>10 Oct</td></tr>
+<tr data-task="AR26"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR26</span>Feature pages as repo files; fewer publishes</td><td>Released in luismc-artifacts 1.1.0 (#33, 23:12): Full Progress publishes once per turn; feature pages are standalone files linked as local paths.</td><td>10 Oct</td></tr>
+<tr data-task="AR21"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR21</span>Every activity is a task, in every project</td><td>Released in luismc-artifacts 1.1.0 (#33, 054eafb, 23:12): every activity is a task, the session&#x27;s own included; the rule reaches every project at session start; the end-of-turn hook blocks background work with no Running task.</td><td>10 Oct</td></tr>
+<tr data-task="AR4"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR4</span>Answer the open decisions</td><td>Answered: one task registry; branch names start with the task ID; catch-up at session start; each project&#x27;s own design, the plugin&#x27;s default when it has none; an App / service column on the full-progress artifact.</td><td>10 Oct</td></tr>
+<tr data-task="AR16"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR16</span>dev-standards record in docs/artifacts</td><td>Manifest, registry, HTML and the interim generator committed to main as docs-only commits.</td><td>10 Oct</td></tr>
+<tr data-task="AR2"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR2</span>Proposal reviewed</td><td>Twelve findings; each one and the change it led to is in section 7.</td><td>10 Oct</td></tr>
+<tr data-task="AR3"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR3</span>Moved to dev-standards and rewritten</td><td>This artifact now belongs to dev-standards and describes the agreed design; Full Progress: dev-standards created.</td><td>10 Oct</td></tr>
 <tr data-task="AR20"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR20</span>mark-published leaves the registry alone</td><td>mark-published, design set, edit-content, render and feature-new no longer bump the registry, so the full-progress artifact stays clean after publishing; three regression tests. dev-standards also got its rule file and gitignore entries. #21.</td><td>10 Oct</td></tr>
 <tr data-task="AR18"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR18</span>Script fixes from the real-repo test</td><td>Adopted URLs, no-op content edits, two-digit Expected days, a sparse record worktree with long paths, no worktree without a record. Released in #18.</td><td>10 Oct</td></tr>
 <tr data-task="AR19"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR19</span>Names the secret rule does not read as credentials</td><td>Main&#x27;s secret-scan failed after #18: the project-named-secret rule read FP_KEY-style identifiers and a test command as credentials. Renamed; fixed forward in #19.</td><td>10 Oct</td></tr>
@@ -471,10 +595,6 @@ li { margin: .25em 0; }
 <tr data-task="AR15"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR15</span>Repo record and recreate</td><td>The record in docs/artifacts and recreation without duplicates, built into project_artifacts.py. Released in #18.</td><td>10 Oct</td></tr>
 <tr data-task="AR17"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR17</span>dev-standards onto the plugin</td><td>This record converted to ARTIFACTSPEC 1.0.0 on a scratch clone and checked clean, a status change run end to end, nothing pushed; shipped in #18. These artifacts are now rendered by the plugin.</td><td>10 Oct</td></tr>
 <tr data-task="AR12"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR12</span>Integrate and release</td><td>Released as luismc-artifacts 1.0.0, ARTIFACTSPEC 1.0.0 and luismc-project-setup 12.1.0 in one ready PR (#18, 3a5ad29), merged on green after a Linux-only test fix.</td><td>10 Oct</td></tr>
-<tr data-task="AR2"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR2</span>Proposal reviewed</td><td>Twelve findings; each one and the change it led to is in section 7.</td><td>10 Oct</td></tr>
-<tr data-task="AR3"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR3</span>Moved to dev-standards and rewritten</td><td>This artifact now belongs to dev-standards and describes the agreed design; Full Progress: dev-standards created.</td><td>10 Oct</td></tr>
-<tr data-task="AR4"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR4</span>Answer the open decisions</td><td>Answered: one task registry; branch names start with the task ID; catch-up at session start; each project&#x27;s own design, the plugin&#x27;s default when it has none; an App / service column on the full-progress artifact.</td><td>10 Oct</td></tr>
-<tr data-task="AR16"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR16</span>dev-standards record in docs/artifacts</td><td>Manifest, registry, HTML and the interim generator committed to main as docs-only commits.</td><td>10 Oct</td></tr>
 </tbody></table></div>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>What and why</h2>
@@ -605,20 +725,7 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
 <tr><td>R17</td><td>Recreate without duplicates (AS19).</td><td>Manifest link deleted: one new artifact, manifest updated. Link alive: nothing created. Same title exists: no new artifact, manifest repaired.</td></tr>
 </tbody></table></div>
 </section>
-<section id="s6"><h2><span class="section-number">&sect; 6</span>Decisions</h2>
-<div class="table-scroll"><table><thead><tr><th>#</th><th>Question</th><th>Decision (10 Oct)</th></tr></thead><tbody>
-<tr><td>1</td><td>How is a task&rsquo;s status stored so both artifacts update automatically?</td><td><strong>One task registry</strong> inside the full-progress artifact; both checklists are generated from it.</td></tr>
-<tr><td>2</td><td>Do branch names start with the task ID?</td><td><strong>Yes</strong> (<code>AR5-artifactspec</code>), so hooks can match events to tasks.</td></tr>
-<tr><td>3</td><td>How do changes made outside a session reach the artifacts?</td><td><strong>At the next session start</strong>, through the session-start hook. No cloud routine in 1.0.</td></tr>
-<tr><td>4</td><td>What look do artifacts get?</td><td><strong>The project&rsquo;s own design</strong>, found by scanning its design files, theme configuration, CSS custom properties or live site. A project with no design gets the plugin&rsquo;s <strong>default design</strong>. dev-standards uses the default.</td></tr>
-<tr><td>5</td><td>An App / service column on the full-progress artifact?</td><td><strong>Yes</strong>, on the full-progress artifact only.</td></tr>
-<tr><td>6</td><td>Where is the record kept?</td><td><strong>In the repo</strong>, <code>docs/artifacts/</code>, committed to the default branch as docs-only commits; a deleted artifact is recreated from it without duplicates. Replaces the first answer that the published artifact is the record.</td></tr>
-<tr><td>7</td><td>How does a project get the plugin?</td><td><strong>luismc-project-setup installs it</strong> in every project it sets up; it can also be installed on its own in any project. No artifact is created until the first feature artifact.</td></tr>
-<tr><td>8</td><td>Which clock do Expected times use?</td><td><strong>The owner&rsquo;s time zone, per project</strong>, set in the manifest and named in the column header.</td></tr>
-<tr><td>9</td><td>Does dev-standards move other projects onto the plugin?</td><td><strong>No.</strong> dev-standards ships the plugin and names or changes no other project; each project adopts it in its own sessions.</td></tr>
-</tbody></table></div>
-</section>
-<section id="s7"><h2><span class="section-number">&sect; 7</span>What the review changed</h2>
+<section id="s6"><h2><span class="section-number">&sect; 6</span>What the review changed</h2>
 <p class="lede">The review of the first proposal on 10 October found twelve problems. Each one changed the design above.</p><div class="table-scroll"><table><thead><tr><th>Finding</th><th>Change</th></tr></thead><tbody>
 <tr><td>A status was typed by hand in two places, the cause of the drift.</td><td>One task registry; one command regenerates every checklist (AS5, AS14).</td></tr>
 <tr><td>The discipline was a sentence in CLAUDE.md, the form that already failed.</td><td>Hooks queue status changes and block the turn until artifacts are published (AS17).</td></tr>
@@ -634,8 +741,171 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
 <tr><td>Generic names: &ldquo;page&rdquo;, <code>luismc-pages</code>, <code>.st</code>.</td><td>Feature artifact and full-progress artifact throughout; plugin <code>luismc-artifacts</code>; readable class names in AR6.</td></tr>
 </tbody></table></div>
 </section>
+<section id="s7"><h2><span class="section-number">&sect; 7</span>Decisions</h2>
+<div class="decision-list">
+<article class="decision decision-decided" data-decision="D9">
+<h3 class="decision-head"><span class="decision-id">D9</span> <span class="decision-question">Does dev-standards move other projects onto the plugin?</span></h3>
+<p class="decision-meta">Asked 10 Oct · Decided 10 Oct</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Branch and draft PR</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Push a task-ID branch with a draft PR. You review it and merge it yourself.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Merge on green there too</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Same flow as here: one ready PR, merged on green.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Local only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Prepare the change in a local clone and push nothing. Leave a report for you.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Leave other projects alone</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Oct</span></div>
+<p class="decision-summary">dev-standards ships the plugin and names or changes no other project; each project adopts it in its own sessions.</p>
+<blockquote class="decision-words">&ldquo;why are you touch another project?&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D8">
+<h3 class="decision-head"><span class="decision-id">D8</span> <span class="decision-question">Which clock do Expected times use?</span></h3>
+<p class="decision-meta">Asked 10 Oct · Decided 10 Oct</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Owner&#x27;s zone, per project</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Oct</span></div>
+<p class="decision-summary">Set once in each project&#x27;s manifest; Lisbon for your projects. The zone is named in the column header.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Always Lisbon</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Fixed for every project.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">UTC</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">The same everywhere, but you would have to convert it in your head.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D7">
+<h3 class="decision-head"><span class="decision-id">D7</span> <span class="decision-question">How does a project get the plugin?</span></h3>
+<p class="decision-meta">Asked 10 Oct · Decided 10 Oct</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">project-setup installs it</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Every project set up by luismc-project-setup gets it, and no artifact is created until the first feature artifact is made.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Opt-in per project</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">You install it yourself in the projects that want it.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Project-setup installs it, plus independent install</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Oct</span></div>
+<p class="decision-summary">Every project set up by luismc-project-setup gets it, and any project can also install it on its own. No artifact is created until the first feature artifact is made.</p>
+<blockquote class="decision-words">&ldquo;option 1 plus the ability to install independently per project&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D6">
+<h3 class="decision-head"><span class="decision-id">D6</span> <span class="decision-question">Where is the record kept?</span></h3>
+<p class="decision-meta">Asked 10 Oct · Decided 10 Oct</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Dedicated branch</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">An orphan branch, e.g. project-artifacts, holding only the record. Updates commit there without a checkout, so code branches, PRs and CI never see them and parallel agents can&#x27;t conflict with them.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Folder on the default branch</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">.claude/project-artifacts/ on main. Easy to find, but every status change is a commit to main: CI has to skip those paths, and it bends the &#x27;nothing lands on main one change at a time&#x27; rule.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Folder on each work branch</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">The status change rides the branch doing the work and reaches main with its PR. The record on main lags, and parallel branches conflict on the registry.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">The repo’s docs/artifacts folder</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Oct</span></div>
+<p class="decision-summary">The record (manifest, registry, content, last published HTML) lives in docs/artifacts/ on the repo, and every doc goes under docs/.</p>
+<blockquote class="decision-words">&ldquo;on the repos docs/artifacts folder; the project-setup plugin should set a more general rule for all docs to be created in the docs/ folder;&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D5">
+<h3 class="decision-head"><span class="decision-id">D5</span> <span class="decision-question">An App / service column on the full-progress artifact?</span></h3>
+<p class="decision-meta">Asked 10 Oct · Decided 10 Oct</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, full-progress only</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Oct</span></div>
+<p class="decision-summary">It covers every app and service, so you can scan one area. Feature artifacts keep four columns.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No, four columns everywhere</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Same columns on every artifact; the app or service goes in the Detail text.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D4">
+<h3 class="decision-head"><span class="decision-id">D4</span> <span class="decision-question">What look do artifacts get?</span></h3>
+<p class="decision-meta">Asked 10 Oct · Decided 10 Oct</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Neutral, comic optional</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">A plain neutral theme by default; the current comic look ships as a theme a project can choose.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Comic for every project</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">The comic look from another project becomes the default everywhere.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Each project’s own design, else a default</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Oct</span></div>
+<p class="decision-summary">Look and feel taken from the project it belongs to (scan its design files or web pages); a project with no design gets a default design file shipped in the plugin. The other project’s comic look is ignored.</p>
+<blockquote class="decision-words">&ldquo;ignore the [another project] look; all artificts should have a look &amp; feel based on the project they belong too ([…]); if project has no design, then put together a default design file in this plugin; and since dev-standards proejct has no design since its just for plugins, the create the default design and its file now, and apply it to existing artifacts&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D3">
+<h3 class="decision-head"><span class="decision-id">D3</span> <span class="decision-question">How do changes made outside a session reach the artifacts?</span></h3>
+<p class="decision-meta">Asked 10 Oct · Decided 10 Oct</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Next session start</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Oct</span></div>
+<p class="decision-summary">A session-start hook checks GitHub and queues the changes. No extra cost; artifacts can lag until the next session.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Also a cloud routine</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">A scheduled cloud agent also checks and updates artifacts when no session is open. Always current; costs a recurring run.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D2">
+<h3 class="decision-head"><span class="decision-id">D2</span> <span class="decision-question">Do branch names start with the task ID?</span></h3>
+<p class="decision-meta">Asked 10 Oct · Decided 10 Oct</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, task ID first</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Oct</span></div>
+<p class="decision-summary">Hooks match git/gh events to tasks automatically and queue the status change.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No convention</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Branches stay free-form; hooks can only remind the session to update statuses, not say which task changed.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D1">
+<h3 class="decision-head"><span class="decision-id">D1</span> <span class="decision-question">How is a task’s status stored so both artifacts update automatically?</span></h3>
+<p class="decision-meta">Asked 10 Oct · Decided 10 Oct</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One registry</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Oct</span></div>
+<p class="decision-summary">Each status stored once, as a task registry inside the full-progress artifact. One command regenerates the feature artifact&#x27;s and full-progress artifact&#x27;s checklists from it. Cannot drift.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Write both, then sync</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Status written on the feature artifact and the full-progress artifact separately; a sync step compares them and flags disagreements. Closer to the original proposal; can still drift between syncs.</p>
+</div>
+</div>
+</article>
+</div>
+</section>
 <section id="s8"><h2><span class="section-number">&sect; 8</span>History</h2>
 <div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
+<tr><td>10 Oct 23:30</td><td>Decisions rebuilt in the 1.1.0 form: every option you were offered, the recommendation, and your choice in your words (AR23). The page is now a file in docs/artifacts, no longer a claude.ai artifact (AR26).</td></tr>
 <tr><td>10 Oct 14:45</td><td>luismc-artifacts 1.0.0 released (#18). dev-standards now keeps these artifacts with the plugin: the record converted (AR17), the interim generator retired. Two secret-scan fixes followed on main (AR19, DS16).</td></tr>
 <tr><td>10 Oct 13:40</td><td>AR7 and AR15 done and joined; every part of the plugin is on AR12-integration. AR17 added: dev-standards moves onto the plugin as the real-repo test. Release now expected about 15:30.</td></tr>
 <tr><td>10 Oct 13:32</td><td>AR8, AR10 and AR11 done and joined. ARTIFACTSPEC settled what the agents asked: content edited through a folder (export-content, edit-content --from), design set, project prefixes, the pending JSON, the marketplace name, the hooks as built.</td></tr>
@@ -688,3 +958,5 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
   } catch (error) {}
 })();
 </script>
+</body>
+</html>

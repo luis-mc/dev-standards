@@ -1,5 +1,9 @@
 [
   {
+    "date": "10 Oct 23:30",
+    "change": "Decisions rebuilt in the 1.1.0 form: every option you were offered, the recommendation, and your choice in your words (AR23). The page is now a file in docs/artifacts, no longer a claude.ai artifact (AR26)."
+  },
+  {
     "date": "10 Oct 13:40",
     "change": "MP3 to MP6 live: released in luismc-project-setup 12.0.0 (#10, 12:56); the alias-drift hook also installed in the owner’s ~/.claude."
   },

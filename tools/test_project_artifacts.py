@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prove project_artifacts.py does what ARTIFACTSPEC 1.0.0 section 7 says (R13.1).
+"""Prove project_artifacts.py does what ARTIFACTSPEC 1.1.0 section 7 says (R13.1).
 
 Every case builds throwaway git repositories with a local bare remote and runs
 the real command line against them. Nothing here pushes to any real remote.
@@ -19,6 +19,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -38,7 +39,7 @@ import json
 import re
 from pathlib import Path
 
-STATUSES = ['Live', 'Done', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed']
+STATUSES = ['Live', 'Built', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed']
 REQUIRED_TOKENS = ['--paper', '--ink']
 
 
@@ -46,6 +47,7 @@ class ContentError(Exception):
     def __init__(self, problems):
         super().__init__('; '.join(problems))
         self.problems = list(problems)
+        self.partial = None
 
 
 def _read(p):
@@ -92,13 +94,19 @@ def load_content(record_dir, key, plugin_dir=None):
             continue
         if re.search(r'<script|<style', text, re.I):
             problems.append('R4.10 %s contains <script> or <style>' % p.name)
+        if mt.group(1).strip().lower() == 'decisions' and key != 'full-progress':
+            problems.append('R5.19 %s: a section titled Decisions is drawn from decisions.json only' % p.name)
         sections.append({'title': mt.group(1), 'html': rest})
     hp = d / 'history.json'
     if hp.is_file():
         history = json.loads(_read(hp))
+    content = {'meta': meta, 'sections': sections, 'history': history}
     if problems:
-        raise ContentError(problems)
-    return {'meta': meta, 'sections': sections, 'history': history}
+        err = ContentError(problems)
+        if meta:
+            err.partial = content
+        raise err
+    return content
 
 
 def check_html(html, key, manifest, registry, plugin_dir, record_dir):
@@ -118,7 +126,7 @@ def check_html(html, key, manifest, registry, plugin_dir, record_dir):
     return out
 
 
-def render_artifact(manifest, registry, contents, key, plugin_dir, record_dir, stamp_text, stamp_iso):
+def render_artifact(manifest, registry, contents, key, plugin_dir, record_dir, stamp_text, stamp_iso, links=None):
     esc = _h.escape
     if manifest.get('design') == 'design.css':
         bad = check_tokens((Path(record_dir) / 'design.css').read_text(encoding='utf-8'))
@@ -131,7 +139,8 @@ def render_artifact(manifest, registry, contents, key, plugin_dir, record_dir, s
     tasks = registry['tasks'] if fp else [t for t in registry['tasks'] if t['owner'] == key]
     order = {s: i for i, s in enumerate(STATUSES)}
     tasks = sorted(tasks, key=lambda t: (order[t['status']], t['id']))
-    urls = {e['key']: e['url'] for e in manifest['feature_artifacts']}
+    hrefs = {e['key']: (links or {}).get(e['key'], (e['file'], ''))[0] for e in manifest['feature_artifacts']}
+    shown = {e['key']: (links or {}).get(e['key'], (e['file'], ''))[1] for e in manifest['feature_artifacts']}
     needs = ['%s %s' % (t['id'], t['item']) for t in tasks if t['status'] in ('Needs you', 'Failed')]
     out = ['<title>%s</title>' % esc(entry['title']),
            '<h1>%s</h1>' % esc(c['meta'].get('hero', '')),
@@ -143,8 +152,10 @@ def render_artifact(manifest, registry, contents, key, plugin_dir, record_dir, s
     out.append('<table><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected</th></tr>')
     for t in tasks:
         item = esc(t['item'])
-        if fp and t['owner'] in urls and urls[t['owner']]:
-            item = '<a href="%s">%s</a>' % (esc(urls[t['owner']]), item)
+        if fp and t['owner'] in hrefs:
+            item = '<a href="%s">%s</a>' % (esc(hrefs[t['owner']]), item)
+            if shown[t['owner']]:
+                item += ' <span class="local-path">%s</span>' % esc(shown[t['owner']])
         out.append('<tr><td>%s</td><td>%s %s</td><td>%s</td><td>%s</td></tr>' % (
             esc(t['status']), esc(t['id']), item, esc(t['detail']), esc(t['expected'])))
     out.append('</table>')
@@ -152,7 +163,7 @@ def render_artifact(manifest, registry, contents, key, plugin_dir, record_dir, s
     if fp:
         out.append('<h2>1. Features</h2>')
         for e in manifest['feature_artifacts']:
-            out.append('<p>%s %s %s</p>' % (esc(e['title']), esc(e['url']),
+            out.append('<p>%s %s %s</p>' % (esc(e['title']), esc(hrefs[e['key']]),
                                           esc(contents[e['key']]['meta'].get('lede', '').split('.')[0])))
         n = 2
     for s in c['sections']:
@@ -427,11 +438,10 @@ def test_init_session_files(env):
     r = p.init()
     gi = (p.clone / '.gitignore').read_text(encoding='utf-8')
     assert '.claude/artifacts-queue.json' in gi and '.claude/worktrees/' in gi
-    if (env.plugin / 'rules' / 'project-artifacts.md').is_file():
-        assert (p.clone / '.claude' / 'rules' / 'project-artifacts.md').is_file()
-        assert '.claude/rules/project-artifacts.md' in r.out
-    else:
-        assert 'not in the plugin yet' in r.out
+    assert '.claude/artifacts-publish/' in gi, gi                      # the publish copy is never committed (R5.31)
+    # R10.2, R10.4: the plugin delivers the rule at session start; init copies nothing
+    assert not (p.clone / '.claude' / 'rules').exists(), list((p.clone / '.claude').iterdir())
+    assert 'rules/' not in r.out, r.out
     status = git(p.clone, 'status', '--porcelain').stdout
     assert 'docs/' not in status and 'worktrees' not in status, status
     # idempotent: a second command reports no session changes
@@ -459,7 +469,7 @@ def test_feature_new_runs_init_first(env):
     m = p.man()
     e = m['feature_artifacts'][0]
     assert e['key'] == 'artifacts' and e['title'] == 'Feature: Artifacts' and e['prefix'] == 'AR'
-    assert e['apps'] == ['plugin', 'docs'] and e['url'] == '' and e['published_sha256'] == ''
+    assert e['apps'] == ['plugin', 'docs'] and 'url' not in e and 'published_sha256' not in e   # never published (R4.3)
     assert e['file'] == 'feature-artifacts.html', e['file']
     meta = json.loads(p.show('docs/artifacts/content/artifacts/meta.json'))
     assert meta['hero'] == 'The hero.' and meta['title'] == 'Feature: Artifacts'
@@ -579,13 +589,13 @@ def test_set_task_status_only_touches_its_artifacts(env):
 
 
 @case
-def test_status_live_done_sets_expected_date(env):
+def test_status_live_built_sets_expected_date(env):
     p = env.baseline()
     p.ok('set-task-status', 'AR1', 'Live')
     assert p.task('AR1')['expected'] == '10 Oct', p.task('AR1')
-    p.ok('set-task-status', 'SI1', 'Done')
+    p.ok('set-task-status', 'SI1', 'Built')
     assert p.task('SI1')['expected'] == '10 Oct'
-    p.ok('set-task-status', 'DS1', 'Done', '--expected', '09 Oct; shipped early')
+    p.ok('set-task-status', 'DS1', 'Built', '--expected', '09 Oct; shipped early')
     assert p.task('DS1')['expected'] == '09 Oct; shipped early'
     assert p.run('check').code == 0
 
@@ -594,7 +604,7 @@ def test_status_live_done_sets_expected_date(env):
 def test_status_nearest(env):
     p = env.baseline()
     for word, near in [('Merged', 'Live'), ('Blocked', 'Needs you'), ('In progress', 'Running'),
-                       ('Paused', 'On hold'), ('Planned', 'To do'), ('Finished', 'Done'),
+                       ('Paused', 'On hold'), ('Planned', 'To do'), ('Finished', 'Built'),
                        ('Broken', 'Failed'), ('wating', 'Waiting'), ('live', 'Live')]:
         before = p.head()
         r = p.run('set-task-status', 'AR1', word)
@@ -753,58 +763,203 @@ def test_render_repairs_stale_html(env):
 # pending, mark-published, queue
 # --------------------------------------------------------------------------
 
+def url_path(url):
+    """The filesystem path a file:/// URL names (percent-decoded)."""
+    from urllib.parse import unquote, urlparse
+    assert url.startswith('file:///'), url
+    s = unquote(urlparse(url).path)
+    return s[1:] if os.name == 'nt' and re.match(r'^/[A-Za-z]:', s) else s
+
+
+def sha(text):
+    import hashlib
+    return hashlib.sha256(text.encode('utf-8')).hexdigest()
+
+
 @case
 def test_pending_and_mark_published(env):
+    """R9.1, R5.31, R5.32: only Full Progress is listed, as its publish copy; the hash is of the committed render."""
     p = env.baseline()
     r = p.run('pending', '--json')
     assert r.code == 1
     j = r.json()
     assert sorted(j) == ['artifacts', 'queue'] and j['queue'] == []
-    assert [a['key'] for a in j['artifacts']] == ['full-progress', 'artifacts', 'site']
-    for a in j['artifacts']:
-        assert sorted(a) == ['file', 'key', 'path', 'reason', 'title', 'url']
-        assert a['reason'] == 'never published' and a['url'] == ''
-        assert '/' not in a['file'] and os.sep not in a['file'] and a['file'].endswith('.html')
-        assert Path(a['path']).is_absolute() and Path(a['path']).name == a['file']
-        assert Path(a['path']).is_file() and Path(a['path']).read_text(encoding='utf-8').startswith('<title>')
-    assert j['artifacts'][1]['title'] == 'Feature: Artifacts'
-    assert 'pending' in p.run('pending').out or 'publish' in p.run('pending').out
-    # publish the features, then the full-progress last
-    p.ok('mark-published', 'artifacts', '--url', 'https://claude.ai/artifact/aaa')
-    after = p.run('pending', '--json').json()['artifacts']
-    # the full-progress artifact links to the feature url, so it changed and is still pending
-    assert [a['key'] for a in after] == ['full-progress', 'site'], after
-    p.ok('mark-published', 'site', '--url', 'https://claude.ai/artifact/bbb')
+    assert [a['key'] for a in j['artifacts']] == ['full-progress'], j['artifacts']          # a feature is never listed (R9.5)
+    a = j['artifacts'][0]
+    assert sorted(a) == ['file', 'key', 'kind', 'path', 'reason', 'title', 'url'] and a['kind'] == 'full-progress'
+    assert a['reason'] == 'never published' and a['url'] == ''
+    assert '/' not in a['file'] and os.sep not in a['file'] and a['file'].endswith('.html')
+    copy = Path(a['path'])
+    assert copy.is_absolute() and copy.name == a['file'] and copy.is_file()
+    assert os.path.samefile(str(copy.parent), str(p.clone / '.claude' / 'artifacts-publish')), copy
+    assert 'publish' in p.run('pending').out
+    committed = p.show('docs/artifacts/' + a['file'])
+    text = copy.read_text(encoding='utf-8')
+    assert text.startswith('<title>') and text != committed, 'the copy differs from the committed render in its links'
+    # mark Full Progress published; the copy does not make the record look stale (R5.32)
     p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
     r = p.run('pending', '--json')
     assert r.code == 0 and r.json() == {'artifacts': [], 'queue': []}, r.out
     m = p.man()
-    assert m['feature_artifacts'][0]['url'].endswith('/aaa') and len(m['feature_artifacts'][0]['published_sha256']) == 64
-    # the recorded hash is the hash of the pushed file
-    import hashlib
-    h = hashlib.sha256(p.show('docs/artifacts/feature-artifacts.html').encode('utf-8')).hexdigest()
-    assert m['feature_artifacts'][0]['published_sha256'] == h
+    fp = m['full_progress_artifact']
+    assert fp['url'].endswith('/ccc') and fp['published_sha256'] == sha(p.show('docs/artifacts/' + fp['file']))
+    assert fp['published_sha256'] != sha(copy.read_text(encoding='utf-8')), 'the hash is of the committed render, not of the copy'
+    for e in m['feature_artifacts']:
+        assert 'url' not in e and 'published_sha256' not in e, e
     assert p.run('check').code == 0
-    # a status change makes the touched artifacts pending again with the right reason
+    # a status change makes Full Progress pending again, with the right reason and the url to publish to
     p.ok('set-task-status', 'AR1', 'Waiting')
-    again = {a['key']: a for a in p.run('pending', '--json').json()['artifacts']}
-    assert sorted(again) == ['artifacts', 'full-progress'], again
-    assert again['artifacts']['reason'] == 'changed since last publish'
-    assert again['artifacts']['url'].endswith('/aaa')
+    again = p.run('pending', '--json').json()['artifacts']
+    assert [x['key'] for x in again] == ['full-progress'], again
+    assert again[0]['reason'] == 'changed since last publish' and again[0]['url'].endswith('/ccc')
+    # a feature status change lists Full Progress only
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
+    p.ok('set-task-status', 'SI1', 'Live')
+    assert [x['key'] for x in p.run('pending', '--json').json()['artifacts']] == ['full-progress']
     # url must be http(s)
-    r = p.run('mark-published', 'site', '--url', 'nope')
+    r = p.run('mark-published', 'full-progress', '--url', 'nope')
     assert r.code == 1 and 'http' in r.err
     r = p.run('mark-published', 'ghost', '--url', 'https://x.example/a')
     assert r.code == 1 and 'unknown artifact key' in r.err
 
 
 @case
+def test_pending_never_lists_a_feature_artifact(env):
+    """R9.5: not when it is new, not when its file or content changed, not when it was never published."""
+    p = env.baseline()
+    assert [a['key'] for a in p.run('pending', '--json').json()['artifacts']] == ['full-progress']
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
+    assert p.run('pending').code == 0
+    d = export(p, 'site', 'pendfeat')
+    meta = json.loads((d / 'meta.json').read_text(encoding='utf-8'))
+    meta['lede'] = 'The site changed. More follows.'
+    (d / 'meta.json').write_text(json.dumps(meta), encoding='utf-8')
+    p.ok('edit-content', 'site', '--from', d)
+    assert [a['key'] for a in p.run('pending', '--json').json()['artifacts']] == ['full-progress']   # its lede is quoted in section 1
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
+    p.ok('feature-new', '--key', 'fresh', '--title', 'Fresh', '--prefix', 'FR', '--apps', 'x')
+    assert [a['key'] for a in p.run('pending', '--json').json()['artifacts']] == ['full-progress']
+    assert 'feature-fresh.html' not in p.run('pending').out
+
+
+@case
+def test_mark_published_refuses_a_feature_artifact(env):
+    """R9.5: a clear message, nothing written."""
+    p = env.baseline()
+    before = p.head()
+    for key in ('artifacts', 'site'):
+        r = p.run('mark-published', key, '--url', 'https://claude.ai/artifact/zzz')
+        assert r.code == 1 and 'feature artifact' in r.err and 'never published' in r.err, r.all
+        assert 'only the full-progress artifact is' in r.err and 'feature-' in r.err, r.err
+        assert p.head() == before and dirty(p) == []
+    r = p.run('mark-published', 'site', '--url', 'https://claude.ai/artifact/zzz', '--json')
+    assert r.code == 1 and r.json()['ok'] is False and 'never published' in r.json()['error']
+    assert all('url' not in e for e in p.man()['feature_artifacts'])
+
+
+@case
+def test_publish_copy_links_and_committed_links(env):
+    """R5.30, R5.31: relative in the committed file, absolute file:/// in the copy, path text beside each link."""
+    need_real(env)
+    p = env.baseline()
+    a = p.run('pending', '--json').json()['artifacts'][0]
+    copy = Path(a['path']).read_text(encoding='utf-8')
+    committed = p.show('docs/artifacts/' + a['file'])
+    # committed: relative file names only
+    assert 'href="feature-artifacts.html"' in committed and 'href="feature-the-site.html"' in committed
+    assert 'file:' not in committed and 'class="local-path"' not in committed
+    # the copy: absolute file:/// URLs to the feature files, in section 1 and on every feature task
+    hrefs = sorted(set(re.findall(r'href="(file:///[^"]+)"', copy)))
+    assert [h.rsplit('/', 1)[1] for h in hrefs] == ['feature-artifacts.html', 'feature-the-site.html'], hrefs
+    for h in hrefs:
+        target = Path(url_path(h))
+        assert target.is_absolute() and target.is_file() and target.parent.name == 'artifacts'
+        assert os.path.samefile(str(target), str(p.clone / 'docs' / 'artifacts' / target.name)), (h, target)   # the session's checkout
+        assert '<span class="local-path">%s</span>' % target.as_posix().replace('&', '&amp;') in copy or \
+            re.search(r'<span class="local-path">[^<]*%s</span>' % re.escape(target.name), copy), target
+    assert copy.count('class="local-path"') == 2 + 3, copy.count('class="local-path"')   # section 1 (2) + AR1, AR2, SI1
+    assert 'href="feature-' not in copy
+    # the same page: undo the links and it is the committed render
+    back = re.sub(r' <span class="local-path">[^<]*</span>', '', copy)
+    for h in hrefs:
+        back = back.replace('href="%s"' % h, 'href="%s"' % h.rsplit('/', 1)[1])
+    assert back == committed
+    # the copy is outside the record and ignored once .gitignore says so (R10.2)
+    assert 'does not ignore' in p.run('pending').err
+    (p.clone / '.gitignore').write_text('.claude/artifacts-publish/\n', encoding='utf-8')
+    assert 'does not ignore' not in p.run('pending').err
+    assert 'artifacts-publish' not in git(p.clone, 'status', '--porcelain', '--untracked-files=all').stdout
+
+
+@case
+def test_publish_copy_path_encoding_with_spaces(env):
+    """R5.31: a space in the path is %20 in the URL and a plain space in the text; `&` is %26 / &amp;."""
+    need_real(env)
+    env.baseline()
+    q = Project(env, 'a b&c %d' % env.n, env._template)
+    a = q.run('pending', '--json').json()['artifacts'][0]
+    copy = Path(a['path']).read_text(encoding='utf-8')
+    hrefs = sorted(set(re.findall(r'href="(file:///[^"]+)"', copy)))
+    assert len(hrefs) == 2 and all('%20' in h and ' ' not in h and '%26' in h and '&' not in h for h in hrefs), hrefs
+    for h in hrefs:
+        assert os.path.samefile(url_path(h), str(q.clone / 'docs' / 'artifacts' / h.rsplit('/', 1)[1])), h
+        assert '\\' not in h                                              # forward slashes only
+    assert re.search(r'<span class="local-path">[^<]*a b&amp;c[^<]*feature-artifacts\.html</span>', copy), 'path text keeps the space'
+    assert q.run('check').code == 0
+
+
+@case
+def test_publish_copy_falls_back_to_the_record_worktree(env):
+    """R5.31: a session checkout that does not have the feature file yet links to the record worktree's."""
+    need_real(env)
+    p = env.project()
+    p.init()
+    p.ok('feature-new', '--key', 'a', '--title', 'A', '--prefix', 'AA', '--apps', 'x')
+    assert not (p.clone / 'docs').exists()                                  # the session is on a checkout without the record
+    a = p.run('pending', '--json').json()['artifacts'][0]
+    copy = Path(a['path']).read_text(encoding='utf-8')
+    (href,) = sorted(set(re.findall(r'href="(file:///[^"]+)"', copy)))
+    target = Path(url_path(href))
+    assert target.is_file() and os.path.samefile(str(target), str(p.rdir / 'feature-a.html')), (href, target)
+
+
+@case
+def test_old_feature_urls_migrate(env):
+    """R4.18: a manifest whose feature entries hold a url or a hash is read without them, noted by check,
+    rewritten by the next writing command, and its feature pages and Full Progress links are rendered again."""
+    need_real(env)
+    p = env.baseline()
+    other = p.clone_again('legacy')
+    f = other / 'docs' / 'artifacts' / 'manifest.json'
+    edit_json(f, lambda m: (feat(m).update(url='https://claude.ai/artifact/old-a', published_sha256='a' * 64),
+                            feat(m, 'site').update(url='https://claude.ai/artifact/old-b')))
+    page = other / 'docs' / 'artifacts' / 'feature-artifacts.html'
+    page.write_text('<title>Feature: Artifacts</title>\n<time datetime="2026-10-10T12:39+01:00">x</time>\n', encoding='utf-8')
+    git(other, 'commit', '-qam', 'a record from before feature artifacts stopped being published')
+    git(other, 'push', '-q', 'origin', 'main')
+    # check reads it, notes the old fields and finds the old page form
+    r = p.run('check', '--json')
+    assert r.code == 1, r.all
+    j = r.json()
+    assert any('artifacts' in n and 'no longer published' in n and 'site' in n for n in j['notes']), j['notes']
+    assert any(x['req'] == 'INV-3' and x['file'] == 'feature-artifacts.html' for x in j['findings']), j['findings']
+    assert 'note: manifest.json: feature artifact(s) artifacts, site' in p.run('check').out
+    # nothing lists a feature artifact, whatever its url said
+    assert [x['key'] for x in p.run('pending', '--json').json()['artifacts']] == ['full-progress']
+    # the next writing command drops the fields and renders everything again
+    p.ok('set-task-status', 'SI1', 'Running')
+    m = p.man()
+    assert all('url' not in e and 'published_sha256' not in e for e in m['feature_artifacts']), m['feature_artifacts']
+    assert p.show('docs/artifacts/feature-artifacts.html').startswith('<!doctype html>')
+    assert 'href="feature-artifacts.html"' in p.show('docs/artifacts/' + m['full_progress_artifact']['file'])
+    r = p.run('check', '--json')
+    assert r.code == 0 and r.json() == {'findings': [], 'notes': []}, r.out
+
+
+@case
 def test_pending_queue(env):
     p = env.baseline()
-    for k, u in (('full-progress', 'c'), ('artifacts', 'a'), ('site', 'b')):
-        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + u)
-    for k, u in (('artifacts', 'a'), ('site', 'b'), ('full-progress', 'c')):    # settle link churn
-        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + u)
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/c')
     assert p.run('pending').code == 0
     q = p.clone / '.claude' / 'artifacts-queue.json'
     q.parent.mkdir(exist_ok=True)
@@ -853,23 +1008,22 @@ def test_pending_without_record(env):
 
 @case
 def test_adopted_url_without_hash(env):
-    """R4.3: a url with an empty published_sha256 is an adopted artifact; pending says so."""
+    """R4.3: a full-progress url with an empty published_sha256 is an adopted artifact; pending says so."""
     p = env.baseline()
     other = p.clone_again('adopt')
     f = other / 'docs' / 'artifacts' / 'manifest.json'
-    edit_json(f, lambda m: feat(m).update(url='https://claude.ai/artifact/adopted'))
+    edit_json(f, lambda m: m['full_progress_artifact'].update(url='https://claude.ai/artifact/adopted'))
     git(other, 'commit', '-qam', 'adopt an existing artifact')
     git(other, 'push', '-q', 'origin', 'main')
-    p.ok('render')                      # the full-progress artifact links to the adopted url
-    assert p.man()['feature_artifacts'][0]['published_sha256'] == ''
+    assert p.man()['full_progress_artifact']['published_sha256'] == ''
     r = p.run('check')
     assert r.code == 0, r.all
     got = {a['key']: a for a in p.run('pending', '--json').json()['artifacts']}
-    assert got['artifacts']['reason'] == 'adopted, not yet published from the record', got
-    assert got['artifacts']['url'].endswith('/adopted')
-    assert got['site']['reason'] == 'never published'
-    p.ok('mark-published', 'artifacts', '--url', 'https://claude.ai/artifact/adopted')
-    assert 'artifacts' not in {a['key'] for a in p.run('pending', '--json').json()['artifacts']}
+    assert list(got) == ['full-progress'], got
+    assert got['full-progress']['reason'] == 'adopted, not yet published from the record', got
+    assert got['full-progress']['url'].endswith('/adopted')
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/adopted')
+    assert p.run('pending', '--json').json()['artifacts'] == []
 
 
 @case
@@ -1050,8 +1204,8 @@ def test_protection_refusal_and_retry(env):
     os.chmod(str(hook), 0o755)
     assert p.run('set-task-status', 'SI1', 'Waiting').code == 4
     hook.unlink()
-    p.ok('set-task-status', 'AR2', 'Done')
-    assert p.task('SI1')['status'] == 'Waiting' and p.task('AR2')['status'] == 'Done'
+    p.ok('set-task-status', 'AR2', 'Built')
+    assert p.task('SI1')['status'] == 'Waiting' and p.task('AR2')['status'] == 'Built'
 
 
 @case
@@ -1260,9 +1414,8 @@ def _drop_fp(m):
 
 
 def _second_fp_entry(m):
-    m['feature_artifacts'].append({'key': 'full-progress-2', 'title': 'Full Progress: Again', 'url': '',
-                                   'file': 'full-progress-again.html', 'prefix': 'FP', 'apps': [],
-                                   'published_sha256': ''})
+    m['feature_artifacts'].append({'key': 'full-progress-2', 'title': 'Full Progress: Again',
+                                   'file': 'full-progress-again.html', 'prefix': 'FP', 'apps': []})
 
 
 def _stray_fp_file(rec):
@@ -1327,9 +1480,10 @@ MANIFEST_FIXTURES = [
     ('wrong spec', 'R4.2', lambda m: m.update(spec='ARTIFACTSPEC 0.9')),
     ('merged_status', 'R4.2', lambda m: m.update(merged_status='Shipped')),
     ('design value', 'R4.2', lambda m: m.update(design='fancy')),
-    ('bad hash', 'R4.3', lambda m: feat(m).update(url='https://claude.ai/artifact/x', published_sha256='abc')),
-    ('hash without url', 'R4.3', lambda m: feat(m).update(published_sha256='a' * 64)),
-    ('bad url', 'R4.3', lambda m: feat(m).update(url='ftp://x', published_sha256='a' * 64)),
+    ('bad hash', 'R4.3', lambda m: m['full_progress_artifact'].update(url='https://claude.ai/artifact/x', published_sha256='abc')),
+    ('hash without url', 'R4.3', lambda m: m['full_progress_artifact'].update(published_sha256='a' * 64)),
+    ('bad url', 'R4.3', lambda m: m['full_progress_artifact'].update(url='ftp://x', published_sha256='a' * 64)),
+    ('full-progress url missing', 'R4.3', lambda m: m['full_progress_artifact'].pop('url')),
     ('file name', 'R4.4', lambda m: feat(m).update(file='artifacts.html')),
     ('design.css missing', 'R5.10', _design_missing),
 ]
@@ -1349,7 +1503,7 @@ REGISTRY_FIXTURES = [
     ('expected soon', 'R6.6', lambda r: task(r, 'SI1').update(expected='soon; very')),
     ('one-digit day', 'R6.6', lambda r: task(r, 'SI1').update(expected='2 Oct')),
     ('expected missing month', 'R6.6', lambda r: task(r, 'DS1').update(expected='13')),
-    ('expected on a done row', 'R6.7', lambda r: task(r, 'AR2').update(expected='tomorrow')),
+    ('expected on a built row', 'R6.7', lambda r: task(r, 'AR2').update(expected='tomorrow')),
     ('registry spec', 'R4.2', lambda r: r.update(spec='x')),
 ]
 
@@ -1372,10 +1526,82 @@ def test_check_baseline_clean(env):
     r = p.run('check')
     assert r.code == 0 and 'clean' in r.out, r.all
     r = p.run('check', '--json')
-    assert r.code == 0 and r.json() == {'findings': []}
+    assert r.code == 0 and r.json() == {'findings': [], 'notes': []}
     rec = p.record_copy('baseline')
     assert check_record(env, rec).code == 0
     assert check_record(env, rec.parent.parent).code == 0, 'a repository root is accepted for --record'
+
+
+@case
+def test_done_is_a_deprecated_alias_of_built(env):
+    """R6.9: Done is accepted, stored as Built, with a note; task-add takes it too."""
+    p = env.baseline()
+    r = p.ok('set-task-status', 'AR1', 'Done')
+    assert p.task('AR1')['status'] == 'Built', p.task('AR1')
+    assert 'deprecated' in r.err and 'Built' in r.err, r.all
+    r = p.ok('task-add', '--owner', 'site', '--item', 'Old', '--detail', 'x', '--expected', '14 Oct',
+             '--status', 'done')
+    assert p.reg()['tasks'][-1]['status'] == 'Built' and 'deprecated' in r.err, r.all
+    r = p.run('set-task-status', 'AR1', 'Finished')            # a synonym is refused, with the hint
+    assert r.code == 1 and 'Nearest allowed status: Built' in r.err, r.all
+    assert 'Done' not in R_STATUSES(env)
+
+
+def R_STATUSES(env):
+    r = subprocess.run([sys.executable, '-c',
+                        'import sys; sys.path.insert(0, %r); import render_artifacts as R; print(R.STATUSES)'
+                        % str(env.plugin / 'scripts')], capture_output=True, text=True, env=base_env())
+    return r.stdout
+
+
+@case
+def test_old_done_records_migrate_to_built(env):
+    """R6.9: a record holding Done is read as Built, noted by check, rewritten by the next writing command."""
+    p = env.baseline()
+    other = p.clone_again('old-done')
+    rp, mp = other / 'docs' / 'artifacts' / 'registry.json', other / 'docs' / 'artifacts' / 'manifest.json'
+    reg = json.loads(rp.read_text(encoding='utf-8'))
+    next(t for t in reg['tasks'] if t['id'] == 'AR2')['status'] = 'Done'
+    rp.write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
+    man = json.loads(mp.read_text(encoding='utf-8'))
+    man['merged_status'] = 'Done'
+    mp.write_text(json.dumps(man, indent=2) + '\n', encoding='utf-8')
+    git(other, 'commit', '-q', '-a', '-m', 'age the record to 1.0.0 statuses')
+    git(other, 'push', '-q', 'origin', 'main')
+    out = p.run('check', '--json').json()
+    assert any('AR2' in n and 'Done' in n for n in out['notes']), out
+    assert not any('retired status' in f['message'] for f in out['findings']), out    # a note, not a finding
+    r = p.run('check')
+    assert 'note: registry.json: AR2 still use the retired status Done' in r.out, r.all
+    p.ok('set-task-status', 'AR1', 'Running')       # any writing command
+    assert p.task('AR2')['status'] == 'Built', p.task('AR2')
+    assert all(t['status'] != 'Done' for t in p.reg()['tasks'])
+    assert p.man()['merged_status'] == 'Built', p.man()
+    assert 'Done' not in p.show('docs/artifacts/registry.json')
+    r = p.ok('check', '--json')
+    assert r.json() == {'findings': [], 'notes': []}, r.out
+
+
+@case
+def test_check_notes_a_differing_rule_copy(env):
+    """R10.5: a project's own copy of the rule that differs is a note, never a finding."""
+    p = env.baseline()
+    rules = p.clone / '.claude' / 'rules'
+    rules.mkdir(parents=True)
+    mine = rules / 'project-artifacts.md'
+    plugin_rule = env.plugin / 'rules' / 'project-artifacts.md'
+    mine.write_bytes(plugin_rule.read_bytes())
+    r = p.run('check', '--json')
+    assert r.code == 0 and r.json()['notes'] == [], r.all       # identical: nothing to say
+    mine.write_text('- An old rule.\n', encoding='utf-8')
+    r = p.run('check')
+    assert r.code == 0 and 'record is clean' in r.out, r.all    # not a failure
+    assert 'note: ' in r.out and '.claude/rules/project-artifacts.md differs' in r.out, r.out
+    assert 'delivers the rule at session start' in r.out and 'can be deleted' in r.out, r.out
+    r = p.run('check', '--json')
+    assert r.code == 0 and r.json()['findings'] == [] and len(r.json()['notes']) == 1, r.all
+    mine.unlink()
+    assert p.run('check', '--json').json()['notes'] == []
 
 
 @case
@@ -1462,21 +1688,81 @@ def test_one_full_progress(env):
     assert q.man()['full_progress_artifact']['key'] == 'full-progress'
 
 
+def hand_break_registry(p, tag='hand'):
+    """Push to main a registry that has a finding (R6.6), as a hand edit or an older version could leave."""
+    other = p.clone_again(tag)
+    edit_json(other / 'docs' / 'artifacts' / 'registry.json', lambda r: task(r, 'AR1').update(expected='today'))
+    git(other, 'commit', '-qam', 'break it')
+    git(other, 'push', '-q', 'origin', 'main')
+
+
+def hand_decisions_sections(p, keys, tag='hand-d'):
+    """Push to main a hand-written section titled Decisions in each of the features (R5.19), as a 1.0.0 record can have."""
+    other = p.clone_again(tag)
+    for key in keys:
+        d = other / 'docs' / 'artifacts' / 'content' / key
+        n = len(list(d.glob('[0-9][0-9]-*.html'))) + 1
+        (d / ('%02d-decisions.html' % n)).write_text('<!-- title: Decisions -->\n<p>By hand.</p>\n', encoding='utf-8')
+    git(other, 'add', '-A')
+    git(other, 'commit', '-q', '-m', 'hand-written Decisions sections')
+    git(other, 'push', '-q', 'origin', 'main')
+
+
+@case
+def test_earlier_findings_do_not_block_a_change(env):
+    """R7.1: a writing command may leave the findings the record already had; it says so and writes the change."""
+    p = env.baseline()
+    hand_break_registry(p)
+    before = p.head()
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'R6.6'), r.all
+    r = p.ok('set-task-status', 'SI1', 'Waiting')
+    assert p.head() != before and p.task('SI1')['status'] == 'Waiting'
+    assert re.search(r'note: \d earlier findings? remains?; run check', r.out), r.all
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'R6.6'), r.all
+    # the fixing command is allowed, and ends the finding
+    r = p.ok('set-task-status', 'AR1', 'Waiting', '--expected', '14 Oct')
+    assert 'earlier finding' not in r.all
+    assert p.run('check').code == 0
+    assert dirty(p) == []
+
+
+@case
+def test_a_new_finding_is_refused_beside_earlier_ones(env):
+    """R7.1: a change that adds a finding is refused and writes nothing, even when the record has others."""
+    p = env.baseline()
+    hand_break_registry(p)
+    before = p.head()
+    # the same rule in the same file again: counted, so it is an added finding
+    r = p.run('set-task-status', 'SI1', 'Waiting', '--expected', 'soon')
+    assert r.code == 1 and has_line(r.err, 'R6.6') and 'nothing written' in r.err, r.err
+    assert p.head() == before and dirty(p) == []
+    # another rule
+    r = p.run('set-task-status', 'SI1', 'Waiting', '--detail', 'x' * 700)
+    assert r.code == 1 and has_line(r.err, 'R4.8'), r.err
+    assert p.head() == before and dirty(p) == []
+    r = p.run('set-task-status', 'SI1', 'Waiting', '--json', '--expected', 'next week')
+    out = r.json()
+    assert r.code == 1 and out['ok'] is False and {f['req'] for f in out['findings']} == {'R6.6'}, out
+    assert not [f for f in out['findings'] if 'AR1' in f['message']], 'only what the change added is printed'
+    assert p.head() == before
+
+
 @case
 def test_validation_before_blocks_writes(env):
-    """R7.1: a record that is invalid before the change is not written to."""
+    """R7.1: a record the change cannot work with is not written to."""
     p = env.baseline()
     other = p.clone_again('hand')
-    f = other / 'docs' / 'artifacts' / 'registry.json'
-    edit_json(f, lambda r: task(r, 'AR1').update(expected='today'))
+    (other / 'docs' / 'artifacts' / 'registry.json').write_text('{"spec": "x", "tasks": 5}', encoding='utf-8')
     git(other, 'commit', '-qam', 'break it')
     git(other, 'push', '-q', 'origin', 'main')
     before = p.head()
-    r = p.run('set-task-status', 'SI1', 'Waiting')
-    assert r.code == 1 and has_line(r.err, 'R6.6') and 'nothing written' in r.err, r.err
-    assert p.head() == before
-    r = p.run('set-task-status', 'AR1', 'Waiting', '--expected', '14 Oct')
-    assert r.code == 1, 'even the fixing command is refused: the record must be repaired first'
+    for args in (('set-task-status', 'SI1', 'Waiting'),
+                 ('task-add', '--owner', 'project', '--prefix', 'DS', '--item', 'X', '--detail', 'x', '--expected', '12 Oct')):
+        r = p.run(*args)
+        assert r.code == 1 and 'Traceback' not in r.err, (args, r.all)
+        assert p.head() == before and dirty(p) == []
 
 
 @case
@@ -1496,12 +1782,133 @@ def test_validation_after_blocks_writes(env):
 
 
 @case
+def test_a_record_with_two_stuck_features_repairs_in_two_edits(env):
+    """R7.1: two features each hold a hand-written Decisions section (R5.19). Fixing one used to be refused
+    because the other still had its finding, so the record could not be migrated."""
+    p = env.baseline()
+    hand_decisions_sections(p, ['artifacts', 'site'])
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'R5.19', 'content/artifacts') and has_line(r.out, 'R5.19', 'content/site'), r.all
+    # the other writing commands work meanwhile, for tasks that need no stuck feature's file
+    r = p.ok('task-add', '--owner', 'project', '--prefix', 'DS', '--item', 'More', '--detail', 'Later.', '--expected', '14 Oct')
+    assert 'note: 2 earlier findings remain; run check' in r.out, r.all
+    r = p.ok('set-task-status', 'DS1', 'Waiting', '--json')
+    assert r.json()['notes'] == ['2 earlier findings remain; run check'], r.out
+    assert 'Waiting' in p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
+    # a task of a stuck feature would leave that feature's file out of date: refused, nothing written
+    before = p.head()
+    r = p.run('set-task-status', 'AR1', 'Waiting')
+    assert r.code == 1 and 'content/artifacts is invalid; fix it with edit-content' in r.err, r.all
+    assert has_line(r.err, 'R5.19', 'content/artifacts') and p.head() == before and dirty(p) == []
+    # edit one: allowed, and the other finding stays
+    d = export(p, 'artifacts', 'stuck1')
+    (d / '02-decisions.html').unlink()
+    r = p.ok('edit-content', 'artifacts', '--from', d)
+    assert 'note: 1 earlier finding remains; run check' in r.out, r.all
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'R5.19', 'content/site') and not has_line(r.out, 'R5.19', 'content/artifacts'), r.all
+    assert not has_line(r.out, 'INV-3'), r.all           # the repaired feature was rendered again
+    # its tasks can change again, while the other feature is still stuck
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    assert 'Waiting' in p.show('docs/artifacts/feature-artifacts.html')
+    # edit the other: the record is clean
+    d = export(p, 'site', 'stuck2')
+    (d / '02-decisions.html').unlink()
+    r = p.ok('edit-content', 'site', '--from', d)
+    assert 'earlier finding' not in r.all
+    r = p.run('check')
+    assert r.code == 0 and 'clean' in r.out, r.all
+    assert dirty(p) == []
+
+
+@case
+def test_a_stuck_feature_is_not_edited_into_a_stuck_one(env):
+    """R7.1: edit-content refuses content that is still invalid, and one that adds a second finding."""
+    p = env.baseline()
+    hand_decisions_sections(p, ['artifacts', 'site'])
+    before = p.head()
+    d = export(p, 'artifacts', 'still')          # still holds the Decisions section
+    (d / 'meta.json').write_text(json.dumps({**json.loads((d / 'meta.json').read_text(encoding='utf-8')),
+                                             'lede': 'Changed.'}), encoding='utf-8')
+    r = p.run('edit-content', 'artifacts', '--from', d)
+    assert r.code == 1 and has_line(r.err, 'R5.19', 'content/artifacts') and 'nothing written' in r.err, r.err
+    assert p.head() == before and dirty(p) == []
+    d = export(p, 'artifacts', 'worse')
+    (d / '03-more.html').write_text('<!-- title: Decisions -->\n<p>again</p>\n', encoding='utf-8')
+    r = p.run('edit-content', 'artifacts', '--from', d)
+    assert r.code == 1 and 'nothing written' in r.err and p.head() == before, r.all
+    # a clean feature cannot be edited into a stuck one either
+    q = env.baseline()
+    q.ok('feature-new', '--key', 'third', '--title', 'Third', '--prefix', 'TH', '--apps', 'x')
+    hand_decisions_sections(q, ['artifacts'], 'hand-q')
+    qb = q.head()
+    d = export(q, 'third', 'third')
+    (d / '02-decisions.html').write_text('<!-- title: Decisions -->\n<p>no</p>\n', encoding='utf-8')
+    r = q.run('edit-content', 'third', '--from', d)
+    assert r.code == 1 and has_line(r.err, 'R5.19', 'content/third') and q.head() == qb, r.err
+    assert not has_line(r.err, 'R5.19', 'content/artifacts'), 'only the added finding is printed'
+
+
+@case
+def test_a_record_that_is_migrating_and_stuck_repairs_one_edit_at_a_time(env):
+    """R7.1a: the first writing command on a 1.0.0 record migrates it; a stuck feature waits for its own edit."""
+    p = env.baseline()
+    hand_decisions_sections(p, ['artifacts', 'site'])
+    other = p.clone_again('old-done')
+    rp = other / 'docs' / 'artifacts' / 'registry.json'
+    edit_json(rp, lambda r: task(r, 'AR2').update(status='Done'))
+    git(other, 'commit', '-q', '-a', '-m', 'age the record to 1.0.0 statuses')
+    git(other, 'push', '-q', 'origin', 'main')
+    d = export(p, 'artifacts', 'mig1')
+    (d / '02-decisions.html').unlink()
+    r = p.ok('edit-content', 'artifacts', '--from', d)
+    assert p.task('AR2')['status'] == 'Built', p.task('AR2')
+    assert 'note: 1 earlier finding remains; run check' in r.out and 'not rendered' in r.out and 'site' in r.out, r.all
+    r = p.run('check', '--json')
+    assert [(f['req'], f['file']) for f in r.json()['findings']] == [('R5.19', 'content/site')], r.out
+    d = export(p, 'site', 'mig2')
+    (d / '02-decisions.html').unlink()
+    p.ok('edit-content', 'site', '--from', d)
+    r = p.run('check')
+    assert r.code == 0 and 'clean' in r.out, r.all
+
+
+@case
+def test_render_with_earlier_findings(env):
+    """R7.1: render repairs what it can and leaves a feature with invalid content alone."""
+    p = env.baseline()
+    hand_decisions_sections(p, ['site'])
+    other = p.clone_again('hand-reg')
+    edit_json(other / 'docs' / 'artifacts' / 'registry.json', lambda r: task(r, 'AR1').update(detail='Edited by hand.'))
+    git(other, 'commit', '-qam', 'hand edit')
+    git(other, 'push', '-q', 'origin', 'main')
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'INV-3', 'feature-artifacts.html') and has_line(r.out, 'R5.19', 'content/site'), r.all
+    site_html = p.show('docs/artifacts/feature-the-site.html')
+    r = p.ok('render', '--json')
+    assert 'artifacts' in r.json()['rendered'] and 'site' not in r.json()['rendered'], r.out
+    assert r.json()['notes'][0] == '1 earlier finding remains; run check', r.out
+    assert 'not rendered, because its content is invalid: site' in r.json()['notes'][1], r.out
+    assert 'Edited by hand.' in p.show('docs/artifacts/feature-artifacts.html')
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'R5.19', 'content/site') and not has_line(r.out, 'INV-3'), r.all
+    before = p.head()
+    r = p.ok('render', '--all', '--json', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-11T08:00:00+00:00'})
+    assert sorted(r.json()['rendered']) == ['artifacts', 'full-progress'], r.out
+    assert p.show('docs/artifacts/feature-the-site.html') == site_html and p.head() != before
+    r = p.ok('render')
+    assert 'nothing to do' in r.out and 'note: 1 earlier finding remains; run check' in r.out, r.all
+    assert dirty(p) == []
+
+
+@case
 def test_readme_generated(env):
     p = env.baseline()
     t = p.show('docs/artifacts/README.md')
     assert '# Project artifacts' in t and 'Feature: Artifacts' in t and '(not published)' in t
     assert 'render' in t and 'mark-published' in t and 'same title' in t
-    p.ok('mark-published', 'artifacts', '--url', 'https://claude.ai/artifact/aaa')
+    assert 'never published' in t and 'standalone HTML file' in t        # R9.5: a feature is a file
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/aaa')
     assert 'https://claude.ai/artifact/aaa' in p.show('docs/artifacts/README.md')
 
 
@@ -1596,22 +2003,17 @@ def later(n):
 
 @case
 def test_session_sequence_ends_clean(env):
-    """set-task-status -> pending -> mark-published (features, then full-progress) -> pending 0 and check 0."""
+    """set-task-status (several) -> pending lists Full Progress once -> mark-published -> pending 0 and check 0."""
     p = env.baseline()
-    for k, u in (('full-progress', 'c'), ('artifacts', 'a'), ('site', 'b')):     # a published starting point
-        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + u, env=later(0))
-    for k, u in (('artifacts', 'a'), ('site', 'b'), ('full-progress', 'c')):
-        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + u, env=later(1))
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/c', env=later(0))   # a published starting point
     assert p.run('pending').code == 0 and p.run('check').code == 0
     p.ok('set-task-status', 'AR1', 'Waiting', env=later(2))
     p.ok('set-task-status', 'SI1', 'Live', env=later(3))
     r = p.run('pending', '--json', env=later(4))
     assert r.code == 1, r.out
     pend = [a['key'] for a in r.json()['artifacts']]
-    assert pend == ['full-progress', 'artifacts', 'site'], pend
-    for i, k in enumerate(['artifacts', 'site', 'full-progress']):
-        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + {'artifacts': 'a', 'site': 'b',
-                                                                              'full-progress': 'c'}[k], env=later(5 + i))
+    assert pend == ['full-progress'], pend                                  # two changes, one publish (R3.1)
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/c', env=later(5))
     r = p.run('pending', '--json', env=later(9))
     assert r.code == 0 and r.json() == {'artifacts': [], 'queue': []}, r.out
     r = p.run('check', env=later(9))
@@ -1623,10 +2025,9 @@ def test_mark_published_leaves_registry_byte_identical(env):
     p = env.baseline()
     before = p.show('docs/artifacts/registry.json')
     upd = p.reg()['updated']
-    for i, k in enumerate(['artifacts', 'site', 'full-progress']):
-        p.ok('mark-published', k, '--url', 'https://claude.ai/artifact/' + k, env=later(1 + i))
-        assert p.show('docs/artifacts/registry.json') == before, k
-        assert p.man()['updated'] != upd                      # the manifest's own `updated` does move
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/full-progress', env=later(3))
+    assert p.show('docs/artifacts/registry.json') == before
+    assert p.man()['updated'] != upd                          # the manifest's own `updated` does move
     assert p.reg()['updated'] == upd
     assert p.man()['updated'] == '2026-10-11T13:00+01:00', p.man()['updated']      # 12:00 UTC, Lisbon summer time
     assert p.run('check').code == 0
@@ -1655,6 +2056,265 @@ def test_non_task_commands_leave_registry_alone(env):
     p.ok('set-task-status', 'AR1', 'Waiting', env=later(6))
     assert p.show('docs/artifacts/registry.json') != before and p.reg()['updated'] == '2026-10-11T16:00+01:00', p.reg()['updated']
     assert p.run('check').code == 0
+
+
+# --------------------------------------------------------------------------
+# decisions (section 5.4; the real renderer only)
+# --------------------------------------------------------------------------
+
+def d_opt(label, **kw):
+    out = {'label': label, 'summary': '%s, in a sentence.' % label}
+    out.update(kw)
+    return out
+
+
+def d_dec(n, **kw):
+    out = {'id': 'D%d' % n, 'question': 'Which layout for the checkout page?', 'asked': '2026-10-09', 'status': 'decided',
+           'options': [d_opt('Single page', recommended=True, preview='<pre>+------+\n| Pay  |\n+------+</pre>'), d_opt('Three steps')],
+           'chosen': 'Single page', 'decided': '2026-10-10', 'owner_words': 'single page, fewer clicks', 'task': 'AR1'}
+    out.update(kw)
+    return out
+
+
+def d_open(n, **kw):
+    out = d_dec(n, question='Should History also list decisions?', status='open', chosen=None, decided=None,
+                owner_words=None, options=[d_opt('Yes'), d_opt('No', recommended=True)])
+    out.update(kw)
+    return out
+
+
+def edit_decisions(p, decisions, name, key='artifacts', extra=None):
+    """export-content, write decisions.json (and extra files), return the folder."""
+    d = export(p, key, name)
+    (d / 'decisions.json').write_text(json.dumps({'decisions': decisions}, indent=1), encoding='utf-8')
+    for rel, data in (extra or {}).items():
+        (d / rel).parent.mkdir(parents=True, exist_ok=True)
+        (d / rel).write_bytes(data)
+    return d
+
+
+def need_real(env):
+    if env.kind == 'fake':
+        SKIP('the stand-in renderer does not know decisions')
+
+
+@case
+def test_decisions_edit_content_renders_and_checks(env):
+    need_real(env)
+    p = env.baseline()
+    d = edit_decisions(p, [d_dec(1), d_open(2, task='AR1')], 'dec1')
+    p.ok('set-task-status', 'AR1', 'Needs you', '--expected', '11 Oct')
+    r = p.ok('edit-content', 'artifacts', '--from', d)
+    assert 'edit-content artifacts' in r.out
+    saved = json.loads(p.show('docs/artifacts/content/artifacts/decisions.json'))
+    assert [x['id'] for x in saved['decisions']] == ['D1', 'D2']
+    html = p.show('docs/artifacts/feature-artifacts.html')
+    assert 'Chosen by the owner &middot; 10 Oct' in html and 'single page, fewer clicks' in html and 'Not chosen' in html
+    assert html.index('>Decisions</h2>') < html.index('>History</h2>')
+    assert 'Needs you: AR1 Spec; D2 Should History also list decisions?' in html, html[html.index('class="lede"'):][:300]
+    assert '1 decision open' in p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
+    r = p.run('check')
+    assert r.code == 0 and 'record is clean' in r.out and 'warning' not in r.out, r.all
+    assert dirty(p) == [], dirty(p)
+    # an export carries decisions.json back out, and writing it back changes nothing
+    d2 = export(p, 'artifacts', 'dec1b')
+    assert (d2 / 'decisions.json').is_file()
+    head = p.head()
+    assert 'no change' in p.ok('edit-content', 'artifacts', '--from', d2).out and p.head() == head
+
+
+@case
+def test_decisions_invalid_file_writes_nothing(env):
+    need_real(env)
+    p = env.baseline()
+    before = p.head()
+    bad = [
+        ('one option', [d_dec(1, options=[d_opt('Single page')])], 'R5.16'),
+        ('decided without a choice', [d_dec(1, chosen=None)], 'R5.16'),
+        ('duplicate labels', [d_dec(1, options=[d_opt('A'), d_opt('A')], chosen='A')], 'R5.16'),
+        ('open with a choice', [d_open(1, chosen='Yes')], 'R5.16'),
+        ('two recommended', [d_dec(1, options=[d_opt('A', recommended=True), d_opt('B', recommended=True)], chosen='A')], 'R5.16'),
+        ('replaces nothing', [d_dec(1, replaces='D4')], 'R5.18'),
+        ('script in a preview', [d_dec(1, options=[d_opt('A', preview='<script>x()</script>'), d_opt('B')], chosen='B')], 'R5.17'),
+        ('external image in a preview', [d_dec(1, options=[d_opt('A', preview='<img src="https://x.test/a.png">'), d_opt('B')], chosen='B')], 'R5.17'),
+        ('missing image file', [d_dec(1, options=[d_opt('A', image='assets/none.png'), d_opt('B')], chosen='B')], 'R5.17'),
+        ('id gap', [d_dec(1), d_dec(3)], 'R5.15'),
+    ]
+    for name, decisions, req in bad:
+        d = edit_decisions(p, decisions, 'bad-' + name.replace(' ', '-'))
+        r = p.run('edit-content', 'artifacts', '--from', d)
+        assert r.code == 1 and 'nothing written' in r.err and has_line(r.err, req, 'content/artifacts'), (name, r.err)
+        assert p.head() == before and dirty(p) == [] and p.show('docs/artifacts/content/artifacts/decisions.json') is None, name
+    # a hand-written Decisions section is refused, in any case
+    d = export(p, 'artifacts', 'hand')
+    (d / '02-decisions.html').write_text('<!-- title: Decisions -->\n<table><tr><td>1</td></tr></table>\n', encoding='utf-8')
+    r = p.run('edit-content', 'artifacts', '--from', d)
+    assert r.code == 1 and has_line(r.err, 'R5.19', 'content/artifacts') and 'decisions.json' in r.err, r.err
+    assert p.head() == before
+    # the full-progress artifact has no decisions.json
+    d = edit_decisions(p, [d_dec(1)], 'fp-dec', key='full-progress')
+    r = p.run('edit-content', 'full-progress', '--from', d)
+    assert r.code == 1 and has_line(r.err, 'R5.14', 'content/full-progress'), r.err
+    assert p.head() == before
+
+
+@case
+def test_decisions_are_append_only_through_edit_content(env):
+    need_real(env)
+    p = env.baseline()
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1), d_open(2)], 'ao1'))
+    before = p.head()
+    # a decision cannot be removed
+    r = p.run('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1)], 'ao2'))
+    assert r.code == 1 and has_line(r.err, 'R5.15') and 'D2 was removed' in r.err, r.err
+    d = export(p, 'artifacts', 'ao3')
+    (d / 'decisions.json').unlink()
+    r = p.run('edit-content', 'artifacts', '--from', d)
+    assert r.code == 1 and 'D1 was removed' in r.err, r.err
+    # a decided one cannot change its choice
+    r = p.run('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1, chosen='Three steps', owner_words=None), d_open(2)], 'ao4'))
+    assert r.code == 1 and 'D1 is decided; its choice cannot change' in r.err, r.err
+    assert p.head() == before
+    # but an open one can be closed, and a changed mind is a new decision that replaces the old
+    closed = d_open(2, status='decided', chosen='No', decided='2026-10-11', owner_words='no, keep them apart')
+    new = d_dec(3, question='Which layout, second thoughts?', replaces='D1', options=[d_opt('Single page'), d_opt('Wizard')],
+                chosen='Wizard', owner_words='wizard', asked='2026-10-11', decided='2026-10-11')
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1), closed, new], 'ao5'))
+    html = p.show('docs/artifacts/feature-artifacts.html')
+    assert 'Replaced by D3' in html and 'no, keep them apart' in html
+    assert p.run('check').code == 0
+
+
+@case
+def test_decisions_image_assets_round_trip_byte_for_byte(env):
+    need_real(env)
+    p = env.baseline()
+    png = b'\x89PNG\r\n\x1a\n' + b'\r\n' * 5 + bytes(range(256))
+    dec = [d_dec(1, options=[d_opt('A', image='assets/a.png'), d_opt('B')], chosen='B', owner_words=None)]
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, dec, 'img1', extra={'assets/a.png': png}))
+    r = git(p.bare, 'show', 'main:docs/artifacts/content/artifacts/assets/a.png', check=False)
+    shown = subprocess.run(['git', 'show', 'main:docs/artifacts/content/artifacts/assets/a.png'], cwd=str(p.bare),
+                           capture_output=True).stdout
+    assert shown == png, 'binary assets must not be line-ending converted'
+    html = p.show('docs/artifacts/feature-artifacts.html')
+    assert 'src="data:image/png;base64,' in html and 'http' not in html[html.index('decision-image'):][:60]
+    d = export(p, 'artifacts', 'img2')
+    assert (d / 'assets' / 'a.png').read_bytes() == png
+    assert 'no change' in p.ok('edit-content', 'artifacts', '--from', d).out
+    # an image the decisions do not name may stay in assets/; dropping the folder drops the file
+    r = p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, dec, 'img3', extra={'assets/a.png': png, 'assets/b.png': png}))
+    assert p.run('check').code == 0
+    # assets/ holds files only
+    d = export(p, 'artifacts', 'img4')
+    (d / 'assets' / 'sub').mkdir()
+    r = p.run('edit-content', 'artifacts', '--from', d)
+    assert r.code == 1 and 'assets/ holds files only' in r.err, r.err
+
+
+@case
+def test_check_warns_about_an_open_decision_without_a_needs_you_task(env):
+    need_real(env)
+    p = env.baseline()
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_open(1, task=None)], 'w1'))
+    r = p.run('check')
+    assert r.code == 0 and 'record is clean' in r.out, r.all                         # a warning is not a finding
+    assert 'warning  content/artifacts: D1 is open, but no task in this feature is in Needs you' in r.out, r.out
+    j = p.run('check', '--json')
+    assert j.code == 0 and j.json()['findings'] == [] and len(j.json()['warnings']) == 1, j.out
+    # naming a task that is not in Needs you still warns, and says which
+    d = edit_decisions(p, [d_open(1, task='AR1')], 'w1b')
+    # D1 exists with task None: only fields other than the choice may change
+    p.ok('edit-content', 'artifacts', '--from', d)
+    assert 'its task AR1 is not in Needs you' in p.run('check').out
+    # a task of another feature does not count
+    p.ok('set-task-status', 'SI1', 'Needs you', '--expected', '12 Oct')
+    assert 'its task AR1 is not in Needs you' in p.run('check').out
+    # once the task waits on the owner, the warning goes
+    p.ok('set-task-status', 'AR1', 'Needs you', '--expected', '12 Oct')
+    r = p.run('check')
+    assert r.code == 0 and r.out.strip() == 'record is clean', r.out
+    assert p.run('check', '--json').json() == {'findings': [], 'notes': []}
+    # a decision with no task is satisfied by any Needs you task of its feature
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_open(1, task=None), d_open(2, task=None)], 'w2'))
+    assert p.run('check').out.strip() == 'record is clean'
+    # a closed decision never warns
+    p.ok('set-task-status', 'AR1', 'Running', '--expected', '12 Oct')
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(
+        p, [d_dec(1, question='Q?', task=None, options=[d_opt('Yes'), d_opt('No')], chosen='Yes', owner_words=None), d_dec(2, task=None)], 'w3'))
+    assert p.run('check').out.strip() == 'record is clean'
+
+
+@case
+def test_check_decisions_against_the_record(env):
+    need_real(env)
+    p = env.baseline()
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1), d_open(2, task='AR1')], 'c1'))
+    base = p.record_copy('decisions')
+    assert check_record(env, base).code == 0
+
+    def fresh(name):
+        dest = TMP / ('dfx-%s-%s' % (env.kind, name))
+        if dest.exists():
+            _rmtree(dest)
+        shutil.copytree(str(base.parent.parent), str(dest))
+        return dest / 'docs' / 'artifacts'
+
+    def broken(name, mutate, req, needle):
+        rec = fresh(name)
+        path = rec / 'content' / 'artifacts' / 'decisions.json'
+        data = json.loads(path.read_text(encoding='utf-8'))
+        mutate(data['decisions'])
+        path.write_text(json.dumps(data), encoding='utf-8')
+        r = check_record(env, rec)
+        assert r.code == 1 and has_line(r.out, req, 'content/artifacts') and needle in r.out, '%s:\n%s' % (name, r.all)
+
+    broken('task-unknown', lambda ds: ds[0].update(task='AR99'), 'R5.18', 'AR99 is not in the task registry')
+    broken('choice', lambda ds: ds[0].update(chosen='Zero steps'), 'R5.16', 'label of one of its options')
+    broken('script', lambda ds: ds[0]['options'][0].update(preview='<p onclick="x()">a</p>'), 'R5.17', 'onclick')
+    broken('gap', lambda ds: ds.pop(0), 'R5.15', 'no gap')
+    # the rendered file is stale after decisions.json changes by hand: INV-3
+    rec = fresh('stale')
+    path = rec / 'content' / 'artifacts' / 'decisions.json'
+    data = json.loads(path.read_text(encoding='utf-8'))
+    data['decisions'][0]['owner_words'] = 'changed after the render'
+    path.write_text(json.dumps(data), encoding='utf-8')
+    r = check_record(env, rec)
+    assert r.code == 1 and has_line(r.out, 'INV-3', 'feature-artifacts.html'), r.all
+
+
+@case
+def test_an_invalid_decisions_file_is_left_alone_until_edit_content_fixes_it(env):
+    """R7.1: the other writing commands neither refuse nor render the feature; edit-content repairs it."""
+    need_real(env)
+    p = env.baseline()
+    p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1)], 'wc1'))
+    other = p.clone_again('other')
+    path = other / 'docs' / 'artifacts' / 'content' / 'artifacts' / 'decisions.json'
+    git(other, 'config', 'core.sparseCheckout', 'false', check=False)
+    data = json.loads(path.read_text(encoding='utf-8'))
+    data['decisions'][0]['options'] = data['decisions'][0]['options'][:1]       # a single option: invalid
+    path.write_text(json.dumps(data), encoding='utf-8')
+    git(other, 'add', '-A')
+    git(other, 'commit', '-q', '-m', 'break the decisions')
+    git(other, 'push', '-q', 'origin', 'main')
+    html = p.show('docs/artifacts/feature-artifacts.html')
+    for args in (('set-task-status', 'SI1', 'Waiting'), ('task-add', '--owner', 'project', '--prefix', 'DS', '--item', 'X',
+                                                          '--detail', 'x', '--expected', '12 Oct'),
+                 ('render', '--all')):
+        r = p.run(*args, env=later(5) if args[0] == 'render' else None)
+        assert r.code == 0 and re.search(r'note: \d earlier findings? remains?; run check', r.out), (args, r.all)
+        assert p.show('docs/artifacts/feature-artifacts.html') == html, args
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'R5.16', 'content/artifacts'), r.all
+    before = p.head()
+    r = p.run('set-task-status', 'AR1', 'Waiting')          # it would leave the feature's file out of date
+    assert r.code == 1 and 'edit-content' in r.err and p.head() == before, r.all
+    # the edit that fixes it is the way out
+    r = p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1)], 'wc2'))
+    assert 'earlier finding' not in r.all
+    assert p.run('check').code == 0
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    assert 'Waiting' in p.show('docs/artifacts/feature-artifacts.html')
 
 
 # --------------------------------------------------------------------------

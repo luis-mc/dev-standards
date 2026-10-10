@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """project_artifacts.py - the only writer of a project's artifact record.
 
-Implements ARTIFACTSPEC 1.0.0: section 4 (the record, time, the record
+Implements ARTIFACTSPEC 1.1.0: section 4 (the record, time, the record
 worktree and its commits), section 7 (every command), the bookkeeping of
-section 9 (`pending`, `mark-published`) and the record-level checks of
+section 9 (`pending`, `mark-published`; only Full Progress is published, a
+feature artifact is a standalone file) and the record-level checks of
 section 14. Rendering lives in render_artifacts.py, the queue in
 artifact_queue.py. Python 3.10+, standard library only.
 
@@ -58,7 +59,9 @@ EXPECTED_RE = re.compile(
     r'^(0[1-9]|[12][0-9]|3[01]) (?:' + '|'.join(MONTHS) + r')( ~([01][0-9]|2[0-3]):[0-5][0-9])?(; \S.*)?$')
 TIME_EL_RE = re.compile(r'<time\b[^>]*\bdatetime="([^"]+)"')
 RULE_NAME = 'project-artifacts.md'
-GITIGNORE_LINES = ['.claude/artifacts-queue.json', '.claude/artifacts-stop-state.json', '.claude/worktrees/']
+PUBLISH_REL = os.path.join('.claude', 'artifacts-publish')      # the publish copy of Full Progress (R5.31)
+GITIGNORE_LINES = ['.claude/artifacts-queue.json', '.claude/artifacts-stop-state.json', '.claude/artifacts-publish/',
+                   '.claude/worktrees/']
 
 # Test seam (tests only): called as hook(ctx, attempt) right before each push.
 _TEST_BEFORE_PUSH = None
@@ -97,6 +100,8 @@ def emit(args, result, human=None):
         print(json.dumps(result, indent=2, ensure_ascii=False))
     elif human is not None:
         print(human if isinstance(human, str) else '\n'.join(human))
+        for n in (result or {}).get('notes') or []:
+            print('note: ' + n)
 
 
 # --------------------------------------------------------------------------
@@ -539,6 +544,35 @@ def task_sort_key(t):
     return (m.group(1), int(m.group(2))) if m else (str(t.get('id', '')), 0)
 
 
+def migrate_done(manifest, registry):
+    """Read the status Done, retired in 1.1.0, as Built (in tasks and in merged_status).
+    Returns (IDs of tasks changed, whether anything changed); the next writing command writes it."""
+    ids = []
+    tasks = registry.get('tasks')
+    for t in tasks if isinstance(tasks, list) else []:
+        if isinstance(t, dict) and t.get('status') == 'Done':
+            t['status'] = 'Built'
+            ids.append(str(t.get('id')))
+    merged = manifest.get('merged_status') == 'Done'
+    if merged:
+        manifest['merged_status'] = 'Built'
+    return ids, bool(ids) or merged
+
+
+def migrate_feature_urls(manifest):
+    """R4.18: a feature artifact is never published, so a feature entry holds no url and no
+    published_sha256. Drops them from an older manifest; returns the keys changed. The next writing
+    command writes the manifest and renders every artifact again."""
+    keys = []
+    feats = manifest.get('feature_artifacts')
+    for e in feats if isinstance(feats, list) else []:
+        if isinstance(e, dict) and ('url' in e or 'published_sha256' in e):
+            e.pop('url', None)
+            e.pop('published_sha256', None)
+            keys.append(str(e.get('key')))
+    return keys
+
+
 class Record:
     def __init__(self, d, manifest=None, registry=None, exists=True):
         self.dir = Path(d)
@@ -548,9 +582,17 @@ class Record:
         self.exists = exists
         self._now = None
         self._contents = None
+        self._broken = {}            # key -> content findings (R4.4, R4.10, ...) of an artifact that cannot load
+        self._partial = {}           # key -> what could be read of such an artifact (its lede, for Full Progress)
+        self.pre_findings = []       # the findings the record had before this change (R7.1)
+        self.skipped = []            # artifacts left as they are because their content is invalid (R7.1a)
         self.render_keys = {}        # key -> 'new': render with a new stamp
         self.rendered = set()
         self.message = None
+        self.old_done = []           # IDs read from the file with the retired status Done
+        self.old_merged = False      # merged_status read from the file as the retired Done
+        self.old_urls = []           # feature keys read from the file with a url (R4.18)
+        self.migrated = False
 
     @classmethod
     def load(cls, d):
@@ -564,7 +606,18 @@ class Record:
         registry = read_json(rp)
         if not isinstance(manifest, dict) or not isinstance(registry, dict):
             raise Fail(2, 'unreadable record: manifest.json and registry.json must be objects')
-        return cls(d, manifest, registry)
+        raw_tasks = copy.deepcopy(registry.get('tasks')) if isinstance(registry.get('tasks'), list) else None
+        old_merged = manifest.get('merged_status') == 'Done'
+        old_done, migrated = migrate_done(manifest, registry)
+        old_urls = migrate_feature_urls(manifest)
+        rec = cls(d, manifest, registry)
+        if migrated:
+            rec._tasks0 = raw_tasks      # the registry differs from the file, so it is rewritten
+            rec.old_done, rec.old_merged = old_done, old_merged
+        if migrated or old_urls:
+            rec.migrated = True
+            rec.old_urls = old_urls
+        return rec
 
     def artifacts(self):
         """[(key, kind, entry)], full-progress first. Tolerates a damaged manifest."""
@@ -620,13 +673,27 @@ class Record:
     def sort_tasks(self):
         self.registry['tasks'] = sorted(self.tasks(), key=task_sort_key)
 
-    def contents(self):
+    def _load(self):
         if self._contents is None:
-            c, findings = load_contents(self)
-            if findings:
-                raise Fail(1, 'content is invalid; nothing written', findings)
-            self._contents = c
+            self._contents, self._broken, self._partial = load_contents_by_key(self)
+
+    def contents(self):
+        """{key: content} of the artifacts whose content loads."""
+        self._load()
         return self._contents
+
+    def broken(self):
+        """{key: [findings]} of the artifacts whose content does not load."""
+        self._load()
+        return self._broken
+
+    def render_contents(self):
+        """What Full Progress renders from: the loaded contents, and for an artifact that does not load, what could
+        be read of it (its lede and decisions), so one broken feature does not stop the others being changed."""
+        self._load()
+        out = dict(self._partial)
+        out.update(self._contents)
+        return out
 
     def invalidate(self):
         self._contents = None
@@ -663,24 +730,37 @@ def _load_content(record_dir, key):
     return R.load_content(record_dir, key)
 
 
-def load_contents(rec):
-    contents, findings = {}, []
+def load_contents_by_key(rec):
+    """(contents, broken, partial): the content of each artifact that loads, the findings of each that does not,
+    and what the renderer could read of those."""
+    contents, broken, partial = {}, {}, {}
     for key, _kind, _e in rec.artifacts():
         if not isinstance(key, str) or not KEY_RE.match(key):
             continue
         try:
             contents[key] = _load_content(rec.dir, key)
         except R.ContentError as ce:
-            findings += problems_to_findings(getattr(ce, 'problems', None) or [str(ce)], key)
+            broken[key] = problems_to_findings(getattr(ce, 'problems', None) or [str(ce)], key)
+            if isinstance(getattr(ce, 'partial', None), dict):
+                partial[key] = ce.partial
         except Exception as e:  # unreadable content of any kind
-            findings.append(('R4.1', 'content/%s' % key, 'content cannot be read: %s' % e))
-    return contents, findings
+            broken[key] = [('R4.1', 'content/%s' % key, 'content cannot be read: %s' % e)]
+    return contents, broken, partial
 
 
-def render_one(rec, key, stamp_t, stamp_i):
+def load_contents(rec):
+    contents, broken, _partial = load_contents_by_key(rec)
+    return contents, [f for fs in broken.values() for f in fs]
+
+
+def render_one(rec, key, stamp_t, stamp_i, links=None):
+    """Render one artifact; `links` ({feature key: (href, path text)}) is only for the publish copy."""
     try:
-        return R.render_artifact(rec.manifest, rec.registry, rec.contents(), key, PLUGIN_DIR,
-                                 rec.dir, stamp_t, stamp_i)
+        if key in rec.broken():
+            raise Fail(1, 'content/%s is invalid; fix it with edit-content; nothing written' % key, rec.broken()[key])
+        extra = {} if links is None else {'links': links}
+        return R.render_artifact(rec.manifest, rec.registry, rec.render_contents(), key, PLUGIN_DIR,
+                                 rec.dir, stamp_t, stamp_i, **extra)
     except Fail:
         raise
     except R.ContentError as ce:
@@ -688,21 +768,6 @@ def render_one(rec, key, stamp_t, stamp_i):
                    problems_to_findings(getattr(ce, 'problems', None) or [str(ce)], key))
     except Exception as e:
         raise Fail(2, 'render of %s failed: %s: %s' % (key, type(e).__name__, e))
-
-
-def rerender_existing(rec):
-    """Re-render every artifact that has a file, keeping its stamp; returns keys written."""
-    written = []
-    for key, _kind, e in rec.artifacts():
-        old = read_html(rec.dir / e['file'])
-        st = existing_stamp(old)
-        if st is None:
-            continue
-        html = render_one(rec, key, stamp_text_from_iso(st), st)
-        if html.replace('\r\n', '\n') != old:
-            rec.write_html(key, html)
-            written.append(key)
-    return written
 
 
 # --------------------------------------------------------------------------
@@ -728,8 +793,8 @@ def validate_structure(rec):
         f('R4.2', 'manifest.json', 'field "windows_timezone" is missing or not a string')
     if m.get('spec') != SPEC:
         f('R4.2', 'manifest.json', 'spec must be "%s"' % SPEC)
-    if m.get('merged_status') not in ('Live', 'Done'):
-        f('R4.2', 'manifest.json', 'merged_status must be "Live" or "Done"')
+    if m.get('merged_status') not in ('Live', 'Built'):
+        f('R4.2', 'manifest.json', 'merged_status must be "Live" or "Built"')
     if m.get('design') not in ('default', 'design.css'):
         f('R4.2', 'manifest.json', 'design must be "default" or "design.css"')
     elif m.get('design') == 'design.css' and not (rec.dir / 'design.css').is_file():
@@ -776,7 +841,8 @@ def validate_structure(rec):
         label = key if isinstance(key, str) else '?'
         if not isinstance(key, str) or not KEY_RE.match(key):
             f('R4.2', 'manifest.json', 'artifact key %r is not lowercase letters, digits and hyphens' % key)
-        for fld in ('title', 'file', 'url', 'published_sha256'):
+        # only the full-progress entry is published, so only it has a url and a hash (R4.3)
+        for fld in ('title', 'file') + (('url', 'published_sha256') if kind == 'full-progress' else ()):
             if not isinstance(e.get(fld), str):
                 f('R4.3' if fld in ('url', 'published_sha256') else 'R4.2', 'manifest.json',
                   '%s: field "%s" is missing or not a string' % (label, fld))
@@ -864,7 +930,7 @@ def validate_structure(rec):
             f('R4.8', 'registry.json', '%s: detail is longer than 600 characters' % label)
         ex = t.get('expected')
         if isinstance(ex, str) and isinstance(st, str) and st in statuses:
-            if st in ('Live', 'Done'):
+            if st in ('Live', 'Built'):
                 if not EXPECTED_RE.match(ex):
                     f('R6.7', 'registry.json', '%s: Expected on a %s row must be the date it happened (DD Mon), got "%s"'
                       % (label, st, ex))
@@ -882,6 +948,11 @@ def validate_structure(rec):
     # -- content
     _c, cf = load_contents(rec)
     F.extend(cf)
+    task_ids = {t.get('id') for t in tasks if isinstance(t, dict)}
+    for ckey, content in sorted(_c.items()):
+        for d in content.get('decisions') or []:
+            if d.get('task') and d['task'] not in task_ids:
+                f('R5.18', 'content/%s' % ckey, '%s: task %s is not in the task registry' % (d.get('id'), d['task']))
     known = {k for k in keys if isinstance(k, str)}
     cdir = rec.dir / 'content'
     if cdir.is_dir():
@@ -891,9 +962,10 @@ def validate_structure(rec):
     return sorted(set(F))
 
 
-def check_html_findings(rec, key):
+def check_html_findings(rec, key, html=None):
     e = rec.entry(key)
-    html = read_html(rec.dir / e['file'])
+    if html is None:
+        html = read_html(rec.dir / e['file'])
     if html is None:
         return [('INV-3', e['file'], 'rendered file is missing; run render')]
     out = []
@@ -934,7 +1006,8 @@ def fresh_render_findings(rec, key):
 SYNONYMS = {
     'merged': 'Live', 'released': 'Live', 'shipped': 'Live', 'deployed': 'Live', 'production': 'Live',
     'prod': 'Live', 'published': 'Live', 'launched': 'Live', 'released to production': 'Live',
-    'complete': 'Done', 'completed': 'Done', 'finished': 'Done', 'closed': 'Done', 'resolved': 'Done',
+    'complete': 'Built', 'completed': 'Built', 'finished': 'Built', 'closed': 'Built', 'resolved': 'Built',
+    'built': 'Built', 'done': 'Built',
     'in progress': 'Running', 'started': 'Running', 'active': 'Running', 'working': 'Running',
     'wip': 'Running', 'ongoing': 'Running', 'open': 'Running', 'run': 'Running',
     'blocked': 'Needs you', 'review': 'Needs you', 'needs review': 'Needs you',
@@ -967,6 +1040,10 @@ def require_status(word):
     allowed = list(R.STATUSES)
     if word in allowed:
         return word
+    if str(word).strip().lower() == 'done':
+        warn('status "Done" is deprecated and is stored as "Built" (finished, not yet released); '
+             'use "Built", or "Live" once it is released')
+        return 'Built'
     near = nearest_status(word)
     hint = ' Nearest allowed status: %s.' % near if near else ''
     raise Fail(1, 'status "%s" is not one of: %s.%s' % (word, ', '.join(allowed), hint))
@@ -981,25 +1058,33 @@ def readme_text(manifest):
     fp = manifest.get('full_progress_artifact') or {}
     arts = ([fp] if fp else []) + [e for e in manifest.get('feature_artifacts', []) if isinstance(e, dict)]
     for e in arts:
-        rows.append('| %s | `%s` | %s |' % (e.get('title', ''), e.get('file', ''), e.get('url') or '(not published)'))
-    table = '\n'.join(['| Artifact | File | URL |', '|---|---|---|'] + rows)
+        if e is fp:
+            where = e.get('url') or '(not published)'
+        else:
+            where = 'a file in the repository, open it in a browser; never published'
+        rows.append('| %s | `%s` | %s |' % (e.get('title', ''), e.get('file', ''), where))
+    table = '\n'.join(['| Artifact | File | Where |', '|---|---|---|'] + rows)
     return (
         '# Project artifacts\n\n'
         'This folder is the record of %s\'s project artifacts (%s). It is generated and committed by\n'
         '`scripts/project_artifacts.py` of the `luismc-artifacts` plugin; do not edit the JSON or the\n'
         'rendered HTML by hand.\n\n'
         '%s\n\n'
-        '## Recreate an artifact that was deleted on claude.ai\n\n'
-        'The artifacts are disposable views; the record here is the source (R9.3).\n\n'
+        'A feature artifact is a standalone HTML file: open it in a browser, no server needed. It is\n'
+        'never published. Only the full-progress artifact is a claude.ai artifact; it links to the\n'
+        'feature files as local files.\n\n'
+        '## Recreate the full-progress artifact if it was deleted on claude.ai\n\n'
+        'The artifact is a disposable view; the record here is the source (R9.3).\n\n'
         '1. `python <plugin>/scripts/project_artifacts.py render` writes the HTML again from `content/`,\n'
         '   `registry.json` and `manifest.json`.\n'
-        '2. `python <plugin>/scripts/project_artifacts.py pending` lists what must be published.\n'
-        '3. Publish each listed file with the Artifact tool, to the URL in `manifest.json` when it still\n'
-        '   opens. When the publish is refused because the artifact no longer exists, list your artifacts:\n'
-        '   if one has the same title, publish to that one; only if none does, publish a new one.\n'
-        '   At most one artifact per title is ever created.\n'
-        '4. `python <plugin>/scripts/project_artifacts.py mark-published KEY --url URL` records the URL\n'
-        '   and the hash of what was published.\n\n'
+        '2. `python <plugin>/scripts/project_artifacts.py pending` lists Full Progress when it must be\n'
+        '   published and writes the publish copy (`.claude/artifacts-publish/`, not committed).\n'
+        '3. Publish that file with the Artifact tool, once at the end of the turn, to the URL in\n'
+        '   `manifest.json` when it still opens. When the publish is refused because the artifact no\n'
+        '   longer exists, list your artifacts: if one has the same title, publish to that one; only if\n'
+        '   none does, publish a new one. At most one artifact per title is ever created.\n'
+        '4. `python <plugin>/scripts/project_artifacts.py mark-published full-progress --url URL` records\n'
+        '   the URL and the hash of the committed render.\n\n'
         'Change a task only with `set-task-status`; edit prose only under `content/<key>/` and then run\n'
         '`edit-content <key>`.\n' % (manifest.get('project', 'the project'), SPEC, table))
 
@@ -1018,9 +1103,7 @@ def run_change(ctx, apply, new_ok=False):
                 if isinstance(mb, str) and mb and mb != ctx.branch:
                     ctx.branch = mb
                     continue
-                pre = validate_structure(rec)
-                if pre:
-                    raise Fail(1, 'the record is invalid; nothing written', pre)
+                rec.pre_findings = all_findings(rec)           # earlier findings may stay; new ones may not (R7.1)
             else:
                 if not new_ok:
                     raise no_record_fail(ctx)
@@ -1028,8 +1111,11 @@ def run_change(ctx, apply, new_ok=False):
             try:
                 result = apply(rec) or {}
                 result = finish_change(ctx, rec, result)
-            except BaseException:
+            except BaseException as ex:
                 clean_worktree(ctx, base)
+                if rec.pre_findings and isinstance(ex, Exception) and not isinstance(ex, Fail):
+                    raise Fail(1, 'the record has earlier findings this change cannot work around (%s: %s); '
+                                  'nothing written' % (type(ex).__name__, ex), rec.pre_findings) from ex
                 raise
             sha = commit_record(ctx, rec.message or 'docs/artifacts: update')
             result['commit'] = sha or head_sha(ctx)
@@ -1060,10 +1146,17 @@ def finish_change(ctx, rec, result):
     """Write manifest/registry, render, README; validate the result (R7.1)."""
     if getattr(rec, 'noop', False):
         result['rendered'] = []
-        return result
+        return add_notes(result, len(rec.pre_findings), rec.skipped)
     rec.sort_tasks()
     if rec.registry_changed() and rec.entry(FP_NAME) is not None:
         rec.render_keys.setdefault(FP_NAME, 'new')     # it embeds the registry (R5.9)
+    if rec.migrated:
+        rec.invalidate()
+        for key, _kind, _e in rec.artifacts():
+            if key in rec.broken():          # migrates when edit-content fixes it (R7.1a)
+                rec.skipped.append(key)
+            else:
+                rec.render_keys.setdefault(key, 'new')
     rec.touch()
     now = rec.now()
     write_text(rec.dir / 'manifest.json', dump_json(rec.manifest))
@@ -1075,31 +1168,80 @@ def finish_change(ctx, rec, result):
     post = validate_structure(rec)
     for key in sorted(rec.rendered):
         post += check_html_findings(rec, key)
-    if post:
-        raise Fail(1, 'the change would make the record invalid; nothing written', sorted(set(post)))
+    # a file this change did not write has the findings it had before
+    files = {e['file'] for _k, _kind, e in rec.artifacts() if isinstance(e.get('file'), str)}
+    written = {rec.entry(k)['file'] for k in rec.rendered}
+    post += [fd for fd in rec.pre_findings if fd[1] in files and fd[1] not in written]
+    added, remaining = compare_findings(rec.pre_findings, post)
+    if added:
+        raise Fail(1, 'the change would make the record invalid; nothing written', added)
     result['rendered'] = sorted(rec.rendered)
     result['stamp'] = now.iso
+    return add_notes(result, remaining, sorted(set(rec.skipped)))
+
+
+def all_findings(rec):
+    """What a writing command compares before and after a change (R7.1): the record-level findings, those of
+    every rendered file, and those a fresh render would show (a registry finding reappears in the file drawn from
+    it, and is not an added one). An unreadable or unrenderable file is left to `check`."""
+    out = validate_structure(rec)
+    stamp = rec.now()
+    for key, _kind, e in rec.artifacts():
+        if not isinstance(key, str) or not KEY_RE.match(key) or not isinstance(e.get('file'), str):
+            continue
+        try:
+            out += check_html_findings(rec, key)
+            if key not in rec.broken():
+                out += check_html_findings(rec, key, render_one(rec, key, stamp.text, stamp.iso))
+        except Fail:
+            pass
+    return sorted(set(out))
+
+
+def compare_findings(pre, post):
+    """(added, remaining): the findings `post` has beyond `pre`, and how many of `pre` remain (R7.1).
+
+    A finding is identified by its requirement and its file, never by its message, and counted: a second
+    finding of the same kind in the same file is an added one."""
+    def group(findings):
+        out = {}
+        for fd in sorted(set(findings)):
+            out.setdefault((fd[0], fd[1]), []).append(fd)
+        return out
+    before, after = group(pre), group(post)
+    added, remaining = [], 0
+    for ident, fs in sorted(after.items()):
+        old = before.get(ident, [])
+        extra = len(fs) - len(old)
+        remaining += min(len(fs), len(old))
+        if extra > 0:
+            old_msgs = {fd[2] for fd in old}
+            new = [fd for fd in fs if fd[2] not in old_msgs]
+            added += new if len(new) >= extra else fs[-extra:]
+    return added, remaining
+
+
+def add_notes(result, remaining, skipped):
+    notes = []
+    if remaining:
+        notes.append('%d earlier finding%s remain%s; run check' % (remaining, '' if remaining == 1 else 's',
+                                                                   's' if remaining == 1 else ''))
+    if skipped:
+        notes.append('not rendered, because its content is invalid: %s; edit-content renders it once fixed'
+                     % ', '.join(skipped))
+    if notes:
+        result['notes'] = notes
     return result
 
 
 # --------------------------------------------------------------------------
-# session checkout files (R10.2)
+# session checkout files (R10.2) and the rule copy note (R10.5)
 # --------------------------------------------------------------------------
 
 def install_session_files(root):
-    """Copy the rule file and extend .gitignore. Returns (changed paths, notes)."""
+    """Extend .gitignore. Returns (changed paths, notes). The rule is not copied: the
+    session-start hook delivers it (R10.4)."""
     changed, notes = [], []
-    src = PLUGIN_DIR / 'rules' / RULE_NAME
-    dst = Path(root) / '.claude' / 'rules' / RULE_NAME
-    if not src.is_file():
-        notes.append('rules/%s is not in the plugin yet; the rule file was not copied' % RULE_NAME)
-    elif dst.is_file():
-        if dst.read_bytes() != src.read_bytes():
-            notes.append('.claude/rules/%s exists and differs from the plugin\'s; left as it is' % RULE_NAME)
-    else:
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(str(src), str(dst))
-        changed.append('.claude/rules/%s' % RULE_NAME)
     gi = Path(root) / '.gitignore'
     text = gi.read_text(encoding='utf-8') if gi.is_file() else ''
     have = {ln.strip().lstrip('/').rstrip('/') for ln in text.splitlines()}
@@ -1220,9 +1362,9 @@ def cmd_feature_new(args):
         if prefix in taken:
             raise Fail(1, 'prefix %s is already registered' % prefix)
         title = 'Feature: %s' % name
-        m['feature_artifacts'].append({
-            'key': key, 'title': title, 'url': '', 'file': R.artifact_file('feature', title),
-            'prefix': prefix, 'apps': apps, 'published_sha256': ''})
+        m['feature_artifacts'].append({      # never published: no url, no published_sha256 (R4.3)
+            'key': key, 'title': title, 'file': R.artifact_file('feature', title),
+            'prefix': prefix, 'apps': apps})
         d = rec.dir / 'content' / key
         if d.exists():
             raise Fail(1, 'content/%s already exists' % key)
@@ -1318,7 +1460,7 @@ def cmd_set_task_status(args):
             task['detail'] = args.detail
         if args.expected is not None:
             task['expected'] = args.expected
-        elif status in ('Live', 'Done'):
+        elif status in ('Live', 'Built'):
             task['expected'] = now.date          # R6.8
         owner = task['owner']
         if owner != 'project':
@@ -1351,16 +1493,46 @@ def cmd_set_task_status(args):
 
 
 def content_files(d):
-    """{name: bytes} of the regular files directly in a content folder; refuses anything else."""
+    """{name: bytes} of the regular files in a content folder, and of its assets/ folder as 'assets/<name>'
+    (images of decision options, section 5.4); refuses anything else."""
     d = Path(d)
     if not d.is_dir():
         raise Fail(1, '%s is not a folder' % d)
     out = {}
     for p in sorted(d.iterdir()):
+        if p.name == 'assets' and p.is_dir():
+            for q in sorted(p.iterdir()):
+                if not q.is_file():
+                    raise Fail(1, '%s: assets/ holds files only, found %s' % (d, q.name))
+                out['assets/' + q.name] = q.read_bytes()
+            continue
         if not p.is_file():
-            raise Fail(1, '%s: content folders hold files only, found %s' % (d, p.name))
+            raise Fail(1, '%s: content folders hold files only (and assets/), found %s' % (d, p.name))
         out[p.name] = p.read_bytes()
     return out
+
+
+def decisions_edit_problems(old, new):
+    """R5.15: an edit never removes a decision and never changes the choice of a decided one."""
+    try:
+        before = json.loads(old.decode('utf-8-sig'))['decisions']
+        before = [x for x in before if isinstance(x, dict)]
+    except (ValueError, KeyError, TypeError, AttributeError):
+        return []                     # nothing valid to hold the edit to
+    try:
+        after = {x.get('id'): x for x in json.loads(new.decode('utf-8-sig'))['decisions'] if isinstance(x, dict)}
+    except (ValueError, KeyError, TypeError, AttributeError):
+        after = {}
+    problems = []
+    for was in before:
+        now = after.get(was.get('id'))
+        if now is None:
+            problems.append('%s was removed; decisions are never removed (a changed mind is a new decision with "replaces")'
+                            % was.get('id'))
+        elif was.get('status') == 'decided' and any(now.get(k) != was.get(k) for k in ('status', 'chosen', 'decided')):
+            problems.append('%s is decided; its choice cannot change (a changed mind is a new decision with "replaces")'
+                            % was.get('id'))
+    return problems
 
 
 def cmd_export_content(args):
@@ -1379,6 +1551,7 @@ def cmd_export_content(args):
     dest.mkdir(parents=True, exist_ok=True)
     names = []
     for name, data in content_files(src).items():
+        (dest / name).parent.mkdir(parents=True, exist_ok=True)
         (dest / name).write_bytes(data)
         names.append(name)
     emit(args, {'command': 'export-content', 'key': key, 'to': str(dest), 'files': names},
@@ -1397,17 +1570,24 @@ def cmd_edit_content(args):
         if rec.entry(key) is None:
             raise Fail(1, 'unknown artifact key "%s"' % key)
         d = rec.dir / 'content' / key
-        new = {n: b.replace(b'\r\n', b'\n') for n, b in src.items()}
+        new = {n: (b if n.startswith('assets/') else b.replace(b'\r\n', b'\n')) for n, b in src.items()}
         if d.is_dir() and new == content_files(d):
             rec.noop = True
             return {'command': 'edit-content', 'key': key, 'files': sorted(src), 'no_change': True}
+        if (d / 'decisions.json').is_file():
+            bad = decisions_edit_problems((d / 'decisions.json').read_bytes(), new.get('decisions.json', b''))
+            if bad:
+                raise Fail(1, 'content is invalid; nothing written',
+                           [('R5.15', 'content/%s/decisions.json' % key, b) for b in bad])
         if d.exists():
             shutil.rmtree(str(d))
         d.mkdir(parents=True)
-        for name, data in src.items():
-            (d / name).write_bytes(data.replace(b'\r\n', b'\n'))
+        for name, data in new.items():
+            (d / name).parent.mkdir(parents=True, exist_ok=True)
+            (d / name).write_bytes(data)
         rec.invalidate()
-        rec.contents()                       # validates what the session supplied
+        if key in rec.broken():              # validates what the session supplied; other artifacts may stay as they are
+            raise Fail(1, 'content is invalid; nothing written', rec.broken()[key])
         rec.render_keys[key] = 'new'
         if key != FP_NAME:
             rec.render_keys[FP_NAME] = 'new'   # section 1 quotes each lede
@@ -1466,6 +1646,9 @@ def cmd_render(args):
     def apply(rec):
         now = rec.now()
         for key, _kind, e in rec.artifacts():
+            if key in rec.broken():          # cannot be rendered until edit-content fixes it (R7.1a)
+                rec.skipped.append(key)
+                continue
             old = read_html(rec.dir / e['file'])
             if args.all or old is None:
                 rec.render_keys[key] = 'new'
@@ -1492,6 +1675,9 @@ def cmd_mark_published(args):
         e = rec.entry(key)
         if e is None:
             raise Fail(1, 'unknown artifact key "%s"' % key)
+        if rec.kind(key) != 'full-progress':
+            raise Fail(1, '%s is a feature artifact: feature artifacts are standalone files in the repository (%s) '
+                          'and are never published; only the full-progress artifact is (R9.5)' % (key, e.get('file', '')))
         old = read_html(rec.dir / e['file'])
         st = existing_stamp(old)
         if old is None or st is None:
@@ -1499,13 +1685,11 @@ def cmd_mark_published(args):
         if render_one(rec, key, stamp_text_from_iso(st), st).replace('\r\n', '\n') != old:
             raise Fail(1, '%s differs from a fresh render; run render first' % e['file'])
         e['url'] = url
-        rec.invalidate()
-        # other artifacts may link to this url; refresh them keeping their stamps
-        stale = rerender_existing(rec)
+        # the hash of the committed render, not of the publish copy (R5.32): nothing links to the url,
+        # so no other artifact changes
         e['published_sha256'] = sha_of_file(rec.html_path(key))
         rec.message = 'docs/artifacts: published %s' % key
-        return {'command': 'mark-published', 'key': key, 'url': url,
-                'sha256': e['published_sha256'], 'refreshed': sorted(k for k in stale if k != key)}
+        return {'command': 'mark-published', 'key': key, 'url': url, 'sha256': e['published_sha256']}
 
     res = run_change(ctx, apply)
     emit(args, res, 'recorded %s -> %s (%s)' % (key, url, short(res)))
@@ -1574,6 +1758,40 @@ def load_for_read(args):
     return ctx, rec
 
 
+def rule_copy_notes():
+    """A note (never a finding) when the project keeps its own, differing copy of the rule (R10.5)."""
+    root = session_root() if artifact_queue is not None else None
+    src = PLUGIN_DIR / 'rules' / RULE_NAME
+    dst = Path(root) / '.claude' / 'rules' / RULE_NAME if root else None
+    try:
+        if dst is not None and dst.is_file() and src.is_file() and dst.read_bytes() != src.read_bytes():
+            return ['.claude/rules/%s differs from the plugin\'s rules/%s; the plugin now delivers the rule '
+                    'at session start, so this copy can be deleted' % (RULE_NAME, RULE_NAME)]
+    except OSError:
+        pass
+    return []
+
+
+def done_notes(rec):
+    """A note (never a finding) for the retired status Done, read as Built (R6.9)."""
+    out = []
+    if rec.old_done:
+        out.append('registry.json: %s still use the retired status Done; they are read as Built and the next '
+                   'writing command rewrites them' % ', '.join(sorted(rec.old_done)))
+    if rec.old_merged and not rec.old_done:
+        out.append('manifest.json: merged_status Done is read as Built; the next writing command rewrites it')
+    return out
+
+
+def feature_url_notes(rec):
+    """A note (never a finding) for an older manifest whose feature entries hold a url (R4.18)."""
+    if not rec.old_urls:
+        return []
+    return ['manifest.json: feature artifact(s) %s hold a url or published_sha256; feature artifacts are no longer '
+            'published, so the next writing command drops them and renders every artifact again'
+            % ', '.join(sorted(rec.old_urls))]
+
+
 def cmd_check(args):
     if R is None:
         raise Fail(2, 'render_artifacts.py cannot be imported: %s' % _RENDER_ERROR)
@@ -1591,22 +1809,93 @@ def cmd_check(args):
         findings += check_html_findings(rec, key)
         findings += fresh_render_findings(rec, key)
     findings = sorted(set(findings))
+    notes = rule_copy_notes() + done_notes(rec) + feature_url_notes(rec)
+    warnings = decision_warnings(rec)
     if getattr(args, 'json_out', False):
-        print(json.dumps({'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings]},
-                         indent=2, ensure_ascii=False))
-    elif findings:
-        print('\n'.join(fmt_finding(x) for x in findings))
+        result = {'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],
+                  'notes': notes}
+        if warnings:
+            result['warnings'] = [{'file': f, 'message': m} for f, m in warnings]
+        print(json.dumps(result, indent=2, ensure_ascii=False))
     else:
-        print('record is clean')
+        print('\n'.join(fmt_finding(x) for x in findings) if findings else 'record is clean')
+        for n in notes:
+            print('note: ' + n)
+        for f, m in warnings:
+            print('warning  %s: %s' % (f, m))
     return 1 if findings else 0
 
 
+def decision_warnings(rec):
+    """Section 5.4 (R5.26): an open decision with no task in Needs you in its feature. [(file, message)]"""
+    open_of = getattr(R, 'open_decisions', None)
+    if open_of is None:
+        return []
+    contents, _findings = load_contents(rec)
+    by_id = {t.get('id'): t for t in rec.tasks() if isinstance(t, dict)}
+    out = []
+    for key, content in sorted(contents.items()):
+        needs = [t for t in by_id.values() if t.get('owner') == key and t.get('status') == 'Needs you']
+        for d in open_of(content.get('decisions') or []):
+            tid = d.get('task')
+            if tid:
+                t = by_id.get(tid)
+                if t is None or t.get('owner') != key or t.get('status') != 'Needs you':
+                    out.append(('content/%s' % key, '%s is open, but its task %s is not in Needs you in this feature; '
+                                'set it to Needs you' % (d['id'], tid)))
+            elif not needs:
+                out.append(('content/%s' % key, '%s is open, but no task in this feature is in Needs you; add one or set '
+                            'the decision\'s "task"' % d['id']))
+    return out
+
+
+def feature_link_map(root, rec):
+    """R5.31: {feature key: (file:/// URL, path as text)} for the publish copy. The target is the feature
+    file in the session's checkout (`<root>/docs/artifacts/`) when it exists there, else the same file in
+    the record worktree, which always has it. The URL is the absolute path with forward slashes,
+    percent-encoded by pathlib (a space is %20)."""
+    out = {}
+    for key, kind, e in rec.artifacts():
+        if kind != 'feature' or not isinstance(e.get('file'), str):
+            continue
+        target = Path(root) / RECORD_REL / e['file']
+        if not target.is_file():
+            target = rec.dir / e['file']
+        absolute = Path(os.path.abspath(str(target)))
+        out[key] = (absolute.as_uri(), absolute.as_posix())
+    return out
+
+
+def write_publish_copy(ctx, rec, key, e):
+    """R5.31: render Full Progress, from the committed render's stamp, with absolute links to the feature
+    files, to .claude/artifacts-publish/<file> (git-ignored). Returns its path, or None when it cannot be made."""
+    old = read_html(rec.dir / e['file'])
+    st = existing_stamp(old)
+    if st is None:
+        return None
+    try:
+        html = render_one(rec, key, stamp_text_from_iso(st), st, links=feature_link_map(ctx.root, rec))
+    except Fail as fl:
+        warn('the publish copy of %s was not written (%s); publish the committed file as it is' % (key, fl.msg))
+        return None
+    dest = ctx.root / PUBLISH_REL / e['file']
+    write_text(dest, html)
+    if git(ctx.root, 'check-ignore', '-q', str(dest)).returncode == 1:
+        warn('.gitignore does not ignore %s/ (the publish copy); add that line' % PUBLISH_REL.replace(os.sep, '/'))
+    return str(dest)
+
+
 def cmd_pending(args):
+    """Lists Full Progress when its committed render changed since the last publish, and queued events.
+    A feature artifact is never listed (R9.5)."""
     ctx, rec = load_for_read(args)
     arts = []
     if rec is not None:
-        for key, _kind, e in rec.artifacts():
+        for key, kind, e in rec.artifacts():
+            if kind != 'full-progress':
+                continue
             p = rec.dir / str(e.get('file', ''))
+            copy_path = None
             if not p.is_file():
                 reason = 'not rendered yet; run render'
             else:
@@ -1619,8 +1908,9 @@ def cmd_pending(args):
                     reason = 'changed since last publish'
                 else:
                     continue
-            arts.append({'key': key, 'title': e.get('title', ''), 'file': e.get('file', ''), 'path': str(p),
-                         'url': e.get('url', ''), 'reason': reason})
+                copy_path = write_publish_copy(ctx, rec, key, e)
+            arts.append({'key': key, 'kind': kind, 'title': e.get('title', ''), 'file': e.get('file', ''),
+                         'path': copy_path or str(p), 'url': e.get('url', ''), 'reason': reason})
     queue = artifact_queue.read_queue(str(ctx.root))
     if args.json_out:
         print(json.dumps({'artifacts': arts, 'queue': queue}, indent=2, ensure_ascii=False))
@@ -1744,10 +2034,10 @@ def build_parser():
     s.add_argument('--record', help='a docs/artifacts folder (or the repository containing it)')
     s.set_defaults(func=cmd_check)
 
-    s = sub.add_parser('pending', parents=[j], help='artifacts to publish and queued events; exit 1 when any')
+    s = sub.add_parser('pending', parents=[j], help='Full Progress to publish (with its publish copy) and queued events; exit 1 when any')
     s.set_defaults(func=cmd_pending)
 
-    s = sub.add_parser('mark-published', parents=[w], help='record the URL and hash of what was published')
+    s = sub.add_parser('mark-published', parents=[w], help='record the URL and the hash of the committed render of Full Progress')
     s.add_argument('key')
     s.add_argument('--url', required=True)
     s.set_defaults(func=cmd_mark_published)

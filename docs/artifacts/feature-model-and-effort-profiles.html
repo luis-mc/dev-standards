@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Feature: Model and effort profiles</title>
 <meta name="artifact-kind" content="feature-artifact">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -251,7 +256,7 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
 }
 .status-count-tile .label { font-size: .82rem; color: var(--ink-muted); }
 .status-count-tile.status-live { border-top-color: var(--live); }
-.status-count-tile.status-done { border-top-color: var(--live); }
+.status-count-tile.status-built { border-top-color: var(--live); }
 .status-count-tile.status-running { border-top-color: var(--running-mark); }
 .status-count-tile.status-needs-you { border-top-color: var(--signal); }
 .status-count-tile.status-waiting { border-top-color: var(--rule-strong); }
@@ -274,7 +279,7 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
   background: var(--surface);
 }
 .status-chip.status-live { background: var(--live); color: var(--on-live); border-color: var(--live); }
-.status-chip.status-done { background: var(--done-bg); }
+.status-chip.status-built { background: var(--done-bg); }
 .status-chip.status-running { background: var(--running-bg); border-left: 3px solid var(--running-mark); }
 .status-chip.status-needs-you { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
 .status-chip.status-waiting { background: var(--waiting-bg); }
@@ -327,7 +332,7 @@ tr.status-group td {
 }
 table.history-table td:first-child { font-family: var(--font-mono); white-space: nowrap; }
 
-/* Earlier fold: Live or done rows older than the fold age, closed by default */
+/* Earlier fold: Live rows older than the fold age, closed by default */
 details.earlier { margin: .9em 0; }
 details.earlier > summary {
   cursor: pointer;
@@ -349,6 +354,17 @@ details.earlier[open] > summary { margin-bottom: .2em; }
   color: var(--ink-muted);
 }
 a .task-id { color: inherit; }
+
+/* The path of a linked feature file, beside its link in the publish copy, to copy by hand */
+.local-path {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: .7rem;
+  line-height: 1.3;
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
 
 /* Links and focus */
 a { color: var(--signal); text-underline-offset: .15em; }
@@ -417,7 +433,100 @@ li { margin: .25em 0; }
   font-family: var(--font-mono);
 }
 
+/* Decisions: the options the owner was shown, side by side, the chosen one marked */
+.decision-list { margin: 1em 0; }
+.decision {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 1rem;
+  margin: 0 0 1.2rem;
+}
+.decision-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .7rem;
+  align-items: baseline;
+  margin: 0;
+  font-size: 1.12rem;
+}
+.decision-id {
+  font-family: var(--font-mono);
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+.decision-question { flex: 1 1 14rem; min-width: 0; overflow-wrap: anywhere; }
+.decision-meta {
+  font-family: var(--font-mono);
+  font-size: .76rem;
+  color: var(--ink-muted);
+  margin: .4em 0 .8em;
+}
+.decision-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: .75rem;
+}
+.decision-option {
+  min-width: 0;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: .8rem .9rem;
+}
+.decision-option.decision-chosen {
+  background: var(--surface);
+  border: 3px solid var(--signal);
+  padding: calc(.8rem - 2px) calc(.9rem - 2px);
+}
+.decision-option.decision-muted { background: var(--surface-2); color: var(--ink-muted); }
+.decision-option-head { display: flex; flex-wrap: wrap; gap: .35rem .5rem; align-items: baseline; }
+.decision-label {
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.decision-chip, .decision-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding: .1em .45em;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+  background: var(--surface);
+}
+.decision-chip-chosen { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
+.decision-chip-muted { background: var(--surface-2); border-style: dashed; color: var(--ink-muted); }
+.decision-tag { border-color: var(--signal); }
+.decision-summary { margin: .5em 0 0; }
+.decision-preview { margin-top: .7em; max-width: 100%; overflow-x: auto; }
+.decision-image { display: block; max-width: 100%; height: auto; border: 1px solid var(--rule); }
+.decision-words {
+  margin: .8em 0 0;
+  padding-left: .8em;
+  border-left: 3px solid var(--signal);
+  font-style: italic;
+  color: var(--ink);
+}
+details.decision-replaced { padding: .6rem 1rem; }
+details.decision-replaced > summary { cursor: pointer; color: var(--ink-muted); }
+details.decision-replaced > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+details.decision-replaced[open] > summary { margin-bottom: .6em; }
+.decision-replaced-by {
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
 /* Phone width */
+@media (max-width: 40rem) {
+  .decision-options { grid-template-columns: 1fr; }
+  .decision { padding: .8rem; }
+}
 @media (max-width: 56rem) {
   .layout { display: block; padding-inline: 1rem; }
   nav.contents {
@@ -467,18 +576,22 @@ figure.diagram figcaption b{color:var(--ink)}
 .dg .dg-line{stroke:var(--ink-muted);stroke-width:1.5;fill:none}
 .dg .dg-arrowhead{fill:var(--ink-muted)}
 </style>
+</head>
+<body>
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Today</a><a href="#s3"><b>3</b>Where model and effort come from</a><a href="#s4"><b>4</b>Consequences</a><a href="#s5"><b>5</b>The profiles</a><a href="#s6"><b>6</b>Requirements and tests</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Model and effort profiles</h1><p>Which model and which effort every kind of agent and every skill uses, where each setting lives, and what follows from it. Built into <code>claude-setup</code> in luismc-project-setup.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-10T14:05+01:00">10 Oct 14:05</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T00:05+01:00">11 Oct 00:05</time> (Lisbon)</p>
 <p class="lede">The profiles are decided and the effort question is live (DS5, luismc-project-setup 11.3.0). Role rules, per-skill profiles and the alias-drift warning are live too, in luismc-project-setup 12.0.0 (DS6, #10). Every task here is also on <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">Full Progress: dev-standards</a>. <strong>Nothing needs you.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">6</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">2</div><div class="label">done</div></div></div>
-<p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-done">Done</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">8</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div></div>
+<p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group" data-group="done"><td colspan="4"><strong>Live or done</strong></td></tr>
+<tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next</strong></td></tr>
+<tr data-task="MP7"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">MP7</span>Defaults: Opus at medium, Sonnet at high</td><td>Owner confirmed: Opus at medium and Sonnet at medium everywhere (replaces &#x27;Sonnet at high&#x27; in this row&#x27;s title). Agent changing the shipped defaults (skill profiles, claude-setup&#x27;s preselected answers, top-level effort, the architect agent, the rule&#x27;s agent lines). Rides the 7.0.0 release. Already applied to your own ~/.claude: both models medium, top-level medium, rule lines medium (backups in the session scratchpad).</td><td>11 Oct ~01:00</td></tr>
+<tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
+<tr data-task="MP1"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">MP1</span>Inventory of models per agent type</td><td>Checked against the Claude Code docs; corrects the first answer (Explore and Plan run on the main session’s model). Figure 1.</td><td>10 Oct</td></tr>
+<tr data-task="MP2"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">MP2</span>Profile decisions</td><td>Explore and Plan stay on Opus; skills profiled by kind of work; a session-start warning for alias drift. Section 7.</td><td>10 Oct</td></tr>
 <tr data-task="DS5"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS5</span>claude-setup: medium or high effort per model</td><td>Asked on every run, high preselected for code agents; written to modelSettings and the delegation rule; top-level effortLevel high for cloud agents. luismc-project-setup 11.3.0, PR #2.</td><td>10 Oct</td></tr>
-<tr data-task="MP1"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">MP1</span>Inventory of models per agent type</td><td>Checked against the Claude Code docs; corrects the first answer (Explore and Plan run on the main session’s model). Figure 1.</td><td>10 Oct</td></tr>
-<tr data-task="MP2"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">MP2</span>Profile decisions</td><td>Explore and Plan stay on Opus; skills profiled by kind of work; a session-start warning for alias drift. Section 7.</td><td>10 Oct</td></tr>
 <tr data-task="MP3"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">MP3</span>Role rules</td><td>One line per role in .claude/rules/agents-and-integration.md: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts, Haiku for log triage. luismc-project-setup 12.0.0.</td><td>10 Oct</td></tr>
 <tr data-task="MP4"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">MP4</span>Per-skill model and effort</td><td>model and effort in every plugin SKILL.md by kind of work, checked against model-profiles.json by test_model_profiles.py. luismc-project-setup 12.0.0.</td><td>10 Oct</td></tr>
 <tr data-task="MP5"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">MP5</span>Alias-drift warning</td><td>effort_drift.py warns at session start when the current Opus or Sonnet ID has no saved effort. Shipped in 12.0.0 and installed in the owner’s ~/.claude.</td><td>10 Oct</td></tr>
@@ -541,16 +654,90 @@ figure.diagram figcaption b{color:var(--ink)}
 </tbody></table></div>
 </section>
 <section id="s7"><h2><span class="section-number">&sect; 7</span>Decisions</h2>
-<div class="table-scroll"><table><thead><tr><th>#</th><th>Question</th><th>Decision (10 Oct)</th></tr></thead><tbody>
-<tr><td>1</td><td>Effort for each model of the split?</td><td>Asked on every setup, <strong>high preselected for code agents</strong>; top-level <code>effortLevel</code> high for cloud agents.</td></tr>
-<tr><td>2</td><td>Where do the role rules live?</td><td>In a plugin-owned rule file, <code>.claude/rules/agents-and-integration.md</code>, replaced on every run.</td></tr>
-<tr><td>3</td><td>Override Explore and Plan?</td><td><strong>No</strong>; both stay on the main session&rsquo;s model (Opus).</td></tr>
-<tr><td>4</td><td>Per-skill profiles?</td><td><strong>By kind of work</strong>: judgment on Opus high, mechanical on Sonnet medium, claude-setup on Sonnet high.</td></tr>
-<tr><td>5</td><td>Saved effort when an alias moves?</td><td><strong>Warn at session start</strong> and ask to re-run claude-setup; aliases keep following new models.</td></tr>
-</tbody></table></div>
+<div class="decision-list">
+<article class="decision decision-decided" data-decision="D5">
+<h3 class="decision-head"><span class="decision-id">D5</span> <span class="decision-question">Saved effort when an alias moves?</span></h3>
+<p class="decision-meta">Asked 10 Oct · Decided 10 Oct</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Warn at session start</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Oct</span></div>
+<p class="decision-summary">A session-start hook checks that the current Opus and Sonnet IDs have an effort entry and tells you to re-run claude-setup if not. Aliases keep following new models.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Pin full model IDs</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Settings name exact IDs (claude-opus-5-5) everywhere, so nothing drifts; new models are adopted only when claude-setup is re-run.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D4">
+<h3 class="decision-head"><span class="decision-id">D4</span> <span class="decision-question">Per-skill profiles?</span></h3>
+<p class="decision-meta">Asked 10 Oct · Decided 10 Oct</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">By kind of work</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Oct</span></div>
+<p class="decision-summary">Judgment skills (spec-new, the three audits, tech-stack-setup, auth-setup) on Opus at high; mechanical skills (spec-check, project-artifact-check, task-add, task-status-update) on Sonnet at medium; claude-setup on Sonnet at high.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">All inherit the session</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No per-skill model or effort; every skill runs on whatever the main session uses.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D3">
+<h3 class="decision-head"><span class="decision-id">D3</span> <span class="decision-question">Override Explore and Plan?</span></h3>
+<p class="decision-meta">Asked 10 Oct · Decided 10 Oct</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Explore on Sonnet, Plan on Opus</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">The plugin ships an agent named Explore pinned to Sonnet (search is mechanical); Plan stays on Opus (it is design work).</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Explore on Haiku, Plan on Opus</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Cheapest search; Haiku may miss subtle matches in large repos.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Leave both on Opus</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Oct</span></div>
+<p class="decision-summary">No override; highest quality, highest cost.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D2">
+<h3 class="decision-head"><span class="decision-id">D2</span> <span class="decision-question">Where do the role rules live?</span></h3>
+<p class="decision-meta">Asked 10 Oct · Decided 10 Oct</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Plugin-owned rule file</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Oct</span></div>
+<p class="decision-summary">Install the block as .claude/rules/agents-and-integration.md, replaced on every run like model-delegation.md. Reaches every project, including ones with a hand-written CLAUDE.md. The CLAUDE.md template drops those sections.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">CLAUDE.md template only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Put the block in the CLAUDE.md template. Only projects without a CLAUDE.md get it.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D1">
+<h3 class="decision-head"><span class="decision-id">D1</span> <span class="decision-question">Effort for each model of the split?</span></h3>
+<p class="decision-meta">Asked 10 Oct · Decided 10 Oct</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Fixed: Sonnet high, Opus asked</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Code agents always high (per-model entry + the Agent call&#x27;s effort), plus top-level effortLevel high for cloud agents. The setup asks only the Opus main-session effort. DS5 is reworked to this and folded into DS6.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Fixed: everything high</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No question at all. Top-level effortLevel high and both per-model entries high. DS5&#x27;s question is dropped.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Keep asking, high preselected</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Oct</span></div>
+<p class="decision-summary">DS5 ships as built, but high is offered as the default answer for code agents, and top-level effortLevel high is added for cloud agents.</p>
+</div>
+</div>
+</article>
+</div>
 </section>
 <section id="s8"><h2><span class="section-number">&sect; 8</span>History</h2>
 <div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
+<tr><td>10 Oct 23:30</td><td>Decisions rebuilt in the 1.1.0 form: every option you were offered, the recommendation, and your choice in your words (AR23). The page is now a file in docs/artifacts, no longer a claude.ai artifact (AR26).</td></tr>
 <tr><td>10 Oct 13:40</td><td>MP3 to MP6 live: released in luismc-project-setup 12.0.0 (#10, 12:56); the alias-drift hook also installed in the owner’s ~/.claude.</td></tr>
 <tr><td>10 Oct 12:23</td><td>Expected times are now a date and a Lisbon time, not “today”; MP3 to MP6 ship with the DS6 release at about 13:45. No other project is named.</td></tr>
 <tr><td>10 Oct 11:07</td><td>Created. The owner made model and effort profiles a feature of their own. DS2 and DS5 moved here from the project tasks; MP1 to MP6 added; three figures (who runs on what, where settings come from, alias drift); the decisions of 10 October.</td></tr>
@@ -596,3 +783,5 @@ figure.diagram figcaption b{color:var(--ink)}
   } catch (error) {}
 })();
 </script>
+</body>
+</html>

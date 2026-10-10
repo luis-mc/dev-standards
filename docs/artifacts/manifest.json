@@ -12,34 +12,30 @@
     "title": "Full Progress: dev-standards",
     "url": "https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv",
     "file": "full-progress-dev-standards.html",
-    "published_sha256": "705a5f6376eabf53a4b43ef33fa1beb1bae196c45eb39f73548e4236e50c2e88"
+    "published_sha256": "074989c5c7fec56a9253c0606d377f1ea31e1d1adcf1d8a4b8ed8b27886f0c22"
   },
   "feature_artifacts": [
     {
       "key": "artifacts",
       "title": "Feature: Project artifacts standard",
-      "url": "https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq",
       "file": "feature-project-artifacts-standard.html",
       "prefix": "AR",
       "apps": [
         "luismc-artifacts"
-      ],
-      "published_sha256": "53ad95d0796b4ee12aebe71ad1a5106219be07a5d121f3dce02c0a4ce9687cf3"
+      ]
     },
     {
       "key": "models",
       "title": "Feature: Model and effort profiles",
-      "url": "https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn",
       "file": "feature-model-and-effort-profiles.html",
       "prefix": "MP",
       "apps": [
         "luismc-project-setup"
-      ],
-      "published_sha256": "f941fc4d947ac854c8d213f3443c8763c17065ec2dc7d0e3fd399e13359bd42a"
+      ]
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-10-10T15:20+01:00"
+  "updated": "2026-10-11T00:06+01:00"
 }

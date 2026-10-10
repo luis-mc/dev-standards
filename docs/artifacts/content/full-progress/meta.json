@@ -1,6 +1,6 @@
 {
  "title": "Full Progress: dev-standards",
  "hero": "All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.",
- "lede": "All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class=\"task-id\">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class=\"task-id\">AR12</span>), and the secret-scan fixes (<span class=\"task-id\">DS15</span>, <span class=\"task-id\">AR19</span>, <span class=\"task-id\">DS16</span>). Nothing is running.",
+ "lede": "All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class=\"task-id\">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class=\"task-id\">AR12</span>), and the secret-scan fixes (<span class=\"task-id\">DS15</span>, <span class=\"task-id\">AR19</span>, <span class=\"task-id\">DS16</span>). Not released yet: the round toward STACKSPEC 7.0.0 (<span class=\"task-id\">DS17</span> to <span class=\"task-id\">DS21</span>) is built and joined, so those rows say Done. The tests on the joined branch are running; then one ready PR, its CI, and the merge, about 21:45. Each row turns Live only when the merge lands.",
  "extra_css": ""
 }

@@ -5,4 +5,5 @@ __pycache__/
 *.pyc
 .claude/artifacts-queue.json
 .claude/artifacts-stop-state.json
+.claude/artifacts-publish/
 .claude/worktrees/

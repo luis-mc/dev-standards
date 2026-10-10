@@ -1,36 +1,36 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T15:19+01:00",
+  "updated": "2026-10-11T00:06+01:00",
   "tasks": [
     {
       "id": "AR2",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "Proposal reviewed",
       "detail": "Twelve findings; each one and the change it led to is in section 7.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T22:54+01:00"
     },
     {
       "id": "AR3",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "Moved to dev-standards and rewritten",
       "detail": "This artifact now belongs to dev-standards and describes the agreed design; Full Progress: dev-standards created.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T22:54+01:00"
     },
     {
       "id": "AR4",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "Answer the open decisions",
       "detail": "Answered: one task registry; branch names start with the task ID; catch-up at session start; each project's own design, the plugin's default when it has none; an App / service column on the full-progress artifact.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T22:55+01:00"
     },
     {
       "id": "AR5",
@@ -136,11 +136,11 @@
       "id": "AR16",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "dev-standards record in docs/artifacts",
       "detail": "Manifest, registry, HTML and the interim generator committed to main as docs-only commits.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T22:55+01:00"
     },
     {
       "id": "AR17",
@@ -181,6 +181,86 @@
       "detail": "mark-published, design set, edit-content, render and feature-new no longer bump the registry, so the full-progress artifact stays clean after publishing; three regression tests. dev-standards also got its rule file and gitignore entries. #21.",
       "expected": "10 Oct",
       "changed": "2026-10-10T15:19+01:00"
+    },
+    {
+      "id": "AR21",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Live",
+      "item": "Every activity is a task, in every project",
+      "detail": "Released in luismc-artifacts 1.1.0 (#33, 054eafb, 23:12): every activity is a task, the session's own included; the rule reaches every project at session start; the end-of-turn hook blocks background work with no Running task.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T23:14+01:00"
+    },
+    {
+      "id": "AR22",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Live",
+      "item": "Decisions show every option and the owner's choice",
+      "detail": "Released in luismc-artifacts 1.1.0 (#33, 23:12): decisions.json drawn as option cards with the owner's choice, Not chosen, Recommended, open = Needs you.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T23:15+01:00"
+    },
+    {
+      "id": "AR23",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Live",
+      "item": "Convert dev-standards' decisions",
+      "detail": "Applied at 00:10: both feature pages show their decisions as option cards, every option offered, the recommendation, and your choice in your words (9 for Project artifacts standard, 5 for Model and effort profiles).",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:06+01:00"
+    },
+    {
+      "id": "AR24",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "Integrate and release luismc-artifacts 1.1.0",
+      "detail": "Merged (#33, 23:12; 1.1.1 #36, 00:05). The record is migrated to 1.1 and clean; the feature pages are local files; the two old claude.ai feature artifacts were deleted with your confirmation. Left: publish Full Progress once after the 01:00 reset.",
+      "expected": "11 Oct ~01:05",
+      "changed": "2026-10-11T00:06+01:00"
+    },
+    {
+      "id": "AR25",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Live",
+      "item": "Rename Done to Built",
+      "detail": "Released in luismc-artifacts 1.1.0 (#33, 23:12): Done is now Built (finished, not released).",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T23:15+01:00"
+    },
+    {
+      "id": "AR26",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Live",
+      "item": "Feature pages as repo files; fewer publishes",
+      "detail": "Released in luismc-artifacts 1.1.0 (#33, 23:12): Full Progress publishes once per turn; feature pages are standalone files linked as local paths.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T23:15+01:00"
+    },
+    {
+      "id": "AR27",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Live",
+      "item": "Repair a record one artifact at a time",
+      "detail": "Released in luismc-artifacts 1.1.1 (#36, 0a6264f, 00:05): a change may leave earlier findings but may not add new ones, so a record repairs one artifact at a time. This repo's record migrated with it.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:05+01:00"
+    },
+    {
+      "id": "AR28",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "Update the installed plugins",
+      "detail": "Approved by you for tonight: after 7.0.0 and 1.1.1 merge, refresh the dev-standards marketplace and update luismc-artifacts and luismc-project-setup in ~/.claude (backups first), so every session stops publishing after each change once restarted.",
+      "expected": "11 Oct ~01:30",
+      "changed": "2026-10-10T23:22+01:00"
     },
     {
       "id": "DS1",
@@ -343,24 +423,124 @@
       "changed": "2026-10-10T14:47+01:00"
     },
     {
+      "id": "DS17",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Branch gate: setup first, 30-minute limit, fail fast",
+      "detail": "Built in draft #25: the gate runs a frozen-lockfile setup step first, stops at the first failure (--keep-going runs everything), stops after 30 min with exit 4 (whole process tree killed) and writes a log per step; gate_verify never trusts a timed-out or setup-failed result. Joined.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T22:53+01:00"
+    },
+    {
+      "id": "DS18",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Pre-push guard flakes",
+      "detail": "Built in draft #26. Causes shown: Vitest's 5 s default timeout on the whole-repo guard scan (no CI=true), and guards scanning other agents' worktrees nested under .claude/worktrees (a conflict marker there failed this push). Fixed in every track; fast_guards now has a 5-min limit per step, logs, and a FAIL line naming the check. gitleaks timing not proven. Joined.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T22:53+01:00"
+    },
+    {
+      "id": "DS19",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Automatic branch and worktree cleanup",
+      "detail": "Built in draft #24: cleanup.py removes a merged train's branches, gate-result refs, local branches and worktrees. It keeps open, unmerged, dirty or unpushed work and anything gh cannot classify. train-cleanup.yml runs it on a merge into main; join.py runs it locally first. 175 checks, 36 mutants. Waiting for the join.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T22:53+01:00"
+    },
+    {
+      "id": "DS20",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Keep only the newest build artifact",
+      "detail": "Built in draft #23: artifact_prune.py keeps the newest GitHub Actions build artifact of each name (expired skipped, 404 means already gone, --keep below 1 refused); artifact-prune.yml runs after every CI run and daily. 20 tests with 12 mutants. Waiting for the join.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T22:53+01:00"
+    },
+    {
+      "id": "DS21",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Windows-only test failures",
+      "detail": "Built in draft #22: test_spec_check loads spec_check through the symlink placeholder Windows checks out; test_authspec_check reads the spec as UTF-8. Both pass on Windows with no environment variable; every other tools/ suite passes there too. Waiting for the join.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T22:54+01:00"
+    },
+    {
+      "id": "DS22",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Integrate and release STACKSPEC 7.0.0",
+      "detail": "Ready PR #27, not merged. Fixed so far: the secret-scan hit, the Linux-only cleanup test, DS24 joined (found the stale go.sum bug). Waiting for DS23 and DS25, then rejoin, CI watched by commit, merge on green.",
+      "expected": "11 Oct ~00:30",
+      "changed": "2026-10-10T23:15+01:00"
+    },
+    {
+      "id": "DS23",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Pre-push checks the pushed commit",
+      "detail": "Agent building; draft #32 open. When the pushed commit is not the checked-out one, the guards run on the pushed commit in a temporary worktree.",
+      "expected": "10 Oct ~23:45",
+      "changed": "2026-10-10T23:15+01:00"
+    },
+    {
+      "id": "DS24",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Template build check",
+      "detail": "Built in draft #30, joined, not released: template-build.yml and tools/template_build_check.py compile and run the Go, Rust and .NET guard starters in a scaffold, prove each guard fails on a planted conflict marker and ignores nested checkouts, and prove setup fails on a stale lockfile. Ran in Docker for all three. Found and fixed: Go's setup passed a stale go.sum; it now runs go list -mod=readonly -deps -test ./....",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T21:58+01:00"
+    },
+    {
+      "id": "DS25",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Cleanup needs gh to delete local work",
+      "detail": "Agent building (same agent as DS23): without gh, cleanup.py --local lists and deletes nothing.",
+      "expected": "10 Oct ~23:45",
+      "changed": "2026-10-10T23:15+01:00"
+    },
+    {
+      "id": "DS26",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "After 7.0.0: repo setting, cleanup, global rules",
+      "detail": "Approved by you for tonight: turn on delete-branch-after-merge for dev-standards; run cleanup.py on dev-standards (merged DS*/AR* branches, gate refs, finished worktrees; open, unmerged or dirty work is kept); add the new rule lines to ~/.claude/rules/agents-and-integration.md, with a backup.",
+      "expected": "11 Oct ~01:00",
+      "changed": "2026-10-10T23:22+01:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
-      "status": "Done",
+      "status": "Live",
       "item": "Inventory of models per agent type",
       "detail": "Checked against the Claude Code docs; corrects the first answer (Explore and Plan run on the main session’s model). Figure 1.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T22:55+01:00"
     },
     {
       "id": "MP2",
       "owner": "models",
       "app": "luismc-project-setup",
-      "status": "Done",
+      "status": "Live",
       "item": "Profile decisions",
       "detail": "Explore and Plan stay on Opus; skills profiled by kind of work; a session-start warning for alias drift. Section 7.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T22:55+01:00"
     },
     {
       "id": "MP3",
@@ -401,6 +581,16 @@
       "detail": "Profile test, hook test and claude-setup checks pass; released in ready PR #10 (0751e61).",
       "expected": "10 Oct",
       "changed": "2026-10-10T12:00+01:00"
+    },
+    {
+      "id": "MP7",
+      "owner": "models",
+      "app": "luismc-project-setup",
+      "status": "Running",
+      "item": "Defaults: Opus at medium, Sonnet at high",
+      "detail": "Owner confirmed: Opus at medium and Sonnet at medium everywhere (replaces 'Sonnet at high' in this row's title). Agent changing the shipped defaults (skill profiles, claude-setup's preselected answers, top-level effort, the architect agent, the rule's agent lines). Rides the 7.0.0 release. Already applied to your own ~/.claude: both models medium, top-level medium, rule lines medium (backups in the session scratchpad).",
+      "expected": "11 Oct ~01:00",
+      "changed": "2026-10-10T23:33+01:00"
     }
   ]
 }

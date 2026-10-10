@@ -1,9 +1,9 @@
 {
-  "description": "luismc-artifacts: queue status events after commands, keep project artifacts published at the end of a turn, catch up at session start (ARTIFACTSPEC section 8)",
+  "description": "luismc-artifacts: queue status events after commands, note background work, keep Full Progress published (once, at the end of a turn) and background work recorded, deliver the rule and catch up at session start (ARTIFACTSPEC section 8)",
   "hooks": {
     "PostToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|Agent|Task",
         "hooks": [
           {
             "type": "command",
