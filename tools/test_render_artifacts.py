@@ -11,10 +11,12 @@ from __future__ import annotations
 import copy
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
 import traceback
+from html.parser import HTMLParser
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLUGIN = os.path.join(ROOT, 'claude', 'plugins', 'artifacts')
@@ -23,7 +25,8 @@ sys.path.insert(0, os.path.join(PLUGIN, 'scripts'))
 import render_artifacts as R  # noqa: E402
 
 STAMP_TEXT, STAMP_ISO = '10 Oct 12:39', '2026-10-10T12:39+01:00'
-FP_URL, AR_URL = 'https://claude.ai/artifact/fp-url', 'https://claude.ai/artifact/ar-url'
+FP_URL = 'https://claude.ai/artifact/fp-url'
+AR_FILE, MP_FILE = 'feature-project-artifacts-standard.html', 'feature-model-and-effort-profiles.html'
 
 
 # ------------------------------------------------------------------ fixture: the shape of the dev-standards record
@@ -59,10 +62,10 @@ def base_manifest():
         'full_progress_artifact': {'key': 'full-progress', 'title': 'Full Progress: dev-standards', 'url': FP_URL,
                                    'file': 'full-progress-dev-standards.html', 'published_sha256': ''},
         'feature_artifacts': [
-            {'key': 'artifacts', 'title': 'Feature: Project artifacts standard', 'url': AR_URL,
-             'file': 'feature-project-artifacts-standard.html', 'prefix': 'AR', 'apps': ['luismc-artifacts'], 'published_sha256': ''},
-            {'key': 'models', 'title': 'Feature: Model and effort profiles', 'url': '',
-             'file': 'feature-model-and-effort-profiles.html', 'prefix': 'MP', 'apps': ['luismc-project-setup'], 'published_sha256': ''},
+            {'key': 'artifacts', 'title': 'Feature: Project artifacts standard',
+             'file': AR_FILE, 'prefix': 'AR', 'apps': ['luismc-artifacts']},
+            {'key': 'models', 'title': 'Feature: Model and effort profiles',
+             'file': MP_FILE, 'prefix': 'MP', 'apps': ['luismc-project-setup']},
         ],
         'project_prefixes': ['DS'], 'updated': STAMP_ISO,
     }
@@ -116,7 +119,8 @@ class Fixture:
         manifest = kw.get('manifest', self.manifest)
         registry = kw.get('registry', self.registry)
         return R.render_artifact(manifest, registry, kw.get('contents', self.contents), key, kw.get('plugin', PLUGIN),
-                                 self.record, kw.get('stamp_text', STAMP_TEXT), kw.get('stamp_iso', STAMP_ISO))
+                                 self.record, kw.get('stamp_text', STAMP_TEXT), kw.get('stamp_iso', STAMP_ISO),
+                                 links=kw.get('links'))
 
     def check(self, html, key, **kw):
         return R.check_html(html, key, kw.get('manifest', self.manifest), kw.get('registry', self.registry),
@@ -173,13 +177,120 @@ def render_is_deterministic(fx):
 
 @test
 @with_fixture
-def render_is_a_fragment_beginning_with_title(fx):
-    for key in ('full-progress', 'artifacts'):
-        out = fx.render(key)
-        assert out.startswith('<title>'), out[:40]
-        for tag in ('<html', '<head>', '<body', '{{', '}}'):
-            assert tag not in out, tag
-        assert out.endswith('\n')
+def full_progress_is_a_fragment_beginning_with_title(fx):
+    """R5.29: the Artifact tool takes a fragment."""
+    out = fx.render('full-progress')
+    assert out.startswith('<title>'), out[:40]
+    for tag in ('<!doctype', '<html', '<head>', '<body', '{{', '}}'):
+        assert tag not in out, tag
+    assert out.endswith('\n')
+
+
+class _Collect(HTMLParser):
+    """Reads a document the way a browser does, with no help from the renderer's own DOM."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.tags, self.links, self.scripts, self.styles, self.ids, self.metas = [], [], [], [], set(), []
+        self.stack, self.text, self.errors = [], {}, []
+
+    def handle_decl(self, decl):
+        self.tags.append(('decl', decl.lower()))
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        self.tags.append((tag, a))
+        self.stack.append(tag)
+        if 'id' in a:
+            self.ids.add(a['id'])
+        if tag == 'link':
+            self.links.append(a)
+        elif tag == 'meta':
+            self.metas.append(a)
+        elif tag in ('script', 'style'):
+            (self.scripts if tag == 'script' else self.styles).append([a, ''])
+
+    def handle_endtag(self, tag):
+        if tag in self.stack:
+            while self.stack.pop() != tag:
+                pass
+
+    def handle_data(self, data):
+        if self.stack and self.stack[-1] in ('script', 'style'):
+            (self.scripts if self.stack[-1] == 'script' else self.styles)[-1][1] += data
+        if self.stack and self.stack[-1] == 'title':
+            self.text['title'] = self.text.get('title', '') + data
+
+
+def read_document(html):
+    parser = _Collect()
+    parser.feed(html)
+    parser.close()
+    return parser
+
+
+@test
+@with_fixture
+def feature_artifact_is_a_standalone_document(fx):
+    """R5.27: doctype, html lang, head (charset, viewport, title, fonts link, style) and body."""
+    out = fx.render('artifacts')
+    assert out.startswith('<!doctype html>\n<html lang="en">\n<head>\n'), out[:60]
+    assert out.rstrip().endswith('</body>\n</html>')
+    doc = read_document(out)
+    names = [n for n, _ in doc.tags]
+    assert names.index('html') < names.index('head') < names.index('title') < names.index('style') < names.index('body') < names.index('main')
+    assert ('decl', 'doctype html') in doc.tags
+    assert dict(doc.tags[names.index('html')][1]) == {'lang': 'en'}
+    metas = doc.metas
+    assert {'charset': 'utf-8'} in metas
+    assert {'name': 'viewport', 'content': 'width=device-width, initial-scale=1'} in metas
+    assert doc.text['title'] == 'Feature: Project artifacts standard'
+    assert [s[0].get('id') for s in doc.styles] == ['design-tokens', 'structure-css', 'extra-css']
+    assert '{{' not in out and '}}' not in out
+    assert fx.check(out, 'artifacts') == []
+
+
+@test
+@with_fixture
+def feature_artifact_needs_no_host(fx):
+    """R5.28: opens by double-click: CSS inlined, nothing external but the fonts link, both themes' tokens present."""
+    out = fx.render('artifacts')
+    doc = read_document(out)
+    css = {s[0]['id']: s[1] for s in doc.styles}
+    assert css['structure-css'] == R.structure_css(PLUGIN)                 # project-artifact.css, inlined unchanged
+    tokens = css['design-tokens']
+    assert tokens == R.design_css(fx.manifest, PLUGIN, fx.record)
+    assert R.check_tokens(tokens) == []
+    assert ':root[data-theme="dark"]' in tokens and 'prefers-color-scheme: dark' in tokens   # light and dark
+    hosts = sorted((l['rel'], l['href'].split('/')[2]) for l in doc.links)
+    assert hosts == [('preconnect', 'fonts.googleapis.com'), ('preconnect', 'fonts.gstatic.com'),
+                     ('stylesheet', 'fonts.googleapis.com')], hosts
+    assert not any('src' in s[0] for s in doc.scripts)                      # one inline script, the template's own
+    assert len(doc.scripts) == 1 and doc.scripts[0][1] == R._ui_script(PLUGIN, 'feature')
+    for name, attrs in doc.tags:
+        if isinstance(attrs, dict):
+            assert not set(attrs) & {'src', 'srcset', 'poster', 'data'}, (name, attrs)
+    assert 'href="project-artifact.css"' not in out and '@import' not in ''.join(css.values())
+    # every contents link lands on a section of the same file
+    hrefs = [a.attrs['href'] for a in R.find_all(R.find(R.parse_dom(out), 'nav'), 'a')]
+    assert hrefs and all(h.startswith('#') and h[1:] in doc.ids for h in hrefs), hrefs
+    # the same holds with a project design of its own
+    write(os.path.join(fx.record, 'design.css'), R.design_css(fx.manifest, PLUGIN, fx.record).replace('Archivo', 'Rubik'))
+    manifest = copy.deepcopy(fx.manifest)
+    manifest['design'] = 'design.css'
+    own = fx.render('artifacts', manifest=manifest)
+    assert 'family=Rubik' in own and fx.check(own, 'artifacts', manifest=manifest) == []
+
+
+@test
+@with_fixture
+def a_feature_artifact_without_fonts_needs_no_link_at_all(fx):
+    plain = R.design_css(fx.manifest, PLUGIN, fx.record).replace('https://fonts.googleapis.com/css2?', 'https://example.test/css2?')
+    write(os.path.join(fx.record, 'design.css'), plain)
+    manifest = copy.deepcopy(fx.manifest)
+    manifest['design'] = 'design.css'
+    out = fx.render('artifacts', manifest=manifest)
+    assert read_document(out).links == [] and fx.check(out, 'artifacts', manifest=manifest) == []
 
 
 @test
@@ -244,7 +355,7 @@ def full_progress_structure(fx):
     assert cells == [['Feature: Project artifacts standard', 'AR5 to AR16', 'The design is agreed.'],
                      ['Feature: Model and effort profiles', 'MP1 to MP2, DS2', 'Effort question is live!']], cells
     anchors = [a.attrs['href'] for a in R.find_all(s1node, 'a')]
-    assert anchors == [AR_URL], anchors  # the feature without a URL is listed unlinked
+    assert anchors == [AR_FILE, MP_FILE], anchors  # R5.30: every feature is linked to its file, relative
 
 
 @test
@@ -301,7 +412,7 @@ def groups_and_order_on_the_full_progress_artifact(fx):
         ('group', 'you', 'Needs you, failed or on hold'),
         ('task', 'DS9'), ('task', 'DS11'), ('task', 'DS10'),    # Needs you, Failed, On hold
         ('group', 'built', 'Live or built'),
-        ('task', 'AR5'), ('task', 'MP1'), ('task', 'DS2'), ('task', 'DS3'),   # newest changed first
+        ('task', 'AR5'), ('task', 'MP1'), ('task', 'DS2'), ('task', 'DS3'), ('task', 'AR16'),   # newest changed first; Built never folds
     ], rows
 
 
@@ -309,7 +420,7 @@ def groups_and_order_on_the_full_progress_artifact(fx):
 @with_fixture
 def earlier_fold_older_than_14_days(fx):
     out = fx.render('full-progress')
-    assert table_rows(out, 1) == [('task', 'DS1'), ('task', 'AR16')], table_rows(out, 1)  # 24 Sep, 20 Sep: newest first
+    assert table_rows(out, 1) == [('task', 'DS1')], table_rows(out, 1)   # only a Live row folds (24 Sep)
     dom = R.parse_dom(out)
     details = R.find_all(dom, 'details')
     assert len(details) == 1 and 'open' not in details[0].attrs and R.text_of(R.find(details[0], 'summary')) == 'Earlier'
@@ -318,12 +429,34 @@ def earlier_fold_older_than_14_days(fx):
 
 @test
 @with_fixture
+def built_rows_never_fold(fx):
+    """R6.3: unreleased work must not be hidden, however old."""
+    for task_ in fx.registry['tasks']:
+        if task_['id'] == 'AR16':
+            task_['changed'] = '2025-01-01T10:00+00:00'                       # almost two years old, and Built
+    out = fx.render('full-progress')
+    assert ('task', 'AR16') in table_rows(out, 0) and ('task', 'AR16') not in table_rows(out, 1)
+    assert fx.check(out, 'full-progress') == []
+    # the same task released (Live) folds
+    for task_ in fx.registry['tasks']:
+        if task_['id'] == 'AR16':
+            task_['status'] = 'Live'
+    folded = fx.render('full-progress')
+    assert ('task', 'AR16') in table_rows(folded, 1) and ('task', 'AR16') not in table_rows(folded, 0)
+    # a registry with only old Built rows has no Earlier fold at all
+    fx.registry['tasks'] = [dict(t_, status='Built', changed='2025-01-01T10:00+00:00') for t_ in fx.registry['tasks']
+                            if t_['status'] in ('Live', 'Built')]
+    assert '<details' not in fx.render('full-progress')
+
+
+@test
+@with_fixture
 def earlier_fold_boundary_is_14_days_from_the_stamp(fx):
     # stamp 10 Oct 12:39; a change at exactly 26 Sep 12:39 is 14 days old: not older, so it stays shown
     fx.registry['tasks'][4]['changed'] = '2026-09-26T12:39+01:00'          # DS1: exactly 14 days
-    fx.registry['tasks'][3]['changed'] = '2026-09-26T12:38+01:00'          # AR16: one minute older
+    fx.registry['tasks'][6]['changed'] = '2026-09-26T12:38+01:00'          # DS3 (Live): one minute older
     out = fx.render('full-progress')
-    assert table_rows(out, 1) == [('task', 'AR16')], table_rows(out, 1)
+    assert table_rows(out, 1) == [('task', 'DS3')], table_rows(out, 1)
     assert ('task', 'DS1') in table_rows(out, 0)
     assert fx.check(out, 'full-progress') == []
 
@@ -340,6 +473,9 @@ def earlier_fold_follows_the_stamp_not_the_clock(fx):
 @with_fixture
 def a_group_with_only_folded_rows_is_still_closed_correctly(fx):
     fx.registry['tasks'] = [t for t in fx.registry['tasks'] if t['status'] not in ('Live', 'Built') or t['id'] in ('AR16', 'DS1')]
+    for task_ in fx.registry['tasks']:
+        if task_['id'] == 'AR16':
+            task_['status'] = 'Live'                                             # Built would stay shown
     out = fx.render('full-progress')
     rows = table_rows(out, 0)
     assert ('group', 'built', 'Live or built') not in rows, rows
@@ -387,13 +523,19 @@ def tiles_count_each_status_in_order_and_skip_empty(fx):
 
 @test
 @with_fixture
-def links_on_the_full_progress_artifact(fx):
-    dom = R.parse_dom(fx.render('full-progress'))
+def full_progress_links_are_relative(fx):
+    """R5.30: the committed file links to feature files by file name, so it works from a checkout."""
+    out = fx.render('full-progress')
+    dom = R.parse_dom(out)
     table = R.find(dom, 'table', 'status-checklist')
     hrefs = {tr.attrs['data-task']: (R.find(tr, 'a').attrs['href'] if R.find(tr, 'a') else None)
              for tr in R.find_all(table, 'tr', pred=lambda n: 'data-task' in n.attrs)}
-    assert hrefs['AR6'] == AR_URL and hrefs['AR5'] == AR_URL
-    assert hrefs['DS6'] is None and hrefs['MP1'] is None  # project task; feature without a URL
+    assert hrefs['AR6'] == AR_FILE and hrefs['AR5'] == AR_FILE and hrefs['AR16'] == AR_FILE
+    assert hrefs['MP1'] == MP_FILE and hrefs['MP2'] == MP_FILE and hrefs['DS2'] == MP_FILE   # DS2 belongs to models
+    assert hrefs['DS6'] is None                                                            # a project task has no link
+    assert 'file:' not in out and 'class="local-path"' not in out
+    for href in (h for h in hrefs.values() if h):
+        assert '/' not in href and ':' not in href and href.endswith('.html')
 
 
 @test
@@ -522,7 +664,7 @@ def check_r63_earlier_fold(fx):
     # un-fold: take the details out
     start = fp.index('<details class="earlier">')
     end = fp.index('</details>') + len('</details>')
-    expect(fx, fp[:start] + fp[end:], 'full-progress', ['INV-1', 'R6.3', 'R6.5'])    # rows lost entirely: also not in the checklist
+    expect(fx, fp[:start] + fp[end:], 'full-progress', ['INV-1', 'R6.3'])            # rows lost entirely: also not in the checklist
     expect(fx, sub1(fp, '<details class="earlier">', '<details class="earlier" open>'), 'full-progress', ['R6.3'])
     expect(fx, sub1(fp, '<summary>Earlier</summary>', '<summary>Older</summary>'), 'full-progress', ['R6.3'])
     # a registry whose change dates disagree with the fold
@@ -530,6 +672,13 @@ def check_r63_earlier_fold(fx):
     registry['tasks'][5]['changed'] = '2026-08-01T10:00+01:00'                         # DS2 is old, but shown
     got = fx.check(sub1(fp, '<script type="application/json" id="task-registry">', '<script type="application/json" id="task-registry">'), 'full-progress', registry=registry)
     assert 'R6.3' in reqs(got), got
+    # a Built row is never folded: AR16 (Built, 20 Sep) moved into Earlier by hand
+    start = fp.index('<tr data-task="AR16">')
+    end = fp.index('</tr>', start) + len('</tr>')
+    row = fp[start:end]
+    hidden = fp[:start] + fp[end:]
+    hidden = sub1(hidden, '</tbody></table></div>\n</details>', row + '\n</tbody></table></div>\n</details>')
+    assert 'R6.3' in reqs(fx.check(hidden, 'full-progress')), fx.check(hidden, 'full-progress')
     # a feature artifact has no fold
     feature = fx.render('artifacts')
     wrapped = sub1(feature, '</section>\n<section id="s1">', '<details class="earlier"><summary>Earlier</summary></details></section>\n<section id="s1">')
@@ -610,10 +759,15 @@ def check_r58_tiles(fx):
 @with_fixture
 def check_r65_feature_tasks_linked_on_full_progress(fx):
     fp = fx.render('full-progress')
-    linked = '<a href="%s"><span class="task-id">AR6</span>Templates</a>' % AR_URL
+    linked = '<a href="%s"><span class="task-id">AR6</span>Templates</a>' % AR_FILE
     assert linked in fp
     expect(fx, sub1(fp, linked, '<span class="task-id">AR6</span>Templates'), 'full-progress', ['R6.5'])
-    expect(fx, sub1(fp, linked, '<a href="https://claude.ai/artifact/other"><span class="task-id">AR6</span>Templates</a>'), 'full-progress', ['R6.5'])
+    expect(fx, sub1(fp, linked, '<a href="feature-other.html"><span class="task-id">AR6</span>Templates</a>'), 'full-progress', ['R5.30'])
+    # R5.30: the committed file never carries the publish copy's absolute links
+    expect(fx, sub1(fp, linked, '<a href="file:///C:/x/docs/artifacts/%s"><span class="task-id">AR6</span>Templates</a>' % AR_FILE),
+           'full-progress', ['R5.30'])
+    expect(fx, sub1(fp, linked, '<a href="docs/artifacts/%s"><span class="task-id">AR6</span>Templates</a>' % AR_FILE),
+           'full-progress', ['R5.30'])
     start = fp.index('<tr data-task="AR6">')
     end = fp.index('</tr>', start) + 6
     expect(fx, fp[:start] + fp[end:], 'full-progress', ['INV-1', 'R6.5'])
@@ -623,8 +777,10 @@ def check_r65_feature_tasks_linked_on_full_progress(fx):
 @with_fixture
 def check_r56_feature_list(fx):
     fp = fx.render('full-progress')
-    expect(fx, sub1(fp, '<a href="%s">Feature: Project artifacts standard</a>' % AR_URL, 'Feature: Project artifacts standard'), 'full-progress', ['R5.6'])
-    expect(fx, sub1(fp, '<td>Feature: Model and effort profiles</td>', '<td>Feature: Model and effort</td>'), 'full-progress', ['R5.6'])
+    expect(fx, sub1(fp, '<a href="%s">Feature: Project artifacts standard</a>' % AR_FILE, 'Feature: Project artifacts standard'), 'full-progress', ['R5.6'])
+    expect(fx, sub1(fp, '<a href="%s">Feature: Model and effort profiles</a>' % MP_FILE, '<a href="https://claude.ai/artifact/x">Feature: Model and effort profiles</a>'),
+           'full-progress', ['R5.30'])
+    expect(fx, sub1(fp, '<td><a href="%s">Feature: Model and effort profiles</a></td>' % MP_FILE, '<td>Feature: Model and effort</td>'), 'full-progress', ['R5.6'])
 
 
 @test
@@ -988,13 +1144,152 @@ def templates_hold_only_known_placeholders(fx):
         text = open(os.path.join(PLUGIN, 'templates', name), encoding='utf-8').read()
         found = set(re.findall(r'\{\{(\w+)\}\}', text))
         assert found <= known, found - known
-        assert text.startswith('<title>{{title}}</title>')
+        if name.startswith('feature'):
+            assert text.startswith('<!doctype html>\n<html lang="en">'), text[:40]   # a complete document (R5.27)
+            assert text.rstrip().endswith('</body>\n</html>')
+        else:
+            assert text.startswith('<title>{{title}}</title>')                      # a fragment (R5.29)
         assert ('{{registry}}' in text) == (name.startswith('full-progress'))
         assert text.count('<script') == 1 or (name.startswith('full') and text.count('<script') == 1)
 
 
+# ------------------------------------------------------------------ standalone files and links (section 5.5)
+@test
+@with_fixture
+def check_r527_standalone_document(fx):
+    out = fx.render('artifacts')
+    expect(fx, sub1(out, '<!doctype html>\n', ''), 'artifacts', ['R5.27'])
+    expect(fx, sub1(out, '<!doctype html>', '<!DOCTYPE HTML>'), 'artifacts', [])                 # case does not matter
+    expect(fx, sub1(out, '<html lang="en">', '<html>'), 'artifacts', ['R5.27'])
+    expect(fx, sub1(out, '<html lang="en">', '<html lang="">'), 'artifacts', ['R5.27'])
+    expect(fx, sub1(out, '<meta charset="utf-8">\n', ''), 'artifacts', ['R5.27'])
+    expect(fx, sub1(out, '<meta name="viewport" content="width=device-width, initial-scale=1">\n', ''), 'artifacts', ['R5.27'])
+    # the old claude.ai form: a fragment beginning with <title>
+    old_form = out[out.index('<title>'):out.index('</head>')] + out[out.index('</head>\n<body>\n') + len('</head>\n<body>\n'):out.index('</body>')]
+    got = fx.check(old_form, 'artifacts')
+    assert 'R5.27' in reqs(got), got
+    # the page outside the body
+    expect(fx, sub1(sub1(out, '</head>\n<body>\n', '</head>\n'), '</body>\n', ''), 'artifacts', ['R5.27'])
+
+
+@test
+@with_fixture
+def check_r528_no_external_resources(fx):
+    out = fx.render('artifacts')
+    link = '<link rel="stylesheet" href="project-artifact.css">\n'
+    expect(fx, sub1(out, '<style id="design-tokens">', link + '<style id="design-tokens">'), 'artifacts', ['R5.28'])
+    other = '<link rel="stylesheet" href="https://cdn.example.test/a.css">\n'
+    expect(fx, sub1(out, '<style id="design-tokens">', other + '<style id="design-tokens">'), 'artifacts', ['R5.28'])
+    pre = '<link rel="preconnect" href="https://cdn.example.test">\n'
+    expect(fx, sub1(out, '<style id="design-tokens">', pre + '<style id="design-tokens">'), 'artifacts', ['R5.28'])
+    fonts_only = '<link rel="icon" href="https://fonts.gstatic.com/x.ico">\n'
+    expect(fx, sub1(out, '<style id="design-tokens">', fonts_only + '<style id="design-tokens">'), 'artifacts', ['R5.28'])
+    expect(fx, sub1(out, '<div class="layout">', '<script src="app.js"></script>\n<div class="layout">'), 'artifacts', ['R4.10', 'R5.28'])
+    expect(fx, sub1(out, '<p>Because.</p>', '<p>Because.</p><img src="logo.png" alt="">'), 'artifacts', ['R5.28'])
+    expect(fx, sub1(out, '<p>Because.</p>', '<p>Because.</p><img src="data:image/png;base64,AAAA" alt="">'), 'artifacts', [])
+    expect(fx, sub1(out, '<style id="extra-css"></style>', '<style id="extra-css">@import url(https://cdn.example.test/a.css);</style>'),
+           'artifacts', ['R5.28'])
+    expect(fx, sub1(out, '<style id="extra-css"></style>', '<style id="extra-css">.x{background:url(https://cdn.example.test/a.png)}</style>'),
+           'artifacts', ['R5.28'])
+    expect(fx, sub1(out, '<style id="extra-css"></style>', '<style id="extra-css">.x{background:url(data:image/png;base64,AAAA)}</style>'),
+           'artifacts', [])
+
+
+@test
+@with_fixture
+def check_r529_full_progress_fragment(fx):
+    fp = fx.render('full-progress')
+    document = '<!doctype html>\n<html lang="en">\n<head>\n' + fp + '</head>\n<body></body>\n</html>\n'
+    assert 'R5.29' in reqs(fx.check(document, 'full-progress')), fx.check(document, 'full-progress')
+    assert 'R5.29' in reqs(fx.check('<!-- x -->\n' + fp, 'full-progress'))
+    assert 'R5.29' in reqs(fx.check('<body>' + fp + '</body>', 'full-progress'))
+    assert fx.check(fp, 'full-progress') == []
+
+
+@test
+@with_fixture
+def check_r530_relative_links(fx):
+    """R5.30: the committed full-progress file links by file name; the publish copy's links fail the check."""
+    fp = fx.render('full-progress')
+    assert fx.check(fp, 'full-progress') == []
+    copy_ = fx.render('full-progress', links=publish_links(fx))
+    got = fx.check(copy_, 'full-progress')
+    assert 'R5.30' in reqs(got), got                                     # absolute links are not what is committed
+    assert any('file:///' in m for _, m in got)
+    # section 1 and a task link, each broken alone
+    expect(fx, sub1(fp, '<a href="%s">Feature: Project artifacts standard</a>' % AR_FILE,
+                    '<a href="./%s">Feature: Project artifacts standard</a>' % AR_FILE), 'full-progress', ['R5.30'])
+    expect(fx, sub1(fp, '<a href="%s"><span class="task-id">MP2</span>' % MP_FILE,
+                    '<a href="../%s"><span class="task-id">MP2</span>' % MP_FILE), 'full-progress', ['R5.30'])
+    # a feature artifact has no such links to check
+    assert fx.check(fx.render('artifacts'), 'artifacts') == []
+
+
+def publish_links(fx, root='/home/me/my repo'):
+    """What project_artifacts.py hands render_artifact for the publish copy (R5.31)."""
+    out = {}
+    for entry in fx.manifest['feature_artifacts']:
+        path = '%s/docs/artifacts/%s' % (root, entry['file'])
+        out[entry['key']] = ('file://' + path.replace(' ', '%20'), path)
+    return out
+
+
+@test
+@with_fixture
+def publish_copy_has_file_links(fx):
+    """R5.31: the copy differs from the committed render in its links, and shows each path as text."""
+    links = publish_links(fx)
+    copy_ = fx.render('full-progress', links=links)
+    committed = fx.render('full-progress')
+    assert copy_ != committed
+    dom = R.parse_dom(copy_)
+    hrefs = sorted({a.attrs['href'] for a in R.find_all(dom, 'a') if a.attrs['href'].startswith(('file:', 'feature-'))})
+    assert hrefs == sorted(v[0] for v in links.values()), hrefs
+    assert 'file:///' in copy_ and 'file:///home/me/my%20repo/docs/artifacts/' + AR_FILE in copy_
+    assert 'href="feature-' not in copy_                                                 # no relative link is left
+    # the path is text next to every link: section 1 and each feature task
+    shown = [R.text_of(n) for n in R.find_all(dom, 'span', 'local-path')]
+    assert shown.count('/home/me/my repo/docs/artifacts/' + AR_FILE) == 1 + 4      # section 1, then AR5, AR6, AR7, AR16
+    assert shown.count('/home/me/my repo/docs/artifacts/' + MP_FILE) == 1 + 3      # section 1, then DS2, MP1, MP2
+    for anchor in R.find_all(dom, 'a'):
+        if anchor.attrs['href'].startswith('file:'):
+            siblings = [n for n in anchor.parent.children if n.tag != '#text' or n.text.strip()]
+            following = siblings[siblings.index(anchor) + 1]
+            assert following.tag == 'span' and R.has_class(following, 'local-path'), anchor.attrs['href']
+            assert R.text_of(following).endswith(anchor.attrs['href'].rsplit('/', 1)[1])
+    # undoing the two differences gives the committed render back: the copy is the same page with the same stamp
+    back = re.sub(r' <span class="local-path">[^<]*</span>', '', copy_)
+    for key, (href, _shown) in links.items():
+        back = back.replace('href="%s"' % href, 'href="%s"' % next(e['file'] for e in fx.manifest['feature_artifacts'] if e['key'] == key))
+    assert back == committed
+    # the stamp, the registry script and the checklist are those of the committed file
+    assert R.text_of(R.find(dom, 'p', 'last-update')) == 'Last update: 10 Oct 12:39 (Lisbon)'
+    assert json.loads(''.join(c.text for c in R.find(dom, 'script', pred=lambda n: n.attrs.get('type') == 'application/json').children)) == fx.registry
+
+
+@test
+@with_fixture
+def publish_copy_path_encoding(fx):
+    """R5.31: the href is as given (percent-encoded by the caller), the path text is escaped, not encoded."""
+    links = {'artifacts': ('file:///C:/My%20Docs/a%26b/docs/artifacts/' + AR_FILE, 'C:/My Docs/a&b/docs/artifacts/' + AR_FILE),
+             'models': ('file:///C:/My%20Docs/a%26b/docs/artifacts/' + MP_FILE, 'C:/My Docs/a&b/docs/artifacts/' + MP_FILE)}
+    out = fx.render('full-progress', links=links)
+    assert 'href="file:///C:/My%20Docs/a%26b/docs/artifacts/' + AR_FILE + '"' in out
+    assert '<span class="local-path">C:/My Docs/a&amp;b/docs/artifacts/' + AR_FILE + '</span>' in out
+    assert '&amp;amp;' not in out and 'a&b' not in out.replace('a&amp;b', '')
+    # a feature artifact has no links to feature files, whatever it is given
+    assert fx.render('artifacts', links=links) == fx.render('artifacts')
+
+
+@test
+@with_fixture
+def publish_copy_with_partial_links_keeps_relative_for_the_rest(fx):
+    out = fx.render('full-progress', links={'artifacts': ('file:///x/' + AR_FILE, '/x/' + AR_FILE)})
+    assert 'href="file:///x/%s"' % AR_FILE in out and 'href="%s"' % MP_FILE in out
+
+
 # ------------------------------------------------------------------ decisions (section 5.4)
-PNG = b'\x89PNG\r\n\x1a\n' + b'not-a-real-image-the-renderer-only-embeds-bytes'
+PNG =b'\x89PNG\r\n\x1a\n' + b'not-a-real-image-the-renderer-only-embeds-bytes'
 
 
 def opt(label, summary=None, **kw):

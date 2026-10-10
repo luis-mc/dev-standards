@@ -1,6 +1,6 @@
 ---
 name: feature-artifact-new
-description: Create a feature artifact — the claude.ai artifact of one feature, titled `Feature: <name>`, with a status checklist, written content and a history. Use when the user starts a feature and wants it tracked, asks for a feature artifact or feature page, or says a feature needs its own status view. Creates the project's full-progress artifact first when it does not exist yet.
+description: Create a feature artifact — the standalone HTML file `docs/artifacts/feature-<slug>.html` of one feature, titled `Feature: <name>`, with a status checklist, written content and a history. It opens by double-click in any browser and is never published. Use when the user starts a feature and wants it tracked, asks for a feature artifact or feature page, or says a feature needs its own status view. Creates the project's full-progress artifact first when it does not exist yet.
 model: opus
 effort: high
 ---
@@ -9,7 +9,11 @@ effort: high
 
 Creates one feature artifact from the project's record (`docs/artifacts/`,
 ARTIFACTSPEC 1.1.0). The script is the only writer of `manifest.json` and
-`registry.json`; never edit either by hand.
+`registry.json`; never edit either by hand. A feature artifact is a standalone
+HTML file in the repository (`docs/artifacts/feature-<slug>.html`, CSS inlined,
+opens by double-click). It is never published to claude.ai, because claude.ai
+allows 200 publishes per account per day: only Full Progress is published, once
+at the end of the turn.
 
 Every command below is
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/project_artifacts.py" <command>`, run from
@@ -82,13 +86,13 @@ the repository instead (the session's scratchpad directory, in a new folder).
    never `today`, `soon` or `next` alone. Every activity is a task, the
    session's own included; `Built` means finished but not released, and
    release work still to come (join, release) is a task of its own.
-7. **Publish** every artifact `pending` lists, per "Publishing" below. The new
-   feature artifact comes first, then the full-progress artifact, which links
-   to it.
+7. **Do not publish the feature artifact**, and do not publish Full Progress
+   yet: it is published once, at the end of the turn, per "Publishing" below.
 8. **Check:** run `check`. Report any finding with its requirement ID. The
    script commits and pushes the record on every writing command; if `pending`
    or a push fails, say so and stop.
-9. **Tell the owner** the artifact's URL, its task IDs, and that branch names
+9. **Tell the owner** where the file is (`docs/artifacts/<file>` in the
+   repository; open it by double-click), its task IDs, and that branch names
    for these tasks must start with the task ID (`<ID>-short-name`).
 
 ## Decisions
@@ -118,20 +122,25 @@ write that section by hand.
    option's label and `decided` to the date. A closed decision never changes: a
    changed mind is a new decision with `"replaces": "D<n>"`.
 5. `edit-content <key> --from <scratch dir>`; fix what it reports and run it
-   again. Then publish as below.
+   again.
 
 ## Publishing
 
-Repeat until `pending` exits 0.
+Only Full Progress is published, once, at the end of the turn: status changes
+accumulate during the turn and never trigger a publish of their own. Feature
+artifacts are never published and have no URL; `mark-published` refuses them.
 
-1. Run `pending --json`. Handle every entry of `artifacts`, feature artifacts
-   before the full-progress artifact. Each entry carries `key`, `title`, `path`
-   (the absolute path of the HTML to publish) and `url` (empty before the first
-   publish).
+At the end of the turn, repeat until `pending` exits 0:
+
+1. Run `pending --json`. It lists Full Progress when its committed render
+   changed since the last publish, and writes the publish copy: the same page
+   with absolute `file:///` links to the feature files. Each entry carries
+   `key`, `title`, `path` (the absolute path of the publish copy) and `url`
+   (empty before the first publish).
 2. Publish with the Artifact tool: `file_path` is the entry's `path`, unchanged,
    and `url` is the entry's `url` when it is not empty. On a first publish pass
    `icon` (a generic word such as `tracker`) and a one-sentence `description`.
-   Publish the file as rendered; do not edit it.
+   Publish the file as written; do not edit it.
 3. If the publish is refused because the artifact does not exist, list the
    owner's artifacts (`action: "list"`, `scope: "mine"`) and look for one whose
    title is exactly the entry's `title`. If one exists, publish to its `url`.
@@ -139,9 +148,10 @@ Repeat until `pending` exits 0.
    is ever created.
 4. If it is refused because the artifact changed elsewhere, `read` the live
    version once. Copy changes to content sections into a scratch export
-   (`export-content <key> --to <dir>`), then `edit-content <key> --from <dir>`;
-   drop changes to the generated sections. Run `pending --json` again for the
-   new `path`, and retry once.
-5. Run `mark-published <key> --url <URL>` with the URL the publish returned.
+   (`export-content full-progress --to <dir>`), then
+   `edit-content full-progress --from <dir>`; drop changes to the generated
+   sections. Run `pending --json` again for the new `path`, and retry once.
+5. Run `mark-published full-progress --url <URL>` with the URL the publish
+   returned.
 6. If there is no Artifact tool, say what is still unpublished and stop; the
    end-of-turn hook then reminds you.

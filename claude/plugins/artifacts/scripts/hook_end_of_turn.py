@@ -4,7 +4,8 @@
 ARTIFACTSPEC 1.1.0 section 8.2. Lets the turn end only when the queue is empty and
 `project_artifacts.py pending` lists nothing; otherwise blocks the stop with
 {"decision": "block", "reason": ...} naming each item and the commands to run
-(R8.3). It also blocks when this session started background work (marked by
+(R8.3). It acts on Full Progress only, the one published artifact: a pending entry
+for a feature artifact is ignored (R8.11). It also blocks when this session started background work (marked by
 hook_after_command, R8.8) and the registry has no task in Running, Waiting or
 Needs you (R8.10); once such a task exists the marker is cleared. After 3
 consecutive blocks in one session with no change in what is pending it lets the
@@ -60,6 +61,11 @@ def pending_items(root, script):
         warn('pending printed output that is not JSON (exit 1)')
         return None
     return artifacts, queue
+
+
+def only_full_progress(artifacts):
+    """R8.11: Full Progress is the only artifact that is published; any other entry is ignored."""
+    return [a for a in artifacts if a.get('kind') == 'full-progress' or a.get('key') == 'full-progress']
 
 
 def merge_queue(root, queue):
@@ -138,10 +144,13 @@ def build_reason(root, script, artifacts, queue):
         key = a.get('key')
         target = ('update the existing artifact at %s' % a['url']) if a.get('url') else \
             'create it (first publish; after the Artifact tool is called, list the owner\'s artifacts first if the title may exist)'
-        out.append('- Publish "%s" (%s; %s): read %s, publish it with the Artifact tool (%s), then run: '
-                   '%s mark-published %s --url <the artifact URL>'
+        # `path` is the publish copy (links to the feature files as file:/// URLs); the committed file is the fallback
+        source = a.get('path') or os.path.join(record, str(a.get('file', '')))
+        out.append('- Publish "%s" once, now, at the end of the turn (%s; %s): publish the file %s with the Artifact '
+                   'tool, unedited (%s), then run: %s mark-published %s --url <the artifact URL>. Feature artifacts '
+                   'are files in the repository and are never published.'
                    % (a.get('title') or key, a.get('file', ''), a.get('reason', 'pending'),
-                      os.path.join(record, str(a.get('file', ''))), target, py, key))
+                      source, target, py, key))
     out.append('Then run %s pending --json to confirm nothing is left.' % py)
     return '\n'.join(out)
 
@@ -150,8 +159,8 @@ def build_background_reason(script):
     py = 'python "%s"' % script
     return ('Work was started in the background this turn but no task is Running. Record it with task-add '
             '(%s task-add --owner <key|project> --item ... --detail ... --expected ... --status Running) or '
-            'set the task that covers it Running (%s set-task-status <ID> Running), then publish what '
-            'pending lists. If the work is already finished, there is nothing to record: set its task '
+            'set the task that covers it Running (%s set-task-status <ID> Running), then publish Full '
+            'Progress if pending lists it. If the work is already finished, there is nothing to record: set its task '
             'Built only when it is finished, and release work still to come is its own task.' % (py, py))
 
 
@@ -169,6 +178,7 @@ def main():
     found = pending_items(root, script)
     # pending unreadable: fail open on artifacts, but the queue file is still a fact
     artifacts, queue = found if found is not None else ([], [])
+    artifacts = only_full_progress(artifacts)
     queue = merge_queue(root, queue)
     state_path = os.path.join(root, STATE_NAME)
     sid = str(data.get('session_id') or 'default')

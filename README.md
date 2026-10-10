@@ -140,32 +140,37 @@ the same way `tech-stack-setup` audits the rest of the stack.
 
 ## `luismc-artifacts` — see what is live, running and waiting without reading code
 
-Keeps a project's status in front of you as claude.ai artifacts: one **feature
-artifact** per feature and one **full-progress artifact** for the whole project,
-each with a status checklist, written content and a stamp of the last update.
+Keeps a project's status in front of you: one **feature artifact** per feature
+and one **full-progress artifact** for the whole project, each with a status
+checklist, written content and a stamp of the last update. A feature artifact is
+a standalone HTML file in the repository (`docs/artifacts/feature-<slug>.html`)
+that opens by double-click and is never published; the full-progress artifact is
+the project's one claude.ai artifact, published once at the end of each turn
+(claude.ai allows 200 publishes per account per day), and it links to the
+feature files as local files.
 They are generated from a record in the project's repository
 (`docs/artifacts/`: a manifest, a task registry, content), to the binding
 `ARTIFACTSPEC`, so status is typed in one place and every view agrees. A
-deleted artifact is recreated from the record without duplicates. The artifacts
+deleted full-progress artifact is recreated from the record without duplicates. The artifacts
 use the project's own design, found and confirmed with you, or a default one.
 
 Five skills:
 
 - **`/luismc-artifacts:feature-artifact-new`** — asks the feature, its apps and
-  task prefix, finds the project's design, writes the content and tasks, and
-  publishes.
+  task prefix, finds the project's design, and writes the content and tasks of
+  its standalone file.
 - **`/luismc-artifacts:full-progress-artifact-new`** — creates the project's one
   full-progress artifact.
 - **`/luismc-artifacts:task-add`** — records work as a task before it starts.
 - **`/luismc-artifacts:task-status-update`** — changes a status through the
-  script and publishes what changed.
+  script; Full Progress is published once, at the end of the turn.
 - **`/luismc-artifacts:project-artifact-check`** — checks the artifacts against
   the spec and explains each finding with its requirement ID.
 
 Hooks queue status changes when a pull request is opened, readied or merged,
 when CI finishes, and on a production deploy, and the end of a turn waits until
-those are applied and published; it also asks for a Running task when work
-was started in the background without one. Every activity is a task, the
+those are applied and Full Progress is published; it also asks for a Running
+task when work was started in the background without one. Every activity is a task, the
 session's own included, and Built means finished but not yet released (Live
 means released). The plugin
 delivers that rule itself at every session start in any project with a record,

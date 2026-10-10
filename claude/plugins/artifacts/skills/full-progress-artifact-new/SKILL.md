@@ -17,6 +17,12 @@ anywhere inside the project's repository. Exit 0 is success; on any other exit
 read the message, fix the cause and rerun. Never work around a refusal by
 editing the record.
 
+Full Progress is the only artifact of a project that is published to claude.ai,
+and it is published once per turn, at the end of the turn, never mid-turn:
+claude.ai allows 200 publishes per account per day and every republish counts.
+Feature artifacts are standalone HTML files in the repository; Full Progress
+links to them as local files.
+
 The record lives in the record worktree `<repo>/.claude/worktrees/artifacts-record`
 (a worktree of the default branch). Never write into it, and never into the
 session's own working tree: the script resets the record worktree before each
@@ -37,7 +43,8 @@ the repository instead (the session's scratchpad directory, in a new folder).
 3. **Create it:**
    `init --project NAME --timezone IANA --label LABEL [--windows-timezone ID] [--default-branch B]`.
    This creates the manifest, an empty registry and the full-progress artifact's
-   content, and installs the rule file and the gitignore lines.
+   content, and adds the gitignore lines (the rule itself is delivered by the
+   plugin at every session start).
 4. **Find the project's design** (R5.12), only when the manifest says
    `"design": "default"`. Look in this order and stop at the first hit:
    design-token files; Tailwind or theme configuration; CSS custom properties
@@ -76,23 +83,26 @@ the repository instead (the session's scratchpad directory, in a new folder).
    alone. This artifact shows all work, so every activity is a task here, the
    session's own included (contracts, joins, test runs, releases, cleanup);
    `Built` means finished but not released; release work still to come is a task of its own.
-7. **Publish** every artifact `pending` lists, per "Publishing" below.
+7. **Publish** Full Progress at the end of the turn, per "Publishing" below.
 8. **Check:** run `check` and report any finding with its requirement ID.
 9. **Tell the owner** the artifact's URL, and that every feature artifact
-   created later appears in it by itself.
+   created later appears in it by itself, linked as a local file.
 
 ## Publishing
 
-Repeat until `pending` exits 0.
+Once, at the end of the turn, never mid-turn. Repeat until `pending` exits 0:
 
-1. Run `pending --json`. Handle every entry of `artifacts`, feature artifacts
-   before the full-progress artifact. Each entry carries `key`, `title`, `path`
-   (the absolute path of the HTML to publish) and `url` (empty before the first
-   publish).
+1. Run `pending --json`. It lists Full Progress (the only artifact it lists)
+   when its committed render changed since the last publish, and writes the
+   publish copy: the same page with absolute `file:///` links to the feature
+   files (some browsers block `file:` links from a web page; the page shows
+   each path as text so it can be copied). The entry carries `key`, `title`,
+   `path` (the absolute path of the publish copy) and `url` (empty before the
+   first publish).
 2. Publish with the Artifact tool: `file_path` is the entry's `path`, unchanged,
    and `url` is the entry's `url` when it is not empty. On a first publish pass
    `icon` (a generic word such as `tracker`) and a one-sentence `description`.
-   Publish the file as rendered; do not edit it.
+   Publish the file as written; do not edit it.
 3. If the publish is refused because the artifact does not exist, list the
    owner's artifacts (`action: "list"`, `scope: "mine"`) and look for one whose
    title is exactly the entry's `title`. If one exists, publish to its `url`.
@@ -100,9 +110,11 @@ Repeat until `pending` exits 0.
    is ever created.
 4. If it is refused because the artifact changed elsewhere, `read` the live
    version once. Copy changes to content sections into a scratch export
-   (`export-content <key> --to <dir>`), then `edit-content <key> --from <dir>`;
-   drop changes to the generated sections. Run `pending --json` again for the
-   new `path`, and retry once.
-5. Run `mark-published <key> --url <URL>` with the URL the publish returned.
+   (`export-content full-progress --to <dir>`), then
+   `edit-content full-progress --from <dir>`; drop changes to the generated
+   sections. Run `pending --json` again for the new `path`, and retry once.
+5. Run `mark-published full-progress --url <URL>` with the URL the publish
+   returned. It records the hash of the committed render, not of the publish
+   copy.
 6. If there is no Artifact tool, say what is still unpublished and stop; the
    end-of-turn hook then reminds you.
