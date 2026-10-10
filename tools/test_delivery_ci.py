@@ -821,7 +821,7 @@ def check_workflow(track: str, text: str) -> list[str]:
             problems.append("decide checkout must use fetch-depth: 0")
         if "python3 scripts/delivery/ci_skip_check.py" not in d:
             problems.append("decide must run scripts/delivery/ci_skip_check.py")
-        if not re.search(r"GH_TOKEN: \$\{\{ github\.token \}\}", d):
+        if "GH_TOKEN: ${{ github.token }}" not in d:
             problems.append("decide needs GH_TOKEN: ${{ github.token }}")
         for perm in ("contents: read", "pull-requests: read", "actions: read"):
             if not re.search(rf"^      {re.escape(perm)}\s*$", d, re.M):

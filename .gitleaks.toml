@@ -37,7 +37,8 @@ real credential committed into any of these files is still caught.
    at runtime by the runner, and the only supported way to consume a secret in
    a workflow. The literal text is never the value. secret-scan.yml's own
    `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}` trips project-named-secret
-   without this.
+   without this. `${{ github.token }}` is the same kind of reference; the
+   shipped ci.yml passes it as `GH_TOKEN` to the decide job.
 
 2. An assignment whose value is a bare `...` is documentation. .githooks/pre-
    commit documents the patterns it detects (`FOO_TOKEN=...`, `const FOO_KEY =
@@ -54,7 +55,7 @@ real credential committed into any of these files is still caught.
    pre-commit hook is what caught it.
 """
 regexes = [
-  '''\$\{\{\s*secrets\.[A-Za-z0-9_]+\s*\}\}''',
+  '''\$\{\{\s*(secrets\.[A-Za-z0-9_]+|github\.token)\s*\}\}''',
   '''[:=]\s*\.\.\.''',
   '''postgres://postgres:postgres@localhost:5432/[a-z0-9_]+''',
 ]

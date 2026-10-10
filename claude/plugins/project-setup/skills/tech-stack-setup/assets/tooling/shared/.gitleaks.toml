@@ -38,7 +38,8 @@ path, so a real credential committed anywhere — including into these same file
    a secret in a workflow — the literal text is never the value. Without this,
    ci.yml's own gitleaks step (`GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}`)
    trips project-named-secret and the pre-commit hook blocks the very first
-   commit of a freshly generated repo.
+   commit of a freshly generated repo. `${{ github.token }}` is the same kind
+   of reference; ci.yml passes it as `GH_TOKEN` to the decide job.
 
 3. An assignment whose value is a bare `...` is documentation, not a secret.
    .githooks/pre-commit documents the patterns it detects (`FOO_TOKEN=...`,
@@ -49,6 +50,6 @@ path, so a real credential committed anywhere — including into these same file
 """
 regexes = [
   '''postgres://postgres:postgres@localhost:5432/[a-z0-9_]+''',
-  '''\$\{\{\s*secrets\.[A-Za-z0-9_]+\s*\}\}''',
+  '''\$\{\{\s*(secrets\.[A-Za-z0-9_]+|github\.token)\s*\}\}''',
   '''[:=]\s*\.\.\.''',
 ]
