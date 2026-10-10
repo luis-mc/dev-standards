@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T00:06+01:00",
+  "updated": "2026-10-11T00:07+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -586,11 +586,11 @@
       "id": "MP7",
       "owner": "models",
       "app": "luismc-project-setup",
-      "status": "Running",
+      "status": "Built",
       "item": "Defaults: Opus at medium, Sonnet at high",
-      "detail": "Owner confirmed: Opus at medium and Sonnet at medium everywhere (replaces 'Sonnet at high' in this row's title). Agent changing the shipped defaults (skill profiles, claude-setup's preselected answers, top-level effort, the architect agent, the rule's agent lines). Rides the 7.0.0 release. Already applied to your own ~/.claude: both models medium, top-level medium, rule lines medium (backups in the session scratchpad).",
-      "expected": "11 Oct ~01:00",
-      "changed": "2026-10-10T23:33+01:00"
+      "detail": "Built in #35 and joined into the 7.0.0 release (not released yet): every skill, the architect agent, claude-setup's preselected answers and the top-level effort default to medium for Opus and Sonnet; the rule's agent lines say medium. Plugins: project-setup 13.0.0, specs 1.2.0, audits 1.2.0, agents 1.1.0, artifacts 1.1.2. Your own ~/.claude already uses medium for both.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:07+01:00"
     }
   ]
 }
