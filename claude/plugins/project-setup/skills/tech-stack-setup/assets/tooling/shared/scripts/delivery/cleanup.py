@@ -26,11 +26,14 @@ Detached worktrees and the default branch are never touched.
 --pr N considers only the train of that merged pull request (its head branch and
 every branch whose pull request had that head as base); N must be merged into the
 default branch, or the script exits 2. Without it, every branch on the remote
-(and every local branch). --local treats local branches and worktrees only; with
-no `gh` installed a local branch is finished when its upstream is gone from the
-remote. --dry-run changes nothing except what a `git fetch` brings in.
+(and every local branch). --local treats local branches and worktrees only.
+Without a working `gh` (not installed, or failing) it deletes nothing: a local
+branch whose upstream is gone from the remote is listed as `would delete (needs gh
+to confirm)`, the others as kept. --dry-run changes nothing except what a
+`git fetch` brings in.
 
-One row per branch: `deleted`, `would delete`, `kept: <reason>` or `failed: ...`.
+One row per branch: `deleted`, `would delete`, `would delete (needs gh to
+confirm)`, `kept: <reason>` or `failed: ...`.
 Exit: 0 it ran (kept branches are not a failure), 1 a deletion failed, 2 usage,
 no repository, or it could not decide.
 """
@@ -51,6 +54,7 @@ import delivery_common as dc
 
 PR_FIELDS = "number,state,baseRefName,headRefOid,mergedAt"
 MAX_PRS = "200"
+NEEDS_GH = "needs gh to confirm"  # the detail of a branch that only gh can say is finished
 
 
 class GhError(Exception):
@@ -101,7 +105,8 @@ class Verdict:
     finished: bool
     reason: str = ""
     safe: list[str] = field(default_factory=list)  # merged head shas: a tip at or below one is not lost
-    unverifiable: bool = False  # finished by "upstream gone": commits cannot be compared
+    cannot_classify: bool = False  # gh is missing or failed: no verdict, nothing is deleted
+    needs_gh: bool = False  # not finished, but its upstream is gone: gh would settle it
 
 
 @dataclass
@@ -162,7 +167,7 @@ def _assess(ctx: Ctx, branch: str, depth: int) -> Verdict:
     try:
         prs = pr_list(ctx.repo, head=branch)
     except GhError as exc:
-        return Verdict(False, "cannot classify (%s)" % exc)
+        return Verdict(False, "cannot classify (%s)" % exc, cannot_classify=True)
     if not prs:
         return Verdict(False, "no pull request")
     opened = [p for p in prs if p.get("state") == "OPEN"]
@@ -203,14 +208,21 @@ def upstream_gone(ctx: Ctx, branch: str) -> bool | None:
 
 
 def assess_local(ctx: Ctx, branch: str) -> Verdict:
+    """Local mode. A pull request decides, so without a working gh nothing is ever
+    finished here: a branch whose upstream is gone is only reported, as one that
+    gh would have to confirm."""
     if gh_available():
-        return assess(ctx, branch)
-    if branch in ctx.protected:
-        return Verdict(False, "default branch")
-    gone = upstream_gone(ctx, branch)
-    if gone:
-        return Verdict(True, "upstream gone", unverifiable=True)
-    return Verdict(False, "cannot classify (gh is not installed) and its upstream is not gone")
+        v = assess(ctx, branch)
+        if not v.cannot_classify:
+            return v
+        why = v.reason
+    else:
+        if branch in ctx.protected:
+            return Verdict(False, "default branch")
+        why = "cannot classify (gh is not installed)"
+    if upstream_gone(ctx, branch):
+        return Verdict(False, NEEDS_GH, cannot_classify=True, needs_gh=True)
+    return Verdict(False, why + " and its upstream is not gone", cannot_classify=True)
 
 
 # --------------------------------------------------------------------------
@@ -251,7 +263,7 @@ def same_path(a: str, b: str | Path) -> bool:
 
 
 def local_tip_ok(ctx: Ctx, tip: str, v: Verdict) -> bool:
-    if v.unverifiable or contained(ctx, tip, v.safe):
+    if contained(ctx, tip, v.safe):
         return True
     p = ctx.git(["for-each-ref", "--contains", tip, "--count=1", "--format=%(refname)", "refs/remotes/%s/" % ctx.remote])
     return bool(p.stdout.strip())
@@ -399,11 +411,14 @@ def main(argv: list[str] | None = None) -> int:
         remote_here = do_remote and (branch in heads or branch in ctx.result_refs)
         # a branch only a local-mode run can see may be classified without gh
         v = assess_local(ctx, branch) if (args.local or (local_here and not remote_here)) else assess(ctx, branch)
+        if v.needs_gh:
+            row.status, row.detail = "would delete", NEEDS_GH  # listed, never done
+            continue
         if not v.finished:
             row.status, row.detail = "kept", v.reason
             continue
         tip = heads.get(branch)
-        if do_remote and tip and not v.unverifiable and not contained(ctx, tip, v.safe):
+        if do_remote and tip and not contained(ctx, tip, v.safe):
             row.status, row.detail = "kept", "commits on the remote after the merged pull request"
             continue
         verb = "would delete" if ctx.dry else "deleted"
@@ -440,6 +455,8 @@ def main(argv: list[str] | None = None) -> int:
             done = "removed: " + ", ".join(r.removed) if r.removed else ""
             if r.status in ("kept", "failed"):
                 text = "%s: %s" % (r.status, r.detail) + ("  [%s]" % done if done else "")
+            elif r.detail == NEEDS_GH:
+                text = "%s (%s)" % (r.status, r.detail)
             else:
                 text = r.status + "  (%s)" % (done[len("removed: "):] if done else r.detail)
             print("%s  %s" % (r.branch, text))

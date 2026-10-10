@@ -644,6 +644,7 @@ def sc_worktrees(t: T, shared: Path) -> None:
 
 
 def sc_local_without_gh(t: T, shared: Path) -> None:
+    """Without a working gh, --local deletes nothing: it only lists what gh would have to confirm."""
     w = World(shared)
     w.branch("feat/gone")      # merged and deleted on the remote: upstream gone
     w.branch("feat/live")      # upstream still there
@@ -653,11 +654,53 @@ def sc_local_without_gh(t: T, shared: Path) -> None:
     before = w.snapshot()
     r, rows = w.rows("--local", gh=False)
     exit_is(t, "no gh, --local: exit 0", r, 0)
-    t.eq("no gh: a branch whose upstream is gone is finished", status(rows, "feat/gone"), "deleted")
-    t.eq("... branch and worktree removed", ("feat/gone" in w.local_branches(), "gone" in w.worktrees()), (False, False))
-    t.check("no gh: a branch whose upstream exists is kept", is_kept(rows, "feat/live"), status(rows, "feat/live"))
-    t.check("no gh: a branch that was never pushed is kept", is_kept(rows, "feat/local"), status(rows, "feat/local"))
-    t.eq("no gh: those branches are untouched", {"feat/live", "feat/local"} <= w.local_branches(), True)
+    gone = rows.get("feat/gone") or {}
+    t.eq("no gh: a branch whose upstream is gone is listed as needing gh",
+         (gone.get("status"), gone.get("detail")), ("would delete", "needs gh to confirm"))
+    t.eq("... and nothing is removed: branch, worktree, remote", w.snapshot(), before)
+    t.check("no gh: a branch whose upstream exists is kept", is_kept(rows, "feat/live", "cannot classify"), status(rows, "feat/live"))
+    t.check("no gh: a branch that was never pushed is kept", is_kept(rows, "feat/local", "cannot classify"), status(rows, "feat/local"))
+    t.eq("no gh: the main branch is not listed", "main" in rows, False)
+    r = w.cleanup("--local", gh=False)
+    t.has("the row reads 'would delete (needs gh to confirm)'", r.out, "feat/gone  would delete (needs gh to confirm)")
+    t.eq("... and the run changed nothing", w.snapshot(), before)
+    r = w.cleanup("--local", "--dry-run", gh=False)
+    t.has("--dry-run says the same", r.out, "feat/gone  would delete (needs gh to confirm)")
+    r = w.cleanup(gh=False)
+    exit_is(t, "no gh, no mode flag: exit 0", r, 0)
+    t.has("... the local-only branch is listed the same way", r.out, "feat/gone  would delete (needs gh to confirm)")
+    t.eq("... and nothing is removed", w.snapshot(), before)
+
+    # a gh that is installed but failing is no better than none
+    w3 = World(shared)
+    w3.branch("feat/gone")
+    w3.branch("feat/live")
+    w3.worktree("gone", "feat/gone")
+    w3.g("push", "-q", "origin", "--delete", "feat/gone")
+    w3.stub.fx["all_error"] = True
+    w3.stub.save()
+    before = w3.snapshot()
+    r, rows = w3.rows("--local")
+    exit_is(t, "gh failing, --local: exit 0", r, 0)
+    t.eq("gh failing: an upstream-gone branch is listed as needing gh",
+         (rows.get("feat/gone") or {}).get("detail"), "needs gh to confirm")
+    t.check("gh failing: a branch whose upstream exists is kept", is_kept(rows, "feat/live", "cannot classify"), status(rows, "feat/live"))
+    t.eq("gh failing: nothing is removed", w3.snapshot(), before)
+
+    # gh working: the pull request decides, as before
+    w4 = World(shared)
+    done = w4.branch("feat/done")
+    w4.branch("feat/nopr")
+    w4.worktree("done", "feat/done")
+    w4.g("push", "-q", "origin", "--delete", "feat/done")
+    w4.g("push", "-q", "origin", "--delete", "feat/nopr")
+    w4.stub.pr("feat/done", "MERGED", done)
+    r, rows = w4.rows("--local")
+    t.eq("gh working: a merged branch is deleted", status(rows, "feat/done"), "deleted")
+    t.eq("... with its worktree", ("feat/done" in w4.local_branches(), "done" in w4.worktrees()), (False, False))
+    t.check("gh working: an upstream-gone branch with no pull request is kept, not deleted",
+            is_kept(rows, "feat/nopr", "no pull request"), status(rows, "feat/nopr"))
+    t.eq("... and still there", "feat/nopr" in w4.local_branches(), True)
 
     w2 = World(shared)
     sha = w2.branch("feat/a")
@@ -666,6 +709,8 @@ def sc_local_without_gh(t: T, shared: Path) -> None:
     r, rows = w2.rows(gh=False)
     t.eq("no gh, remote mode: nothing can be classified, nothing is removed", w2.snapshot(), before)
     t.check("... and the branch is listed as kept", is_kept(rows, "feat/a"), status(rows, "feat/a"))
+    r, rows = w2.rows("--remote-only", gh=False)
+    t.check("... --remote-only too", is_kept(rows, "feat/a", "cannot classify"), status(rows, "feat/a"))
 
 
 # --------------------------------------------------------------------------
@@ -717,6 +762,22 @@ def sc_join_cleanup(t: T, shared: Path) -> None:
     box.gated("feat/a", {"apps/web/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
     r = box.script("join.py", "--into", "integ", "feat/a", env=Stub().env(with_gh=False))
     exit_is(t, "join without gh: exit 0", r, 0)
+
+    # no gh and a branch whose upstream is gone: the join prints the row and goes on, nothing is removed
+    box = join_box(shared)
+    box.branch("agent/old", {"docs/old.txt": "old\n"})
+    box.push("agent/old")
+    box.g("checkout", "-q", "integ")
+    box.g("push", "-q", "origin", "--delete", "agent/old")
+    wt = box.root / "wt-old"
+    box.g("worktree", "add", "-q", str(wt), "agent/old")
+    box.gated("feat/a", {"apps/web/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
+    r = box.script("join.py", "--into", "integ", "feat/a", env=Stub().env(with_gh=False))
+    exit_is(t, "join without gh, a branch with its upstream gone: exit 0", r, 0)
+    t.has("... the row is printed", r.out, "agent/old  would delete (needs gh to confirm)")
+    t.eq("... the worktree and the branch are still there",
+         (wt.exists(), "agent/old" in box.g("branch", "--format=%(refname:short)").split()), (True, True))
+    t.eq("... and the join itself happened", box.g("log", "--merges", "--format=%s", "integ").splitlines(), ["Join feat/a"])
 
 
 # --------------------------------------------------------------------------
@@ -802,10 +863,11 @@ MUTANTS = [
     ("a branch with no pull request is finished", D,
      'return Verdict(False, "no pull request")', 'return Verdict(True, "no pull request")', "classify"),
     ("a gh error finishes the branch", D,
-     'return Verdict(False, "cannot classify (%s)" % exc)', 'return Verdict(True, "cannot classify (%s)" % exc)',
+     'return Verdict(False, "cannot classify (%s)" % exc, cannot_classify=True)',
+     'return Verdict(True, "cannot classify (%s)" % exc)',
      "gh_failure"),
     ("commits pushed after the merge are ignored", D,
-     "if do_remote and tip and not v.unverifiable and not contained(ctx, tip, v.safe):", "if False:", "classify"),
+     "if do_remote and tip and not contained(ctx, tip, v.safe):", "if False:", "classify"),
     ("the remote's HEAD branch is not protected", D,
      'ctx.protected.add(line.split()[1].removeprefix("refs/heads/"))', "pass", "default_branch"),
     ("the default branch of gate.json is not protected", D,
@@ -861,8 +923,25 @@ MUTANTS = [
     ("worktree prune runs in --dry-run", D, "    if do_local and not ctx.dry:\n        ctx.git([\"worktree\", \"prune\"])",
      "    if do_local:\n        ctx.git([\"worktree\", \"prune\"])", "worktrees"),
     ("a vanished worktree blocks deleting its branch", D, "            if len(live) < len(mine):", "            if False:", "worktrees"),
-    ("no gh: every local branch is finished", D,
-     "    if gone:\n        return Verdict(True", "    if True:\n        return Verdict(True", "local_without_gh"),
+    ("no gh: an upstream-gone branch is deleted", D,
+     "    if upstream_gone(ctx, branch):\n        return Verdict(False, NEEDS_GH, cannot_classify=True, needs_gh=True)",
+     "    if upstream_gone(ctx, branch):\n        return Verdict(True, \"upstream gone\")", "local_without_gh"),
+    ("no gh: the needs-gh row deletes after all", D,
+     '        if v.needs_gh:\n            row.status, row.detail = "would delete", NEEDS_GH  # listed, never done\n            continue\n',
+     '        if v.needs_gh:\n            v = Verdict(True, "upstream gone")\n', "local_without_gh"),
+    ("no gh: the needs-gh row is dropped", D,
+     '        if v.needs_gh:\n            row.status, row.detail = "would delete", NEEDS_GH  # listed, never done\n            continue\n',
+     "", "local_without_gh"),
+    ("no gh: every local branch needs gh", D,
+     "    if upstream_gone(ctx, branch):\n        return Verdict(False, NEEDS_GH",
+     "    if True:\n        return Verdict(False, NEEDS_GH", "local_without_gh"),
+    ("a failing gh does not fall back to the upstream check", D,
+     "        if not v.cannot_classify:\n            return v\n", "        return v\n", "local_without_gh"),
+    ("a working gh no longer decides in --local", D,
+     "        if not v.cannot_classify:\n            return v\n", "        if False:\n            return v\n", "local_without_gh"),
+    ("the needs-gh row loses its wording", D,
+     '            elif r.detail == NEEDS_GH:\n                text = "%s (%s)" % (r.status, r.detail)\n',
+     "", "local_without_gh"),
     ("no gh: upstream-gone is never true", D,
      'return merge.removeprefix("refs/heads/") not in ctx.remote_heads', "return False", "local_without_gh"),
     # join.py
