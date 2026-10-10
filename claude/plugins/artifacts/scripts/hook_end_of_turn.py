@@ -138,9 +138,9 @@ def main():
         return 0
     script = script_path()
     found = pending_items(root, script)
-    if found is None:
-        return 0
-    artifacts, queue = found
+    # pending unreadable: fail open on artifacts, but the queue file is still a fact
+    # pending unreadable: fail open on artifacts, but the queue file is still a fact
+    artifacts, queue = found if found is not None else ([], [])
     queue = merge_queue(root, queue)
     state_path = os.path.join(root, STATE_NAME)
     sid = str(data.get('session_id') or 'default')
