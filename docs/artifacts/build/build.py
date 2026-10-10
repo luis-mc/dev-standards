@@ -127,33 +127,36 @@ PROJECT_TASKS = [
     dict(id='DS1', status='Live', item='AUTHSPEC 3.1.0',
          detail='Synced passkeys allowed on the admin plane. Plugin: luismc-project-setup.', expected='27 Sep'),
     # Running now and next, earliest first
-    dict(id='DS6', status='Running', item='Agent and integration rules',
-         detail='17 changes from the 9–10 Oct evidence of a real project’s sessions. Contract committed to DS6-agent-delivery (02535cd): STACKSPEC 6.0.0 and the delivery-scripts contract. Building DS8 to DS11 in parallel; then a test on a real repository, the join, and one ready PR merged on green.',
-         expected='10 Oct ~13:45'),
-    dict(id='DS8', status='Waiting', item='Branch gate scripts',
-         detail='branch_gate, gate_verify, fast_guards, join, agent_setup, gate.json per track, the pre-push hook, a starter guard test per track; tested against throwaway repos (303 checks, 23 mutants). Joined into DS6-agent-delivery at 0b967a3; waiting for release.',
-         expected='10 Oct ~13:45', app='luismc-project-setup'),
-    dict(id='DS9', status='Waiting', item='CI scripts and workflows',
-         detail='ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files. Built: draft PR #6, 33 tests pass. Joined at 0b967a3; waiting for release.',
-         expected='10 Oct ~13:45', app='luismc-project-setup'),
-    dict(id='DS10', status='Waiting', item='claude-setup rules and profiles',
-         detail='The agents-and-integration rule file (replaces model-delegation.md), the docs/ rule, per-skill model and effort, the alias-drift hook. Covers MP3, MP4, MP5 and DS7. Built: draft PR #4. Joined at 0b967a3; waiting for release.',
-         expected='10 Oct ~13:45', app='luismc-project-setup'),
-    dict(id='DS11', status='Waiting', item='tech-stack-setup wiring',
-         detail='Generate and audit paths for STACKSPEC 6.0.0, spec-lint CI steps for the new tests, luismc-project-setup 12.0.0. Built: draft PR #3; also limits spec-lint and secret-scan to main and ready PRs, and fixes the 23 stack-profile references that kept spec-lint red on main since July. Joined at 0b967a3; waiting for release.',
-         expected='10 Oct ~13:45', app='luismc-project-setup'),
-    dict(id='DS12', status='Waiting', item='Test on a real repository',
-         detail='Six scenarios on a local scratch clone of a real repository, nothing pushed: the gate caught a guard violation and blocked the push; lint reported every failing package; gate_verify rejected a stale head and a stale base; join refused a failing branch; the push-CI skip was right on 8 real merges. Four bugs fixed (tests of dependent packages, no-test packages, per-step env, LF for hooks); 322 gate checks pass. Joined at 66c8a58; waiting for release.',
-         expected='10 Oct ~13:45', app='luismc-project-setup'),
-    dict(id='DS13', status='Running', item='Join and release',
-         detail='DS8 to DS12 joined (66c8a58); STACKSPEC §13.2 now gives previews to ready PRs only (2ac740d); every local check passes. Next: DS14, then one ready PR to main, ci_watch on its head, merge on green. Then move the Agents and Integrate sections of the owner’s CLAUDE.md into the rule file.',
-         expected='10 Oct ~13:45; your CLAUDE.md ~13:55', app='luismc-project-setup'),
-    dict(id='DS14', status='Running', item='Pre-push hook keeps a project’s own check',
-         detail='Found in DS12: installing the template pre-push hook replaced a project’s existing one. The existing hook moves to pre-push.local and the template runs it; the agent_setup PATH hint uses Git Bash paths.',
-         expected='10 Oct ~13:25', app='luismc-project-setup'),
-    dict(id='DS7', status='Waiting', item='docs/ folder rule',
-         detail='A project-setup rule: every doc a session creates goes under docs/. Built in DS10.',
-         expected='10 Oct ~13:45', app='luismc-project-setup'),
+    dict(id='DS6', status='Live', item='Agent and integration rules',
+         detail='17 changes from the 9–10 Oct evidence of a real project’s sessions, released as STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 in one ready PR (#10, 0751e61), merged on green.',
+         expected='10 Oct'),
+    dict(id='DS8', status='Live', item='Branch gate scripts',
+         detail='branch_gate, gate_verify, fast_guards, join, agent_setup, gate.json per track, the pre-push hook, a starter guard per track; 345 checks with mutants. Released in #10.',
+         expected='10 Oct', app='luismc-project-setup'),
+    dict(id='DS9', status='Live', item='CI scripts and workflows',
+         detail='ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files; 33 tests. Released in #10.',
+         expected='10 Oct', app='luismc-project-setup'),
+    dict(id='DS10', status='Live', item='claude-setup rules and profiles',
+         detail='The agents-and-integration rule file, the docs/ rule, per-skill model and effort, the alias-drift hook. Released in #10; applied to the owner’s global config at 13:00.',
+         expected='10 Oct', app='luismc-project-setup'),
+    dict(id='DS11', status='Live', item='tech-stack-setup wiring',
+         detail='STACKSPEC 6.0.0 wiring, spec-lint steps, luismc-project-setup 12.0.0; spec-lint and secret-scan limited to main and ready PRs; spec-lint green again. Released in #10.',
+         expected='10 Oct', app='luismc-project-setup'),
+    dict(id='DS12', status='Live', item='Test on a real repository',
+         detail='Six scenarios on a scratch clone of a real repository, nothing pushed; four bugs found and fixed before release. Released in #10.',
+         expected='10 Oct', app='luismc-project-setup'),
+    dict(id='DS13', status='Live', item='Join and release',
+         detail='Ready PR #10 watched by head commit and merged on green at 12:56. The owner’s CLAUDE.md now holds only Communications; Agents, Integrate and Docs are in ~/.claude/rules/agents-and-integration.md; the alias-drift hook runs at session start.',
+         expected='10 Oct', app='luismc-project-setup'),
+    dict(id='DS14', status='Live', item='Pre-push hook keeps a project’s own check',
+         detail='A project’s existing pre-push hook moves to pre-push.local and still runs; the agent_setup PATH hint uses Git Bash paths. Released in #10.',
+         expected='10 Oct', app='luismc-project-setup'),
+    dict(id='DS15', status='Live', item='gitleaks allows ${{ github.token }}',
+         detail='Main’s secret-scan failed after #10: the shipped ci.yml’s GH_TOKEN: ${{ github.token }} tripped our own rule, and would have in every generated product. Fixed forward in #11 (a96dcdc); main green.',
+         expected='10 Oct', app='luismc-project-setup'),
+    dict(id='DS7', status='Live', item='docs/ folder rule',
+         detail='Every doc a session creates goes under docs/. Released in #10.',
+         expected='10 Oct', app='luismc-project-setup'),
 ]
 
 
@@ -264,14 +267,14 @@ def build_feature(module):
 
 # ---------------------------------------------------------------- full-progress artifact
 p_lede = ('<p class="lede">All ongoing work in dev-standards, across every plugin. <strong>Nothing needs you right now.</strong> '
-          'Running: <span class="task-id">DS6</span>, the agent and integration round, with DS8 to DS12 joined; DS14 fixes the pre-push hook before the release at about 13:45. '
-          'Live today: <span class="task-id">DS5</span>, the effort question (luismc-project-setup 11.3.0).</p>')
+          'Live: <span class="task-id">DS6</span>, STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (12:56), and the DS15 fix to the secret scan. Running: the luismc-artifacts build, merge on green at about 17:15. '
+          '</p>')
 
 p_s1 = table(['Feature artifact', 'Tasks', 'Where it stands'], [
     [link_or_text(content_artifacts), 'AR1 to AR16',
      'ARTIFACTSPEC 1.0.0 written (AR5); renderer, script and hooks being built; merge on green at about 17:15.'],
     [link_or_text(content_models), 'MP1 to MP6, DS2, DS5',
-     'Effort question live; role rules, skill profiles and the alias warning ship with DS6.'],
+     'All live: the effort question, role rules, skill profiles and the alias warning (luismc-project-setup 12.0.0).'],
 ])
 
 p_s2 = """<p class="lede">Until <code>luismc-artifacts</code> is built, this artifact is kept by hand to the same rules: a status change is written to the feature artifact that holds the task and to this artifact, in the same turn.</p>

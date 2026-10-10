@@ -2,7 +2,7 @@
  "registry": "draft for ARTIFACTSPEC 1.0.0",
  "project": "dev-standards",
  "timezone": "Europe/Lisbon",
- "updated": "2026-10-10T12:46+01:00",
+ "updated": "2026-10-10T13:03+01:00",
  "feature_artifacts": [
   {
    "title": "Feature: Project artifacts standard",
@@ -50,82 +50,91 @@
    "id": "DS6",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Running",
+   "status": "Live",
    "item": "Agent and integration rules",
-   "detail": "17 changes from the 9–10 Oct evidence of a real project’s sessions. Contract committed to DS6-agent-delivery (02535cd): STACKSPEC 6.0.0 and the delivery-scripts contract. Building DS8 to DS11 in parallel; then a test on a real repository, the join, and one ready PR merged on green.",
-   "expected": "10 Oct ~13:45"
+   "detail": "17 changes from the 9–10 Oct evidence of a real project’s sessions, released as STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 in one ready PR (#10, 0751e61), merged on green.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS8",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "Branch gate scripts",
-   "detail": "branch_gate, gate_verify, fast_guards, join, agent_setup, gate.json per track, the pre-push hook, a starter guard test per track; tested against throwaway repos (303 checks, 23 mutants). Joined into DS6-agent-delivery at 0b967a3; waiting for release.",
-   "expected": "10 Oct ~13:45"
+   "detail": "branch_gate, gate_verify, fast_guards, join, agent_setup, gate.json per track, the pre-push hook, a starter guard per track; 345 checks with mutants. Released in #10.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS9",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "CI scripts and workflows",
-   "detail": "ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files. Built: draft PR #6, 33 tests pass. Joined at 0b967a3; waiting for release.",
-   "expected": "10 Oct ~13:45"
+   "detail": "ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files; 33 tests. Released in #10.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS10",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "claude-setup rules and profiles",
-   "detail": "The agents-and-integration rule file (replaces model-delegation.md), the docs/ rule, per-skill model and effort, the alias-drift hook. Covers MP3, MP4, MP5 and DS7. Built: draft PR #4. Joined at 0b967a3; waiting for release.",
-   "expected": "10 Oct ~13:45"
+   "detail": "The agents-and-integration rule file, the docs/ rule, per-skill model and effort, the alias-drift hook. Released in #10; applied to the owner’s global config at 13:00.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS11",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "tech-stack-setup wiring",
-   "detail": "Generate and audit paths for STACKSPEC 6.0.0, spec-lint CI steps for the new tests, luismc-project-setup 12.0.0. Built: draft PR #3; also limits spec-lint and secret-scan to main and ready PRs, and fixes the 23 stack-profile references that kept spec-lint red on main since July. Joined at 0b967a3; waiting for release.",
-   "expected": "10 Oct ~13:45"
+   "detail": "STACKSPEC 6.0.0 wiring, spec-lint steps, luismc-project-setup 12.0.0; spec-lint and secret-scan limited to main and ready PRs; spec-lint green again. Released in #10.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS12",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "Test on a real repository",
-   "detail": "Six scenarios on a local scratch clone of a real repository, nothing pushed: the gate caught a guard violation and blocked the push; lint reported every failing package; gate_verify rejected a stale head and a stale base; join refused a failing branch; the push-CI skip was right on 8 real merges. Four bugs fixed (tests of dependent packages, no-test packages, per-step env, LF for hooks); 322 gate checks pass. Joined at 66c8a58; waiting for release.",
-   "expected": "10 Oct ~13:45"
+   "detail": "Six scenarios on a scratch clone of a real repository, nothing pushed; four bugs found and fixed before release. Released in #10.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS13",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Running",
+   "status": "Live",
    "item": "Join and release",
-   "detail": "DS8 to DS12 joined (66c8a58); STACKSPEC §13.2 now gives previews to ready PRs only (2ac740d); every local check passes. Next: DS14, then one ready PR to main, ci_watch on its head, merge on green. Then move the Agents and Integrate sections of the owner’s CLAUDE.md into the rule file.",
-   "expected": "10 Oct ~13:45; your CLAUDE.md ~13:55"
+   "detail": "Ready PR #10 watched by head commit and merged on green at 12:56. The owner’s CLAUDE.md now holds only Communications; Agents, Integrate and Docs are in ~/.claude/rules/agents-and-integration.md; the alias-drift hook runs at session start.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS14",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Running",
+   "status": "Live",
    "item": "Pre-push hook keeps a project’s own check",
-   "detail": "Found in DS12: installing the template pre-push hook replaced a project’s existing one. The existing hook moves to pre-push.local and the template runs it; the agent_setup PATH hint uses Git Bash paths.",
-   "expected": "10 Oct ~13:25"
+   "detail": "A project’s existing pre-push hook moves to pre-push.local and still runs; the agent_setup PATH hint uses Git Bash paths. Released in #10.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "DS15",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "Live",
+   "item": "gitleaks allows ${{ github.token }}",
+   "detail": "Main’s secret-scan failed after #10: the shipped ci.yml’s GH_TOKEN: ${{ github.token }} tripped our own rule, and would have in every generated product. Fixed forward in #11 (a96dcdc); main green.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS7",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "docs/ folder rule",
-   "detail": "A project-setup rule: every doc a session creates goes under docs/. Built in DS10.",
-   "expected": "10 Oct ~13:45"
+   "detail": "Every doc a session creates goes under docs/. Released in #10.",
+   "expected": "10 Oct"
   },
   {
    "id": "AR16",
@@ -185,10 +194,10 @@
    "id": "AR6",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Done",
    "item": "Templates",
-   "detail": "render_artifacts.py, the two templates and the HTML checks; a Sonnet agent on AR6-templates.",
-   "expected": "10 Oct ~15:30"
+   "detail": "render_artifacts.py and the two templates: deterministic rendering, the HTML checks, the Earlier fold; 57 tests; joined at 39cb8c3.",
+   "expected": "10 Oct"
   },
   {
    "id": "AR7",
@@ -212,27 +221,27 @@
    "id": "AR9",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Running",
    "item": "Tests and CI",
-   "detail": "A fixture per check that proves it fires, hook tests, spec-lint.yml path filters.",
+   "detail": "Each build agent writes the tests for its part; the spec-lint steps are being added on AR10-skills-wiring.",
    "expected": "10 Oct ~16:30"
   },
   {
    "id": "AR10",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Running",
    "item": "Skills and rule file",
-   "detail": "The five skills and .claude/rules/project-artifacts.md.",
+   "detail": "The five skills and .claude/rules/project-artifacts.md; a Sonnet agent on AR10-skills-wiring.",
    "expected": "10 Oct ~16:30"
   },
   {
    "id": "AR11",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Running",
    "item": "Plugin wiring",
-   "detail": "plugin.json 1.0.0, the marketplace entry, the README section and install line.",
+   "detail": "plugin.json 1.0.0, the marketplace entry, the README section; claude-setup enables the plugin in every project (luismc-project-setup 12.1.0). Same agent as AR10.",
    "expected": "10 Oct ~16:45"
   },
   {
@@ -293,37 +302,37 @@
    "id": "MP3",
    "owner": "Feature: Model and effort profiles",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "Role rules",
-   "detail": "One line per role in the agents-and-integration rule file: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts a script cannot resolve, Haiku for log triage.",
-   "expected": "10 Oct ~13:45"
+   "detail": "One line per role in .claude/rules/agents-and-integration.md: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts, Haiku for log triage. luismc-project-setup 12.0.0.",
+   "expected": "10 Oct"
   },
   {
    "id": "MP4",
    "owner": "Feature: Model and effort profiles",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "Per-skill model and effort",
-   "detail": "model and effort in every plugin SKILL.md, by kind of work (section 5), with a test that compares them to the profile table.",
-   "expected": "10 Oct ~13:45"
+   "detail": "model and effort in every plugin SKILL.md by kind of work, checked against model-profiles.json by test_model_profiles.py. luismc-project-setup 12.0.0.",
+   "expected": "10 Oct"
   },
   {
    "id": "MP5",
    "owner": "Feature: Model and effort profiles",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "Alias-drift warning",
-   "detail": "A session-start hook that warns when the current Opus or Sonnet ID has no saved effort entry (figure 3).",
-   "expected": "10 Oct ~13:45"
+   "detail": "effort_drift.py warns at session start when the current Opus or Sonnet ID has no saved effort. Shipped in 12.0.0 and installed in the owner’s ~/.claude.",
+   "expected": "10 Oct"
   },
   {
    "id": "MP6",
    "owner": "Feature: Model and effort profiles",
    "app": "luismc-project-setup",
-   "status": "To do",
+   "status": "Live",
    "item": "Tests and release",
-   "detail": "Profile test, hook test, claude-setup checks; released in the DS6 ready PR.",
-   "expected": "10 Oct ~13:45"
+   "detail": "Profile test, hook test and claude-setup checks pass; released in ready PR #10 (0751e61).",
+   "expected": "10 Oct"
   }
  ]
 }

@@ -16,8 +16,7 @@ HERO = ('Which model and which effort every kind of agent and every skill uses, 
 EXTRA_CSS = FIGURE_CSS
 
 LEDE = ('<p class="lede">The profiles are decided and the effort question is live (DS5, luismc-project-setup 11.3.0). '
-        '<strong>Nothing needs you.</strong> The rest ships with the agent and integration round (DS6): '
-        'role rules, per-skill profiles and the alias-drift warning. Every task here is also on {fp_link}.</p>')
+        '<strong>Nothing needs you.</strong> Role rules, per-skill profiles and the alias-drift warning are live too, in luismc-project-setup 12.0.0 (DS6, #10). Every task here is also on {fp_link}.</p>')
 
 # status, item, detail, expected; owner is this feature unless noted. Done/Live newest first.
 TASKS = [
@@ -33,18 +32,18 @@ TASKS = [
     dict(id='DS2', status='Live', item='Opus plans, Sonnet codes',
          detail='claude-setup writes model opus and CLAUDE_CODE_SUBAGENT_MODEL sonnet, plus the delegation rule.',
          expected='01 Oct'),
-    dict(id='MP3', status='Waiting', item='Role rules',
-         detail='One line per role in the agents-and-integration rule file: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts a script cannot resolve, Haiku for log triage.',
-         expected='10 Oct ~13:45'),
-    dict(id='MP4', status='Waiting', item='Per-skill model and effort',
-         detail='model and effort in every plugin SKILL.md, by kind of work (section 5), with a test that compares them to the profile table.',
-         expected='10 Oct ~13:45'),
-    dict(id='MP5', status='Waiting', item='Alias-drift warning',
-         detail='A session-start hook that warns when the current Opus or Sonnet ID has no saved effort entry (figure 3).',
-         expected='10 Oct ~13:45'),
-    dict(id='MP6', status='To do', item='Tests and release',
-         detail='Profile test, hook test, claude-setup checks; released in the DS6 ready PR.',
-         expected='10 Oct ~13:45'),
+    dict(id='MP3', status='Live', item='Role rules',
+         detail='One line per role in .claude/rules/agents-and-integration.md: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts, Haiku for log triage. luismc-project-setup 12.0.0.',
+         expected='10 Oct'),
+    dict(id='MP4', status='Live', item='Per-skill model and effort',
+         detail='model and effort in every plugin SKILL.md by kind of work, checked against model-profiles.json by test_model_profiles.py. luismc-project-setup 12.0.0.',
+         expected='10 Oct'),
+    dict(id='MP5', status='Live', item='Alias-drift warning',
+         detail='effort_drift.py warns at session start when the current Opus or Sonnet ID has no saved effort. Shipped in 12.0.0 and installed in the owner’s ~/.claude.',
+         expected='10 Oct'),
+    dict(id='MP6', status='Live', item='Tests and release',
+         detail='Profile test, hook test and claude-setup checks pass; released in ready PR #10 (0751e61).',
+         expected='10 Oct'),
 ]
 
 
@@ -126,7 +125,8 @@ S7 = _table(['#', 'Question', 'Decision (10 Oct)'], [
 
 def history(stamp):
     return _table(['Date', 'Change'], [
-        [stamp, 'Expected times are now a date and a Lisbon time, not &ldquo;today&rdquo;; MP3 to MP6 ship with the DS6 release at about 13:45. No other project is named.'],
+        [stamp, 'MP3 to MP6 live: released in luismc-project-setup 12.0.0 (#10, 12:56); the alias-drift hook also installed in the owner&rsquo;s ~/.claude.'],
+        ['10 Oct 12:23', 'Expected times are now a date and a Lisbon time, not &ldquo;today&rdquo;; MP3 to MP6 ship with the DS6 release at about 13:45. No other project is named.'],
         ['10 Oct 11:07', 'Created. The owner made model and effort profiles a feature of their own. DS2 and DS5 moved here from the project tasks; MP1 to MP6 added; three figures (who runs on what, where settings come from, alias drift); the decisions of 10 October.'],
     ]).replace('<table>', '<table class="history-table">')
 

@@ -436,7 +436,7 @@ li { margin: .25em 0; }
  "registry": "draft for ARTIFACTSPEC 1.0.0",
  "project": "dev-standards",
  "timezone": "Europe/Lisbon",
- "updated": "2026-10-10T12:46+01:00",
+ "updated": "2026-10-10T13:03+01:00",
  "feature_artifacts": [
   {
    "title": "Feature: Project artifacts standard",
@@ -484,82 +484,91 @@ li { margin: .25em 0; }
    "id": "DS6",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Running",
+   "status": "Live",
    "item": "Agent and integration rules",
-   "detail": "17 changes from the 9–10 Oct evidence of a real project’s sessions. Contract committed to DS6-agent-delivery (02535cd): STACKSPEC 6.0.0 and the delivery-scripts contract. Building DS8 to DS11 in parallel; then a test on a real repository, the join, and one ready PR merged on green.",
-   "expected": "10 Oct ~13:45"
+   "detail": "17 changes from the 9–10 Oct evidence of a real project’s sessions, released as STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 in one ready PR (#10, 0751e61), merged on green.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS8",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "Branch gate scripts",
-   "detail": "branch_gate, gate_verify, fast_guards, join, agent_setup, gate.json per track, the pre-push hook, a starter guard test per track; tested against throwaway repos (303 checks, 23 mutants). Joined into DS6-agent-delivery at 0b967a3; waiting for release.",
-   "expected": "10 Oct ~13:45"
+   "detail": "branch_gate, gate_verify, fast_guards, join, agent_setup, gate.json per track, the pre-push hook, a starter guard per track; 345 checks with mutants. Released in #10.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS9",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "CI scripts and workflows",
-   "detail": "ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files. Built: draft PR #6, 33 tests pass. Joined at 0b967a3; waiting for release.",
-   "expected": "10 Oct ~13:45"
+   "detail": "ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files; 33 tests. Released in #10.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS10",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "claude-setup rules and profiles",
-   "detail": "The agents-and-integration rule file (replaces model-delegation.md), the docs/ rule, per-skill model and effort, the alias-drift hook. Covers MP3, MP4, MP5 and DS7. Built: draft PR #4. Joined at 0b967a3; waiting for release.",
-   "expected": "10 Oct ~13:45"
+   "detail": "The agents-and-integration rule file, the docs/ rule, per-skill model and effort, the alias-drift hook. Released in #10; applied to the owner’s global config at 13:00.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS11",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "tech-stack-setup wiring",
-   "detail": "Generate and audit paths for STACKSPEC 6.0.0, spec-lint CI steps for the new tests, luismc-project-setup 12.0.0. Built: draft PR #3; also limits spec-lint and secret-scan to main and ready PRs, and fixes the 23 stack-profile references that kept spec-lint red on main since July. Joined at 0b967a3; waiting for release.",
-   "expected": "10 Oct ~13:45"
+   "detail": "STACKSPEC 6.0.0 wiring, spec-lint steps, luismc-project-setup 12.0.0; spec-lint and secret-scan limited to main and ready PRs; spec-lint green again. Released in #10.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS12",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "Test on a real repository",
-   "detail": "Six scenarios on a local scratch clone of a real repository, nothing pushed: the gate caught a guard violation and blocked the push; lint reported every failing package; gate_verify rejected a stale head and a stale base; join refused a failing branch; the push-CI skip was right on 8 real merges. Four bugs fixed (tests of dependent packages, no-test packages, per-step env, LF for hooks); 322 gate checks pass. Joined at 66c8a58; waiting for release.",
-   "expected": "10 Oct ~13:45"
+   "detail": "Six scenarios on a scratch clone of a real repository, nothing pushed; four bugs found and fixed before release. Released in #10.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS13",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Running",
+   "status": "Live",
    "item": "Join and release",
-   "detail": "DS8 to DS12 joined (66c8a58); STACKSPEC §13.2 now gives previews to ready PRs only (2ac740d); every local check passes. Next: DS14, then one ready PR to main, ci_watch on its head, merge on green. Then move the Agents and Integrate sections of the owner’s CLAUDE.md into the rule file.",
-   "expected": "10 Oct ~13:45; your CLAUDE.md ~13:55"
+   "detail": "Ready PR #10 watched by head commit and merged on green at 12:56. The owner’s CLAUDE.md now holds only Communications; Agents, Integrate and Docs are in ~/.claude/rules/agents-and-integration.md; the alias-drift hook runs at session start.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS14",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Running",
+   "status": "Live",
    "item": "Pre-push hook keeps a project’s own check",
-   "detail": "Found in DS12: installing the template pre-push hook replaced a project’s existing one. The existing hook moves to pre-push.local and the template runs it; the agent_setup PATH hint uses Git Bash paths.",
-   "expected": "10 Oct ~13:25"
+   "detail": "A project’s existing pre-push hook moves to pre-push.local and still runs; the agent_setup PATH hint uses Git Bash paths. Released in #10.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "DS15",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "Live",
+   "item": "gitleaks allows ${{ github.token }}",
+   "detail": "Main’s secret-scan failed after #10: the shipped ci.yml’s GH_TOKEN: ${{ github.token }} tripped our own rule, and would have in every generated product. Fixed forward in #11 (a96dcdc); main green.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS7",
    "owner": "project",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "docs/ folder rule",
-   "detail": "A project-setup rule: every doc a session creates goes under docs/. Built in DS10.",
-   "expected": "10 Oct ~13:45"
+   "detail": "Every doc a session creates goes under docs/. Released in #10.",
+   "expected": "10 Oct"
   },
   {
    "id": "AR16",
@@ -619,10 +628,10 @@ li { margin: .25em 0; }
    "id": "AR6",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Done",
    "item": "Templates",
-   "detail": "render_artifacts.py, the two templates and the HTML checks; a Sonnet agent on AR6-templates.",
-   "expected": "10 Oct ~15:30"
+   "detail": "render_artifacts.py and the two templates: deterministic rendering, the HTML checks, the Earlier fold; 57 tests; joined at 39cb8c3.",
+   "expected": "10 Oct"
   },
   {
    "id": "AR7",
@@ -646,27 +655,27 @@ li { margin: .25em 0; }
    "id": "AR9",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Running",
    "item": "Tests and CI",
-   "detail": "A fixture per check that proves it fires, hook tests, spec-lint.yml path filters.",
+   "detail": "Each build agent writes the tests for its part; the spec-lint steps are being added on AR10-skills-wiring.",
    "expected": "10 Oct ~16:30"
   },
   {
    "id": "AR10",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Running",
    "item": "Skills and rule file",
-   "detail": "The five skills and .claude/rules/project-artifacts.md.",
+   "detail": "The five skills and .claude/rules/project-artifacts.md; a Sonnet agent on AR10-skills-wiring.",
    "expected": "10 Oct ~16:30"
   },
   {
    "id": "AR11",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Running",
    "item": "Plugin wiring",
-   "detail": "plugin.json 1.0.0, the marketplace entry, the README section and install line.",
+   "detail": "plugin.json 1.0.0, the marketplace entry, the README section; claude-setup enables the plugin in every project (luismc-project-setup 12.1.0). Same agent as AR10.",
    "expected": "10 Oct ~16:45"
   },
   {
@@ -727,79 +736,80 @@ li { margin: .25em 0; }
    "id": "MP3",
    "owner": "Feature: Model and effort profiles",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "Role rules",
-   "detail": "One line per role in the agents-and-integration rule file: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts a script cannot resolve, Haiku for log triage.",
-   "expected": "10 Oct ~13:45"
+   "detail": "One line per role in .claude/rules/agents-and-integration.md: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts, Haiku for log triage. luismc-project-setup 12.0.0.",
+   "expected": "10 Oct"
   },
   {
    "id": "MP4",
    "owner": "Feature: Model and effort profiles",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "Per-skill model and effort",
-   "detail": "model and effort in every plugin SKILL.md, by kind of work (section 5), with a test that compares them to the profile table.",
-   "expected": "10 Oct ~13:45"
+   "detail": "model and effort in every plugin SKILL.md by kind of work, checked against model-profiles.json by test_model_profiles.py. luismc-project-setup 12.0.0.",
+   "expected": "10 Oct"
   },
   {
    "id": "MP5",
    "owner": "Feature: Model and effort profiles",
    "app": "luismc-project-setup",
-   "status": "Waiting",
+   "status": "Live",
    "item": "Alias-drift warning",
-   "detail": "A session-start hook that warns when the current Opus or Sonnet ID has no saved effort entry (figure 3).",
-   "expected": "10 Oct ~13:45"
+   "detail": "effort_drift.py warns at session start when the current Opus or Sonnet ID has no saved effort. Shipped in 12.0.0 and installed in the owner’s ~/.claude.",
+   "expected": "10 Oct"
   },
   {
    "id": "MP6",
    "owner": "Feature: Model and effort profiles",
    "app": "luismc-project-setup",
-   "status": "To do",
+   "status": "Live",
    "item": "Tests and release",
-   "detail": "Profile test, hook test, claude-setup checks; released in the DS6 ready PR.",
-   "expected": "10 Oct ~13:45"
+   "detail": "Profile test, hook test and claude-setup checks pass; released in ready PR #10 (0751e61).",
+   "expected": "10 Oct"
   }
  ]
 }</script>
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every plugin &middot; default design</div></header>
-<section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2><p class="last-update">Last update: <time datetime="2026-10-10T12:46+01:00">10 Oct 12:46</time> (Lisbon)</p>
-<p class="lede">All ongoing work in dev-standards, across every plugin. <strong>Nothing needs you right now.</strong> Running: <span class="task-id">DS6</span>, the agent and integration round, with DS8 to DS12 joined; DS14 fixes the pre-push hook before the release at about 13:45. Live today: <span class="task-id">DS5</span>, the effort question (luismc-project-setup 11.3.0).</p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">5</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">8</div><div class="label">done</div></div><div class="status-count-tile status-running"><div class="count">7</div><div class="label">running</div></div><div class="status-count-tile status-waiting"><div class="count">9</div><div class="label">waiting</div></div><div class="status-count-tile status-to-do"><div class="count">5</div><div class="label">to do</div></div></div>
+<section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2><p class="last-update">Last update: <time datetime="2026-10-10T13:03+01:00">10 Oct 13:03</time> (Lisbon)</p>
+<p class="lede">All ongoing work in dev-standards, across every plugin. <strong>Nothing needs you right now.</strong> Live: <span class="task-id">DS6</span>, STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (12:56), and the DS15 fix to the secret scan. Running: the luismc-artifacts build, merge on green at about 17:15. </p>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">19</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">9</div><div class="label">done</div></div><div class="status-count-tile status-running"><div class="count">6</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-done">Done</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next, earliest first</strong></td></tr>
-<tr data-task="DS6"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS6</span>Agent and integration rules</td><td><code>luismc-project-setup</code></td><td>17 changes from the 9–10 Oct evidence of a real project’s sessions. Contract committed to DS6-agent-delivery (02535cd): STACKSPEC 6.0.0 and the delivery-scripts contract. Building DS8 to DS11 in parallel; then a test on a real repository, the join, and one ready PR merged on green.</td><td>10 Oct ~13:45</td></tr>
-<tr data-task="DS8"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DS8</span>Branch gate scripts</td><td><code>luismc-project-setup</code></td><td>branch_gate, gate_verify, fast_guards, join, agent_setup, gate.json per track, the pre-push hook, a starter guard test per track; tested against throwaway repos (303 checks, 23 mutants). Joined into DS6-agent-delivery at 0b967a3; waiting for release.</td><td>10 Oct ~13:45</td></tr>
-<tr data-task="DS9"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DS9</span>CI scripts and workflows</td><td><code>luismc-project-setup</code></td><td>ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files. Built: draft PR #6, 33 tests pass. Joined at 0b967a3; waiting for release.</td><td>10 Oct ~13:45</td></tr>
-<tr data-task="DS10"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DS10</span>claude-setup rules and profiles</td><td><code>luismc-project-setup</code></td><td>The agents-and-integration rule file (replaces model-delegation.md), the docs/ rule, per-skill model and effort, the alias-drift hook. Covers MP3, MP4, MP5 and DS7. Built: draft PR #4. Joined at 0b967a3; waiting for release.</td><td>10 Oct ~13:45</td></tr>
-<tr data-task="DS11"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DS11</span>tech-stack-setup wiring</td><td><code>luismc-project-setup</code></td><td>Generate and audit paths for STACKSPEC 6.0.0, spec-lint CI steps for the new tests, luismc-project-setup 12.0.0. Built: draft PR #3; also limits spec-lint and secret-scan to main and ready PRs, and fixes the 23 stack-profile references that kept spec-lint red on main since July. Joined at 0b967a3; waiting for release.</td><td>10 Oct ~13:45</td></tr>
-<tr data-task="DS12"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DS12</span>Test on a real repository</td><td><code>luismc-project-setup</code></td><td>Six scenarios on a local scratch clone of a real repository, nothing pushed: the gate caught a guard violation and blocked the push; lint reported every failing package; gate_verify rejected a stale head and a stale base; join refused a failing branch; the push-CI skip was right on 8 real merges. Four bugs fixed (tests of dependent packages, no-test packages, per-step env, LF for hooks); 322 gate checks pass. Joined at 66c8a58; waiting for release.</td><td>10 Oct ~13:45</td></tr>
-<tr data-task="DS13"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS13</span>Join and release</td><td><code>luismc-project-setup</code></td><td>DS8 to DS12 joined (66c8a58); STACKSPEC §13.2 now gives previews to ready PRs only (2ac740d); every local check passes. Next: DS14, then one ready PR to main, ci_watch on its head, merge on green. Then move the Agents and Integrate sections of the owner’s CLAUDE.md into the rule file.</td><td>10 Oct ~13:45; your CLAUDE.md ~13:55</td></tr>
-<tr data-task="DS14"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS14</span>Pre-push hook keeps a project’s own check</td><td><code>luismc-project-setup</code></td><td>Found in DS12: installing the template pre-push hook replaced a project’s existing one. The existing hook moves to pre-push.local and the template runs it; the agent_setup PATH hint uses Git Bash paths.</td><td>10 Oct ~13:25</td></tr>
-<tr data-task="DS7"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DS7</span>docs/ folder rule</td><td><code>luismc-project-setup</code></td><td>A project-setup rule: every doc a session creates goes under docs/. Built in DS10.</td><td>10 Oct ~13:45</td></tr>
-<tr data-task="AR6"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR6</span>Templates</a></td><td><code>luismc-artifacts</code></td><td>render_artifacts.py, the two templates and the HTML checks; a Sonnet agent on AR6-templates.</td><td>10 Oct ~15:30</td></tr>
 <tr data-task="AR7"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR7</span>project_artifacts.py</a></td><td><code>luismc-artifacts</code></td><td>project_artifacts.py: the record worktree, every command, pending and mark-published, the record checks; a Sonnet agent on AR7-project-artifacts.</td><td>10 Oct ~15:30</td></tr>
 <tr data-task="AR8"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR8</span>Hooks</a></td><td><code>luismc-artifacts</code></td><td>The after-command, end-of-turn and session-start hooks and hooks/hooks.json; a Sonnet agent on AR8-hooks.</td><td>10 Oct ~15:30</td></tr>
-<tr data-task="AR9"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR9</span>Tests and CI</a></td><td><code>luismc-artifacts</code></td><td>A fixture per check that proves it fires, hook tests, spec-lint.yml path filters.</td><td>10 Oct ~16:30</td></tr>
-<tr data-task="AR10"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR10</span>Skills and rule file</a></td><td><code>luismc-artifacts</code></td><td>The five skills and .claude/rules/project-artifacts.md.</td><td>10 Oct ~16:30</td></tr>
-<tr data-task="AR11"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR11</span>Plugin wiring</a></td><td><code>luismc-artifacts</code></td><td>plugin.json 1.0.0, the marketplace entry, the README section and install line.</td><td>10 Oct ~16:45</td></tr>
+<tr data-task="AR9"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR9</span>Tests and CI</a></td><td><code>luismc-artifacts</code></td><td>Each build agent writes the tests for its part; the spec-lint steps are being added on AR10-skills-wiring.</td><td>10 Oct ~16:30</td></tr>
+<tr data-task="AR10"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR10</span>Skills and rule file</a></td><td><code>luismc-artifacts</code></td><td>The five skills and .claude/rules/project-artifacts.md; a Sonnet agent on AR10-skills-wiring.</td><td>10 Oct ~16:30</td></tr>
+<tr data-task="AR11"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR11</span>Plugin wiring</a></td><td><code>luismc-artifacts</code></td><td>plugin.json 1.0.0, the marketplace entry, the README section; claude-setup enables the plugin in every project (luismc-project-setup 12.1.0). Same agent as AR10.</td><td>10 Oct ~16:45</td></tr>
 <tr data-task="AR12"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR12</span>Integrate and release</a></td><td><code>luismc-artifacts</code></td><td>Full suite once on AR12-integration, then one ready PR to main: one CI run, one release; merged on green.</td><td>10 Oct ~17:15</td></tr>
 <tr data-task="AR15"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR15</span>Repo record and recreate</a></td><td><code>luismc-artifacts</code></td><td>The record in docs/artifacts and recreation without duplicates; built into project_artifacts.py by the AR7 agent.</td><td>10 Oct ~15:30</td></tr>
-<tr data-task="MP3"><td><span class="status-chip status-waiting">Waiting</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP3</span>Role rules</a></td><td><code>luismc-project-setup</code></td><td>One line per role in the agents-and-integration rule file: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts a script cannot resolve, Haiku for log triage.</td><td>10 Oct ~13:45</td></tr>
-<tr data-task="MP4"><td><span class="status-chip status-waiting">Waiting</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP4</span>Per-skill model and effort</a></td><td><code>luismc-project-setup</code></td><td>model and effort in every plugin SKILL.md, by kind of work (section 5), with a test that compares them to the profile table.</td><td>10 Oct ~13:45</td></tr>
-<tr data-task="MP5"><td><span class="status-chip status-waiting">Waiting</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP5</span>Alias-drift warning</a></td><td><code>luismc-project-setup</code></td><td>A session-start hook that warns when the current Opus or Sonnet ID has no saved effort entry (figure 3).</td><td>10 Oct ~13:45</td></tr>
-<tr data-task="MP6"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP6</span>Tests and release</a></td><td><code>luismc-project-setup</code></td><td>Profile test, hook test, claude-setup checks; released in the DS6 ready PR.</td><td>10 Oct ~13:45</td></tr>
 <tr class="status-group" data-group="done"><td colspan="5"><strong>Live or done, newest first</strong></td></tr>
+<tr data-task="DS6"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS6</span>Agent and integration rules</td><td><code>luismc-project-setup</code></td><td>17 changes from the 9–10 Oct evidence of a real project’s sessions, released as STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 in one ready PR (#10, 0751e61), merged on green.</td><td>10 Oct</td></tr>
+<tr data-task="DS8"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS8</span>Branch gate scripts</td><td><code>luismc-project-setup</code></td><td>branch_gate, gate_verify, fast_guards, join, agent_setup, gate.json per track, the pre-push hook, a starter guard per track; 345 checks with mutants. Released in #10.</td><td>10 Oct</td></tr>
+<tr data-task="DS9"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS9</span>CI scripts and workflows</td><td><code>luismc-project-setup</code></td><td>ci_watch, ci_skip_check, reach_check; the decide job and gated e2e with a quarantine list in all four ci.yml files; 33 tests. Released in #10.</td><td>10 Oct</td></tr>
+<tr data-task="DS10"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS10</span>claude-setup rules and profiles</td><td><code>luismc-project-setup</code></td><td>The agents-and-integration rule file, the docs/ rule, per-skill model and effort, the alias-drift hook. Released in #10; applied to the owner’s global config at 13:00.</td><td>10 Oct</td></tr>
+<tr data-task="DS11"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS11</span>tech-stack-setup wiring</td><td><code>luismc-project-setup</code></td><td>STACKSPEC 6.0.0 wiring, spec-lint steps, luismc-project-setup 12.0.0; spec-lint and secret-scan limited to main and ready PRs; spec-lint green again. Released in #10.</td><td>10 Oct</td></tr>
+<tr data-task="DS12"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS12</span>Test on a real repository</td><td><code>luismc-project-setup</code></td><td>Six scenarios on a scratch clone of a real repository, nothing pushed; four bugs found and fixed before release. Released in #10.</td><td>10 Oct</td></tr>
+<tr data-task="DS13"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS13</span>Join and release</td><td><code>luismc-project-setup</code></td><td>Ready PR #10 watched by head commit and merged on green at 12:56. The owner’s CLAUDE.md now holds only Communications; Agents, Integrate and Docs are in ~/.claude/rules/agents-and-integration.md; the alias-drift hook runs at session start.</td><td>10 Oct</td></tr>
+<tr data-task="DS14"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS14</span>Pre-push hook keeps a project’s own check</td><td><code>luismc-project-setup</code></td><td>A project’s existing pre-push hook moves to pre-push.local and still runs; the agent_setup PATH hint uses Git Bash paths. Released in #10.</td><td>10 Oct</td></tr>
+<tr data-task="DS15"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS15</span>gitleaks allows ${{ github.token }}</td><td><code>luismc-project-setup</code></td><td>Main’s secret-scan failed after #10: the shipped ci.yml’s GH_TOKEN: ${{ github.token }} tripped our own rule, and would have in every generated product. Fixed forward in #11 (a96dcdc); main green.</td><td>10 Oct</td></tr>
+<tr data-task="DS7"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS7</span>docs/ folder rule</td><td><code>luismc-project-setup</code></td><td>Every doc a session creates goes under docs/. Released in #10.</td><td>10 Oct</td></tr>
 <tr data-task="AR16"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR16</span>dev-standards record in docs/artifacts</a></td><td><code>luismc-artifacts</code></td><td>Manifest, registry, HTML and the interim generator committed to main as docs-only commits.</td><td>10 Oct</td></tr>
 <tr data-task="AR4"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR4</span>Answer the open decisions</a></td><td><code>luismc-artifacts</code></td><td>Answered: one task registry; branch names start with the task ID; catch-up at session start; each project&#x27;s own design, the plugin&#x27;s default when it has none; an App / service column on the full-progress artifact.</td><td>10 Oct</td></tr>
 <tr data-task="AR14"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR14</span>Default design</a></td><td><code>luismc-artifacts</code></td><td>design/default-design.css, DESIGN.md and templates/project-artifact.css on branch AR14-default-design; applied to both dev-standards artifacts.</td><td>10 Oct</td></tr>
 <tr data-task="AR3"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR3</span>Moved to dev-standards and rewritten</a></td><td><code>luismc-artifacts</code></td><td>This artifact now belongs to dev-standards and describes the agreed design; Full Progress: dev-standards created.</td><td>10 Oct</td></tr>
 <tr data-task="AR2"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR2</span>Proposal reviewed</a></td><td><code>luismc-artifacts</code></td><td>Twelve findings; each one and the change it led to is in section 7.</td><td>10 Oct</td></tr>
 <tr data-task="AR5"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR5</span>ARTIFACTSPEC 1.0.0</a></td><td><code>luismc-artifacts</code></td><td>ARTIFACTSPEC 1.0.0 on AR12-integration (b8bd29b): the record, statuses and checklist, commands, hooks, publishing and recreation, test and conformance gates; spec_check clean. Plus the shared queue module (43150da).</td><td>10 Oct</td></tr>
+<tr data-task="AR6"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR6</span>Templates</a></td><td><code>luismc-artifacts</code></td><td>render_artifacts.py and the two templates: deterministic rendering, the HTML checks, the Earlier fold; 57 tests; joined at 39cb8c3.</td><td>10 Oct</td></tr>
 <tr data-task="DS5"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">DS5</span>claude-setup: medium or high effort per model</a></td><td><code>luismc-project-setup</code></td><td>Asked on every run, high preselected for code agents; written to modelSettings and the delegation rule; top-level effortLevel high for cloud agents. luismc-project-setup 11.3.0, PR #2.</td><td>10 Oct</td></tr>
 <tr data-task="MP2"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP2</span>Profile decisions</a></td><td><code>luismc-project-setup</code></td><td>Explore and Plan stay on Opus; skills profiled by kind of work; a session-start warning for alias drift. Section 7.</td><td>10 Oct</td></tr>
 <tr data-task="MP1"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP1</span>Inventory of models per agent type</a></td><td><code>luismc-project-setup</code></td><td>Checked against the Claude Code docs; corrects the first answer (Explore and Plan run on the main session’s model). Figure 1.</td><td>10 Oct</td></tr>
+<tr data-task="MP3"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP3</span>Role rules</a></td><td><code>luismc-project-setup</code></td><td>One line per role in .claude/rules/agents-and-integration.md: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts, Haiku for log triage. luismc-project-setup 12.0.0.</td><td>10 Oct</td></tr>
+<tr data-task="MP4"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP4</span>Per-skill model and effort</a></td><td><code>luismc-project-setup</code></td><td>model and effort in every plugin SKILL.md by kind of work, checked against model-profiles.json by test_model_profiles.py. luismc-project-setup 12.0.0.</td><td>10 Oct</td></tr>
+<tr data-task="MP5"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP5</span>Alias-drift warning</a></td><td><code>luismc-project-setup</code></td><td>effort_drift.py warns at session start when the current Opus or Sonnet ID has no saved effort. Shipped in 12.0.0 and installed in the owner’s ~/.claude.</td><td>10 Oct</td></tr>
+<tr data-task="MP6"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP6</span>Tests and release</a></td><td><code>luismc-project-setup</code></td><td>Profile test, hook test and claude-setup checks pass; released in ready PR #10 (0751e61).</td><td>10 Oct</td></tr>
 <tr data-task="DS4"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS4</span>tech-stack-setup 11.2.1</td><td><code>luismc-project-setup</code></td><td>Required checks named by job name, not job id. Plugin: luismc-project-setup.</td><td>02 Oct</td></tr>
 <tr data-task="DS3"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS3</span>tech-stack-setup 11.2.0</td><td><code>luismc-project-setup</code></td><td>Fewer CI minutes without dropping the STACKSPEC §13.1 gates. Plugin: luismc-project-setup.</td><td>02 Oct</td></tr>
 <tr data-task="DS2"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">DS2</span>Opus plans, Sonnet codes</a></td><td><code>luismc-project-setup</code></td><td>claude-setup writes model opus and CLAUDE_CODE_SUBAGENT_MODEL sonnet, plus the delegation rule.</td><td>01 Oct</td></tr>
@@ -809,7 +819,7 @@ li { margin: .25em 0; }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table><thead><tr><th>Feature artifact</th><th>Tasks</th><th>Where it stands</th></tr></thead><tbody>
 <tr><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq">Feature: Project artifacts standard</a></td><td>AR1 to AR16</td><td>ARTIFACTSPEC 1.0.0 written (AR5); renderer, script and hooks being built; merge on green at about 17:15.</td></tr>
-<tr><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn">Feature: Model and effort profiles</a></td><td>MP1 to MP6, DS2, DS5</td><td>Effort question live; role rules, skill profiles and the alias warning ship with DS6.</td></tr>
+<tr><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn">Feature: Model and effort profiles</a></td><td>MP1 to MP6, DS2, DS5</td><td>All live: the effort question, role rules, skill profiles and the alias warning (luismc-project-setup 12.0.0).</td></tr>
 </tbody></table></div></section>
 <section id="s2"><h2><span class="section-number">&sect; 2</span>How it stays current</h2>
 <p class="lede">Until <code>luismc-artifacts</code> is built, this artifact is kept by hand to the same rules: a status change is written to the feature artifact that holds the task and to this artifact, in the same turn.</p>
