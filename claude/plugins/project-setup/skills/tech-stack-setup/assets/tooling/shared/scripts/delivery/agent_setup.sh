@@ -184,4 +184,4 @@ while IFS= read -r cmd; do
   bash -c "$cmd" </dev/null || die "setup command failed: $cmd"
 done <<< "$setup_cmds"
 
-say "ready. If gitleaks is not found in new shells, add to PATH:  export PATH=\"$bin_dir:\$PATH\""
+say "ready. If gitleaks is not found in new shells, add to PATH:  export PATH=\"$bin_path:\$PATH\""

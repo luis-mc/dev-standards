@@ -179,6 +179,12 @@ passing the remote sha as `--base-ref` on an update; it skips tags, deletions
 and every ref outside `refs/heads/`. A first push with no `origin/<default>`
 exits 2. Never publishes a result.
 
+After the guards pass, the `pre-push` hook runs `pre-push.local` from its own
+directory when that file exists, with the same arguments and the same stdin (it
+reads the ref lines once and feeds both); a non-zero exit fails the push.
+`pre-push.local` is the project's own pre-push check, moved there at install so
+the template never overwrites it.
+
 ```
 join.py --into INTEGRATION BRANCH [BRANCH ...] [--no-gate] [--push]
 ```

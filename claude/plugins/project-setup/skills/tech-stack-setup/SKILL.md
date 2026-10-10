@@ -281,8 +281,15 @@ Copy all of this in the first commit, so the first branch is already gated:
 | `.github/workflows/ci.yml` | `<track>/.github/workflows/ci.yml` — carries the `decide` job and the gated E2E job | `§11.2`, `§13.1` |
 | a `.gitignore` line `.delivery/` | no asset: append it to the generated `.gitignore` | `§13.5` |
 
-The pre-push hook is activated the same way as pre-commit, one setting for both
-(`git config core.hooksPath .githooks`); say so in the repo's setup notes. Mark
+Install the pre-push hook so a project's existing check survives:
+
+- Find the existing pre-push hook: in `.githooks/`, in the directory `core.hooksPath` points to, or `.git/hooks/pre-push` when `core.hooksPath` is unset.
+- If it differs from the template, move it to `pre-push.local` in that hooks directory before copying the template; never overwrite it.
+- The template runs `pre-push.local` after its own guards pass, with the same arguments and stdin, and fails the push if it fails.
+- If `core.hooksPath` already points at another directory (for example `.husky`), install both hooks into that directory; do not change `core.hooksPath`.
+- If `core.hooksPath` is unset, copy into `.githooks/` and set it: `git config core.hooksPath .githooks`; say so in the repo's setup notes.
+
+Mark
 `agent_setup.sh` and both hooks executable (`git update-index --chmod=+x`), or a
 checkout on another machine cannot run them. Copy `.gitattributes` before the
 first commit, so those files are never stored with CRLF; if the repo already has
@@ -419,7 +426,9 @@ check, performed by reading.
      `always`), secret scan and E2E (scope `ui-changed`), with `widen_on` naming
      the lockfile, the task-runner config and the CI workflows; a guard-test
      suite exists and is selected by the track's convention; `.githooks/pre-push`
-     exists and `core.hooksPath` points at `.githooks`; `agent_setup.sh` installs
+     exists in the hooks directory `core.hooksPath` points at (`.githooks` unless
+     the project already used another), and any earlier pre-push hook it
+     replaced is kept as `pre-push.local` beside it; `agent_setup.sh` installs
      the scanner at the version in `tools.json`, and CI installs that same
      version; `.delivery/` is git-ignored; `.gitattributes` forces LF on `*.sh`,
      `.githooks/*` and `scripts/delivery/*.py`, so the hooks run on every OS
