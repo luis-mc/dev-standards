@@ -819,15 +819,102 @@ def test_pending_queue(env):
 @case
 def test_pending_without_record(env):
     p = env.project()
-    r = p.run('pending', '--json')
-    assert r.code == 0 and r.json() == {'artifacts': [], 'queue': []}, r.all
-    r = p.run('check')
-    assert r.code == 2 and 'no artifact record' in r.err, r.all
+    d = TMP / ('noexp-%s-%d' % (env.kind, env.n))
+    env.n += 1
+    empty = TMP / ('noexp-empty-%s-%d' % (env.kind, env.n))
+    empty.mkdir()
+    for argv in (['pending', '--json'], ['pending'], ['check'], ['path'], ['export-content', 'x', '--to', d],
+                 ['render'], ['set-task-status', 'AR1', 'Live'], ['edit-content', 'x', '--from', empty],
+                 ['task-add', '--owner', 'project', '--prefix', 'DS', '--item', 'x', '--detail', 'd', '--expected', '14 Oct'],
+                 ['mark-published', 'full-progress', '--url', 'https://x.example/a'], ['design', 'set', 'default'],
+                 ['commit']):
+        r = p.run(*argv)
+        assert r.code == 2 and 'no record in this repository' in r.err, (argv, r.code, r.all)
+        assert not p.wt.exists(), 'no command may create the record worktree without a record: %s' % argv
+    r = p.run('check', '--json')
+    assert r.code == 2 and r.json()['ok'] is False
+    # init is the exception: it creates the worktree
+    p.init()
+    assert (p.wt / '.git').exists()
 
 
 # --------------------------------------------------------------------------
 # the record worktree and commits (R4.13 - R4.17)
 # --------------------------------------------------------------------------
+
+@case
+def test_adopted_url_without_hash(env):
+    """R4.3: a url with an empty published_sha256 is an adopted artifact; pending says so."""
+    p = env.baseline()
+    other = p.clone_again('adopt')
+    f = other / 'docs' / 'artifacts' / 'manifest.json'
+    edit_json(f, lambda m: feat(m).update(url='https://claude.ai/artifact/adopted'))
+    git(other, 'commit', '-qam', 'adopt an existing artifact')
+    git(other, 'push', '-q', 'origin', 'main')
+    p.ok('render')                      # the full-progress artifact links to the adopted url
+    assert p.man()['feature_artifacts'][0]['published_sha256'] == ''
+    r = p.run('check')
+    assert r.code == 0, r.all
+    got = {a['key']: a for a in p.run('pending', '--json').json()['artifacts']}
+    assert got['artifacts']['reason'] == 'adopted, not yet published from the record', got
+    assert got['artifacts']['url'].endswith('/adopted')
+    assert got['site']['reason'] == 'never published'
+    p.ok('mark-published', 'artifacts', '--url', 'https://claude.ai/artifact/adopted')
+    assert 'artifacts' not in {a['key'] for a in p.run('pending', '--json').json()['artifacts']}
+
+
+@case
+def test_feature_task_may_carry_a_project_prefix(env):
+    """R4.6: a task moved into a feature keeps its ID; task-add still uses the feature's prefix."""
+    p = env.baseline()
+    rec = p.record_copy('moved')
+    edit_json(rec / 'registry.json', lambda r: task(r, 'AR1').update(id='DS9'))
+    out = check_record(env, rec).out
+    assert not has_line(out, 'R4.6'), out
+    edit_json(rec / 'registry.json', lambda r: task(r, 'DS9').update(id='QQ9'))
+    assert has_line(check_record(env, rec).out, 'R4.6', 'registry.json')
+    r = p.ok('task-add', '--owner', 'artifacts', '--item', 'x', '--detail', 'd', '--expected', '14 Oct')
+    assert r.out.strip() == 'AR3'
+    r = p.run('task-add', '--owner', 'artifacts', '--prefix', 'DS', '--item', 'x', '--detail', 'd', '--expected', '14 Oct')
+    assert r.code == 1 and 'not the prefix' in r.err
+
+
+@case
+def test_edit_content_no_change(env):
+    p = env.baseline()
+    d = export(p, 'artifacts', 'same')
+    before = p.head()
+    r = p.ok('edit-content', 'artifacts', '--from', d)
+    assert 'no change' in r.out, r.out
+    assert p.head() == before, 'nothing committed'
+    assert p.ok('edit-content', 'artifacts', '--from', d, '--json').json()['changed'] is False
+    # CRLF copies of the same files are the same content
+    for f in d.iterdir():
+        f.write_bytes(f.read_bytes().replace(b'\n', b'\r\n'))
+    assert 'no change' in p.ok('edit-content', 'artifacts', '--from', d).out and p.head() == before
+    (d / 'meta.json').write_text((d / 'meta.json').read_text(encoding='utf-8').replace('Planned', 'Planned,'), encoding='utf-8')
+    p.ok('edit-content', 'artifacts', '--from', d)
+    assert p.head() != before
+
+
+@case
+def test_record_worktree_is_sparse(env):
+    p = env.baseline()
+    p.ok('path')
+    assert (p.wt / 'docs' / 'artifacts' / 'manifest.json').is_file()
+    assert not (p.wt / 'README.md').exists(), 'only docs/artifacts is checked out'
+    assert git(p.wt, 'config', '--get', 'core.sparseCheckout').stdout.strip() == 'true'
+    # the session's own checkout is not made sparse
+    assert git(p.clone, 'config', '--get', 'core.sparseCheckout', check=False).stdout.strip() != 'true'
+    assert (p.clone / 'README.md').is_file()
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    assert not (p.wt / 'README.md').exists() and p.task('AR1')['status'] == 'Waiting'
+    # a worktree made before this fix (not sparse) is converted on the next use
+    git(p.wt, 'sparse-checkout', 'disable')
+    assert (p.wt / 'README.md').exists()
+    p.ok('set-task-status', 'AR1', 'Running')
+    assert not (p.wt / 'README.md').exists()
+
 
 @case
 def test_session_checkout_untouched(env):
@@ -863,7 +950,7 @@ def test_commits_only_docs_artifacts(env):
     mod = ip.mod
     ctx = mod.Ctx(p.clone, 'main')
     (p.wt / 'docs' / 'other.txt').write_text('x\n', encoding='utf-8')
-    git(p.wt, 'add', 'docs/other.txt')
+    git(p.wt, 'add', '--sparse', 'docs/other.txt')      # the sparse checkout would refuse it otherwise
     try:
         mod.commit_record(ctx, 'x')
     except mod.Fail as e:
@@ -1231,7 +1318,7 @@ MANIFEST_FIXTURES = [
     ('merged_status', 'R4.2', lambda m: m.update(merged_status='Shipped')),
     ('design value', 'R4.2', lambda m: m.update(design='fancy')),
     ('bad hash', 'R4.3', lambda m: feat(m).update(url='https://claude.ai/artifact/x', published_sha256='abc')),
-    ('url without hash', 'R4.3', lambda m: feat(m).update(url='https://claude.ai/artifact/x')),
+    ('hash without url', 'R4.3', lambda m: feat(m).update(published_sha256='a' * 64)),
     ('bad url', 'R4.3', lambda m: feat(m).update(url='ftp://x', published_sha256='a' * 64)),
     ('file name', 'R4.4', lambda m: feat(m).update(file='artifacts.html')),
     ('design.css missing', 'R5.10', _design_missing),
@@ -1250,6 +1337,7 @@ REGISTRY_FIXTURES = [
     ('id order', 'R4.9', lambda r: r['tasks'].reverse()),
     ('expected relative word', 'R6.6', lambda r: task(r, 'AR1').update(expected='today')),
     ('expected soon', 'R6.6', lambda r: task(r, 'SI1').update(expected='soon; very')),
+    ('one-digit day', 'R6.6', lambda r: task(r, 'SI1').update(expected='2 Oct')),
     ('expected missing month', 'R6.6', lambda r: task(r, 'DS1').update(expected='13')),
     ('expected on a done row', 'R6.7', lambda r: task(r, 'AR2').update(expected='tomorrow')),
     ('registry spec', 'R4.2', lambda r: r.update(spec='x')),

@@ -197,7 +197,9 @@ docs/artifacts/
 - **R4.2** — `key` is lowercase letters, digits and hyphens; `prefix` is 2 to 5
   capital letters; every prefix appears once across the manifest.
 - **R4.3** — `url` is empty until the first publish; `published_sha256` is the
-  SHA-256 of the HTML that was last published, empty before that.
+  SHA-256 of the HTML that was last published, empty before that. A `url` with
+  an empty `published_sha256` is valid: an existing artifact adopted by a new
+  record, listed by `pending` until it is published from the record.
 - **R4.4** — `file` is `<kind>-<slug>.html` with kind `feature` or
   `full-progress`; the slug is the title's words, lowercase, hyphenated.
 
@@ -217,7 +219,8 @@ docs/artifacts/
   saying so, so the next number, the highest plus one, is always unused.
 - **R4.6** — `owner` is a feature `key` from the manifest or `project`. A
   feature task's prefix is its feature's prefix; a project task's prefix is
-  in `project_prefixes`.
+  in `project_prefixes`. A task moved into a feature after it got its ID keeps
+  its ID, so a feature task may also carry a prefix from `project_prefixes`.
 - **R4.7** — `status` is one of the eight statuses of §6.1. `changed` is set by
   the script on every status change, never by hand.
 - **R4.8** — `expected` follows §6.4. `item` is at most 80 characters; `detail`
