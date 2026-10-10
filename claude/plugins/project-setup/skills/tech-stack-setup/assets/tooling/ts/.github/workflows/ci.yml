@@ -40,19 +40,45 @@ permissions:
 
 jobs:
   # ---------------------------------------------------------------------------
+  # §13.1: a push to the default branch must not repeat a suite that already
+  # passed. When this commit's tree equals the tree of a pull-request head whose
+  # run of this workflow passed, `skip` is true and every job below is skipped.
+  # Any doubt, or any error, leaves `skip` false and the suite runs. Pull
+  # requests never run this job; `!cancelled()` on the jobs below lets them run
+  # when `decide` is skipped. Not a required check: it never gates anything.
+  # ---------------------------------------------------------------------------
+  decide:
+    name: 'decide: skip a tree already tested'
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The pull-request head commit must be present to compare trees.
+          fetch-depth: 0
+
+      - name: Has this tree already passed?
+        id: check
+        run: python3 scripts/delivery/ci_skip_check.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  # ---------------------------------------------------------------------------
   # Static gates: everything that needs no database.
   # ---------------------------------------------------------------------------
   verify:
     name: lint, types, boundaries, unit + contract tests
-    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    needs: decide
+    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ubuntu-latest
-    # gitleaks-action lists a PR's commits through the API. With only the
-    # workflow-level `contents: read` that call returns 403 and the job fails
-    # before scanning anything. Job-level permissions replace the workflow
-    # block rather than merge with it, so `contents: read` is repeated here.
     permissions:
       contents: read
-      pull-requests: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -66,10 +92,22 @@ jobs:
       # A step in this job, not a job of its own: a scan that takes a few seconds
       # would still bill a full minute as a separate job. It runs first so a
       # leaked secret fails fast, before the slow gates below.
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
+      # Installed from the release archive at the version pinned in
+      # scripts/delivery/tools.json, checksum verified, so CI runs the scanner
+      # the agent setup script installed locally (§13.5). `gitleaks git` with no
+      # log options scans the whole history, which `fetch-depth: 0` provides.
+      - name: Secret scan (gitleaks, full history)
+        run: |
+          version="$(python3 -c "import json; print(json.load(open('scripts/delivery/tools.json'))['gitleaks'])")"
+          archive="gitleaks_${version}_linux_x64.tar.gz"
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${version}"
+          cd "$RUNNER_TEMP"
+          curl -sSfL -O "${base}/${archive}"
+          curl -sSfL -O "${base}/gitleaks_${version}_checksums.txt"
+          grep " ${archive}\$" "gitleaks_${version}_checksums.txt" | sha256sum -c -
+          tar -xzf "${archive}" gitleaks
+          cd "$GITHUB_WORKSPACE"
+          "$RUNNER_TEMP/gitleaks" git --config .gitleaks.toml --redact --no-banner
 
       # §2.2: pnpm is mandatory and its version is pinned via `packageManager`
       # in the root manifest. corepack reads that field, so the pinned version
@@ -162,7 +200,8 @@ jobs:
   # ---------------------------------------------------------------------------
   integration:
     name: integration tests (ephemeral Postgres)
-    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    needs: decide
+    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -217,10 +256,15 @@ jobs:
         run: pnpm vitest run --project authz
 
   # ---------------------------------------------------------------------------
-  # §11.2: web E2E is SHOULD, not gated. This job reports and never blocks. If
-  # you delete it, §11.2 requires the release checklist to name the manual
-  # journeys verified before each submission — an untested release path is a
-  # decision, and it should be a visible one.
+  # §11.2: end-to-end tests of the critical web journeys run on every ready pull
+  # request and fail it. This is a required check. A spec that fails
+  # intermittently is moved to e2e/quarantine.json (owner, date, reason) and
+  # fixed; it is never retried until green (§11.3), so playwright.config.ts
+  # keeps retries at 0 here. Quarantined specs still run, in their own
+  # non-blocking step, so their results stay visible.
+  #
+  # On a push to main this job runs only when `decide` did not find the tree
+  # already tested (§13.1); the integration PR's run is the one full suite.
   # ---------------------------------------------------------------------------
   #
   # The presence check is a step, not a job-level `if`. `hashFiles()` is not a
@@ -231,11 +275,14 @@ jobs:
   # failed because of a workflow file issue", while the identical workflow
   # using `if: github.event_name == 'push'` ran fine. hashFiles also resolves
   # against the workspace, which is empty until checkout has run.
+  #
+  # A repository with no web app has no playwright.config.ts; the job then
+  # passes without running anything, so the required check still reports.
   e2e:
-    name: web E2E (advisory, §11.2)
-    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    name: web E2E (§11.2)
+    needs: decide
+    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -246,7 +293,7 @@ jobs:
             echo 'present=true' >> "$GITHUB_OUTPUT"
           else
             echo 'present=false' >> "$GITHUB_OUTPUT"
-            echo "No playwright.config.ts — skipping E2E (§11.2 is SHOULD)."
+            echo "No playwright.config.ts — no web app to test."
           fi
 
       # corepack before setup-node — see the verify job for why.
@@ -267,6 +314,18 @@ jobs:
         if: steps.probe.outputs.present == 'true'
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: E2E
+      # Every spec not listed in e2e/quarantine.json. A failure here fails the
+      # job; finding no spec at all fails too (§11.3).
+      - name: E2E (gating specs)
         if: steps.probe.outputs.present == 'true'
         run: pnpm exec playwright test
+
+      # Quarantined specs only. They run and report, and cannot fail the build.
+      # `--pass-with-no-tests` because an empty quarantine list is the normal
+      # case here, unlike the gating step above.
+      - name: E2E (quarantined specs, non-blocking)
+        if: steps.probe.outputs.present == 'true'
+        continue-on-error: true
+        env:
+          E2E_QUARANTINE: only
+        run: pnpm exec playwright test --pass-with-no-tests
