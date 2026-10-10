@@ -353,6 +353,16 @@
       "changed": "2026-10-10T19:03+01:00"
     },
     {
+      "id": "DS18",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Pre-push guard flakes",
+      "detail": "Find why the pre-push guards failed twice with no clear cause, fix it, and make every guard failure say which check failed and why.",
+      "expected": "10 Oct ~21:30",
+      "changed": "2026-10-10T19:03+01:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
