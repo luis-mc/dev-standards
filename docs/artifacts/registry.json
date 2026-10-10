@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T23:22+01:00",
+  "updated": "2026-10-10T23:27+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -581,6 +581,16 @@
       "detail": "Profile test, hook test and claude-setup checks pass; released in ready PR #10 (0751e61).",
       "expected": "10 Oct",
       "changed": "2026-10-10T12:00+01:00"
+    },
+    {
+      "id": "MP7",
+      "owner": "models",
+      "app": "luismc-project-setup",
+      "status": "Running",
+      "item": "Defaults: Opus at medium, Sonnet at high",
+      "detail": "Owner's change: projects installing the plugins default to Opus at medium effort and Sonnet at high effort (skill profiles, claude-setup's preselected answers and the settings it writes). Rides the STACKSPEC 7.0.0 / project-setup 13.0.0 release.",
+      "expected": "11 Oct ~01:00",
+      "changed": "2026-10-10T23:27+01:00"
     }
   ]
 }
