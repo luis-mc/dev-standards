@@ -212,7 +212,9 @@ docs/artifacts/
 ```
 
 - **R4.5** — A task's `id` is a registered prefix plus a positive integer; IDs
-  are unique and never reused, even after a task is removed.
+  are unique and never reused. A task is never removed from the registry (there
+  is no remove command); dropped work is set On hold or Done with a detail
+  saying so, so the next number, the highest plus one, is always unused.
 - **R4.6** — `owner` is a feature `key` from the manifest or `project`. A
   feature task's prefix is its feature's prefix; a project task's prefix is
   in `project_prefixes`.
