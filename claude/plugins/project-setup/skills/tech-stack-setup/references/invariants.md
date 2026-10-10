@@ -40,6 +40,8 @@ to fast, scoped checks with a result that can be verified:
   request; flaky specs go to a committed quarantine list.
 - §13.1: a default-branch run skips its suite when the merged tree is one a
   pull-request run already passed.
+- §13.2: the per-PR preview is for ready pull requests only; draft pull
+  requests never deploy a preview.
 - §13.5 (new): a branch gate with a machine-readable result, and fast guards as
   a pre-push hook.
 - §13.6 (new): the integration flow — task-named branches, a merge script, one
@@ -1266,8 +1268,11 @@ that changed anything runs the suite, and a failure to decide runs it too.
 ### 13.2 Promotion
 
 **The three-tier promotion flow is not optional**, whichever host is chosen:
-preview per pull request, staging on merge to the default branch, production on
-an explicit release action.
+preview per ready pull request, staging on merge to the default branch,
+production on an explicit release action.
+
+- Draft pull requests MUST NOT deploy a preview; agent branches are verified by
+  the branch gate (§13.5), and only the one ready pull request (§13.6) gets one.
 
 - Migrations run in the deploy pipeline **before** the new code is serving.
 - Every deploy is traceable to a commit, and rollback is a documented, rehearsed
