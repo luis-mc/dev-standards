@@ -86,11 +86,11 @@
       "id": "AR10",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "Skills and rule file",
-      "detail": "The five skills (feature-artifact-new on Opus high, the rest Sonnet medium) and the rule file; joined at fb1edf2.",
+      "detail": "The five skills (feature-artifact-new on Opus high, the rest Sonnet medium) and the rule file. Released in #18.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T14:46+01:00"
     },
     {
       "id": "AR11",
