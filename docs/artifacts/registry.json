@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T23:13+01:00",
+  "updated": "2026-10-10T23:14+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -186,11 +186,11 @@
       "id": "AR21",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "Every activity is a task, in every project",
-      "detail": "Built in draft #28, not released: the rule (every activity is a task, the session's own included; Running while it runs; Built means not released) is delivered at every session start in every project; init no longer copies it; the end-of-turn hook blocks when background work started and no task is Running. 117 + 67 + 57 tests pass.",
+      "detail": "Released in luismc-artifacts 1.1.0 (#33, 054eafb, 23:12): every activity is a task, the session's own included; the rule reaches every project at session start; the end-of-turn hook blocks background work with no Running task.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T22:04+01:00"
+      "changed": "2026-10-10T23:14+01:00"
     },
     {
       "id": "AR22",
