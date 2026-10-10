@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T14:45+01:00",
+  "updated": "2026-10-10T14:46+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -146,11 +146,11 @@
       "id": "AR17",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "dev-standards onto the plugin",
-      "detail": "Real-repo test (R13.3): convert this record to ARTIFACTSPEC 1.0.0 on a scratch clone, render, check, one status change end to end, nothing pushed. The converted record ships in the AR12 ready PR and retires the interim generator.",
-      "expected": "10 Oct ~15:00",
-      "changed": "2026-10-10T14:05+01:00"
+      "detail": "This record converted to ARTIFACTSPEC 1.0.0 on a scratch clone and checked clean, a status change run end to end, nothing pushed; shipped in #18. These artifacts are now rendered by the plugin.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T14:46+01:00"
     },
     {
       "id": "DS1",
