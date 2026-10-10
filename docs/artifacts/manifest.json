@@ -18,28 +18,24 @@
     {
       "key": "artifacts",
       "title": "Feature: Project artifacts standard",
-      "url": "https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq",
       "file": "feature-project-artifacts-standard.html",
       "prefix": "AR",
       "apps": [
         "luismc-artifacts"
-      ],
-      "published_sha256": "dac9f8815185a5f4997b16bb7cfc3f9e606e9809aa20eaaf5ed57d3482b11aa8"
+      ]
     },
     {
       "key": "models",
       "title": "Feature: Model and effort profiles",
-      "url": "https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn",
       "file": "feature-model-and-effort-profiles.html",
       "prefix": "MP",
       "apps": [
         "luismc-project-setup"
-      ],
-      "published_sha256": "f941fc4d947ac854c8d213f3443c8763c17065ec2dc7d0e3fd399e13359bd42a"
+      ]
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-10-11T00:00+01:00"
+  "updated": "2026-10-11T00:05+01:00"
 }
