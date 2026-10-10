@@ -219,14 +219,22 @@ Fetches the branch, the base ref and `refs/gate-results/BRANCH`; prints why a
 result is or is not trusted. Exit 0 trusted and passing, 1 otherwise, 2 no result.
 
 ```
-fast_guards.py [--base-ref REF]
+fast_guards.py [--base-ref REF] [--commit SHA]
 ```
-Runs the `pre_push: true` steps on the checked-out commit (it takes no ref),
-continuing past a failure. Each step has a limit of 5 minutes (killed like a
+Runs the `pre_push: true` steps, continuing past a failure. With `--commit SHA`
+different from `HEAD`, it checks that commit out in a temporary detached
+worktree under `.delivery/push-check/` (shared object store, no install: the
+main checkout's dependency directories, such as every `node_modules`, are
+linked into it with a symlink or a Windows junction, and Rust builds share the
+main checkout's target directory through `CARGO_TARGET_DIR`), runs the steps
+there, and always
+removes the worktree afterwards, also on failure or interruption. Without
+`--commit`, or when it equals `HEAD`, it runs in place as before. Each step has a limit of 5 minutes (killed like a
 gate step, outcome `fail`, reason `timed out after 5 min`). A failure is
 reported the way the gate reports one (`FAIL <step>: ...`, the log path, the
 last 40 lines), so a blocked push always says which check failed and why. The `pre-push` hook calls it once per pushed ref,
-passing the remote sha as `--base-ref` on an update; it skips tags, deletions
+passing the pushed sha as `--commit` and the remote sha as `--base-ref` on an
+update; it skips tags, deletions
 and every ref outside `refs/heads/`. A first push with no `origin/<default>`
 exits 2. Never publishes a result.
 
@@ -281,8 +289,9 @@ train of that pull request is considered (exit 2 unless N is merged into the
 default branch) (its head branch and every
 branch whose pull request had that head as base); without it, every branch on
 the remote. `--local` treats only local branches and worktrees: after
-`git fetch --prune`, a local branch is finished when its pull request is merged
-(when `gh` works) or, without `gh`, when its upstream is gone from the remote.
+`git fetch --prune`, a local branch is finished when its pull request is merged.
+Without a working `gh`, `--local` deletes nothing: it lists each branch whose
+upstream is gone as `would delete (needs gh to confirm)` and exits 0.
 Prints one row per branch: `deleted`, `kept: <reason>`, or `would delete` with
 `--dry-run`. Exit 0 when it ran (kept branches are not a failure), 1 when a
 deletion it attempted failed, 2 usage or no repository.
