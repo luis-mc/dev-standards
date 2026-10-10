@@ -356,11 +356,11 @@
       "id": "DS18",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Pre-push guard flakes",
-      "detail": "Find why the pre-push guards failed twice with no clear cause, fix it, and make every guard failure say which check failed and why.",
+      "detail": "Agent investigating the two pre-push guard failures after DS17; every guard failure will name the check, the reason and the log.",
       "expected": "10 Oct ~21:30",
-      "changed": "2026-10-10T19:03+01:00"
+      "changed": "2026-10-10T19:09+01:00"
     },
     {
       "id": "DS19",
