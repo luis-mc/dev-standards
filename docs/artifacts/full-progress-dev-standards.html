@@ -450,7 +450,7 @@ li { margin: .25em 0; }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-10T19:09+01:00",
+ "updated": "2026-10-10T19:28+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -826,11 +826,11 @@ li { margin: .25em 0; }
    "id": "DS20",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Done",
    "item": "Keep only the newest build artifact",
-   "detail": "Agent building artifact_prune.py and the artifact-prune workflow for GitHub Actions build outputs (MSI installers, bundles, reports): only the newest of each name is kept. Rule written in STACKSPEC 7.0.0 §13.1 and the agent rules.",
+   "detail": "Built in draft #23: artifact_prune.py keeps the newest GitHub Actions build artifact of each name (expired skipped, 404 means already gone, --keep below 1 refused); artifact-prune.yml runs after every CI run and daily. 20 tests with 12 mutants. Waiting for the join.",
    "expected": "10 Oct ~21:30",
-   "changed": "2026-10-10T19:09+01:00"
+   "changed": "2026-10-10T19:28+01:00"
   },
   {
    "id": "DS21",
@@ -908,18 +908,18 @@ li { margin: .25em 0; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-10T19:09+01:00">10 Oct 19:09</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-10T19:28+01:00">10 Oct 19:28</time> (Lisbon)</p>
 <p class="lede">All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class="task-id">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class="task-id">AR12</span>), and the secret-scan fixes (<span class="task-id">DS15</span>, <span class="task-id">AR19</span>, <span class="task-id">DS16</span>). Running now: one round toward STACKSPEC 7.0.0. It covers the branch gate (<span class="task-id">DS17</span>), the pre-push guard failures (<span class="task-id">DS18</span>), automatic cleanup after a merge (<span class="task-id">DS19</span>), keeping only the newest build artifact (<span class="task-id">DS20</span>) and the Windows-only tests (<span class="task-id">DS21</span>). Expected 21:30. <strong>Nothing needs you.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">34</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">6</div><div class="label">done</div></div><div class="status-count-tile status-running"><div class="count">5</div><div class="label">running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">34</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">7</div><div class="label">done</div></div><div class="status-count-tile status-running"><div class="count">4</div><div class="label">running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-done">Done</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
 <tr data-task="DS17"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS17</span>Branch gate: setup first, 30-minute limit, fail fast</td><td></td><td>Agent building: setup step first (frozen lockfile), 30-minute limit with exit 4, fail fast by default with --keep-going, per-step logs.</td><td>10 Oct ~21:30</td></tr>
 <tr data-task="DS18"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS18</span>Pre-push guard flakes</td><td></td><td>Agent investigating the two pre-push guard failures after DS17; every guard failure will name the check, the reason and the log.</td><td>10 Oct ~21:30</td></tr>
 <tr data-task="DS19"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS19</span>Automatic branch and worktree cleanup</td><td></td><td>Agent building cleanup.py and the train-cleanup workflow: a merged train&#x27;s branches, gate-result refs, local branches and worktrees go; open, unmerged or dirty ones are kept and listed.</td><td>10 Oct ~21:30</td></tr>
-<tr data-task="DS20"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS20</span>Keep only the newest build artifact</td><td></td><td>Agent building artifact_prune.py and the artifact-prune workflow for GitHub Actions build outputs (MSI installers, bundles, reports): only the newest of each name is kept. Rule written in STACKSPEC 7.0.0 §13.1 and the agent rules.</td><td>10 Oct ~21:30</td></tr>
 <tr data-task="DS21"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS21</span>Windows-only test failures</td><td></td><td>Agent fixing test_spec_check (symlink placeholder on Windows) and test_authspec_check (UTF-8).</td><td>10 Oct ~21:30</td></tr>
 <tr class="status-group" data-group="done"><td colspan="5"><strong>Live or done</strong></td></tr>
+<tr data-task="DS20"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">DS20</span>Keep only the newest build artifact</td><td></td><td>Built in draft #23: artifact_prune.py keeps the newest GitHub Actions build artifact of each name (expired skipped, 404 means already gone, --keep below 1 refused); artifact-prune.yml runs after every CI run and daily. 20 tests with 12 mutants. Waiting for the join.</td><td>10 Oct ~21:30</td></tr>
 <tr data-task="AR20"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR20</span>mark-published leaves the registry alone</a></td><td><code>luismc-artifacts</code></td><td>mark-published, design set, edit-content, render and feature-new no longer bump the registry, so the full-progress artifact stays clean after publishing; three regression tests. dev-standards also got its rule file and gitignore entries. #21.</td><td>10 Oct</td></tr>
 <tr data-task="AR18"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR18</span>Script fixes from the real-repo test</a></td><td><code>luismc-artifacts</code></td><td>Adopted URLs, no-op content edits, two-digit Expected days, a sparse record worktree with long paths, no worktree without a record. Released in #18.</td><td>10 Oct</td></tr>
 <tr data-task="AR19"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR19</span>Names the secret rule does not read as credentials</a></td><td><code>luismc-artifacts</code></td><td>Main&#x27;s secret-scan failed after #18: the project-named-secret rule read FP_KEY-style identifiers and a test command as credentials. Renamed; fixed forward in #19.</td><td>10 Oct</td></tr>
