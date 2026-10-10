@@ -16,6 +16,7 @@ import argparse
 import contextlib
 import difflib
 import hashlib
+import inspect
 import json
 import os
 import re
@@ -396,50 +397,20 @@ def head_sha(ctx):
     return git_out(ctx.wt, 'rev-parse', 'HEAD')
 
 
-def snapshot_dir(d):
-    snap = {}
-    if d.is_dir():
-        for p in sorted(d.rglob('*')):
-            if p.is_file():
-                snap[p.relative_to(d).as_posix()] = p.read_bytes()
-    return snap
-
-
-def restore_dir(d, snap):
-    if d.exists():
-        shutil.rmtree(d)
-    for rel, data in snap.items():
-        p = d / rel
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_bytes(data)
-
-
 def clean_worktree(ctx, to=None):
     git(ctx.wt, 'reset', '--hard', '--quiet', to or 'HEAD')
     git(ctx.wt, 'clean', '-fdq', '--', RECORD_REL)
 
 
-def sync(ctx, preserve_key=None, readonly=False):
-    """Bring the record worktree to origin/<default_branch>.
+def sync(ctx, readonly=False):
+    """Fetch and reset the record worktree to origin/<default_branch> (R4.13).
 
-    Local unpushed record commits are kept (rebased). Uncommitted edits are
-    never discarded: a read-only command leaves them alone; edit-content
-    carries the edits under content/<key>; any other writing command refuses.
+    Unpushed record commits (kept after a refused push or --no-push) are
+    rebased onto it, not dropped. Uncommitted edits are discarded: the session
+    never edits this worktree (it uses export-content / edit-content).
     """
     ensure_worktree(ctx, tolerant=readonly)
-    dirty = dirty_paths(ctx)
-    snap = None
-    keep_prefix = '%s/content/%s/' % (RECORD_REL, preserve_key) if preserve_key else None
-    if dirty:
-        if readonly:
-            warn('the record worktree has uncommitted edits (%s); not refreshed from origin' % dirty[0])
-            return
-        stray = [p for p in dirty if not (keep_prefix and p.startswith(keep_prefix))]
-        if stray:
-            raise Fail(1, 'the record worktree %s has uncommitted edits (%s); run edit-content for '
-                          'content edits or discard them with: git -C "%s" checkout -- . && '
-                          'git -C "%s" clean -fd %s' % (ctx.wt, stray[0], ctx.wt, ctx.wt, RECORD_REL))
-        snap = snapshot_dir(ctx.record_dir / 'content' / preserve_key)
+    if dirty_paths(ctx):
         clean_worktree(ctx)
     if git(ctx.wt, 'rev-parse', '--verify', '-q', 'origin/' + ctx.branch).returncode != 0:
         raise Fail(2, 'origin/%s does not exist' % ctx.branch)
@@ -452,8 +423,6 @@ def sync(ctx, preserve_key=None, readonly=False):
     else:
         git(ctx.wt, 'reset', '--hard', '--quiet', 'origin/' + ctx.branch, check=True)
     git(ctx.wt, 'clean', '-fdq', '--', RECORD_REL)
-    if snap is not None:
-        restore_dir(ctx.record_dir / 'content' / preserve_key, snap)
 
 
 def commit_record(ctx, message):
@@ -649,13 +618,23 @@ def problems_to_findings(problems, key):
     return out
 
 
+def _load_content(record_dir, key):
+    try:
+        takes_plugin = 'plugin_dir' in inspect.signature(R.load_content).parameters
+    except (TypeError, ValueError):
+        takes_plugin = False
+    if takes_plugin:
+        return R.load_content(record_dir, key, plugin_dir=str(PLUGIN_DIR))
+    return R.load_content(record_dir, key)
+
+
 def load_contents(rec):
     contents, findings = {}, []
     for key, _kind, _e in rec.artifacts():
         if not isinstance(key, str) or not KEY_RE.match(key):
             continue
         try:
-            contents[key] = R.load_content(rec.dir, key)
+            contents[key] = _load_content(rec.dir, key)
         except R.ContentError as ce:
             findings += problems_to_findings(getattr(ce, 'problems', None) or [str(ce)], key)
         except Exception as e:  # unreadable content of any kind
@@ -720,6 +699,12 @@ def validate_structure(rec):
         f('R4.2', 'manifest.json', 'design must be "default" or "design.css"')
     elif m.get('design') == 'design.css' and not (rec.dir / 'design.css').is_file():
         f('R5.10', 'manifest.json', 'design is "design.css" but docs/artifacts/design.css is missing')
+    elif m.get('design') == 'design.css' and getattr(R, 'check_tokens', None):
+        try:
+            for prob in R.check_tokens(read_html(rec.dir / 'design.css') or ''):
+                f('R5.11', 'design.css', prob)
+        except Exception as ex:
+            f('R5.11', 'design.css', 'cannot be checked: %s' % ex)
     if isinstance(m.get('updated'), str) and m['updated'] and parse_iso(m['updated']) is None:
         f('R4.2', 'manifest.json', 'updated is not an ISO time with offset')
 
@@ -984,20 +969,13 @@ def readme_text(manifest):
         '`edit-content <key>`.\n' % (manifest.get('project', 'the project'), SPEC, table))
 
 
-def run_change(ctx, apply, preserve_key=None, new_ok=False):
+def run_change(ctx, apply, new_ok=False):
     """sync -> validate -> apply -> render -> validate -> commit -> push, with R4.15 retries."""
     with locked(ctx):
         retries = 0
-        kept = None
         while True:
             ctx.attempt = retries + 1
-            sync(ctx, preserve_key=preserve_key)
-            if preserve_key:
-                # the session's content edits survive a lost race: re-apply them after each reset
-                if kept is None:
-                    kept = snapshot_dir(ctx.record_dir / 'content' / preserve_key)
-                else:
-                    restore_dir(ctx.record_dir / 'content' / preserve_key, kept)
+            sync(ctx)
             base = head_sha(ctx)
             if (ctx.record_dir / 'manifest.json').is_file():
                 rec = Record.load(ctx.record_dir)
@@ -1017,8 +995,6 @@ def run_change(ctx, apply, preserve_key=None, new_ok=False):
                 result = finish_change(ctx, rec, result)
             except BaseException:
                 clean_worktree(ctx, base)
-                if preserve_key and kept is not None:
-                    restore_dir(ctx.record_dir / 'content' / preserve_key, kept)   # keep the session's edits
                 raise
             sha = commit_record(ctx, rec.message or 'docs/artifacts: update')
             result['commit'] = sha or head_sha(ctx)
@@ -1116,14 +1092,6 @@ def slug_words(text):
     return re.sub(r'[^a-z0-9]+', '-', text.lower()).strip('-')
 
 
-def default_project_name(root):
-    url = git_out(root, 'remote', 'get-url', 'origin') or ''
-    name = re.split(r'[/\\:]', url.rstrip('/\\'))[-1] if url else ''
-    if name.endswith('.git'):
-        name = name[:-4]
-    return name or Path(root).name
-
-
 def split_list(s):
     return [x.strip() for x in (s or '').split(',') if x.strip()]
 
@@ -1154,6 +1122,10 @@ def build_init(rec, args, project, root):
     write_text(d / 'meta.json', dump_json({
         'title': title, 'hero': 'Everything in flight on %s.' % project,
         'lede': 'No work is recorded yet.', 'extra_css': ''}))
+    # section 1 of this artifact is generated (the feature list), so this renders as section 2
+    write_text(d / '01-how-to-read-this.html',
+               '<!-- title: How to read this -->\n'
+               '<p>Every row of the checklist comes from the task registry; nothing here is typed by hand.</p>\n')
     rec.render_keys[FP_KEY] = 'new'
     rec.exists = True
 
@@ -1196,11 +1168,13 @@ def cmd_feature_new(args):
     if not name:
         raise Fail(1, 'title is empty')
     apps = split_list(args.apps)
-    project = args.project or default_project_name(ctx.root)
+    project = args.project
 
     def apply(rec):
         created = not rec.exists
         if created:
+            if not project:
+                raise Fail(1, 'there is no artifact record yet; feature-new runs init first, so --project is required')
             build_init(rec, args, project, ctx.root)
         m = rec.manifest
         if any(e.get('key') == key for e in m['feature_artifacts']):
@@ -1231,9 +1205,8 @@ def cmd_feature_new(args):
     res = run_change(ctx, apply, new_ok=True)
     changed, notes = install_session_files(ctx.root)
     res['session_changes'], res['notes'] = changed, notes
-    res['content_dir'] = str(ctx.record_dir / 'content' / key)
     emit(args, res, ['added feature artifact "%s" (%s)' % (key, short(res)),
-                     'edit its prose under %s, then run edit-content %s' % (res['content_dir'], key)] +
+                     'to edit its prose: export-content %s --to DIR, edit, edit-content %s --from DIR' % (key, key)] +
          session_report(changed, notes))
     return 0
 
@@ -1340,24 +1313,109 @@ def cmd_set_task_status(args):
     return 0
 
 
+def content_files(d):
+    """{name: bytes} of the regular files directly in a content folder; refuses anything else."""
+    d = Path(d)
+    if not d.is_dir():
+        raise Fail(1, '%s is not a folder' % d)
+    out = {}
+    for p in sorted(d.iterdir()):
+        if not p.is_file():
+            raise Fail(1, '%s: content folders hold files only, found %s' % (d, p.name))
+        out[p.name] = p.read_bytes()
+    return out
+
+
+def cmd_export_content(args):
+    key = args.key
+    if not KEY_RE.match(key):
+        raise Fail(1, 'key must be lowercase letters, digits and hyphens')
+    _ctx, rec = load_for_read(args)
+    if rec.entry(key) is None:
+        raise Fail(1, 'unknown artifact key "%s"' % key)
+    src = rec.dir / 'content' / key
+    if not src.is_dir():
+        raise Fail(2, 'content/%s is missing from the record' % key)
+    dest = Path(args.to)
+    if dest.exists() and (not dest.is_dir() or any(dest.iterdir())):
+        raise Fail(1, '%s exists and is not an empty folder' % dest)
+    dest.mkdir(parents=True, exist_ok=True)
+    names = []
+    for name, data in content_files(src).items():
+        (dest / name).write_bytes(data)
+        names.append(name)
+    emit(args, {'command': 'export-content', 'key': key, 'to': str(dest), 'files': names},
+         'exported %d file(s) of %s to %s' % (len(names), key, dest))
+    return 0
+
+
 def cmd_edit_content(args):
     ctx = make_ctx(args)
     key = args.key
     if not KEY_RE.match(key):
         raise Fail(1, 'key must be lowercase letters, digits and hyphens')
+    src = content_files(args.from_dir)       # read once; a retried push re-applies the same files
 
     def apply(rec):
         if rec.entry(key) is None:
             raise Fail(1, 'unknown artifact key "%s"' % key)
-        rec.contents()                       # validates what the session edited
+        d = rec.dir / 'content' / key
+        if d.exists():
+            shutil.rmtree(str(d))
+        d.mkdir(parents=True)
+        for name, data in src.items():
+            (d / name).write_bytes(data.replace(b'\r\n', b'\n'))
+        rec.invalidate()
+        rec.contents()                       # validates what the session supplied
         rec.render_keys[key] = 'new'
         if key != FP_KEY:
             rec.render_keys[FP_KEY] = 'new'   # section 1 quotes each lede
         rec.message = 'docs/artifacts: edit %s' % key
-        return {'command': 'edit-content', 'key': key}
+        return {'command': 'edit-content', 'key': key, 'files': sorted(src)}
 
-    res = run_change(ctx, apply, preserve_key=key)
+    res = run_change(ctx, apply)
     emit(args, res, 'edit-content %s (%s)' % (key, short(res)))
+    return 0
+
+
+def cmd_design(args):
+    ctx = make_ctx(args)
+    target = args.target
+    css = None
+    if target != 'default':
+        f = Path(target)
+        if not f.is_file():
+            raise Fail(1, 'design file %s does not exist' % f)
+        css = f.read_bytes().decode('utf-8-sig').replace('\r\n', '\n')
+        check = getattr(R, 'check_tokens', None)
+        problems = check(css) if check else []
+        if problems:
+            raise Fail(1, '%s does not satisfy the token contract; nothing written' % f,
+                       [('R5.11', f.name, p) for p in problems])
+
+    def apply(rec):
+        dpath = rec.dir / 'design.css'
+        if css is None:
+            if rec.manifest.get('design') == 'default' and not dpath.exists():
+                rec.noop = True
+                return {'command': 'design', 'design': 'default'}
+            if dpath.exists():
+                dpath.unlink()
+            rec.manifest['design'] = 'default'
+        else:
+            old = read_html(dpath)
+            if rec.manifest.get('design') == 'design.css' and old == css:
+                rec.noop = True
+                return {'command': 'design', 'design': 'design.css'}
+            write_text(dpath, css)
+            rec.manifest['design'] = 'design.css'
+        for key, _kind, _e in rec.artifacts():     # every artifact carries the token block
+            rec.render_keys[key] = 'new'
+        rec.message = 'docs/artifacts: design %s' % ('default' if css is None else 'design.css')
+        return {'command': 'design', 'design': rec.manifest['design']}
+
+    res = run_change(ctx, apply)
+    emit(args, res, 'design: %s (%s)' % (res['design'], short(res)))
     return 0
 
 
@@ -1520,14 +1578,14 @@ def cmd_pending(args):
                     reason = 'changed since last publish'
                 else:
                     continue
-            arts.append({'key': key, 'title': e.get('title', ''), 'file': str(p), 'url': e.get('url', ''),
-                         'reason': reason})
+            arts.append({'key': key, 'title': e.get('title', ''), 'file': e.get('file', ''), 'path': str(p),
+                         'url': e.get('url', ''), 'reason': reason})
     queue = artifact_queue.read_queue(str(ctx.root))
     if args.json_out:
         print(json.dumps({'artifacts': arts, 'queue': queue}, indent=2, ensure_ascii=False))
     else:
         for a in arts:
-            print('publish %s (%s): %s%s' % (a['key'], a['file'], a['reason'],
+            print('publish %s (%s): %s%s' % (a['key'], a['path'], a['reason'],
                                              '' if a['url'] else ' [no URL yet]'))
         for ev in queue:
             print('queued %s -> %s (%s)' % (ev.get('id'), ev.get('suggested_status'), ev.get('event')))
@@ -1622,9 +1680,20 @@ def build_parser():
     s.add_argument('--history')
     s.set_defaults(func=cmd_set_task_status)
 
-    s = sub.add_parser('edit-content', parents=[w], help='re-render after editing content/KEY/')
+    s = sub.add_parser('export-content', parents=[j], help="copy an artifact's content files out of the record")
     s.add_argument('key')
+    s.add_argument('--to', required=True, metavar='DIR')
+    s.set_defaults(func=cmd_export_content)
+
+    s = sub.add_parser('edit-content', parents=[w], help="replace an artifact's content files with a folder's")
+    s.add_argument('key')
+    s.add_argument('--from', dest='from_dir', required=True, metavar='DIR')
     s.set_defaults(func=cmd_edit_content)
+
+    s = sub.add_parser('design', parents=[w], help="set the project's design tokens, or go back to the default")
+    s.add_argument('action', choices=['set'])
+    s.add_argument('target', metavar='FILE|default')
+    s.set_defaults(func=cmd_design)
 
     s = sub.add_parser('render', parents=[w], help='render every artifact whose output would change')
     s.add_argument('--all', action='store_true')

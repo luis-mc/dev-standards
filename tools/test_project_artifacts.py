@@ -57,7 +57,11 @@ def artifact_file(kind, title):
     return '%s-%s.html' % (kind, re.sub(r'[^a-z0-9]+', '-', words.lower()).strip('-'))
 
 
-def load_content(record_dir, key):
+def check_tokens(css):
+    return ['token %s is not defined on :root' % t for t in REQUIRED_TOKENS if t + ':' not in css]
+
+
+def load_content(record_dir, key, plugin_dir=None):
     d = Path(record_dir) / 'content' / key
     problems, meta, sections, history = [], {}, [], []
     mp = d / 'meta.json'
@@ -68,6 +72,9 @@ def load_content(record_dir, key):
             meta = json.loads(_read(mp))
         except ValueError:
             problems.append('R4.4 meta.json is not valid JSON')
+        for field in ('title', 'hero', 'lede'):
+            if not isinstance(meta.get(field), str) or not meta[field].strip():
+                problems.append('R4.4 meta.json: "%s" must be a non-empty string' % field)
     n = 0
     for p in sorted(d.glob('*.html')) if d.is_dir() else []:
         m = re.match(r'^(\d\d)-[a-z0-9-]+\.html$', p.name)
@@ -107,6 +114,10 @@ def check_html(html, key, manifest, registry, plugin_dir, record_dir):
 
 def render_artifact(manifest, registry, contents, key, plugin_dir, record_dir, stamp_text, stamp_iso):
     esc = _h.escape
+    if manifest.get('design') == 'design.css':
+        bad = check_tokens((Path(record_dir) / 'design.css').read_text(encoding='utf-8'))
+        if bad:
+            raise ContentError(['design: ' + b for b in bad])
     fp = key == 'full-progress'
     entry = manifest['full_progress_artifact'] if fp else next(
         e for e in manifest['feature_artifacts'] if e['key'] == key)
@@ -447,7 +458,7 @@ def test_feature_new_runs_init_first(env):
     hist = json.loads(p.show('docs/artifacts/content/artifacts/history.json'))
     assert len(hist) == 1 and hist[0]['change'] and len(hist[0]['date']) == 12, hist
     assert p.show('docs/artifacts/feature-artifacts.html') is not None
-    assert 'content/artifacts' in r.out.replace('\\', '/')
+    assert 'export-content artifacts' in r.out and 'edit-content artifacts' in r.out
     # one commit for init + feature
     msgs = git(p.bare, 'log', '--format=%s', 'main').stdout.split('\n')
     assert msgs[0] == 'docs/artifacts: add feature artifacts' and msgs[1] == 'seed', msgs
@@ -603,62 +614,100 @@ def test_set_task_status_removes_queue_events(env):
 # edit-content, render
 # --------------------------------------------------------------------------
 
+def dirty(p):
+    return [x for x in git(p.wt, 'status', '--porcelain').stdout.splitlines() if x.strip()]
+
+
+def export(p, key, name):
+    dest = TMP / ('exp-%s-%s-%d' % (p.env.kind, name, p.env.n))
+    p.env.n += 1
+    p.ok('export-content', key, '--to', dest)
+    return dest
+
+
 @case
-def test_edit_content(env):
+def test_export_content(env):
     p = env.baseline()
-    p.ok('path')
-    d = p.rdir / 'content' / 'artifacts'
+    d = export(p, 'artifacts', 'a')
+    assert sorted(x.name for x in d.iterdir()) == ['01-what-and-why.html', 'history.json', 'meta.json']
+    assert (d / '01-what-and-why.html').read_text(encoding='utf-8') == p.show(
+        'docs/artifacts/content/artifacts/01-what-and-why.html')
+    r = p.ok('export-content', 'full-progress', '--to', TMP / ('exp-fp-%s-%d' % (env.kind, env.n)), '--json')
+    assert 'meta.json' in r.json()['files']
+    # refuses a folder that already has files, and unknown keys; reads nothing it should not
+    r = p.run('export-content', 'artifacts', '--to', d)
+    assert r.code == 1 and 'empty folder' in r.err, r.err
+    r = p.run('export-content', 'nope', '--to', TMP / 'exp-nope')
+    assert r.code == 1 and 'unknown artifact key' in r.err
+    r = p.run('export-content', '../x', '--to', TMP / 'exp-bad')
+    assert r.code == 1
+
+
+@case
+def test_edit_content_from_folder(env):
+    p = env.baseline()
+    d = export(p, 'artifacts', 'b')
     (d / '02-the-design.html').write_text('<!-- title: The design -->\n<p>Tokens and structure.</p>\n', encoding='utf-8')
     meta = json.loads((d / 'meta.json').read_text(encoding='utf-8'))
     meta['lede'] = 'Design is settled.'
     (d / 'meta.json').write_text(json.dumps(meta), encoding='utf-8')
-    r = p.ok('edit-content', 'artifacts')
+    (d / '01-what-and-why.html').unlink()          # a file missing from the folder is removed from the record
+    (d / '01-the-start.html').write_text('<!-- title: The start -->\n<p>First.</p>\n', encoding='utf-8')
+    r = p.ok('edit-content', 'artifacts', '--from', d)
     assert 'edit-content artifacts' in r.out
     assert p.show('docs/artifacts/content/artifacts/02-the-design.html') is not None
+    assert p.show('docs/artifacts/content/artifacts/01-what-and-why.html') is None
     html = p.show('docs/artifacts/feature-artifacts.html')
-    assert 'Tokens and structure.' in html and 'Design is settled.' in html
+    assert 'Tokens and structure.' in html and 'Design is settled.' in html and 'First.' in html
     assert 'Design is settled' in p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
     assert git(p.bare, 'log', '-1', '--format=%s', 'main').stdout.strip() == 'docs/artifacts: edit artifacts'
     assert p.run('check').code == 0
     assert dirty(p) == [], dirty(p)
-
-
-def dirty(p):
-    return [x for x in git(p.wt, 'status', '--porcelain').stdout.splitlines() if x.strip()]
+    # the folder is read, never the record worktree: stray edits there are discarded by the reset
+    (p.rdir / 'content' / 'artifacts' / '03-stray.html').write_text('<!-- title: Stray -->\n<p>s</p>\n', encoding='utf-8')
+    d2 = export(p, 'artifacts', 'c')
+    assert not (d2 / '03-stray.html').exists()
+    p.ok('edit-content', 'artifacts', '--from', d2)
+    assert p.show('docs/artifacts/content/artifacts/03-stray.html') is None
 
 
 @case
 def test_edit_content_invalid_writes_nothing(env):
     p = env.baseline()
-    p.ok('path')
-    d = p.rdir / 'content' / 'artifacts'
+    d = export(p, 'artifacts', 'd')
     (d / '02-bad.html').write_text('<!-- title: Bad -->\n<script>alert(1)</script>\n', encoding='utf-8')
     before = p.head()
-    r = p.run('edit-content', 'artifacts')
-    assert r.code == 1 and 'content/artifacts' in r.err, r.err
-    assert p.head() == before
-    assert (d / '02-bad.html').is_file(), 'the session\'s edit must survive for fixing'
+    r = p.run('edit-content', 'artifacts', '--from', d)
+    assert r.code == 1 and 'content/artifacts' in r.err and 'nothing written' in r.err, r.err
+    assert p.head() == before and dirty(p) == []
+    assert p.show('docs/artifacts/content/artifacts/02-bad.html') is None
     (d / '02-bad.html').write_text('<!-- title: Fixed -->\n<p>ok</p>\n', encoding='utf-8')
-    p.ok('edit-content', 'artifacts')
+    p.ok('edit-content', 'artifacts', '--from', d)
     assert 'Fixed' in p.show('docs/artifacts/feature-artifacts.html')
-    r = p.run('edit-content', 'nope')
+    r = p.run('edit-content', 'nope', '--from', d)
     assert r.code == 1 and 'unknown artifact key' in r.err
+    r = p.run('edit-content', 'artifacts', '--from', TMP / 'no-such-folder')
+    assert r.code == 1 and 'not a folder' in r.err
+    # a folder without meta.json cannot replace the content
+    empty = TMP / ('empty-%s-%d' % (env.kind, env.n))
+    env.n += 1
+    empty.mkdir()
+    r = p.run('edit-content', 'artifacts', '--from', empty)
+    assert r.code == 1 and p.head() != before
+    assert p.show('docs/artifacts/content/artifacts/meta.json') is not None
 
 
 @case
-def test_other_commands_refuse_dirty_worktree(env):
+def test_stray_worktree_edits_are_discarded(env):
+    """R4.13: the reset before each change discards anything left in the record worktree."""
     p = env.baseline()
     p.ok('path')
     (p.rdir / 'content' / 'artifacts' / '02-x.html').write_text('<!-- title: X -->\n<p>x</p>\n', encoding='utf-8')
-    before = p.head()
-    r = p.run('set-task-status', 'AR1', 'Waiting')
-    assert r.code == 1 and 'uncommitted edits' in r.err, r.err
-    assert p.head() == before
-    assert (p.rdir / 'content' / 'artifacts' / '02-x.html').is_file(), 'edits are never discarded'
-    # read-only commands leave the edits alone too
-    p.run('pending')
-    p.run('check')
-    assert (p.rdir / 'content' / 'artifacts' / '02-x.html').is_file()
+    (p.rdir / 'registry.json').write_text('{}', encoding='utf-8')
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    assert p.show('docs/artifacts/content/artifacts/02-x.html') is None
+    assert p.task('AR1')['status'] == 'Waiting' and len(p.reg()['tasks']) == 4
+    assert dirty(p) == []
 
 
 @case
@@ -667,24 +716,11 @@ def test_render_noop_and_all(env):
     before = p.head()
     r = p.ok('render')
     assert 'nothing to do' in r.out and p.head() == before
-    r = p.ok('render', '--all', '--json')
+    r = p.ok('render', '--all', '--json', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-11T08:00:00+00:00'})
     assert sorted(r.json()['rendered']) == sorted(['full-progress', 'artifacts', 'site'])
     assert p.head() != before
-    # hand-edited content: render notices, edit-content-style
-    p.ok('path')
-    meta = p.rdir / 'content' / 'site' / 'meta.json'
-    j = json.loads(meta.read_text(encoding='utf-8'))
-    j['lede'] = 'A changed lede.'
-    meta.write_text(json.dumps(j), encoding='utf-8')
-    r = p.run('set-task-status', 'AR1', 'Waiting')
-    assert r.code == 1
-    git(p.wt, 'checkout', '--', '.')
-    # a hand-damaged rendered file is repaired by render
-    p.ok('path')
-    f = p.rdir / 'feature-the-site.html'
-    f.write_text(f.read_text(encoding='utf-8') + '<!-- hand -->\n', encoding='utf-8')
-    assert p.run('check').code == 1
-    git(p.wt, 'checkout', '--', '.')
+    assert 'datetime="2026-10-11T09:00+01:00"' in p.show('docs/artifacts/feature-the-site.html') or \
+        '2026-10-11T09:00+01:00' in p.show('docs/artifacts/feature-the-site.html')
 
 
 @case
@@ -717,9 +753,11 @@ def test_pending_and_mark_published(env):
     assert sorted(j) == ['artifacts', 'queue'] and j['queue'] == []
     assert [a['key'] for a in j['artifacts']] == ['full-progress', 'artifacts', 'site']
     for a in j['artifacts']:
-        assert sorted(a) == ['file', 'key', 'reason', 'title', 'url']
+        assert sorted(a) == ['file', 'key', 'path', 'reason', 'title', 'url']
         assert a['reason'] == 'never published' and a['url'] == ''
-        assert Path(a['file']).is_file() and Path(a['file']).read_text(encoding='utf-8').startswith('<title>')
+        assert '/' not in a['file'] and os.sep not in a['file'] and a['file'].endswith('.html')
+        assert Path(a['path']).is_absolute() and Path(a['path']).name == a['file']
+        assert Path(a['path']).is_file() and Path(a['path']).read_text(encoding='utf-8').startswith('<title>')
     assert j['artifacts'][1]['title'] == 'Feature: Artifacts'
     assert 'pending' in p.run('pending').out or 'publish' in p.run('pending').out
     # publish the features, then the full-progress last
@@ -795,15 +833,20 @@ def test_pending_without_record(env):
 def test_session_checkout_untouched(env):
     p = env.baseline()
     git(p.clone, 'checkout', '-q', '-b', 'AR9-some-task')
+    # what init told the session to commit on its branch
+    (p.clone / '.gitignore').write_text('.claude/artifacts-queue.json\n.claude/worktrees/\n', encoding='utf-8')
+    git(p.clone, 'add', '.gitignore')
+    git(p.clone, 'commit', '-q', '-m', 'ignore the artifact queue and record worktree')
     (p.clone / 'work.txt').write_text('wip\n', encoding='utf-8')
     head = git(p.clone, 'rev-parse', 'HEAD').stdout
     status = git(p.clone, 'status', '--porcelain').stdout
+    reg_before = (p.clone / 'docs' / 'artifacts' / 'registry.json').read_bytes()
     p.ok('set-task-status', 'AR1', 'Waiting')
     p.ok('task-add', '--owner', 'site', '--item', 'x', '--detail', 'd', '--expected', '14 Oct')
     assert git(p.clone, 'rev-parse', 'HEAD').stdout == head
     assert git(p.clone, 'branch', '--show-current').stdout.strip() == 'AR9-some-task'
     assert git(p.clone, 'status', '--porcelain').stdout == status
-    assert not (p.clone / 'docs').exists()
+    assert (p.clone / 'docs' / 'artifacts' / 'registry.json').read_bytes() == reg_before, 'the session tree is stale by design'
     # the record worktree is a detached worktree of origin/main
     assert git(p.wt, 'rev-parse', 'HEAD').stdout.strip() == p.head()
     assert git(p.wt, 'branch', '--show-current').stdout.strip() == ''
@@ -975,15 +1018,15 @@ def test_edit_content_survives_lost_race(env):
     p = env.baseline()
     ip = InProc(env)
     other = p.clone_again('clone-b')
-    p.ok('path')
-    (p.rdir / 'content' / 'artifacts' / '02-extra.html').write_text('<!-- title: Extra -->\n<p>kept</p>\n', encoding='utf-8')
+    d = export(p, 'artifacts', 'race')
+    (d / '02-extra.html').write_text('<!-- title: Extra -->\n<p>kept</p>\n', encoding='utf-8')
 
     def hook(ctx, attempt):
         if attempt == 1:
             assert p.run('set-task-status', 'SI1', 'Running', cwd=other).code == 0
 
     ip.mod._TEST_BEFORE_PUSH = hook
-    r = ip.call(p.clone, 'edit-content', 'artifacts')
+    r = ip.call(p.clone, 'edit-content', 'artifacts', '--from', d)
     assert r.code == 0, r.all
     assert p.show('docs/artifacts/content/artifacts/02-extra.html') is not None
     assert p.task('SI1')['status'] == 'Running'
@@ -1372,6 +1415,78 @@ def test_path_command(env):
     assert p.ok('path', '--json').json()['record_dir'] == str(p.rdir)
 
 
+@case
+def test_feature_new_needs_project_when_no_record(env):
+    p = env.project()
+    before = p.head()
+    r = p.run('feature-new', '--key', 'a', '--title', 'A', '--prefix', 'AA', '--apps', 'x')
+    assert r.code == 1 and '--project is required' in r.err, r.err
+    assert p.head() == before
+    # with a record already there --project is not needed
+    p.init()
+    p.ok('feature-new', '--key', 'a', '--title', 'A', '--prefix', 'AA', '--apps', 'x')
+
+
+def valid_design(env, marker='#123456'):
+    """A token block that satisfies the contract of whichever renderer is under test."""
+    base = (REAL_PLUGIN / 'design' / 'default-design.css').read_text(encoding='utf-8') \
+        if env.kind == 'real' else ':root { --paper: #fff; --ink: #000; }\n'
+    return base + '\n/* %s */\n' % marker
+
+
+@case
+def test_design_set_and_default(env):
+    p = env.baseline()
+    f = TMP / ('design-%s-%d.css' % (env.kind, env.n))
+    env.n += 1
+    f.write_text(valid_design(env), encoding='utf-8')
+    r = p.ok('design', 'set', f)
+    assert 'design.css' in r.out
+    assert p.man()['design'] == 'design.css'
+    assert p.show('docs/artifacts/design.css') == f.read_text(encoding='utf-8')
+    assert git(p.bare, 'log', '-1', '--format=%s', 'main').stdout.strip() == 'docs/artifacts: design design.css'
+    files = git(p.bare, 'show', '--name-only', '--format=', 'main').stdout.split()
+    assert all(x.startswith('docs/artifacts/') for x in files)
+    for name in ('feature-artifacts.html', 'feature-the-site.html', p.man()['full_progress_artifact']['file']):
+        assert '#123456' in p.show('docs/artifacts/' + name) or env.kind == 'fake', name
+    assert p.run('check').code == 0
+    # the same file again changes nothing
+    before = p.head()
+    assert 'unchanged' in p.ok('design', 'set', f).out and p.head() == before
+    # back to the default removes the file
+    p.ok('design', 'set', 'default')
+    assert p.man()['design'] == 'default' and p.show('docs/artifacts/design.css') is None
+    assert p.run('check').code == 0
+    before = p.head()
+    assert 'unchanged' in p.ok('design', 'set', 'default').out and p.head() == before
+
+
+@case
+def test_design_set_validates_tokens(env):
+    p = env.baseline()
+    f = TMP / ('bad-design-%s-%d.css' % (env.kind, env.n))
+    env.n += 1
+    f.write_text(':root { --nothing: 1; }\n', encoding='utf-8')
+    before = p.head()
+    r = p.run('design', 'set', f)
+    assert r.code == 1 and has_line(r.err, 'R5.11') and 'token contract' in r.err, r.err
+    assert p.head() == before and p.man()['design'] == 'default'
+    r = p.run('design', 'set', TMP / 'no-such.css')
+    assert r.code == 1 and 'does not exist' in r.err
+    # a design.css that lost its tokens on main is a record finding
+    g = TMP / ('ok-design-%s-%d.css' % (env.kind, env.n))
+    env.n += 1
+    g.write_text(valid_design(env), encoding='utf-8')
+    p.ok('design', 'set', g)
+    rec = p.record_copy('design')
+    (rec / 'design.css').write_text(':root { --nothing: 1; }\n', encoding='utf-8')
+    r = check_record(env, rec)
+    assert r.code == 1 and has_line(r.out, 'R5.11', 'design.css'), r.all
+    (rec / 'design.css').unlink()
+    r = check_record(env, rec)
+    assert r.code == 1 and has_line(r.out, 'R5.10'), r.all
+
+
 # --------------------------------------------------------------------------
 # running
 # --------------------------------------------------------------------------
@@ -1401,6 +1516,8 @@ def run_group(kind):
     for name, fn, fake_only in TESTS:
         if fake_only and kind != 'fake':
             continue
+        if ONLY and not any(o in name for o in ONLY):
+            continue
         try:
             fn(env)
             passed += 1
@@ -1416,6 +1533,7 @@ def run_group(kind):
 
 
 TMP = None
+ONLY = [a for a in sys.argv[1:] if not a.startswith('--')]     # run only cases whose name contains one
 
 
 def main():
@@ -1424,12 +1542,15 @@ def main():
     (TMP / 'nullconfig').write_text('', encoding='utf-8')
     total_p = total_f = 0
     try:
-        p, f, s = run_group('fake')
-        print('fake renderer: %d passed, %d failed, %d skipped' % (p, f, s))
-        total_p += p
-        total_f += f
-        why = real_available()
-        if why:
+        if '--real-only' not in sys.argv:
+            p, f, s = run_group('fake')
+            print('fake renderer: %d passed, %d failed, %d skipped' % (p, f, s))
+            total_p += p
+            total_f += f
+        why = None if '--fake-only' in sys.argv else real_available()
+        if '--fake-only' in sys.argv:
+            pass
+        elif why:
             print('SKIP  [real] the real-renderer group is skipped: %s' % why)
         else:
             p, f, s = run_group('real')
