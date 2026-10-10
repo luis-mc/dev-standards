@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T14:46+01:00",
+  "updated": "2026-10-10T14:47+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -151,6 +151,16 @@
       "detail": "This record converted to ARTIFACTSPEC 1.0.0 on a scratch clone and checked clean, a status change run end to end, nothing pushed; shipped in #18. These artifacts are now rendered by the plugin.",
       "expected": "10 Oct",
       "changed": "2026-10-10T14:46+01:00"
+    },
+    {
+      "id": "AR18",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Live",
+      "item": "Script fixes from the real-repo test",
+      "detail": "Adopted URLs, no-op content edits, two-digit Expected days, a sparse record worktree with long paths, no worktree without a record. Released in #18.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T14:47+01:00"
     },
     {
       "id": "DS1",
