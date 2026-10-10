@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T21:40+01:00",
+  "updated": "2026-10-10T21:48+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -196,11 +196,11 @@
       "id": "AR22",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Done",
       "item": "Decisions show every option and the owner's choice",
-      "detail": "Rule and ARTIFACTSPEC 1.1.0: when the owner chooses between options (designs, approaches, names), the feature artifact shows every option offered, with its preview, the recommended one, the one the owner chose (marked, dated, in their words when given) and the ones not chosen; an open choice shows as Needs you. Decisions are structured data the renderer draws and check validates, not free HTML.",
-      "expected": "10 Oct ~23:00",
-      "changed": "2026-10-10T21:06+01:00"
+      "detail": "Built in draft #29, not released: ARTIFACTSPEC §5.4; decisions.json drawn as option cards (Chosen by the owner · date with their words, Not chosen, Recommended, open = Needs you, replaced collapsed); check refuses fewer than 2 options, no choice, or a hand-written Decisions section. 80 + 118 + 47 tests pass. Release is AR24.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T21:48+01:00"
     },
     {
       "id": "AR23",
