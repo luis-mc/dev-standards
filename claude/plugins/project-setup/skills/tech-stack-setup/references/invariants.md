@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 6.0.0
+**Version:** 7.0.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -22,7 +22,26 @@ chosen per product through the selection catalog that accompanies this spec, and
 recorded in the product's Stack Profile (§18). This document does not name
 vendors and does not rank them.
 
-### 0.1 What changed in 6.0 and 5.x, and why
+### 0.1 What changed in 7.0, 6.0 and 5.x, and why
+
+**7.0.0 — nothing left behind, and a gate that cannot hang.** Under 6.0.0 the
+branch gate trusted whatever dependencies were already installed, so a stale
+lockfile passed it and failed later; a hung step held a gate open with no end;
+and a failed step still let the slow steps behind it run. Merged trains left
+their branches, gate-result refs and agent worktrees behind, and build outputs
+uploaded to the CI platform (installers, bundles, reports) piled up and were
+billed for storage.
+
+- §13.1: the CI platform keeps only the newest build artifact of each name;
+  older ones are deleted after every workflow run.
+- §13.5: the gate installs from the lockfile in frozen mode before any step, has
+  a time limit, and stops at the first failed step unless asked to go on.
+- §13.6: once a train merges, its branches, gate-result refs and worktrees are
+  removed automatically.
+
+These are new `MUST`s, so this is a major version (§20). A product conforming to
+6.0.0 needs the artifact pruning, the gate's install step and time limit, and
+the train cleanup to conform to 7.0.0.
 
 **6.0.0 — one full CI run per release, and the checks that make it safe.** On
 one product each change passed up to four full suites: an agent's branch check,
@@ -1265,6 +1284,16 @@ whose run of the same workflow passed, the default-branch run records that and
 skips its jobs; otherwise it runs in full. The comparison is by tree, so a merge
 that changed anything runs the suite, and a failure to decide runs it too.
 
+**Build artifacts.** The CI platform MUST keep only the newest build artifact of
+each name. A build artifact is any output a workflow uploads to the platform's
+artifact store: an installer (an MSI, an APK), a bundle, a test or coverage
+report. After every run of a workflow that uploads one, the older artifacts of
+the same name are deleted, and a scheduled sweep deletes any the per-run pruning
+missed. So that pruning can tell kinds apart, an artifact's name MUST be stable
+for its kind — `windows-installer`, never `windows-installer-1.4.2-run-812`; the
+version and commit go inside the artifact. A build that must outlive the next
+one (a release) is published as a release asset, not kept as an artifact.
+
 ### 13.2 Promotion
 
 **The three-tier promotion flow is not optional**, whichever host is chosen:
@@ -1322,6 +1351,13 @@ will join, it runs:
 6. End-to-end tests, only when a user-facing app, or a package it renders,
    changed.
 
+Before the first step the gate installs dependencies from the committed
+lockfile in frozen mode, so a lockfile that no longer matches the manifests
+fails the gate instead of a later run. The gate stops at the first failed step
+unless it is asked to go on, and it has a time limit (30 minutes by default):
+when the limit is reached, the running step is stopped with its child processes
+and the result records a timeout. A gate that could not finish never passes.
+
 A change to the lockfile, the task runner's configuration or the CI workflows
 widens the gate to every package.
 
@@ -1352,6 +1388,11 @@ gate runs the scanner CI runs.
   next one.
 - CI is watched through the workflow runs for the head commit, never through a
   pull request's check list, which can be read before the new run is listed.
+- Once the ready pull request merges, the train is removed automatically: on the
+  remote, the integration branch, every branch joined into it and their
+  gate-result refs; locally, their branches and the worktrees they were built
+  in. A branch with an open pull request, a branch not merged, and a worktree
+  holding uncommitted work are never removed; they are listed instead.
 
 ---
 
@@ -1615,11 +1656,14 @@ Every item is checkable regardless of stack.
 - [ ] Workflows path-filtered; expensive runners not used on unrelated changes
 - [ ] CI cost kept down (SHOULD): no sub-minute job that could be a step, superseded PR runs cancelled but never default-branch runs, drafts skip CI, installs and task-runner results cached
 - [ ] Default-branch push runs skip a tree a pull-request run already passed
+- [ ] Only the newest build artifact of each name is kept; artifact names stable per kind
 - [ ] End-to-end tests of critical web journeys gate the ready pull request; flaky specs quarantined, never retried until green
 - [ ] Branch gate: dependents type-checked and linted with every error reported, guard tests always run, secret scan, E2E only when a UI app changed
+- [ ] Branch gate installs from the lockfile in frozen mode first, stops at the first failure, and has a time limit
 - [ ] Gate results machine-readable and trusted only against the current head and base
 - [ ] Guard tests and secret scan run as a pre-push hook; the agent setup script installs every scanner CI uses
 - [ ] Integration through a merge script and one ready pull request; CI watched by commit
+- [ ] A merged train's branches, gate-result refs and worktrees removed automatically
 - [ ] Three-tier promotion; migrations before serving; rollback documented and rehearsed
 - [ ] Release order enforced: additive API → web/admin → mobile submission
 - [ ] Mobile signing material stored reproducibly with a tested recovery procedure

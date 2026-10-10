@@ -18,6 +18,9 @@
 - A train leaves when its cargo is green; late branches ride the next train.
 - One deploy per merge; smoke-test production; fix forward on a new branch.
 - No preview deploys for agent branches. Never merge mid-round to "see it deployed".
+- A gate that fails at `setup` means a stale lockfile: regenerate and commit it, never install unfrozen.
+- After the ready PR merges, run `scripts/delivery/cleanup.py --pr <N>`: it removes the train's branches, gate-result refs and worktrees. Leave nothing behind.
+- Build artifacts on GitHub (installers such as MSI, bundles, reports): keep only the newest of each name. Give each kind a stable name; `artifact-prune.yml` deletes the older ones after every run.
 
 ## Docs
 - Create every doc under `docs/`.
