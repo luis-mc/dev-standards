@@ -239,7 +239,7 @@ def after_non_matching_and_quoted_text_queue_nothing():
 def after_matches_inside_chains_wrappers_and_windows_paths():
     for cmd, status in (('cd sub && gh pr create --title "t"', 'Running'),
                         ('rtk gh pr ready', 'Waiting'),
-                        ('GH_TOKEN=x gh pr merge 3', 'Live'),
+                        ('CI=1 gh pr merge 3', 'Live'),
                         ('python3 .\\scripts\\delivery\\ci_watch.py 7', 'Waiting'),
                         ('git push && gh pr create --fill', 'Running')):
         work = make_repo()

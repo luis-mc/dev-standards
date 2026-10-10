@@ -44,7 +44,7 @@ except ImportError as _e:
     _RENDER_ERROR = str(_e)
 
 SPEC = 'ARTIFACTSPEC 1.0.0'
-FP_KEY = 'full-progress'
+FP_NAME = 'full-progress'
 RECORD_REL = 'docs/artifacts'
 WORKTREE_REL = os.path.join('.claude', 'worktrees', 'artifacts-record')
 PUSH_RETRIES = 3          # R4.15: retries after the first push attempt
@@ -569,7 +569,7 @@ class Record:
         out = []
         fp = self.manifest.get('full_progress_artifact')
         if isinstance(fp, dict) and fp:
-            out.append((fp.get('key', FP_KEY), 'full-progress', fp))
+            out.append((fp.get('key', FP_NAME), 'full-progress', fp))
         feats = self.manifest.get('feature_artifacts')
         for e in feats if isinstance(feats, list) else []:
             if isinstance(e, dict):
@@ -747,10 +747,10 @@ def validate_structure(rec):
         if feats:
             f('INV-2', 'manifest.json', 'a feature artifact exists but there is no full-progress artifact')
     else:
-        if fp.get('key') != FP_KEY:
-            f('R4.2', 'manifest.json', 'the full-progress artifact key must be "%s"' % FP_KEY)
+        if fp.get('key') != FP_NAME:
+            f('R4.2', 'manifest.json', 'the full-progress artifact key must be "%s"' % FP_NAME)
     for e in feats:
-        if e.get('key') == FP_KEY or str(e.get('title', '')).startswith('Full Progress: '):
+        if e.get('key') == FP_NAME or str(e.get('title', '')).startswith('Full Progress: '):
             f('INV-2', 'manifest.json', 'a second full-progress artifact is listed (%s)' % e.get('key'))
     if fp_ok and rec.dir.is_dir():
         for p in sorted(rec.dir.glob('full-progress-*.html')):
@@ -812,7 +812,7 @@ def validate_structure(rec):
     if not isinstance(tasks, list):
         f('R4.3', 'registry.json', 'tasks must be a list')
         tasks = []
-    feat_by_key = {e.get('key'): e for e in feats}
+    feat_by_name = {e.get('key'): e for e in feats}
     seen = {}
     for t in tasks:
         if not isinstance(t, dict):
@@ -833,10 +833,10 @@ def validate_structure(rec):
         if owner == 'project':
             if mt and mt.group(1) not in pp:
                 f('R4.6', 'registry.json', '%s: prefix %s is not a project prefix' % (label, mt.group(1)))
-        elif owner in feat_by_key:
-            if mt and mt.group(1) != feat_by_key[owner].get('prefix') and mt.group(1) not in pp:
+        elif owner in feat_by_name:
+            if mt and mt.group(1) != feat_by_name[owner].get('prefix') and mt.group(1) not in pp:
                 f('R4.6', 'registry.json', '%s: prefix %s is neither the prefix of "%s" (%s) nor a project prefix'
-                  % (label, mt.group(1), owner, feat_by_key[owner].get('prefix')))
+                  % (label, mt.group(1), owner, feat_by_name[owner].get('prefix')))
         elif isinstance(owner, str):
             f('R4.6', 'registry.json', '%s: owner "%s" is neither project nor a feature key' % (label, owner))
         st = t.get('status')
@@ -1053,7 +1053,7 @@ def finish_change(ctx, rec, result):
     write_text(rec.dir / 'manifest.json', dump_json(rec.manifest))
     write_text(rec.dir / 'registry.json', dump_json(rec.registry))
     rec.invalidate()
-    for key in sorted(rec.render_keys, key=lambda k: (k != FP_KEY, k)):
+    for key in sorted(rec.render_keys, key=lambda k: (k != FP_NAME, k)):
         rec.write_html(key, render_one(rec, key, now.text, now.iso))
     write_text(rec.dir / 'README.md', readme_text(rec.manifest))
     post = validate_structure(rec)
@@ -1131,7 +1131,7 @@ def build_init(rec, args, project, root):
         'spec': SPEC, 'project': project, 'timezone': zone, 'timezone_label': label,
         'windows_timezone': win, 'design': 'default', 'default_branch': args.default_branch_final,
         'merged_status': 'Live',
-        'full_progress_artifact': {'key': FP_KEY, 'title': title,
+        'full_progress_artifact': {'key': FP_NAME, 'title': title,
                                    'file': R.artifact_file('full-progress', title),
                                    'url': '', 'published_sha256': ''},
         'feature_artifacts': [],
@@ -1139,7 +1139,7 @@ def build_init(rec, args, project, root):
         'updated': '',
     }
     rec.registry = {'spec': SPEC, 'updated': '', 'tasks': []}
-    d = rec.dir / 'content' / FP_KEY
+    d = rec.dir / 'content' / FP_NAME
     write_text(d / 'meta.json', dump_json({
         'title': title, 'hero': 'Everything in flight on %s.' % project,
         'lede': 'No work is recorded yet.', 'extra_css': ''}))
@@ -1147,7 +1147,7 @@ def build_init(rec, args, project, root):
     write_text(d / '01-how-to-read-this.html',
                '<!-- title: How to read this -->\n'
                '<p>Every row of the checklist comes from the task registry; nothing here is typed by hand.</p>\n')
-    rec.render_keys[FP_KEY] = 'new'
+    rec.render_keys[FP_NAME] = 'new'
     rec.exists = True
 
 
@@ -1180,8 +1180,8 @@ def cmd_feature_new(args):
     ctx = make_ctx(args)
     args.default_branch_final = ctx.branch
     key, name, prefix = args.key, args.title.strip(), args.prefix
-    if not KEY_RE.match(key) or key == FP_KEY:
-        raise Fail(1, 'key must be lowercase letters, digits and hyphens (and not "%s")' % FP_KEY)
+    if not KEY_RE.match(key) or key == FP_NAME:
+        raise Fail(1, 'key must be lowercase letters, digits and hyphens (and not "%s")' % FP_NAME)
     if not PREFIX_RE.match(prefix):
         raise Fail(1, 'prefix must be 2 to 5 capital letters')
     if name.startswith('Feature: '):
@@ -1218,7 +1218,7 @@ def cmd_feature_new(args):
                    '<!-- title: What and why -->\n<p>Describe what this feature is and why it exists.</p>\n')
         write_text(d / 'history.json', dump_json([{'date': now.text, 'change': 'Feature artifact created.'}]))
         rec.render_keys[key] = 'new'
-        rec.render_keys[FP_KEY] = 'new'
+        rec.render_keys[FP_NAME] = 'new'
         rec.message = 'docs/artifacts: add feature %s' % key
         return {'command': 'feature-new', 'key': key, 'title': title, 'prefix': prefix,
                 'file': m['feature_artifacts'][-1]['file'], 'initialised': created}
@@ -1275,7 +1275,7 @@ def cmd_task_add(args):
                              'changed': now.iso})
         if owner != 'project':
             rec.render_keys[owner] = 'new'
-        rec.render_keys[FP_KEY] = 'new'
+        rec.render_keys[FP_NAME] = 'new'
         rec.message = 'docs/artifacts: %s %s' % (tid, status)
         return {'command': 'task-add', 'id': tid, 'status': status}
 
@@ -1318,7 +1318,7 @@ def cmd_set_task_status(args):
                 rec.invalidate()
         elif args.history:
             warn('%s is a project task; project tasks have no History, --history ignored' % args.id)
-        rec.render_keys[FP_KEY] = 'new'
+        rec.render_keys[FP_NAME] = 'new'
         rec.message = 'docs/artifacts: %s %s' % (args.id, status)
         return {'command': 'set-task-status', 'id': args.id, 'status': status, 'previous': prev,
                 'expected': task['expected']}
@@ -1393,8 +1393,8 @@ def cmd_edit_content(args):
         rec.invalidate()
         rec.contents()                       # validates what the session supplied
         rec.render_keys[key] = 'new'
-        if key != FP_KEY:
-            rec.render_keys[FP_KEY] = 'new'   # section 1 quotes each lede
+        if key != FP_NAME:
+            rec.render_keys[FP_NAME] = 'new'   # section 1 quotes each lede
         rec.message = 'docs/artifacts: edit %s' % key
         return {'command': 'edit-content', 'key': key, 'files': sorted(src)}
 
