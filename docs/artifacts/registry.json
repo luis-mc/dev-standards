@@ -468,9 +468,9 @@
       "app": "",
       "status": "Live",
       "item": "Windows-only test failures",
-      "detail": "Released in STACKSPEC 7.0.0 (#27, 137e0d0, 00:31). Built in draft #22: test_spec_check loads spec_check through the symlink placeholder Windows checks out; test_authspec_check reads the spec as UTF-8. Both pass on Windows with no environment variable; every other tools/ suite passes there too. Waiting for the join.",
+      "detail": "Released in STACKSPEC 7.0.0 (#27, 137e0d0, 00:31). test_spec_check and test_authspec_check pass on Windows with no environment variable.",
       "expected": "11 Oct",
-      "changed": "2026-10-11T00:32+01:00"
+      "changed": "2026-10-11T00:34+01:00"
     },
     {
       "id": "DS22",
