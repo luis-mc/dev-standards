@@ -226,11 +226,11 @@
       "id": "AR25",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "Rename Done to Built",
-      "detail": "Built in draft #28, not released: Done becomes Built everywhere (spec, script, chips, skills, rule); Done is accepted as an alias; old records are migrated on the next write.",
+      "detail": "Released in luismc-artifacts 1.1.0 (#33, 23:12): Done is now Built (finished, not released).",
       "expected": "10 Oct",
-      "changed": "2026-10-10T22:04+01:00"
+      "changed": "2026-10-10T23:15+01:00"
     },
     {
       "id": "AR26",
