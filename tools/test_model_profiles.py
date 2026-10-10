@@ -12,6 +12,8 @@ What is checked against a repo root:
   S1  the settings template registers the SessionStart effort_drift.py hook
       and the hook file ships next to it
   M1  no model-delegation.md remains in the claude-setup assets
+  E1  the settings template enables luismc-artifacts@{{MARKETPLACE}} and
+      SKILL.md says how the placeholder is filled
 
 Each check is then proved able to fail: a clean copy of the relevant files is
 mutated one way at a time, and the mutation must produce the matching finding.
@@ -56,6 +58,8 @@ RULE_LINES = [
     "- Create every doc under `docs/`.",
 ]
 PLACEHOLDER = "{{SUBAGENT_EFFORT}}"
+ARTIFACTS_PLUGIN = "luismc-artifacts@{{MARKETPLACE}}"
+SKILL = SETUP + "/SKILL.md"
 
 
 def frontmatter(text):
@@ -130,6 +134,20 @@ def check(root):
 
     if (root / OLD_RULE).exists():
         found.append("M1 model-delegation.md is still in the assets")
+
+    try:
+        enabled = json.loads((root / SETTINGS).read_text(encoding="utf-8"))["enabledPlugins"]
+        on = enabled.get(ARTIFACTS_PLUGIN) is True
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        on = False
+    if not on:
+        found.append(f"E1 settings template does not enable {ARTIFACTS_PLUGIN}")
+    try:
+        skill_text = (root / SKILL).read_text(encoding="utf-8")
+    except OSError:
+        skill_text = ""
+    if "{{MARKETPLACE}}" not in skill_text or "luismc-project-setup@" not in skill_text:
+        found.append("E1 SKILL.md does not say how {{MARKETPLACE}} is filled")
     return found
 
 
@@ -221,6 +239,25 @@ def m_old_rule(r):
     (r / OLD_RULE).write_text("old\n", encoding="utf-8")
 
 
+def m_no_enabled_plugins(r):
+    p = r / SETTINGS
+    data = json.loads(p.read_text(encoding="utf-8"))
+    del data["enabledPlugins"]
+    p.write_text(json.dumps(data), encoding="utf-8")
+
+
+def m_marketplace_unexplained(r):
+    p = r / SKILL
+    p.write_text(p.read_text(encoding="utf-8").replace("{{MARKETPLACE}}", "x"),
+                 encoding="utf-8")
+
+
+def m_hardcoded_marketplace(r):
+    p = r / SETTINGS
+    p.write_text(p.read_text(encoding="utf-8").replace(
+        "{{MARKETPLACE}}", "luismc-dev-tools"), encoding="utf-8")
+
+
 def m_bad_json(r):
     (r / PROFILES).write_text("{", encoding="utf-8")
 
@@ -236,6 +273,9 @@ MUTATIONS = [
     ("S1 hook not registered", m_no_hook_registration, "registers no SessionStart"),
     ("S1 hook file missing", m_no_hook_file, "effort_drift.py is missing"),
     ("M1 old rule file present", m_old_rule, "model-delegation.md is still"),
+    ("E1 plugin not enabled", m_no_enabled_plugins, "does not enable luismc-artifacts"),
+    ("E1 marketplace hard-coded", m_hardcoded_marketplace, "does not enable luismc-artifacts"),
+    ("E1 placeholder unexplained", m_marketplace_unexplained, "does not say how {{MARKETPLACE}}"),
     ("P0 profiles unreadable", m_bad_json, "model-profiles.json unreadable"),
 ]
 

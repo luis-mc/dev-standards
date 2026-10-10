@@ -16,7 +16,10 @@ claude plugin install luismc-audits@luismc-dev-tools
 claude plugin install luismc-agents@luismc-dev-tools
 claude plugin install luismc-specs@luismc-dev-tools
 claude plugin install luismc-project-setup@luismc-dev-tools
+claude plugin install luismc-artifacts@<marketplace>
 ```
+
+`<marketplace>` is the name your machine registered this marketplace under, the suffix of your other `luismc-*` plugins.
 
 Private repo — this uses your existing git/gh credentials, nothing extra to
 configure.
@@ -46,6 +49,8 @@ Sets up:
 - `.claude/rules/agents-and-integration.md` — how agents are run and work is
   integrated (replaces `model-delegation.md`)
 - `.claude/hooks/effort_drift.py` — a SessionStart alias-drift warning
+- `enabledPlugins` — turns on `luismc-artifacts` for the project (project
+  target only; other entries are kept, and an entry you set to `false` stays)
 
 **Model split:** the main session runs on Opus and does the thinking and
 planning; subagents run on Sonnet and write the code. Every project gets it,
@@ -130,6 +135,38 @@ reliable to build on otherwise.
 
 It can also audit an existing auth implementation against the same standard,
 the same way `tech-stack-setup` audits the rest of the stack.
+
+---
+
+## `luismc-artifacts` — see what is live, running and waiting without reading code
+
+Keeps a project's status in front of you as claude.ai artifacts: one **feature
+artifact** per feature and one **full-progress artifact** for the whole project,
+each with a status checklist, written content and a stamp of the last update.
+They are generated from a record in the project's repository
+(`docs/artifacts/`: a manifest, a task registry, content), to the binding
+`ARTIFACTSPEC`, so status is typed in one place and every view agrees. A
+deleted artifact is recreated from the record without duplicates. The artifacts
+use the project's own design, found and confirmed with you, or a default one.
+
+Five skills:
+
+- **`/luismc-artifacts:feature-artifact-new`** — asks the feature, its apps and
+  task prefix, finds the project's design, writes the content and tasks, and
+  publishes.
+- **`/luismc-artifacts:full-progress-artifact-new`** — creates the project's one
+  full-progress artifact.
+- **`/luismc-artifacts:task-add`** — records work as a task before it starts.
+- **`/luismc-artifacts:task-status-update`** — changes a status through the
+  script and publishes what changed.
+- **`/luismc-artifacts:project-artifact-check`** — checks the artifacts against
+  the spec and explains each finding with its requirement ID.
+
+Hooks queue status changes when a pull request is opened, readied or merged,
+when CI finishes, and on a production deploy, and the end of a turn waits until
+those are applied and published. Installing creates nothing in a project; the
+first artifact adds a short rule file. `luismc-project-setup`'s `claude-setup`
+enables the plugin in every project it sets up.
 
 ---
 
