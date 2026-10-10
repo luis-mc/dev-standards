@@ -1,0 +1,82 @@
+/*
+  Default design for project artifacts.
+
+  Layout concept: Spec sheet: a contents rail on the left, numbered sections, the status checklist first.
+
+  Fonts (load with a link element in the head):
+  https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600;700&display=swap
+
+  This file holds tokens only. Structure lives in templates/project-artifact.css.
+*/
+:root {
+  --font-display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;
+  --font-display-stretch: 87.5%;
+  --font-body: 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, Menlo, monospace;
+
+  --paper: #F5F6F8;
+  --surface: #FFFFFF;
+  --surface-2: #ECEEF2;
+  --ink: #141A23;
+  --ink-muted: #556070;
+  --rule: #D5DAE1;
+  --rule-strong: #9AA4B2;
+  --signal: #2D46C8;
+  --on-signal: #FFFFFF;
+  --live: #17784A;
+  --on-live: #FFFFFF;
+  --done-bg: #DCEFE4;
+  --running-bg: #FBEBC8;
+  --running-mark: #B26A00;
+  --waiting-bg: #DDE6FA;
+  --failed: #C0352B;
+  --on-failed: #FFFFFF;
+  --focus: #2D46C8;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F141B;
+    --surface: #161D27;
+    --surface-2: #1E2733;
+    --ink: #E7EBF0;
+    --ink-muted: #9AA5B4;
+    --rule: #2A3442;
+    --rule-strong: #4A5668;
+    --signal: #8EA2FF;
+    --on-signal: #0F141B;
+    --live: #4CC38A;
+    --on-live: #0F141B;
+    --done-bg: #173326;
+    --running-bg: #3A2C0E;
+    --running-mark: #F0B54A;
+    --waiting-bg: #1B2A4A;
+    --failed: #F07167;
+    --on-failed: #0F141B;
+    --focus: #8EA2FF;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #0F141B;
+  --surface: #161D27;
+  --surface-2: #1E2733;
+  --ink: #E7EBF0;
+  --ink-muted: #9AA5B4;
+  --rule: #2A3442;
+  --rule-strong: #4A5668;
+  --signal: #8EA2FF;
+  --on-signal: #0F141B;
+  --live: #4CC38A;
+  --on-live: #0F141B;
+  --done-bg: #173326;
+  --running-bg: #3A2C0E;
+  --running-mark: #F0B54A;
+  --waiting-bg: #1B2A4A;
+  --failed: #F07167;
+  --on-failed: #0F141B;
+  --focus: #8EA2FF;
+  color-scheme: dark;
+}
