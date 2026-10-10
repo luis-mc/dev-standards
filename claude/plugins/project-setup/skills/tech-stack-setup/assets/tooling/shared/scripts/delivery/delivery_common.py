@@ -258,6 +258,12 @@ def load_gate(root: Path) -> dict:
         if "run_full" in step and not isinstance(step["run_full"], str):
             raise DeliveryError("%s ('%s'): 'run_full' must be a string" % (label, name))
         step["pre_push"] = bool(step.get("pre_push", False))
+        env = step.get("env", {})
+        if not isinstance(env, dict) or not all(
+            isinstance(k, str) and k and isinstance(v, str) for k, v in env.items()
+        ):
+            raise DeliveryError("%s ('%s'): 'env' must map names to string values" % (label, name))
+        step["env"] = env
     return cfg
 
 
@@ -554,12 +560,15 @@ def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
     return True, cmd, why
 
 
-def run_command(cmd: str, cwd: Path) -> tuple[int, float]:
-    """Run a step command through the shell, output inherited. Returns (code, seconds)."""
+def run_command(cmd: str, cwd: Path, env: dict[str, str] | None = None) -> tuple[int, float]:
+    """Run a step command through the shell, output inherited. `env` is added to the
+    environment (a step's "env" in gate.json: the only way to set a variable that
+    works in cmd.exe and sh alike). Returns (code, seconds)."""
     sys.stdout.flush()
     sys.stderr.flush()
     start = time.monotonic()
-    code = subprocess.run(cmd, shell=True, cwd=cwd).returncode
+    full_env = {**os.environ, **env} if env else None
+    code = subprocess.run(cmd, shell=True, cwd=cwd, env=full_env).returncode
     return code, round(time.monotonic() - start, 1)
 
 
@@ -584,7 +593,7 @@ def execute_steps(
             entry["reason"] = why
             if go:
                 print("\n==> %s (%s)\n    $ %s" % (name, why, cmd), flush=True)
-                code, secs = run_command(cmd, ctx.root)
+                code, secs = run_command(cmd, ctx.root, step.get("env"))
                 entry.update(
                     outcome="pass" if code == 0 else "fail", seconds=secs, command=cmd
                 )

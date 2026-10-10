@@ -67,6 +67,10 @@ timed out. A script never exits 0 when it could not decide.
   `--full`), and are skipped (outcome `skip`) when no package changed;
   `ui-changed` runs only when a changed file is under a `ui_paths` prefix or the
   gate is widened.
+- `env` (optional, per step): an object of names to string values added to the
+  environment of that step's command, e.g. `"env": {"CI": "true"}` for a test
+  runner whose timeouts depend on it. Inline `VAR=x cmd` does not work in
+  `cmd.exe`; this does everywhere.
 - Placeholders: `{base}` (base commit sha), `{changed_dirs}` (space-separated
   package directories that changed, POSIX paths relative to the root),
   `{affected_dirs}` (the changed directories plus every workspace package that

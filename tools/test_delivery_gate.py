@@ -436,6 +436,29 @@ def sc_affected(t: T, shared: Path) -> None:
         root, {"kind": "go-modules"}, pk, ["a"]), ["a"])
 
 
+def sc_step_env(t: T, shared: Path) -> None:
+    """A step's "env" reaches its command; a bad "env" is a configuration error."""
+    cfg = Box.gate_json()
+    for s in cfg["steps"]:
+        if s["name"] == "unit":
+            s["env"] = {"GATE_TEST_FAIL": "unit"}  # the test step script fails when it sees its own name here
+    box = Box(shared, gate_json=cfg)
+    box.branch("feat/api", {"apps/api/a.txt": "a\n"})
+    r = box.gate("--no-publish")
+    steps = {s["name"]: s["outcome"] for s in box.result()["steps"]}
+    t.eq("env: the variable reaches the step that declares it, and only that step",
+         (r.code, steps["unit"], steps["typecheck"], steps["lint"]), (1, "fail", "pass", "pass"))
+
+    for bad in ({"A": 1}, ["A"], {"": "x"}):
+        cfg = Box.gate_json()
+        cfg["steps"][0]["env"] = bad
+        box = Box(shared, gate_json=cfg)
+        box.branch("feat/api", {"apps/api/a.txt": "a\n"})
+        r = box.gate("--no-publish")
+        t.eq("env: %r is a configuration error" % (bad,), r.code, 2)
+        t.has("env: ... that names the step", r.err, "env")
+
+
 def sc_widening(t: T, shared: Path) -> None:
     box = Box(shared)
     box.branch("feat/lock", {"pnpm-lock.yaml": "lock\nl1\nchanged\n"})
@@ -1287,6 +1310,8 @@ MUTANTS = [
     ("affected set is the whole workspace for a leaf", "scripts/delivery/delivery_common.py",
      '.replace("{affected_dirs}", " ".join(ctx.packages if wide else ctx.affected_dirs))',
      '.replace("{affected_dirs}", " ".join(ctx.packages))', "affected"),
+    ("a step's env is not passed", "scripts/delivery/delivery_common.py",
+     "full_env = {**os.environ, **env} if env else None", "full_env = None", "step_env"),
     ("gate never widens", "scripts/delivery/delivery_common.py",
      'reasons = widening_files(files, cfg["widen_on"])', "reasons = []", "widening"),
     ("--fail-fast does not stop", "scripts/delivery/delivery_common.py",
@@ -1320,6 +1345,7 @@ MUTANTS = [
 SCENARIOS = {
     "scopes": sc_scopes,
     "affected": sc_affected,
+    "step_env": sc_step_env,
     "widening": sc_widening,
     "only_skip": sc_only_skip,
     "failures": sc_failures,
