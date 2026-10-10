@@ -40,20 +40,19 @@ read the message, fix the cause and rerun.
    queued events and commits the record. Exit 3 or 4 means the record could not
    be pushed; report that and stop, because the change would be lost.
 3. **Publish** every artifact `pending` lists, until it exits 0:
-   - Run `pending --json`. Handle every artifact it lists, feature artifacts
-     before the full-progress artifact. Take `file` and `url` from
-     `docs/artifacts/manifest.json` in `<repo>/.claude/worktrees/artifacts-record`
-     (read only).
-   - Publish with the Artifact tool: `file_path` is
-     `<record worktree>/docs/artifacts/<file>`, unchanged; `url` is the
-     manifest URL when it is not empty. If it is refused because the artifact
-     does not exist, list the owner's artifacts (`action: "list"`) and match
-     the exact title (`Feature: <name>` or `Full Progress: <project>`); publish
-     to that one, and only when none matches publish a new one (with an `icon`
-     such as `tracker`). If it is refused because the artifact changed
-     elsewhere, `read` the live version once, copy content-section changes into
-     `content/<key>/`, run `edit-content <key>` and retry once; changes to the
-     generated sections are dropped.
+   - Run `pending --json`. Handle every entry of `artifacts`, feature artifacts
+     before the full-progress artifact. Each carries `key`, `title`, `path` (the
+     absolute path of the HTML to publish) and `url`.
+   - Publish with the Artifact tool: `file_path` is the entry's `path`,
+     unchanged; `url` is the entry's `url` when it is not empty. If it is
+     refused because the artifact does not exist, list the owner's artifacts
+     (`action: "list"`) and match the exact `title`; publish to that one, and
+     only when none matches publish a new one (with an `icon` such as
+     `tracker`). If it is refused because the artifact changed elsewhere,
+     `read` the live version once, copy content-section changes through
+     `export-content <key> --to <dir>` and `edit-content <key> --from <dir>`,
+     and retry once with the new `path`; changes to the generated sections are
+     dropped.
    - Run `mark-published <key> --url <URL>` with the URL the publish returned.
      Marking a feature artifact changes the full-progress artifact's links, so
      rerun `pending` and publish again until it exits 0.

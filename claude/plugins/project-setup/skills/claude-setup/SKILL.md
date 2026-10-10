@@ -162,7 +162,7 @@ to avoid. The keys, and what each is for:
 | `modelSettings.<Sonnet ID>.effortLevel` | the step 1 answer, `"medium"` or `"high"` | the Sonnet effort for the session itself (subagents: see the rule file below) |
 | `effortLevel` | `"high"` | the effort for sessions whose model has no `modelSettings` entry, such as cloud agents; the per-model entries beat it |
 | `hooks.SessionStart` | the drift-hook entry, see path note below | runs `hooks/effort_drift.py` at session start |
-| `enabledPlugins."luismc-artifacts@luismc-dev-tools"` | `true`, project target only | enables the project-artifacts plugin (ARTIFACTSPEC R10.1) |
+| `enabledPlugins."luismc-artifacts@<marketplace>"` | `true`, project target only; marketplace as found below | enables the project-artifacts plugin (ARTIFACTSPEC R10.1) |
 
 **The effort keys are written from the user's answer, not queued as missing.**
 They are an explicit choice made this run, so they are written into every
@@ -205,19 +205,34 @@ is, and never remove or reorder a hook. Create `hooks` and `hooks.SessionStart`
 when they are absent.
 
 **`enabledPlugins` merges, and writes one entry.** For a project target, add
-`"luismc-artifacts@luismc-dev-tools": true` to `enabledPlugins` in the
-project's `.claude/settings.json`, so every project this skill sets up has the
-project-artifacts plugin (ARTIFACTSPEC R10.1). `luismc-dev-tools` is the
-marketplace name this plugin itself is installed from. Create `enabledPlugins`
-when it is absent. When the key `luismc-artifacts@luismc-dev-tools` is already
-there, with `true` or `false`, leave it exactly as it is: a `false` is the
-owner's decision. Keep every other entry, and never remove or reorder one. This
-skill writes no other `enabledPlugins` entry, and none to a user target; which
-other plugins are enabled is the user's call, made through `/plugin` or their
-own settings. Enabling the plugin creates no file in the project; the plugin's
-own first `feature-new` or `init` does (its R10.2). Report, in step 5, that the
-marketplace must be added on the machine (`claude plugin marketplace add
-luis-mc/dev-standards`) for the entry to take effect.
+`"luismc-artifacts@<marketplace>": true` to `enabledPlugins` in the project's
+`.claude/settings.json`, so every project this skill sets up has the
+project-artifacts plugin (ARTIFACTSPEC R10.1). The settings template carries
+the placeholder `{{MARKETPLACE}}` in that key; it never reaches a target.
+`<marketplace>` is the name under which the owner registered this plugin's
+marketplace, found in this order:
+
+1. The suffix after `@` of the entry whose key starts with
+   `luismc-project-setup@` in the `enabledPlugins` of the user's
+   `~/.claude/settings.json`. This skill is part of that plugin, so the entry is
+   how the owner registered the marketplace on this machine.
+2. Only when there is no such entry, the `name` in the marketplace file this
+   plugin was installed from (`.claude-plugin/marketplace.json` at the
+   marketplace root).
+3. If neither can be read, ask the owner for the marketplace name.
+
+Create `enabledPlugins` when it is absent. When a key
+`luismc-artifacts@<marketplace>` is already there, with `true` or `false`,
+leave it exactly as it is: a `false` is the owner's decision. When the project
+already names `luismc-artifacts` under a different marketplace than the one
+found, queue it as a **conflict** (the entry would enable nothing on this
+machine) and let the owner choose in step 3. Keep every other entry, and never
+remove or reorder one. This skill writes no other `enabledPlugins` entry, and
+none to a user target; which other plugins are enabled is the user's call, made
+through `/plugin` or their own settings. Enabling the plugin creates no file in
+the project; the plugin's own first `feature-new` or `init` does (its R10.2).
+Report, in step 5, the marketplace name used and where it came from, and that
+the plugin must be installed on the machine for the entry to take effect.
 
 **The `statusLine` command differs per target and the template only carries the
 project form.** Rewrite it for a user-level install:
@@ -313,7 +328,7 @@ Group every queued change by target and by file: what is being added, what is
 being overwritten unconditionally, what is being removed (a target's old
 `rules/model-delegation.md`), and which individual settings keys are being
 added, including the `hooks.SessionStart` entry and, for a project target, the
-`enabledPlugins` entry for `luismc-artifacts@luismc-dev-tools` (or that it is
+`enabledPlugins` entry for `luismc-artifacts@<marketplace>` (or that it is
 already there). List each model-split
 conflict separately as `key: current → policy`. List the two effort keys per
 target as `modelSettings.<ID>.effortLevel: current → chosen` (`none → chosen`
@@ -351,7 +366,8 @@ Apply what was confirmed, then check the result rather than assuming it worked:
   `hooks.SessionStart` holds the command for that target (project form
   with `$CLAUDE_PROJECT_DIR`, user form with `$HOME`), once, next to any
   hooks that were already there.
-- A project target's `enabledPlugins` holds `luismc-artifacts@luismc-dev-tools`
+- A project target's `enabledPlugins` holds `luismc-artifacts@<marketplace>`,
+  with no `{{MARKETPLACE}}` left in the file,
   (`true`, or the owner's existing value), next to every entry that was there
   before, and the file still parses as JSON.
 - No `CLAUDE_CODE_EFFORT_LEVEL` remains in the target's `env` block, unless the

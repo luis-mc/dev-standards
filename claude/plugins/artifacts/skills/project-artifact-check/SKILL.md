@@ -29,17 +29,17 @@ structure stylesheet by hand.
      that differs from the registry (INV-1, R5.8), a stamp or contents list out
      of step (R5.2, R5.5): run `render --all`.
    - A content fragment, `meta.json` or `extra_css` problem (R4.10, R4.11,
-     R5.2): fix the file under `content/<key>/` in the record worktree
-     (`<repo>/.claude/worktrees/artifacts-record`), then run `edit-content <key>`.
+     R5.2): run `export-content <key> --to <scratch dir>`, fix the file there,
+     then run `edit-content <key> --from <scratch dir>`.
    - A task row that is wrong (R6.6 expected format, R4.5 or R4.6 IDs and
      prefixes, R6.1 status): change it with `set-task-status` or `task-add`,
      never by hand.
    - A structure stylesheet that differs (R5.10): run `render --all`; the
      renderer includes `${CLAUDE_PLUGIN_ROOT}/templates/project-artifact.css`
      unchanged.
-   - A token block that is incomplete (R5.11): complete
-     `docs/artifacts/design.css` in the record worktree to the contract in
-     `${CLAUDE_PLUGIN_ROOT}/design/DESIGN.md`, then run `render --all`.
+   - A token block that is incomplete (R5.11): complete a copy of
+     `docs/artifacts/design.css` in a scratch directory to the contract in
+     `${CLAUDE_PLUGIN_ROOT}/design/DESIGN.md`, then run `design set <file>`.
    - Missing full-progress artifact with feature artifacts present (INV-2): run
      `full-progress-artifact-new`.
    - Title wrong (R5.1) or History not last (R5.4): the renderer owns both;

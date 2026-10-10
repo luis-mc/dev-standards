@@ -7,7 +7,7 @@
     "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
   },
   "enabledPlugins": {
-    "luismc-artifacts@luismc-dev-tools": true
+    "luismc-artifacts@{{MARKETPLACE}}": true
   },
   "statusLine": {
     "type": "command",

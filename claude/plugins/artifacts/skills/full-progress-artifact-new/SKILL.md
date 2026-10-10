@@ -18,8 +18,10 @@ read the message, fix the cause and rerun. Never work around a refusal by
 editing the record.
 
 The record lives in the record worktree `<repo>/.claude/worktrees/artifacts-record`
-(a worktree of the default branch). Write content files there, never in the
-session's own working tree.
+(a worktree of the default branch). Never write into it, and never into the
+session's own working tree: the script resets the record worktree before each
+change and would discard the edit. Edit content in a scratch directory outside
+the repository instead (the session's scratchpad directory, in a new folder).
 
 ## Steps
 
@@ -36,21 +38,20 @@ session's own working tree.
    `init --project NAME --timezone IANA --label LABEL [--windows-timezone ID] [--default-branch B]`.
    This creates the manifest, an empty registry and the full-progress artifact's
    content, and installs the rule file and the gitignore lines.
-4. **Find the project's design** (R5.12), only when
-   `docs/artifacts/design.css` does not exist. Look in this order and stop at
-   the first hit: design-token files; Tailwind or theme configuration; CSS
-   custom properties in the app; the live site, if the project names one. Show
-   the owner what you found (file, colours, fonts) and ask before using it.
-   Only on a yes, write `docs/artifacts/design.css` in the record worktree:
-   every token of the contract in `${CLAUDE_PLUGIN_ROOT}/design/DESIGN.md`,
-   light values on `:root`, dark values under both
+4. **Find the project's design** (R5.12), only when the manifest says
+   `"design": "default"`. Look in this order and stop at the first hit:
+   design-token files; Tailwind or theme configuration; CSS custom properties
+   in the app; the live site, if the project names one. Show the owner what you
+   found (file, colours, fonts) and ask before using it. Only on a yes, write
+   the design file in the scratch directory: every token of the contract in
+   `${CLAUDE_PLUGIN_ROOT}/design/DESIGN.md`, light values on `:root`, dark
+   values under both
    `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) }`
-   and `:root[data-theme="dark"]`. A no, or nothing found, keeps the default
-   design. The manifest's `design` field is the script's to set: if a render
-   still uses the default tokens after `design.css` is written, tell the owner
-   and keep the default rather than editing `manifest.json`.
-5. **Write the content** in
-   `<record worktree>/docs/artifacts/content/full-progress/`:
+   and `:root[data-theme="dark"]`. Then run `design set <file>`. If it rejects
+   the file, fix the tokens it names and run it again. A no, or nothing found,
+   keeps the default design.
+5. **Write the content.** Run `export-content full-progress --to <scratch dir>`
+   and edit the files there:
    - `meta.json`: `title`, `hero` (one line: what the project is), `lede` (one
      or two sentences on where the project stands now; the script appends the
      needs-you line), `extra_css` (empty unless needed).
@@ -61,8 +62,9 @@ session's own working tree.
      `<!-- title: Section title -->`. No `<script>`, no `<style>`, no section
      numbers. `extra_css` must never redefine a selector of the structure
      stylesheet.
-   Write only what is true now. Then run `edit-content full-progress` and fix
-   any validation error.
+   Write only what is true now. Then run
+   `edit-content full-progress --from <scratch dir>` and fix any validation
+   error in the scratch files.
 6. **Add the project's tasks**, for work that belongs to no feature, with
    `task-add --owner project --prefix P --item "TEXT" --detail "TEXT" --expected "DD Mon" --status "To do" [--app A]`
    (or the status it truly has). `--app` names the app or service shown in the
@@ -79,25 +81,24 @@ session's own working tree.
 
 Repeat until `pending` exits 0.
 
-1. Run `pending --json`. Handle every artifact it lists, feature artifacts
-   before the full-progress artifact (it links to them). For each, take `file`
-   and `url` from `docs/artifacts/manifest.json` in the record worktree (read
-   only).
-2. Publish with the Artifact tool: `file_path` is
-   `<record worktree>/docs/artifacts/<file>`, unchanged, and `url` is the
-   manifest URL when it is not empty. On a first publish pass `icon` (a generic
-   word such as `tracker`) and a one-sentence `description`. Publish the file as
-   rendered; do not edit it.
+1. Run `pending --json`. Handle every entry of `artifacts`, feature artifacts
+   before the full-progress artifact. Each entry carries `key`, `title`, `path`
+   (the absolute path of the HTML to publish) and `url` (empty before the first
+   publish).
+2. Publish with the Artifact tool: `file_path` is the entry's `path`, unchanged,
+   and `url` is the entry's `url` when it is not empty. On a first publish pass
+   `icon` (a generic word such as `tracker`) and a one-sentence `description`.
+   Publish the file as rendered; do not edit it.
 3. If the publish is refused because the artifact does not exist, list the
    owner's artifacts (`action: "list"`, `scope: "mine"`) and look for one whose
-   title is exactly the artifact's title (`Feature: <name>` or
-   `Full Progress: <project>`). If one exists, publish to its `url`. Only when
-   none does, publish without `url`. At most one artifact per title is ever
-   created.
+   title is exactly the entry's `title`. If one exists, publish to its `url`.
+   Only when none does, publish without `url`. At most one artifact per title
+   is ever created.
 4. If it is refused because the artifact changed elsewhere, `read` the live
-   version once. Copy changes to content sections into `content/<key>/` and run
-   `edit-content <key>`; drop changes to the generated section 0 and 1. Retry
-   once.
+   version once. Copy changes to content sections into a scratch export
+   (`export-content <key> --to <dir>`), then `edit-content <key> --from <dir>`;
+   drop changes to the generated sections. Run `pending --json` again for the
+   new `path`, and retry once.
 5. Run `mark-published <key> --url <URL>` with the URL the publish returned.
 6. If there is no Artifact tool, say what is still unpublished and stop; the
    end-of-turn hook then reminds you.

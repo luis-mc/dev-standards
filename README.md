@@ -16,8 +16,10 @@ claude plugin install luismc-audits@luismc-dev-tools
 claude plugin install luismc-agents@luismc-dev-tools
 claude plugin install luismc-specs@luismc-dev-tools
 claude plugin install luismc-project-setup@luismc-dev-tools
-claude plugin install luismc-artifacts@luismc-dev-tools
+claude plugin install luismc-artifacts@<marketplace>
 ```
+
+`<marketplace>` is the name your machine registered this marketplace under, the suffix of your other `luismc-*` plugins.
 
 Private repo — this uses your existing git/gh credentials, nothing extra to
 configure.

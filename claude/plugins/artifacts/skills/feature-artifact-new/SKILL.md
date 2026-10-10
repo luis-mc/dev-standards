@@ -18,40 +18,43 @@ read the message, fix the cause and rerun. Never work around a refusal by
 editing the record.
 
 The record lives in the record worktree `<repo>/.claude/worktrees/artifacts-record`
-(a worktree of the default branch). Write content files there, never in the
-session's own working tree.
+(a worktree of the default branch). Never write into it, and never into the
+session's own working tree: the script resets the record worktree before each
+change and would discard the edit. Edit content in a scratch directory outside
+the repository instead (the session's scratchpad directory, in a new folder).
 
 ## Steps
 
 1. **Ask** with AskUserQuestion: the feature's name, the apps or services it
    touches (comma-separated), and its task prefix (2 to 5 capital letters, not
    used by any other feature or project prefix). Derive the key from the name:
-   lowercase letters, digits and hyphens. If the project has no record yet, also
-   ask the project name and time zone (IANA name, short label; offer the
-   machine's) for `init`.
-2. **Create it.** With no `docs/artifacts/manifest.json` yet (in the repo or
-   on the default branch), run
-   `init --project NAME --timezone IANA --label LABEL` first (add
-   `--windows-timezone ID` and `--default-branch B` when the owner gave them).
-   Then run
+   lowercase letters, digits and hyphens. If the project has no record yet
+   (no `docs/artifacts/manifest.json` in the repo or on the default branch),
+   also ask the project name and time zone (IANA name, short label; offer the
+   machine's), and the Windows zone ID and default branch if they differ from
+   the machine's.
+2. **Create it:**
    `feature-new --key K --title "NAME" --prefix P --apps a,b [--hero "TEXT"]`.
-   The full-progress artifact exists after `init`; `feature-new` also installs
-   the rule file and the gitignore lines on first use.
-3. **Find the project's design** (R5.12), only when
-   `docs/artifacts/design.css` does not exist. Look in this order and stop at
-   the first hit: design-token files; Tailwind or theme configuration; CSS
-   custom properties in the app; the live site, if the project names one. Show
-   the owner what you found (file, colours, fonts) and ask before using it.
-   Only on a yes, write `docs/artifacts/design.css` in the record worktree:
-   every token of the contract in `${CLAUDE_PLUGIN_ROOT}/design/DESIGN.md`,
-   light values on `:root`, dark values under both
+   With no record yet, add the `init` flags to the same command
+   (`--project NAME --timezone IANA --label LABEL`, plus `--windows-timezone ID`
+   and `--default-branch B` when given); the script runs `init` itself, so the
+   full-progress artifact exists afterwards. Do not run `init` separately. The
+   command also installs the rule file and the gitignore lines on first use.
+3. **Find the project's design** (R5.12), only when the manifest says
+   `"design": "default"`. Look in this order and stop at the first hit:
+   design-token files; Tailwind or theme configuration; CSS custom properties
+   in the app; the live site, if the project names one. Show the owner what you
+   found (file, colours, fonts) and ask before using it. Only on a yes, write
+   the design file in the scratch directory: every token of the contract in
+   `${CLAUDE_PLUGIN_ROOT}/design/DESIGN.md`, light values on `:root`, dark
+   values under both
    `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) }`
-   and `:root[data-theme="dark"]`. Then run `render --all`. A no, or nothing
-   found, keeps the default design. The manifest's `design` field is the
-   script's to set: if the render still uses the default tokens, tell the
-   owner and keep the default rather than editing `manifest.json`. Design never
-   blocks the artifact.
-4. **Write the content** in `<record worktree>/docs/artifacts/content/<key>/`:
+   and `:root[data-theme="dark"]`. Then run `design set <file>`. If it rejects
+   the file, fix the tokens it names and run it again. A no, or nothing found,
+   keeps the default design. Design never blocks
+   the artifact.
+4. **Write the content.** Run `export-content <key> --to <scratch dir>` and edit
+   the files there:
    - `meta.json`: `title`, `hero` (one line saying what the feature is), `lede`
      (one or two sentences on where the work stands now; the script appends the
      needs-you line), `extra_css` (empty unless needed).
@@ -65,8 +68,8 @@ session's own working tree.
      structure stylesheet.
    Write what is true now, from the code and the owner's words. Do not invent
    status, dates or results.
-5. **Render and validate:** `edit-content <key>`. Fix any validation error it
-   reports in the files and run it again.
+5. **Apply and validate:** `edit-content <key> --from <scratch dir>`. Fix any
+   validation error it reports in the scratch files and run it again.
 6. **Add the feature's tasks**, one per unit of work, with
    `task-add --owner <key> --item "TEXT" --detail "TEXT" --expected "DD Mon" --status "To do"`
    (or the status it truly has). The command prints each task's ID. `item` is at
@@ -86,23 +89,24 @@ session's own working tree.
 
 Repeat until `pending` exits 0.
 
-1. Run `pending --json`. Handle every artifact it lists. For each, take `file`
-   and `url` from `docs/artifacts/manifest.json` in the record worktree (read
-   only).
-2. Publish with the Artifact tool: `file_path` is
-   `<record worktree>/docs/artifacts/<file>`, unchanged, and `url` is the
-   manifest URL when it is not empty. On a first publish pass `icon` (a generic
-   word such as `tracker`) and a one-sentence `description`. Publish the file as
-   rendered; do not edit it.
+1. Run `pending --json`. Handle every entry of `artifacts`, feature artifacts
+   before the full-progress artifact. Each entry carries `key`, `title`, `path`
+   (the absolute path of the HTML to publish) and `url` (empty before the first
+   publish).
+2. Publish with the Artifact tool: `file_path` is the entry's `path`, unchanged,
+   and `url` is the entry's `url` when it is not empty. On a first publish pass
+   `icon` (a generic word such as `tracker`) and a one-sentence `description`.
+   Publish the file as rendered; do not edit it.
 3. If the publish is refused because the artifact does not exist, list the
    owner's artifacts (`action: "list"`, `scope: "mine"`) and look for one whose
-   title is exactly the artifact's title (`Feature: <name>` or
-   `Full Progress: <project>`). If one exists, publish to its `url`. Only when
-   none does, publish without `url`. At most one artifact per title is ever
-   created.
+   title is exactly the entry's `title`. If one exists, publish to its `url`.
+   Only when none does, publish without `url`. At most one artifact per title
+   is ever created.
 4. If it is refused because the artifact changed elsewhere, `read` the live
-   version once. Copy changes to content sections into `content/<key>/` and run
-   `edit-content <key>`; drop changes to the generated section 0. Retry once.
+   version once. Copy changes to content sections into a scratch export
+   (`export-content <key> --to <dir>`), then `edit-content <key> --from <dir>`;
+   drop changes to the generated sections. Run `pending --json` again for the
+   new `path`, and retry once.
 5. Run `mark-published <key> --url <URL>` with the URL the publish returned.
 6. If there is no Artifact tool, say what is still unpublished and stop; the
    end-of-turn hook then reminds you.
