@@ -486,11 +486,11 @@
       "id": "DS23",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Pre-push checks the pushed commit",
-      "detail": "Built in #32 and joined (not released): the pre-push guards check the pushed commit in a temporary worktree, node_modules linked never copied, the worktree always removed. 609 checks on Windows, 618 on Linux. Open: a SIGKILLed run leaves its push-check folder behind (no sweep yet); workspace packages resolve to the checked-out version.",
+      "detail": "Released in STACKSPEC 7.0.0 (#27, 137e0d0, 00:31). the pre-push guards check the pushed commit in a temporary worktree, node_modules linked never copied, the worktree always removed. 609 checks on Windows, 618 on Linux. Open: a SIGKILLed run leaves its push-check folder behind (no sweep yet); workspace packages resolve to the checked-out version.",
       "expected": "11 Oct",
-      "changed": "2026-10-11T00:19+01:00"
+      "changed": "2026-10-11T00:32+01:00"
     },
     {
       "id": "DS24",
