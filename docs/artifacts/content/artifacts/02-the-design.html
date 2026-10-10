@@ -1,0 +1,30 @@
+<!-- title: The design -->
+<p class="lede">Each task&rsquo;s status is stored once, in a task registry inside the full-progress artifact. One command changes it, regenerates every checklist that shows the task, and a hook makes sure both artifacts are published before the turn ends.</p>
+<h3>Two kinds of project artifact</h3>
+<div class="table-scroll"><table><thead><tr><th>Kind</th><th>Title</th><th>Holds</th><th>How many</th></tr></thead><tbody>
+<tr><td>Feature artifact</td><td><code>Feature: &lt;name&gt;</code></td><td>One feature: why, design, rules, tests, decisions, its tasks, History last.</td><td>Any number</td></tr>
+<tr><td>Full-progress artifact</td><td><code>Full Progress: &lt;project&gt;</code></td><td>All ongoing work in the project: every feature task (linked to its feature artifact) and every project task. Embeds the task registry.</td><td>Exactly one</td></tr>
+</tbody></table></div>
+<h3>What happens on a status change</h3>
+<div class="flow-steps">
+ <div class="flow-step"><b>Status event</b><small>PR opened, checks failed, merged, live, blocked, decided</small></div><div class="flow-arrow">&rarr;</div>
+ <div class="flow-step key-step"><b>set-task-status AR5 running</b><small>one command, run by the session</small></div><div class="flow-arrow">&rarr;</div>
+ <div class="flow-step"><b>Task registry</b><small>the one record, inside the full-progress artifact</small></div><div class="flow-arrow">&rarr;</div>
+ <div class="flow-step"><b>Both checklists regenerated</b><small>feature artifact (if the task has one) and full-progress artifact; tiles, groups, stamp</small></div><div class="flow-arrow">&rarr;</div>
+ <div class="flow-step"><b>Published</b><small>the end-of-turn hook blocks until it is</small></div>
+</div>
+<h3>What makes it automatic</h3>
+<div class="table-scroll"><table><thead><tr><th>Layer</th><th>What it does</th></tr></thead><tbody>
+<tr><td>Rule file</td><td><code>.claude/rules/project-artifacts.md</code>, installed in a project when its first project artifact is created. Sessions record every piece of work as a task and run <code>task-status-update</code> at each status event.</td></tr>
+<tr><td>After-command hook</td><td>Watches for known events (<code>gh pr create</code>, <code>gh pr merge</code>, deploys, failed checks) on a branch named with a task ID, and queues the status change.</td></tr>
+<tr><td>End-of-turn hook</td><td>If a status change is queued or a changed artifact is unpublished, the turn cannot end; it lists what is missing. <strong>This is the guarantee.</strong></td></tr>
+<tr><td>Session-start hook</td><td>Catches changes made between sessions (CI finished, a PR merged on GitHub) and queues them.</td></tr>
+</tbody></table></div>
+<p class="note">The plugin cannot publish an artifact by itself; only the session&rsquo;s Artifact tool can. The hooks make sure the session does it. All hooks do nothing in a project without the manifest.</p>
+<h3>Where things live</h3>
+<ul>
+ <li><strong>The repo is the record.</strong> Each project keeps <code>docs/artifacts/</code>: <code>manifest.json</code> (each artifact&rsquo;s link), <code>registry.json</code> (the task registry), each artifact&rsquo;s content and its last published HTML. A deleted artifact is recreated from it.</li>
+ <li><strong>No duplicates.</strong> An artifact is created only when its manifest link no longer opens and no artifact with the same title exists; the new link is written back to the manifest.</li>
+ <li><strong>Status changes commit to the default branch</strong> as docs-only commits. CI ignores <code>docs/**</code>, and hosting skips docs-only deploys.</li>
+ <li><strong>Task IDs</strong> are a registered prefix plus a number (<span class="task-id">AR5</span>, <span class="task-id">DS4</span>), unique across the project. Branch names start with one: <code>AR5-artifactspec</code>.</li>
+</ul>

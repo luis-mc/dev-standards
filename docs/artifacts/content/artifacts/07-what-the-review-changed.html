@@ -1,0 +1,15 @@
+<!-- title: What the review changed -->
+<p class="lede">The review of the first proposal on 10 October found twelve problems. Each one changed the design above.</p><div class="table-scroll"><table><thead><tr><th>Finding</th><th>Change</th></tr></thead><tbody>
+<tr><td>A status was typed by hand in two places, the cause of the drift.</td><td>One task registry; one command regenerates every checklist (AS5, AS14).</td></tr>
+<tr><td>The discipline was a sentence in CLAUDE.md, the form that already failed.</td><td>Hooks queue status changes and block the turn until artifacts are published (AS17).</td></tr>
+<tr><td>No source of truth and no list of a project&rsquo;s pages.</td><td>The repo record in <code>docs/artifacts/</code> is the source; the manifest lists every artifact, and a deleted one is recreated from it (AS5, AS6, AS19).</td></tr>
+<tr><td>Per-project look contradicted the byte-identical stylesheet check.</td><td>Structure stylesheet fixed, theme tokens free (AS7, R13).</td></tr>
+<tr><td>A project name and &ldquo;Lisbon&rdquo; hard-coded; old and duplicate CSS rules.</td><td>Project name and timezone come from the manifest; the stylesheet is rebuilt clean (AR6).</td></tr>
+<tr><td>Spec and code disagreed on the groups and the History columns.</td><td>One definition each (AS2, AS11).</td></tr>
+<tr><td>HTML parsed with regular expressions; it left broken CSS on this artifact.</td><td>The script uses Python&rsquo;s built-in HTML parser.</td></tr>
+<tr><td>Python&rsquo;s zoneinfo has no timezone data on Windows without the tzdata package.</td><td>Fallback to the machine&rsquo;s local time, with a warning.</td></tr>
+<tr><td>The stamp had no year and nothing a program could compare.</td><td>ISO time in the <code>datetime</code> attribute (AS9).</td></tr>
+<tr><td>The rule would have gone into every project&rsquo;s CLAUDE.md.</td><td>A rule file installed only where project artifacts are used.</td></tr>
+<tr><td>The progress page would grow forever.</td><td>Live or Done rows older than 14 days fold into &ldquo;Earlier&rdquo; (AS3).</td></tr>
+<tr><td>Generic names: &ldquo;page&rdquo;, <code>luismc-pages</code>, <code>.st</code>.</td><td>Feature artifact and full-progress artifact throughout; plugin <code>luismc-artifacts</code>; readable class names in AR6.</td></tr>
+</tbody></table></div>

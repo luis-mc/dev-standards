@@ -1,0 +1,36 @@
+<!-- title: In dev-standards -->
+<p class="lede">A new plugin, <strong><code>luismc-artifacts</code></strong>, beside <code>luismc-specs</code>. One script does the work; the skills and hooks call it.</p>
+<h3>Layout</h3>
+<pre><code>claude/plugins/artifacts/
+  .claude-plugin/plugin.json            name luismc-artifacts, version 1.0.0
+  design/default-design.css             the default design tokens (AR14)
+  design/DESIGN.md                      how a project's own design is found; the token contract
+  references/ARTIFACTSPEC.md            the standard (section 3 here), versioned like STACKSPEC and AUTHSPEC
+  scripts/project_artifacts.py          registry, rendering, add-task, set-task-status, stamp, check (stdlib only)
+  scripts/hook_after_command.py         queues status changes from git, gh and deploy commands
+  scripts/hook_end_of_turn.py           blocks the turn while anything is queued or unpublished
+  scripts/hook_session_start.py         queues changes made between sessions
+  hooks/hooks.json
+  templates/feature-artifact.html
+  templates/full-progress-artifact.html
+  templates/project-artifact.css        the fixed structure stylesheet
+  rules/project-artifacts.md            installed into a project by the first creation skill
+  skills/feature-artifact-new/SKILL.md
+  skills/full-progress-artifact-new/SKILL.md
+  skills/task-add/SKILL.md
+  skills/task-status-update/SKILL.md
+  skills/project-artifact-check/SKILL.md
+.claude-plugin/marketplace.json         add the luismc-artifacts entry
+README.md                               a luismc-artifacts section and the install line
+tools/test_project_artifacts_check.py   a fixture per check, proving it fires
+tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes out
+.github/workflows/spec-lint.yml         path filters and steps for the above</code></pre>
+<h3>The five skills</h3>
+<div class="table-scroll"><table><thead><tr><th>Skill</th><th>What it does</th></tr></thead><tbody>
+<tr><td><code>/luismc-artifacts:feature-artifact-new</code></td><td>Asks the feature name and the apps it covers, writes a feature artifact with section 0 started and a first History row, registers it in the manifest, and adds its tasks to the registry. Creates the full-progress artifact first if the project has none.</td></tr>
+<tr><td><code>/luismc-artifacts:full-progress-artifact-new</code></td><td>Writes the project&rsquo;s one full-progress artifact with an empty task registry; refuses if one exists. For a project with ongoing work but no feature artifact yet.</td></tr>
+<tr><td><code>/luismc-artifacts:task-add</code></td><td>Records new work as a task, asking which artifact owns it (a feature artifact, or the project), and gives it the next ID.</td></tr>
+<tr><td><code>/luismc-artifacts:task-status-update</code></td><td>Reads the artifacts, runs <code>set-task-status</code>, runs the check, and publishes every artifact that changed. Retries after a publish conflict.</td></tr>
+<tr><td><code>/luismc-artifacts:project-artifact-check</code></td><td>Checks a project&rsquo;s artifacts against ARTIFACTSPEC. Exit 0 clean, 1 findings, 2 unreadable, like <code>spec_check.py</code>.</td></tr>
+</tbody></table></div>
+<p class="note">The default design is in <code>design/default-design.css</code> and <code>templates/project-artifact.css</code> on branch AR14-default-design; these two artifacts use it.</p>
