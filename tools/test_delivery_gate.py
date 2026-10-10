@@ -839,6 +839,80 @@ def sc_hook(t: T, shared: Path) -> None:
     t.has("... with a warning", r.text, "NOT run")
 
 
+def sc_hook_local(t: T, shared: Path) -> None:
+    """The project's own check, kept beside the template as pre-push.local."""
+    box = Box(shared)
+    box.g("config", "core.hooksPath", ".githooks")
+    local = box.work / ".githooks/pre-push.local"
+    stdin_log = box.work / ".delivery/local.stdin"
+    args_log = box.work / ".delivery/local.args"
+
+    def install(code: int, executable: bool = True) -> None:
+        box.write(".githooks/pre-push.local",
+                  '#!/bin/sh\nmkdir -p .delivery\ncat > .delivery/local.stdin\n'
+                  'echo "$@" > .delivery/local.args\nexit %d\n' % code)
+        local.chmod(0o755 if executable else 0o644)
+
+    def reset() -> None:
+        box.clear_log()
+        for p in (stdin_log, args_log):
+            if p.exists():
+                p.unlink()
+
+    # no pre-push.local: as before
+    box.branch("feat/loc", {"apps/web/a.txt": "a\n"})
+    r = run(["git", "push", "-q", "-u", "origin", "feat/loc"], cwd=box.work)
+    t.eq("no pre-push.local: the push is allowed", r.code, 0)
+    t.eq("... the guards ran", [x[0] for x in box.ran()], ["guards", "secret-scan"])
+    t.eq("... nothing else ran", stdin_log.exists(), False)
+    pushed = box.g("rev-parse", "HEAD")
+
+    # pre-push.local that fails
+    install(1)
+    box.commit({"apps/web/b.txt": "b\n"}, "second")
+    reset()
+    r = run(["git", "push", "origin", "feat/loc"], cwd=box.work)
+    t.check("a failing pre-push.local blocks the push", r.code != 0, r.text)
+    t.has("... and says why", r.text, "pre-push.local")
+    t.eq("... the remote did not move", box.remote_ref("refs/heads/feat/loc"), pushed)
+    t.eq("... the guards ran first", [x[0] for x in box.ran()], ["guards", "secret-scan"])
+
+    # pre-push.local that passes, and what it receives
+    install(0)
+    reset()
+    tip = box.g("rev-parse", "HEAD")
+    r = run(["git", "push", "origin", "feat/loc"], cwd=box.work)
+    t.eq("a passing pre-push.local lets the push through", r.code, 0)
+    t.eq("... the branch arrived", box.remote_ref("refs/heads/feat/loc"), tip)
+    stdin_text = stdin_log.read_text(encoding="utf-8") if stdin_log.exists() else ""
+    t.has("... it received the ref line on stdin", stdin_text, "refs/heads/feat/loc %s refs/heads/feat/loc %s" % (tip, pushed))
+    t.eq("... the guards still got the same stdin", [x[0] for x in box.ran()], ["guards", "secret-scan"])
+    t.eq("... and compared with what the remote had", box.ran()[1], ["secret-scan", pushed])
+    t.eq("... it received the remote name and url", args_log.read_text(encoding="utf-8").split()[0] if args_log.exists() else "",
+         "origin")
+
+    # a file without the executable bit still runs
+    install(1, executable=False)
+    box.commit({"apps/web/c.txt": "c\n"}, "third")
+    reset()
+    r = run(["git", "push", "origin", "feat/loc"], cwd=box.work)
+    t.check("a pre-push.local without the executable bit runs, and blocks", r.code != 0 and stdin_log.exists(), r.text)
+
+    # the local check runs only after the guards pass
+    install(0)
+    reset()
+    r = run(["git", "push", "origin", "feat/loc"], cwd=box.work, extra_env={"GATE_TEST_FAIL": "guards"})
+    t.check("a failing guard still blocks", r.code != 0, r.text)
+    t.eq("... and pre-push.local did not run", stdin_log.exists(), False)
+
+    # scripts/delivery absent: the project's check still runs
+    shutil.rmtree(box.work / "scripts/delivery")
+    install(1)
+    reset()
+    r = run(["git", "push", "origin", "feat/loc"], cwd=box.work)
+    t.check("scripts/delivery absent: a failing pre-push.local still blocks", r.code != 0 and stdin_log.exists(), r.text)
+
+
 # --------------------------------------------------------------------------
 # scenarios: join.py
 # --------------------------------------------------------------------------
@@ -1102,6 +1176,16 @@ def sc_agent_setup(t: T, shared: Path) -> None:
             t.has("idempotent: skips the download", r.err, "already installed")
             t.eq("idempotent: setup runs again", [x[0] for x in box.ran()], ["setup"])
 
+        # the PATH hint is a shell path: through cygpath when there is one (Git Bash)
+        # (a cygpath function from BASH_ENV, so it wins over any real cygpath on PATH)
+        cyg_env = box.root / "cygpath.env"
+        cyg_env.write_text('cygpath() { [ "$1" = "-u" ] || return 1; echo "/cyg$2"; }\n', newline="\n")
+        cyg_bin = box.root / "cyg-bin"
+        r = run([bash, sh.as_posix()], cwd=box.work,
+                extra_env={**env, "DELIVERY_BIN": cyg_bin.as_posix(), "BASH_ENV": cyg_env.as_posix()})
+        t.eq("with cygpath: exit 0", r.code, 0)
+        t.has("... the PATH hint uses cygpath -u", r.err, 'export PATH="/cyg%s:$PATH"' % cyg_bin.as_posix())
+
         # a tampered archive must not be installed
         (srv_dir / ("gitleaks_%s_checksums.txt" % version)).write_text("%s  %s\n" % ("1" * 64, asset))
         bad_bin = box.root / "bad-bin"
@@ -1338,6 +1422,15 @@ MUTANTS = [
      'if [ "$fail" -ne 0 ]; then', "if false; then", "hook"),
     ("pre-push runs for result refs", ".githooks/pre-push",
      "refs/heads/*) ;;", "*) ;;", "hook"),
+    ("pre-push never runs pre-push.local", ".githooks/pre-push",
+     'run_local "$@"\nexit 0', "exit 0", "hook_local"),
+    ("pre-push ignores a failing pre-push.local", ".githooks/pre-push",
+     '    exit 1\n  }\n}', '    exit 0\n  }\n}', "hook_local"),
+    ("pre-push.local gets no stdin", ".githooks/pre-push",
+     '"$hooks_dir/pre-push.local" "$@" < "$stdin_file"\n  else',
+     '"$hooks_dir/pre-push.local" "$@" < /dev/null\n  else', "hook_local"),
+    ("agent_setup prints the Windows path in the PATH hint", "scripts/delivery/agent_setup.sh",
+     'export PATH=\\"$bin_path:\\$PATH\\""', 'export PATH=\\"$bin_dir:\\$PATH\\""', "agent_setup"),
     ("agent_setup skips the checksum", "scripts/delivery/agent_setup.sh",
      "if got != want:", "if False:", "agent_setup"),
 ]
@@ -1355,6 +1448,7 @@ SCENARIOS = {
     "verify": sc_verify,
     "fast_guards": sc_fast_guards,
     "hook": sc_hook,
+    "hook_local": sc_hook_local,
     "join_clean": sc_join_clean,
     "join_untrusted": sc_join_untrusted,
     "join_conflicts": sc_join_conflicts,
