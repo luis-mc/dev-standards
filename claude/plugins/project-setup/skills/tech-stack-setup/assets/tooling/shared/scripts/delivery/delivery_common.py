@@ -22,14 +22,16 @@ import json
 import os
 import posixpath
 import re
+import signal
 import subprocess
+import threading
 import time
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
 SCHEMA = 1
-TOOL_VERSION = 1
+TOOL_VERSION = 2
 
 EXIT_OK = 0
 EXIT_FAIL = 1  # checks failed, or a result is not trusted
@@ -37,10 +39,17 @@ EXIT_USAGE = 2  # usage or configuration error; could not decide
 EXIT_CONFLICT = 3  # join stopped at a conflict
 EXIT_TIMEOUT = 4
 
+DEFAULT_TIMEOUT_MINUTES = 30  # one branch_gate.py run, setup included
+FAST_STEP_TIMEOUT_MINUTES = 5  # one fast_guards.py step
+TAIL_LINES = 40  # lines of a failed step printed after the summary
+SETUP_STEP = "setup"  # reserved step name: the gate.json "setup" commands
+
 SCOPES = ("always", "changed", "changed+dependents", "ui-changed")
 PACKAGE_KINDS = ("pnpm-workspace", "go-modules", "cargo-workspace", "dotnet-sln")
 
 DELIVERY_DIR = ".delivery"
+LOG_DIR = ".delivery/logs"  # one <step>.log per step, combined stdout and stderr
+FAST_LOG_DIR = ".delivery/logs/pre-push"  # fast_guards.py keeps its own, so a push never overwrites a gate log
 GATE_RESULT_PATH = ".delivery/gate-result.json"
 JOIN_RESULT_PATH = ".delivery/join-result.json"
 GATE_JSON_PATH = "scripts/delivery/gate.json"
@@ -232,6 +241,9 @@ def load_gate(root: Path) -> dict:
         raise DeliveryError("%s: 'default_branch' must be a non-empty string" % where)
     for key in ("setup", "widen_on", "ui_paths", "lockfiles"):
         cfg[key] = _str_list(cfg, key, where)
+    minutes = cfg.setdefault("timeout_minutes", DEFAULT_TIMEOUT_MINUTES)
+    if isinstance(minutes, bool) or not isinstance(minutes, int) or minutes < 1:
+        raise DeliveryError("%s: 'timeout_minutes' must be an integer >= 1" % where)
     pk = cfg.get("packages")
     if not isinstance(pk, dict) or pk.get("kind") not in PACKAGE_KINDS:
         raise DeliveryError(
@@ -250,6 +262,8 @@ def load_gate(root: Path) -> dict:
             raise DeliveryError("%s needs a 'name'" % label)
         if name in seen:
             raise DeliveryError("%s: duplicate step name '%s'" % (where, name))
+        if name == SETUP_STEP:
+            raise DeliveryError("%s: '%s' is reserved for the \"setup\" commands" % (label, name))
         seen.add(name)
         if step.get("scope") not in SCOPES:
             raise DeliveryError("%s ('%s'): scope must be one of %s" % (label, name, ", ".join(SCOPES)))
@@ -561,9 +575,10 @@ def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
 
 
 def run_command(cmd: str, cwd: Path, env: dict[str, str] | None = None) -> tuple[int, float]:
-    """Run a step command through the shell, output inherited. `env` is added to the
-    environment (a step's "env" in gate.json: the only way to set a variable that
-    works in cmd.exe and sh alike). Returns (code, seconds)."""
+    """Run a command through the shell, output inherited, no log and no limit
+    (join.py's lockfile re-setup). `env` is added to the environment (a step's
+    "env" in gate.json: the only way to set a variable that works in cmd.exe and sh
+    alike). Returns (code, seconds)."""
     sys.stdout.flush()
     sys.stderr.flush()
     start = time.monotonic()
@@ -572,42 +587,209 @@ def run_command(cmd: str, cwd: Path, env: dict[str, str] | None = None) -> tuple
     return code, round(time.monotonic() - start, 1)
 
 
+# --------------------------------------------------------------------------
+# running steps: logs, time limits, process trees
+# --------------------------------------------------------------------------
+
+def kill_tree(proc: subprocess.Popen) -> None:
+    """Kill a step and everything it started. POSIX: run_logged starts the step in
+    its own session, so its process group is the whole tree. Windows: taskkill /T
+    follows the parent links from the shell down."""
+    if os.name == "nt":
+        subprocess.run(["taskkill", "/T", "/F", "/PID", str(proc.pid)], capture_output=True, check=False)
+    else:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            pass
+    try:
+        proc.kill()
+    except OSError:
+        pass
+
+
+def _pump(stream, log) -> None:
+    """Copy a step's combined output to its log file and to the terminal."""
+    out = getattr(sys.stdout, "buffer", None)
+    echo = True
+    try:
+        while True:
+            chunk = stream.read1(65536)
+            if not chunk:
+                return
+            log.write(chunk)
+            log.flush()
+            if echo:
+                try:
+                    if out is not None:
+                        out.write(chunk)
+                        out.flush()
+                    else:
+                        sys.stdout.write(chunk.decode("utf-8", "replace"))
+                        sys.stdout.flush()
+                except (OSError, ValueError):
+                    echo = False  # the terminal went away; keep logging
+    except (OSError, ValueError):
+        return  # the pipe or the log was closed under us
+
+
+def run_logged(
+    cmd: str, cwd: Path, env: dict[str, str] | None, log, timeout: float | None
+) -> tuple[int, float, bool]:
+    """Run a step command through the shell. Its stdout and stderr are one stream,
+    written to `log` (an open binary file) and echoed. stdin is closed, so a tool
+    that waits for input fails instead of hanging. After `timeout` seconds the whole
+    process tree is killed. Returns (exit code, seconds, timed out)."""
+    sys.stdout.flush()
+    sys.stderr.flush()
+    start = time.monotonic()
+    full_env = {**os.environ, **env} if env else None
+    kw = {} if os.name == "nt" else {"start_new_session": True}
+    proc = subprocess.Popen(
+        cmd,
+        shell=True,
+        cwd=cwd,
+        env=full_env,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        **kw,
+    )
+    pump = threading.Thread(target=_pump, args=(proc.stdout, log), daemon=True)
+    pump.start()
+    timed_out = False
+    try:
+        code = proc.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        kill_tree(proc)
+        code = proc.wait()
+    except BaseException:  # Ctrl-C: the step is in its own session and would outlive us
+        kill_tree(proc)
+        raise
+    # A child that outlived the step can keep the pipe open; do not wait for it.
+    pump.join(timeout=5)
+    try:
+        proc.stdout.close()
+    except OSError:
+        pass
+    return code, round(time.monotonic() - start, 1), timed_out
+
+
+def _log_name(step_name: str) -> str:
+    return re.sub(r"[^A-Za-z0-9._-]", "_", step_name)
+
+
+def _skipped(name: str, reason: str) -> dict:
+    return {"name": name, "outcome": "skip", "seconds": 0.0, "command": None, "reason": reason}
+
+
+def _minutes(seconds: float) -> str:
+    return "%g" % round(seconds / 60, 3)
+
+
 def execute_steps(
     steps: list[dict],
     ctx: Context,
     selected: set[str] | None = None,
-    fail_fast: bool = False,
-) -> list[dict]:
-    """Run `steps` in order and return the result's step entries."""
+    keep_going: bool = False,
+    setup_cmds: list[str] | None = None,
+    no_setup: bool = False,
+    limit_seconds: float | None = None,
+    per_step: bool = False,
+    log_dir: str = LOG_DIR,
+) -> tuple[list[dict], bool]:
+    """Run `setup_cmds` as the step "setup", then `steps` in order. Returns the
+    result's step entries and whether the time limit stopped the run.
+
+    Stops at the first failed step unless `keep_going`; a failed setup or an
+    exhausted time limit always stops. `limit_seconds` is for the whole run, or for
+    each step with `per_step` (a step over it fails and the run goes on). Each step's
+    output goes to <log_dir>/<step>.log."""
+    root = ctx.root
     entries: list[dict] = []
-    stopped = False
+    timed_out = False
+    halt: str | None = None  # why every later step is skipped
+    t0 = time.monotonic()
+
+    def budget() -> float | None:
+        if limit_seconds is None:
+            return None
+        return limit_seconds if per_step else limit_seconds - (time.monotonic() - t0)
+
+    def run(name: str, commands: list[str], why: str, env: dict[str, str] | None) -> dict:
+        nonlocal timed_out
+        log_rel = "%s/%s.log" % (log_dir, _log_name(name))
+        log_path = root / log_rel
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        entry = {
+            "name": name,
+            "outcome": "pass",
+            "seconds": 0.0,
+            "command": " && ".join(commands),
+            "reason": None,
+            "exit_code": 0,
+            "log": log_rel,
+        }
+        print("\n==> %s (%s)" % (name, why), flush=True)
+        with open(log_path, "wb") as log:
+            for cmd in commands:
+                print("    $ %s" % cmd, flush=True)
+                left = budget()
+                code, secs, hit = run_logged(
+                    cmd, root, env, log, None if left is None else max(left, 0.01)
+                )
+                entry["seconds"] = round(entry["seconds"] + secs, 1)
+                if code == 0 and not hit:
+                    continue
+                entry.update(outcome="fail", exit_code=code)
+                if hit:
+                    entry["reason"] = "timed out after %s min" % _minutes(limit_seconds)
+                    timed_out = timed_out or not per_step
+                else:
+                    entry["reason"] = "command failed" + (": " + cmd if len(commands) > 1 else "")
+                break
+        return entry
+
+    if setup_cmds:
+        if no_setup:
+            entries.append(_skipped(SETUP_STEP, "--no-setup"))
+        else:
+            entry = run(SETUP_STEP, setup_cmds, "install from the lockfile", None)
+            entries.append(entry)
+            if entry["outcome"] == "fail":
+                halt = "gate timed out" if timed_out else "setup failed"
+
     for step in steps:
         name = step["name"]
-        entry = {"name": name, "outcome": "skip", "seconds": 0.0, "command": None}
-        if stopped:
-            entry["reason"] = "fail-fast: an earlier step failed"
-        elif selected is not None and name not in selected:
-            entry["reason"] = "not selected"
-        else:
+        reason = halt
+        go, cmd, why = False, None, ""
+        if reason is None and selected is not None and name not in selected:
+            reason = "not selected"
+        if reason is None:
             go, cmd, why = plan_step(step, ctx)
-            entry["reason"] = why
-            if go:
-                print("\n==> %s (%s)\n    $ %s" % (name, why, cmd), flush=True)
-                code, secs = run_command(cmd, ctx.root, step.get("env"))
-                entry.update(
-                    outcome="pass" if code == 0 else "fail", seconds=secs, command=cmd
-                )
-                if code != 0:
-                    entry["exit_code"] = code
-                    stopped = fail_fast
+            if not go:
+                reason = why
+            elif not per_step and limit_seconds is not None and budget() <= 0:
+                timed_out = True
+                halt = reason = "gate timed out"
+        if reason is not None:
+            entries.append(_skipped(name, reason))
+            continue
+        entry = run(name, [cmd], why, step.get("env"))
         entries.append(entry)
-    return entries
+        if entry["outcome"] == "fail":
+            if timed_out:
+                halt = "gate timed out"
+            elif not keep_going:
+                halt = "an earlier step failed"
+    return entries, timed_out
 
 
 def summary_table(entries: list[dict]) -> str:
     rows = [("step", "outcome", "seconds", "note")]
     for e in entries:
-        rows.append((e["name"], e["outcome"].upper(), "%.1f" % e["seconds"], e.get("reason", "")))
+        rows.append((e["name"], e["outcome"].upper(), "%.1f" % e["seconds"], e.get("reason") or ""))
     widths = [max(len(r[i]) for r in rows) for i in range(4)]
     lines = []
     for i, r in enumerate(rows):
@@ -617,10 +799,52 @@ def summary_table(entries: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def overall_pass(entries: list[dict]) -> bool:
-    """No step failed and at least one ran."""
-    outcomes = [e["outcome"] for e in entries]
-    return "fail" not in outcomes and "pass" in outcomes
+def _say(line: str) -> None:
+    """print() that survives a console whose encoding cannot show the line."""
+    try:
+        print(line)
+    except UnicodeEncodeError:
+        enc = sys.stdout.encoding or "ascii"
+        print(line.encode(enc, "replace").decode(enc))
+
+
+def log_tail(path: Path, lines: int = TAIL_LINES) -> list[str]:
+    """The last `lines` lines of a step log ([] when there is none)."""
+    try:
+        with open(path, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            size = f.tell()
+            f.seek(max(0, size - 256 * 1024))
+            data = f.read()
+    except OSError:
+        return []
+    return data.decode("utf-8", "replace").splitlines()[-lines:]
+
+
+def print_failures(entries: list[dict], root: Path) -> None:
+    """After the summary: for each failed step, which one, why, where its log is,
+    and the end of its output, so a failure never needs a re-run to be read."""
+    for e in entries:
+        if e["outcome"] != "fail":
+            continue
+        _say(
+            "\nFAIL %s: %s (exit %s, %ss) - log: %s"
+            % (e["name"], e.get("reason"), e.get("exit_code"), e["seconds"], e.get("log"))
+        )
+        tail = log_tail(root / e["log"]) if e.get("log") else []
+        if not tail:
+            _say("    (no output)")
+        for line in tail:
+            _say("    " + line)
+    sys.stdout.flush()
+
+
+def overall_pass(entries: list[dict], timed_out: bool = False) -> bool:
+    """No step failed, the time limit did not stop the run, setup (when there is
+    one) did not fail, and at least one step besides setup ran and passed."""
+    if timed_out or any(e["outcome"] == "fail" for e in entries):
+        return False
+    return any(e["outcome"] == "pass" for e in entries if e["name"] != SETUP_STEP)
 
 
 def is_lockfile(path: str, cfg: dict) -> bool:

@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """Branch gate (STACKSPEC 13.5): the one command run on a branch before it joins.
 
-    branch_gate.py [--base-ref REF] [--full] [--only a,b] [--skip a,b]
-                   [--no-publish] [--fail-fast]
+    branch_gate.py [--base-ref REF] [--full] [--only a,b] [--skip a,b] [--no-publish]
+                   [--keep-going] [--no-setup] [--timeout-minutes N]
 
-Runs the steps of scripts/delivery/gate.json against the merge base with the
-branch it will join, writes .delivery/gate-result.json and publishes it as a
-parentless commit at refs/gate-results/<branch> on the remote. See CONTRACT.md.
+Installs from the lockfile (gate.json "setup"), then runs the steps of
+scripts/delivery/gate.json against the merge base with the branch it will join,
+stopping at the first failure. Writes .delivery/gate-result.json (step logs in
+.delivery/logs/) and publishes it as a parentless commit at
+refs/gate-results/<branch> on the remote. See CONTRACT.md.
 
-Exit: 0 pass, 1 a step failed (or nothing ran), 2 usage/configuration error.
+Exit: 0 pass, 1 a step failed (or nothing ran), 2 usage/configuration error,
+4 timed out.
 """
 from __future__ import annotations
 
@@ -63,8 +66,14 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--only", help="comma-separated step names to run; the rest are skipped")
     ap.add_argument("--skip", help="comma-separated step names to skip")
     ap.add_argument("--no-publish", action="store_true", help="write the result locally only")
-    ap.add_argument("--fail-fast", action="store_true", help="stop at the first failing step")
+    ap.add_argument("--keep-going", action="store_true", help="run every selected step even after one fails")
+    ap.add_argument("--fail-fast", action="store_true", help="accepted and ignored: stopping at the first failure is the default")
+    ap.add_argument("--no-setup", action="store_true", help="skip the install from the lockfile; the run is partial")
+    ap.add_argument("--timeout-minutes", type=float, metavar="N",
+                    help="wall-clock limit for the whole run (default: gate.json timeout_minutes, 30)")
     args = ap.parse_args(argv)
+    if args.timeout_minutes is not None and not args.timeout_minutes > 0:
+        ap.error("--timeout-minutes must be greater than 0")
 
     root = dc.repo_root()
     cfg = dc.load_gate(root)
@@ -72,7 +81,7 @@ def main(argv: list[str] | None = None) -> int:
     names = [s["name"] for s in steps]
     only = parse_names(args.only, names, "--only")
     skip = parse_names(args.skip, names, "--skip") or set()
-    partial = only is not None or bool(skip)
+    partial = only is not None or bool(skip) or args.no_setup
     selected = (only if only is not None else set(names)) - skip
 
     dirty = dc.dirty_paths(root)
@@ -97,12 +106,22 @@ def main(argv: list[str] | None = None) -> int:
     if ctx.widened:
         shown = ", ".join(ctx.widen_reasons[:5]) + (" ..." if len(ctx.widen_reasons) > 5 else "")
         print("widened : yes (%s)" % shown)
+    minutes = args.timeout_minutes if args.timeout_minutes is not None else cfg["timeout_minutes"]
+    print("limit   : %g min" % minutes)
 
     started = dc.utc_now()
-    entries = dc.execute_steps(steps, ctx, selected=selected, fail_fast=args.fail_fast)
+    entries, timed_out = dc.execute_steps(
+        steps,
+        ctx,
+        selected=selected,
+        keep_going=args.keep_going,
+        setup_cmds=cfg["setup"],
+        no_setup=args.no_setup,
+        limit_seconds=minutes * 60,
+    )
     finished = dc.utc_now()
 
-    ok = dc.overall_pass(entries)
+    ok = dc.overall_pass(entries, timed_out)
     result = {
         "schema": dc.SCHEMA,
         "kind": "branch-gate",
@@ -114,6 +133,7 @@ def main(argv: list[str] | None = None) -> int:
         "changed_dirs": ctx.changed_dirs,
         "steps": entries,
         "pass": ok,
+        "timed_out": timed_out,
         "partial": partial,
         "started_at": started,
         "finished_at": finished,
@@ -123,11 +143,17 @@ def main(argv: list[str] | None = None) -> int:
     dc.write_json(result_file, result)
 
     print("\n" + dc.summary_table(entries))
+    dc.print_failures(entries, root)
+    if any(e["name"] == dc.SETUP_STEP and e["outcome"] == "fail" and not timed_out for e in entries):
+        print("\nsetup   : failed, so no other step ran. A stale lockfile is the usual cause:")
+        print("          regenerate it with the package manager's normal install, commit it, run the gate again.")
+    if timed_out:
+        dc.eprint("error: the gate timed out after %g min; the running step was killed" % minutes)
     print("\nresult  : %s -> %s" % ("PASS" if ok else "FAIL", dc.GATE_RESULT_PATH))
 
-    exit_code = dc.EXIT_OK if ok else dc.EXIT_FAIL
+    exit_code = dc.EXIT_OK if ok else dc.EXIT_TIMEOUT if timed_out else dc.EXIT_FAIL
     if partial:
-        print("note    : --only/--skip used; this result is partial and is not published or trusted")
+        print("note    : --only/--skip/--no-setup used; this result is partial and is not published or trusted")
     elif not args.no_publish:
         try:
             publish_result(root, remote, branch, result_file)

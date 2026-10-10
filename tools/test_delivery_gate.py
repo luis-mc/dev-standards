@@ -37,6 +37,7 @@ import sys
 import tarfile
 import tempfile
 import threading
+import time
 import traceback
 import zipfile
 from pathlib import Path
@@ -171,7 +172,36 @@ class Box:
         "os.makedirs('.delivery', exist_ok=True)\n"
         "with open('.delivery/ran.log', 'a') as f:\n"
         "    f.write(json.dumps([name] + args) + '\\n')\n"
+        "print('[%s] stdout' % name, flush=True)\n"
+        "print('[%s] stderr' % name, file=sys.stderr, flush=True)\n"
+        "if name in os.environ.get('GATE_TEST_NOISE', '').split(','):\n"
+        "    for i in range(1, 101):\n"
+        "        print('noise line %03d' % i, flush=True)\n"
         "sys.exit(1 if name in os.environ.get('GATE_TEST_FAIL', '').split(',') else 0)\n"
+    )
+
+    # A step that never finishes on its own and leaves a child behind that would
+    # outlive it: the child appends to .delivery/child.beat every 0.1 s for 30 s.
+    SLOW_SCRIPT = (
+        "import os, subprocess, sys\n"
+        "os.makedirs('.delivery', exist_ok=True)\n"
+        "print('slow step started', flush=True)\n"
+        "subprocess.Popen([sys.executable, 'scripts/delivery/_beat.py']).wait()\n"
+    )
+    BEAT_SCRIPT = (
+        "import time\n"
+        "for _ in range(300):\n"
+        "    with open('.delivery/child.beat', 'a') as f:\n"
+        "        f.write('x')\n"
+        "    time.sleep(0.1)\n"
+    )
+    # Fails (exit 1) the way a frozen install does when the lockfile is stale.
+    LOCK_SCRIPT = (
+        "import sys\n"
+        "text = open('pnpm-lock.yaml', encoding='utf-8').read()\n"
+        "if 'STALE' in text:\n"
+        "    print('ERR_PNPM_OUTDATED_LOCKFILE: lockfile is not up to date with package.json', file=sys.stderr)\n"
+        "    sys.exit(1)\n"
     )
 
     def __init__(self, shared: Path = SHARED, gate_json: dict | None = None, hooks: bool = True):
@@ -188,7 +218,9 @@ class Box:
         d.mkdir(parents=True)
         for name in SCRIPT_FILES:
             self.copy_text(shared / "scripts/delivery" / name, d / name)
-        (d / "_t.py").write_text(self.STEP_SCRIPT, encoding="utf-8", newline="\n")
+        for fname, body in (("_t.py", self.STEP_SCRIPT), ("_slow.py", self.SLOW_SCRIPT),
+                            ("_beat.py", self.BEAT_SCRIPT), ("_lock.py", self.LOCK_SCRIPT)):
+            (d / fname).write_text(body, encoding="utf-8", newline="\n")
         (d / "gate.json").write_text(json.dumps(gate_json or self.gate_json(), indent=2) + "\n", encoding="utf-8")
         if hooks:
             (self.work / ".githooks").mkdir()
@@ -280,11 +312,13 @@ class Box:
         self.push(name)
         return head
 
-    def ran(self) -> list:
+    def ran(self, setup: bool = False) -> list:
+        """The step commands that ran, in order; `setup` also lists the install."""
         log = self.work / ".delivery/ran.log"
         if not log.exists():
             return []
-        return [json.loads(line) for line in log.read_text().splitlines() if line]
+        rows = [json.loads(line) for line in log.read_text().splitlines() if line]
+        return rows if setup else [r for r in rows if r[0] != "setup"]
 
     def clear_log(self) -> None:
         log = self.work / ".delivery/ran.log"
@@ -328,7 +362,7 @@ def sc_scopes(t: T, shared: Path) -> None:
     res = box.result()
     t.eq("result: contract keys present",
          sorted(res), sorted(["schema", "kind", "branch", "head", "base", "base_ref", "widened",
-                              "changed_dirs", "steps", "pass", "partial", "started_at",
+                              "changed_dirs", "steps", "pass", "timed_out", "partial", "started_at",
                               "finished_at", "tool"]))
     t.eq("result: branch", res["branch"], "feat/web")
     t.eq("result: head", res["head"], box.g("rev-parse", "HEAD"))
@@ -341,9 +375,11 @@ def sc_scopes(t: T, shared: Path) -> None:
     t.check("result: timestamps are UTC ISO",
             all(re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ", res[k]) for k in ("started_at", "finished_at")))
     t.check("result: tool names the script", res["tool"].startswith("branch_gate.py "))
-    t.eq("result: step shape", sorted(res["steps"][0])[:4], ["command", "name", "outcome", "reason"])
+    t.eq("result: setup is the first step", res["steps"][0]["name"], "setup")
+    t.eq("result: step shape", sorted(res["steps"][1]),
+         ["command", "exit_code", "log", "name", "outcome", "reason", "seconds"])
     t.check("result: command recorded with placeholders filled",
-            "apps/web" in res["steps"][0]["command"] and "{" not in res["steps"][0]["command"])
+            "apps/web" in res["steps"][1]["command"] and "{" not in res["steps"][1]["command"])
     t.has("summary table printed", r.out, "outcome")
     t.has("summary table names a step", r.out, "secret-scan")
 
@@ -495,6 +531,7 @@ def sc_only_skip(t: T, shared: Path) -> None:
     r = box.gate("--only", "guards")
     t.eq("--only: exit 0", r.code, 0)
     t.eq("--only: just that step ran", [x[0] for x in box.ran()], ["guards"])
+    t.eq("--only: setup still runs first", [x[0] for x in box.ran(True)], ["setup", "guards"])
     res = box.result()
     t.eq("--only: result marks partial", res["partial"], True)
     t.eq("--only: unselected steps are skip", {s["name"]: s["outcome"] for s in res["steps"]}["unit"], "skip")
@@ -527,9 +564,9 @@ def sc_only_skip(t: T, shared: Path) -> None:
 def sc_failures(t: T, shared: Path) -> None:
     box = Box(shared)
     box.branch("feat/fail", {"apps/web/a.txt": "a\n"})
-    r = box.gate("--no-publish", env={"GATE_TEST_FAIL": "lint"})
+    r = box.gate("--no-publish", "--keep-going", env={"GATE_TEST_FAIL": "lint"})
     t.eq("a failing step: exit 1", r.code, 1)
-    t.eq("a failing step: later steps still ran",
+    t.eq("a failing step: later steps still ran with --keep-going",
          [x[0] for x in box.ran()], ["typecheck", "lint", "unit", "guards", "secret-scan", "e2e"])
     res = box.result()
     outcomes = {s["name"]: s["outcome"] for s in res["steps"]}
@@ -545,6 +582,8 @@ def sc_failures(t: T, shared: Path) -> None:
     outcomes = {s["name"]: s["outcome"] for s in box.result()["steps"]}
     t.eq("--fail-fast: the rest are skip", [outcomes[n] for n in ("unit", "guards", "secret-scan", "e2e")], ["skip"] * 4)
 
+    box.clear_log()
+    box.gate("--no-publish", env={"GATE_TEST_FAIL": "lint"})
     box.clear_log()
     box.gate(env={"GATE_TEST_FAIL": "unit"})
     ref = box.remote_ref("refs/gate-results/feat/fail")
@@ -571,6 +610,23 @@ def sc_config_errors(t: T, shared: Path) -> None:
     t.has("invalid gate.json: names the problem", r.err, "scope")
     gate_path.write_text(good, encoding="utf-8")
     t.eq("restored gate.json runs", box.gate("--no-publish").code, 0)
+
+    for bad_minutes in (0, -1, "5", True, 1.5, None):
+        bad = json.loads(good)
+        bad["timeout_minutes"] = bad_minutes
+        gate_path.write_text(json.dumps(bad), encoding="utf-8")
+        r = box.gate("--no-publish")
+        t.eq("timeout_minutes %r: exit 2" % (bad_minutes,), r.code, 2)
+        t.has("timeout_minutes %r: names the key" % (bad_minutes,), r.err, "timeout_minutes")
+    bad = json.loads(good)
+    bad["steps"][0]["name"] = "setup"
+    gate_path.write_text(json.dumps(bad), encoding="utf-8")
+    r = box.gate("--no-publish")
+    t.eq("a step named setup: exit 2", r.code, 2)
+    t.has("a step named setup: says it is reserved", r.err, "reserved")
+    gate_path.write_text(good, encoding="utf-8")
+    t.eq("--timeout-minutes 0: exit 2", box.gate("--no-publish", "--timeout-minutes", "0").code, 2)
+    t.eq("--timeout-minutes -3: exit 2", box.gate("--no-publish", "--timeout-minutes=-3").code, 2)
 
     box.g("checkout", "-q", "--detach")
     t.eq("detached HEAD, publishing: exit 2", box.gate().code, 2)
@@ -646,6 +702,219 @@ def sc_publish(t: T, shared: Path) -> None:
     t.eq("--no-publish publishes nothing", box.remote_ref("refs/gate-results/feat/nopub"), None)
 
 
+def sc_setup(t: T, shared: Path) -> None:
+    """The gate installs from the lockfile first; a stale lockfile stops it there."""
+    box = Box(shared)
+    box.branch("feat/web", {"apps/web/a.txt": "a\n"})
+    r = box.gate("--no-publish")
+    t.eq("setup first: exit 0", r.code, 0)
+    t.eq("setup runs before every other step", [x[0] for x in box.ran(True)][:2], ["setup", "typecheck"])
+    res = box.result()
+    first = res["steps"][0]
+    t.eq("result: the first step is setup, passed",
+         (first["name"], first["outcome"], first["exit_code"], first["reason"]), ("setup", "pass", 0, None))
+    t.has("result: the setup command is recorded", first["command"], "_t.py setup")
+    t.eq("result: the setup log", first["log"], ".delivery/logs/setup.log")
+    t.eq("result: tool version", res["tool"], "branch_gate.py %d" % dc.TOOL_VERSION)
+    t.eq("result: not timed out", res["timed_out"], False)
+
+    # a stale lockfile: the frozen install fails, so nothing else runs
+    cfg = Box.gate_json()
+    cfg["setup"] = [Box.step_cmd("setup"), '"%s" scripts/delivery/_lock.py' % PY]
+    box = Box(shared, gate_json=cfg)
+    box.branch("feat/stale", {"pnpm-lock.yaml": "lock\nSTALE\n", "apps/web/a.txt": "a\n"})
+    r = box.gate()
+    t.eq("stale lockfile: exit 1", r.code, 1)
+    t.eq("... the first setup command ran, no step did", (box.ran(True), box.ran()), ([["setup"]], []))
+    res = box.result()
+    st = {s["name"]: s for s in res["steps"]}
+    t.eq("... setup is fail", (st["setup"]["outcome"], st["setup"]["exit_code"]), ("fail", 1))
+    t.has("... and says which command failed", st["setup"]["reason"], "_lock.py")
+    t.eq("... every other step is skip 'setup failed'",
+         {n: (s["outcome"], s["reason"]) for n, s in st.items() if n != "setup"},
+         {n: ("skip", "setup failed") for n in st if n != "setup"})
+    t.eq("... pass is false", res["pass"], False)
+    t.has("... the summary names a stale lockfile", r.out, "stale lockfile")
+    t.has("... and the FAIL line names setup", r.out, "FAIL setup:")
+    t.has("... the install's error is in the log",
+          (box.work / ".delivery/logs/setup.log").read_text(encoding="utf-8"), "ERR_PNPM_OUTDATED_LOCKFILE")
+    t.has("... and in the tail after the summary", r.out.split("FAIL setup:", 1)[-1], "ERR_PNPM_OUTDATED_LOCKFILE")
+    t.check("... the failing result is still published", box.remote_ref("refs/gate-results/feat/stale") is not None)
+    box.push("feat/stale")
+    t.eq("... and gate_verify does not trust it", verify(box, "feat/stale").code, 1)
+
+    # --keep-going does not carry on past a failed setup
+    box.clear_log()
+    r = box.gate("--no-publish", "--keep-going")
+    t.eq("--keep-going with a failed setup: still stops, exit 1", (r.code, box.ran()), (1, []))
+
+    # --no-setup: partial, never published
+    box = Box(shared)
+    box.branch("feat/nosetup", {"apps/web/a.txt": "a\n"})
+    r = box.gate("--no-setup")
+    t.eq("--no-setup: exit 0", r.code, 0)
+    t.eq("--no-setup: setup did not run", [x[0] for x in box.ran(True)][:1], ["typecheck"])
+    res = box.result()
+    t.eq("--no-setup: partial", res["partial"], True)
+    t.eq("--no-setup: setup recorded as skip", (res["steps"][0]["name"], res["steps"][0]["outcome"], res["steps"][0]["reason"]),
+         ("setup", "skip", "--no-setup"))
+    t.eq("--no-setup: never published", box.remote_ref("refs/gate-results/feat/nosetup"), None)
+    t.has("--no-setup: says the result is partial", r.out, "partial")
+    r = box.gate("--no-setup", env={"GATE_TEST_FAIL": "setup"})
+    t.eq("--no-setup: a setup that would fail is not run", r.code, 0)
+
+    # a setup that fails without --no-setup, for contrast
+    box.clear_log()
+    r = box.gate("--no-publish", env={"GATE_TEST_FAIL": "setup"})
+    t.eq("setup failing: exit 1, no step ran", (r.code, box.ran()), (1, []))
+
+    # a gate.json with no setup commands has no setup step
+    cfg = Box.gate_json()
+    cfg["setup"] = []
+    box = Box(shared, gate_json=cfg)
+    box.branch("feat/nosetupcmds", {"apps/web/a.txt": "a\n"})
+    r = box.gate("--no-publish")
+    t.eq("no setup commands: exit 0", r.code, 0)
+    t.eq("... and no setup step", [s["name"] for s in box.result()["steps"]][:1], ["typecheck"])
+
+
+def sc_failfast(t: T, shared: Path) -> None:
+    """Stop at the first failure by default; --keep-going runs on; --fail-fast is a no-op."""
+    box = Box(shared)
+    box.branch("feat/ff", {"apps/web/a.txt": "a\n"})
+    names = ["typecheck", "lint", "unit", "guards", "secret-scan", "e2e"]
+
+    r = box.gate("--no-publish", env={"GATE_TEST_FAIL": "lint"})
+    t.eq("default: exit 1", r.code, 1)
+    t.eq("default: stops after the first failing step", [x[0] for x in box.ran()], ["typecheck", "lint"])
+    st = {s["name"]: s for s in box.result()["steps"]}
+    t.eq("default: later steps are skip 'an earlier step failed'",
+         [(st[n]["outcome"], st[n]["reason"]) for n in names[2:]], [("skip", "an earlier step failed")] * 4)
+    t.eq("default: no log for a step that never ran", (box.work / ".delivery/logs/unit.log").exists(), False)
+
+    box.clear_log()
+    r = box.gate("--no-publish", "--keep-going", env={"GATE_TEST_FAIL": "lint"})
+    t.eq("--keep-going: exit 1", r.code, 1)
+    t.eq("--keep-going: every step ran", [x[0] for x in box.ran()], names)
+    st = {s["name"]: s for s in box.result()["steps"]}
+    t.eq("--keep-going: only the failing step failed",
+         {n: s["outcome"] for n, s in st.items() if s["outcome"] != "pass"}, {"lint": "fail"})
+
+    box.clear_log()
+    r = box.gate("--no-publish", "--fail-fast", env={"GATE_TEST_FAIL": "lint"})
+    t.eq("--fail-fast: accepted, same as the default", (r.code, [x[0] for x in box.ran()]), (1, ["typecheck", "lint"]))
+
+    box.clear_log()
+    r = box.gate("--no-publish", "--fail-fast", "--keep-going", env={"GATE_TEST_FAIL": "lint"})
+    t.eq("--fail-fast with --keep-going: --keep-going wins", [x[0] for x in box.ran()], names)
+
+    # a later failure after earlier passes, and a failure in the last step
+    box.clear_log()
+    r = box.gate("--no-publish", env={"GATE_TEST_FAIL": "e2e"})
+    t.eq("a failure in the last step: everything before it ran", (r.code, [x[0] for x in box.ran()]), (1, names))
+
+
+def sc_logs(t: T, shared: Path) -> None:
+    """Step logs, the streamed output, and the FAIL line with the tail."""
+    box = Box(shared)
+    box.branch("feat/logs", {"apps/web/a.txt": "a\n"})
+    r = box.gate("--no-publish", env={"GATE_TEST_FAIL": "lint", "GATE_TEST_NOISE": "lint"})
+    t.eq("a failing step: exit 1", r.code, 1)
+    logs = box.work / ".delivery/logs"
+    t.check("a log per step that ran", all((logs / (n + ".log")).is_file() for n in ("setup", "typecheck", "lint")))
+    t.check("no log for a step that did not run", not (logs / "unit.log").exists())
+    lint_log = (logs / "lint.log").read_text(encoding="utf-8")
+    t.check("the log holds stdout and stderr together",
+            "[lint] stdout" in lint_log and "[lint] stderr" in lint_log, lint_log)
+    t.has("the log holds the whole output", lint_log, "noise line 001")
+    t.check("the output is streamed to the terminal too",
+            "[typecheck] stdout" in r.out and "[lint] stdout" in r.out, r.out)
+    t.has("... stderr as well", r.out, "[lint] stderr")
+    st = {s["name"]: s for s in box.result()["steps"]}
+    t.eq("result: the log field is relative to the root", st["lint"]["log"], ".delivery/logs/lint.log")
+    t.eq("result: a skipped step has no log field", "log" in st["unit"], False)
+    t.eq("result: the exit code is recorded", (st["lint"]["exit_code"], st["lint"]["reason"]), (1, "command failed"))
+
+    m = re.search(r"^FAIL lint: command failed \(exit 1, [\d.]+s\) - log: \.delivery/logs/lint\.log\r?$",
+                  r.out, re.M)
+    t.check("the FAIL line names the step, reason, exit code, seconds and log", m is not None, r.out[-600:])
+    t.check("... printed after the summary table", m is not None and r.out.index("outcome") < m.start())
+    after = r.out.split("FAIL lint:", 1)[-1]
+    t.eq("... followed by the last 40 lines of the step's output",
+         len(re.findall(r"noise line \d+", after)), 40)
+    t.check("... which are the last ones", "noise line 100" in after and "noise line 061" in after
+            and "noise line 060" not in after)
+    t.check("a passing step prints no FAIL line", "FAIL typecheck" not in r.out and "FAIL setup" not in r.out)
+
+    r = box.gate("--no-publish")
+    t.eq("a passing run: no FAIL line", (r.code, "FAIL " in r.out.replace("FAILURES", "")), (0, False))
+    t.has("... and the logs are rewritten", (logs / "lint.log").read_text(encoding="utf-8"), "[lint] stdout")
+    t.check("... not appended", "noise line" not in (logs / "lint.log").read_text(encoding="utf-8"))
+
+    # a step name that is not a safe file name
+    cfg = Box.gate_json()
+    cfg["steps"][0]["name"] = "type check/ts"
+    box2 = Box(shared, gate_json=cfg)
+    box2.branch("feat/names", {"apps/web/a.txt": "a\n"})
+    r = box2.gate("--no-publish")
+    t.eq("an unsafe step name still gets a log", (r.code, (box2.work / ".delivery/logs/type_check_ts.log").is_file()), (0, True))
+
+
+def sc_timeout(t: T, shared: Path) -> None:
+    """The time limit kills the running step's whole tree and stops the gate."""
+    cfg = Box.gate_json()
+    for s in cfg["steps"]:
+        if s["name"] == "lint":  # never finishes on its own, and leaves a child behind
+            s["run"] = s["run_full"] = '"%s" scripts/delivery/_slow.py' % PY
+    box = Box(shared, gate_json=cfg)
+    box.branch("feat/slow", {"apps/web/a.txt": "a\n"})
+    started = time.monotonic()
+    r = box.gate("--timeout-minutes", "0.2")
+    elapsed = time.monotonic() - started
+    t.eq("timed out: exit 4", r.code, 4)
+    t.check("... stopped near the limit (12 s), not when the child ends (30 s)", elapsed < 27, "%.1f s" % elapsed)
+    res = box.result()
+    st = {s["name"]: s for s in res["steps"]}
+    t.eq("... result: timed_out, not passing", (res["timed_out"], res["pass"]), (True, False))
+    t.eq("... the running step is fail 'timed out after 0.2 min'",
+         (st["lint"]["outcome"], st["lint"]["reason"]), ("fail", "timed out after 0.2 min"))
+    t.eq("... the steps before it passed", (st["setup"]["outcome"], st["typecheck"]["outcome"]), ("pass", "pass"))
+    t.eq("... the rest are skip 'gate timed out'",
+         [(st[n]["outcome"], st[n]["reason"]) for n in ("unit", "guards", "secret-scan", "e2e")],
+         [("skip", "gate timed out")] * 4)
+    t.check("... the later steps never ran", not any(x[0] in ("unit", "guards") for x in box.ran()))
+    t.has("... says the gate timed out", r.err, "timed out")
+    t.has("... the FAIL line names the timeout", r.out, "FAIL lint: timed out after 0.2 min")
+    t.has("... the output up to the kill is in the log",
+          (box.work / ".delivery/logs/lint.log").read_text(encoding="utf-8"), "slow step started")
+    t.check("... the result is published",
+            box.remote_ref("refs/gate-results/feat/slow") is not None)
+    published = json.loads(box.origin_git("show", "refs/gate-results/feat/slow:gate-result.json"))
+    t.eq("... with timed_out true", (published["timed_out"], published["pass"]), (True, False))
+
+    beat = box.work / ".delivery/child.beat"
+    before = beat.stat().st_size if beat.exists() else 0
+    t.check("the step's child did run", before > 0)
+    time.sleep(1.5)
+    after = beat.stat().st_size if beat.exists() else 0
+    t.eq("... and was killed with the step (its heartbeat stopped)", after, before)
+
+    box.push("feat/slow")
+    v = verify(box, "feat/slow")
+    t.eq("gate_verify does not trust a timed-out result", v.code, 1)
+
+    # a short limit set in gate.json and the flag that overrides it
+    box = Box(shared)
+    box.branch("feat/lim", {"apps/web/a.txt": "a\n"})
+    r = box.gate("--no-publish", "--only", "guards")
+    t.has("the default limit is 30 min", r.out, "limit   : 30 min")
+    box.commit({"scripts/delivery/gate.json": json.dumps({**Box.gate_json(), "timeout_minutes": 7})}, "limit")
+    r = box.gate("--no-publish", "--only", "guards")
+    t.has("gate.json timeout_minutes is used", r.out, "limit   : 7 min")
+    r = box.gate("--no-publish", "--only", "guards", "--timeout-minutes", "3")
+    t.has("--timeout-minutes overrides it", r.out, "limit   : 3 min")
+
+
 # --------------------------------------------------------------------------
 # scenarios: gate_verify.py
 # --------------------------------------------------------------------------
@@ -679,6 +948,15 @@ def sc_verify(t: T, shared: Path) -> None:
     box.g("checkout", "-q", "-B", "feat/garbage", "feat/ok")
     box.push("feat/garbage")
     box.publish_raw("feat/garbage", "not json at all")
+    box.g("checkout", "-q", "-B", "feat/timedout", "feat/ok")
+    box.push("feat/timedout")
+    box.publish_raw("feat/timedout", json.dumps({**good, "branch": "feat/timedout", "timed_out": True}))
+    box.g("checkout", "-q", "-B", "feat/setupfail", "feat/ok")
+    box.push("feat/setupfail")
+    box.publish_raw("feat/setupfail", json.dumps({
+        **good, "branch": "feat/setupfail",
+        "steps": [{"name": "setup", "outcome": "fail", "seconds": 1.0, "command": "x", "reason": "command failed",
+                   "exit_code": 1}] + good["steps"][1:]}))
     box.g("checkout", "-q", "-B", "feat/oldschema", "feat/ok")
     box.push("feat/oldschema")
     box.publish_raw("feat/oldschema", json.dumps({**good, "branch": "feat/oldschema", "schema": 99}))
@@ -712,6 +990,12 @@ def sc_verify(t: T, shared: Path) -> None:
     r = verify(box, "feat/partial")
     t.eq("partial result: exit 1", r.code, 1)
     t.has("partial result: says partial", r.out, "partial")
+    r = verify(box, "feat/timedout")
+    t.eq("a timed-out result that claims pass: exit 1", r.code, 1)
+    t.has("... says it timed out", r.out, "timed out")
+    r = verify(box, "feat/setupfail")
+    t.eq("a result whose setup failed but claims pass: exit 1", r.code, 1)
+    t.has("... says setup did not pass", r.out, "setup did not pass")
     t.eq("garbage result: exit 1", verify(box, "feat/garbage").code, 1)
     t.eq("unknown schema: exit 1", verify(box, "feat/oldschema").code, 1)
 
@@ -1057,7 +1341,7 @@ def sc_join_conflicts(t: T, shared: Path) -> None:
     t.eq("... integration's lockfile wins",
          (box.work / "pnpm-lock.yaml").read_text(encoding="utf-8"), "lock\nL1\nl2\n")
     t.eq("... the other work of the branch is in", (box.work / "apps/api/l2.txt").exists(), True)
-    t.eq("... setup was re-run", [x[0] for x in box.ran()], ["setup"])
+    t.eq("... setup was re-run", [x[0] for x in box.ran(True)], ["setup"])
     t.eq("... it is a Join commit", box.g("log", "-1", "--format=%s"), "Join feat/l2")
     t.eq("... with two parents", len(box.g("rev-list", "--parents", "-n1", "HEAD").split()), 3)
     t.eq("... and a clean tree", box.clean(), True)
@@ -1167,14 +1451,14 @@ def sc_agent_setup(t: T, shared: Path) -> None:
         r = run([bash, sh.as_posix()], cwd=box.work, extra_env=env)
         t.eq("install with a matching checksum: exit 0", r.code, 0)
         t.check("... gitleaks is in DELIVERY_BIN", (bin_dir / exe).exists(), r.text)
-        t.eq("... gate.json setup ran", [x[0] for x in box.ran()], ["setup"])
+        t.eq("... gate.json setup ran", [x[0] for x in box.ran(True)], ["setup"])
         t.eq("... hooks path set", box.g("config", "--get", "core.hooksPath"), ".githooks")
         if exe == "gitleaks":
             box.clear_log()
             r = run([bash, sh.as_posix()], cwd=box.work, extra_env=env)
             t.eq("idempotent: second run exit 0", r.code, 0)
             t.has("idempotent: skips the download", r.err, "already installed")
-            t.eq("idempotent: setup runs again", [x[0] for x in box.ran()], ["setup"])
+            t.eq("idempotent: setup runs again", [x[0] for x in box.ran(True)], ["setup"])
 
         # the PATH hint is a shell path: through cygpath when there is one (Git Bash)
         # (a cygpath function from BASH_ENV, so it wins over any real cygpath on PATH)
@@ -1219,6 +1503,25 @@ def sc_agent_setup(t: T, shared: Path) -> None:
 # static checks: tools.json, gate.json per track, guard starters, packages
 # --------------------------------------------------------------------------
 
+def unfrozen_setup(cmds: list[str]) -> list[str]:
+    """The setup commands that could change a lockfile or the dependency set."""
+    bad = []
+    for cmd in cmds:
+        words = cmd.split()
+        if words[:2] == ["pnpm", "install"] and "--frozen-lockfile" not in words:
+            bad.append(cmd)
+        elif words[:2] == ["npm", "install"] or words[:1] == ["yarn"] and "--frozen-lockfile" not in words:
+            bad.append(cmd)
+        elif words[:1] == ["cargo"] and "--locked" not in words:
+            bad.append(cmd)
+        elif words[:2] == ["dotnet", "restore"] and "--locked-mode" not in words:
+            bad.append(cmd)
+        elif words[:1] == ["go"] and (words[1:3] == ["mod", "tidy"] or words[1:2] == ["get"]
+                                       or (words[1:2] == ["list"] and "-mod=readonly" not in words)):
+            bad.append(cmd)
+    return bad
+
+
 def sc_assets(t: T, shared: Path) -> None:
     tools = json.loads((shared / "scripts/delivery/tools.json").read_text())
     ver = tools.get("gitleaks", "")
@@ -1242,6 +1545,11 @@ def sc_assets(t: T, shared: Path) -> None:
             continue
         t.check(label + " is valid", True)
         t.eq(label + ": track and package kind", (cfg["track"], cfg["packages"]["kind"]), (track, kind))
+        t.check(label + ": setup installs from the lockfile in frozen mode",
+                bool(cfg["setup"]) and not unfrozen_setup(cfg["setup"]), str(cfg["setup"]))
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        t.check(label + ": timeout_minutes is set (an integer >= 1)",
+                isinstance(raw.get("timeout_minutes"), int) and raw["timeout_minutes"] >= 1, str(raw.get("timeout_minutes")))
         steps = {s["name"]: s for s in cfg["steps"]}
         t.check(label + ": guards and secret-scan are pre_push and always",
                 all(steps.get(n, {}).get("pre_push") and steps[n]["scope"] == "always"
@@ -1255,6 +1563,13 @@ def sc_assets(t: T, shared: Path) -> None:
                 {"typecheck", "unit"} <= set(steps))
         t.check(label + ": no single quotes in commands (cmd.exe)",
                 all("'" not in s.get("run", "") + s.get("run_full", "") for s in cfg["steps"]))
+    t.eq("a non-frozen setup is recognised",
+         unfrozen_setup(["pnpm install", "cargo fetch", "dotnet restore", "go mod tidy", "go get x", "npm install",
+                         "go list -m all"]),
+         ["pnpm install", "cargo fetch", "dotnet restore", "go mod tidy", "go get x", "npm install", "go list -m all"])
+    t.eq("a frozen setup is accepted",
+         unfrozen_setup(["pnpm install --frozen-lockfile", "cargo fetch --locked", "dotnet restore --locked-mode",
+                         "go mod download", "go list -mod=readonly -m all"]), [])
     ts = json.loads((TOOLING / "ts/scripts/delivery/gate.json").read_text())
     t.check("ts gate.json matches the contract example commands",
             any("--filter" in s["run"] and "{base}" in s["run"] for s in ts["steps"] if s["name"] == "typecheck")
@@ -1395,13 +1710,56 @@ MUTANTS = [
      '.replace("{affected_dirs}", " ".join(ctx.packages if wide else ctx.affected_dirs))',
      '.replace("{affected_dirs}", " ".join(ctx.packages))', "affected"),
     ("a step's env is not passed", "scripts/delivery/delivery_common.py",
-     "full_env = {**os.environ, **env} if env else None", "full_env = None", "step_env"),
+     "    full_env = {**os.environ, **env} if env else None\n    kw = {}", "    full_env = None\n    kw = {}", "step_env"),
     ("gate never widens", "scripts/delivery/delivery_common.py",
      'reasons = widening_files(files, cfg["widen_on"])', "reasons = []", "widening"),
-    ("--fail-fast does not stop", "scripts/delivery/delivery_common.py",
-     "stopped = fail_fast", "stopped = False", "failures"),
+    ("the gate does not stop at the first failure", "scripts/delivery/delivery_common.py",
+     "elif not keep_going:", "elif False:", "failfast"),
+    ("--keep-going is ignored", "scripts/delivery/branch_gate.py",
+     "keep_going=args.keep_going,", "keep_going=False,", "failfast"),
     ("a failing gate still exits 0", "scripts/delivery/branch_gate.py",
-     "exit_code = dc.EXIT_OK if ok else dc.EXIT_FAIL", "exit_code = dc.EXIT_OK", "failures"),
+     "exit_code = dc.EXIT_OK if ok else dc.EXIT_TIMEOUT if timed_out else dc.EXIT_FAIL", "exit_code = dc.EXIT_OK", "failures"),
+    ("a timed-out gate exits 1", "scripts/delivery/branch_gate.py",
+     "dc.EXIT_TIMEOUT if timed_out else dc.EXIT_FAIL", "dc.EXIT_FAIL", "timeout"),
+    ("setup does not run", "scripts/delivery/delivery_common.py",
+     "    if setup_cmds:\n        if no_setup:", "    if False:\n        if no_setup:", "setup"),
+    ("a failed setup does not stop the run", "scripts/delivery/delivery_common.py",
+     'halt = "gate timed out" if timed_out else "setup failed"', "halt = None", "setup"),
+    ("--no-setup run is not partial", "scripts/delivery/branch_gate.py",
+     "partial = only is not None or bool(skip) or args.no_setup", "partial = only is not None or bool(skip)", "setup"),
+    ("the stale-lockfile hint is not printed", "scripts/delivery/branch_gate.py",
+     'if any(e["name"] == dc.SETUP_STEP and e["outcome"] == "fail" and not timed_out for e in entries):',
+     "if False:", "setup"),
+    ("a timeout does not kill the process tree", "scripts/delivery/delivery_common.py",
+     '    if os.name == "nt":\n        subprocess.run(["taskkill"',
+     '    proc.kill()\n    return\n    if os.name == "nt":\n        subprocess.run(["taskkill"', "timeout"),
+    ("the time limit is not enforced", "scripts/delivery/delivery_common.py",
+     "code = proc.wait(timeout=timeout)", "code = proc.wait()", "timeout"),
+    ("--timeout-minutes is ignored", "scripts/delivery/branch_gate.py",
+     'minutes = args.timeout_minutes if args.timeout_minutes is not None else cfg["timeout_minutes"]',
+     'minutes = cfg["timeout_minutes"]', "timeout"),
+    ("gate.json timeout_minutes is ignored", "scripts/delivery/branch_gate.py",
+     'else cfg["timeout_minutes"]', "else 30", "timeout"),
+    ("a timed-out step is not recorded as failed", "scripts/delivery/delivery_common.py",
+     'entry["reason"] = "timed out after %s min" % _minutes(limit_seconds)', 'entry["reason"] = "command failed"', "timeout"),
+    ("a timed-out run is not marked timed_out", "scripts/delivery/branch_gate.py",
+     '"timed_out": timed_out,', '"timed_out": False,', "timeout"),
+    ("step output is not written to the log", "scripts/delivery/delivery_common.py",
+     "            log.write(chunk)\n", "            pass\n", "logs"),
+    ("step output is not streamed", "scripts/delivery/delivery_common.py",
+     "            if echo:\n", "            if False:\n", "logs"),
+    ("no FAIL line is printed", "scripts/delivery/delivery_common.py",
+     '        if e["outcome"] != "fail":\n            continue\n', "        continue\n", "logs"),
+    ("the failure tail is not limited to 40 lines", "scripts/delivery/delivery_common.py",
+     "TAIL_LINES = 40", "TAIL_LINES = 400", "logs"),
+    ("verify trusts a timed-out result", "scripts/delivery/gate_verify.py",
+     'if result.get("timed_out"):', "if False:", "verify"),
+    ("verify trusts a result whose setup failed", "scripts/delivery/gate_verify.py",
+     's.get("outcome") != "pass" for s in steps', "False for s in steps", "verify"),
+    ("a step may be named setup", "scripts/delivery/delivery_common.py",
+     "if name == SETUP_STEP:", "if False:", "config_errors"),
+    ("timeout_minutes is not validated", "scripts/delivery/delivery_common.py",
+     "if isinstance(minutes, bool) or not isinstance(minutes, int) or minutes < 1:", "if False:", "config_errors"),
     ("a partial result is published", "scripts/delivery/branch_gate.py",
      "    if partial:\n        print(\"note", "    if False:\n        print(\"note", "only_skip"),
     ("the result is not force-pushed", "scripts/delivery/branch_gate.py",
@@ -1442,6 +1800,10 @@ SCENARIOS = {
     "widening": sc_widening,
     "only_skip": sc_only_skip,
     "failures": sc_failures,
+    "setup": sc_setup,
+    "failfast": sc_failfast,
+    "logs": sc_logs,
+    "timeout": sc_timeout,
     "config_errors": sc_config_errors,
     "dirty": sc_dirty,
     "publish": sc_publish,
