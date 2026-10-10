@@ -80,6 +80,7 @@ class ContentError(Exception):
         if isinstance(problems, str):
             problems = [problems]
         self.problems = list(problems)
+        self.partial = None          # load_content: what could be read of the content, when only some of it is invalid
         super().__init__('; '.join(self.problems))
 
 
@@ -730,9 +731,13 @@ def load_content(record_dir: str, key: str, plugin_dir: str = PLUGIN_DIR) -> dic
         else:
             decisions, found = load_decisions(folder, key)
             problems += found
+    content = {'meta': meta, 'sections': sections, 'history': history, 'decisions': decisions}
     if problems:
-        raise ContentError(problems)
-    return {'meta': meta, 'sections': sections, 'history': history, 'decisions': decisions}
+        error = ContentError(problems)
+        if loaded:
+            error.partial = content
+        raise error
+    return content
 
 
 # ------------------------------------------------------------------ the record: kinds and tasks

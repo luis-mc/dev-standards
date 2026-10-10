@@ -6,7 +6,7 @@
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
 **Last reviewed:** 2026-10-10
-**Changes in 1.1.0:** the activity rule and the status `Built` (R3.2 to R3.5, R6.1, R6.9), the rule delivered at session start (R8.9, R10.4, R10.5), the end-of-turn check on background work (R8.8, R8.10), §5.4 Decisions (`decisions.json`, R5.14 to R5.26), feature artifacts as standalone HTML files in the repository that are never published (R5.27 to R5.29, R9.5), Full Progress published once per turn, at its end (R3.1, R9.1), with local-file links to the feature files (§5.5, R5.30 to R5.32), the Earlier fold for `Live` rows only (R6.3), and the end-of-turn background check armed by background agents only (R8.8). The record format string in `manifest.json` and `registry.json` stays `ARTIFACTSPEC 1.0.0`: existing records stay valid.
+**Changes in 1.1.0:** the activity rule and the status `Built` (R3.2 to R3.5, R6.1, R6.9), the rule delivered at session start (R8.9, R10.4, R10.5), the end-of-turn check on background work (R8.8, R8.10), §5.4 Decisions (`decisions.json`, R5.14 to R5.26), feature artifacts as standalone HTML files in the repository that are never published (R5.27 to R5.29, R9.5), Full Progress published once per turn, at its end (R3.1, R9.1), with local-file links to the feature files (§5.5, R5.30 to R5.32), the Earlier fold for `Live` rows only (R6.3), and the end-of-turn background check armed by background agents only (R8.8). Plugin 1.1.1 made R7.1 incremental: a writing command refuses only a change that adds a finding (R7.1, R7.1a). The record format string in `manifest.json` and `registry.json` stays `ARTIFACTSPEC 1.0.0`: existing records stay valid.
 
 ---
 
@@ -74,7 +74,11 @@ nothing was running while much was. 1.1.0 adds:
   (R5.27 to R5.29, R9.5), and Full Progress links to the feature files as
   local files (§5.5);
 - only `Live` rows fold into `Earlier`, so unreleased `Built` work is never
-  hidden (R6.3); and only background agents arm the end-of-turn check (R8.8).
+  hidden (R6.3); and only background agents arm the end-of-turn check (R8.8);
+- a writing command refuses a change that adds a finding, not a record that
+  already has some, so a record migrating from 1.0.0 is repaired one edit at a
+  time (R7.1, R7.1a; plugin 1.1.1, with no change to the requirements' meaning
+  for a valid record).
 
 The record format is unchanged: `spec` in the manifest and the registry stays
 `"ARTIFACTSPEC 1.0.0"`, so a 1.0.0 record is valid under 1.1.0.
@@ -649,7 +653,21 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
 | `commit [--retry] [--message M]` | Commits and pushes the record (also done by every writing command). |
 
 - **R7.1** — Every writing command validates the record before and after the
-  change and writes nothing when either fails.
+  change and writes nothing when the change adds a finding: one the record
+  did not have before. A finding is identified by its requirement ID and its
+  file, never by its message text, and findings are counted, so a second
+  finding of the same requirement in the same file is an added one. The
+  command prints the added findings and writes nothing.
+- **R7.1a** — A writing command MUST NOT refuse a change because of findings
+  the record already had. Some of them, such as two feature artifacts each
+  holding a hand-written section titled Decisions (R5.19), clear only by
+  edits, one artifact at a time. The command prints
+  `N earlier findings remain; run check`. An artifact whose content is already
+  invalid is not rendered by another change and keeps its file, and the
+  command says so; `edit-content` of that artifact refuses content that is
+  still invalid and, once the content is valid, renders it. `render` skips such
+  an artifact the same way, and Full Progress shows a feature whose content is
+  invalid from what can be read of it.
 - **R7.2** — `set-task-status` updates the registry, renders the task's feature
   artifact (if any) and the full-progress artifact with a new stamp, removes
   the task's queued events, and commits — in one invocation.
