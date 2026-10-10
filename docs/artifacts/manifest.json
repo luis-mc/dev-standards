@@ -24,7 +24,7 @@
       "apps": [
         "luismc-artifacts"
       ],
-      "published_sha256": "53ad95d0796b4ee12aebe71ad1a5106219be07a5d121f3dce02c0a4ce9687cf3"
+      "published_sha256": "63cc313cfc453eda28eef5b37cedaffbf6e98f419f519534e7555154a817be55"
     },
     {
       "key": "models",
@@ -41,5 +41,5 @@
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-10-10T20:59+01:00"
+  "updated": "2026-10-10T21:00+01:00"
 }
