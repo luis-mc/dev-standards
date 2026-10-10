@@ -703,6 +703,16 @@ li { margin: .25em 0; }
    "changed": "2026-10-10T23:13+01:00"
   },
   {
+   "id": "AR28",
+   "owner": "artifacts",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Update the installed plugins",
+   "detail": "Approved by you for tonight: after 7.0.0 and 1.1.1 merge, refresh the dev-standards marketplace and update luismc-artifacts and luismc-project-setup in ~/.claude (backups first), so every session stops publishing after each change once restarted.",
+   "expected": "11 Oct ~01:30",
+   "changed": "2026-10-10T23:22+01:00"
+  },
+  {
    "id": "DS1",
    "owner": "project",
    "app": "luismc-project-setup",
@@ -1030,7 +1040,7 @@ li { margin: .25em 0; }
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
 <p class="last-update">Last update: <time datetime="2026-10-10T23:22+01:00">10 Oct 23:22</time> (Lisbon)</p>
 <p class="lede">All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class="task-id">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class="task-id">AR12</span>), and the secret-scan fixes (<span class="task-id">DS15</span>, <span class="task-id">AR19</span>, <span class="task-id">DS16</span>). Not released yet: the round toward STACKSPEC 7.0.0 (<span class="task-id">DS17</span> to <span class="task-id">DS21</span>) is built and joined, so those rows say Done. The tests on the joined branch are running; then one ready PR, its CI, and the merge, about 21:45. Each row turns Live only when the merge lands. <strong>Nothing needs you.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">44</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">6</div><div class="label">done</div></div><div class="status-count-tile status-running"><div class="count">6</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">44</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">6</div><div class="label">done</div></div><div class="status-count-tile status-running"><div class="count">6</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-done">Done</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
@@ -1041,6 +1051,7 @@ li { margin: .25em 0; }
 <tr data-task="AR27"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR27</span>Repair a record one artifact at a time</a></td><td><code>luismc-artifacts</code></td><td>Found migrating this repo to 1.1.0: every writing command refuses while the record has any finding, so two hand-written Decisions sections block each other&#x27;s fix and the record cannot be migrated (even task-add is refused). Fix: a change may leave findings that were already there but may not add new ones. Recorded with the 1.0.0 script meanwhile.</td><td>11 Oct ~00:45</td></tr>
 <tr data-task="DS26"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS26</span>After 7.0.0: repo setting, cleanup, global rules</td><td></td><td>Approved by you for tonight: turn on delete-branch-after-merge for dev-standards; run cleanup.py on dev-standards (merged DS*/AR* branches, gate refs, finished worktrees; open, unmerged or dirty work is kept); add the new rule lines to ~/.claude/rules/agents-and-integration.md, with a backup.</td><td>11 Oct ~01:00</td></tr>
 <tr data-task="AR24"><td><span class="status-chip status-running">Running</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR24</span>Integrate and release luismc-artifacts 1.1.0</a></td><td><code>luismc-artifacts</code></td><td>Merged: PR #33 squash 054eafb at 23:12, CI green. The two old feature artifacts on claude.ai were deleted at 23:20 with your confirmation (their content stays in the record). Left: migrate this repo&#x27;s record after AR27 (feature pages become local files), apply AR23, publish Full Progress after 01:00.</td><td>11 Oct ~01:15</td></tr>
+<tr data-task="AR28"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR28</span>Update the installed plugins</a></td><td><code>luismc-artifacts</code></td><td>Approved by you for tonight: after 7.0.0 and 1.1.1 merge, refresh the dev-standards marketplace and update luismc-artifacts and luismc-project-setup in ~/.claude (backups first), so every session stops publishing after each change once restarted.</td><td>11 Oct ~01:30</td></tr>
 <tr class="status-group" data-group="done"><td colspan="5"><strong>Live or done</strong></td></tr>
 <tr data-task="AR22"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR22</span>Decisions show every option and the owner&#x27;s choice</a></td><td><code>luismc-artifacts</code></td><td>Released in luismc-artifacts 1.1.0 (#33, 23:12): decisions.json drawn as option cards with the owner&#x27;s choice, Not chosen, Recommended, open = Needs you.</td><td>10 Oct</td></tr>
 <tr data-task="AR25"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR25</span>Rename Done to Built</a></td><td><code>luismc-artifacts</code></td><td>Released in luismc-artifacts 1.1.0 (#33, 23:12): Done is now Built (finished, not released).</td><td>10 Oct</td></tr>
@@ -1096,7 +1107,7 @@ li { margin: .25em 0; }
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th>Feature artifact</th><th>Tasks</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq">Feature: Project artifacts standard</a></td><td>AR2 to AR27</td><td>luismc-artifacts 1.0.0 is live (AR12, #18), and these artifacts are now kept with it (AR17).</td></tr>
+<tr><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq">Feature: Project artifacts standard</a></td><td>AR2 to AR28</td><td>luismc-artifacts 1.0.0 is live (AR12, #18), and these artifacts are now kept with it (AR17).</td></tr>
 <tr><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn">Feature: Model and effort profiles</a></td><td>MP1 to MP6, DS2 to DS5</td><td>The profiles are decided and the effort question is live (DS5, luismc-project-setup 11.3.0).</td></tr>
 </tbody></table></div>
 </section>

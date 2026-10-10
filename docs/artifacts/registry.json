@@ -253,6 +253,16 @@
       "changed": "2026-10-10T23:13+01:00"
     },
     {
+      "id": "AR28",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "Update the installed plugins",
+      "detail": "Approved by you for tonight: after 7.0.0 and 1.1.1 merge, refresh the dev-standards marketplace and update luismc-artifacts and luismc-project-setup in ~/.claude (backups first), so every session stops publishing after each change once restarted.",
+      "expected": "11 Oct ~01:30",
+      "changed": "2026-10-10T23:22+01:00"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
