@@ -273,14 +273,20 @@ Copy all of this in the first commit, so the first branch is already gated:
 | `scripts/delivery/gate.json` | `<track>/scripts/delivery/gate.json` — set `default_branch` to the repo's own, and `ui_paths` to the apps that exist | `§13.5` |
 | `.githooks/pre-push` | `shared/.githooks/pre-push`, beside `pre-commit` | `§13.5` |
 | `e2e/quarantine.json` (TypeScript track only) | `ts/e2e/quarantine.json` | `§11.2` |
-| the guard-test starter | the track's starter under `<track>/` (a Vitest `guard` project, `TestGuard*`, `guard_*` or `Category=Guard`) | `§13.5` item 4 |
+| `.gitattributes` | `shared/.gitattributes` — LF for shell scripts, hooks and the delivery scripts, so a CRLF checkout cannot break them | `§13.5` |
+| the guard-test starter, TypeScript | `ts/guards/*.guard.test.ts` and `ts/vitest.config.ts` (its `guard` project) | `§13.5` item 4 |
+| the guard-test starter, Go | `go/guards/` (`TestGuard*`) | `§13.5` item 4 |
+| the guard-test starter, Rust | `rust/crates/guards/` — a member crate (`guard_*` tests); add `crates/guards` to the workspace `members` in the root `Cargo.toml` | `§13.5` item 4 |
+| the guard-test starter, .NET | `dotnet/tests/Guards/` (`Category=Guard`); add `Guards.csproj` to the solution and match its `TargetFramework` to `global.json` | `§13.5` item 4 |
 | `.github/workflows/ci.yml` | `<track>/.github/workflows/ci.yml` — carries the `decide` job and the gated E2E job | `§11.2`, `§13.1` |
 | a `.gitignore` line `.delivery/` | no asset: append it to the generated `.gitignore` | `§13.5` |
 
 The pre-push hook is activated the same way as pre-commit, one setting for both
 (`git config core.hooksPath .githooks`); say so in the repo's setup notes. Mark
 `agent_setup.sh` and both hooks executable (`git update-index --chmod=+x`), or a
-checkout on another machine cannot run them.
+checkout on another machine cannot run them. Copy `.gitattributes` before the
+first commit, so those files are never stored with CRLF; if the repo already has
+one, append the four lines rather than replacing it.
 
 **`scripts/delivery/agent_setup.sh` is the first step for any cloud agent.** It
 installs Python 3.11+ if missing, the scanners pinned in `tools.json` (the version
@@ -415,8 +421,12 @@ check, performed by reading.
      suite exists and is selected by the track's convention; `.githooks/pre-push`
      exists and `core.hooksPath` points at `.githooks`; `agent_setup.sh` installs
      the scanner at the version in `tools.json`, and CI installs that same
-     version; `.delivery/` is git-ignored. A branch result that is not tied to
-     the current head and base is not a result
+     version; `.delivery/` is git-ignored; `.gitattributes` forces LF on `*.sh`,
+     `.githooks/*` and `scripts/delivery/*.py`, so the hooks run on every OS
+     (a CRLF shebang line fails on Linux and macOS). The guard starter is
+     registered: the Rust `crates/guards` is in the workspace `members`, the
+     .NET `tests/Guards` project is in the solution. A branch result that is
+     not tied to the current head and base is not a result
    - **Integration flow (`§13.6`)** — advisory, because it is process: read the
      repo's rules and agent instructions for task-ID branches, draft pull
      requests into an integration branch, the merge script, one ready pull
@@ -462,7 +472,8 @@ check, performed by reading.
      rules are decaying by default
    - lint, format, test and task-runner configs missing
    - `scripts/delivery/`, `gate.json`, `tools.json` or `.githooks/pre-push`
-     missing → `§13.5`; the `.delivery/` line missing from `.gitignore`
+     missing → `§13.5`; the `.delivery/` line missing from `.gitignore`;
+     `.gitattributes` missing or not forcing LF on the hooks and scripts
    - `ci.yml` without the `decide` job or its job conditions → `§13.1`; E2E
      advisory or `e2e/quarantine.json` missing → `§11.2`
 
