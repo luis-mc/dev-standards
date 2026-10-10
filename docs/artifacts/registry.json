@@ -136,11 +136,11 @@
       "id": "AR16",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "dev-standards record in docs/artifacts",
       "detail": "Manifest, registry, HTML and the interim generator committed to main as docs-only commits.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T22:55+01:00"
     },
     {
       "id": "AR17",
