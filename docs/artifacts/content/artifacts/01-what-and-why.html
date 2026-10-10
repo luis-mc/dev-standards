@@ -1,0 +1,12 @@
+<!-- title: What and why -->
+<p class="lede">A project builds many things at once. Its owner needs to see, at any moment, what is live, what is running and what needs them, without reading code or chat.</p>
+<p>What the owner asked for (9 and 10 October):</p>
+<ul>
+ <li><strong>Same look and feel</strong> for every artifact within a project, with sections always numbered and section 0 always <strong>Status and checklist</strong>.</li>
+ <li><strong>Feature artifacts</strong> (&ldquo;Feature: &lt;name&gt;&rdquo;) describe something to build in one app, several apps or the whole project. They evolve, and log every change in a <strong>History</strong> table as their last section.</li>
+ <li>One <strong>full-progress artifact</strong> per project (&ldquo;Full Progress: &lt;project&gt;&rdquo;): the owner&rsquo;s view of <strong>all ongoing work</strong> in the project, across every app and service. It holds every feature task and every other project task; it is not only a summary of the feature artifacts.</li>
+ <li>Creating a feature artifact when the project has no full-progress artifact <strong>creates the full-progress artifact too</strong>.</li>
+ <li>Status changes update the artifacts <strong>automatically</strong>: a feature task&rsquo;s change updates its feature artifact, and any project task&rsquo;s change updates the full-progress artifact.</li>
+ <li>Built in dev-standards as the plugin <code>luismc-artifacts</code>, with <strong>explicit names in the code</strong>: feature artifact and full-progress artifact, never a generic &ldquo;page&rdquo;.</li>
+</ul>
+<p><strong>Why it matters.</strong> In an earlier project the pages drifted: a feature page still said &ldquo;Needs you&rdquo; for a step finished hours before. The status was typed by hand in two places. This design writes each status once and generates every view of it.</p>

@@ -1,0 +1,9 @@
+<!-- title: How it stays current -->
+<p class="lede">Until <code>luismc-artifacts</code> is built, this artifact is kept by hand to the same rules: a status change is written to the feature artifact that holds the task and to this artifact, in the same turn.</p>
+<ul>
+ <li><strong>Project tasks</strong> (prefix <span class="task-id">DS</span>) are work in dev-standards that belongs to no feature artifact: releases, fixes, CI, spec changes. They include changes to luismc-project-setup, such as DS6 and DS7.</li>
+ <li><strong>Feature tasks</strong> link to their feature artifact. Task <span class="task-id">AR</span> belongs to Feature: Project artifacts standard; task <span class="task-id">MP</span> to Feature: Model and effort profiles.</li>
+ <li>The task registry below the checklist is the record both artifacts are generated from. Once the plugin lands (AR12), <code>set-task-status</code> writes it and the hooks keep both artifacts published.</li>
+ <li>Recent releases are listed from the git history of <code>main</code>; a change merged to <code>main</code> is live through the marketplace&rsquo;s auto-update.</li>
+ <li>The record of these artifacts is in <code>docs/artifacts/</code> in this repo. A deleted artifact is recreated from it; see its README.</li>
+</ul>

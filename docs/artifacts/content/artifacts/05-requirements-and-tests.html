@@ -1,0 +1,20 @@
+<!-- title: Requirements and tests -->
+<div class="table-scroll"><table><thead><tr><th>ID</th><th>Requirement</th><th>Test that proves it</th></tr></thead><tbody>
+<tr><td>R1</td><td>Titles start with &ldquo;Feature: &rdquo; or &ldquo;Full Progress: &rdquo; (AS2, AS3).</td><td>A feature artifact titled &ldquo;Manga&rdquo; fails; &ldquo;Feature: Manga&rdquo; passes.</td></tr>
+<tr><td>R2</td><td>Exactly one full-progress artifact, created with the first feature artifact (AS1).</td><td>Project with none: feature-artifact-new creates both. Project with one: no second is created. Manifest with two: fails.</td></tr>
+<tr><td>R3</td><td>Section 0 first and named &ldquo;Status and checklist&rdquo; (AS8).</td><td>Section 0 named &ldquo;Status&rdquo; fails.</td></tr>
+<tr><td>R4</td><td>Sections numbered from 0, in order, no gaps (AS8).</td><td>A gap, a repeat and an unnumbered section each fail with their line.</td></tr>
+<tr><td>R5</td><td>Stamp format, ISO attribute and timezone label (AS9, AS18).</td><td>&ldquo;Last update: 9/10 7am&rdquo; fails; a stamp without <code>datetime</code> or label fails.</td></tr>
+<tr><td>R6</td><td>Checklist columns: Status | Item | Detail | Expected on a feature artifact; Status | Item | App / service | Detail | Expected on the full-progress artifact (AS11).</td><td>A fifth column, or reordered columns, fails. An Expected value on an open row that is not a date (<code>today</code>, <code>soon</code>) fails.</td></tr>
+<tr><td>R7</td><td>Only the eight statuses (AS12).</td><td>&ldquo;Merged&rdquo; as a status fails and names the nearest allowed word.</td></tr>
+<tr><td>R8</td><td>Every row sits in its status&rsquo;s group (AS11).</td><td>A Live row under &ldquo;Running now and next&rdquo; fails.</td></tr>
+<tr><td>R9</td><td>Checklists and tiles equal the registry (AS5).</td><td>A hand-edited row, or a tile saying 3 Live over 2, fails.</td></tr>
+<tr><td>R10</td><td>Every feature task is on the full-progress artifact, linked to its feature artifact (AS3).</td><td>A feature task missing from the full-progress artifact fails.</td></tr>
+<tr><td>R11</td><td>Task IDs unique and their prefixes registered (AS4).</td><td>Two tasks named AR5, or an unregistered prefix, fail.</td></tr>
+<tr><td>R12</td><td>History is the last section of a feature artifact, Date | Change (AS2).</td><td>No History, or History not last, fails.</td></tr>
+<tr><td>R13</td><td>Structure stylesheet unchanged; theme tokens free (AS7).</td><td>A changed structure rule fails; a changed theme colour passes.</td></tr>
+<tr><td>R14</td><td>One command updates every artifact that shows the task (AS14).</td><td>set-task-status AR5 running: both artifacts show Running with new stamps.</td></tr>
+<tr><td>R15</td><td>Hooks queue and block (AS16, AS17).</td><td><code>gh pr merge</code> on branch AR5-x queues AR5; the end-of-turn hook blocks with a queue and passes without one; no manifest, no effect.</td></tr>
+<tr><td>R16</td><td>Phone width and both themes (AS13).</td><td>A fixture artifact at 360 px wide has no sideways scroll in light and dark (manual check listed in the skill).</td></tr>
+<tr><td>R17</td><td>Recreate without duplicates (AS19).</td><td>Manifest link deleted: one new artifact, manifest updated. Link alive: nothing created. Same title exists: no new artifact, manifest repaired.</td></tr>
+</tbody></table></div>

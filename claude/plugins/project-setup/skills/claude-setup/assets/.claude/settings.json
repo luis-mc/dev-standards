@@ -6,6 +6,9 @@
     "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "500000",
     "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
   },
+  "enabledPlugins": {
+    "luismc-artifacts@{{MARKETPLACE}}": true
+  },
   "statusLine": {
     "type": "command",
     "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/statusline.sh\""

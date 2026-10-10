@@ -1,0 +1,14 @@
+[
+  {
+    "date": "10 Oct 13:40",
+    "change": "MP3 to MP6 live: released in luismc-project-setup 12.0.0 (#10, 12:56); the alias-drift hook also installed in the owner’s ~/.claude."
+  },
+  {
+    "date": "10 Oct 12:23",
+    "change": "Expected times are now a date and a Lisbon time, not “today”; MP3 to MP6 ship with the DS6 release at about 13:45. No other project is named."
+  },
+  {
+    "date": "10 Oct 11:07",
+    "change": "Created. The owner made model and effort profiles a feature of their own. DS2 and DS5 moved here from the project tasks; MP1 to MP6 added; three figures (who runs on what, where settings come from, alias drift); the decisions of 10 October."
+  }
+]

@@ -227,6 +227,7 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
   line-height: 1.4;
 }
 table.status-checklist td:first-child { white-space: nowrap; }
+table.status-checklist td code { white-space: nowrap; overflow-wrap: normal; }
 tr.status-group td {
   background: var(--paper);
   font-family: var(--font-mono);
@@ -237,6 +238,20 @@ tr.status-group td {
   padding-top: 1em;
 }
 table.history-table td:first-child { font-family: var(--font-mono); white-space: nowrap; }
+
+/* Earlier fold: Live or done rows older than the fold age, closed by default */
+details.earlier { margin: .9em 0; }
+details.earlier > summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink-muted);
+  padding: .5em 0;
+}
+details.earlier > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+details.earlier[open] > summary { margin-bottom: .2em; }
 
 .task-id {
   font-family: var(--font-mono);
