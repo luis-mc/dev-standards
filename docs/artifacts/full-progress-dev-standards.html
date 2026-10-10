@@ -1,0 +1,812 @@
+<title>Full Progress: dev-standards</title>
+<meta name="artifact-kind" content="full-progress-artifact">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>/*
+  Default design for project artifacts.
+
+  Layout concept: Spec sheet: a contents rail on the left, numbered sections, the status checklist first.
+
+  Fonts (load with a link element in the head):
+  https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600;700&display=swap
+
+  This file holds tokens only. Structure lives in templates/project-artifact.css.
+*/
+:root {
+  --font-display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;
+  --font-display-stretch: 87.5%;
+  --font-body: 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, Menlo, monospace;
+
+  --paper: #F5F6F8;
+  --surface: #FFFFFF;
+  --surface-2: #ECEEF2;
+  --ink: #141A23;
+  --ink-muted: #556070;
+  --rule: #D5DAE1;
+  --rule-strong: #9AA4B2;
+  --signal: #2D46C8;
+  --on-signal: #FFFFFF;
+  --live: #17784A;
+  --on-live: #FFFFFF;
+  --done-bg: #DCEFE4;
+  --running-bg: #FBEBC8;
+  --running-mark: #B26A00;
+  --waiting-bg: #DDE6FA;
+  --failed: #C0352B;
+  --on-failed: #FFFFFF;
+  --focus: #2D46C8;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F141B;
+    --surface: #161D27;
+    --surface-2: #1E2733;
+    --ink: #E7EBF0;
+    --ink-muted: #9AA5B4;
+    --rule: #2A3442;
+    --rule-strong: #4A5668;
+    --signal: #8EA2FF;
+    --on-signal: #0F141B;
+    --live: #4CC38A;
+    --on-live: #0F141B;
+    --done-bg: #173326;
+    --running-bg: #3A2C0E;
+    --running-mark: #F0B54A;
+    --waiting-bg: #1B2A4A;
+    --failed: #F07167;
+    --on-failed: #0F141B;
+    --focus: #8EA2FF;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #0F141B;
+  --surface: #161D27;
+  --surface-2: #1E2733;
+  --ink: #E7EBF0;
+  --ink-muted: #9AA5B4;
+  --rule: #2A3442;
+  --rule-strong: #4A5668;
+  --signal: #8EA2FF;
+  --on-signal: #0F141B;
+  --live: #4CC38A;
+  --on-live: #0F141B;
+  --done-bg: #173326;
+  --running-bg: #3A2C0E;
+  --running-mark: #F0B54A;
+  --waiting-bg: #1B2A4A;
+  --failed: #F07167;
+  --on-failed: #0F141B;
+  --focus: #8EA2FF;
+  color-scheme: dark;
+}
+
+/*
+  Structure stylesheet for project artifacts.
+  Fixed for every project. It uses design tokens only and never holds a colour.
+  Tokens come from the project's design file, or design/default-design.css.
+*/
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 4rem; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  gap: 0 2.5rem;
+  max-width: 76rem;
+  margin: 0 auto;
+  padding-inline: 1.25rem;
+}
+
+/* Contents rail */
+nav.contents {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  align-self: start;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding-block: 1.5rem;
+}
+.contents-title {
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--ink-muted);
+  margin-bottom: .6rem;
+}
+nav.contents a {
+  display: block;
+  text-decoration: none;
+  color: var(--ink);
+  padding: .3em .6em;
+  border-left: 2px solid transparent;
+}
+nav.contents a b {
+  display: inline-block;
+  min-width: 2em;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+nav.contents a.current {
+  border-left-color: var(--signal);
+  background: var(--surface-2);
+}
+.theme-toggle {
+  margin-top: 1rem;
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  padding: .35em .7em;
+  cursor: pointer;
+}
+
+main { min-width: 0; padding-bottom: 5rem; }
+
+/* Header */
+header.artifact-header {
+  padding-block: 2rem 1.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+.artifact-kind {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  font-size: .78rem;
+  letter-spacing: .08em;
+  color: var(--ink-muted);
+}
+h1 {
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.05;
+  text-wrap: balance;
+  margin: .2em 0 .4em;
+}
+header.artifact-header p { max-width: 46em; font-size: 1.08rem; }
+.artifact-meta {
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  color: var(--ink-muted);
+}
+
+/* Sections */
+section { padding-top: 2.5rem; }
+h2 {
+  display: flex;
+  gap: .6em;
+  align-items: baseline;
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 700;
+  font-size: 1.65rem;
+  text-wrap: balance;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: .3em;
+  margin: 0 0 .8em;
+}
+.section-number {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: .95rem;
+  color: var(--signal);
+}
+h3 {
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-top: 1.8em;
+}
+
+p.last-update {
+  font-family: var(--font-mono);
+  font-size: .85rem;
+  color: var(--ink-muted);
+}
+p.last-update time { color: var(--ink); font-weight: 600; }
+p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
+
+/* Status count tiles */
+.status-count-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+  gap: .75rem;
+  margin: 1.2em 0;
+}
+.status-count-tile {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--rule-strong);
+  padding: .7em .9em;
+}
+.status-count-tile .count {
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 800;
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.status-count-tile .label { font-size: .82rem; color: var(--ink-muted); }
+.status-count-tile.status-live { border-top-color: var(--live); }
+.status-count-tile.status-done { border-top-color: var(--live); }
+.status-count-tile.status-running { border-top-color: var(--running-mark); }
+.status-count-tile.status-needs-you { border-top-color: var(--signal); }
+.status-count-tile.status-waiting { border-top-color: var(--rule-strong); }
+.status-count-tile.status-to-do { border-top-color: var(--rule-strong); }
+.status-count-tile.status-on-hold { border-top-color: var(--rule-strong); border-top-style: dashed; }
+.status-count-tile.status-failed { border-top-color: var(--failed); }
+
+/* Status chips */
+.status-chip {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding: .12em .5em;
+  border: 1px solid var(--rule-strong);
+  white-space: nowrap;
+  color: var(--ink);
+  background: var(--surface);
+}
+.status-chip.status-live { background: var(--live); color: var(--on-live); border-color: var(--live); }
+.status-chip.status-done { background: var(--done-bg); }
+.status-chip.status-running { background: var(--running-bg); border-left: 3px solid var(--running-mark); }
+.status-chip.status-needs-you { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
+.status-chip.status-waiting { background: var(--waiting-bg); }
+.status-chip.status-to-do { background: var(--surface-2); }
+.status-chip.status-on-hold { background: var(--surface-2); border-style: dashed; }
+.status-chip.status-failed { background: var(--failed); color: var(--on-failed); border-color: var(--failed); }
+
+/* Tables */
+.table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  margin: .9em 0;
+}
+.table-scroll table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 34rem;
+  font-size: .9rem;
+  font-variant-numeric: tabular-nums;
+}
+.table-scroll th {
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink-muted);
+  background: var(--surface-2);
+  text-align: left;
+  padding: .55em .7em;
+  border-bottom: 1px solid var(--rule);
+}
+.table-scroll td {
+  padding: .55em .7em;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  line-height: 1.4;
+}
+table.status-checklist td:first-child { white-space: nowrap; }
+tr.status-group td {
+  background: var(--paper);
+  font-family: var(--font-mono);
+  font-size: .74rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink-muted);
+  padding-top: 1em;
+}
+table.history-table td:first-child { font-family: var(--font-mono); white-space: nowrap; }
+
+.task-id {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: .82em;
+  margin-right: .4em;
+  color: var(--ink-muted);
+}
+a .task-id { color: inherit; }
+
+/* Links and focus */
+a { color: var(--signal); text-underline-offset: .15em; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Code */
+code, kbd {
+  font-family: var(--font-mono);
+  font-size: .86em;
+  background: var(--surface-2);
+  padding: .05em .3em;
+  border: 1px solid var(--rule);
+  overflow-wrap: anywhere;
+}
+pre {
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  line-height: 1.4;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: .9em 1em;
+  overflow-x: auto;
+  white-space: pre;
+}
+pre code { background: none; border: 0; padding: 0; overflow-wrap: normal; }
+
+.note { font-size: .85rem; color: var(--ink-muted); }
+ul, ol { padding-left: 1.3em; }
+li { margin: .25em 0; }
+
+/* Flow of steps */
+.flow-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: stretch;
+  margin: 1em 0;
+}
+.flow-step {
+  flex: 1 1 9rem;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: .6em .75em;
+  font-size: .88rem;
+}
+.flow-step b {
+  display: block;
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 700;
+  font-size: 1rem;
+}
+.flow-step small {
+  display: block;
+  color: var(--ink-muted);
+  line-height: 1.3;
+  margin-top: .2em;
+}
+.flow-step.key-step { border-color: var(--signal); border-width: 2px; }
+.flow-arrow {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+}
+
+/* Phone width */
+@media (max-width: 56rem) {
+  .layout { display: block; padding-inline: 1rem; }
+  nav.contents {
+    position: sticky;
+    z-index: 20;
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+    margin-inline: -1rem;
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+  }
+  .contents-title, .theme-toggle { display: none; }
+  nav.contents .contents-links {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    gap: .4rem;
+    padding: .5rem 1rem;
+  }
+  nav.contents a {
+    display: inline-block;
+    border: 1px solid var(--rule);
+    border-left-width: 1px;
+    flex: 0 0 auto;
+  }
+  nav.contents a.current { border-color: var(--signal); }
+}
+</style>
+<script type="application/json" id="task-registry">{
+ "registry": "draft for ARTIFACTSPEC 1.0.0",
+ "project": "dev-standards",
+ "timezone": "Europe/Lisbon",
+ "updated": "2026-10-10T10:17+01:00",
+ "feature_artifacts": [
+  {
+   "title": "Feature: Project artifacts standard",
+   "url": "https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq",
+   "prefix": "AR"
+  },
+  {
+   "title": "Feature: Model and effort profiles",
+   "url": "https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn",
+   "prefix": "MP"
+  }
+ ],
+ "project_prefixes": [
+  "DS"
+ ],
+ "tasks": [
+  {
+   "id": "DS4",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "Live",
+   "item": "tech-stack-setup 11.2.1",
+   "detail": "Required checks named by job name, not job id. Plugin: luismc-project-setup.",
+   "expected": "02 Oct"
+  },
+  {
+   "id": "DS3",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "Live",
+   "item": "tech-stack-setup 11.2.0",
+   "detail": "Fewer CI minutes without dropping the STACKSPEC §13.1 gates. Plugin: luismc-project-setup.",
+   "expected": "02 Oct"
+  },
+  {
+   "id": "DS1",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "Live",
+   "item": "AUTHSPEC 3.1.0",
+   "detail": "Synced passkeys allowed on the admin plane. Plugin: luismc-project-setup.",
+   "expected": "27 Sep"
+  },
+  {
+   "id": "DS6",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "Running",
+   "item": "Agent and integration rules",
+   "detail": "17 changes from the 9–10 Oct evidence in comics-organizer: one full CI run, gate-result.json, merge script, pre-push guards, push-CI skip, gated e2e, at most 5 agents, contract first. Round started 10 Oct: spec and contracts first, then at most five Sonnet agents; tested on a local clone of comics-organizer; one ready PR, merged on green.",
+   "expected": "today"
+  },
+  {
+   "id": "DS7",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "To do",
+   "item": "docs/ folder rule",
+   "detail": "A project-setup rule: every doc a session creates goes under docs/.",
+   "expected": "with DS6"
+  },
+  {
+   "id": "AR16",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "Done",
+   "item": "dev-standards record in docs/artifacts",
+   "detail": "Manifest, registry, HTML and the interim generator committed to main as docs-only commits.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "AR4",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "Done",
+   "item": "Answer the open decisions",
+   "detail": "Answered: one task registry; branch names start with the task ID; catch-up at session start; each project's own design, the plugin's default when it has none; an App / service column on the full-progress artifact.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "AR14",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "Done",
+   "item": "Default design",
+   "detail": "design/default-design.css, DESIGN.md and templates/project-artifact.css on branch AR14-default-design; applied to both dev-standards artifacts.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "AR3",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "Done",
+   "item": "Moved to dev-standards and rewritten",
+   "detail": "This artifact now belongs to dev-standards and describes the agreed design; Full Progress: dev-standards created.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "AR2",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "Done",
+   "item": "Proposal reviewed",
+   "detail": "Twelve findings; each one and the change it led to is in section 7.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "AR1",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "Done",
+   "item": "Rules adopted in Comics Organizer",
+   "detail": "Seven Comics Organizer pages moved to template v1; the rule saved for that project.",
+   "expected": "09 Oct"
+  },
+  {
+   "id": "AR5",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "ARTIFACTSPEC 1.0.0",
+   "detail": "The standard as a numbered, versioned spec; section 3 is its draft. Must pass spec_check.py.",
+   "expected": "first; ~1 h after your answers (spec writing)"
+  },
+  {
+   "id": "AR6",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Templates",
+   "detail": "feature-artifact.html and full-progress-artifact.html built on the AR14 stylesheet, plus finding a project's own design.",
+   "expected": "~1 h after AR5"
+  },
+  {
+   "id": "AR7",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "project_artifacts.py",
+   "detail": "Task registry, rendering, add-task, set-task-status, stamp, check. Stdlib only; Windows timezone fallback.",
+   "expected": "~3 h after AR5, alongside AR6"
+  },
+  {
+   "id": "AR8",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Hooks",
+   "detail": "After-command, end-of-turn and session-start hooks in hooks/hooks.json.",
+   "expected": "~2 h after AR7"
+  },
+  {
+   "id": "AR9",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Tests and CI",
+   "detail": "A fixture per check that proves it fires, hook tests, spec-lint.yml path filters.",
+   "expected": "~2 h, alongside AR8"
+  },
+  {
+   "id": "AR10",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Skills and rule file",
+   "detail": "The five skills and .claude/rules/project-artifacts.md.",
+   "expected": "~2 h after AR6 and AR7"
+  },
+  {
+   "id": "AR11",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Plugin wiring",
+   "detail": "plugin.json 1.0.0, the marketplace entry, the README section and install line.",
+   "expected": "~30 min after AR8 and AR10"
+  },
+  {
+   "id": "AR12",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Integrate and release",
+   "detail": "Full suite once on artifacts/integration, then one ready PR to main: one CI run, one release.",
+   "expected": "after AR5 to AR11"
+  },
+  {
+   "id": "AR13",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Comics Organizer onto the plugin",
+   "detail": "Turn its checklists into a task registry; run one real status change end to end.",
+   "expected": "after AR12 is merged"
+  },
+  {
+   "id": "AR15",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Repo record and recreate",
+   "detail": "Each project keeps its artifacts' record in docs/artifacts/: manifest, task registry, each artifact's content and last published HTML. A deleted artifact is recreated from it without duplicates. Built into project_artifacts.py.",
+   "expected": "with AR7"
+  },
+  {
+   "id": "DS5",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "Live",
+   "item": "claude-setup: medium or high effort per model",
+   "detail": "Asked on every run, high preselected for code agents; written to modelSettings and the delegation rule; top-level effortLevel high for cloud agents. luismc-project-setup 11.3.0, PR #2.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "MP2",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "Done",
+   "item": "Profile decisions",
+   "detail": "Explore and Plan stay on Opus; skills profiled by kind of work; a session-start warning for alias drift. Section 7.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "MP1",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "Done",
+   "item": "Inventory of models per agent type",
+   "detail": "Checked against the Claude Code docs; corrects the first answer (Explore and Plan run on the main session’s model). Figure 1.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "DS2",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "Live",
+   "item": "Opus plans, Sonnet codes",
+   "detail": "claude-setup writes model opus and CLAUDE_CODE_SUBAGENT_MODEL sonnet, plus the delegation rule.",
+   "expected": "01 Oct"
+  },
+  {
+   "id": "MP3",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "To do",
+   "item": "Role rules",
+   "detail": "One line per role in the agents-and-integration rule file: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts a script cannot resolve, Haiku for log triage.",
+   "expected": "with DS6"
+  },
+  {
+   "id": "MP4",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "To do",
+   "item": "Per-skill model and effort",
+   "detail": "model and effort in every plugin SKILL.md, by kind of work (section 5), with a test that compares them to the profile table.",
+   "expected": "with DS6"
+  },
+  {
+   "id": "MP5",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "To do",
+   "item": "Alias-drift warning",
+   "detail": "A session-start hook that warns when the current Opus or Sonnet ID has no saved effort entry (figure 3).",
+   "expected": "with DS6"
+  },
+  {
+   "id": "MP6",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "To do",
+   "item": "Tests and release",
+   "detail": "Profile test, hook test, claude-setup checks; released in the DS6 ready PR.",
+   "expected": "with DS6"
+  }
+ ]
+}</script>
+<div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
+<header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every plugin &middot; default design</div></header>
+<section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2><p class="last-update">Last update: <time datetime="2026-10-10T10:17+01:00">10 Oct 10:17</time> (Lisbon)</p>
+<p class="lede">All ongoing work in dev-standards, across every plugin. <strong>Nothing needs you right now.</strong> Running: <span class="task-id">DS6</span>, the agent and integration round. Live today: <span class="task-id">DS5</span>, the effort question (luismc-project-setup 11.3.0).</p>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">5</div><div class="label">live</div></div><div class="status-count-tile status-done"><div class="count">8</div><div class="label">done</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">15</div><div class="label">to do</div></div></div>
+<p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-done">Done</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected</th></tr></thead><tbody>
+<tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next, earliest first</strong></td></tr>
+<tr data-task="DS6"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS6</span>Agent and integration rules</td><td><code>luismc-project-setup</code></td><td>17 changes from the 9–10 Oct evidence in comics-organizer: one full CI run, gate-result.json, merge script, pre-push guards, push-CI skip, gated e2e, at most 5 agents, contract first. Round started 10 Oct: spec and contracts first, then at most five Sonnet agents; tested on a local clone of comics-organizer; one ready PR, merged on green.</td><td>today</td></tr>
+<tr data-task="DS7"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS7</span>docs/ folder rule</td><td><code>luismc-project-setup</code></td><td>A project-setup rule: every doc a session creates goes under docs/.</td><td>with DS6</td></tr>
+<tr data-task="AR5"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR5</span>ARTIFACTSPEC 1.0.0</a></td><td><code>luismc-artifacts</code></td><td>The standard as a numbered, versioned spec; section 3 is its draft. Must pass spec_check.py.</td><td>first; ~1 h after your answers (spec writing)</td></tr>
+<tr data-task="AR6"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR6</span>Templates</a></td><td><code>luismc-artifacts</code></td><td>feature-artifact.html and full-progress-artifact.html built on the AR14 stylesheet, plus finding a project&#x27;s own design.</td><td>~1 h after AR5</td></tr>
+<tr data-task="AR7"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR7</span>project_artifacts.py</a></td><td><code>luismc-artifacts</code></td><td>Task registry, rendering, add-task, set-task-status, stamp, check. Stdlib only; Windows timezone fallback.</td><td>~3 h after AR5, alongside AR6</td></tr>
+<tr data-task="AR8"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR8</span>Hooks</a></td><td><code>luismc-artifacts</code></td><td>After-command, end-of-turn and session-start hooks in hooks/hooks.json.</td><td>~2 h after AR7</td></tr>
+<tr data-task="AR9"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR9</span>Tests and CI</a></td><td><code>luismc-artifacts</code></td><td>A fixture per check that proves it fires, hook tests, spec-lint.yml path filters.</td><td>~2 h, alongside AR8</td></tr>
+<tr data-task="AR10"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR10</span>Skills and rule file</a></td><td><code>luismc-artifacts</code></td><td>The five skills and .claude/rules/project-artifacts.md.</td><td>~2 h after AR6 and AR7</td></tr>
+<tr data-task="AR11"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR11</span>Plugin wiring</a></td><td><code>luismc-artifacts</code></td><td>plugin.json 1.0.0, the marketplace entry, the README section and install line.</td><td>~30 min after AR8 and AR10</td></tr>
+<tr data-task="AR12"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR12</span>Integrate and release</a></td><td><code>luismc-artifacts</code></td><td>Full suite once on artifacts/integration, then one ready PR to main: one CI run, one release.</td><td>after AR5 to AR11</td></tr>
+<tr data-task="AR13"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR13</span>Comics Organizer onto the plugin</a></td><td><code>luismc-artifacts</code></td><td>Turn its checklists into a task registry; run one real status change end to end.</td><td>after AR12 is merged</td></tr>
+<tr data-task="AR15"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR15</span>Repo record and recreate</a></td><td><code>luismc-artifacts</code></td><td>Each project keeps its artifacts&#x27; record in docs/artifacts/: manifest, task registry, each artifact&#x27;s content and last published HTML. A deleted artifact is recreated from it without duplicates. Built into project_artifacts.py.</td><td>with AR7</td></tr>
+<tr data-task="MP3"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP3</span>Role rules</a></td><td><code>luismc-project-setup</code></td><td>One line per role in the agents-and-integration rule file: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts a script cannot resolve, Haiku for log triage.</td><td>with DS6</td></tr>
+<tr data-task="MP4"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP4</span>Per-skill model and effort</a></td><td><code>luismc-project-setup</code></td><td>model and effort in every plugin SKILL.md, by kind of work (section 5), with a test that compares them to the profile table.</td><td>with DS6</td></tr>
+<tr data-task="MP5"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP5</span>Alias-drift warning</a></td><td><code>luismc-project-setup</code></td><td>A session-start hook that warns when the current Opus or Sonnet ID has no saved effort entry (figure 3).</td><td>with DS6</td></tr>
+<tr data-task="MP6"><td><span class="status-chip status-to-do">To do</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP6</span>Tests and release</a></td><td><code>luismc-project-setup</code></td><td>Profile test, hook test, claude-setup checks; released in the DS6 ready PR.</td><td>with DS6</td></tr>
+<tr class="status-group" data-group="done"><td colspan="5"><strong>Live or done, newest first</strong></td></tr>
+<tr data-task="AR16"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR16</span>dev-standards record in docs/artifacts</a></td><td><code>luismc-artifacts</code></td><td>Manifest, registry, HTML and the interim generator committed to main as docs-only commits.</td><td>10 Oct</td></tr>
+<tr data-task="AR4"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR4</span>Answer the open decisions</a></td><td><code>luismc-artifacts</code></td><td>Answered: one task registry; branch names start with the task ID; catch-up at session start; each project&#x27;s own design, the plugin&#x27;s default when it has none; an App / service column on the full-progress artifact.</td><td>10 Oct</td></tr>
+<tr data-task="AR14"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR14</span>Default design</a></td><td><code>luismc-artifacts</code></td><td>design/default-design.css, DESIGN.md and templates/project-artifact.css on branch AR14-default-design; applied to both dev-standards artifacts.</td><td>10 Oct</td></tr>
+<tr data-task="AR3"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR3</span>Moved to dev-standards and rewritten</a></td><td><code>luismc-artifacts</code></td><td>This artifact now belongs to dev-standards and describes the agreed design; Full Progress: dev-standards created.</td><td>10 Oct</td></tr>
+<tr data-task="AR2"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR2</span>Proposal reviewed</a></td><td><code>luismc-artifacts</code></td><td>Twelve findings; each one and the change it led to is in section 7.</td><td>10 Oct</td></tr>
+<tr data-task="DS5"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">DS5</span>claude-setup: medium or high effort per model</a></td><td><code>luismc-project-setup</code></td><td>Asked on every run, high preselected for code agents; written to modelSettings and the delegation rule; top-level effortLevel high for cloud agents. luismc-project-setup 11.3.0, PR #2.</td><td>10 Oct</td></tr>
+<tr data-task="MP2"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP2</span>Profile decisions</a></td><td><code>luismc-project-setup</code></td><td>Explore and Plan stay on Opus; skills profiled by kind of work; a session-start warning for alias drift. Section 7.</td><td>10 Oct</td></tr>
+<tr data-task="MP1"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">MP1</span>Inventory of models per agent type</a></td><td><code>luismc-project-setup</code></td><td>Checked against the Claude Code docs; corrects the first answer (Explore and Plan run on the main session’s model). Figure 1.</td><td>10 Oct</td></tr>
+<tr data-task="AR1"><td><span class="status-chip status-done">Done</span></td><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq"><span class="task-id">AR1</span>Rules adopted in Comics Organizer</a></td><td><code>luismc-artifacts</code></td><td>Seven Comics Organizer pages moved to template v1; the rule saved for that project.</td><td>09 Oct</td></tr>
+<tr data-task="DS4"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS4</span>tech-stack-setup 11.2.1</td><td><code>luismc-project-setup</code></td><td>Required checks named by job name, not job id. Plugin: luismc-project-setup.</td><td>02 Oct</td></tr>
+<tr data-task="DS3"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS3</span>tech-stack-setup 11.2.0</td><td><code>luismc-project-setup</code></td><td>Fewer CI minutes without dropping the STACKSPEC §13.1 gates. Plugin: luismc-project-setup.</td><td>02 Oct</td></tr>
+<tr data-task="DS2"><td><span class="status-chip status-live">Live</span></td><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn"><span class="task-id">DS2</span>Opus plans, Sonnet codes</a></td><td><code>luismc-project-setup</code></td><td>claude-setup writes model opus and CLAUDE_CODE_SUBAGENT_MODEL sonnet, plus the delegation rule.</td><td>01 Oct</td></tr>
+<tr data-task="DS1"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS1</span>AUTHSPEC 3.1.0</td><td><code>luismc-project-setup</code></td><td>Synced passkeys allowed on the admin plane. Plugin: luismc-project-setup.</td><td>27 Sep</td></tr>
+</tbody></table></div>
+</section>
+<section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
+<div class="table-scroll"><table><thead><tr><th>Feature artifact</th><th>Tasks</th><th>Where it stands</th></tr></thead><tbody>
+<tr><td><a href="https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq">Feature: Project artifacts standard</a></td><td>AR1 to AR16</td><td>Design agreed; default design built; repo record saved; next is AR5, the spec.</td></tr>
+<tr><td><a href="https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn">Feature: Model and effort profiles</a></td><td>MP1 to MP6, DS2, DS5</td><td>Effort question live; role rules, skill profiles and the alias warning ship with DS6.</td></tr>
+</tbody></table></div></section>
+<section id="s2"><h2><span class="section-number">&sect; 2</span>How it stays current</h2>
+<p class="lede">Until <code>luismc-artifacts</code> is built, this artifact is kept by hand to the same rules: a status change is written to the feature artifact that holds the task and to this artifact, in the same turn.</p>
+<ul>
+ <li><strong>Project tasks</strong> (prefix <span class="task-id">DS</span>) are work in dev-standards that belongs to no feature artifact: releases, fixes, CI, spec changes. They include changes to luismc-project-setup, such as DS6 and DS7.</li>
+ <li><strong>Feature tasks</strong> link to their feature artifact. Task <span class="task-id">AR</span> belongs to Feature: Project artifacts standard; task <span class="task-id">MP</span> to Feature: Model and effort profiles.</li>
+ <li>The task registry below the checklist is the record both artifacts are generated from. Once the plugin lands (AR12), <code>set-task-status</code> writes it and the hooks keep both artifacts published.</li>
+ <li>Recent releases are listed from the git history of <code>main</code>; a change merged to <code>main</code> is live through the marketplace&rsquo;s auto-update.</li>
+ <li>The record of these artifacts is in <code>docs/artifacts/</code> in this repo. A deleted artifact is recreated from it; see its README.</li>
+</ul></section>
+</main></div>
+<script>
+(function () {
+  try {
+    var root = document.documentElement;
+    var toggle = document.getElementById('theme-toggle');
+    if (toggle) {
+      toggle.addEventListener('click', function () {
+        var dark = root.getAttribute('data-theme') === 'dark' ||
+          (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        root.setAttribute('data-theme', dark ? 'light' : 'dark');
+      });
+    }
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.contents a'));
+    var sections = links.map(function (link) {
+      return document.getElementById(link.getAttribute('href').slice(1));
+    });
+    function markCurrent() {
+      var index = 0;
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i] && sections[i].getBoundingClientRect().top <= 120) index = i;
+      }
+      links.forEach(function (link, i) {
+        var isCurrent = i === index;
+        link.classList.toggle('current', isCurrent);
+        if (isCurrent) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      });
+      var row = document.querySelector('nav.contents .contents-links');
+      var current = links[index];
+      if (row && current && row.scrollWidth > row.clientWidth && getComputedStyle(row).display === 'flex') {
+        row.scrollLeft = current.offsetLeft - row.clientWidth / 2 + current.offsetWidth / 2;
+      }
+    }
+    window.addEventListener('scroll', markCurrent, { passive: true });
+    window.addEventListener('resize', markCurrent);
+    markCurrent();
+  } catch (error) {}
+})();
+</script>

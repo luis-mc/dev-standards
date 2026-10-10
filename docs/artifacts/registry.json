@@ -1,0 +1,284 @@
+{
+ "registry": "draft for ARTIFACTSPEC 1.0.0",
+ "project": "dev-standards",
+ "timezone": "Europe/Lisbon",
+ "updated": "2026-10-10T10:17+01:00",
+ "feature_artifacts": [
+  {
+   "title": "Feature: Project artifacts standard",
+   "url": "https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq",
+   "prefix": "AR"
+  },
+  {
+   "title": "Feature: Model and effort profiles",
+   "url": "https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn",
+   "prefix": "MP"
+  }
+ ],
+ "project_prefixes": [
+  "DS"
+ ],
+ "tasks": [
+  {
+   "id": "DS4",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "Live",
+   "item": "tech-stack-setup 11.2.1",
+   "detail": "Required checks named by job name, not job id. Plugin: luismc-project-setup.",
+   "expected": "02 Oct"
+  },
+  {
+   "id": "DS3",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "Live",
+   "item": "tech-stack-setup 11.2.0",
+   "detail": "Fewer CI minutes without dropping the STACKSPEC §13.1 gates. Plugin: luismc-project-setup.",
+   "expected": "02 Oct"
+  },
+  {
+   "id": "DS1",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "Live",
+   "item": "AUTHSPEC 3.1.0",
+   "detail": "Synced passkeys allowed on the admin plane. Plugin: luismc-project-setup.",
+   "expected": "27 Sep"
+  },
+  {
+   "id": "DS6",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "Running",
+   "item": "Agent and integration rules",
+   "detail": "17 changes from the 9–10 Oct evidence in comics-organizer: one full CI run, gate-result.json, merge script, pre-push guards, push-CI skip, gated e2e, at most 5 agents, contract first. Round started 10 Oct: spec and contracts first, then at most five Sonnet agents; tested on a local clone of comics-organizer; one ready PR, merged on green.",
+   "expected": "today"
+  },
+  {
+   "id": "DS7",
+   "owner": "project",
+   "app": "luismc-project-setup",
+   "status": "To do",
+   "item": "docs/ folder rule",
+   "detail": "A project-setup rule: every doc a session creates goes under docs/.",
+   "expected": "with DS6"
+  },
+  {
+   "id": "AR16",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "Done",
+   "item": "dev-standards record in docs/artifacts",
+   "detail": "Manifest, registry, HTML and the interim generator committed to main as docs-only commits.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "AR4",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "Done",
+   "item": "Answer the open decisions",
+   "detail": "Answered: one task registry; branch names start with the task ID; catch-up at session start; each project's own design, the plugin's default when it has none; an App / service column on the full-progress artifact.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "AR14",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "Done",
+   "item": "Default design",
+   "detail": "design/default-design.css, DESIGN.md and templates/project-artifact.css on branch AR14-default-design; applied to both dev-standards artifacts.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "AR3",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "Done",
+   "item": "Moved to dev-standards and rewritten",
+   "detail": "This artifact now belongs to dev-standards and describes the agreed design; Full Progress: dev-standards created.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "AR2",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "Done",
+   "item": "Proposal reviewed",
+   "detail": "Twelve findings; each one and the change it led to is in section 7.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "AR1",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "Done",
+   "item": "Rules adopted in Comics Organizer",
+   "detail": "Seven Comics Organizer pages moved to template v1; the rule saved for that project.",
+   "expected": "09 Oct"
+  },
+  {
+   "id": "AR5",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "ARTIFACTSPEC 1.0.0",
+   "detail": "The standard as a numbered, versioned spec; section 3 is its draft. Must pass spec_check.py.",
+   "expected": "first; ~1 h after your answers (spec writing)"
+  },
+  {
+   "id": "AR6",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Templates",
+   "detail": "feature-artifact.html and full-progress-artifact.html built on the AR14 stylesheet, plus finding a project's own design.",
+   "expected": "~1 h after AR5"
+  },
+  {
+   "id": "AR7",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "project_artifacts.py",
+   "detail": "Task registry, rendering, add-task, set-task-status, stamp, check. Stdlib only; Windows timezone fallback.",
+   "expected": "~3 h after AR5, alongside AR6"
+  },
+  {
+   "id": "AR8",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Hooks",
+   "detail": "After-command, end-of-turn and session-start hooks in hooks/hooks.json.",
+   "expected": "~2 h after AR7"
+  },
+  {
+   "id": "AR9",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Tests and CI",
+   "detail": "A fixture per check that proves it fires, hook tests, spec-lint.yml path filters.",
+   "expected": "~2 h, alongside AR8"
+  },
+  {
+   "id": "AR10",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Skills and rule file",
+   "detail": "The five skills and .claude/rules/project-artifacts.md.",
+   "expected": "~2 h after AR6 and AR7"
+  },
+  {
+   "id": "AR11",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Plugin wiring",
+   "detail": "plugin.json 1.0.0, the marketplace entry, the README section and install line.",
+   "expected": "~30 min after AR8 and AR10"
+  },
+  {
+   "id": "AR12",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Integrate and release",
+   "detail": "Full suite once on artifacts/integration, then one ready PR to main: one CI run, one release.",
+   "expected": "after AR5 to AR11"
+  },
+  {
+   "id": "AR13",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Comics Organizer onto the plugin",
+   "detail": "Turn its checklists into a task registry; run one real status change end to end.",
+   "expected": "after AR12 is merged"
+  },
+  {
+   "id": "AR15",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "Repo record and recreate",
+   "detail": "Each project keeps its artifacts' record in docs/artifacts/: manifest, task registry, each artifact's content and last published HTML. A deleted artifact is recreated from it without duplicates. Built into project_artifacts.py.",
+   "expected": "with AR7"
+  },
+  {
+   "id": "DS5",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "Live",
+   "item": "claude-setup: medium or high effort per model",
+   "detail": "Asked on every run, high preselected for code agents; written to modelSettings and the delegation rule; top-level effortLevel high for cloud agents. luismc-project-setup 11.3.0, PR #2.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "MP2",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "Done",
+   "item": "Profile decisions",
+   "detail": "Explore and Plan stay on Opus; skills profiled by kind of work; a session-start warning for alias drift. Section 7.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "MP1",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "Done",
+   "item": "Inventory of models per agent type",
+   "detail": "Checked against the Claude Code docs; corrects the first answer (Explore and Plan run on the main session’s model). Figure 1.",
+   "expected": "10 Oct"
+  },
+  {
+   "id": "DS2",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "Live",
+   "item": "Opus plans, Sonnet codes",
+   "detail": "claude-setup writes model opus and CLAUDE_CODE_SUBAGENT_MODEL sonnet, plus the delegation rule.",
+   "expected": "01 Oct"
+  },
+  {
+   "id": "MP3",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "To do",
+   "item": "Role rules",
+   "detail": "One line per role in the agents-and-integration rule file: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts a script cannot resolve, Haiku for log triage.",
+   "expected": "with DS6"
+  },
+  {
+   "id": "MP4",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "To do",
+   "item": "Per-skill model and effort",
+   "detail": "model and effort in every plugin SKILL.md, by kind of work (section 5), with a test that compares them to the profile table.",
+   "expected": "with DS6"
+  },
+  {
+   "id": "MP5",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "To do",
+   "item": "Alias-drift warning",
+   "detail": "A session-start hook that warns when the current Opus or Sonnet ID has no saved effort entry (figure 3).",
+   "expected": "with DS6"
+  },
+  {
+   "id": "MP6",
+   "owner": "Feature: Model and effort profiles",
+   "app": "luismc-project-setup",
+   "status": "To do",
+   "item": "Tests and release",
+   "detail": "Profile test, hook test, claude-setup checks; released in the DS6 ready PR.",
+   "expected": "with DS6"
+  }
+ ]
+}

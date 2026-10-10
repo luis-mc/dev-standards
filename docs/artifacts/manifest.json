@@ -1,0 +1,32 @@
+{
+  "project": "dev-standards",
+  "timezone": "Europe/Lisbon",
+  "design": "default",
+  "full_progress_artifact": {
+    "title": "Full Progress: dev-standards",
+    "url": "https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv",
+    "file": "full-progress-dev-standards.html"
+  },
+  "feature_artifacts": [
+    {
+      "key": "artifacts",
+      "title": "Feature: Project artifacts standard",
+      "url": "https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq",
+      "prefix": "AR",
+      "app": "luismc-artifacts",
+      "file": "feature-project-artifacts-standard.html"
+    },
+    {
+      "key": "models",
+      "title": "Feature: Model and effort profiles",
+      "url": "https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn",
+      "prefix": "MP",
+      "app": "luismc-project-setup",
+      "file": "feature-model-and-effort-profiles.html"
+    }
+  ],
+  "project_prefixes": [
+    "DS"
+  ],
+  "updated": "2026-10-10T10:17+01:00"
+}

@@ -1,0 +1,655 @@
+<title>Feature: Project artifacts standard</title>
+<meta name="artifact-kind" content="feature-artifact">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>/*
+  Default design for project artifacts.
+
+  Layout concept: Spec sheet: a contents rail on the left, numbered sections, the status checklist first.
+
+  Fonts (load with a link element in the head):
+  https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600;700&display=swap
+
+  This file holds tokens only. Structure lives in templates/project-artifact.css.
+*/
+:root {
+  --font-display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;
+  --font-display-stretch: 87.5%;
+  --font-body: 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, Menlo, monospace;
+
+  --paper: #F5F6F8;
+  --surface: #FFFFFF;
+  --surface-2: #ECEEF2;
+  --ink: #141A23;
+  --ink-muted: #556070;
+  --rule: #D5DAE1;
+  --rule-strong: #9AA4B2;
+  --signal: #2D46C8;
+  --on-signal: #FFFFFF;
+  --live: #17784A;
+  --on-live: #FFFFFF;
+  --done-bg: #DCEFE4;
+  --running-bg: #FBEBC8;
+  --running-mark: #B26A00;
+  --waiting-bg: #DDE6FA;
+  --failed: #C0352B;
+  --on-failed: #FFFFFF;
+  --focus: #2D46C8;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F141B;
+    --surface: #161D27;
+    --surface-2: #1E2733;
+    --ink: #E7EBF0;
+    --ink-muted: #9AA5B4;
+    --rule: #2A3442;
+    --rule-strong: #4A5668;
+    --signal: #8EA2FF;
+    --on-signal: #0F141B;
+    --live: #4CC38A;
+    --on-live: #0F141B;
+    --done-bg: #173326;
+    --running-bg: #3A2C0E;
+    --running-mark: #F0B54A;
+    --waiting-bg: #1B2A4A;
+    --failed: #F07167;
+    --on-failed: #0F141B;
+    --focus: #8EA2FF;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #0F141B;
+  --surface: #161D27;
+  --surface-2: #1E2733;
+  --ink: #E7EBF0;
+  --ink-muted: #9AA5B4;
+  --rule: #2A3442;
+  --rule-strong: #4A5668;
+  --signal: #8EA2FF;
+  --on-signal: #0F141B;
+  --live: #4CC38A;
+  --on-live: #0F141B;
+  --done-bg: #173326;
+  --running-bg: #3A2C0E;
+  --running-mark: #F0B54A;
+  --waiting-bg: #1B2A4A;
+  --failed: #F07167;
+  --on-failed: #0F141B;
+  --focus: #8EA2FF;
+  color-scheme: dark;
+}
+
+/*
+  Structure stylesheet for project artifacts.
+  Fixed for every project. It uses design tokens only and never holds a colour.
+  Tokens come from the project's design file, or design/default-design.css.
+*/
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 4rem; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  gap: 0 2.5rem;
+  max-width: 76rem;
+  margin: 0 auto;
+  padding-inline: 1.25rem;
+}
+
+/* Contents rail */
+nav.contents {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  align-self: start;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding-block: 1.5rem;
+}
+.contents-title {
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--ink-muted);
+  margin-bottom: .6rem;
+}
+nav.contents a {
+  display: block;
+  text-decoration: none;
+  color: var(--ink);
+  padding: .3em .6em;
+  border-left: 2px solid transparent;
+}
+nav.contents a b {
+  display: inline-block;
+  min-width: 2em;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+nav.contents a.current {
+  border-left-color: var(--signal);
+  background: var(--surface-2);
+}
+.theme-toggle {
+  margin-top: 1rem;
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  padding: .35em .7em;
+  cursor: pointer;
+}
+
+main { min-width: 0; padding-bottom: 5rem; }
+
+/* Header */
+header.artifact-header {
+  padding-block: 2rem 1.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+.artifact-kind {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  font-size: .78rem;
+  letter-spacing: .08em;
+  color: var(--ink-muted);
+}
+h1 {
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.05;
+  text-wrap: balance;
+  margin: .2em 0 .4em;
+}
+header.artifact-header p { max-width: 46em; font-size: 1.08rem; }
+.artifact-meta {
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  color: var(--ink-muted);
+}
+
+/* Sections */
+section { padding-top: 2.5rem; }
+h2 {
+  display: flex;
+  gap: .6em;
+  align-items: baseline;
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 700;
+  font-size: 1.65rem;
+  text-wrap: balance;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: .3em;
+  margin: 0 0 .8em;
+}
+.section-number {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: .95rem;
+  color: var(--signal);
+}
+h3 {
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-top: 1.8em;
+}
+
+p.last-update {
+  font-family: var(--font-mono);
+  font-size: .85rem;
+  color: var(--ink-muted);
+}
+p.last-update time { color: var(--ink); font-weight: 600; }
+p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
+
+/* Status count tiles */
+.status-count-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+  gap: .75rem;
+  margin: 1.2em 0;
+}
+.status-count-tile {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--rule-strong);
+  padding: .7em .9em;
+}
+.status-count-tile .count {
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 800;
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.status-count-tile .label { font-size: .82rem; color: var(--ink-muted); }
+.status-count-tile.status-live { border-top-color: var(--live); }
+.status-count-tile.status-done { border-top-color: var(--live); }
+.status-count-tile.status-running { border-top-color: var(--running-mark); }
+.status-count-tile.status-needs-you { border-top-color: var(--signal); }
+.status-count-tile.status-waiting { border-top-color: var(--rule-strong); }
+.status-count-tile.status-to-do { border-top-color: var(--rule-strong); }
+.status-count-tile.status-on-hold { border-top-color: var(--rule-strong); border-top-style: dashed; }
+.status-count-tile.status-failed { border-top-color: var(--failed); }
+
+/* Status chips */
+.status-chip {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding: .12em .5em;
+  border: 1px solid var(--rule-strong);
+  white-space: nowrap;
+  color: var(--ink);
+  background: var(--surface);
+}
+.status-chip.status-live { background: var(--live); color: var(--on-live); border-color: var(--live); }
+.status-chip.status-done { background: var(--done-bg); }
+.status-chip.status-running { background: var(--running-bg); border-left: 3px solid var(--running-mark); }
+.status-chip.status-needs-you { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
+.status-chip.status-waiting { background: var(--waiting-bg); }
+.status-chip.status-to-do { background: var(--surface-2); }
+.status-chip.status-on-hold { background: var(--surface-2); border-style: dashed; }
+.status-chip.status-failed { background: var(--failed); color: var(--on-failed); border-color: var(--failed); }
+
+/* Tables */
+.table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  margin: .9em 0;
+}
+.table-scroll table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 34rem;
+  font-size: .9rem;
+  font-variant-numeric: tabular-nums;
+}
+.table-scroll th {
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink-muted);
+  background: var(--surface-2);
+  text-align: left;
+  padding: .55em .7em;
+  border-bottom: 1px solid var(--rule);
+}
+.table-scroll td {
+  padding: .55em .7em;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  line-height: 1.4;
+}
+table.status-checklist td:first-child { white-space: nowrap; }
+tr.status-group td {
+  background: var(--paper);
+  font-family: var(--font-mono);
+  font-size: .74rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink-muted);
+  padding-top: 1em;
+}
+table.history-table td:first-child { font-family: var(--font-mono); white-space: nowrap; }
+
+.task-id {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: .82em;
+  margin-right: .4em;
+  color: var(--ink-muted);
+}
+a .task-id { color: inherit; }
+
+/* Links and focus */
+a { color: var(--signal); text-underline-offset: .15em; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Code */
+code, kbd {
+  font-family: var(--font-mono);
+  font-size: .86em;
+  background: var(--surface-2);
+  padding: .05em .3em;
+  border: 1px solid var(--rule);
+  overflow-wrap: anywhere;
+}
+pre {
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  line-height: 1.4;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: .9em 1em;
+  overflow-x: auto;
+  white-space: pre;
+}
+pre code { background: none; border: 0; padding: 0; overflow-wrap: normal; }
+
+.note { font-size: .85rem; color: var(--ink-muted); }
+ul, ol { padding-left: 1.3em; }
+li { margin: .25em 0; }
+
+/* Flow of steps */
+.flow-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: stretch;
+  margin: 1em 0;
+}
+.flow-step {
+  flex: 1 1 9rem;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: .6em .75em;
+  font-size: .88rem;
+}
+.flow-step b {
+  display: block;
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 700;
+  font-size: 1rem;
+}
+.flow-step small {
+  display: block;
+  color: var(--ink-muted);
+  line-height: 1.3;
+  margin-top: .2em;
+}
+.flow-step.key-step { border-color: var(--signal); border-width: 2px; }
+.flow-arrow {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+}
+
+/* Phone width */
+@media (max-width: 56rem) {
+  .layout { display: block; padding-inline: 1rem; }
+  nav.contents {
+    position: sticky;
+    z-index: 20;
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+    margin-inline: -1rem;
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+  }
+  .contents-title, .theme-toggle { display: none; }
+  nav.contents .contents-links {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    gap: .4rem;
+    padding: .5rem 1rem;
+  }
+  nav.contents a {
+    display: inline-block;
+    border: 1px solid var(--rule);
+    border-left-width: 1px;
+    flex: 0 0 auto;
+  }
+  nav.contents a.current { border-color: var(--signal); }
+}
+</style>
+<div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>Decisions</a><a href="#s7"><b>7</b>What the review changed</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
+<header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact &middot; default design</div></header>
+<section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2><p class="last-update">Last update: <time datetime="2026-10-10T10:17+01:00">10 Oct 10:17</time> (Lisbon)</p>
+<p class="lede">The design is agreed and the default design is built (AR14). <strong>Nothing needs you</strong> on this feature. Next is AR5, the spec. Every task here is also on <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">Full Progress: dev-standards</a>.</p>
+<div class="status-count-tiles"><div class="status-count-tile status-done"><div class="count">6</div><div class="label">done</div></div><div class="status-count-tile status-to-do"><div class="count">10</div><div class="label">to do</div></div></div>
+<p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-done">Done</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected</th></tr></thead><tbody>
+<tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next, earliest first</strong></td></tr>
+<tr data-task="AR5"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR5</span>ARTIFACTSPEC 1.0.0</td><td>The standard as a numbered, versioned spec; section 3 is its draft. Must pass spec_check.py.</td><td>first; ~1 h after your answers (spec writing)</td></tr>
+<tr data-task="AR6"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR6</span>Templates</td><td>feature-artifact.html and full-progress-artifact.html built on the AR14 stylesheet, plus finding a project&#x27;s own design.</td><td>~1 h after AR5</td></tr>
+<tr data-task="AR7"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR7</span>project_artifacts.py</td><td>Task registry, rendering, add-task, set-task-status, stamp, check. Stdlib only; Windows timezone fallback.</td><td>~3 h after AR5, alongside AR6</td></tr>
+<tr data-task="AR8"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR8</span>Hooks</td><td>After-command, end-of-turn and session-start hooks in hooks/hooks.json.</td><td>~2 h after AR7</td></tr>
+<tr data-task="AR9"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR9</span>Tests and CI</td><td>A fixture per check that proves it fires, hook tests, spec-lint.yml path filters.</td><td>~2 h, alongside AR8</td></tr>
+<tr data-task="AR10"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR10</span>Skills and rule file</td><td>The five skills and .claude/rules/project-artifacts.md.</td><td>~2 h after AR6 and AR7</td></tr>
+<tr data-task="AR11"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR11</span>Plugin wiring</td><td>plugin.json 1.0.0, the marketplace entry, the README section and install line.</td><td>~30 min after AR8 and AR10</td></tr>
+<tr data-task="AR12"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR12</span>Integrate and release</td><td>Full suite once on artifacts/integration, then one ready PR to main: one CI run, one release.</td><td>after AR5 to AR11</td></tr>
+<tr data-task="AR13"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR13</span>Comics Organizer onto the plugin</td><td>Turn its checklists into a task registry; run one real status change end to end.</td><td>after AR12 is merged</td></tr>
+<tr data-task="AR15"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR15</span>Repo record and recreate</td><td>Each project keeps its artifacts&#x27; record in docs/artifacts/: manifest, task registry, each artifact&#x27;s content and last published HTML. A deleted artifact is recreated from it without duplicates. Built into project_artifacts.py.</td><td>with AR7</td></tr>
+<tr class="status-group" data-group="done"><td colspan="4"><strong>Live or done, newest first</strong></td></tr>
+<tr data-task="AR16"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR16</span>dev-standards record in docs/artifacts</td><td>Manifest, registry, HTML and the interim generator committed to main as docs-only commits.</td><td>10 Oct</td></tr>
+<tr data-task="AR4"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR4</span>Answer the open decisions</td><td>Answered: one task registry; branch names start with the task ID; catch-up at session start; each project&#x27;s own design, the plugin&#x27;s default when it has none; an App / service column on the full-progress artifact.</td><td>10 Oct</td></tr>
+<tr data-task="AR14"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR14</span>Default design</td><td>design/default-design.css, DESIGN.md and templates/project-artifact.css on branch AR14-default-design; applied to both dev-standards artifacts.</td><td>10 Oct</td></tr>
+<tr data-task="AR3"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR3</span>Moved to dev-standards and rewritten</td><td>This artifact now belongs to dev-standards and describes the agreed design; Full Progress: dev-standards created.</td><td>10 Oct</td></tr>
+<tr data-task="AR2"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR2</span>Proposal reviewed</td><td>Twelve findings; each one and the change it led to is in section 7.</td><td>10 Oct</td></tr>
+<tr data-task="AR1"><td><span class="status-chip status-done">Done</span></td><td><span class="task-id">AR1</span>Rules adopted in Comics Organizer</td><td>Seven Comics Organizer pages moved to template v1; the rule saved for that project.</td><td>09 Oct</td></tr>
+</tbody></table></div>
+</section>
+<section id="s1"><h2><span class="section-number">&sect; 1</span>What and why</h2>
+<p class="lede">A project builds many things at once. Its owner needs to see, at any moment, what is live, what is running and what needs them, without reading code or chat.</p>
+<p>What the owner asked for (9 and 10 October):</p>
+<ul>
+ <li><strong>Same look and feel</strong> for every artifact within a project, with sections always numbered and section 0 always <strong>Status and checklist</strong>.</li>
+ <li><strong>Feature artifacts</strong> (&ldquo;Feature: &lt;name&gt;&rdquo;) describe something to build in one app, several apps or the whole project. They evolve, and log every change in a <strong>History</strong> table as their last section.</li>
+ <li>One <strong>full-progress artifact</strong> per project (&ldquo;Full Progress: &lt;project&gt;&rdquo;): the owner&rsquo;s view of <strong>all ongoing work</strong> in the project, across every app and service. It holds every feature task and every other project task; it is not only a summary of the feature artifacts.</li>
+ <li>Creating a feature artifact when the project has no full-progress artifact <strong>creates the full-progress artifact too</strong>.</li>
+ <li>Status changes update the artifacts <strong>automatically</strong>: a feature task&rsquo;s change updates its feature artifact, and any project task&rsquo;s change updates the full-progress artifact.</li>
+ <li>Built in dev-standards as the plugin <code>luismc-artifacts</code>, with <strong>explicit names in the code</strong>: feature artifact and full-progress artifact, never a generic &ldquo;page&rdquo;.</li>
+</ul>
+<p><strong>Why it matters.</strong> In Comics Organizer the pages drifted: a feature page still said &ldquo;Needs you&rdquo; for a step finished hours before. The status was typed by hand in two places. This design writes each status once and generates every view of it.</p></section>
+<section id="s2"><h2><span class="section-number">&sect; 2</span>The design</h2>
+<p class="lede">Each task&rsquo;s status is stored once, in a task registry inside the full-progress artifact. One command changes it, regenerates every checklist that shows the task, and a hook makes sure both artifacts are published before the turn ends.</p>
+<h3>Two kinds of project artifact</h3>
+<div class="table-scroll"><table><thead><tr><th>Kind</th><th>Title</th><th>Holds</th><th>How many</th></tr></thead><tbody>
+<tr><td>Feature artifact</td><td><code>Feature: &lt;name&gt;</code></td><td>One feature: why, design, rules, tests, decisions, its tasks, History last.</td><td>Any number</td></tr>
+<tr><td>Full-progress artifact</td><td><code>Full Progress: &lt;project&gt;</code></td><td>All ongoing work in the project: every feature task (linked to its feature artifact) and every project task. Embeds the task registry.</td><td>Exactly one</td></tr>
+</tbody></table></div>
+<h3>What happens on a status change</h3>
+<div class="flow-steps">
+ <div class="flow-step"><b>Status event</b><small>PR opened, checks failed, merged, live, blocked, decided</small></div><div class="flow-arrow">&rarr;</div>
+ <div class="flow-step key-step"><b>set-task-status AR5 running</b><small>one command, run by the session</small></div><div class="flow-arrow">&rarr;</div>
+ <div class="flow-step"><b>Task registry</b><small>the one record, inside the full-progress artifact</small></div><div class="flow-arrow">&rarr;</div>
+ <div class="flow-step"><b>Both checklists regenerated</b><small>feature artifact (if the task has one) and full-progress artifact; tiles, groups, stamp</small></div><div class="flow-arrow">&rarr;</div>
+ <div class="flow-step"><b>Published</b><small>the end-of-turn hook blocks until it is</small></div>
+</div>
+<h3>What makes it automatic</h3>
+<div class="table-scroll"><table><thead><tr><th>Layer</th><th>What it does</th></tr></thead><tbody>
+<tr><td>Rule file</td><td><code>.claude/rules/project-artifacts.md</code>, installed in a project when its first project artifact is created. Sessions record every piece of work as a task and run <code>task-status-update</code> at each status event.</td></tr>
+<tr><td>After-command hook</td><td>Watches for known events (<code>gh pr create</code>, <code>gh pr merge</code>, deploys, failed checks) on a branch named with a task ID, and queues the status change.</td></tr>
+<tr><td>End-of-turn hook</td><td>If a status change is queued or a changed artifact is unpublished, the turn cannot end; it lists what is missing. <strong>This is the guarantee.</strong></td></tr>
+<tr><td>Session-start hook</td><td>Catches changes made between sessions (CI finished, a PR merged on GitHub) and queues them.</td></tr>
+</tbody></table></div>
+<p class="note">The plugin cannot publish an artifact by itself; only the session&rsquo;s Artifact tool can. The hooks make sure the session does it. All hooks do nothing in a project without the manifest.</p>
+<h3>Where things live</h3>
+<ul>
+ <li><strong>The repo is the record.</strong> Each project keeps <code>docs/artifacts/</code>: <code>manifest.json</code> (each artifact&rsquo;s link), <code>registry.json</code> (the task registry), each artifact&rsquo;s content and its last published HTML. A deleted artifact is recreated from it.</li>
+ <li><strong>No duplicates.</strong> An artifact is created only when its manifest link no longer opens and no artifact with the same title exists; the new link is written back to the manifest.</li>
+ <li><strong>Status changes commit to the default branch</strong> as docs-only commits. CI ignores <code>docs/**</code>, and hosting skips docs-only deploys.</li>
+ <li><strong>Task IDs</strong> are a registered prefix plus a number (<span class="task-id">AR5</span>, <span class="task-id">DS4</span>), unique across the project. Branch names start with one: <code>AR5-artifactspec</code>.</li>
+</ul></section>
+<section id="s3"><h2><span class="section-number">&sect; 3</span>The rules</h2>
+<p class="lede">The draft of ARTIFACTSPEC 1.0.0. Each rule has an ID so the spec, the checks and reviews can cite it.</p><h3>Kinds and tasks</h3><div class="table-scroll"><table><thead><tr><th>ID</th><th>Rule</th></tr></thead><tbody>
+<tr><td>AS1</td><td>A project has feature artifacts and <strong>exactly one full-progress artifact</strong>. Creating the first feature artifact creates the full-progress artifact if none exists.</td></tr>
+<tr><td>AS2</td><td>A feature artifact is titled <code>Feature: </code> plus the feature name. It covers one app, several, or the whole project, and changes as the feature evolves. Its <strong>last section is History</strong>: <em>Date | Change</em>, newest first.</td></tr>
+<tr><td>AS3</td><td>The full-progress artifact is titled <code>Full Progress: </code> plus the project name. It shows <strong>all ongoing work in the project</strong>, across every app and service: every feature task, linked to its feature artifact, and every project task. It has no History; Live or Done rows older than 14 days fold into an &ldquo;Earlier&rdquo; block.</td></tr>
+<tr><td>AS4</td><td>Every task has an ID: a prefix registered in the manifest plus a number. IDs are unique across the project and never reused.</td></tr>
+<tr><td>AS5</td><td>Each task&rsquo;s state is stored once, in the task registry <code>docs/artifacts/registry.json</code>, committed in the project&rsquo;s repo and embedded in the full-progress artifact. Every checklist and tile count is generated from it; no status row is typed by hand.</td></tr>
+<tr><td>AS6</td><td>The manifest <code>docs/artifacts/manifest.json</code> names the project, its timezone, its design, the full-progress artifact, and each feature artifact with its link, task prefix and files.</td></tr>
+</tbody></table></div><h3>Look and structure</h3><div class="table-scroll"><table><thead><tr><th>ID</th><th>Rule</th></tr></thead><tbody>
+<tr><td>AS7</td><td>Every artifact of a project uses the shared structure stylesheet unchanged, plus the project&rsquo;s design tokens: taken from the project&rsquo;s own design (design-token files, theme configuration, CSS custom properties or its live site), or the plugin&rsquo;s default design when it has none. Artifact-only drawings may add styles but never change shared ones.</td></tr>
+<tr><td>AS8</td><td>Sections are numbered from 0 in order with no gaps; the contents list shows the same numbers. Section 0 is <strong>Status and checklist</strong>: stamp, lede, tiles, key and checklist, in that order.</td></tr>
+<tr><td>AS9</td><td>The stamp reads <code>Last update: DD Mon HH:MM (&lt;timezone label&gt;)</code>, with the full ISO time in its <code>datetime</code> attribute, taken from the real clock at the moment of the change.</td></tr>
+<tr><td>AS10</td><td>The lede says in plain words what stands and <strong>what needs the owner</strong>, or &ldquo;Nothing needs you&rdquo;.</td></tr>
+<tr><td>AS11</td><td>The checklist columns are <strong>Status | Item | Detail | Expected</strong>. Rows are grouped: <em>Running now and next</em> (Running, Waiting, To do), <em>Needs you, failed or on hold</em> (Needs you, Failed, On hold), <em>Live or done</em>, newest first. The full-progress artifact adds an <strong>App / service</strong> column after Item.</td></tr>
+<tr><td>AS12</td><td>Eight statuses with fixed colours and meanings: <span class="status-chip status-live">Live</span> released or in production; <span class="status-chip status-done">Done</span> finished, nothing to release; <span class="status-chip status-running">Running</span> being worked on now; <span class="status-chip status-needs-you">Needs you</span> waits on the owner; <span class="status-chip status-waiting">Waiting</span> waits on something else (CI, a dependency, a time); <span class="status-chip status-to-do">To do</span> planned, not started; <span class="status-chip status-on-hold">On hold</span> paused by decision; <span class="status-chip status-failed">Failed</span> broke and needs a fix or a decision.</td></tr>
+<tr><td>AS13</td><td>Artifacts work in light and dark themes, and at phone width with a 16 px side gutter and no sideways page scroll; wide tables scroll inside their box.</td></tr>
+</tbody></table></div><h3>Keeping them current</h3><div class="table-scroll"><table><thead><tr><th>ID</th><th>Rule</th></tr></thead><tbody>
+<tr><td>AS14</td><td>A feature task&rsquo;s status change updates its feature artifact and the full-progress artifact; any other project task&rsquo;s change updates the full-progress artifact. One command does both, and every changed artifact is published in the same turn.</td></tr>
+<tr><td>AS15</td><td>Every piece of work a session starts in the project is recorded as a task first: on its feature artifact, or as a project task.</td></tr>
+<tr><td>AS16</td><td>Branch names start with the task ID, so hooks can match events to tasks.</td></tr>
+<tr><td>AS17</td><td>A turn may not end while a status change is queued or a changed artifact is unpublished.</td></tr>
+<tr><td>AS18</td><td>Times are shown in the owner&rsquo;s timezone and labelled with it.</td></tr>
+<tr><td>AS19</td><td>A project&rsquo;s artifacts can be recreated from <code>docs/artifacts/</code> alone. A new artifact is created only when the manifest link no longer opens and no artifact with the same title exists.</td></tr>
+<tr><td>AS20</td><td>Status changes are committed to the default branch as docs-only commits; CI and hosting skip docs-only changes.</td></tr>
+</tbody></table></div></section>
+<section id="s4"><h2><span class="section-number">&sect; 4</span>In dev-standards</h2>
+<p class="lede">A new plugin, <strong><code>luismc-artifacts</code></strong>, beside <code>luismc-specs</code>. One script does the work; the skills and hooks call it.</p>
+<h3>Layout</h3>
+<pre><code>claude/plugins/artifacts/
+  .claude-plugin/plugin.json            name luismc-artifacts, version 1.0.0
+  design/default-design.css             the default design tokens (AR14)
+  design/DESIGN.md                      how a project's own design is found; the token contract
+  references/ARTIFACTSPEC.md            the standard (section 3 here), versioned like STACKSPEC and AUTHSPEC
+  scripts/project_artifacts.py          registry, rendering, add-task, set-task-status, stamp, check (stdlib only)
+  scripts/hook_after_command.py         queues status changes from git, gh and deploy commands
+  scripts/hook_end_of_turn.py           blocks the turn while anything is queued or unpublished
+  scripts/hook_session_start.py         queues changes made between sessions
+  hooks/hooks.json
+  templates/feature-artifact.html
+  templates/full-progress-artifact.html
+  templates/project-artifact.css        the fixed structure stylesheet
+  rules/project-artifacts.md            installed into a project by the first creation skill
+  skills/feature-artifact-new/SKILL.md
+  skills/full-progress-artifact-new/SKILL.md
+  skills/task-add/SKILL.md
+  skills/task-status-update/SKILL.md
+  skills/project-artifact-check/SKILL.md
+.claude-plugin/marketplace.json         add the luismc-artifacts entry
+README.md                               a luismc-artifacts section and the install line
+tools/test_project_artifacts_check.py   a fixture per check, proving it fires
+tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes out
+.github/workflows/spec-lint.yml         path filters and steps for the above</code></pre>
+<h3>The five skills</h3>
+<div class="table-scroll"><table><thead><tr><th>Skill</th><th>What it does</th></tr></thead><tbody>
+<tr><td><code>/luismc-artifacts:feature-artifact-new</code></td><td>Asks the feature name and the apps it covers, writes a feature artifact with section 0 started and a first History row, registers it in the manifest, and adds its tasks to the registry. Creates the full-progress artifact first if the project has none.</td></tr>
+<tr><td><code>/luismc-artifacts:full-progress-artifact-new</code></td><td>Writes the project&rsquo;s one full-progress artifact with an empty task registry; refuses if one exists. For a project with ongoing work but no feature artifact yet.</td></tr>
+<tr><td><code>/luismc-artifacts:task-add</code></td><td>Records new work as a task, asking which artifact owns it (a feature artifact, or the project), and gives it the next ID.</td></tr>
+<tr><td><code>/luismc-artifacts:task-status-update</code></td><td>Reads the artifacts, runs <code>set-task-status</code>, runs the check, and publishes every artifact that changed. Retries after a publish conflict.</td></tr>
+<tr><td><code>/luismc-artifacts:project-artifact-check</code></td><td>Checks a project&rsquo;s artifacts against ARTIFACTSPEC. Exit 0 clean, 1 findings, 2 unreadable, like <code>spec_check.py</code>.</td></tr>
+</tbody></table></div>
+<p class="note">The default design is in <code>design/default-design.css</code> and <code>templates/project-artifact.css</code> on branch AR14-default-design; these two artifacts use it.</p></section>
+<section id="s5"><h2><span class="section-number">&sect; 5</span>Requirements and tests</h2>
+<div class="table-scroll"><table><thead><tr><th>ID</th><th>Requirement</th><th>Test that proves it</th></tr></thead><tbody>
+<tr><td>R1</td><td>Titles start with &ldquo;Feature: &rdquo; or &ldquo;Full Progress: &rdquo; (AS2, AS3).</td><td>A feature artifact titled &ldquo;Manga&rdquo; fails; &ldquo;Feature: Manga&rdquo; passes.</td></tr>
+<tr><td>R2</td><td>Exactly one full-progress artifact, created with the first feature artifact (AS1).</td><td>Project with none: feature-artifact-new creates both. Project with one: no second is created. Manifest with two: fails.</td></tr>
+<tr><td>R3</td><td>Section 0 first and named &ldquo;Status and checklist&rdquo; (AS8).</td><td>Section 0 named &ldquo;Status&rdquo; fails.</td></tr>
+<tr><td>R4</td><td>Sections numbered from 0, in order, no gaps (AS8).</td><td>A gap, a repeat and an unnumbered section each fail with their line.</td></tr>
+<tr><td>R5</td><td>Stamp format, ISO attribute and timezone label (AS9, AS18).</td><td>&ldquo;Last update: 9/10 7am&rdquo; fails; a stamp without <code>datetime</code> or label fails.</td></tr>
+<tr><td>R6</td><td>Checklist columns: Status | Item | Detail | Expected on a feature artifact; Status | Item | App / service | Detail | Expected on the full-progress artifact (AS11).</td><td>A fifth column, or reordered columns, fails.</td></tr>
+<tr><td>R7</td><td>Only the eight statuses (AS12).</td><td>&ldquo;Merged&rdquo; as a status fails and names the nearest allowed word.</td></tr>
+<tr><td>R8</td><td>Every row sits in its status&rsquo;s group (AS11).</td><td>A Live row under &ldquo;Running now and next&rdquo; fails.</td></tr>
+<tr><td>R9</td><td>Checklists and tiles equal the registry (AS5).</td><td>A hand-edited row, or a tile saying 3 Live over 2, fails.</td></tr>
+<tr><td>R10</td><td>Every feature task is on the full-progress artifact, linked to its feature artifact (AS3).</td><td>A feature task missing from the full-progress artifact fails.</td></tr>
+<tr><td>R11</td><td>Task IDs unique and their prefixes registered (AS4).</td><td>Two tasks named AR5, or an unregistered prefix, fail.</td></tr>
+<tr><td>R12</td><td>History is the last section of a feature artifact, Date | Change (AS2).</td><td>No History, or History not last, fails.</td></tr>
+<tr><td>R13</td><td>Structure stylesheet unchanged; theme tokens free (AS7).</td><td>A changed structure rule fails; a changed theme colour passes.</td></tr>
+<tr><td>R14</td><td>One command updates every artifact that shows the task (AS14).</td><td>set-task-status AR5 running: both artifacts show Running with new stamps.</td></tr>
+<tr><td>R15</td><td>Hooks queue and block (AS16, AS17).</td><td><code>gh pr merge</code> on branch AR5-x queues AR5; the end-of-turn hook blocks with a queue and passes without one; no manifest, no effect.</td></tr>
+<tr><td>R16</td><td>Phone width and both themes (AS13).</td><td>A fixture artifact at 360 px wide has no sideways scroll in light and dark (manual check listed in the skill).</td></tr>
+<tr><td>R17</td><td>Recreate without duplicates (AS19).</td><td>Manifest link deleted: one new artifact, manifest updated. Link alive: nothing created. Same title exists: no new artifact, manifest repaired.</td></tr>
+</tbody></table></div></section>
+<section id="s6"><h2><span class="section-number">&sect; 6</span>Decisions</h2>
+<div class="table-scroll"><table><thead><tr><th>#</th><th>Question</th><th>Decision (10 Oct)</th></tr></thead><tbody>
+<tr><td>1</td><td>How is a task&rsquo;s status stored so both artifacts update automatically?</td><td><strong>One task registry</strong> inside the full-progress artifact; both checklists are generated from it.</td></tr>
+<tr><td>2</td><td>Do branch names start with the task ID?</td><td><strong>Yes</strong> (<code>AR5-artifactspec</code>), so hooks can match events to tasks.</td></tr>
+<tr><td>3</td><td>How do changes made outside a session reach the artifacts?</td><td><strong>At the next session start</strong>, through the session-start hook. No cloud routine in 1.0.</td></tr>
+<tr><td>4</td><td>What look do artifacts get?</td><td><strong>The project&rsquo;s own design</strong>, found by scanning its design files, theme configuration, CSS custom properties or live site. A project with no design gets the plugin&rsquo;s <strong>default design</strong>. The Comics Organizer look is dropped. dev-standards uses the default.</td></tr>
+<tr><td>5</td><td>An App / service column on the full-progress artifact?</td><td><strong>Yes</strong>, on the full-progress artifact only.</td></tr>
+<tr><td>6</td><td>Where is the record kept?</td><td><strong>In the repo</strong>, <code>docs/artifacts/</code>, committed to the default branch as docs-only commits; a deleted artifact is recreated from it without duplicates. Replaces the first answer that the published artifact is the record.</td></tr>
+</tbody></table></div></section>
+<section id="s7"><h2><span class="section-number">&sect; 7</span>What the review changed</h2>
+<p class="lede">The review of the first proposal on 10 October found twelve problems. Each one changed the design above.</p><div class="table-scroll"><table><thead><tr><th>Finding</th><th>Change</th></tr></thead><tbody>
+<tr><td>A status was typed by hand in two places, the cause of the drift.</td><td>One task registry; one command regenerates every checklist (AS5, AS14).</td></tr>
+<tr><td>The discipline was a sentence in CLAUDE.md, the form that already failed.</td><td>Hooks queue status changes and block the turn until artifacts are published (AS17).</td></tr>
+<tr><td>No source of truth and no list of a project&rsquo;s pages.</td><td>The repo record in <code>docs/artifacts/</code> is the source; the manifest lists every artifact, and a deleted one is recreated from it (AS5, AS6, AS19).</td></tr>
+<tr><td>Per-project look contradicted the byte-identical stylesheet check.</td><td>Structure stylesheet fixed, theme tokens free (AS7, R13).</td></tr>
+<tr><td>&ldquo;Comics Organizer&rdquo; and &ldquo;Lisbon&rdquo; hard-coded; old and duplicate CSS rules.</td><td>Project name and timezone come from the manifest; the stylesheet is rebuilt clean (AR6).</td></tr>
+<tr><td>Spec and code disagreed on the groups and the History columns.</td><td>One definition each (AS2, AS11).</td></tr>
+<tr><td>HTML parsed with regular expressions; it left broken CSS on this artifact.</td><td>The script uses Python&rsquo;s built-in HTML parser.</td></tr>
+<tr><td>Python&rsquo;s zoneinfo has no timezone data on Windows without the tzdata package.</td><td>Fallback to the machine&rsquo;s local time, with a warning.</td></tr>
+<tr><td>The stamp had no year and nothing a program could compare.</td><td>ISO time in the <code>datetime</code> attribute (AS9).</td></tr>
+<tr><td>The rule would have gone into every project&rsquo;s CLAUDE.md.</td><td>A rule file installed only where project artifacts are used.</td></tr>
+<tr><td>The progress page would grow forever.</td><td>Live or Done rows older than 14 days fold into &ldquo;Earlier&rdquo; (AS3).</td></tr>
+<tr><td>Generic names: &ldquo;page&rdquo;, <code>luismc-pages</code>, <code>.st</code>.</td><td>Feature artifact and full-progress artifact throughout; plugin <code>luismc-artifacts</code>; readable class names in AR6.</td></tr>
+</tbody></table></div></section>
+<section id="s8"><h2><span class="section-number">&sect; 8</span>History</h2>
+<div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
+<tr><td>10 Oct 10:17</td><td>The repo becomes the record: docs/artifacts/ holds the manifest, the task registry, each artifact&rsquo;s content and last published HTML, committed to the default branch as docs-only commits; a deleted artifact is recreated from it without duplicates (AS19, AS20, AR15). dev-standards&rsquo; record saved (AR16). Model and effort profiles split into their own feature artifact.</td></tr>
+<tr><td>10 Oct 09:47</td><td>Decisions answered (AR4): one task registry, task-ID branch names, catch-up at session start, an App / service column on the full-progress artifact. The look now comes from each project&rsquo;s own design, with a plugin default for projects without one; dev-standards uses the default design (AR14), applied to this artifact.</td></tr>
+<tr><td>10 Oct 09:24</td><td>Moved from Comics Organizer to dev-standards, where it is built. Rewritten to the agreed design: plugin <code>luismc-artifacts</code>; explicit names (feature artifact, full-progress artifact); the full-progress artifact shows all project work and is created with the first feature artifact; one task registry with automatic updates and hooks; task IDs AR1 to AR13; the review findings (section 7); five open decisions. Full Progress: dev-standards created.</td></tr>
+<tr><td>09 Oct 06:48</td><td>Created in the Comics Organizer session, after the owner asked for one template, numbered sections, Feature and Full Progress pages, and a dev-standards version.</td></tr>
+</tbody></table></div></section>
+</main></div>
+<script>
+(function () {
+  try {
+    var root = document.documentElement;
+    var toggle = document.getElementById('theme-toggle');
+    if (toggle) {
+      toggle.addEventListener('click', function () {
+        var dark = root.getAttribute('data-theme') === 'dark' ||
+          (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        root.setAttribute('data-theme', dark ? 'light' : 'dark');
+      });
+    }
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.contents a'));
+    var sections = links.map(function (link) {
+      return document.getElementById(link.getAttribute('href').slice(1));
+    });
+    function markCurrent() {
+      var index = 0;
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i] && sections[i].getBoundingClientRect().top <= 120) index = i;
+      }
+      links.forEach(function (link, i) {
+        var isCurrent = i === index;
+        link.classList.toggle('current', isCurrent);
+        if (isCurrent) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      });
+      var row = document.querySelector('nav.contents .contents-links');
+      var current = links[index];
+      if (row && current && row.scrollWidth > row.clientWidth && getComputedStyle(row).display === 'flex') {
+        row.scrollLeft = current.offsetLeft - row.clientWidth / 2 + current.offsetWidth / 2;
+      }
+    }
+    window.addEventListener('scroll', markCurrent, { passive: true });
+    window.addEventListener('resize', markCurrent);
+    markCurrent();
+  } catch (error) {}
+})();
+</script>
