@@ -21,6 +21,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # keep scripts/delivery/ free of __pycache__ (a clean tree is required)
+
 import delivery_common as dc
 import gate_verify
 

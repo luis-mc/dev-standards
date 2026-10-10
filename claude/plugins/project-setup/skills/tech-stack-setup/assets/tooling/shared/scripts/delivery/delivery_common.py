@@ -185,6 +185,8 @@ def dirty_paths(root: Path) -> list[str]:
         path = line[3:].strip().strip('"')
         if path == DELIVERY_DIR or path.startswith(DELIVERY_DIR + "/"):
             continue
+        if "__pycache__" in path.split("/"):  # bytecode of these very scripts
+            continue
         paths.append(path)
     return paths
 
@@ -307,8 +309,11 @@ def _expand(root: Path, include: list[str], exclude: list[str], must_contain: st
         pat = pat.rstrip("/")
         if not pat:
             continue
+        prefix = pat.split("**")[0].rstrip("/") if "**" in pat else None
         for hit in glob.glob(pat, root_dir=str(root), recursive=True):
-            rel = posix(hit)
+            rel = posix(hit).rstrip("/")
+            if rel == prefix:  # 'packages/**' lists 'packages/' itself; it is not a package
+                continue
             if (root / hit).is_dir() and not _SKIP_DIRS.intersection(rel.split("/")):
                 if must_contain is None or (root / hit / must_contain).is_file():
                     found.add(rel)

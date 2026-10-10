@@ -12,6 +12,9 @@ Exit: 0 all passed, 1 a step failed, 2 usage/configuration error.
 from __future__ import annotations
 
 import argparse
+import sys
+
+sys.dont_write_bytecode = True  # keep scripts/delivery/ free of __pycache__ (a clean tree is required)
 
 import delivery_common as dc
 

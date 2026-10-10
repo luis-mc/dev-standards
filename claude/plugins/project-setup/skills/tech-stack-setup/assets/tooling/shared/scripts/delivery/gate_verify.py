@@ -18,6 +18,8 @@ import json
 import re
 import sys
 
+sys.dont_write_bytecode = True  # keep scripts/delivery/ free of __pycache__ (a clean tree is required)
+
 import delivery_common as dc
 
 _SHA = re.compile(r"^[0-9a-f]{40}$")
