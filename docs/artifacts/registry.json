@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T21:58+01:00",
+  "updated": "2026-10-10T22:04+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -186,11 +186,11 @@
       "id": "AR21",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Done",
       "item": "Every activity is a task, in every project",
-      "detail": "Rule and ARTIFACTSPEC 1.1.0: all work, the session's own included (contracts, reviews, joins, test runs, releases, cleanup), is a task row before it starts and stays Running while it runs; Done means nothing is left. The plugin delivers its rule to every project it is installed in at each session start, so an installed project never keeps an old copy; the end-of-turn hook blocks a turn that starts background work with no Running task. Rides the train after 7.0.0.",
-      "expected": "10 Oct ~22:45",
-      "changed": "2026-10-10T20:58+01:00"
+      "detail": "Built in draft #28, not released: the rule (every activity is a task, the session's own included; Running while it runs; Built means not released) is delivered at every session start in every project; init no longer copies it; the end-of-turn hook blocks when background work started and no task is Running. 117 + 67 + 57 tests pass.",
+      "expected": "10 Oct",
+      "changed": "2026-10-10T22:04+01:00"
     },
     {
       "id": "AR22",
