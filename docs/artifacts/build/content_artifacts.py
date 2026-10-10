@@ -15,7 +15,7 @@ HERO = ('How every project gets the same status artifacts: a feature artifact pe
 EXTRA_CSS = ''
 
 LEDE = ('<p class="lede">The design is agreed and the default design is built (AR14). <strong>Nothing needs you</strong> on this feature. '
-        'The spec is written (AR5); three Sonnet agents are building the renderer, the script and the hooks. Merge on green at about 17:15. Every task here is also on {fp_link}.</p>')
+        'The spec is written (AR5); three Sonnet agents are building the renderer, the script and the hooks. Merge on green at about 15:30. Every task here is also on {fp_link}.</p>')
 
 # status, item, detail, expected. Done/Live newest first, then the rest earliest first.
 TASKS = [
@@ -39,9 +39,9 @@ TASKS = [
     dict(id='AR6', status='Done', item='Templates',
          detail='render_artifacts.py and the two templates: deterministic rendering, the HTML checks, the Earlier fold; 57 tests; joined at 39cb8c3.',
          expected='10 Oct'),
-    dict(id='AR7', status='Running', item='project_artifacts.py',
-         detail='project_artifacts.py: the record worktree, every command, pending and mark-published, the record checks; a Sonnet agent on AR7-project-artifacts.',
-         expected='10 Oct ~15:30'),
+    dict(id='AR7', status='Done', item='project_artifacts.py',
+         detail='project_artifacts.py: the record worktree with push retries, every §7 command, pending and mark-published, the record checks; 97 tests with the fake and the real renderer; joined.',
+         expected='10 Oct'),
     dict(id='AR8', status='Done', item='Hooks',
          detail='Three hooks and hooks/hooks.json (PostToolUse and PostToolUseFailure, Stop, SessionStart); 47 tests, mutation-checked; joined into AR12-integration.', expected='10 Oct'),
     dict(id='AR9', status='Running', item='Tests and CI',
@@ -52,12 +52,15 @@ TASKS = [
     dict(id='AR11', status='Done', item='Plugin wiring',
          detail='plugin.json 1.0.0, marketplace entry, README; claude-setup enables the plugin under the marketplace name the owner registered (luismc-project-setup 12.1.0); joined at fb1edf2.',
          expected='10 Oct'),
-    dict(id='AR12', status='To do', item='Integrate and release',
-         detail='Full suite once on AR12-integration, then one ready PR to main: one CI run, one release; merged on green.',
-         expected='10 Oct ~17:15'),
-    dict(id='AR15', status='Running', item='Repo record and recreate',
-         detail='The record in docs/artifacts and recreation without duplicates; built into project_artifacts.py by the AR7 agent.',
+    dict(id='AR12', status='Running', item='Integrate and release',
+         detail='All parts joined on AR12-integration; full local suite running; the real-repo test converts dev-standards’ own record on a scratch clone (AR17). Then one ready PR to main, merged on green.',
          expected='10 Oct ~15:30'),
+    dict(id='AR17', status='Running', item='dev-standards onto the plugin',
+         detail='Real-repo test (R13.3): convert this record to ARTIFACTSPEC 1.0.0 on a scratch clone, render, check, one status change end to end, nothing pushed. The converted record ships in the AR12 ready PR and retires the interim generator.',
+         expected='10 Oct ~15:00'),
+    dict(id='AR15', status='Done', item='Repo record and recreate',
+         detail='The record in docs/artifacts and recreation without duplicates, built into project_artifacts.py; joined with AR7.',
+         expected='10 Oct'),
 ]
 
 _CLS = {'Live': 'status-live', 'Done': 'status-done', 'Running': 'status-running', 'Needs you': 'status-needs-you',
@@ -236,7 +239,8 @@ S7 = ('<p class="lede">The review of the first proposal on 10 October found twel
 
 def history(stamp):
     return _table(['Date', 'Change'], [
-        [stamp, 'AR8, AR10 and AR11 done and joined. ARTIFACTSPEC settled what the agents asked: content edited through a folder (export-content, edit-content --from), design set, project prefixes, the pending JSON, the marketplace name, the hooks as built.'],
+        [stamp, 'AR7 and AR15 done and joined; every part of the plugin is on AR12-integration. AR17 added: dev-standards moves onto the plugin as the real-repo test. Release now expected about 15:30.'],
+        ['10 Oct 13:32', 'AR8, AR10 and AR11 done and joined. ARTIFACTSPEC settled what the agents asked: content edited through a folder (export-content, edit-content --from), design set, project prefixes, the pending JSON, the marketplace name, the hooks as built.'],
         ['10 Oct 13:03', 'AR6 done and joined; ARTIFACTSPEC says the full-progress artifact&rsquo;s section 1 is generated and allows the template&rsquo;s theme script (R5.6, R5.9). AR9 to AR11 started.'],
         ['10 Oct 12:46', 'AR5 done: ARTIFACTSPEC 1.0.0 committed to AR12-integration with the shared queue module; AR6, AR7, AR8 and AR15 started.'],
         ['10 Oct 12:23', 'Expected times are now a date and a time on the owner&rsquo;s clock (AS11, R6). Decisions 7 to 9: luismc-project-setup installs the plugin, which also installs on its own; the owner&rsquo;s time zone per project; dev-standards names and changes no other project, so AR1 and AR13 are out of this list. The build runs from about 13:30 and merges on green.'],

@@ -267,12 +267,12 @@ def build_feature(module):
 
 # ---------------------------------------------------------------- full-progress artifact
 p_lede = ('<p class="lede">All ongoing work in dev-standards, across every plugin. <strong>Nothing needs you right now.</strong> '
-          'Live: <span class="task-id">DS6</span>, STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (12:56), and the DS15 fix to the secret scan. Running: the luismc-artifacts build, merge on green at about 17:15. '
+          'Live: <span class="task-id">DS6</span>, STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (12:56), and the DS15 fix to the secret scan. Running: the luismc-artifacts build, merge on green at about 15:30. '
           '</p>')
 
 p_s1 = table(['Feature artifact', 'Tasks', 'Where it stands'], [
     [link_or_text(content_artifacts), 'AR1 to AR16',
-     'ARTIFACTSPEC 1.0.0 written (AR5); renderer, script and hooks being built; merge on green at about 17:15.'],
+     'ARTIFACTSPEC 1.0.0 written (AR5); renderer, script and hooks being built; merge on green at about 15:30.'],
     [link_or_text(content_models), 'MP1 to MP6, DS2, DS5',
      'All live: the effort question, role rules, skill profiles and the alias warning (luismc-project-setup 12.0.0).'],
 ])

@@ -2,7 +2,7 @@
  "registry": "draft for ARTIFACTSPEC 1.0.0",
  "project": "dev-standards",
  "timezone": "Europe/Lisbon",
- "updated": "2026-10-10T13:32+01:00",
+ "updated": "2026-10-10T13:40+01:00",
  "feature_artifacts": [
   {
    "title": "Feature: Project artifacts standard",
@@ -203,10 +203,10 @@
    "id": "AR7",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Done",
    "item": "project_artifacts.py",
-   "detail": "project_artifacts.py: the record worktree, every command, pending and mark-published, the record checks; a Sonnet agent on AR7-project-artifacts.",
-   "expected": "10 Oct ~15:30"
+   "detail": "project_artifacts.py: the record worktree with push retries, every §7 command, pending and mark-published, the record checks; 97 tests with the fake and the real renderer; joined.",
+   "expected": "10 Oct"
   },
   {
    "id": "AR8",
@@ -248,19 +248,28 @@
    "id": "AR12",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Running",
    "item": "Integrate and release",
-   "detail": "Full suite once on AR12-integration, then one ready PR to main: one CI run, one release; merged on green.",
-   "expected": "10 Oct ~17:15"
+   "detail": "All parts joined on AR12-integration; full local suite running; the real-repo test converts dev-standards’ own record on a scratch clone (AR17). Then one ready PR to main, merged on green.",
+   "expected": "10 Oct ~15:30"
+  },
+  {
+   "id": "AR17",
+   "owner": "Feature: Project artifacts standard",
+   "app": "luismc-artifacts",
+   "status": "Running",
+   "item": "dev-standards onto the plugin",
+   "detail": "Real-repo test (R13.3): convert this record to ARTIFACTSPEC 1.0.0 on a scratch clone, render, check, one status change end to end, nothing pushed. The converted record ships in the AR12 ready PR and retires the interim generator.",
+   "expected": "10 Oct ~15:00"
   },
   {
    "id": "AR15",
    "owner": "Feature: Project artifacts standard",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Done",
    "item": "Repo record and recreate",
-   "detail": "The record in docs/artifacts and recreation without duplicates; built into project_artifacts.py by the AR7 agent.",
-   "expected": "10 Oct ~15:30"
+   "detail": "The record in docs/artifacts and recreation without duplicates, built into project_artifacts.py; joined with AR7.",
+   "expected": "10 Oct"
   },
   {
    "id": "DS5",
