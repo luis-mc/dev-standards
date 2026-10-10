@@ -5,8 +5,13 @@ name: spec-lint
 # written against a clause that does not exist. This gate runs on every change
 # to them.
 
+# Only the default branch and ready pull requests run this. Agent branches and
+# draft pull requests are checked in the agent's sandbox (STACKSPEC §13.6);
+# running Actions on every push of every branch bills minutes for checks the
+# branch gate already ran.
 on:
   push:
+    branches: [main]
     paths:
       - 'claude/plugins/project-setup/skills/tech-stack-setup/references/**'
       - 'claude/plugins/project-setup/skills/auth-setup/references/**'
@@ -20,6 +25,7 @@ on:
       - 'claude/plugins/project-setup/skills/claude-setup/assets/**'
       - '.github/workflows/spec-lint.yml'
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - 'claude/plugins/project-setup/skills/tech-stack-setup/references/**'
       - 'claude/plugins/project-setup/skills/auth-setup/references/**'
@@ -40,6 +46,7 @@ env:
 jobs:
   structure:
     name: numbering and internal references (all specs)
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -123,6 +130,7 @@ jobs:
 
   authspec:
     name: authentication.md content consistency
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
