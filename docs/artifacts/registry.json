@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T19:28+01:00",
+  "updated": "2026-10-10T19:33+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -386,11 +386,11 @@
       "id": "DS21",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Done",
       "item": "Windows-only test failures",
-      "detail": "Agent fixing test_spec_check (symlink placeholder on Windows) and test_authspec_check (UTF-8).",
+      "detail": "Built in draft #22: test_spec_check loads spec_check through the symlink placeholder Windows checks out; test_authspec_check reads the spec as UTF-8. Both pass on Windows with no environment variable; every other tools/ suite passes there too. Waiting for the join.",
       "expected": "10 Oct ~21:30",
-      "changed": "2026-10-10T19:09+01:00"
+      "changed": "2026-10-10T19:33+01:00"
     },
     {
       "id": "MP1",
