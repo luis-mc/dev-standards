@@ -506,11 +506,11 @@
       "id": "DS25",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Cleanup needs gh to delete local work",
-      "detail": "Agent building (same agent as DS23): without gh, cleanup.py --local lists and deletes nothing.",
-      "expected": "10 Oct ~23:45",
-      "changed": "2026-10-10T23:15+01:00"
+      "detail": "Built in #34 and joined (not released): without a working gh, cleanup.py --local deletes nothing and lists 'would delete (needs gh to confirm)'. 200 checks on Windows and Linux.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:19+01:00"
     },
     {
       "id": "DS26",
