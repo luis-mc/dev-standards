@@ -356,11 +356,11 @@
       "id": "DS18",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Done",
       "item": "Pre-push guard flakes",
-      "detail": "Agent investigating the two pre-push guard failures after DS17; every guard failure will name the check, the reason and the log.",
-      "expected": "10 Oct ~21:30",
-      "changed": "2026-10-10T19:09+01:00"
+      "detail": "Built in draft #26. Causes shown: Vitest's 5 s default timeout on the whole-repo guard scan (no CI=true), and guards scanning other agents' worktrees nested under .claude/worktrees (a conflict marker there failed this push). Fixed in every track; fast_guards now has a 5-min limit per step, logs, and a FAIL line naming the check. gitleaks timing not proven. Joined.",
+      "expected": "10 Oct ~21:45",
+      "changed": "2026-10-10T20:22+01:00"
     },
     {
       "id": "DS19",
