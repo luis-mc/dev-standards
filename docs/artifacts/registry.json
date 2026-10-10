@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T21:37+01:00",
+  "updated": "2026-10-10T21:40+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -236,11 +236,11 @@
       "id": "AR26",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Needs you",
+      "status": "Waiting",
       "item": "Feature pages as repo files; fewer publishes",
-      "detail": "Owner's change after hitting claude.ai's 200 publishes a day (one publish per edit): Full Progress stays a claude.ai artifact; feature artifacts become HTML files in the repo, updated by the same rules, opened in a browser with the same look. Waiting on the owner: how Full Progress links to them, how often Full Progress publishes, what happens to the two existing feature artifacts.",
-      "expected": "10 Oct ~21:45",
-      "changed": "2026-10-10T21:37+01:00"
+      "detail": "Decided: Full Progress stays on claude.ai and publishes once per turn; feature pages become standalone HTML files in docs/artifacts/ with the same look, never published; Full Progress links to them as files on this PC (file:///…; the committed copy uses relative links); the two feature artifacts on claude.ai are deleted after release, each with your confirmation. Starts when AR21, AR22 and AR25 are joined, since it touches the same files.",
+      "expected": "11 Oct ~00:30",
+      "changed": "2026-10-10T21:40+01:00"
     },
     {
       "id": "DS1",
