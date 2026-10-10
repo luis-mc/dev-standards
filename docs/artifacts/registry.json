@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T00:42+01:00",
+  "updated": "2026-10-11T00:44+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -261,6 +261,16 @@
       "detail": "Done at 00:52 (backups first): the dev-standards marketplace refreshed; luismc-project-setup 11.2.1 -> 13.0.0, luismc-agents 1.0.0 -> 1.1.0, luismc-audits 1.0.1 -> 1.2.0, luismc-specs 1.0.0 -> 1.2.0 (user scope). luismc-artifacts was not installed anywhere; it is now enabled for dev-standards on this machine (local scope, .claude/settings.local.json, nothing committed). Sessions pick the updates up when they restart. Other projects get luismc-artifacts when claude-setup runs there.",
       "expected": "11 Oct",
       "changed": "2026-10-11T00:42+01:00"
+    },
+    {
+      "id": "AR29",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "Bring both feature pages' text up to date",
+      "detail": "Owner asked to update the feature pages. Their prose still describes the state before tonight: feature artifacts published on claude.ai, Done instead of Built, profiles at Opus high / Sonnet medium. Rewriting ledes, sections and history for luismc-artifacts 1.1.x and the medium-effort defaults (MP7).",
+      "expected": "11 Oct ~01:30",
+      "changed": "2026-10-11T00:44+01:00"
     },
     {
       "id": "DS1",
