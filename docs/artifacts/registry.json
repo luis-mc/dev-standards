@@ -46,11 +46,11 @@
       "id": "AR6",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "Templates",
-      "detail": "render_artifacts.py and the two templates: deterministic rendering, the HTML checks, the Earlier fold; 57 tests; joined at 39cb8c3.",
+      "detail": "render_artifacts.py and the two templates: deterministic rendering, the HTML checks, the Earlier fold; 57 tests. Released in #18.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T14:46+01:00"
     },
     {
       "id": "AR7",
