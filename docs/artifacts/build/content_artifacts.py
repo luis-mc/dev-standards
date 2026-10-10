@@ -15,7 +15,7 @@ HERO = ('How every project gets the same status artifacts: a feature artifact pe
 EXTRA_CSS = ''
 
 LEDE = ('<p class="lede">The design is agreed and the default design is built (AR14). <strong>Nothing needs you</strong> on this feature. '
-        'The build starts at about 13:30 with AR5, the spec, and merges on green at about 17:15. Every task here is also on {fp_link}.</p>')
+        'The spec is written (AR5); three Sonnet agents are building the renderer, the script and the hooks. Merge on green at about 17:15. Every task here is also on {fp_link}.</p>')
 
 # status, item, detail, expected. Done/Live newest first, then the rest earliest first.
 TASKS = [
@@ -33,17 +33,17 @@ TASKS = [
          expected='10 Oct'),
     dict(id='AR2', status='Done', item='Proposal reviewed',
          detail='Twelve findings; each one and the change it led to is in section 7.', expected='10 Oct'),
-    dict(id='AR5', status='To do', item='ARTIFACTSPEC 1.0.0',
-         detail='The standard as a numbered, versioned spec; section 3 is its draft. Must pass spec_check.py.',
-         expected='10 Oct ~14:15'),
-    dict(id='AR6', status='To do', item='Templates',
-         detail='feature-artifact.html and full-progress-artifact.html built on the AR14 stylesheet, plus finding a project\'s own design.',
+    dict(id='AR5', status='Done', item='ARTIFACTSPEC 1.0.0',
+         detail='ARTIFACTSPEC 1.0.0 on AR12-integration (b8bd29b): the record, statuses and checklist, commands, hooks, publishing and recreation, test and conformance gates; spec_check clean. Plus the shared queue module (43150da).',
+         expected='10 Oct'),
+    dict(id='AR6', status='Running', item='Templates',
+         detail='render_artifacts.py, the two templates and the HTML checks; a Sonnet agent on AR6-templates.',
          expected='10 Oct ~15:30'),
-    dict(id='AR7', status='To do', item='project_artifacts.py',
-         detail='Task registry, rendering, add-task, set-task-status, stamp, check. Stdlib only; Windows timezone fallback.',
+    dict(id='AR7', status='Running', item='project_artifacts.py',
+         detail='project_artifacts.py: the record worktree, every command, pending and mark-published, the record checks; a Sonnet agent on AR7-project-artifacts.',
          expected='10 Oct ~15:30'),
-    dict(id='AR8', status='To do', item='Hooks',
-         detail='After-command, end-of-turn and session-start hooks in hooks/hooks.json.', expected='10 Oct ~16:30'),
+    dict(id='AR8', status='Running', item='Hooks',
+         detail='The after-command, end-of-turn and session-start hooks and hooks/hooks.json; a Sonnet agent on AR8-hooks.', expected='10 Oct ~15:30'),
     dict(id='AR9', status='To do', item='Tests and CI',
          detail='A fixture per check that proves it fires, hook tests, spec-lint.yml path filters.',
          expected='10 Oct ~16:30'),
@@ -53,10 +53,10 @@ TASKS = [
          detail='plugin.json 1.0.0, the marketplace entry, the README section and install line.',
          expected='10 Oct ~16:45'),
     dict(id='AR12', status='To do', item='Integrate and release',
-         detail='Full suite once on artifacts/integration, then one ready PR to main: one CI run, one release. Built by Sonnet agents from about 13:30; merged on green.',
+         detail='Full suite once on AR12-integration, then one ready PR to main: one CI run, one release; merged on green.',
          expected='10 Oct ~17:15'),
-    dict(id='AR15', status='To do', item='Repo record and recreate',
-         detail='Each project keeps its artifacts\' record in docs/artifacts/: manifest, task registry, each artifact\'s content and last published HTML. A deleted artifact is recreated from it without duplicates. Built into project_artifacts.py.',
+    dict(id='AR15', status='Running', item='Repo record and recreate',
+         detail='The record in docs/artifacts and recreation without duplicates; built into project_artifacts.py by the AR7 agent.',
          expected='10 Oct ~15:30'),
 ]
 
@@ -236,7 +236,8 @@ S7 = ('<p class="lede">The review of the first proposal on 10 October found twel
 
 def history(stamp):
     return _table(['Date', 'Change'], [
-        [stamp, 'Expected times are now a date and a time on the owner&rsquo;s clock (AS11, R6). Decisions 7 to 9: luismc-project-setup installs the plugin, which also installs on its own; the owner&rsquo;s time zone per project; dev-standards names and changes no other project, so AR1 and AR13 are out of this list. The build runs from about 13:30 and merges on green.'],
+        [stamp, 'AR5 done: ARTIFACTSPEC 1.0.0 committed to AR12-integration with the shared queue module; AR6, AR7, AR8 and AR15 started.'],
+        ['10 Oct 12:23', 'Expected times are now a date and a time on the owner&rsquo;s clock (AS11, R6). Decisions 7 to 9: luismc-project-setup installs the plugin, which also installs on its own; the owner&rsquo;s time zone per project; dev-standards names and changes no other project, so AR1 and AR13 are out of this list. The build runs from about 13:30 and merges on green.'],
         ['10 Oct 11:07', 'The repo becomes the record: docs/artifacts/ holds the manifest, the task registry, each artifact&rsquo;s content and last published HTML, committed to the default branch as docs-only commits; a deleted artifact is recreated from it without duplicates (AS19, AS20, AR15). dev-standards&rsquo; record saved (AR16). Model and effort profiles split into their own feature artifact.'],
         ['10 Oct 09:47', 'Decisions answered (AR4): one task registry, task-ID branch names, catch-up at session start, an App / service column on the full-progress artifact. The look now comes from each project&rsquo;s own design, with a plugin default for projects without one; dev-standards uses the default design (AR14), applied to this artifact.'],
         ['10 Oct 09:24', 'Moved to dev-standards, where it is built. Rewritten to the agreed design: plugin <code>luismc-artifacts</code>; explicit names (feature artifact, full-progress artifact); the full-progress artifact shows all project work and is created with the first feature artifact; one task registry with automatic updates and hooks; task IDs AR1 to AR13; the review findings (section 7); five open decisions. Full Progress: dev-standards created.'],
