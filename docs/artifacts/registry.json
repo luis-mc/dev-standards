@@ -96,11 +96,11 @@
       "id": "AR11",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Done",
+      "status": "Live",
       "item": "Plugin wiring",
-      "detail": "plugin.json 1.0.0, marketplace entry, README; claude-setup enables the plugin under the marketplace name the owner registered (luismc-project-setup 12.1.0); joined at fb1edf2.",
+      "detail": "plugin.json 1.0.0, marketplace entry, README; claude-setup enables the plugin under the marketplace name the owner registered (luismc-project-setup 12.1.0). Released in #18.",
       "expected": "10 Oct",
-      "changed": "2026-10-10T12:00+01:00"
+      "changed": "2026-10-10T14:46+01:00"
     },
     {
       "id": "AR12",
