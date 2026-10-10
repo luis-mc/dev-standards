@@ -258,6 +258,12 @@ def load_gate(root: Path) -> dict:
         if "run_full" in step and not isinstance(step["run_full"], str):
             raise DeliveryError("%s ('%s'): 'run_full' must be a string" % (label, name))
         step["pre_push"] = bool(step.get("pre_push", False))
+        env = step.get("env", {})
+        if not isinstance(env, dict) or not all(
+            isinstance(k, str) and k and isinstance(v, str) for k, v in env.items()
+        ):
+            raise DeliveryError("%s ('%s'): 'env' must map names to string values" % (label, name))
+        step["env"] = env
     return cfg
 
 
@@ -417,6 +423,47 @@ def changed_package_dirs(files: list[str], packages: list[str]) -> list[str]:
     return sorted({p for f in files if (p := package_of(f, packages)) is not None})
 
 
+_DEP_KEYS = ("dependencies", "devDependencies", "optionalDependencies", "peerDependencies")
+
+
+def affected_package_dirs(root: Path, packages_cfg: dict, packages: list[str], changed: list[str]) -> list[str]:
+    """The changed packages plus every package that depends on one of them, directly
+    or through others. Only pnpm-workspace repositories have a dependency graph we
+    can read (each package.json); other kinds return the changed set. A test run
+    scoped to the changed packages alone misses the tests of their dependents."""
+    if packages_cfg.get("kind") != "pnpm-workspace" or not changed:
+        return list(changed)
+    names: dict[str, str] = {}
+    deps: dict[str, set[str]] = {}
+    for d in packages:
+        pj = root / d / "package.json"
+        if not pj.is_file():
+            continue
+        try:
+            data = json.loads(pj.read_text(encoding="utf-8-sig"))
+        except ValueError:
+            continue
+        if not isinstance(data, dict):
+            continue
+        if isinstance(data.get("name"), str):
+            names[data["name"]] = d
+        deps[d] = {k for key in _DEP_KEYS if isinstance(data.get(key), dict) for k in data[key]}
+    dependents: dict[str, set[str]] = {}
+    for d, wanted in deps.items():
+        for name in wanted:
+            target = names.get(name)
+            if target is not None and target != d:
+                dependents.setdefault(target, set()).add(d)
+    seen = set(changed)
+    todo = list(changed)
+    while todo:
+        for dep in dependents.get(todo.pop(), ()):
+            if dep not in seen:
+                seen.add(dep)
+                todo.append(dep)
+    return sorted(seen)
+
+
 def widen_match(path: str, entry: str) -> bool:
     """A widen_on entry: 'dir/' (prefix), a glob containing * ? [, or a root-level
     file name. A bare name matches only at the repository root, so a package's own
@@ -447,6 +494,7 @@ class Context:
     files: list[str]
     packages: list[str]
     changed_dirs: list[str]
+    affected_dirs: list[str]
     widened: bool
     widen_reasons: list[str] = field(default_factory=list)
 
@@ -469,6 +517,7 @@ def build_context(root: Path, cfg: dict, base_ref: str | None, full: bool = Fals
     reasons = widening_files(files, cfg["widen_on"])
     if full:
         reasons = ["--full"] + reasons
+    changed = changed_package_dirs(files, packages)
     return Context(
         root=root,
         cfg=cfg,
@@ -477,7 +526,8 @@ def build_context(root: Path, cfg: dict, base_ref: str | None, full: bool = Fals
         head=head,
         files=files,
         packages=packages,
-        changed_dirs=changed_package_dirs(files, packages),
+        changed_dirs=changed,
+        affected_dirs=affected_package_dirs(root, cfg["packages"], packages, changed),
         widened=bool(reasons),
         widen_reasons=reasons,
     )
@@ -502,17 +552,23 @@ def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
             return False, None, "no ui_paths change"
         cmd = (step.get("run_full") if wide else None) or step["run"]
         why = "widened" if wide else "ui path changed"
-    dirs = ctx.packages if wide else ctx.changed_dirs
-    cmd = cmd.replace("{base}", ctx.base).replace("{changed_dirs}", " ".join(dirs))
+    cmd = (
+        cmd.replace("{base}", ctx.base)
+        .replace("{changed_dirs}", " ".join(ctx.packages if wide else ctx.changed_dirs))
+        .replace("{affected_dirs}", " ".join(ctx.packages if wide else ctx.affected_dirs))
+    )
     return True, cmd, why
 
 
-def run_command(cmd: str, cwd: Path) -> tuple[int, float]:
-    """Run a step command through the shell, output inherited. Returns (code, seconds)."""
+def run_command(cmd: str, cwd: Path, env: dict[str, str] | None = None) -> tuple[int, float]:
+    """Run a step command through the shell, output inherited. `env` is added to the
+    environment (a step's "env" in gate.json: the only way to set a variable that
+    works in cmd.exe and sh alike). Returns (code, seconds)."""
     sys.stdout.flush()
     sys.stderr.flush()
     start = time.monotonic()
-    code = subprocess.run(cmd, shell=True, cwd=cwd).returncode
+    full_env = {**os.environ, **env} if env else None
+    code = subprocess.run(cmd, shell=True, cwd=cwd, env=full_env).returncode
     return code, round(time.monotonic() - start, 1)
 
 
@@ -537,7 +593,7 @@ def execute_steps(
             entry["reason"] = why
             if go:
                 print("\n==> %s (%s)\n    $ %s" % (name, why, cmd), flush=True)
-                code, secs = run_command(cmd, ctx.root)
+                code, secs = run_command(cmd, ctx.root, step.get("env"))
                 entry.update(
                     outcome="pass" if code == 0 else "fail", seconds=secs, command=cmd
                 )

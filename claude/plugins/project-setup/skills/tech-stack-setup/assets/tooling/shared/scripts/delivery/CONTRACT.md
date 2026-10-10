@@ -54,8 +54,8 @@ timed out. A script never exits 0 when it could not decide.
     {"name": "lint", "scope": "changed+dependents",
      "run": "pnpm turbo run lint --continue --filter=...[{base}]",
      "run_full": "pnpm turbo run lint --continue"},
-    {"name": "unit", "scope": "changed",
-     "run": "pnpm vitest run --project unit {changed_dirs}",
+    {"name": "unit", "scope": "changed+dependents",
+     "run": "pnpm vitest run --project unit --passWithNoTests {affected_dirs}",
      "run_full": "pnpm vitest run --project unit"},
     {"name": "guards", "scope": "always", "pre_push": true,
      "run": "pnpm vitest run --project guard"},
@@ -76,8 +76,19 @@ timed out. A script never exits 0 when it could not decide.
   glob over the full path; anything else is a root-level file only (a nested
   `package.json` does not widen). Per-package lockfiles use globs (`*go.sum`,
   `*packages.lock.json`).
+- `env` (optional, per step): an object of names to string values added to the
+  environment of that step's command, e.g. `"env": {"CI": "true"}` for a test
+  runner whose timeouts depend on it. Inline `VAR=x cmd` does not work in
+  `cmd.exe`; this does everywhere.
 - Placeholders: `{base}` (base commit sha), `{changed_dirs}` (space-separated
-  package directories that changed, POSIX paths relative to the root).
+  package directories that changed, POSIX paths relative to the root),
+  `{affected_dirs}` (the changed directories plus every workspace package that
+  depends on one of them, directly or not; computed from each `package.json` in a
+  `pnpm-workspace`, equal to `{changed_dirs}` for the other kinds). Use
+  `{affected_dirs}` for a test command that must also run the tests of the
+  packages that import the change; a tool with its own dependency filter
+  (`turbo --filter=...[{base}]`) does not need it. When the gate is widened both
+  placeholders are every package.
 - `packages.kind`: `pnpm-workspace` (globs under `packages:` in
   `pnpm-workspace.yaml`), `go-modules` (dirs holding `go.mod`), `cargo-workspace`
   (`[workspace] members` in `Cargo.toml`), `dotnet-sln` (project dirs of the
