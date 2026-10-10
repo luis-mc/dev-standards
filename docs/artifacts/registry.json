@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-10T21:48+01:00",
+  "updated": "2026-10-10T21:52+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -208,9 +208,9 @@
       "app": "luismc-artifacts",
       "status": "Running",
       "item": "Convert dev-standards' decisions",
-      "detail": "Agent extracting, from this session's record, every question the owner was asked with its options, recommendation and answer, to rebuild both features' decisions as decisions.json; applied with the release, since the new check refuses the old hand-written sections.",
-      "expected": "11 Oct ~00:30",
-      "changed": "2026-10-10T21:48+01:00"
+      "detail": "Extracted from this session: 9 decisions for Project artifacts standard and 5 for Model and effort profiles, each with the options offered, the recommendation and your answer; four of your answers were free text and are kept in your words. One earlier 'decision' was dropped: I had settled it myself, so it was never your choice. Applied to the record right after the 1.1.0 release.",
+      "expected": "11 Oct ~00:45",
+      "changed": "2026-10-10T21:52+01:00"
     },
     {
       "id": "AR24",
