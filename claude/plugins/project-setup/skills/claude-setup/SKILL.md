@@ -142,7 +142,9 @@ Make it executable after copying: `chmod +x <target>/statusline.sh`.
 
 ### `settings.json` — add whole if absent, field-level if present
 
-If the file does not exist, copy the template as-is.
+If the file does not exist, copy the template as-is. For a user target, drop
+the template's `enabledPlugins` block first: only a project target enables the
+project-artifacts plugin.
 
 If it exists, queue only the keys that are **missing**. Never change a key that
 already has a value: an existing entry may have been deliberately tuned, and
@@ -160,6 +162,7 @@ to avoid. The keys, and what each is for:
 | `modelSettings.<Sonnet ID>.effortLevel` | the step 1 answer, `"medium"` or `"high"` | the Sonnet effort for the session itself (subagents: see the rule file below) |
 | `effortLevel` | `"high"` | the effort for sessions whose model has no `modelSettings` entry, such as cloud agents; the per-model entries beat it |
 | `hooks.SessionStart` | the drift-hook entry, see path note below | runs `hooks/effort_drift.py` at session start |
+| `enabledPlugins."luismc-artifacts@luismc-dev-tools"` | `true`, project target only | enables the project-artifacts plugin (ARTIFACTSPEC R10.1) |
 
 **The effort keys are written from the user's answer, not queued as missing.**
 They are an explicit choice made this run, so they are written into every
@@ -201,9 +204,20 @@ write. Keep every other event and every other `SessionStart` hook exactly as it
 is, and never remove or reorder a hook. Create `hooks` and `hooks.SessionStart`
 when they are absent.
 
-Do **not** write an `enabledPlugins` block. Enabling and disabling plugins is
-the user's call per project, made through `/plugin` or their own settings — not
-something this skill decides on their behalf.
+**`enabledPlugins` merges, and writes one entry.** For a project target, add
+`"luismc-artifacts@luismc-dev-tools": true` to `enabledPlugins` in the
+project's `.claude/settings.json`, so every project this skill sets up has the
+project-artifacts plugin (ARTIFACTSPEC R10.1). `luismc-dev-tools` is the
+marketplace name this plugin itself is installed from. Create `enabledPlugins`
+when it is absent. When the key `luismc-artifacts@luismc-dev-tools` is already
+there, with `true` or `false`, leave it exactly as it is: a `false` is the
+owner's decision. Keep every other entry, and never remove or reorder one. This
+skill writes no other `enabledPlugins` entry, and none to a user target; which
+other plugins are enabled is the user's call, made through `/plugin` or their
+own settings. Enabling the plugin creates no file in the project; the plugin's
+own first `feature-new` or `init` does (its R10.2). Report, in step 5, that the
+marketplace must be added on the machine (`claude plugin marketplace add
+luis-mc/dev-standards`) for the entry to take effect.
 
 **The `statusLine` command differs per target and the template only carries the
 project form.** Rewrite it for a user-level install:
@@ -298,7 +312,9 @@ the file it points at actually exists.
 Group every queued change by target and by file: what is being added, what is
 being overwritten unconditionally, what is being removed (a target's old
 `rules/model-delegation.md`), and which individual settings keys are being
-added, including the `hooks.SessionStart` entry. List each model-split
+added, including the `hooks.SessionStart` entry and, for a project target, the
+`enabledPlugins` entry for `luismc-artifacts@luismc-dev-tools` (or that it is
+already there). List each model-split
 conflict separately as `key: current → policy`. List the two effort keys per
 target as `modelSettings.<ID>.effortLevel: current → chosen` (`none → chosen`
 when absent), and any
@@ -335,6 +351,9 @@ Apply what was confirmed, then check the result rather than assuming it worked:
   `hooks.SessionStart` holds the command for that target (project form
   with `$CLAUDE_PROJECT_DIR`, user form with `$HOME`), once, next to any
   hooks that were already there.
+- A project target's `enabledPlugins` holds `luismc-artifacts@luismc-dev-tools`
+  (`true`, or the owner's existing value), next to every entry that was there
+  before, and the file still parses as JSON.
 - No `CLAUDE_CODE_EFFORT_LEVEL` remains in the target's `env` block, unless the
   user chose to keep it — then say it overrides the saved efforts.
 - The split takes effect from the next session; the current one keeps the
@@ -349,7 +368,9 @@ conflict left in place. Whether the model split is now enforced for this
 project only or for all projects. The effort chosen for each model (Opus main
 session, Sonnet subagents) and where it was written, and the top-level
 `effortLevel` (added as `high`, or the existing value left alone) that cloud
-agents fall back to. Anything removed (the old
+agents fall back to. Whether `luismc-artifacts` was enabled for the project, and
+that the marketplace must be added on the machine for it to load. Anything
+removed (the old
 `model-delegation.md`), and whether the project has `scripts/delivery/`, which
 the rule file cites. If both targets were
 written, note which keys the project file now shadows.
@@ -401,8 +422,9 @@ keep it off, set the variable.
 
 `assets/model-profiles.json` is the single source of truth for which model and
 effort each skill in this marketplace runs at, in three groups: `judgment`
-(Opus, high: specs, audits, stack setup, auth), `mechanical` (Sonnet, medium:
-checks and task bookkeeping) and `setup` (Sonnet, high: this skill). Every
+(Opus, high: specs, audits, stack setup, auth, writing a feature artifact),
+`mechanical` (Sonnet, medium: checks and task bookkeeping, the other artifacts
+skills) and `setup` (Sonnet, high: this skill). Every
 skill's `model:` and `effort:` frontmatter must match its group; this skill's
 own frontmatter does. `tools/test_model_profiles.py` enforces that, so change
 the JSON first and the skill files after. The file is not copied to a target
