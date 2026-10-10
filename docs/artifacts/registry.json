@@ -386,11 +386,11 @@
       "id": "DS21",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Windows-only test failures",
-      "detail": "test_spec_check (a symlink) and test_authspec_check (needs UTF-8) pass on Windows as they do on Linux CI.",
+      "detail": "Agent fixing test_spec_check (symlink placeholder on Windows) and test_authspec_check (UTF-8).",
       "expected": "10 Oct ~21:30",
-      "changed": "2026-10-10T19:04+01:00"
+      "changed": "2026-10-10T19:09+01:00"
     },
     {
       "id": "MP1",
