@@ -38,7 +38,7 @@ import json
 import re
 from pathlib import Path
 
-STATUSES = ['Live', 'Done', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed']
+STATUSES = ['Live', 'Built', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed']
 REQUIRED_TOKENS = ['--paper', '--ink']
 
 
@@ -427,11 +427,9 @@ def test_init_session_files(env):
     r = p.init()
     gi = (p.clone / '.gitignore').read_text(encoding='utf-8')
     assert '.claude/artifacts-queue.json' in gi and '.claude/worktrees/' in gi
-    if (env.plugin / 'rules' / 'project-artifacts.md').is_file():
-        assert (p.clone / '.claude' / 'rules' / 'project-artifacts.md').is_file()
-        assert '.claude/rules/project-artifacts.md' in r.out
-    else:
-        assert 'not in the plugin yet' in r.out
+    # R10.2, R10.4: the plugin delivers the rule at session start; init copies nothing
+    assert not (p.clone / '.claude' / 'rules').exists(), list((p.clone / '.claude').iterdir())
+    assert 'rules/' not in r.out, r.out
     status = git(p.clone, 'status', '--porcelain').stdout
     assert 'docs/' not in status and 'worktrees' not in status, status
     # idempotent: a second command reports no session changes
@@ -579,13 +577,13 @@ def test_set_task_status_only_touches_its_artifacts(env):
 
 
 @case
-def test_status_live_done_sets_expected_date(env):
+def test_status_live_built_sets_expected_date(env):
     p = env.baseline()
     p.ok('set-task-status', 'AR1', 'Live')
     assert p.task('AR1')['expected'] == '10 Oct', p.task('AR1')
-    p.ok('set-task-status', 'SI1', 'Done')
+    p.ok('set-task-status', 'SI1', 'Built')
     assert p.task('SI1')['expected'] == '10 Oct'
-    p.ok('set-task-status', 'DS1', 'Done', '--expected', '09 Oct; shipped early')
+    p.ok('set-task-status', 'DS1', 'Built', '--expected', '09 Oct; shipped early')
     assert p.task('DS1')['expected'] == '09 Oct; shipped early'
     assert p.run('check').code == 0
 
@@ -594,7 +592,7 @@ def test_status_live_done_sets_expected_date(env):
 def test_status_nearest(env):
     p = env.baseline()
     for word, near in [('Merged', 'Live'), ('Blocked', 'Needs you'), ('In progress', 'Running'),
-                       ('Paused', 'On hold'), ('Planned', 'To do'), ('Finished', 'Done'),
+                       ('Paused', 'On hold'), ('Planned', 'To do'), ('Finished', 'Built'),
                        ('Broken', 'Failed'), ('wating', 'Waiting'), ('live', 'Live')]:
         before = p.head()
         r = p.run('set-task-status', 'AR1', word)
@@ -1050,8 +1048,8 @@ def test_protection_refusal_and_retry(env):
     os.chmod(str(hook), 0o755)
     assert p.run('set-task-status', 'SI1', 'Waiting').code == 4
     hook.unlink()
-    p.ok('set-task-status', 'AR2', 'Done')
-    assert p.task('SI1')['status'] == 'Waiting' and p.task('AR2')['status'] == 'Done'
+    p.ok('set-task-status', 'AR2', 'Built')
+    assert p.task('SI1')['status'] == 'Waiting' and p.task('AR2')['status'] == 'Built'
 
 
 @case
@@ -1349,7 +1347,7 @@ REGISTRY_FIXTURES = [
     ('expected soon', 'R6.6', lambda r: task(r, 'SI1').update(expected='soon; very')),
     ('one-digit day', 'R6.6', lambda r: task(r, 'SI1').update(expected='2 Oct')),
     ('expected missing month', 'R6.6', lambda r: task(r, 'DS1').update(expected='13')),
-    ('expected on a done row', 'R6.7', lambda r: task(r, 'AR2').update(expected='tomorrow')),
+    ('expected on a built row', 'R6.7', lambda r: task(r, 'AR2').update(expected='tomorrow')),
     ('registry spec', 'R4.2', lambda r: r.update(spec='x')),
 ]
 
@@ -1372,10 +1370,82 @@ def test_check_baseline_clean(env):
     r = p.run('check')
     assert r.code == 0 and 'clean' in r.out, r.all
     r = p.run('check', '--json')
-    assert r.code == 0 and r.json() == {'findings': []}
+    assert r.code == 0 and r.json() == {'findings': [], 'notes': []}
     rec = p.record_copy('baseline')
     assert check_record(env, rec).code == 0
     assert check_record(env, rec.parent.parent).code == 0, 'a repository root is accepted for --record'
+
+
+@case
+def test_done_is_a_deprecated_alias_of_built(env):
+    """R6.9: Done is accepted, stored as Built, with a note; task-add takes it too."""
+    p = env.baseline()
+    r = p.ok('set-task-status', 'AR1', 'Done')
+    assert p.task('AR1')['status'] == 'Built', p.task('AR1')
+    assert 'deprecated' in r.err and 'Built' in r.err, r.all
+    r = p.ok('task-add', '--owner', 'site', '--item', 'Old', '--detail', 'x', '--expected', '14 Oct',
+             '--status', 'done')
+    assert p.reg()['tasks'][-1]['status'] == 'Built' and 'deprecated' in r.err, r.all
+    r = p.run('set-task-status', 'AR1', 'Finished')            # a synonym is refused, with the hint
+    assert r.code == 1 and 'Nearest allowed status: Built' in r.err, r.all
+    assert 'Done' not in R_STATUSES(env)
+
+
+def R_STATUSES(env):
+    r = subprocess.run([sys.executable, '-c',
+                        'import sys; sys.path.insert(0, %r); import render_artifacts as R; print(R.STATUSES)'
+                        % str(env.plugin / 'scripts')], capture_output=True, text=True, env=base_env())
+    return r.stdout
+
+
+@case
+def test_old_done_records_migrate_to_built(env):
+    """R6.9: a record holding Done is read as Built, noted by check, rewritten by the next writing command."""
+    p = env.baseline()
+    other = p.clone_again('old-done')
+    rp, mp = other / 'docs' / 'artifacts' / 'registry.json', other / 'docs' / 'artifacts' / 'manifest.json'
+    reg = json.loads(rp.read_text(encoding='utf-8'))
+    next(t for t in reg['tasks'] if t['id'] == 'AR2')['status'] = 'Done'
+    rp.write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
+    man = json.loads(mp.read_text(encoding='utf-8'))
+    man['merged_status'] = 'Done'
+    mp.write_text(json.dumps(man, indent=2) + '\n', encoding='utf-8')
+    git(other, 'commit', '-q', '-a', '-m', 'age the record to 1.0.0 statuses')
+    git(other, 'push', '-q', 'origin', 'main')
+    out = p.run('check', '--json').json()
+    assert any('AR2' in n and 'Done' in n for n in out['notes']), out
+    assert not any('retired status' in f['message'] for f in out['findings']), out    # a note, not a finding
+    r = p.run('check')
+    assert 'note: registry.json: AR2 still use the retired status Done' in r.out, r.all
+    p.ok('set-task-status', 'AR1', 'Running')       # any writing command
+    assert p.task('AR2')['status'] == 'Built', p.task('AR2')
+    assert all(t['status'] != 'Done' for t in p.reg()['tasks'])
+    assert p.man()['merged_status'] == 'Built', p.man()
+    assert 'Done' not in p.show('docs/artifacts/registry.json')
+    r = p.ok('check', '--json')
+    assert r.json() == {'findings': [], 'notes': []}, r.out
+
+
+@case
+def test_check_notes_a_differing_rule_copy(env):
+    """R10.5: a project's own copy of the rule that differs is a note, never a finding."""
+    p = env.baseline()
+    rules = p.clone / '.claude' / 'rules'
+    rules.mkdir(parents=True)
+    mine = rules / 'project-artifacts.md'
+    plugin_rule = env.plugin / 'rules' / 'project-artifacts.md'
+    mine.write_bytes(plugin_rule.read_bytes())
+    r = p.run('check', '--json')
+    assert r.code == 0 and r.json()['notes'] == [], r.all       # identical: nothing to say
+    mine.write_text('- An old rule.\n', encoding='utf-8')
+    r = p.run('check')
+    assert r.code == 0 and 'record is clean' in r.out, r.all    # not a failure
+    assert 'note: ' in r.out and '.claude/rules/project-artifacts.md differs' in r.out, r.out
+    assert 'delivers the rule at session start' in r.out and 'can be deleted' in r.out, r.out
+    r = p.run('check', '--json')
+    assert r.code == 0 and r.json()['findings'] == [] and len(r.json()['notes']) == 1, r.all
+    mine.unlink()
+    assert p.run('check', '--json').json()['notes'] == []
 
 
 @case

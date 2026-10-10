@@ -8,7 +8,13 @@ effort: medium
 # Task — status update
 
 Changes a task's status through the script and publishes every artifact that
-shows it, in the same turn. Only the script writes the registry; never edit
+shows it, in the same turn. Every activity is a task, the session's own
+included (contracts, joins, test runs, releases, cleanup): a task is `Running`
+while any work for it runs, `Waiting` or `Needs you` when blocked on
+something or someone. `Built` means finished but not released (`Live` is released; `Done` is a
+retired name the script stores as `Built`); release work still to come (join,
+CI, release) is its own task, Running or To do. Before a turn
+ends with work still running in the background, its task is `Running`. Only the script writes the registry; never edit
 `registry.json` or `manifest.json` by hand, and never type a status row into an
 artifact.
 
@@ -21,10 +27,10 @@ read the message, fix the cause and rerun.
 
 1. **Find the task ID and the new status.** The ID is the one in the user's
    words, in a queued event (`queue list`), or the start of the current branch
-   name (`AR5-artifactspec` is task `AR5`). The status is one of Live, Done,
+   name (`AR5-artifactspec` is task `AR5`). The status is one of Live, Built,
    Running, Needs you, Waiting, To do, On hold, Failed. A suggested status from
    a queued event is a suggestion: confirm it matches what happened. A word
-   outside the eight maps to the nearest (`Merged` is `Live`, or `Done` when the
+   outside the eight maps to the nearest (`Merged` is `Live`, or `Built` when the
    project's `merged_status` says so).
 2. **Change it:**
    `set-task-status <ID> "<Status>" [--detail "TEXT"] [--expected "DD Mon"] [--history "TEXT"]`.
@@ -32,7 +38,7 @@ read the message, fix the cause and rerun.
      changed.
    - `--expected`: a real date from `date` in the project's zone, `DD Mon` or
      `DD Mon ~HH:MM`, optionally followed by `; ` and a short note. Never
-     `today`, `soon`, `tomorrow` or `next` alone. For Live or Done it defaults
+     `today`, `soon`, `tomorrow` or `next` alone. For Live or Built it defaults
      to the current date; do not pass one.
    - `--history`: one line for the feature artifact's History table, for a
      feature task whose change the owner should be able to look up later.

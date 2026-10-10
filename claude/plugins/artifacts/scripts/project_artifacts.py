@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """project_artifacts.py - the only writer of a project's artifact record.
 
-Implements ARTIFACTSPEC 1.0.0: section 4 (the record, time, the record
+Implements ARTIFACTSPEC 1.1.0: section 4 (the record, time, the record
 worktree and its commits), section 7 (every command), the bookkeeping of
 section 9 (`pending`, `mark-published`) and the record-level checks of
 section 14. Rendering lives in render_artifacts.py, the queue in
@@ -539,6 +539,21 @@ def task_sort_key(t):
     return (m.group(1), int(m.group(2))) if m else (str(t.get('id', '')), 0)
 
 
+def migrate_done(manifest, registry):
+    """Read the status Done, retired in 1.1.0, as Built (in tasks and in merged_status).
+    Returns (IDs of tasks changed, whether anything changed); the next writing command writes it."""
+    ids = []
+    tasks = registry.get('tasks')
+    for t in tasks if isinstance(tasks, list) else []:
+        if isinstance(t, dict) and t.get('status') == 'Done':
+            t['status'] = 'Built'
+            ids.append(str(t.get('id')))
+    merged = manifest.get('merged_status') == 'Done'
+    if merged:
+        manifest['merged_status'] = 'Built'
+    return ids, bool(ids) or merged
+
+
 class Record:
     def __init__(self, d, manifest=None, registry=None, exists=True):
         self.dir = Path(d)
@@ -551,6 +566,8 @@ class Record:
         self.render_keys = {}        # key -> 'new': render with a new stamp
         self.rendered = set()
         self.message = None
+        self.old_done = []           # IDs read from the file with the retired status Done
+        self.migrated = False
 
     @classmethod
     def load(cls, d):
@@ -564,7 +581,13 @@ class Record:
         registry = read_json(rp)
         if not isinstance(manifest, dict) or not isinstance(registry, dict):
             raise Fail(2, 'unreadable record: manifest.json and registry.json must be objects')
-        return cls(d, manifest, registry)
+        raw_tasks = copy.deepcopy(registry.get('tasks')) if isinstance(registry.get('tasks'), list) else None
+        old_done, migrated = migrate_done(manifest, registry)
+        rec = cls(d, manifest, registry)
+        if migrated:
+            rec._tasks0 = raw_tasks      # the registry differs from the file, so it is rewritten
+            rec.old_done, rec.migrated = old_done, True
+        return rec
 
     def artifacts(self):
         """[(key, kind, entry)], full-progress first. Tolerates a damaged manifest."""
@@ -728,8 +751,8 @@ def validate_structure(rec):
         f('R4.2', 'manifest.json', 'field "windows_timezone" is missing or not a string')
     if m.get('spec') != SPEC:
         f('R4.2', 'manifest.json', 'spec must be "%s"' % SPEC)
-    if m.get('merged_status') not in ('Live', 'Done'):
-        f('R4.2', 'manifest.json', 'merged_status must be "Live" or "Done"')
+    if m.get('merged_status') not in ('Live', 'Built'):
+        f('R4.2', 'manifest.json', 'merged_status must be "Live" or "Built"')
     if m.get('design') not in ('default', 'design.css'):
         f('R4.2', 'manifest.json', 'design must be "default" or "design.css"')
     elif m.get('design') == 'design.css' and not (rec.dir / 'design.css').is_file():
@@ -864,7 +887,7 @@ def validate_structure(rec):
             f('R4.8', 'registry.json', '%s: detail is longer than 600 characters' % label)
         ex = t.get('expected')
         if isinstance(ex, str) and isinstance(st, str) and st in statuses:
-            if st in ('Live', 'Done'):
+            if st in ('Live', 'Built'):
                 if not EXPECTED_RE.match(ex):
                     f('R6.7', 'registry.json', '%s: Expected on a %s row must be the date it happened (DD Mon), got "%s"'
                       % (label, st, ex))
@@ -934,7 +957,8 @@ def fresh_render_findings(rec, key):
 SYNONYMS = {
     'merged': 'Live', 'released': 'Live', 'shipped': 'Live', 'deployed': 'Live', 'production': 'Live',
     'prod': 'Live', 'published': 'Live', 'launched': 'Live', 'released to production': 'Live',
-    'complete': 'Done', 'completed': 'Done', 'finished': 'Done', 'closed': 'Done', 'resolved': 'Done',
+    'complete': 'Built', 'completed': 'Built', 'finished': 'Built', 'closed': 'Built', 'resolved': 'Built',
+    'built': 'Built', 'done': 'Built',
     'in progress': 'Running', 'started': 'Running', 'active': 'Running', 'working': 'Running',
     'wip': 'Running', 'ongoing': 'Running', 'open': 'Running', 'run': 'Running',
     'blocked': 'Needs you', 'review': 'Needs you', 'needs review': 'Needs you',
@@ -967,6 +991,10 @@ def require_status(word):
     allowed = list(R.STATUSES)
     if word in allowed:
         return word
+    if str(word).strip().lower() == 'done':
+        warn('status "Done" is deprecated and is stored as "Built" (finished, not yet released); '
+             'use "Built", or "Live" once it is released')
+        return 'Built'
     near = nearest_status(word)
     hint = ' Nearest allowed status: %s.' % near if near else ''
     raise Fail(1, 'status "%s" is not one of: %s.%s' % (word, ', '.join(allowed), hint))
@@ -1064,6 +1092,9 @@ def finish_change(ctx, rec, result):
     rec.sort_tasks()
     if rec.registry_changed() and rec.entry(FP_NAME) is not None:
         rec.render_keys.setdefault(FP_NAME, 'new')     # it embeds the registry (R5.9)
+    if rec.migrated:
+        for key, _kind, _e in rec.artifacts():
+            rec.render_keys.setdefault(key, 'new')
     rec.touch()
     now = rec.now()
     write_text(rec.dir / 'manifest.json', dump_json(rec.manifest))
@@ -1083,23 +1114,13 @@ def finish_change(ctx, rec, result):
 
 
 # --------------------------------------------------------------------------
-# session checkout files (R10.2)
+# session checkout files (R10.2) and the rule copy note (R10.5)
 # --------------------------------------------------------------------------
 
 def install_session_files(root):
-    """Copy the rule file and extend .gitignore. Returns (changed paths, notes)."""
+    """Extend .gitignore. Returns (changed paths, notes). The rule is not copied: the
+    session-start hook delivers it (R10.4)."""
     changed, notes = [], []
-    src = PLUGIN_DIR / 'rules' / RULE_NAME
-    dst = Path(root) / '.claude' / 'rules' / RULE_NAME
-    if not src.is_file():
-        notes.append('rules/%s is not in the plugin yet; the rule file was not copied' % RULE_NAME)
-    elif dst.is_file():
-        if dst.read_bytes() != src.read_bytes():
-            notes.append('.claude/rules/%s exists and differs from the plugin\'s; left as it is' % RULE_NAME)
-    else:
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(str(src), str(dst))
-        changed.append('.claude/rules/%s' % RULE_NAME)
     gi = Path(root) / '.gitignore'
     text = gi.read_text(encoding='utf-8') if gi.is_file() else ''
     have = {ln.strip().lstrip('/').rstrip('/') for ln in text.splitlines()}
@@ -1318,7 +1339,7 @@ def cmd_set_task_status(args):
             task['detail'] = args.detail
         if args.expected is not None:
             task['expected'] = args.expected
-        elif status in ('Live', 'Done'):
+        elif status in ('Live', 'Built'):
             task['expected'] = now.date          # R6.8
         owner = task['owner']
         if owner != 'project':
@@ -1574,6 +1595,31 @@ def load_for_read(args):
     return ctx, rec
 
 
+def rule_copy_notes():
+    """A note (never a finding) when the project keeps its own, differing copy of the rule (R10.5)."""
+    root = session_root() if artifact_queue is not None else None
+    src = PLUGIN_DIR / 'rules' / RULE_NAME
+    dst = Path(root) / '.claude' / 'rules' / RULE_NAME if root else None
+    try:
+        if dst is not None and dst.is_file() and src.is_file() and dst.read_bytes() != src.read_bytes():
+            return ['.claude/rules/%s differs from the plugin\'s rules/%s; the plugin now delivers the rule '
+                    'at session start, so this copy can be deleted' % (RULE_NAME, RULE_NAME)]
+    except OSError:
+        pass
+    return []
+
+
+def done_notes(rec):
+    """A note (never a finding) for the retired status Done, read as Built (R6.9)."""
+    out = []
+    if rec.old_done:
+        out.append('registry.json: %s still use the retired status Done; they are read as Built and the next '
+                   'writing command rewrites them' % ', '.join(sorted(rec.old_done)))
+    if rec.migrated and not rec.old_done:
+        out.append('manifest.json: merged_status Done is read as Built; the next writing command rewrites it')
+    return out
+
+
 def cmd_check(args):
     if R is None:
         raise Fail(2, 'render_artifacts.py cannot be imported: %s' % _RENDER_ERROR)
@@ -1591,13 +1637,17 @@ def cmd_check(args):
         findings += check_html_findings(rec, key)
         findings += fresh_render_findings(rec, key)
     findings = sorted(set(findings))
+    notes = rule_copy_notes() + done_notes(rec)
     if getattr(args, 'json_out', False):
-        print(json.dumps({'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings]},
-                         indent=2, ensure_ascii=False))
-    elif findings:
-        print('\n'.join(fmt_finding(x) for x in findings))
+        print(json.dumps({'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],
+                          'notes': notes}, indent=2, ensure_ascii=False))
     else:
-        print('record is clean')
+        if findings:
+            print('\n'.join(fmt_finding(x) for x in findings))
+        else:
+            print('record is clean')
+        for n in notes:
+            print('note: ' + n)
     return 1 if findings else 0
 
 

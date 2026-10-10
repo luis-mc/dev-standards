@@ -25,7 +25,7 @@ from html.parser import HTMLParser
 SPEC = 'ARTIFACTSPEC 1.0.0'
 PLUGIN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-STATUSES = ('Live', 'Done', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed')
+STATUSES = ('Live', 'Built', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed')
 OPEN_STATUSES = ('Running', 'Waiting', 'To do', 'Needs you', 'On hold')  # R6.6
 REQUIRED_TOKENS = (
     '--font-display', '--font-display-stretch', '--font-body', '--font-mono',
@@ -46,7 +46,7 @@ MONTHS = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 
 GROUPS = (
     ('now', 'Running now and next', ('Running', 'Waiting', 'To do')),
     ('you', 'Needs you, failed or on hold', ('Needs you', 'Failed', 'On hold')),
-    ('done', 'Live or done', ('Live', 'Done')),
+    ('built', 'Live or built', ('Live', 'Built')),
 )
 YOU_ORDER = ('Needs you', 'Failed', 'On hold')
 
@@ -549,7 +549,7 @@ def group_tasks(tasks: list, ref: datetime, kind: str) -> list:
             floor = datetime.min.replace(tzinfo=timezone.utc)
             mine = sorted(mine, key=lambda t: _parse_iso(t.get('changed'), floor), reverse=True)
         folded = []
-        if gkey == 'done' and kind == 'full-progress':
+        if gkey == 'built' and kind == 'full-progress':
             cutoff = ref - timedelta(days=EARLIER_DAYS)
             folded = [t for t in mine if (_parse_iso(t.get('changed')) or ref) < cutoff]
             mine = [t for t in mine if t not in folded]
@@ -978,7 +978,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         add('R6.3', 'only the full-progress artifact has an Earlier fold')
     if kind == 'full-progress':
         if folded_found != folded_wanted:
-            add('R6.3', 'Live or done rows older than %d days belong in Earlier: expected %s, found %s'
+            add('R6.3', 'Live or built rows older than %d days belong in Earlier: expected %s, found %s'
                 % (EARLIER_DAYS, sorted(folded_wanted), sorted(folded_found)))
         for node in details:
             summary = find(node, 'summary')

@@ -163,7 +163,7 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
 }
 .status-count-tile .label { font-size: .82rem; color: var(--ink-muted); }
 .status-count-tile.status-live { border-top-color: var(--live); }
-.status-count-tile.status-done { border-top-color: var(--live); }
+.status-count-tile.status-built { border-top-color: var(--live); }
 .status-count-tile.status-running { border-top-color: var(--running-mark); }
 .status-count-tile.status-needs-you { border-top-color: var(--signal); }
 .status-count-tile.status-waiting { border-top-color: var(--rule-strong); }
@@ -186,7 +186,7 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
   background: var(--surface);
 }
 .status-chip.status-live { background: var(--live); color: var(--on-live); border-color: var(--live); }
-.status-chip.status-done { background: var(--done-bg); }
+.status-chip.status-built { background: var(--done-bg); }
 .status-chip.status-running { background: var(--running-bg); border-left: 3px solid var(--running-mark); }
 .status-chip.status-needs-you { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
 .status-chip.status-waiting { background: var(--waiting-bg); }
@@ -239,7 +239,7 @@ tr.status-group td {
 }
 table.history-table td:first-child { font-family: var(--font-mono); white-space: nowrap; }
 
-/* Earlier fold: Live or done rows older than the fold age, closed by default */
+/* Earlier fold: Live or built rows older than the fold age, closed by default */
 details.earlier { margin: .9em 0; }
 details.earlier > summary {
   cursor: pointer;

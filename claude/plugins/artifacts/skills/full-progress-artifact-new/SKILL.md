@@ -8,7 +8,7 @@ effort: medium
 # Full-progress artifact — new
 
 Creates the project's one full-progress artifact from the record
-(`docs/artifacts/`, ARTIFACTSPEC 1.0.0). The script is the only writer of
+(`docs/artifacts/`, ARTIFACTSPEC 1.1.0). The script is the only writer of
 `manifest.json` and `registry.json`; never edit either by hand.
 
 Every command below is
@@ -71,7 +71,9 @@ the repository instead (the session's scratchpad directory, in a new folder).
    App / service column. `item` is at most 80 characters. `expected` is a real
    date from `date` in the project's zone, `DD Mon` or `DD Mon ~HH:MM`,
    optionally followed by `; ` and a note; never `today`, `soon` or `next`
-   alone.
+   alone. This artifact shows all work, so every activity is a task here, the
+   session's own included (contracts, joins, test runs, releases, cleanup);
+   `Built` means finished but not released; release work still to come is a task of its own.
 7. **Publish** every artifact `pending` lists, per "Publishing" below.
 8. **Check:** run `check` and report any finding with its requirement ID.
 9. **Tell the owner** the artifact's URL, and that every feature artifact
