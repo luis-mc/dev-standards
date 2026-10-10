@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "track": "ts",
+  "default_branch": "main",
+  "setup": ["pnpm install --frozen-lockfile"],
+  "packages": {"kind": "pnpm-workspace"},
+  "widen_on": [
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "package.json",
+    "turbo.jsonc",
+    "tsconfig.json",
+    "vitest.config.ts",
+    "eslint.config.mjs",
+    ".github/",
+    "scripts/delivery/"
+  ],
+  "ui_paths": ["apps/web/", "apps/admin/", "packages/ui/"],
+  "steps": [
+    {
+      "name": "typecheck",
+      "scope": "changed+dependents",
+      "run": "pnpm turbo run typecheck --continue \"--filter=...[{base}]\"",
+      "run_full": "pnpm turbo run typecheck --continue"
+    },
+    {
+      "name": "lint",
+      "scope": "changed+dependents",
+      "run": "pnpm turbo run lint --continue \"--filter=...[{base}]\"",
+      "run_full": "pnpm turbo run lint --continue"
+    },
+    {
+      "name": "unit",
+      "scope": "changed+dependents",
+      "run": "pnpm vitest run --project unit --passWithNoTests {affected_dirs}",
+      "run_full": "pnpm vitest run --project unit"
+    },
+    {
+      "name": "guards",
+      "scope": "always",
+      "pre_push": true,
+      "run": "pnpm vitest run --project guard"
+    },
+    {
+      "name": "secret-scan",
+      "scope": "always",
+      "pre_push": true,
+      "run": "gitleaks git --log-opts={base}..HEAD --redact --no-banner"
+    },
+    {
+      "name": "e2e",
+      "scope": "ui-changed",
+      "run": "pnpm exec playwright install chromium && pnpm exec playwright test"
+    }
+  ]
+}

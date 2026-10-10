@@ -1,5 +1,7 @@
 ---
 description: Apply Claude Code configuration — statusline, settings.json (auto-compact window, output style, Opus-plans/Sonnet-codes model split with a medium-or-high effort level per model), output styles, rules, and CLAUDE.md — to this project and/or the user-level ~/.claude/. Use when the user asks to set up Claude, configure the statusline, fix their Claude settings, add a CLAUDE.md, or apply their Claude config to a repo or a new machine, or invokes /luismc-project-setup:claude-setup. Not for repo or product tooling (hooks, gitleaks, CI, playwright) — that is /luismc-project-setup:tech-stack-setup.
+model: sonnet
+effort: high
 ---
 
 # Claude setup
@@ -29,8 +31,9 @@ on every run. Five pieces carry it, and all are needed:
 | `settings.json` `model: "opus"` | the main loop's model |
 | `settings.json` `env.CLAUDE_CODE_SUBAGENT_MODEL: "sonnet"` | the default model of every subagent that does not pin its own |
 | `settings.json` `modelSettings.<Opus ID>.effortLevel` | the main loop's effort |
-| `settings.json` `modelSettings.<Sonnet ID>.effortLevel` | the Sonnet effort for the session itself; subagent effort comes from the rule below, because the docs do not say this entry reaches subagents |
-| `.claude/rules/model-delegation.md` | the behaviour — the main loop actually hands implementation to subagents instead of writing it itself, and passes the chosen `effort` on each Agent call |
+| `settings.json` `modelSettings.<Sonnet ID>.effortLevel` | the Sonnet effort for the session itself; subagent effort comes from the rule file, because the docs do not say this entry reaches subagents |
+| `.claude/rules/agents-and-integration.md` | the behaviour — the main loop actually hands implementation to subagents instead of writing it itself, and passes the chosen `effort` on each Agent call |
+| `.claude/hooks/effort_drift.py` | the warning when a model has no saved effort (see "The alias-drift warning") |
 
 Settings alone only pick models and effort; without the rule the Opus session
 would still write all the code itself and the Sonnet default would rarely be
@@ -41,6 +44,16 @@ is the intent —
 judgment-call agents stay on Opus. Forked subagents always inherit the parent's
 model; that is acceptable, since a fork is for continuing the parent's
 reasoning, not for implementation.
+
+The rule file does more than the split. `agents-and-integration.md` is the
+plugin's one rule file for how agents are run and how work is integrated:
+role lines for the orchestrator, code agents, scripts and log triage; the
+integrate-once, deploy-once workflow; and where docs live. Its workflow lines
+cite `scripts/delivery/*` by path. Those scripts exist only in repos generated
+or repaired by `tech-stack-setup` 12 or later; in any other repo the lines name
+tools that are not there, and `tech-stack-setup` is what puts them there. The
+file is the same for every target and is never edited per repo. It replaces
+`model-delegation.md`, which earlier versions of this skill wrote.
 
 **Why effort is carried twice.** Claude Code saves per-model effort as
 `modelSettings.<model ID>.effortLevel`, and that entry beats a top-level
@@ -84,12 +97,14 @@ things make this a real question rather than a formality:
 
 Then, **whatever target was picked**, ask a second question: should the model
 split also be enforced **for all projects** — i.e. written to
-`~/.claude/settings.json` (`model`, `env.CLAUDE_CODE_SUBAGENT_MODEL`) and
-`~/.claude/rules/model-delegation.md`? Ask it even when the user chose
-**project** only — the project target always gets the split; this question is
-whether every other repo on the machine does too. A "yes" adds just those three
-pieces to the user target (not the statusline, output style or CLAUDE.md, unless
-the user also picked **user** or **both**). A "no" leaves `~/.claude/` untouched.
+`~/.claude/settings.json` (`model`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, the two
+effort entries, the drift-hook registration), `~/.claude/hooks/effort_drift.py`
+and `~/.claude/rules/agents-and-integration.md`? Ask it even when the user
+chose **project** only — the project target always gets the split; this
+question is whether every other repo on the machine does too. A "yes" adds just
+those pieces to the user target (not the statusline, output style or
+CLAUDE.md, unless the user also picked **user** or **both**). A "no" leaves
+`~/.claude/` untouched.
 Skip the question only when the user already picked **user** or **both**,
 since the split is then applied there anyway.
 
@@ -144,6 +159,7 @@ to avoid. The keys, and what each is for:
 | `modelSettings.<Opus ID>.effortLevel` | the step 1 answer, `"medium"` or `"high"` | the main loop's effort |
 | `modelSettings.<Sonnet ID>.effortLevel` | the step 1 answer, `"medium"` or `"high"` | the Sonnet effort for the session itself (subagents: see the rule file below) |
 | `effortLevel` | `"high"` | the effort for sessions whose model has no `modelSettings` entry, such as cloud agents; the per-model entries beat it |
+| `hooks.SessionStart` | the drift-hook entry, see path note below | runs `hooks/effort_drift.py` at session start |
 
 **The effort keys are written from the user's answer, not queued as missing.**
 They are an explicit choice made this run, so they are written into every
@@ -178,6 +194,13 @@ non-conforming value (e.g. `model: "sonnet"`), queue it as a **conflict**: show
 the current and policy values and let the user choose per key in step 3 whether
 to replace it. Never replace silently, never skip silently.
 
+**`hooks` merges, it does not queue per key.** Add the template's
+`SessionStart` entry when no hook with the identical `command` string is
+already registered under `hooks.SessionStart`; if one is, there is nothing to
+write. Keep every other event and every other `SessionStart` hook exactly as it
+is, and never remove or reorder a hook. Create `hooks` and `hooks.SessionStart`
+when they are absent.
+
 Do **not** write an `enabledPlugins` block. Enabling and disabling plugins is
 the user's call per project, made through `/plugin` or their own settings — not
 something this skill decides on their behalf.
@@ -194,20 +217,41 @@ user    → bash "$HOME/.claude/statusline.sh"
 project form into `~/.claude/settings.json` gives a statusline that silently
 prints nothing in any directory Claude does not treat as a project root.
 
+**The drift hook's `command` differs per target the same way.** The template
+carries the project form; rewrite both occurrences of the path for a user-level
+install:
+
+```
+project → python3 "$CLAUDE_PROJECT_DIR/.claude/hooks/effort_drift.py" || python "$CLAUDE_PROJECT_DIR/.claude/hooks/effort_drift.py"
+user    → python3 "$HOME/.claude/hooks/effort_drift.py" || python "$HOME/.claude/hooks/effort_drift.py"
+```
+
+The `|| python` fallback is for machines where `python3` is missing or is only
+a stub (common on Windows). The identical-command check above compares the
+rewritten string for the target.
+
 ### `output-styles/caveman.md` — add if missing
 
 Copy alongside the `outputStyle` setting; the setting names a style that must
 exist as a file or Claude falls back to the default with no error.
 
-### `rules/model-delegation.md` — overwrite unconditionally
+### `hooks/effort_drift.py` — overwrite unconditionally
 
-`.claude/rules/model-delegation.md` (project) or
-`~/.claude/rules/model-delegation.md` (user). Claude Code loads every `.md`
-under `rules/` as instructions alongside `CLAUDE.md`, which is why the
-delegation behaviour lives here and not in `CLAUDE.md`: it reaches projects
-whose `CLAUDE.md` already exists and must not be touched. Like the statusline,
-this file is plugin-owned policy, so it is replaced without asking — a local
-edit to it is drift, and the fix belongs in the template.
+`.claude/hooks/effort_drift.py` (project) or `~/.claude/hooks/effort_drift.py`
+(user). Plugin-owned like the statusline: replaced without asking, and a local
+edit is drift. Python 3, standard library only. Create the `hooks/` directory
+when absent. No `chmod` is needed, because the registered command runs it
+through `python3`. See "The alias-drift warning" below for what it does.
+
+### `rules/agents-and-integration.md` — overwrite unconditionally
+
+`.claude/rules/agents-and-integration.md` (project) or
+`~/.claude/rules/agents-and-integration.md` (user). Claude Code loads every
+`.md` under `rules/` as instructions alongside `CLAUDE.md`, which is why the
+agent and integration behaviour lives here and not in `CLAUDE.md`: it reaches
+projects whose `CLAUDE.md` already exists and must not be touched. Like the
+statusline, this file is plugin-owned policy, so it is replaced without asking
+— a local edit to it is drift, and the fix belongs in the template.
 
 The template contains the placeholder `{{SUBAGENT_EFFORT}}`. When writing the
 file, substitute the Sonnet effort chosen in step 1 (`medium` or `high`) for
@@ -216,6 +260,19 @@ main loop to pass `effort` on each Agent call that launches an implementation
 subagent. That is needed on top of the settings entry because the docs do not
 say a `modelSettings` entry applies to subagents, while the Agent call's
 `effort` parameter is the documented route.
+
+**Remove the old file.** Earlier versions of this skill wrote
+`rules/model-delegation.md`. When a target holds that file, delete it, so the
+two rule files never contradict each other. Queue it in the change plan as a
+**removal**, and list it under "removed" in the step 3 summary. Only that exact
+file name is removed, and only from a target being applied.
+
+**The `scripts/delivery/*` paths.** The rule cites
+`scripts/delivery/reach_check.py`, `gate_verify.py`, `join.py` and
+`ci_watch.py`. Those scripts exist only in repos generated or repaired by
+`tech-stack-setup` 12 or later. This skill does not install them; in a repo without them, the cited lines are guidance for
+tooling that has not been generated yet. Say so in the step 5 report when the
+project target has no `scripts/delivery/` directory.
 
 ### `CLAUDE.md` — add if missing, NEVER overwrite
 
@@ -239,10 +296,12 @@ the file it points at actually exists.
 ## Step 3 — Present one batch summary and confirm once
 
 Group every queued change by target and by file: what is being added, what is
-being overwritten unconditionally, and which individual settings keys are being
-added. List each model-split conflict separately as `key: current → policy`.
-List the two effort keys per target as `modelSettings.<ID>.effortLevel:
-current → chosen` (`none → chosen` when absent), and any
+being overwritten unconditionally, what is being removed (a target's old
+`rules/model-delegation.md`), and which individual settings keys are being
+added, including the `hooks.SessionStart` entry. List each model-split
+conflict separately as `key: current → policy`. List the two effort keys per
+target as `modelSettings.<ID>.effortLevel: current → chosen` (`none → chosen`
+when absent), and any
 `CLAUDE_CODE_EFFORT_LEVEL` conflict with where it is set. Ask for one
 confirmation: apply everything (conflicts included), apply a named subset, or
 cancel.
@@ -262,15 +321,20 @@ Apply what was confirmed, then check the result rather than assuming it worked:
 - The path in `statusLine.command` resolves for the target you wrote.
 - Every target that got the model split has `model` resolving to Opus,
   `env.CLAUDE_CODE_SUBAGENT_MODEL` resolving to Sonnet, and
-  `rules/model-delegation.md` present — or the conflicting key is listed as
-  declined. A project `model` key shadows the user one, so a project left on a
+  `rules/agents-and-integration.md` present — or the conflicting key is
+  listed as declined. A project `model` key shadows the user one, so a project left on a
   declined non-Opus value defeats a user-level enforcement; say so.
 - Every target that got the split has both `modelSettings` entries, under the
   canonical IDs, with the value `medium` or `high`.
 - The target's settings contain a top-level `effortLevel` (unless an existing
   value was left alone) and still parse as JSON.
-- The written `rules/model-delegation.md` contains no `{{SUBAGENT_EFFORT}}`
-  placeholder and names the chosen Sonnet effort.
+- The written `rules/agents-and-integration.md` contains no
+  `{{SUBAGENT_EFFORT}}` placeholder and names the chosen Sonnet effort.
+- No `rules/model-delegation.md` remains in a target that was applied.
+- Every target that got the split has `hooks/effort_drift.py`, and its
+  `hooks.SessionStart` holds the command for that target (project form
+  with `$CLAUDE_PROJECT_DIR`, user form with `$HOME`), once, next to any
+  hooks that were already there.
 - No `CLAUDE_CODE_EFFORT_LEVEL` remains in the target's `env` block, unless the
   user chose to keep it — then say it overrides the saved efforts.
 - The split takes effect from the next session; the current one keeps the
@@ -285,5 +349,61 @@ conflict left in place. Whether the model split is now enforced for this
 project only or for all projects. The effort chosen for each model (Opus main
 session, Sonnet subagents) and where it was written, and the top-level
 `effortLevel` (added as `high`, or the existing value left alone) that cloud
-agents fall back to. If both targets were
+agents fall back to. Anything removed (the old
+`model-delegation.md`), and whether the project has `scripts/delivery/`, which
+the rule file cites. If both targets were
 written, note which keys the project file now shadows.
+
+## The alias-drift warning
+
+Per-model effort is saved under the model's canonical ID. The `opus` and
+`sonnet` aliases move to new IDs over time, and then the new model has no
+saved effort and quietly runs at its default. `hooks/effort_drift.py` is a
+`SessionStart` hook that says so.
+
+**What it reads.** Claude Code passes a SessionStart hook a JSON object on
+stdin with `source` and, optionally, `model`, the active model identifier
+(documented at https://code.claude.com/docs/en/hooks, "SessionStart input").
+The field can be missing, for example after `/clear`. The docs also say there
+is no `$CLAUDE_MODEL` variable and that `$ANTHROPIC_MODEL` does not follow
+`/model`, so `model` from stdin is the only reliable source of the session's
+model.
+
+**What it checks.** The model is checked when its ID names Opus or Sonnet,
+the two models this skill saves an effort for. Other models never warn. The
+hook looks for `modelSettings.<ID>.effortLevel` in `~/.claude/settings.json`,
+the project's `.claude/settings.json` and `.claude/settings.local.json`; an
+entry in any of them counts. A `[1m]`-style suffix is ignored.
+
+**Fallback.** When `model` is absent, it checks the IDs in the
+`ANTHROPIC_DEFAULT_OPUS_MODEL` and `ANTHROPIC_DEFAULT_SONNET_MODEL` variables,
+when they are set. With no `model` and no variables there is nothing to
+compare, and the hook stays silent.
+
+**What it cannot detect.** A model switched with `/model` after the session
+started (it runs at session start only). An alias that moved when none of the
+inputs above carry the new ID. An effort overridden by
+`CLAUDE_CODE_EFFORT_LEVEL`, `--effort` or `/effort`; it only tests that an
+entry exists, not that it applies. A saved entry that holds a value the user
+no longer wants.
+
+**Output.** It prints a `systemMessage` JSON object, which Claude Code shows
+to the user, and exits 0. Plain stdout would go to Claude's context instead,
+which is not wanted here. It never blocks and swallows its own errors. The
+message tells the user to re-run `/luismc-project-setup:claude-setup`.
+
+**Disable.** Set `CLAUDE_SETUP_EFFORT_DRIFT` to `off` in the settings `env`
+block or the shell, or delete the `SessionStart` entry that runs it. Deleting
+only the entry is not durable: the next run of this skill adds it back. To
+keep it off, set the variable.
+
+## Per-skill model profiles
+
+`assets/model-profiles.json` is the single source of truth for which model and
+effort each skill in this marketplace runs at, in three groups: `judgment`
+(Opus, high: specs, audits, stack setup, auth), `mechanical` (Sonnet, medium:
+checks and task bookkeeping) and `setup` (Sonnet, high: this skill). Every
+skill's `model:` and `effort:` frontmatter must match its group; this skill's
+own frontmatter does. `tools/test_model_profiles.py` enforces that, so change
+the JSON first and the skill files after. The file is not copied to a target
+and nothing here applies it to a user's settings.

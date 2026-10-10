@@ -1,5 +1,7 @@
 ---
 description: Build the authentication and authorization stack for a repository already set up to STACKSPEC — packages/auth, the auth endpoints in apps/api, sessions, MFA, consent, erasure, audit and their required test suites — per the binding AUTHSPEC, or audit an existing implementation against it. Use when the user asks to add authentication, login, signup, sessions, passkeys, MFA, admin access, or an auth audit, or invokes /luismc-project-setup:auth-setup. Requires tech-stack-setup to have run first; it refuses on a repository that is not set up.
+model: opus
+effort: high
 ---
 
 # Auth setup — build and check

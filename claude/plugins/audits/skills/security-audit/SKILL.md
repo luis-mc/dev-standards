@@ -1,5 +1,7 @@
 ---
 description: Comprehensive regulatory and architectural security review of the current repo matching Elite Security Architect standards (NIST SP 800-53 Rev 5, FedRAMP High, DoD IL6, SOC 2, ISO 27001/27040, NIS2). Produces severity-ranked, compliance-mapped findings. Does not auto-fix. Use when the user asks for a security audit, compliance review, or invokes /luismc-audits:security-audit.
+model: opus
+effort: high
 ---
 
 # Regulatory & Architectural Security Audit

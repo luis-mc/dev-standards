@@ -288,7 +288,9 @@ The templates hold `{{placeholders}}`: `title`, `fonts_link`, `design_css`,
   a `<time>` element whose `datetime` attribute is the ISO time with offset.
 - **R5.6** — The full-progress artifact's section 1 lists every feature
   artifact with its link, its task ID range and one line on where it stands
-  (taken from its `meta.json` lede's first sentence).
+  (taken from its `meta.json` lede's first sentence). Section 1 is generated,
+  so the full-progress artifact's content files `01-*.html` onward render as
+  sections 2 and up.
 
 ### 5.2 Lede and tiles
 
@@ -298,8 +300,10 @@ The templates hold `{{placeholders}}`: `title`, `fonts_link`, `design_css`,
 - **R5.8** — Tiles show the count of each status that has at least one task,
   in the order of §6.1, computed from the registry.
 - **R5.9** — The full-progress artifact embeds the registry as
-  `<script type="application/json" id="task-registry">`, the only script it
-  contains.
+  `<script type="application/json" id="task-registry">`, the only JSON
+  script it contains. The only other script allowed in any artifact is the
+  template's own theme-toggle and contents script, byte-identical to the
+  template.
 
 ### 5.3 Design
 
@@ -381,13 +385,15 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
 | Command | Does |
 |---|---|
 | `init --project NAME [--timezone IANA] [--label L] [--windows-timezone ID] [--default-branch B]` | Creates the manifest, an empty registry and the full-progress artifact's content. Refuses if a manifest exists. Zone defaults to the machine's. |
-| `feature-new --key K --title NAME --prefix P --apps a,b [--hero TEXT]` | Adds a feature artifact (content folder with `meta.json`, a section `01-what-and-why.html` stub and a first History row). Runs `init` first when there is no manifest. |
-| `task-add --owner K\|project --item TEXT --detail TEXT --expected TEXT [--app A] [--status S] [--prefix P]` | Adds a task with the next free number; prints its ID. |
+| `feature-new --key K --title NAME --prefix P --apps a,b [--hero TEXT] [init flags]` | Adds a feature artifact (content folder with `meta.json`, a section `01-what-and-why.html` stub and a first History row). Runs `init` first, with the same `init` flags, when there is no manifest; `--project` is then required. |
+| `task-add --owner K\|project --item TEXT --detail TEXT --expected TEXT [--app A] [--status S] [--prefix P]` | Adds a task with the next free number; prints its ID. For `--owner project`, `--prefix` picks one of `project_prefixes`, and a new prefix not used by any feature is registered. |
 | `set-task-status ID STATUS [--detail TEXT] [--expected TEXT] [--history TEXT]` | Changes one task; adds a History row to its feature artifact when `--history` is given. |
-| `edit-content KEY` | Re-renders after the session edited files under `content/KEY/`; validates them first. |
+| `export-content KEY --to DIR` | Copies the artifact's content files from the record to DIR for editing. |
+| `edit-content KEY --from DIR` | Replaces the artifact's content files in the record with those in DIR (after the fetch and reset of R4.13), validates, renders and commits. The session never edits the record worktree directly; the reset would discard it. |
+| `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design`, renders and commits; `default` removes it. |
 | `render [--all]` | Renders every artifact whose output would change. |
 | `check [--record PATH]` | The conformance checks of §14; lists findings with their requirement ID. |
-| `pending` | Lists artifacts whose rendered HTML hash differs from `published_sha256`, and queued events. Exit 1 when anything is listed. |
+| `pending` | Lists artifacts whose rendered HTML hash differs from `published_sha256`, and queued events. Exit 1 when anything is listed. `--json` prints `{"artifacts": [{"key", "title", "file", "path", "url", "reason"}], "queue": [events]}`; `path` is the absolute path of the HTML to publish. |
 | `mark-published KEY --url URL` | Records the URL and the hash of the current HTML. |
 | `queue list\|clear [--id ID]` | Shows or removes queued events. |
 | `commit [--retry] [--message M]` | Commits and pushes the record (also done by every writing command). |
@@ -477,9 +483,13 @@ Reads the hook input; takes the task ID from the current branch name
 ## 10. Installation and the rule file
 
 - **R10.1** — The plugin is installable on its own
-  (`/plugin install luismc-artifacts@luismc-dev-tools`) and is enabled by
+  (`/plugin install luismc-artifacts@<marketplace>`) and is enabled by
   `luismc-project-setup`'s `claude-setup` in every project it sets up, through
-  `enabledPlugins` in the project's `.claude/settings.json`.
+  `enabledPlugins` in the project's `.claude/settings.json`. `<marketplace>` is
+  the name under which the owner registered this plugin's marketplace: the
+  suffix of the `luismc-project-setup@...` entry in the owner's user
+  `enabledPlugins`, else the marketplace file's own name. A project that names
+  a marketplace the owner registered differently enables nothing.
 - **R10.2** — Installing creates no file in the project. The first
   `feature-new` or `init` copies `rules/project-artifacts.md` to
   `.claude/rules/project-artifacts.md` and adds `.claude/artifacts-queue.json`
