@@ -378,6 +378,64 @@ def sc_scopes(t: T, shared: Path) -> None:
     t.eq("default base ref is origin/<default_branch>", (r.code, box.result()["base_ref"]), (0, "origin/main"))
 
 
+def sc_affected(t: T, shared: Path) -> None:
+    """{affected_dirs}: the changed packages plus the packages that depend on them."""
+
+    class AffectedBox(Box):
+        INIT_FILES = {
+            **Box.INIT_FILES,
+            "packages/core/package.json": '{"name": "@x/core"}\n',
+            "packages/ui/package.json": '{"name": "@x/ui", "dependencies": {"@x/core": "workspace:*"}}\n',
+            "apps/web/package.json": '{"name": "@x/web", "devDependencies": {"@x/ui": "workspace:*"}}\n',
+            "apps/api/package.json": '{"name": "@x/api", "dependencies": {"@x/core": "workspace:*", "left-pad": "1"}}\n',
+        }
+
+        @classmethod
+        def gate_json(cls) -> dict:
+            cfg = Box.gate_json()
+            for s in cfg["steps"]:
+                if s["name"] == "unit":
+                    s["scope"] = "changed+dependents"
+                    s["run"] = cls.step_cmd("unit", "{affected_dirs}")
+            return cfg
+
+    box = AffectedBox(shared)
+    box.branch("feat/core", {"packages/core/a.txt": "a\n"})
+    t.eq("a leaf package's change reaches its direct and transitive dependents",
+         (box.gate("--no-publish").code, [x for x in box.ran() if x[0] == "unit"]),
+         (0, [["unit", "apps/api", "apps/web", "packages/core", "packages/ui"]]))
+    t.eq("... while {changed_dirs} stays the changed set",
+         [x for x in box.ran() if x[0] == "typecheck"], [["typecheck", "packages/core"]])
+    t.eq("... and the result records the changed set", box.result()["changed_dirs"], ["packages/core"])
+
+    box.branch("feat/api", {"apps/api/a.txt": "a\n"})
+    box.clear_log()
+    box.gate("--no-publish")
+    t.eq("a package nothing depends on is its own affected set",
+         [x for x in box.ran() if x[0] == "unit"], [["unit", "apps/api"]])
+
+    box.branch("feat/lock", {"pnpm-lock.yaml": "lock\nl1\nchanged\n"})
+    box.clear_log()
+    box.gate("--no-publish")
+    t.eq("a widened gate runs run_full", [x for x in box.ran() if x[0] == "unit"], [["unit", "FULL"]])
+
+    # the closure itself, on a cycle and on a non-pnpm kind
+    root = Path(tempfile.mkdtemp(dir=_TMP_ROOT))
+    for rel, text in {"a/package.json": '{"name": "a", "dependencies": {"b": "1"}}',
+                      "b/package.json": '{"name": "b", "dependencies": {"a": "1"}}',
+                      "c/package.json": "not json",
+                      "d/package.json": '{"name": "d", "peerDependencies": {"a": "1"}}'}.items():
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text(text, encoding="utf-8")
+    pk = ["a", "b", "c", "d"]
+    t.eq("dependency cycle and peer dependency terminate", dc.affected_package_dirs(
+        root, {"kind": "pnpm-workspace"}, pk, ["a"]), ["a", "b", "d"])
+    t.eq("an unreadable package.json is skipped", dc.affected_package_dirs(
+        root, {"kind": "pnpm-workspace"}, pk, ["c"]), ["c"])
+    t.eq("other kinds have no graph: the changed set", dc.affected_package_dirs(
+        root, {"kind": "go-modules"}, pk, ["a"]), ["a"])
+
+
 def sc_widening(t: T, shared: Path) -> None:
     box = Box(shared)
     box.branch("feat/lock", {"pnpm-lock.yaml": "lock\nl1\nchanged\n"})
@@ -1084,7 +1142,7 @@ def sc_assets(t: T, shared: Path) -> None:
         t.check(label + ": secret-scan uses `gitleaks git` over {base}..HEAD",
                 "gitleaks git " in steps["secret-scan"]["run"] and "--log-opts={base}..HEAD" in steps["secret-scan"]["run"])
         t.check(label + ": only known placeholders",
-                all(set(re.findall(r"\{(\w+)\}", s.get("run", "") + s.get("run_full", ""))) <= {"base", "changed_dirs"}
+                all(set(re.findall(r"\{(\w+)\}", s.get("run", "") + s.get("run_full", ""))) <= {"base", "changed_dirs", "affected_dirs"}
                     for s in cfg["steps"]))
         t.check(label + ": has typecheck, lint-or-build and unit steps",
                 {"typecheck", "unit"} <= set(steps))
@@ -1093,7 +1151,7 @@ def sc_assets(t: T, shared: Path) -> None:
     ts = json.loads((TOOLING / "ts/scripts/delivery/gate.json").read_text())
     t.check("ts gate.json matches the contract example commands",
             any("--filter" in s["run"] and "{base}" in s["run"] for s in ts["steps"] if s["name"] == "typecheck")
-            and any(s["name"] == "unit" and "{changed_dirs}" in s["run"] and "--project unit" in s["run"] for s in ts["steps"]))
+            and any(s["name"] == "unit" and "{affected_dirs}" in s["run"] and "--project unit" in s["run"] and "--passWithNoTests" in s["run"] for s in ts["steps"]))
     t.check("go guards select TestGuard*",
             "TestGuard" in next(s for s in json.loads((TOOLING / "go/scripts/delivery/gate.json").read_text())["steps"] if s["name"] == "guards")["run"])
     t.check("rust guards select guard_*",
@@ -1121,6 +1179,13 @@ def sc_assets(t: T, shared: Path) -> None:
     t.check("dotnet guard project exists", (TOOLING / "dotnet/tests/Guards/Guards.csproj").is_file())
     hook = (shared / ".githooks/pre-push").read_text(encoding="utf-8")
     t.check("pre-push is a POSIX sh script", hook.startswith("#!/bin/sh"))
+    # a Windows checkout must not turn the hook or the scripts into CRLF (sh: not found)
+    rels = [(shared / ".githooks/pre-push"), (shared / "scripts/delivery/agent_setup.sh"),
+            (shared / "scripts/delivery/branch_gate.py"), (shared / "scripts/delivery/gate.json")]
+    attr = run(["git", "check-attr", "eol", "--", *[r.as_posix() for r in rels]], cwd=shared)
+    lines = [l for l in attr.out.splitlines() if l.strip()]
+    t.check("git attributes pin LF for the hook and the delivery scripts",
+            attr.code == 0 and len(lines) == len(rels) and all(l.endswith(": lf") for l in lines), attr.out + attr.err)
 
 
 def sc_packages(t: T, shared: Path) -> None:
@@ -1217,6 +1282,11 @@ MUTANTS = [
      "elif not ctx.changed_dirs:", "elif False:", "scopes"),
     ("gate runs e2e whatever changed", "scripts/delivery/delivery_common.py",
      "if not wide and not ui:", "if False:", "scopes"),
+    ("affected set ignores dependents", "scripts/delivery/delivery_common.py",
+     "if dep not in seen:", "if False:", "affected"),
+    ("affected set is the whole workspace for a leaf", "scripts/delivery/delivery_common.py",
+     '.replace("{affected_dirs}", " ".join(ctx.packages if wide else ctx.affected_dirs))',
+     '.replace("{affected_dirs}", " ".join(ctx.packages))', "affected"),
     ("gate never widens", "scripts/delivery/delivery_common.py",
      'reasons = widening_files(files, cfg["widen_on"])', "reasons = []", "widening"),
     ("--fail-fast does not stop", "scripts/delivery/delivery_common.py",
@@ -1249,6 +1319,7 @@ MUTANTS = [
 
 SCENARIOS = {
     "scopes": sc_scopes,
+    "affected": sc_affected,
     "widening": sc_widening,
     "only_skip": sc_only_skip,
     "failures": sc_failures,

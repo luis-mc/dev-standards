@@ -31,8 +31,8 @@
     },
     {
       "name": "unit",
-      "scope": "changed",
-      "run": "pnpm vitest run --project unit {changed_dirs}",
+      "scope": "changed+dependents",
+      "run": "pnpm vitest run --project unit --passWithNoTests {affected_dirs}",
       "run_full": "pnpm vitest run --project unit"
     },
     {

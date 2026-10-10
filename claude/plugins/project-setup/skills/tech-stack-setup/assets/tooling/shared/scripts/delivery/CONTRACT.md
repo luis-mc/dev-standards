@@ -49,8 +49,8 @@ timed out. A script never exits 0 when it could not decide.
     {"name": "lint", "scope": "changed+dependents",
      "run": "pnpm turbo run lint --continue --filter=...[{base}]",
      "run_full": "pnpm turbo run lint --continue"},
-    {"name": "unit", "scope": "changed",
-     "run": "pnpm vitest run --project unit {changed_dirs}",
+    {"name": "unit", "scope": "changed+dependents",
+     "run": "pnpm vitest run --project unit --passWithNoTests {affected_dirs}",
      "run_full": "pnpm vitest run --project unit"},
     {"name": "guards", "scope": "always", "pre_push": true,
      "run": "pnpm vitest run --project guard"},
@@ -68,7 +68,14 @@ timed out. A script never exits 0 when it could not decide.
   `ui-changed` runs only when a changed file is under a `ui_paths` prefix or the
   gate is widened.
 - Placeholders: `{base}` (base commit sha), `{changed_dirs}` (space-separated
-  package directories that changed, POSIX paths relative to the root).
+  package directories that changed, POSIX paths relative to the root),
+  `{affected_dirs}` (the changed directories plus every workspace package that
+  depends on one of them, directly or not; computed from each `package.json` in a
+  `pnpm-workspace`, equal to `{changed_dirs}` for the other kinds). Use
+  `{affected_dirs}` for a test command that must also run the tests of the
+  packages that import the change; a tool with its own dependency filter
+  (`turbo --filter=...[{base}]`) does not need it. When the gate is widened both
+  placeholders are every package.
 - `packages.kind`: `pnpm-workspace` (globs under `packages:` in
   `pnpm-workspace.yaml`), `go-modules` (dirs holding `go.mod`), `cargo-workspace`
   (`[workspace] members` in `Cargo.toml`), `dotnet-sln` (project dirs of the

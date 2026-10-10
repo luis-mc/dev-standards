@@ -1,0 +1,6 @@
+# Files that run under a POSIX shell or are copied into generated repositories keep
+# LF in every checkout, Windows included: a CRLF `#!/bin/sh` hook fails with
+# "sh\r: not found", and the delivery scripts are copied byte for byte.
+*.sh text eol=lf
+**/.githooks/* text eol=lf
+**/assets/tooling/**/scripts/delivery/* text eol=lf
