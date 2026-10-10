@@ -463,6 +463,16 @@
       "changed": "2026-10-10T21:35+01:00"
     },
     {
+      "id": "DS25",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Cleanup needs gh to delete local work",
+      "detail": "Without the gh CLI, cleanup.py --local only lists what it would remove and deletes nothing. Rides the 7.0.0 release.",
+      "expected": "10 Oct ~23:00",
+      "changed": "2026-10-10T21:35+01:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
