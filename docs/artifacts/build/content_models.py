@@ -35,16 +35,16 @@ TASKS = [
          expected='01 Oct'),
     dict(id='MP3', status='Waiting', item='Role rules',
          detail='One line per role in the agents-and-integration rule file: orchestrator, code agents, scripts for merges and checks, one Sonnet agent for conflicts a script cannot resolve, Haiku for log triage.',
-         expected='10 Oct ~13:15'),
+         expected='10 Oct ~13:45'),
     dict(id='MP4', status='Waiting', item='Per-skill model and effort',
          detail='model and effort in every plugin SKILL.md, by kind of work (section 5), with a test that compares them to the profile table.',
-         expected='10 Oct ~13:15'),
+         expected='10 Oct ~13:45'),
     dict(id='MP5', status='Waiting', item='Alias-drift warning',
          detail='A session-start hook that warns when the current Opus or Sonnet ID has no saved effort entry (figure 3).',
-         expected='10 Oct ~13:15'),
+         expected='10 Oct ~13:45'),
     dict(id='MP6', status='To do', item='Tests and release',
          detail='Profile test, hook test, claude-setup checks; released in the DS6 ready PR.',
-         expected='10 Oct ~13:15'),
+         expected='10 Oct ~13:45'),
 ]
 
 
@@ -126,7 +126,7 @@ S7 = _table(['#', 'Question', 'Decision (10 Oct)'], [
 
 def history(stamp):
     return _table(['Date', 'Change'], [
-        [stamp, 'Expected times are now a date and a Lisbon time, not &ldquo;today&rdquo;; MP3 to MP6 ship with the DS6 release at about 13:15. No other project is named.'],
+        [stamp, 'Expected times are now a date and a Lisbon time, not &ldquo;today&rdquo;; MP3 to MP6 ship with the DS6 release at about 13:45. No other project is named.'],
         ['10 Oct 11:07', 'Created. The owner made model and effort profiles a feature of their own. DS2 and DS5 moved here from the project tasks; MP1 to MP6 added; three figures (who runs on what, where settings come from, alias drift); the decisions of 10 October.'],
     ]).replace('<table>', '<table class="history-table">')
 
