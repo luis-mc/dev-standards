@@ -206,11 +206,11 @@
       "id": "AR23",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Running",
       "item": "Convert dev-standards' decisions",
-      "detail": "After AR22: rebuild the Decisions of both feature artifacts in the new form, with the options each question offered, taken from the session where they were asked.",
-      "expected": "10 Oct ~23:30",
-      "changed": "2026-10-10T21:06+01:00"
+      "detail": "Agent extracting, from this session's record, every question the owner was asked with its options, recommendation and answer, to rebuild both features' decisions as decisions.json; applied with the release, since the new check refuses the old hand-written sections.",
+      "expected": "11 Oct ~00:30",
+      "changed": "2026-10-10T21:48+01:00"
     },
     {
       "id": "AR24",
