@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T00:07+01:00",
+  "updated": "2026-10-11T00:19+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -486,11 +486,11 @@
       "id": "DS23",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Pre-push checks the pushed commit",
-      "detail": "Agent building; draft #32 open. When the pushed commit is not the checked-out one, the guards run on the pushed commit in a temporary worktree.",
-      "expected": "10 Oct ~23:45",
-      "changed": "2026-10-10T23:15+01:00"
+      "detail": "Built in #32 and joined (not released): the pre-push guards check the pushed commit in a temporary worktree, node_modules linked never copied, the worktree always removed. 609 checks on Windows, 618 on Linux. Open: a SIGKILLed run leaves its push-check folder behind (no sweep yet); workspace packages resolve to the checked-out version.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:19+01:00"
     },
     {
       "id": "DS24",
