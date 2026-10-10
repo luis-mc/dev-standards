@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T00:34+01:00",
+  "updated": "2026-10-11T00:41+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -516,11 +516,11 @@
       "id": "DS26",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "After 7.0.0: repo setting, cleanup, global rules",
-      "detail": "Started after the 7.0.0 merge: turning on delete-branch-after-merge; the train-cleanup workflow is removing the train's GitHub branches; then cleanup.py locally (dry run first) and the new rule lines in your ~/.claude rules file.",
-      "expected": "11 Oct ~01:00",
-      "changed": "2026-10-11T00:33+01:00"
+      "detail": "Done at 00:45: delete-branch-after-merge is on; train-cleanup removed the 7.0.0 train on GitHub; cleanup.py removed 36 finished branches and 14 worktrees; DS19 (kept by design: a fix pushed after GitHub marked its draft merged) and two old local branches were removed by hand after checking their work is released; 27 empty Claude Code scaffolding branches removed. Only main and the record worktree remain. Your ~/.claude rules have the three new lines (backup first).",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T00:41+01:00"
     },
     {
       "id": "MP1",
