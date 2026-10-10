@@ -1,6 +1,6 @@
 ---
 name: feature-artifact-new
-description: Create a feature artifact — the claude.ai artifact of one feature, titled `Feature: <name>`, with a status checklist, written content and a history. Use when the user starts a feature and wants it tracked, asks for a feature artifact or feature page, or says a feature needs its own status view. Creates the project's full-progress artifact first when it does not exist yet.
+description: Create a feature artifact — the standalone HTML file `docs/artifacts/feature-<slug>.html` of one feature, titled `Feature: <name>`, with a status checklist, written content and a history. It opens by double-click in any browser and is never published. Use when the user starts a feature and wants it tracked, asks for a feature artifact or feature page, or says a feature needs its own status view. Creates the project's full-progress artifact first when it does not exist yet.
 model: opus
 effort: high
 ---
@@ -8,8 +8,12 @@ effort: high
 # Feature artifact — new
 
 Creates one feature artifact from the project's record (`docs/artifacts/`,
-ARTIFACTSPEC 1.0.0). The script is the only writer of `manifest.json` and
-`registry.json`; never edit either by hand.
+ARTIFACTSPEC 1.1.0). The script is the only writer of `manifest.json` and
+`registry.json`; never edit either by hand. A feature artifact is a standalone
+HTML file in the repository (`docs/artifacts/feature-<slug>.html`, CSS inlined,
+opens by double-click). It is never published to claude.ai, because claude.ai
+allows 200 publishes per account per day: only Full Progress is published, once
+at the end of the turn.
 
 Every command below is
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/project_artifacts.py" <command>`, run from
@@ -39,7 +43,8 @@ the repository instead (the session's scratchpad directory, in a new folder).
    (`--project NAME --timezone IANA --label LABEL`, plus `--windows-timezone ID`
    and `--default-branch B` when given); the script runs `init` itself, so the
    full-progress artifact exists afterwards. Do not run `init` separately. The
-   command also installs the rule file and the gitignore lines on first use.
+   command also adds the gitignore lines on first use. It does not copy the rule
+   file: the plugin delivers the rule at every session start.
 3. **Find the project's design** (R5.12), only when the manifest says
    `"design": "default"`. Look in this order and stop at the first hit:
    design-token files; Tailwind or theme configuration; CSS custom properties
@@ -59,13 +64,16 @@ the repository instead (the session's scratchpad directory, in a new folder).
      (one or two sentences on where the work stands now; the script appends the
      needs-you line), `extra_css` (empty unless needed).
    - Replace the stub `01-what-and-why.html` and add `02-...`, `03-...` as the
-     feature needs (design, how it works, decisions, links). Number files from
-     `01-` upward, with no gaps.
+     feature needs (design, how it works, links). Number files from
+     `01-` upward, with no gaps. Do not write a section titled Decisions: the
+     script refuses it, because decisions are drawn from `decisions.json` (below).
    - Each file is an HTML fragment whose first line is `<!-- title: Section title -->`.
      No `<script>`, no `<style>` and no section numbers in fragments. Section 0
      (status and checklist) and the last section (History) are generated.
    - `extra_css` may add classes; it must never redefine a selector of the
      structure stylesheet.
+   - `decisions.json` (optional, feature artifacts only): the owner's choices
+     between options, see "Decisions" below.
    Write what is true now, from the code and the owner's words. Do not invent
    status, dates or results.
 5. **Apply and validate:** `edit-content <key> --from <scratch dir>`. Fix any
@@ -75,28 +83,64 @@ the repository instead (the session's scratchpad directory, in a new folder).
    (or the status it truly has). The command prints each task's ID. `item` is at
    most 80 characters. `expected` is a real date from `date` in the project's
    zone, `DD Mon` or `DD Mon ~HH:MM`, optionally followed by `; ` and a note;
-   never `today`, `soon` or `next` alone.
-7. **Publish** every artifact `pending` lists, per "Publishing" below. The new
-   feature artifact comes first, then the full-progress artifact, which links
-   to it.
+   never `today`, `soon` or `next` alone. Every activity is a task, the
+   session's own included; `Built` means finished but not released, and
+   release work still to come (join, release) is a task of its own.
+7. **Do not publish the feature artifact**, and do not publish Full Progress
+   yet: it is published once, at the end of the turn, per "Publishing" below.
 8. **Check:** run `check`. Report any finding with its requirement ID. The
    script commits and pushes the record on every writing command; if `pending`
    or a push fails, say so and stop.
-9. **Tell the owner** the artifact's URL, its task IDs, and that branch names
+9. **Tell the owner** where the file is (`docs/artifacts/<file>` in the
+   repository; open it by double-click), its task IDs, and that branch names
    for these tasks must start with the task ID (`<ID>-short-name`).
+
+## Decisions
+
+Whenever the owner chooses between options (designs, approaches, names), record
+every option you offered and the one chosen, in the same turn. An option the
+owner has not chosen yet is an open decision. The script draws the section
+`Decisions` (just before History) from `content/<key>/decisions.json`; never
+write that section by hand.
+
+1. `export-content <key> --to <scratch dir>`, then edit `decisions.json` there
+   (create it when absent): `{"decisions": [...]}`, oldest first.
+2. To **add** one, append `{"id": "D<next>", "question": "...", "asked":
+   "YYYY-MM-DD", "status": "open" or "decided", "options": [...], "chosen":
+   null or a label, "decided": null or "YYYY-MM-DD"}`. IDs run D1, D2, ... with
+   no gap; never reuse or remove one. At least two options, each with a unique
+   `label` and a `summary`; a yes/no question lists Yes and No. Mark at most one
+   option `"recommended": true`. Put the owner's own words, verbatim, in
+   `owner_words` when decided. Put the task the decision belongs to in `task`;
+   for an open decision, set that task to Needs you with `set-task-status`.
+3. Whatever the owner was shown goes into the option's `preview`: the mockup or
+   the AskUserQuestion preview text, as a small HTML fragment (usually
+   `<pre>...</pre>`). No script, style, iframe, `on*` attribute or external URL.
+   Or `"image": "assets/name.png"` with the file in an `assets/` folder next to
+   the other files (png, jpg, gif or webp, at most 300 KB).
+4. To **close** an open decision, set `status` to `decided`, `chosen` to the
+   option's label and `decided` to the date. A closed decision never changes: a
+   changed mind is a new decision with `"replaces": "D<n>"`.
+5. `edit-content <key> --from <scratch dir>`; fix what it reports and run it
+   again.
 
 ## Publishing
 
-Repeat until `pending` exits 0.
+Only Full Progress is published, once, at the end of the turn: status changes
+accumulate during the turn and never trigger a publish of their own. Feature
+artifacts are never published and have no URL; `mark-published` refuses them.
 
-1. Run `pending --json`. Handle every entry of `artifacts`, feature artifacts
-   before the full-progress artifact. Each entry carries `key`, `title`, `path`
-   (the absolute path of the HTML to publish) and `url` (empty before the first
-   publish).
+At the end of the turn, repeat until `pending` exits 0:
+
+1. Run `pending --json`. It lists Full Progress when its committed render
+   changed since the last publish, and writes the publish copy: the same page
+   with absolute `file:///` links to the feature files. Each entry carries
+   `key`, `title`, `path` (the absolute path of the publish copy) and `url`
+   (empty before the first publish).
 2. Publish with the Artifact tool: `file_path` is the entry's `path`, unchanged,
    and `url` is the entry's `url` when it is not empty. On a first publish pass
    `icon` (a generic word such as `tracker`) and a one-sentence `description`.
-   Publish the file as rendered; do not edit it.
+   Publish the file as written; do not edit it.
 3. If the publish is refused because the artifact does not exist, list the
    owner's artifacts (`action: "list"`, `scope: "mine"`) and look for one whose
    title is exactly the entry's `title`. If one exists, publish to its `url`.
@@ -104,9 +148,10 @@ Repeat until `pending` exits 0.
    is ever created.
 4. If it is refused because the artifact changed elsewhere, `read` the live
    version once. Copy changes to content sections into a scratch export
-   (`export-content <key> --to <dir>`), then `edit-content <key> --from <dir>`;
-   drop changes to the generated sections. Run `pending --json` again for the
-   new `path`, and retry once.
-5. Run `mark-published <key> --url <URL>` with the URL the publish returned.
+   (`export-content full-progress --to <dir>`), then
+   `edit-content full-progress --from <dir>`; drop changes to the generated
+   sections. Run `pending --json` again for the new `path`, and retry once.
+5. Run `mark-published full-progress --url <URL>` with the URL the publish
+   returned.
 6. If there is no Artifact tool, say what is still unpublished and stop; the
    end-of-turn hook then reminds you.

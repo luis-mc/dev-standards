@@ -19,18 +19,30 @@ structure stylesheet by hand.
    from anywhere inside the project's repository. Add `--record PATH` to check
    a record somewhere else (a scratch clone, for example). Exit 0 is clean,
    exit 1 means findings, exit 2 means the record is unreadable.
+   The JSON also lists `notes`. A note is not a finding: a project's own
+   `.claude/rules/project-artifacts.md` that differs from the plugin's means the
+   plugin now delivers the rule at session start and the copy can be deleted;
+   offer to delete it. Another note lists `url` or `published_sha256` fields
+   dropped from feature entries of an older manifest (feature artifacts are no
+   longer published); the next writing command rewrites the manifest.
 2. **Clean:** say so in one line and stop.
 3. **Unreadable (exit 2):** quote the script's message. Say which file it could
    not read, and stop; do not guess at the record's contents.
 4. **Findings:** for each, give the requirement ID the script reports, what is
    wrong in plain words, and the fix. Group findings that share a cause.
    Typical fixes:
-   - Rendered HTML differs from a fresh render (INV-3), a checklist or tile
+   - Rendered HTML differs from a fresh render (INV-3; also a feature artifact
+     still in the old claude.ai fragment form, or a full-progress link that is
+     not the relative `feature-<slug>.html`, R5.27 to R5.30), a checklist or tile
      that differs from the registry (INV-1, R5.8), a stamp or contents list out
      of step (R5.2, R5.5): run `render --all`.
    - A content fragment, `meta.json` or `extra_css` problem (R4.10, R4.11,
      R5.2): run `export-content <key> --to <scratch dir>`, fix the file there,
      then run `edit-content <key> --from <scratch dir>`.
+   - A `decisions.json` problem (R5.14 to R5.19: options, choice, IDs, previews,
+     or a hand-written Decisions section): export the content, fix
+     `decisions.json` there, then `edit-content`. A warning that an open decision
+     has no task in Needs you (R5.26) is fixed with `set-task-status <ID> "Needs you"`.
    - A task row that is wrong (R6.6 expected format, R4.5 or R4.6 IDs and
      prefixes, R6.1 status): change it with `set-task-status` or `task-add`,
      never by hand.
@@ -46,6 +58,7 @@ structure stylesheet by hand.
      run `render --all` and report it if the finding stays.
 5. **Offer to apply the fixes.** Only on a yes, run them, then run `check`
    again and report the new result. A fix that changes the record leaves
-   artifacts to publish: run `pending`, and publish what it lists as
-   `task-status-update` describes.
+   Full Progress to publish: at the end of the turn run `pending`, and publish
+   what it lists as `task-status-update` describes (once; never mid-turn;
+   feature artifacts are files and are never published).
 6. **Report** findings fixed and findings left, each with its requirement ID.

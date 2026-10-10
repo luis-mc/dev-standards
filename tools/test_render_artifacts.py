@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for claude/plugins/artifacts/scripts/render_artifacts.py (ARTIFACTSPEC 1.0.0, sections 4 to 6 and 14).
+"""Tests for claude/plugins/artifacts/scripts/render_artifacts.py (ARTIFACTSPEC 1.1.0, sections 4 to 6 and 14).
 
 Every check of check_html gets a fixture that breaks exactly that rule and must produce exactly that
 requirement ID; the clean fixtures must produce nothing. A check nobody has seen fire is not a check.
@@ -11,10 +11,12 @@ from __future__ import annotations
 import copy
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
 import traceback
+from html.parser import HTMLParser
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLUGIN = os.path.join(ROOT, 'claude', 'plugins', 'artifacts')
@@ -23,7 +25,8 @@ sys.path.insert(0, os.path.join(PLUGIN, 'scripts'))
 import render_artifacts as R  # noqa: E402
 
 STAMP_TEXT, STAMP_ISO = '10 Oct 12:39', '2026-10-10T12:39+01:00'
-FP_URL, AR_URL = 'https://claude.ai/artifact/fp-url', 'https://claude.ai/artifact/ar-url'
+FP_URL = 'https://claude.ai/artifact/fp-url'
+AR_FILE, MP_FILE = 'feature-project-artifacts-standard.html', 'feature-model-and-effort-profiles.html'
 
 
 # ------------------------------------------------------------------ fixture: the shape of the dev-standards record
@@ -34,10 +37,10 @@ def task(tid, owner, status, item, expected, changed='', app='', detail=None):
 
 def base_registry():
     return {'spec': R.SPEC, 'updated': STAMP_ISO, 'tasks': [
-        task('AR5', 'artifacts', 'Done', 'ARTIFACTSPEC 1.0.0', '10 Oct', '2026-10-10T11:00+01:00', 'luismc-artifacts'),
+        task('AR5', 'artifacts', 'Built', 'ARTIFACTSPEC 1.0.0', '10 Oct', '2026-10-10T11:00+01:00', 'luismc-artifacts'),
         task('AR6', 'artifacts', 'Running', 'Templates', '10 Oct ~15:30', '2026-10-10T12:00+01:00', 'luismc-artifacts'),
         task('AR7', 'artifacts', 'To do', 'project_artifacts.py', '11 Oct', '2026-10-09T09:00+01:00', 'luismc-artifacts'),
-        task('AR16', 'artifacts', 'Done', 'Record saved', '20 Sep', '2026-09-20T10:00+01:00', 'luismc-artifacts'),
+        task('AR16', 'artifacts', 'Built', 'Record saved', '20 Sep', '2026-09-20T10:00+01:00', 'luismc-artifacts'),
         task('DS1', 'project', 'Live', 'AUTHSPEC 3.1.0', '24 Sep', '2026-09-24T10:00+01:00', 'luismc-project-setup'),
         task('DS2', 'models', 'Live', 'Effort question', '05 Oct', '2026-10-05T10:00+01:00', 'luismc-project-setup'),
         task('DS3', 'project', 'Live', 'tech-stack-setup 11.2.0', '02 Oct', '2026-10-02T10:00+01:00', 'luismc-project-setup'),
@@ -59,10 +62,10 @@ def base_manifest():
         'full_progress_artifact': {'key': 'full-progress', 'title': 'Full Progress: dev-standards', 'url': FP_URL,
                                    'file': 'full-progress-dev-standards.html', 'published_sha256': ''},
         'feature_artifacts': [
-            {'key': 'artifacts', 'title': 'Feature: Project artifacts standard', 'url': AR_URL,
-             'file': 'feature-project-artifacts-standard.html', 'prefix': 'AR', 'apps': ['luismc-artifacts'], 'published_sha256': ''},
-            {'key': 'models', 'title': 'Feature: Model and effort profiles', 'url': '',
-             'file': 'feature-model-and-effort-profiles.html', 'prefix': 'MP', 'apps': ['luismc-project-setup'], 'published_sha256': ''},
+            {'key': 'artifacts', 'title': 'Feature: Project artifacts standard',
+             'file': AR_FILE, 'prefix': 'AR', 'apps': ['luismc-artifacts']},
+            {'key': 'models', 'title': 'Feature: Model and effort profiles',
+             'file': MP_FILE, 'prefix': 'MP', 'apps': ['luismc-project-setup']},
         ],
         'project_prefixes': ['DS'], 'updated': STAMP_ISO,
     }
@@ -116,7 +119,8 @@ class Fixture:
         manifest = kw.get('manifest', self.manifest)
         registry = kw.get('registry', self.registry)
         return R.render_artifact(manifest, registry, kw.get('contents', self.contents), key, kw.get('plugin', PLUGIN),
-                                 self.record, kw.get('stamp_text', STAMP_TEXT), kw.get('stamp_iso', STAMP_ISO))
+                                 self.record, kw.get('stamp_text', STAMP_TEXT), kw.get('stamp_iso', STAMP_ISO),
+                                 links=kw.get('links'))
 
     def check(self, html, key, **kw):
         return R.check_html(html, key, kw.get('manifest', self.manifest), kw.get('registry', self.registry),
@@ -173,13 +177,120 @@ def render_is_deterministic(fx):
 
 @test
 @with_fixture
-def render_is_a_fragment_beginning_with_title(fx):
-    for key in ('full-progress', 'artifacts'):
-        out = fx.render(key)
-        assert out.startswith('<title>'), out[:40]
-        for tag in ('<html', '<head>', '<body', '{{', '}}'):
-            assert tag not in out, tag
-        assert out.endswith('\n')
+def full_progress_is_a_fragment_beginning_with_title(fx):
+    """R5.29: the Artifact tool takes a fragment."""
+    out = fx.render('full-progress')
+    assert out.startswith('<title>'), out[:40]
+    for tag in ('<!doctype', '<html', '<head>', '<body', '{{', '}}'):
+        assert tag not in out, tag
+    assert out.endswith('\n')
+
+
+class _Collect(HTMLParser):
+    """Reads a document the way a browser does, with no help from the renderer's own DOM."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.tags, self.links, self.scripts, self.styles, self.ids, self.metas = [], [], [], [], set(), []
+        self.stack, self.text, self.errors = [], {}, []
+
+    def handle_decl(self, decl):
+        self.tags.append(('decl', decl.lower()))
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        self.tags.append((tag, a))
+        self.stack.append(tag)
+        if 'id' in a:
+            self.ids.add(a['id'])
+        if tag == 'link':
+            self.links.append(a)
+        elif tag == 'meta':
+            self.metas.append(a)
+        elif tag in ('script', 'style'):
+            (self.scripts if tag == 'script' else self.styles).append([a, ''])
+
+    def handle_endtag(self, tag):
+        if tag in self.stack:
+            while self.stack.pop() != tag:
+                pass
+
+    def handle_data(self, data):
+        if self.stack and self.stack[-1] in ('script', 'style'):
+            (self.scripts if self.stack[-1] == 'script' else self.styles)[-1][1] += data
+        if self.stack and self.stack[-1] == 'title':
+            self.text['title'] = self.text.get('title', '') + data
+
+
+def read_document(html):
+    parser = _Collect()
+    parser.feed(html)
+    parser.close()
+    return parser
+
+
+@test
+@with_fixture
+def feature_artifact_is_a_standalone_document(fx):
+    """R5.27: doctype, html lang, head (charset, viewport, title, fonts link, style) and body."""
+    out = fx.render('artifacts')
+    assert out.startswith('<!doctype html>\n<html lang="en">\n<head>\n'), out[:60]
+    assert out.rstrip().endswith('</body>\n</html>')
+    doc = read_document(out)
+    names = [n for n, _ in doc.tags]
+    assert names.index('html') < names.index('head') < names.index('title') < names.index('style') < names.index('body') < names.index('main')
+    assert ('decl', 'doctype html') in doc.tags
+    assert dict(doc.tags[names.index('html')][1]) == {'lang': 'en'}
+    metas = doc.metas
+    assert {'charset': 'utf-8'} in metas
+    assert {'name': 'viewport', 'content': 'width=device-width, initial-scale=1'} in metas
+    assert doc.text['title'] == 'Feature: Project artifacts standard'
+    assert [s[0].get('id') for s in doc.styles] == ['design-tokens', 'structure-css', 'extra-css']
+    assert '{{' not in out and '}}' not in out
+    assert fx.check(out, 'artifacts') == []
+
+
+@test
+@with_fixture
+def feature_artifact_needs_no_host(fx):
+    """R5.28: opens by double-click: CSS inlined, nothing external but the fonts link, both themes' tokens present."""
+    out = fx.render('artifacts')
+    doc = read_document(out)
+    css = {s[0]['id']: s[1] for s in doc.styles}
+    assert css['structure-css'] == R.structure_css(PLUGIN)                 # project-artifact.css, inlined unchanged
+    tokens = css['design-tokens']
+    assert tokens == R.design_css(fx.manifest, PLUGIN, fx.record)
+    assert R.check_tokens(tokens) == []
+    assert ':root[data-theme="dark"]' in tokens and 'prefers-color-scheme: dark' in tokens   # light and dark
+    hosts = sorted((l['rel'], l['href'].split('/')[2]) for l in doc.links)
+    assert hosts == [('preconnect', 'fonts.googleapis.com'), ('preconnect', 'fonts.gstatic.com'),
+                     ('stylesheet', 'fonts.googleapis.com')], hosts
+    assert not any('src' in s[0] for s in doc.scripts)                      # one inline script, the template's own
+    assert len(doc.scripts) == 1 and doc.scripts[0][1] == R._ui_script(PLUGIN, 'feature')
+    for name, attrs in doc.tags:
+        if isinstance(attrs, dict):
+            assert not set(attrs) & {'src', 'srcset', 'poster', 'data'}, (name, attrs)
+    assert 'href="project-artifact.css"' not in out and '@import' not in ''.join(css.values())
+    # every contents link lands on a section of the same file
+    hrefs = [a.attrs['href'] for a in R.find_all(R.find(R.parse_dom(out), 'nav'), 'a')]
+    assert hrefs and all(h.startswith('#') and h[1:] in doc.ids for h in hrefs), hrefs
+    # the same holds with a project design of its own
+    write(os.path.join(fx.record, 'design.css'), R.design_css(fx.manifest, PLUGIN, fx.record).replace('Archivo', 'Rubik'))
+    manifest = copy.deepcopy(fx.manifest)
+    manifest['design'] = 'design.css'
+    own = fx.render('artifacts', manifest=manifest)
+    assert 'family=Rubik' in own and fx.check(own, 'artifacts', manifest=manifest) == []
+
+
+@test
+@with_fixture
+def a_feature_artifact_without_fonts_needs_no_link_at_all(fx):
+    plain = R.design_css(fx.manifest, PLUGIN, fx.record).replace('https://fonts.googleapis.com/css2?', 'https://example.test/css2?')
+    write(os.path.join(fx.record, 'design.css'), plain)
+    manifest = copy.deepcopy(fx.manifest)
+    manifest['design'] = 'design.css'
+    out = fx.render('artifacts', manifest=manifest)
+    assert read_document(out).links == [] and fx.check(out, 'artifacts', manifest=manifest) == []
 
 
 @test
@@ -244,7 +355,7 @@ def full_progress_structure(fx):
     assert cells == [['Feature: Project artifacts standard', 'AR5 to AR16', 'The design is agreed.'],
                      ['Feature: Model and effort profiles', 'MP1 to MP2, DS2', 'Effort question is live!']], cells
     anchors = [a.attrs['href'] for a in R.find_all(s1node, 'a')]
-    assert anchors == [AR_URL], anchors  # the feature without a URL is listed unlinked
+    assert anchors == [AR_FILE, MP_FILE], anchors  # R5.30: every feature is linked to its file, relative
 
 
 @test
@@ -286,8 +397,8 @@ def table_rows(html, which=0):
 def groups_and_order_on_the_feature_artifact(fx):
     rows = table_rows(fx.render('artifacts'))
     assert rows == [('group', 'now', 'Running now and next'), ('task', 'AR6'), ('task', 'AR7'),
-                    ('group', 'done', 'Live or done'), ('task', 'AR5'), ('task', 'AR16')], rows
-    # the "you" group is omitted when empty; Live or done is newest changed first (AR5 11 Oct 10 > AR16 20 Sep)
+                    ('group', 'built', 'Live or built'), ('task', 'AR5'), ('task', 'AR16')], rows
+    # the "you" group is omitted when empty; Live or built is newest changed first (AR5 11 Oct 10 > AR16 20 Sep)
 
 
 @test
@@ -300,8 +411,8 @@ def groups_and_order_on_the_full_progress_artifact(fx):
         ('task', 'AR7'), ('task', 'DS8'), ('task', 'MP2'),      # 11 Oct, 12 Oct, 13 Oct
         ('group', 'you', 'Needs you, failed or on hold'),
         ('task', 'DS9'), ('task', 'DS11'), ('task', 'DS10'),    # Needs you, Failed, On hold
-        ('group', 'done', 'Live or done'),
-        ('task', 'AR5'), ('task', 'MP1'), ('task', 'DS2'), ('task', 'DS3'),   # newest changed first
+        ('group', 'built', 'Live or built'),
+        ('task', 'AR5'), ('task', 'MP1'), ('task', 'DS2'), ('task', 'DS3'), ('task', 'AR16'),   # newest changed first; Built never folds
     ], rows
 
 
@@ -309,7 +420,7 @@ def groups_and_order_on_the_full_progress_artifact(fx):
 @with_fixture
 def earlier_fold_older_than_14_days(fx):
     out = fx.render('full-progress')
-    assert table_rows(out, 1) == [('task', 'DS1'), ('task', 'AR16')], table_rows(out, 1)  # 24 Sep, 20 Sep: newest first
+    assert table_rows(out, 1) == [('task', 'DS1')], table_rows(out, 1)   # only a Live row folds (24 Sep)
     dom = R.parse_dom(out)
     details = R.find_all(dom, 'details')
     assert len(details) == 1 and 'open' not in details[0].attrs and R.text_of(R.find(details[0], 'summary')) == 'Earlier'
@@ -318,12 +429,34 @@ def earlier_fold_older_than_14_days(fx):
 
 @test
 @with_fixture
+def built_rows_never_fold(fx):
+    """R6.3: unreleased work must not be hidden, however old."""
+    for task_ in fx.registry['tasks']:
+        if task_['id'] == 'AR16':
+            task_['changed'] = '2025-01-01T10:00+00:00'                       # almost two years old, and Built
+    out = fx.render('full-progress')
+    assert ('task', 'AR16') in table_rows(out, 0) and ('task', 'AR16') not in table_rows(out, 1)
+    assert fx.check(out, 'full-progress') == []
+    # the same task released (Live) folds
+    for task_ in fx.registry['tasks']:
+        if task_['id'] == 'AR16':
+            task_['status'] = 'Live'
+    folded = fx.render('full-progress')
+    assert ('task', 'AR16') in table_rows(folded, 1) and ('task', 'AR16') not in table_rows(folded, 0)
+    # a registry with only old Built rows has no Earlier fold at all
+    fx.registry['tasks'] = [dict(t_, status='Built', changed='2025-01-01T10:00+00:00') for t_ in fx.registry['tasks']
+                            if t_['status'] in ('Live', 'Built')]
+    assert '<details' not in fx.render('full-progress')
+
+
+@test
+@with_fixture
 def earlier_fold_boundary_is_14_days_from_the_stamp(fx):
     # stamp 10 Oct 12:39; a change at exactly 26 Sep 12:39 is 14 days old: not older, so it stays shown
     fx.registry['tasks'][4]['changed'] = '2026-09-26T12:39+01:00'          # DS1: exactly 14 days
-    fx.registry['tasks'][3]['changed'] = '2026-09-26T12:38+01:00'          # AR16: one minute older
+    fx.registry['tasks'][6]['changed'] = '2026-09-26T12:38+01:00'          # DS3 (Live): one minute older
     out = fx.render('full-progress')
-    assert table_rows(out, 1) == [('task', 'AR16')], table_rows(out, 1)
+    assert table_rows(out, 1) == [('task', 'DS3')], table_rows(out, 1)
     assert ('task', 'DS1') in table_rows(out, 0)
     assert fx.check(out, 'full-progress') == []
 
@@ -339,10 +472,13 @@ def earlier_fold_follows_the_stamp_not_the_clock(fx):
 @test
 @with_fixture
 def a_group_with_only_folded_rows_is_still_closed_correctly(fx):
-    fx.registry['tasks'] = [t for t in fx.registry['tasks'] if t['status'] not in ('Live', 'Done') or t['id'] in ('AR16', 'DS1')]
+    fx.registry['tasks'] = [t for t in fx.registry['tasks'] if t['status'] not in ('Live', 'Built') or t['id'] in ('AR16', 'DS1')]
+    for task_ in fx.registry['tasks']:
+        if task_['id'] == 'AR16':
+            task_['status'] = 'Live'                                             # Built would stay shown
     out = fx.render('full-progress')
     rows = table_rows(out, 0)
-    assert ('group', 'done', 'Live or done') not in rows, rows
+    assert ('group', 'built', 'Live or built') not in rows, rows
     assert table_rows(out, 1) == [('task', 'DS1'), ('task', 'AR16')]
     assert fx.check(out, 'full-progress') == []
 
@@ -375,25 +511,31 @@ def tiles_count_each_status_in_order_and_skip_empty(fx):
     dom = R.parse_dom(fx.render('full-progress'))
     tiles = [(R.text_of(R.find(t, 'div', 'label')), R.text_of(R.find(t, 'div', 'count')), t.attrs['class'])
              for t in R.find_all(dom, 'div', 'status-count-tile')]
-    assert tiles == [('live', '4', 'status-count-tile status-live'), ('done', '2', 'status-count-tile status-done'),
+    assert tiles == [('live', '4', 'status-count-tile status-live'), ('built', '2', 'status-count-tile status-built'),
                      ('running', '3', 'status-count-tile status-running'),
                      ('needs you', '1', 'status-count-tile status-needs-you'), ('waiting', '1', 'status-count-tile status-waiting'),
                      ('to do', '2', 'status-count-tile status-to-do'), ('on hold', '1', 'status-count-tile status-on-hold'),
                      ('failed', '1', 'status-count-tile status-failed')], tiles
     feature = R.parse_dom(fx.render('artifacts'))
     got = [(R.text_of(R.find(t, 'div', 'label')), R.text_of(R.find(t, 'div', 'count'))) for t in R.find_all(feature, 'div', 'status-count-tile')]
-    assert got == [('done', '2'), ('running', '1'), ('to do', '1')], got
+    assert got == [('built', '2'), ('running', '1'), ('to do', '1')], got
 
 
 @test
 @with_fixture
-def links_on_the_full_progress_artifact(fx):
-    dom = R.parse_dom(fx.render('full-progress'))
+def full_progress_links_are_relative(fx):
+    """R5.30: the committed file links to feature files by file name, so it works from a checkout."""
+    out = fx.render('full-progress')
+    dom = R.parse_dom(out)
     table = R.find(dom, 'table', 'status-checklist')
     hrefs = {tr.attrs['data-task']: (R.find(tr, 'a').attrs['href'] if R.find(tr, 'a') else None)
              for tr in R.find_all(table, 'tr', pred=lambda n: 'data-task' in n.attrs)}
-    assert hrefs['AR6'] == AR_URL and hrefs['AR5'] == AR_URL
-    assert hrefs['DS6'] is None and hrefs['MP1'] is None  # project task; feature without a URL
+    assert hrefs['AR6'] == AR_FILE and hrefs['AR5'] == AR_FILE and hrefs['AR16'] == AR_FILE
+    assert hrefs['MP1'] == MP_FILE and hrefs['MP2'] == MP_FILE and hrefs['DS2'] == MP_FILE   # DS2 belongs to models
+    assert hrefs['DS6'] is None                                                            # a project task has no link
+    assert 'file:' not in out and 'class="local-path"' not in out
+    for href in (h for h in hrefs.values() if h):
+        assert '/' not in href and ':' not in href and href.endswith('.html')
 
 
 @test
@@ -471,7 +613,7 @@ def check_r64_columns(fx):
     expect(fx, sub1(fp, '<th>App / service</th>', '', count=2), 'full-progress', ['R6.4'])
     # a feature artifact must not carry the App / service column
     expect(fx, sub1(out, '<th>Detail</th>', '<th>App / service</th><th>Detail</th>'), 'artifacts', ['R6.4'])
-    expect(fx, sub1(out, '<td colspan="4"><strong>Live or done', '<td colspan="5"><strong>Live or done'), 'artifacts', ['R6.4'])
+    expect(fx, sub1(out, '<td colspan="4"><strong>Live or built', '<td colspan="5"><strong>Live or built'), 'artifacts', ['R6.4'])
 
 
 @test
@@ -507,12 +649,12 @@ def check_r62_groups(fx):
     expect(fx, move_row(fp, 'AR7', 'data-group="now"'), 'full-progress', ['R6.2'])
     # two groups swapped
     a, b = fp.index('<tr class="status-group" data-group="now">'), fp.index('<tr class="status-group" data-group="you">')
-    c = fp.index('<tr class="status-group" data-group="done">')
+    c = fp.index('<tr class="status-group" data-group="built">')
     swapped = fp[:a] + fp[b:c] + fp[a:b] + fp[c:]
     expect(fx, swapped, 'full-progress', ['R6.2'])
-    # Live or done not newest first
+    # Live or built not newest first
     out = fx.render('artifacts')
-    expect(fx, move_row(out, 'AR16', 'data-group="done"'), 'artifacts', ['R6.2'])
+    expect(fx, move_row(out, 'AR16', 'data-group="built"'), 'artifacts', ['R6.2'])
 
 
 @test
@@ -522,7 +664,7 @@ def check_r63_earlier_fold(fx):
     # un-fold: take the details out
     start = fp.index('<details class="earlier">')
     end = fp.index('</details>') + len('</details>')
-    expect(fx, fp[:start] + fp[end:], 'full-progress', ['INV-1', 'R6.3', 'R6.5'])    # rows lost entirely: also not in the checklist
+    expect(fx, fp[:start] + fp[end:], 'full-progress', ['INV-1', 'R6.3'])            # rows lost entirely: also not in the checklist
     expect(fx, sub1(fp, '<details class="earlier">', '<details class="earlier" open>'), 'full-progress', ['R6.3'])
     expect(fx, sub1(fp, '<summary>Earlier</summary>', '<summary>Older</summary>'), 'full-progress', ['R6.3'])
     # a registry whose change dates disagree with the fold
@@ -530,6 +672,13 @@ def check_r63_earlier_fold(fx):
     registry['tasks'][5]['changed'] = '2026-08-01T10:00+01:00'                         # DS2 is old, but shown
     got = fx.check(sub1(fp, '<script type="application/json" id="task-registry">', '<script type="application/json" id="task-registry">'), 'full-progress', registry=registry)
     assert 'R6.3' in reqs(got), got
+    # a Built row is never folded: AR16 (Built, 20 Sep) moved into Earlier by hand
+    start = fp.index('<tr data-task="AR16">')
+    end = fp.index('</tr>', start) + len('</tr>')
+    row = fp[start:end]
+    hidden = fp[:start] + fp[end:]
+    hidden = sub1(hidden, '</tbody></table></div>\n</details>', row + '\n</tbody></table></div>\n</details>')
+    assert 'R6.3' in reqs(fx.check(hidden, 'full-progress')), fx.check(hidden, 'full-progress')
     # a feature artifact has no fold
     feature = fx.render('artifacts')
     wrapped = sub1(feature, '</section>\n<section id="s1">', '<details class="earlier"><summary>Earlier</summary></details></section>\n<section id="s1">')
@@ -549,7 +698,7 @@ def check_r66_expected_format(fx):
         registry = copy.deepcopy(fx.registry)
         registry['tasks'][1]['expected'] = good
         assert fx.check(fx.render('artifacts', registry=registry), 'artifacts', registry=registry) == [], good
-    # Live and Done rows are not held to the open-row format; Failed is not an open status
+    # Live and Built rows are not held to the open-row format; Failed is not an open status
     registry = copy.deepcopy(fx.registry)
     registry['tasks'][0]['expected'] = 'yesterday'
     registry['tasks'][12]['expected'] = 'soon'
@@ -597,11 +746,11 @@ def check_inv1_other_artifacts_tasks_do_not_leak(fx):
 @with_fixture
 def check_r58_tiles(fx):
     out = fx.render('artifacts')
-    expect(fx, sub1(out, '<div class="count">2</div><div class="label">done</div>', '<div class="count">3</div><div class="label">done</div>'),
+    expect(fx, sub1(out, '<div class="count">2</div><div class="label">built</div>', '<div class="count">3</div><div class="label">built</div>'),
            'artifacts', ['R5.8'])
     expect(fx, sub1(out, '<div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div>', ''),
            'artifacts', ['R5.8'])
-    expect(fx, sub1(out, '<div class="label">done</div>', '<div class="label">live</div>'), 'artifacts', ['R5.8'])
+    expect(fx, sub1(out, '<div class="label">built</div>', '<div class="label">live</div>'), 'artifacts', ['R5.8'])
     expect(fx, sub1(out, '</div></div>\n<p class="note">Key', '</div><div class="status-count-tile status-failed"><div class="count">0</div><div class="label">failed</div></div></div>\n<p class="note">Key'),
            'artifacts', ['R5.8'])
 
@@ -610,10 +759,15 @@ def check_r58_tiles(fx):
 @with_fixture
 def check_r65_feature_tasks_linked_on_full_progress(fx):
     fp = fx.render('full-progress')
-    linked = '<a href="%s"><span class="task-id">AR6</span>Templates</a>' % AR_URL
+    linked = '<a href="%s"><span class="task-id">AR6</span>Templates</a>' % AR_FILE
     assert linked in fp
     expect(fx, sub1(fp, linked, '<span class="task-id">AR6</span>Templates'), 'full-progress', ['R6.5'])
-    expect(fx, sub1(fp, linked, '<a href="https://claude.ai/artifact/other"><span class="task-id">AR6</span>Templates</a>'), 'full-progress', ['R6.5'])
+    expect(fx, sub1(fp, linked, '<a href="feature-other.html"><span class="task-id">AR6</span>Templates</a>'), 'full-progress', ['R5.30'])
+    # R5.30: the committed file never carries the publish copy's absolute links
+    expect(fx, sub1(fp, linked, '<a href="file:///C:/x/docs/artifacts/%s"><span class="task-id">AR6</span>Templates</a>' % AR_FILE),
+           'full-progress', ['R5.30'])
+    expect(fx, sub1(fp, linked, '<a href="docs/artifacts/%s"><span class="task-id">AR6</span>Templates</a>' % AR_FILE),
+           'full-progress', ['R5.30'])
     start = fp.index('<tr data-task="AR6">')
     end = fp.index('</tr>', start) + 6
     expect(fx, fp[:start] + fp[end:], 'full-progress', ['INV-1', 'R6.5'])
@@ -623,8 +777,10 @@ def check_r65_feature_tasks_linked_on_full_progress(fx):
 @with_fixture
 def check_r56_feature_list(fx):
     fp = fx.render('full-progress')
-    expect(fx, sub1(fp, '<a href="%s">Feature: Project artifacts standard</a>' % AR_URL, 'Feature: Project artifacts standard'), 'full-progress', ['R5.6'])
-    expect(fx, sub1(fp, '<td>Feature: Model and effort profiles</td>', '<td>Feature: Model and effort</td>'), 'full-progress', ['R5.6'])
+    expect(fx, sub1(fp, '<a href="%s">Feature: Project artifacts standard</a>' % AR_FILE, 'Feature: Project artifacts standard'), 'full-progress', ['R5.6'])
+    expect(fx, sub1(fp, '<a href="%s">Feature: Model and effort profiles</a>' % MP_FILE, '<a href="https://claude.ai/artifact/x">Feature: Model and effort profiles</a>'),
+           'full-progress', ['R5.30'])
+    expect(fx, sub1(fp, '<td><a href="%s">Feature: Model and effort profiles</a></td>' % MP_FILE, '<td>Feature: Model and effort</td>'), 'full-progress', ['R5.6'])
 
 
 @test
@@ -659,7 +815,7 @@ def check_r54_history(fx):
 def check_r59_registry_script(fx):
     fp = fx.render('full-progress')
     expect(fx, sub1(fp, 'id="task-registry"', 'id="registry"'), 'full-progress', ['R5.9'])
-    expect(fx, sub1(fp, '"status": "Running"', '"status": "Done"', count=fp.count('"status": "Running"')), 'full-progress', ['R5.9'])
+    expect(fx, sub1(fp, '"status": "Running"', '"status": "Built"', count=fp.count('"status": "Running"')), 'full-progress', ['R5.9'])
     start = fp.index('<script type="application/json"')
     end = fp.index('</script>', start) + 9
     expect(fx, fp[:start] + fp[end:], 'full-progress', ['R5.9'])
@@ -778,7 +934,7 @@ def problems_of(fx, key='artifacts'):
 @with_fixture
 def load_content_returns_the_documented_shape(fx):
     content = fx.contents['artifacts']
-    assert set(content) == {'meta', 'sections', 'history'}
+    assert set(content) == {'meta', 'sections', 'history', 'decisions'}
     assert set(content['meta']) == {'title', 'hero', 'lede', 'extra_css'}
     assert [s['title'] for s in content['sections']] == ['What and why', 'The design']
     assert content['sections'][0]['html'] == '<h3>Why</h3>\n<p>Because.</p>\n'
@@ -951,7 +1107,7 @@ def artifact_file_names():
 
 @test
 def constants_follow_the_contract():
-    assert R.STATUSES == ('Live', 'Done', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed')
+    assert R.STATUSES == ('Live', 'Built', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed')
     assert len(R.REQUIRED_TOKENS) == 22 and len(set(R.REQUIRED_TOKENS)) == 22
     design = open(os.path.join(PLUGIN, 'design', 'DESIGN.md'), encoding='utf-8').read()
     for token in R.REQUIRED_TOKENS:
@@ -988,9 +1144,654 @@ def templates_hold_only_known_placeholders(fx):
         text = open(os.path.join(PLUGIN, 'templates', name), encoding='utf-8').read()
         found = set(re.findall(r'\{\{(\w+)\}\}', text))
         assert found <= known, found - known
-        assert text.startswith('<title>{{title}}</title>')
+        if name.startswith('feature'):
+            assert text.startswith('<!doctype html>\n<html lang="en">'), text[:40]   # a complete document (R5.27)
+            assert text.rstrip().endswith('</body>\n</html>')
+        else:
+            assert text.startswith('<title>{{title}}</title>')                      # a fragment (R5.29)
         assert ('{{registry}}' in text) == (name.startswith('full-progress'))
         assert text.count('<script') == 1 or (name.startswith('full') and text.count('<script') == 1)
+
+
+# ------------------------------------------------------------------ standalone files and links (section 5.5)
+@test
+@with_fixture
+def check_r527_standalone_document(fx):
+    out = fx.render('artifacts')
+    expect(fx, sub1(out, '<!doctype html>\n', ''), 'artifacts', ['R5.27'])
+    expect(fx, sub1(out, '<!doctype html>', '<!DOCTYPE HTML>'), 'artifacts', [])                 # case does not matter
+    expect(fx, sub1(out, '<html lang="en">', '<html>'), 'artifacts', ['R5.27'])
+    expect(fx, sub1(out, '<html lang="en">', '<html lang="">'), 'artifacts', ['R5.27'])
+    expect(fx, sub1(out, '<meta charset="utf-8">\n', ''), 'artifacts', ['R5.27'])
+    expect(fx, sub1(out, '<meta name="viewport" content="width=device-width, initial-scale=1">\n', ''), 'artifacts', ['R5.27'])
+    # the old claude.ai form: a fragment beginning with <title>
+    old_form = out[out.index('<title>'):out.index('</head>')] + out[out.index('</head>\n<body>\n') + len('</head>\n<body>\n'):out.index('</body>')]
+    got = fx.check(old_form, 'artifacts')
+    assert 'R5.27' in reqs(got), got
+    # the page outside the body
+    expect(fx, sub1(sub1(out, '</head>\n<body>\n', '</head>\n'), '</body>\n', ''), 'artifacts', ['R5.27'])
+
+
+@test
+@with_fixture
+def check_r528_no_external_resources(fx):
+    out = fx.render('artifacts')
+    link = '<link rel="stylesheet" href="project-artifact.css">\n'
+    expect(fx, sub1(out, '<style id="design-tokens">', link + '<style id="design-tokens">'), 'artifacts', ['R5.28'])
+    other = '<link rel="stylesheet" href="https://cdn.example.test/a.css">\n'
+    expect(fx, sub1(out, '<style id="design-tokens">', other + '<style id="design-tokens">'), 'artifacts', ['R5.28'])
+    pre = '<link rel="preconnect" href="https://cdn.example.test">\n'
+    expect(fx, sub1(out, '<style id="design-tokens">', pre + '<style id="design-tokens">'), 'artifacts', ['R5.28'])
+    fonts_only = '<link rel="icon" href="https://fonts.gstatic.com/x.ico">\n'
+    expect(fx, sub1(out, '<style id="design-tokens">', fonts_only + '<style id="design-tokens">'), 'artifacts', ['R5.28'])
+    expect(fx, sub1(out, '<div class="layout">', '<script src="app.js"></script>\n<div class="layout">'), 'artifacts', ['R4.10', 'R5.28'])
+    expect(fx, sub1(out, '<p>Because.</p>', '<p>Because.</p><img src="logo.png" alt="">'), 'artifacts', ['R5.28'])
+    expect(fx, sub1(out, '<p>Because.</p>', '<p>Because.</p><img src="data:image/png;base64,AAAA" alt="">'), 'artifacts', [])
+    expect(fx, sub1(out, '<style id="extra-css"></style>', '<style id="extra-css">@import url(https://cdn.example.test/a.css);</style>'),
+           'artifacts', ['R5.28'])
+    expect(fx, sub1(out, '<style id="extra-css"></style>', '<style id="extra-css">.x{background:url(https://cdn.example.test/a.png)}</style>'),
+           'artifacts', ['R5.28'])
+    expect(fx, sub1(out, '<style id="extra-css"></style>', '<style id="extra-css">.x{background:url(data:image/png;base64,AAAA)}</style>'),
+           'artifacts', [])
+
+
+@test
+@with_fixture
+def check_r529_full_progress_fragment(fx):
+    fp = fx.render('full-progress')
+    document = '<!doctype html>\n<html lang="en">\n<head>\n' + fp + '</head>\n<body></body>\n</html>\n'
+    assert 'R5.29' in reqs(fx.check(document, 'full-progress')), fx.check(document, 'full-progress')
+    assert 'R5.29' in reqs(fx.check('<!-- x -->\n' + fp, 'full-progress'))
+    assert 'R5.29' in reqs(fx.check('<body>' + fp + '</body>', 'full-progress'))
+    assert fx.check(fp, 'full-progress') == []
+
+
+@test
+@with_fixture
+def check_r530_relative_links(fx):
+    """R5.30: the committed full-progress file links by file name; the publish copy's links fail the check."""
+    fp = fx.render('full-progress')
+    assert fx.check(fp, 'full-progress') == []
+    copy_ = fx.render('full-progress', links=publish_links(fx))
+    got = fx.check(copy_, 'full-progress')
+    assert 'R5.30' in reqs(got), got                                     # absolute links are not what is committed
+    assert any('file:///' in m for _, m in got)
+    # section 1 and a task link, each broken alone
+    expect(fx, sub1(fp, '<a href="%s">Feature: Project artifacts standard</a>' % AR_FILE,
+                    '<a href="./%s">Feature: Project artifacts standard</a>' % AR_FILE), 'full-progress', ['R5.30'])
+    expect(fx, sub1(fp, '<a href="%s"><span class="task-id">MP2</span>' % MP_FILE,
+                    '<a href="../%s"><span class="task-id">MP2</span>' % MP_FILE), 'full-progress', ['R5.30'])
+    # a feature artifact has no such links to check
+    assert fx.check(fx.render('artifacts'), 'artifacts') == []
+
+
+def publish_links(fx, root='/home/me/my repo'):
+    """What project_artifacts.py hands render_artifact for the publish copy (R5.31)."""
+    out = {}
+    for entry in fx.manifest['feature_artifacts']:
+        path = '%s/docs/artifacts/%s' % (root, entry['file'])
+        out[entry['key']] = ('file://' + path.replace(' ', '%20'), path)
+    return out
+
+
+@test
+@with_fixture
+def publish_copy_has_file_links(fx):
+    """R5.31: the copy differs from the committed render in its links, and shows each path as text."""
+    links = publish_links(fx)
+    copy_ = fx.render('full-progress', links=links)
+    committed = fx.render('full-progress')
+    assert copy_ != committed
+    dom = R.parse_dom(copy_)
+    hrefs = sorted({a.attrs['href'] for a in R.find_all(dom, 'a') if a.attrs['href'].startswith(('file:', 'feature-'))})
+    assert hrefs == sorted(v[0] for v in links.values()), hrefs
+    assert 'file:///' in copy_ and 'file:///home/me/my%20repo/docs/artifacts/' + AR_FILE in copy_
+    assert 'href="feature-' not in copy_                                                 # no relative link is left
+    # the path is text next to every link: section 1 and each feature task
+    shown = [R.text_of(n) for n in R.find_all(dom, 'span', 'local-path')]
+    assert shown.count('/home/me/my repo/docs/artifacts/' + AR_FILE) == 1 + 4      # section 1, then AR5, AR6, AR7, AR16
+    assert shown.count('/home/me/my repo/docs/artifacts/' + MP_FILE) == 1 + 3      # section 1, then DS2, MP1, MP2
+    for anchor in R.find_all(dom, 'a'):
+        if anchor.attrs['href'].startswith('file:'):
+            siblings = [n for n in anchor.parent.children if n.tag != '#text' or n.text.strip()]
+            following = siblings[siblings.index(anchor) + 1]
+            assert following.tag == 'span' and R.has_class(following, 'local-path'), anchor.attrs['href']
+            assert R.text_of(following).endswith(anchor.attrs['href'].rsplit('/', 1)[1])
+    # undoing the two differences gives the committed render back: the copy is the same page with the same stamp
+    back = re.sub(r' <span class="local-path">[^<]*</span>', '', copy_)
+    for key, (href, _shown) in links.items():
+        back = back.replace('href="%s"' % href, 'href="%s"' % next(e['file'] for e in fx.manifest['feature_artifacts'] if e['key'] == key))
+    assert back == committed
+    # the stamp, the registry script and the checklist are those of the committed file
+    assert R.text_of(R.find(dom, 'p', 'last-update')) == 'Last update: 10 Oct 12:39 (Lisbon)'
+    assert json.loads(''.join(c.text for c in R.find(dom, 'script', pred=lambda n: n.attrs.get('type') == 'application/json').children)) == fx.registry
+
+
+@test
+@with_fixture
+def publish_copy_path_encoding(fx):
+    """R5.31: the href is as given (percent-encoded by the caller), the path text is escaped, not encoded."""
+    links = {'artifacts': ('file:///C:/My%20Docs/a%26b/docs/artifacts/' + AR_FILE, 'C:/My Docs/a&b/docs/artifacts/' + AR_FILE),
+             'models': ('file:///C:/My%20Docs/a%26b/docs/artifacts/' + MP_FILE, 'C:/My Docs/a&b/docs/artifacts/' + MP_FILE)}
+    out = fx.render('full-progress', links=links)
+    assert 'href="file:///C:/My%20Docs/a%26b/docs/artifacts/' + AR_FILE + '"' in out
+    assert '<span class="local-path">C:/My Docs/a&amp;b/docs/artifacts/' + AR_FILE + '</span>' in out
+    assert '&amp;amp;' not in out and 'a&b' not in out.replace('a&amp;b', '')
+    # a feature artifact has no links to feature files, whatever it is given
+    assert fx.render('artifacts', links=links) == fx.render('artifacts')
+
+
+@test
+@with_fixture
+def publish_copy_with_partial_links_keeps_relative_for_the_rest(fx):
+    out = fx.render('full-progress', links={'artifacts': ('file:///x/' + AR_FILE, '/x/' + AR_FILE)})
+    assert 'href="file:///x/%s"' % AR_FILE in out and 'href="%s"' % MP_FILE in out
+
+
+# ------------------------------------------------------------------ decisions (section 5.4)
+PNG =b'\x89PNG\r\n\x1a\n' + b'not-a-real-image-the-renderer-only-embeds-bytes'
+
+
+def opt(label, summary=None, **kw):
+    out = {'label': label, 'summary': '%s, in a sentence.' % label if summary is None else summary}
+    out.update(kw)
+    return out
+
+
+def dec(n, **kw):
+    """A decided decision D<n> by default; keyword arguments replace its fields."""
+    out = {'id': 'D%d' % n, 'question': 'Which layout for the checkout page?', 'asked': '2026-10-08', 'status': 'decided',
+           'options': [opt('Single page', recommended=True, preview='<pre>+------+\n| Pay  |\n+------+</pre>'),
+                       opt('Three steps')],
+           'chosen': 'Single page', 'decided': '2026-10-10', 'owner_words': 'single page, fewer clicks', 'task': 'AR6'}
+    out.update(kw)
+    return out
+
+
+def open_dec(n, **kw):
+    out = dec(n, question='Should History also list decisions?', status='open', chosen=None, decided=None, owner_words=None,
+              options=[opt('Yes'), opt('No', recommended=True)], task='AR7')
+    out.update(kw)
+    return out
+
+
+def put_decisions(fx, decisions, key='artifacts', raw=None):
+    path = os.path.join(fx.record, 'content', key, 'decisions.json')
+    write(path, raw if raw is not None else json.dumps({'decisions': decisions}, indent=1))
+    return path
+
+
+def load_problems(fx, key='artifacts'):
+    try:
+        R.load_content(fx.record, key)
+    except R.ContentError as exc:
+        return exc.problems
+    return []
+
+
+def three_decisions():
+    """D1 decided and later replaced, D2 open, D3 decided (replaces D1)."""
+    return [dec(1), open_dec(2), dec(3, question='Which layout, second thoughts?', asked='2026-10-10', replaces='D1',
+                                    options=[opt('Single page'), opt('Wizard', recommended=True)], chosen='Wizard',
+                                    owner_words='wizard, it is clearer', task=None)]
+
+
+def sample(fx, decisions=None):
+    put_decisions(fx, three_decisions() if decisions is None else decisions)
+    fx.reload()
+    registry = copy.deepcopy(fx.registry)
+    for t in registry['tasks']:
+        if t['id'] == 'AR7':
+            t.update(status='Needs you', expected='11 Oct')
+    return registry
+
+
+@test
+@with_fixture
+def decisions_valid_file_loads_normalised(fx):
+    put_decisions(fx, [dec(1), open_dec(2)])
+    content = R.load_content(fx.record, 'artifacts')
+    d1, d2 = content['decisions']
+    assert d1['id'] == 'D1' and d1['chosen'] == 'Single page' and d1['options'][0]['recommended'] is True
+    assert d1['options'][1]['recommended'] is False and d1['options'][1]['preview'] == '' and d1['options'][1]['image_uri'] == ''
+    assert d2['status'] == 'open' and d2['chosen'] is None and d2['decided'] is None and d2['replaces'] is None
+    assert R.load_content(fx.record, 'models')['decisions'] == []          # no file, no decisions
+
+
+@test
+@with_fixture
+def decisions_yes_no_question_lists_both(fx):
+    put_decisions(fx, [open_dec(1)])
+    assert load_problems(fx) == []
+
+
+SCHEMA_CASES = [
+    # (name, decision list builder, text the problem must hold, requirement)
+    ('one option only', lambda: [dec(1, options=[opt('Single page')])], '2 to 6 options', 'R5.16'),
+    ('seven options', lambda: [dec(1, options=[opt('O%d' % i) for i in range(7)], chosen='O1')], '2 to 6 options', 'R5.16'),
+    ('options not a list', lambda: [dec(1, options='Yes or no')], '2 to 6 options', 'R5.16'),
+    ('duplicate labels', lambda: [dec(1, options=[opt('Single page'), opt('Single page')])], 'used twice', 'R5.16'),
+    ('duplicate labels differing in case', lambda: [dec(1, options=[opt('Single page'), opt('single PAGE ')])], 'used twice', 'R5.16'),
+    ('empty label', lambda: [dec(1, options=[opt(''), opt('B')], chosen='B')], '"label"', 'R5.16'),
+    ('empty summary', lambda: [dec(1, options=[opt('Single page', summary=''), opt('B')])], '"summary"', 'R5.14'),
+    ('decided without chosen', lambda: [dec(1, chosen=None)], 'label of one of its options', 'R5.16'),
+    ('chosen is not a label', lambda: [dec(1, chosen='Four steps')], 'label of one of its options', 'R5.16'),
+    ('decided without a date', lambda: [dec(1, decided=None)], '"decided" must be a date', 'R5.16'),
+    ('decided before asked', lambda: [dec(1, decided='2026-10-01')], 'before "asked"', 'R5.16'),
+    ('open with a choice', lambda: [open_dec(1, chosen='Yes')], 'must be null', 'R5.16'),
+    ('open with a decided date', lambda: [open_dec(1, decided='2026-10-10')], 'must be null', 'R5.16'),
+    ('open with the owner\'s words', lambda: [open_dec(1, owner_words='yes please')], 'no "owner_words"', 'R5.16'),
+    ('status outside decided or open', lambda: [dec(1, status='closed')], '"status"', 'R5.16'),
+    ('two recommended', lambda: [dec(1, options=[opt('A', recommended=True), opt('B', recommended=True)], chosen='A')],
+     'at most one', 'R5.16'),
+    ('recommended not a boolean', lambda: [dec(1, options=[opt('A', recommended='yes'), opt('B')], chosen='B')],
+     '"recommended"', 'R5.16'),
+    ('replaces an unknown decision', lambda: [dec(1), dec(2, replaces='D9')], 'earlier decision', 'R5.18'),
+    ('replaces a later decision', lambda: [dec(1, replaces='D2'), dec(2)], 'earlier decision', 'R5.18'),
+    ('replaces itself', lambda: [dec(1, replaces='D1')], 'earlier decision', 'R5.18'),
+    ('task is not an ID', lambda: [dec(1, task='the checkout')], '"task"', 'R5.18'),
+    ('id gap (a decision was removed)', lambda: [dec(1), dec(3)], 'no gap', 'R5.15'),
+    ('id reused', lambda: [dec(1), dec(1)], 'no gap', 'R5.15'),
+    ('id malformed', lambda: [dec(1, id='d1')], 'D1, D2', 'R5.15'),
+    ('unknown decision field', lambda: [dec(1, chosn='x')], 'unknown field', 'R5.14'),
+    ('unknown option field', lambda: [dec(1, options=[opt('A', colour='red'), opt('B')], chosen='B')], 'unknown field', 'R5.14'),
+    ('question missing', lambda: [dec(1, question='')], '"question"', 'R5.14'),
+    ('question too long', lambda: [dec(1, question='Q' * 201)], '"question"', 'R5.14'),
+    ('asked is not a real date', lambda: [dec(1, asked='2026-02-30')], '"asked"', 'R5.14'),
+    ('asked in the wrong format', lambda: [dec(1, asked='10 Oct')], '"asked"', 'R5.14'),
+    ('a decision that is not an object', lambda: [dec(1), 'D2'], 'not an object', 'R5.14'),
+    ('preview and image together', lambda: [dec(1, options=[opt('A', preview='<p>x</p>', image='assets/a.png'), opt('B')], chosen='B')],
+     'not both', 'R5.17'),
+    ('image that does not exist', lambda: [dec(1, options=[opt('A', image='assets/none.png'), opt('B')], chosen='B')],
+     'does not exist', 'R5.17'),
+    ('image outside the content folder', lambda: [dec(1, options=[opt('A', image='../meta.json'), opt('B')], chosen='B')],
+     'assets/<file name>', 'R5.17'),
+    ('image in a subfolder', lambda: [dec(1, options=[opt('A', image='assets/x/a.png'), opt('B')], chosen='B')],
+     'assets/<file name>', 'R5.17'),
+    ('image of the wrong type', lambda: [dec(1, options=[opt('A', image='assets/a.svg'), opt('B')], chosen='B')],
+     'png, jpg, gif or webp', 'R5.17'),
+]
+
+
+@test
+@with_fixture
+def decisions_schema_every_rule_fails_alone(fx):
+    for name, build, needle, req in SCHEMA_CASES:
+        write(os.path.join(fx.record, 'content', 'artifacts', 'assets', 'a.svg'), '<svg xmlns="http://www.w3.org/2000/svg"/>')
+        put_decisions(fx, build())
+        problems = load_problems(fx)
+        hits = [p for p in problems if needle in p]
+        assert hits, '%s: no problem holds %r in %s' % (name, needle, problems)
+        assert any('(%s)' % req in p for p in hits), '%s: wanted %s in %s' % (name, req, hits)
+        put_decisions(fx, [dec(1)])
+        assert load_problems(fx) == [], name                                  # the same file, repaired, is clean
+
+
+@test
+@with_fixture
+def decisions_file_shape_is_checked(fx):
+    for raw in ('{ not json', '[]', '{"decisions": {}}', '{"decisions": [], "extra": 1}', '{}'):
+        put_decisions(fx, None, raw=raw)
+        problems = load_problems(fx)
+        assert problems and all('decisions.json' in p and '(R5.14)' in p for p in problems), (raw, problems)
+    put_decisions(fx, [])
+    assert load_problems(fx) == []                                            # an empty list is a valid, empty file
+    assert R.load_content(fx.record, 'artifacts')['decisions'] == []
+
+
+@test
+@with_fixture
+def decisions_image_is_embedded_and_size_limited(fx):
+    folder = os.path.join(fx.record, 'content', 'artifacts', 'assets')
+    os.makedirs(folder)
+    with open(os.path.join(folder, 'a.png'), 'wb') as handle:
+        handle.write(PNG)
+    put_decisions(fx, [dec(1, options=[opt('A', image='assets/a.png'), opt('B')], chosen='B', owner_words=None)])
+    fx.reload()
+    uri = fx.contents['artifacts']['decisions'][0]['options'][0]['image_uri']
+    assert uri.startswith('data:image/png;base64,')
+    out = fx.render('artifacts')
+    assert '<img class="decision-image" src="%s" alt="A">' % uri in out
+    assert fx.check(out, 'artifacts') == [] and 'http' not in out[out.index('class="decision-image"'):][:200]
+    assert fx.render('artifacts') == out                                       # deterministic with images
+    with open(os.path.join(folder, 'a.png'), 'wb') as handle:
+        handle.write(PNG + b'\0' * R.MAX_IMAGE_BYTES)
+    assert any('at most' in p and '(R5.17)' in p for p in load_problems(fx))
+    os.remove(os.path.join(folder, 'a.png'))
+    os.rmdir(folder)                                                           # an empty or missing assets/ folder is fine
+    put_decisions(fx, [dec(1)])
+    assert load_problems(fx) == []
+
+
+@test
+@with_fixture
+def decisions_assets_folder_is_not_a_content_file(fx):
+    write(os.path.join(fx.record, 'content', 'artifacts', 'assets', 'unused.png'), 'x')
+    assert load_problems(fx) == []                                             # assets/ is allowed beside the sections
+    write(os.path.join(fx.record, 'content', 'artifacts', 'stray.png'), 'x')
+    assert any('not a content file' in p for p in load_problems(fx))
+
+
+@test
+@with_fixture
+def decisions_hand_written_section_is_refused(fx):
+    for title in ('Decisions', 'decisions', '  DECISIONS '):
+        write(os.path.join(fx.record, 'content', 'models', '02-decisions.html'), '<!-- title: %s -->\n<p>Typed by hand.</p>\n' % title)
+        problems = load_problems(fx, 'models')
+        assert len(problems) == 1 and 'decisions.json' in problems[0] and '(R5.19)' in problems[0], problems
+    write(os.path.join(fx.record, 'content', 'models', '02-decisions.html'), '<!-- title: Decisions made -->\n<p>Fine.</p>\n')
+    assert load_problems(fx, 'models') == []                                   # only the exact title is drawn from the file
+    os.remove(os.path.join(fx.record, 'content', 'models', '02-decisions.html'))
+
+
+@test
+@with_fixture
+def decisions_full_progress_has_none(fx):
+    write(os.path.join(fx.record, 'content', 'full-progress', 'decisions.json'), '{"decisions": []}')
+    problems = load_problems(fx, 'full-progress')
+    assert len(problems) == 1 and 'full-progress artifact has no decisions' in problems[0], problems
+
+
+PREVIEW_BAD = [
+    ('script element', '<p>x</p><script>alert(1)</script>', 'script'),
+    ('style element', '<style>p{color:red}</style><p>x</p>', 'style'),
+    ('iframe', '<iframe src="#"></iframe>', 'iframe'),
+    ('on* attribute', '<p onclick="alert(1)">x</p>', 'onclick'),
+    ('on* attribute in another case', '<img src="data:image/png;base64,AAAA" ONERROR="alert(1)">', 'onerror'),
+    ('external image', '<img src="https://example.com/a.png" alt="">', 'external URL'),
+    ('external image, no scheme', '<img src="//example.com/a.png" alt="">', 'external URL'),
+    ('external link', '<a href="http://example.com">x</a>', 'external URL'),
+    ('external URL hidden by a space', '<a href="ht tp://example.com">x</a>', 'external URL'),
+    ('script URL', '<a href="javascript:alert(1)">x</a>', 'script URL'),
+    ('script URL hidden by a tab', '<a href="java\tscript:alert(1)">x</a>', 'script URL'),
+    ('data URL that is not an image', '<a href="data:text/html;base64,AAAA">x</a>', 'data: URL'),
+    ('svg data URL', '<img src="data:image/svg+xml;base64,AAAA" alt="">', 'data: URL'),
+    ('style url()', '<div style="background:url(a.png)">x</div>', 'url()'),
+    ('style @import', '<div style="@import \'a.css\'">x</div>', 'url()'),
+    ('fixed position', '<div style="position: fixed; top:0">x</div>', 'url()'),
+    ('id attribute', '<div id="s0">x</div>', 'id'),
+    ('form', '<form action="#"><input name="a"></form>', 'form'),
+    ('object', '<object data="#"></object>', 'object'),
+    ('a heading of the page', '<h2>Section</h2>', 'h2'),
+    ('foreignObject', '<svg><foreignObject><p>x</p></foreignObject></svg>', 'foreignobject'),
+    ('unclosed tag', '<div><p>x</p>', 'not closed'),
+    ('section number', '<p>&sect; 3</p>', 'section number'),
+]
+PREVIEW_GOOD = [
+    '<pre>+------+\n| Pay  |\n+------+</pre>',
+    '<div style="background: #f5f5f5; padding: .5em"><b>Pay</b> <small>now</small></div>',
+    '<table><tr><td>a</td><td>b</td></tr></table>',
+    '<img src="data:image/png;base64,iVBORw0KGgo=" alt="mock">',
+    '<a href="#s1">Section 1</a>',
+    '<svg viewBox="0 0 10 10"><rect x="1" y="1" width="8" height="8"></rect></svg>',
+    '<p>See https-like text: not a link.</p>',
+]
+
+
+@test
+def decisions_previews_are_sanitised():
+    for name, markup, needle in PREVIEW_BAD:
+        problems = R.preview_problems(markup)
+        assert problems and any(needle in p for p in problems), '%s: %s' % (name, problems)
+        assert all('(R5.17)' in p or 'not closed' in p for p in problems), (name, problems)
+    for markup in PREVIEW_GOOD:
+        assert R.preview_problems(markup) == [], (markup, R.preview_problems(markup))
+
+
+@test
+@with_fixture
+def decisions_a_bad_preview_fails_the_load_and_names_the_option(fx):
+    for name, markup, needle in PREVIEW_BAD:
+        put_decisions(fx, [dec(1, options=[opt('Single page', preview=markup), opt('Three steps')])])
+        problems = load_problems(fx)
+        assert problems and all("D1 option 1 preview" in p for p in problems), (name, problems)
+    put_decisions(fx, [dec(1, options=[opt('Single page', preview='x' * 4001), opt('Three steps')])])
+    assert any('at most 4000' in p for p in load_problems(fx))
+
+
+# ---- rendering
+def decision_blocks(html):
+    dom = R.parse_dom(html)
+    return dom, R.find_all(dom, pred=lambda n: 'data-decision' in n.attrs)
+
+
+@test
+@with_fixture
+def decisions_render_section_before_history_and_numbered(fx):
+    registry = sample(fx)
+    out = fx.render('artifacts', registry=registry)
+    dom = R.parse_dom(out)
+    nav = [R.text_of(a) for a in R.find_all(R.find(dom, 'nav'), 'a')]
+    assert nav == ['0Status and checklist', '1What and why', '2The design', '3Decisions', '4History'], nav
+    sections = [(n.attrs['id'], R.text_of(R.find(n, 'h2'))) for n in R.find_all(dom, 'section')]
+    assert sections[-2:] == [('s3', '§ 3Decisions'), ('s4', '§ 4History')], sections
+    assert fx.check(out, 'artifacts', registry=registry) == []                 # R5.2 and the rest still hold
+    # no decisions, no section; the History stays last
+    plain = fx.render('models').split('</style>')[-1]
+    assert 'Decisions' not in plain and 'decision' not in plain
+
+
+@test
+@with_fixture
+def decisions_newest_first_and_replaced_collapsed(fx):
+    registry = sample(fx)
+    _, blocks = decision_blocks(fx.render('artifacts', registry=registry))
+    assert [b.attrs['data-decision'] for b in blocks] == ['D3', 'D2', 'D1']
+    assert [b.tag for b in blocks] == ['article', 'article', 'details']
+    d1 = blocks[2]
+    assert 'open' not in d1.attrs and 'decision-replaced' in d1.attrs['class']
+    assert 'Replaced by D3' in R.text_of(R.find(d1, 'summary'))
+    assert 'Replaced by' not in R.text_of(blocks[0]) and 'Replaced by' not in R.text_of(blocks[1])
+    assert 'Replaces D1' in R.text_of(R.find(blocks[0], 'p', 'decision-meta'))
+
+
+@test
+@with_fixture
+def decisions_chosen_card_chip_words_and_not_chosen(fx):
+    registry = sample(fx)
+    _, blocks = decision_blocks(fx.render('artifacts', registry=registry))
+    d3 = blocks[0]
+    cards = R.find_all(d3, 'div', 'decision-option')
+    assert [R.text_of(R.find(c, 'span', 'decision-label')) for c in cards] == ['Single page', 'Wizard']
+    chosen = [c for c in cards if R.has_class(c, 'decision-chosen')]
+    assert len(chosen) == 1 and R.text_of(R.find(chosen[0], 'span', 'decision-label')) == 'Wizard'
+    assert [R.text_of(c) for c in R.find_all(chosen[0], 'span', 'decision-chip')] == ['Chosen by the owner · 10 Oct']
+    assert R.text_of(R.find(chosen[0], 'blockquote', 'decision-words')) == '“wizard, it is clearer”'
+    muted = [c for c in cards if c is not chosen[0]]
+    assert len(muted) == 1 and R.has_class(muted[0], 'decision-muted')
+    assert [R.text_of(c) for c in R.find_all(muted[0], 'span', 'decision-chip')] == ['Not chosen']
+    assert R.find(muted[0], 'blockquote') is None                              # the words belong to the chosen card only
+    assert R.text_of(R.find(muted[0], 'p', 'decision-summary')) == 'Single page, in a sentence.'   # shown in full
+
+
+@test
+@with_fixture
+def decisions_recommended_tag_whether_or_not_chosen(fx):
+    registry = sample(fx)
+    _, blocks = decision_blocks(fx.render('artifacts', registry=registry))
+    d1, d3 = blocks[2], blocks[0]
+    d1_tags = [(R.text_of(R.find(c, 'span', 'decision-label')), [R.text_of(t) for t in R.find_all(c, 'span', 'decision-tag')])
+               for c in R.find_all(d1, 'div', 'decision-option')]
+    assert d1_tags == [('Single page', ['Recommended']), ('Three steps', [])]       # recommended and chosen
+    d3_tags = [(R.text_of(R.find(c, 'span', 'decision-label')), [R.text_of(t) for t in R.find_all(c, 'span', 'decision-tag')])
+               for c in R.find_all(d3, 'div', 'decision-option')]
+    assert d3_tags == [('Single page', []), ('Wizard', ['Recommended'])]
+    # a recommended option that was not chosen keeps its tag, and the chosen one is not tagged
+    put_decisions(fx, [dec(1, chosen='Three steps', owner_words=None)])
+    fx.reload()
+    _, blocks = decision_blocks(fx.render('artifacts'))
+    cards = R.find_all(blocks[0], 'div', 'decision-option')
+    assert R.has_class(cards[0], 'decision-muted') and R.text_of(R.find(cards[0], 'span', 'decision-tag')) == 'Recommended'
+    assert R.has_class(cards[1], 'decision-chosen') and R.find(cards[1], 'span', 'decision-tag') is None
+
+
+@test
+@with_fixture
+def decisions_open_shows_needs_you_and_no_chosen_card(fx):
+    registry = sample(fx)
+    out = fx.render('artifacts', registry=registry)
+    _, blocks = decision_blocks(out)
+    d2 = blocks[1]
+    assert [R.text_of(c) for c in R.find_all(R.find(d2, 'h3'), 'span', 'status-needs-you')] == ['Needs you']
+    assert R.find_all(d2, 'div', 'decision-chosen') == [] and R.find_all(d2, 'span', 'decision-chip') == []
+    assert all(not R.has_class(c, 'decision-muted') for c in R.find_all(d2, 'div', 'decision-option'))
+    assert 'Decided' not in R.text_of(R.find(d2, 'p', 'decision-meta')) and 'Task AR7' in R.text_of(R.find(d2, 'p', 'decision-meta'))
+    # the replaced decision and the closed ones carry no Needs you chip
+    assert R.find_all(blocks[0], 'span', 'status-needs-you') == [] and R.find_all(blocks[2], 'span', 'status-needs-you') == []
+
+
+@test
+@with_fixture
+def decisions_text_is_escaped_and_previews_kept(fx):
+    registry = sample(fx, [dec(1, question='A <b>bold</b> & "quoted" question?', owner_words='<i>mine</i>',
+                               options=[opt('A & B', summary='<script>x</script>', preview='<pre>a &lt; b</pre>'), opt('C')],
+                               chosen='A & B')])
+    out = fx.render('artifacts', registry=registry)
+    assert 'A &lt;b&gt;bold&lt;/b&gt; &amp; &quot;quoted&quot; question?' in out
+    assert '&lt;script&gt;x&lt;/script&gt;' in out and '<script>x' not in out
+    assert '&ldquo;&lt;i&gt;mine&lt;/i&gt;&rdquo;' in out
+    assert '<div class="decision-preview"><pre>a &lt; b</pre></div>' in out
+    assert fx.check(out, 'artifacts', registry=registry) == []
+
+
+@test
+@with_fixture
+def decisions_render_adds_no_script_and_is_deterministic(fx):
+    registry = sample(fx)
+    out = fx.render('artifacts', registry=registry)
+    assert out == fx.render('artifacts', registry=registry)
+    assert out.count('<script') == 1                                           # only the template's own theme script (R5.9)
+    assert fx.check(out, 'artifacts', registry=registry) == []
+
+
+@test
+@with_fixture
+def decisions_lede_lists_open_decisions(fx):
+    registry = sample(fx)
+    out = fx.render('artifacts', registry=registry)
+    lede = R.text_of(R.find(R.parse_dom(out), 'p', 'lede'))
+    assert lede.endswith('Needs you: AR7 project_artifacts.py; D2 Should History also list decisions?'), lede
+    assert not lede.endswith('?.')
+    # tasks first, then decisions; the sentence ends with a full stop when a task comes last of nothing
+    registry2 = copy.deepcopy(registry)
+    registry2['tasks'][2]['status'] = 'To do'
+    out2 = fx.render('artifacts', registry=registry2)
+    assert R.text_of(R.find(R.parse_dom(out2), 'p', 'lede')).endswith('Needs you: D2 Should History also list decisions?')
+    # a replaced open decision, and a decided one, are not listed
+    put_decisions(fx, [open_dec(1), dec(2, replaces='D1')])
+    fx.reload()
+    assert R.text_of(R.find(R.parse_dom(fx.render('artifacts')), 'p', 'lede')).endswith('Nothing needs you.')
+    # the existing sentence is unchanged without decisions
+    assert R.needs_you_sentence([{'id': 'AR1', 'status': 'Needs you', 'item': 'Sign off'}]) == 'Needs you: AR1 Sign off.'
+    assert R.needs_you_sentence([]) == 'Nothing needs you.'
+    assert R.needs_you_sentence([], [open_dec(4), open_dec(5, question='Which name?')]) == \
+        'Needs you: D4 Should History also list decisions?; D5 Which name?'
+
+
+@test
+@with_fixture
+def decisions_full_progress_line_counts_open_decisions(fx):
+    registry = sample(fx)
+    def cells(out):
+        s1 = R.find(R.parse_dom(out), 'section', pred=lambda n: n.attrs.get('id') == 's1')
+        return [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1, 'tr', pred=lambda n: R.find(n, 'td'))]
+    out = fx.render('full-progress', registry=registry)
+    assert cells(out)[0] == ['Feature: Project artifacts standard', 'AR5 to AR16', 'The design is agreed. 1 decision open.']
+    assert cells(out)[1][2] == 'Effort question is live!'
+    assert fx.check(out, 'full-progress', registry=registry) == []
+    put_decisions(fx, [open_dec(1), open_dec(2), dec(3)])
+    fx.reload()
+    assert cells(fx.render('full-progress'))[0][2] == 'The design is agreed. 2 decisions open.'
+    put_decisions(fx, [dec(1)])
+    fx.reload()
+    assert cells(fx.render('full-progress'))[0][2] == 'The design is agreed.'
+
+
+# ---- check_html: each Decisions check fires alone
+def reverse_decisions(html):
+    """The three sample decisions in oldest-first order, each block untouched."""
+    i3 = html.index('<article class="decision decision-decided" data-decision="D3">')
+    i2 = html.index('<article class="decision decision-open" data-decision="D2">')
+    i1 = html.index('<details class="decision decision-replaced" data-decision="D1">')
+    end = html.index('\n</div>\n</section>', i1)
+    return html[:i3] + html[i1:end] + '\n' + html[i2:i1] + html[i3:i2].rstrip('\n') + html[end:]
+
+
+def mutate_cases(fx):
+    """(name, expected requirement, function html -> html) on the sample's rendering."""
+    return [
+        ('chosen mark removed', 'R5.22', lambda h: h.replace('decision-option decision-chosen', 'decision-option decision-muted', 1)),
+        ('chosen chip names the wrong date', 'R5.22', lambda h: sub1(h, 'Chosen by the owner &middot; 10 Oct', 'Chosen by the owner &middot; 11 Oct', 2)),
+        ('Not chosen chip dropped', 'R5.22', lambda h: h.replace('Not chosen', 'Skipped', 1)),
+        ('owner words dropped', 'R5.22', lambda h: sub1(h, '<blockquote class="decision-words">&ldquo;wizard, it is clearer&rdquo;</blockquote>', '')),
+        ('Recommended tag dropped', 'R5.22', lambda h: h.replace('<span class="decision-tag">Recommended</span>', '', 1)),
+        ('Needs you chip dropped from the open decision', 'R5.23',
+         lambda h: sub1(h, ' <span class="status-chip status-needs-you">Needs you</span></h3>', '</h3>')),
+        ('replaced decision not collapsed', 'R5.23', lambda h: sub1(h, '<details class="decision decision-replaced"', '<article class="decision decision-replaced"')
+         .replace('</details>', '</article>').replace('<summary>', '<h3>').replace('</summary>', '</h3>')),
+        ('replaced decision opened', 'R5.23', lambda h: sub1(h, '<details class="decision decision-replaced" ', '<details open class="decision decision-replaced" ')),
+        ('replaced-by line names the wrong decision', 'R5.23', lambda h: sub1(h, 'Replaced by D3', 'Replaced by D2')),
+        ('decision order reversed', 'R5.20', reverse_decisions),
+        ('question changed', 'R5.21', lambda h: sub1(h, 'Which layout, second thoughts?', 'Which layout, third thoughts?')),
+        ('option card dropped', 'R5.21', lambda h: sub1(h, '<span class="decision-label">Wizard</span>', '<span class="decision-label">Winzard</span>')),
+    ]
+
+
+@test
+@with_fixture
+def decisions_every_check_html_rule_fires_alone(fx):
+    registry = sample(fx)
+    clean = fx.render('artifacts', registry=registry)
+    assert fx.check(clean, 'artifacts', registry=registry) == []
+    for name, req, fn in mutate_cases(fx):
+        got = fx.check(fn(clean), 'artifacts', registry=registry)
+        assert req in reqs(got), '%s: wanted %s, got %s' % (name, req, got)
+        assert set(reqs(got)) <= {req}, '%s: wanted only %s, got %s' % (name, req, got)
+
+
+@test
+@with_fixture
+def decisions_section_position_and_presence_are_checked(fx):
+    registry = sample(fx)
+    clean = fx.render('artifacts', registry=registry)
+    # the Decisions section renamed: it is no longer found just before History
+    renamed = sub1(clean, '</span>Decisions</h2>', '</span>Choices</h2>')
+    renamed = sub1(renamed, '<b>3</b>Decisions</a>', '<b>3</b>Choices</a>')
+    assert 'R5.20' in reqs(fx.check(renamed, 'artifacts', registry=registry))
+    # decisions.json empty but the section still in the HTML
+    put_decisions(fx, [])
+    fx.reload()
+    assert 'R5.20' in reqs(fx.check(clean, 'artifacts', registry=registry))
+    # a Decisions section on the full-progress artifact is not drawn from any file
+    fp = fx.render('full-progress')
+    forged = sub1(fp, '</span>How it stays current</h2>', '</span>Decisions</h2>')
+    forged = sub1(forged, '<b>2</b>How it stays current</a>', '<b>2</b>Decisions</a>')
+    assert 'R5.20' not in reqs(fx.check(forged, 'full-progress'))            # only features have a generated Decisions section
+
+
+@test
+@with_fixture
+def decisions_lede_check_catches_a_missing_open_decision(fx):
+    registry = sample(fx)
+    clean = fx.render('artifacts', registry=registry)
+    bad = sub1(clean, '; D2 Should History also list decisions?', '')
+    assert 'R5.7' in reqs(fx.check(bad, 'artifacts', registry=registry))
+
+
+@test
+def decisions_css_is_structure_only_and_phone_ready():
+    import re
+    css = R.structure_css(PLUGIN)
+    for selector in ('.decision-options', '.decision-option.decision-chosen', '.decision-option.decision-muted', '.decision-chip-chosen',
+                     '.decision-chip-muted', '.decision-tag', '.decision-words', 'details.decision-replaced', '.decision-preview',
+                     '.decision-image'):
+        assert selector in css, selector
+    # one column on a phone: a media query that sets the options grid to a single track, and auto-fit tracks that cannot fit two
+    assert re.search(r'@media \(max-width: 40rem\)\s*\{[^}]*\.decision-options\s*\{\s*grid-template-columns:\s*1fr', css)
+    assert 'minmax(min(100%, 17rem), 1fr)' in css
+    block = css[css.index('/* Decisions'):css.index('/* Phone width */')]
+    assert not re.search(r'#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(', block)       # tokens only
+    assert 'var(--signal)' in block and 'var(--on-signal)' in block and 'var(--surface-2)' in block
 
 
 def main() -> int:

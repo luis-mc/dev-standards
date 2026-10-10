@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
-"""After-command hook (PostToolUse and PostToolUseFailure, matcher Bash).
+"""After-command hook (PostToolUse and PostToolUseFailure for Bash; PostToolUse for Agent and Task).
 
-ARTIFACTSPEC 1.0.0 section 8.1. Takes the task ID from the current branch name,
+ARTIFACTSPEC 1.1.0 section 8.1. Takes the task ID from the current branch name,
 and when the command that just ran is one of the table rows, appends a status
 event to the queue <repo>/.claude/artifacts-queue.json. It only queues: it never
 writes the record (INV-4, R8.1), finishes fast and never fails the tool call
 (R8.2): every error is one line on stderr and exit 0.
+
+It also notes background work (R8.8): an `Agent`, `Task` or `Bash` call whose
+`tool_input.run_in_background` is true stamps the session's entry in
+<repo>/.claude/artifacts-stop-state.json so the end-of-turn hook can ask for a
+Running task. A foreground call finishes within the turn and records nothing.
+That file is session state, not the record.
 
 Claude Code sends a successful Bash call as PostToolUse and a failed one (exit
 code not 0) as PostToolUseFailure, whose `error` field starts with
@@ -23,12 +29,16 @@ import re
 import shlex
 import subprocess
 import sys
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 DISABLE_VALUES = {'off', '0', 'false', 'no'}
 TASK_ID_RE = re.compile(r'^([A-Z]{2,5}[0-9]+)-')
 MANIFEST_REL = 'manifest.json'
+STATE_NAME = os.path.join('.claude', 'artifacts-stop-state.json')
+MAX_SESSIONS = 20
+BACKGROUND_TOOLS = ('Agent', 'Task')
 
 
 # --- shared helpers (also imported by hook_end_of_turn and hook_session_start) --------
@@ -118,6 +128,34 @@ def load_manifest(root):
         if text is not None:
             return parse_json(text, 'origin/%s:docs/artifacts/manifest.json' % branch)
     return None
+
+
+def merged_status_of(manifest):
+    """The status a merge suggests: `Live` (default) or `Built`; the old `Done` reads as `Built`."""
+    value = manifest.get('merged_status')
+    return 'Built' if value in ('Built', 'Done') else 'Live'
+
+
+def read_state(path):
+    """The per-session stop state (see hook_end_of_turn); {} when missing or unreadable."""
+    try:
+        with open(path, encoding='utf-8') as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def write_state(path, state):
+    if len(state) > MAX_SESSIONS:
+        for k in list(state)[:len(state) - MAX_SESSIONS]:
+            del state[k]
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = '%s.%d.tmp' % (path, os.getpid())
+    with open(tmp, 'w', encoding='utf-8', newline='\n') as f:
+        json.dump(state, f, indent=1)
+        f.write('\n')
+    os.replace(tmp, path)
 
 
 def hook_root(data):
@@ -231,10 +269,42 @@ def current_task_id(root):
     return m.group(1) if m else None
 
 
+def starts_background_work(data):
+    """True for a successful Agent, Task or Bash call run in the background (R8.8): only
+    `tool_input.run_in_background` true arms the end-of-turn check."""
+    if data.get('hook_event_name') == 'PostToolUseFailure' or data.get('error'):
+        return False   # nothing was started
+    tool = data.get('tool_name', 'Bash')
+    tool_input = data.get('tool_input')
+    return (tool in BACKGROUND_TOOLS + ('Bash',) and isinstance(tool_input, dict)
+            and tool_input.get('run_in_background') is True)
+
+
+def note_background_work(data):
+    """Stamp the session's entry in the stop state; the record is not touched (INV-4)."""
+    root = hook_root(data)
+    if not root or load_manifest(root) is None:
+        return
+    path = os.path.join(root, STATE_NAME)
+    sid = str(data.get('session_id') or 'default')
+    state = read_state(path)
+    entry = state.get(sid) if isinstance(state.get(sid), dict) else {}
+    entry['background'] = {'started': time.strftime('%Y-%m-%dT%H:%M:%S%z'), 'session_id': sid,
+                           'tool': str(data.get('tool_name', 'Bash'))}
+    state.pop(sid, None)   # keeps the most recently used session last
+    state[sid] = entry
+    write_state(path, state)
+
+
 def main():
     if hooks_off():
         return 0
     data = read_input()
+    if starts_background_work(data):
+        try:
+            note_background_work(data)
+        except Exception as exc:   # a marker that cannot be written must not stop the queueing below
+            warn('background marker skipped (%s: %s)' % (type(exc).__name__, exc))
     if data.get('tool_name', 'Bash') != 'Bash':
         return 0
     tool_input = data.get('tool_input')
@@ -257,7 +327,7 @@ def main():
     if manifest is None:
         return 0
     from artifact_queue import append_event
-    merged_status = manifest.get('merged_status') if manifest.get('merged_status') in ('Live', 'Done') else 'Live'
+    merged_status = merged_status_of(manifest)
     for status, event in events:
         append_event(root, task_id, merged_status if status is MERGED else status, event, command)
     return 0
