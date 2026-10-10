@@ -543,6 +543,16 @@
       "changed": "2026-10-11T00:51+01:00"
     },
     {
+      "id": "DS28",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Document the pre-push worktree's borrowed dependencies",
+      "detail": "Your decision: accept that the pre-push check of a pushed commit borrows the checkout's node_modules, so a guard importing a workspace package reads the checked-out version; written into CONTRACT.md so nobody relies on it.",
+      "expected": "11 Oct ~01:30",
+      "changed": "2026-10-11T00:51+01:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
