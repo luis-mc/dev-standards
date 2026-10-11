@@ -934,6 +934,25 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
 </section>
 <section id="s7"><h2><span class="section-number">&sect; 7</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D15">
+<h3 class="decision-head"><span class="decision-id">D15</span> <span class="decision-question">How is Running work that ships nothing (a publish, a study, a cleanup) handled under the rule that Running and Built ride a release?</span></h3>
+<p class="decision-meta">Asked 12 Oct · Decided 12 Oct · Task AR48</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Mark it &#x27;ships nothing&#x27;</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 12 Oct</span></div>
+<p class="decision-summary">An explicit no-release flag with a reason lets a task be Running without a release; Built still always rides one.</p>
+<blockquote class="decision-words">&ldquo;Mark it &#x27;ships nothing&#x27;&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Only Built must ride</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Running may be unassigned; Built must ride a release.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep it strict</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Every Running task rides a release, chores included.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D14">
 <h3 class="decision-head"><span class="decision-id">D14</span> <span class="decision-question">Should the status tiles say they count tasks?</span></h3>
 <p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task AR45</p>

@@ -322,6 +322,31 @@
    "decided": "2026-10-11",
    "task": "AR45",
    "owner_words": "relabel; ensure all the changes are part of the artifacts plugin so other projects use it"
+  },
+  {
+   "id": "D15",
+   "question": "How is Running work that ships nothing (a publish, a study, a cleanup) handled under the rule that Running and Built ride a release?",
+   "asked": "2026-10-12",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Mark it 'ships nothing'",
+     "summary": "An explicit no-release flag with a reason lets a task be Running without a release; Built still always rides one.",
+     "recommended": true
+    },
+    {
+     "label": "Only Built must ride",
+     "summary": "Running may be unassigned; Built must ride a release."
+    },
+    {
+     "label": "Keep it strict",
+     "summary": "Every Running task rides a release, chores included."
+    }
+   ],
+   "chosen": "Mark it 'ships nothing'",
+   "decided": "2026-10-12",
+   "task": "AR48",
+   "owner_words": "Mark it 'ships nothing'"
   }
  ]
 }
