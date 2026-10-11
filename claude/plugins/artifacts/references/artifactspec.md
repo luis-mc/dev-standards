@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.4.0
+**Version:** 1.4.1
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.4.1 — 2026-10-11.**
+
+- R5.31: the publish copy's Copy link always targets the feature file in the record worktree, so a session checkout on another branch no longer hands out a stale page.
 
 **1.4.0 — 2026-10-11.**
 
@@ -728,9 +732,9 @@ double-click.
   absolute `file:///` URL built from the repository root on this machine:
   `file:///` plus the absolute path with forward slashes, each segment
   percent-encoded (a space is `%20`), for example
-  `file:///C:/GitHub/dev-standards/docs/artifacts/feature-x.html`. The target is
-  the feature file in the session's checkout (`<root>/docs/artifacts/`) when
-  that file exists there, else the same file in the record worktree. The address
+  `file:///C:/GitHub/dev-standards/.claude/worktrees/artifacts-record/docs/artifacts/feature-x.html`.
+  The target is the feature file in the record worktree, never the session's
+  checkout, which may be on another branch with an older copy. The address
   is shown as selectable text (`<code class="local-path">`, hidden until then)
   only when the clipboard refuses. The publish copy has no link to a feature
   file anywhere: its checklist rows carry none, and only section 1 has the

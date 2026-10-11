@@ -723,9 +723,13 @@ delivery_log.py live    --pr N [--at ISO] [--remote origin] [--repo OWNER/NAME] 
 `cleanup.py --pr N` collects, before it deletes anything, one row per change of
 the train (the ready pull request's branch and every branch joined into it):
 finished (the branch's last commit), joined (the merge commit that brought it into
-the integration branch), CI start and end (the earliest start and latest end of
-the runs on the ready pull request's head, from `gh run list --commit`), queued
-(the longest created-to-started wait among those runs) and merged (`mergedAt`).
+the integration branch), CI start (the earliest start among the runs on the ready pull
+request's branch created at or after the pull request was created, from
+`gh run list --branch` and `gh pr view --json createdAt`, so an earlier fix-forward
+round counts; the final head's runs when that listing fails), CI end (the latest
+end of the runs on the final head, from `gh run list --commit`), queued (the
+longest created-to-started wait among the runs of CI start) and merged (`mergedAt`).
+Every time in the table is UTC and its headers say so.
 After the deletions it writes the table into the train's GitHub release notes
 (`--no-delivery-log` skips it; `--dry-run` writes nothing). The deploy job calls
 `delivery_log.py live --pr N` after its smoke test; it sets `live` on every row

@@ -13,15 +13,17 @@ calls `live` after its smoke test to add the moment the change went live.
 Per change (the ready pull request's branch and every branch joined into it):
   finished   the last commit on the branch
   joined     the merge commit that brought the branch into the integration branch
-  CI start   the earliest start of a workflow run on the ready pull request's head
-  CI end     the latest end of those runs
+  CI start   the earliest start of a workflow run on the ready pull request's branch
+             created at or after the pull request was created (so an earlier
+             fix-forward round counts); the final head's runs when that listing fails
+  CI end     the latest end of the runs on the ready pull request's final head
   merged     the pull request's mergedAt
   live       set by `live`
 and the time to live (live minus finished) split into
   testing    CI end minus CI start
-  queueing   the longest wait of a run between created and started
+  queueing   the longest wait of a run between created and started, among the runs of CI start
   waiting    the rest: time before CI, in the train, in the merge and in the deploy
-A timestamp that cannot be found is "unknown", and so is every figure that needs
+Every time in the table is UTC (the headers say so). A timestamp that cannot be found is "unknown", and so is every figure that needs
 it. Rows already in the release notes are kept; a later call only fills what is
 missing (and `live` sets the live time of rows that have none).
 
@@ -146,20 +148,41 @@ def joined_time(root: Path, head: str, tip: str) -> str | None:
     return found
 
 
-def ci_of(repo: str | None, head: str) -> dict:
-    """CI start, end and queued time from the runs on the ready pull request's head."""
+RUN_FIELDS = "databaseId,workflowName,status,conclusion,createdAt,startedAt,updatedAt"
+
+
+def ci_of(repo: str | None, head: str, branch: str | None = None, pr_created: str | None = None) -> dict:
+    """CI start, end and queued time. End: the latest end of the runs on the ready pull
+    request's final head. Start and queued: the runs on its branch created at or after
+    the pull request, earlier fix-forward rounds included; the head's runs alone when
+    that listing fails or yields nothing."""
     out: dict = {"ci_start": None, "ci_end": None, "queued_s": None}
-    runs = gh(["run", "list", "--commit", head, "--limit", "100", "--json",
-               "databaseId,workflowName,status,conclusion,createdAt,startedAt,updatedAt"], repo, as_json=True)
+    runs = gh(["run", "list", "--commit", head, "--limit", "100", "--json", RUN_FIELDS], repo, as_json=True)
     if not isinstance(runs, list):
         return out
-    starts = [parse(r.get("startedAt")) for r in runs if isinstance(r, dict)]
-    ends = [parse(r.get("updatedAt")) for r in runs if isinstance(r, dict) and r.get("status") == "completed"]
-    queued = [seconds(r.get("createdAt"), r.get("startedAt")) for r in runs if isinstance(r, dict)]
-    starts, ends = [s for s in starts if s], [e for e in ends if e]
-    queued = [q for q in queued if q is not None and q >= 0]
-    out["ci_start"] = iso(min(starts)) if starts else None
+    runs = [r for r in runs if isinstance(r, dict)]
+    ends = [parse(r.get("updatedAt")) for r in runs if r.get("status") == "completed"]
+    ends = [e for e in ends if e]
     out["ci_end"] = iso(max(ends)) if ends else None
+    rounds = runs
+    since = parse(pr_created)
+    if branch and since:
+        try:
+            listed = gh(["run", "list", "--branch", branch, "--limit", "200", "--json", RUN_FIELDS], repo, as_json=True)
+        except GhFailure as exc:
+            warn("%s; CI start is taken from the final head's runs" % exc)
+            listed = None
+        if isinstance(listed, list):
+            since_runs = []
+            for r in listed:
+                created = parse(r.get("createdAt")) if isinstance(r, dict) else None
+                if created and created >= since:
+                    since_runs.append(r)
+            if any(parse(r.get("startedAt")) for r in since_runs):
+                rounds = since_runs
+    starts = [x for x in (parse(r.get("startedAt")) for r in rounds) if x]
+    queued = [q for q in (seconds(r.get("createdAt"), r.get("startedAt")) for r in rounds) if q is not None and q >= 0]
+    out["ci_start"] = iso(min(starts)) if starts else None
     out["queued_s"] = max(queued) if queued else None
     return out
 
@@ -170,7 +193,7 @@ def collect(root: Path, repo: str | None, pr: int, tips: dict[str, str]) -> dict
     info: dict = {"pr": pr, "merge_commit": None, "head_branch": None, "rows": []}
     pr_data: dict = {}
     try:
-        data = gh(["pr", "view", str(pr), "--json", "number,headRefName,headRefOid,mergedAt,mergeCommit"], repo, as_json=True)
+        data = gh(["pr", "view", str(pr), "--json", "number,headRefName,headRefOid,mergedAt,mergeCommit,createdAt"], repo, as_json=True)
         pr_data = data if isinstance(data, dict) else {}
     except GhFailure as exc:
         warn(str(exc))
@@ -182,7 +205,7 @@ def collect(root: Path, repo: str | None, pr: int, tips: dict[str, str]) -> dict
     ci: dict = {"ci_start": None, "ci_end": None, "queued_s": None}
     if head:
         try:
-            ci = ci_of(repo, head)
+            ci = ci_of(repo, head, pr_data.get("headRefName"), pr_data.get("createdAt"))
         except GhFailure as exc:
             warn(str(exc))
     for branch in sorted(tips):
@@ -212,7 +235,7 @@ def figures(row: dict) -> tuple[float | None, float | None, float | None, float 
 
 
 def render(info: dict) -> str:
-    head = ("| Change | Finished | Joined | CI start | CI end | Merged | Live | Waiting | Testing | Queueing | Time to live |\n"
+    head = ("| Change | Finished (UTC) | Joined (UTC) | CI start (UTC) | CI end (UTC) | Merged (UTC) | Live (UTC) | Waiting | Testing | Queueing | Time to live |\n"
             "|---|---|---|---|---|---|---|---|---|---|---|")
     lines = []
     for row in info.get("rows", []):
@@ -223,7 +246,7 @@ def render(info: dict) -> str:
             human(waiting), human(testing), human(queued), human(ttl)))
     data = json.dumps({"pr": info.get("pr"), "rows": info.get("rows", [])}, separators=(",", ":")).replace("--", "--")
     return "\n".join([START, "## Delivery log, pull request #%s" % info.get("pr"), "", head, *lines, "",
-                      "Time to live is live minus finished: waiting (before CI, in the train, in the merge and the deploy), "
+                      "Times are UTC. Time to live is live minus finished: waiting (before CI, in the train, in the merge and the deploy), "
                       "testing (CI start to end) and queueing (longest wait for a runner). unknown: not recorded.",
                       "<!-- delivery-log:data %s -->" % data, END])
 

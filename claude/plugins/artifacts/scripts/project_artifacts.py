@@ -2272,16 +2272,14 @@ def decision_warnings(rec):
 
 def feature_link_map(root, rec):
     """R5.31: {feature key: (file:/// URL, path as text)} for the publish copy. The target is the feature
-    file in the session's checkout (`<root>/docs/artifacts/`) when it exists there, else the same file in
-    the record worktree, which always has it. The URL is the absolute path with forward slashes,
+    file in the record worktree, which always holds the latest record; the session's checkout may be on
+    another branch with an older copy. The URL is the absolute path with forward slashes,
     percent-encoded by pathlib (a space is %20)."""
     out = {}
     for key, kind, e in rec.artifacts():
         if kind != 'feature' or not isinstance(e.get('file'), str):
             continue
-        target = Path(root) / RECORD_REL / e['file']
-        if not target.is_file():
-            target = rec.dir / e['file']
+        target = rec.dir / e['file']
         absolute = Path(os.path.abspath(str(target)))
         out[key] = (absolute.as_uri(), absolute.as_posix())
     return out
