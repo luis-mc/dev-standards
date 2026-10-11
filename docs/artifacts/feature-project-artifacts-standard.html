@@ -649,19 +649,15 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T14:41+01:00">11 Oct 14:41</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T14:42+01:00">11 Oct 14:42</time> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</p>
 <div class="at-a-glance">
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
-<div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
-<ul>
-<li data-glance-task="AR41"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes <span class="glance-expected">11 Oct ~15:00</span><span class="glance-basis">five content edits</span></li>
-</ul>
-</div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
+<li data-glance-task="AR41"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</li>
 <li data-glance-task="AR40"><span class="task-id">AR40</span>At a glance block in section 0 instead of one prose paragraph</li>
 <li data-glance-task="AR42"><span class="task-id">AR42</span>Feature table: Last updated column, newest first, sortable headers</li>
 <li data-glance-task="AR35"><span class="task-id">AR35</span>Re-render every page when the templates change</li>
@@ -669,17 +665,15 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <li data-glance-task="AR39"><span class="task-id">AR39</span>Release luismc-artifacts 1.3.1 (AR35, AR37)</li>
 <li data-glance-task="AR38"><span class="task-id">AR38</span>Current Where it stands lines</li>
 <li data-glance-task="AR36"><span class="task-id">AR36</span>Update the installed plugins to the 7.1.0 release</li>
-<li data-glance-task="AR33"><span class="task-id">AR33</span>Expected says what sets the estimate</li>
-<li class="glance-more">and 31 more</li>
+<li class="glance-more">and 32 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">39</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">40</div><div class="label">live</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next</strong></td></tr>
-<tr data-task="AR41"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</td><td>Rewriting the five notes as one or two sentences each</td><td>11 Oct ~15:00<span class="expected-basis">five content edits</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
+<tr data-task="AR41"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</td><td>Five notes rewritten as one or two sentences (103 to 179 characters); check shows no warnings</td><td>11 Oct</td></tr>
 <tr data-task="AR40"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR40</span>At a glance block in section 0 instead of one prose paragraph</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
 <tr data-task="AR42"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR42</span>Feature table: Last updated column, newest first, sortable headers</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
 <tr data-task="AR35"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR35</span>Re-render every page when the templates change</td><td>Released in luismc-artifacts 1.3.1 (#46, 17d306a); installed here at user and project scope</td><td>11 Oct</td></tr>

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T14:41+01:00",
+  "updated": "2026-10-11T14:42+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -386,12 +386,11 @@
       "id": "AR41",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Apply At a glance here: short notes instead of long ledes",
-      "detail": "Rewriting the five notes as one or two sentences each",
-      "expected": "11 Oct ~15:00",
-      "changed": "2026-10-11T14:41+01:00",
-      "expected_basis": "five content edits"
+      "detail": "Five notes rewritten as one or two sentences (103 to 179 characters); check shows no warnings",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T14:42+01:00"
     },
     {
       "id": "AR42",

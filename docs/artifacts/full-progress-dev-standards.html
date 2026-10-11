@@ -641,7 +641,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-11T14:41+01:00",
+ "updated": "2026-10-11T14:42+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1027,12 +1027,11 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "id": "AR41",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Live",
    "item": "Apply At a glance here: short notes instead of long ledes",
-   "detail": "Rewriting the five notes as one or two sentences each",
-   "expected": "11 Oct ~15:00",
-   "changed": "2026-10-11T14:41+01:00",
-   "expected_basis": "five content edits"
+   "detail": "Five notes rewritten as one or two sentences (103 to 179 characters); check shows no warnings",
+   "expected": "11 Oct",
+   "changed": "2026-10-11T14:42+01:00"
   },
   {
    "id": "AR42",
@@ -1797,13 +1796,9 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
-<div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
-<ul>
-<li data-glance-task="AR41"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes <span class="glance-expected">11 Oct ~15:00</span><span class="glance-basis">five content edits</span></li>
-</ul>
-</div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
+<li data-glance-task="AR41"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</li>
 <li data-glance-task="AR40"><span class="task-id">AR40</span>At a glance block in section 0 instead of one prose paragraph</li>
 <li data-glance-task="AR42"><span class="task-id">AR42</span>Feature table: Last updated column, newest first, sortable headers</li>
 <li data-glance-task="DL1"><span class="task-id">DL1</span>Inert paths keep gate results valid</li>
@@ -1811,18 +1806,17 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <li data-glance-task="DL3"><span class="task-id">DL3</span>Agent rule: affected suites, full suite only on a valve</li>
 <li data-glance-task="DL4"><span class="task-id">DL4</span>Narrower gate valves: lockfile and shared UI</li>
 <li data-glance-task="DL5"><span class="task-id">DL5</span>Build-artifact workflows only when their inputs change</li>
-<li data-glance-task="DL6"><span class="task-id">DL6</span>Train freeze while the ready PR runs CI</li>
-<li class="glance-more">and 85 more</li>
+<li class="glance-more">and 86 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">112</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">113</div><div class="label">live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
-<tr data-task="AR41"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</a></td><td><code>luismc-artifacts</code></td><td>Rewriting the five notes as one or two sentences each</td><td>11 Oct ~15:00<span class="expected-basis">five content edits</span></td></tr>
 <tr data-task="DS50"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS50</span>Write the STACKSPEC 8.0.0 upgrade prompt for projects</td><td></td><td>Generic, no project names; tells a project to rerun the tech-stack-setup audit and apply the 8.0.0 items</td><td>11 Oct ~15:15<span class="expected-basis">right after the TC6 merge</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
+<tr data-task="AR41"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</a></td><td><code>luismc-artifacts</code></td><td>Five notes rewritten as one or two sentences (103 to 179 characters); check shows no warnings</td><td>11 Oct</td></tr>
 <tr data-task="AR40"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR40</span>At a glance block in section 0 instead of one prose paragraph</a></td><td><code>luismc-artifacts</code></td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
 <tr data-task="AR42"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR42</span>Feature table: Last updated column, newest first, sortable headers</a></td><td><code>luismc-artifacts</code></td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
 <tr data-task="DL1"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL1</span>Inert paths keep gate results valid</a></td><td></td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
@@ -1945,8 +1939,8 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th>Where it stands</th></tr></thead><tbody>
 <tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29862102"><time datetime="2026-10-11T14:42+01:00">11 Oct 14:42</time></td><td>DL1 to DL11</td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29862102"><time datetime="2026-10-11T14:42+01:00">11 Oct 14:42</time></td><td>MP1 to MP7, DS2 to DS5</td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
+<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862102"><time datetime="2026-10-11T14:42+01:00">11 Oct 14:42</time></td><td>AR2 to AR42</td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862102"><time datetime="2026-10-11T14:42+01:00">11 Oct 14:42</time></td><td>TC1 to TC6</td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
-<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862101"><time datetime="2026-10-11T14:41+01:00">11 Oct 14:41</time></td><td>AR2 to AR42</td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 </tbody></table></div>
 </section>
 <section id="s2"><h2><span class="section-number">&sect; 2</span>How it stays current</h2>
