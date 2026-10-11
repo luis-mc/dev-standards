@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T17:22+01:00",
+  "updated": "2026-10-11T17:23+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -527,12 +527,11 @@
       "id": "DL13",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Save the STACKSPEC 8.0.0 upgrade prompt",
-      "detail": "Orchestrator writes docs/upgrades/stackspec-8.0.0.md on DL12-integration",
-      "expected": "11 Oct ~18:00",
-      "changed": "2026-10-11T17:22+01:00",
-      "expected_basis": "short doc, written now"
+      "detail": "docs/upgrades/stackspec-8.0.0.md on DL12-integration; ships with DS51",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T17:23+01:00"
     },
     {
       "id": "DS1",

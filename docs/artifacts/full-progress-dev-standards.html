@@ -641,7 +641,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-11T17:22+01:00",
+ "updated": "2026-10-11T17:23+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1168,12 +1168,11 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "id": "DL13",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Save the STACKSPEC 8.0.0 upgrade prompt",
-   "detail": "Orchestrator writes docs/upgrades/stackspec-8.0.0.md on DL12-integration",
-   "expected": "11 Oct ~18:00",
-   "changed": "2026-10-11T17:22+01:00",
-   "expected_basis": "short doc, written now"
+   "detail": "docs/upgrades/stackspec-8.0.0.md on DL12-integration; ships with DS51",
+   "expected": "11 Oct",
+   "changed": "2026-10-11T17:23+01:00"
   },
   {
    "id": "DS1",
@@ -1822,7 +1821,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T17:22+01:00">11 Oct 17:22</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T17:23+01:00">11 Oct 17:23</time> (Lisbon)</p>
 <p class="lede">Release #47 (11 October, 14:37) shipped STACKSPEC 8.0.0, luismc-project-setup 14.0.0 and luismc-artifacts 1.4.0; from now on each new request rides a small train of its own.</p>
 <div class="at-a-glance">
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
@@ -1830,9 +1829,13 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </div>
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
-<li data-glance-task="DL13"><span class="task-id">DL13</span>Save the STACKSPEC 8.0.0 upgrade prompt <span class="glance-expected">11 Oct ~18:00</span><span class="glance-basis">short doc, written now</span></li>
 <li data-glance-task="DL12"><span class="task-id">DL12</span>Delivery log: label its times as UTC, CI start from the first run <span class="glance-expected">11 Oct ~18:15</span><span class="glance-basis">agent ~15 min plus local delivery suite</span></li>
 <li data-glance-task="DS51"><span class="task-id">DS51</span>DL12 train: join, PR CI, merge, cleanup <span class="glance-expected">11 Oct ~18:45</span><span class="glance-basis">agent ~15 min, PR CI ~20-30 min, then merge and cleanup</span></li>
+</ul>
+</div>
+<div class="glance-group glance-built" data-glance="built"><div class="glance-label">Built, not released</div>
+<ul>
+<li data-glance-task="DL13"><span class="task-id">DL13</span>Save the STACKSPEC 8.0.0 upgrade prompt</li>
 </ul>
 </div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
@@ -1849,14 +1852,14 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">114</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">114</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
-<tr data-task="DL13"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL13</span>Save the STACKSPEC 8.0.0 upgrade prompt</a></td><td></td><td>Orchestrator writes docs/upgrades/stackspec-8.0.0.md on DL12-integration</td><td>11 Oct ~18:00<span class="expected-basis">short doc, written now</span></td></tr>
 <tr data-task="DL12"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL12</span>Delivery log: label its times as UTC, CI start from the first run</a></td><td></td><td>One Sonnet agent on DL12-delivery-log-times</td><td>11 Oct ~18:15<span class="expected-basis">agent ~15 min plus local delivery suite</span></td></tr>
 <tr data-task="DS51"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS51</span>DL12 train: join, PR CI, merge, cleanup</td><td></td><td>Small train for DL12 and DL13; one agent branch plus the upgrade doc</td><td>11 Oct ~18:45<span class="expected-basis">agent ~15 min, PR CI ~20-30 min, then merge and cleanup</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
+<tr data-task="DL13"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL13</span>Save the STACKSPEC 8.0.0 upgrade prompt</a></td><td></td><td>docs/upgrades/stackspec-8.0.0.md on DL12-integration; ships with DS51</td><td>11 Oct</td></tr>
 <tr data-task="AR41"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</a></td><td><code>luismc-artifacts</code></td><td>Five notes rewritten as one or two sentences (103 to 179 characters); check shows no warnings</td><td>11 Oct</td></tr>
 <tr data-task="DS50"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS50</span>Write the STACKSPEC 8.0.0 upgrade prompt for projects</td><td></td><td>Upgrade prompt for STACKSPEC 8.0.0 given to the owner in chat, generic, no project names</td><td>11 Oct</td></tr>
 <tr data-task="AR40"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR40</span>At a glance block in section 0 instead of one prose paragraph</a></td><td><code>luismc-artifacts</code></td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
@@ -1979,7 +1982,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29862262"><time datetime="2026-10-11T17:22+01:00">11 Oct 17:22</time></td><td>DL1 to DL13</td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29862263"><time datetime="2026-10-11T17:23+01:00">11 Oct 17:23</time></td><td>DL1 to DL13</td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29862102"><time datetime="2026-10-11T14:42+01:00">11 Oct 14:42</time></td><td>MP1 to MP7, DS2 to DS5</td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
 <tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862102"><time datetime="2026-10-11T14:42+01:00">11 Oct 14:42</time></td><td>AR2 to AR42</td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862102"><time datetime="2026-10-11T14:42+01:00">11 Oct 14:42</time></td><td>TC1 to TC6</td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
