@@ -649,12 +649,17 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T17:20+01:00">11 Oct 17:20</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T17:22+01:00">11 Oct 17:22</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Oct 17:20</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
+</div>
+<div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
+<ul>
+<li data-glance-task="DL12"><span class="task-id">DL12</span>Delivery log: label its times as UTC, CI start from the first run <span class="glance-expected">11 Oct ~18:15</span><span class="glance-basis">agent ~15 min plus local delivery suite</span></li>
+</ul>
 </div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
@@ -670,11 +675,11 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">11</div><div class="label">live</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">11</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next</strong></td></tr>
-<tr data-task="DL12"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL12</span>Delivery log: label its times as UTC, CI start from the first run</td><td>Owner chose: ship now as a small train with the upgrade doc</td><td>11 Oct; about 1 h after restart<span class="expected-basis">one agent ~15 min, PR CI ~20-30 min, merge and cleanup</span></td></tr>
+<tr data-task="DL12"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL12</span>Delivery log: label its times as UTC, CI start from the first run</td><td>One Sonnet agent on DL12-delivery-log-times</td><td>11 Oct ~18:15<span class="expected-basis">agent ~15 min plus local delivery suite</span></td></tr>
 <tr data-task="DL13"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL13</span>Save the STACKSPEC 8.0.0 upgrade prompt</td><td>docs/upgrades/stackspec-8.0.0.md, generic, no project names; rides the DL12 train</td><td>11 Oct; after restart<span class="expected-basis">starts when the owner restarts Claude Code</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
 <tr data-task="DL1"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL1</span>Inert paths keep gate results valid</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>

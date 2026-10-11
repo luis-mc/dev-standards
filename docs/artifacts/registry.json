@@ -516,12 +516,12 @@
       "id": "DL12",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Delivery log: label its times as UTC, CI start from the first run",
-      "detail": "Owner chose: ship now as a small train with the upgrade doc",
-      "expected": "11 Oct; about 1 h after restart",
-      "changed": "2026-10-11T17:20+01:00",
-      "expected_basis": "one agent ~15 min, PR CI ~20-30 min, merge and cleanup"
+      "detail": "One Sonnet agent on DL12-delivery-log-times",
+      "expected": "11 Oct ~18:15",
+      "changed": "2026-10-11T17:22+01:00",
+      "expected_basis": "agent ~15 min plus local delivery suite"
     },
     {
       "id": "DL13",
