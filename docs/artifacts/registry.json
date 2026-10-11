@@ -417,11 +417,11 @@
       "id": "AR44",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "Copy link opens the record's current feature page",
-      "detail": "Fixed on DL12-integration (R5.31): links target the record worktree, not the checkout; ships with DS51",
-      "expected": "11 Oct ~18:30",
-      "changed": "2026-10-11T17:46+01:00"
+      "detail": "Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T17:53+01:00"
     },
     {
       "id": "DL1",

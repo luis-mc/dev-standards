@@ -649,20 +649,16 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T17:49+01:00">11 Oct 17:49</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T17:53+01:00">11 Oct 17:53</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Oct 17:49</a> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</p>
 <div class="at-a-glance">
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
-<div class="glance-group glance-built" data-glance="built"><div class="glance-label">Built, not released</div>
-<ul>
-<li data-glance-task="AR44"><span class="task-id">AR44</span>Copy link opens the record&#x27;s current feature page</li>
-</ul>
-</div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
+<li data-glance-task="AR44"><span class="task-id">AR44</span>Copy link opens the record&#x27;s current feature page</li>
 <li data-glance-task="AR41"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</li>
 <li data-glance-task="AR40"><span class="task-id">AR40</span>At a glance block in section 0 instead of one prose paragraph</li>
 <li data-glance-task="AR42"><span class="task-id">AR42</span>Feature table: Last updated column, newest first, sortable headers</li>
@@ -670,18 +666,17 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <li data-glance-task="AR37"><span class="task-id">AR37</span>Full Progress feature links that work from claude.ai</li>
 <li data-glance-task="AR39"><span class="task-id">AR39</span>Release luismc-artifacts 1.3.1 (AR35, AR37)</li>
 <li data-glance-task="AR38"><span class="task-id">AR38</span>Current Where it stands lines</li>
-<li data-glance-task="AR36"><span class="task-id">AR36</span>Update the installed plugins to the 7.1.0 release</li>
-<li class="glance-more">and 18 more</li>
+<li class="glance-more">and 19 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">40</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">built</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">41</div><div class="label">live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next</strong></td></tr>
 <tr data-task="AR43"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">AR43</span>Full Progress: release timeline above the status table</td><td>Owner confirmed the design with Expected = sum of phases and a named fix-round risk; plugin build is the next small train</td><td>11 Oct ~18:55<span class="expected-basis">after DS51 (~18:00): agent ~45 min, PR CI ~6 min, merge ~4 min</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
-<tr data-task="AR44"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">AR44</span>Copy link opens the record&#x27;s current feature page</td><td>Fixed on DL12-integration (R5.31): links target the record worktree, not the checkout; ships with DS51</td><td>11 Oct ~18:30</td></tr>
+<tr data-task="AR44"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR44</span>Copy link opens the record&#x27;s current feature page</td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>
 <tr data-task="AR41"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</td><td>Five notes rewritten as one or two sentences (103 to 179 characters); check shows no warnings</td><td>11 Oct</td></tr>
 <tr data-task="AR40"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR40</span>At a glance block in section 0 instead of one prose paragraph</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
 <tr data-task="AR42"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR42</span>Feature table: Last updated column, newest first, sortable headers</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
