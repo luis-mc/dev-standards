@@ -579,7 +579,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-11T13:14+01:00",
+ "updated": "2026-10-11T13:17+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -976,12 +976,11 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "id": "AR42",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Built",
    "item": "Feature table: Last updated column, newest first, sortable headers",
-   "detail": "Section 1 shows each feature page's stamp; click Feature artifact or Last updated to sort; feature pages show Full Progress's last publish",
-   "expected": "11 Oct ~15:00",
-   "changed": "2026-10-11T12:22+01:00",
-   "expected_basis": "agent ~1h, in the TC6 release"
+   "detail": "Joined: Last updated column, newest first, sortable headers checked in a browser; feature pages show Full Progress's publish; no publish loop (tested)",
+   "expected": "11 Oct",
+   "changed": "2026-10-11T13:17+01:00"
   },
   {
    "id": "DL1",
@@ -1736,14 +1735,13 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T13:14+01:00">11 Oct 13:14</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T13:17+01:00">11 Oct 13:17</time> (Lisbon)</p>
 <p class="lede">All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class="task-id">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class="task-id">AR12</span>), and the secret-scan fixes (<span class="task-id">DS15</span>, <span class="task-id">AR19</span>, <span class="task-id">DS16</span>). Not released yet: the round toward STACKSPEC 7.0.0 (<span class="task-id">DS17</span> to <span class="task-id">DS21</span>) is built and joined, so those rows say Done. The tests on the joined branch are running; then one ready PR, its CI, and the merge, about 21:45. Each row turns Live only when the merge lands. <strong>Nothing needs you.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">88</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">17</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">7</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">88</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">18</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">6</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
 <tr data-task="AR41"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</a></td><td><code>luismc-artifacts</code></td><td>After the TC6 release: update the plugin here, rewrite Full Progress and feature ledes as one or two sentences, render</td><td>11 Oct ~15:00<span class="expected-basis">after the TC6 merge; three content edits</span></td></tr>
-<tr data-task="AR42"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR42</span>Feature table: Last updated column, newest first, sortable headers</a></td><td><code>luismc-artifacts</code></td><td>Section 1 shows each feature page&#x27;s stamp; click Feature artifact or Last updated to sort; feature pages show Full Progress&#x27;s last publish</td><td>11 Oct ~15:00<span class="expected-basis">agent ~1h, in the TC6 release</span></td></tr>
 <tr data-task="DL5"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL5</span>Build-artifact workflows only when their inputs change</a></td><td></td><td>Agent on DL5-ci-packaging-log, in the TC6 release; it starts its test suites only while fewer than 3 others run</td><td>11 Oct ~15:00<span class="expected-basis">agent ~1h30 from 12:10, then the one join and CI</span></td></tr>
 <tr data-task="DL8"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL8</span>Delivery log in release notes</a></td><td></td><td>Agent on DL5-ci-packaging-log, in the TC6 release; it starts its test suites only while fewer than 3 others run</td><td>11 Oct ~15:00<span class="expected-basis">agent ~1h30 from 12:10, then the one join and CI</span></td></tr>
 <tr data-task="DL9"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL9</span>Packaged-program smoke test (MUST, STACKSPEC 8.0.0)</a></td><td></td><td>Agent on DL5-ci-packaging-log, in the TC6 release; it starts its test suites only while fewer than 3 others run</td><td>11 Oct ~15:00<span class="expected-basis">agent ~1h30 from 12:10, then the one join and CI</span></td></tr>
@@ -1752,6 +1750,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <tr data-task="DL10"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL10</span>dev-standards adopts the delivery log and the freeze</a></td><td></td><td>pre-push freeze committed on TC6-integration; hooks switched on and this train&#x27;s release notes after the merge</td><td>11 Oct ~15:15<span class="expected-basis">right after the TC6 merge</span></td></tr>
 <tr data-task="DS50"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS50</span>Write the STACKSPEC 8.0.0 upgrade prompt for projects</td><td></td><td>Generic, no project names; tells a project to rerun the tech-stack-setup audit and apply the 8.0.0 items</td><td>11 Oct ~15:15<span class="expected-basis">right after the TC6 merge</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
+<tr data-task="AR42"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR42</span>Feature table: Last updated column, newest first, sortable headers</a></td><td><code>luismc-artifacts</code></td><td>Joined: Last updated column, newest first, sortable headers checked in a browser; feature pages show Full Progress&#x27;s publish; no publish loop (tested)</td><td>11 Oct</td></tr>
 <tr data-task="DS49"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DS49</span>Agent branches: a short Linux CI run of their area instead of local</td><td></td><td>Joined: spec-lint dispatch takes areas; ci_areas --branch-advice; rule: heavy changes use an area CI run instead of the local full run</td><td>11 Oct</td></tr>
 <tr data-task="DL1"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL1</span>Inert paths keep gate results valid</a></td><td></td><td>Joined into TC6-integration (51453a4): 660 checks, new mutants caught; Rust lockfiles still widen</td><td>11 Oct</td></tr>
 <tr data-task="DL2"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL2</span>Quick join check instead of a second full gate</a></td><td></td><td>Joined into TC6-integration (43e4d72): 657 checks, 56 CI tests, 29 new mutants caught</td><td>11 Oct</td></tr>
