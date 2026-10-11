@@ -1276,6 +1276,17 @@
       "rides": "DS56"
     },
     {
+      "id": "DS58",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Publish Full Progress after the daily publish limit resets",
+      "detail": "Account hit 200 publishes/day at ~00:19; a background timer wakes the session at 01:01 Lisbon to publish once and record it (AR47)",
+      "expected": "12 Oct ~01:02",
+      "changed": "2026-10-12T00:24+01:00",
+      "expected_basis": "limit resets at UTC midnight = 01:00 Lisbon"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
