@@ -1010,6 +1010,17 @@
       "changed": "2026-10-11T13:00+01:00"
     },
     {
+      "id": "DS50",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Write the STACKSPEC 8.0.0 upgrade prompt for projects",
+      "detail": "Generic, no project names; tells a project to rerun the tech-stack-setup audit and apply the 8.0.0 items",
+      "expected": "11 Oct ~15:15",
+      "changed": "2026-10-11T13:00+01:00",
+      "expected_basis": "right after the TC6 merge"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
