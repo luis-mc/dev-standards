@@ -428,6 +428,111 @@ def test_basis_over_80_refused(env):
 
 
 @case
+def test_release_flags_store_the_fields(env):
+    """R5.40: --release, --phase, --risk and --rides are stored as optional fields, and cleared with ""."""
+    p = env.baseline()
+    r = p.ok('task-add', '--owner', 'project', '--item', 'DL12 release', '--detail', 'Join, CI, merge.',
+             '--expected', '10 Oct ~18:00', '--release',
+             '--phase', 'agents=17:30-17:45', '--phase', 'join=17:45-17:48', '--phase', 'ci=17:48-17:54',
+             '--phase', 'merge=17:54-18:00', '--risk', '+1 fix round=10')
+    rel = r.out.strip()
+    t = p.task(rel)
+    assert t['release'] is True and t['risk'] == {'label': '+1 fix round', 'minutes': 10}, t
+    assert [(x['name'], x['start'], x['end']) for x in t['phases']] == [
+        ('agents', '2026-10-10T17:30+01:00', '2026-10-10T17:45+01:00'),
+        ('join', '2026-10-10T17:45+01:00', '2026-10-10T17:48+01:00'),
+        ('ci', '2026-10-10T17:48+01:00', '2026-10-10T17:54+01:00'),
+        ('merge', '2026-10-10T17:54+01:00', '2026-10-10T18:00+01:00')], t['phases']
+    assert 'release' not in p.task('AR1') and 'phases' not in p.task('AR1'), 'no flags, no fields'
+    # a task that rides the release, and the timeline in the rendered Full Progress
+    p.ok('set-task-status', 'AR1', 'Running', '--rides', rel)
+    assert p.task('AR1')['rides'] == rel
+    fp = p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file']) or ''
+    assert 'class="release-timeline"' in fp and 'live ~18:00' in fp and 'worst ~18:10' in fp and 'data-col="state"' in fp
+    # the explicit date form, a replaced phase list and the clearing forms
+    p.ok('set-task-status', rel, 'Running', '--phase', 'agents=10 Oct 17:30-10 Oct 18:00')
+    assert p.task(rel)['phases'][0]['name'] == 'agents' and len(p.task(rel)['phases']) == 1
+    p.ok('set-task-status', rel, 'Running', '--phase', '', '--risk', '', '--rides', '')
+    t = p.task(rel)
+    assert 'phases' not in t and 'risk' not in t and t['release'] is True, t
+    p.ok('set-task-status', 'AR1', 'Running', '--rides', '')
+    assert 'rides' not in p.task('AR1')
+    assert p.run('check').code == 0
+
+
+@case
+def test_release_expected_is_the_end_of_the_last_phase(env):
+    """R5.41: an open release's Expected must be the end of its last phase; a mismatch is refused, nothing written."""
+    p = env.baseline()
+    before = p.head()
+    r = p.run('task-add', '--owner', 'project', '--item', 'R', '--detail', 'd', '--expected', '10 Oct ~18:10', '--release',
+              '--phase', 'agents=17:30-17:45', '--phase', 'merge=17:54-18:00')
+    assert r.code == 1 and '~18:00' in r.err and 'last phase' in r.err, r.all
+    assert p.head() == before
+    ok = p.ok('task-add', '--owner', 'project', '--item', 'R', '--detail', 'd', '--expected', '10 Oct ~18:00; fix round named',
+              '--release', '--phase', 'agents=17:30-17:45', '--phase', 'merge=17:54-18:00')
+    rel = ok.out.strip()
+    # moving the Expected away from the phases is refused too, and so is a phase change that leaves it behind
+    r = p.run('set-task-status', rel, 'Running', '--expected', '10 Oct ~19:00')
+    assert r.code == 1 and 'last phase' in r.err, r.all
+    r = p.run('set-task-status', rel, 'Running', '--phase', 'agents=17:30-18:20')
+    assert r.code == 1 and '~18:20' in r.err, r.all
+    p.ok('set-task-status', rel, 'Running', '--phase', 'agents=17:30-18:20', '--expected', '10 Oct ~18:20')
+    # a closed release is not held to it (Expected is then the date it happened)
+    p.ok('set-task-status', rel, 'Live')
+    assert p.task(rel)['expected'] == '10 Oct' and p.run('check').code == 0
+
+
+@case
+def test_release_refusals(env):
+    """R5.40: --rides must name a release; phases and risk need --release; bad phases and risks are refused."""
+    p = env.baseline()
+    before = p.head()
+    add = ['task-add', '--owner', 'project', '--item', 'R', '--detail', 'd', '--expected', '10 Oct ~18:00']
+    bad = [
+        (add + ['--rides', 'AR1'], 'not a release'),
+        (add + ['--rides', 'ZZ9'], 'not a task'),
+        (add + ['--phase', 'agents=17:30-18:00'], '--release'),
+        (add + ['--risk', 'x=5'], '--release'),
+        (add + ['--release', '--phase', 'deploy=17:30-18:00'], 'one of agents, join, ci, merge'),
+        (add + ['--release', '--phase', 'agents=18:00-17:30'], 'after the start'),
+        (add + ['--release', '--phase', 'agents=17:30-17:45', '--phase', 'agents=17:45-18:00'], 'twice'),
+        (add + ['--release', '--phase', 'agents=17:30'], 'NAME=HH:MM-HH:MM'),
+        (add + ['--release', '--phase', 'agents=25:00-26:00'], 'HH:MM'),
+        (add + ['--release', '--phase', '', '--phase', 'agents=17:30-18:00'], 'alone'),
+        (add + ['--release', '--risk', 'no minutes'], 'LABEL=MINUTES'),
+        (add + ['--release', '--risk', 'zero=0'], 'LABEL=MINUTES'),
+        (add + ['--release', '--risk', ('x' * 41) + '=5'], 'at most 40'),
+        (['set-task-status', 'AR1', 'Running', '--rides', 'AR2'], 'not a release'),
+        (['set-task-status', 'AR1', 'Running', '--phase', 'agents=17:30-18:00'], '--release'),
+    ]
+    for argv, word in bad:
+        r = p.run(*argv)
+        assert r.code == 1 and word in r.err, (argv, r.all)
+    assert p.head() == before, 'a refused change writes nothing'
+
+
+@case
+def test_state_column_counts_in_the_record(env):
+    """R5.44: Full Progress's State shows Complete for a finished feature and counts per open status otherwise."""
+    p = env.baseline()
+    fp = p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
+    assert fp is not None
+    import re
+    rows = re.findall(r'<tr><td data-value="[^"]*">.*?</tr>', fp, re.S)
+    cell = lambda row: re.search(r'<td data-col="state">(.*?)</td>', row, re.S).group(1)
+    states = [re.sub(r'<[^>]+>', ' ', cell(r)).split() for r in rows]
+    by_title = {re.search(r'Feature: ([^<]+)<', r).group(1): s for r, s in zip(rows, states)}
+    assert by_title['Artifacts'] == ['1', 'Running'], by_title
+    p.ok('set-task-status', 'SI1', 'Live')
+    fp = p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
+    rows = re.findall(r'<tr><td data-value="[^"]*">.*?</tr>', fp, re.S)
+    site = next(r for r in rows if 'The site' in r)
+    assert 'Complete' in cell(site) and 'status-live' in cell(site)
+    assert p.run('check').code == 0
+
+
+@case
 def test_task_add_refusals(env):
     p = env.baseline()
     cases = [
@@ -1771,6 +1876,14 @@ REGISTRY_FIXTURES = [
     ('basis empty', 'R6.10', lambda r: task(r, 'AR1').update(expected_basis='  ')),
     ('basis not a string', 'R6.10', lambda r: task(r, 'AR1').update(expected_basis=5)),
     ('basis on a Live row', 'R6.10', lambda r: task(r, 'AR1').update(status='Live', expected='10 Oct', expected_basis='x')),
+    ('release false', 'R5.40', lambda r: task(r, 'AR1').update(release=False)),
+    ('phases on a non-release', 'R5.40', lambda r: task(r, 'AR1').update(phases=[{'name': 'agents', 'start': '2026-10-10T17:30+01:00', 'end': '2026-10-10T17:45+01:00'}])),
+    ('bad phase name', 'R5.40', lambda r: task(r, 'AR1').update(release=True, phases=[{'name': 'deploy', 'start': '2026-10-10T17:30+01:00', 'end': '2026-10-10T17:45+01:00'}])),
+    ('phase ends before it starts', 'R5.40', lambda r: task(r, 'AR1').update(release=True, phases=[{'name': 'ci', 'start': '2026-10-10T17:45+01:00', 'end': '2026-10-10T17:30+01:00'}])),
+    ('bad risk', 'R5.40', lambda r: task(r, 'AR1').update(release=True, risk={'label': '', 'minutes': 0})),
+    ('rides a non-release', 'R5.40', lambda r: task(r, 'SI1').update(rides='AR2')),
+    ('rides an unknown task', 'R5.40', lambda r: task(r, 'SI1').update(rides='ZZ9')),
+    ('expected is not the end of the last phase', 'R5.41', lambda r: task(r, 'AR1').update(release=True, expected='10 Oct ~19:00', phases=[{'name': 'agents', 'start': '2026-10-10T17:30+01:00', 'end': '2026-10-10T17:45+01:00'}])),
     ('expected relative word', 'R6.6', lambda r: task(r, 'AR1').update(expected='today')),
     ('expected soon', 'R6.6', lambda r: task(r, 'SI1').update(expected='soon; very')),
     ('one-digit day', 'R6.6', lambda r: task(r, 'SI1').update(expected='2 Oct')),

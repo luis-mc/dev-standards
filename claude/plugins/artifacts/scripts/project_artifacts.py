@@ -1167,6 +1167,8 @@ def validate_structure(rec):
                 f('R6.10', 'registry.json', '%s: expected_basis is longer than %d characters' % (label, BASIS_MAX))
             if isinstance(st, str) and st in statuses and st not in OPEN_STATUSES:
                 f('R6.10', 'registry.json', '%s: expected_basis belongs on an open row, not on a %s row' % (label, st))
+        for req, msg in release_problems(t, {x.get('id'): x for x in tasks if isinstance(x, dict)}):
+            f(req, 'registry.json', '%s: %s' % (label, msg))
         ex = t.get('expected')
         if isinstance(ex, str) and isinstance(st, str) and st in statuses:
             if st in ('Live', 'Built'):
@@ -1694,6 +1696,135 @@ def cmd_feature_new(args):
     return 0
 
 
+PHASE_NAMES = ('agents', 'join', 'ci', 'merge')       # R5.40
+RISK_LABEL_MAX = 40
+_POINT_RE = re.compile(r'^\s*(?:(\d{1,2}) (' + '|'.join(MONTHS) + r') )?([01]?\d|2[0-3]):([0-5]\d)\s*$')
+
+
+def _phase_point(text, now_dt, spec):
+    m = _POINT_RE.match(text)
+    if not m:
+        raise Fail(1, '--phase "%s": "%s" is not HH:MM or DD Mon HH:MM' % (spec, text.strip()))
+    day = int(m.group(1)) if m.group(1) else now_dt.day
+    month = MONTHS.index(m.group(2)) + 1 if m.group(2) else now_dt.month
+    try:
+        return datetime(now_dt.year, month, day, int(m.group(3)), int(m.group(4)), tzinfo=now_dt.tzinfo)
+    except ValueError:
+        raise Fail(1, '--phase "%s": %s %s is not a date' % (spec, day, MONTHS[month - 1]))
+
+
+def parse_phases(specs, now_dt):
+    """R5.40: `--phase NAME=HH:MM-HH:MM` (today) or `NAME=DD Mon HH:MM-DD Mon HH:MM`, repeatable, in the project's
+    zone; returns the stored list ordered by start, or [] for `--phase ""` (which clears them)."""
+    if any(not str(s).strip() for s in specs):
+        if len(specs) > 1:
+            raise Fail(1, '--phase "" clears the phases; give it alone')
+        return []
+    out = []
+    for spec in specs:
+        name, sep, span = str(spec).partition('=')
+        name = name.strip()
+        if not sep or name not in PHASE_NAMES:
+            raise Fail(1, '--phase "%s": use NAME=HH:MM-HH:MM with NAME one of %s' % (spec, ', '.join(PHASE_NAMES)))
+        if any(p['name'] == name for p in out):
+            raise Fail(1, '--phase: %s is given twice' % name)
+        a, sep, b = span.partition('-')
+        if not sep:
+            raise Fail(1, '--phase "%s": use NAME=HH:MM-HH:MM' % spec)
+        start, end = _phase_point(a, now_dt, spec), _phase_point(b, now_dt, spec)
+        if end <= start:
+            raise Fail(1, '--phase "%s": the end must be after the start' % spec)
+        out.append({'name': name, 'start': start.isoformat(timespec='minutes'), 'end': end.isoformat(timespec='minutes')})
+    return sorted(out, key=lambda p: (p['start'], p['name']))
+
+
+def parse_risk(text):
+    """R5.40: `--risk "LABEL=MINUTES"` -> {"label", "minutes"}; "" clears it (returns None)."""
+    text = str(text).strip()
+    if not text:
+        return None
+    label, sep, minutes = text.rpartition('=')
+    label = ' '.join(label.split())
+    if not sep or not label or not minutes.strip().isdigit() or int(minutes) < 1:
+        raise Fail(1, '--risk "%s": use "LABEL=MINUTES" with a whole number of minutes, for example "+1 fix round=10"' % text)
+    if len(label) > RISK_LABEL_MAX:
+        raise Fail(1, '--risk label is %d characters; at most %d' % (len(label), RISK_LABEL_MAX))
+    return {'label': label, 'minutes': int(minutes)}
+
+
+def release_problems(task, by_id):
+    """R5.40, R5.41: [(requirement, message)] for the release fields of one task row."""
+    out = []
+    rel = task.get('release')
+    phases, risk, rides = task.get('phases'), task.get('risk'), task.get('rides')
+    if 'release' in task and rel is not True:
+        out.append(('R5.40', 'release must be true when present'))
+    if (phases is not None or risk is not None) and rel is not True:
+        out.append(('R5.40', 'phases and risk belong to a release task (--release)'))
+    good = []
+    if phases is not None:
+        if not isinstance(phases, list) or not phases:
+            out.append(('R5.40', 'phases must be a non-empty list'))
+        else:
+            seen = set()
+            for p in phases:
+                a = parse_iso(p.get('start')) if isinstance(p, dict) else None
+                b = parse_iso(p.get('end')) if isinstance(p, dict) else None
+                if not isinstance(p, dict) or p.get('name') not in PHASE_NAMES or a is None or b is None or b <= a:
+                    out.append(('R5.40', 'a phase needs a name (%s) and a start before its end, ISO times with an offset'
+                                % ', '.join(PHASE_NAMES)))
+                elif p['name'] in seen:
+                    out.append(('R5.40', 'phase %s appears twice' % p['name']))
+                else:
+                    seen.add(p['name'])
+                    good.append(b)
+    if risk is not None:
+        if not (isinstance(risk, dict) and isinstance(risk.get('label'), str) and risk['label'].strip()
+                and len(risk['label']) <= RISK_LABEL_MAX and isinstance(risk.get('minutes'), int)
+                and not isinstance(risk['minutes'], bool) and risk['minutes'] >= 1):
+            out.append(('R5.40', 'risk must be {"label": text of at most %d characters, "minutes": a whole number >= 1}' % RISK_LABEL_MAX))
+    if rides is not None:
+        target = by_id.get(rides) if isinstance(rides, str) else None
+        if target is None:
+            out.append(('R5.40', 'rides names %r, which is not a task' % (rides,)))
+        elif target is task or target.get('release') is not True:
+            out.append(('R5.40', 'rides names %s, which is not a release task' % rides))
+    if good and task.get('status') in OPEN_STATUSES and isinstance(task.get('expected'), str):
+        end = max(good)
+        want = '%02d %s ~%02d:%02d' % (end.day, MONTHS[end.month - 1], end.hour, end.minute)
+        have = task['expected'].split(';')[0].strip()
+        if have != want:
+            out.append(('R5.41', 'Expected is "%s" but the last phase ends at %s: a release\'s Expected is the end of its last '
+                                 'phase (name a risk with --risk instead of padding)' % (have, want)))
+    return out
+
+
+def apply_release_fields(task, by_id, args, now_dt):
+    """Set or clear the release fields of `task` from --release/--phase/--risk/--rides; refuse a bad result."""
+    if getattr(args, 'release', False):
+        task['release'] = True
+    if args.phase is not None:
+        phases = parse_phases(args.phase, now_dt)
+        if phases:
+            task['phases'] = phases
+        else:
+            task.pop('phases', None)
+    if args.risk is not None:
+        risk = parse_risk(args.risk)
+        if risk:
+            task['risk'] = risk
+        else:
+            task.pop('risk', None)
+    if args.rides is not None:
+        if args.rides.strip():
+            task['rides'] = args.rides.strip()
+        else:
+            task.pop('rides', None)
+    problems = release_problems(task, by_id)
+    if problems:
+        raise Fail(1, '%s: %s' % (task.get('id', 'new task'), '; '.join(m for _, m in problems)))
+
+
 def clean_basis(text):
     """R6.10: the basis as stored ('' clears it); refused when longer than BASIS_MAX."""
     text = ' '.join(str(text).split())
@@ -1749,6 +1880,7 @@ def cmd_task_add(args):
                'changed': now.iso}
         if basis:
             row['expected_basis'] = basis
+        apply_release_fields(row, {t.get('id'): t for t in rec.tasks()}, args, now.dt)
         reg['tasks'].append(row)
         if owner != 'project':
             rec.render_keys[owner] = 'new'
@@ -1791,6 +1923,7 @@ def cmd_set_task_status(args):
                 task['expected_basis'] = basis
             else:
                 task.pop('expected_basis', None)
+        apply_release_fields(task, {t.get('id'): t for t in rec.tasks()}, args, now.dt)
         owner = task['owner']
         if owner != 'project':
             rec.render_keys[owner] = 'new'
@@ -2448,6 +2581,11 @@ def build_parser():
     s.add_argument('--app')
     s.add_argument('--status', default='To do')
     s.add_argument('--prefix')
+    s.add_argument('--release', action='store_true', help='this task is a release (R5.40)')
+    s.add_argument('--phase', action='append', metavar='NAME=HH:MM-HH:MM',
+                   help='a release phase (agents, join, ci, merge), repeatable; "" clears them')
+    s.add_argument('--risk', metavar='LABEL=MINUTES', help='the named risk of a release, for example "+1 fix round=10"; "" clears it')
+    s.add_argument('--rides', metavar='ID', help='the release task this task rides; "" clears it')
     s.set_defaults(func=cmd_task_add)
 
     s = sub.add_parser('set-task-status', parents=[w], help='change one task')
@@ -2457,6 +2595,11 @@ def build_parser():
     s.add_argument('--expected')
     s.add_argument('--basis', help='what sets the estimate; "" clears it (open statuses only)')
     s.add_argument('--history')
+    s.add_argument('--release', action='store_true', help='this task is a release (R5.40)')
+    s.add_argument('--phase', action='append', metavar='NAME=HH:MM-HH:MM',
+                   help='a release phase (agents, join, ci, merge), repeatable; "" clears them')
+    s.add_argument('--risk', metavar='LABEL=MINUTES', help='the named risk of a release, for example "+1 fix round=10"; "" clears it')
+    s.add_argument('--rides', metavar='ID', help='the release task this task rides; "" clears it')
     s.set_defaults(func=cmd_set_task_status)
 
     s = sub.add_parser('export-content', parents=[j], help="copy an artifact's content files out of the record")

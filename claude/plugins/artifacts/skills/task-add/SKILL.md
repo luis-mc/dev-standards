@@ -43,6 +43,10 @@ read the message, fix the cause and rerun.
    `tomorrow` or `next` alone. When you give an Expected time, give its basis
    too (what it waits on and how long): `--basis "agent slot ~01:30, ~1.5 h"`,
    at most 80 characters, open statuses only; it shows under the Expected value.
+   A release (`--release`) may carry phases, repeatable `--phase NAME=HH:MM-HH:MM`
+   (`agents`, `join`, `ci`, `merge`) and one named `--risk "LABEL=MINUTES"`; its
+   Expected is the end of its last phase, and the risk is named, never padded in.
+   Work that rides a release says so with `--rides <release ID>`.
 3. **Add it:**
    `task-add --owner <key|project> --item "TEXT" --detail "TEXT" --expected "DD Mon" [--basis "TEXT"] [--app A] [--status S] [--prefix P]`.
    For `--owner project`, `--prefix` picks one of the project's prefixes; a new
