@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T17:39+01:00",
+  "updated": "2026-10-11T17:46+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -412,6 +412,16 @@
       "expected": "11 Oct",
       "changed": "2026-10-11T17:39+01:00",
       "expected_basis": "waits on the owner's review of the preview"
+    },
+    {
+      "id": "AR44",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Built",
+      "item": "Copy link opens the record's current feature page",
+      "detail": "Fixed on DL12-integration (R5.31): links target the record worktree, not the checkout; ships with DS51",
+      "expected": "11 Oct ~18:30",
+      "changed": "2026-10-11T17:46+01:00"
     },
     {
       "id": "DL1",
