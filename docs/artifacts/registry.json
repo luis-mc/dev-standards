@@ -716,11 +716,11 @@
       "id": "DS40",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Agents test fast locally; CI does mutants and Linux",
-      "detail": "In your ~/.claude rules now (backup first) and in the shipped rule file on DS37-integration (with STACKSPEC 7.1.0): suites run locally without the mutation pass; mutants and Linux run once in CI, triggered on the agent's branch; at most 3 agents when they run heavy suites on one machine. The five running agents were told to switch now and finish through CI. Added after an agent stopped other agents' test processes and containers: agents stop only processes and containers they started.",
+      "detail": "Released in STACKSPEC 7.1.0 / luismc-project-setup 13.1.0 / luismc-artifacts 1.3.0 (#45, 48205a9, 04:17). In your ~/.claude rules now (backup first) and in the shipped rule file on DS37-integration (with STACKSPEC 7.1.0): suites run locally without the mutation pass; mutants and Linux run once in CI, triggered on the agent's branch; at most 3 agents when they run heavy suites on one machine. The five running agents were told to switch now and finish through CI. Added after an agent stopped other agents' test processes and containers: agents stop only processes and containers they started.",
       "expected": "11 Oct",
-      "changed": "2026-10-11T02:50+01:00"
+      "changed": "2026-10-11T04:19+01:00"
     },
     {
       "id": "DS41",
