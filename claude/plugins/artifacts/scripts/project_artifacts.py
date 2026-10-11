@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """project_artifacts.py - the only writer of a project's artifact record.
 
-Implements ARTIFACTSPEC 1.3.1: section 4 (the record, time, the record
+Implements ARTIFACTSPEC 1.4.0: section 4 (the record, time, the record
 worktree and its commits), section 7 (every command), the bookkeeping of
 section 9 (`pending`, `mark-published`; only Full Progress is published, a
 feature artifact is a standalone file) and the record-level checks of

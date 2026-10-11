@@ -1,4 +1,4 @@
-"""Old claude.ai pages, older records and the stale rule copy (ARTIFACTSPEC 1.3.1, R4.19 to R4.23, R10.6).
+"""Old claude.ai pages, older records and the stale rule copy (ARTIFACTSPEC 1.4.0, R4.19 to R4.23, R10.6).
 
 Shared by project_artifacts.py (which writes the record) and the hooks (which only read). Nothing here
 writes the record. Standard library only.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """End-of-turn hook (Stop).
 
-ARTIFACTSPEC 1.3.1 section 8.2. Lets the turn end only when the queue is empty and
+ARTIFACTSPEC 1.4.0 section 8.2. Lets the turn end only when the queue is empty and
 `project_artifacts.py pending` lists nothing; otherwise blocks the stop with
 {"decision": "block", "reason": ...} naming each item and the commands to run
 (R8.3). It acts on Full Progress only, the one published artifact: a pending entry

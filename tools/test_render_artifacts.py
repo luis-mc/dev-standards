@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for claude/plugins/artifacts/scripts/render_artifacts.py (ARTIFACTSPEC 1.3.1, sections 4 to 6 and 14).
+"""Tests for claude/plugins/artifacts/scripts/render_artifacts.py (ARTIFACTSPEC 1.4.0, sections 4 to 6 and 14).
 
 Every check of check_html gets a fixture that breaks exactly that rule and must produce exactly that
 requirement ID; the clean fixtures must produce nothing. A check nobody has seen fire is not a check.

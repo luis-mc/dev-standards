@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.3.1
+**Version:** 1.4.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,12 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.4.0 — 2026-10-11.**
+
+- Section 0 of every artifact gets a generated At a glance block (R5.33 to R5.35): Needs you, Running now, Built not released, Waiting or on hold, and Live in the last 24 hours, one task per line. The lede becomes an optional short note (R5.3, R5.7), a lede over 300 characters is a warning (R5.37), and Full Progress section 1 shows a generated summary for a feature with an empty lede (R5.36).
+- Full Progress section 1 becomes a table `Feature artifact | Last updated | Tasks | Where it stands` (R5.6): the new column shows the time each feature page last changed (its stamp, kept in the manifest entry as `updated`, R4.30), and the rows start newest first. The two headers `Feature artifact` and `Last updated` are buttons that sort the rows on the page and reverse on a second click, with an arrow and `aria-sort` (R5.39); the template's script does it and stores nothing. Each feature page shows `Full Progress published: DD Mon HH:MM (<label>)` right under its stamp, linking to Full Progress's URL (R5.38), from the new manifest field `published_at` that `mark-published` sets; recording a publish redraws the feature pages keeping their stamp, so Full Progress does not change and `pending` has nothing to list again. A command that renders features and Full Progress draws the features first (R7.5).
+- Writing commands commit the record but no longer push it; the record is pushed once, at the end of the turn, by `pending`, by a new `push` command and by a new before-command hook ahead of `gh pr create`, `gh pr ready` and `gh pr merge` (R4.28, R4.29, R7.6, R8.16, R8.17). This stops one secret-scan run per record commit.
 
 **1.3.1 — 2026-10-11.**
 
@@ -557,26 +563,8 @@ an HTML fragment beginning with `<title>`, as the Artifact tool expects (no
   every task in Needs you or Failed, then every open decision (R5.25), and reads
   `Nothing needs you.` when none waits. `check` finds a Needs you group that
   differs from the generated set.
-- **R5.33** — Section 0 holds, right after the lede and before the tiles, an
-  *At a glance* block generated from the registry: `<div class="at-a-glance">`
-  with one `<div class="glance-group" data-glance="<kind>">` per kind, a
-  `glance-label` and a list of items one per line. An item is the task ID
-  (`<span class="task-id">`), the item text and, for an open status, the
-  Expected (and its `expected_basis`, R6.10). The block is the same on a feature
-  artifact (its own tasks and decisions) and on the full-progress artifact (all
-  tasks; decisions as in R5.25, which the full-progress artifact has none of),
-  and is deterministic (R7.4).
-- **R5.34** — The groups, in this order, each omitted when empty except the
-  first: `you` *Needs you* (tasks in Needs you, then Failed, then open decisions
-  as in R5.25); `running` *Running now* (Running tasks, soonest Expected first);
-  `built` *Built, not released* (Built, newest first); `waiting` *Waiting or on
-  hold* (Waiting, then On hold); `live` *Live in the last 24 hours* (Live tasks
-  whose `changed` is within 24 hours of the stamp, newest first, at most 8, then
-  an item `and N more`). To do tasks are not listed. A group in a feature
-  artifact never names a task of another owner.
-- **R5.35** — `check` finds a group that does not list exactly the tasks (and
-  decisions) of its statuses in the order of R5.34, a missing or extra group, a
-  group out of order, or a wrong `and N more`.
+The At a glance block itself is specified in §5.6 (R5.33 to R5.35).
+
 - **R5.8** — Tiles show the count of each status that has at least one task,
   in the order of §6.1, computed from the registry.
 - **R5.9** — The full-progress artifact embeds the registry as
@@ -693,15 +681,6 @@ and drawn by the renderer; they are never written as a content section.
 - **R5.26** — `check` warns, without failing, for an open, unreplaced decision
   whose `task` is not a task of that feature in Needs you, or, when it names no
   task, when the feature has no task in Needs you.
-- **R5.36** — When a feature's lede is empty, its line in the full-progress
-  artifact's section 1 (R5.6) is its generated summary, from the registry:
-  counts of its Running, Built, Waiting, To do, On hold and Live tasks, then
-  `nothing needs you` or `N need(s) you`, as `2 running, 3 built, nothing needs
-  you.` The column is never blank.
-- **R5.37** — `check` warns, without failing, for a lede over 300 characters:
-  keep the note to one or two sentences; the At a glance block lists the
-  statuses. Records written before this requirement stay valid.
-
 ### 5.5 Standalone files, the publish copy and links
 
 claude.ai allows 200 artifact publishes per account per day, and every
@@ -763,6 +742,38 @@ double-click.
   of the publish copy (R4.3), so writing a publish copy never makes the record
   look stale: `pending` compares the committed file with `published_sha256`.
   Verified by `test_pending_and_mark_published`.
+
+### 5.6 At a glance, notes and the feature table
+
+- **R5.33** — Section 0 holds, right after the lede and before the tiles, an
+  *At a glance* block generated from the registry: `<div class="at-a-glance">`
+  with one `<div class="glance-group" data-glance="<kind>">` per kind, a
+  `glance-label` and a list of items one per line. An item is the task ID
+  (`<span class="task-id">`), the item text and, for an open status, the
+  Expected (and its `expected_basis`, R6.10). The block is the same on a feature
+  artifact (its own tasks and decisions) and on the full-progress artifact (all
+  tasks; decisions as in R5.25, which the full-progress artifact has none of),
+  and is deterministic (R7.4).
+- **R5.34** — The groups, in this order, each omitted when empty except the
+  first: `you` *Needs you* (tasks in Needs you, then Failed, then open decisions
+  as in R5.25); `running` *Running now* (Running tasks, soonest Expected first);
+  `built` *Built, not released* (Built, newest first); `waiting` *Waiting or on
+  hold* (Waiting, then On hold); `live` *Live in the last 24 hours* (Live tasks
+  whose `changed` is within 24 hours of the stamp, newest first, at most 8, then
+  an item `and N more`). To do tasks are not listed. A group in a feature
+  artifact never names a task of another owner.
+- **R5.35** — `check` finds a group that does not list exactly the tasks (and
+  decisions) of its statuses in the order of R5.34, a missing or extra group, a
+  group out of order, or a wrong `and N more`.
+
+- **R5.36** — When a feature's lede is empty, its line in the full-progress
+  artifact's section 1 (R5.6) is its generated summary, from the registry:
+  counts of its Running, Built, Waiting, To do, On hold and Live tasks, then
+  `nothing needs you` or `N need(s) you`, as `2 running, 3 built, nothing needs
+  you.` The column is never blank.
+- **R5.37** — `check` warns, without failing, for a lede over 300 characters:
+  keep the note to one or two sentences; the At a glance block lists the
+  statuses. Records written before this requirement stay valid.
 
 - **R5.38** — Right under the stamp, a feature artifact shows `Full Progress
   published: DD Mon HH:MM (<timezone_label>)` in `<p class="full-progress-published">`,

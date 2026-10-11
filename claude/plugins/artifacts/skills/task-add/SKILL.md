@@ -8,7 +8,7 @@ effort: medium
 # Task — add
 
 Records work as a task in the registry (`docs/artifacts/registry.json`,
-ARTIFACTSPEC 1.3.1) before the work starts. Only the script writes the
+ARTIFACTSPEC 1.4.0) before the work starts. Only the script writes the
 registry; never edit `registry.json` or `manifest.json` by hand.
 
 Every activity is a task before it starts, whoever does it: work given to

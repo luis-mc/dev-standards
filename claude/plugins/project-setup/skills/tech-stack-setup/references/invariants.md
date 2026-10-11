@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 7.1.0
+**Version:** 8.0.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -23,6 +23,14 @@ recorded in the product's Stack Profile (§18). This document does not name
 vendors and does not rank them.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+
+**8.0.0 — 2026-10-11.**
+
+- The gate scopes more tightly (STACKSPEC §13.5): `gate.json` gains `inert_paths` (default `docs/**`), and `gate_verify.py` keeps a result valid when the base moved only by commits under those paths (`--strict-base` turns that off); a new `lockfile_scope` key lets a pnpm lockfile change count as a change to the packages whose dependencies moved instead of widening the whole gate (Go and .NET per-package lockfiles stop widening, Cargo.lock still widens); and without an `e2e_map` the end-to-end specs of the apps that import a changed shared UI package come from the workspace dependency graph.
+- The join runs a quick check (install, build, typecheck and the tests of the joined branches' affected packages plus their dependents) instead of a second full gate, and records each step's time; the pre-push hook freezes a branch while its ready PR's CI runs (override with DELIVERY_FREEZE_OVERRIDE=1; offline it allows the push with a warning); join.py and ci_watch.py warn when no online runner carries a label CI needs, and the runner question in tech-stack-setup warns against a label only one runner carries.
+- New requirement STACKSPEC §13.7 (a MUST): a product that ships a packaged program has CI start the packaged form and wait for a readiness signal from the program and from every worker it starts, failing when one does not come up; the tracks get a `package.yml` workflow (path-filtered, never for docs-only merges, startable by hand) and a `smoke.json` declaration, and a new `smoke_packaged.py` runs the check. Build-artifact workflows run only when their inputs change (§13.1, SHOULD). `cleanup.py --pr N` appends a delivery log, the time to live of each change split into waiting, testing and queueing, to the train's release notes through the new `delivery_log.py`, whose `live` command the deploy calls (§13.6, SHOULD).
+- The shipped delivery scripts change: `cleanup.py --pr N` also removes every branch joined into the merged train (tip an ancestor of the merged pull request's head, no open pull request), and `join.py` skips the gate on the joined head when its tree equals a joined branch head whose gate result is trusted for the same base (STACKSPEC §13.6 states the join can skip that run).
+- Upgrading from 7.x: the only new `MUST` is §13.7, and it applies only to a product that ships a packaged program (add `smoke.json` and a `package.yml` job). Everything else is a `SHOULD` or comes with the new delivery scripts; a product that ships no packaged program conforms to 8.0.0 as it stands.
 
 **7.1.0 — gates that check the right thing on any runner.** Learned on a
 product: the branch gate diffed against a stale base and its result was then
