@@ -154,7 +154,11 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     root = dc.repo_root()
-    cfg = dc.load_gate(root)
+    # STACKSPEC 13.8: a repository with no gate.json still joins; it says so and records that no gate ran.
+    gated = (root / dc.GATE_JSON_PATH).is_file()
+    cfg = dc.load_gate(root) if gated else {"setup": [], "lockfiles": [], "default_branch": "main", "steps": []}
+    if not gated:
+        print("join: the gate is not configured (no %s); joining without any gate" % dc.GATE_JSON_PATH, flush=True)
     dirty = dc.dirty_paths(root)
     if dirty:
         dc.eprint("error: working tree is not clean; commit or stash first:")
@@ -184,8 +188,8 @@ def main(argv: list[str] | None = None) -> int:
 
     joined: list[str] = []
     for branch in args.branches:
-        verdict = gate_verify.verify(branch, integ_ref, remote, allow_older_base=True, root=root)
-        if not verdict["trusted"]:
+        verdict = gate_verify.verify(branch, integ_ref, remote, allow_older_base=True, root=root) if gated else None
+        if verdict is not None and not verdict["trusted"]:
             dc.eprint("join: %s has no trusted passing gate result:" % branch)
             for reason in verdict["reasons"]:
                 dc.eprint("  - " + reason)
@@ -239,9 +243,13 @@ def main(argv: list[str] | None = None) -> int:
     write_join_result(root, joined, None, [])
 
     base_ref = "%s/%s" % (remote, cfg["default_branch"])
-    same = None if args.no_gate else trusted_same_tree(root, remote, base_ref, joined)
+    same = None if args.no_gate or not gated else trusted_same_tree(root, remote, base_ref, joined)
     extra: dict = {}
-    if same is not None:
+    if not gated:
+        extra["gate"] = "not configured"
+        extra["quick_check"] = {"skipped": "gate not configured"}
+        print("join: no gate ran: the gate is not configured", flush=True)
+    elif same is not None:
         print("\njoin: gate on the joined head skipped: its tree equals that of %s, whose gate result "
               "is trusted for that head and for %s" % (same, base_ref), flush=True)
         extra["quick_check"] = {"skipped": "tree equals that of %s" % same}

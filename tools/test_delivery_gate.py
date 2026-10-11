@@ -1994,6 +1994,24 @@ def sc_join_clean(t: T, shared: Path) -> None:
     t.eq("dirty working tree: exit 2", r.code, 2)
 
 
+def sc_join_no_gate_config(t: T, shared: Path) -> None:
+    """STACKSPEC 13.8: join.py works in a repository with no gate.json."""
+    box = integ_box(shared)
+    box.branch("feat/a", {"apps/web/a.txt": "a\n"}, "integ")
+    box.push("feat/a")
+    box.g("checkout", "-q", "integ")
+    box.g("rm", "-q", "scripts/delivery/gate.json")
+    box.g("commit", "-q", "-m", "no gate config")
+    box.g("push", "-q", "origin", "integ")
+    box.clear_log()
+    r = join(box, "--into", "integ", "feat/a")
+    t.eq("no gate.json: exit 0, nothing ran", (r.code, box.ran()), (0, []))
+    t.has("... says the gate is not configured", r.out, "gate is not configured")
+    jr = join_result(box)
+    t.eq("... records that no gate ran", (jr["joined"], jr["gate"], jr["quick_check"]),
+         (["feat/a"], "not configured", {"skipped": "gate not configured"}))
+
+
 def sc_join_same_tree(t: T, shared: Path) -> None:
     """DS45: the gate on the joined head is skipped when its tree is the tree of a joined
     branch head whose gate result is trusted for that head and for the gate's base."""
@@ -3384,6 +3402,7 @@ SCENARIOS = {
     "fork_point": sc_fork_point,
     "join_clean": sc_join_clean,
     "join_same_tree": sc_join_same_tree,
+    "join_no_gate_config": sc_join_no_gate_config,
     "join_untrusted": sc_join_untrusted,
     "join_conflicts": sc_join_conflicts,
     "agent_setup": sc_agent_setup,
