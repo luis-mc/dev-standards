@@ -89,6 +89,9 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   base_args=""
   if [ "$remote_sha" != "$zero" ] && git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then
     base_args="--base-ref $remote_sha"            # only what this push adds
+  elif [ "$remote_sha" = "$zero" ]; then
+    # a ref the remote does not have yet: compare with the branch it was cut from
+    base_args="--base-ref auto --branch ${remote_ref#refs/heads/}"
   fi
   # stdin is the ref list; guards must not read it.
   # shellcheck disable=SC2086

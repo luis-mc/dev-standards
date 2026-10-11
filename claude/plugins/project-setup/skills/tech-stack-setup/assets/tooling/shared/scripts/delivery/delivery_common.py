@@ -224,6 +224,31 @@ def _str_list(cfg: dict, key: str, where: str) -> list[str]:
     return value
 
 
+def _check_e2e_map(value: object, where: str) -> dict:
+    """Validate the optional "e2e_map" (CONTRACT.md, U1) and fill its defaults."""
+    label = "%s: 'e2e_map'" % where
+    if not isinstance(value, dict):
+        raise DeliveryError("%s must be an object" % label)
+    specs = value.get("specs", [])
+    if not isinstance(specs, list):
+        raise DeliveryError("%s: 'specs' must be a list" % label)
+    clean = []
+    for i, item in enumerate(specs):
+        if (
+            not isinstance(item, dict)
+            or not isinstance(item.get("spec"), str)
+            or not item["spec"].strip()
+            or not isinstance(item.get("paths"), list)
+            or not item["paths"]
+            or not all(isinstance(p, str) and p for p in item["paths"])
+        ):
+            raise DeliveryError(
+                "%s: specs[%d] needs a 'spec' file and a non-empty list of 'paths'" % (label, i)
+            )
+        clean.append({"spec": item["spec"].strip(), "paths": list(item["paths"])})
+    return {"specs": clean, "full_on": _str_list(value, "full_on", label)}
+
+
 def load_gate(root: Path) -> dict:
     """Read and validate scripts/delivery/gate.json. Fills defaults."""
     path = root / GATE_JSON_PATH
@@ -244,6 +269,8 @@ def load_gate(root: Path) -> dict:
     minutes = cfg.setdefault("timeout_minutes", DEFAULT_TIMEOUT_MINUTES)
     if isinstance(minutes, bool) or not isinstance(minutes, int) or minutes < 1:
         raise DeliveryError("%s: 'timeout_minutes' must be an integer >= 1" % where)
+    if "e2e_map" in cfg:
+        cfg["e2e_map"] = _check_e2e_map(cfg["e2e_map"], where)
     pk = cfg.get("packages")
     if not isinstance(pk, dict) or pk.get("kind") not in PACKAGE_KINDS:
         raise DeliveryError(
@@ -498,6 +525,62 @@ def widening_files(files: list[str], widen_on: list[str]) -> list[str]:
 # context and step planning (shared by branch_gate.py and fast_guards.py)
 # --------------------------------------------------------------------------
 
+def split_remote_ref(ref: str, cwd: Path | str | None = None) -> tuple[str, str] | None:
+    """('origin', 'x') for 'origin/x' when 'origin' is a remote of this repository;
+    None for a local branch or a commit."""
+    head, sep, tail = ref.partition("/")
+    if sep and tail and head in remotes(cwd):
+        return head, tail
+    return None
+
+
+def fetch_base(root: Path, base_ref: str) -> tuple[bool, str | None]:
+    """Fetch the base branch before the merge base is taken (CONTRACT.md, U2):
+    `git fetch --quiet --no-tags <remote> <branch>`. Returns (fetched, reason it
+    was not). A ref that is not <remote>/<branch> has nothing to fetch (reason
+    None). Never prompts for credentials."""
+    parts = split_remote_ref(base_ref, root)
+    if parts is None:
+        return False, None
+    env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
+    try:
+        p = run_git(["fetch", "--quiet", "--no-tags", parts[0], parts[1]], cwd=root, check=False, env=env)
+    except DeliveryError as exc:
+        return False, str(exc)
+    if p.returncode == 0:
+        return True, None
+    lines = [ln.strip() for ln in (p.stderr or p.stdout).splitlines() if ln.strip()]
+    return False, lines[0] if lines else "fetch exited %d" % p.returncode
+
+
+def fork_point_base(root: Path, commit: str, default_branch: str, pushed_branch: str = "") -> str:
+    """The remote branch `commit` was most likely cut from (CONTRACT.md, U3): among
+    refs/remotes/<remote>/* (not HEAD, not the pushed branch itself) the one whose
+    merge base with `commit` is nearest to it, i.e. the fewest commits in
+    <merge-base>..<commit>. Ties go to the default branch, then to name order. No
+    candidate: the default branch."""
+    names = remotes(root)
+    remote = "origin" if "origin" in names else (names[0] if names else "origin")
+    prefix = "refs/remotes/%s/" % remote
+    out = git(["for-each-ref", "--format=%(refname)", prefix], cwd=root, check=False)
+    fallback = "%s/%s" % (remote, default_branch)
+    best: tuple[int, int, str] | None = None
+    for ref in out.splitlines():
+        name = ref[len(prefix):]
+        if not name or name == "HEAD" or name == pushed_branch:
+            continue
+        mb = run_git(["merge-base", commit, ref], cwd=root, check=False)
+        if mb.returncode != 0 or not mb.stdout.strip():
+            continue
+        n = run_git(["rev-list", "--count", "%s..%s" % (mb.stdout.strip(), commit)], cwd=root, check=False)
+        if n.returncode != 0:
+            continue
+        key = (int(n.stdout.strip() or 0), 0 if name == default_branch else 1, name)
+        if best is None or key < best:
+            best = key
+    return fallback if best is None else "%s/%s" % (remote, best[2])
+
+
 @dataclass
 class Context:
     root: Path
@@ -511,10 +594,14 @@ class Context:
     affected_dirs: list[str]
     widened: bool
     widen_reasons: list[str] = field(default_factory=list)
+    base_fetched: bool = False
 
 
 def build_context(root: Path, cfg: dict, base_ref: str | None, full: bool = False) -> Context:
     base_ref = base_ref or "origin/" + cfg["default_branch"]
+    fetched, why_not = fetch_base(root, base_ref)
+    if why_not:
+        eprint("warning: base not fetched: %s; using the local ref" % why_not)
     if rev(base_ref, root) is None:
         raise DeliveryError(
             "base ref '%s' not found. Run 'git fetch' or pass --base-ref." % base_ref
@@ -544,13 +631,41 @@ def build_context(root: Path, cfg: dict, base_ref: str | None, full: bool = Fals
         affected_dirs=affected_package_dirs(root, cfg["packages"], packages, changed),
         widened=bool(reasons),
         widen_reasons=reasons,
+        base_fetched=fetched,
     )
+
+
+def e2e_selection(ctx: Context) -> tuple[str, list[str]]:
+    """('affected', specs) when gate.json's "e2e_map" covers every changed UI file
+    and no changed file is in "full_on"; otherwise ('full', []) (CONTRACT.md, U1).
+    A widened gate, or no map, is always 'full'."""
+    emap = ctx.cfg.get("e2e_map")
+    if not emap or ctx.widened:
+        return "full", []
+    if any(widen_match(f, e) for f in ctx.files for e in emap["full_on"]):
+        return "full", []
+    specs: set[str] = set()
+    for f in ctx.files:
+        hits = [m["spec"] for m in emap["specs"] if any(widen_match(f, p) for p in m["paths"])]
+        if not hits and any(f.startswith(p) for p in ctx.cfg["ui_paths"]):
+            return "full", []  # a UI file no spec claims
+        specs.update(hits)
+    return ("affected", sorted(specs)) if specs else ("full", [])
+
+
+def e2e_info(step: dict, ctx: Context) -> dict:
+    """The result fields of a step that takes {e2e_specs}: selection and specs."""
+    if step["scope"] != "ui-changed" or "{e2e_specs}" not in step["run"]:
+        return {}
+    selection, specs = e2e_selection(ctx)
+    return {"selection": selection, "specs": specs}
 
 
 def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
     """Decide one step: (run?, command with placeholders filled, reason)."""
     scope = step["scope"]
     wide = ctx.widened
+    e2e_specs = ""
     if scope == "always":
         cmd, why = step["run"], "always"
     elif scope in ("changed", "changed+dependents"):
@@ -566,8 +681,15 @@ def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
             return False, None, "no ui_paths change"
         cmd = (step.get("run_full") if wide else None) or step["run"]
         why = "widened" if wide else "ui path changed"
+        if ctx.cfg.get("e2e_map") and not wide:
+            selection, specs = e2e_selection(ctx)
+            if selection == "affected":
+                cmd, why, e2e_specs = step["run"], "affected specs", " ".join(specs)
+            else:
+                cmd, why = step.get("run_full") or step["run"], "full suite (e2e_map)"
     cmd = (
-        cmd.replace("{base}", ctx.base)
+        cmd.replace("{e2e_specs}", e2e_specs)
+        .replace("{base}", ctx.base)
         .replace("{changed_dirs}", " ".join(ctx.packages if wide else ctx.changed_dirs))
         .replace("{affected_dirs}", " ".join(ctx.packages if wide else ctx.affected_dirs))
     )
@@ -789,6 +911,7 @@ def execute_steps(
             entries.append(_skipped(name, reason))
             continue
         entry = run(name, [cmd], why, step.get("env"))
+        entry.update(e2e_info(step, ctx))
         entries.append(entry)
         if entry["outcome"] == "fail":
             if timed_out:

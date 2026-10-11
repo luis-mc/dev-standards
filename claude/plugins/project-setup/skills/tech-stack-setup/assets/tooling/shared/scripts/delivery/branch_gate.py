@@ -102,6 +102,7 @@ def main(argv: list[str] | None = None) -> int:
     print("branch  : %s" % (branch or "(detached)"))
     print("head    : %s" % ctx.head)
     print("base    : %s  (merge-base with %s)" % (ctx.base, ctx.base_ref))
+    print("fetched : %s" % ("yes" if ctx.base_fetched else "no (local ref used)"))
     print("changed : %s" % (", ".join(ctx.changed_dirs) or "(no package)"))
     if ctx.widened:
         shown = ", ".join(ctx.widen_reasons[:5]) + (" ..." if len(ctx.widen_reasons) > 5 else "")
@@ -129,6 +130,7 @@ def main(argv: list[str] | None = None) -> int:
         "head": ctx.head,
         "base": ctx.base,
         "base_ref": ctx.base_ref,
+        "base_fetched": ctx.base_fetched,
         "widened": ctx.widened,
         "changed_dirs": ctx.changed_dirs,
         "steps": entries,
