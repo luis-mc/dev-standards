@@ -613,6 +613,16 @@
       "changed": "2026-10-11T01:22+01:00"
     },
     {
+      "id": "DS32",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Scanner checksum pinned, not fetched",
+      "detail": "U4: gitleaks' SHA-256 was taken from the same release it verifies. tools.json now pins each platform's SHA-256; CI and setup verify against it.",
+      "expected": "11 Oct ~05:30",
+      "changed": "2026-10-11T01:22+01:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
