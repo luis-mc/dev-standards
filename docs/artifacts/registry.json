@@ -676,11 +676,11 @@
       "id": "DS36",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Guard starters safe on Windows",
-      "detail": "U9: guard starters normalise path separators; the template build check also runs on Windows.",
-      "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T01:23+01:00"
+      "detail": "Built in #40 and joined into DS37-integration (not released). Guard starters safe on Windows: done as contracted; Windows suites green; CI on its branch green (spec-lint; template build on Linux and Windows for Go, Rust and .NET).",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T03:01+01:00"
     },
     {
       "id": "DS37",
