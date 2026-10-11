@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the three luismc-artifacts hooks (ARTIFACTSPEC 1.2.0 section 8, R13.2).
+"""Tests for the three luismc-artifacts hooks (ARTIFACTSPEC 1.3.0 section 8, R13.2).
 
 Feeds sample hook input to each hook in throwaway git repos (with a bare remote)
 and asserts the queue, the exit code and the output, including R8.2, R8.4, R8.5,
@@ -127,7 +127,8 @@ def record_hash(work):
 
 def run_hook(script, stdin, work, env=None, timeout=60):
     """Run one hook; checks INV-4 around it. stdin is a dict (sent as JSON) or a raw string."""
-    full = {k: v for k, v in os.environ.items() if not k.startswith('CLAUDE_ARTIFACTS_')}
+    full = {k: v for k, v in os.environ.items()
+            if not k.startswith('CLAUDE_ARTIFACTS_') and k != 'LUISMC_ARTIFACTS_WORKTREE'}
     full.update(env or {})
     raw = stdin if isinstance(stdin, str) else json.dumps(stdin)
     before = record_hash(work)
@@ -721,6 +722,97 @@ def stop_background_clears_once_a_task_becomes_running_in_the_record_worktree():
     assert parse_stop(stop(stale, set_pending(stale))[1]).get('decision') == 'block'
 
 
+def _running_registry(path):
+    write(os.path.join(path, 'docs', 'artifacts', 'registry.json'), json.dumps({
+        'spec': 'ARTIFACTSPEC 1.0.0', 'tasks': [{'id': 'AR30', 'owner': 'project', 'status': 'Running', 'item': 'y'}]}))
+
+
+@test
+def stop_background_reads_the_record_worktree_from_the_environment():
+    """R4.24: the end-of-turn hook finds the record where the setting says."""
+    work = make_repo(statuses=NO_ACTIVE)
+    where = os.path.join(TMP_ROOT, 'moved-env')
+    env = dict(set_pending(work), LUISMC_ARTIFACTS_WORKTREE=where)
+    bg_started(work)
+    assert parse_stop(stop(work, env)[1]).get('decision') == 'block'
+    _running_registry(where)
+    rc, out, _e, _ = stop(work, env)
+    assert rc == 0 and out.strip() == '' and 's1' not in stop_state(work), (out, stop_state(work))
+    # the default location no longer counts: a Running task there does not clear the block
+    other = make_repo(statuses=NO_ACTIVE)
+    _running_registry(os.path.join(other, '.claude', 'worktrees', 'artifacts-record'))
+    bg_started(other)
+    env2 = dict(set_pending(other), LUISMC_ARTIFACTS_WORKTREE=os.path.join(TMP_ROOT, 'empty-env'))
+    assert parse_stop(stop(other, env2)[1]).get('decision') == 'block'
+
+
+@test
+def stop_background_reads_the_record_worktree_from_the_local_file():
+    work = make_repo(statuses=NO_ACTIVE)
+    where = os.path.join(TMP_ROOT, 'moved-file')
+    write(os.path.join(work, '.claude', 'artifacts-local.json'), json.dumps({'record_worktree': where}))
+    env = set_pending(work)
+    bg_started(work)
+    assert parse_stop(stop(work, env)[1]).get('decision') == 'block'
+    _running_registry(where)
+    rc, out, _e, _ = stop(work, env)
+    assert rc == 0 and out.strip() == '' and 's1' not in stop_state(work), (out, stop_state(work))
+
+
+@test
+def hooks_and_script_agree_on_the_worktree():
+    """R4.24: one function; the hooks' helper, the queue module and the script's command give one answer."""
+    work = make_repo()
+    sys.path.insert(0, SCRIPTS)
+    try:
+        import artifact_queue
+        import hook_after_command
+    finally:
+        sys.path.remove(SCRIPTS)
+    script = os.path.join(SCRIPTS, 'project_artifacts.py')
+    where = os.path.join(TMP_ROOT, 'agree')
+    cases = [(None, None, os.path.join(work, '.claude', 'worktrees', 'artifacts-record')),
+             (None, where, where),
+             (where + '-env', where, where + '-env')]            # the variable wins over the file
+    old = os.environ.pop('LUISMC_ARTIFACTS_WORKTREE', None)
+    local = os.path.join(work, '.claude', 'artifacts-local.json')
+    try:
+        for env_value, file_value, want in cases:
+            if env_value is None:
+                os.environ.pop('LUISMC_ARTIFACTS_WORKTREE', None)
+            else:
+                os.environ['LUISMC_ARTIFACTS_WORKTREE'] = env_value
+            if file_value is None:
+                if os.path.exists(local):
+                    os.remove(local)
+            else:
+                write(local, json.dumps({'record_worktree': file_value}))
+            want = os.path.normpath(want)
+            assert artifact_queue.record_worktree(work) == want, (env_value, file_value)
+            assert hook_after_command.worktree_dir(work) == want
+            out = subprocess.run([sys.executable, script, 'worktree'], cwd=work, capture_output=True, text=True,
+                                 env=dict(os.environ))
+            assert out.returncode == 0 and os.path.normcase(out.stdout.strip()) == os.path.normcase(want), out.stdout + out.stderr
+        # a refused setting: the script says so, the hooks fall back to the default and do not fail
+        os.environ['LUISMC_ARTIFACTS_WORKTREE'] = 'relative/dir'
+        try:
+            artifact_queue.record_worktree(work)
+            raise AssertionError('a relative path must be refused')
+        except artifact_queue.WorktreeSettingError:
+            pass
+        assert hook_after_command.worktree_dir(work) == artifact_queue.default_worktree(work)
+        out = subprocess.run([sys.executable, script, 'worktree'], cwd=work, capture_output=True, text=True,
+                             env=dict(os.environ))
+        assert out.returncode == 2 and 'LUISMC_ARTIFACTS_WORKTREE' in out.stderr, out.stderr
+        env = dict(set_pending(work), LUISMC_ARTIFACTS_WORKTREE='relative/dir')
+        rc, _out, _err, _ = stop(work, env)
+        assert rc == 0
+    finally:
+        os.environ.pop('LUISMC_ARTIFACTS_WORKTREE', None)
+        if old is not None:
+            os.environ['LUISMC_ARTIFACTS_WORKTREE'] = old
+
+
 @test
 def stop_background_gives_up_after_three_blocks():
     work = make_repo(statuses=NO_ACTIVE)
@@ -1239,6 +1331,13 @@ def rule_file_carries_the_retired_pages_rule():
             "lists retired pages, ask the owner, delete each confirmed one with the Artifact tool, then run "
             "mark-deleted.")
     assert want in lines, lines
+
+
+@test
+def rule_file_carries_the_basis_rule():
+    """R6.11, R10.3: an Expected time comes with its basis."""
+    lines = [ln[2:] for ln in RULE.splitlines() if ln.startswith('- ')]
+    assert "When you give an Expected time, give its basis too (what it waits on and how long)." in lines, lines
 
 
 # --- registration and invariants ------------------------------------------------------

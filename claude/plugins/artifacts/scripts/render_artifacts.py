@@ -760,6 +760,8 @@ def _tasks(registry: dict) -> list:
         for field in ('id', 'item', 'detail', 'expected'):
             if not isinstance(task.get(field), str):
                 problems.append('task %s: "%s" must be a string' % (task.get('id', '?'), field))
+        if 'expected_basis' in task and not isinstance(task['expected_basis'], str):
+            problems.append('task %s: "expected_basis" must be a string' % task.get('id', '?'))
     if problems:
         raise ContentError(problems)
     return tasks
@@ -872,8 +874,11 @@ def _row(task: dict, kind: str, feature_links: dict) -> str:
     if link:
         item = _link(link, item)
     app = '<td>%s</td>' % ('<code>%s</code>' % esc(task['app']) if task.get('app') else '') if kind == 'full-progress' else ''
+    expected = esc(task['expected'])
+    if task.get('expected_basis') and task['status'] in OPEN_STATUSES:     # R6.10
+        expected += '<span class="expected-basis">%s</span>' % esc(task['expected_basis'])
     return '<tr data-task="%s"><td>%s</td><td>%s</td>%s<td>%s</td><td>%s</td></tr>' % (
-        esc(task['id']), _chip(task['status']), item, app, esc(task['detail']), esc(task['expected']))
+        esc(task['id']), _chip(task['status']), item, app, esc(task['detail']), expected)
 
 
 def _table(body_rows: list, kind: str, label: str) -> str:
@@ -1398,7 +1403,10 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             offset = 1 if kind == 'full-progress' else 0
             row['app'] = text_of(cells[2]) if kind == 'full-progress' and len(cells) > 2 else ''
             row['detail'] = text_of(cells[2 + offset]) if len(cells) > 2 + offset else ''
-            row['expected'] = text_of(cells[3 + offset]) if len(cells) > 3 + offset else ''
+            row['expected'] = (text_of(cells[3 + offset], skip=lambda n: has_class(n, 'expected-basis'))
+                               if len(cells) > 3 + offset else '')
+            basis = find(cells[3 + offset], 'span', 'expected-basis') if len(cells) > 3 + offset else None
+            row['basis'] = text_of(basis) if basis else ''
             rows.append(row)
     for mark in group_marks:
         if mark[2] != str(len(wanted_cols)):
@@ -1472,6 +1480,8 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         for field, want, have in pairs:
             if want != have:
                 add('INV-1', 'task %s %s is %r in the checklist; the registry says %r' % (tid, field, have, want))
+        if row['basis'] != (_norm(task.get('expected_basis', '')) if task.get('status') in OPEN_STATUSES else ''):
+            add('R6.10', 'task %s shows the basis %r; the registry says %r' % (tid, row['basis'], task.get('expected_basis', '')))
         if row['label'] != tid:
             add('INV-1', 'task %s row shows the ID %r' % (tid, row['label']))
     for tid in seen:

@@ -8,7 +8,7 @@ effort: medium
 # Task — add
 
 Records work as a task in the registry (`docs/artifacts/registry.json`,
-ARTIFACTSPEC 1.2.0) before the work starts. Only the script writes the
+ARTIFACTSPEC 1.3.0) before the work starts. Only the script writes the
 registry; never edit `registry.json` or `manifest.json` by hand.
 
 Every activity is a task before it starts, whoever does it: work given to
@@ -26,8 +26,10 @@ read the message, fix the cause and rerun.
 ## Steps
 
 1. **Find the owner.** Read `docs/artifacts/manifest.json` (read only) in
-   `<repo>/.claude/worktrees/artifacts-record`, or on the default branch if the
-   worktree does not exist yet. The owner is a feature artifact's `key`, or
+   the record worktree (`python "${CLAUDE_PLUGIN_ROOT}/scripts/project_artifacts.py" worktree` prints its path; by default
+   `<repo>/.claude/worktrees/artifacts-record`, movable with
+   `LUISMC_ARTIFACTS_WORKTREE` or `.claude/artifacts-local.json`), or on the
+   default branch if the worktree does not exist yet. The owner is a feature artifact's `key`, or
    `project`. If the manifest does not exist, stop and offer
    `feature-artifact-new` or `full-progress-artifact-new`.
 2. **Collect** the item (at most 80 characters), the detail (plain text, at
@@ -38,9 +40,11 @@ read the message, fix the cause and rerun.
    `expected` is a real date from `date` in the project's zone (the manifest's
    `timezone`): `DD Mon`, or `DD Mon ~HH:MM` for work due within a day,
    optionally followed by `; ` and a short note. Never `today`, `soon`,
-   `tomorrow` or `next` alone.
+   `tomorrow` or `next` alone. When you give an Expected time, give its basis
+   too (what it waits on and how long): `--basis "agent slot ~01:30, ~1.5 h"`,
+   at most 80 characters, open statuses only; it shows under the Expected value.
 3. **Add it:**
-   `task-add --owner <key|project> --item "TEXT" --detail "TEXT" --expected "DD Mon" [--app A] [--status S] [--prefix P]`.
+   `task-add --owner <key|project> --item "TEXT" --detail "TEXT" --expected "DD Mon" [--basis "TEXT"] [--app A] [--status S] [--prefix P]`.
    For `--owner project`, `--prefix` picks one of the project's prefixes; a new
    prefix that no feature uses is registered by the command. The command prints the new ID and renders and commits the
    record.

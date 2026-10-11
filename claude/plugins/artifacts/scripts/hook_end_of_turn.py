@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """End-of-turn hook (Stop).
 
-ARTIFACTSPEC 1.2.0 section 8.2. Lets the turn end only when the queue is empty and
+ARTIFACTSPEC 1.3.0 section 8.2. Lets the turn end only when the queue is empty and
 `project_artifacts.py pending` lists nothing; otherwise blocks the stop with
 {"decision": "block", "reason": ...} naming each item and the commands to run
 (R8.3). It acts on Full Progress only, the one published artifact: a pending entry
@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from hook_after_command import (STATE_NAME, command_for, hook_root, hooks_off,  # noqa: E402
                                 load_manifest, migration_reasons_now, origin_record_file,
                                 parse_json, read_input, read_state, run, script_path, warn,
-                                write_state)
+                                worktree_dir, write_state)
 
 BLOCK_LIMIT = 3          # R8.4; the ceiling in section 12 is 5, it may only be lowered
 PENDING_TIMEOUT = 90
@@ -85,7 +85,7 @@ def registry_tasks(root, manifest):
     the checkout. None when none can be read."""
     branch = manifest.get('default_branch') if isinstance(manifest.get('default_branch'), str) else 'main'
     rel = os.path.join('docs', 'artifacts', 'registry.json')
-    sources = [os.path.join(root, '.claude', 'worktrees', 'artifacts-record', rel), 'origin',
+    sources = [os.path.join(worktree_dir(root), rel), 'origin',
                os.path.join(root, rel)]
     for source in sources:
         if source == 'origin':
@@ -163,7 +163,7 @@ def tell_retired_once(root, sid, retired):
 
 def build_reason(root, script, artifacts, queue):
     py = 'python "%s"' % script
-    record = os.path.join(root, '.claude', 'worktrees', 'artifacts-record', 'docs', 'artifacts')
+    record = os.path.join(worktree_dir(root), 'docs', 'artifacts')
     out = ['Project artifacts are not up to date. Finish this in the same turn:']
     for e in queue:
         i = e.get('id')

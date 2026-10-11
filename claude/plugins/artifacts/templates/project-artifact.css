@@ -262,6 +262,15 @@ details.earlier[open] > summary { margin-bottom: .2em; }
 }
 a .task-id { color: inherit; }
 
+/* What sets the Expected estimate (R6.10): a small muted line under the value */
+.expected-basis {
+  display: block;
+  font-size: .72rem;
+  line-height: 1.3;
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+
 /* The path of a linked feature file, beside its link in the publish copy, to copy by hand */
 .local-path {
   display: block;

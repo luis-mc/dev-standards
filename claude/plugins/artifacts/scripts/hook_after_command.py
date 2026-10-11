@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """After-command hook (PostToolUse and PostToolUseFailure for Bash; PostToolUse for Agent and Task).
 
-ARTIFACTSPEC 1.2.0 section 8.1. Takes the task ID from the current branch name,
+ARTIFACTSPEC 1.3.0 section 8.1. Takes the task ID from the current branch name,
 and when the command that just ran is one of the table rows, appends a status
 event to the queue <repo>/.claude/artifacts-queue.json. It only queues: it never
 writes the record (INV-4, R8.1), finishes fast and never fails the tool call
@@ -176,10 +176,21 @@ def hook_root(data):
 
 RULE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                          'rules', 'project-artifacts.md')
-RULE_HEADING = 'luismc-artifacts: rules for work in this project (ARTIFACTSPEC 1.2.0)'
+RULE_HEADING = 'luismc-artifacts: rules for work in this project (ARTIFACTSPEC 1.3.0)'
 UPDATED_LINE = ('luismc-artifacts was updated; this rule replaces earlier instructions about publishing '
                 'feature artifacts.')
-WORKTREE_PARTS = ('.claude', 'worktrees', 'artifacts-record')
+
+
+def worktree_dir(root):
+    """The record worktree, resolved by the same function as the script (R4.24); a bad setting
+    falls back to the default here, the script is what refuses it."""
+    from artifact_queue import WorktreeSettingError, default_worktree, record_worktree
+    try:
+        return record_worktree(root)
+    except WorktreeSettingError:
+        return default_worktree(root)
+
+
 STALE_RULE_REL = '.claude/rules/project-artifacts.md'
 
 
@@ -205,7 +216,7 @@ def rule_digest(text):
 def record_text(root, manifest, rel):
     """A record file as text from the freshest source: the record worktree, origin/<branch>, the checkout."""
     branch = manifest.get('default_branch') if isinstance(manifest.get('default_branch'), str) else 'main'
-    paths = [os.path.join(root, *WORKTREE_PARTS, 'docs', 'artifacts', rel)]
+    paths = [os.path.join(worktree_dir(root), 'docs', 'artifacts', rel)]
     for source in paths + ['origin', os.path.join(root, 'docs', 'artifacts', rel)]:
         if source == 'origin':
             text = origin_record_file(root, branch, rel)
@@ -225,7 +236,7 @@ def record_dir_and_rev(root, manifest):
     branch = manifest.get('default_branch') if isinstance(manifest.get('default_branch'), str) else 'main'
     r = git(root, 'rev-parse', '--verify', '-q', 'refs/remotes/origin/' + branch)
     rev = 'origin/' + branch if r and r[0] == 0 else 'HEAD'
-    for d in (os.path.join(root, *WORKTREE_PARTS, 'docs', 'artifacts'), os.path.join(root, 'docs', 'artifacts')):
+    for d in (os.path.join(worktree_dir(root), 'docs', 'artifacts'), os.path.join(root, 'docs', 'artifacts')):
         if os.path.isdir(d):
             return d, rev
     return None, None

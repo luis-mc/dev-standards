@@ -35,13 +35,17 @@ read the message, fix the cause and rerun.
    outside the eight maps to the nearest (`Merged` is `Live`, or `Built` when the
    project's `merged_status` says so).
 2. **Change it:**
-   `set-task-status <ID> "<Status>" [--detail "TEXT"] [--expected "DD Mon"] [--history "TEXT"]`.
+   `set-task-status <ID> "<Status>" [--detail "TEXT"] [--expected "DD Mon"] [--basis "TEXT"] [--history "TEXT"]`.
    - `--detail`: plain text, at most 600 characters, when what the row says
      changed.
    - `--expected`: a real date from `date` in the project's zone, `DD Mon` or
      `DD Mon ~HH:MM`, optionally followed by `; ` and a short note. Never
      `today`, `soon`, `tomorrow` or `next` alone. For Live or Built it defaults
      to the current date; do not pass one.
+   - `--basis`: when you give an Expected time, give its basis too (what it waits
+     on and how long), for example `"agent slot ~01:30, ~1.5 h"`; at most 80
+     characters; `""` clears it. Open statuses only: a row that goes Live,
+     Built or Failed drops it.
    - `--history`: one line for the feature artifact's History table, for a
      feature task whose change the owner should be able to look up later.
    The command renders every artifact that shows the task, removes the task's
