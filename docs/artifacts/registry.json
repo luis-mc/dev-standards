@@ -1006,12 +1006,11 @@
       "id": "DS50",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Live",
       "item": "Write the STACKSPEC 8.0.0 upgrade prompt for projects",
-      "detail": "Generic, no project names; tells a project to rerun the tech-stack-setup audit and apply the 8.0.0 items",
-      "expected": "11 Oct ~15:15",
-      "changed": "2026-10-11T13:00+01:00",
-      "expected_basis": "right after the TC6 merge"
+      "detail": "Upgrade prompt for STACKSPEC 8.0.0 given to the owner in chat, generic, no project names",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T14:42+01:00"
     },
     {
       "id": "MP1",
