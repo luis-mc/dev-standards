@@ -58,7 +58,7 @@ RULE_LINES = [
     "`effort: \"medium\"` unless the user chose otherwise in claude-setup.",
     "- Agents whose definition pins a model or effort keep it.",
     "- Trivial edits",
-    "- Max 5 agents at once.",
+    "- Max 5 agents at once, and at most 3 when they run heavy test suites",
     "## Integrate once, deploy once",
     "## Docs",
     "- Create every doc under `docs/`.",
