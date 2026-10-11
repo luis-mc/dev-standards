@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T04:18+01:00",
+  "updated": "2026-10-11T04:19+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -696,11 +696,11 @@
       "id": "DS38",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "dev-standards adopts change notes",
-      "detail": "Built in #43 and joined (not released): dev-standards checks change notes in spec-lint (tools/change-notes.json: the three specs, every plugin.json, release branches *-integration); notes go in docs/specs/changes/; fold bumps spec and plugin versions. From the next round, branches here add notes instead of editing versions.",
+      "detail": "Released in STACKSPEC 7.1.0 / luismc-project-setup 13.1.0 / luismc-artifacts 1.3.0 (#45, 48205a9, 04:17). dev-standards checks change notes in spec-lint (tools/change-notes.json: the three specs, every plugin.json, release branches *-integration); notes go in docs/specs/changes/; fold bumps spec and plugin versions. From the next round, branches here add notes instead of editing versions.",
       "expected": "11 Oct",
-      "changed": "2026-10-11T03:32+01:00"
+      "changed": "2026-10-11T04:19+01:00"
     },
     {
       "id": "DS39",
