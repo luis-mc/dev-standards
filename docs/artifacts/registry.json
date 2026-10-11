@@ -384,6 +384,17 @@
       "expected_basis": "after TC6 merges (~14:30); one release"
     },
     {
+      "id": "DL2",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Quick join check instead of a second full gate",
+      "detail": "install, build, typecheck, union of affected tests plus dependents; per-step times",
+      "expected": "11 Oct ~18:00",
+      "changed": "2026-10-11T11:55+01:00",
+      "expected_basis": "after TC6 merges (~14:30); one release"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
