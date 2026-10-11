@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T23:29+01:00",
+  "updated": "2026-10-11T23:31+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -426,11 +426,11 @@
       "id": "AR45",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "RELEASE-n numbers; Full Progress groups items by release",
-      "detail": "4 commits on AR45-release-numbers; agent's local runs 116+122+90 pass; PR #51 CI is the full run",
+      "detail": "Released in #52 (c306304, 23:09): ARTIFACTSPEC 1.6.0, luismc-artifacts 1.6.0",
       "expected": "11 Oct",
-      "changed": "2026-10-11T22:59+01:00",
+      "changed": "2026-10-11T23:31+01:00",
       "rides": "DS54"
     },
     {
