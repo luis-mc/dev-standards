@@ -1051,7 +1051,7 @@ def sc_verify(t: T, shared: Path) -> None:
 
     # now main moves on: every earlier result has a stale base
     box.g("checkout", "-q", "main")
-    box.commit({"docs/main2.txt": "m\n"}, "main moves")
+    box.commit({"apps/api/main2.txt": "m\n"}, "main moves")  # code, so not an inert move (DL1)
     box.g("push", "-q", "origin", "main")
     r = verify(box, "feat/ok")
     t.eq("stale base (the target moved): exit 1", r.code, 1)
@@ -2017,7 +2017,7 @@ def sc_join_same_tree(t: T, shared: Path) -> None:
     box = integ_box(shared)
     box.gated("feat/a", {"apps/web/a.txt": "a\n"}, base_ref="origin/main", frm="integ")
     box.g("checkout", "-q", "main")
-    box.g("commit", "-q", "--allow-empty", "-m", "main moves")  # same tree, new head
+    box.commit({"apps/api/main-moves.txt": "m\n"}, "main moves")  # code, so not an inert move (DL1); integ does not have it
     box.g("push", "-q", "origin", "main")
     box.g("checkout", "-q", "integ")
     box.clear_log()
@@ -2484,6 +2484,278 @@ def sc_packages(t: T, shared: Path) -> None:
 
 
 # --------------------------------------------------------------------------
+# scenarios: DL1 (inert paths keep results valid) and DL4 (narrower valves)
+# --------------------------------------------------------------------------
+
+def sc_inert_base(t: T, shared: Path) -> None:
+    """DL1: a result stays valid when the base moved only by commits under inert_paths."""
+    box = Box(shared)
+    box.gated("feat/ok", {"apps/web/ok.txt": "ok\n"})
+    box.gated("feat/failing", {"apps/web/f.txt": "f\n"}, fail="unit")
+    box.g("checkout", "-q", "main")
+    box.commit({"docs/a.txt": "a\n"}, "docs one")
+    box.commit({"docs/artifacts/b.txt": "b\n"}, "docs two")
+    box.g("push", "-q", "origin", "main")
+
+    r = verify(box, "feat/ok")
+    t.eq("base moved by docs only: trusted", r.code, 0)
+    t.has("... and says why", r.out, "base moved only by inert commits: 2")
+    r = verify(box, "feat/ok", "--json")
+    t.eq("... the verdict carries the count", json.loads(r.out)["inert_commits"], 2)
+    r = verify(box, "feat/ok", "--strict-base")
+    t.eq("--strict-base: the same move is stale", r.code, 1)
+    t.has("--strict-base: says stale base", r.out, "stale base")
+    r = verify(box, "feat/failing")
+    t.eq("an inert move does not excuse a failing result", r.code, 1)
+    r = verify(box, "feat/ok", "--allow-older-base")
+    t.eq("--allow-older-base still accepts an ancestor base", r.code, 0)
+    t.has("--allow-older-base keeps its own message", r.out, "older base")
+
+    # a merge commit counts by its diff
+    box.g("checkout", "-q", "-B", "docs-side", "main")
+    box.commit({"docs/side.txt": "s\n"}, "docs side")
+    box.g("checkout", "-q", "main")
+    box.g("merge", "-q", "--no-ff", "-m", "merge docs", "docs-side")
+    box.g("push", "-q", "origin", "main")
+    r = verify(box, "feat/ok")
+    t.eq("a docs-only merge commit keeps it trusted", r.code, 0)
+    t.has("... counted", r.out, "base moved only by inert commits: 4")
+
+    # one code commit among the docs commits: stale
+    box.commit({"apps/api/code.txt": "c\n"}, "code lands")
+    box.g("push", "-q", "origin", "main")
+    r = verify(box, "feat/ok")
+    t.eq("one non-inert change in the range: stale", r.code, 1)
+    t.has("... says stale base", r.out, "stale base")
+
+    # an ancestor is required: a rewound base that differs only in docs
+    box.g("checkout", "-q", "-B", "alt", box.main_sha + "~1")
+    box.commit({"docs/other.txt": "o\n"}, "docs on another line")
+    box.g("push", "-q", "--force", "origin", "alt:main")
+    r = verify(box, "feat/ok")
+    t.eq("a base that is not an ancestor is stale even when only docs differ", r.code, 1)
+
+    # a gate.json can name its own inert paths; the default is docs/**
+    cfg = Box.gate_json()
+    cfg["inert_paths"] = ["notes/**"]
+    nb = Box(shared, gate_json=cfg)
+    nb.gated("feat/ok", {"apps/web/ok.txt": "ok\n"})
+    nb.g("checkout", "-q", "main")
+    nb.commit({"docs/a.txt": "a\n"}, "docs")
+    nb.g("push", "-q", "origin", "main")
+    t.eq("inert_paths replaces the default: docs is no longer inert", verify(nb, "feat/ok").code, 1)
+    nb.commit({"notes/n.txt": "n\n"}, "notes")
+    nb.g("reset", "-q", "--hard", "HEAD~2")
+    nb.commit({"notes/n.txt": "n\n"}, "notes")
+    nb.g("push", "-q", "--force", "origin", "main")
+    r = verify(nb, "feat/ok")
+    t.eq("... and a listed path is", r.code, 0)
+    t.has("... counted", r.out, "base moved only by inert commits: 1")
+
+    for bad in ("x", [1], {"a": "b"}):
+        cfg = Box.gate_json()
+        cfg["inert_paths"] = bad
+        b = Box(shared, gate_json=cfg)
+        b.branch("feat/e", {"apps/web/a.txt": "a\n"})
+        t.eq("inert_paths %r is a configuration error" % (bad,), b.gate("--no-publish").code, 2)
+    cfg = Box.gate_json()
+    cfg["lockfile_scope"] = "everything"
+    b = Box(shared, gate_json=cfg)
+    b.branch("feat/e", {"apps/web/a.txt": "a\n"})
+    t.eq("an unknown lockfile_scope is a configuration error", b.gate("--no-publish").code, 2)
+
+
+PNPM_LOCK_HEAD = "lockfileVersion: '9.0'\n\nimporters:\n\n"
+
+
+def pnpm_lock(root: str = "2.0.0", api: str = "1.0.0", core: str = "1.0.0", ui: str = "1.0.0",
+              snap: str = "a") -> str:
+    def imp(path: str, dep: str, ver: str) -> str:
+        return "  %s:\n    dependencies:\n      %s:\n        specifier: '1'\n        version: %s\n\n" % (path, dep, ver)
+
+    return (PNPM_LOCK_HEAD + imp(".", "turbo", root) + imp("apps/api", "left-pad", api)
+            + imp("packages/core", "is-odd", core) + imp("packages/ui", "clsx", ui)
+            + "packages:\n\n  left-pad@1.0.0:\n    resolution: {integrity: %s}\n" % snap)
+
+
+class LockBox(Box):
+    INIT_FILES = {
+        **Box.INIT_FILES,
+        "pnpm-lock.yaml": pnpm_lock(),
+        "packages/core/package.json": '{"name": "@x/core"}\n',
+        "packages/ui/package.json": '{"name": "@x/ui", "dependencies": {"@x/core": "workspace:*"}}\n',
+        "apps/web/package.json": '{"name": "@x/web", "dependencies": {"@x/ui": "workspace:*"}}\n',
+        "apps/api/package.json": '{"name": "@x/api"}\n',
+    }
+
+    @classmethod
+    def gate_json(cls) -> dict:
+        cfg = Box.gate_json()
+        cfg["widen_on"] = [e for e in cfg["widen_on"] if e != "pnpm-lock.yaml"]
+        cfg["lockfile_scope"] = "pnpm-importers"
+        for s in cfg["steps"]:
+            if s["name"] == "unit":
+                s["scope"] = "changed+dependents"
+                s["run"] = cls.step_cmd("unit", "{affected_dirs}")
+        return cfg
+
+
+def sc_lockfile_scope(t: T, shared: Path) -> None:
+    """DL4: a lockfile change widens only when it cannot be pinned to a package."""
+    box = LockBox(shared)
+
+    def lock(label: str, **kw):
+        box.branch("feat/lock", {"pnpm-lock.yaml": pnpm_lock(**kw)})
+        box.clear_log()
+        r = box.gate("--no-publish")
+        res = box.result()
+        return r, res, [x for x in box.ran() if x[0] == "unit"]
+
+    r, res, unit = lock("api importer", api="1.0.1", snap="b")
+    t.eq("one importer's dependencies changed: exit 0, not widened", (r.code, res["widened"]), (0, False))
+    t.eq("... that package is the changed set", res["changed_dirs"], ["apps/api"])
+    t.eq("... and the steps run scoped", unit, [["unit", "apps/api"]])
+
+    r, res, unit = lock("core importer", core="1.0.1")
+    t.eq("a leaf package's importer: its dependents are affected", unit,
+         [["unit", "apps/web", "packages/core", "packages/ui"]])
+    t.eq("... and it is not widened", res["widened"], False)
+
+    r, res, unit = lock("root importer", root="2.0.1")
+    t.eq("the root importer changed: widened", (res["widened"], unit), (True, [["unit", "FULL"]]))
+
+    r, res, unit = lock("transitive", snap="c")
+    t.eq("a change outside every importer cannot be pinned: widened", (res["widened"], unit),
+         (True, [["unit", "FULL"]]))
+
+    r, res, unit = lock("ui importer", ui="1.0.1")
+    outcomes = {s["name"]: s["outcome"] for s in res["steps"]}
+    t.eq("a ui package's importer counts as a ui change: e2e runs", outcomes["e2e"], "pass")
+
+    # an old gate.json keeps the lockfile in widen_on: it still widens
+    cfg = LockBox.gate_json()
+    cfg["widen_on"].append("pnpm-lock.yaml")
+    old = LockBox(shared, gate_json=cfg)
+    old.branch("feat/lock", {"pnpm-lock.yaml": pnpm_lock(api="1.0.1")})
+    old.gate("--no-publish")
+    t.eq("lockfile in widen_on: widens whatever lockfile_scope says", old.result()["widened"], True)
+
+    # no lockfile_scope: as before
+    plain = LockBox(shared, gate_json={**LockBox.gate_json(), "lockfile_scope": "widen"})
+    plain.branch("feat/lock", {"pnpm-lock.yaml": pnpm_lock(api="1.0.1")})
+    plain.gate("--no-publish")
+    t.eq("lockfile_scope widen: the lockfile is only a widen_on entry, so it does not widen",
+         plain.result()["widened"], False)
+
+    # per-package lockfiles (Go modules, .NET projects): the package's own file
+    class GoBox(Box):
+        INIT_FILES = {**{k: v for k, v in Box.INIT_FILES.items() if k != "pnpm-workspace.yaml"},
+                      "svc/a/go.mod": "module a\n", "svc/a/go.sum": "s\n", "svc/b/go.mod": "module b\n"}
+
+        @classmethod
+        def gate_json(cls) -> dict:
+            cfg = Box.gate_json()
+            cfg["packages"] = {"kind": "go-modules"}
+            cfg["widen_on"] = ["go.work", "scripts/delivery/"]
+            cfg["lockfile_scope"] = "per-package"
+            return cfg
+
+    gb = GoBox(shared)
+    gb.branch("feat/sum", {"svc/a/go.sum": "t\n"})
+    gb.gate("--no-publish")
+    res = gb.result()
+    t.eq("a module's go.sum: that module only, not widened", (res["changed_dirs"], res["widened"]), (["svc/a"], False))
+    gb.branch("feat/work", {"go.work": "w\n"})
+    gb.gate("--no-publish")
+    t.eq("go.work still widens", gb.result()["widened"], True)
+
+    # the shipped tracks
+    for track, widening, scope in (("ts", "pnpm-lock.yaml", "pnpm-importers"), ("go", "go.sum", "per-package"),
+                                   ("dotnet", "packages.lock.json", "per-package"), ("rust", None, "widen")):
+        cfg = json.loads((TOOLING / track / "scripts/delivery/gate.json").read_text(encoding="utf-8"))
+        t.eq("%s gate.json: lockfile_scope" % track, cfg.get("lockfile_scope"), scope)
+        t.eq("%s gate.json: inert_paths" % track, cfg.get("inert_paths"), ["docs/**"])
+        listed = [e for e in cfg["widen_on"] if "lock" in e or "go.sum" in e or e == "go.mod"]
+        t.eq("%s gate.json: lockfiles in widen_on" % track, listed, ["Cargo.lock"] if track == "rust" else [])
+
+
+class GraphBox(Box):
+    """A workspace with a dependency graph and end-to-end spec directories."""
+
+    INIT_FILES = {
+        **Box.INIT_FILES,
+        "packages/core/package.json": '{"name": "@x/core"}\n',
+        "packages/ui/package.json": '{"name": "@x/ui", "dependencies": {"@x/core": "workspace:*"}}\n',
+        "apps/web/package.json": '{"name": "@x/web", "dependencies": {"@x/ui": "workspace:*"}}\n',
+        "apps/admin/package.json": '{"name": "@x/admin"}\n',
+        "apps/api/package.json": '{"name": "@x/api"}\n',
+        "apps/web/e2e/web.spec.txt": "web\n",
+        "e2e/ui/ui.spec.txt": "ui\n",
+    }
+
+    @classmethod
+    def gate_json(cls) -> dict:
+        cfg = e2e_gate_json(with_map=False)
+        cfg["ui_paths"] = ["apps/web/", "apps/admin/", "packages/ui/", "shared-ui/"]
+        return cfg
+
+
+def sc_e2e_graph(t: T, shared: Path) -> None:
+    """DL4: without an e2e_map the specs come from the workspace dependency graph."""
+    box = GraphBox(shared)
+
+    def e2e(files: dict, *args: str, b: Box | None = None):
+        b = b or box
+        b.branch("feat/e", files)
+        b.clear_log()
+        r = b.gate("--no-publish", *args)
+        entry = {s["name"]: s for s in b.result()["steps"]}["e2e"]
+        return r, [x for x in b.ran() if x[0] == "e2e"], entry
+
+    r, ran, entry = e2e({"packages/ui/a.txt": "a\n"})
+    t.eq("a shared ui package: its own specs and its dependents' specs", ran,
+         [["e2e", "apps/web/e2e", "e2e/ui"]])
+    t.eq("... recorded as affected", (entry.get("selection"), entry.get("specs")),
+         ("affected", ["apps/web/e2e", "e2e/ui"]))
+
+    r, ran, entry = e2e({"apps/web/a.txt": "a\n"})
+    t.eq("an app's change: only that app's specs (the package it imports is not affected)", ran,
+         [["e2e", "apps/web/e2e"]])
+
+    r, ran, entry = e2e({"apps/admin/a.txt": "a\n"})
+    t.eq("a ui package with no specs and no dependents: the whole suite", (ran, entry.get("selection")),
+         ([["e2e"]], "full"))
+
+    r, ran, entry = e2e({"apps/web/a.txt": "a\n", "apps/admin/a.txt": "a\n"})
+    t.eq("one changed ui package uncovered: the whole suite, not just the covered one", ran, [["e2e"]])
+
+    r, ran, entry = e2e({"packages/ui/a.txt": "a\n", "package.json": "{\"x\": 1}\n"})
+    t.eq("a widened gate: run_full", ran, [["e2e", "FULL"]])
+
+    r, ran, entry = e2e({"packages/ui/a.txt": "a\n"}, "--full")
+    t.eq("--full: run_full", ran, [["e2e", "FULL"]])
+
+    # a shared package without specs of its own is covered by a dependent that has them
+    class NoUiSpecs(GraphBox):
+        INIT_FILES = {k: v for k, v in GraphBox.INIT_FILES.items() if not k.startswith("e2e/")}
+
+    nb = NoUiSpecs(shared)
+    r, ran, entry = e2e({"packages/ui/a.txt": "a\n"}, b=nb)
+    t.eq("... a shared package with no specs of its own runs its dependents' specs", ran,
+         [["e2e", "apps/web/e2e"]])
+
+    r, ran, entry = e2e({"apps/web/a.txt": "a\n", "shared-ui/x.txt": "x\n"})
+    t.eq("a ui file outside any package: the specs cannot be known, the whole suite", ran, [["e2e"]])
+
+    # the map wins when there is one
+    mapped = GraphBox(shared, gate_json={**GraphBox.gate_json(),
+                                         "e2e_map": {"specs": [{"spec": "e2e/only.spec.txt", "paths": ["packages/ui/"]}],
+                                                     "full_on": []}})
+    r, ran, entry = e2e({"packages/ui/a.txt": "a\n"}, b=mapped)
+    t.eq("e2e_map present: it wins over the graph", ran, [["e2e", "e2e/only.spec.txt"]])
+
+
+# --------------------------------------------------------------------------
 # mutation pass
 # --------------------------------------------------------------------------
 
@@ -2695,6 +2967,36 @@ MUTANTS = [
      'export PATH=\\"$bin_path:\\$PATH\\""', 'export PATH=\\"$bin_dir:\\$PATH\\""', "agent_setup"),
     ("agent_setup skips the checksum", "scripts/delivery/agent_setup.sh",
      "if got != want:", "if False:", "agent_setup"),
+    ('verify accepts any base move', 'scripts/delivery/gate_verify.py',
+     'if inert_ok:', 'if True:', 'inert_base'),
+    ('--strict-base is ignored', 'scripts/delivery/gate_verify.py',
+     'if not strict_base:', 'if True:', 'inert_base'),
+    ('the inert count is not reported', 'scripts/delivery/gate_verify.py',
+     'verdict["inert_commits"] = n_inert', 'verdict["inert_commits"] = 0', 'inert_base'),
+    ('an inert move needs no ancestor', 'scripts/delivery/delivery_common.py',
+     'if not inert_paths or not is_ancestor(old, new, cwd):', 'if not inert_paths:', 'inert_base'),
+    ('every path counts as inert', 'scripts/delivery/delivery_common.py',
+     'bad = [f for f in files if not any(widen_match(f, e) for e in inert_paths)]', 'bad = []', 'inert_base'),
+    ('docs is not inert by default', 'scripts/delivery/delivery_common.py',
+     'DEFAULT_INERT_PATHS = ["docs/**"]', 'DEFAULT_INERT_PATHS = []', 'inert_base'),
+    ('an unknown lockfile_scope is accepted', 'scripts/delivery/delivery_common.py',
+     'if scope not in LOCKFILE_SCOPES:', 'if False:', 'inert_base'),
+    ('a root importer change does not widen', 'scripts/delivery/delivery_common.py',
+     'if "." in changed:', 'if False:', 'lockfile_scope'),
+    ('a change outside the importers does not widen', 'scripts/delivery/delivery_common.py',
+     'if not changed and rest_a != rest_b:', 'if False:', 'lockfile_scope'),
+    ('a changed importer is not a changed package', 'scripts/delivery/delivery_common.py',
+     'changed = sorted(set(changed_package_dirs(files, packages)) | set(lock_dirs))', 'changed = changed_package_dirs(files, packages)', 'lockfile_scope'),
+    ('a lockfile importer is not a ui change', 'scripts/delivery/delivery_common.py',
+     'ui += [d for d in ctx.lock_dirs if is_ui_dir(d, ctx.cfg["ui_paths"])]', 'pass', 'lockfile_scope'),
+    ('the dependency graph picks no specs', 'scripts/delivery/delivery_common.py',
+     'elif not wide and "{e2e_specs}" in step["run"]:', 'elif False:', 'e2e_graph'),
+    ("dependents' specs are not run", 'scripts/delivery/delivery_common.py',
+     'for d in ctx.affected_dirs if is_ui_dir(d, ui_paths)}', 'for d in ctx.changed_dirs if is_ui_dir(d, ui_paths)}', 'e2e_graph'),
+    ('an uncovered ui package is left out', 'scripts/delivery/delivery_common.py',
+     'if not any(own.get(d) for d in users):', 'if False:', 'e2e_graph'),
+    ('a ui file outside any package is ignored', 'scripts/delivery/delivery_common.py',
+     'if pkg is None or not is_ui_dir(pkg, ui_paths):\n                return []', 'if pkg is None:\n                continue', 'e2e_graph'),
 ]
 
 SCENARIOS = {
@@ -2730,6 +3032,9 @@ SCENARIOS = {
     "agent_setup": sc_agent_setup,
     "assets": sc_assets,
     "packages": sc_packages,
+    "inert_base": sc_inert_base,
+    "lockfile_scope": sc_lockfile_scope,
+    "e2e_graph": sc_e2e_graph,
 }
 
 

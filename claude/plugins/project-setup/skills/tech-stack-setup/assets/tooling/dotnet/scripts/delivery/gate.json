@@ -13,10 +13,11 @@
     "nuget.config",
     ".editorconfig",
     "*.sln",
-    "*packages.lock.json",
     ".github/",
     "scripts/delivery/"
   ],
+  "lockfile_scope": "per-package",
+  "inert_paths": ["docs/**"],
   "ui_paths": [],
   "steps": [
     {

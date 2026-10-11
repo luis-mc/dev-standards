@@ -46,6 +46,13 @@ SETUP_STEP = "setup"  # reserved step name: the gate.json "setup" commands
 
 SCOPES = ("always", "changed", "changed+dependents", "ui-changed")
 PACKAGE_KINDS = ("pnpm-workspace", "go-modules", "cargo-workspace", "dotnet-sln")
+# How a lockfile change is scoped (gate.json "lockfile_scope"). "widen" (the default)
+# leaves lockfiles to "widen_on". "pnpm-importers" reads pnpm-lock.yaml's importers
+# section; "per-package" means each package keeps its own lockfile (go.mod/go.sum,
+# packages.lock.json), which belongs to the package directory it sits in.
+LOCKFILE_SCOPES = ("widen", "pnpm-importers", "per-package")
+DEFAULT_INERT_PATHS = ["docs/**"]  # gate.json "inert_paths" when absent
+PNPM_LOCK = "pnpm-lock.yaml"
 
 DELIVERY_DIR = ".delivery"
 LOG_DIR = ".delivery/logs"  # one <step>.log per step, combined stdout and stderr
@@ -266,6 +273,13 @@ def load_gate(root: Path) -> dict:
         raise DeliveryError("%s: 'default_branch' must be a non-empty string" % where)
     for key in ("setup", "widen_on", "ui_paths", "lockfiles"):
         cfg[key] = _str_list(cfg, key, where)
+    if "inert_paths" in cfg:
+        cfg["inert_paths"] = _str_list(cfg, "inert_paths", where)
+    else:
+        cfg["inert_paths"] = list(DEFAULT_INERT_PATHS)
+    scope = cfg.setdefault("lockfile_scope", "widen")
+    if scope not in LOCKFILE_SCOPES:
+        raise DeliveryError("%s: 'lockfile_scope' must be one of %s" % (where, ", ".join(LOCKFILE_SCOPES)))
     cfg.setdefault("specs", ["docs/specs/*.md"])
     cfg.setdefault("release_branches", ["*-integration", "release/*"])
     for key in ("specs", "release_branches"):
@@ -528,6 +542,81 @@ def widening_files(files: list[str], widen_on: list[str]) -> list[str]:
     return [f for f in files if any(widen_match(f, e) for e in widen_on)]
 
 
+def inert_only(old: str, new: str, inert_paths: list[str], cwd: Path | str | None = None) -> tuple[bool, int, list[str]]:
+    """(ok, commits, offending files): `old` is an ancestor of `new` and the
+    difference between them touches only inert paths (gate.json "inert_paths").
+    The net difference decides, so a merge commit counts by its diff and a change
+    made and reverted inside the range counts as nothing. `commits` is the number
+    of commits in old..new."""
+    if not inert_paths or not is_ancestor(old, new, cwd):
+        return False, 0, []
+    out = run_git(["diff", "--name-only", "--no-renames", "-z", old, new], cwd=cwd, check=False)
+    if out.returncode != 0:
+        return False, 0, []
+    files = sorted(f for f in out.stdout.split("\0") if f)
+    bad = [f for f in files if not any(widen_match(f, e) for e in inert_paths)]
+    n = run_git(["rev-list", "--count", "%s..%s" % (old, new)], cwd=cwd, check=False)
+    count = int(n.stdout.strip()) if n.returncode == 0 and n.stdout.strip().isdigit() else 0
+    return not bad, count, bad
+
+
+def _git_show(cwd: Path, rev_: str, path: str) -> str | None:
+    p = run_git(["show", "%s:%s" % (rev_, path)], cwd=cwd, check=False)
+    return p.stdout.replace("\r\n", "\n") if p.returncode == 0 else None
+
+
+def split_pnpm_lock(text: str) -> tuple[dict[str, str], str]:
+    """(importers, rest) of a pnpm-lock.yaml: each importer's block of text keyed by
+    its path, and everything outside the `importers:` section. Text only, no YAML
+    parser; a block that changed in any way differs."""
+    importers: dict[str, list[str]] = {}
+    rest: list[str] = []
+    in_imp = False
+    cur: str | None = None
+    for line in text.split("\n"):
+        if re.match(r"^\S", line):  # a top-level key
+            in_imp = line.startswith("importers:")
+            cur = None
+            if not in_imp:
+                rest.append(line)
+            continue
+        if not in_imp:
+            rest.append(line)
+            continue
+        m = re.match(r"^  (\S.*?):\s*$", line)
+        if m:
+            cur = _unquote(m.group(1))
+            importers[cur] = []
+        elif cur is not None and line.strip():
+            importers[cur].append(line)
+    return {k: "\n".join(v) for k, v in importers.items()}, "\n".join(r for r in rest if r.strip())
+
+
+def lockfile_effect(root: Path, cfg: dict, base: str, files: list[str], packages: list[str]) -> tuple[list[str], list[str]]:
+    """(packages whose dependencies a lockfile change touches, reasons to widen).
+    Only for a gate.json with "lockfile_scope" "pnpm-importers" and a pnpm-lock.yaml
+    in `files` (CONTRACT.md, DL4). The importers whose block differs between the
+    base and HEAD are the packages whose dependencies changed: they count as
+    changed, so their steps run scoped. The gate widens when the change cannot be
+    attributed to a package: the root importer, a change outside the importers
+    section, a lockfile missing on one side."""
+    if cfg.get("lockfile_scope") != "pnpm-importers" or PNPM_LOCK not in files:
+        return [], []
+    # An old gate.json that still lists the lockfile in widen_on widens through
+    # widening_files already; the result here only adds to it.
+    old, new = _git_show(root, base, PNPM_LOCK), _git_show(root, "HEAD", PNPM_LOCK)
+    if old is None or new is None:
+        return [], [PNPM_LOCK + " (added or removed)"]
+    a, rest_a = split_pnpm_lock(old)
+    b, rest_b = split_pnpm_lock(new)
+    changed = sorted(k for k in set(a) | set(b) if a.get(k) != b.get(k))
+    if "." in changed:
+        return [], [PNPM_LOCK + " (the root importer's dependencies changed)"]
+    if not changed and rest_a != rest_b:
+        return [], [PNPM_LOCK + " (resolutions changed outside any importer)"]
+    return [c for c in changed if c in packages], []
+
+
 # --------------------------------------------------------------------------
 # context and step planning (shared by branch_gate.py and fast_guards.py)
 # --------------------------------------------------------------------------
@@ -602,6 +691,7 @@ class Context:
     widened: bool
     widen_reasons: list[str] = field(default_factory=list)
     base_fetched: bool = False
+    lock_dirs: list[str] = field(default_factory=list)  # packages a lockfile change touches
 
 
 def build_context(root: Path, cfg: dict, base_ref: str | None, full: bool = False) -> Context:
@@ -623,9 +713,11 @@ def build_context(root: Path, cfg: dict, base_ref: str | None, full: bool = Fals
     files = changed_files(base, root)
     packages = discover_packages(root, cfg["packages"])
     reasons = widening_files(files, cfg["widen_on"])
+    lock_dirs, lock_reasons = lockfile_effect(root, cfg, base, files, packages)
+    reasons += lock_reasons
     if full:
         reasons = ["--full"] + reasons
-    changed = changed_package_dirs(files, packages)
+    changed = sorted(set(changed_package_dirs(files, packages)) | set(lock_dirs))
     return Context(
         root=root,
         cfg=cfg,
@@ -639,16 +731,60 @@ def build_context(root: Path, cfg: dict, base_ref: str | None, full: bool = Fals
         widened=bool(reasons),
         widen_reasons=reasons,
         base_fetched=fetched,
+        lock_dirs=lock_dirs,
     )
+
+
+def is_ui_dir(path: str, ui_paths: list[str]) -> bool:
+    return any((path + "/").startswith(p if p.endswith("/") else p + "/") for p in ui_paths)
+
+
+def e2e_spec_dir(root: Path, package: str) -> str | None:
+    """Where a ui package keeps its end-to-end specs when there is no e2e_map:
+    `<package>/e2e` or `e2e/<last segment of the package path>` (CONTRACT.md, DL4)."""
+    for cand in (package + "/e2e", "e2e/" + package.rsplit("/", 1)[-1]):
+        if (root / cand).is_dir():
+            return cand
+    return None
+
+
+def e2e_derived(ctx: Context) -> list[str]:
+    """The spec directories to run without an e2e_map (CONTRACT.md, DL4): those of
+    the ui packages the change affects (a changed package and every ui package that
+    depends on it, from the workspace graph). Empty when the specs cannot be
+    determined, which means the whole suite: not a pnpm workspace, a changed ui
+    file outside any package, or a changed ui package that neither has specs nor is
+    imported by a ui package that has."""
+    ui_paths = ctx.cfg["ui_paths"]
+    if ctx.cfg["packages"]["kind"] != "pnpm-workspace" or not ui_paths:
+        return []
+    changed_ui: set[str] = set()
+    for f in ctx.files:
+        if is_ui_dir(f, ui_paths):
+            pkg = package_of(f, ctx.packages)
+            if pkg is None or not is_ui_dir(pkg, ui_paths):
+                return []
+            changed_ui.add(pkg)
+    changed_ui |= {d for d in ctx.lock_dirs if is_ui_dir(d, ui_paths)}
+    if not changed_ui:
+        return []
+    own = {d: e2e_spec_dir(ctx.root, d) for d in ctx.affected_dirs if is_ui_dir(d, ui_paths)}
+    for pkg in changed_ui:
+        users = affected_package_dirs(ctx.root, ctx.cfg["packages"], ctx.packages, [pkg])
+        if not any(own.get(d) for d in users):
+            return []  # nothing that imports this package has specs, and it has none itself
+    return sorted({s for s in own.values() if s})
 
 
 def e2e_selection(ctx: Context) -> tuple[str, list[str]]:
     """('affected', specs) when gate.json's "e2e_map" covers every changed UI file
     and no changed file is in "full_on"; otherwise ('full', []) (CONTRACT.md, U1).
-    A widened gate, or no map, is always 'full'."""
+    A widened gate is always 'full'. Without a map the specs come from the
+    workspace dependency graph (e2e_derived)."""
     emap = ctx.cfg.get("e2e_map")
     if not emap or ctx.widened:
-        return "full", []
+        specs = e2e_derived(ctx) if not emap and not ctx.widened else []
+        return ("affected", specs) if specs else ("full", [])
     if any(widen_match(f, e) for f in ctx.files for e in emap["full_on"]):
         return "full", []
     specs: set[str] = set()
@@ -684,6 +820,7 @@ def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
             cmd, why = step["run"], "package changed"
     else:  # ui-changed
         ui = [f for f in ctx.files if any(f.startswith(p) for p in ctx.cfg["ui_paths"])]
+        ui += [d for d in ctx.lock_dirs if is_ui_dir(d, ctx.cfg["ui_paths"])]
         if not wide and not ui:
             return False, None, "no ui_paths change"
         cmd = (step.get("run_full") if wide else None) or step["run"]
@@ -694,6 +831,10 @@ def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
                 cmd, why, e2e_specs = step["run"], "affected specs", " ".join(specs)
             else:
                 cmd, why = step.get("run_full") or step["run"], "full suite (e2e_map)"
+        elif not wide and "{e2e_specs}" in step["run"]:
+            selection, specs = e2e_selection(ctx)  # no map: from the dependency graph
+            if selection == "affected":
+                cmd, why, e2e_specs = step["run"], "affected specs (dependency graph)", " ".join(specs)
     cmd = (
         cmd.replace("{e2e_specs}", e2e_specs)
         .replace("{base}", ctx.base)

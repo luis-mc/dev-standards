@@ -6,7 +6,6 @@
   "timeout_minutes": 30,
   "packages": {"kind": "pnpm-workspace"},
   "widen_on": [
-    "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
     "package.json",
     "turbo.jsonc",
@@ -16,6 +15,8 @@
     ".github/",
     "scripts/delivery/"
   ],
+  "lockfile_scope": "pnpm-importers",
+  "inert_paths": ["docs/**"],
   "ui_paths": ["apps/web/", "apps/admin/", "packages/ui/"],
   "steps": [
     {
