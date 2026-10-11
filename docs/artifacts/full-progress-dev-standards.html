@@ -563,7 +563,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-11T04:21+01:00",
+ "updated": "2026-10-11T04:22+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1316,6 +1316,16 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "changed": "2026-10-11T03:03+01:00"
   },
   {
+   "id": "DS42",
+   "owner": "project",
+   "app": "",
+   "status": "Waiting",
+   "item": "Remove four agent worktrees still in use",
+   "detail": "After 7.1.0 merged, cleanup.py removed every finished branch and three worktrees, but four agent worktrees refused (Permission denied): their agents still run background jobs inside them. Not killed (rule: stop only what you started). Re-run cleanup.py once those jobs end.",
+   "expected": "11 Oct ~05:00",
+   "changed": "2026-10-11T04:22+01:00"
+  },
+  {
    "id": "MP1",
    "owner": "models",
    "app": "luismc-project-setup",
@@ -1391,12 +1401,13 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T04:21+01:00">11 Oct 04:21</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T04:22+01:00">11 Oct 04:22</time> (Lisbon)</p>
 <p class="lede">All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class="task-id">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class="task-id">AR12</span>), and the secret-scan fixes (<span class="task-id">DS15</span>, <span class="task-id">AR19</span>, <span class="task-id">DS16</span>). Not released yet: the round toward STACKSPEC 7.0.0 (<span class="task-id">DS17</span> to <span class="task-id">DS21</span>) is built and joined, so those rows say Done. The tests on the joined branch are running; then one ready PR, its CI, and the merge, about 21:45. Each row turns Live only when the merge lands. <strong>Nothing needs you.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">81</div><div class="label">live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">81</div><div class="label">live</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">waiting</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
+<tr data-task="DS42"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DS42</span>Remove four agent worktrees still in use</td><td></td><td>After 7.1.0 merged, cleanup.py removed every finished branch and three worktrees, but four agent worktrees refused (Permission denied): their agents still run background jobs inside them. Not killed (rule: stop only what you started). Re-run cleanup.py once those jobs end.</td><td>11 Oct ~05:00</td></tr>
 <tr data-task="AR35"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR35</span>Re-render every page when the templates change</a></td><td><code>luismc-artifacts</code></td><td>Found after 1.3.0 merged: a stylesheet change left the Model and effort profiles page stale until a manual render, because status changes re-render only the pages a task appears on. check caught it (INV-3, R5.10). Fix: any command re-renders every artifact when the plugin&#x27;s templates or stylesheet differ from what the record was rendered with.</td><td>11 Oct</td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR36"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR36</span>Update the installed plugins to the 7.1.0 release</a></td><td><code>luismc-artifacts</code></td><td>Done at 04:22 (backup first): luismc-artifacts 1.3.0 and luismc-project-setup 13.1.0 installed for your user; sessions pick them up on restart.</td><td>11 Oct</td></tr>

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T04:21+01:00",
+  "updated": "2026-10-11T04:22+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -751,6 +751,16 @@
       "detail": "Released in luismc-artifacts 1.2.0 / luismc-project-setup 13.0.1 (#42, 5babc30, 03:02). Merged on green CI (spec-lint, secret-scan).",
       "expected": "11 Oct",
       "changed": "2026-10-11T03:03+01:00"
+    },
+    {
+      "id": "DS42",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Remove four agent worktrees still in use",
+      "detail": "After 7.1.0 merged, cleanup.py removed every finished branch and three worktrees, but four agent worktrees refused (Permission denied): their agents still run background jobs inside them. Not killed (rule: stop only what you started). Re-run cleanup.py once those jobs end.",
+      "expected": "11 Oct ~05:00",
+      "changed": "2026-10-11T04:22+01:00"
     },
     {
       "id": "MP1",
