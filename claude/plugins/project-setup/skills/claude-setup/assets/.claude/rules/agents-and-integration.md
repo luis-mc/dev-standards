@@ -6,7 +6,7 @@
 - Agents whose definition pins a model or effort keep it.
 - Trivial edits (a typo, a one-line value): do them directly.
 - Max 5 agents at once, and at most 3 when they run heavy test suites on the same machine. Split by file ownership; give overlapping UI work to one agent.
-- Agents test only what they touch: locally, the suites for the files they changed, without the mutation pass (`--no-mutants` where supported) and without local Docker unless a failure only reproduces there. No CI runs on agent branches; the ready PR's CI is the one full run. Only a change that behaves differently on Linux gets a branch run (`gh workflow run <workflow> --ref <branch>`, watched with `scripts/delivery/ci_watch.py`), of that area alone.
+- Agents test only what they touch: locally, the suites for the files they changed (the full suite at most once, and only when the change trips a full-run valve such as a lockfile or shared config), without the mutation pass (`--no-mutants` where supported) and without local Docker unless a failure only reproduces there. No CI runs on agent branches; the ready PR's CI is the one full run. Only a change that behaves differently on Linux gets a branch run (`gh workflow run <workflow> --ref <branch>`, watched with `scripts/delivery/ci_watch.py`), of that area alone.
 - Agents stop only processes and containers they started themselves; never kill by name or stop every container.
 - Agents write their report first, push after every step, and keep the report current.
 - Commit shared contracts to the integration branch before launching agents.
