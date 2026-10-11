@@ -2044,7 +2044,7 @@ def test_old_done_records_migrate_to_built(env):
     other = p.clone_again('old-done')
     rp, mp = other / 'docs' / 'artifacts' / 'registry.json', other / 'docs' / 'artifacts' / 'manifest.json'
     reg = json.loads(rp.read_text(encoding='utf-8'))
-    next(t for t in reg['tasks'] if t['id'] == 'AR2')['status'] = 'Done'
+    next(t for t in reg['tasks'] if t['id'] == 'AR2').update(status='Done', rides='DS1')
     rp.write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
     man = json.loads(mp.read_text(encoding='utf-8'))
     man['merged_status'] = 'Done'
@@ -2341,7 +2341,7 @@ def test_a_record_that_is_migrating_and_stuck_repairs_one_edit_at_a_time(env):
     hand_decisions_sections(p, ['artifacts', 'site'])
     other = p.clone_again('old-done')
     rp = other / 'docs' / 'artifacts' / 'registry.json'
-    edit_json(rp, lambda r: task(r, 'AR2').update(status='Done'))
+    edit_json(rp, lambda r: task(r, 'AR2').update(status='Done', rides='DS1'))
     git(other, 'commit', '-q', '-a', '-m', 'age the record to 1.0.0 statuses')
     git(other, 'push', '-q', 'origin', 'main')
     d = export(p, 'artifacts', 'mig1')
