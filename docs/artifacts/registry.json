@@ -696,11 +696,11 @@
       "id": "DS38",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "dev-standards adopts change notes",
-      "detail": "Your decision: this repo uses U7 too. Branches add notes under docs/specs/changes/; the release folds them into STACKSPEC/ARTIFACTSPEC versions and change entries. Starts once DS34's tooling is built.",
+      "detail": "Agent adopting change notes in dev-standards: a small config instead of a product gate.json, notes in docs/specs/changes/, plugin.json versions folded the same way, a spec-lint step that refuses version edits off release branches.",
       "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T01:24+01:00"
+      "changed": "2026-10-11T02:58+01:00"
     },
     {
       "id": "DS39",
