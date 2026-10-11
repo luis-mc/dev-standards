@@ -1198,11 +1198,11 @@
       "id": "TC7",
       "owner": "test-cost",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "PR CI: mutants per suite, delivery suites in parallel",
-      "detail": "767b853 on TC7-ci-parallel-suites; ci_areas tests pass, gate scenarios 711/0, shards 34/34/34/33 disjoint",
+      "detail": "Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1",
       "expected": "11 Oct",
-      "changed": "2026-10-11T17:46+01:00"
+      "changed": "2026-10-11T17:53+01:00"
     },
     {
       "id": "TC8",
