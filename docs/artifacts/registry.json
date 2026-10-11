@@ -1180,10 +1180,10 @@
       "app": "",
       "status": "Running",
       "item": "PR CI: mutants per suite, delivery suites in parallel",
-      "detail": "One Sonnet agent on TC7-ci-parallel-suites; rides the DL12 train",
-      "expected": "11 Oct ~18:05",
+      "detail": "Mutants per suite, delivery suites in parallel, gate mutants in 4 shards; one Sonnet agent",
+      "expected": "11 Oct ~18:20",
       "changed": "2026-10-11T17:29+01:00",
-      "expected_basis": "agent ~20 min, then the DL12 train's PR CI"
+      "expected_basis": "agent ~30 min, then the train's PR CI ~5 min"
     }
   ]
 }
