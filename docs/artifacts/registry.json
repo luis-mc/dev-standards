@@ -1350,12 +1350,13 @@
       "id": "TC9",
       "owner": "test-cost",
       "app": "luismc-project-setup",
-      "status": "Needs you",
+      "status": "Running",
       "item": "Light or heavy from measured suite times, not the session's guess",
-      "detail": "Proposal: 4 guards shipped by luismc-project-setup to every project. 1 measured suite times; 2 hook blocks a local full run of a heavy suite and a repeat full run of an already-tested tree; 3 pre-commit runs the change-notes check; 4 hook blocks a ready PR not from an *-integration branch. Plus join.py works without gate.json. Awaiting go-ahead",
-      "expected": "12 Oct",
-      "changed": "2026-10-11T23:06+01:00",
-      "expected_basis": "owner's go-ahead, then one agent ~40 min, one train"
+      "detail": "Owner chose (D15-D18): four blocking checks in luismc-project-setup, heavy = over 3 min locally, plus rule lines tagged check or advice with a test. Brief and plan by the session, then one agent",
+      "expected": "12 Oct ~00:15",
+      "changed": "2026-10-11T23:31+01:00",
+      "expected_basis": "agent ~40 min from 23:35",
+      "rides": "DS55"
     }
   ]
 }
