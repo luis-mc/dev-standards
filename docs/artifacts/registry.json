@@ -485,12 +485,12 @@
       "id": "DL9",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Waiting",
+      "status": "Running",
       "item": "Packaged-program smoke test (MUST, STACKSPEC 8.0.0)",
-      "detail": "Its agent starts when AR40's agent finishes (at most 3 heavy suites on this PC)",
+      "detail": "Agent on DL5-ci-packaging-log, in the TC6 release; it starts its test suites only while fewer than 3 others run",
       "expected": "11 Oct ~15:00",
-      "changed": "2026-10-11T12:05+01:00",
-      "expected_basis": "AR40 ~12:45, then ~1h"
+      "changed": "2026-10-11T12:08+01:00",
+      "expected_basis": "agent ~1h30 from 12:50, then the one join and CI"
     },
     {
       "id": "DL10",
