@@ -20,11 +20,12 @@ on:
     paths-ignore: ['apps/ios/**', 'apps/android/**', '**/*.md', 'docs/**']
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
   # Outdated PR runs are cancelled. Runs on main never are: every commit on main
   # must finish its run, because cancelling one can leave a merged commit
-  # unverified.
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  # unverified. With the repository variable CI_SERIAL=true (self-hosted or
+  # shared runners) ready-PR runs queue one at a time and are never cancelled.
+  group: ${{ vars.CI_SERIAL == 'true' && github.event_name == 'pull_request' && 'ci-ready-serial' || format('ci-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' && vars.CI_SERIAL != 'true' }}
 
 permissions:
   contents: read
@@ -41,7 +42,7 @@ jobs:
   decide:
     name: 'decide: skip a tree already tested'
     if: ${{ github.event_name == 'push' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     permissions:
       contents: read
       pull-requests: read
@@ -67,7 +68,7 @@ jobs:
     name: lint, vet, boundaries, unit + contract tests
     needs: decide
     if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     permissions:
       contents: read
     steps:
@@ -90,13 +91,18 @@ jobs:
       # log options scans the whole history, which `fetch-depth: 0` provides.
       - name: Secret scan (gitleaks, full history)
         run: |
-          version="$(python3 -c "import json; print(json.load(open('scripts/delivery/tools.json'))['gitleaks'])")"
+          read -r version sha <<< "$(python3 -c "import json; g = json.load(open('scripts/delivery/tools.json'))['gitleaks']; print(g if isinstance(g, str) else g['version'] + ' ' + g['sha256']['linux_x64'])")"
           archive="gitleaks_${version}_linux_x64.tar.gz"
           base="https://github.com/gitleaks/gitleaks/releases/download/v${version}"
           cd "$RUNNER_TEMP"
           curl -sSfL -O "${base}/${archive}"
-          curl -sSfL -O "${base}/gitleaks_${version}_checksums.txt"
-          grep " ${archive}\$" "gitleaks_${version}_checksums.txt" | sha256sum -c -
+          if [ -n "${sha:-}" ]; then
+            echo "${sha}  ${archive}" | sha256sum -c -
+          else
+            echo "::warning::scripts/delivery/tools.json uses the old form; checking against the release's checksums file. Run scripts/delivery/tools_pin.py gitleaks ${version}."
+            curl -sSfL -O "${base}/gitleaks_${version}_checksums.txt"
+            grep " ${archive}\$" "gitleaks_${version}_checksums.txt" | sha256sum -c -
+          fi
           tar -xzf "${archive}" gitleaks
           cd "$GITHUB_WORKSPACE"
           "$RUNNER_TEMP/gitleaks" git --config .gitleaks.toml --redact --no-banner
@@ -197,7 +203,7 @@ jobs:
     name: integration tests (ephemeral database)
     needs: decide
     if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     services:
       postgres:
         image: postgres:17

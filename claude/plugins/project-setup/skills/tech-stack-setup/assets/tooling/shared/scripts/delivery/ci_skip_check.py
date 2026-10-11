@@ -7,6 +7,18 @@ run of the same workflow passed, the suite has already vouched for exactly this
 content, and the jobs can be skipped. The comparison is by tree, so a merge
 that changed anything runs the suite, and failing to decide runs it too.
 
+One relaxation (DS39): commits that land on the default branch between the PR's
+last run and its merge (docs, Markdown, the record commits, mobile folders with
+their own workflows) make the trees differ. The suite is also skipped when every
+path that differs between the passed PR head and the pushed commit matches the
+workflow's own push `paths-ignore` list, read from the workflow file at
+GITHUB_WORKFLOW_REF by a minimal parser (no YAML library): "safe to skip" then
+means exactly "CI would not have run for these files". A `ci_skip_paths` list in
+scripts/delivery/gate.json replaces that list when present. Patterns follow
+GitHub's filter globs (`**`, `*`); a pattern with any other special character,
+a workflow without a push `paths-ignore`, or a list the parser cannot read means
+no skip.
+
 Reads GITHUB_SHA, GITHUB_REPOSITORY and GITHUB_WORKFLOW_REF (for example
 `owner/repo/.github/workflows/ci.yml@refs/heads/main`). Uses `gh api` to find
 the pull request(s) the commit belongs to and a successful `pull_request` run of
@@ -75,6 +87,136 @@ def tree_of(commit: str) -> str:
     return run(["git", "rev-parse", f"{commit}^{{tree}}"])
 
 
+def file_at(commit: str, path: str) -> str | None:
+    """The text of `path` in `commit`, or None when it is not there."""
+    cmd = [shutil.which("git") or "git", "show", f"{commit}:{path}"]
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                              timeout=60)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return proc.stdout if proc.returncode == 0 else None
+
+
+def _indent(line: str) -> int:
+    return len(line) - len(line.lstrip(" "))
+
+
+def _unquote(item: str) -> str:
+    item = item.strip()
+    if item[:1] in ("'", '"'):
+        end = item.find(item[0], 1)
+        if end < 0:
+            raise Undecided(f"unreadable paths-ignore entry {item!r}")
+        return item[1:end]
+    item = item.split(" #", 1)[0].strip()
+    if not item or item[0] in "*&!|>%@{[":  # YAML aliases, tags, block scalars, nested lists
+        raise Undecided(f"unreadable paths-ignore entry {item!r}")
+    return item
+
+
+def push_paths_ignore(text: str) -> list[str] | None:
+    """The `paths-ignore` list of the `push` trigger (block or one-line form), or None
+    when the workflow has no such list. Raises Undecided on anything it cannot read."""
+    lines = [ln.rstrip("\r") for ln in text.split("\n")]
+    useful = [(i, ln) for i, ln in enumerate(lines) if ln.strip() and not ln.lstrip().startswith("#")]
+    on_at = next((k for k, (_, ln) in enumerate(useful) if re.fullmatch(r"on:\s*(#.*)?", ln)), None)
+    if on_at is None:
+        raise Undecided("no top-level `on:` block")
+    block = []
+    for _, ln in useful[on_at + 1:]:
+        if _indent(ln) == 0:
+            break
+        block.append(ln)
+    push_at = next((k for k, ln in enumerate(block) if re.fullmatch(r"  push:\s*(#.*)?", ln)), None)
+    if push_at is None:
+        raise Undecided("no `push:` trigger under `on:`")
+    inner = []
+    for ln in block[push_at + 1:]:
+        if _indent(ln) <= 2:
+            break
+        inner.append(ln)
+    for k, ln in enumerate(inner):
+        m = re.fullmatch(r"    paths-ignore:\s*(.*?)\s*", ln)
+        if not m:
+            continue
+        rest = m.group(1)
+        if rest and not rest.startswith("#"):
+            flow = re.fullmatch(r"\[(.*)\]\s*(#.*)?", rest)
+            if not flow:
+                raise Undecided(f"unreadable paths-ignore: {rest!r}")
+            return [_unquote(x) for x in flow.group(1).split(",") if x.strip()]
+        items = []
+        for nxt in inner[k + 1:]:
+            if _indent(nxt) <= 4:
+                break
+            m2 = re.fullmatch(r"      - (.+)", nxt)
+            if not m2:
+                raise Undecided(f"unreadable paths-ignore entry {nxt.strip()!r}")
+            items.append(_unquote(m2.group(1)))
+        return items
+    return None
+
+
+def glob_regex(pattern: str) -> re.Pattern[str]:
+    """GitHub filter glob -> regex: `**` crosses `/`, `*` does not. Other special
+    characters are not modelled, so they are refused (the suite runs)."""
+    if re.search(r"[?\[\]+!]", pattern):
+        raise Undecided(f"unsupported glob character in {pattern!r}")
+    out, i = "", 0
+    while i < len(pattern):
+        if pattern.startswith("**/", i):
+            out += "(?:.*/)?"
+            i += 3
+        elif pattern.startswith("**", i):
+            out += ".*"
+            i += 2
+        elif pattern[i] == "*":
+            out += "[^/]*"
+            i += 1
+        else:
+            out += re.escape(pattern[i])
+            i += 1
+    return re.compile(out)
+
+
+def ignored_patterns(sha: str, wf_path: str) -> list[str]:
+    """The paths whose change starts no run: gate.json `ci_skip_paths`, else the workflow's
+    push `paths-ignore`."""
+    gate = file_at(sha, "scripts/delivery/gate.json")
+    if gate is not None:
+        try:
+            override = json.loads(gate).get("ci_skip_paths")
+        except (ValueError, AttributeError) as exc:
+            raise Undecided(f"scripts/delivery/gate.json is not readable: {exc}") from exc
+        if override is not None:
+            if not isinstance(override, list) or not all(isinstance(x, str) for x in override):
+                raise Undecided("ci_skip_paths must be a list of strings")
+            return override
+    text = file_at(sha, wf_path)
+    if text is None:
+        raise Undecided(f"{wf_path} is not in {sha[:10]}")
+    found = push_paths_ignore(text)
+    if not found:
+        raise Undecided(f"{wf_path} has no push paths-ignore list")
+    return found
+
+
+def only_ignored_changes(head: str, sha: str, wf_path: str) -> list[str]:
+    """The changed paths (all ignored) between `head` and `sha`; Undecided when any
+    changed path would have started a run."""
+    patterns = ignored_patterns(sha, wf_path)
+    regexes = [glob_regex(p) for p in patterns]
+    changed = [p for p in run(["git", "diff", "--name-only", "--no-renames", head, sha]).splitlines() if p]
+    if not changed:
+        return []
+    live = [p for p in changed if not any(r.fullmatch(p) for r in regexes)]
+    if live:
+        shown = ", ".join(live[:3]) + (" ..." if len(live) > 3 else "")
+        raise Undecided(f"changed outside paths-ignore: {shown}")
+    return changed
+
+
 def ensure_commit(sha: str, number: object) -> None:
     probe = ["git", "cat-file", "-e", f"{sha}^{{commit}}"]
     if subprocess.run(probe, capture_output=True).returncode == 0:
@@ -131,11 +273,19 @@ def decide(env: dict[str, str]) -> tuple[bool, str]:
             continue
         ensure_commit(head, number)
         head_tree = tree_of(head)
+        ignored: list[str] = []
         if head_tree != sha_tree:
-            notes.append(f"#{number}: tree of {head[:10]} differs from tree of {sha[:10]}")
-            continue
+            try:
+                ignored = only_ignored_changes(head, sha, wf_path)
+            except Undecided as exc:
+                notes.append(f"#{number}: tree of {head[:10]} differs from tree of {sha[:10]} ({exc})")
+                continue
         for cand in candidates:
             if run_really_passed(repo, cand.get("id")):
+                if ignored:
+                    shown = ", ".join(ignored[:5]) + (" ..." if len(ignored) > 5 else "")
+                    return True, (f"{wf_path} passed in run {cand.get('id')} on #{number} "
+                                  f"({head[:10]}); {sha[:10]} differs only in ignored paths: {shown}")
                 return True, (f"tree {sha_tree[:10]} already passed {wf_path} in run "
                               f"{cand.get('id')} on #{number} ({head[:10]})")
         notes.append(f"#{number}: the matching run had no job that passed")

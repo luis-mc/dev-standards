@@ -22,6 +22,12 @@ const SCANNED = new Set([
   '.go', '.rs', '.cs', '.csproj', '.props', '.targets', '.sln',
 ]);
 
+const SKIP_DIRS = new Set(['.git', 'node_modules', '.delivery']);
+
+// Paths are matched and reported with '/' on every OS: the listing prints them
+// that way, but a path that went through Windows tooling may carry '\'.
+const toSlash = (path: string): string => path.replaceAll('\\', '/');
+
 // Built from pieces so this file does not contain a marker line itself.
 const START = new RegExp('^' + '<'.repeat(7) + '( |$)');
 const SEPARATOR = new RegExp('^' + '='.repeat(7) + '$');
@@ -30,9 +36,10 @@ const END = new RegExp('^' + '>'.repeat(7) + '( |$)');
 // Listed once per run: both tests below use it, and `git` is the slow part to start.
 // Another checkout nested in this one (an agent worktree) shows up in the listing as
 // one `dir/` entry, which has no scanned extension, so its files are never read.
-let listed: string[] | undefined;
+let listed: { root: string; files: string[] } | undefined;
 
-function repositoryFiles(): string[] {
+/** The scanned files as repository-relative paths with '/' separators. */
+function repositoryFiles(): { root: string; files: string[] } {
   if (listed) return listed;
   const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
   const out = execFileSync(
@@ -40,24 +47,31 @@ function repositoryFiles(): string[] {
     ['ls-files', '-z', '--cached', '--others', '--exclude-standard'],
     { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
   );
-  listed = out
+  const files = out
     .split('\0')
-    .filter((f) => f !== '' && SCANNED.has(extname(f).toLowerCase()))
-    .map((f) => join(root, f));
+    .map(toSlash)
+    .filter(
+      (f) =>
+        f !== '' &&
+        SCANNED.has(extname(f).toLowerCase()) &&
+        !f.split('/').some((segment) => SKIP_DIRS.has(segment)),
+    );
+  listed = { root, files };
   return listed;
 }
 
 describe('guard: no merge-conflict markers', () => {
   it('finds files to scan (an empty scan would pass for the wrong reason)', () => {
-    expect(repositoryFiles().length).toBeGreaterThan(0);
+    expect(repositoryFiles().files.length).toBeGreaterThan(0);
   });
 
   it('has no conflict marker line in any source file', () => {
     const hits: string[] = [];
-    for (const file of repositoryFiles()) {
+    const { root, files } = repositoryFiles();
+    for (const file of files) {
       let text: string;
       try {
-        text = readFileSync(file, 'utf8');
+        text = readFileSync(join(root, file), 'utf8');
       } catch {
         continue; // deleted in the working tree but still listed
       }

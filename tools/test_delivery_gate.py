@@ -1840,9 +1840,14 @@ def sc_agent_setup(t: T, shared: Path) -> None:
     syntax = run([bash, "-n", script.as_posix()])
     t.eq("agent_setup.sh parses", syntax.code, 0)
 
-    version = json.loads((shared / "scripts/delivery/tools.json").read_text())["gitleaks"]
+    pin = json.loads((shared / "scripts/delivery/tools.json").read_text())["gitleaks"]
+    version = pin if isinstance(pin, str) else pin["version"]
     box = Box(shared)
     sh = box.work / "scripts/delivery/agent_setup.sh"
+    # This scenario drives the old tools.json form ({"gitleaks": "x.y.z"}): the archive is
+    # checked against the release's checksums file. The pinned form (SHA-256 in tools.json)
+    # is covered in test_delivery_ci.py.
+    (box.work / "scripts/delivery/tools.json").write_text(json.dumps({"gitleaks": version}) + "\n")
     path = Path(PY).parent.as_posix() + os.pathsep + os.environ.get("PATH", "")
     base_env = {"PATH": path}
 
@@ -1890,6 +1895,7 @@ def sc_agent_setup(t: T, shared: Path) -> None:
         env = {**base_env, "DELIVERY_BIN": bin_dir.as_posix(), "DELIVERY_GITLEAKS_BASE_URL": base_url}
         r = run([bash, sh.as_posix()], cwd=box.work, extra_env=env)
         t.eq("install with a matching checksum: exit 0", r.code, 0)
+        t.has("... the old tools.json form warns", r.err, "old form")
         t.check("... gitleaks is in DELIVERY_BIN", (bin_dir / exe).exists(), r.text)
         t.eq("... gate.json setup ran", [x[0] for x in box.ran(True)], ["setup"])
         t.eq("... hooks path set", box.g("config", "--get", "core.hooksPath"), ".githooks")
@@ -1965,6 +1971,12 @@ def unfrozen_setup(cmds: list[str]) -> list[str]:
 def sc_assets(t: T, shared: Path) -> None:
     tools = json.loads((shared / "scripts/delivery/tools.json").read_text())
     ver = tools.get("gitleaks", "")
+    if isinstance(ver, dict):  # the pinned form: version plus a SHA-256 per platform
+        pins = ver.get("sha256", {})
+        t.eq("tools.json pins the five platforms", sorted(pins),
+             ["darwin_arm64", "darwin_x64", "linux_arm64", "linux_x64", "windows_x64"])
+        t.check("... each pin is a SHA-256", all(re.fullmatch(r"[0-9a-f]{64}", v) for v in pins.values()), str(pins))
+        ver = ver.get("version", "")
     t.check("tools.json pins gitleaks to an exact x.y.z", re.fullmatch(r"\d+\.\d+\.\d+", ver) is not None, ver)
     parts = tuple(int(x) for x in ver.split(".")) if re.fullmatch(r"\d+\.\d+\.\d+", ver) else (0, 0, 0)
     t.check("... new enough for the `git` subcommand (8.19+)", parts >= (8, 19, 0), ver)
