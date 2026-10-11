@@ -8,7 +8,7 @@ effort: medium
 # Full-progress artifact — new
 
 Creates the project's one full-progress artifact from the record
-(`docs/artifacts/`, ARTIFACTSPEC 1.1.0). The script is the only writer of
+(`docs/artifacts/`, ARTIFACTSPEC 1.2.0). The script is the only writer of
 `manifest.json` and `registry.json`; never edit either by hand.
 
 Every command below is
@@ -118,3 +118,11 @@ Once, at the end of the turn, never mid-turn. Repeat until `pending` exits 0:
    copy.
 6. If there is no Artifact tool, say what is still unpublished and stop; the
    end-of-turn hook then reminds you.
+
+## Old claude.ai pages
+
+`pending --json` has a `retired` array: old claude.ai pages of feature
+artifacts. They do not change `pending`'s exit code and are never published.
+Ask the owner to confirm, delete each confirmed page with the Artifact tool
+(`action: "delete"`), then run `mark-deleted <key> --url <URL>` (`--gone` when
+the page no longer exists). Never delete without the owner's confirmation.

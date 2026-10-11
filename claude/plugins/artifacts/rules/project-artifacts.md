@@ -11,3 +11,4 @@
 - Built means the work is finished but not released; release work still to come (join, CI, release) is its own task, Running or To do.
 - Before ending a turn that leaves work running in the background, its task is Running.
 - When the owner chooses between options (designs, approaches, names), record every option offered and the one chosen in the feature's `decisions.json`, in the same turn; an option the owner has not chosen yet is an open decision.
+- Old claude.ai pages of feature artifacts are deleted only with the owner's confirmation: when pending lists retired pages, ask the owner, delete each confirmed one with the Artifact tool, then run mark-deleted.

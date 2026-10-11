@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the three luismc-artifacts hooks (ARTIFACTSPEC 1.1.0 section 8, R13.2).
+"""Tests for the three luismc-artifacts hooks (ARTIFACTSPEC 1.2.0 section 8, R13.2).
 
 Feeds sample hook input to each hook in throwaway git repos (with a bare remote)
 and asserts the queue, the exit code and the output, including R8.2, R8.4, R8.5,
@@ -347,7 +347,7 @@ def after_background_agent_and_bash_mark_the_session():
                        ('Bash', {'command': 'sleep 600', 'run_in_background': True})):
         work = make_repo(branch='main')       # no task ID in the branch is needed
         rc, out, err, _ = background(work, tool, **args)
-        assert rc == 0 and out == '', (tool, rc, out, err)
+        assert rc == 0 and '"decision"' not in out, (tool, rc, out, err)     # the first call also delivers the rule (R8.12)
         m = marker(work)
         assert m and m['session_id'] == 's1' and m['started'], (tool, stop_state(work))
         assert queue_of(work) == [], 'the marker is not a queued status change'
@@ -434,9 +434,10 @@ def stub_dir(work):
     return d
 
 
-def set_pending(work, artifacts=(), queue=(), mode=''):
+def set_pending(work, artifacts=(), queue=(), mode='', retired=()):
     d = stub_dir(work)
-    write(os.path.join(d, 'pending.json'), json.dumps({'artifacts': list(artifacts), 'queue': list(queue)}))
+    write(os.path.join(d, 'pending.json'), json.dumps({'artifacts': list(artifacts), 'queue': list(queue),
+                                                       'retired': list(retired)}))
     write(os.path.join(d, 'mode'), mode)
     return {'CLAUDE_ARTIFACTS_SCRIPT': os.path.join(d, 'project_artifacts.py')}
 
@@ -462,7 +463,14 @@ def stop(work, env, session='s1', extra=None):
 
 
 def stop_state(work):
-    return read_json(os.path.join(work, '.claude', 'artifacts-stop-state.json'), {})
+    """The per-session stop entries; the delivered-rule entries (`rule:<session>`, R8.12) are rule_state."""
+    state = read_json(os.path.join(work, '.claude', 'artifacts-stop-state.json'), {})
+    return {k: v for k, v in state.items() if not k.startswith('rule:')}
+
+
+def rule_state(work):
+    state = read_json(os.path.join(work, '.claude', 'artifacts-stop-state.json'), {})
+    return {k: v for k, v in state.items() if k.startswith('rule:')}
 
 
 def parse_stop(out):
@@ -995,6 +1003,242 @@ def rule_file_carries_the_activity_rules():
                  'Before ending a turn that leaves work running in the background, its task is Running'):
         assert frag in joined, frag
     assert all(len(ln) < 260 for ln in lines), 'one short imperative line per rule'
+
+
+# --- upgrading a project: the rule, migration, old pages (R8.12 to R8.15) -------------------
+
+RULE = open(os.path.join(PLUGIN, 'rules', 'project-artifacts.md'), encoding='utf-8').read().strip()
+UPDATED = 'luismc-artifacts was updated; this rule replaces earlier instructions about publishing feature artifacts.'
+OLD_URL_A = 'https://claude.ai/artifact/old-a'
+OLD_URL_B = 'https://claude.ai/artifact/old-b'
+
+
+def feature(key='demo', **extra):
+    e = {'key': key, 'title': 'Feature: ' + key.title(), 'file': 'feature-%s.html' % key, 'prefix': 'DE', 'apps': []}
+    e.update(extra)
+    return e
+
+
+def set_record(work, manifest=None, registry=None, files=None, message='record change'):
+    """Change the committed record (as an older plugin, or the owner, would) and push it to main."""
+    mp = os.path.join(work, 'docs', 'artifacts', 'manifest.json')
+    m = read_json(mp)
+    m.update(manifest or {})
+    write(mp, json.dumps(m, indent=2))
+    if registry is not None:
+        write(os.path.join(work, 'docs', 'artifacts', 'registry.json'), json.dumps(registry))
+    for name, text in (files or {}).items():
+        write(os.path.join(work, 'docs', 'artifacts', name), text)
+    sh(['add', '-A'], work)
+    sh(['commit', '-q', '-m', message], work)
+    sh(['push', '-q', 'origin', 'HEAD:main'], work)
+
+
+DOC = '<!doctype html>\n<title>Feature: Demo</title>\n'
+
+
+def context_of(out):
+    return json.loads(out)['hookSpecificOutput']['additionalContext']
+
+
+@test
+def after_delivers_the_rule_once_per_session_and_again_when_it_changes():
+    work = make_repo()
+    rc, out, err, _ = after(work, 'git status')
+    hso = json.loads(out)['hookSpecificOutput']
+    assert rc == 0 and hso['hookEventName'] == 'PostToolUse', (rc, out, err)
+    assert RULE in hso['additionalContext'] and UPDATED in hso['additionalContext'], hso
+    digest = rule_state(work)['rule:s1']['rule']
+    assert digest and '"decision"' not in out
+    # once per session: the same session, any later call
+    assert after(work, 'git status')[1] == '' and after(work, 'gh pr ready')[1] == ''
+    assert background(work, 'Agent', prompt='x')[1] == ''
+    # another session gets it
+    d2 = bash_input(work, 'ls')
+    d2['session_id'] = 's2'
+    assert RULE in context_of(run_hook(AFTER, d2, work)[1])
+    # after the rule text changes (the stored hash is of an older text) it is delivered again, once
+    state = read_json(os.path.join(work, '.claude', 'artifacts-stop-state.json'))
+    state['rule:s1']['rule'] = 'an-older-rule-hash'
+    write(os.path.join(work, '.claude', 'artifacts-stop-state.json'), json.dumps(state))
+    assert RULE in context_of(after(work, 'git status')[1])
+    assert rule_state(work)['rule:s1']['rule'] == digest and after(work, 'git status')[1] == ''
+    # an agent call delivers it too, a failed Bash call as the failure event
+    fresh = make_repo()
+    assert RULE in context_of(background(fresh, 'Agent', prompt='x')[1])
+    failing = make_repo()
+    out = after(failing, 'false', FAIL1)[1]
+    assert json.loads(out)['hookSpecificOutput']['hookEventName'] == 'PostToolUseFailure', out
+    # it still queues what it queued, and never fails
+    q = make_repo()
+    rc, out, _e, _ = after(q, 'gh pr ready')
+    assert rc == 0 and statuses(q) == [('AR5', 'Waiting')] and RULE in context_of(out)
+
+
+@test
+def after_delivers_nothing_without_a_manifest_or_when_off_and_stays_fast():
+    bare = make_repo(manifest=False)
+    rc, out, _e, _ = after(bare, 'git status')
+    assert rc == 0 and out == '' and rule_state(bare) == {}, (rc, out)
+    work = make_repo()
+    rc, out, _e, _ = after(work, 'git status', env={'CLAUDE_ARTIFACTS_HOOKS': 'off'})
+    assert rc == 0 and out == '' and rule_state(work) == {}
+    assert min(after(work, 'git status')[3] for _ in range(3)) < 2.0
+
+
+@test
+def start_records_the_delivery_so_after_stays_quiet():
+    work = make_repo(branch='main')
+    rc, out, _e, _ = start(work, gh_env(work, prs=[]))
+    assert rc == 0 and RULE in context_of(out) and UPDATED not in context_of(out)
+    assert rule_state(work)['rule:s1']['rule']
+    assert after(work, 'git status')[1] == ''                 # this session has the rule
+    d2 = bash_input(work, 'git status')
+    d2['session_id'] = 's2'
+    assert RULE in context_of(run_hook(AFTER, d2, work)[1])  # another session does not
+
+
+@test
+def start_context_names_an_older_rule_copy():
+    work = make_repo(branch='main')
+    assert 'older copy' not in context_of(start(work, gh_env(work, prs=[]))[1])
+    write(os.path.join(work, '.claude', 'rules', 'project-artifacts.md'), '- Publish what `pending` lists.\n')
+    ctx = context_of(start(work, gh_env(work, prs=[]))[1])
+    assert ('If `.claude/rules/project-artifacts.md` exists in this repo, it is an older copy; '
+            'this rule replaces it') in ctx, ctx
+    other = make_repo(branch='main')
+    write(os.path.join(other, '.claude', 'rules', 'project-artifacts.md'), 'x\n')
+    assert 'older copy' in context_of(after(other, 'ls')[1])
+
+
+def retired_record(work, history=False):
+    """A record with two retired pages: listed in the manifest, or only left in the history of manifest.json."""
+    if history:
+        set_record(work, {'feature_artifacts': [feature('demo', url=OLD_URL_A), feature('site', url=OLD_URL_B)]})
+        set_record(work, {'feature_artifacts': [feature('demo'), feature('site')]}, files={
+            'feature-demo.html': DOC, 'feature-site.html': DOC})
+    else:
+        set_record(work, {'feature_artifacts': [feature('demo'), feature('site')], 'retired': [
+            {'key': 'demo', 'title': 'Feature: Demo', 'url': OLD_URL_A, 'retired': '2026-10-11T10:00:00+00:00'},
+            {'key': 'site', 'title': 'Feature: Site', 'url': OLD_URL_B, 'retired': '2026-10-11T10:00:00+00:00'}]},
+            files={'feature-demo.html': DOC, 'feature-site.html': DOC})
+
+
+@test
+def start_context_offers_deleting_retired_pages():
+    for history in (False, True):
+        work = make_repo(branch='main')
+        retired_record(work, history)
+        rc, out, err, _ = start(work, gh_env(work, prs=[]))
+        ctx = context_of(out)
+        assert rc == 0 and RULE in ctx, (rc, out, err)
+        assert OLD_URL_A in ctx and OLD_URL_B in ctx and 'Feature: Demo' in ctx, ctx
+        assert 'offer the owner to delete them' in ctx and 'start of the session' in ctx, ctx
+        assert 'confirm' in ctx and 'Artifact tool' in ctx and 'action: delete' in ctx and 'mark-deleted' in ctx, ctx
+        # the after-command hook says it too, to a session that did not get the start context
+        assert OLD_URL_A in context_of(after(make_repo_like(work), 'ls')[1])
+    # a page recorded as deleted is not listed, however the history shows it
+    work = make_repo(branch='main')
+    retired_record(work, history=True)
+    set_record(work, {'deleted': [{'key': 'demo', 'url': OLD_URL_A, 'deleted': '2026-10-11T10:00:00+00:00'}]})
+    ctx = context_of(start(work, gh_env(work, prs=[]))[1])
+    assert OLD_URL_B in ctx and OLD_URL_A not in ctx, ctx
+    # Full Progress's url is never offered
+    fp = make_repo(branch='main')
+    set_record(fp, {'full_progress_artifact': {'key': 'full-progress', 'url': 'https://claude.ai/artifact/fp'}})
+    set_record(fp, {'full_progress_artifact': {'key': 'full-progress', 'url': 'https://claude.ai/artifact/fp2'}})
+    ctx = context_of(start(fp, gh_env(fp, prs=[]))[1])
+    assert 'claude.ai/artifact/fp' not in ctx and 'offer the owner' not in ctx, ctx
+
+
+@test
+def stop_tells_retired_pages_once_and_does_not_block():
+    work = make_repo()
+    retired = [{'key': 'demo', 'title': 'Feature: Demo', 'url': OLD_URL_A, 'retired': '2026-10-11T10:00:00+00:00'}]
+    env = set_pending(work, retired=retired)
+    rc, out, err, _ = stop(work, env)
+    res = json.loads(out)
+    assert rc == 0 and 'decision' not in res, (rc, out, err)
+    assert OLD_URL_A in res['systemMessage'] and 'owner' in res['systemMessage'] and 'mark-deleted' in res['systemMessage']
+    assert stop_state(work) == {}
+    assert stop(work, env)[1].strip() == ''                                   # once per session
+    assert OLD_URL_A in json.loads(stop(work, env, session='s2')[1])['systemMessage']
+    # beside a pending Full Progress it is a message on the block, and does not count towards the give-up
+    work = make_repo()
+    env = set_pending(work, artifacts=[art('demo')], retired=retired)
+    res = parse_stop(stop(work, env)[1])
+    assert res['decision'] == 'block' and OLD_URL_A in res['systemMessage'] and OLD_URL_A not in res['reason'], res
+    assert 'systemMessage' not in parse_stop(stop(work, env)[1])
+
+
+@test
+def stop_blocks_while_the_record_needs_migrating():
+    # a feature entry that still holds a url
+    work = make_repo()
+    set_record(work, {'feature_artifacts': [feature('demo', url=OLD_URL_A)]}, files={'feature-demo.html': DOC})
+    env = set_pending(work)
+    rc, out, err, _ = stop(work, env)
+    res = parse_stop(out)
+    assert rc == 0 and res.get('decision') == 'block', (rc, out, err)
+    assert 'older format' in res['reason'] and 'claude.ai url' in res['reason'], res
+    assert 'project_artifacts.py' in res['reason'] and ' render' in res['reason'], res
+    assert stop_state(work)['s1']['blocks'] == 1
+    # the retired status Done
+    done = make_repo()
+    set_record(done, {'merged_status': 'Done'})
+    assert 'Done' in parse_stop(stop(done, set_pending(done))[1])['reason']
+    # a feature file in the old fragment form
+    frag = make_repo()
+    set_record(frag, {'feature_artifacts': [feature('demo')]}, files={'feature-demo.html': '<title>Feature: Demo</title>\n'})
+    assert 'fragment' in parse_stop(stop(frag, set_pending(frag))[1])['reason']
+    # migrated: a complete document, no url, no Done: nothing to ask
+    ok = make_repo()
+    set_record(ok, {'feature_artifacts': [feature('demo')]}, files={'feature-demo.html': DOC})
+    assert stop(ok, set_pending(ok))[1].strip() == ''
+    # the migration is the script's: the hook wrote nothing but the stop state (INV-4 checks the record)
+    assert read_json(os.path.join(work, 'docs', 'artifacts', 'manifest.json'))['feature_artifacts'][0]['url'] == OLD_URL_A
+
+
+@test
+def stop_migration_gives_up_after_three_blocks():
+    work = make_repo()
+    set_record(work, {'feature_artifacts': [feature('demo', url=OLD_URL_A)]}, files={'feature-demo.html': DOC})
+    env = set_pending(work)
+    for n in (1, 2, 3):
+        assert parse_stop(stop(work, env)[1]).get('decision') == 'block'
+        assert stop_state(work)['s1']['blocks'] == n, stop_state(work)
+    res = parse_stop(stop(work, env)[1])
+    assert 'decision' not in res and 'letting the turn end after 3 blocks' in res['systemMessage'], res
+    assert 'migrating' in res['systemMessage']
+
+
+@test
+def contexts_tell_the_session_to_migrate_an_older_record():
+    work = make_repo(branch='main')
+    set_record(work, {'feature_artifacts': [feature('demo', url=OLD_URL_A)]}, files={'feature-demo.html': DOC})
+    for out in (start(work, gh_env(work, prs=[]))[1], after(make_repo_like(work), 'ls')[1]):
+        ctx = context_of(out)
+        assert 'older format' in ctx and 'render' in ctx and 'now to migrate the record' in ctx, ctx
+    clean = make_repo(branch='main')
+    assert 'migrate' not in context_of(start(clean, gh_env(clean, prs=[]))[1])
+
+
+def make_repo_like(work):
+    """The same work directory with a session that has not had the rule: after reads the record from `work`."""
+    state = os.path.join(work, '.claude', 'artifacts-stop-state.json')
+    if os.path.exists(state):
+        os.remove(state)
+    return work
+
+
+@test
+def rule_file_carries_the_retired_pages_rule():
+    """R4.23, R10.3: old claude.ai pages are deleted only with the owner's confirmation."""
+    lines = [ln[2:] for ln in RULE.splitlines() if ln.startswith('- ')]
+    want = ("Old claude.ai pages of feature artifacts are deleted only with the owner's confirmation: when pending "
+            "lists retired pages, ask the owner, delete each confirmed one with the Artifact tool, then run "
+            "mark-deleted.")
+    assert want in lines, lines
 
 
 # --- registration and invariants ------------------------------------------------------

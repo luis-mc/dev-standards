@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """End-of-turn hook (Stop).
 
-ARTIFACTSPEC 1.1.0 section 8.2. Lets the turn end only when the queue is empty and
+ARTIFACTSPEC 1.2.0 section 8.2. Lets the turn end only when the queue is empty and
 `project_artifacts.py pending` lists nothing; otherwise blocks the stop with
 {"decision": "block", "reason": ...} naming each item and the commands to run
 (R8.3). It acts on Full Progress only, the one published artifact: a pending entry
@@ -27,40 +27,39 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from hook_after_command import (STATE_NAME, command_for, hook_root, hooks_off,  # noqa: E402
-                                load_manifest, origin_record_file, parse_json, read_input,
-                                read_state, run, warn, write_state)
+                                load_manifest, migration_reasons_now, origin_record_file,
+                                parse_json, read_input, read_state, run, script_path, warn,
+                                write_state)
 
 BLOCK_LIMIT = 3          # R8.4; the ceiling in section 12 is 5, it may only be lowered
 PENDING_TIMEOUT = 90
 ACTIVE_STATUSES = ('Running', 'Waiting', 'Needs you')   # R8.10
 BACKGROUND_NOTE = 'work started in the background with no Running task'
-
-
-def script_path():
-    return os.environ.get('CLAUDE_ARTIFACTS_SCRIPT') or os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), 'project_artifacts.py')
+MIGRATION_NOTE = 'the artifact record needs migrating (run render)'
 
 
 def pending_items(root, script):
-    """(artifacts, queue) from `pending --json`; None when it cannot be read."""
+    """(artifacts, queue, retired) from `pending --json`; None when it cannot be read. Retired pages never
+    change pending's exit code, so they are read from its output at exit 0 as well (R8.13)."""
     r = run(command_for(script) + ['pending', '--json'], root, PENDING_TIMEOUT)
     if r is None:
         warn('pending could not run (%s)' % script)
         return None
     rc, out, err = r
-    if rc == 0:
-        return [], []
-    if rc != 1:
+    if rc not in (0, 1):
         warn('pending failed (exit %d)' % rc)
         return None
     try:
         data = json.loads(out)
         artifacts = [a for a in data.get('artifacts', []) if isinstance(a, dict)]
         queue = [e for e in data.get('queue', []) if isinstance(e, dict)]
-    except (ValueError, AttributeError):
+        retired = [e for e in data.get('retired', []) if isinstance(e, dict) and e.get('url')]
+    except (ValueError, AttributeError, TypeError):
+        if rc == 0:
+            return [], [], []
         warn('pending printed output that is not JSON (exit 1)')
         return None
-    return artifacts, queue
+    return artifacts, queue, retired
 
 
 def only_full_progress(artifacts):
@@ -113,21 +112,53 @@ def has_active_task(root, manifest):
     return any(t.get('status') in ACTIVE_STATUSES for t in tasks)
 
 
-def fingerprint(artifacts, queue, background=False):
+def fingerprint(artifacts, queue, background=False, migration=False):
     """Stable hash of what is pending (keys and queued changes, not wording)."""
     parts = sorted([['artifact', str(a.get('key'))] for a in artifacts]
                    + [['event', str(e.get('id')), str(e.get('suggested_status'))] for e in queue]
-                   + ([['background']] if background else []))
+                   + ([['background']] if background else [])
+                   + ([['migration']] if migration else []))
     return hashlib.sha256(json.dumps(parts).encode('utf-8')).hexdigest()[:16]
 
 
-def describe(artifacts, queue, background=False):
+def describe(artifacts, queue, background=False, migration=False):
     """One line per pending item, for the systemMessage."""
     lines = ['%s (%s)' % (a.get('title') or a.get('key'), a.get('file', '')) for a in artifacts]
     lines += ['%s -> %s' % (e.get('id'), e.get('suggested_status')) for e in queue]
     if background:
         lines.append(BACKGROUND_NOTE)
+    if migration:
+        lines.append(MIGRATION_NOTE)
     return '; '.join(lines)
+
+
+def build_migration_reason(script, reasons):
+    return ('The artifact record is in an older format (%s). Migrate it in this turn: run '
+            'python "%s" render, then run pending --json.' % ('; '.join(reasons), script))
+
+
+def retired_message(retired):
+    return ('luismc-artifacts: old claude.ai pages of feature artifacts are still up (%s). They are deleted only '
+            'with the owner\'s confirmation: ask the owner, delete each confirmed page with the Artifact tool '
+            '(action: delete), then run mark-deleted.'
+            % '; '.join('%s %s' % (e.get('key'), e.get('url')) for e in retired))
+
+
+def tell_retired_once(root, sid, retired):
+    """R8.13: the systemMessage listing retired pages, once per session and per list. '' when already told."""
+    if not retired:
+        return ''
+    digest = hashlib.sha256(json.dumps(sorted(e['url'] for e in retired)).encode('utf-8')).hexdigest()[:16]
+    path = os.path.join(root, STATE_NAME)
+    state = read_state(path)
+    entry = state.get('rule:' + sid) if isinstance(state.get('rule:' + sid), dict) else {}
+    if entry.get('told') == digest:
+        return ''
+    entry['told'] = digest
+    state.pop('rule:' + sid, None)
+    state['rule:' + sid] = entry
+    write_state(path, state)
+    return retired_message(retired)
 
 
 def build_reason(root, script, artifacts, queue):
@@ -177,7 +208,13 @@ def main():
     script = script_path()
     found = pending_items(root, script)
     # pending unreadable: fail open on artifacts, but the queue file is still a fact
-    artifacts, queue = found if found is not None else ([], [])
+    artifacts, queue, retired = found if found is not None else ([], [], [])
+    try:
+        reasons = migration_reasons_now(root, manifest)       # R8.14: read-only, the hook never migrates
+    except Exception as exc:
+        warn('migration check skipped (%s: %s)' % (type(exc).__name__, exc))
+        reasons = []
+    migration = bool(reasons)
     artifacts = only_full_progress(artifacts)
     queue = merge_queue(root, queue)
     state_path = os.path.join(root, STATE_NAME)
@@ -197,20 +234,29 @@ def main():
             write_state(state_path, state)
         else:
             background = True
-    if not artifacts and not queue and not background:
+    try:
+        told = tell_retired_once(root, sid, retired)      # R8.13: a message, never a block
+    except Exception as exc:
+        warn('retired pages not listed (%s: %s)' % (type(exc).__name__, exc))
+        told = ''
+    if not artifacts and not queue and not background and not migration:
+        state = read_state(state_path)
         if sid in state:
             del state[sid]
             write_state(state_path, state)
+        if told:
+            print(json.dumps({'systemMessage': told}))
         return 0
-    digest = fingerprint(artifacts, queue, background)
+    state = read_state(state_path)
+    digest = fingerprint(artifacts, queue, background, migration)
     blocks = entry.get('blocks', 0) if entry.get('last') == digest else 0
     if not isinstance(blocks, int):
         blocks = 0
     if blocks >= BLOCK_LIMIT:
-        print(json.dumps({'systemMessage': (
+        print(json.dumps({'systemMessage': '\n'.join(filter(None, [(
             'luismc-artifacts: letting the turn end after %d blocks with no change. Still unpublished, '
-            'unapplied or unrecorded: %s. Run `pending` in the next session.'
-            % (BLOCK_LIMIT, describe(artifacts, queue, background)))}))
+            'unapplied, unrecorded or unmigrated: %s. Run `pending` in the next session.'
+            % (BLOCK_LIMIT, describe(artifacts, queue, background, migration))), told]))}))
         return 0
     state.pop(sid, None)   # keeps the most recently used session last
     new = {'blocks': blocks + 1, 'last': digest}
@@ -221,9 +267,14 @@ def main():
     parts = []
     if artifacts or queue:
         parts.append(build_reason(root, script, artifacts, queue))
+    if migration:
+        parts.insert(0, build_migration_reason(script, reasons))
     if background:
         parts.append(build_background_reason(script))
-    print(json.dumps({'decision': 'block', 'reason': '\n\n'.join(parts)}))
+    out = {'decision': 'block', 'reason': '\n\n'.join(parts)}
+    if told:
+        out['systemMessage'] = told
+    print(json.dumps(out))
     return 0
 
 

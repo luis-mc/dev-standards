@@ -75,3 +75,13 @@ Once, at the end of the turn, never mid-turn. Repeat until `pending` exits 0:
   `path`; changes to the generated sections are dropped.
 - Run `mark-published full-progress --url <URL>` with the URL the publish
   returned.
+
+## Old claude.ai pages
+
+`pending` also lists `retired` pages: claude.ai pages of feature artifacts
+published before feature artifacts became files. They never block publishing
+and `pending`'s exit code ignores them. Delete one only with the owner's
+confirmation: ask the owner, delete each confirmed page with the Artifact tool
+(`action: "delete"`), then run `mark-deleted <key> --url <URL>` (add `--gone`
+for a page that no longer exists). When the session-start or after-command
+context lists retired pages, offer the deletion to the owner at the start.

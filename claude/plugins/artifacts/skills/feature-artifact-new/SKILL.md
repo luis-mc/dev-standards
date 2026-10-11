@@ -8,7 +8,7 @@ effort: medium
 # Feature artifact — new
 
 Creates one feature artifact from the project's record (`docs/artifacts/`,
-ARTIFACTSPEC 1.1.0). The script is the only writer of `manifest.json` and
+ARTIFACTSPEC 1.2.0). The script is the only writer of `manifest.json` and
 `registry.json`; never edit either by hand. A feature artifact is a standalone
 HTML file in the repository (`docs/artifacts/feature-<slug>.html`, CSS inlined,
 opens by double-click). It is never published to claude.ai, because claude.ai
@@ -155,3 +155,11 @@ At the end of the turn, repeat until `pending` exits 0:
    returned.
 6. If there is no Artifact tool, say what is still unpublished and stop; the
    end-of-turn hook then reminds you.
+
+## Old claude.ai pages
+
+A feature artifact published by plugin 1.0.0 left a claude.ai page behind; its
+URL is kept in the manifest's `retired` list and `pending` lists it under
+`retired`. Ask the owner to confirm, delete each confirmed page with the
+Artifact tool (`action: "delete"`), then run `mark-deleted <key> --url <URL>`.
+This never blocks the feature work or the end of the turn.

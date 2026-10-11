@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prove project_artifacts.py does what ARTIFACTSPEC 1.1.0 section 7 says (R13.1).
+"""Prove project_artifacts.py does what ARTIFACTSPEC 1.2.0 section 7 says (R13.1).
 
 Every case builds throwaway git repositories with a local bare remote and runs
 the real command line against them. Nothing here pushes to any real remote.
@@ -245,7 +245,7 @@ class Env:
                     shutil.copytree(str(REAL_PLUGIN / sub), str(self.plugin / sub))
             (self.plugin / 'rules').mkdir()
             (self.plugin / 'rules' / 'project-artifacts.md').write_text(RULE_TEXT, encoding='utf-8')
-            for f in ('project_artifacts.py', 'artifact_queue.py'):
+            for f in ('project_artifacts.py', 'artifact_queue.py', 'artifact_retire.py'):
                 shutil.copyfile(str(REAL_PLUGIN / 'scripts' / f), str(self.plugin / 'scripts' / f))
             (self.plugin / 'scripts' / 'render_artifacts.py').write_text(FAKE_RENDER, encoding='utf-8')
         else:
@@ -783,7 +783,7 @@ def test_pending_and_mark_published(env):
     r = p.run('pending', '--json')
     assert r.code == 1
     j = r.json()
-    assert sorted(j) == ['artifacts', 'queue'] and j['queue'] == []
+    assert sorted(j) == ['artifacts', 'queue', 'retired'] and j['queue'] == [] and j['retired'] == []
     assert [a['key'] for a in j['artifacts']] == ['full-progress'], j['artifacts']          # a feature is never listed (R9.5)
     a = j['artifacts'][0]
     assert sorted(a) == ['file', 'key', 'kind', 'path', 'reason', 'title', 'url'] and a['kind'] == 'full-progress'
@@ -799,7 +799,7 @@ def test_pending_and_mark_published(env):
     # mark Full Progress published; the copy does not make the record look stale (R5.32)
     p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
     r = p.run('pending', '--json')
-    assert r.code == 0 and r.json() == {'artifacts': [], 'queue': []}, r.out
+    assert r.code == 0 and r.json() == {'artifacts': [], 'queue': [], 'retired': []}, r.out
     m = p.man()
     fp = m['full_progress_artifact']
     assert fp['url'].endswith('/ccc') and fp['published_sha256'] == sha(p.show('docs/artifacts/' + fp['file']))
@@ -953,7 +953,10 @@ def test_old_feature_urls_migrate(env):
     assert p.show('docs/artifacts/feature-artifacts.html').startswith('<!doctype html>')
     assert 'href="feature-artifacts.html"' in p.show('docs/artifacts/' + m['full_progress_artifact']['file'])
     r = p.run('check', '--json')
-    assert r.code == 0 and r.json() == {'findings': [], 'notes': []}, r.out
+    j = r.json()
+    assert r.code == 0 and j['findings'] == [], r.out
+    assert len(j['notes']) == 1 and 'old-a' in j['notes'][0] and 'old-b' in j['notes'][0], j['notes']   # R4.19, R4.22
+    assert [e['url'] for e in m['retired']] == ['https://claude.ai/artifact/old-a', 'https://claude.ai/artifact/old-b'], m
 
 
 @case
@@ -2015,7 +2018,7 @@ def test_session_sequence_ends_clean(env):
     assert pend == ['full-progress'], pend                                  # two changes, one publish (R3.1)
     p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/c', env=later(5))
     r = p.run('pending', '--json', env=later(9))
-    assert r.code == 0 and r.json() == {'artifacts': [], 'queue': []}, r.out
+    assert r.code == 0 and r.json() == {'artifacts': [], 'queue': [], 'retired': []}, r.out
     r = p.run('check', env=later(9))
     assert r.code == 0, r.all
 
@@ -2315,6 +2318,264 @@ def test_an_invalid_decisions_file_is_left_alone_until_edit_content_fixes_it(env
     assert p.run('check').code == 0
     p.ok('set-task-status', 'AR1', 'Waiting')
     assert 'Waiting' in p.show('docs/artifacts/feature-artifacts.html')
+
+
+# --------------------------------------------------------------------------
+# retired pages, mark-deleted and the old rule copy (R4.19 to R4.23, R10.6)
+# --------------------------------------------------------------------------
+
+URL_A = 'https://claude.ai/artifact/old-a'
+URL_B = 'https://claude.ai/artifact/old-b'
+FP_URL = 'https://claude.ai/artifact/ccc'
+
+
+def push_manifest(p, name, fn, message='record change'):
+    """Change the pushed manifest as another clone (an older plugin, or history) would."""
+    other = p.clone_again(name)
+    edit_json(other / 'docs' / 'artifacts' / 'manifest.json', fn)
+    git(other, 'commit', '-qam', message)
+    git(other, 'push', '-q', 'origin', 'main')
+
+
+def with_old_urls(m):
+    feat(m, 'artifacts').update(url=URL_A, published_sha256='a' * 64)
+    feat(m, 'site').update(url=URL_B)
+
+
+def without_urls(m):
+    for e in m['feature_artifacts']:
+        e.pop('url', None)
+        e.pop('published_sha256', None)
+
+
+def retired_urls(p):
+    return [e['url'] for e in p.man().get('retired', [])]
+
+
+def published_project(env):
+    """A baseline project whose Full Progress is published, so that pending exits 0 unless retired pages change it."""
+    p = env.baseline()
+    p.ok('mark-published', 'full-progress', '--url', FP_URL)
+    return p
+
+
+@case
+def test_migration_keeps_feature_urls_as_retired(env):
+    """R4.19: the next writing command moves a feature's url to `retired`; the hash is dropped."""
+    p = published_project(env)
+    push_manifest(p, 'old1', with_old_urls)
+    p.ok('set-task-status', 'SI1', 'Running')
+    m = p.man()
+    assert all('url' not in e and 'published_sha256' not in e for e in m['feature_artifacts']), m['feature_artifacts']
+    assert [(e['key'], e['title'], e['url']) for e in m['retired']] == [
+        ('artifacts', 'Feature: Artifacts', URL_A), ('site', 'Feature: The site', URL_B)], m['retired']
+    for e in m['retired']:
+        assert sorted(e) == ['key', 'retired', 'title', 'url'] and re.match(r'^\d{4}-\d\d-\d\dT', e['retired']), e
+    assert 'deleted' not in m
+    # a second writing command changes nothing about it
+    p.ok('set-task-status', 'SI1', 'Waiting')
+    assert p.man()['retired'] == m['retired']
+    assert p.run('check').code == 0
+
+
+@case
+def test_retired_urls_are_recovered_from_history(env):
+    """R4.20: a record already migrated by 1.1.0 to 1.1.2 (urls gone) finds them in the history of manifest.json."""
+    p = published_project(env)
+    push_manifest(p, 'h1', with_old_urls, 'a 1.0.0 record')
+    push_manifest(p, 'h2', without_urls, 'migrated by 1.1.0: the urls are gone')
+    assert 'retired' not in p.man()
+    r = p.run('pending', '--json')
+    assert r.code == 0, r.all                                  # the full-progress artifact is published
+    got = r.json()['retired']
+    assert [(e['key'], e['url']) for e in got] == [('artifacts', URL_A), ('site', URL_B)], got
+    assert all(e['title'].startswith('Feature: ') and e['retired'] for e in got), got
+    assert FP_URL not in json.dumps(got)                       # Full Progress's url is never retired
+    # read-only commands wrote nothing; the next writing command writes them
+    before = p.head()
+    p.run('check')
+    assert p.head() == before and 'retired' not in p.man()
+    p.ok('set-task-status', 'SI1', 'Running')
+    assert retired_urls(p) == [URL_A, URL_B], p.man()
+    # a later commit does not duplicate them
+    p.ok('set-task-status', 'SI1', 'Waiting')
+    assert retired_urls(p) == [URL_A, URL_B]
+    # a record with nothing in its history is untouched
+    q = env.baseline()
+    assert q.run('pending', '--json').json()['retired'] == []
+
+
+@case
+def test_recovery_is_bounded_and_ignores_full_progress(env):
+    """R4.20: only feature entries count, whatever else the history holds; a url seen twice is listed once."""
+    p = published_project(env)
+    push_manifest(p, 'b1', lambda m: (feat(m, 'artifacts').update(url=URL_A), m['full_progress_artifact'].update(url=FP_URL + 'x')))
+    push_manifest(p, 'b2', lambda m: feat(m, 'site').update(url=URL_A))        # the same url under another key
+    push_manifest(p, 'b3', without_urls)
+    got = p.run('pending', '--json').json()['retired']
+    assert [e['url'] for e in got] == [URL_A], got
+    assert FP_URL + 'x' not in json.dumps(got) and FP_URL not in json.dumps(got)
+
+
+@case
+def test_mark_deleted_removes_the_page_for_good(env):
+    """R4.21: moved to `deleted`; never listed again, also not by the history recovery."""
+    p = published_project(env)
+    push_manifest(p, 'd1', with_old_urls)
+    p.ok('set-task-status', 'SI1', 'Running')
+    assert retired_urls(p) == [URL_A, URL_B]
+    before = p.head()
+    # refusals change nothing
+    for args, word in ((('mark-deleted', 'site', '--url', URL_A), 'belongs to'),
+                       (('mark-deleted', '--url', 'https://claude.ai/artifact/never'), 'not in the retired list'),
+                       (('mark-deleted', '--url', FP_URL), 'Full Progress'),
+                       (('mark-deleted', 'site', '--url', 'nope'), 'http')):
+        r = p.run(*args)
+        assert r.code == 1 and word in r.err, (args, r.all)
+        assert p.head() == before and dirty(p) == []
+    r = p.ok('mark-deleted', 'artifacts', '--url', URL_A)
+    assert 'recorded' in r.out
+    m = p.man()
+    assert retired_urls(p) == [URL_B]
+    assert len(m['deleted']) == 1 and m['deleted'][0]['key'] == 'artifacts' and m['deleted'][0]['url'] == URL_A, m
+    assert re.match(r'^\d{4}-\d\d-\d\dT', m['deleted'][0]['deleted']) and 'gone' not in m['deleted'][0]
+    assert p.run('mark-deleted', 'artifacts', '--url', URL_A).code == 1            # no longer retired
+    # the history still shows the url, and it does not come back
+    assert [e['url'] for e in p.run('pending', '--json').json()['retired']] == [URL_B]
+    p.ok('set-task-status', 'SI1', 'Waiting')
+    assert retired_urls(p) == [URL_B] and [e['url'] for e in p.man()['deleted']] == [URL_A]
+    # the last one, without a key
+    p.ok('mark-deleted', '--url', URL_B, '--json')
+    assert p.man()['retired'] == [] and [e['url'] for e in p.man()['deleted']] == [URL_A, URL_B]
+    assert p.run('pending', '--json').json()['retired'] == []
+    assert p.run('check', '--json').json() == {'findings': [], 'notes': []}
+
+
+@case
+def test_mark_deleted_gone(env):
+    """R4.21: `--gone` records a page that no longer exists, with the same effect."""
+    p = published_project(env)
+    push_manifest(p, 'g1', with_old_urls)
+    push_manifest(p, 'g2', without_urls)
+    r = p.ok('mark-deleted', '--url', URL_B, '--gone')           # recovered from history, then recorded
+    m = p.man()
+    assert [e['url'] for e in m['retired']] == [URL_A], m
+    assert m['deleted'] == [{'key': 'site', 'url': URL_B, 'deleted': m['deleted'][0]['deleted'], 'gone': True}], m
+    assert [e['url'] for e in p.run('pending', '--json').json()['retired']] == [URL_A]
+
+
+@case
+def test_pending_lists_retired_pages_without_changing_its_exit_code(env):
+    """R4.22: listed apart, with title, url and what to do; exit 0 stays 0 and exit 1 stays 1."""
+    p = published_project(env)
+    push_manifest(p, 'e1', with_old_urls)
+    p.ok('set-task-status', 'SI1', 'Running')                    # migrates; Full Progress changed, so republish
+    p.ok('mark-published', 'full-progress', '--url', FP_URL)
+    r = p.run('pending')
+    assert r.code == 0, r.all
+    assert 'nothing pending' in r.out
+    lines = [ln for ln in r.out.splitlines() if ln.startswith('retired ')]
+    assert len(lines) == 2 and URL_A in lines[0] and 'Feature: Artifacts' in lines[0], lines
+    for ln in lines:
+        assert 'ask the owner to confirm' in ln and 'Artifact tool (action: delete)' in ln and 'mark-deleted' in ln, ln
+    j = p.run('pending', '--json')
+    assert j.code == 0 and [e['url'] for e in j.json()['retired']] == [URL_A, URL_B]
+    assert sorted(j.json()['retired'][0]) == ['key', 'retired', 'title', 'url']
+    # with Full Progress pending the exit code is 1 for that reason alone
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    r = p.run('pending', '--json')
+    assert r.code == 1 and [a['key'] for a in r.json()['artifacts']] == ['full-progress'] and len(r.json()['retired']) == 2
+    p.ok('mark-published', 'full-progress', '--url', FP_URL)
+    assert p.run('pending').code == 0
+
+
+@case
+def test_check_notes_retired_pages(env):
+    """R4.22: a note, never a finding; the exit code is not changed."""
+    p = published_project(env)
+    push_manifest(p, 'n1', with_old_urls)
+    push_manifest(p, 'n2', without_urls)
+    r = p.run('check', '--json')
+    assert r.code == 0 and r.json()['findings'] == [], r.all
+    notes = r.json()['notes']
+    assert len(notes) == 1 and URL_A in notes[0] and URL_B in notes[0] and 'mark-deleted' in notes[0], notes
+    assert 'owner to confirm' in notes[0] and 'action: delete' in notes[0], notes
+    t = p.run('check')
+    assert t.code == 0 and 'record is clean' in t.out and 'note: claude.ai pages' in t.out, t.all
+    # a malformed list is a finding (R4.19)
+    push_manifest(p, 'n3', lambda m: m.update(retired=[{'key': 'x'}], deleted='no'))
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'R4.19', 'manifest.json'), r.all
+
+
+@case
+def test_full_progress_url_is_never_retired(env):
+    """R4.19, R4.21: Full Progress's url is in neither list, and mark-deleted refuses it."""
+    p = published_project(env)
+    push_manifest(p, 'f1', lambda m: feat(m, 'site').update(url=FP_URL))        # a feature entry that held Full Progress's url
+    p.ok('set-task-status', 'SI1', 'Running')
+    m = p.man()
+    assert m.get('retired', []) == [] and m['full_progress_artifact']['url'] == FP_URL, m
+    r = p.run('mark-deleted', '--url', FP_URL, '--gone')
+    assert r.code == 1 and 'Full Progress' in r.err
+    assert p.run('pending', '--json').json()['retired'] == []
+
+
+RULE_1_0_0 = ('# Project artifacts\n\n- Record work as a task before starting it.\n- Start branch names with the task ID.\n'
+              '- Change status only with `set-task-status`.\n- Publish what `pending` lists in the same turn.\n'
+              '- Never type a status row by hand.\n- Put every doc under `docs/`.\n')
+STALE = '.claude/rules/project-artifacts.md'
+
+
+def push_file(p, name, rel, text):
+    other = p.clone_again(name)
+    f = other / rel
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_bytes(text.encode('utf-8'))
+    git(other, 'add', '-A')
+    git(other, 'commit', '-qm', 'the rule copy that init 1.0.0 made')
+    git(other, 'push', '-q', 'origin', 'main')
+
+
+@case
+def test_stale_rule_copy_is_removed_with_the_migration_commit(env):
+    """R10.6: a copy equal to a shipped rule text (any line endings) is deleted in the record commit, and says so."""
+    p = env.baseline()
+    push_file(p, 's1', STALE, RULE_1_0_0.replace('\n', '\r\n'))
+    assert p.show(STALE) is not None
+    local = p.clone / STALE                                       # an untracked copy in the session's checkout
+    local.parent.mkdir(parents=True, exist_ok=True)
+    local.write_text(RULE_1_0_0, encoding='utf-8')
+    # a record worktree made by an older script: its sparse checkout names docs/artifacts only
+    p.ok('path')
+    git(p.wt, 'sparse-checkout', 'set', '--no-cone', '/docs/artifacts/')
+    r = p.ok('set-task-status', 'AR1', 'Waiting')
+    assert 'removed .claude/rules/project-artifacts.md' in r.out, r.out
+    assert p.show(STALE) is None
+    msg = git(p.bare, 'log', '-1', '--format=%B', 'main').stdout
+    assert 'removed .claude/rules/project-artifacts.md' in msg and 'AR1' in msg, msg
+    assert not local.exists(), 'the untracked copy in the checkout is removed too'
+    assert p.show('docs/artifacts/manifest.json') is not None
+    # the current plugin rule is also a copy that can go
+    push_file(p, 's2', STALE, (env.plugin / 'rules' / 'project-artifacts.md').read_text(encoding='utf-8'))
+    r = p.ok('render', '--all')
+    assert p.show(STALE) is None and 'removed .claude/rules' in r.out, r.out
+
+
+@case
+def test_edited_rule_copy_is_kept(env):
+    """R10.6, R10.5: a copy the owner edited stays, and check keeps noting it."""
+    p = env.baseline()
+    mine = RULE_1_0_0 + '- Also: my own line.\n'
+    push_file(p, 'k1', STALE, mine)
+    local = p.clone / STALE
+    local.parent.mkdir(parents=True, exist_ok=True)
+    local.write_text(mine, encoding='utf-8')
+    r = p.ok('set-task-status', 'AR1', 'Waiting')
+    assert 'removed' not in r.out, r.out
+    assert p.show(STALE) == mine and local.read_text(encoding='utf-8') == mine
+    c = p.run('check')
+    assert c.code == 0 and 'differs' in c.out, c.all
 
 
 # --------------------------------------------------------------------------
