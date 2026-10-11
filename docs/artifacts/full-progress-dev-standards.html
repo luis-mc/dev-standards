@@ -1131,6 +1131,17 @@ tr.status-group.release-group td { color: var(--ink); }
    "rides": "DS56"
   },
   {
+   "id": "AR47",
+   "owner": "artifacts",
+   "app": "luismc-artifacts",
+   "status": "To do",
+   "item": "End-of-turn hook knows the daily publish limit",
+   "detail": "00:20: claude.ai refused publishes (200/day, resets 01:00 Lisbon) and the end-of-turn hook kept blocking a publish nobody could make. Also: Full Progress publishes once per turn, so a busy night spends the budget",
+   "expected": "12 Oct",
+   "changed": "2026-10-12T00:23+01:00",
+   "expected_basis": "next train; owner to choose the approach"
+  },
+  {
    "id": "DL1",
    "owner": "delivery-speed",
    "app": "",
@@ -2148,9 +2159,11 @@ tr.status-group.release-group td { color: var(--ink); }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">132</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">132</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr class="status-group" data-group="now"><td colspan="5"><strong>Not in a release yet</strong></td></tr>
+<tr data-task="AR47"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR47</span>End-of-turn hook knows the daily publish limit</a></td><td><code>luismc-artifacts</code></td><td>00:20: claude.ai refused publishes (200/day, resets 01:00 Lisbon) and the end-of-turn hook kept blocking a publish nobody could make. Also: Full Progress publishes once per turn, so a busy night spends the budget</td><td>12 Oct<span class="expected-basis">next train; owner to choose the approach</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR46"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</a><span class="release-line"><span class="release-name">RELEASE-4</span></span></td><td><code>luismc-artifacts</code></td><td>Released in #54 (eaeec1d, 00:22): ARTIFACTSPEC 1.6.1, luismc-artifacts 1.6.2</td><td>12 Oct</td></tr>
 <tr data-task="DS56"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</td><td></td><td>#54 merged on green 00:22 (rerun after two join fixes: suites test pin, and test_session_guard.py now in CI). Cleanup done; an empty DS56 folder stays locked by this session&#x27;s shell until it ends</td><td>12 Oct</td></tr>
@@ -2292,7 +2305,7 @@ tr.status-group.release-group td { color: var(--ink); }
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862683"><time datetime="2026-10-12T00:23+01:00">12 Oct 00:23</time></td><td>AR2 to AR46</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
+<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862683"><time datetime="2026-10-12T00:23+01:00">12 Oct 00:23</time></td><td>AR2 to AR47</td><td data-col="state"><span class="state-chips"><span class="status-chip status-to-do">1 To do</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862661"><time datetime="2026-10-12T00:01+01:00">12 Oct 00:01</time></td><td>TC1 to TC11</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
 <tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29862629"><time datetime="2026-10-11T23:29+01:00">11 Oct 23:29</time></td><td>DL1 to DL13</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29862629"><time datetime="2026-10-11T23:29+01:00">11 Oct 23:29</time></td><td>MP1 to MP7, DS2 to DS5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
