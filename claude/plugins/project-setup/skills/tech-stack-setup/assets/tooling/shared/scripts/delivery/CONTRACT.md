@@ -646,6 +646,10 @@ One or two sentences for the change log.
   named in `gate.json` `changelog_heading` (default: a heading starting
   `What changed`). Release branches: `gate.json` `release_branches` (globs;
   default `["*-integration", "release/*"]`).
+- `change_notes.py check --staged`: the same check on the staged changes (index
+  against HEAD), run by the pre-commit hook so the edit is refused at commit time
+  (STACKSPEC §13.8); a repository with no commit yet or no change-note settings
+  passes.
 - `change_notes.py fold` (run on a release branch before the ready PR): for
   each spec with notes, bumps `**Version:**` by the highest change kind, writes
   one change-log entry under the change-log heading (new version, date, one

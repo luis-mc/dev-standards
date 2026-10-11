@@ -14,6 +14,7 @@
     {"name": "ci-areas", "full": "python tools/test_ci_areas.py", "cases": ""},
     {"name": "model-profiles", "full": "python tools/test_model_profiles.py", "cases": ""},
     {"name": "preflight", "full": "python tools/test_preflight.py", "cases": ""},
+    {"name": "rule-tags", "full": "python tools/test_rule_tags.py", "cases": ""},
     {"name": "session-guard", "full": "python tools/test_session_guard.py", "cases": "python tools/test_session_guard.py {cases}"},
     {"name": "smoke-packaged", "full": "python tools/test_smoke_packaged.py", "full_args": ["--no-mutants"], "cases": "python tools/test_smoke_packaged.py --no-mutants -k {cases}"},
     {"name": "spec-check", "full": "python tools/test_spec_check.py", "cases": ""}
