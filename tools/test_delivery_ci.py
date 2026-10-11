@@ -1592,6 +1592,121 @@ def tools_json_ships_real_pins():
 
 
 # ---------------------------------------------------------------------------
+# ci_watch: runner health (DL7, warnings only)
+# ---------------------------------------------------------------------------
+
+JOBS_KEY = "repos/{owner}/{repo}/actions/runs/5/jobs?per_page=100"
+RUNNERS_KEY = "repos/{owner}/{repo}/actions/runners?per_page=100"
+LONG_AGO = "2020-01-01T00:00:00Z"
+
+
+def queued_fixture(labels: list[str], runners, created: str = LONG_AGO, polls: int = 4) -> dict:
+    """A run that stays pending for `polls` polls, then succeeds; one queued job."""
+    seq = [[run_obj(5, "queued", "")] for _ in range(polls)] + [[run_obj(5, "completed", "success")]]
+    job = {"id": 11, "name": "build", "status": "queued", "created_at": created, "labels": labels}
+    api = {JOBS_KEY: {"jobs": [job]}}
+    if runners == "error":
+        api[RUNNERS_KEY] = {"__error": "HTTP 403: Must have admin rights to Repository."}
+    elif runners is not None:
+        api[RUNNERS_KEY] = {"runners": [
+            {"status": st, "labels": [{"name": n} for n in lab]} for st, lab in runners]}
+    return {"run_list": seq, "api": api}
+
+
+def watch_queued(fx: dict):
+    sb = Sandbox()
+    try:
+        rc, out, err = watch(sb, fx)
+        return rc, out, err
+    finally:
+        sb.close()
+
+
+@test
+def watch_warns_once_when_no_online_runner_has_the_labels():
+    rc, out, err = watch_queued(queued_fixture(
+        ["self-hosted", "gpu"], [("online", ["self-hosted", "linux"]), ("offline", ["self-hosted", "gpu"])]))
+    expect_exit(rc, 0, out, err)  # a warning never changes the exit code
+    check(out.count("WARNING") == 1, f"expected exactly one warning over several polls: {out}")
+    check("gpu" in out and "no online runner" in out, f"warning must name the labels: {out}")
+
+
+@test
+def watch_no_warning_when_an_online_runner_has_the_labels():
+    rc, out, err = watch_queued(queued_fixture(
+        ["self-hosted", "gpu"], [("online", ["self-hosted", "gpu", "linux"])]))
+    expect_exit(rc, 0, out, err)
+    check("WARNING" not in out, f"a runner carries the labels, no warning expected: {out}")
+
+
+@test
+def watch_says_queued_10_min_when_runners_cannot_be_listed():
+    rc, out, err = watch_queued(queued_fixture(["self-hosted", "gpu"], "error"))
+    expect_exit(rc, 0, out, err)
+    check("WARNING" in out and "queued 10+ min" in out and "could not be listed" in out,
+          f"expected the 10+ min warning with the reason: {out}")
+    check(out.count("WARNING") == 1, f"warn once: {out}")
+
+
+@test
+def watch_no_warning_for_a_job_queued_under_the_limit():
+    rc, out, err = watch_queued(queued_fixture(
+        ["self-hosted", "gpu"], [("online", ["self-hosted", "linux"])], created="2999-01-01T00:00:00Z"))
+    expect_exit(rc, 0, out, err)
+    check("WARNING" not in out, f"a job queued for a moment must not warn: {out}")
+
+
+@test
+def watch_no_warning_for_a_queued_github_hosted_job():
+    rc, out, err = watch_queued(queued_fixture(["ubuntu-latest"], []))
+    expect_exit(rc, 0, out, err)
+    check("WARNING" not in out, f"hosted labels count as available: {out}")
+
+
+def watch_runner_detectors() -> list:
+    return [watch_warns_once_when_no_online_runner_has_the_labels,
+            watch_no_warning_when_an_online_runner_has_the_labels,
+            watch_says_queued_10_min_when_runners_cannot_be_listed,
+            watch_no_warning_for_a_job_queued_under_the_limit,
+            watch_no_warning_for_a_queued_github_hosted_job]
+
+
+@test
+def watch_runner_health_mutants_are_detected():
+    global CI_WATCH
+    original = CI_WATCH.read_text(encoding="utf-8").replace("\r\n", "\n")
+    cases = [
+        ("warns on every poll", " or jid in warned:", ":"),
+        ("a runner with the labels is ignored",
+         "elif labels and not any(runner_health.runner_carries(r, labels) for r in runners):",
+         "elif labels:"),
+        ("the age limit ignored", "if age is None or age < threshold:", "if age is None:"),
+        ("hosted labels are checked", "if labels and runner_health.is_hosted(labels):", "if False:"),
+        ("an unlistable runner list stays silent", "if runners is None:\n                print(",
+         "if False:\n                print("),
+        ("the warning is never recorded", "            warned.add(jid)\n", "            pass\n"),
+    ]
+    saved = CI_WATCH
+    with tempfile.TemporaryDirectory(prefix="dl7-") as d:
+        shutil.copy(DELIVERY / "runner_health.py", Path(d) / "runner_health.py")
+        for label, old, new in cases:
+            path = Path(d) / "ci_watch.py"
+            path.write_text(mutate(original, old, new), encoding="utf-8", newline="\n")
+            CI_WATCH = path
+            try:
+                caught = False
+                for fn in watch_runner_detectors():
+                    try:
+                        fn()
+                    except Exception:  # noqa: BLE001 - any failing test is a detection
+                        caught = True
+                        break
+                check(caught, f"mutation '{label}' was not detected by any runner-health test")
+            finally:
+                CI_WATCH = saved
+
+
+# ---------------------------------------------------------------------------
 
 def main() -> int:
     failed = 0

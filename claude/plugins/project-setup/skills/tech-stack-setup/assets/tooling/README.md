@@ -150,7 +150,14 @@ Copied to `scripts/delivery/` (see `shared/scripts/delivery/CONTRACT.md`):
 - `ci_watch.py SHA`: waits for the workflow runs of one commit and exits 0, 1 (it
   prints the failed jobs), or 4 (timeout). It reads workflow runs, never a pull
   request's check list, which can be read before the new run is listed
-  (`§13.6`). Use it after pushing the ready pull request's head.
+  (`§13.6`). Use it after pushing the ready pull request's head. It warns once for a
+  job queued over 10 minutes with no online runner for its labels (warnings only).
+- `train_freeze.py`: called by the `pre-push` hook. Refuses a push to a branch whose
+  ready (non-draft) pull request has CI running; allows it when CI finished, the pull
+  request closed, or GitHub is unreachable (a warning). `DELIVERY_FREEZE_OVERRIDE=1`
+  pushes anyway and the running CI restarts. A late branch rides the next train.
+- `runner_health.py`: warns when no online runner carries a label the workflows need
+  (hosted labels count as available); used by `join.py` and `ci_watch.py`.
 - `reach_check.py URL...`: GETs each URL from where it runs and prints status or
   error. Run it in an agent sandbox before relying on a registry, API or preview
   host being reachable.

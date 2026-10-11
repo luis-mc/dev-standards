@@ -1436,22 +1436,36 @@ gate runs the scanner CI runs.
 - Shared contracts (types, schemas, interfaces that several branches build on)
   are committed to the integration branch before parallel work starts.
 - Branches join the integration branch through a merge script. It merges each
-  branch in turn, stops at a conflict it cannot resolve, and runs the branch gate
-  on the joined head. No other full suite runs at the join. The script can skip
-  that run when the joined tree equals the tree of a joined branch head whose gate
-  result is trusted for that head and the same base.
+  branch in turn, stops at a conflict it cannot resolve, and runs a quick check
+  on the joined head: the install from the lockfile, the build, the type check and
+  the tests of every package any joined branch changed plus its dependents. No
+  full suite runs at the join. The script can skip that check when the joined tree
+  equals the tree of a joined branch head whose gate result is trusted for that
+  head and the same base. It records the time of each step.
 - When the last join is pushed, one ready pull request goes from the integration
   branch to the default branch. Its CI is the only full suite, end-to-end tests
   included (§11.2). It merges when that run is green, never by auto-merge.
+- While that run is going the train is frozen: a push to the branch the ready pull
+  request comes from is refused until its CI has finished, passed or failed (so a
+  fix goes forward), or the ready pull request is closed unmerged. When GitHub
+  cannot be reached the push is allowed with a warning; an explicit override allows
+  it and the running CI restarts. A branch that is late rides the next train.
 - A branch that is not green when the ready pull request opens waits for the
   next one.
+- Before the ready pull request opens, the merge script SHOULD warn when no online
+  runner carries a label the workflows' jobs need (GitHub-hosted labels count as
+  available), and the CI watcher SHOULD warn about a job queued over ten minutes with
+  no online runner for its labels. Both only warn: listing self-hosted runners needs
+  administrator rights, and without them the check says it was skipped.
 - CI is watched through the workflow runs for the head commit, never through a
   pull request's check list, which can be read before the new run is listed.
 - Branches SHOULD NOT edit a spec's version or change log. Each adds a change
   note naming the spec and the kind of change; the release folds the notes
   into the versions and change logs, so parallel branches do not conflict.
 - On shared or self-hosted runners, ready pull requests' CI SHOULD run one at a
-  time; the next train waits for the run, not for a merge.
+  time; the next train waits for the run, not for a merge. A required runner label
+  carried by one runner only is a single point of failure: setup warns against it
+  unless a fallback job exists.
 - Once the ready pull request merges, the train is removed automatically: on the
   remote, the integration branch, every branch joined into it and their
   gate-result refs; locally, their branches and the worktrees they were built
