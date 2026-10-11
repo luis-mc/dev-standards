@@ -464,12 +464,12 @@
       "id": "DL7",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Runner health warnings",
-      "detail": "join and ci_watch warn on offline runners and long queues; setup warns on single-runner labels",
-      "expected": "11 Oct ~18:00",
-      "changed": "2026-10-11T11:56+01:00",
-      "expected_basis": "after TC6 merges (~14:30); one release"
+      "detail": "Agent on DL2-join-freeze-runners, in the TC6 release",
+      "expected": "11 Oct ~15:00",
+      "changed": "2026-10-11T12:04+01:00",
+      "expected_basis": "agents ~1h30 in parallel, then one join and one ready-PR CI"
     },
     {
       "id": "DL8",
