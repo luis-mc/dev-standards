@@ -952,12 +952,12 @@
       "id": "TC3",
       "owner": "test-cost",
       "app": "",
-      "status": "Needs you",
+      "status": "To do",
       "item": "Retire the fake-renderer group",
-      "detail": "S6: it repeats the real group (46% of the suite); move its one unique case; waits on D7",
+      "detail": "Chosen by the owner 11 Oct; next train after this study",
       "expected": "12 Oct",
-      "changed": "2026-10-11T11:02+01:00",
-      "expected_basis": "your choice in D7, then one test change"
+      "changed": "2026-10-11T11:25+01:00",
+      "expected_basis": "the next train, one change per task"
     },
     {
       "id": "TC4",
