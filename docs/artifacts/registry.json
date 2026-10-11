@@ -507,12 +507,12 @@
       "id": "DL11",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Waiting",
       "item": "Release STACKSPEC 8.0.0 (DL1 to DL10)",
-      "detail": "one train after TC6: join, fold notes, one ready-PR CI, merge on green",
-      "expected": "11 Oct ~18:00",
-      "changed": "2026-10-11T11:56+01:00",
-      "expected_basis": "after TC6 merges (~14:30); one release"
+      "detail": "Folded into the TC6 release: one integration branch, one CI, one merge",
+      "expected": "11 Oct ~15:00",
+      "changed": "2026-10-11T12:05+01:00",
+      "expected_basis": "the TC6 merge"
     },
     {
       "id": "DS1",
