@@ -656,11 +656,11 @@
       "id": "DS34",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Change notes instead of version bumps on branches",
-      "detail": "Built in #39 and joined (not released): change_notes.py check refuses spec version and change-log edits off release branches; fold bumps versions by the highest change kind, writes entries, deletes notes. A change-notes step in every track's gate.json. 74 checks and 18 mutants on Windows; Linux CI green on its branch.",
+      "detail": "Released in STACKSPEC 7.1.0 / luismc-project-setup 13.1.0 / luismc-artifacts 1.3.0 (#45, 48205a9, 04:17). change_notes.py check refuses spec version and change-log edits off release branches; fold bumps versions by the highest change kind, writes entries, deletes notes. A change-notes step in every track's gate.json. 74 checks and 18 mutants on Windows; Linux CI green on its branch.",
       "expected": "11 Oct",
-      "changed": "2026-10-11T02:58+01:00"
+      "changed": "2026-10-11T04:18+01:00"
     },
     {
       "id": "DS35",
