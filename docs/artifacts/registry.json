@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T12:13+01:00",
+  "updated": "2026-10-11T12:15+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -376,12 +376,11 @@
       "id": "AR40",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "At a glance block in section 0 instead of one prose paragraph",
-      "detail": "Generated groups (needs you, running, built not released, waiting, live 24 h); the lede becomes a short note",
-      "expected": "11 Oct ~14:30",
-      "changed": "2026-10-11T11:59+01:00",
-      "expected_basis": "agent ~1h, ships in the TC6 train"
+      "detail": "On AR40-at-a-glance (76eccd9): render 101/101, hooks 82/82; sample checked in a browser; the long-note warning gets wired into check at the join",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T12:15+01:00"
     },
     {
       "id": "AR41",
