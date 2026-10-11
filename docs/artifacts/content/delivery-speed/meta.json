@@ -1,6 +1,6 @@
 {
   "title": "Feature: Delivery speed",
   "hero": "Each delivery layer does only its share, so a finished change goes live sooner",
-  "lede": "Planned. Work has not started.",
+  "lede": "Planned 11 October from a prompt measured in one product: each delivery layer will do only its share. Ten changes (DL1 to DL10), released as STACKSPEC 8.0.0 once the TC6 train merges; every question is decided (D1 to D9).",
   "extra_css": ""
 }

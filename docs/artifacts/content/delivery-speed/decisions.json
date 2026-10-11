@@ -1,0 +1,199 @@
+{
+ "decisions": [
+  {
+   "id": "D1",
+   "question": "Rewrite the pasted delivery prompt with the review’s fixes and queue it after TC6?",
+   "asked": "2026-10-11",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Rewrite and queue",
+     "summary": "Fix the gaps and conflicts, record its points as tasks, start it as one release once TC6 merges.",
+     "recommended": true
+    },
+    {
+     "label": "Rewrite only",
+     "summary": "Give the fixed prompt; queue nothing."
+    },
+    {
+     "label": "Drop it",
+     "summary": "No changes beyond TC6."
+    }
+   ],
+   "chosen": "Rewrite and queue",
+   "decided": "2026-10-11",
+   "task": "DL11",
+   "owner_words": "Rewrite and queue (Recommended)"
+  },
+  {
+   "id": "D2",
+   "question": "Point 7, a smoke test of the packaged program: MUST or SHOULD?",
+   "asked": "2026-10-11",
+   "status": "decided",
+   "options": [
+    {
+     "label": "MUST, STACKSPEC 8.0.0",
+     "summary": "Every product that ships a packaged program has CI start it and exercise every worker; a major version.",
+     "recommended": true
+    },
+    {
+     "label": "SHOULD, STACKSPEC 7.2.0",
+     "summary": "Recommended but not required; stays minor."
+    }
+   ],
+   "chosen": "MUST, STACKSPEC 8.0.0",
+   "decided": "2026-10-11",
+   "task": "DL9",
+   "owner_words": "MUST, STACKSPEC 8.0.0 (Recommended)"
+  },
+  {
+   "id": "D3",
+   "question": "Point 8: where is the delivery log kept?",
+   "asked": "2026-10-11",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Release notes",
+     "summary": "Appended to the GitHub release of each train: durable, no commits to main.",
+     "recommended": true
+    },
+    {
+     "label": "delivery-log branch",
+     "summary": "A JSON lines file on its own branch, one commit per train."
+    },
+    {
+     "label": "One commit per train on main",
+     "summary": "docs/delivery/log.jsonl appended once per train; adds a commit to main each time."
+    }
+   ],
+   "chosen": "Release notes",
+   "decided": "2026-10-11",
+   "task": "DL8",
+   "owner_words": "Release notes (Recommended)"
+  },
+  {
+   "id": "D4",
+   "question": "Point 4: what does the pre-push hook do when it cannot reach GitHub?",
+   "asked": "2026-10-11",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Allow and warn",
+     "summary": "The push goes through with a warning; the ready PR’s CI still decides the merge.",
+     "recommended": true
+    },
+    {
+     "label": "Refuse",
+     "summary": "No push to a train branch until GitHub confirms CI finished; offline work stops."
+    }
+   ],
+   "chosen": "Allow and warn",
+   "decided": "2026-10-11",
+   "task": "DL6",
+   "owner_words": "Allow and warn (Recommended)"
+  },
+  {
+   "id": "D5",
+   "question": "Point 5: no online runner for a job’s labels before the ready PR opens?",
+   "asked": "2026-10-11",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Warn, don’t block",
+     "summary": "join.py and ci_watch.py print a clear warning; works without admin rights.",
+     "recommended": true
+    },
+    {
+     "label": "Block the ready PR",
+     "summary": "Refuse to open it until a runner is online; needs admin rights, else a warning."
+    }
+   ],
+   "chosen": "Warn, don’t block",
+   "decided": "2026-10-11",
+   "task": "DL7",
+   "owner_words": "Warn, don't block (Recommended)"
+  },
+  {
+   "id": "D6",
+   "question": "Point 3: which tests run at the join when branches affect overlapping packages?",
+   "asked": "2026-10-11",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Union plus dependents",
+     "summary": "Every package any branch affected plus their dependents, so an interaction is caught before the ready PR.",
+     "recommended": true
+    },
+    {
+     "label": "Union only",
+     "summary": "Only the packages the branches affected; an interaction shows first in the ready PR’s CI."
+    }
+   ],
+   "chosen": "Union plus dependents",
+   "decided": "2026-10-11",
+   "task": "DL2",
+   "owner_words": "Union plus dependents (Recommended)"
+  },
+  {
+   "id": "D7",
+   "question": "Should dev-standards adopt the delivery log in its own releases? (asked as one multi-select question)",
+   "asked": "2026-10-11",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Yes",
+     "summary": "Each dev-standards release gets its time-to-live breakdown in its release notes."
+    },
+    {
+     "label": "No",
+     "summary": "Products only."
+    }
+   ],
+   "chosen": "Yes",
+   "decided": "2026-10-11",
+   "task": "DL10",
+   "owner_words": "Delivery log in releases, Train freeze, good to use this projects for its own dogfood"
+  },
+  {
+   "id": "D8",
+   "question": "Should dev-standards adopt the train freeze? (same multi-select question)",
+   "asked": "2026-10-11",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Yes",
+     "summary": "No pushes to an integration branch while its ready-PR CI runs."
+    },
+    {
+     "label": "No",
+     "summary": "Products only."
+    }
+   ],
+   "chosen": "Yes",
+   "decided": "2026-10-11",
+   "task": "DL10",
+   "owner_words": "Delivery log in releases, Train freeze, good to use this projects for its own dogfood"
+  },
+  {
+   "id": "D9",
+   "question": "Point 4: how is the train freeze overridden on purpose?",
+   "asked": "2026-10-11",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Env variable, logged",
+     "summary": "DELIVERY_FREEZE_OVERRIDE=1 on the push; the hook allows it and prints that the running CI will restart.",
+     "recommended": true
+    },
+    {
+     "label": "Abandon the train first",
+     "summary": "No override: close the ready PR, push, open a new ready PR."
+    }
+   ],
+   "chosen": "Env variable, logged",
+   "decided": "2026-10-11",
+   "task": "DL6",
+   "owner_words": "Env variable, logged (Recommended)"
+  }
+ ]
+}

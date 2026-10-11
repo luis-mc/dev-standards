@@ -1,2 +1,10 @@
 <!-- title: What and why -->
-<p>Describe what this feature is and why it exists.</p>
+<p>The owner brought a prompt measured in one product over seven days: 82 releases, 971 workflow runs, 3,039 CI jobs. Its diagnosis matches what dev-standards found about itself (see Feature: Test and validation cost): the problem is not the number of tests but that each delivery layer reruns the full suite instead of doing its own share. A finished change also waits for its whole train, and pushes to a train branch keep restarting CI.</p>
+<ul>
+<li>Each change ran the full suite 4 to 6 times: 1 to 3 agent gates, the join gate, PR CI, and a default-branch run on the same tree.</li>
+<li>56% of CI job-minutes went to cancelled or failed runs, most of the cancels from pushes to a train branch while its CI ran.</li>
+<li>In one traced release, tests ran 51 of the 492 minutes from built to live. The rest was waiting for cargo, restarted CI, and 3 hours queued for the only runner with a required label, which was offline.</li>
+<li>A gate result went stale only because the default branch moved by docs-only commits.</li>
+<li>A packaged program shipped with a worker that never started while every test passed, because no test ran the packaged form.</li>
+</ul>
+<p>The numbers describe one product and stay here, not in the specs. The work changes luismc-project-setup (STACKSPEC 13.5 and 13.6, the delivery scripts, the agents rule) and is released as <strong>STACKSPEC 8.0.0</strong> after the TC6 train merges, because it builds on that train's join change (DS45).</p>
