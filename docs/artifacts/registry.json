@@ -316,11 +316,11 @@
       "id": "AR34",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Running",
       "item": "Record worktree location is a setting",
-      "detail": "Raised by another project: the record worktree always lives at <repo>/.claude/worktrees/artifacts-record, so a project whose rule keeps worktrees elsewhere cannot follow it. Make the location a per-project setting (default unchanged). The plugin names no other project or path. Starts after AR31, which owns the same code.",
+      "detail": "Raised by another project: the record worktree always lives at <repo>/.claude/worktrees/artifacts-record, so a project whose rule keeps worktrees elsewhere cannot follow it. Make the location a per-project setting (default unchanged). The plugin names no other project or path. Starts after AR31, which owns the same code. Started 03:10 (one agent for both); rides STACKSPEC 7.1.0.",
       "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T01:25+01:00"
+      "changed": "2026-10-11T03:05+01:00"
     },
     {
       "id": "DS1",
