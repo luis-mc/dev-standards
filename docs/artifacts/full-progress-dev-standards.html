@@ -1850,30 +1850,30 @@ tr.status-group.release-group td { color: var(--ink); }
    "status": "To do",
    "item": "TC9 train: join, PR CI, merge, cleanup",
    "detail": "Integration branch DS55-integration, fold change notes, ready PR, merge on green, cleanup",
-   "expected": "12 Oct ~00:10",
+   "expected": "12 Oct ~00:30",
    "changed": "2026-10-11T23:31+01:00",
-   "expected_basis": "agent ~40 min; #52: CI 3.5 min, merge+cleanup 5",
+   "expected_basis": "agent ~40 min from 23:35; #52: CI 3.5 min, merge+cleanup 5",
    "release": 3,
    "phases": [
     {
      "name": "agents",
-     "start": "2026-10-11T23:15+01:00",
-     "end": "2026-10-11T23:55+01:00"
+     "start": "2026-10-11T23:35+01:00",
+     "end": "2026-10-12T00:15+01:00"
     },
     {
      "name": "join",
-     "start": "2026-10-11T23:55+01:00",
-     "end": "2026-10-12T00:00+01:00"
+     "start": "2026-10-12T00:15+01:00",
+     "end": "2026-10-12T00:20+01:00"
     },
     {
      "name": "ci",
-     "start": "2026-10-12T00:00+01:00",
-     "end": "2026-10-12T00:05+01:00"
+     "start": "2026-10-12T00:20+01:00",
+     "end": "2026-10-12T00:25+01:00"
     },
     {
      "name": "merge",
-     "start": "2026-10-12T00:05+01:00",
-     "end": "2026-10-12T00:10+01:00"
+     "start": "2026-10-12T00:25+01:00",
+     "end": "2026-10-12T00:30+01:00"
     }
    ],
    "risk": {
@@ -2082,8 +2082,8 @@ tr.status-group.release-group td { color: var(--ink); }
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group release-group" data-group="release-3"><td colspan="5"><strong>RELEASE-3 · live ~00:10 · worst ~00:20</strong></td></tr>
-<tr data-task="DS55"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup</td><td></td><td>Integration branch DS55-integration, fold change notes, ready PR, merge on green, cleanup</td><td>12 Oct ~00:10<span class="expected-basis">agent ~40 min; #52: CI 3.5 min, merge+cleanup 5</span></td></tr>
+<tr class="status-group release-group" data-group="release-3"><td colspan="5"><strong>RELEASE-3 · live ~00:30 · worst ~00:40</strong></td></tr>
+<tr data-task="DS55"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup</td><td></td><td>Integration branch DS55-integration, fold change notes, ready PR, merge on green, cleanup</td><td>12 Oct ~00:30<span class="expected-basis">agent ~40 min from 23:35; #52: CI 3.5 min, merge+cleanup 5</span></td></tr>
 <tr class="status-group" data-group="you"><td colspan="5"><strong>Needs you, failed or on hold</strong></td></tr>
 <tr data-task="TC9"><td><span class="status-chip status-needs-you">Needs you</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</a></td><td><code>luismc-project-setup</code></td><td>Proposal: 4 guards shipped by luismc-project-setup to every project. 1 measured suite times; 2 hook blocks a local full run of a heavy suite and a repeat full run of an already-tested tree; 3 pre-commit runs the change-notes check; 4 hook blocks a ready PR not from an *-integration branch. Plus join.py works without gate.json. Awaiting go-ahead</td><td>12 Oct<span class="expected-basis">owner&#x27;s go-ahead, then one agent ~40 min, one train</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
