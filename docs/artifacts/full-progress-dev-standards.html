@@ -579,7 +579,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-11T12:01+01:00",
+ "updated": "2026-10-11T12:04+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -977,12 +977,12 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "id": "DL1",
    "owner": "delivery-speed",
    "app": "",
-   "status": "To do",
+   "status": "Running",
    "item": "Inert paths keep gate results valid",
-   "detail": "gate.json inert_paths; gate_verify trusts a base moved only by inert commits",
-   "expected": "11 Oct ~18:00",
-   "changed": "2026-10-11T11:55+01:00",
-   "expected_basis": "after TC6 merges (~14:30); one release"
+   "detail": "Agent on DL1-gate-scope-and-inert, in the TC6 release",
+   "expected": "11 Oct ~15:00",
+   "changed": "2026-10-11T12:04+01:00",
+   "expected_basis": "agents ~1h30 in parallel, then one join and one ready-PR CI"
   },
   {
    "id": "DL2",
@@ -1711,16 +1711,16 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T12:01+01:00">11 Oct 12:01</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T12:04+01:00">11 Oct 12:04</time> (Lisbon)</p>
 <p class="lede">All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class="task-id">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class="task-id">AR12</span>), and the secret-scan fixes (<span class="task-id">DS15</span>, <span class="task-id">AR19</span>, <span class="task-id">DS16</span>). Not released yet: the round toward STACKSPEC 7.0.0 (<span class="task-id">DS17</span> to <span class="task-id">DS21</span>) is built and joined, so those rows say Done. The tests on the joined branch are running; then one ready PR, its CI, and the merge, about 21:45. Each row turns Live only when the merge lands. <strong>Nothing needs you.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">88</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">9</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">12</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">88</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">9</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">11</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
 <tr data-task="AR40"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR40</span>At a glance block in section 0 instead of one prose paragraph</a></td><td><code>luismc-artifacts</code></td><td>Generated groups (needs you, running, built not released, waiting, live 24 h); the lede becomes a short note</td><td>11 Oct ~14:30<span class="expected-basis">agent ~1h, ships in the TC6 train</span></td></tr>
 <tr data-task="TC6"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC6</span>Release the test-cost train (all eight fixes and DS48)</a></td><td></td><td>One integration branch, three agents by file ownership, change notes folded, one ready-PR CI run, merge on green</td><td>11 Oct ~14:30<span class="expected-basis">agents ~1h30 in parallel, join ~15 min, ready-PR CI ~10 min</span></td></tr>
 <tr data-task="AR41"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</a></td><td><code>luismc-artifacts</code></td><td>After the TC6 release: update the plugin here, rewrite Full Progress and feature ledes as one or two sentences, render</td><td>11 Oct ~15:00<span class="expected-basis">after the TC6 merge; three content edits</span></td></tr>
-<tr data-task="DL1"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL1</span>Inert paths keep gate results valid</a></td><td></td><td>gate.json inert_paths; gate_verify trusts a base moved only by inert commits</td><td>11 Oct ~18:00<span class="expected-basis">after TC6 merges (~14:30); one release</span></td></tr>
+<tr data-task="DL1"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL1</span>Inert paths keep gate results valid</a></td><td></td><td>Agent on DL1-gate-scope-and-inert, in the TC6 release</td><td>11 Oct ~15:00<span class="expected-basis">agents ~1h30 in parallel, then one join and one ready-PR CI</span></td></tr>
 <tr data-task="DL2"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL2</span>Quick join check instead of a second full gate</a></td><td></td><td>install, build, typecheck, union of affected tests plus dependents; per-step times</td><td>11 Oct ~18:00<span class="expected-basis">after TC6 merges (~14:30); one release</span></td></tr>
 <tr data-task="DL3"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL3</span>Agent rule: affected suites, full suite only on a valve</a></td><td></td><td>merged with DS45: no branch CI unless Linux-specific</td><td>11 Oct ~18:00<span class="expected-basis">after TC6 merges (~14:30); one release</span></td></tr>
 <tr data-task="DL4"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL4</span>Narrower gate valves: lockfile and shared UI</a></td><td></td><td>lockfile widens only for affected deps; shared UI runs importing apps e2e</td><td>11 Oct ~18:00<span class="expected-basis">after TC6 merges (~14:30); one release</span></td></tr>
