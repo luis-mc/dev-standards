@@ -1,0 +1,26 @@
+name: nightly
+
+# TC1: pull requests run the fast suites (mutation passes only when the change
+# touches the code they guard). Once a night, main runs every area with the
+# mutation passes, so a mutant that slipped past a fast run is found within a day.
+# The steps live in spec-lint.yml; this file only calls it with everything on.
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+jobs:
+  spec-lint:
+    # A scheduled run uses the default branch; a manual run is limited to main
+    # so a nightly result always describes main.
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/spec-lint.yml
+    with:
+      mutants: true
+      # a manual run has no diff to read: name every area
+      areas: specs,delivery,artifacts,profiles

@@ -8,7 +8,7 @@ effort: medium
 # Task — add
 
 Records work as a task in the registry (`docs/artifacts/registry.json`,
-ARTIFACTSPEC 1.3.1) before the work starts. Only the script writes the
+ARTIFACTSPEC 1.4.0) before the work starts. Only the script writes the
 registry; never edit `registry.json` or `manifest.json` by hand.
 
 Every activity is a task before it starts, whoever does it: work given to
@@ -47,7 +47,7 @@ read the message, fix the cause and rerun.
    `task-add --owner <key|project> --item "TEXT" --detail "TEXT" --expected "DD Mon" [--basis "TEXT"] [--app A] [--status S] [--prefix P]`.
    For `--owner project`, `--prefix` picks one of the project's prefixes; a new
    prefix that no feature uses is registered by the command. The command prints the new ID and renders and commits the
-   record.
+   record (the push comes once, at the end of the turn).
 4. **Do not publish now.** Status changes accumulate during the turn;
    Full Progress is published once, at the end of the turn, per "Publishing" in
    the `task-status-update` skill (claude.ai allows 200 publishes per account

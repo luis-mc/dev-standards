@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Remove what a merged train leaves behind (STACKSPEC 13.6, last bullet).
 
-    cleanup.py [--pr N] [--remote origin] [--local] [--remote-only] [--dry-run] [--json] [--repo OWNER/NAME]
+    cleanup.py [--pr N] [--remote origin] [--local] [--remote-only] [--dry-run] [--json] [--no-delivery-log] [--repo OWNER/NAME]
 
 A branch is FINISHED when it is not the default branch, has no open pull
 request, and either (a) a pull request with it as head is merged, or (b) it is
@@ -34,9 +34,18 @@ left by a pre-push check that was killed is removed when process <pid> is not
 running: the dependency links first (never their targets), then the worktree.
 Rows: `push-check <name>  deleted` / `kept: <reason>` / `would delete`.
 
---pr N considers only the train of that merged pull request (its head branch and
-every branch whose pull request had that head as base); N must be merged into the
-default branch, or the script exits 2. Without it, every branch on the remote
+DELIVERY LOG (--pr N, not --dry-run): before it deletes anything the script collects,
+per change of the train, when the branch finished, was joined, ran CI and merged; after
+the deletions it appends the table to the train's GitHub release notes
+(delivery_log.py; --no-delivery-log skips it). Offline, no permission or any error:
+a warning, and the cleanup is unaffected.
+
+--pr N considers only the train of that merged pull request (its head branch,
+every branch whose pull request had that head as base, and every JOINED branch:
+a remote or local branch whose tip is an ancestor of the merged pull request's
+head commit, `headRefOid`, that is not an ancestor of <remote>/<default> and has
+no open pull request; commits outside that head keep a branch); N must be merged
+into the default branch, or the script exits 2. Without it, every branch on the remote
 (and every local branch). --local treats local branches and worktrees only.
 Without a working `gh` (not installed, or failing) it deletes nothing: a local
 branch whose upstream is gone from the remote is listed as `would delete (needs gh
@@ -62,6 +71,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True  # keep scripts/delivery/ free of __pycache__ (a clean tree is required)
 
 import delivery_common as dc
+import delivery_log as dlog  # the delivery log in the train's release notes
 import fast_guards as fg  # the push-check folder naming and link removal
 
 PR_FIELDS = "number,state,baseRefName,headRefOid,mergedAt"
@@ -208,6 +218,19 @@ def _assess(ctx: Ctx, branch: str, depth: int) -> Verdict:
                 return Verdict(True, "pull request #%s closed into finished %s" % (p.get("number"), base), [sha])
     return Verdict(False, "pull requests closed without merging (%s)"
                    % ", ".join("#%s" % p.get("number") for p in prs))
+
+
+def assess_joined(ctx: Ctx, branch: str, number: int, head: str) -> Verdict:
+    """A branch whose tip lies inside the merged pull request's head is finished unless
+    it has an open pull request; a gh error keeps it."""
+    try:
+        prs = pr_list(ctx.repo, head=branch)
+    except GhError as exc:
+        return Verdict(False, "cannot classify the joined branch (%s)" % exc, cannot_classify=True)
+    still_open = [p for p in prs if p.get("state") == "OPEN"]
+    if still_open:
+        return Verdict(False, "open pull request #%s" % still_open[0].get("number"))
+    return Verdict(True, "joined into pull request #%d" % number, [head])
 
 
 def upstream_gone(ctx: Ctx, branch: str) -> bool | None:
@@ -451,11 +474,36 @@ def ls_remote(ctx: Ctx) -> None:
             ctx.protected.add(line.split()[1].removeprefix("refs/heads/"))
 
 
-def train_of(ctx: Ctx, number: int) -> list[str]:
+def joined_of(ctx: Ctx, head: str, train: list[str], local_branches: list[str],
+              do_remote: bool, do_local: bool) -> list[str]:
+    """Branches (other than the train's and the default branch) whose every tip is an
+    ancestor of `head`, the merged pull request's head commit, and not of the default
+    branch on the remote (a branch with no work of its own is not a joined branch)."""
+    if not head or dc.rev(head, ctx.root) is None:
+        return []
+    default_ref = "refs/remotes/%s/%s" % (ctx.remote, ctx.default)
+    has_default = dc.rev(default_ref, ctx.root) is not None
+    found = []
+    names = set(local_branches if do_local else []) | set((ctx.remote_heads or {}) if do_remote else [])
+    for name in sorted(names - ctx.protected - set(train)):
+        tips = []
+        if do_local and name in local_branches:
+            tips.append(dc.rev("refs/heads/" + name, ctx.root))
+        if do_remote and name in (ctx.remote_heads or {}):
+            tips.append(ctx.remote_heads[name])
+        if not tips or any(tip is None for tip in tips):
+            continue
+        if all(tip == head or dc.is_ancestor(tip, head, ctx.root) for tip in tips) and not (
+                has_default and any(dc.is_ancestor(tip, default_ref, ctx.root) for tip in tips)):
+            found.append(name)
+    return found
+
+
+def train_of(ctx: Ctx, number: int) -> tuple[list[str], str]:
     """The merged pull request N's head branch and every branch whose pull request
     had one of the train's branches as base. Refuses unless N is merged into the default branch."""
     try:
-        pr = gh_json(["pr", "view", str(number), "--json", "number,state,headRefName,baseRefName"], ctx.repo)
+        pr = gh_json(["pr", "view", str(number), "--json", "number,state,headRefName,baseRefName,headRefOid"], ctx.repo)
     except GhError as exc:
         raise dc.DeliveryError("cannot read pull request #%d: %s" % (number, exc))
     if not isinstance(pr, dict) or pr.get("state") != "MERGED":
@@ -475,7 +523,9 @@ def train_of(ctx: Ctx, number: int) -> list[str]:
         except GhError as exc:
             raise dc.DeliveryError("cannot list the pull requests into '%s': %s" % (name, exc))
         queue += [c["headRefName"] for c in children if c.get("headRefName")]
-    return [b for b in train if b not in ctx.protected]
+    head = pr.get("headRefOid") or ""
+    ensure_object(ctx, head, number)
+    return [b for b in train if b not in ctx.protected], head
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -486,6 +536,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--remote-only", action="store_true", help="the remote only (what CI runs)")
     ap.add_argument("--dry-run", action="store_true", help="say what would be removed; remove nothing")
     ap.add_argument("--json", action="store_true", help="print the rows as JSON")
+    ap.add_argument("--no-delivery-log", action="store_true", help="with --pr: do not append the delivery log to the release notes")
     ap.add_argument("--repo", metavar="OWNER/NAME", help="repository for gh (default: the current one)")
     args = ap.parse_args(argv)
     if args.local and args.remote_only:
@@ -507,8 +558,14 @@ def main(argv: list[str] | None = None) -> int:
     heads = ctx.remote_heads or {}
 
     local_branches = [b for b in dc.git(["for-each-ref", "--format=%(refname:short)", "refs/heads/"], cwd=root).splitlines() if b]
+    joined: set[str] = set()
+    log_info = None
+    pr_head = pr_branch = ""
     if args.pr is not None:
-        candidates = train_of(ctx, args.pr)
+        candidates, pr_head = train_of(ctx, args.pr)
+        pr_branch = candidates[0] if candidates else "pr-%d" % args.pr
+        joined = set(joined_of(ctx, pr_head, candidates, local_branches, do_remote, do_local))
+        candidates += sorted(joined)
     else:
         names = set()
         if do_remote:
@@ -516,6 +573,23 @@ def main(argv: list[str] | None = None) -> int:
         if do_local:
             names |= set(local_branches)
         candidates = sorted(names - ctx.protected)
+
+    # The delivery log is collected now, while the branches (and their commit times) still
+    # exist, and written to the release notes after the deletions. Best effort, never fatal.
+    log_tips: dict[str, str] = {}
+    want_log = args.pr is not None and not args.dry_run and not args.no_delivery_log
+    if want_log:
+        for name in candidates:
+            tip = heads.get(name) or dc.rev("refs/heads/" + name, root)
+            if tip:
+                log_tips[name] = tip
+        if pr_head and not any(t == pr_head for t in log_tips.values()):
+            log_tips.setdefault(pr_branch, pr_head)
+        try:
+            log_info = dlog.collect(root, args.repo, args.pr, log_tips)
+        except Exception as exc:  # noqa: BLE001
+            dc.eprint("cleanup: warning: delivery log not collected: %s" % exc)
+            log_info = None
 
     trees = list_worktrees(ctx) if do_local else []
     rows: list[Row] = []
@@ -525,7 +599,10 @@ def main(argv: list[str] | None = None) -> int:
         local_here = do_local and (branch in local_branches or any(w.branch == branch for w in trees))
         remote_here = do_remote and (branch in heads or branch in ctx.result_refs)
         # a branch only a local-mode run can see may be classified without gh
-        v = assess_local(ctx, branch) if (args.local or (local_here and not remote_here)) else assess(ctx, branch)
+        if branch in joined:
+            v = assess_joined(ctx, branch, args.pr, pr_head)
+        else:
+            v = assess_local(ctx, branch) if (args.local or (local_here and not remote_here)) else assess(ctx, branch)
         if do_local and args.pr is None:
             sv, commits_why = scaffolding_verdict(ctx, branch, v, local_branches)
             if sv is not None:
@@ -564,6 +641,12 @@ def main(argv: list[str] | None = None) -> int:
                 row.detail = "already gone"
         except RuntimeError as exc:
             row.status, row.detail = "failed", str(exc)
+
+    if want_log and log_info is not None:
+        try:
+            dlog.write_release(root, args.repo, log_info, log_info["rows"], False)
+        except Exception as exc:  # noqa: BLE001
+            dc.eprint("cleanup: warning: delivery log not published: %s" % exc)
 
     if do_local:
         rows += sweep_push_check(ctx)

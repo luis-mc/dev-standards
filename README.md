@@ -113,6 +113,8 @@ scanner checksums are pinned, runners are a repository setting, and a
 default-branch run skips merges that differ only in documentation. Branches add
 change notes instead of editing spec versions; the release folds them.
 
+Since 8.0.0 each delivery layer does only its share: a gate result stays valid while the base moves only by docs, lockfile changes widen only when they cannot be tied to a package, the join runs a quick check instead of a second full gate, a train branch is frozen while its ready PR's CI runs, runner problems are warned about, build-artifact workflows run only when their inputs change, each train's release notes carry its delivery log, and a product that ships a packaged program has CI start it and every worker it starts (the one new MUST).
+
 Supports four language tracks: **TypeScript, Go, Rust, and .NET**. Every
 vendor choice — Postgres or MySQL, Neon or RDS, Vercel or Fly — is yours;
 the wizard never tells you which one to pick, only which ones are compatible

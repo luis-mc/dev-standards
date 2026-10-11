@@ -8,7 +8,7 @@ name: Artifact prune
 #
 # PRODUCT: `workflows:` below must list the `name:` of EVERY workflow of this
 # repository that uploads an artifact (actions/upload-artifact). The template
-# lists `CI`; add each release or installer workflow you create, or its
+# lists `CI` and `Package` (package.yml); add each release or installer workflow you create, or its
 # artifacts are only caught by the daily sweep.
 #
 # Artifact names must be stable per kind (`windows-installer`, never
@@ -16,7 +16,7 @@ name: Artifact prune
 # that must outlive the next one is a release asset, not an artifact.
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["CI", "Package"]
     types: [completed]
   schedule:
     - cron: '23 3 * * *'

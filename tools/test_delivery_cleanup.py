@@ -90,6 +90,26 @@ elif argv[:2] == ["pr", "view"]:
     if view is None:
         fail("no pull request #" + argv[2])
     print(json.dumps(view))
+elif argv[:2] == ["run", "list"]:
+    if "runs-error" in fx:
+        fail("HTTP 500 for run list")
+    print(json.dumps(fx.get("runs", {}).get(opt("--commit"), [])))
+elif argv[:2] in (["release", "view"], ["release", "create"], ["release", "edit"]):
+    if fx.get("releases-error"):
+        fail("HTTP 403: Resource not accessible by integration")
+    store = os.path.join(os.path.dirname(os.environ["GH_STUB_FIXTURE"]), "releases.json")
+    rel = json.load(open(store, encoding="utf-8")) if os.path.exists(store) else {}
+    tag = argv[2]
+    if argv[1] == "view":
+        if tag not in rel:
+            fail("release not found")
+        print(json.dumps({"tagName": tag, "body": rel[tag]["body"]}))
+    else:
+        if argv[1] == "edit" and tag not in rel:
+            fail("release not found")
+        notes = open(opt("--notes-file"), encoding="utf-8").read()
+        rel[tag] = {"body": notes, "target": opt("--target") or rel.get(tag, {}).get("target")}
+        json.dump(rel, open(store, "w", encoding="utf-8"))
 else:
     fail("stub gh: unexpected call " + " ".join(argv))
 '''
@@ -168,7 +188,7 @@ class Stub:
 # a throwaway repository
 # --------------------------------------------------------------------------
 
-DELIVERY_FILES = ["delivery_common.py", "fast_guards.py", "cleanup.py"]
+DELIVERY_FILES = ["delivery_common.py", "fast_guards.py", "delivery_log.py", "cleanup.py"]
 
 
 class World:
@@ -441,11 +461,13 @@ def sc_pr(t: T, shared: Path) -> None:
     integ = w.integration("integ", ["feat/d1", "feat/d2"])
     other = w.branch("feat/other")        # finished, but not part of this train
     unrelated = w.branch("feat/unrelated")  # not in the train and not finished
+    d3 = w.branch("feat/d3")  # a train draft never joined: only --pr's children rule finds it
     for b in ("integ", "feat/d1", "feat/d2", "feat/other"):
         w.result_ref(b)
     n = s.pr("integ", "MERGED", integ, number=7)
     s.pr("feat/d1", "MERGED", d1, base="integ")
     s.pr("feat/d2", "CLOSED", d2, base="integ")
+    s.pr("feat/d3", "CLOSED", d3, base="integ")
     s.pr("feat/other", "MERGED", other)
 
     # refusals: not merged, merged into something other than the default branch
@@ -466,9 +488,9 @@ def sc_pr(t: T, shared: Path) -> None:
     r, rows = w.rows("--remote-only", "--pr", str(n))
     exit_is(t, "--pr N (merged into the default branch): exit 0", r, 0)
     t.eq("the train is exactly the head branch and the branches that had it as base",
-         sorted(rows), ["feat/d1", "feat/d2", "integ"])
-    t.eq("remote: the train is gone, a finished branch outside it is not",
-         w.remote_heads(), {"main", "feat/other", "feat/unrelated"})
+         sorted(rows), ["feat/d1", "feat/d2", "feat/d3", "integ"])
+    t.eq("remote: the train is gone, a finished branch outside it is not, a never-joined draft is kept",
+         w.remote_heads(), {"main", "feat/other", "feat/unrelated", "feat/d3"})
     t.eq("gate-result refs of the train are gone", w.remote_results(), {"feat/other"})
     t.eq("--pr lists the children with gh pr list --base", ["integ"] == [c[c.index("--base") + 1] for c in s.calls() if "--base" in c][:1], True)
 
@@ -482,6 +504,67 @@ def sc_pr(t: T, shared: Path) -> None:
     r, rows = w2.rows("--remote-only", "--pr", "3")
     t.eq("integration branch already deleted: its closed draft is still removed", w2.remote_heads(), {"main"})
     t.eq("... and the missing branch is reported as already gone", rows.get("integ", {}).get("detail"), "already gone")
+
+
+def sc_joined(t: T, shared: Path) -> None:
+    """DS48: --pr N also finishes every branch whose tip is an ancestor of the merged
+    pull request's head commit (joined by merge commits), unless it has an open pull
+    request, has commits outside that head, or is the default branch."""
+    w = World(shared)
+    s = w.stub
+    d1, d2, d3, d4 = (w.branch("feat/" + n) for n in ("d1", "d2", "d3", "d4"))
+    integ = w.integration("integ", ["feat/d1", "feat/d2", "feat/d3", "feat/d4"])
+    w.g("checkout", "-q", "-B", "feat/local", "integ")  # joined, never pushed
+    w.g("checkout", "-q", "main")
+    extra = w.branch("feat/extra", frm="integ")  # holds the integration plus a commit of its own
+    w.g("branch", "feat/empty", "main")
+    w.g("push", "-q", "-u", "origin", "feat/empty")  # no work of its own: an ancestor of main too
+    ahead = w.branch("feat/ahead", frm="feat/d1")  # a joined branch with a commit after the join
+    w.g("push", "-q", "--force", "origin", "feat/ahead:feat/d1")
+    w.g("fetch", "-q", "origin")
+    for b in ("integ", "feat/d1", "feat/d2"):
+        w.result_ref(b)
+    s.pr("feat/d3", "OPEN", d3)  # into main, so not a child of the integration branch
+    s.fx["errors"].append("head:feat/d4")
+    n = s.pr("integ", "MERGED", integ, number=46)
+    before = w.snapshot()
+
+    r, rows = w.rows("--dry-run", "--pr", str(n))
+    exit_is(t, "--dry-run --pr: exit 0", r, 0)
+    t.eq("--dry-run removes nothing", w.snapshot(), before)
+    t.check("... and lists the joined branches as would delete",
+            all(rows.get(b, {}).get("status") == "would delete" for b in ("feat/d2", "feat/local")), str(rows))
+
+    r, rows = w.rows("--pr", str(n))
+    exit_is(t, "--pr with joined branches: exit 0", r, 0)
+    t.check("the joined branch with no pull request of its own is deleted on the remote and locally",
+            "feat/d2" not in w.remote_heads() and "feat/d2" not in w.local_branches(), status(rows, "feat/d2"))
+    t.check("... and so is the integration branch",
+            "integ" not in w.remote_heads() and "integ" not in w.local_branches())
+    t.check("... and a joined branch that exists only locally",
+            "feat/local" not in w.local_branches(), status(rows, "feat/local"))
+    t.eq("... gate-result refs of joined branches go too", w.remote_results(), {"feat/d1"})
+    t.check("a joined branch with an open pull request is kept", is_kept(rows, "feat/d3", "open pull request")
+            and "feat/d3" in w.remote_heads(), status(rows, "feat/d3"))
+    t.check("a joined branch gh cannot classify is kept", is_kept(rows, "feat/d4", "cannot classify")
+            and "feat/d4" in w.remote_heads(), status(rows, "feat/d4"))
+    t.check("a branch with a commit outside the merged head is not touched",
+            {"feat/extra", "feat/ahead", "feat/d1"} <= w.remote_heads()
+            and {"feat/extra", "feat/ahead", "feat/d1"} <= w.local_branches()
+            and not {"feat/extra", "feat/ahead", "feat/d1"} & set(rows), str(sorted(rows)))
+    t.check("a branch with no work of its own (an ancestor of the default branch) is not touched",
+            "feat/empty" in w.remote_heads() and "feat/empty" not in rows)
+    t.check("the default branch is not touched", "main" in w.remote_heads() and "main" not in rows)
+    t.eq("the extra commits are still reachable", (w.tip("feat/extra"), w.tip("feat/ahead")), (extra, ahead))
+
+    # --remote-only leaves local branches; the remote side still goes
+    w = World(shared)
+    a, b = w.branch("feat/a"), w.branch("feat/b")
+    integ = w.integration("integ", ["feat/a", "feat/b"])
+    n = w.stub.pr("integ", "MERGED", integ, number=5)
+    r, rows = w.rows("--remote-only", "--pr", str(n))
+    t.eq("--remote-only: joined branches leave the remote", w.remote_heads(), {"main"})
+    t.eq("... and stay local", {"feat/a", "feat/b"} <= w.local_branches(), True)
 
 
 def sc_modes(t: T, shared: Path) -> None:
@@ -906,6 +989,7 @@ def sc_push_check_sweep(t: T, shared: Path) -> None:
 
 def join_box(shared: Path, cleanup_text: str | None = None):
     box = tdg.Box(shared)
+    tdg.Box.copy_text(shared / "scripts/delivery/delivery_log.py", box.work / "scripts/delivery/delivery_log.py")
     dst = box.work / "scripts/delivery/cleanup.py"
     if cleanup_text is None:
         tdg.Box.copy_text(shared / "scripts/delivery/cleanup.py", dst)
@@ -982,8 +1066,9 @@ def check_workflow(text: str, ci_text: str) -> list[str]:
     if want_if not in text:
         bad.append("job condition is not merged && base is the default branch")
     perms = re.search(r"^permissions:\n((?:  .+\n)+)", text, re.M)
-    if not perms or sorted(perms.group(1).split("\n")[:-1]) != ["  contents: write", "  pull-requests: read"]:
-        bad.append("permissions are not contents: write, pull-requests: read")
+    if not perms or sorted(ln.split("#")[0].rstrip() for ln in perms.group(1).split("\n")[:-1]) != [
+            "  actions: read", "  contents: write", "  pull-requests: read"]:
+        bad.append("permissions are not contents: write, pull-requests: read, actions: read")
     if "fetch-depth: 0" not in text:
         bad.append("checkout without fetch-depth: 0")
     for action in ("actions/checkout", "actions/setup-python"):
@@ -1033,10 +1118,185 @@ def sc_assets(t: T, shared: Path) -> None:
 
 
 # --------------------------------------------------------------------------
+# scenarios: the delivery log (DL8)
+# --------------------------------------------------------------------------
+
+def load_dlog(shared: Path):
+    """delivery_log.py of `shared` as a module (its figures and table are pure functions)."""
+    import importlib.util
+    d = str(shared / "scripts/delivery")
+    if d not in sys.path:
+        sys.path.insert(0, d)
+    sys.modules.pop("delivery_common", None)
+    spec = importlib.util.spec_from_file_location("dlog_" + str(abs(hash(d))), shared / "scripts/delivery/delivery_log.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def log_world(shared: Path, notes: str | None = None, tag: str | None = None, merge_commit: bool = True):
+    """A merged train: integ joins d1 and d2; CI ran twice on integ's head; the pull
+    request is #7, merged into main with a merge commit."""
+    w = World(shared)
+    s = w.stub
+    d1, d2 = w.branch("feat/d1"), w.branch("feat/d2")
+    integ = w.integration("integ", ["feat/d1", "feat/d2"])
+    n = s.pr("integ", "MERGED", integ, number=7)
+    s.pr("feat/d1", "MERGED", d1, base="integ")
+    s.pr("feat/d2", "CLOSED", d2, base="integ")
+    w.g("merge", "-q", "--no-ff", "-m", "Merge integ", "integ")
+    w.g("push", "-q", "origin", "main")
+    mc = w.g("rev-parse", "HEAD")
+    if merge_commit:
+        s.fx["views"]["7"]["mergeCommit"] = {"oid": mc}
+    s.fx["runs"] = {integ: [
+        {"databaseId": 1, "workflowName": "CI", "status": "completed", "conclusion": "success",
+         "createdAt": "2026-10-10T10:00:00Z", "startedAt": "2026-10-10T10:00:30Z", "updatedAt": "2026-10-10T10:05:00Z"},
+        {"databaseId": 2, "workflowName": "Other", "status": "completed", "conclusion": "success",
+         "createdAt": "2026-10-10T10:00:00Z", "startedAt": "2026-10-10T10:01:00Z", "updatedAt": "2026-10-10T10:10:00Z"}]}
+    s.save()
+    if tag:
+        w.g("tag", tag, mc)
+    if notes is not None:
+        (s.dir / "releases.json").write_text(json.dumps({tag or "train-2026-10-10-7": {"body": notes, "target": None}}), encoding="utf-8")
+    return w, n, mc
+
+
+def releases(w: World) -> dict:
+    p = w.stub.dir / "releases.json"
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
+
+
+def cells_of(body: str, change: str) -> list[str]:
+    row = next((x for x in body.splitlines() if x.startswith("| %s |" % change)), "")
+    cells = [c.strip() for c in row.strip("|").split("|")]
+    return cells if len(cells) == 11 else ["(no row)"] * 11
+
+
+def sc_delivery_log(t: T, shared: Path) -> None:
+    w, n, mc = log_world(shared)
+    r = w.cleanup("--remote-only", "--pr", str(n))
+    exit_is(t, "cleanup --pr N with a delivery log: exit 0", r, 0)
+    rel = releases(w)
+    t.eq("a release train-<merge date>-<N> is created for the merge commit", list(rel), ["train-2026-10-10-7"])
+    t.eq("... targeting the merge commit", rel.get("train-2026-10-10-7", {}).get("target"), mc)
+    body = rel.get("train-2026-10-10-7", {}).get("body", "")
+    t.eq("the table holds one row per change of the train",
+         sorted(re.findall(r"^\| (feat/d1|feat/d2|integ) \|", body, re.M)), ["feat/d1", "feat/d2", "integ"])
+    cells = cells_of(body, "feat/d1")
+    t.check("a joined branch has a joined time", cells[2] != "unknown", str(cells))
+    t.eq("CI start is the earliest start, CI end the latest end", cells[3:5], ["2026-10-10 10:00", "2026-10-10 10:10"])
+    t.eq("merged comes from the pull request", cells[5], "2026-10-10 10:00")
+    t.eq("live is unknown until the deploy says so", cells[6], "unknown")
+    t.eq("testing is CI start to CI end, queueing the longest wait", cells[8:10], ["9m 30s", "1m 00s"])
+    t.eq("without live, waiting and time to live are unknown", [cells[7], cells[10]], ["unknown", "unknown"])
+    t.eq("the train's branches are gone all the same", w.remote_heads(), {"main"})
+
+    # the deploy adds live; the branches are gone, so the notes alone hold the rows
+    live = [PY, str(w.work / "scripts/delivery/delivery_log.py"), "live", "--pr", "7", "--at"]
+    r = run([*live, "2099-01-01T00:00:00Z"], cwd=w.work, extra_env=w.stub.env())
+    exit_is(t, "delivery_log.py live: exit 0", r, 0)
+    body = releases(w)["train-2026-10-10-7"]["body"]
+    cells = cells_of(body, "feat/d1")
+    t.eq("live is recorded", cells[6], "2099-01-01 00:00")
+    t.check("... and time to live and waiting are now known", "unknown" not in (cells[7], cells[10]), str(cells))
+    t.eq("a second call replaces the table; it does not add another", body.count("<!-- delivery-log:start -->"), 1)
+    run([*live, "2100-01-01T00:00:00Z"], cwd=w.work, extra_env=w.stub.env())
+    body2 = releases(w)["train-2026-10-10-7"]["body"]
+    t.check("a later live call does not move a live time already recorded", "2099-01-01 00:00" in body2 and "2100-01-01" not in body2)
+
+
+def sc_delivery_log_notes(t: T, shared: Path) -> None:
+    """Notes already in the release survive; rows already in the table win; an existing tag is used."""
+    dlog = load_dlog(shared)
+    old_row = {"change": "integ", "finished": None, "joined": None, "ci_start": "2026-01-01T00:00:00Z",
+               "ci_end": None, "queued_s": None, "merged": None, "live": None}
+    seeded = "Release notes above\n\n" + dlog.render({"pr": 7, "rows": [old_row]}) + "\n\nNotes below\n"
+    w, n, mc = log_world(shared, notes=seeded, tag="v1.2.3")
+    r = w.cleanup("--remote-only", "--pr", str(n))
+    exit_is(t, "cleanup --pr N with an existing release: exit 0", r, 0)
+    rel = releases(w)
+    t.eq("the repository's own tag on the merge commit is used, no train-* tag is made", list(rel), ["v1.2.3"])
+    body = rel["v1.2.3"]["body"]
+    t.check("notes before and after the table are kept",
+            body.startswith("Release notes above") and body.rstrip().endswith("Notes below"), body[:80])
+    t.eq("one table", body.count("<!-- delivery-log:start -->"), 1)
+    t.has("a value already in the table is not overwritten", body, "2026-01-01 00:00")
+    t.has("a missing change is added", body, "| feat/d2 |")
+
+    # a tag on the merge commit, no release yet: the release is made for that tag
+    w, n, mc = log_world(shared, tag="v9.9.9")
+    w.cleanup("--remote-only", "--pr", str(n))
+    t.eq("no release yet: it is created for the existing tag", list(releases(w)), ["v9.9.9"])
+
+
+def sc_delivery_log_figures(t: T, shared: Path) -> None:
+    dlog = load_dlog(shared)
+    row = {"change": "c", "finished": "2026-10-10T08:00:00Z", "joined": None, "ci_start": "2026-10-10T09:00:00Z",
+           "ci_end": "2026-10-10T09:30:00Z", "queued_s": 120, "merged": "2026-10-10T09:40:00Z", "live": "2026-10-10T10:00:00Z"}
+    ttl, waiting, testing, queued = dlog.figures(row)
+    t.eq("time to live is live minus finished", ttl, 7200.0)
+    t.eq("testing is CI end minus CI start", testing, 1800.0)
+    t.eq("queueing is the queued time", queued, 120.0)
+    t.eq("waiting is what testing and queueing leave of the time to live", waiting, 7200.0 - 1800.0 - 120.0)
+    t.eq("an unknown moment is unknown, not a crash", dlog.figures({**row, "ci_start": None})[1:3], (None, None))
+    t.eq("unknown is spelled unknown", dlog.human(None), "unknown")
+    t.eq("a negative span is unknown", dlog.human(-5), "unknown")
+    t.eq("hours", dlog.human(3720), "1h 02m")
+    table = dlog.render({"pr": 7, "rows": [{"change": "x"}]})
+    t.has("a row with no data renders as unknown", table, "| x |" + " unknown |" * 10)
+    t.eq("the table sits between its markers", (table.startswith(dlog.START), table.endswith(dlog.END)), (True, True))
+
+
+def sc_delivery_log_offline(t: T, shared: Path) -> None:
+    # no permission on releases: warn, finish the cleanup
+    w, n, mc = log_world(shared)
+    w.stub.fx["releases-error"] = True
+    w.stub.save()
+    r = w.cleanup("--remote-only", "--pr", str(n))
+    exit_is(t, "release not writable: cleanup still exits 0", r, 0)
+    t.has("... warns about the delivery log", r.err, "delivery log")
+    t.eq("... and still deletes the train", w.remote_heads(), {"main"})
+
+    # the runs API fails: the table is written with unknown CI columns
+    w, n, mc = log_world(shared)
+    w.stub.fx["runs-error"] = True
+    w.stub.save()
+    r = w.cleanup("--remote-only", "--pr", str(n))
+    exit_is(t, "runs API failing: exit 0", r, 0)
+    cells = cells_of(releases(w).get("train-2026-10-10-7", {}).get("body", ""), "integ")
+    t.eq("... CI start, end, testing and queueing are unknown", cells[3:5] + cells[8:10], ["unknown"] * 4)
+
+    # no merge commit known and no tag: nothing to attach the release to
+    w, n, mc = log_world(shared, merge_commit=False)
+    r = w.cleanup("--remote-only", "--pr", str(n))
+    exit_is(t, "merge commit unknown: exit 0", r, 0)
+    t.eq("... no release is made", releases(w), {})
+    t.has("... and it says why", r.err, "merge commit")
+    t.eq("... the train is still deleted", w.remote_heads(), {"main"})
+
+    # opt out and dry run
+    w, n, mc = log_world(shared)
+    w.cleanup("--remote-only", "--pr", str(n), "--no-delivery-log")
+    t.eq("--no-delivery-log: no release", releases(w), {})
+    w, n, mc = log_world(shared)
+    w.cleanup("--remote-only", "--pr", str(n), "--dry-run")
+    t.eq("--dry-run: no release", releases(w), {})
+    t.eq("--dry-run: nothing deleted", "integ" in w.remote_heads(), True)
+
+    # delivery_log.py alone without gh
+    w, n, mc = log_world(shared)
+    r = run([PY, str(w.work / "scripts/delivery/delivery_log.py"), "live", "--pr", "7"], cwd=w.work, extra_env=w.stub.env(False))
+    exit_is(t, "delivery_log.py live without gh: warns and exits 0", r, 0)
+    t.has("... warning", r.err, "warning")
+
+
+# --------------------------------------------------------------------------
 # mutation pass
 # --------------------------------------------------------------------------
 
 D = "scripts/delivery/cleanup.py"
+L = "scripts/delivery/delivery_log.py"
 MUTANTS = [
     # classification
     ("an open pull request does not keep a branch", D, "    if opened:\n", "    if False:\n", "classify"),
@@ -1073,6 +1333,19 @@ MUTANTS = [
      'pr.get("state") != "MERGED"', 'False', "pr"),
     ("--pr accepts a base that is not the default branch", D,
      'pr.get("baseRefName") != ctx.default', "False", "pr"),
+    # joined branches (DS48)
+    ("--pr ignores the joined branches", D, "        candidates += sorted(joined)\n", "", "joined"),
+    ("a branch with commits outside the merged head counts as joined", D,
+     "all(tip == head or dc.is_ancestor(tip, head, ctx.root) for tip in tips)", "all(True for tip in tips)", "joined"),
+    ("a branch with no work of its own counts as joined", D,
+     "has_default and any(dc.is_ancestor(tip, default_ref, ctx.root) for tip in tips)", "False", "joined"),
+    ("an open pull request does not keep a joined branch", D,
+     "    if still_open:\n", "    if False:\n", "joined"),
+    ("a gh error finishes a joined branch", D,
+     'return Verdict(False, "cannot classify the joined branch (%s)" % exc, cannot_classify=True)',
+     'return Verdict(True, "joined", [head])', "joined"),
+    ("only the remote tip is checked against the merged head", D,
+     "        if do_local and name in local_branches:\n            tips.append(", "        if False:\n            tips.append(", "joined"),
     # modes
     ("--remote-only still cleans local branches", D,
      "do_remote, do_local = not args.local, not args.remote_only", "do_remote, do_local = not args.local, True", "modes"),
@@ -1159,6 +1432,23 @@ MUTANTS = [
      'parent / "cleanup.py"', 'parent / "nocleanup.py"', "join_cleanup"),
     ("join stops when cleanup.py fails", "scripts/delivery/join.py",
      'dc.eprint("join: cleanup.py --local exited %d; going on" % cleaned)', "return cleaned", "join_cleanup"),
+    # the delivery log (DL8)
+    ("cleanup never writes the delivery log", D,
+     'dlog.write_release(root, args.repo, log_info, log_info["rows"], False)', "pass", "delivery_log"),
+    ("a dry run writes the delivery log", D,
+     "want_log = args.pr is not None and not args.dry_run and not args.no_delivery_log",
+     "want_log = args.pr is not None and not args.no_delivery_log", "delivery_log_offline"),
+    ("waiting ignores the queueing", L, "waiting = ttl - testing - queued", "waiting = ttl - testing", "delivery_log_figures"),
+    ("an unknown span is shown as zero", L, "    if s is None or s < 0:\n        return UNKNOWN",
+     "    if s is None or s < 0:\n        return \"0s\"", "delivery_log_figures"),
+    ("a second call appends another table", L, "return body[:a] + section + body[b:]",
+     "return body + \"\\n\" + section", "delivery_log"),
+    ("a row already published is overwritten", L,
+     'if cur.get(k) in (None, "") and r.get(k) not in (None, ""):', 'if r.get(k) not in (None, ""):', "delivery_log_notes"),
+    ("a tag already on the merge commit is ignored", L, "        if tags:\n", "        if False:\n", "delivery_log_notes"),
+    ("live overwrites a live time already recorded", L, 'r.get("live") or live', "live", "delivery_log"),
+    ("CI start is the latest start, not the earliest", L,
+     'out["ci_start"] = iso(min(starts))', 'out["ci_start"] = iso(max(starts))', "delivery_log"),
 ]
 
 SCENARIOS = {
@@ -1167,6 +1457,7 @@ SCENARIOS = {
     "default_branch": sc_default_branch,
     "failed_deletion": sc_failed_deletion,
     "pr": sc_pr,
+    "joined": sc_joined,
     "modes": sc_modes,
     "dry_run": sc_dry_run,
     "worktrees": sc_worktrees,
@@ -1176,6 +1467,10 @@ SCENARIOS = {
     "join_cleanup": sc_join_cleanup,
     "workflow": sc_workflow,
     "assets": sc_assets,
+    "delivery_log": sc_delivery_log,
+    "delivery_log_notes": sc_delivery_log_notes,
+    "delivery_log_figures": sc_delivery_log_figures,
+    "delivery_log_offline": sc_delivery_log_offline,
 }
 
 
@@ -1212,6 +1507,8 @@ def main() -> int:
             crashed = False
             try:
                 SCENARIOS[scenario](t, shared)
+            except tdg.MutantStop:
+                pass  # the first failed check: caught
             except Exception:  # noqa: BLE001
                 crashed = True
             caught = bool(t.failures) or crashed

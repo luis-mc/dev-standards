@@ -8,7 +8,7 @@ effort: medium
 # Feature artifact — new
 
 Creates one feature artifact from the project's record (`docs/artifacts/`,
-ARTIFACTSPEC 1.3.1). The script is the only writer of `manifest.json` and
+ARTIFACTSPEC 1.4.0). The script is the only writer of `manifest.json` and
 `registry.json`; never edit either by hand. A feature artifact is a standalone
 HTML file in the repository (`docs/artifacts/feature-<slug>.html`, CSS inlined,
 opens by double-click). It is never published to claude.ai, because claude.ai
@@ -65,8 +65,9 @@ the repository instead (the session's scratchpad directory, in a new folder).
 4. **Write the content.** Run `export-content <key> --to <scratch dir>` and edit
    the files there:
    - `meta.json`: `title`, `hero` (one line saying what the feature is), `lede`
-     (one or two sentences on where the work stands now; the script appends the
-     needs-you line), `extra_css` (empty unless needed).
+     (a note of one or two sentences of context the registry cannot show: an
+     incident, a constraint, a plan; never restate statuses, the At a glance
+     block lists them; may be empty), `extra_css` (empty unless needed).
    - Replace the stub `01-what-and-why.html` and add `02-...`, `03-...` as the
      feature needs (design, how it works, links). Number files from
      `01-` upward, with no gaps. Do not write a section titled Decisions: the
@@ -95,8 +96,9 @@ the repository instead (the session's scratchpad directory, in a new folder).
 7. **Do not publish the feature artifact**, and do not publish Full Progress
    yet: it is published once, at the end of the turn, per "Publishing" below.
 8. **Check:** run `check`. Report any finding with its requirement ID. The
-   script commits and pushes the record on every writing command; if `pending`
-   or a push fails, say so and stop.
+   script commits the record on every writing command and pushes it once, at the
+   end of the turn (the end-of-turn hook, `pending`, and before `gh pr create`,
+   `gh pr ready` and `gh pr merge`); if `pending` or a push fails, say so and stop.
 9. **Tell the owner** where the file is (`docs/artifacts/<file>` in the
    repository; open it by double-click), its task IDs, and that branch names
    for these tasks must start with the task ID (`<ID>-short-name`).

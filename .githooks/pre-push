@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Train freeze for dev-standards itself (STACKSPEC 13.6, DL10): refuse a push to a
+# branch that is the head of a ready pull request while that PR's CI is still running,
+# so a late push does not restart the one full run. Late branches ride the next train.
+# A finished run (passed or failed) allows the push, so fix forward works. Offline or
+# without gh the push is allowed with a warning. DELIVERY_FREEZE_OVERRIDE=1 overrides.
+#
+# The script ships in luismc-project-setup; this repo runs its copy in place.
+# Enable with: git config core.hooksPath .githooks
+set -u
+freeze="claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/train_freeze.py"
+[ -f "$freeze" ] || exit 0
+py=$(command -v python3 || command -v python || true)
+[ -n "$py" ] || { echo "pre-push: no python; train freeze skipped" >&2; exit 0; }
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/*) ;;
+    *) continue ;;
+  esac
+  [ "$local_sha" = "0000000000000000000000000000000000000000" ] && continue   # a deletion
+  "$py" "$freeze" --branch "${remote_ref#refs/heads/}" </dev/null || exit 1
+done
+exit 0

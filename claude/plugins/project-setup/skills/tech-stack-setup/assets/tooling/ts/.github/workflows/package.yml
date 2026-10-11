@@ -1,0 +1,90 @@
+name: Package
+
+# Implements STACKSPEC §13.1 "Build artifacts" and §13.7 for the ts track: build
+# the packaged form of the product, start it and check that every child process
+# or worker it starts comes up, then keep the build under one stable artifact name.
+#
+# It runs only when a path that feeds the packaged program changes (`paths:`
+# below), never for a documentation-only or record-only change (`!docs/**`,
+# `!**/*.md`), and by hand with "Run workflow" (`workflow_dispatch`). Drafts
+# skip it like CI. PRODUCT: adjust the paths to the directories that feed your
+# packaged program, and fill `scripts/delivery/smoke.json`; a product with no
+# packaged program deletes this workflow and its artifact-prune.yml entry.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.jsonc'
+      - 'Dockerfile'
+      - 'docker/**'
+      - '.github/workflows/package.yml'
+      - 'scripts/delivery/smoke.json'
+      - '!apps/ios/**'
+      - '!apps/android/**'
+      - '!docs/**'
+      - '!**/*.md'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.jsonc'
+      - 'Dockerfile'
+      - 'docker/**'
+      - '.github/workflows/package.yml'
+      - 'scripts/delivery/smoke.json'
+      - '!apps/ios/**'
+      - '!apps/android/**'
+      - '!docs/**'
+      - '!**/*.md'
+  workflow_dispatch:
+
+concurrency:
+  group: package-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: build, start and smoke-test the packaged program
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Enable corepack (pnpm from packageManager)
+        run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      # PRODUCT: the packaged form of the product. For a container image this is
+      # `docker build`; for a single executable, the bundler's command.
+      - name: Build the packaged program
+        run: docker build --tag packaged-program:ci .
+
+      # §13.7: start the packaged form, not the development server, and wait for
+      # a readiness line from the program and from every worker it starts
+      # (scripts/delivery/smoke.json). The job fails when one does not come up.
+      - name: Smoke test the packaged program
+        run: python3 scripts/delivery/smoke_packaged.py

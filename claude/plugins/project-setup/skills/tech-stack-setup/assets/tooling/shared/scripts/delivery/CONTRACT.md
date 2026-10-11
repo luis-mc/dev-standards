@@ -17,10 +17,16 @@ are built against; change it first, then the code.
 | `scripts/delivery/agent_setup.sh` | same | gate |
 | `scripts/delivery/delivery_common.py` | same (shared helpers: git, JSON, gate.json loading) | gate |
 | `scripts/delivery/ci_watch.py` | same | ci |
+| `scripts/delivery/runner_health.py` | same (runner labels against online runners; used by `join.py` and `ci_watch.py`) | gate |
+| `scripts/delivery/train_freeze.py` | same (called by the `pre-push` hook) | gate |
 | `scripts/delivery/ci_skip_check.py` | same | ci |
 | `scripts/delivery/reach_check.py` | same | ci |
 | `scripts/delivery/cleanup.py` | same | cleanup |
 | `scripts/delivery/artifact_prune.py` | same | ci |
+| `scripts/delivery/delivery_log.py` | same | cleanup |
+| `scripts/delivery/smoke_packaged.py` | same | ci |
+| `scripts/delivery/smoke.json` | `tooling/<track>/scripts/delivery/smoke.json` | ci |
+| `.github/workflows/package.yml` | `tooling/<track>/.github/workflows/package.yml` | ci |
 | `.github/workflows/train-cleanup.yml` | `tooling/shared/.github/workflows/train-cleanup.yml` | cleanup |
 | `.github/workflows/artifact-prune.yml` | `tooling/shared/.github/workflows/artifact-prune.yml` | ci |
 | `scripts/delivery/tools.json` | same | gate |
@@ -55,7 +61,9 @@ timed out. A script never exits 0 when it could not decide.
   "setup": ["pnpm install --frozen-lockfile"],
   "timeout_minutes": 30,
   "packages": {"kind": "pnpm-workspace"},
-  "widen_on": ["pnpm-lock.yaml", "package.json", "turbo.jsonc", ".github/", "scripts/delivery/"],
+  "widen_on": ["package.json", "turbo.jsonc", ".github/", "scripts/delivery/"],
+  "lockfile_scope": "pnpm-importers",
+  "inert_paths": ["docs/**"],
   "ui_paths": ["apps/web/", "apps/admin/", "packages/ui/"],
   "steps": [
     {"name": "typecheck", "scope": "changed+dependents",
@@ -86,6 +94,31 @@ timed out. A script never exits 0 when it could not decide.
   glob over the full path; anything else is a root-level file only (a nested
   `package.json` does not widen). Per-package lockfiles use globs (`*go.sum`,
   `*packages.lock.json`).
+- `lockfile_scope` (optional, default `widen`): how a lockfile change is scoped.
+  `widen`: the lockfile is whatever `widen_on` says (an entry there widens the gate
+  to every package; a gate.json written before this key keeps working, and a
+  lockfile still listed in `widen_on` widens whatever the scope says).
+  `pnpm-importers`: `pnpm-lock.yaml` is compared with its version at the base; each
+  entry of its `importers:` section whose text differs is a package whose
+  dependencies changed, and that package counts as changed (its steps run scoped,
+  its dependents are affected, a ui package triggers `ui-changed`). The gate
+  widens instead when the change cannot be pinned to a package: the root importer
+  (`.`) changed, the lockfile differs only outside `importers:` (a transitive
+  resolution), or the lockfile was added or removed. `per-package`: the lockfiles
+  live next to their package (`go.mod`/`go.sum` per Go module, `packages.lock.json`
+  per .NET project), so they are not `widen_on` entries and a change makes just
+  that package changed; a root-level file such as `go.work` or `go.work.sum`
+  still widens. Per track: `ts` pnpm-importers; `go` and `dotnet` per-package;
+  `rust` widen, because `Cargo.lock` is one file for the workspace and mapping
+  its changed entries to the crates that depend on them needs a dependency graph
+  the gate does not build, so any change to it widens. (The older `lockfiles`
+  array is unrelated: it only lists extra files `join.py` may resolve.)
+- `inert_paths` (optional, default `["docs/**"]`): globs (same rules as
+  `widen_on`) for paths whose change cannot affect what a gate result tested.
+  `gate_verify.py` keeps a result valid across a move of the base that touches only
+  these paths. tech-stack-setup writes the key into each track's `gate.json`; when
+  luismc-artifacts is enabled it adds `docs/artifacts/**` only if `docs/**` is not
+  already listed, and the default already covers it.
 - `env` (optional, per step): an object of names to string values added to the
   environment of that step's command, e.g. `"env": {"CI": "true"}` for a test
   runner whose timeouts depend on it. Inline `VAR=x cmd` does not work in
@@ -175,8 +208,19 @@ One ref per branch, so parallel agents never contend.
 **Trust rule** (`gate_verify.py`): a result is trusted when `head` equals the
 branch's current head on the remote, `base` equals the current head of the branch
 it joins, `pass` is true and `partial` is not. `--allow-older-base` relaxes the second condition
-to "`base` is an ancestor of the current head" (used by `join.py`, which re-gates
-the joined head anyway).
+to "`base` is an ancestor of the current head" (used by `join.py`, which runs its quick check
+on the joined head unless its tree equals a trusted joined branch's tree).
+
+**Inert moves of the base.** Without `--allow-older-base`, a `base` that is not the
+current head still passes when it is an ancestor of the current head and the
+difference between them (`git diff --name-only base current`) touches only
+`inert_paths`. The net difference decides, so a merge commit counts by its diff
+and a change made and reverted inside the range counts as nothing. The verdict
+gets `"inert_commits": N` (the commits in `base..current`; `null` otherwise) and
+the output says `base moved only by inert commits: N`. A base that is not an
+ancestor (a rewound branch) is stale as before. `--strict-base` turns the
+exception off. The exception is safe because the ready pull request's CI still
+tests the real merge, and it SHOULD be used, not required.
 
 ## Command lines
 
@@ -213,7 +257,7 @@ partial. Refuses (exit 2) on a dirty working tree. Exit 0 pass, 1 a step
 failed, 2 usage, 4 timed out.
 
 ```
-gate_verify.py BRANCH [--base-ref REF] [--remote origin] [--allow-older-base] [--json]
+gate_verify.py BRANCH [--base-ref REF] [--remote origin] [--allow-older-base] [--strict-base] [--json]
 ```
 Fetches the branch, the base ref and `refs/gate-results/BRANCH`; prints why a
 result is or is not trusted. Exit 0 trusted and passing, 1 otherwise, 2 no result.
@@ -248,6 +292,20 @@ exits 2. Never publishes a result.
 After the guards pass, the `pre-push` hook runs `pre-push.local` from its own
 directory when that file exists, with the same arguments and the same stdin (it
 reads the ref lines once and feeds both); a non-zero exit fails the push.
+
+**Train freeze** (`train_freeze.py --branch NAME`, called by the hook for every pushed
+`refs/heads/*` ref before the guards). A branch is *frozen* when an open, non-draft pull
+request has it as head (an integration branch, `*-integration`, or whatever head the ready
+pull request has) and a workflow run of that pull request's head commit has not completed.
+A frozen branch refuses the push (exit 1), naming the pull request and the run. Allowed:
+CI finished, passed or failed (fix forward works); the ready pull request closed unmerged
+(the train is abandoned); a draft pull request; no pull request; no run listed yet. When
+GitHub cannot say (offline, `gh` missing, an API error, no answer within 8 s) the push is
+allowed with a warning (D4): the ready pull request's CI still decides the merge.
+`DELIVERY_FREEZE_OVERRIDE=1` allows the push and prints that the running CI will restart
+(D9). A branch that is late rides the next train. The hook stays fast: one `gh pr list
+--head NAME --state open` call, and a second, `gh run list --commit SHA`, only when a ready
+pull request exists. Tags, deletions and refs outside `refs/heads/` are not checked.
 `pre-push.local` is the project's own pre-push check, moved there at install so
 the template never overwrites it.
 
@@ -263,9 +321,33 @@ lockfile is resolved by taking INTEGRATION's version and re-running `setup`; if
 join exits 3 (the conflict goes to one agent). `.delivery/join-result.json`
 (`{"joined": [...], "stopped_at": BRANCH|null, "conflicts": [paths]}`, plus a
 `reason` when a branch is refused or a step fails) is written on success and on
-failure. After the last merge it runs `branch_gate.py --base-ref origin/<default_branch>`
-on the joined head (unless `--no-gate`) and pushes INTEGRATION and its result
-with `--push`. Before the first fetch it runs `cleanup.py --local` (best effort:
+failure. After the last merge it runs a **quick check** on the joined head (unless `--no-gate`): the
+`setup` commands, then the steps of `gate.json` named `build`, `typecheck`, `unit` and `test`
+(a step's own `"join": true` or `false` overrides the name), with the gate's own affected
+set against `origin/<default_branch>` (`delivery_common.build_context`): every package any
+joined branch changed **plus their dependents** (D6), so an interaction between branches
+shows before the ready pull request; a `{changed_dirs}` in such a step is filled with that
+set, and a widened join runs the `run_full` commands. It is not the full gate: no `lint`,
+`guards`, scan or end-to-end step, no result is written to `refs/gate-results/`, and the
+ready pull request's CI is the one full suite. Each step's time is printed and written to
+`join-result.json` as `quick_check` (`pass`, `seconds`, `affected_dirs`, and `steps` with
+`name`, `outcome`, `seconds`); a package-less join (only docs changed) passes after the
+install. A failed check exits 1 (4 on timeout) and pushes nothing. `--push` pushes
+INTEGRATION. **The quick check is skipped, and the output says so,
+when the joined tree equals the tree of a joined branch's head whose gate result
+`gate_verify.py` trusts for that head and for the same base the join gate would use
+(`origin/<default_branch>`, without `--allow-older-base`)**: those files were
+already gated against that base. Otherwise it runs as above. Neither publishes a result for INTEGRATION.
+Last, before the join says it is done, **runner health** (`runner_health.py`, D5) prints a
+warning for every job whose `runs-on` labels no online runner carries, and never stops the
+join; it is recorded as `runner_health` in `join-result.json` (`status` `ok`, `warn` or
+`skipped`, with `warnings` and `reason`). It reads every `.github/workflows/*.yml|yaml`,
+resolves `${{ fromJSON(vars.NAME || '"default"') }}` through the repository variable (`gh
+variable get`; the default is used, with a note, when it cannot be read), counts
+`ubuntu-*`, `windows-*` and `macos-*` label sets as available, and for a `self-hosted` set
+needs one online runner (`gh api repos/{owner}/{repo}/actions/runners`) carrying every label.
+Listing runners needs admin rights; without them the check prints that it was skipped, and
+why. Hosted-only workflows make no runner call. Before the first fetch it runs `cleanup.py --local` (best effort:
 its failure is printed and never stops the join), so worktrees of trains
 already merged are gone before new ones are made.
 
@@ -311,7 +393,14 @@ Never touches the default branch, a detached worktree (such as
 cannot classify (an error from `gh` keeps the branch). With `--pr N` only the
 train of that pull request is considered (exit 2 unless N is merged into the
 default branch) (its head branch and every
-branch whose pull request had that head as base); without it, every branch on
+branch whose pull request had that head as base, and every **joined** branch:
+a remote or local branch whose tip is an ancestor of the merged pull request's
+head commit, `headRefOid`, which is not the default branch, not an ancestor of
+`<remote>/<default>` (a branch with no work of its own), and has no open pull
+request; a branch with any commit outside that head, on the remote or locally, is
+not touched, and a `gh` error keeps it. A squash merge leaves the integration
+branch's joined branches behind otherwise. They are then removed like any
+finished branch, worktree rules included); without it, every branch on
 the remote. `--local` treats only local branches and worktrees: after
 `git fetch --prune`, a local branch is finished when its pull request is merged.
 Without a working `gh`, `--local` deletes nothing: it lists each branch whose
@@ -340,6 +429,11 @@ Waits until at least one run of the workflow exists for SHA and every run of it
 for SHA is completed. Exit 0 all `success` (or `skipped`), 1 any other
 conclusion (prints the failed jobs from `gh run view --json jobs`), 2 after 5
 consecutive `gh` failures, 4 timeout. It never reads a pull request's check list.
+While it waits (`--queue-warn-seconds`, default 600) it reads the jobs of each unfinished run
+(`gh api repos/{owner}/{repo}/actions/runs/ID/jobs`) and warns **once per job** that has been
+queued longer, when no online runner carries the job's labels, or, when the runners cannot
+be listed, that the job has been queued 10+ min. GitHub-hosted label sets are not checked.
+A warning never changes the exit code (D5).
 
 ```
 ci_skip_check.py
@@ -385,7 +479,7 @@ then runs `gate.json`'s `setup` commands. Idempotent.
   It becomes a required check.
 - Gitleaks in CI installs the version in `tools.json` (checksum verified).
 - `artifact-prune.yml` (every track): `on: workflow_run` (`workflows:` lists
-  every workflow of the repository that uploads an artifact: `CI` in the
+  every workflow of the repository that uploads an artifact: `CI` and `Package` in the
   template; a product that adds a release workflow adds its name here),
   `types: [completed]`; plus a daily `schedule` and `workflow_dispatch`. One
   job, `permissions: actions: write`, `GH_TOKEN: ${{ github.token }}`, runs
@@ -397,13 +491,14 @@ then runs `gate.json`'s `setup` commands. Idempotent.
   (a draft into an integration branch also closes as merged when `join.py`
   pushes; the train goes only when the ready pull request merges),
   `permissions: contents: write,
-  pull-requests: read`, checkout with `fetch-depth: 0`, then
+  pull-requests: read, actions: read`, checkout with `fetch-depth: 0`, then
   `python3 scripts/delivery/cleanup.py --remote-only --pr ${{ github.event.pull_request.number }}`
   with `GH_TOKEN: ${{ github.token }}`.
 
 ## Tests (in `tools/` of this repository)
 
-- `tools/test_delivery_gate.py` — branch_gate, gate_verify, fast_guards, join
+- `tools/test_delivery_gate.py` — branch_gate, gate_verify, fast_guards, join (quick check,
+  train freeze, runner health)
   against throwaway git repositories with a local bare remote and a `gate.json`
   whose steps are small Python commands. Every trust-rule branch and every exit
   code is exercised.
@@ -417,6 +512,10 @@ then runs `gate.json`'s `setup` commands. Idempotent.
   locked, dirty and detached cases, `--pr`, `--local`, `--remote-only`,
   `--dry-run`, join.py's best-effort call, and the structure of
   `train-cleanup.yml`.
+- `tools/test_smoke_packaged.py` — smoke_packaged.py against a fake packaged program
+  that starts workers: all up, one missing, the program exiting, health probes,
+  the declaration's errors, the process tree stopped on every path, and the
+  structure of the tracks' `package.yml` and `smoke.json`.
 - `tools/test_artifact_prune.py` — artifact_prune.py with a stub `gh` serving
   artifact pages: grouping, ties, expired, `--keep`, `--dry-run`, a failed
   deletion, pagination, and the structure of `artifact-prune.yml`.
@@ -444,6 +543,20 @@ whole suite). The result entry for e2e adds `"selection": "affected"|"full"` and
 Template TS `gate.json`: `"run": "pnpm exec playwright install chromium && pnpm exec playwright test {e2e_specs}"`,
 `"run_full"` without the placeholder, and an example `e2e_map` commented in the
 README (not in gate.json; a product writes its own).
+
+**Without an `e2e_map` (DL4), `pnpm-workspace` only.** When the e2e step has the
+`{e2e_specs}` placeholder and the gate is not widened, the specs come from the
+workspace dependency graph. The ui packages the change affects are the changed
+packages under `ui_paths` (a file there that is in no package, or a lockfile
+change that touches a ui package, counts) and every ui package that depends on
+one of them. Each affected ui package contributes its spec directory:
+`<package>/e2e` or, failing that, `e2e/<last segment of the package path>`, when it
+exists. The placeholder becomes those directories (sorted, space-separated,
+Playwright takes them as path filters), and the result records
+`"selection": "affected"`. It is the whole suite instead (placeholder empty) when
+any changed ui package neither has a spec directory nor is imported by an affected
+ui package that has one, when a ui file is in no package, or for any other kind of
+workspace. A present `e2e_map` wins and is applied exactly as above.
 
 ### U2 — the gate fetches its base
 
@@ -561,3 +674,69 @@ lists at least `docs/**` and `**/*.md` under push `paths-ignore` (plus the
 mobile app folders when those have their own workflows), so docs-only pushes,
 such as the record commits, start no run at all.
 
+## STACKSPEC 8.0.0 additions
+
+### DL5 — build-artifact workflows run only when their inputs change
+
+A workflow that builds a shipped artifact (installer, bundle, package, image) is
+its own workflow, not a job of `ci.yml`, so the paths that feed it can filter it.
+`tooling/<track>/.github/workflows/package.yml` (workflow name `Package`) is the
+template: `on: pull_request` (types as `ci.yml`, drafts skipped by the job-level
+`if`) and `push` to the default branch, both with a `paths:` list of the
+directories and manifests that feed the packaged program, the workflow itself and
+`scripts/delivery/smoke.json`, followed by the exclusions `'!docs/**'` and
+`'!**/*.md'` (a documentation-only or record-only merge never builds); and
+`workflow_dispatch:` so a build can always be started by hand. The runner is
+`vars.CI_RUNS_ON` like every workflow. Its artifact has one stable name
+(`packaged-program`) and `artifact-prune.yml` lists `Package`. A product adjusts
+the `paths:` list to its own layout; a product with no packaged program deletes
+`package.yml` and its `artifact-prune.yml` entry.
+
+### DL9 — `smoke_packaged.py` and `smoke.json`
+
+```
+smoke_packaged.py [--config scripts/delivery/smoke.json] [--start CMD] [--expect TEXT ...]
+                  [--health URL ...] [--timeout SECONDS] [--cwd DIR]
+```
+
+`scripts/delivery/smoke.json` declares the check:
+`{"smoke": {"start": "./dist/app", "expect": ["api ready", "worker-queue ready"], "health": ["http://127.0.0.1:8080/healthz"], "timeout_s": 60, "cwd": "."}}`.
+`start` runs the PACKAGED program (executable, installed bundle, `docker run` of
+the image). `expect` holds one readiness line per process the program starts,
+itself included; each must appear in its combined output, in any order. `health`
+URLs must answer 2xx. The script exits 0 when everything was seen, 1 when the
+program exited first or a line never came (naming each one missing and showing
+the last output), 4 on the time limit, 2 for a declaration it cannot use: no
+file, invalid, or a `start` with nothing in `expect` and `health`. An empty
+`start` means "this product ships no packaged program" and exits 0 with a
+notice; it is the template's default until the product fills it. The whole
+process tree is stopped at the end on every path; only processes the script
+started are touched. `package.yml` runs it after the build.
+
+### DL8 — `delivery_log.py`, the delivery log in the release notes
+
+```
+delivery_log.py publish --pr N [--remote origin] [--repo OWNER/NAME] [--dry-run]
+delivery_log.py live    --pr N [--at ISO] [--remote origin] [--repo OWNER/NAME] [--dry-run]
+```
+
+`cleanup.py --pr N` collects, before it deletes anything, one row per change of
+the train (the ready pull request's branch and every branch joined into it):
+finished (the branch's last commit), joined (the merge commit that brought it into
+the integration branch), CI start and end (the earliest start and latest end of
+the runs on the ready pull request's head, from `gh run list --commit`), queued
+(the longest created-to-started wait among those runs) and merged (`mergedAt`).
+After the deletions it writes the table into the train's GitHub release notes
+(`--no-delivery-log` skips it; `--dry-run` writes nothing). The deploy job calls
+`delivery_log.py live --pr N` after its smoke test; it sets `live` on every row
+that has none. Time to live is live minus finished and is split into testing (CI
+end minus CI start), queueing, and waiting (the rest: before CI, in the train,
+the merge and the deploy). The release is the one whose tag points at the merge
+commit; without one, `train-<merge date>-<N>` is created for the merge commit.
+The table sits between `<!-- delivery-log:start -->` and `<!-- delivery-log:end -->`
+with its rows as JSON in a comment, so a second call replaces the table, keeps
+every value already recorded, and leaves the rest of the notes alone. Nothing is
+committed to the default branch. A missing timestamp is `unknown` and so is every
+figure that needs it; offline, without `gh`, without permission, or on any error
+the script warns on stderr and exits 0, because the log must never fail a cleanup
+or a deploy.

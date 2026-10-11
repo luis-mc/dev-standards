@@ -12,7 +12,7 @@ full-progress artifact is rendered as a fragment beginning with <title> (R5.29).
 feature files by relative link unless render_artifact is given `links` (the publish copy, R5.31).
 
 Templates hold {{placeholders}}. Section 0 is in the template; its parts come from the
-placeholders stamp, lede, tiles, key and checklist. The other placeholders are title,
+placeholders stamp, lede, glance, tiles, key and checklist. The other placeholders are title,
 fonts_link, design_css, structure_css, extra_css, kind_label, project, hero, contents,
 sections, and registry (full-progress template only).
 """
@@ -642,6 +642,8 @@ def load_content(record_dir: str, key: str, plugin_dir: str = PLUGIN_DIR) -> dic
         loaded = {}
     for field in ('title', 'hero', 'lede'):
         value = loaded.get(field)
+        if field == 'lede' and (value is None or (isinstance(value, str) and not value.strip())):
+            continue                     # R5.7: the lede is an optional note; the At a glance block carries the statuses
         if not isinstance(value, str) or not value.strip():
             if loaded:
                 problems.append('content/%s/meta.json: "%s" must be a non-empty string' % (key, field))
@@ -812,6 +814,96 @@ def needs_you_sentence(tasks: list, decisions=()) -> str:
     if not parts:
         return 'Nothing needs you.'
     return 'Needs you: ' + '; '.join(parts) + ('' if parts[-1].endswith('?') else '.')
+
+
+GLANCE_LIVE_HOURS = 24      # R5.34
+GLANCE_LIVE_MAX = 8         # R5.34
+LEDE_WARN_CHARS = 300       # R5.37
+GLANCE_GROUPS = (
+    ('you', 'Needs you'), ('running', 'Running now'), ('built', 'Built, not released'),
+    ('waiting', 'Waiting or on hold'), ('live', 'Live in the last 24 hours'),
+)
+
+
+def glance_groups(tasks: list, decisions, ref: datetime) -> list:
+    """R5.33 and R5.34: [(group key, label, [task], [decision], more)] in display order. Empty groups are
+    omitted except `you`. Each task list is ordered by the checklist's rules (R6.2)."""
+    floor = datetime.min.replace(tzinfo=timezone.utc)
+
+    def newest(items):
+        return sorted(items, key=lambda t: _parse_iso(t.get('changed'), floor), reverse=True)
+
+    def soonest(task):
+        moment = _expected_datetime(task['expected'], ref)
+        return (1, datetime.max) if moment is None else (0, moment)
+
+    out = []
+    for gkey, label in GLANCE_GROUPS:
+        more = 0
+        if gkey == 'you':
+            shown = sorted([t for t in tasks if t['status'] in ('Needs you', 'Failed')],
+                           key=lambda t: YOU_ORDER.index(t['status']))
+            found = open_decisions(decisions)
+        else:
+            found = []
+            if gkey == 'running':
+                shown = sorted([t for t in tasks if t['status'] == 'Running'], key=soonest)
+            elif gkey == 'built':
+                shown = newest([t for t in tasks if t['status'] == 'Built'])
+            elif gkey == 'waiting':
+                shown = sorted([t for t in tasks if t['status'] in ('Waiting', 'On hold')],
+                               key=lambda t: (t['status'] == 'On hold',) + soonest(t))
+            else:
+                cutoff = ref - timedelta(hours=GLANCE_LIVE_HOURS)
+                recent = newest([t for t in tasks if t['status'] == 'Live'
+                                 and (_parse_iso(t.get('changed')) or floor) >= cutoff])
+                shown, more = recent[:GLANCE_LIVE_MAX], max(0, len(recent) - GLANCE_LIVE_MAX)
+        if shown or found or gkey == 'you':
+            out.append((gkey, label, shown, found, more))
+    return out
+
+
+def _glance_task(task: dict) -> str:
+    expected = ''
+    if task['status'] in OPEN_STATUSES and task.get('expected'):
+        expected = ' <span class="glance-expected">%s</span>' % esc(task['expected'])
+        if task.get('expected_basis'):
+            expected += '<span class="glance-basis">%s</span>' % esc(task['expected_basis'])
+    return '<li data-glance-task="%s"><span class="task-id">%s</span>%s%s</li>' % (
+        esc(task['id']), esc(task['id']), esc(task['item']), expected)
+
+
+def _at_a_glance(tasks: list, decisions, ref: datetime) -> str:
+    """R5.33: the At a glance block of section 0, generated from the registry."""
+    groups = []
+    for gkey, label, shown, found, more in glance_groups(tasks, decisions, ref):
+        items = [_glance_task(t) for t in shown]
+        items += ['<li data-glance-decision="%s"><span class="task-id">%s</span>%s</li>'
+                  % (esc(d['id']), esc(d['id']), esc(_norm(d['question']))) for d in found]
+        if more:
+            items.append('<li class="glance-more">and %d more</li>' % more)
+        body = '<ul>\n%s\n</ul>' % '\n'.join(items) if items else '<p class="glance-none">Nothing needs you.</p>'
+        groups.append('<div class="glance-group glance-%s" data-glance="%s"><div class="glance-label">%s</div>\n%s\n</div>'
+                      % (gkey, gkey, esc(label), body))
+    return '<div class="at-a-glance">\n%s\n</div>' % '\n'.join(groups)
+
+
+def feature_summary(tasks: list, decisions=()) -> str:
+    """R5.36: a one-line summary generated from the registry, e.g. `2 running, 3 built, nothing needs you`."""
+    counts = {s: sum(1 for t in tasks if t['status'] == s) for s in STATUSES}
+    parts = ['%d %s' % (counts[s], s.lower()) for s in ('Running', 'Built', 'Waiting', 'To do', 'On hold', 'Live') if counts[s]]
+    needs = counts['Needs you'] + counts['Failed'] + len(open_decisions(decisions))
+    parts.append('nothing needs you' if not needs else '%d need%s you' % (needs, 's' if needs == 1 else ''))
+    return ', '.join(parts)
+
+
+def lede_warnings(content: dict) -> list:
+    """R5.37: [message] for a lede over 300 characters (a warning, never a finding)."""
+    text = text_of(parse_dom(content['meta']['lede'])) if content['meta'].get('lede') else ''
+    if len(text) <= LEDE_WARN_CHARS:
+        return []
+    return ['the lede is %d characters; keep the note to one or two sentences, the At a glance block lists the statuses'
+            % len(text)]
 
 
 def _first_sentence(lede_html: str) -> str:
@@ -1005,7 +1097,42 @@ def _decisions_open_line(decisions) -> str:
     return '' if not count else ' %d decision%s open.' % (count, '' if count == 1 else 's')
 
 
-def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list, feature_links: dict) -> str:
+TIME_ATTR_RE = re.compile(r'<time\b[^>]*\bdatetime="([^"]+)"')
+
+
+def feature_updated(entry: dict, record_dir: str) -> str:
+    """The ISO stamp of a feature's page, as Full Progress section 1 shows it (R5.6): the manifest entry's
+    `updated` (written whenever the script writes the page with a new stamp, R4.20), else the `<time datetime>`
+    of the feature file for a record that has none, else ''."""
+    value = entry.get('updated')
+    if isinstance(value, str) and ISO_OFFSET_RE.match(value) and _parse_iso(value) is not None:
+        return value
+    try:
+        text = _read(os.path.join(record_dir, str(entry.get('file', ''))))
+    except (OSError, ContentError):
+        return ''
+    found = TIME_ATTR_RE.search(text)
+    if found and ISO_OFFSET_RE.match(found.group(1)) and _parse_iso(found.group(1)) is not None:
+        return found.group(1)
+    return ''
+
+
+def _utc_minutes(iso: str) -> int:
+    moment = _parse_iso(iso)
+    if moment is None:
+        return 0
+    return int(moment.astimezone(timezone.utc).timestamp() // 60)
+
+
+def _sort_header(label: str, name: str, order: str) -> str:
+    arrow = {'ascending': '&uarr;', 'descending': '&darr;'}.get(order, '')
+    return ('<th scope="col"%s><button type="button" class="sort-header" data-sort="%s">%s '
+            '<span class="sort-arrow" aria-hidden="true">%s</span></button></th>'
+            % (' aria-sort="%s"' % order if order else '', name, esc(label), arrow))
+
+
+def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list, feature_links: dict,
+                     record_dir: str = '') -> str:
     rows = []
     for entry in manifest.get('feature_artifacts') or []:
         content = contents.get(entry['key'])
@@ -1014,11 +1141,36 @@ def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list
             continue
         title = esc(entry['title'])
         link = _link(feature_links[entry['key']], title)
-        rows.append('<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % (
-            link, esc(_id_ranges(entry['key'], entry.get('prefix', ''), tasks)),
-            esc(_first_sentence(content['meta']['lede']) + _decisions_open_line(content.get('decisions')))))
-    return ('<div class="table-scroll"><table class="feature-list"><thead><tr><th>Feature artifact</th><th>Tasks</th>'
-            '<th>Where it stands</th></tr></thead><tbody>\n%s\n</tbody></table></div>\n' % '\n'.join(rows))
+        stands = _first_sentence(content['meta']['lede'])
+        if not stands:                    # R5.36: an empty note never leaves the column blank
+            stands = feature_summary([t for t in tasks if t.get('owner') == entry['key']], content.get('decisions')) + '.'
+            stands = stands[0].upper() + stands[1:]
+        iso = feature_updated(entry, record_dir)
+        when = ('<time datetime="%s">%s</time>' % (esc(iso), esc(_fmt_stamp(datetime.fromisoformat(iso)))) if iso else '')
+        rows.append((not iso, -_utc_minutes(iso) if iso else 0, str(entry['title']).lower(),
+                     '<tr><td data-value="%s">%s</td><td data-value="%d">%s</td><td>%s</td><td>%s</td></tr>' % (
+                         esc(str(entry['title']).lower()), link, _utc_minutes(iso) if iso else 0, when,
+                         esc(_id_ranges(entry['key'], entry.get('prefix', ''), tasks)),
+                         esc(stands + _decisions_open_line(content.get('decisions'))))))
+    rows.sort(key=lambda r: r[:3])      # newest first, no stamp last, ties by title
+    return ('<div class="table-scroll"><table class="feature-list"><thead><tr>%s%s<th>Tasks</th>'
+            '<th>Where it stands</th></tr></thead><tbody>\n%s\n</tbody></table></div>\n'
+            % (_sort_header('Feature artifact', 'name', ''), _sort_header('Last updated', 'updated', 'descending'),
+               '\n'.join(r[3] for r in rows)))
+
+
+def _published_line(manifest: dict, label: str) -> str:
+    """A feature page's line under its stamp: when Full Progress was last published, linking to it (R5.38).
+    Empty before the first publish. It comes from the manifest, never moves the page's stamp."""
+    fp = manifest.get('full_progress_artifact')
+    if not isinstance(fp, dict):
+        return ''
+    url, at = fp.get('url'), fp.get('published_at')
+    if not (isinstance(url, str) and re.match(r'^https?://\S+$', url) and isinstance(at, str)
+            and ISO_OFFSET_RE.match(at) and _parse_iso(at) is not None):
+        return ''
+    return ('<p class="full-progress-published">Full Progress published: <a href="%s">%s</a> (%s)</p>\n'
+            % (esc(url), esc(_fmt_stamp(datetime.fromisoformat(at))), esc(label)))
 
 
 def _registry_script(registry: dict) -> str:
@@ -1104,13 +1256,12 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
     meta = content['meta']
 
     decisions = content.get('decisions') or []
-    sentence = needs_you_sentence(mine, decisions)
-    lede = '<p class="lede">%s<strong>%s</strong></p>' % (meta['lede'] + ' ' if meta['lede'] else '', esc(sentence))
+    lede = '<p class="lede">%s</p>\n' % meta['lede'] if meta['lede'] else ''
 
     sections = []  # (title, inner html) for sections 1..N
     if kind == 'full-progress':
         feature_problems = []
-        sections.append(('Feature artifacts', _feature_section(manifest, tasks, contents, feature_problems, feature_links)))
+        sections.append(('Feature artifacts', _feature_section(manifest, tasks, contents, feature_problems, feature_links, record_dir)))
         if feature_problems:
             raise ContentError(feature_problems)
     sections += [(s['title'], s['html']) for s in content['sections']]
@@ -1135,7 +1286,9 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
         'hero': meta['hero'],
         'contents': nav,
         'stamp': '<time datetime="%s">%s</time> (%s)' % (esc(stamp_iso), esc(stamp_text), esc(label)),
+        'published': _published_line(manifest, label) if kind == 'feature' else '',
         'lede': lede,
+        'glance': _at_a_glance(mine, decisions, moment),
         'tiles': _tiles(mine),
         'key': _key(label),
         'checklist': _checklist(mine, kind, label, ref, feature_links),
@@ -1204,7 +1357,48 @@ def _check_decisions(node, decisions, add) -> None:
             add('R5.23', '%s shows the Needs you chip exactly when it is open and not replaced' % did)
 
 
-FONT_HOST_RE = re.compile(r'^https://fonts\.(googleapis|gstatic)\.com(/|$)')
+def _check_feature_table(s1, manifest: dict, record_dir: str, add) -> None:
+    """R5.6, R5.39: the columns, the sort buttons, a Last updated time per feature and the default order."""
+    table = find(s1, 'table', 'feature-list')
+    if table is None:
+        add('R5.6', 'section 1 must be a table of the feature artifacts')
+        return
+    heads = find_all(table, 'th')
+    if [text_of(th).rstrip(' ↑↓') for th in heads] != ['Feature artifact', 'Last updated', 'Tasks', 'Where it stands']:
+        add('R5.6', 'section 1 must have the columns Feature artifact, Last updated, Tasks, Where it stands')
+        return
+    buttons = [(find(th, 'button', 'sort-header') if i < 2 else None) for i, th in enumerate(heads)]
+    for button, name in zip(buttons[:2], ('name', 'updated')):
+        if button is None or button.attrs.get('data-sort') != name or button.attrs.get('type') != 'button':
+            add('R5.39', 'the %s column header must be a <button type="button" class="sort-header" data-sort="%s">'
+                % ('Feature artifact' if name == 'name' else 'Last updated', name))
+            return
+    if heads[1].attrs.get('aria-sort') != 'descending' or heads[0].attrs.get('aria-sort'):
+        add('R5.39', 'the committed table is sorted by Last updated, newest first: that header carries aria-sort="descending"')
+    entries = {e.get('title'): e for e in manifest.get('feature_artifacts') or []}
+    keys = []
+    for row in find_all(table, 'tr'):
+        cells = [c for c in row.children if getattr(c, 'tag', None) == 'td']
+        if len(cells) != 4:
+            continue
+        title = text_of(cells[0]).replace('Copy link', '').strip()
+        anchor = find(cells[0], 'a')
+        title = text_of(anchor) if anchor is not None else title
+        time_node = find(cells[1], 'time')
+        shown = text_of(cells[1]).strip()
+        iso = time_node.attrs.get('datetime', '') if time_node is not None else ''
+        entry = entries.get(title)
+        want = feature_updated(entry, record_dir) if entry is not None else ''
+        if iso != want:
+            add('R5.6', 'the Last updated time of %r must be its page\'s stamp %r; it shows %r' % (title, want, iso))
+        elif iso and shown != _fmt_stamp(datetime.fromisoformat(iso)):
+            add('R5.6', 'the Last updated time of %r must read DD Mon HH:MM; it shows %r' % (title, shown))
+        keys.append((not iso, -_utc_minutes(iso) if iso else 0, title.lower()))
+    if keys != sorted(keys):
+        add('R5.39', 'the committed table must list the features by Last updated, newest first, ties by title')
+
+
+FONT_HOST_RE =re.compile(r'^https://fonts\.(googleapis|gstatic)\.com(/|$)')
 
 
 def _check_document(html: str, root, kind: str, add) -> None:
@@ -1333,22 +1527,41 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             % (info[0]['title'] if info else None))
     if s0 is not None:
         order = [n for n in elements(s0)]
-        parts = [('stamp', find(s0, 'p', 'last-update')), ('lede', find(s0, 'p', 'lede')),
+        parts = [('stamp', find(s0, 'p', 'last-update')), ('at a glance', find(s0, 'div', 'at-a-glance')),
                  ('tiles', find(s0, 'div', 'status-count-tiles')), ('status key', find(s0, 'p', 'note')),
                  ('checklist', find(s0, 'table', 'status-checklist'))]
+        lede_node = find(s0, 'p', 'lede')       # optional (R5.7): the session's note
         missing = [name for name, node in parts if node is None]
         if missing:
             add('R5.3', 'section 0 lacks: %s' % ', '.join(missing))
         else:
-            positions = [order.index(node) for _, node in parts]
+            wanted_order = parts[:1] + ([('lede', lede_node)] if lede_node is not None else []) + parts[1:]
+            positions = [order.index(node) for _, node in wanted_order]
             if positions != sorted(positions):
-                add('R5.3', 'section 0 must hold the stamp, lede, tiles, status key and checklist in that order')
+                add('R5.3', 'section 0 must hold the stamp, the lede (if any), at a glance, tiles, status key and checklist in that order')
         key_node = parts[3][1]
         if key_node is not None and [text_of(c) for c in find_all(key_node, 'span', 'status-chip')] != list(STATUSES):
             add('R5.3', 'the status key must show the eight statuses in order')
 
+    # R5.38 the line under a feature's stamp: when Full Progress was last published
+    if s0 is not None:
+        want_line = _published_line(manifest, label) if kind == 'feature' else ''
+        lines = find_all(s0, 'p', 'full-progress-published')
+        stamp_node = find(s0, 'p', 'last-update')
+        if want_line:
+            want_node = find(parse_dom(want_line), 'p')
+            anchor, want_anchor = (find(lines[0], 'a') if lines else None), find(want_node, 'a')
+            order_s0 = list(elements(s0))
+            if len(lines) != 1 or text_of(lines[0]) != text_of(want_node) \
+                    or anchor is None or anchor.attrs.get('href') != want_anchor.attrs.get('href'):
+                add('R5.38', 'the line under the stamp must read %r and link to Full Progress\'s URL' % text_of(want_node))
+            elif stamp_node is None or order_s0.index(lines[0]) != order_s0.index(stamp_node) + 1 + len(list(elements(stamp_node))):
+                add('R5.38', 'the Full Progress published line must come right under the stamp')
+        elif lines:
+            add('R5.38', 'the Full Progress published line belongs only on a feature artifact, after Full Progress was published')
+
     # R5.5 stamp
-    ref = _parse_iso('2000-01-01T00:00+00:00')
+    ref =_parse_iso('2000-01-01T00:00+00:00')
     stamp_p = find(s0, 'p', 'last-update') if s0 is not None else None
     time_node = find(stamp_p, 'time') if stamp_p else None
     if time_node is None:
@@ -1367,11 +1580,39 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         if tail != 'Last update: (%s)' % label:
             add('R5.5', 'the stamp must read "Last update: DD Mon HH:MM (%s)"; around the time it reads %r' % (label, tail))
 
-    # R5.7 lede
-    lede = find(s0, 'p', 'lede') if s0 is not None else None
-    sentence = needs_you_sentence([t for t in mine if t.get('status') in STATUSES], decisions)
-    if lede is not None and not text_of(lede).endswith(sentence):
-        add('R5.7', 'the lede must end with %r; it reads %r' % (sentence, text_of(lede)[-120:]))
+    # R5.7 the Needs you group, R5.33 to R5.35 the At a glance block
+    glance = find(s0, 'div', 'at-a-glance') if s0 is not None else None
+    if glance is not None:
+        valid = [t for t in mine if t.get('status') in STATUSES]
+        want_groups = glance_groups(valid, decisions, ref)
+        have = []
+        for g in find_all(glance, 'div', 'glance-group'):
+            tasks_in = [li.attrs.get('data-glance-task') for li in find_all(g, 'li', pred=lambda n: 'data-glance-task' in n.attrs)]
+            decs_in = [li.attrs.get('data-glance-decision') for li in find_all(g, 'li', pred=lambda n: 'data-glance-decision' in n.attrs)]
+            more_li = find(g, 'li', 'glance-more')
+            none_p = find(g, 'p', 'glance-none')
+            have.append((g.attrs.get('data-glance', ''), tasks_in, decs_in, text_of(more_li) if more_li else '',
+                         text_of(none_p) if none_p else ''))
+        wanted_keys = [g[0] for g in want_groups]
+        if [h[0] for h in have] != wanted_keys:
+            add('R5.33', 'the At a glance groups must be %s in that order; found %s' % (wanted_keys, [h[0] for h in have]))
+        by_name = {h[0]: h for h in have}
+        for gkey, _label, shown, open_decs, more in want_groups:
+            h = by_name.get(gkey)
+            if h is None:
+                continue
+            ids, dec_ids = [t['id'] for t in shown], [d['id'] for d in open_decs]
+            if gkey == 'you':
+                empty_text = 'Nothing needs you.'
+                if (h[1], h[2]) != (ids, dec_ids) or (not ids and not dec_ids and h[4] != empty_text) or (ids or dec_ids) and h[4]:
+                    add('R5.7', 'the Needs you group must list %s then decisions %s, or read %r when none; it lists %s then %s%s'
+                        % (ids, dec_ids, empty_text, h[1], h[2], (' and reads %r' % h[4]) if h[4] else ''))
+            else:
+                want_more = 'and %d more' % more if more else ''
+                if h[1] != ids or h[2] or h[3] != want_more:
+                    add('R5.35', 'the %r group must list %s%s; it lists %s%s' % (
+                        gkey, ids, (' and "%s"' % want_more) if want_more else '', h[1],
+                        (' and "%s"' % h[3]) if h[3] else ''))
 
     # checklist tables
     tables = find_all(root, 'table', 'status-checklist')
@@ -1536,6 +1777,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
                 elif not any(a.attrs.get('href') == e.get('file') for a in anchors):
                     add('R5.30', 'section 1 must link %r to %s, relative to this file; it links to %r'
                         % (e.get('title'), e.get('file'), anchors[0].attrs.get('href')))
+            _check_feature_table(s1, manifest, record_dir, add)
 
     # R5.4 History
     history_sections = [i for i in info if i['title'] == 'History']

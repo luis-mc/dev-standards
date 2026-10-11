@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.3.1
+**Version:** 1.4.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,12 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.4.0 — 2026-10-11.**
+
+- Section 0 of every artifact gets a generated At a glance block (R5.33 to R5.35): Needs you, Running now, Built not released, Waiting or on hold, and Live in the last 24 hours, one task per line. The lede becomes an optional short note (R5.3, R5.7), a lede over 300 characters is a warning (R5.37), and Full Progress section 1 shows a generated summary for a feature with an empty lede (R5.36).
+- Full Progress section 1 becomes a table `Feature artifact | Last updated | Tasks | Where it stands` (R5.6): the new column shows the time each feature page last changed (its stamp, kept in the manifest entry as `updated`, R4.30), and the rows start newest first. The two headers `Feature artifact` and `Last updated` are buttons that sort the rows on the page and reverse on a second click, with an arrow and `aria-sort` (R5.39); the template's script does it and stores nothing. Each feature page shows `Full Progress published: DD Mon HH:MM (<label>)` right under its stamp, linking to Full Progress's URL (R5.38), from the new manifest field `published_at` that `mark-published` sets; recording a publish redraws the feature pages keeping their stamp, so Full Progress does not change and `pending` has nothing to list again. A command that renders features and Full Progress draws the features first (R7.5).
+- Writing commands commit the record but no longer push it; the record is pushed once, at the end of the turn, by `pending`, by a new `push` command and by a new before-command hook ahead of `gh pr create`, `gh pr ready` and `gh pr merge` (R4.28, R4.29, R7.6, R8.16, R8.17). This stops one secret-scan run per record commit.
 
 **1.3.1 — 2026-10-11.**
 
@@ -309,8 +315,8 @@ docs/artifacts/
 | `design` | string | `"default"` or `"design.css"`. |
 | `default_branch` | string | Where the record is committed, e.g. `main`. |
 | `merged_status` | string | Status a merge suggests: `"Live"` (default) or `"Built"`. |
-| `full_progress_artifact` | object | `{key:"full-progress", title, url, file, published_sha256}` |
-| `feature_artifacts` | array | `{key, title, file, prefix, apps:[...]}` each: no `url` and no `published_sha256`, because a feature artifact is never published |
+| `full_progress_artifact` | object | `{key:"full-progress", title, url, file, published_sha256, published_at}`; `published_at` is the ISO time (with offset) of the last `mark-published`, absent before the first publish (R4.30) |
+| `feature_artifacts` | array | `{key, title, file, prefix, apps:[...], updated}` each: no `url` and no `published_sha256`, because a feature artifact is never published; `updated` is the ISO time (with offset) of the stamp of the feature's page, written whenever the script writes that page with a new stamp, and absent in an older record (R4.30) |
 | `retired` | array | Optional. `[{key, title, url, retired}]`: claude.ai pages of feature artifacts still to delete (R4.19). |
 | `deleted` | array | Optional. `[{key, url, deleted}]`, plus `"gone": true` for a page that no longer existed: pages recorded as deleted (R4.19). |
 | `project_prefixes` | array | Task prefixes owned by the project, e.g. `["DS"]`. |
@@ -355,9 +361,11 @@ docs/artifacts/
 
 ### 4.4 Content
 
-`meta.json`: `{title, hero, lede, extra_css}`. `lede` is the session's
-sentence about where the work stands; the script appends the needs-you line
-(§5.2). Each `NN-<slug>.html` is an HTML fragment whose first line is an HTML
+`meta.json`: `{title, hero, lede, extra_css}`. `lede` is a short note: one or
+two sentences of context the registry cannot show (an incident, a constraint, a
+plan). It never restates statuses: the generated At a glance block (§5.2) lists
+what is live, built, running, waiting and needs the owner. It may be empty, and
+a lede over 300 characters is a warning (R5.37). Each `NN-<slug>.html` is an HTML fragment whose first line is an HTML
 comment holding the section title: `<!-- title: The design -->`.
 `history.json`: `[{"date": "10 Oct 12:23", "change": "..."}]`, newest first.
 `decisions.json` is described in §5.4.
@@ -381,8 +389,8 @@ comment holding the section title: `<!-- title: The design -->`.
 - **R4.13** — The script writes the record in a record worktree at the location
   of R4.24 (by default `<repo>/.claude/worktrees/artifacts-record`), a detached worktree of
   `origin/<default_branch>`, created on first use. Before each change it
-  fetches and resets that worktree to `origin/<default_branch>`; after it, it
-  commits and pushes to `<default_branch>`. The session's own working tree is
+  fetches and syncs that worktree to `origin/<default_branch>` (R4.29); after it, it
+  commits. It pushes to `<default_branch>` only as R4.28 says. The session's own working tree is
   never touched — a session on a task branch would otherwise carry record
   changes into its pull request.
 - **R4.14** — A record commit changes only paths under `docs/artifacts/`; the
@@ -392,10 +400,10 @@ comment holding the section title: `<!-- title: The design -->`.
   fetch and re-apply, at most 3 times; then the command fails with exit 3.
 - **R4.16** — A push rejected by branch protection fails with exit 4 and the
   message `record push refused by <default_branch> protection`; the change
-  stays committed in the record worktree for `commit --retry`.
+  stays committed in the record worktree for the next `push` (or `commit --retry`).
 - **R4.17** — With `--no-push` (tests and the real-repo test), the script
-  commits in the record worktree and does not push.
-
+  commits in the record worktree and does not push. This is now what
+  a writing command does without a flag (R4.28); `--no-push` stays accepted.
 ### 4.7 Older records
 
 - **R4.18** — A manifest whose feature entry still holds `url` or
@@ -475,6 +483,44 @@ comment holding the section title: `<!-- title: The design -->`.
   by `test_moving_the_worktree_removes_the_old_one` and
   `test_moving_refuses_unpushed_commits`.
 
+### 4.9 Pushing the record
+
+- **R4.28** — A writing command commits in the record worktree and does not
+  push, unless it is given `--push`, which pushes at once with the retries of
+  R4.15 and the refusal of R4.16. The record is pushed, once for all the
+  commits of the turn, at these points: the end-of-turn hook (R8.17); `pending`
+  before it lists (R7.6); the before-command hook ahead of `gh pr create`,
+  `gh pr ready` and `gh pr merge` (R8.16); and the `push` command (§7). A push
+  pushes every record commit not yet on `origin/<default_branch>`. A push that
+  fails at a hook point leaves the commits in the record worktree and says so;
+  it never loses them and never blocks the session forever.
+- **R4.29** — Syncing the record worktree before a change never discards a
+  record commit that is not on `origin/<default_branch>`: after the fetch it
+  rebases those commits onto the fetched head (and resets only when there are
+  none), so a race in which the default branch moved while commits were
+  unpushed ends with the commits on top of the new head. Two writers always
+  disagree on the `updated` stamps and the rendered pages, so the rebase
+  resolves those itself: `manifest.json` and `registry.json` are merged as JSON
+  (objects key by key, tasks by `id`, features by `key`, the later `updated`),
+  a rendered page at the top of `docs/artifacts/` takes origin's copy, and
+  every page the merge leaves different from a fresh render is drawn again in
+  one more commit, `docs/artifacts: render after rebase`. Anything else, or two
+  different edits of one value (the same task's status set two ways), is not
+  resolved: the command aborts the rebase, exits 2, names the conflicting
+  files, and the commits stay in the record worktree. Verified by
+  `test_unpushed_commits_survive_a_moved_main`, `test_push_after_main_moved_rebases`
+  and `test_conflicting_unpushed_commit_is_kept`.
+- **R4.30** — A feature entry's `updated` is the ISO time (with offset) of the
+  stamp of the feature's page; the script sets it whenever it writes that page
+  with a new stamp (a task status change, a content edit, a decision, a plugin
+  upgrade that redraws the page), and never when it writes the page keeping its
+  stamp (R5.38). Full Progress section 1 shows it (R5.6); a record without it
+  is read from the `<time datetime>` of the feature file. The full-progress
+  entry's `published_at` is the time `mark-published` last ran; the feature
+  pages show it (R5.38). Both are ISO times with an offset, or absent; the
+  rebase keeps the later of two (R4.29). `check` reports a malformed one.
+  Verified by `test_feature_updated_and_published_line`.
+
 ---
 
 ## 5. Artifact structure and look
@@ -493,22 +539,32 @@ an HTML fragment beginning with `<title>`, as the Artifact tool expects (no
 - **R5.2** — Sections are numbered from 0 in order with no gaps, and the
   contents list shows the same numbers and titles.
 - **R5.3** — Section 0 is titled `Status and checklist` and holds, in order:
-  the stamp, the lede, the tiles, the status key and the checklist.
+  the stamp, the lede (omitted when empty, R5.7), the At a glance block (R5.33),
+  the tiles, the status key and the checklist.
 - **R5.4** — A feature artifact's last section is `History`, a table
   `Date | Change`, newest first. The full-progress artifact has no History.
 - **R5.5** — The stamp reads `Last update: DD Mon HH:MM (<timezone_label>)` in
   a `<time>` element whose `datetime` attribute is the ISO time with offset.
 - **R5.6** — The full-progress artifact's section 1 lists every feature
-  artifact with its link to the feature's file (R5.30, R5.31), its task ID
-  range and one line on where it stands (taken from its `meta.json` lede's
-  first sentence). Section 1 is generated, so the full-progress artifact's
+  artifact in a table `Feature artifact | Last updated | Tasks | Where it stands`:
+  its link to the feature's file (R5.30, R5.31), the time its page was last
+  updated (its stamp, `DD Mon HH:MM` in a `<time>` element, from the manifest
+  entry's `updated`, R4.30), its task ID range and one line on where it stands
+  (taken from its `meta.json` lede's first sentence, or its generated summary
+  when the lede is empty, R5.36). The committed rows are in the default order
+  (R5.39): Last updated, newest first, ties by title. Section 1 is generated, so the full-progress artifact's
   content files `01-*.html` onward render as sections 2 and up.
 
-### 5.2 Lede and tiles
+### 5.2 Lede, At a glance and tiles
 
-- **R5.7** — The lede is the content lede followed by a generated sentence:
-  `Needs you: <ID> <item>; ...` listing every task in Needs you or Failed, or
-  `Nothing needs you.` when none is.
+- **R5.7** — The lede is the content lede alone, in `<p class="lede">`: a short
+  note (§4.4). When the content lede is empty the paragraph is omitted. The
+  statuses are not in it: the At a glance block's Needs you group (R5.34) lists
+  every task in Needs you or Failed, then every open decision (R5.25), and reads
+  `Nothing needs you.` when none waits. `check` finds a Needs you group that
+  differs from the generated set.
+The At a glance block itself is specified in §5.6 (R5.33 to R5.35).
+
 - **R5.8** — Tiles show the count of each status that has at least one task,
   in the order of §6.1, computed from the registry.
 - **R5.9** — The full-progress artifact embeds the registry as
@@ -617,15 +673,14 @@ and drawn by the renderer; they are never written as a content section.
 
 **Where decisions surface**
 
-- **R5.25** — The generated needs-you sentence (R5.7) also lists every open,
-  unreplaced decision after the tasks, as `<ID> <question>`; the sentence is
+- **R5.25** — The Needs you group (R5.7, R5.34) also lists every open,
+  unreplaced decision after the tasks, as `<ID> <question>`; it reads
   `Nothing needs you.` only when no task and no decision waits. In the
   full-progress artifact's section 1 a feature's line ends with `n decisions
   open.` (`1 decision open.`) when it has any.
 - **R5.26** — `check` warns, without failing, for an open, unreplaced decision
   whose `task` is not a task of that feature in Needs you, or, when it names no
   task, when the feature has no task in Needs you.
-
 ### 5.5 Standalone files, the publish copy and links
 
 claude.ai allows 200 artifact publishes per account per day, and every
@@ -687,6 +742,58 @@ double-click.
   of the publish copy (R4.3), so writing a publish copy never makes the record
   look stale: `pending` compares the committed file with `published_sha256`.
   Verified by `test_pending_and_mark_published`.
+
+### 5.6 At a glance, notes and the feature table
+
+- **R5.33** — Section 0 holds, right after the lede and before the tiles, an
+  *At a glance* block generated from the registry: `<div class="at-a-glance">`
+  with one `<div class="glance-group" data-glance="<kind>">` per kind, a
+  `glance-label` and a list of items one per line. An item is the task ID
+  (`<span class="task-id">`), the item text and, for an open status, the
+  Expected (and its `expected_basis`, R6.10). The block is the same on a feature
+  artifact (its own tasks and decisions) and on the full-progress artifact (all
+  tasks; decisions as in R5.25, which the full-progress artifact has none of),
+  and is deterministic (R7.4).
+- **R5.34** — The groups, in this order, each omitted when empty except the
+  first: `you` *Needs you* (tasks in Needs you, then Failed, then open decisions
+  as in R5.25); `running` *Running now* (Running tasks, soonest Expected first);
+  `built` *Built, not released* (Built, newest first); `waiting` *Waiting or on
+  hold* (Waiting, then On hold); `live` *Live in the last 24 hours* (Live tasks
+  whose `changed` is within 24 hours of the stamp, newest first, at most 8, then
+  an item `and N more`). To do tasks are not listed. A group in a feature
+  artifact never names a task of another owner.
+- **R5.35** — `check` finds a group that does not list exactly the tasks (and
+  decisions) of its statuses in the order of R5.34, a missing or extra group, a
+  group out of order, or a wrong `and N more`.
+
+- **R5.36** — When a feature's lede is empty, its line in the full-progress
+  artifact's section 1 (R5.6) is its generated summary, from the registry:
+  counts of its Running, Built, Waiting, To do, On hold and Live tasks, then
+  `nothing needs you` or `N need(s) you`, as `2 running, 3 built, nothing needs
+  you.` The column is never blank.
+- **R5.37** — `check` warns, without failing, for a lede over 300 characters:
+  keep the note to one or two sentences; the At a glance block lists the
+  statuses. Records written before this requirement stay valid.
+
+- **R5.38** — Right under the stamp, a feature artifact shows `Full Progress
+  published: DD Mon HH:MM (<timezone_label>)` in `<p class="full-progress-published">`,
+  the time linking to Full Progress's `url`. It comes from the manifest's
+  `published_at` and `url` and is omitted before the first publish. Recording a
+  publish never moves a page's stamp: `mark-published` draws the feature pages
+  again keeping their stamp and their `updated`, so Full Progress, which shows
+  those stamps, does not change and is not listed by `pending` again. A command
+  that renders features and Full Progress draws the features first, then Full
+  Progress, so its section 1 shows the stamps just written (R7.4, INV-3).
+  Verified by `test_publish_does_not_loop` and `check_r538_published_line`.
+- **R5.39** — The headers `Feature artifact` and `Last updated` of section 1 are
+  buttons (`<button type="button" class="sort-header" data-sort="name|updated">`):
+  a click sorts the rows by that column, a second click reverses the order, an
+  arrow and `aria-sort` on the header show the current order. The page starts
+  in Last updated, newest first (the committed order); sorting is done by the
+  template's own script on the page, stores nothing and calls nothing outside
+  the page, so it works in the publish copy, whose Copy link buttons (R5.31)
+  keep working in any order. Verified by `check_r539_sort_headers` and
+  `test_full_progress_sort_script`.
 
 ---
 
@@ -779,7 +886,8 @@ All commands run as `python <plugin>/scripts/project_artifacts.py <command>`
 from anywhere inside the project's repository, read `docs/artifacts/` from the
 record worktree (§4.6), and exit 0 on success, 1 on findings or a refused
 action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
-`--json` prints a machine-readable result.
+`--json` prints a machine-readable result. Every writing command accepts
+`--no-push` (the default, R4.28) and `--push` (push at once).
 
 | Command | Does |
 |---|---|
@@ -791,13 +899,14 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
 | `edit-content KEY --from DIR` | Replaces the artifact's content files in the record with those in DIR (after the fetch and reset of R4.13), validates, renders and commits. The session never edits the record worktree directly; the reset would discard it. It refuses an edit that removes a decision or changes the choice of a decided one (R5.15). |
 | `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design`, renders and commits; `default` removes it. |
 | `render [--all]` | Renders every artifact whose output would change (committed renders, with relative links). It is the migration of an older record (R8.14). |
-| `check [--record PATH]` | The conformance checks of §14; lists findings with their requirement ID, then notes (including retired pages, R4.22) and any warnings (R5.26), which do not change the exit code. |
-| `pending` | Lists the full-progress artifact when the hash of its committed render differs from `published_sha256` (a feature artifact is never listed, R9.5), and queued events. When it lists Full Progress it writes the publish copy (R5.31). Exit 1 when anything is listed. `--json` prints `{"artifacts": [{"key", "kind", "title", "file", "path", "url", "reason"}], "queue": [events]}`; `path` is the absolute path of the publish copy to publish. It also lists the retired pages (R4.22): `--json` adds `"retired": [{"key", "title", "url", "retired"}]`, and they never change the exit code. |
+| `check [--record PATH]` | The conformance checks of §14; lists findings with their requirement ID, then notes (including retired pages, R4.22) and any warnings (R5.26, R5.37), which do not change the exit code. |
+| `pending` | Pushes the record first (R7.6), then lists the full-progress artifact when the hash of its committed render differs from `published_sha256` (a feature artifact is never listed, R9.5), and queued events. When it lists Full Progress it writes the publish copy (R5.31). Exit 1 when anything is listed. `--json` prints `{"artifacts": [{"key", "kind", "title", "file", "path", "url", "reason"}], "queue": [events]}`; `path` is the absolute path of the publish copy to publish. It also lists the retired pages (R4.22): `--json` adds `"retired": [{"key", "title", "url", "retired"}]`, and they never change the exit code. |
 | `mark-published KEY --url URL` | Records the URL and the hash of the committed render (R5.32). Refuses a feature artifact (R9.5). |
 | `mark-deleted [KEY] --url URL [--gone]` | Records that the owner confirmed and the session deleted a retired page (or that it no longer exists): moves it to `deleted` (R4.21). |
 | `worktree` | Prints the record worktree's path as R4.24 resolves it. |
 | `queue list\|clear [--id ID]` | Shows or removes queued events. |
-| `commit [--retry] [--message M]` | Commits and pushes the record (also done by every writing command). |
+| `push` | Pushes the record commits not yet on `origin/<default_branch>`, with the retries of R4.15; prints nothing to push when there are none. Exit 3 when the race is lost, 4 when protection refuses (R4.16). |
+| `commit [--retry] [--message M]` | Commits uncommitted edits in the record worktree and pushes only with `--push`; `--retry` pushes the commits a refused push kept (the same as `push`). Every writing command commits too (R4.28). |
 
 - **R7.1** — Every writing command validates the record before and after the
   change and writes nothing when the change adds a finding: one the record
@@ -822,19 +931,26 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
   nearest allowed status (`Merged` → `Live`).
 - **R7.4** — Rendering is deterministic: the same record and the same stamp give
   byte-identical HTML.
-- **R7.5** — Every writing command except `render` (which does this itself) also
+- **R7.5** — A command that renders Full Progress draws it after the feature
+  pages it draws in the same command (R5.38). Every writing command except `render` (which does this itself) also
   renders, with a new stamp, each artifact whose file differs from a fresh render
   with that file's own stamp, so a plugin upgrade that changes the templates or
   the stylesheet brings every page up to date at the next change, not only the
   pages that change names (INV-3). An artifact whose content is invalid is
   skipped as in R7.1a. A page that is already up to date keeps its stamp.
+- **R7.6** — `pending` pushes the unpushed record commits (as `push`, R4.28)
+  before it reads the record, so Full Progress is published from a pushed
+  record. A failed push never stops the listing: `pending` prints the failure on
+  stderr, adds `"push_error"` to its `--json` output, and lists as before.
+  Verified by `test_pending_pushes_first`.
 
 ---
 
 ## 8. Hooks
 
-All three hooks are registered in the plugin's `hooks/hooks.json` (the
-after-command hook for `Bash`, `Agent` and `Task`), run
+All four hooks are registered in the plugin's `hooks/hooks.json` (the
+after-command hook for `Bash`, `Agent` and `Task`; the before-command hook for
+`Bash` and `PowerShell`), run
 `python <plugin>/scripts/hook_*.py`, and exit 0 doing nothing when the
 project has no `docs/artifacts/manifest.json` in the current checkout or on
 `origin/<default branch>`.
@@ -965,6 +1081,21 @@ Reads the hook input; takes the task ID from the current branch name
   an older copy; this rule replaces it.` Verified by
   `start_context_names_an_older_rule_copy`.
 
+### 8.6 Pushing the record
+
+- **R8.16** — Before a command that runs `gh pr create`, `gh pr ready` or
+  `gh pr merge` (in any segment of the command line), the hook runs `push`
+  (R4.28), so the pull request, the readiness and the merge see the record the
+  work recorded; the after-command hook runs too late for that. It never
+  blocks the command: when the push fails or cannot run, the hook prints a
+  `systemMessage` saying the commits stay local and exits 0. Any other command
+  passes through at once. Verified by `test_before_command_pushes_the_record`.
+- **R8.17** — Before it decides, the hook runs `push` (R4.28), so the record
+  commits of the turn are pushed once, at its end. A failed push never blocks
+  the stop and is not counted in R8.4: the hook adds a `systemMessage` saying
+  the record push failed and the commits stay local, and the next push point
+  tries again. Verified by `test_end_of_turn_pushes_the_record`.
+
 ---
 
 ## 9. Publishing and recreation
@@ -1074,11 +1205,11 @@ Reads the hook input; takes the task ID from the current branch name
 
 - **R13.1** — `tools/test_project_artifacts.py` builds throwaway git repos with
   a bare remote and proves each command, each check of §14 (one fixture per
-  check that fails without it), INV-1 to INV-3, R4.13 to R4.27, R6.10, R6.11, R5.31, R5.32,
-  R7.4, R7.5, R9.5 and R10.6.
+  check that fails without it), INV-1 to INV-3, R4.13 to R4.29, R6.10, R6.11, R5.31, R5.32,
+  R5.33 to R5.39, R4.30, R7.4 to R7.6, R9.5 and R10.6.
 - **R13.2** — `tools/test_project_artifacts_hooks.py` feeds sample hook input
   to each hook and asserts the queue, the exit code and the output, including
-  R8.4, R8.8 to R8.15 and INV-4, and that every hook does nothing without a
+  R8.4, R8.8 to R8.17 and INV-4, and that every hook does nothing without a
   manifest.
 - **R13.3** — Before release, the plugin is run on a scratch clone of the
   plugin's own repository: its existing record is converted to this format,
@@ -1097,7 +1228,8 @@ Reads the hook input; takes the task ID from the current branch name
 |---|---|
 | Titles start with `Feature: ` or `Full Progress: ` | R5.1 |
 | Exactly one full-progress artifact when any feature artifact exists | INV-2 |
-| Section 0 first, named `Status and checklist`, holding its five parts in order | R5.3 |
+| Section 0 first, named `Status and checklist`, holding the stamp, the lede (optional), At a glance, tiles, key and checklist in order | R5.3 |
+| At a glance block: groups in order; each group lists exactly its tasks; Live within 24 hours, at most 8 | R5.33 to R5.35 |
 | Sections numbered 0..N without gaps; contents match | R5.2 |
 | Stamp format, `datetime` attribute and zone label | R5.5 |
 | Checklist columns per kind | R6.4 |
@@ -1106,14 +1238,18 @@ Reads the hook input; takes the task ID from the current branch name
 | `expected_basis`: a string of 1 to 80 characters, on open rows only | R6.10 |
 | Checklists and tiles equal the registry | INV-1, R5.8 |
 | Every feature task on the full-progress artifact, linked to the feature file by a relative link | R6.5, R5.30 |
+| Section 1 of Full Progress: the four columns, a Last updated time per feature, sort buttons, rows in the default order | R5.6, R5.39 |
+| A feature page's Full Progress published line equals the manifest's | R5.38 |
+| `updated` and `published_at` in the manifest are ISO times with an offset | R4.30 |
 | A feature artifact is a complete HTML document with its CSS inlined and no external resource but the fonts link; Full Progress is a fragment beginning with `<title>` | R5.27, R5.28, R5.29 |
 | IDs unique, prefixes registered | R4.5, R4.6 |
 | History last on feature artifacts, Date / Change | R5.4 |
 | `decisions.json` valid: fields, IDs, options, choice, previews, images, task | R5.14 to R5.18 |
 | No hand-written Decisions section | R5.19 |
 | Decisions section just before History, newest first, one card per option, the choice marked, open and replaced decisions shown | R5.20 to R5.23 |
-| Needs-you sentence lists open decisions | R5.25 |
+| Needs you group equals the generated set (tasks, then open decisions); `Nothing needs you.` when empty | R5.7, R5.25 |
 | Warning: open decision with no task in Needs you | R5.26 |
+| Warning: lede over 300 characters | R5.37 |
 | Structure stylesheet byte-identical; token block complete | R5.10, R5.11 |
 | `extra_css` redefines no structure selector | R4.11 |
 | Rendered HTML equals a fresh render | INV-3 |

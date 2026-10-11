@@ -18,7 +18,9 @@ retired name the script stores as `Built`); release work still to come (join,
 CI, release) is its own task, Running or To do. Before a turn
 ends with work still running in the background, its task is `Running`. Only the script writes the registry; never edit
 `registry.json` or `manifest.json` by hand, and never type a status row into an
-artifact.
+artifact. The statuses reach the artifact's At a glance block by themselves, so
+never write them into a lede: a `meta.json` lede holds one or two sentences of
+context the registry cannot show (an incident, a constraint, a plan).
 
 Every command below is
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/project_artifacts.py" <command>`, run from
@@ -50,8 +52,11 @@ read the message, fix the cause and rerun.
      feature task whose change the owner should be able to look up later.
    The command renders every artifact that shows the task, and any other page
    whose look is older than the installed plugin's (R7.5), removes the task's
-   queued events and commits the record. Exit 3 or 4 means the record could not
-   be pushed; report that and stop, because the change would be lost.
+   queued events and commits the record; it does not push (the end-of-turn hook,
+   `pending` and the hook before `gh pr create|ready|merge` push once; `push`
+   does it by hand, `--push` at once). Exit 3 or 4, from `push` or `pending`,
+   means the record could not be pushed: the commits stay in the record
+   worktree; report that and stop, then run `push` again.
 3. **Do not publish yet.** Change as many statuses as the turn needs, each
    with `set-task-status`; they accumulate. Publish at the end of the turn, per
    "Publishing" below.

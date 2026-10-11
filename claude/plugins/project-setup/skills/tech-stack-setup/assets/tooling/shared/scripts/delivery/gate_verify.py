@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """Decide whether a branch's published gate result can be trusted (STACKSPEC 13.5).
 
-    gate_verify.py BRANCH [--base-ref REF] [--remote origin] [--allow-older-base] [--json]
+    gate_verify.py BRANCH [--base-ref REF] [--remote origin] [--allow-older-base] [--strict-base] [--json]
 
 Fetches the branch, the base ref and refs/gate-results/BRANCH, then applies the
 trust rule from CONTRACT.md: the result's head is the branch's current head on
 the remote, its base is the current head of the branch it joins, and it passed.
 --allow-older-base relaxes the base condition to "base is an ancestor of the
 current head of the branch it joins" (join.py re-gates the joined head anyway).
+A result whose base is an ancestor of the current base stays valid when every
+commit in between touches only inert paths (gate.json "inert_paths", default
+docs/**): the ready pull request's CI still tests the real merge. --strict-base
+turns that off, so any move of the base makes the result stale.
 
 Exit: 0 trusted and passing, 1 not trusted, 2 no result (or branch not found).
 """
@@ -36,6 +40,7 @@ def verify(
     remote: str = "origin",
     allow_older_base: bool = False,
     root=None,
+    strict_base: bool = False,
 ) -> dict:
     """The verdict as a dict: trusted, exit, reasons, plus the shas involved."""
     root = root or dc.repo_root()
@@ -50,6 +55,7 @@ def verify(
         "base_head": None,
         "result_head": None,
         "result_base": None,
+        "inert_commits": None,
     }
 
     def refuse(code: int, reason: str) -> dict:
@@ -115,10 +121,20 @@ def verify(
                     "base %s is not an ancestor of %s (%s)" % (r_base[:10], base_ref, base_head[:10])
                 )
             else:
-                reasons.append(
-                    "stale base: result was gated against %s, %s is now at %s"
-                    % (r_base[:10], base_ref, base_head[:10])
-                )
+                inert_ok, n_inert = False, 0
+                if not strict_base:
+                    try:
+                        inert = dc.load_gate(root)["inert_paths"]
+                    except dc.DeliveryError:
+                        inert = []
+                    inert_ok, n_inert, _bad = dc.inert_only(r_base, base_head, inert, root)
+                if inert_ok:
+                    verdict["inert_commits"] = n_inert  # the base moved, but only by inert commits
+                else:
+                    reasons.append(
+                        "stale base: result was gated against %s, %s is now at %s"
+                        % (r_base[:10], base_ref, base_head[:10])
+                    )
 
     if result.get("partial"):
         reasons.append("partial result (--only/--skip/--no-setup was used)")
@@ -142,6 +158,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--base-ref", help="branch it joins (default <remote>/<default_branch>)")
     ap.add_argument("--remote", default="origin")
     ap.add_argument("--allow-older-base", action="store_true")
+    ap.add_argument("--strict-base", action="store_true",
+                    help="any move of the base makes the result stale (no inert_paths exception)")
     ap.add_argument("--json", action="store_true", help="print the verdict as JSON")
     args = ap.parse_args(argv)
 
@@ -150,7 +168,7 @@ def main(argv: list[str] | None = None) -> int:
     if not base_ref:
         base_ref = "%s/%s" % (args.remote, dc.load_gate(root)["default_branch"])
 
-    v = verify(args.branch, base_ref, args.remote, args.allow_older_base, root)
+    v = verify(args.branch, base_ref, args.remote, args.allow_older_base, root, args.strict_base)
     if args.json:
         print(json.dumps(v, indent=2))
     elif v["trusted"]:
@@ -161,9 +179,11 @@ def main(argv: list[str] | None = None) -> int:
                 v["result_head"][:10],
                 base_ref,
                 v["result_base"][:10],
-                " (older base allowed)" if v["result_base"] != v["base_head"] else "",
+                " (older base allowed)" if v["result_base"] != v["base_head"] and v["inert_commits"] is None else "",
             )
         )
+        if v["inert_commits"] is not None:
+            print("  base moved only by inert commits: %d" % v["inert_commits"])
     else:
         print("NOT TRUSTED: %s" % args.branch)
         for reason in v["reasons"]:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for claude/plugins/artifacts/scripts/render_artifacts.py (ARTIFACTSPEC 1.3.1, sections 4 to 6 and 14).
+"""Tests for claude/plugins/artifacts/scripts/render_artifacts.py (ARTIFACTSPEC 1.4.0, sections 4 to 6 and 14).
 
 Every check of check_html gets a fixture that breaks exactly that rule and must produce exactly that
 requirement ID; the clean fixtures must produce nothing. A check nobody has seen fire is not a check.
@@ -63,9 +63,9 @@ def base_manifest():
                                    'file': 'full-progress-dev-standards.html', 'published_sha256': ''},
         'feature_artifacts': [
             {'key': 'artifacts', 'title': 'Feature: Project artifacts standard',
-             'file': AR_FILE, 'prefix': 'AR', 'apps': ['luismc-artifacts']},
+             'file': AR_FILE, 'prefix': 'AR', 'apps': ['luismc-artifacts'], 'updated': '2026-10-10T12:39+01:00'},
             {'key': 'models', 'title': 'Feature: Model and effort profiles',
-             'file': MP_FILE, 'prefix': 'MP', 'apps': ['luismc-project-setup']},
+             'file': MP_FILE, 'prefix': 'MP', 'apps': ['luismc-project-setup'], 'updated': '2026-10-09T18:00+01:00'},
         ],
         'project_prefixes': ['DS'], 'updated': STAMP_ISO,
     }
@@ -137,6 +137,26 @@ def sub1(html, old, new, count=1):
 
 def reqs(findings):
     return sorted({r for r, _ in findings})
+
+
+def glance(html):
+    """{group key: (task ids, decision ids, 'and N more' text, 'none' text)} of the At a glance block."""
+    root = R.parse_dom(html)
+    out = {}
+    for g in R.find_all(root, 'div', 'glance-group'):
+        more, none = R.find(g, 'li', 'glance-more'), R.find(g, 'p', 'glance-none')
+        out[g.attrs['data-glance']] = (
+            [li.attrs['data-glance-task'] for li in R.find_all(g, 'li', pred=lambda n: 'data-glance-task' in n.attrs)],
+            [li.attrs['data-glance-decision'] for li in R.find_all(g, 'li', pred=lambda n: 'data-glance-decision' in n.attrs)],
+            R.text_of(more) if more else '', R.text_of(none) if none else '')
+    return out
+
+
+def drop_item(html, attr, value):
+    import re
+    pattern = r'<li data-glance-%s="%s">.*?</li>\n?' % (attr, re.escape(value))
+    assert len(re.findall(pattern, html)) == 1, (attr, value)
+    return re.sub(pattern, '', html)
 
 
 TESTS = []
@@ -352,8 +372,8 @@ def full_progress_structure(fx):
     # R5.6: link, task ID range, first sentence of the lede
     s1node = R.find(dom, 'section', pred=lambda n: n.attrs.get('id') == 's1')
     cells = [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1node, 'tr', pred=lambda n: R.find(n, 'td'))]
-    assert cells == [['Feature: Project artifacts standard', 'AR5 to AR16', 'The design is agreed.'],
-                     ['Feature: Model and effort profiles', 'MP1 to MP2, DS2', 'Effort question is live!']], cells
+    assert cells == [['Feature: Project artifacts standard', '10 Oct 12:39', 'AR5 to AR16', 'The design is agreed.'],
+                     ['Feature: Model and effort profiles', '09 Oct 18:00', 'MP1 to MP2, DS2', 'Effort question is live!']], cells
     anchors = [a.attrs['href'] for a in R.find_all(s1node, 'a')]
     assert anchors == [AR_FILE, MP_FILE], anchors  # R5.30: every feature is linked to its file, relative
 
@@ -488,13 +508,15 @@ def a_group_with_only_folded_rows_is_still_closed_correctly(fx):
 def needs_you_sentence(fx):
     out = fx.render('full-progress')
     lede = R.text_of(R.find(R.parse_dom(out), 'p', 'lede'))
-    assert lede == ('All ongoing work in dev-standards. More words follow. '
-                    'Needs you: DS9 Sign off the <rules> & ship; DS11 Release CI.'), lede
+    assert lede == 'All ongoing work in dev-standards. More words follow.', lede     # R5.7: the note only
+    assert glance(out)['you'][:2] == (['DS9', 'DS11'], []), glance(out)['you']
     # a feature artifact lists only its own tasks, and says so when there are none
-    assert R.text_of(R.find(R.parse_dom(fx.render('artifacts')), 'p', 'lede')).endswith('Nothing needs you.')
+    assert glance(fx.render('artifacts'))['you'] == ([], [], '', 'Nothing needs you.')
     fx.registry['tasks'][0]['status'] = 'Needs you'
     fx.registry['tasks'][0]['expected'] = '12 Oct'
-    assert R.text_of(R.find(R.parse_dom(fx.render('artifacts')), 'p', 'lede')).endswith('Needs you: AR5 ARTIFACTSPEC 1.0.0.')
+    assert glance(fx.render('artifacts'))['you'][:2] == (['AR5'], [])
+    # the sentence generator is still the reference for the set
+    assert R.needs_you_sentence(fx.registry['tasks'][:1]) == 'Needs you: AR5 ARTIFACTSPEC 1.0.0.'
 
 
 @test
@@ -835,16 +857,20 @@ def check_r56_feature_list(fx):
     expect(fx, sub1(fp, '<a href="%s">Feature: Project artifacts standard</a>' % AR_FILE, 'Feature: Project artifacts standard'), 'full-progress', ['R5.6'])
     expect(fx, sub1(fp, '<a href="%s">Feature: Model and effort profiles</a>' % MP_FILE, '<a href="https://claude.ai/artifact/x">Feature: Model and effort profiles</a>'),
            'full-progress', ['R5.30'])
-    expect(fx, sub1(fp, '<td><a href="%s">Feature: Model and effort profiles</a></td>' % MP_FILE, '<td>Feature: Model and effort</td>'), 'full-progress', ['R5.6'])
+    expect(fx, sub1(fp, '<td data-value="feature: model and effort profiles"><a href="%s">Feature: Model and effort profiles</a></td>' % MP_FILE, '<td>Feature: Model and effort</td>'), 'full-progress', ['R5.6'])
 
 
 @test
 @with_fixture
 def check_r57_lede(fx):
     fp = fx.render('full-progress')
-    expect(fx, sub1(fp, 'Needs you: DS9 Sign off the &lt;rules&gt; &amp; ship; DS11 Release CI.', 'Nothing needs you.'), 'full-progress', ['R5.7'])
+    expect(fx, drop_item(fp, 'task', 'DS11'), 'full-progress', ['R5.7'])                    # a Failed task missing
     out = fx.render('artifacts')
-    expect(fx, sub1(out, 'Nothing needs you.', 'Needs you: AR6 Templates.'), 'artifacts', ['R5.7'])
+    wrong = sub1(out, '<p class="glance-none">Nothing needs you.</p>', '<ul><li data-glance-task="AR6"><span class="task-id">AR6</span>Templates</li></ul>')
+    expect(fx, wrong, 'artifacts', ['R5.7'])                                                # a task that does not need you
+    expect(fx, sub1(out, 'Nothing needs you.', 'All clear.'), 'artifacts', ['R5.7'])        # the exact text
+    # a long or missing lede is not a finding
+    assert fx.check(out, 'artifacts') == []
 
 
 @test
@@ -1193,8 +1219,8 @@ def the_structure_stylesheet_holds_no_literal_colour():
 @with_fixture
 def templates_hold_only_known_placeholders(fx):
     import re
-    known = {'title', 'fonts_link', 'design_css', 'structure_css', 'extra_css', 'kind_label', 'project', 'hero', 'contents',
-             'sections', 'stamp', 'lede', 'tiles', 'key', 'checklist', 'registry'}
+    known = {'title', 'fonts_link', 'design_css', 'structure_css', 'extra_css', 'kind_label', 'project', 'hero', 'contents', 'glance',
+             'sections', 'stamp', 'published', 'lede', 'tiles', 'key', 'checklist', 'registry'}
     for name in ('feature-artifact.html', 'full-progress-artifact.html'):
         text = open(os.path.join(PLUGIN, 'templates', name), encoding='utf-8').read()
         found = set(re.findall(r'\{\{(\w+)\}\}', text))
@@ -1728,18 +1754,17 @@ def decisions_render_adds_no_script_and_is_deterministic(fx):
 def decisions_lede_lists_open_decisions(fx):
     registry = sample(fx)
     out = fx.render('artifacts', registry=registry)
-    lede = R.text_of(R.find(R.parse_dom(out), 'p', 'lede'))
-    assert lede.endswith('Needs you: AR7 project_artifacts.py; D2 Should History also list decisions?'), lede
-    assert not lede.endswith('?.')
-    # tasks first, then decisions; the sentence ends with a full stop when a task comes last of nothing
+    assert glance(out)['you'][:2] == (['AR7'], ['D2']), glance(out)['you']        # tasks first, then decisions
+    assert 'D2</span>Should History also list decisions?' in out
+    assert R.needs_you_sentence(registry['tasks'], R.open_decisions(fx.contents['artifacts']['decisions'])).endswith('decisions?')
     registry2 = copy.deepcopy(registry)
     registry2['tasks'][2]['status'] = 'To do'
     out2 = fx.render('artifacts', registry=registry2)
-    assert R.text_of(R.find(R.parse_dom(out2), 'p', 'lede')).endswith('Needs you: D2 Should History also list decisions?')
+    assert glance(out2)['you'][:2] == ([], ['D2'])
     # a replaced open decision, and a decided one, are not listed
     put_decisions(fx, [open_dec(1), dec(2, replaces='D1')])
     fx.reload()
-    assert R.text_of(R.find(R.parse_dom(fx.render('artifacts')), 'p', 'lede')).endswith('Nothing needs you.')
+    assert glance(fx.render('artifacts'))['you'] == ([], [], '', 'Nothing needs you.')
     # the existing sentence is unchanged without decisions
     assert R.needs_you_sentence([{'id': 'AR1', 'status': 'Needs you', 'item': 'Sign off'}]) == 'Needs you: AR1 Sign off.'
     assert R.needs_you_sentence([]) == 'Nothing needs you.'
@@ -1755,15 +1780,15 @@ def decisions_full_progress_line_counts_open_decisions(fx):
         s1 = R.find(R.parse_dom(out), 'section', pred=lambda n: n.attrs.get('id') == 's1')
         return [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1, 'tr', pred=lambda n: R.find(n, 'td'))]
     out = fx.render('full-progress', registry=registry)
-    assert cells(out)[0] == ['Feature: Project artifacts standard', 'AR5 to AR16', 'The design is agreed. 1 decision open.']
-    assert cells(out)[1][2] == 'Effort question is live!'
+    assert cells(out)[0] == ['Feature: Project artifacts standard', '10 Oct 12:39', 'AR5 to AR16', 'The design is agreed. 1 decision open.']
+    assert cells(out)[1][3] == 'Effort question is live!'
     assert fx.check(out, 'full-progress', registry=registry) == []
     put_decisions(fx, [open_dec(1), open_dec(2), dec(3)])
     fx.reload()
-    assert cells(fx.render('full-progress'))[0][2] == 'The design is agreed. 2 decisions open.'
+    assert cells(fx.render('full-progress'))[0][3] == 'The design is agreed. 2 decisions open.'
     put_decisions(fx, [dec(1)])
     fx.reload()
-    assert cells(fx.render('full-progress'))[0][2] == 'The design is agreed.'
+    assert cells(fx.render('full-progress'))[0][3] == 'The design is agreed.'
 
 
 # ---- check_html: each Decisions check fires alone
@@ -1833,7 +1858,7 @@ def decisions_section_position_and_presence_are_checked(fx):
 def decisions_lede_check_catches_a_missing_open_decision(fx):
     registry = sample(fx)
     clean = fx.render('artifacts', registry=registry)
-    bad = sub1(clean, '; D2 Should History also list decisions?', '')
+    bad = drop_item(clean, 'decision', 'D2')
     assert 'R5.7' in reqs(fx.check(bad, 'artifacts', registry=registry))
 
 
@@ -1851,6 +1876,276 @@ def decisions_css_is_structure_only_and_phone_ready():
     block = css[css.index('/* Decisions'):css.index('/* Phone width */')]
     assert not re.search(r'#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(', block)       # tokens only
     assert 'var(--signal)' in block and 'var(--on-signal)' in block and 'var(--surface-2)' in block
+
+
+# ------------------------------------------------------------------ AR40: At a glance
+def glance_registry():
+    """Fixture registry plus ten Live tasks changed within 24 h of the stamp, and one just outside it."""
+    registry = base_registry()
+    for n in range(10):
+        registry['tasks'].append(task('LV%d' % (n + 1), 'project', 'Live', 'Shipped %d' % (n + 1), '10 Oct',
+                                      '2026-10-10T%02d:00+01:00' % (n + 1), 'luismc-project-setup'))
+    registry['tasks'].append(task('LV11', 'project', 'Live', 'Shipped long ago', '08 Oct', '2026-10-09T12:00+01:00'))   # 24 h 39 min: out
+    return registry
+
+
+QUIET = {'spec': R.SPEC, 'updated': STAMP_ISO, 'tasks': [
+    task('MP1', 'models', 'Live', 'Role rules', '08 Oct', '2026-10-08T10:00+01:00')]}
+
+
+@test
+@with_fixture
+def at_a_glance_groups_and_order(fx):
+    """R5.33, R5.34: the groups, in order, each from its statuses; To do is not listed; Live is 24 h and capped at 8."""
+    out = fx.render('full-progress', registry=glance_registry())
+    got = glance(out)
+    assert list(got) == ['you', 'running', 'built', 'waiting', 'live'], list(got)
+    assert got['you'][0] == ['DS9', 'DS11'] and got['running'][0] == ['DS6', 'AR6', 'MP2'], got
+    assert got['built'][0] == ['AR5', 'AR16'] and got['waiting'][0] == ['DS7', 'DS10'], got
+    assert got['live'][0] == ['LV10', 'LV9', 'LV8', 'LV7', 'LV6', 'LV5', 'LV4', 'LV3'] and got['live'][2] == 'and 2 more', got['live']
+    assert 'AR7' not in str(got) and 'DS8' not in str(got)                                   # To do
+    # the line: id, item, then the Expected for open statuses
+    row = out[out.index('data-glance-task="DS6"'):]
+    row = row[:row.index('</li>')]
+    assert '<span class="glance-expected">10 Oct ~13:45</span>' in row, row
+    fx.registry = glance_registry()
+    by_id = {t['id']: t for t in fx.registry['tasks']}
+    by_id['AR6']['expected_basis'] = 'agent slot'
+    by_id['LV10']['expected_basis'] = 'not shown'
+    out = fx.render('artifacts')
+    assert '<span class="glance-basis">agent slot</span>' in out and 'not shown' not in out
+    assert fx.check(out, 'artifacts') == []
+    assert fx.check(fx.render('full-progress'), 'full-progress') == []
+    # an empty group is omitted, and Needs you always shows
+    out = fx.render('models', registry=QUIET)
+    assert list(glance(out)) == ['you'] and glance(out)['you'] == ([], [], '', 'Nothing needs you.')
+    assert fx.check(out, 'models', registry=QUIET) == []
+
+
+@test
+@with_fixture
+def at_a_glance_is_deterministic_and_placed(fx):
+    """R5.33: after the lede, before the tiles; same bytes each time (R7.4)."""
+    out = fx.render('artifacts')
+    assert out == fx.render('artifacts')
+    assert out.index('class="lede"') < out.index('class="at-a-glance"') < out.index('class="status-count-tiles"')
+
+
+@test
+@with_fixture
+def check_r532_block_and_order(fx):
+    """R5.3 (order, lede optional) and R5.33 (groups in order)."""
+    out = fx.render('artifacts')
+    start = out.index('<div class="at-a-glance">')
+    end = out.index('</div>\n</div>', start) + len('</div>\n</div>')
+    block = out[start:end]
+    after_tiles = sub1(out[:start] + out[end:], '<p class="note">Key:', block + '\n<p class="note">Key:')
+    expect(fx, after_tiles, 'artifacts', ['R5.3'])                                           # block after the tiles
+    expect(fx, out[:start] + out[end:], 'artifacts', ['R5.3'])                               # block missing
+    lede = out[out.index('<p class="lede">'):out.index('</p>', out.index('<p class="lede">')) + 4]
+    lede_late = sub1(out, lede + '\n', '')
+    lede_late = sub1(lede_late, block, block + '\n' + lede)
+    expect(fx, lede_late, 'artifacts', ['R5.3'])                                             # lede after the block
+    expect(fx, sub1(out, lede + '\n', ''), 'artifacts', [])                                  # no lede: still clean
+    swapped = (out.replace('data-glance="running"', 'data-glance="TMP"').replace('data-glance="built"', 'data-glance="running"')
+               .replace('data-glance="TMP"', 'data-glance="built"'))
+    expect(fx, swapped, 'artifacts', ['R5.33', 'R5.35'])
+
+
+@test
+@with_fixture
+def check_r534_each_group_lists_its_tasks(fx):
+    """R5.34, R5.35: a missing or extra task in a group, or a wrong 'and N more', is a finding."""
+    fx.registry = glance_registry()
+    fp = fx.render('full-progress')
+    expect(fx, drop_item(fp, 'task', 'DS6'), 'full-progress', ['R5.35'])                     # Running task missing
+    expect(fx, drop_item(fp, 'task', 'AR5'), 'full-progress', ['R5.35'])                     # Built task missing
+    expect(fx, drop_item(fp, 'task', 'DS10'), 'full-progress', ['R5.35'])                    # On hold task missing
+    expect(fx, drop_item(fp, 'task', 'LV9'), 'full-progress', ['R5.35'])                     # Live task missing
+    expect(fx, sub1(fp, 'and 2 more', 'and 3 more'), 'full-progress', ['R5.35'])
+    extra = sub1(fp, '<li data-glance-task="AR5">', '<li data-glance-task="AR7"><span class="task-id">AR7</span>x</li>\n<li data-glance-task="AR5">')
+    expect(fx, extra, 'full-progress', ['R5.35'])                                            # To do task listed
+    old_live = sub1(fp, '<li data-glance-task="LV3">', '<li data-glance-task="LV11"><span class="task-id">LV11</span>x</li>\n<li data-glance-task="LV3">')
+    expect(fx, old_live, 'full-progress', ['R5.35'])                                         # Live task older than 24 h listed
+    # the window follows the stamp: exactly 24 h before it is in
+    fx.registry['tasks'][-1]['changed'] = '2026-10-09T12:39+01:00'
+    assert 'LV11' not in glance(fx.render('full-progress'))['live'][0]                     # cut by the cap, still not shown past 8
+    assert fx.check(fx.render('full-progress'), 'full-progress') == []
+
+
+@test
+@with_fixture
+def lede_is_a_short_optional_note(fx):
+    """R5.7, R5.37: an empty lede renders no paragraph; over 300 characters warns, never fails."""
+    folder = os.path.join(fx.record, 'content', 'artifacts')
+    write(os.path.join(folder, 'meta.json'), json.dumps({'title': 'artifacts', 'hero': 'h', 'lede': '', 'extra_css': ''}))
+    fx.reload()
+    out = fx.render('artifacts')
+    assert 'class="lede"' not in out and fx.check(out, 'artifacts') == []
+    assert R.lede_warnings(fx.contents['artifacts']) == []
+    write(os.path.join(folder, 'meta.json'), json.dumps({'title': 'artifacts', 'hero': 'h', 'lede': 'Word. ' * 60, 'extra_css': ''}))
+    fx.reload()
+    warned = R.lede_warnings(fx.contents['artifacts'])
+    assert len(warned) == 1 and 'one or two sentences' in warned[0] and 'At a glance' in warned[0], warned
+    assert fx.check(fx.render('artifacts'), 'artifacts') == []                              # a warning, not a finding
+    write(os.path.join(folder, 'meta.json'), json.dumps({'title': 'artifacts', 'hero': 'h', 'lede': 'x' * 300, 'extra_css': ''}))
+    fx.reload()
+    assert R.lede_warnings(fx.contents['artifacts']) == []
+
+
+@test
+@with_fixture
+def section_one_never_blank(fx):
+    """R5.36: a feature with an empty lede gets its generated summary in Where it stands."""
+    folder = os.path.join(fx.record, 'content', 'models')
+    write(os.path.join(folder, 'meta.json'), json.dumps({'title': 'models', 'hero': 'h', 'lede': '', 'extra_css': ''}))
+    fx.reload()
+    out = fx.render('full-progress')
+    s1 = R.find(R.parse_dom(out), 'section', pred=lambda n: n.attrs.get('id') == 's1')
+    cells = [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1, 'tr', pred=lambda n: R.find(n, 'td'))]
+    assert cells[1][3] == '1 running, 2 live, nothing needs you.', cells
+    assert R.feature_summary([task('X1', 'a', 'Needs you', 'i', '10 Oct')]) == '1 needs you'
+    assert fx.check(out, 'full-progress') == []
+
+
+@test
+def at_a_glance_css_uses_tokens_and_fits_a_phone():
+    import re
+    css = R.structure_css(PLUGIN)
+    for selector in ('.at-a-glance', '.glance-group', '.glance-label', '.glance-you', '.glance-running', '.glance-expected', '.glance-more'):
+        assert selector in css, selector
+    block = css[css.index('.at-a-glance {'):css.index('/* Status chips */')]
+    assert 'var(--signal)' in block and 'var(--running-bg)' in block and 'var(--waiting-bg)' in block and 'var(--ink-muted)' in block
+    assert not re.search(r'#[0-9a-fA-F]{3,6}\b', block), 'colours must be tokens'
+    assert re.search(r'@media \(max-width: 40rem\)\s*\{\s*\.glance-group\s*\{\s*grid-template-columns:\s*1fr', block)
+
+
+def _s1_rows(out):
+    s1 = R.find(R.parse_dom(out), 'section', pred=lambda n: n.attrs.get('id') == 's1')
+    return [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1, 'tr', pred=lambda n: R.find(n, 'td'))]
+
+
+@test
+@with_fixture
+def section_one_orders_by_last_updated_newest_first(fx):
+    """R5.6, R5.39: four columns, a time per feature, the newest page on top, ties by title."""
+    out = fx.render('full-progress')
+    dom = R.parse_dom(out)
+    heads = R.find_all(R.find(dom, 'table', 'feature-list'), 'th')
+    assert [R.text_of(h).rstrip(' ↑↓') for h in heads] == ['Feature artifact', 'Last updated', 'Tasks', 'Where it stands']
+    assert heads[1].attrs['aria-sort'] == 'descending' and 'aria-sort' not in heads[0].attrs
+    assert R.text_of(heads[1]).endswith('↓')
+    assert [b.attrs['data-sort'] for b in R.find_all(dom, 'button', 'sort-header')] == ['name', 'updated']
+    assert [r[0] for r in _s1_rows(out)] == ['Feature: Project artifacts standard', 'Feature: Model and effort profiles']
+    manifest = base_manifest()
+    manifest['feature_artifacts'][1]['updated'] = '2026-10-11T12:08+01:00'                   # models changed last
+    out = fx.render('full-progress', manifest=manifest)
+    assert [r[:2] for r in _s1_rows(out)] == [['Feature: Model and effort profiles', '11 Oct 12:08'],
+                                              ['Feature: Project artifacts standard', '10 Oct 12:39']]
+    assert fx.check(out, 'full-progress', manifest=manifest) == []
+    manifest['feature_artifacts'][1]['updated'] = manifest['feature_artifacts'][0]['updated']    # a tie: by title
+    out = fx.render('full-progress', manifest=manifest)
+    assert [r[0] for r in _s1_rows(out)] == ['Feature: Model and effort profiles', 'Feature: Project artifacts standard']
+    # another offset: compared as instants, not as text
+    manifest['feature_artifacts'][0]['updated'] = '2026-10-10T12:39+00:00'
+    manifest['feature_artifacts'][1]['updated'] = '2026-10-10T12:00-01:00'                   # 13:00 UTC, newer
+    out = fx.render('full-progress', manifest=manifest)
+    assert [r[0] for r in _s1_rows(out)] == ['Feature: Model and effort profiles', 'Feature: Project artifacts standard']
+    assert fx.check(out, 'full-progress', manifest=manifest) == []
+
+
+@test
+@with_fixture
+def section_one_reads_an_older_record_from_the_feature_file(fx):
+    """R4.30: a manifest entry without `updated` takes the stamp of the feature file."""
+    manifest = base_manifest()
+    for entry in manifest['feature_artifacts']:
+        del entry['updated']
+    assert [r[1] for r in _s1_rows(fx.render('full-progress', manifest=manifest))] == ['', '']      # no file yet
+    write(os.path.join(fx.record, MP_FILE), '<p>x</p><time datetime="2026-10-11T08:05+01:00">11 Oct 08:05</time>')
+    out = fx.render('full-progress', manifest=manifest)
+    assert [r[:2] for r in _s1_rows(out)] == [['Feature: Model and effort profiles', '11 Oct 08:05'],
+                                              ['Feature: Project artifacts standard', '']]
+    assert fx.check(out, 'full-progress', manifest=manifest) == []
+
+
+@test
+@with_fixture
+def check_r539_sort_headers_and_order(fx):
+    fp = fx.render('full-progress')
+    expect(fx, sub1(fp, 'data-sort="updated"', 'data-sort="date"'), 'full-progress', ['R5.39'])
+    expect(fx, sub1(fp, ' aria-sort="descending"', ''), 'full-progress', ['R5.39'])
+    def in_table(new):                       # the second such time: the first is the page's stamp
+        cut = fp.rindex('<time datetime="2026-10-10T12:39+01:00">10 Oct 12:39</time>')
+        return fp[:cut] + new + fp[cut + len('<time datetime="2026-10-10T12:39+01:00">10 Oct 12:39</time>'):]
+    expect(fx, in_table('<time datetime="2026-10-08T12:39+01:00">08 Oct 12:39</time>'), 'full-progress', ['R5.6', 'R5.39'])                                                          # wrong time, and out of order
+    expect(fx, in_table('<time datetime="2026-10-10T12:39+01:00">10 Oct 12:40</time>'), 'full-progress', ['R5.6'])
+    expect(fx, sub1(fp, '<th>Tasks</th>', '<th>Task IDs</th>'), 'full-progress', ['R5.6'])
+
+
+@test
+@with_fixture
+def feature_page_says_when_full_progress_was_published(fx):
+    """R5.38: under the stamp, omitted before the first publish."""
+    plain = fx.render('artifacts')
+    assert '<p class="full-progress-published"' not in plain
+    manifest = base_manifest()
+    manifest['full_progress_artifact']['published_at'] = '2026-10-11T12:08+01:00'
+    manifest['full_progress_artifact']['url'] = ''
+    assert '<p class="full-progress-published"' not in fx.render('artifacts', manifest=manifest)                  # no URL yet
+    manifest['full_progress_artifact']['url'] = FP_URL
+    out = fx.render('artifacts', manifest=manifest)
+    line_html = '<p class="full-progress-published">Full Progress published: <a href="%s">11 Oct 12:08</a> (Lisbon)</p>\n' % FP_URL
+    assert out.count(line_html) == 1 and out.replace(line_html, '') == plain       # nothing else on the page moves, not even the stamp
+    s0 = R.find(R.parse_dom(out), 'section')
+    kids = [n for n in s0.children if n.tag != '#text']
+    assert R.has_class(kids[1], 'last-update') and R.has_class(kids[2], 'full-progress-published')   # right under the stamp
+    assert fx.check(out, 'artifacts', manifest=manifest) == []
+    expect(fx, plain, 'artifacts', ['R5.38'], manifest=manifest)                                       # the line is missing
+    expect(fx, out, 'artifacts', ['R5.38'])                                                            # the manifest has no such publish
+    expect(fx, sub1(out, '>11 Oct 12:08<', '>11 Oct 12:09<'), 'artifacts', ['R5.38'], manifest=manifest)
+    assert '<p class="full-progress-published"' not in fx.render('full-progress', manifest=manifest)
+
+
+@test
+@with_fixture
+def full_progress_sort_script(fx):
+    """R5.39: the template's script sorts the rows on a click and keeps the arrow and aria-sort."""
+    import subprocess
+    text = open(os.path.join(PLUGIN, 'templates', 'full-progress-artifact.html'), encoding='utf-8').read()
+    start, end = text.index('    // Section 1: click'), text.index("    window.addEventListener('scroll'")
+    node = shutil.which('node')
+    if not node:
+        assert 'sortRows' in text[start:end]
+        return
+    harness = r"""
+function el(attrs) { return {attrs: attrs || {}, listeners: {}, textContent: '',
+  getAttribute: function (k) { return k in this.attrs ? this.attrs[k] : null; },
+  setAttribute: function (k, v) { this.attrs[k] = v; }, removeAttribute: function (k) { delete this.attrs[k]; },
+  addEventListener: function (n, f) { this.listeners[n] = f; }, querySelector: function () { return this.arrow; }}; }
+function row(name, minutes) { return {name: name, cells: [el({'data-value': name}), el({'data-value': String(minutes)})]}; }
+var rows = [row('b', 30), row('a', 30), row('c', 10), row('d', 20)];
+var body = {rows: rows, appendChild: function (r) { rows.splice(rows.indexOf(r), 1); rows.push(r); }};
+var heads = [el({}), el({'aria-sort': 'descending'})];
+var buttons = [el({'data-sort': 'name'}), el({'data-sort': 'updated'})];
+buttons.forEach(function (b, i) { b.parentNode = heads[i]; b.arrow = el({}); });
+var table = {tBodies: [body], querySelectorAll: function () { return buttons; }};
+var document = {querySelector: function () { return table; }};
+function order() { return rows.map(function (r) { return r.name; }).join(''); }
+function click(i) { buttons[i].listeners.click(); }
+var out = [];
+SCRIPT
+click(1); out.push(order(), heads[1].attrs['aria-sort'], buttons[1].arrow.textContent);
+click(1); out.push(order(), heads[1].attrs['aria-sort']);
+click(0); out.push(order(), heads[0].attrs['aria-sort'], heads[1].attrs['aria-sort'] || '-', buttons[0].arrow.textContent, buttons[1].arrow.textContent === '');
+click(0); out.push(order(), heads[0].attrs['aria-sort']);
+click(1); out.push(order(), heads[1].attrs['aria-sort']);
+console.log(JSON.stringify(out));
+""".replace('SCRIPT', text[start:end])
+    done = subprocess.run([node, '-e', harness], capture_output=True, text=True, encoding='utf-8', timeout=60)
+    assert done.returncode == 0, done.stderr
+    assert json.loads(done.stdout) == ['cdab', 'ascending', '↑', 'abdc', 'descending',
+                                       'abcd', 'ascending', '-', '↑', True, 'dcba', 'descending', 'abdc', 'descending'], done.stdout
 
 
 def main() -> int:

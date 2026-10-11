@@ -8,7 +8,7 @@ effort: medium
 # Full-progress artifact — new
 
 Creates the project's one full-progress artifact from the record
-(`docs/artifacts/`, ARTIFACTSPEC 1.3.1). The script is the only writer of
+(`docs/artifacts/`, ARTIFACTSPEC 1.4.0). The script is the only writer of
 `manifest.json` and `registry.json`; never edit either by hand.
 
 Every command below is
@@ -63,9 +63,10 @@ the repository instead (the session's scratchpad directory, in a new folder).
    keeps the default design.
 5. **Write the content.** Run `export-content full-progress --to <scratch dir>`
    and edit the files there:
-   - `meta.json`: `title`, `hero` (one line: what the project is), `lede` (one
-     or two sentences on where the project stands now; the script appends the
-     needs-you line), `extra_css` (empty unless needed).
+   - `meta.json`: `title`, `hero` (one line: what the project is), `lede` (a
+     note of one or two sentences of context the registry cannot show: an
+     incident, a constraint, a plan; never restate statuses, the At a glance
+     block lists them; may be empty), `extra_css` (empty unless needed).
    - Optional sections for what the owner wants beside the checklist (how the
      project is released, where things live). Files start at `01-` and render as
      section 2 and up, because section 1 (the list of feature artifacts) is
@@ -97,7 +98,9 @@ the repository instead (the session's scratchpad directory, in a new folder).
 
 Once, at the end of the turn, never mid-turn. Repeat until `pending` exits 0:
 
-1. Run `pending --json`. It lists Full Progress (the only artifact it lists)
+1. Run `pending --json`. It first pushes the record commits of the turn (a
+   failed push is reported as `push_error` and does not stop the listing), then
+   lists Full Progress (the only artifact it lists)
    when its committed render changed since the last publish, and writes the
    publish copy: the same page with absolute `file:///` links to the feature
    files (some browsers block `file:` links from a web page; the page shows

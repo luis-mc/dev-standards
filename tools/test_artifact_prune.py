@@ -699,8 +699,8 @@ def workflow_problems(text: str) -> list[str]:
             p.append(msg)
 
     need(r"^on:\s*$", "no top-level `on:`")
-    need(r"^  workflow_run:\s*\n(?:    .*\n)*?    workflows:\s*\[\s*[\"']CI[\"']\s*\]",
-         "workflow_run must list workflows: [\"CI\"]")
+    need(r"^  workflow_run:\s*\n(?:    .*\n)*?    workflows:\s*\[\s*[\"']CI[\"']\s*,\s*[\"']Package[\"']\s*\]",
+         "workflow_run must list workflows: [\"CI\", \"Package\"]")
     need(r"^  workflow_run:\s*\n(?:    .*\n)*?    types:\s*\[\s*completed\s*\]",
          "workflow_run must use types: [completed]")
     need(r"^  schedule:\s*\n\s+- cron:\s*'[^']+'", "no schedule cron")
@@ -770,7 +770,7 @@ def workflow_structure():
 def workflow_checker_catches_each_defect():
     text = WORKFLOW.read_text(encoding="utf-8")
     cases = [
-        ('workflows: ["CI"]', 'workflows: ["Build"]', "workflows: [\"CI\"]"),
+        ('workflows: ["CI", "Package"]', 'workflows: ["CI"]', "workflows: [\"CI\", \"Package\"]"),
         ("types: [completed]", "types: [requested]", "types: [completed]"),
         ("  schedule:\n    - cron: '23 3 * * *'\n", "", "schedule cron"),
         ("  workflow_dispatch:\n", "", "workflow_dispatch"),

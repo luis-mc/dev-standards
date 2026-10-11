@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 7.1.0
+**Version:** 8.0.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -23,6 +23,14 @@ recorded in the product's Stack Profile (§18). This document does not name
 vendors and does not rank them.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+
+**8.0.0 — 2026-10-11.**
+
+- The gate scopes more tightly (STACKSPEC §13.5): `gate.json` gains `inert_paths` (default `docs/**`), and `gate_verify.py` keeps a result valid when the base moved only by commits under those paths (`--strict-base` turns that off); a new `lockfile_scope` key lets a pnpm lockfile change count as a change to the packages whose dependencies moved instead of widening the whole gate (Go and .NET per-package lockfiles stop widening, Cargo.lock still widens); and without an `e2e_map` the end-to-end specs of the apps that import a changed shared UI package come from the workspace dependency graph.
+- The join runs a quick check (install, build, typecheck and the tests of the joined branches' affected packages plus their dependents) instead of a second full gate, and records each step's time; the pre-push hook freezes a branch while its ready PR's CI runs (override with DELIVERY_FREEZE_OVERRIDE=1; offline it allows the push with a warning); join.py and ci_watch.py warn when no online runner carries a label CI needs, and the runner question in tech-stack-setup warns against a label only one runner carries.
+- New requirement STACKSPEC §13.7 (a MUST): a product that ships a packaged program has CI start the packaged form and wait for a readiness signal from the program and from every worker it starts, failing when one does not come up; the tracks get a `package.yml` workflow (path-filtered, never for docs-only merges, startable by hand) and a `smoke.json` declaration, and a new `smoke_packaged.py` runs the check. Build-artifact workflows run only when their inputs change (§13.1, SHOULD). `cleanup.py --pr N` appends a delivery log, the time to live of each change split into waiting, testing and queueing, to the train's release notes through the new `delivery_log.py`, whose `live` command the deploy calls (§13.6, SHOULD).
+- The shipped delivery scripts change: `cleanup.py --pr N` also removes every branch joined into the merged train (tip an ancestor of the merged pull request's head, no open pull request), and `join.py` skips the gate on the joined head when its tree equals a joined branch head whose gate result is trusted for the same base (STACKSPEC §13.6 states the join can skip that run).
+- Upgrading from 7.x: the only new `MUST` is §13.7, and it applies only to a product that ships a packaged program (add `smoke.json` and a `package.yml` job). Everything else is a `SHOULD` or comes with the new delivery scripts; a product that ships no packaged program conforms to 8.0.0 as it stands.
 
 **7.1.0 — gates that check the right thing on any runner.** Learned on a
 product: the branch gate diffed against a stale base and its result was then
@@ -1324,6 +1332,12 @@ for its kind — `windows-installer`, never `windows-installer-1.4.2-run-812`; t
 version and commit go inside the artifact. A build that must outlive the next
 one (a release) is published as a release asset, not kept as an artifact.
 
+A workflow that builds a shipped artifact (an installer, a bundle, a package, an
+image) SHOULD be a workflow of its own that runs only when a path that feeds it
+changes, never for a documentation-only or record-only change, and that can
+always be started by hand. The path filter is the cost control: a merge that
+changed nothing the artifact is built from builds nothing.
+
 ### 13.2 Promotion
 
 **The three-tier promotion flow is not optional**, whichever host is chosen:
@@ -1380,8 +1394,10 @@ will join, it runs:
 5. The secret scan over the branch's new commits.
 6. End-to-end tests, only when a user-facing app, or a package it renders,
    changed. The gate SHOULD run only the specs the change affects, through a
-   committed map from specs to source paths; a change the map does not cover,
-   or one to shared configuration or the API contract, runs them all. The
+   committed map from specs to source paths or, when there is no map, the specs
+   of the apps that depend on the changed package (from the workspace dependency
+   graph); a change the map does not cover, or one to shared configuration or
+   the API contract, runs them all. The
    ready pull request's CI always runs every spec.
 
 Because a result is trusted only against the current head of the branch it
@@ -1396,14 +1412,28 @@ unless it is asked to go on, and it has a time limit (30 minutes by default):
 when the limit is reached, the running step is stopped with its child processes
 and the result records a timeout. A gate that could not finish never passes.
 
-A change to the lockfile, the task runner's configuration or the CI workflows
-widens the gate to every package.
+A change to the task runner's configuration or the CI workflows widens the gate
+to every package. A change to the lockfile widens it too, unless the lockfile
+format lets the gate see which packages' dependencies changed (a per-package
+lockfile, or a workspace lockfile with a section per package): then the gate
+SHOULD treat those packages as changed and widen only for a change it cannot
+attribute to a package, such as one to the root package or to a transitive
+resolution. A lockfile whose format the gate does not read widens as before.
 
 The gate MUST write a machine-readable result: the head commit, the base commit,
 each step with its outcome, and an overall pass. A result is trusted only when
 its head is the branch's current head and its base is the current head of the
 branch it joins. A claim in prose, such as a report saying "green", is not a
 result. Results travel with the repository, never in pull-request comments.
+
+A result gated against an older base SHOULD stay valid when that base is an
+ancestor of the branch's current base and every commit in between touches only
+inert paths (the repository declares them; the default is the documentation
+directory, which already covers the project record when the artifacts plugin is
+enabled), so a branch is not gated again because a note was merged. The ready
+pull request's CI still tests the real merge, which is why this is safe. The
+check reports why it accepted the result, and a strict mode keeps the exact-base
+rule.
 
 The guard tests and the secret scan MUST also run as a pre-push hook. They take
 seconds and catch the failures that otherwise reach pull-request CI. For a
@@ -1420,25 +1450,65 @@ gate runs the scanner CI runs.
 - Shared contracts (types, schemas, interfaces that several branches build on)
   are committed to the integration branch before parallel work starts.
 - Branches join the integration branch through a merge script. It merges each
-  branch in turn, stops at a conflict it cannot resolve, and runs the branch gate
-  on the joined head. No other full suite runs at the join.
+  branch in turn, stops at a conflict it cannot resolve, and runs a quick check
+  on the joined head: the install from the lockfile, the build, the type check and
+  the tests of every package any joined branch changed plus its dependents. No
+  full suite runs at the join. The script can skip that check when the joined tree
+  equals the tree of a joined branch head whose gate result is trusted for that
+  head and the same base. It records the time of each step.
 - When the last join is pushed, one ready pull request goes from the integration
   branch to the default branch. Its CI is the only full suite, end-to-end tests
   included (§11.2). It merges when that run is green, never by auto-merge.
+- While that run is going the train is frozen: a push to the branch the ready pull
+  request comes from is refused until its CI has finished, passed or failed (so a
+  fix goes forward), or the ready pull request is closed unmerged. When GitHub
+  cannot be reached the push is allowed with a warning; an explicit override allows
+  it and the running CI restarts. A branch that is late rides the next train.
 - A branch that is not green when the ready pull request opens waits for the
   next one.
+- Before the ready pull request opens, the merge script SHOULD warn when no online
+  runner carries a label the workflows' jobs need (GitHub-hosted labels count as
+  available), and the CI watcher SHOULD warn about a job queued over ten minutes with
+  no online runner for its labels. Both only warn: listing self-hosted runners needs
+  administrator rights, and without them the check says it was skipped.
 - CI is watched through the workflow runs for the head commit, never through a
   pull request's check list, which can be read before the new run is listed.
 - Branches SHOULD NOT edit a spec's version or change log. Each adds a change
   note naming the spec and the kind of change; the release folds the notes
   into the versions and change logs, so parallel branches do not conflict.
 - On shared or self-hosted runners, ready pull requests' CI SHOULD run one at a
-  time; the next train waits for the run, not for a merge.
+  time; the next train waits for the run, not for a merge. A required runner label
+  carried by one runner only is a single point of failure: setup warns against it
+  unless a fallback job exists.
 - Once the ready pull request merges, the train is removed automatically: on the
   remote, the integration branch, every branch joined into it and their
   gate-result refs; locally, their branches and the worktrees they were built
   in. A branch with an open pull request, a branch not merged, and a worktree
   holding uncommitted work are never removed; they are listed instead.
+- Delivery log (SHOULD). Before the train is removed, the time each change
+  finished, joined, started and ended CI and merged is collected from its
+  branch; the deploy adds when it went live. A table of the time to live of
+  each change, split into waiting, testing and queueing, is appended to the
+  train's release notes. It is never committed to the default branch, a time
+  that cannot be found is shown as unknown, and a log that cannot be written
+  (offline, no permission) never stops the cleanup or the deploy.
+
+### 13.7 Packaged-program smoke test
+
+A product that ships a packaged program (a single executable, an installer, an
+app bundle or a container image) MUST have CI start the packaged form, not the
+development server, and exercise every child process or worker it starts: CI
+waits for a readiness signal (a log line or a health probe) from the program and
+from each of those processes, and MUST fail the build when one does not come up
+within a stated time. The list of signals is declared in the repository, so adding
+a worker means adding its signal; the process tree is stopped when the check ends,
+whether it passed or not. A program that starts but whose worker never does is
+the failure this check exists for: it passes every unit test and breaks only when
+packaged, where paths, bundled files and process launching differ from
+development.
+
+A product that ships no packaged program declares none and the check has nothing
+to start.
 
 ---
 
@@ -1703,6 +1773,8 @@ Every item is checkable regardless of stack.
 - [ ] CI cost kept down (SHOULD): no sub-minute job that could be a step, superseded PR runs cancelled but never default-branch runs, drafts skip CI, installs and task-runner results cached
 - [ ] Default-branch push runs skip a tree a pull-request run already passed
 - [ ] Only the newest build artifact of each name is kept; artifact names stable per kind
+- [ ] Artifact-building workflows run only when their inputs change, never for docs-only merges, and can be started by hand (SHOULD)
+- [ ] A packaged program is started by CI in its packaged form and every worker it starts must report ready, or the build fails (§13.7)
 - [ ] End-to-end tests of critical web journeys gate the ready pull request; flaky specs quarantined, never retried until green
 - [ ] Branch gate: dependents type-checked and linted with every error reported, guard tests always run, secret scan, E2E only when a UI app changed
 - [ ] Branch gate installs from the lockfile in frozen mode first, stops at the first failure, and has a time limit
@@ -1710,6 +1782,7 @@ Every item is checkable regardless of stack.
 - [ ] Guard tests and secret scan run as a pre-push hook; the agent setup script installs every scanner CI uses
 - [ ] Integration through a merge script and one ready pull request; CI watched by commit
 - [ ] A merged train's branches, gate-result refs and worktrees removed automatically
+- [ ] A delivery log (time to live per change: waiting, testing, queueing) appended to the train's release notes, never committed (SHOULD)
 - [ ] Three-tier promotion; migrations before serving; rollback documented and rehearsed
 - [ ] Release order enforced: additive API → web/admin → mobile submission
 - [ ] Mobile signing material stored reproducibly with a tested recovery procedure
