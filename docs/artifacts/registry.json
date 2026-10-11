@@ -441,12 +441,12 @@
       "id": "DL5",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Waiting",
       "item": "Build-artifact workflows only when their inputs change",
-      "detail": "never for docs-only or record-only merges",
-      "expected": "11 Oct ~18:00",
-      "changed": "2026-10-11T11:56+01:00",
-      "expected_basis": "after TC6 merges (~14:30); one release"
+      "detail": "Its agent starts when AR40's agent finishes (at most 3 heavy suites on this PC)",
+      "expected": "11 Oct ~15:00",
+      "changed": "2026-10-11T12:04+01:00",
+      "expected_basis": "AR40 ~12:45, then ~1h"
     },
     {
       "id": "DL6",
