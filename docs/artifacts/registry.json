@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T01:05+01:00",
+  "updated": "2026-10-11T01:06+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -288,9 +288,9 @@
       "app": "luismc-artifacts",
       "status": "Running",
       "item": "Old claude.ai feature pages get deleted, with the owner's confirmation",
-      "detail": "Gap found by the owner in another project: the 1.1 migration turns feature artifacts into files but never deletes their old claude.ai pages, and it drops their URLs so no one can find them. Fix: keep them as retired (recovering URLs already dropped from the record's git history); pending, check and the end-of-turn hook list them until each is deleted with the owner's confirmation and recorded with a new command. luismc-artifacts 1.2.0.",
-      "expected": "11 Oct ~02:30",
-      "changed": "2026-10-11T01:05+01:00"
+      "detail": "Owner: fix the plugin so no project needs manual steps when it upgrades. Building in luismc-artifacts 1.2.0: (1) a running session gets the new rule on its next command, no restart; (2) an unmigrated record is migrated on the session's first turn (the hooks ask for it and block the turn until done); (3) the old copied rule file is deleted in the migration commit when it is an unedited plugin copy; (4) old claude.ai feature pages are kept as retired (URLs recovered from git history) and offered for deletion with the owner's confirmation.",
+      "expected": "11 Oct ~03:00",
+      "changed": "2026-10-11T01:06+01:00"
     },
     {
       "id": "DS1",
