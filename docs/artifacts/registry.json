@@ -1089,12 +1089,11 @@
       "id": "TC3",
       "owner": "test-cost",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Retire the fake-renderer group",
-      "detail": "Agent on TC5-record-push-once, part of the TC6 train",
-      "expected": "11 Oct ~13:30",
-      "changed": "2026-10-11T11:31+01:00",
-      "expected_basis": "agent work ~1h30 in parallel, then join"
+      "detail": "Fake-renderer group removed; its one unique case now uses the real renderer",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T12:01+01:00"
     },
     {
       "id": "TC4",
