@@ -1373,12 +1373,11 @@
       "id": "TC11",
       "owner": "test-cost",
       "app": "dev-standards",
-      "status": "Running",
+      "status": "Built",
       "item": "Use the session guards in dev-standards itself",
-      "detail": "Agent A after TC9: suites.json for tools/test_*.py, the guard hooks in this repo's .claude/settings.json",
-      "expected": "12 Oct ~00:15",
-      "changed": "2026-10-11T23:33+01:00",
-      "expected_basis": "with TC9, ~10 min",
+      "detail": "Same branch: .claude/suites.json lists the 15 tools/test_*.py suites (the six slow ones never measured locally); guard hook in this repo's .claude/settings.json",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T23:52+01:00",
       "rides": "DS55"
     }
   ]
