@@ -929,6 +929,63 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
 </section>
 <section id="s7"><h2><span class="section-number">&sect; 7</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D13">
+<h3 class="decision-head"><span class="decision-id">D13</span> <span class="decision-question">Must items be assigned to a release?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task AR45</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Built must name one</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">A Built task must ride a release; other statuses may stay unassigned; Live rows keep their release.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Every open item</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Running, To do, Waiting, Built and the rest all must ride a release.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Optional</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Never required; unassigned items show as Not in a release yet.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Built and Running must name one</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">Owner&#x27;s variant: the first option, with Running tasks required to ride a release too.</p>
+<blockquote class="decision-words">&ldquo;option 1 and &quot;running&quot; items too&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D12">
+<h3 class="decision-head"><span class="decision-id">D12</span> <span class="decision-question">How does Full Progress show which items go into each release?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task AR45</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Group rows by release</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">One group per open release in Expected order with the release row and every item riding it, then Not in a release yet, then the other groups.</p>
+<blockquote class="decision-words">&ldquo;its hard to know what items go into each release&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Release column</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep today&#x27;s groups and add a Release column with a RELEASE-n chip on each row.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Both</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Group by release and also show a Release chip on each row.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D11">
+<h3 class="decision-head"><span class="decision-id">D11</span> <span class="decision-question">How does a release get its RELEASE-&lt;n&gt; number?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task AR45</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Number on the release task</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">The release stays a task (its ID still starts branch names); --release gives it the next project-wide number, never reused, shown as RELEASE-12.</p>
+<blockquote class="decision-words">&ldquo;releases should be numbered with &quot;RELEASE-&lt;release number&gt;&quot;&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Release is its own entity</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">RELEASE-12 is a separate record, not a task; join, CI and merge are ordinary tasks that point at it.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D10">
 <h3 class="decision-head"><span class="decision-id">D10</span> <span class="decision-question">Full Progress: release timeline above the status table and a State column in the feature table (preview, Version 70); adopt for the plugin?</span></h3>
 <p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task AR43</p>
