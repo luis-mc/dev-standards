@@ -457,11 +457,11 @@
       "id": "DL6",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Train freeze while the ready PR runs CI",
-      "detail": "Joined into TC6-integration (43e4d72): 657 checks, 56 CI tests, 29 new mutants caught",
+      "detail": "Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0",
       "expected": "11 Oct",
-      "changed": "2026-10-11T12:56+01:00"
+      "changed": "2026-10-11T14:41+01:00"
     },
     {
       "id": "DL7",
