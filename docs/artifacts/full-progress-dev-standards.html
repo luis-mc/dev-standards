@@ -1849,31 +1849,31 @@ tr.status-group.release-group td { color: var(--ink); }
    "app": "",
    "status": "Running",
    "item": "TC9 train: join, PR CI, merge, cleanup",
-   "detail": "Contract 1f3115a on DS55-integration; agents A (TC9, TC11) and B (TC10) running; each ends with CI on its branch, then join, fold, ready PR",
-   "expected": "12 Oct ~00:35",
-   "changed": "2026-10-11T23:34+01:00",
-   "expected_basis": "agents ~40 min incl. branch CI; #52: CI 3.5 min, merge+cleanup 5",
+   "detail": "Joined TC9, TC10 (fixed: suites.json lacked TC10's new test); folded to STACKSPEC 8.2.0, project-setup 14.2.0, artifacts 1.6.1; ready PR #53, CI from 23:56",
+   "expected": "12 Oct ~00:05",
+   "changed": "2026-10-11T23:56+01:00",
+   "expected_basis": "#52: CI 3.5 min, merge+cleanup 5",
    "release": 3,
    "phases": [
     {
      "name": "agents",
      "start": "2026-10-11T23:40+01:00",
-     "end": "2026-10-12T00:20+01:00"
+     "end": "2026-10-11T23:51+01:00"
     },
     {
      "name": "join",
-     "start": "2026-10-12T00:20+01:00",
-     "end": "2026-10-12T00:25+01:00"
+     "start": "2026-10-11T23:51+01:00",
+     "end": "2026-10-11T23:56+01:00"
     },
     {
      "name": "ci",
-     "start": "2026-10-12T00:25+01:00",
-     "end": "2026-10-12T00:30+01:00"
+     "start": "2026-10-11T23:56+01:00",
+     "end": "2026-10-12T00:00+01:00"
     },
     {
      "name": "merge",
-     "start": "2026-10-12T00:30+01:00",
-     "end": "2026-10-12T00:35+01:00"
+     "start": "2026-10-12T00:00+01:00",
+     "end": "2026-10-12T00:05+01:00"
     }
    ],
    "risk": {
@@ -2078,7 +2078,7 @@ tr.status-group.release-group td { color: var(--ink); }
 </div>
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
-<li data-glance-task="DS55"><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~00:35</span><span class="glance-basis">agents ~40 min incl. branch CI; #52: CI 3.5 min, merge+cleanup 5</span></li>
+<li data-glance-task="DS55"><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~00:05</span><span class="glance-basis">#52: CI 3.5 min, merge+cleanup 5</span></li>
 </ul>
 </div>
 <div class="glance-group glance-built" data-glance="built"><div class="glance-label">Built, not released</div>
@@ -2115,8 +2115,8 @@ tr.status-group.release-group td { color: var(--ink); }
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group release-group" data-group="release-3"><td colspan="5"><strong>RELEASE-3 · live ~00:35 · worst ~00:45</strong></td></tr>
-<tr data-task="DS55"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup</td><td></td><td>Contract 1f3115a on DS55-integration; agents A (TC9, TC11) and B (TC10) running; each ends with CI on its branch, then join, fold, ready PR</td><td>12 Oct ~00:35<span class="expected-basis">agents ~40 min incl. branch CI; #52: CI 3.5 min, merge+cleanup 5</span></td></tr>
+<tr class="status-group release-group" data-group="release-3"><td colspan="5"><strong>RELEASE-3 · live ~00:05 · worst ~00:15</strong></td></tr>
+<tr data-task="DS55"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup</td><td></td><td>Joined TC9, TC10 (fixed: suites.json lacked TC10&#x27;s new test); folded to STACKSPEC 8.2.0, project-setup 14.2.0, artifacts 1.6.1; ready PR #53, CI from 23:56</td><td>12 Oct ~00:05<span class="expected-basis">#52: CI 3.5 min, merge+cleanup 5</span></td></tr>
 <tr data-task="TC9"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</a></td><td><code>luismc-project-setup</code></td><td>Branch TC9-test-and-pr-guards (0cbd767): suites.json + run_suite.py (times in .delivery/), session_guard.py blocks full local runs of heavy suites, repeat full runs of a tested tree and ready PRs off *-integration; join.py works without gate.json. Branch CI green 3m33s; 17 new guard cases</td><td>11 Oct</td></tr>
 <tr data-task="TC10"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check</a></td><td><code>luismc-project-setup</code></td><td>Branch TC10-commit-check-and-rule-tags (5b3889c): pre-commit runs change_notes.py check --staged; 39 shipped rule lines tagged (13 check, 26 advice), test_rule_tags.py in CI. Branch CI green 3m14s</td><td>11 Oct</td></tr>
 <tr data-task="TC11"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC11</span>Use the session guards in dev-standards itself</a></td><td><code>dev-standards</code></td><td>Same branch: .claude/suites.json lists the 15 tools/test_*.py suites (the six slow ones never measured locally); guard hook in this repo&#x27;s .claude/settings.json</td><td>11 Oct</td></tr>

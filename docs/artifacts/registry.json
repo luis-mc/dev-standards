@@ -1163,31 +1163,31 @@
       "app": "",
       "status": "Running",
       "item": "TC9 train: join, PR CI, merge, cleanup",
-      "detail": "Contract 1f3115a on DS55-integration; agents A (TC9, TC11) and B (TC10) running; each ends with CI on its branch, then join, fold, ready PR",
-      "expected": "12 Oct ~00:35",
-      "changed": "2026-10-11T23:34+01:00",
-      "expected_basis": "agents ~40 min incl. branch CI; #52: CI 3.5 min, merge+cleanup 5",
+      "detail": "Joined TC9, TC10 (fixed: suites.json lacked TC10's new test); folded to STACKSPEC 8.2.0, project-setup 14.2.0, artifacts 1.6.1; ready PR #53, CI from 23:56",
+      "expected": "12 Oct ~00:05",
+      "changed": "2026-10-11T23:56+01:00",
+      "expected_basis": "#52: CI 3.5 min, merge+cleanup 5",
       "release": 3,
       "phases": [
         {
           "name": "agents",
           "start": "2026-10-11T23:40+01:00",
-          "end": "2026-10-12T00:20+01:00"
+          "end": "2026-10-11T23:51+01:00"
         },
         {
           "name": "join",
-          "start": "2026-10-12T00:20+01:00",
-          "end": "2026-10-12T00:25+01:00"
+          "start": "2026-10-11T23:51+01:00",
+          "end": "2026-10-11T23:56+01:00"
         },
         {
           "name": "ci",
-          "start": "2026-10-12T00:25+01:00",
-          "end": "2026-10-12T00:30+01:00"
+          "start": "2026-10-11T23:56+01:00",
+          "end": "2026-10-12T00:00+01:00"
         },
         {
           "name": "merge",
-          "start": "2026-10-12T00:30+01:00",
-          "end": "2026-10-12T00:35+01:00"
+          "start": "2026-10-12T00:00+01:00",
+          "end": "2026-10-12T00:05+01:00"
         }
       ],
       "risk": {
