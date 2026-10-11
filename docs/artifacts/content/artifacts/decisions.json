@@ -1,207 +1,231 @@
 {
- "decisions": [
-  {
-   "id": "D1",
-   "question": "How is a task’s status stored so both artifacts update automatically?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
+  "decisions": [
     {
-     "label": "One registry",
-     "summary": "Each status stored once, as a task registry inside the full-progress artifact. One command regenerates the feature artifact's and full-progress artifact's checklists from it. Cannot drift.",
-     "recommended": true
+      "id": "D1",
+      "question": "How is a task’s status stored so both artifacts update automatically?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "One registry",
+          "summary": "Each status stored once, as a task registry inside the full-progress artifact. One command regenerates the feature artifact's and full-progress artifact's checklists from it. Cannot drift.",
+          "recommended": true
+        },
+        {
+          "label": "Write both, then sync",
+          "summary": "Status written on the feature artifact and the full-progress artifact separately; a sync step compares them and flags disagreements. Closer to the original proposal; can still drift between syncs."
+        }
+      ],
+      "chosen": "One registry",
+      "decided": "2026-10-10"
     },
     {
-     "label": "Write both, then sync",
-     "summary": "Status written on the feature artifact and the full-progress artifact separately; a sync step compares them and flags disagreements. Closer to the original proposal; can still drift between syncs."
+      "id": "D2",
+      "question": "Do branch names start with the task ID?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, task ID first",
+          "summary": "Hooks match git/gh events to tasks automatically and queue the status change.",
+          "recommended": true
+        },
+        {
+          "label": "No convention",
+          "summary": "Branches stay free-form; hooks can only remind the session to update statuses, not say which task changed."
+        }
+      ],
+      "chosen": "Yes, task ID first",
+      "decided": "2026-10-10"
+    },
+    {
+      "id": "D3",
+      "question": "How do changes made outside a session reach the artifacts?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Next session start",
+          "summary": "A session-start hook checks GitHub and queues the changes. No extra cost; artifacts can lag until the next session.",
+          "recommended": true
+        },
+        {
+          "label": "Also a cloud routine",
+          "summary": "A scheduled cloud agent also checks and updates artifacts when no session is open. Always current; costs a recurring run."
+        }
+      ],
+      "chosen": "Next session start",
+      "decided": "2026-10-10"
+    },
+    {
+      "id": "D4",
+      "question": "What look do artifacts get?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Neutral, comic optional",
+          "summary": "A plain neutral theme by default; the current comic look ships as a theme a project can choose.",
+          "recommended": true
+        },
+        {
+          "label": "Comic for every project",
+          "summary": "The comic look from another project becomes the default everywhere."
+        },
+        {
+          "label": "Each project’s own design, else a default",
+          "summary": "Look and feel taken from the project it belongs to (scan its design files or web pages); a project with no design gets a default design file shipped in the plugin. The other project’s comic look is ignored."
+        }
+      ],
+      "chosen": "Each project’s own design, else a default",
+      "decided": "2026-10-10",
+      "owner_words": "ignore the [another project] look; all artificts should have a look & feel based on the project they belong too ([…]); if project has no design, then put together a default design file in this plugin; and since dev-standards proejct has no design since its just for plugins, the create the default design and its file now, and apply it to existing artifacts"
+    },
+    {
+      "id": "D5",
+      "question": "An App / service column on the full-progress artifact?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, full-progress only",
+          "summary": "It covers every app and service, so you can scan one area. Feature artifacts keep four columns.",
+          "recommended": true
+        },
+        {
+          "label": "No, four columns everywhere",
+          "summary": "Same columns on every artifact; the app or service goes in the Detail text."
+        }
+      ],
+      "chosen": "Yes, full-progress only",
+      "decided": "2026-10-10"
+    },
+    {
+      "id": "D6",
+      "question": "Where is the record kept?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Dedicated branch",
+          "summary": "An orphan branch, e.g. project-artifacts, holding only the record. Updates commit there without a checkout, so code branches, PRs and CI never see them and parallel agents can't conflict with them.",
+          "recommended": true
+        },
+        {
+          "label": "Folder on the default branch",
+          "summary": ".claude/project-artifacts/ on main. Easy to find, but every status change is a commit to main: CI has to skip those paths, and it bends the 'nothing lands on main one change at a time' rule."
+        },
+        {
+          "label": "Folder on each work branch",
+          "summary": "The status change rides the branch doing the work and reaches main with its PR. The record on main lags, and parallel branches conflict on the registry."
+        },
+        {
+          "label": "The repo’s docs/artifacts folder",
+          "summary": "The record (manifest, registry, content, last published HTML) lives in docs/artifacts/ on the repo, and every doc goes under docs/."
+        }
+      ],
+      "chosen": "The repo’s docs/artifacts folder",
+      "decided": "2026-10-10",
+      "owner_words": "on the repos docs/artifacts folder; the project-setup plugin should set a more general rule for all docs to be created in the docs/ folder;"
+    },
+    {
+      "id": "D7",
+      "question": "How does a project get the plugin?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "project-setup installs it",
+          "summary": "Every project set up by luismc-project-setup gets it, and no artifact is created until the first feature artifact is made.",
+          "recommended": true
+        },
+        {
+          "label": "Opt-in per project",
+          "summary": "You install it yourself in the projects that want it."
+        },
+        {
+          "label": "Project-setup installs it, plus independent install",
+          "summary": "Every project set up by luismc-project-setup gets it, and any project can also install it on its own. No artifact is created until the first feature artifact is made."
+        }
+      ],
+      "chosen": "Project-setup installs it, plus independent install",
+      "decided": "2026-10-10",
+      "owner_words": "option 1 plus the ability to install independently per project"
+    },
+    {
+      "id": "D8",
+      "question": "Which clock do Expected times use?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Owner's zone, per project",
+          "summary": "Set once in each project's manifest; Lisbon for your projects. The zone is named in the column header.",
+          "recommended": true
+        },
+        {
+          "label": "Always Lisbon",
+          "summary": "Fixed for every project."
+        },
+        {
+          "label": "UTC",
+          "summary": "The same everywhere, but you would have to convert it in your head."
+        }
+      ],
+      "chosen": "Owner's zone, per project",
+      "decided": "2026-10-10"
+    },
+    {
+      "id": "D9",
+      "question": "Does dev-standards move other projects onto the plugin?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Branch and draft PR",
+          "summary": "Push a task-ID branch with a draft PR. You review it and merge it yourself.",
+          "recommended": true
+        },
+        {
+          "label": "Merge on green there too",
+          "summary": "Same flow as here: one ready PR, merged on green."
+        },
+        {
+          "label": "Local only",
+          "summary": "Prepare the change in a local clone and push nothing. Leave a report for you."
+        },
+        {
+          "label": "Leave other projects alone",
+          "summary": "dev-standards ships the plugin and names or changes no other project; each project adopts it in its own sessions."
+        }
+      ],
+      "chosen": "Leave other projects alone",
+      "decided": "2026-10-10",
+      "owner_words": "why are you touch another project?"
+    },
+    {
+      "id": "D10",
+      "question": "Full Progress: release timeline above the status table and a State column in the feature table (preview, Version 70); adopt for the plugin?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "As previewed",
+          "summary": "Phases sized from the basis, hatched margin up to Expected."
+        },
+        {
+          "label": "With the two changes",
+          "summary": "Expected = the sum of the phases (no silent padding); risk drawn as a named faint extension (e.g. +1 fix round ~10 min) ending at an outlined worst-case marker, only when the basis names it."
+        },
+        {
+          "label": "Change something else",
+          "summary": "Owner names other changes."
+        }
+      ],
+      "chosen": "With the two changes",
+      "decided": "2026-10-11",
+      "task": "AR43",
+      "owner_words": "For the plugin version add the two things; also apply now to full progress page"
     }
-   ],
-   "chosen": "One registry",
-   "decided": "2026-10-10"
-  },
-  {
-   "id": "D2",
-   "question": "Do branch names start with the task ID?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Yes, task ID first",
-     "summary": "Hooks match git/gh events to tasks automatically and queue the status change.",
-     "recommended": true
-    },
-    {
-     "label": "No convention",
-     "summary": "Branches stay free-form; hooks can only remind the session to update statuses, not say which task changed."
-    }
-   ],
-   "chosen": "Yes, task ID first",
-   "decided": "2026-10-10"
-  },
-  {
-   "id": "D3",
-   "question": "How do changes made outside a session reach the artifacts?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Next session start",
-     "summary": "A session-start hook checks GitHub and queues the changes. No extra cost; artifacts can lag until the next session.",
-     "recommended": true
-    },
-    {
-     "label": "Also a cloud routine",
-     "summary": "A scheduled cloud agent also checks and updates artifacts when no session is open. Always current; costs a recurring run."
-    }
-   ],
-   "chosen": "Next session start",
-   "decided": "2026-10-10"
-  },
-  {
-   "id": "D4",
-   "question": "What look do artifacts get?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Neutral, comic optional",
-     "summary": "A plain neutral theme by default; the current comic look ships as a theme a project can choose.",
-     "recommended": true
-    },
-    {
-     "label": "Comic for every project",
-     "summary": "The comic look from another project becomes the default everywhere."
-    },
-    {
-     "label": "Each project’s own design, else a default",
-     "summary": "Look and feel taken from the project it belongs to (scan its design files or web pages); a project with no design gets a default design file shipped in the plugin. The other project’s comic look is ignored."
-    }
-   ],
-   "chosen": "Each project’s own design, else a default",
-   "decided": "2026-10-10",
-   "owner_words": "ignore the [another project] look; all artificts should have a look & feel based on the project they belong too ([…]); if project has no design, then put together a default design file in this plugin; and since dev-standards proejct has no design since its just for plugins, the create the default design and its file now, and apply it to existing artifacts"
-  },
-  {
-   "id": "D5",
-   "question": "An App / service column on the full-progress artifact?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Yes, full-progress only",
-     "summary": "It covers every app and service, so you can scan one area. Feature artifacts keep four columns.",
-     "recommended": true
-    },
-    {
-     "label": "No, four columns everywhere",
-     "summary": "Same columns on every artifact; the app or service goes in the Detail text."
-    }
-   ],
-   "chosen": "Yes, full-progress only",
-   "decided": "2026-10-10"
-  },
-  {
-   "id": "D6",
-   "question": "Where is the record kept?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Dedicated branch",
-     "summary": "An orphan branch, e.g. project-artifacts, holding only the record. Updates commit there without a checkout, so code branches, PRs and CI never see them and parallel agents can't conflict with them.",
-     "recommended": true
-    },
-    {
-     "label": "Folder on the default branch",
-     "summary": ".claude/project-artifacts/ on main. Easy to find, but every status change is a commit to main: CI has to skip those paths, and it bends the 'nothing lands on main one change at a time' rule."
-    },
-    {
-     "label": "Folder on each work branch",
-     "summary": "The status change rides the branch doing the work and reaches main with its PR. The record on main lags, and parallel branches conflict on the registry."
-    },
-    {
-     "label": "The repo’s docs/artifacts folder",
-     "summary": "The record (manifest, registry, content, last published HTML) lives in docs/artifacts/ on the repo, and every doc goes under docs/."
-    }
-   ],
-   "chosen": "The repo’s docs/artifacts folder",
-   "decided": "2026-10-10",
-   "owner_words": "on the repos docs/artifacts folder; the project-setup plugin should set a more general rule for all docs to be created in the docs/ folder;"
-  },
-  {
-   "id": "D7",
-   "question": "How does a project get the plugin?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "project-setup installs it",
-     "summary": "Every project set up by luismc-project-setup gets it, and no artifact is created until the first feature artifact is made.",
-     "recommended": true
-    },
-    {
-     "label": "Opt-in per project",
-     "summary": "You install it yourself in the projects that want it."
-    },
-    {
-     "label": "Project-setup installs it, plus independent install",
-     "summary": "Every project set up by luismc-project-setup gets it, and any project can also install it on its own. No artifact is created until the first feature artifact is made."
-    }
-   ],
-   "chosen": "Project-setup installs it, plus independent install",
-   "decided": "2026-10-10",
-   "owner_words": "option 1 plus the ability to install independently per project"
-  },
-  {
-   "id": "D8",
-   "question": "Which clock do Expected times use?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Owner's zone, per project",
-     "summary": "Set once in each project's manifest; Lisbon for your projects. The zone is named in the column header.",
-     "recommended": true
-    },
-    {
-     "label": "Always Lisbon",
-     "summary": "Fixed for every project."
-    },
-    {
-     "label": "UTC",
-     "summary": "The same everywhere, but you would have to convert it in your head."
-    }
-   ],
-   "chosen": "Owner's zone, per project",
-   "decided": "2026-10-10"
-  },
-  {
-   "id": "D9",
-   "question": "Does dev-standards move other projects onto the plugin?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Branch and draft PR",
-     "summary": "Push a task-ID branch with a draft PR. You review it and merge it yourself.",
-     "recommended": true
-    },
-    {
-     "label": "Merge on green there too",
-     "summary": "Same flow as here: one ready PR, merged on green."
-    },
-    {
-     "label": "Local only",
-     "summary": "Prepare the change in a local clone and push nothing. Leave a report for you."
-    },
-    {
-     "label": "Leave other projects alone",
-     "summary": "dev-standards ships the plugin and names or changes no other project; each project adopts it in its own sessions."
-    }
-   ],
-   "chosen": "Leave other projects alone",
-   "decided": "2026-10-10",
-   "owner_words": "why are you touch another project?"
-  }
- ]
+  ]
 }
