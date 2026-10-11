@@ -20,6 +20,8 @@ PLUGIN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SHIPPED_RULE_SHA256 = {
     'a90a8c5589851ae52c884aaf7fc44b383f1f1fec2a0e35b46525ac564e3d0ba5': '1.0.0',
     'da59292d536662a281d2aaeebd9b22378f0864ed657f01109c1672f1ee21c1c7': '1.1.0',
+    '7641ef11f679d5fe3465e087dd14e72c67fabcff4830c9986f7bbb69dc7f827b': '1.2.0',
+    '99055a7a0c9b9836009917054cc4356da41fae3a0d794e2177d761ef81011ac7': '1.3.0',
 }
 
 

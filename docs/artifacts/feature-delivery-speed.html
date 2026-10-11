@@ -642,6 +642,44 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
   }
   nav.contents a.current { border-color: var(--signal); }
 }
+
+/* Release timeline (R5.40 to R5.43) and the State column (R5.44) */
+.release-timeline { margin: 0 0 1rem; padding: .75rem 1rem; background: var(--surface); border: 1px solid var(--rule); }
+.release-timeline figcaption {
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: .4rem;
+}
+.timeline-scroll { overflow-x: auto; }
+.release-timeline svg { width: 100%; height: auto; display: block; font-family: var(--font-body); }
+.release-timeline .rt-axis { font-size: 11px; fill: var(--ink-muted); text-anchor: middle; }
+.release-timeline .rt-grid { stroke: var(--rule); }
+.release-timeline .rt-break { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; }
+.release-timeline .rt-name { font-size: 13px; font-weight: 600; fill: var(--ink); }
+.release-timeline .rt-sub { font-size: 11px; fill: var(--ink-muted); }
+.release-timeline .rt-bar.agents { fill: var(--running-mark); }
+.release-timeline .rt-bar.join { fill: var(--signal); }
+.release-timeline .rt-bar.ci { fill: var(--live); }
+.release-timeline .rt-bar.merge { fill: var(--ink); }
+.release-timeline .rt-risk { fill: var(--rule-strong); opacity: .55; }
+.release-timeline .rt-worst { fill: var(--paper); stroke: var(--ink-muted); stroke-width: 1.5; }
+.release-timeline .rt-expected { fill: var(--ink); }
+.release-timeline .rt-day { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.release-timeline .rt-day-label { font-size: 12px; fill: var(--ink); }
+.release-timeline .rt-live-label { font-size: 12px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
+.release-timeline .rt-risk-label { font-size: 10.5px; fill: var(--ink-muted); }
+.release-timeline .rt-now { stroke: var(--failed); stroke-width: 2; }
+.release-timeline .rt-now-label { font-size: 11px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
+.timeline-legend { font-size: .85rem; color: var(--ink-muted); margin: .5rem 0 0; }
+.rt-swatch { display: inline-block; width: 10px; height: 10px; vertical-align: middle; margin: 0 4px 0 2px; }
+.rt-swatch.agents { background: var(--running-mark); }
+.rt-swatch.join { background: var(--signal); }
+.rt-swatch.ci { background: var(--live); }
+.rt-swatch.merge { background: var(--ink); }
+.state-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 </style>
 <style id="extra-css"></style>
 </head>
@@ -649,8 +687,8 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T17:53+01:00">11 Oct 17:53</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Oct 17:55</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T18:32+01:00">11 Oct 18:32</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Oct 18:35</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>

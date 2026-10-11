@@ -1439,6 +1439,14 @@ def rule_file_carries_the_basis_rule():
     assert "When you give an Expected time, give its basis too (what it waits on and how long)." in lines, lines
 
 
+@test
+def rule_file_carries_the_release_rule():
+    """R5.41: a release's Expected is the end of its last phase; a risk is named, not padded in."""
+    lines = [ln[2:] for ln in RULE.splitlines() if ln.startswith('- ')]
+    assert any("release's Expected is the end of its last phase" in ln and '--risk' in ln and 'instead of padding' in ln
+               for ln in lines), lines
+
+
 # --- registration and invariants ------------------------------------------------------
 
 @test

@@ -265,6 +265,30 @@
       "decided": "2026-10-11",
       "task": "TC8",
       "owner_words": "Generic SHOULD, next train (Recommended)"
+    },
+    {
+      "id": "D13",
+      "question": "When should TC8 run? (its 12 Oct date had no basis)",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Start now, in parallel",
+          "summary": "Own small release beside AR43 (files disjoint); live ~19:00, merges after AR43."
+        },
+        {
+          "label": "After AR43",
+          "summary": "Starts when AR43 merges; live ~19:50."
+        },
+        {
+          "label": "Tomorrow",
+          "summary": "Keep 12 Oct with a stated reason."
+        }
+      ],
+      "chosen": "Start now, in parallel",
+      "decided": "2026-10-11",
+      "task": "TC8",
+      "owner_words": "Start now, in parallel (Recommended)"
     }
   ]
 }

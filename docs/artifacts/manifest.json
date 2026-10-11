@@ -12,8 +12,8 @@
     "title": "Full Progress: dev-standards",
     "url": "https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv",
     "file": "full-progress-dev-standards.html",
-    "published_sha256": "d045e84893c8b9d30cf2b0a2bcfad6ccf4a2bc3bc3387b07e8efbd9132bd89a7",
-    "published_at": "2026-10-11T17:55+01:00"
+    "published_sha256": "b62db58d8e9451c45d0de012ae7669ac2843bb1a0bc1db882987b48c23d8e306",
+    "published_at": "2026-10-11T18:35+01:00"
   },
   "feature_artifacts": [
     {
@@ -24,7 +24,7 @@
       "apps": [
         "luismc-artifacts"
       ],
-      "updated": "2026-10-11T17:54+01:00"
+      "updated": "2026-10-11T18:39+01:00"
     },
     {
       "key": "models",
@@ -34,7 +34,7 @@
       "apps": [
         "luismc-project-setup"
       ],
-      "updated": "2026-10-11T14:42+01:00"
+      "updated": "2026-10-11T18:32+01:00"
     },
     {
       "key": "test-cost",
@@ -46,7 +46,7 @@
         "delivery scripts",
         "luismc-artifacts"
       ],
-      "updated": "2026-10-11T17:53+01:00"
+      "updated": "2026-10-11T18:39+01:00"
     },
     {
       "key": "delivery-speed",
@@ -58,13 +58,13 @@
         "STACKSPEC",
         "tech-stack-setup"
       ],
-      "updated": "2026-10-11T17:53+01:00"
+      "updated": "2026-10-11T18:32+01:00"
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-10-11T17:55+01:00",
+  "updated": "2026-10-11T18:39+01:00",
   "retired": [],
   "deleted": [
     {

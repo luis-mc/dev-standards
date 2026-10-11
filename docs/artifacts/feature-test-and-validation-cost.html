@@ -642,6 +642,44 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
   }
   nav.contents a.current { border-color: var(--signal); }
 }
+
+/* Release timeline (R5.40 to R5.43) and the State column (R5.44) */
+.release-timeline { margin: 0 0 1rem; padding: .75rem 1rem; background: var(--surface); border: 1px solid var(--rule); }
+.release-timeline figcaption {
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: .4rem;
+}
+.timeline-scroll { overflow-x: auto; }
+.release-timeline svg { width: 100%; height: auto; display: block; font-family: var(--font-body); }
+.release-timeline .rt-axis { font-size: 11px; fill: var(--ink-muted); text-anchor: middle; }
+.release-timeline .rt-grid { stroke: var(--rule); }
+.release-timeline .rt-break { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; }
+.release-timeline .rt-name { font-size: 13px; font-weight: 600; fill: var(--ink); }
+.release-timeline .rt-sub { font-size: 11px; fill: var(--ink-muted); }
+.release-timeline .rt-bar.agents { fill: var(--running-mark); }
+.release-timeline .rt-bar.join { fill: var(--signal); }
+.release-timeline .rt-bar.ci { fill: var(--live); }
+.release-timeline .rt-bar.merge { fill: var(--ink); }
+.release-timeline .rt-risk { fill: var(--rule-strong); opacity: .55; }
+.release-timeline .rt-worst { fill: var(--paper); stroke: var(--ink-muted); stroke-width: 1.5; }
+.release-timeline .rt-expected { fill: var(--ink); }
+.release-timeline .rt-day { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.release-timeline .rt-day-label { font-size: 12px; fill: var(--ink); }
+.release-timeline .rt-live-label { font-size: 12px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
+.release-timeline .rt-risk-label { font-size: 10.5px; fill: var(--ink-muted); }
+.release-timeline .rt-now { stroke: var(--failed); stroke-width: 2; }
+.release-timeline .rt-now-label { font-size: 11px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
+.timeline-legend { font-size: .85rem; color: var(--ink-muted); margin: .5rem 0 0; }
+.rt-swatch { display: inline-block; width: 10px; height: 10px; vertical-align: middle; margin: 0 4px 0 2px; }
+.rt-swatch.agents { background: var(--running-mark); }
+.rt-swatch.join { background: var(--signal); }
+.rt-swatch.ci { background: var(--live); }
+.rt-swatch.merge { background: var(--ink); }
+.state-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 </style>
 <style id="extra-css">.tc-figure{margin:1rem 0 1.5rem;overflow-x:auto}.tc-chart{display:block;width:100%;max-width:640px;height:auto}.tc-chart text{font-family:var(--font-mono);font-size:12px;fill:var(--ink)}.tc-chart .tc-muted{fill:var(--ink-muted);font-size:11px}.tc-chart .tc-on{fill:var(--on-signal);font-weight:600}.tc-a{fill:var(--signal)}.tc-b{fill:var(--rule-strong)}.tc-c{fill:var(--running-mark)}.tc-axis{stroke:var(--rule-strong);stroke-width:1}.tc-figure figcaption{font-size:.85rem;color:var(--ink-muted);margin-top:.4rem;max-width:65ch}</style>
 </head>
@@ -649,12 +687,17 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>The question</a><a href="#s2"><b>2</b>How it was measured</a><a href="#s3"><b>3</b>Hypotheses and verdicts</a><a href="#s4"><b>4</b>Where the time goes</a><a href="#s5"><b>5</b>The mutation pass</a><a href="#s6"><b>6</b>Repeats and noise</a><a href="#s7"><b>7</b>What is wrong</a><a href="#s8"><b>8</b>Solutions, ranked</a><a href="#s9"><b>9</b>Decisions</a><a href="#s10"><b>10</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Test and validation cost</h1><p>What our tests and checks cost, where they repeat, and what to cut</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T17:53+01:00">11 Oct 17:53</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Oct 17:55</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T18:39+01:00">11 Oct 18:39</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Oct 18:35</a> (Lisbon)</p>
 <p class="lede">All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</p>
 <div class="at-a-glance">
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
+</div>
+<div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
+<ul>
+<li data-glance-task="TC8"><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards <span class="glance-expected">11 Oct ~19:12</span><span class="glance-basis">agent ~50 min from 18:22</span></li>
+</ul>
 </div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
@@ -668,11 +711,11 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">7</div><div class="label">live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">7</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next</strong></td></tr>
-<tr data-task="TC8"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards</td><td>STACKSPEC SHOULD, Playwright sharding in the e2e template, ci_watch slowest-job summary; next small train</td><td>12 Oct<span class="expected-basis">starts after the DL12 train merges, about 1 h of work and CI</span></td></tr>
+<tr data-task="TC8"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards</td><td>One Sonnet agent on TC8-ci-speed-generic</td><td>11 Oct ~19:12<span class="expected-basis">agent ~50 min from 18:22</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
 <tr data-task="TC7"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC7</span>PR CI: mutants per suite, delivery suites in parallel</td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>
 <tr data-task="TC6"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC6</span>Release the test-cost train (all eight fixes and DS48)</td><td>#47 merged on green at 14:37 after two fix-forwards; cleanup removed every train branch; plugins and ~/.claude rules updated</td><td>11 Oct</td></tr>
@@ -842,6 +885,25 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </section>
 <section id="s9"><h2><span class="section-number">&sect; 9</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D13">
+<h3 class="decision-head"><span class="decision-id">D13</span> <span class="decision-question">When should TC8 run? (its 12 Oct date had no basis)</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC8</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Start now, in parallel</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">Own small release beside AR43 (files disjoint); live ~19:00, merges after AR43.</p>
+<blockquote class="decision-words">&ldquo;Start now, in parallel (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">After AR43</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Starts when AR43 merges; live ~19:50.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Tomorrow</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep 12 Oct with a stated reason.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D12">
 <h3 class="decision-head"><span class="decision-id">D12</span> <span class="decision-question">How should the CI-speed ideas reach other projects?</span></h3>
 <p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC8</p>

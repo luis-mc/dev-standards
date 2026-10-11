@@ -372,8 +372,8 @@ def full_progress_structure(fx):
     # R5.6: link, task ID range, first sentence of the lede
     s1node = R.find(dom, 'section', pred=lambda n: n.attrs.get('id') == 's1')
     cells = [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1node, 'tr', pred=lambda n: R.find(n, 'td'))]
-    assert cells == [['Feature: Project artifacts standard', '10 Oct 12:39', 'AR5 to AR16', 'The design is agreed.'],
-                     ['Feature: Model and effort profiles', '09 Oct 18:00', 'MP1 to MP2, DS2', 'Effort question is live!']], cells
+    assert cells == [['Feature: Project artifacts standard', '10 Oct 12:39', 'AR5 to AR16', '1 Running2 Built1 To do', 'The design is agreed.'],
+                     ['Feature: Model and effort profiles', '09 Oct 18:00', 'MP1 to MP2, DS2', '1 Running', 'Effort question is live!']], cells
     anchors = [a.attrs['href'] for a in R.find_all(s1node, 'a')]
     assert anchors == [AR_FILE, MP_FILE], anchors  # R5.30: every feature is linked to its file, relative
 
@@ -1220,7 +1220,7 @@ def the_structure_stylesheet_holds_no_literal_colour():
 def templates_hold_only_known_placeholders(fx):
     import re
     known = {'title', 'fonts_link', 'design_css', 'structure_css', 'extra_css', 'kind_label', 'project', 'hero', 'contents', 'glance',
-             'sections', 'stamp', 'published', 'lede', 'tiles', 'key', 'checklist', 'registry'}
+             'sections', 'stamp', 'published', 'lede', 'tiles', 'key', 'timeline', 'checklist', 'registry'}
     for name in ('feature-artifact.html', 'full-progress-artifact.html'):
         text = open(os.path.join(PLUGIN, 'templates', name), encoding='utf-8').read()
         found = set(re.findall(r'\{\{(\w+)\}\}', text))
@@ -1780,15 +1780,16 @@ def decisions_full_progress_line_counts_open_decisions(fx):
         s1 = R.find(R.parse_dom(out), 'section', pred=lambda n: n.attrs.get('id') == 's1')
         return [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1, 'tr', pred=lambda n: R.find(n, 'td'))]
     out = fx.render('full-progress', registry=registry)
-    assert cells(out)[0] == ['Feature: Project artifacts standard', '10 Oct 12:39', 'AR5 to AR16', 'The design is agreed. 1 decision open.']
-    assert cells(out)[1][3] == 'Effort question is live!'
+    assert cells(out)[0] == ['Feature: Project artifacts standard', '10 Oct 12:39', 'AR5 to AR16',
+                            '1 Running1 Needs you2 Built1 open decision', 'The design is agreed. 1 decision open.']
+    assert cells(out)[1][4] == 'Effort question is live!'
     assert fx.check(out, 'full-progress', registry=registry) == []
     put_decisions(fx, [open_dec(1), open_dec(2), dec(3)])
     fx.reload()
-    assert cells(fx.render('full-progress'))[0][3] == 'The design is agreed. 2 decisions open.'
+    assert cells(fx.render('full-progress'))[0][4] == 'The design is agreed. 2 decisions open.'
     put_decisions(fx, [dec(1)])
     fx.reload()
-    assert cells(fx.render('full-progress'))[0][3] == 'The design is agreed.'
+    assert cells(fx.render('full-progress'))[0][4] == 'The design is agreed.'
 
 
 # ---- check_html: each Decisions check fires alone
@@ -2003,7 +2004,7 @@ def section_one_never_blank(fx):
     out = fx.render('full-progress')
     s1 = R.find(R.parse_dom(out), 'section', pred=lambda n: n.attrs.get('id') == 's1')
     cells = [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1, 'tr', pred=lambda n: R.find(n, 'td'))]
-    assert cells[1][3] == '1 running, 2 live, nothing needs you.', cells
+    assert cells[1][4] == '1 running, 2 live, nothing needs you.', cells
     assert R.feature_summary([task('X1', 'a', 'Needs you', 'i', '10 Oct')]) == '1 needs you'
     assert fx.check(out, 'full-progress') == []
 
@@ -2032,7 +2033,7 @@ def section_one_orders_by_last_updated_newest_first(fx):
     out = fx.render('full-progress')
     dom = R.parse_dom(out)
     heads = R.find_all(R.find(dom, 'table', 'feature-list'), 'th')
-    assert [R.text_of(h).rstrip(' ↑↓') for h in heads] == ['Feature artifact', 'Last updated', 'Tasks', 'Where it stands']
+    assert [R.text_of(h).rstrip(' ↑↓') for h in heads] == ['Feature artifact', 'Last updated', 'Tasks', 'State', 'Where it stands']
     assert heads[1].attrs['aria-sort'] == 'descending' and 'aria-sort' not in heads[0].attrs
     assert R.text_of(heads[1]).endswith('↓')
     assert [b.attrs['data-sort'] for b in R.find_all(dom, 'button', 'sort-header')] == ['name', 'updated']
@@ -2146,6 +2147,208 @@ console.log(JSON.stringify(out));
     assert done.returncode == 0, done.stderr
     assert json.loads(done.stdout) == ['cdab', 'ascending', '↑', 'abdc', 'descending',
                                        'abcd', 'ascending', '-', '↑', True, 'dcba', 'descending', 'abdc', 'descending'], done.stdout
+
+
+# ------------------------------------------------------------------ release timeline and State column (R5.40 to R5.44)
+def phase(name, start, end):
+    return {'name': name, 'start': '2026-10-10T%s+01:00' % start, 'end': '2026-10-10T%s+01:00' % end}
+
+
+def release(tid, item, expected, phases=None, risk=None, status='Running'):
+    row = task(tid, 'project', status, item, expected, '2026-10-10T12:00+01:00', 'luismc-artifacts')
+    row['release'] = True
+    if phases:
+        row['phases'] = phases
+    if risk:
+        row['risk'] = risk
+    return row
+
+
+def with_releases(fx, *rows, rides=()):
+    registry = copy.deepcopy(fx.registry)
+    registry['tasks'] += list(rows)
+    for t in registry['tasks']:
+        if t['id'] in rides:
+            t['rides'] = rows[0]['id']
+    return registry
+
+
+def two_releases(fx):
+    a = release('DS51', 'DL12 release', '10 Oct ~18:00',
+                [phase('agents', '17:30', '17:45'), phase('join', '17:45', '17:48'), phase('ci', '17:48', '17:54'),
+                 phase('merge', '17:54', '18:00')], {'label': '+1 fix round', 'minutes': 10})
+    b = release('DS52', 'Timeline release', '12 Oct', status='To do')
+    return with_releases(fx, a, b, rides=('AR6', 'DS6'))
+
+
+def timeline_of(out):
+    return R.find(R.parse_dom(out), 'figure', 'release-timeline')
+
+
+@test
+@with_fixture
+def timeline_is_absent_without_open_releases(fx):
+    """R5.42: no open release, no figure; a Live release is not open."""
+    out = fx.render('full-progress')
+    assert timeline_of(out) is None
+    registry = with_releases(fx, release('DS51', 'Done release', '09 Oct', status='Live'))
+    out = fx.render('full-progress', registry=registry)
+    assert timeline_of(out) is None and fx.check(out, 'full-progress', registry=registry) == []
+    assert R.release_timeline(registry['tasks'], R._parse_iso(STAMP_ISO), 'Lisbon') == ''
+    feature = fx.render('artifacts', registry=two_releases(fx))
+    assert timeline_of(feature) is None, 'only Full Progress carries the timeline'
+
+
+@test
+@with_fixture
+def timeline_rows_axis_and_break(fx):
+    """R5.42: a row per open release by Expected, riders under the label, a half-hour axis, a day slot after a break."""
+    registry = two_releases(fx)
+    out = fx.render('full-progress', registry=registry)
+    fig = timeline_of(out)
+    assert fig is not None and R.text_of(R.find(fig, 'figcaption')) == 'Next releases (Lisbon)'
+    names = [R.text_of(n, skip=lambda x: x.tag == 'title') for n in R.find_all(fig, 'text', 'rt-name')]
+    assert names == ['DS51 · DL12 release', 'DS52 · Timeline release'], names
+    assert [R.text_of(n, skip=lambda x: x.tag == 'title') for n in R.find_all(fig, 'text', 'rt-sub')] == ['AR6, DS6']
+    ticks = [R.text_of(t) for t in R.find_all(R.find(fig, 'g', 'rt-axis'), 'text')]
+    assert ticks == ['17:30', '18:00', '18:30', '12 Oct'], ticks
+    assert len(R.find_all(fig, 'rect', 'rt-bar')) == 4 and len(R.find_all(fig, 'polygon', 'rt-day')) == 1
+    assert R.find(fig, 'path', 'rt-break') is not None
+    assert [R.text_of(n) for n in R.find_all(fig, 'text', 'rt-day-label')] == ['12 Oct']
+    assert R.text_of(R.find(fig, 'text', 'rt-live-label')) == 'live ~18:00'
+    # the figure sits between the status key and the checklist, in section 0
+    s0 = R.find(R.parse_dom(out), 'section', pred=lambda n: n.attrs.get('id') == 's0')
+    order = list(R.elements(s0))
+    fig0 = R.find(s0, 'figure', 'release-timeline')
+    assert order.index(R.find(s0, 'p', 'note')) < order.index(fig0) < order.index(R.find(s0, 'table', 'status-checklist'))
+    assert fx.check(out, 'full-progress', registry=registry) == []
+
+
+@test
+@with_fixture
+def timeline_axis_is_to_scale_from_the_earliest_phase(fx):
+    """R5.42: the axis runs from the earliest phase start (or the stamp), floored, to the worst case, ceiled."""
+    row = release('DS51', 'Late release', '10 Oct ~15:30', [phase('agents', '14:40', '15:20'), phase('merge', '15:20', '15:30')],
+                  {'label': 'slow CI', 'minutes': 25})
+    fig = R.release_timeline([row], R._parse_iso(STAMP_ISO), 'Lisbon')
+    ticks = [R.text_of(t) for t in R.find_all(R.find(R.parse_dom(fig), 'g', 'rt-axis'), 'text')]
+    assert ticks == ['14:30', '15:00', '15:30', '16:00'], ticks
+    assert 'slow CI → worst ~15:55' in fig
+    long_row = release('DS51', 'Long release', '10 Oct ~21:00', [phase('agents', '13:00', '21:00')])
+    ticks = [R.text_of(t) for t in R.find_all(R.find(R.parse_dom(R.release_timeline([long_row], R._parse_iso(STAMP_ISO), 'Lisbon')), 'g', 'rt-axis'), 'text')]
+    assert ticks[:3] == ['13:00', '14:00', '15:00'], 'every hour beyond four hours: %s' % ticks
+
+
+@test
+@with_fixture
+def timeline_risk_now_and_accessibility(fx):
+    """R5.43: the risk extension and worst-case label, the now line at the stamp, role and aria-label, legend."""
+    registry = two_releases(fx)
+    fig = timeline_of(fx.render('full-progress', registry=registry, stamp_text='10 Oct 17:40', stamp_iso='2026-10-10T17:40+01:00'))
+    assert R.text_of(R.find(fig, 'text', 'rt-risk-label')) == '+1 fix round → worst ~18:10'
+    assert R.find(fig, 'rect', 'rt-risk') is not None and R.find(fig, 'polygon', 'rt-worst') is not None
+    assert R.text_of(R.find(fig, 'text', 'rt-now-label')) == 'now 17:40'
+    svg = R.find(fig, 'svg')
+    assert svg.attrs['role'] == 'img'
+    label = svg.attrs['aria-label']
+    assert 'DS51' in label and 'expected live about 18:00, worst case 18:10' in label and 'DS52' in label and 'expected 12 Oct' in label, label
+    assert 'min-width' in svg.attrs['style']
+    scroll = R.find(fig, 'div', 'timeline-scroll')
+    assert R.find(scroll, 'svg') is svg
+    legend = R.text_of(R.find(fig, 'p', 'timeline-legend'))
+    assert 'agents' in legend and 'join' in legend and 'PR CI' in legend and 'merge + cleanup' in legend
+    assert 'Expected (filled diamond) is the sum of the phases' in legend
+    # a stamp outside today's axis (12:39 is before the first phase) draws no now line
+    assert 'rt-now' not in R.release_timeline(registry['tasks'], R._parse_iso(STAMP_ISO), 'Lisbon')
+    late = R.release_timeline(registry['tasks'], R._parse_iso('2026-10-10T22:30+01:00'), 'Lisbon')
+    assert 'rt-now' not in late
+
+
+@test
+@with_fixture
+def timeline_is_deterministic_and_uses_the_stamp_for_now(fx):
+    """R5.42, R7.4: same inputs, same bytes; moving the stamp moves the now line, the wall clock never does."""
+    registry = two_releases(fx)
+    first = fx.render('full-progress', registry=registry)
+    assert first == fx.render('full-progress', registry=registry)
+    later = fx.render('full-progress', registry=registry, stamp_text='10 Oct 17:40', stamp_iso='2026-10-10T17:40+01:00')
+    assert R.text_of(R.find(timeline_of(later), 'text', 'rt-now-label')) == 'now 17:40'
+    assert fx.check(later, 'full-progress', registry=registry) == []
+
+
+@test
+@with_fixture
+def timeline_without_phases_is_a_diamond_at_expected(fx):
+    """R5.42: a release with no phases is a filled diamond at its Expected only; no bars."""
+    registry = with_releases(fx, release('DS51', 'Plain release', '10 Oct ~16:00'))
+    fig = timeline_of(fx.render('full-progress', registry=registry))
+    assert R.find(fig, 'rect', 'rt-bar') is None and R.find(fig, 'polygon', 'rt-expected') is not None
+    assert R.text_of(R.find(fig, 'text', 'rt-live-label')) == 'live ~16:00'
+
+
+@test
+@with_fixture
+def check_finds_a_wrong_timeline(fx):
+    """R5.42, R5.43: a missing, extra, unlabelled or misplaced timeline is reported."""
+    registry = two_releases(fx)
+    out = fx.render('full-progress', registry=registry)
+    import re
+    gone = re.sub(r'<figure class="release-timeline">.*?</figure>\n?', '', out, flags=re.S)
+    assert 'R5.42' in reqs(fx.check(gone, 'full-progress', registry=registry))
+    plain = fx.render('full-progress')
+    extra = plain.replace('<div class="table-scroll"><table class="status-checklist">',
+                 '<figure class="release-timeline"><figcaption>Next releases (Lisbon)</figcaption></figure>\n<div class="table-scroll"><table class="status-checklist">')
+    assert 'R5.42' in reqs(fx.check(extra, 'full-progress'))
+    bad = sub1(out, 'role="img"', 'role="presentation"')
+    assert 'R5.43' in reqs(fx.check(bad, 'full-progress', registry=registry))
+    bad = sub1(out, '<figcaption>Next releases (Lisbon)</figcaption>', '<figcaption>Next releases</figcaption>')
+    assert 'R5.42' in reqs(fx.check(bad, 'full-progress', registry=registry))
+
+
+@test
+def timeline_css_uses_tokens():
+    """R5.43: the timeline styles use design tokens and no literal colour; the bars use the four phase tokens."""
+    import re
+    css = R.structure_css(PLUGIN)
+    block = css[css.index('/* Release timeline'):]
+    assert not re.search(r'#[0-9a-fA-F]{3,6}\b|rgb\(|hsl\(', block), 'colours must be tokens'
+    for cls, token in (('agents', '--running-mark'), ('join', '--signal'), ('ci', '--live'), ('merge', '--ink')):
+        assert re.search(r'\.rt-bar\.%s \{ fill: var\(%s\)' % (cls, token), block), cls
+        assert re.search(r'\.rt-swatch\.%s \{ background: var\(%s\)' % (cls, token), block), cls
+    assert 'var(--failed)' in block and 'var(--rule-strong)' in block and 'overflow-x: auto' in block
+
+
+@test
+@with_fixture
+def state_column_counts(fx):
+    """R5.44: Complete for a finished feature, else a chip per open status in order, then open decisions."""
+    out = fx.render('full-progress')
+    rows = _s1_rows(out)
+    assert rows[0][3] == '1 Running2 Built1 To do' and rows[1][3] == '1 Running', rows
+    dom = R.parse_dom(out)
+    chips = [(R.text_of(c), c.attrs['class']) for c in R.find_all(R.find(dom, 'table', 'feature-list'), 'span', 'status-chip')]
+    assert ('1 Running', 'status-chip status-running') in chips and ('2 Built', 'status-chip status-built') in chips
+    done = copy.deepcopy(fx.registry)
+    for t in done['tasks']:
+        if t['owner'] == 'models':
+            t['status'], t['expected'] = 'Live', '09 Oct'
+    out = fx.render('full-progress', registry=done)
+    assert _s1_rows(out)[1][3] == 'Complete'
+    assert R.find(R.find(R.parse_dom(out), 'table', 'feature-list'), 'span', 'status-live') is not None
+    assert fx.check(out, 'full-progress', registry=done) == []
+    assert R.state_chips([task('X1', 'k', 'Needs you', 'i', '10 Oct'), task('X2', 'k', 'Failed', 'i', ''), task('X3', 'k', 'On hold', 'i', '10 Oct'),
+                          task('X4', 'k', 'Waiting', 'i', '10 Oct')], [{'id': 'D1', 'status': 'open'}, {'id': 'D2', 'status': 'open'}]) == [
+        ('status-needs-you', '1 Needs you'), ('status-failed', '1 Failed'), ('status-waiting', '1 Waiting'),
+        ('status-on-hold', '1 On hold'), ('status-needs-you', '2 open decisions')]
+
+
+@test
+@with_fixture
+def check_state_column(fx):
+    """R5.44: a State that differs from the registry is reported."""
+    out = fx.render('full-progress')
+    bad = sub1(out, '1 Running</span><span class="status-chip status-built">2 Built', '3 Running</span><span class="status-chip status-built">2 Built')
+    assert 'R5.44' in reqs(fx.check(bad, 'full-progress'))
 
 
 def main() -> int:

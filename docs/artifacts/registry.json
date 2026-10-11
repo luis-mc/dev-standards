@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T17:54+01:00",
+  "updated": "2026-10-11T18:39+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -406,12 +406,11 @@
       "id": "AR43",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Full Progress: release timeline above the status table",
-      "detail": "One Sonnet agent on AR43-release-timeline",
-      "expected": "11 Oct ~18:42",
-      "changed": "2026-10-11T17:54+01:00",
-      "expected_basis": "agent ~45 min from 17:58"
+      "detail": "Released in #49 (051005d, 18:38): luismc-artifacts 1.5.0, ARTIFACTSPEC 1.5.0",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T18:39+01:00"
     },
     {
       "id": "AR44",
@@ -1067,12 +1066,44 @@
       "id": "DS52",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "AR43 train: join, PR CI, merge, cleanup",
-      "detail": "Plugin build of the release timeline and State column (luismc-artifacts minor)",
-      "expected": "11 Oct ~18:50",
-      "changed": "2026-10-11T17:54+01:00",
-      "expected_basis": "agent 17:58-18:42, PR CI ~4 min, merge and cleanup ~4 min; +1 fix round ~10 min"
+      "detail": "#49 merged 18:38 on one 3.4 min CI run; cleanup done; delivery log in train-2026-10-11-49",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T18:39+01:00"
+    },
+    {
+      "id": "DS53",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "TC8 train: join, PR CI, merge, cleanup",
+      "detail": "Own small train beside AR43; merges after AR43",
+      "expected": "11 Oct ~19:20",
+      "changed": "2026-10-11T18:39+01:00",
+      "expected_basis": "agent ~50 min from 18:22, PR CI ~4 min, merge and cleanup ~4 min",
+      "release": true,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-10-11T18:22+01:00",
+          "end": "2026-10-11T19:12+01:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-10-11T19:12+01:00",
+          "end": "2026-10-11T19:16+01:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-10-11T19:16+01:00",
+          "end": "2026-10-11T19:20+01:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 10
+      }
     },
     {
       "id": "MP1",
@@ -1218,12 +1249,13 @@
       "id": "TC8",
       "owner": "test-cost",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Generic CI speed: split or shard the dominant step, e2e shards",
-      "detail": "STACKSPEC SHOULD, Playwright sharding in the e2e template, ci_watch slowest-job summary; next small train",
-      "expected": "12 Oct",
-      "changed": "2026-10-11T17:31+01:00",
-      "expected_basis": "starts after the DL12 train merges, about 1 h of work and CI"
+      "detail": "One Sonnet agent on TC8-ci-speed-generic",
+      "expected": "11 Oct ~19:12",
+      "changed": "2026-10-11T18:39+01:00",
+      "expected_basis": "agent ~50 min from 18:22",
+      "rides": "DS53"
     }
   ]
 }
