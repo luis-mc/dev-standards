@@ -346,11 +346,11 @@
       "id": "AR37",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "Full Progress feature links that work from claude.ai",
-      "detail": "On branch AR37-copy-feature-links (bca72f0): render 94/94, artifacts 184/184, change notes ok",
+      "detail": "Released in luismc-artifacts 1.3.1 (#46, 17d306a); Full Progress shows Copy link buttons after the next render",
       "expected": "11 Oct",
-      "changed": "2026-10-11T10:40+01:00"
+      "changed": "2026-10-11T11:06+01:00"
     },
     {
       "id": "AR38",
