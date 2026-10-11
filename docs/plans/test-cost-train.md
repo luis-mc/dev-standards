@@ -18,3 +18,16 @@ Shared rules:
 - **Record pushes (TC5).** Writing commands commit the record but do not push. A push happens at the end of the turn (end-of-turn hook), in `pending` before it lists anything, and before `gh pr create|merge|ready` (after-command hook sees those first; a PreToolUse check if needed). Push retries and refusals keep their exit codes.
 - **Versions.** Never edit a `**Version:**` line, a change log or a `plugin.json` version: add a change note in `docs/specs/changes/<task>-<slug>.md` (`docs/specs/changes/README.md`). Expected: luismc-artifacts minor (ARTIFACTSPEC minor), luismc-project-setup minor, STACKSPEC minor only if `invariants.md` text changes.
 - **Testing (DS45).** Run locally only the suites for files you changed, with `--no-mutants`, no Docker, no branch CI runs. Stop only processes you started. The ready PR's CI is the one full run.
+
+## Delivery speed, folded into this train (DL1 to DL10)
+
+The plan is section 2 of `docs/artifacts/feature-delivery-speed.html`; its decisions D1 to D9 are settled. STACKSPEC becomes **8.0.0** (DL9 adds a MUST), luismc-project-setup **major**. Three branches, cut from `TC6-integration` after DS43, TC2 and TC5 were joined:
+
+| Branch | Tasks | Owns |
+|---|---|---|
+| `DL1-gate-scope-and-inert` | DL1, DL4 | `gate_verify.py`, `branch_gate.py`, `delivery_common.py`, the four tracks' `gate.json`, gate/verify/scope scenarios in `tools/test_delivery_gate.py` |
+| `DL2-join-freeze-runners` | DL2, DL6, DL7 | `join.py`, `ci_watch.py`, `shared/.githooks/pre-push`, `fast_guards.py`, tech-stack-setup `SKILL.md` (runner question), join/hook scenarios in `tools/test_delivery_gate.py`, ci_watch cases in `tools/test_delivery_ci.py` |
+| `DL5-ci-packaging-log` | DL5, DL8, DL9 | the tracks' `ci.yml` and other workflow templates, `cleanup.py`, `tools/test_delivery_cleanup.py`, `tools/template_build_check.py`, `.github/workflows/template-build.yml` |
+| orchestrator | DL3, DL10 | the agents rule, dev-standards' own adoption |
+
+Shared files: `CONTRACT.md` and STACKSPEC `invariants.md`: each branch edits only the paragraphs of its own tasks (DL1: §13.5 gate and trust; DL2: §13.6 join and freeze, §13.1 runner health; DL5: §13.1 build artifacts, the new packaged-program smoke test, delivery log). Add new scenarios and mutants to `tools/test_delivery_gate.py` at the end of the SCENARIOS and MUTANTS lists only, so joins merge cleanly. Change notes: one per branch, `spec:` invariants.md with `change: major` only on `DL5-ci-packaging-log` (DL9's MUST); the others `change: minor`.
