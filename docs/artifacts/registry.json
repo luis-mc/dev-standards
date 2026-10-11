@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-12T00:01+01:00",
+  "updated": "2026-10-12T00:03+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1212,31 +1212,31 @@
       "app": "",
       "status": "Running",
       "item": "AR46 train: join, PR CI, merge, cleanup",
-      "detail": "Timeline fix and cleanup race fix; integration branch DS56-integration",
-      "expected": "12 Oct ~00:36",
-      "changed": "2026-10-12T00:01+01:00",
-      "expected_basis": "agents ~20 min (small fixes); #53: CI 3.4 min, merge 4",
+      "detail": "Contract on DS56-integration (R5.42a + change notes); agents on AR46 (timeline) and DS57 (cleanup race), each ends with CI on its branch; then join, fold, ready PR",
+      "expected": "12 Oct ~00:39",
+      "changed": "2026-10-12T00:03+01:00",
+      "expected_basis": "agents ~20 min incl. branch CI; #53: CI 3.4 min, merge 4",
       "release": 4,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-10-12T00:05+01:00",
-          "end": "2026-10-12T00:25+01:00"
-        },
-        {
-          "name": "join",
-          "start": "2026-10-12T00:25+01:00",
+          "start": "2026-10-12T00:08+01:00",
           "end": "2026-10-12T00:28+01:00"
         },
         {
-          "name": "ci",
+          "name": "join",
           "start": "2026-10-12T00:28+01:00",
-          "end": "2026-10-12T00:32+01:00"
+          "end": "2026-10-12T00:31+01:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-10-12T00:31+01:00",
+          "end": "2026-10-12T00:35+01:00"
         },
         {
           "name": "merge",
-          "start": "2026-10-12T00:32+01:00",
-          "end": "2026-10-12T00:36+01:00"
+          "start": "2026-10-12T00:35+01:00",
+          "end": "2026-10-12T00:39+01:00"
         }
       ],
       "risk": {
