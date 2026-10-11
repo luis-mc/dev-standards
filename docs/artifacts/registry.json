@@ -418,12 +418,11 @@
       "id": "DL2",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Quick join check instead of a second full gate",
-      "detail": "Agent on DL2-join-freeze-runners, in the TC6 release",
-      "expected": "11 Oct ~15:00",
-      "changed": "2026-10-11T12:04+01:00",
-      "expected_basis": "agents ~1h30 in parallel, then one join and one ready-PR CI"
+      "detail": "Joined into TC6-integration (43e4d72): 657 checks, 56 CI tests, 29 new mutants caught",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T12:56+01:00"
     },
     {
       "id": "DL3",
