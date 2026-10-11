@@ -816,12 +816,11 @@
       "id": "DS45",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Agents test only what they touch",
-      "detail": "Agent on TC2-mutants-and-cleanup (join) and TC6-integration (rule text, done), part of the TC6 train",
-      "expected": "11 Oct ~13:30",
-      "changed": "2026-10-11T11:31+01:00",
-      "expected_basis": "agent work ~1h30 in parallel, then join"
+      "detail": "Rule text on TC6-integration; join skips its gate when the tree equals a trusted branch head (3 new mutants caught)",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T11:49+01:00"
     },
     {
       "id": "DS46",
