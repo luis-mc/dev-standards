@@ -301,6 +301,27 @@
    "decided": "2026-10-11",
    "task": "AR45",
    "owner_words": "option 1 and \"running\" items too"
+  },
+  {
+   "id": "D14",
+   "question": "Should the status tiles say they count tasks?",
+   "asked": "2026-10-11",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Relabel",
+     "summary": "Tile labels read 'tasks live', 'tasks built' and so on, so 123 is not read as releases.",
+     "recommended": true
+    },
+    {
+     "label": "Keep the labels",
+     "summary": "Tiles keep the bare status word."
+    }
+   ],
+   "chosen": "Relabel",
+   "decided": "2026-10-11",
+   "task": "AR45",
+   "owner_words": "relabel; ensure all the changes are part of the artifacts plugin so other projects use it"
   }
  ]
 }

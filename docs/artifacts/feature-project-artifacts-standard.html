@@ -687,7 +687,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T22:00+01:00">11 Oct 22:00</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T22:02+01:00">11 Oct 22:02</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Oct 20:39</a> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</p>
 <div class="at-a-glance">
@@ -929,6 +929,21 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
 </section>
 <section id="s7"><h2><span class="section-number">&sect; 7</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D14">
+<h3 class="decision-head"><span class="decision-id">D14</span> <span class="decision-question">Should the status tiles say they count tasks?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task AR45</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Relabel</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">Tile labels read &#x27;tasks live&#x27;, &#x27;tasks built&#x27; and so on, so 123 is not read as releases.</p>
+<blockquote class="decision-words">&ldquo;relabel; ensure all the changes are part of the artifacts plugin so other projects use it&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep the labels</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Tiles keep the bare status word.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D13">
 <h3 class="decision-head"><span class="decision-id">D13</span> <span class="decision-question">Must items be assigned to a release?</span></h3>
 <p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task AR45</p>
