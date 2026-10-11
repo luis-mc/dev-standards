@@ -1759,8 +1759,30 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "item": "TC8 train: join, PR CI, merge, cleanup",
    "detail": "Own small train beside AR43; merges after AR43",
    "expected": "11 Oct ~19:20",
-   "changed": "2026-10-11T18:23+01:00",
-   "expected_basis": "agent 18:22-19:12, PR CI ~4 min, merge and cleanup ~4 min; +1 fix round ~10 min"
+   "changed": "2026-10-11T18:39+01:00",
+   "expected_basis": "agent ~50 min from 18:22, PR CI ~4 min, merge and cleanup ~4 min",
+   "release": true,
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-10-11T18:22+01:00",
+     "end": "2026-10-11T19:12+01:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-10-11T19:12+01:00",
+     "end": "2026-10-11T19:16+01:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-10-11T19:16+01:00",
+     "end": "2026-10-11T19:20+01:00"
+    }
+   ],
+   "risk": {
+    "label": "+1 fix round",
+    "minutes": 10
+   }
   },
   {
    "id": "MP1",
@@ -1928,7 +1950,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
 <li data-glance-task="TC8"><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards <span class="glance-expected">11 Oct ~19:12</span><span class="glance-basis">agent ~50 min from 18:22</span></li>
-<li data-glance-task="DS53"><span class="task-id">DS53</span>TC8 train: join, PR CI, merge, cleanup <span class="glance-expected">11 Oct ~19:20</span><span class="glance-basis">agent 18:22-19:12, PR CI ~4 min, merge and cleanup ~4 min; +1 fix round ~10 min</span></li>
+<li data-glance-task="DS53"><span class="task-id">DS53</span>TC8 train: join, PR CI, merge, cleanup <span class="glance-expected">11 Oct ~19:20</span><span class="glance-basis">agent ~50 min from 18:22, PR CI ~4 min, merge and cleanup ~4 min</span></li>
 </ul>
 </div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
@@ -1947,10 +1969,26 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </div>
 <div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">121</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<figure class="release-timeline">
+<figcaption>Next releases (Lisbon)</figcaption>
+<div class="timeline-scroll"><svg viewBox="0 0 900 164" role="img" aria-label="Next releases: DS53 (TC8 train: join, PR CI, merge, cleanup) expected live about 19:20, worst case 19:30." style="min-width:640px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">18:00</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">18:30</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">19:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">19:30</text></g>
+<text class="rt-name" x="0" y="60"><title>DS53 · TC8 train: join, PR CI, merge, cleanup</title>DS53 · TC8 train: join, P…</text>
+<rect class="rt-bar agents" x="327.1" y="52" width="288.9" height="22"><title>agents 18:22-19:12</title></rect>
+<rect class="rt-bar ci" x="616" y="52" width="23.1" height="22"><title>PR CI 19:12-19:16</title></rect>
+<rect class="rt-bar merge" x="639.1" y="52" width="23.1" height="22"><title>merge + cleanup 19:16-19:20</title></rect>
+<rect class="rt-risk" x="662.2" y="58" width="57.8" height="10"><title>+1 fix round</title></rect>
+<polygon class="rt-worst" points="720,51 727,63 720,75 713,63"/>
+<text class="rt-risk-label" x="731" y="67">+1 fix round → worst ~19:30</text>
+<polygon class="rt-expected" points="662.2,50 670.2,63 662.2,76 654.2,63"/>
+<text class="rt-live-label" x="662.2" y="92">live ~19:20</text>
+<line class="rt-now" x1="425.3" y1="36" x2="425.3" y2="148"/><text class="rt-now-label" x="425.3" y="161">now 18:39</text>
+</svg></div>
+<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
+</figure>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
 <tr data-task="TC8"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards</a></td><td></td><td>One Sonnet agent on TC8-ci-speed-generic</td><td>11 Oct ~19:12<span class="expected-basis">agent ~50 min from 18:22</span></td></tr>
-<tr data-task="DS53"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS53</span>TC8 train: join, PR CI, merge, cleanup</td><td></td><td>Own small train beside AR43; merges after AR43</td><td>11 Oct ~19:20<span class="expected-basis">agent 18:22-19:12, PR CI ~4 min, merge and cleanup ~4 min; +1 fix round ~10 min</span></td></tr>
+<tr data-task="DS53"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS53</span>TC8 train: join, PR CI, merge, cleanup</td><td></td><td>Own small train beside AR43; merges after AR43</td><td>11 Oct ~19:20<span class="expected-basis">agent ~50 min from 18:22, PR CI ~4 min, merge and cleanup ~4 min</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR43"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR43</span>Full Progress: release timeline above the status table</a></td><td><code>luismc-artifacts</code></td><td>Released in #49 (051005d, 18:38): luismc-artifacts 1.5.0, ARTIFACTSPEC 1.5.0</td><td>11 Oct</td></tr>
 <tr data-task="DS52"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS52</span>AR43 train: join, PR CI, merge, cleanup</td><td></td><td>#49 merged 18:38 on one 3.4 min CI run; cleanup done; delivery log in train-2026-10-11-49</td><td>11 Oct</td></tr>
