@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T03:01+01:00",
+  "updated": "2026-10-11T03:02+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -286,11 +286,11 @@
       "id": "AR31",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "Old claude.ai feature pages get deleted, with the owner's confirmation",
-      "detail": "Built in #41 and joined (not released): a project upgrading needs no manual step (rule delivered on the next command, migration on the first turn, old rule copy deleted when unedited, old claude.ai pages kept as retired and offered for deletion with your confirmation; URLs recovered from git history). Windows suites green; Linux CI green on its branch. While testing, the agent stopped processes and containers it had not started; the other agents were warned to re-run anything that died.",
+      "detail": "Released in luismc-artifacts 1.2.0 / luismc-project-setup 13.0.1 (#42, 5babc30, 03:02). A project upgrading needs no manual step: rule on the next command, migration on the first turn, old rule copy deleted when unedited, old claude.ai feature pages offered for deletion with your confirmation (URLs recovered from git history).",
       "expected": "11 Oct",
-      "changed": "2026-10-11T02:49+01:00"
+      "changed": "2026-10-11T03:02+01:00"
     },
     {
       "id": "AR32",
