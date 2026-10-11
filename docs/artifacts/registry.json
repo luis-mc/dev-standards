@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T10:06+01:00",
+  "updated": "2026-10-11T10:08+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -328,9 +328,10 @@
       "app": "luismc-artifacts",
       "status": "Running",
       "item": "Re-render every page when the templates change",
-      "detail": "Building: render re-renders every page when the templates or stylesheet change",
-      "expected": "11 Oct",
-      "changed": "2026-10-11T09:55+01:00"
+      "detail": "Built in the branch; suite running locally, released together with AR37",
+      "expected": "11 Oct ~11:30",
+      "changed": "2026-10-11T10:08+01:00",
+      "expected_basis": "ships in the same release as AR37"
     },
     {
       "id": "AR36",
