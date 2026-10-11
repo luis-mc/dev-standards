@@ -125,6 +125,10 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"tools/(spec_check|authspec_check|test_spec_check|test_authspec_check)\.py",
      frozenset({"specs"})),
     (r"tools/route-ratelimit-map\.json", frozenset({"specs"})),
+    # rule files shipped to projects: tools/test_rule_tags.py (specs) checks their tags
+    (r"tools/test_rule_tags\.py", frozenset({"specs"})),
+    (r"claude/plugins/artifacts/rules/.*", frozenset({"specs", "artifacts"})),
+    (re.escape(PS) + r"/claude-setup/assets/\.claude/rules/.*", frozenset({"specs", "profiles"})),
     # profiles (SKILL.md anywhere under the plugins, before the area folders)
     (r"claude/plugins/.*/SKILL\.md", frozenset({"profiles"})),
     (re.escape(PS) + r"/claude-setup/assets/.*", frozenset({"profiles"})),
