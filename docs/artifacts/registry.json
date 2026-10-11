@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T00:53+01:00",
+  "updated": "2026-10-11T01:01+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -216,11 +216,11 @@
       "id": "AR24",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Integrate and release luismc-artifacts 1.1.0",
-      "detail": "Everything merged and migrated. Only step left: publish Full Progress once after the 01:00 reset (the timer fires at 01:01).",
-      "expected": "11 Oct ~01:05",
-      "changed": "2026-10-11T00:51+01:00"
+      "detail": "Released: luismc-artifacts 1.1.0 (#33, 23:12) and 1.1.1 (#36, 00:05); this repo's record migrated and clean; the two old claude.ai feature artifacts deleted with your confirmation; Full Progress published once after the 01:00 reset.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T01:01+01:00"
     },
     {
       "id": "AR25",
