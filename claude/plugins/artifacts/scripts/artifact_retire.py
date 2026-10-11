@@ -18,8 +18,8 @@ PLUGIN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SHA-256 of every rules/project-artifacts.md a released plugin version shipped, line endings normalised and
 # trailing whitespace stripped (R10.6). 1.0.0 is what `init` copied into projects; 1.1.0 to 1.1.2 shipped one text.
 SHIPPED_RULE_SHA256 = {
-    '07fd4ea61d93e31fec264cac8cef936bed9c9a340a4d82b16efd267365fd0924': '1.0.0',
-    '6e4a2f0d02af20b9a5d82472d9d72d174fb7035d513158db67d18c340e3668fa': '1.1.0',
+    'a90a8c5589851ae52c884aaf7fc44b383f1f1fec2a0e35b46525ac564e3d0ba5': '1.0.0',
+    'da59292d536662a281d2aaeebd9b22378f0864ed657f01109c1672f1ee21c1c7': '1.1.0',
 }
 
 
