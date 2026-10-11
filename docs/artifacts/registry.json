@@ -839,12 +839,11 @@
       "id": "DS47",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Study test and validation cost, with a feature page",
-      "detail": "Measuring: CI history, transcripts, timed runs",
-      "expected": "11 Oct ~12:30",
-      "changed": "2026-10-11T10:19+01:00",
-      "expected_basis": "timed local runs wait for the two suites now running (~10:45)"
+      "detail": "Feature page docs/artifacts/feature-test-and-validation-cost.html: 10 hypotheses, 2 experiments, 8 ranked fixes, D6 to D8 open",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T11:06+01:00"
     },
     {
       "id": "MP1",
