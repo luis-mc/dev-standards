@@ -846,6 +846,17 @@
       "changed": "2026-10-11T11:06+01:00"
     },
     {
+      "id": "DS48",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "cleanup.py also removes the branches a train joined",
+      "detail": "After #46, cleanup removed AR39-integration but left AR35 and AR37, whose tips were in the merged head",
+      "expected": "12 Oct",
+      "changed": "2026-10-11T11:06+01:00",
+      "expected_basis": "after the TC fixes; cleanup.py and its suite"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",

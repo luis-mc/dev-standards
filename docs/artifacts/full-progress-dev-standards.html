@@ -1425,6 +1425,17 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "changed": "2026-10-11T11:06+01:00"
   },
   {
+   "id": "DS48",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "cleanup.py also removes the branches a train joined",
+   "detail": "After #46, cleanup removed AR39-integration but left AR35 and AR37, whose tips were in the merged head",
+   "expected": "12 Oct",
+   "changed": "2026-10-11T11:06+01:00",
+   "expected_basis": "after the TC fixes; cleanup.py and its suite"
+  },
+  {
    "id": "MP1",
    "owner": "models",
    "app": "luismc-project-setup",
@@ -1557,13 +1568,14 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
 <p class="last-update">Last update: <time datetime="2026-10-11T11:06+01:00">11 Oct 11:06</time> (Lisbon)</p>
 <p class="lede">All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class="task-id">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class="task-id">AR12</span>), and the secret-scan fixes (<span class="task-id">DS15</span>, <span class="task-id">AR19</span>, <span class="task-id">DS16</span>). Not released yet: the round toward STACKSPEC 7.0.0 (<span class="task-id">DS17</span> to <span class="task-id">DS21</span>) is built and joined, so those rows say Done. The tests on the joined branch are running; then one ready PR, its CI, and the merge, about 21:45. Each row turns Live only when the merge lands. <strong>Needs you: TC1 Mutation passes only when their files change, all nightly; TC3 Retire the fake-renderer group; TC5 Push the record once per turn.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">88</div><div class="label">live</div></div><div class="status-count-tile status-needs-you"><div class="count">3</div><div class="label">needs you</div></div><div class="status-count-tile status-to-do"><div class="count">5</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">88</div><div class="label">live</div></div><div class="status-count-tile status-needs-you"><div class="count">3</div><div class="label">needs you</div></div><div class="status-count-tile status-to-do"><div class="count">6</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
 <tr data-task="DS43"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS43</span>Path-scoped spec-lint jobs</td><td></td><td>Each area (delivery, artifacts, specs, auth) runs only when its files change; shared files run all</td><td>12 Oct<span class="expected-basis">after the 1.3.1 release; one workflow change</span></td></tr>
 <tr data-task="DS44"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS44</span>Skip the main re-run of a tested tree</td><td></td><td>After a merge, main&#x27;s CI skips when its files equal what the ready PR tested; a STACKSPEC rule too</td><td>12 Oct<span class="expected-basis">after the 1.3.1 release; ci_skip_check change</span></td></tr>
 <tr data-task="DS45"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS45</span>Agents test only what they touch</td><td></td><td>Local suites for changed files only, no branch CI unless Linux-specific, join trusts an unchanged gate</td><td>12 Oct<span class="expected-basis">after the 1.3.1 release; rule text and join.py</span></td></tr>
+<tr data-task="DS48"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS48</span>cleanup.py also removes the branches a train joined</td><td></td><td>After #46, cleanup removed AR39-integration but left AR35 and AR37, whose tips were in the merged head</td><td>12 Oct<span class="expected-basis">after the TC fixes; cleanup.py and its suite</span></td></tr>
 <tr data-task="TC2"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC2</span>A mutant stops at its first failed check</a></td><td></td><td>S3: E2 measured 49% of mutant time after the first failure; about 4.3 min</td><td>12 Oct<span class="expected-basis">after the 1.3.1 release; two test harness changes</span></td></tr>
 <tr data-task="TC4"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC4</span>Cancel superseded ready-PR spec-lint runs</a></td><td></td><td>S7: two full DS17 runs ran side by side at 00:07; add a concurrency group</td><td>12 Oct<span class="expected-basis">after the 1.3.1 release; three workflow lines</span></td></tr>
 <tr class="status-group" data-group="you"><td colspan="5"><strong>Needs you, failed or on hold</strong></td></tr>
