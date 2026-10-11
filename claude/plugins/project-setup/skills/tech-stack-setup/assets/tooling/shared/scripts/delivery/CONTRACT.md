@@ -508,3 +508,22 @@ One or two sentences for the change log.
   notes → nothing to do.
 - Template `gate.json`s get the step; the README documents notes and fold.
 
+### DS39 — skip a merge that differs only in ignored paths
+
+`ci_skip_check.py` today skips a default-branch run only when the pushed tree
+equals a passed PR head's tree. Commits that land on the default branch between
+the PR's last run and its merge (docs, the luismc-artifacts record, Markdown,
+mobile apps with their own workflows) make the trees differ, so the full suite
+ran again for nothing. New rule: skip when `git diff --name-only <head> <sha>`
+is empty **or every changed path matches the workflow's own push
+`paths-ignore` list** (read from the workflow file at `GITHUB_WORKFLOW_REF`; a
+minimal parser for that one list, no YAML library), so "safe to skip" means
+exactly "CI would not have run for these files". An optional `gate.json`
+`ci_skip_paths` list replaces it when present. Glob semantics follow GitHub's
+filter patterns (`**`, `*`, trailing `/**`). The reason line names the PR, the
+head and the ignored paths that differed. Anything else, a parse failure, or no
+`paths-ignore` list → `skip=false` (fail open, as now). Every track's `ci.yml`
+lists at least `docs/**` and `**/*.md` under push `paths-ignore` (plus the
+mobile app folders when those have their own workflows), so docs-only pushes,
+such as the record commits, start no run at all.
+
