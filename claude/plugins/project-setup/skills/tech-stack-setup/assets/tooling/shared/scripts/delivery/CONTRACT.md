@@ -434,6 +434,11 @@ While it waits (`--queue-warn-seconds`, default 600) it reads the jobs of each u
 queued longer, when no online runner carries the job's labels, or, when the runners cannot
 be listed, that the job has been queued 10+ min. GitHub-hosted label sets are not checked.
 A warning never changes the exit code (D5).
+Slowest job (TC8): once every run is complete, whether it passed or not, it prints one summary
+after the verdict: per run, the wall time (first job start to last job end), the slowest job with
+its share of the wall time, and that job's two slowest steps, from `gh run view ID --json jobs`.
+It is information for §13.1's split-the-dominant-job advice; it never changes the exit code,
+and when the jobs cannot be read or lack times it prints nothing extra.
 
 ```
 ci_skip_check.py

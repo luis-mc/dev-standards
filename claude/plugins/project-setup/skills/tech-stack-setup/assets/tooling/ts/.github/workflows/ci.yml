@@ -284,11 +284,21 @@ jobs:
   #
   # A repository with no web app has no playwright.config.ts; the job then
   # passes without running anything, so the required check still reports.
-  e2e:
-    name: web E2E (§11.2)
+  #
+  # CI wall time is set by its slowest job (§13.1), and the browser suite is
+  # usually that job, so it runs as parallel shards. The shard list below is the
+  # one place that sets how many: add a number to it for more shards. The
+  # `e2e` job after it keeps the required check name and passes only when
+  # every shard did.
+  e2e-shard:
+    name: web E2E shard ${{ matrix.shard }}
     needs: decide
     if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     steps:
       - uses: actions/checkout@v4
 
@@ -324,7 +334,7 @@ jobs:
       # job; finding no spec at all fails too (§11.3).
       - name: E2E (gating specs)
         if: steps.probe.outputs.present == 'true'
-        run: pnpm exec playwright test
+        run: pnpm exec playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
 
       # Quarantined specs only. They run and report, and cannot fail the build.
       # `--pass-with-no-tests` because an empty quarantine list is the normal
@@ -334,4 +344,19 @@ jobs:
         continue-on-error: true
         env:
           E2E_QUARANTINE: only
-        run: pnpm exec playwright test --pass-with-no-tests
+        run: pnpm exec playwright test --pass-with-no-tests --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+
+  # The required check. Its name stays 'web E2E (§11.2)' whatever the shard
+  # count, so branch protection never needs editing when shards are added.
+  e2e:
+    name: web E2E (§11.2)
+    needs: [decide, e2e-shard]
+    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    steps:
+      - name: Every shard passed
+        env:
+          SHARDS: ${{ needs.e2e-shard.result }}
+        run: |
+          echo "E2E shards: $SHARDS"
+          [ "$SHARDS" = "success" ]
