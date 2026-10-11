@@ -1162,7 +1162,7 @@ def _release_row(task: dict, ref: datetime, tasks: list):
         worst = exp_min + risk['minutes']
     riders = [t['id'] for t in tasks if t.get('rides') == task['id']]
     return {'task': task, 'phases': phases, 'exp_dt': exp_dt, 'exp_min': exp_min, 'timed': timed,
-            'today': timed and exp_dt.date() == ref.date(), 'risk': risk if worst is not None else None,
+            'today': timed and abs(exp_dt - ref.replace(tzinfo=None)) <= timedelta(hours=24), 'risk': risk if worst is not None else None,
             'worst': worst, 'riders': riders}
 
 
@@ -1237,8 +1237,12 @@ def release_timeline(tasks: list, ref: datetime, label: str) -> str:
         step = 30 if t1 - t0 <= 240 else 60
         m = -(-t0 // step) * step
         while m <= t1:
+            tick = _hhmm(m)
+            if m % 1440 == 0 or (m - step) % 1440 == 0:       # R5.42a: midnight and the first tick after it carry the date
+                day = ref.date() + timedelta(days=int(m // 1440))
+                tick = '%02d %s %s' % (day.day, MONTHS[day.month - 1], tick)
             grid.append('<line class="rt-grid" x1="%s" y1="36" x2="%s" y2="%d"/><text x="%s" y="28">%s</text>'
-                        % (_n(x(m)), _n(x(m)), height - 24, _n(x(m)), _hhmm(m)))
+                        % (_n(x(m)), _n(x(m)), height - 24, _n(x(m)), tick))
             m += step
     for day in days:
         grid.append('<line class="rt-grid" x1="%d" y1="36" x2="%d" y2="%d"/><text x="%d" y="28">%02d %s</text>'
@@ -1904,6 +1908,15 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             if key_p is not None and checklist_t is not None and not (
                     order_s0.index(key_p) < order_s0.index(figs[0]) < order_s0.index(checklist_t)):
                 add('R5.42', 'the release timeline must sit between the status key and the checklist')
+
+    # R5.42a a timed release within 24 hours belongs on the time axis, never in a day slot
+    if kind == 'full-progress' and s0 is not None:
+        figs = find_all(s0, 'figure', 'release-timeline')
+        if len(figs) == 1:
+            rows = [r for r in (_release_row(t, ref, all_tasks) for t in open_releases(all_tasks)) if r is not None]
+            want_slots = sum(1 for r in rows if not r['today'])
+            if len(find_all(figs[0], 'polygon', 'rt-day')) > want_slots:
+                add('R5.42a', 'a release with a time within 24 hours of the stamp must be drawn on the time axis, not in a day slot')
 
     # R5.7 the Needs you group, R5.33 to R5.35 the At a glance block
     glance = find(s0, 'div', 'at-a-glance') if s0 is not None else None

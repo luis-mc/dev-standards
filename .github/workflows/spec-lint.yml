@@ -219,6 +219,11 @@ jobs:
       - name: Every shipped rule line names its check
         run: python3 tools/test_rule_tags.py
 
+      # STACKSPEC 13.8: the session guard (test runs, ready pull requests) and
+      # run_suite.py, and this repository's suites.json covering every suite.
+      - name: Prove the session guard still holds
+        run: python3 tools/test_session_guard.py
+
   # TC7: the delivery area is one job per suite, so the suites run side by side
   # and the area takes as long as its slowest one. Each suite's mutation pass is
   # decided by its own flag from tools/ci_areas.py (mutants_gate, mutants_cleanup,

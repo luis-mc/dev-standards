@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.6.0
+**Version:** 1.6.1
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.6.1 — 2026-10-11.**
+
+- The release timeline puts every release due within 24 hours on its time axis, across midnight, so a release expected just after midnight keeps its phase bars (R5.42, R5.42a).
 
 **1.6.0 — 2026-10-11.**
 
@@ -851,17 +855,25 @@ double-click.
   `Next releases (<timezone_label>)`, an inline `<svg>` and a legend. It has one
   row per open release, ordered by Expected (ties by ID); each label is
   `<ID> · <item>` and, below it, the IDs of the tasks whose `rides` names it.
-  Today's releases (a time in Expected, or phases, on the stamp's date) share a
+  Releases due within a day (a time in Expected, or phases, ending no more than
+  24 hours after the stamp, whatever the calendar date; R5.42a) share a
   time axis drawn to scale: from the earliest phase start, Expected or stamp to
   the latest Expected or worst case, floored and ceiled to the half hour, with a
   tick every 30 minutes (every hour beyond 4 hours). A release whose Expected is
-  another day, or has no time, sits after an axis break in one slot per day, as
+  more than 24 hours after the stamp, or has no time, sits after an axis break in one slot per day, as
   an outline diamond with the day. A release without phases is a filled diamond at
   its Expected only. The figure is deterministic (R7.4): the "now" mark is the
   render stamp, never the wall clock. `check` finds a missing, extra or misplaced
   timeline and a wrong caption (R5.42). Verified by `timeline_rows_axis_and_break`,
   `timeline_axis_is_to_scale_from_the_earliest_phase`, `timeline_is_absent_without_open_releases`,
   `timeline_without_phases_is_a_diamond_at_expected` and `check_finds_a_wrong_timeline`.
+- **R5.42a** — The time axis may cross midnight: a tick at midnight, and the
+  first tick after it, carry the date (`12 Oct 00:00`), and the "now" mark is
+  drawn wherever the stamp falls on the axis. A release expected at `00:05` the
+  next day, drawn at `23:57`, keeps its phase bars and its Expected diamond on
+  the axis; it never falls back to a bare day slot. `check` finds a timed
+  release within 24 hours drawn in a day slot (R5.42a). Verified by
+  `timeline_crosses_midnight` and `check_finds_a_timed_release_in_a_day_slot`.
 - **R5.43** — The look of the timeline uses the design tokens only, through
   classes of the structure stylesheet: phases are bars in `--running-mark`
   (agents), `--signal` (join), `--live` (PR CI) and `--ink` (merge and cleanup);

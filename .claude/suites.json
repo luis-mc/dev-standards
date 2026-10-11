@@ -7,7 +7,7 @@
     {"name": "delivery-ci", "full": "python tools/test_delivery_ci.py", "cases": "", "measure": false},
     {"name": "project-artifacts", "full": "python tools/test_project_artifacts.py", "cases": "python tools/test_project_artifacts.py {cases}", "measure": false},
     {"name": "project-artifacts-hooks", "full": "python tools/test_project_artifacts_hooks.py", "cases": "", "measure": false},
-    {"name": "render-artifacts", "full": "python tools/test_render_artifacts.py", "cases": "", "measure": false},
+    {"name": "render-artifacts", "full": "python tools/test_render_artifacts.py", "cases": ""},
     {"name": "artifact-prune", "full": "python tools/test_artifact_prune.py", "cases": ""},
     {"name": "authspec-check", "full": "python tools/test_authspec_check.py", "cases": ""},
     {"name": "change-notes", "full": "python tools/test_change_notes.py", "full_args": ["--no-mutants"], "cases": "python tools/test_change_notes.py --no-mutants -k {cases}"},

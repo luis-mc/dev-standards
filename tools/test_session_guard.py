@@ -297,7 +297,7 @@ def this_repo_registers_the_hook_and_declares_suites():
     on_disk = {p.stem for p in (ROOT / "tools").glob("test_*.py")}
     declared = {Path(s["full"].split()[1]).stem for s in suites.values()}
     assert on_disk == declared, (on_disk ^ declared)
-    for name in ("project-artifacts", "render-artifacts", "project-artifacts-hooks",
+    for name in ("project-artifacts", "project-artifacts-hooks",
                  "delivery-gate", "delivery-cleanup", "delivery-ci"):
         assert suites[name]["measure"] is False, name
     for s in suites.values():
