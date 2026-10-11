@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T20:34+01:00",
+  "updated": "2026-10-11T20:38+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1254,11 +1254,11 @@
       "id": "TC8",
       "owner": "test-cost",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Generic CI speed: split or shard the dominant step, e2e shards",
-      "detail": "8eec285: STACKSPEC 13.1 SHOULD, ts e2e 2 shards, ci_watch slowest-job summary, hook allows github.token; test_delivery_ci 60/0",
+      "detail": "Released in #50 (469da89, 20:37): STACKSPEC 8.1.0, luismc-project-setup 14.1.0",
       "expected": "11 Oct",
-      "changed": "2026-10-11T20:34+01:00",
+      "changed": "2026-10-11T20:38+01:00",
       "rides": "DS53"
     }
   ]
