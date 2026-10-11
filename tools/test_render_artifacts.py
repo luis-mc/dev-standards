@@ -426,7 +426,7 @@ def groups_and_order_on_the_feature_artifact(fx):
 def groups_and_order_on_the_full_progress_artifact(fx):
     rows = table_rows(fx.render('full-progress'))
     assert rows == [
-        ('group', 'now', 'Running now and next'),
+        ('group', 'now', 'Not in a release yet'),
         ('task', 'DS6'), ('task', 'DS7'), ('task', 'AR6'),      # 10 Oct ~13:45 (twice, registry order), then 10 Oct ~15:30
         ('task', 'AR7'), ('task', 'DS8'), ('task', 'MP2'),      # 11 Oct, 12 Oct, 13 Oct
         ('group', 'you', 'Needs you, failed or on hold'),
@@ -533,14 +533,14 @@ def tiles_count_each_status_in_order_and_skip_empty(fx):
     dom = R.parse_dom(fx.render('full-progress'))
     tiles = [(R.text_of(R.find(t, 'div', 'label')), R.text_of(R.find(t, 'div', 'count')), t.attrs['class'])
              for t in R.find_all(dom, 'div', 'status-count-tile')]
-    assert tiles == [('live', '4', 'status-count-tile status-live'), ('built', '2', 'status-count-tile status-built'),
-                     ('running', '3', 'status-count-tile status-running'),
-                     ('needs you', '1', 'status-count-tile status-needs-you'), ('waiting', '1', 'status-count-tile status-waiting'),
-                     ('to do', '2', 'status-count-tile status-to-do'), ('on hold', '1', 'status-count-tile status-on-hold'),
-                     ('failed', '1', 'status-count-tile status-failed')], tiles
+    assert tiles == [('tasks live', '4', 'status-count-tile status-live'), ('tasks built', '2', 'status-count-tile status-built'),
+                     ('tasks running', '3', 'status-count-tile status-running'),
+                     ('task needs you', '1', 'status-count-tile status-needs-you'), ('task waiting', '1', 'status-count-tile status-waiting'),
+                     ('tasks to do', '2', 'status-count-tile status-to-do'), ('task on hold', '1', 'status-count-tile status-on-hold'),
+                     ('task failed', '1', 'status-count-tile status-failed')], tiles
     feature = R.parse_dom(fx.render('artifacts'))
     got = [(R.text_of(R.find(t, 'div', 'label')), R.text_of(R.find(t, 'div', 'count'))) for t in R.find_all(feature, 'div', 'status-count-tile')]
-    assert got == [('built', '2'), ('running', '1'), ('to do', '1')], got
+    assert got == [('tasks built', '2'), ('task running', '1'), ('task to do', '1')], got
 
 
 @test
@@ -664,16 +664,16 @@ def move_row(html, task_id, after_marker):
 def check_r62_groups(fx):
     fp = fx.render('full-progress')
     # a Running row placed under the "Needs you, failed or on hold" group
-    expect(fx, move_row(fp, 'DS6', 'data-group="you"'), 'full-progress', ['R6.2'])
+    expect(fx, move_row(fp, 'DS6', 'data-group="you"'), 'full-progress', ['R5.46'])
     # group heading text and order
-    expect(fx, sub1(fp, '<strong>Running now and next</strong>', '<strong>Running next</strong>'), 'full-progress', ['R6.2'])
+    expect(fx, sub1(fp, '<strong>Not in a release yet</strong>', '<strong>Running next</strong>'), 'full-progress', ['R5.46'])
     # order inside a group: AR7 (11 Oct) moved before DS6 (10 Oct)
-    expect(fx, move_row(fp, 'AR7', 'data-group="now"'), 'full-progress', ['R6.2'])
+    expect(fx, move_row(fp, 'AR7', 'data-group="now"'), 'full-progress', ['R5.46'])
     # two groups swapped
     a, b = fp.index('<tr class="status-group" data-group="now">'), fp.index('<tr class="status-group" data-group="you">')
     c = fp.index('<tr class="status-group" data-group="built">')
     swapped = fp[:a] + fp[b:c] + fp[a:b] + fp[c:]
-    expect(fx, swapped, 'full-progress', ['R6.2'])
+    expect(fx, swapped, 'full-progress', ['R5.46'])
     # Live or built not newest first
     out = fx.render('artifacts')
     expect(fx, move_row(out, 'AR16', 'data-group="built"'), 'artifacts', ['R6.2'])
@@ -821,12 +821,12 @@ def check_inv1_other_artifacts_tasks_do_not_leak(fx):
 @with_fixture
 def check_r58_tiles(fx):
     out = fx.render('artifacts')
-    expect(fx, sub1(out, '<div class="count">2</div><div class="label">built</div>', '<div class="count">3</div><div class="label">built</div>'),
+    expect(fx, sub1(out, '<div class="count">2</div><div class="label">tasks built</div>', '<div class="count">3</div><div class="label">tasks built</div>'),
            'artifacts', ['R5.8'])
-    expect(fx, sub1(out, '<div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div>', ''),
+    expect(fx, sub1(out, '<div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div>', ''),
            'artifacts', ['R5.8'])
-    expect(fx, sub1(out, '<div class="label">built</div>', '<div class="label">live</div>'), 'artifacts', ['R5.8'])
-    expect(fx, sub1(out, '</div></div>\n<p class="note">Key', '</div><div class="status-count-tile status-failed"><div class="count">0</div><div class="label">failed</div></div></div>\n<p class="note">Key'),
+    expect(fx, sub1(out, '<div class="label">tasks built</div>', '<div class="label">tasks live</div>'), 'artifacts', ['R5.8'])
+    expect(fx, sub1(out, '</div></div>\n<p class="note">Key', '</div><div class="status-count-tile status-failed"><div class="count">0</div><div class="label">tasks failed</div></div></div>\n<p class="note">Key'),
            'artifacts', ['R5.8'])
 
 
@@ -2154,9 +2154,9 @@ def phase(name, start, end):
     return {'name': name, 'start': '2026-10-10T%s+01:00' % start, 'end': '2026-10-10T%s+01:00' % end}
 
 
-def release(tid, item, expected, phases=None, risk=None, status='Running'):
+def release(tid, item, expected, phases=None, risk=None, status='Running', number=None):
     row = task(tid, 'project', status, item, expected, '2026-10-10T12:00+01:00', 'luismc-artifacts')
-    row['release'] = True
+    row['release'] = number or int(tid[2:]) - 50       # DS51 is RELEASE-1, DS52 RELEASE-2 (R5.45)
     if phases:
         row['phases'] = phases
     if risk:
@@ -2208,7 +2208,7 @@ def timeline_rows_axis_and_break(fx):
     fig = timeline_of(out)
     assert fig is not None and R.text_of(R.find(fig, 'figcaption')) == 'Next releases (Lisbon)'
     names = [R.text_of(n, skip=lambda x: x.tag == 'title') for n in R.find_all(fig, 'text', 'rt-name')]
-    assert names == ['DS51 · DL12 release', 'DS52 · Timeline release'], names
+    assert names == ['RELEASE-1 · DL12 release', 'RELEASE-2 · Timeline rele…'], names
     assert [R.text_of(n, skip=lambda x: x.tag == 'title') for n in R.find_all(fig, 'text', 'rt-sub')] == ['AR6, DS6']
     ticks = [R.text_of(t) for t in R.find_all(R.find(fig, 'g', 'rt-axis'), 'text')]
     assert ticks == ['17:30', '18:00', '18:30', '12 Oct'], ticks
@@ -2316,6 +2316,21 @@ def timeline_css_uses_tokens():
         assert re.search(r'\.rt-bar\.%s \{ fill: var\(%s\)' % (cls, token), block), cls
         assert re.search(r'\.rt-swatch\.%s \{ background: var\(%s\)' % (cls, token), block), cls
     assert 'var(--failed)' in block and 'var(--rule-strong)' in block and 'overflow-x: auto' in block
+
+
+@test
+@with_fixture
+def timeline_is_never_scaled_up(fx):
+    """R5.43: one release with no phases and a day Expected is drawn at the design width, never scaled up."""
+    import re
+    registry = with_releases(fx, release('DS52', 'Timeline release', '12 Oct', status='To do'))
+    fig = R.release_timeline(registry['tasks'], R._parse_iso(STAMP_ISO), 'Lisbon')
+    match = re.search(r'viewBox="0 0 (\d+) (\d+)".*?style="min-width:(\d+)px;max-width:(\d+)px"', fig)
+    assert match, fig[:300]
+    width, height, low, high = (int(x) for x in match.groups())
+    assert width == R.TL_WIDTH == 960 and high == width and low <= high and height < 200, match.groups()
+    out = fx.render('full-progress', registry=registry)
+    assert fx.check(out, 'full-progress', registry=registry) == []
 
 
 @test

@@ -587,3 +587,10 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 .rt-swatch.ci { background: var(--live); }
 .rt-swatch.merge { background: var(--ink); }
 .state-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* Release names and the checklist grouped by release (R5.45, R5.46) */
+.release-name { font-family: var(--font-mono); font-weight: 600; font-size: .82em; margin-right: .4em; color: var(--signal); }
+a .release-name { color: var(--signal); }
+.release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
+.release-line .release-name { margin-right: 0; }
+tr.status-group.release-group td { color: var(--ink); }

@@ -875,9 +875,9 @@ double-click.
   `role="img"` and an `aria-label` stating each release's Expected and worst
   case; the legend under it names the four colours and says Expected is the sum
   of the phases. At phone width the figure scrolls inside its own
-  `div.timeline-scroll` (the `<svg>` has a `min-width`), so the page does not.
+  `div.timeline-scroll` (the `<svg>` has a `min-width`), so the page does not. The drawing is never scaled up: its `viewBox` is at least 960 units wide and the `<svg>` carries a `max-width` equal to that width, so text is drawn at its own size on a wide page (`timeline_is_never_scaled_up`).
   Both themes follow from the tokens. Verified by `timeline_risk_now_and_accessibility`,
-  `timeline_is_deterministic_and_uses_the_stamp_for_now` and `timeline_css_uses_tokens`.
+  `timeline_is_deterministic_and_uses_the_stamp_for_now`, `timeline_is_never_scaled_up` and `timeline_css_uses_tokens`.
 - **R5.44** — The feature table of section 1 has a `State` column right after
   `Tasks`. A feature with no task in an open status (any status but Live) and no
   open decision (R5.23) shows one `Complete` chip (`status-live`); otherwise one
