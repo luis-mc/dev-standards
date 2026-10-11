@@ -241,6 +241,30 @@
       "decided": "2026-10-11",
       "task": "TC7",
       "owner_words": "I meant all the 3 points"
+    },
+    {
+      "id": "D12",
+      "question": "How should the CI-speed ideas reach other projects?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Generic SHOULD, next train",
+          "summary": "A STACKSPEC SHOULD to give a dominating CI step its own job or shards, Playwright sharding in the e2e template, a ci_watch slowest-job summary."
+        },
+        {
+          "label": "Measure first",
+          "summary": "The owner pastes a product's slow CI run; the template change is designed from it."
+        },
+        {
+          "label": "dev-standards only",
+          "summary": "TC7 stays local; templates unchanged."
+        }
+      ],
+      "chosen": "Generic SHOULD, next train",
+      "decided": "2026-10-11",
+      "task": "TC8",
+      "owner_words": "Generic SHOULD, next train (Recommended)"
     }
   ]
 }
