@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T09:51+01:00",
+  "updated": "2026-10-11T09:55+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -326,11 +326,11 @@
       "id": "AR35",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Running",
       "item": "Re-render every page when the templates change",
-      "detail": "Found after 1.3.0 merged: a stylesheet change left the Model and effort profiles page stale until a manual render, because status changes re-render only the pages a task appears on. check caught it (INV-3, R5.10). Fix: any command re-renders every artifact when the plugin's templates or stylesheet differ from what the record was rendered with.",
+      "detail": "Building: render re-renders every page when the templates or stylesheet change",
       "expected": "11 Oct",
-      "changed": "2026-10-11T04:20+01:00"
+      "changed": "2026-10-11T09:55+01:00"
     },
     {
       "id": "AR36",
