@@ -1005,6 +1005,17 @@
       "changed": "2026-10-11T11:49+01:00"
     },
     {
+      "id": "DS49",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Agent branches: a short Linux CI run of their area instead of local",
+      "detail": "spec-lint dispatch takes the areas to run; the agents rule swaps the local run for that run; the ready PR stays the one full run",
+      "expected": "11 Oct ~15:00",
+      "changed": "2026-10-11T12:22+01:00",
+      "expected_basis": "agent ~40 min, in the TC6 release"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",

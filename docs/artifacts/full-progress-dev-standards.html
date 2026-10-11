@@ -1584,6 +1584,17 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "changed": "2026-10-11T11:49+01:00"
   },
   {
+   "id": "DS49",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Agent branches: a short Linux CI run of their area instead of local",
+   "detail": "spec-lint dispatch takes the areas to run; the agents rule swaps the local run for that run; the ready PR stays the one full run",
+   "expected": "11 Oct ~15:00",
+   "changed": "2026-10-11T12:22+01:00",
+   "expected_basis": "agent ~40 min, in the TC6 release"
+  },
+  {
    "id": "MP1",
    "owner": "models",
    "app": "luismc-project-setup",
@@ -1722,7 +1733,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
 <p class="last-update">Last update: <time datetime="2026-10-11T12:22+01:00">11 Oct 12:22</time> (Lisbon)</p>
 <p class="lede">All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class="task-id">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class="task-id">AR12</span>), and the secret-scan fixes (<span class="task-id">DS15</span>, <span class="task-id">AR19</span>, <span class="task-id">DS16</span>). Not released yet: the round toward STACKSPEC 7.0.0 (<span class="task-id">DS17</span> to <span class="task-id">DS21</span>) is built and joined, so those rows say Done. The tests on the joined branch are running; then one ready PR, its CI, and the merge, about 21:45. Each row turns Live only when the merge lands. <strong>Nothing needs you.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">88</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">11</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">11</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">88</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">11</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">12</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
@@ -1738,6 +1749,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <tr data-task="DL9"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL9</span>Packaged-program smoke test (MUST, STACKSPEC 8.0.0)</a></td><td></td><td>Agent on DL5-ci-packaging-log, in the TC6 release; it starts its test suites only while fewer than 3 others run</td><td>11 Oct ~15:00<span class="expected-basis">agent ~1h30 from 12:10, then the one join and CI</span></td></tr>
 <tr data-task="DL10"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL10</span>dev-standards adopts the delivery log and the freeze</a></td><td></td><td>Delivery log and train freeze for dev-standards itself, done in the TC6 release</td><td>11 Oct ~15:00<span class="expected-basis">orchestrator, after the agents report</span></td></tr>
 <tr data-task="DL11"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL11</span>Release STACKSPEC 8.0.0 (DL1 to DL10)</a></td><td></td><td>The same release as TC6: one integration branch, one ready-PR CI, one merge</td><td>11 Oct ~15:00<span class="expected-basis">the TC6 merge</span></td></tr>
+<tr data-task="DS49"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS49</span>Agent branches: a short Linux CI run of their area instead of local</td><td></td><td>spec-lint dispatch takes the areas to run; the agents rule swaps the local run for that run; the ready PR stays the one full run</td><td>11 Oct ~15:00<span class="expected-basis">agent ~40 min, in the TC6 release</span></td></tr>
 <tr data-task="TC6"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC6</span>Release the test-cost train (all eight fixes and DS48)</a></td><td></td><td>One release for TC1 to TC5, DS43 to DS48, AR40 and DL1 to DL10; 3 of 7 branches joined</td><td>11 Oct ~15:00<span class="expected-basis">slowest agent ~14:15, join and fold ~15 min, ready-PR CI ~20 min</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR40"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR40</span>At a glance block in section 0 instead of one prose paragraph</a></td><td><code>luismc-artifacts</code></td><td>On AR40-at-a-glance (76eccd9): render 101/101, hooks 82/82; sample checked in a browser; the long-note warning gets wired into check at the join</td><td>11 Oct</td></tr>
