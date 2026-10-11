@@ -616,11 +616,11 @@
       "id": "DS30",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Gate fetches its base first",
-      "detail": "Bug found (U2): the gate diffed against the local base ref and never fetched, so results were recorded against a stale base and rejected. It now fetches the base first; offline it uses the local ref and says so.",
-      "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T01:22+01:00"
+      "detail": "Built in #38 and joined (not released): the gate and the pre-push guards fetch the base first; offline they warn and use the local ref; base_fetched in the result.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T03:26+01:00"
     },
     {
       "id": "DS31",
