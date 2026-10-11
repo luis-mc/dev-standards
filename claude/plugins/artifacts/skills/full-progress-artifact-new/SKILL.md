@@ -8,7 +8,7 @@ effort: medium
 # Full-progress artifact — new
 
 Creates the project's one full-progress artifact from the record
-(`docs/artifacts/`, ARTIFACTSPEC 1.3.0). The script is the only writer of
+(`docs/artifacts/`, ARTIFACTSPEC 1.3.1). The script is the only writer of
 `manifest.json` and `registry.json`; never edit either by hand.
 
 Every command below is

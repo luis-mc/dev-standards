@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.3.0
+**Version:** 1.3.1
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,11 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.3.1 — 2026-10-11.**
+
+- Every writing command also renders each page whose file differs from a fresh render (R7.5), so a plugin upgrade that changes the templates or the stylesheet brings every page up to date at the next status change instead of leaving the untouched pages in the older look until someone runs `render`.
+- The publish copy of Full Progress names each feature as text with a Copy link button for its file:/// address, because a page on claude.ai cannot open a file: link; its checklist rows carry no link.
 
 Version 1.0.0 recorded the work given to agents but not the session's own, and
 left built-but-unreleased work marked Done (finished-sounding), so the full-progress artifact said
