@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T01:22+01:00",
+  "updated": "2026-10-11T01:23+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -641,6 +641,16 @@
       "detail": "U7: branches add a change note under docs/specs/changes/; a gate step refuses version and changelog edits off release branches; a fold script applies the notes at release. SHOULD in STACKSPEC 7.1.0.",
       "expected": "11 Oct ~05:30",
       "changed": "2026-10-11T01:22+01:00"
+    },
+    {
+      "id": "DS35",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "One ready-PR CI at a time on shared runners",
+      "detail": "U8: on shared or self-hosted runners, ready pull requests' CI runs one at a time (a repository variable switches it on). SHOULD in STACKSPEC 7.1.0.",
+      "expected": "11 Oct ~05:30",
+      "changed": "2026-10-11T01:23+01:00"
     },
     {
       "id": "MP1",
