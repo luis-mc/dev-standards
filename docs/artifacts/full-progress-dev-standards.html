@@ -1870,12 +1870,12 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "id": "TC8",
    "owner": "test-cost",
    "app": "",
-   "status": "To do",
+   "status": "Running",
    "item": "Generic CI speed: split or shard the dominant step, e2e shards",
-   "detail": "STACKSPEC SHOULD, Playwright sharding in the e2e template, ci_watch slowest-job summary; next small train",
-   "expected": "12 Oct",
-   "changed": "2026-10-11T17:31+01:00",
-   "expected_basis": "starts after the DL12 train merges, about 1 h of work and CI"
+   "detail": "One Sonnet agent on TC8-ci-speed-generic",
+   "expected": "11 Oct ~18:50",
+   "changed": "2026-10-11T18:22+01:00",
+   "expected_basis": "agent ~50 min from 18:00"
   }
  ]
 }</script>
@@ -1893,6 +1893,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <ul>
 <li data-glance-task="AR43"><span class="task-id">AR43</span>Full Progress: release timeline above the status table <span class="glance-expected">11 Oct ~18:42</span><span class="glance-basis">agent ~45 min from 17:58</span></li>
 <li data-glance-task="DS52"><span class="task-id">DS52</span>AR43 train: join, PR CI, merge, cleanup <span class="glance-expected">11 Oct ~18:50</span><span class="glance-basis">agent 17:58-18:42, PR CI ~4 min, merge and cleanup ~4 min; +1 fix round ~10 min</span></li>
+<li data-glance-task="TC8"><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards <span class="glance-expected">11 Oct ~18:50</span><span class="glance-basis">agent ~50 min from 18:00</span></li>
 <li data-glance-task="DS53"><span class="task-id">DS53</span>TC8 train: join, PR CI, merge, cleanup <span class="glance-expected">11 Oct ~19:00</span><span class="glance-basis">agent 18:00-18:50, PR CI ~4 min, merge and cleanup ~4 min; +1 fix round ~10 min</span></li>
 </ul>
 </div>
@@ -1910,14 +1911,14 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">119</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">119</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">4</div><div class="label">running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
 <tr data-task="AR43"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR43</span>Full Progress: release timeline above the status table</a></td><td><code>luismc-artifacts</code></td><td>One Sonnet agent on AR43-release-timeline</td><td>11 Oct ~18:42<span class="expected-basis">agent ~45 min from 17:58</span></td></tr>
 <tr data-task="DS52"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS52</span>AR43 train: join, PR CI, merge, cleanup</td><td></td><td>Plugin build of the release timeline and State column (luismc-artifacts minor)</td><td>11 Oct ~18:50<span class="expected-basis">agent 17:58-18:42, PR CI ~4 min, merge and cleanup ~4 min; +1 fix round ~10 min</span></td></tr>
+<tr data-task="TC8"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards</a></td><td></td><td>One Sonnet agent on TC8-ci-speed-generic</td><td>11 Oct ~18:50<span class="expected-basis">agent ~50 min from 18:00</span></td></tr>
 <tr data-task="DS53"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS53</span>TC8 train: join, PR CI, merge, cleanup</td><td></td><td>Own small train beside AR43; merges after AR43</td><td>11 Oct ~19:00<span class="expected-basis">agent 18:00-18:50, PR CI ~4 min, merge and cleanup ~4 min; +1 fix round ~10 min</span></td></tr>
-<tr data-task="TC8"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards</a></td><td></td><td>STACKSPEC SHOULD, Playwright sharding in the e2e template, ci_watch slowest-job summary; next small train</td><td>12 Oct<span class="expected-basis">starts after the DL12 train merges, about 1 h of work and CI</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR44"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR44</span>Copy link opens the record&#x27;s current feature page</a></td><td><code>luismc-artifacts</code></td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>
 <tr data-task="DL13"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL13</span>Save the STACKSPEC 8.0.0 upgrade prompt</a></td><td></td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>

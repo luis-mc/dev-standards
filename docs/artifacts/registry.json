@@ -1229,12 +1229,12 @@
       "id": "TC8",
       "owner": "test-cost",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Generic CI speed: split or shard the dominant step, e2e shards",
-      "detail": "STACKSPEC SHOULD, Playwright sharding in the e2e template, ci_watch slowest-job summary; next small train",
-      "expected": "12 Oct",
-      "changed": "2026-10-11T17:31+01:00",
-      "expected_basis": "starts after the DL12 train merges, about 1 h of work and CI"
+      "detail": "One Sonnet agent on TC8-ci-speed-generic",
+      "expected": "11 Oct ~18:50",
+      "changed": "2026-10-11T18:22+01:00",
+      "expected_basis": "agent ~50 min from 18:00"
     }
   ]
 }

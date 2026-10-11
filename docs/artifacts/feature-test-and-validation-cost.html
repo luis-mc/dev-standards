@@ -656,6 +656,11 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
+<div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
+<ul>
+<li data-glance-task="TC8"><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards <span class="glance-expected">11 Oct ~18:50</span><span class="glance-basis">agent ~50 min from 18:00</span></li>
+</ul>
+</div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
 <li data-glance-task="TC7"><span class="task-id">TC7</span>PR CI: mutants per suite, delivery suites in parallel</li>
@@ -668,11 +673,11 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">7</div><div class="label">live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">7</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next</strong></td></tr>
-<tr data-task="TC8"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards</td><td>STACKSPEC SHOULD, Playwright sharding in the e2e template, ci_watch slowest-job summary; next small train</td><td>12 Oct<span class="expected-basis">starts after the DL12 train merges, about 1 h of work and CI</span></td></tr>
+<tr data-task="TC8"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards</td><td>One Sonnet agent on TC8-ci-speed-generic</td><td>11 Oct ~18:50<span class="expected-basis">agent ~50 min from 18:00</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
 <tr data-task="TC7"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC7</span>PR CI: mutants per suite, delivery suites in parallel</td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>
 <tr data-task="TC6"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC6</span>Release the test-cost train (all eight fixes and DS48)</td><td>#47 merged on green at 14:37 after two fix-forwards; cleanup removed every train branch; plugins and ~/.claude rules updated</td><td>11 Oct</td></tr>
