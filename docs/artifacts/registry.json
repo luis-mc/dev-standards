@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T03:59+01:00",
+  "updated": "2026-10-11T04:18+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -606,11 +606,11 @@
       "id": "DS29",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "E2E runs only the affected specs",
-      "detail": "Built in #38 and joined (not released): gate.json e2e_map; a branch gate runs only the affected specs ({e2e_specs}); unmapped UI files, full_on hits, a widened gate or no map run the full suite; the result records selection and specs.",
+      "detail": "Released in STACKSPEC 7.1.0 / luismc-project-setup 13.1.0 / luismc-artifacts 1.3.0 (#45, 48205a9, 04:17). gate.json e2e_map; a branch gate runs only the affected specs ({e2e_specs}); unmapped UI files, full_on hits, a widened gate or no map run the full suite; the result records selection and specs.",
       "expected": "11 Oct",
-      "changed": "2026-10-11T03:26+01:00"
+      "changed": "2026-10-11T04:18+01:00"
     },
     {
       "id": "DS30",
