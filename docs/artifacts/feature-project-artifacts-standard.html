@@ -694,16 +694,16 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-12T00:01+01:00">12 Oct 00:01</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-12T00:09+01:00">12 Oct 00:09</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">12 Oct 00:03</a> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</p>
 <div class="at-a-glance">
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
-<div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
+<div class="glance-group glance-built" data-glance="built"><div class="glance-label">Built, not released</div>
 <ul>
-<li data-glance-task="AR46"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars <span class="glance-expected">12 Oct ~00:25</span><span class="glance-basis">one agent ~20 min incl. branch CI</span></li>
+<li data-glance-task="AR46"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</li>
 </ul>
 </div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
@@ -716,16 +716,15 @@ tr.status-group.release-group td { color: var(--ink); }
 <li data-glance-task="AR42"><span class="task-id">AR42</span>Feature table: Last updated column, newest first, sortable headers</li>
 <li data-glance-task="AR35"><span class="task-id">AR35</span>Re-render every page when the templates change</li>
 <li data-glance-task="AR37"><span class="task-id">AR37</span>Full Progress feature links that work from claude.ai</li>
-<li class="glance-more">and 13 more</li>
+<li class="glance-more">and 11 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">43</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">43</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next</strong></td></tr>
-<tr data-task="AR46"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars<span class="release-line"><span class="release-name">RELEASE-4</span></span></td><td>Owner saw RELEASE-3 (Expected 12 Oct ~00:05, page drawn 11 Oct 23:57) as a bare day diamond: render_artifacts.py:1165 puts on the time axis only an Expected on the stamp&#x27;s date. Fix: any timed Expected within 24 h of the stamp is on the axis, which can cross midnight</td><td>12 Oct ~00:25<span class="expected-basis">one agent ~20 min incl. branch CI</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
+<tr data-task="AR46"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars<span class="release-line"><span class="release-name">RELEASE-4</span></span></td><td>33f81ab: a timed release within 24 h of the stamp stays on the time axis across midnight (ticks dated at midnight); R5.42a check; 2 new cases reproduce 23:57 -&gt; 00:05. Branch CI green 3m32s; guard refused a local full renderer run, as designed</td><td>12 Oct</td></tr>
 <tr data-task="AR45"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release<span class="release-line"><span class="release-name">RELEASE-2</span></span></td><td>Released in #52 (c306304, 23:09): ARTIFACTSPEC 1.6.0, luismc-artifacts 1.6.0</td><td>11 Oct</td></tr>
 <tr data-task="AR43"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR43</span>Full Progress: release timeline above the status table</td><td>Released in #49 (051005d, 18:38): luismc-artifacts 1.5.0, ARTIFACTSPEC 1.5.0</td><td>11 Oct</td></tr>
 <tr data-task="AR44"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR44</span>Copy link opens the record&#x27;s current feature page</td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>

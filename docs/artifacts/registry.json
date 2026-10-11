@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-12T00:03+01:00",
+  "updated": "2026-10-12T00:09+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -437,12 +437,11 @@
       "id": "AR46",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "Timeline: releases past midnight keep their phase bars",
-      "detail": "Owner saw RELEASE-3 (Expected 12 Oct ~00:05, page drawn 11 Oct 23:57) as a bare day diamond: render_artifacts.py:1165 puts on the time axis only an Expected on the stamp's date. Fix: any timed Expected within 24 h of the stamp is on the axis, which can cross midnight",
-      "expected": "12 Oct ~00:25",
-      "changed": "2026-10-12T00:01+01:00",
-      "expected_basis": "one agent ~20 min incl. branch CI",
+      "detail": "33f81ab: a timed release within 24 h of the stamp stays on the time axis across midnight (ticks dated at midnight); R5.42a check; 2 new cases reproduce 23:57 -> 00:05. Branch CI green 3m32s; guard refused a local full renderer run, as designed",
+      "expected": "12 Oct",
+      "changed": "2026-10-12T00:09+01:00",
       "rides": "DS56"
     },
     {
