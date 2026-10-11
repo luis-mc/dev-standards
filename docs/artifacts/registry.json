@@ -518,10 +518,10 @@
       "app": "",
       "status": "To do",
       "item": "Delivery log: label its times as UTC, CI start from the first run",
-      "detail": "The table in release train-2026-10-11-47 shows UTC times without saying so, and CI start is the last run's start",
-      "expected": "12 Oct",
-      "changed": "2026-10-11T14:42+01:00",
-      "expected_basis": "next small train; delivery_log.py and its scenarios"
+      "detail": "Owner chose: ship now as a small train with the upgrade doc",
+      "expected": "11 Oct; about 1 h after restart",
+      "changed": "2026-10-11T17:20+01:00",
+      "expected_basis": "one agent ~15 min, PR CI ~20-30 min, merge and cleanup"
     },
     {
       "id": "DL13",

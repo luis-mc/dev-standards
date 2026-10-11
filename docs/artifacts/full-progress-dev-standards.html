@@ -1159,10 +1159,10 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "app": "",
    "status": "To do",
    "item": "Delivery log: label its times as UTC, CI start from the first run",
-   "detail": "The table in release train-2026-10-11-47 shows UTC times without saying so, and CI start is the last run's start",
-   "expected": "12 Oct",
-   "changed": "2026-10-11T14:42+01:00",
-   "expected_basis": "next small train; delivery_log.py and its scenarios"
+   "detail": "Owner chose: ship now as a small train with the upgrade doc",
+   "expected": "11 Oct; about 1 h after restart",
+   "changed": "2026-10-11T17:20+01:00",
+   "expected_basis": "one agent ~15 min, PR CI ~20-30 min, merge and cleanup"
   },
   {
    "id": "DL13",
@@ -1835,8 +1835,8 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
+<tr data-task="DL12"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL12</span>Delivery log: label its times as UTC, CI start from the first run</a></td><td></td><td>Owner chose: ship now as a small train with the upgrade doc</td><td>11 Oct; about 1 h after restart<span class="expected-basis">one agent ~15 min, PR CI ~20-30 min, merge and cleanup</span></td></tr>
 <tr data-task="DL13"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL13</span>Save the STACKSPEC 8.0.0 upgrade prompt</a></td><td></td><td>docs/upgrades/stackspec-8.0.0.md, generic, no project names; rides the DL12 train</td><td>11 Oct; after restart<span class="expected-basis">starts when the owner restarts Claude Code</span></td></tr>
-<tr data-task="DL12"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL12</span>Delivery log: label its times as UTC, CI start from the first run</a></td><td></td><td>The table in release train-2026-10-11-47 shows UTC times without saying so, and CI start is the last run&#x27;s start</td><td>12 Oct<span class="expected-basis">next small train; delivery_log.py and its scenarios</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR41"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</a></td><td><code>luismc-artifacts</code></td><td>Five notes rewritten as one or two sentences (103 to 179 characters); check shows no warnings</td><td>11 Oct</td></tr>
 <tr data-task="DS50"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS50</span>Write the STACKSPEC 8.0.0 upgrade prompt for projects</td><td></td><td>Upgrade prompt for STACKSPEC 8.0.0 given to the owner in chat, generic, no project names</td><td>11 Oct</td></tr>
