@@ -15,7 +15,9 @@ included (contracts, joins, test runs, releases, cleanup): a task is `Running`
 while any work for it runs, `Waiting` or `Needs you` when blocked on
 something or someone. `Built` means finished but not released (`Live` is released; `Done` is a
 retired name the script stores as `Built`); release work still to come (join,
-CI, release) is its own task, Running or To do. Before a turn
+CI, release) is its own task, Running or To do. A task set to `Running` or `Built`
+rides a release (`--rides <ID or RELEASE-n>` in the same call; the command refuses otherwise)
+unless it is a release itself. Before a turn
 ends with work still running in the background, its task is `Running`. Only the script writes the registry; never edit
 `registry.json` or `manifest.json` by hand, and never type a status row into an
 artifact. The statuses reach the artifact's At a glance block by themselves, so

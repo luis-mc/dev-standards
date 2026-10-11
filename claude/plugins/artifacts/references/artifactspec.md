@@ -363,7 +363,7 @@ docs/artifacts/
   the script on every status change, never by hand.
 - **R4.8** — `expected` follows §6.4; an open row may also carry
   `expected_basis` (R6.10); a release row may also carry `release`, `phases`,
-  `risk` and any row `rides` (R5.40). `item` is at most 80 characters; `detail`
+  `risk` and any row `rides` (R5.40, R5.45). `item` is at most 80 characters; `detail`
   is plain text, at most 600 characters.
 - **R4.9** — Tasks are stored in ID order (prefix, then number); rendering
   orders them (§6.2), the file does not.
@@ -576,6 +576,9 @@ The At a glance block itself is specified in §5.6 (R5.33 to R5.35).
 
 - **R5.8** — Tiles show the count of each status that has at least one task,
   in the order of §6.1, computed from the registry.
+- **R5.8a** — A tile's label names what it counts: `tasks <status in lower
+  case>`, for example `123` over `tasks live`, `1 task running` in the singular
+  (the label reads `task running`). Verified by `tiles_say_tasks`.
 - **R5.9** — The full-progress artifact embeds the registry as
   `<script type="application/json" id="task-registry">`, the only JSON
   script it contains. The only other script allowed in any artifact is the
@@ -865,9 +868,9 @@ double-click.
   `role="img"` and an `aria-label` stating each release's Expected and worst
   case; the legend under it names the four colours and says Expected is the sum
   of the phases. At phone width the figure scrolls inside its own
-  `div.timeline-scroll` (the `<svg>` has a `min-width`), so the page does not.
+  `div.timeline-scroll` (the `<svg>` has a `min-width`), so the page does not. The drawing is never scaled up: its `viewBox` is at least 960 units wide and the `<svg>` carries a `max-width` equal to that width, so text is drawn at its own size on a wide page (`timeline_is_never_scaled_up`).
   Both themes follow from the tokens. Verified by `timeline_risk_now_and_accessibility`,
-  `timeline_is_deterministic_and_uses_the_stamp_for_now` and `timeline_css_uses_tokens`.
+  `timeline_is_deterministic_and_uses_the_stamp_for_now`, `timeline_is_never_scaled_up` and `timeline_css_uses_tokens`.
 - **R5.44** — The feature table of section 1 has a `State` column right after
   `Tasks`. A feature with no task in an open status (any status but Live) and no
   open decision (R5.23) shows one `Complete` chip (`status-live`); otherwise one
@@ -876,6 +879,57 @@ double-click.
   Needs you chip. `check` finds a State that differs from the registry
   (R5.44). Verified by `state_column_counts`, `check_state_column` and
   `test_state_column_counts_in_the_record`.
+
+### 5.8 Release numbers and items grouped by release
+
+- **R5.45** — A release is numbered. A release row carries `"release": <n>`, a
+  positive integer unique among all releases of the registry, Live ones
+  included; the release is named `RELEASE-<n>` wherever it is shown. `--release`
+  on `task-add` or `set-task-status` gives a task that is not yet a release the
+  next number (the highest number in the registry plus one, 1 when none) and
+  leaves an existing number alone; numbers are never reused or changed, like task
+  IDs (R4.5). `--rides` takes a release's task ID or its name `RELEASE-<n>`;
+  `rides` always stores the task ID. An older record's `"release": true` rows
+  are numbered by the migration (§4.7) in order of `changed`, oldest first, ties
+  by ID; `check` reports a `release` that is not a positive integer, a repeated
+  number, and `true` left after migration (R5.45). Every release row's Item, in
+  the checklists, the At a glance block and the timeline, starts with a
+  `<span class="release-name">RELEASE-<n></span>` before its text; the timeline
+  label reads `RELEASE-<n> · <item>` (replacing `<ID> · <item>` of R5.42) and
+  the task ID stays in the row's ID cell. Verified by
+  `test_release_numbers_are_assigned_and_never_reused`,
+  `test_rides_accepts_the_release_name`, `test_migration_numbers_old_releases`
+  and the R5.45 fixtures of `test_check_fixtures`.
+- **R5.46** — The full-progress checklist is grouped by release, in this order,
+  each group omitted when empty:
+  1. one group per open release (R5.42), ordered by Expected, ties by number,
+     headed `RELEASE-<n> · live ~HH:MM` (the Expected's time; `live DD Mon` when
+     it has no time), with ` · worst ~HH:MM` added when the release has a risk;
+     its rows are the release row first, then every task riding it in the order
+     of R6.2 (Running, Waiting, To do, Needs you, Failed, On hold, Built, Live),
+     ties by ID;
+  2. `Not in a release yet`: Running, Waiting and To do tasks that ride no open
+     release, earliest Expected first;
+  3. `Needs you, failed or on hold`, then `Live or built`, as in R6.2, holding
+     only tasks that ride no open release.
+  A task appears in exactly one group. In `Live or built` (and `Earlier`), and
+  in a feature artifact's checklist, a row that rides a release shows
+  `<span class="release-name">RELEASE-<n></span>` in a muted line under its
+  Item, so what shipped in each release stays visible. Feature artifacts keep
+  the groups of R6.2. `check` finds a row in the wrong group or order, a missing
+  or extra group, a wrong heading and a missing release line (R5.46). The
+  look uses the tokens only: a group heading row like R6.2's with the release
+  name in `--ink`; `.release-name` is the mono face in `--signal`. Verified by
+  `full_progress_groups_by_release`, `release_group_heading_with_risk`,
+  `rows_show_the_release_they_rode` and `check_finds_a_row_in_the_wrong_release_group`.
+- **R5.47** — Every task in Running or Built that is not itself a release rides
+  a release (`rides`, R5.40). A writing command refuses a change that leaves a
+  Running or Built task without one: `task-add --status Running` and
+  `set-task-status ID Running|Built` take `--rides` in the same call when the
+  task has none. `check` reports such a task (R5.47); an older record's
+  existing findings do not freeze writing commands (R7.1a). The rule file says
+  so in one line. Verified by `test_running_and_built_must_ride_a_release`,
+  `rule_file_carries_the_rides_rule` and the R5.47 fixture of `test_check_fixtures`.
 
 ---
 
@@ -902,7 +956,8 @@ double-click.
 - **R6.2** — Checklist rows are grouped, in this order: `Running now and next`
   (Running, Waiting, To do — earliest expected first), `Needs you, failed or
   on hold` (Needs you, Failed, On hold), `Live or built` (newest `changed`
-  first). An empty group is omitted.
+  first). An empty group is omitted. The full-progress artifact groups by
+  release instead (R5.46); these groups still order the rows inside it.
 - **R6.3** — In the full-progress artifact, `Live` rows whose `changed` is more
   than 14 days old fold into a closed `<details>` titled `Earlier`. `Built` rows
   never fold, however old: unreleased work must not be hidden. Verified by
@@ -1288,7 +1343,7 @@ Reads the hook input; takes the task ID from the current branch name
 - **R13.1** — `tools/test_project_artifacts.py` builds throwaway git repos with
   a bare remote and proves each command, each check of §14 (one fixture per
   check that fails without it), INV-1 to INV-3, R4.13 to R4.29, R6.10, R6.11, R5.31, R5.32,
-  R5.33 to R5.39, R4.30, R7.4 to R7.6, R9.5 and R10.6.
+  R5.33 to R5.39, R5.45 to R5.47, R5.8a, R4.30, R7.4 to R7.6, R9.5 and R10.6.
 - **R13.2** — `tools/test_project_artifacts_hooks.py` feeds sample hook input
   to each hook and asserts the queue, the exit code and the output, including
   R8.4, R8.8 to R8.17 and INV-4, and that every hook does nothing without a
@@ -1322,6 +1377,10 @@ Reads the hook input; takes the task ID from the current branch name
 | Every feature task on the full-progress artifact, linked to the feature file by a relative link | R6.5, R5.30 |
 | Section 1 of Full Progress: the five columns, a Last updated time and a State per feature, sort buttons, rows in the default order | R5.6, R5.39, R5.44 |
 | Release fields: `release`, `phases`, `risk`, `rides`; Expected is the end of the last phase | R5.40, R5.41 |
+| Release numbers: positive, unique, none left `true`; `RELEASE-<n>` on every release row | R5.45 |
+| Full Progress grouped by release; release line on rows that rode one | R5.46 |
+| Every Running or Built task rides a release | R5.47 |
+| Tile labels name tasks | R5.8a |
 | The release timeline is present exactly when a release is open, between the key and the checklist, with its caption and `aria-label` | R5.42, R5.43 |
 | A feature page's Full Progress published line equals the manifest's | R5.38 |
 | `updated` and `published_at` in the manifest are ISO times with an offset | R4.30 |

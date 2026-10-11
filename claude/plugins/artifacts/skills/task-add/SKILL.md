@@ -8,7 +8,7 @@ effort: medium
 # Task — add
 
 Records work as a task in the registry (`docs/artifacts/registry.json`,
-ARTIFACTSPEC 1.4.0) before the work starts. Only the script writes the
+ARTIFACTSPEC 1.6.0) before the work starts. Only the script writes the
 registry; never edit `registry.json` or `manifest.json` by hand.
 
 Every activity is a task before it starts, whoever does it: work given to
@@ -46,7 +46,9 @@ read the message, fix the cause and rerun.
    A release (`--release`) may carry phases, repeatable `--phase NAME=HH:MM-HH:MM`
    (`agents`, `join`, `ci`, `merge`) and one named `--risk "LABEL=MINUTES"`; its
    Expected is the end of its last phase, and the risk is named, never padded in.
-   Work that rides a release says so with `--rides <release ID>`.
+   `--release` gives the task the next release number, shown as `RELEASE-<n>`.
+   Work that rides a release says so with `--rides <release ID or RELEASE-n>`;
+   every Running or Built task that is not itself a release must (the command refuses otherwise).
 3. **Add it:**
    `task-add --owner <key|project> --item "TEXT" --detail "TEXT" --expected "DD Mon" [--basis "TEXT"] [--app A] [--status S] [--prefix P]`.
    For `--owner project`, `--prefix` picks one of the project's prefixes; a new
