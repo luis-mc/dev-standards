@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T04:20+01:00",
+  "updated": "2026-10-11T04:21+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -331,6 +331,16 @@
       "detail": "Found after 1.3.0 merged: a stylesheet change left the Model and effort profiles page stale until a manual render, because status changes re-render only the pages a task appears on. check caught it (INV-3, R5.10). Fix: any command re-renders every artifact when the plugin's templates or stylesheet differ from what the record was rendered with.",
       "expected": "11 Oct",
       "changed": "2026-10-11T04:20+01:00"
+    },
+    {
+      "id": "AR36",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Live",
+      "item": "Update the installed plugins to the 7.1.0 release",
+      "detail": "Done at 04:22 (backup first): luismc-artifacts 1.3.0 and luismc-project-setup 13.1.0 installed for your user; sessions pick them up on restart.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T04:21+01:00"
     },
     {
       "id": "DS1",
