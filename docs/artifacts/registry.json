@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T02:24+01:00",
+  "updated": "2026-10-11T02:26+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -588,9 +588,9 @@
       "app": "",
       "status": "Running",
       "item": "Cleanup removes agent scaffolding branches",
-      "detail": "Found tonight: Claude Code leaves a local worktree-agent-<id> branch for every isolated agent; cleanup.py keeps them ('no pull request'), so they pile up (27 here). It should remove a local branch with no pull request, no worktree and no commits outside the default branch, and sweep stale .delivery/push-check folders (DS23's open point). Approved at 01:00; one agent building it.",
-      "expected": "11 Oct ~02:00",
-      "changed": "2026-10-11T00:51+01:00"
+      "detail": "Found tonight: Claude Code leaves a local worktree-agent-<id> branch for every isolated agent; cleanup.py keeps them ('no pull request'), so they pile up (27 here). It should remove a local branch with no pull request, no worktree and no commits outside the default branch, and sweep stale .delivery/push-check folders (DS23's open point). Approved at 01:00; one agent building it. Draft #37; finishing through a CI run on its branch (new testing rule).",
+      "expected": "11 Oct ~03:00",
+      "changed": "2026-10-11T02:26+01:00"
     },
     {
       "id": "DS28",
