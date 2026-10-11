@@ -316,11 +316,11 @@
       "id": "AR34",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "Record worktree location is a setting",
-      "detail": "Built in #44 and joined (not released): the record worktree location comes from LUISMC_ARTIFACTS_WORKTREE or a git-ignored .claude/artifacts-local.json, else the default; moving it removes the old worktree unless it holds unpushed record commits.",
+      "detail": "Released in STACKSPEC 7.1.0 / luismc-project-setup 13.1.0 / luismc-artifacts 1.3.0 (#45, 48205a9, 04:17). the record worktree location comes from LUISMC_ARTIFACTS_WORKTREE or a git-ignored .claude/artifacts-local.json, else the default; moving it removes the old worktree unless it holds unpushed record commits.",
       "expected": "11 Oct",
-      "changed": "2026-10-11T03:59+01:00"
+      "changed": "2026-10-11T04:19+01:00"
     },
     {
       "id": "DS1",
