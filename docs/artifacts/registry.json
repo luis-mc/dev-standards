@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T23:06+01:00",
+  "updated": "2026-10-11T23:29+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1092,7 +1092,7 @@
       "detail": "#50 merged 20:37, CI 2m27s; cleanup done (an empty locked folder dev-standards-TC8 remains); delivery log in train-2026-10-11-50",
       "expected": "11 Oct",
       "changed": "2026-10-11T20:38+01:00",
-      "release": true,
+      "release": 1,
       "phases": [
         {
           "name": "agents",
@@ -1130,7 +1130,7 @@
       "expected": "11 Oct ~23:20",
       "changed": "2026-10-11T23:05+01:00",
       "expected_basis": "#51 CI took 3m27s; merge+cleanup ~5 min",
-      "release": true,
+      "release": 2,
       "phases": [
         {
           "name": "agents",

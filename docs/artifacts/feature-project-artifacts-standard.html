@@ -680,6 +680,13 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 .rt-swatch.ci { background: var(--live); }
 .rt-swatch.merge { background: var(--ink); }
 .state-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* Release names and the checklist grouped by release (R5.45, R5.46) */
+.release-name { font-family: var(--font-mono); font-weight: 600; font-size: .82em; margin-right: .4em; color: var(--signal); }
+a .release-name { color: var(--signal); }
+.release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
+.release-line .release-name { margin-right: 0; }
+tr.status-group.release-group td { color: var(--ink); }
 </style>
 <style id="extra-css"></style>
 </head>
@@ -687,7 +694,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T22:59+01:00">11 Oct 22:59</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T23:29+01:00">11 Oct 23:29</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Oct 23:06</a> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</p>
 <div class="at-a-glance">
@@ -709,15 +716,15 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <li data-glance-task="AR35"><span class="task-id">AR35</span>Re-render every page when the templates change</li>
 <li data-glance-task="AR37"><span class="task-id">AR37</span>Full Progress feature links that work from claude.ai</li>
 <li data-glance-task="AR39"><span class="task-id">AR39</span>Release luismc-artifacts 1.3.1 (AR35, AR37)</li>
-<li class="glance-more">and 16 more</li>
+<li class="glance-more">and 12 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">42</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">built</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">42</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
-<tr data-task="AR45"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release</td><td>4 commits on AR45-release-numbers; agent&#x27;s local runs 116+122+90 pass; PR #51 CI is the full run</td><td>11 Oct</td></tr>
+<tr data-task="AR45"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release<span class="release-line"><span class="release-name">RELEASE-2</span></span></td><td>4 commits on AR45-release-numbers; agent&#x27;s local runs 116+122+90 pass; PR #51 CI is the full run</td><td>11 Oct</td></tr>
 <tr data-task="AR43"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR43</span>Full Progress: release timeline above the status table</td><td>Released in #49 (051005d, 18:38): luismc-artifacts 1.5.0, ARTIFACTSPEC 1.5.0</td><td>11 Oct</td></tr>
 <tr data-task="AR44"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR44</span>Copy link opens the record&#x27;s current feature page</td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>
 <tr data-task="AR41"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</td><td>Five notes rewritten as one or two sentences (103 to 179 characters); check shows no warnings</td><td>11 Oct</td></tr>

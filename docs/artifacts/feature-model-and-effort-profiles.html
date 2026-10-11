@@ -680,6 +680,13 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 .rt-swatch.ci { background: var(--live); }
 .rt-swatch.merge { background: var(--ink); }
 .state-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* Release names and the checklist grouped by release (R5.45, R5.46) */
+.release-name { font-family: var(--font-mono); font-weight: 600; font-size: .82em; margin-right: .4em; color: var(--signal); }
+a .release-name { color: var(--signal); }
+.release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
+.release-line .release-name { margin-right: 0; }
+tr.status-group.release-group td { color: var(--ink); }
 </style>
 <style id="extra-css">
 figure.diagram{margin:1.2em 0;border:1px solid var(--rule);background:var(--surface)}
@@ -706,7 +713,7 @@ figure.diagram figcaption b{color:var(--ink)}
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Today</a><a href="#s3"><b>3</b>Where model and effort come from</a><a href="#s4"><b>4</b>Consequences</a><a href="#s5"><b>5</b>The profiles</a><a href="#s6"><b>6</b>Requirements and tests</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Model and effort profiles</h1><p>Which model and which effort every kind of agent and every skill uses, where each setting lives, and what follows from it. Built into <code>claude-setup</code> in luismc-project-setup.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T18:32+01:00">11 Oct 18:32</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T23:29+01:00">11 Oct 23:29</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Oct 23:06</a> (Lisbon)</p>
 <p class="lede">The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</p>
 <div class="at-a-glance">
@@ -716,12 +723,10 @@ figure.diagram figcaption b{color:var(--ink)}
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
 <li data-glance-task="MP7"><span class="task-id">MP7</span>Defaults: Opus at medium, Sonnet at high</li>
-<li data-glance-task="MP1"><span class="task-id">MP1</span>Inventory of models per agent type</li>
-<li data-glance-task="MP2"><span class="task-id">MP2</span>Profile decisions</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">9</div><div class="label">live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">9</div><div class="label">tasks live</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>

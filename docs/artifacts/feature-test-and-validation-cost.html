@@ -680,6 +680,13 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 .rt-swatch.ci { background: var(--live); }
 .rt-swatch.merge { background: var(--ink); }
 .state-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* Release names and the checklist grouped by release (R5.45, R5.46) */
+.release-name { font-family: var(--font-mono); font-weight: 600; font-size: .82em; margin-right: .4em; color: var(--signal); }
+a .release-name { color: var(--signal); }
+.release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
+.release-line .release-name { margin-right: 0; }
+tr.status-group.release-group td { color: var(--ink); }
 </style>
 <style id="extra-css">.tc-figure{margin:1rem 0 1.5rem;overflow-x:auto}.tc-chart{display:block;width:100%;max-width:640px;height:auto}.tc-chart text{font-family:var(--font-mono);font-size:12px;fill:var(--ink)}.tc-chart .tc-muted{fill:var(--ink-muted);font-size:11px}.tc-chart .tc-on{fill:var(--on-signal);font-weight:600}.tc-a{fill:var(--signal)}.tc-b{fill:var(--rule-strong)}.tc-c{fill:var(--running-mark)}.tc-axis{stroke:var(--rule-strong);stroke-width:1}.tc-figure figcaption{font-size:.85rem;color:var(--ink-muted);margin-top:.4rem;max-width:65ch}</style>
 </head>
@@ -687,7 +694,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>The question</a><a href="#s2"><b>2</b>How it was measured</a><a href="#s3"><b>3</b>Hypotheses and verdicts</a><a href="#s4"><b>4</b>Where the time goes</a><a href="#s5"><b>5</b>The mutation pass</a><a href="#s6"><b>6</b>Repeats and noise</a><a href="#s7"><b>7</b>What is wrong</a><a href="#s8"><b>8</b>Solutions, ranked</a><a href="#s9"><b>9</b>Decisions</a><a href="#s10"><b>10</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Test and validation cost</h1><p>What our tests and checks cost, where they repeat, and what to cut</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T23:06+01:00">11 Oct 23:06</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T23:29+01:00">11 Oct 23:29</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Oct 23:06</a> (Lisbon)</p>
 <p class="lede">All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</p>
 <div class="at-a-glance">
@@ -709,13 +716,13 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">8</div><div class="label">live</div></div><div class="status-count-tile status-needs-you"><div class="count">1</div><div class="label">needs you</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">8</div><div class="label">tasks live</div></div><div class="status-count-tile status-needs-you"><div class="count">1</div><div class="label">task needs you</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="you"><td colspan="4"><strong>Needs you, failed or on hold</strong></td></tr>
 <tr data-task="TC9"><td><span class="status-chip status-needs-you">Needs you</span></td><td><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</td><td>Proposal: 4 guards shipped by luismc-project-setup to every project. 1 measured suite times; 2 hook blocks a local full run of a heavy suite and a repeat full run of an already-tested tree; 3 pre-commit runs the change-notes check; 4 hook blocks a ready PR not from an *-integration branch. Plus join.py works without gate.json. Awaiting go-ahead</td><td>12 Oct<span class="expected-basis">owner&#x27;s go-ahead, then one agent ~40 min, one train</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
-<tr data-task="TC8"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards</td><td>Released in #50 (469da89, 20:37): STACKSPEC 8.1.0, luismc-project-setup 14.1.0</td><td>11 Oct</td></tr>
+<tr data-task="TC8"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards<span class="release-line"><span class="release-name">RELEASE-1</span></span></td><td>Released in #50 (469da89, 20:37): STACKSPEC 8.1.0, luismc-project-setup 14.1.0</td><td>11 Oct</td></tr>
 <tr data-task="TC7"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC7</span>PR CI: mutants per suite, delivery suites in parallel</td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>
 <tr data-task="TC6"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC6</span>Release the test-cost train (all eight fixes and DS48)</td><td>#47 merged on green at 14:37 after two fix-forwards; cleanup removed every train branch; plugins and ~/.claude rules updated</td><td>11 Oct</td></tr>
 <tr data-task="TC1"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC1</span>Mutation passes only when their files change, all nightly</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
@@ -884,6 +891,78 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </section>
 <section id="s9"><h2><span class="section-number">&sect; 9</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D18">
+<h3 class="decision-head"><span class="decision-id">D18</span> <span class="decision-question">When does a suite count as heavy?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC9</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Over 3 min locally</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">From the last full local run; unmeasured counts as heavy.</p>
+<blockquote class="decision-words">&ldquo;Over 3 min locally&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Over 1 min locally</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Stricter.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Over 5 min locally</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Looser.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D17">
+<h3 class="decision-head"><span class="decision-id">D17</span> <span class="decision-question">When a check catches a break, block or warn?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC9</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Block</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">Command refused with the reason and the right way.</p>
+<blockquote class="decision-words">&ldquo;Block&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Warn</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Command runs with a warning.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D16">
+<h3 class="decision-head"><span class="decision-id">D16</span> <span class="decision-question">Tag every line of the shipped rule files with its check or &#x27;advice&#x27;, with a test that fails on an untagged line?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC9</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, in TC9</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">Same release.</p>
+<blockquote class="decision-words">&ldquo;Yes, in TC9&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Yes, as its own task</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Separate task and release.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Rule files unchanged.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D15">
+<h3 class="decision-head"><span class="decision-id">D15</span> <span class="decision-question">Build the four checks (measured suite times, test-run hook, change-note check at commit, ready PR only from *-integration, join.py fix) in luismc-project-setup?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC9</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, next train</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">One agent on its own branch, its own small release after 1.6.0.</p>
+<blockquote class="decision-words">&ldquo;Yes, next train&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Yes, but only some</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Owner names which.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Not now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">TC9 On hold.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D14">
 <h3 class="decision-head"><span class="decision-id">D14</span> <span class="decision-question">How should TC8 get past the pre-commit false positive on `GH_TOKEN: ${{ github.token }}`?</span></h3>
 <p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC8</p>
