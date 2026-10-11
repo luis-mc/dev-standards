@@ -688,9 +688,9 @@
       "app": "",
       "status": "Running",
       "item": "Integrate and release STACKSPEC 7.1.0",
-      "detail": "Approved: merge on green tonight, then update the installed plugins. Writing the 7.1.0 contracts on DS37-integration now; agents next.",
-      "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T01:24+01:00"
+      "detail": "Every part joined into DS37-integration; tech-stack-setup wired for 7.1.0 (runners, serial CI, e2e map, change notes, the 7.0.x audit note); luismc-project-setup 13.1.0, luismc-artifacts 1.3.0. Ready PR #45 open; CI running (secret-scan, template build on Linux and Windows, spec-lint with mutants), watched by commit, ~25 min; merge on green, then the plugins on this PC are updated.",
+      "expected": "11 Oct ~04:45",
+      "changed": "2026-10-11T03:59+01:00"
     },
     {
       "id": "DS38",
