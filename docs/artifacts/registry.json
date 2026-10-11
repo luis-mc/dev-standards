@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T03:03+01:00",
+  "updated": "2026-10-11T03:04+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -296,11 +296,11 @@
       "id": "AR32",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Running",
       "item": "Update the installed plugins to 1.2.0",
-      "detail": "Approved by you for tonight: after the DS27/AR31 release merges, update luismc-artifacts (1.2.0) and luismc-project-setup on this PC, backups first, and remove the local-only luismc-artifacts setting once the repo's project setting is live (AR30).",
-      "expected": "11 Oct ~03:30",
-      "changed": "2026-10-11T01:12+01:00"
+      "detail": "Updating the installed plugins after #42 (backups first): luismc-artifacts 1.2.0, luismc-project-setup 13.0.1; removing the local-only luismc-artifacts setting now that the repo's project setting is live.",
+      "expected": "11 Oct ~03:15",
+      "changed": "2026-10-11T03:04+01:00"
     },
     {
       "id": "AR33",
