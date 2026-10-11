@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.3.0
+**Version:** 1.3.1
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,11 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.3.1 — 2026-10-11.**
+
+- Every writing command also renders each page whose file differs from a fresh render (R7.5), so a plugin upgrade that changes the templates or the stylesheet brings every page up to date at the next status change instead of leaving the untouched pages in the older look until someone runs `render`.
+- The publish copy of Full Progress names each feature as text with a Copy link button for its file:/// address, because a page on claude.ai cannot open a file: link; its checklist rows carry no link.
 
 Version 1.0.0 recorded the work given to agents but not the session's own, and
 left built-but-unreleased work marked Done (finished-sounding), so the full-progress artifact said
@@ -661,17 +666,22 @@ double-click.
   and `check_r530_relative_links`.
 - **R5.31** — `pending` hands the session a separate publish copy: the same
   render with the same stamp, written to `.claude/artifacts-publish/<file>` in
-  the session's repository (git-ignored, R10.2), in which every link of R5.30 is
-  an absolute `file:///` URL built from the repository root on this machine:
+  the session's repository (git-ignored, R10.2). A page on claude.ai cannot open
+  a `file:` link, so in the publish copy each feature artifact in section 1 is
+  named as text with a "Copy link" button (`<button class="copy-link">`) that
+  copies its address to paste into the browser's address bar; the address is an
+  absolute `file:///` URL built from the repository root on this machine:
   `file:///` plus the absolute path with forward slashes, each segment
   percent-encoded (a space is `%20`), for example
   `file:///C:/GitHub/dev-standards/docs/artifacts/feature-x.html`. The target is
   the feature file in the session's checkout (`<root>/docs/artifacts/`) when
-  that file exists there, else the same file in the record worktree. Next to each
-  link the publish copy shows the path as text (`<span class="local-path">`),
-  because some browsers block `file:` links from a web page; the text can be
-  copied. The publish copy is never committed. Verified by
-  `publish_copy_has_file_links`, `publish_copy_path_encoding` and
+  that file exists there, else the same file in the record worktree. The address
+  is shown as selectable text (`<code class="local-path">`, hidden until then)
+  only when the clipboard refuses. The publish copy has no link to a feature
+  file anywhere: its checklist rows carry none, and only section 1 has the
+  buttons, one per feature. The publish copy is never committed. Verified by
+  `publish_copy_has_file_links`, `publish_copy_path_encoding`,
+  `publish_copy_with_partial_links_keeps_relative_for_the_rest` and
   `test_pending_and_mark_published`.
 - **R5.32** — `mark-published` records the SHA-256 of the committed render, not
   of the publish copy (R4.3), so writing a publish copy never makes the record
@@ -812,6 +822,12 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
   nearest allowed status (`Merged` → `Live`).
 - **R7.4** — Rendering is deterministic: the same record and the same stamp give
   byte-identical HTML.
+- **R7.5** — Every writing command except `render` (which does this itself) also
+  renders, with a new stamp, each artifact whose file differs from a fresh render
+  with that file's own stamp, so a plugin upgrade that changes the templates or
+  the stylesheet brings every page up to date at the next change, not only the
+  pages that change names (INV-3). An artifact whose content is invalid is
+  skipped as in R7.1a. A page that is already up to date keeps its stamp.
 
 ---
 
@@ -1059,7 +1075,7 @@ Reads the hook input; takes the task ID from the current branch name
 - **R13.1** — `tools/test_project_artifacts.py` builds throwaway git repos with
   a bare remote and proves each command, each check of §14 (one fixture per
   check that fails without it), INV-1 to INV-3, R4.13 to R4.27, R6.10, R6.11, R5.31, R5.32,
-  R7.4, R9.5 and R10.6.
+  R7.4, R7.5, R9.5 and R10.6.
 - **R13.2** — `tools/test_project_artifacts_hooks.py` feeds sample hook input
   to each hook and asserts the queue, the exit code and the output, including
   R8.4, R8.8 to R8.15 and INV-4, and that every hook does nothing without a

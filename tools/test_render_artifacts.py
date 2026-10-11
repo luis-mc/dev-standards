@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for claude/plugins/artifacts/scripts/render_artifacts.py (ARTIFACTSPEC 1.3.0, sections 4 to 6 and 14).
+"""Tests for claude/plugins/artifacts/scripts/render_artifacts.py (ARTIFACTSPEC 1.3.1, sections 4 to 6 and 14).
 
 Every check of check_html gets a fixture that breaks exactly that rule and must produce exactly that
 requirement ID; the clean fixtures must produce nothing. A check nobody has seen fire is not a check.
@@ -533,7 +533,7 @@ def full_progress_links_are_relative(fx):
     assert hrefs['AR6'] == AR_FILE and hrefs['AR5'] == AR_FILE and hrefs['AR16'] == AR_FILE
     assert hrefs['MP1'] == MP_FILE and hrefs['MP2'] == MP_FILE and hrefs['DS2'] == MP_FILE   # DS2 belongs to models
     assert hrefs['DS6'] is None                                                            # a project task has no link
-    assert 'file:' not in out and 'class="local-path"' not in out
+    assert 'href="file:' not in out and 'data-copy="' not in out and 'class="local-path"' not in out and 'class="copy-link"' not in out
     for href in (h for h in hrefs.values() if h):
         assert '/' not in href and ':' not in href and href.endswith('.html')
 
@@ -819,6 +819,8 @@ def check_r65_feature_tasks_linked_on_full_progress(fx):
     # R5.30: the committed file never carries the publish copy's absolute links
     expect(fx, sub1(fp, linked, '<a href="file:///C:/x/docs/artifacts/%s"><span class="task-id">AR6</span>Templates</a>' % AR_FILE),
            'full-progress', ['R5.30'])
+    # R5.31: the publish copy's rows carry no link, which the committed-file check reports as a missing link
+    expect(fx, sub1(fp, linked, '<span class="task-id">AR6</span>Templates'), 'full-progress', ['R6.5'])
     expect(fx, sub1(fp, linked, '<a href="docs/artifacts/%s"><span class="task-id">AR6</span>Templates</a>' % AR_FILE),
            'full-progress', ['R5.30'])
     start = fp.index('<tr data-task="AR6">')
@@ -1267,8 +1269,7 @@ def check_r530_relative_links(fx):
     assert fx.check(fp, 'full-progress') == []
     copy_ = fx.render('full-progress', links=publish_links(fx))
     got = fx.check(copy_, 'full-progress')
-    assert 'R5.30' in reqs(got), got                                     # absolute links are not what is committed
-    assert any('file:///' in m for _, m in got)
+    assert 'R6.5' in reqs(got) and 'R5.6' in reqs(got), got              # the copy has no relative links: it is not what is committed
     # section 1 and a task link, each broken alone
     expect(fx, sub1(fp, '<a href="%s">Feature: Project artifacts standard</a>' % AR_FILE,
                     '<a href="./%s">Feature: Project artifacts standard</a>' % AR_FILE), 'full-progress', ['R5.30'])
@@ -1290,45 +1291,49 @@ def publish_links(fx, root='/home/me/my repo'):
 @test
 @with_fixture
 def publish_copy_has_file_links(fx):
-    """R5.31: the copy differs from the committed render in its links, and shows each path as text."""
+    """R5.31: the copy names each feature as text with one Copy link button holding its file:/// address."""
     links = publish_links(fx)
     copy_ = fx.render('full-progress', links=links)
     committed = fx.render('full-progress')
     assert copy_ != committed
     dom = R.parse_dom(copy_)
-    hrefs = sorted({a.attrs['href'] for a in R.find_all(dom, 'a') if a.attrs['href'].startswith(('file:', 'feature-'))})
-    assert hrefs == sorted(v[0] for v in links.values()), hrefs
-    assert 'file:///' in copy_ and 'file:///home/me/my%20repo/docs/artifacts/' + AR_FILE in copy_
-    assert 'href="feature-' not in copy_                                                 # no relative link is left
-    # the path is text next to every link: section 1 and each feature task
-    shown = [R.text_of(n) for n in R.find_all(dom, 'span', 'local-path')]
-    assert shown.count('/home/me/my repo/docs/artifacts/' + AR_FILE) == 1 + 4      # section 1, then AR5, AR6, AR7, AR16
-    assert shown.count('/home/me/my repo/docs/artifacts/' + MP_FILE) == 1 + 3      # section 1, then DS2, MP1, MP2
-    for anchor in R.find_all(dom, 'a'):
-        if anchor.attrs['href'].startswith('file:'):
-            siblings = [n for n in anchor.parent.children if n.tag != '#text' or n.text.strip()]
-            following = siblings[siblings.index(anchor) + 1]
-            assert following.tag == 'span' and R.has_class(following, 'local-path'), anchor.attrs['href']
-            assert R.text_of(following).endswith(anchor.attrs['href'].rsplit('/', 1)[1])
-    # undoing the two differences gives the committed render back: the copy is the same page with the same stamp
-    back = re.sub(r' <span class="local-path">[^<]*</span>', '', copy_)
-    for key, (href, _shown) in links.items():
-        back = back.replace('href="%s"' % href, 'href="%s"' % next(e['file'] for e in fx.manifest['feature_artifacts'] if e['key'] == key))
-    assert back == committed
-    # the stamp, the registry script and the checklist are those of the committed file
+    assert 'href="file:' not in copy_ and 'href="feature-' not in copy_                 # a page on claude.ai cannot open them
+    assert not [a for a in R.find_all(dom, 'a') if a.attrs['href'].startswith(('file:', 'feature-'))]
+    buttons = R.find_all(dom, 'button', 'copy-link')
+    assert sorted(b.attrs['data-copy'] for b in buttons) == sorted(v[0] for v in links.values()), len(buttons)
+    assert len(buttons) == len(links) == len(fx.manifest['feature_artifacts'])           # exactly one per feature
+    assert 'file:///home/me/my%20repo/docs/artifacts/' + AR_FILE in copy_
+    # the buttons are in section 1 only; the checklist rows carry no link at all
+    table = R.find(dom, 'table', 'status-checklist')
+    assert not R.find_all(table, 'button', 'copy-link') and not R.find_all(table, 'a')
+    assert not R.find_all(table, 'code', 'local-path')
+    feature_list = R.find(dom, 'table', 'feature-list')
+    assert len(R.find_all(feature_list, 'button', 'copy-link')) == len(buttons)
+    for button in buttons:
+        assert R.text_of(button) == 'Copy link'
+        siblings = [n for n in button.parent.children if n.tag != '#text' or n.text.strip()]
+        before, after = siblings[siblings.index(button) - 1], siblings[siblings.index(button) + 1]
+        assert before.tag == 'span' and R.has_class(before, 'feature-name')              # the name, as text
+        assert after.tag == 'code' and R.has_class(after, 'local-path') and 'hidden' in after.attrs
+        assert R.text_of(after) == button.attrs['data-copy']                             # shown only if the clipboard refuses
+        assert button.attrs['title'].startswith('/home/me/my repo/docs/artifacts/')       # the path, as the tooltip
+    # the stamp, the registry script and the rows are those of the committed file
     assert R.text_of(R.find(dom, 'p', 'last-update')) == 'Last update: 10 Oct 12:39 (Lisbon)'
     assert json.loads(''.join(c.text for c in R.find(dom, 'script', pred=lambda n: n.attrs.get('type') == 'application/json').children)) == fx.registry
+    assert len(R.find_all(R.find(R.parse_dom(committed), 'table', 'status-checklist'), 'tr')) == len(R.find_all(table, 'tr'))
 
 
 @test
 @with_fixture
 def publish_copy_path_encoding(fx):
-    """R5.31: the href is as given (percent-encoded by the caller), the path text is escaped, not encoded."""
+    """R5.31: the address is as given (percent-encoded by the caller), the path text is escaped, not encoded."""
     links = {'artifacts': ('file:///C:/My%20Docs/a%26b/docs/artifacts/' + AR_FILE, 'C:/My Docs/a&b/docs/artifacts/' + AR_FILE),
              'models': ('file:///C:/My%20Docs/a%26b/docs/artifacts/' + MP_FILE, 'C:/My Docs/a&b/docs/artifacts/' + MP_FILE)}
     out = fx.render('full-progress', links=links)
-    assert 'href="file:///C:/My%20Docs/a%26b/docs/artifacts/' + AR_FILE + '"' in out
-    assert '<span class="local-path">C:/My Docs/a&amp;b/docs/artifacts/' + AR_FILE + '</span>' in out
+    assert 'data-copy="file:///C:/My%20Docs/a%26b/docs/artifacts/' + AR_FILE + '"' in out
+    assert 'title="C:/My Docs/a&amp;b/docs/artifacts/' + AR_FILE + '"' in out
+    assert '<code class="local-path" hidden>file:///C:/My%20Docs/a%26b/docs/artifacts/' + AR_FILE + '</code>' in out
+    assert 'href="file:' not in out
     assert '&amp;amp;' not in out and 'a&b' not in out.replace('a&amp;b', '')
     # a feature artifact has no links to feature files, whatever it is given
     assert fx.render('artifacts', links=links) == fx.render('artifacts')
@@ -1338,7 +1343,8 @@ def publish_copy_path_encoding(fx):
 @with_fixture
 def publish_copy_with_partial_links_keeps_relative_for_the_rest(fx):
     out = fx.render('full-progress', links={'artifacts': ('file:///x/' + AR_FILE, '/x/' + AR_FILE)})
-    assert 'href="file:///x/%s"' % AR_FILE in out and 'href="%s"' % MP_FILE in out
+    assert out.count('class="copy-link"') == 1 and 'data-copy="file:///x/%s"' % AR_FILE in out
+    assert 'href="%s"' % MP_FILE in out and 'href="%s"' % AR_FILE not in out            # the rest stay relative links
 
 
 # ------------------------------------------------------------------ decisions (section 5.4)

@@ -858,20 +858,26 @@ def _columns(kind: str, label: str) -> list:
     return base + ['Expected (%s)' % label]
 
 
-def _local_path(text: str) -> str:
-    """The path of a linked feature file, shown as text beside its link so it can be copied (R5.31)."""
-    return ' <span class="local-path">%s</span>' % esc(text)
+def _copy_link(link) -> str:
+    """R5.31: a page on claude.ai cannot open a file: link, so the publish copy names the feature as text and
+    gives a button that copies its file:/// address to paste into the address bar; the address is shown, to
+    copy by hand, only when the clipboard refuses."""
+    return (' <button type="button" class="copy-link" data-copy="%s" title="%s">Copy link</button>'
+            '<code class="local-path" hidden>%s</code>' % (esc(link[0]), esc(link[1]), esc(link[0])))
 
 
 def _link(link, label: str) -> str:
-    """`label` as a link to a feature file; `link` is (href, path text or '')."""
-    return '<a href="%s">%s</a>%s' % (esc(link[0]), label, _local_path(link[1]) if link[1] else '')
+    """`label` as a link to a feature file; `link` is (href, path text or ''). With path text (the publish
+    copy) the label is plain text with a copy button instead (R5.31)."""
+    if link[1]:
+        return '<span class="feature-name">%s</span>%s' % (label, _copy_link(link))
+    return '<a href="%s">%s</a>' % (esc(link[0]), label)
 
 
 def _row(task: dict, kind: str, feature_links: dict) -> str:
     item = '<span class="task-id">%s</span>%s' % (esc(task['id']), esc(task['item']))
     link = feature_links.get(task.get('owner')) if kind == 'full-progress' else None
-    if link:
+    if link and not link[1]:             # the publish copy's rows stay text; section 1 has the copy buttons
         item = _link(link, item)
     app = '<td>%s</td>' % ('<code>%s</code>' % esc(task['app']) if task.get('app') else '') if kind == 'full-progress' else ''
     expected = esc(task['expected'])

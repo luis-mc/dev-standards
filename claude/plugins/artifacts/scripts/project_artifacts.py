@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """project_artifacts.py - the only writer of a project's artifact record.
 
-Implements ARTIFACTSPEC 1.3.0: section 4 (the record, time, the record
+Implements ARTIFACTSPEC 1.3.1: section 4 (the record, time, the record
 worktree and its commits), section 7 (every command), the bookkeeping of
 section 9 (`pending`, `mark-published`; only Full Progress is published, a
 feature artifact is a standalone file) and the record-level checks of
@@ -1288,6 +1288,8 @@ def finish_change(ctx, rec, result):
                 rec.skipped.append(key)
             else:
                 rec.render_keys.setdefault(key, 'new')
+    else:
+        refresh_stale(rec)
     rec.touch()
     now = rec.now()
     write_text(rec.dir / 'manifest.json', dump_json(rec.manifest))
@@ -1309,6 +1311,22 @@ def finish_change(ctx, rec, result):
     result['rendered'] = sorted(rec.rendered)
     result['stamp'] = now.iso
     return add_notes(result, remaining, sorted(set(rec.skipped)))
+
+
+def refresh_stale(rec):
+    """R7.5: also render, with a new stamp, every artifact whose file differs from a fresh render with its own
+    stamp: after a plugin upgrade changes the templates or the stylesheet, the next writing command brings every
+    page up to date, not only the ones it changes. Compared before touch(), so a command that changes no task
+    moves no stamp of an up-to-date page."""
+    for key, _kind, e in rec.artifacts():
+        if key in rec.render_keys or not isinstance(e.get('file'), str):
+            continue
+        if key in rec.broken():          # cannot be rendered until edit-content fixes it (R7.1a)
+            continue
+        old = read_html(rec.dir / e['file'])
+        st = existing_stamp(old) if old is not None else None
+        if st is None or render_one(rec, key, stamp_text_from_iso(st), st).replace('\r\n', '\n') != old:
+            rec.render_keys[key] = 'new'
 
 
 def all_findings(rec):
