@@ -409,8 +409,8 @@
       "status": "Running",
       "item": "Full Progress: release timeline above the status table",
       "detail": "One Sonnet agent on AR43-release-timeline",
-      "expected": "11 Oct ~18:45",
-      "changed": "2026-10-11T17:53+01:00",
+      "expected": "11 Oct ~18:42",
+      "changed": "2026-10-11T17:54+01:00",
       "expected_basis": "agent ~45 min from 17:58"
     },
     {
