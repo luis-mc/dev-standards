@@ -1,6 +1,6 @@
 {
   "title": "Feature: Test and validation cost",
   "hero": "What our tests and checks cost, where they repeat, and what to cut",
-  "lede": "Studied 11 October: the checks are good, but they run too often and for everything. Half of all CI time was agents’ branch runs, a luismc-artifacts change waits 17.5 min where 3.8 would prove the same, and the mutation pass and a duplicate renderer group are most of the rest. Eight fixes are ranked below; the owner’s choices are in D1 to D8, and all eight are To do.",
+  "lede": "All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.",
   "extra_css": ".tc-figure{margin:1rem 0 1.5rem;overflow-x:auto}.tc-chart{display:block;width:100%;max-width:640px;height:auto}.tc-chart text{font-family:var(--font-mono);font-size:12px;fill:var(--ink)}.tc-chart .tc-muted{fill:var(--ink-muted);font-size:11px}.tc-chart .tc-on{fill:var(--on-signal);font-weight:600}.tc-a{fill:var(--signal)}.tc-b{fill:var(--rule-strong)}.tc-c{fill:var(--running-mark)}.tc-axis{stroke:var(--rule-strong);stroke-width:1}.tc-figure figcaption{font-size:.85rem;color:var(--ink-muted);margin-top:.4rem;max-width:65ch}"
 }
