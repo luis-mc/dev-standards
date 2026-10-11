@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T23:56+01:00",
+  "updated": "2026-10-12T00:01+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1350,11 +1350,11 @@
       "id": "TC9",
       "owner": "test-cost",
       "app": "luismc-project-setup",
-      "status": "Built",
+      "status": "Live",
       "item": "Light or heavy from measured suite times, not the session's guess",
-      "detail": "Branch TC9-test-and-pr-guards (0cbd767): suites.json + run_suite.py (times in .delivery/), session_guard.py blocks full local runs of heavy suites, repeat full runs of a tested tree and ready PRs off *-integration; join.py works without gate.json. Branch CI green 3m33s; 17 new guard cases",
-      "expected": "11 Oct",
-      "changed": "2026-10-11T23:52+01:00",
+      "detail": "Released in #53 (fe3af00, 00:00): STACKSPEC 8.2.0, luismc-project-setup 14.2.0, luismc-artifacts 1.6.1",
+      "expected": "12 Oct",
+      "changed": "2026-10-12T00:01+01:00",
       "rides": "DS55"
     },
     {
