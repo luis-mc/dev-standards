@@ -1232,9 +1232,9 @@
       "status": "Running",
       "item": "Generic CI speed: split or shard the dominant step, e2e shards",
       "detail": "One Sonnet agent on TC8-ci-speed-generic",
-      "expected": "11 Oct ~18:50",
-      "changed": "2026-10-11T18:22+01:00",
-      "expected_basis": "agent ~50 min from 18:00"
+      "expected": "11 Oct ~19:12",
+      "changed": "2026-10-11T18:23+01:00",
+      "expected_basis": "agent ~50 min from 18:22"
     }
   ]
 }
