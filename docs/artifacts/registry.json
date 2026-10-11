@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T01:24+01:00",
+  "updated": "2026-10-11T01:25+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -311,6 +311,16 @@
       "detail": "Idea from another project's page: an Expected entry may carry its basis (e.g. 'agent slot ~01:30, ~1.5 h'). Starts after AR31, which owns the same files.",
       "expected": "11 Oct ~05:30",
       "changed": "2026-10-11T01:23+01:00"
+    },
+    {
+      "id": "AR34",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "Record worktree location is a setting",
+      "detail": "Raised by another project: the record worktree always lives at <repo>/.claude/worktrees/artifacts-record, so a project whose rule keeps worktrees elsewhere cannot follow it. Make the location a per-project setting (default unchanged). The plugin names no other project or path. Starts after AR31, which owns the same code.",
+      "expected": "11 Oct ~05:30",
+      "changed": "2026-10-11T01:25+01:00"
     },
     {
       "id": "DS1",
