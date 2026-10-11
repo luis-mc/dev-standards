@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T02:12+01:00",
+  "updated": "2026-10-11T02:13+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -708,9 +708,9 @@
       "app": "",
       "status": "Running",
       "item": "CI skips docs-only changes",
-      "detail": "Your rule: a merge that differs from the tested PR head only in docs, Markdown or (per project) mobile files skips the second full suite; docs-only pushes such as the luismc-artifacts record commits start no full CI at all. Skip-safe paths default to docs/ and *.md; a project adds its mobile folders when they have their own workflows. Rides STACKSPEC 7.1.0.",
+      "detail": "Contract and STACKSPEC 7.1.0 text written (§13.1): a default-branch run also skips when the merge differs from the tested PR head only in paths the workflow ignores (docs/**, **/*.md, mobile folders with their own workflows), read from the workflow's own paths-ignore so there is one list. Docs-only pushes such as the record commits already start no run. Being built by the agent that owns ci.yml.",
       "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T02:12+01:00"
+      "changed": "2026-10-11T02:13+01:00"
     },
     {
       "id": "MP1",
