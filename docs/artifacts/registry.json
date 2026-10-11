@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T23:32+01:00",
+  "updated": "2026-10-11T23:33+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1356,6 +1356,18 @@
       "expected": "12 Oct ~00:15",
       "changed": "2026-10-11T23:32+01:00",
       "expected_basis": "agent ~40 min from 23:40",
+      "rides": "DS55"
+    },
+    {
+      "id": "TC10",
+      "owner": "test-cost",
+      "app": "luismc-project-setup",
+      "status": "Running",
+      "item": "Change notes at commit; every shipped rule line names its check",
+      "detail": "Agent B, branch TC10-commit-check-and-rule-tags: pre-commit change-note check, rule tags on shipped rule files (project-setup and artifacts), test for untagged lines",
+      "expected": "12 Oct ~00:10",
+      "changed": "2026-10-11T23:33+01:00",
+      "expected_basis": "agent ~30 min from 23:40",
       "rides": "DS55"
     }
   ]
