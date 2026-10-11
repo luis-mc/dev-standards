@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T11:06+01:00",
+  "updated": "2026-10-11T11:25+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -930,12 +930,12 @@
       "id": "TC1",
       "owner": "test-cost",
       "app": "",
-      "status": "Needs you",
+      "status": "To do",
       "item": "Mutation passes only when their files change, all nightly",
-      "detail": "S2: saves 8.8 min on PRs that leave the delivery scripts alone; waits on decision D6",
+      "detail": "Chosen by the owner 11 Oct; next train after this study",
       "expected": "12 Oct",
-      "changed": "2026-10-11T11:02+01:00",
-      "expected_basis": "your choice in D6, then one workflow change"
+      "changed": "2026-10-11T11:25+01:00",
+      "expected_basis": "the next train, one change per task"
     },
     {
       "id": "TC2",
