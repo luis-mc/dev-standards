@@ -663,6 +663,240 @@ def skip_fetches_a_head_commit_that_is_missing_locally():
 
 
 # ---------------------------------------------------------------------------
+# ci_skip_check: a merge that differs only in push paths-ignore paths (DS39)
+# ---------------------------------------------------------------------------
+
+WORKFLOW_BLOCK = """name: CI
+on:
+  pull_request:
+    types: [opened]
+    paths-ignore:
+      - 'pr-only/**'
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'apps/ios/**'   # a comment
+      - '**/*.md'
+      - "docs/**"
+      - assets/*.png
+concurrency:
+  group: x
+"""
+
+WORKFLOW_FLOW = WORKFLOW_BLOCK.replace(
+    "    paths-ignore:\n      - 'apps/ios/**'   # a comment\n      - '**/*.md'\n"
+    "      - \"docs/**\"\n      - assets/*.png\n",
+    "    paths-ignore: ['apps/ios/**', '**/*.md', \"docs/**\", assets/*.png]\n")
+
+
+def import_skip_module():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ci_skip_check_under_test", CI_SKIP)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def make_merge_repo(root: Path, *, workflow: str | None, extra: dict[str, str],
+                    gate: str | None = None) -> dict:
+    """main: A (workflow, optional gate.json), then the PR head H (b.txt) squashed as S
+    (same tree as H), then D, which writes `extra`. The PR head's run passed."""
+    repo = root / "work"
+    repo.mkdir()
+    git(repo, "init", "-q", "-b", "main")
+    (repo / ".github/workflows").mkdir(parents=True)
+    (repo / "a.txt").write_text("a\n", encoding="utf-8")
+    if workflow is not None:
+        (repo / ".github/workflows/ci.yml").write_text(workflow, encoding="utf-8")
+    if gate is not None:
+        (repo / "scripts/delivery").mkdir(parents=True)
+        (repo / "scripts/delivery/gate.json").write_text(gate, encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "A")
+    git(repo, "checkout", "-q", "-b", "pr")
+    head = commit_file(repo, "b.txt", "b\n", "H")
+    git(repo, "checkout", "-q", "main")
+    git(repo, "merge", "--squash", "pr")
+    git(repo, "commit", "-q", "-m", "S")
+    for name, text in extra.items():
+        (repo / name).parent.mkdir(parents=True, exist_ok=True)
+        (repo / name).write_text(text, encoding="utf-8")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "D")
+    return {"repo": repo, "head": head, "sha": git(repo, "rev-parse", "HEAD")}
+
+
+def skip_for_extra(workflow: str | None, extra: dict[str, str], gate: str | None = None) -> dict:
+    sb = Sandbox()
+    try:
+        r = make_merge_repo(sb.dir, workflow=workflow, extra=extra, gate=gate)
+        rc, out, err, o = skip_run(sb, r["repo"], r["sha"], skip_fixture(r["sha"], r["head"]))
+        expect_exit(rc, 0, out, err)
+        return o
+    finally:
+        sb.close()
+
+
+@test
+def skip_true_when_only_docs_differ():
+    o = skip_for_extra(WORKFLOW_BLOCK, {"docs/x/new.txt": "d\n"})
+    check(o.get("skip") == "true", f"{o}")
+    reason = o.get("reason", "")
+    check("#7" in reason and "docs/x/new.txt" in reason, f"reason should name the PR and the paths: {reason}")
+
+
+@test
+def skip_true_when_only_markdown_differs_anywhere():
+    for path in ("README.md", "deep/er/NOTES.md"):
+        o = skip_for_extra(WORKFLOW_BLOCK, {path: "m\n"})
+        check(o.get("skip") == "true", f"{path}: {o}")
+    # Contrast: a file that only looks like it (`.md` as a directory, `.mdx`) runs the suite.
+    for path in ("notes.mdx", "x.md/real.txt"):
+        o = skip_for_extra(WORKFLOW_BLOCK, {path: "m\n"})
+        check(o.get("skip") == "false", f"{path}: {o}")
+
+
+@test
+def skip_true_when_only_an_ignored_mobile_folder_differs():
+    o = skip_for_extra(WORKFLOW_BLOCK, {"apps/ios/App/Info.plist": "p\n", "docs/a.txt": "d\n"})
+    check(o.get("skip") == "true", f"{o}")
+    # `*` stops at `/`: assets/*.png ignores assets/a.png but not assets/sub/a.png.
+    check(skip_for_extra(WORKFLOW_BLOCK, {"assets/a.png": "x\n"}).get("skip") == "true", "assets/a.png")
+    check(skip_for_extra(WORKFLOW_BLOCK, {"assets/sub/a.png": "x\n"}).get("skip") == "false", "assets/sub/a.png")
+
+
+@test
+def skip_false_when_any_other_file_differs():
+    o = skip_for_extra(WORKFLOW_BLOCK, {"docs/ok.md": "d\n", "src/main.ts": "x\n"})
+    check(o.get("skip") == "false", f"{o}")
+    check("src/main.ts" in o.get("reason", ""), f"reason should name the live path: {o}")
+    # A path ignored only for pull requests is not ignored for push.
+    check(skip_for_extra(WORKFLOW_BLOCK, {"pr-only/a.txt": "x\n"}).get("skip") == "false", "pr-only")
+    # An ignored folder one level too deep or too shallow does not match.
+    check(skip_for_extra(WORKFLOW_BLOCK, {"other/docs/a.txt": "x\n"}).get("skip") == "false", "other/docs")
+
+
+@test
+def skip_reads_the_one_line_paths_ignore_form_too():
+    check(skip_for_extra(WORKFLOW_FLOW, {"docs/a.txt": "d\n"}).get("skip") == "true", "flow form")
+    check(skip_for_extra(WORKFLOW_FLOW, {"src/a.txt": "d\n"}).get("skip") == "false", "flow form, live path")
+
+
+@test
+def skip_false_when_the_workflow_has_no_push_paths_ignore():
+    no_list = WORKFLOW_BLOCK.replace(
+        "    paths-ignore:\n      - 'apps/ios/**'   # a comment\n      - '**/*.md'\n"
+        "      - \"docs/**\"\n      - assets/*.png\n", "")
+    check(no_list != WORKFLOW_BLOCK, "fixture should have lost the push list")
+    o = skip_for_extra(no_list, {"docs/a.txt": "d\n"})
+    check(o.get("skip") == "false" and "paths-ignore" in o.get("reason", ""), f"{o}")
+    # ... no push trigger at all, and no workflow file in the commit.
+    o = skip_for_extra("name: CI\non:\n  pull_request:\n    types: [opened]\n", {"docs/a.txt": "d\n"})
+    check(o.get("skip") == "false", f"{o}")
+    check(skip_for_extra(None, {"docs/a.txt": "d\n"}).get("skip") == "false", "no workflow file")
+
+
+@test
+def skip_false_when_the_list_cannot_be_parsed():
+    for label, text in (
+        ("an anchor", WORKFLOW_BLOCK.replace("      - '**/*.md'", "      - *md")),
+        ("a nested list", WORKFLOW_BLOCK.replace("      - '**/*.md'", "      - ['**/*.md']")),
+        ("an unquoted flow list", WORKFLOW_BLOCK.replace(
+            "    paths-ignore:\n      - 'apps/ios/**'", "    paths-ignore: *shared\n      - 'apps/ios/**'")),
+        ("a character class", WORKFLOW_BLOCK.replace("'**/*.md'", "'docs/[a-z]*'")),
+        ("no on block", "name: CI\njobs: {}\n"),
+    ):
+        o = skip_for_extra(text, {"docs/a.txt": "d\n"})
+        check(o.get("skip") == "false", f"{label}: expected skip=false, got {o}")
+
+
+@test
+def skip_ci_skip_paths_in_gate_json_replaces_the_workflow_list():
+    gate = json.dumps({"ci_skip_paths": ["generated/**"]})
+    # docs/** is in the workflow list but the override replaces it ...
+    check(skip_for_extra(WORKFLOW_BLOCK, {"docs/a.txt": "d\n"}, gate).get("skip") == "false", "override replaces")
+    # ... and the override alone decides, even for a workflow without any list.
+    o = skip_for_extra("name: CI\non:\n  push:\n    branches: [main]\n", {"generated/a.ts": "g\n"}, gate)
+    check(o.get("skip") == "true", f"{o}")
+    # An unusable override is not guessed around.
+    check(skip_for_extra(WORKFLOW_BLOCK, {"docs/a.txt": "d\n"}, '{"ci_skip_paths": "docs/**"}').get("skip") == "false",
+          "string override")
+    check(skip_for_extra(WORKFLOW_BLOCK, {"docs/a.txt": "d\n"}, "{not json").get("skip") == "false", "bad gate.json")
+    # A gate.json without the key leaves the workflow list in charge.
+    check(skip_for_extra(WORKFLOW_BLOCK, {"docs/a.txt": "d\n"}, "{}").get("skip") == "true", "no key")
+
+
+@test
+def skip_ignored_paths_still_need_a_passed_run():
+    sb = Sandbox()
+    try:
+        r = make_merge_repo(sb.dir, workflow=WORKFLOW_BLOCK, extra={"docs/a.txt": "d\n"})
+        rc, out, err, o = skip_run(sb, r["repo"], r["sha"],
+                                   skip_fixture(r["sha"], r["head"], runs={"workflow_runs": []}))
+        check(o.get("skip") == "false", f"a docs-only diff must not skip without a passed run: {o}")
+    finally:
+        sb.close()
+
+
+@test
+def every_track_ci_skips_docs_and_markdown_on_push():
+    mod = import_skip_module()
+    for track in TRACKS:
+        text = read(TOOLING / track / ".github/workflows/ci.yml")
+        listed = mod.push_paths_ignore(text)
+        check(listed and "docs/**" in listed and "**/*.md" in listed,
+              f"{track}: push paths-ignore must list docs/** and **/*.md, got {listed}")
+        for pattern in listed:
+            mod.glob_regex(pattern)  # every shipped pattern is one the skip check understands
+        check(mod.glob_regex("docs/**").fullmatch("docs/a/b.txt") and mod.glob_regex("**/*.md").fullmatch("a/b.md")
+              and mod.glob_regex("**/*.md").fullmatch("b.md") and not mod.glob_regex("docs/**").fullmatch("docsx/a"),
+              "glob semantics")
+
+
+@test
+def skip_check_detects_each_defect():
+    """The tests above can fail: break ci_skip_check.py in each way and expect one to notice."""
+    global CI_SKIP
+    original = CI_SKIP.read_text(encoding="utf-8").replace("\r\n", "\n")
+    cases = [
+        ("every changed path is no longer required to match",
+         "    live = [p for p in changed if not any(r.fullmatch(p) for r in regexes)]",
+         "    live = [p for p in changed if not any(r.fullmatch(p) for r in regexes)][:0]"),
+        ("`**` stops crossing `/`", '            out += ".*"\n', '            out += "[^/]*"\n'),
+        ("`*` crosses `/`", '            out += "[^/]*"\n            i += 1', '            out += ".*"\n            i += 1'),
+        ("a prefix match instead of a full match", "r.fullmatch(p) for r in regexes", "r.match(p) for r in regexes"),
+        ("the override ignored", "            return override\n", "            pass\n"),
+        ("the pull_request list read as the push list",
+         '    push_at = next((k for k, ln in enumerate(block) if re.fullmatch(r"  push:\\s*(#.*)?", ln)), None)',
+         '    push_at = next((k for k, ln in enumerate(block) if re.fullmatch(r"  pull_request:\\s*(#.*)?", ln)), None)'),
+        ("an unsupported glob accepted", 'if re.search(r"[?\\[\\]+!]", pattern):', "if False:"),
+        ("no list means skip", '        raise Undecided(f"{wf_path} has no push paths-ignore list")', "        return ['**']"),
+    ]
+    detect = [skip_true_when_only_docs_differ, skip_true_when_only_markdown_differs_anywhere,
+              skip_true_when_only_an_ignored_mobile_folder_differs, skip_false_when_any_other_file_differs,
+              skip_reads_the_one_line_paths_ignore_form_too, skip_false_when_the_workflow_has_no_push_paths_ignore,
+              skip_false_when_the_list_cannot_be_parsed, skip_ci_skip_paths_in_gate_json_replaces_the_workflow_list]
+    saved = CI_SKIP
+    with tempfile.TemporaryDirectory(prefix="ds39-") as d:
+        for label, old, new in cases:
+            mutated = mutate(original, old, new)
+            path = Path(d) / "ci_skip_check.py"
+            path.write_text(mutated, encoding="utf-8", newline="\n")
+            CI_SKIP = path
+            try:
+                caught = False
+                for fn in detect:
+                    try:
+                        fn()
+                    except Exception:  # noqa: BLE001 - any failing test is a detection
+                        caught = True
+                        break
+                check(caught, f"mutation '{label}' was not detected by any skip test")
+            finally:
+                CI_SKIP = saved
+
+
+# ---------------------------------------------------------------------------
 # reach_check
 # ---------------------------------------------------------------------------
 
