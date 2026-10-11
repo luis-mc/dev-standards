@@ -364,6 +364,17 @@
       "changed": "2026-10-11T10:06+01:00"
     },
     {
+      "id": "AR39",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "Release luismc-artifacts 1.3.1 (AR35, AR37)",
+      "detail": "Join both branches, fold change notes, one ready-PR CI run, merge on green, update the plugin here",
+      "expected": "11 Oct ~11:30",
+      "changed": "2026-10-11T10:18+01:00",
+      "expected_basis": "waits on the AR37 agent (~10:45), then join ~15 min and CI ~17 min"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
