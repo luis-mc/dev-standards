@@ -427,11 +427,11 @@
       "id": "DL3",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Agent rule: affected suites, full suite only on a valve",
-      "detail": "Rule text on TC6-integration: the full suite at most once, only when a change trips a full-run valve",
+      "detail": "Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0",
       "expected": "11 Oct",
-      "changed": "2026-10-11T12:04+01:00"
+      "changed": "2026-10-11T14:41+01:00"
     },
     {
       "id": "DL4",
