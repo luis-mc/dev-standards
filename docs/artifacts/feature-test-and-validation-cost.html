@@ -264,6 +264,50 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
 .status-count-tile.status-on-hold { border-top-color: var(--rule-strong); border-top-style: dashed; }
 .status-count-tile.status-failed { border-top-color: var(--failed); }
 
+/* At a glance (section 0): one labelled row per kind, items one per line */
+.at-a-glance {
+  margin: 1.2em 0;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  max-width: 60em;
+}
+.glance-group {
+  display: grid;
+  grid-template-columns: 11rem 1fr;
+  gap: .3rem 1rem;
+  padding: .65em .9em;
+  border-top: 1px solid var(--rule);
+  border-left: 4px solid var(--rule-strong);
+}
+.glance-group:first-child { border-top: 0; }
+.glance-label {
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--ink-muted);
+  padding-top: .15em;
+}
+.glance-group ul { list-style: none; margin: 0; padding: 0; min-width: 0; }
+.glance-group li { padding: .1em 0; overflow-wrap: anywhere; }
+.glance-group p { margin: 0; color: var(--ink-muted); }
+.glance-expected { font-size: .85rem; color: var(--ink-muted); margin-left: .5em; }
+.glance-more { color: var(--ink-muted); font-size: .88rem; }
+.glance-basis { display: block; font-size: .72rem; line-height: 1.3; color: var(--ink-muted); }
+.glance-you { border-left-color: var(--signal); }
+.glance-you .glance-label { color: var(--ink); }
+.glance-you:has(li) { background: var(--waiting-bg); border-left-width: 6px; }
+.glance-you:has(li) .glance-label { color: var(--signal); }
+.glance-running { border-left-color: var(--running-mark); }
+.glance-running li { background: var(--running-bg); padding-inline: .4em; margin-block: .15em; }
+.glance-built { border-left-color: var(--live); }
+.glance-waiting { border-left-color: var(--rule-strong); border-left-style: dashed; }
+.glance-live { border-left-color: var(--live); }
+@media (max-width: 40rem) {
+  .glance-group { grid-template-columns: 1fr; }
+}
+
 /* Status chips */
 .status-chip {
   display: inline-block;
@@ -379,6 +423,24 @@ a .task-id { color: inherit; }
   white-space: nowrap;
 }
 .copy-link:hover, .copy-link:focus-visible { color: var(--signal); border-color: var(--signal); }
+
+/* Section 1 sort headers (R5.39) */
+.sort-header {
+  padding: 0;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  text-align: inherit;
+  cursor: pointer;
+}
+.sort-header:hover, .sort-header:focus-visible { color: var(--signal); }
+.sort-arrow { display: inline-block; min-width: 1ch; }
+
+/* A feature page's line under its stamp (R5.38) */
+.full-progress-published { margin: .2rem 0 0; font-size: .85rem; color: var(--ink-muted); }
 
 /* The address itself, shown only when the clipboard refuses, to copy by hand */
 .local-path {
@@ -587,18 +649,41 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>The question</a><a href="#s2"><b>2</b>How it was measured</a><a href="#s3"><b>3</b>Hypotheses and verdicts</a><a href="#s4"><b>4</b>Where the time goes</a><a href="#s5"><b>5</b>The mutation pass</a><a href="#s6"><b>6</b>Repeats and noise</a><a href="#s7"><b>7</b>What is wrong</a><a href="#s8"><b>8</b>Solutions, ranked</a><a href="#s9"><b>9</b>Decisions</a><a href="#s10"><b>10</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Test and validation cost</h1><p>What our tests and checks cost, where they repeat, and what to cut</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T14:25+01:00">11 Oct 14:25</time> (Lisbon)</p>
-<p class="lede">Studied 11 October: the checks are good, but they run too often and for everything. Half of all CI time was agents’ branch runs, a luismc-artifacts change waits 17.5 min where 3.8 would prove the same, and the mutation pass and a duplicate renderer group are most of the rest. Eight fixes are ranked below; the owner’s choices are in D1 to D8, and all eight are To do. <strong>Nothing needs you.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-built"><div class="count">5</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div></div>
+<p class="last-update">Last update: <time datetime="2026-10-11T14:40+01:00">11 Oct 14:40</time> (Lisbon)</p>
+<p class="lede">Studied 11 October: the checks are good, but they run too often and for everything. Half of all CI time was agents’ branch runs, a luismc-artifacts change waits 17.5 min where 3.8 would prove the same, and the mutation pass and a duplicate renderer group are most of the rest. Eight fixes are ranked below; the owner’s choices are in D1 to D8, and all eight are To do.</p>
+<div class="at-a-glance">
+<div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
+<p class="glance-none">Nothing needs you.</p>
+</div>
+<div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
+<ul>
+<li data-glance-task="TC6"><span class="task-id">TC6</span>Release the test-cost train (all eight fixes and DS48) <span class="glance-expected">11 Oct ~14:45</span><span class="glance-basis">spec-lint with mutants ~20 min from 14:25</span></li>
+</ul>
+</div>
+<div class="glance-group glance-built" data-glance="built"><div class="glance-label">Built, not released</div>
+<ul>
+<li data-glance-task="TC3"><span class="task-id">TC3</span>Retire the fake-renderer group</li>
+<li data-glance-task="TC5"><span class="task-id">TC5</span>Push the record once per turn</li>
+<li data-glance-task="TC2"><span class="task-id">TC2</span>A mutant stops at its first failed check</li>
+<li data-glance-task="TC4"><span class="task-id">TC4</span>Cancel superseded ready-PR spec-lint runs</li>
+</ul>
+</div>
+<div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
+<ul>
+<li data-glance-task="TC1"><span class="task-id">TC1</span>Mutation passes only when their files change, all nightly</li>
+</ul>
+</div>
+</div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">1</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">4</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next</strong></td></tr>
 <tr data-task="TC6"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">TC6</span>Release the test-cost train (all eight fixes and DS48)</td><td>PR #47 second fix forward: the artifact-prune test now expects Package next to CI; CI re-running</td><td>11 Oct ~14:45<span class="expected-basis">spec-lint with mutants ~20 min from 14:25</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
+<tr data-task="TC1"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC1</span>Mutation passes only when their files change, all nightly</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
 <tr data-task="TC3"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">TC3</span>Retire the fake-renderer group</td><td>Fake-renderer group removed; its one unique case now uses the real renderer</td><td>11 Oct</td></tr>
 <tr data-task="TC5"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">TC5</span>Push the record once per turn</td><td>On TC5-record-push-once: commit always, push at turn end, in pending and before gh pr create/ready/merge; 106 + 88 tests pass</td><td>11 Oct</td></tr>
 <tr data-task="TC2"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">TC2</span>A mutant stops at its first failed check</td><td>On TC2-mutants-and-cleanup (17ee580): mutants stop at the first failed check; gate 606/606, cleanup 236/236 without mutants; full pass runs in the ready PR</td><td>11 Oct</td></tr>
-<tr data-task="TC1"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">TC1</span>Mutation passes only when their files change, all nightly</td><td>On DS43-ci-scoping (d0e97e3): ci_areas test passes; the workflow first runs in the ready PR</td><td>11 Oct</td></tr>
 <tr data-task="TC4"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">TC4</span>Cancel superseded ready-PR spec-lint runs</td><td>On DS43-ci-scoping (d0e97e3): ci_areas test passes; the workflow first runs in the ready PR</td><td>11 Oct</td></tr>
 </tbody></table></div>
 </section>

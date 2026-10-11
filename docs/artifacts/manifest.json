@@ -22,7 +22,8 @@
       "prefix": "AR",
       "apps": [
         "luismc-artifacts"
-      ]
+      ],
+      "updated": "2026-10-11T14:40+01:00"
     },
     {
       "key": "models",
@@ -31,7 +32,8 @@
       "prefix": "MP",
       "apps": [
         "luismc-project-setup"
-      ]
+      ],
+      "updated": "2026-10-11T14:40+01:00"
     },
     {
       "key": "test-cost",
@@ -42,7 +44,8 @@
         "spec-lint",
         "delivery scripts",
         "luismc-artifacts"
-      ]
+      ],
+      "updated": "2026-10-11T14:40+01:00"
     },
     {
       "key": "delivery-speed",
@@ -53,13 +56,14 @@
         "delivery scripts",
         "STACKSPEC",
         "tech-stack-setup"
-      ]
+      ],
+      "updated": "2026-10-11T14:40+01:00"
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-10-11T14:26+01:00",
+  "updated": "2026-10-11T14:40+01:00",
   "retired": [],
   "deleted": [
     {
