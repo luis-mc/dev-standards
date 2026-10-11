@@ -959,11 +959,11 @@
       "id": "DS45",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Agents test only what they touch",
-      "detail": "Rule text on TC6-integration; join skips its gate when the tree equals a trusted branch head (3 new mutants caught)",
+      "detail": "Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0",
       "expected": "11 Oct",
-      "changed": "2026-10-11T11:49+01:00"
+      "changed": "2026-10-11T14:40+01:00"
     },
     {
       "id": "DS46",
