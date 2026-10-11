@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T09:50+01:00",
+  "updated": "2026-10-11T09:51+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -756,11 +756,11 @@
       "id": "DS42",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Remove four agent worktrees still in use",
-      "detail": "The PC restarted, so the agents' jobs ended; removing the four worktrees",
-      "expected": "11 Oct ~05:00",
-      "changed": "2026-10-11T09:50+01:00"
+      "detail": "Four agent worktrees removed after the restart ended their jobs; only main and the record worktree remain",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T09:51+01:00"
     },
     {
       "id": "MP1",
