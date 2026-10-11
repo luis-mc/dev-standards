@@ -461,11 +461,13 @@ def sc_pr(t: T, shared: Path) -> None:
     integ = w.integration("integ", ["feat/d1", "feat/d2"])
     other = w.branch("feat/other")        # finished, but not part of this train
     unrelated = w.branch("feat/unrelated")  # not in the train and not finished
+    d3 = w.branch("feat/d3")  # a train draft never joined: only --pr's children rule finds it
     for b in ("integ", "feat/d1", "feat/d2", "feat/other"):
         w.result_ref(b)
     n = s.pr("integ", "MERGED", integ, number=7)
     s.pr("feat/d1", "MERGED", d1, base="integ")
     s.pr("feat/d2", "CLOSED", d2, base="integ")
+    s.pr("feat/d3", "CLOSED", d3, base="integ")
     s.pr("feat/other", "MERGED", other)
 
     # refusals: not merged, merged into something other than the default branch
@@ -486,9 +488,9 @@ def sc_pr(t: T, shared: Path) -> None:
     r, rows = w.rows("--remote-only", "--pr", str(n))
     exit_is(t, "--pr N (merged into the default branch): exit 0", r, 0)
     t.eq("the train is exactly the head branch and the branches that had it as base",
-         sorted(rows), ["feat/d1", "feat/d2", "integ"])
-    t.eq("remote: the train is gone, a finished branch outside it is not",
-         w.remote_heads(), {"main", "feat/other", "feat/unrelated"})
+         sorted(rows), ["feat/d1", "feat/d2", "feat/d3", "integ"])
+    t.eq("remote: the train is gone, a finished branch outside it is not, a never-joined draft is kept",
+         w.remote_heads(), {"main", "feat/other", "feat/unrelated", "feat/d3"})
     t.eq("gate-result refs of the train are gone", w.remote_results(), {"feat/other"})
     t.eq("--pr lists the children with gh pr list --base", ["integ"] == [c[c.index("--base") + 1] for c in s.calls() if "--base" in c][:1], True)
 

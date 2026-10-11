@@ -1595,8 +1595,8 @@ def tools_json_ships_real_pins():
 # ci_watch: runner health (DL7, warnings only)
 # ---------------------------------------------------------------------------
 
-JOBS_KEY = "repos/{owner}/{repo}/actions/runs/5/jobs?per_page=100"
-RUNNERS_KEY = "repos/{owner}/{repo}/actions/runners?per_page=100"
+JOBS_PATH = "repos/{owner}/{repo}/actions/runs/5/jobs?per_page=100"
+RUNNERS_PATH = "repos/{owner}/{repo}/actions/runners?per_page=100"
 LONG_AGO = "2020-01-01T00:00:00Z"
 
 
@@ -1604,11 +1604,11 @@ def queued_fixture(labels: list[str], runners, created: str = LONG_AGO, polls: i
     """A run that stays pending for `polls` polls, then succeeds; one queued job."""
     seq = [[run_obj(5, "queued", "")] for _ in range(polls)] + [[run_obj(5, "completed", "success")]]
     job = {"id": 11, "name": "build", "status": "queued", "created_at": created, "labels": labels}
-    api = {JOBS_KEY: {"jobs": [job]}}
+    api = {JOBS_PATH: {"jobs": [job]}}
     if runners == "error":
-        api[RUNNERS_KEY] = {"__error": "HTTP 403: Must have admin rights to Repository."}
+        api[RUNNERS_PATH] = {"__error": "HTTP 403: Must have admin rights to Repository."}
     elif runners is not None:
-        api[RUNNERS_KEY] = {"runners": [
+        api[RUNNERS_PATH] = {"runners": [
             {"status": st, "labels": [{"name": n} for n in lab]} for st, lab in runners]}
     return {"run_list": seq, "api": api}
 

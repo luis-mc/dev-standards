@@ -1596,9 +1596,9 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         wanted_keys = [g[0] for g in want_groups]
         if [h[0] for h in have] != wanted_keys:
             add('R5.33', 'the At a glance groups must be %s in that order; found %s' % (wanted_keys, [h[0] for h in have]))
-        by_key = {h[0]: h for h in have}
+        by_name = {h[0]: h for h in have}
         for gkey, _label, shown, open_decs, more in want_groups:
-            h = by_key.get(gkey)
+            h = by_name.get(gkey)
             if h is None:
                 continue
             ids, dec_ids = [t['id'] for t in shown], [d['id'] for d in open_decs]

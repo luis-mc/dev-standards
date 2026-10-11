@@ -20,3 +20,7 @@
 3a5ad29e15cfe7998bdea3143fc1acde8b6d012d:claude/plugins/artifacts/scripts/render_artifacts.py:project-named-secret:487
 3a5ad29e15cfe7998bdea3143fc1acde8b6d012d:tools/test_project_artifacts_hooks.py:project-named-secret:242
 c11c82c19c798cde397c31bbac44a9283aca3a8e:tools/test_artifact_prune.py:project-named-secret:732
+43e4d7296f45c12e18c0f2f8f3c0b0deb2dbdc24:tools/test_delivery_ci.py:project-named-secret:1598
+43e4d7296f45c12e18c0f2f8f3c0b0deb2dbdc24:tools/test_delivery_ci.py:project-named-secret:1599
+43e4d7296f45c12e18c0f2f8f3c0b0deb2dbdc24:tools/test_delivery_ci.py:project-named-secret:1607
+76eccd9599ab75c4a2e3ed367ec840703e5c4750:claude/plugins/artifacts/scripts/render_artifacts.py:project-named-secret:1484
