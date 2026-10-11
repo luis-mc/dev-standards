@@ -527,12 +527,12 @@
       "id": "DL13",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Save the STACKSPEC 8.0.0 upgrade prompt",
-      "detail": "docs/upgrades/stackspec-8.0.0.md, generic, no project names; rides the DL12 train",
-      "expected": "11 Oct; after restart",
-      "changed": "2026-10-11T17:20+01:00",
-      "expected_basis": "starts when the owner restarts Claude Code"
+      "detail": "Orchestrator writes docs/upgrades/stackspec-8.0.0.md on DL12-integration",
+      "expected": "11 Oct ~18:00",
+      "changed": "2026-10-11T17:22+01:00",
+      "expected_basis": "short doc, written now"
     },
     {
       "id": "DS1",
