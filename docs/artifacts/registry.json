@@ -447,11 +447,11 @@
       "id": "DL5",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Build-artifact workflows only when their inputs change",
-      "detail": "Joined: package.yml per track, smoke_packaged.py (STACKSPEC 13.7 MUST), delivery_log.py; 283 + 73 checks",
+      "detail": "Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0",
       "expected": "11 Oct",
-      "changed": "2026-10-11T13:23+01:00"
+      "changed": "2026-10-11T14:41+01:00"
     },
     {
       "id": "DL6",
