@@ -1057,12 +1057,11 @@
       "id": "DS51",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "DL12 train: join, PR CI, merge, cleanup",
-      "detail": "PR #48 open (ed9eb0e), joined DL12, TC7, AR44; CI running with TC7's parallel jobs",
-      "expected": "11 Oct ~18:00",
-      "changed": "2026-10-11T17:48+01:00",
-      "expected_basis": "PR CI ~6 min from 17:48, merge and cleanup ~4 min; +1 fix round ~10 min"
+      "detail": "#48 merged 17:52 after one 3.0 min CI run (was 11.6); cleanup done; delivery log in train-2026-10-11-48",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T17:53+01:00"
     },
     {
       "id": "MP1",

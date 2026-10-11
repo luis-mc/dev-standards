@@ -1698,12 +1698,11 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "id": "DS51",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "DL12 train: join, PR CI, merge, cleanup",
-   "detail": "PR #48 open (ed9eb0e), joined DL12, TC7, AR44; CI running with TC7's parallel jobs",
-   "expected": "11 Oct ~18:00",
-   "changed": "2026-10-11T17:48+01:00",
-   "expected_basis": "PR CI ~6 min from 17:48, merge and cleanup ~4 min; +1 fix round ~10 min"
+   "detail": "#48 merged 17:52 after one 3.0 min CI run (was 11.6); cleanup done; delivery log in train-2026-10-11-48",
+   "expected": "11 Oct",
+   "changed": "2026-10-11T17:53+01:00"
   },
   {
    "id": "MP1",
@@ -1868,35 +1867,30 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
-<div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
-<ul>
-<li data-glance-task="DS51"><span class="task-id">DS51</span>DL12 train: join, PR CI, merge, cleanup <span class="glance-expected">11 Oct ~18:00</span><span class="glance-basis">PR CI ~6 min from 17:48, merge and cleanup ~4 min; +1 fix round ~10 min</span></li>
-</ul>
-</div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
 <li data-glance-task="AR44"><span class="task-id">AR44</span>Copy link opens the record&#x27;s current feature page</li>
 <li data-glance-task="DL13"><span class="task-id">DL13</span>Save the STACKSPEC 8.0.0 upgrade prompt</li>
+<li data-glance-task="DS51"><span class="task-id">DS51</span>DL12 train: join, PR CI, merge, cleanup</li>
 <li data-glance-task="TC7"><span class="task-id">TC7</span>PR CI: mutants per suite, delivery suites in parallel</li>
 <li data-glance-task="DL12"><span class="task-id">DL12</span>Delivery log: label its times as UTC, CI start from the first run</li>
 <li data-glance-task="AR41"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</li>
 <li data-glance-task="DS50"><span class="task-id">DS50</span>Write the STACKSPEC 8.0.0 upgrade prompt for projects</li>
 <li data-glance-task="AR40"><span class="task-id">AR40</span>At a glance block in section 0 instead of one prose paragraph</li>
-<li data-glance-task="AR42"><span class="task-id">AR42</span>Feature table: Last updated column, newest first, sortable headers</li>
-<li class="glance-more">and 76 more</li>
+<li class="glance-more">and 77 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">118</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">119</div><div class="label">live</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
-<tr data-task="DS51"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS51</span>DL12 train: join, PR CI, merge, cleanup</td><td></td><td>PR #48 open (ed9eb0e), joined DL12, TC7, AR44; CI running with TC7&#x27;s parallel jobs</td><td>11 Oct ~18:00<span class="expected-basis">PR CI ~6 min from 17:48, merge and cleanup ~4 min; +1 fix round ~10 min</span></td></tr>
 <tr data-task="AR43"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR43</span>Full Progress: release timeline above the status table</a></td><td><code>luismc-artifacts</code></td><td>Owner confirmed the design with Expected = sum of phases and a named fix-round risk; plugin build is the next small train</td><td>11 Oct ~18:55<span class="expected-basis">after DS51 (~18:00): agent ~45 min, PR CI ~6 min, merge ~4 min</span></td></tr>
 <tr data-task="TC8"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards</a></td><td></td><td>STACKSPEC SHOULD, Playwright sharding in the e2e template, ci_watch slowest-job summary; next small train</td><td>12 Oct<span class="expected-basis">starts after the DL12 train merges, about 1 h of work and CI</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR44"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR44</span>Copy link opens the record&#x27;s current feature page</a></td><td><code>luismc-artifacts</code></td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>
 <tr data-task="DL13"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL13</span>Save the STACKSPEC 8.0.0 upgrade prompt</a></td><td></td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>
+<tr data-task="DS51"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS51</span>DL12 train: join, PR CI, merge, cleanup</td><td></td><td>#48 merged 17:52 after one 3.0 min CI run (was 11.6); cleanup done; delivery log in train-2026-10-11-48</td><td>11 Oct</td></tr>
 <tr data-task="TC7"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC7</span>PR CI: mutants per suite, delivery suites in parallel</a></td><td></td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>
 <tr data-task="DL12"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL12</span>Delivery log: label its times as UTC, CI start from the first run</a></td><td></td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>
 <tr data-task="AR41"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</a></td><td><code>luismc-artifacts</code></td><td>Five notes rewritten as one or two sentences (103 to 179 characters); check shows no warnings</td><td>11 Oct</td></tr>
