@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T10:11+01:00",
+  "updated": "2026-10-11T10:18+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -326,12 +326,11 @@
       "id": "AR35",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "Re-render every page when the templates change",
-      "detail": "Built in the branch; suite running locally, released together with AR37",
+      "detail": "On branch AR35-rerender-on-template-change (8421878): suite 185/186, the one fake-group failure was the new test itself, fixed and re-run green",
       "expected": "11 Oct ~11:30",
-      "changed": "2026-10-11T10:08+01:00",
-      "expected_basis": "ships in the same release as AR37"
+      "changed": "2026-10-11T10:18+01:00"
     },
     {
       "id": "AR36",
