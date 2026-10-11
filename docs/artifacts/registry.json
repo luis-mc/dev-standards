@@ -960,6 +960,17 @@
       "expected": "12 Oct",
       "changed": "2026-10-11T11:02+01:00",
       "expected_basis": "after the 1.3.1 release; three workflow lines"
+    },
+    {
+      "id": "TC5",
+      "owner": "test-cost",
+      "app": "",
+      "status": "Needs you",
+      "item": "Push the record once per turn",
+      "detail": "S8: 264 of 276 commits on main are record pushes; commit each, push at turn end; waits on D8",
+      "expected": "12 Oct",
+      "changed": "2026-10-11T11:02+01:00",
+      "expected_basis": "your choice in D8, then a plugin change"
     }
   ]
 }
