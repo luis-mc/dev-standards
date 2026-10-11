@@ -176,7 +176,7 @@ One ref per branch, so parallel agents never contend.
 branch's current head on the remote, `base` equals the current head of the branch
 it joins, `pass` is true and `partial` is not. `--allow-older-base` relaxes the second condition
 to "`base` is an ancestor of the current head" (used by `join.py`, which re-gates
-the joined head anyway).
+the joined head unless its tree equals a trusted joined branch's tree).
 
 ## Command lines
 
@@ -265,7 +265,12 @@ join exits 3 (the conflict goes to one agent). `.delivery/join-result.json`
 `reason` when a branch is refused or a step fails) is written on success and on
 failure. After the last merge it runs `branch_gate.py --base-ref origin/<default_branch>`
 on the joined head (unless `--no-gate`) and pushes INTEGRATION and its result
-with `--push`. Before the first fetch it runs `cleanup.py --local` (best effort:
+with `--push`. **The gate on the joined head is skipped, and the output says so,
+when the joined tree equals the tree of a joined branch's head whose gate result
+`gate_verify.py` trusts for that head and for the same base the join gate would use
+(`origin/<default_branch>`, without `--allow-older-base`)**: those files were
+already gated against that base. Otherwise it runs as above. A skipped gate
+publishes no result for INTEGRATION. Before the first fetch it runs `cleanup.py --local` (best effort:
 its failure is printed and never stops the join), so worktrees of trains
 already merged are gone before new ones are made.
 
@@ -311,7 +316,14 @@ Never touches the default branch, a detached worktree (such as
 cannot classify (an error from `gh` keeps the branch). With `--pr N` only the
 train of that pull request is considered (exit 2 unless N is merged into the
 default branch) (its head branch and every
-branch whose pull request had that head as base); without it, every branch on
+branch whose pull request had that head as base, and every **joined** branch:
+a remote or local branch whose tip is an ancestor of the merged pull request's
+head commit, `headRefOid`, which is not the default branch, not an ancestor of
+`<remote>/<default>` (a branch with no work of its own), and has no open pull
+request; a branch with any commit outside that head, on the remote or locally, is
+not touched, and a `gh` error keeps it. A squash merge leaves the integration
+branch's joined branches behind otherwise. They are then removed like any
+finished branch, worktree rules included); without it, every branch on
 the remote. `--local` treats only local branches and worktrees: after
 `git fetch --prune`, a local branch is finished when its pull request is merged.
 Without a working `gh`, `--local` deletes nothing: it lists each branch whose

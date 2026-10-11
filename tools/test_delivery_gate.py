@@ -125,8 +125,15 @@ def run(cmd: list, cwd: Path | None = None, extra_env: dict | None = None, input
     )
 
 
+class MutantStop(BaseException):
+    """Raised by the first failed check of a scenario that runs as a mutant: the mutant
+    is caught, and the rest of the scenario is not worth the time. A BaseException so
+    that no `except Exception` inside a scenario swallows it."""
+
+
 class T:
-    """Records the checks of one scenario."""
+    """Records the checks of one scenario. A quiet one (a mutant run) stops at the
+    first failed check; a normal run checks everything."""
 
     def __init__(self, name: str, quiet: bool = False):
         self.name, self.quiet = name, quiet
@@ -137,6 +144,8 @@ class T:
         self.total += 1
         if not ok:
             self.failures.append(label)
+            if self.quiet:
+                raise MutantStop(label)
         if not self.quiet:
             line = "%s  %s: %s" % ("PASS" if ok else "FAIL", self.name, label)
             if not ok and detail:
@@ -1951,11 +1960,12 @@ def sc_join_clean(t: T, shared: Path) -> None:
     # --push, in a second box
     box = integ_box(shared)
     box.gated("feat/a", {"apps/web/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
-    r = join(box, "--into", "integ", "feat/a", "--push")
+    box.gated("feat/b", {"apps/api/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
+    r = join(box, "--into", "integ", "feat/a", "feat/b", "--push")
     t.eq("--push: exit 0", r.code, 0)
     head = box.g("rev-parse", "HEAD")
     t.eq("a branch that could fast-forward still gets a merge commit",
-         box.g("log", "--merges", "--format=%s", "integ").splitlines(), ["Join feat/a"])
+         box.g("log", "--merges", "--format=%s", "integ").splitlines(), ["Join feat/b", "Join feat/a"])
     t.eq("--push: integration pushed", box.g("rev-parse", "origin/integ"), head)
     ref = box.remote_ref("refs/gate-results/integ")
     t.check("--push: its gate result published", ref is not None)
@@ -1974,8 +1984,9 @@ def sc_join_clean(t: T, shared: Path) -> None:
     # a failing gate on the joined head blocks the push
     box = integ_box(shared)
     box.gated("feat/a", {"apps/web/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
+    box.gated("feat/b", {"apps/api/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
     before = box.g("rev-parse", "origin/integ")
-    r = join(box, "--into", "integ", "feat/a", "--push", env={"GATE_TEST_FAIL": "unit"})
+    r = join(box, "--into", "integ", "feat/a", "feat/b", "--push", env={"GATE_TEST_FAIL": "unit"})
     t.eq("a failing gate on the joined head: exit 1", r.code, 1)
     t.eq("... and nothing is pushed", box.g("rev-parse", "origin/integ"), before)
 
@@ -1985,6 +1996,60 @@ def sc_join_clean(t: T, shared: Path) -> None:
     box.write("docs/dirty.txt", "d\n")
     r = join(box, "--into", "integ", "feat/a")
     t.eq("dirty working tree: exit 2", r.code, 2)
+
+
+def sc_join_same_tree(t: T, shared: Path) -> None:
+    """DS45: the gate on the joined head is skipped when its tree is the tree of a joined
+    branch head whose gate result is trusted for that head and for the gate's base."""
+    # one branch joined onto an integration branch that is still at the base: same tree
+    box = integ_box(shared)
+    head = box.gated("feat/a", {"apps/web/a.txt": "a\n"}, base_ref="origin/main", frm="integ")
+    box.clear_log()
+    r = join(box, "--into", "integ", "feat/a", "--push")
+    t.eq("same tree as a trusted branch head: exit 0, no step ran", (r.code, box.ran()), (0, []))
+    t.has("... and the output says the gate was skipped", r.out, "gate on the joined head skipped")
+    t.has("... naming feat/a", r.out, "equals that of feat/a")
+    t.eq("... the merge was pushed", box.g("rev-parse", "origin/integ"), box.g("rev-parse", "HEAD"))
+    t.eq("... the tree is the branch's", box.g("rev-parse", "HEAD^{tree}"), box.g("rev-parse", head + "^{tree}"))
+
+    # the branch was gated against a base that has since moved: its result is not trusted
+    # for the gate's base, so the gate runs although the trees are equal
+    box = integ_box(shared)
+    box.gated("feat/a", {"apps/web/a.txt": "a\n"}, base_ref="origin/main", frm="integ")
+    box.g("checkout", "-q", "main")
+    box.g("commit", "-q", "--allow-empty", "-m", "main moves")  # same tree, new head
+    box.g("push", "-q", "origin", "main")
+    box.g("checkout", "-q", "integ")
+    box.clear_log()
+    r = join(box, "--into", "integ", "feat/a")
+    t.eq("a base that moved on after the branch was gated: the gate runs",
+         (r.code, box.ran() != [], "skipped" in r.out), (0, True, False))
+
+    # integration moved: the joined tree is not the branch's, whatever its result says
+    box = integ_box(shared)
+    box.gated("feat/a", {"apps/web/a.txt": "a\n"}, base_ref="origin/main", frm="integ")
+    box.g("checkout", "-q", "integ")
+    box.commit({"docs/other.txt": "o\n"}, "someone else")
+    box.g("push", "-q", "origin", "integ")
+    box.clear_log()
+    r = join(box, "--into", "integ", "feat/a")
+    t.eq("the integration branch added work: the gate runs",
+         (r.code, box.ran() != [], "skipped" in r.out), (0, True, False))
+
+    # two branches: the joined tree equals neither
+    box = integ_box(shared)
+    box.gated("feat/a", {"apps/web/a.txt": "a\n"}, base_ref="origin/main", frm="integ")
+    box.gated("feat/b", {"apps/api/b.txt": "b\n"}, base_ref="origin/main", frm="integ")
+    box.clear_log()
+    r = join(box, "--into", "integ", "feat/a", "feat/b")
+    t.eq("two branches joined: the gate runs",
+         (r.code, box.ran() != [], "skipped" in r.out), (0, True, False))
+
+    # a failing result is refused before anything can be skipped
+    box = integ_box(shared)
+    box.gated("feat/a", {"apps/web/a.txt": "a\n"}, base_ref="origin/main", frm="integ", fail="unit")
+    r = join(box, "--into", "integ", "feat/a")
+    t.eq("a failing result: join refuses, nothing skipped", (r.code, "skipped" in r.out), (1, False))
 
 
 def sc_join_untrusted(t: T, shared: Path) -> None:
@@ -2526,7 +2591,14 @@ MUTANTS = [
     ("join merges fast-forward", "scripts/delivery/join.py",
      '["merge", "--no-ff", "-m"', '["merge", "--ff", "-m"', "join_clean"),
     ("join never gates the joined head", "scripts/delivery/join.py",
-     "if not args.no_gate:", "if False:", "join_clean"),
+     "elif not args.no_gate:", "elif False:", "join_clean"),
+    ("join skips the gate whatever the tree", "scripts/delivery/join.py",
+     "    if same is not None:", "    if True:", "join_same_tree"),
+    ("join skips the gate without checking the branch's result", "scripts/delivery/join.py",
+     '        if gate_verify.verify(branch, base_ref, remote, root=root)["trusted"]:',
+     "        if True:", "join_same_tree"),
+    ("join skips the gate whatever tree the branch has", "scripts/delivery/join.py",
+     "(\"refs/remotes/%s/%s\" % (remote, branch)) != tree:", "(\"refs/remotes/%s/%s\" % (remote, branch)) == \"\":", "join_same_tree"),
     ("pre-push runs for deletions", ".githooks/pre-push",
      '[ "$local_sha" = "$zero" ] && continue', "false", "hook"),
     ("pre-push does not hand the pushed commit to the guards", ".githooks/pre-push",
@@ -2652,6 +2724,7 @@ SCENARIOS = {
     "base_fetch": sc_base_fetch,
     "fork_point": sc_fork_point,
     "join_clean": sc_join_clean,
+    "join_same_tree": sc_join_same_tree,
     "join_untrusted": sc_join_untrusted,
     "join_conflicts": sc_join_conflicts,
     "agent_setup": sc_agent_setup,
@@ -2704,6 +2777,8 @@ def main() -> int:
             crashed = False
             try:
                 SCENARIOS[scenario](t, shared)
+            except MutantStop:
+                pass  # the first failed check: caught
             except Exception:  # noqa: BLE001
                 crashed = True
             caught = bool(t.failures) or crashed

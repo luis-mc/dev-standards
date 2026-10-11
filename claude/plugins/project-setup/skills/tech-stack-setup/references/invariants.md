@@ -1421,7 +1421,9 @@ gate runs the scanner CI runs.
   are committed to the integration branch before parallel work starts.
 - Branches join the integration branch through a merge script. It merges each
   branch in turn, stops at a conflict it cannot resolve, and runs the branch gate
-  on the joined head. No other full suite runs at the join.
+  on the joined head. No other full suite runs at the join. The script can skip
+  that run when the joined tree equals the tree of a joined branch head whose gate
+  result is trusted for that head and the same base.
 - When the last join is pushed, one ready pull request goes from the integration
   branch to the default branch. Its CI is the only full suite, end-to-end tests
   included (§11.2). It merges when that run is green, never by auto-merge.

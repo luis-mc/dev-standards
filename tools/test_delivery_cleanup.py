@@ -484,6 +484,67 @@ def sc_pr(t: T, shared: Path) -> None:
     t.eq("... and the missing branch is reported as already gone", rows.get("integ", {}).get("detail"), "already gone")
 
 
+def sc_joined(t: T, shared: Path) -> None:
+    """DS48: --pr N also finishes every branch whose tip is an ancestor of the merged
+    pull request's head commit (joined by merge commits), unless it has an open pull
+    request, has commits outside that head, or is the default branch."""
+    w = World(shared)
+    s = w.stub
+    d1, d2, d3, d4 = (w.branch("feat/" + n) for n in ("d1", "d2", "d3", "d4"))
+    integ = w.integration("integ", ["feat/d1", "feat/d2", "feat/d3", "feat/d4"])
+    w.g("checkout", "-q", "-B", "feat/local", "integ")  # joined, never pushed
+    w.g("checkout", "-q", "main")
+    extra = w.branch("feat/extra", frm="integ")  # holds the integration plus a commit of its own
+    w.g("branch", "feat/empty", "main")
+    w.g("push", "-q", "-u", "origin", "feat/empty")  # no work of its own: an ancestor of main too
+    ahead = w.branch("feat/ahead", frm="feat/d1")  # a joined branch with a commit after the join
+    w.g("push", "-q", "--force", "origin", "feat/ahead:feat/d1")
+    w.g("fetch", "-q", "origin")
+    for b in ("integ", "feat/d1", "feat/d2"):
+        w.result_ref(b)
+    s.pr("feat/d3", "OPEN", d3)  # into main, so not a child of the integration branch
+    s.fx["errors"].append("head:feat/d4")
+    n = s.pr("integ", "MERGED", integ, number=46)
+    before = w.snapshot()
+
+    r, rows = w.rows("--dry-run", "--pr", str(n))
+    exit_is(t, "--dry-run --pr: exit 0", r, 0)
+    t.eq("--dry-run removes nothing", w.snapshot(), before)
+    t.check("... and lists the joined branches as would delete",
+            all(rows.get(b, {}).get("status") == "would delete" for b in ("feat/d2", "feat/local")), str(rows))
+
+    r, rows = w.rows("--pr", str(n))
+    exit_is(t, "--pr with joined branches: exit 0", r, 0)
+    t.check("the joined branch with no pull request of its own is deleted on the remote and locally",
+            "feat/d2" not in w.remote_heads() and "feat/d2" not in w.local_branches(), status(rows, "feat/d2"))
+    t.check("... and so is the integration branch",
+            "integ" not in w.remote_heads() and "integ" not in w.local_branches())
+    t.check("... and a joined branch that exists only locally",
+            "feat/local" not in w.local_branches(), status(rows, "feat/local"))
+    t.eq("... gate-result refs of joined branches go too", w.remote_results(), {"feat/d1"})
+    t.check("a joined branch with an open pull request is kept", is_kept(rows, "feat/d3", "open pull request")
+            and "feat/d3" in w.remote_heads(), status(rows, "feat/d3"))
+    t.check("a joined branch gh cannot classify is kept", is_kept(rows, "feat/d4", "cannot classify")
+            and "feat/d4" in w.remote_heads(), status(rows, "feat/d4"))
+    t.check("a branch with a commit outside the merged head is not touched",
+            {"feat/extra", "feat/ahead", "feat/d1"} <= w.remote_heads()
+            and {"feat/extra", "feat/ahead", "feat/d1"} <= w.local_branches()
+            and not {"feat/extra", "feat/ahead", "feat/d1"} & set(rows), str(sorted(rows)))
+    t.check("a branch with no work of its own (an ancestor of the default branch) is not touched",
+            "feat/empty" in w.remote_heads() and "feat/empty" not in rows)
+    t.check("the default branch is not touched", "main" in w.remote_heads() and "main" not in rows)
+    t.eq("the extra commits are still reachable", (w.tip("feat/extra"), w.tip("feat/ahead")), (extra, ahead))
+
+    # --remote-only leaves local branches; the remote side still goes
+    w = World(shared)
+    a, b = w.branch("feat/a"), w.branch("feat/b")
+    integ = w.integration("integ", ["feat/a", "feat/b"])
+    n = w.stub.pr("integ", "MERGED", integ, number=5)
+    r, rows = w.rows("--remote-only", "--pr", str(n))
+    t.eq("--remote-only: joined branches leave the remote", w.remote_heads(), {"main"})
+    t.eq("... and stay local", {"feat/a", "feat/b"} <= w.local_branches(), True)
+
+
 def sc_modes(t: T, shared: Path) -> None:
     w = World(shared)
     a, b = w.branch("feat/a"), w.branch("feat/b")
@@ -1073,6 +1134,19 @@ MUTANTS = [
      'pr.get("state") != "MERGED"', 'False', "pr"),
     ("--pr accepts a base that is not the default branch", D,
      'pr.get("baseRefName") != ctx.default', "False", "pr"),
+    # joined branches (DS48)
+    ("--pr ignores the joined branches", D, "        candidates += sorted(joined)\n", "", "joined"),
+    ("a branch with commits outside the merged head counts as joined", D,
+     "all(tip == head or dc.is_ancestor(tip, head, ctx.root) for tip in tips)", "all(True for tip in tips)", "joined"),
+    ("a branch with no work of its own counts as joined", D,
+     "has_default and any(dc.is_ancestor(tip, default_ref, ctx.root) for tip in tips)", "False", "joined"),
+    ("an open pull request does not keep a joined branch", D,
+     "    if still_open:\n", "    if False:\n", "joined"),
+    ("a gh error finishes a joined branch", D,
+     'return Verdict(False, "cannot classify the joined branch (%s)" % exc, cannot_classify=True)',
+     'return Verdict(True, "joined", [head])', "joined"),
+    ("only the remote tip is checked against the merged head", D,
+     "        if do_local and name in local_branches:\n            tips.append(", "        if False:\n            tips.append(", "joined"),
     # modes
     ("--remote-only still cleans local branches", D,
      "do_remote, do_local = not args.local, not args.remote_only", "do_remote, do_local = not args.local, True", "modes"),
@@ -1167,6 +1241,7 @@ SCENARIOS = {
     "default_branch": sc_default_branch,
     "failed_deletion": sc_failed_deletion,
     "pr": sc_pr,
+    "joined": sc_joined,
     "modes": sc_modes,
     "dry_run": sc_dry_run,
     "worktrees": sc_worktrees,
@@ -1212,6 +1287,8 @@ def main() -> int:
             crashed = False
             try:
                 SCENARIOS[scenario](t, shared)
+            except tdg.MutantStop:
+                pass  # the first failed check: caught
             except Exception:  # noqa: BLE001
                 crashed = True
             caught = bool(t.failures) or crashed

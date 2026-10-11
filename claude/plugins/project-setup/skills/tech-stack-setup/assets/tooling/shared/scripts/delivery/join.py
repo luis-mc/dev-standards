@@ -10,7 +10,10 @@ fine), then merges it with `git merge --no-ff -m "Join BRANCH"`. A conflict that
 touches only a lockfile is resolved by taking INTEGRATION's version and re-running
 gate.json's `setup`; any other conflict aborts that merge, writes
 .delivery/join-result.json and exits 3. After the last merge the branch gate runs
-on the joined head (unless --no-gate); --push then pushes INTEGRATION and its result.
+on the joined head (unless --no-gate; or unless the joined tree equals the tree of a joined
+branch head whose gate result is trusted for that head and for the base the gate would use,
+in which case the run is skipped and the output says so); --push then pushes INTEGRATION and
+its result.
 
 Exit: 0 joined, 1 a result is not trusted or the gate/push failed, 2 usage or
 configuration error (or no result), 3 stopped at a conflict.
@@ -63,6 +66,23 @@ def resolve_lockfiles(root: Path, cfg: dict, branch: str, lock: list[str]) -> st
             return "setup failed (exit %d): %s" % (code, cmd)
     for path in lock:  # setup may have regenerated the lockfile
         dc.run_git(["add", "--", path], cwd=root)
+    return None
+
+
+def trusted_same_tree(root: Path, remote: str, base_ref: str, joined: list[str]) -> str | None:
+    """The first joined branch whose head has the joined head's tree and a gate result
+    trusted for that head and for `base_ref` (the base the gate would use): running the
+    gate again would test the same files against the same base. None when there is none."""
+    def tree_of(ref: str) -> str | None:
+        p = dc.run_git(["rev-parse", "--verify", "--quiet", ref + "^{tree}"], cwd=root, check=False)
+        return p.stdout.strip() or None if p.returncode == 0 else None
+
+    tree = tree_of("HEAD")
+    for branch in joined:
+        if tree is None or tree_of("refs/remotes/%s/%s" % (remote, branch)) != tree:
+            continue
+        if gate_verify.verify(branch, base_ref, remote, root=root)["trusted"]:
+            return branch
     return None
 
 
@@ -160,12 +180,17 @@ def main(argv: list[str] | None = None) -> int:
 
     write_join_result(root, joined, None, [])
 
-    if not args.no_gate:
+    base_ref = "%s/%s" % (remote, cfg["default_branch"])
+    same = None if args.no_gate else trusted_same_tree(root, remote, base_ref, joined)
+    if same is not None:
+        print("\njoin: gate on the joined head skipped: its tree equals that of %s, whose gate result "
+              "is trusted for that head and for %s" % (same, base_ref), flush=True)
+    elif not args.no_gate:
         cmd = [
             sys.executable,
             str(Path(__file__).resolve().parent / "branch_gate.py"),
             "--base-ref",
-            "%s/%s" % (remote, cfg["default_branch"]),
+            base_ref,
         ]
         if not args.push:
             cmd.append("--no-publish")
