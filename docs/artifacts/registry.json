@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T18:35+01:00",
+  "updated": "2026-10-11T18:39+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -406,11 +406,11 @@
       "id": "AR43",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "Full Progress: release timeline above the status table",
-      "detail": "015da6e: R5.40-R5.44, release flags, timeline, State column; renderer 116/0, commands 112/0, hooks 89/0",
+      "detail": "Released in #49 (051005d, 18:38): luismc-artifacts 1.5.0, ARTIFACTSPEC 1.5.0",
       "expected": "11 Oct",
-      "changed": "2026-10-11T18:32+01:00"
+      "changed": "2026-10-11T18:39+01:00"
     },
     {
       "id": "AR44",
