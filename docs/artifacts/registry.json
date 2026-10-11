@@ -1158,6 +1158,44 @@
       }
     },
     {
+      "id": "DS55",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "TC9 train: join, PR CI, merge, cleanup",
+      "detail": "Integration branch DS55-integration, fold change notes, ready PR, merge on green, cleanup",
+      "expected": "12 Oct ~00:10",
+      "changed": "2026-10-11T23:31+01:00",
+      "expected_basis": "agent ~40 min; #52: CI 3.5 min, merge+cleanup 5",
+      "release": 3,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-10-11T23:15+01:00",
+          "end": "2026-10-11T23:55+01:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-10-11T23:55+01:00",
+          "end": "2026-10-12T00:00+01:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-10-12T00:00+01:00",
+          "end": "2026-10-12T00:05+01:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-10-12T00:05+01:00",
+          "end": "2026-10-12T00:10+01:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 10
+      }
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
