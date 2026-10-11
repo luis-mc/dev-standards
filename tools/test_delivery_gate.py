@@ -1111,7 +1111,7 @@ def e2e_gate_json(with_map: bool = True, placeholder: bool = True) -> dict:
                 {"spec": "e2e/ui.spec.ts", "paths": ["packages/ui/"]},
                 {"spec": "e2e/core.spec.ts", "paths": ["packages/core/"]},
             ],
-            "full_on": ["apps/web/app.config.txt"],
+            "full_on": ["playwright.config.txt"],
         }
     return cfg
 
@@ -1146,7 +1146,7 @@ def sc_e2e_map(t: T, shared: Path) -> None:
     t.eq("an unmapped UI file: the whole suite", (r.code, ran), (0, [["e2e", "FULL"]]))
     t.eq("... the result says full, no specs", (entry.get("selection"), entry.get("specs")), ("full", []))
 
-    r, ran, entry = e2e({"apps/web/checkout/a.txt": "a\n", "apps/web/app.config.txt": "c\n"})
+    r, ran, entry = e2e({"apps/web/checkout/a.txt": "a\n", "playwright.config.txt": "c\n"})
     t.eq("a full_on file: the whole suite", ran, [["e2e", "FULL"]])
     t.eq("... the result says full", (entry.get("selection"), entry.get("specs")), ("full", []))
 
