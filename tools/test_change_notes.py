@@ -326,6 +326,16 @@ def sc_fold_kinds(t: T, s: Path) -> None:
         t.check("%s release branch check passes after fold" % kind, b.check().code == 0)
 
 
+def sc_fold_resets(t: T, s: Path) -> None:
+    for kind, want in (("patch", "1.4.3"), ("minor", "1.5.0"), ("major", "2.0.0")):
+        b = box(s)
+        b.branch("DS9b-integration")
+        b.note("DS9b-a", "docs/specs/beta.md", kind, "x.")
+        folded(b)
+        b.fold()
+        t.check("1.4.2 + %s = %s (lower parts reset)" % (kind, want), "**Version:** %s\n" % want in b.read("docs/specs/beta.md"))
+
+
 def sc_fold_several(t: T, s: Path) -> None:
     b = box(s)
     b.branch("DS10-integration")
@@ -424,6 +434,7 @@ SCENARIOS = [
     ("not-ancestor", sc_not_ancestor, "merge base"),
     ("bad-notes", sc_bad_notes, "malformed notes"),
     ("fold-kinds", sc_fold_kinds, "fold bumps"),
+    ("fold-resets", sc_fold_resets, "lower parts reset"),
     ("fold-several", sc_fold_several, "several notes, two specs, idempotent"),
     ("fold-dry", sc_fold_dry, "dry run"),
     ("fold-errors", sc_fold_errors, "fold errors, CRLF"),
@@ -441,8 +452,8 @@ MUTANTS = [
      "def is_spec(path: str, cfg: dict) -> bool:\n    return True\n", ["custom-specs"]),
     ("change_notes.py", "if old_lines is None or new_lines is None:", "if False:", ["custom-specs"]),
     ("change_notes.py", "key=KINDS.index)", "key=lambda k: -KINDS.index(k))", ["fold-kinds", "fold-several"]),
-    ("change_notes.py", "return major, minor + 1, 0", "return major, minor + 1, patch", ["fold-kinds"]),
-    ("change_notes.py", "return major + 1, 0, 0", "return major + 1, minor, patch", ["fold-kinds"]),
+    ("change_notes.py", "return major, minor + 1, 0", "return major, minor + 1, patch", ["fold-resets"]),
+    ("change_notes.py", "return major + 1, 0, 0", "return major + 1, minor, patch", ["fold-resets"]),
     ("change_notes.py", "        for n in notes:\n            (root / n.path).unlink()\n", "", ["fold-kinds", "fold-several"]),
     ("change_notes.py", "if not args.dry_run:\n            with open", "if True:\n            with open", ["fold-dry"]),
     ("change_notes.py", "    at = rng[0]  # right under", "    at = len(lines)  # right under", ["fold-kinds"]),
