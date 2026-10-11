@@ -316,11 +316,11 @@
       "id": "AR34",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "Record worktree location is a setting",
-      "detail": "Raised by another project: the record worktree always lives at <repo>/.claude/worktrees/artifacts-record, so a project whose rule keeps worktrees elsewhere cannot follow it. Make the location a per-project setting (default unchanged). The plugin names no other project or path. Starts after AR31, which owns the same code. Started 03:10 (one agent for both); rides STACKSPEC 7.1.0.",
-      "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T03:05+01:00"
+      "detail": "Built in #44 and joined (not released): the record worktree location comes from LUISMC_ARTIFACTS_WORKTREE or a git-ignored .claude/artifacts-local.json, else the default; moving it removes the old worktree unless it holds unpushed record commits.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T03:59+01:00"
     },
     {
       "id": "DS1",
