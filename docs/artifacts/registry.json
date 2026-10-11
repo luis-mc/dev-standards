@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T17:49+01:00",
+  "updated": "2026-10-11T17:52+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -537,11 +537,11 @@
       "id": "DL12",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Delivery log: label its times as UTC, CI start from the first run",
-      "detail": "9d2013a on DL12-delivery-log-times; delivery-log suite 290 checks, 0 failed; ships with DS51",
+      "detail": "Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1",
       "expected": "11 Oct",
-      "changed": "2026-10-11T17:38+01:00"
+      "changed": "2026-10-11T17:52+01:00"
     },
     {
       "id": "DL13",
