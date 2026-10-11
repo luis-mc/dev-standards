@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T11:25+01:00",
+  "updated": "2026-10-11T11:29+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -980,6 +980,17 @@
       "expected": "12 Oct",
       "changed": "2026-10-11T11:25+01:00",
       "expected_basis": "the next train, one change per task"
+    },
+    {
+      "id": "TC6",
+      "owner": "test-cost",
+      "app": "",
+      "status": "Running",
+      "item": "Release the test-cost train (all eight fixes and DS48)",
+      "detail": "One integration branch, three agents by file ownership, change notes folded, one ready-PR CI run, merge on green",
+      "expected": "11 Oct ~14:30",
+      "changed": "2026-10-11T11:29+01:00",
+      "expected_basis": "agents ~1h30 in parallel, join ~15 min, ready-PR CI ~10 min"
     }
   ]
 }
