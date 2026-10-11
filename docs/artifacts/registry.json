@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T17:20+01:00",
+  "updated": "2026-10-11T17:22+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1033,6 +1033,17 @@
       "detail": "Upgrade prompt for STACKSPEC 8.0.0 given to the owner in chat, generic, no project names",
       "expected": "11 Oct",
       "changed": "2026-10-11T14:42+01:00"
+    },
+    {
+      "id": "DS51",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "DL12 train: join, PR CI, merge, cleanup",
+      "detail": "Small train for DL12 and DL13; one agent branch plus the upgrade doc",
+      "expected": "11 Oct ~18:45",
+      "changed": "2026-10-11T17:22+01:00",
+      "expected_basis": "agent ~15 min, PR CI ~20-30 min, then merge and cleanup"
     },
     {
       "id": "MP1",
