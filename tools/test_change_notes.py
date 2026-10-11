@@ -585,8 +585,109 @@ def sc_track_gates(t: T, s: Path) -> None:
         t.check("%s gate.json has the change-notes step" % track, ok, json.dumps(steps))
 
 
+def staged(b: Box, *extra: str) -> R:
+    return run([PY, "scripts/delivery/change_notes.py", "check", "--staged", *extra], b.root)
+
+
+BUMPED = SPEC_A.replace("7.0.0\n\n## 1", "7.1.0\n\n## 1")
+
+
+def sc_staged(t: T, s: Path) -> None:
+    b = box(s)
+    b.branch("TC10-feature")
+    b.write("docs/specs/alpha.md", SPEC_A.replace("Text.", "Text, edited."))
+    b.git("add", "-A")
+    r = staged(b)
+    t.check("staged: a body edit passes", r.code == 0 and "ok" in r.out, r.text)
+    b.write("docs/specs/alpha.md", BUMPED)
+    b.git("add", "-A")
+    r = staged(b)
+    t.check("staged: a staged Version edit fails", r.code == 1 and "docs/specs/alpha.md:3:" in r.out, r.text)
+    t.check("staged: says to add a change note", "change note" in r.out, r.text)
+    b.git("reset", "-q")  # the edit stays in the working tree, unstaged
+    r = staged(b)
+    t.check("staged: an unstaged Version edit is not judged", r.code == 0, r.text)
+    b.git("checkout", "--", "docs/specs/alpha.md")
+    b.write("CHANGELOG.md", "# Changelog\n\n- x\n")
+    b.git("add", "-A")
+    r = staged(b)
+    t.check("staged: a CHANGELOG edit fails", r.code == 1 and "CHANGELOG.md" in r.out, r.text)
+    p = box_cfg(s, CFG)
+    p.branch("TC10-plugin")
+    p.write(PLUGIN, PLUGIN_JSON.replace("A plugin.", "Another plugin."))
+    p.git("add", "-A")
+    cmd = [PY, "scripts/delivery/change_notes.py", "check", "--staged", "--config", "tools/cfg.json"]
+    t.check("staged: a plugin.json edit other than version passes", run(cmd, p.root).code == 0)
+    p.write(PLUGIN, PLUGIN_JSON.replace("2.3.4", "2.4.0"))
+    p.git("add", "-A")
+    r = run(cmd, p.root)
+    t.check("staged: a plugin version edit fails", r.code == 1 and "plugin.json:4:" in r.out, r.text)
+    r = staged(b, "--branch", "TC10-integration")
+    t.check("staged: a release branch is exempt", r.code == 0 and "release branch" in r.out, r.text)
+    c = box(s)
+    c.git("checkout", "-q", "-b", "TC10-other")
+    c.write("docs/specs/alpha.md", BUMPED)
+    c.git("add", "-A")
+    r = run([PY, "scripts/delivery/change_notes.py", "check", "--staged", "--base-ref", "nope"], c.root)
+    t.check("staged: needs no base ref", r.code == 1 and "nope" not in r.text, r.text)
+
+
+def sc_staged_hook(t: T, s: Path) -> None:
+    bash = shutil.which("bash")
+    if not bash:
+        t.check("pre-commit hook: bash is available (skipped)", True)
+        return
+    hook = SHARED / ".githooks/pre-commit"
+    shim = _TMP / "shim"
+    shim.mkdir(exist_ok=True)
+    (shim / "python3").write_text('#!/bin/sh\nexec "%s" "$@"\n' % PY, encoding="utf-8", newline="\n")
+    (shim / "python3").chmod(0o755)
+
+    def hook_run(b: Box) -> R:
+        e = env()
+        e["PATH"] = shim.as_posix() + os.pathsep + e["PATH"]
+        return R(subprocess.run([bash, ".githooks/pre-commit"], cwd=b.root, env=e, capture_output=True, check=False))
+
+    b = box(s)
+    b.write(".githooks/pre-commit", hook.read_text(encoding="utf-8"))
+    b.commit("hook")
+    b.branch("TC10-feature")
+    b.write("docs/specs/alpha.md", BUMPED)
+    b.git("add", "-A")
+    r = hook_run(b)
+    t.check("hook: refuses a staged Version edit off a release branch",
+            r.code == 1 and "alpha.md:3:" in r.text and "change-note check" in r.text, r.text)
+    b.git("reset", "-q")
+    b.write("docs/specs/alpha.md", SPEC_A.replace("Text.", "Text, edited."))
+    b.git("add", "-A")
+    r = hook_run(b)
+    t.check("hook: lets a body edit through", r.code == 0, r.text)
+    c = box(s)
+    c.write(".githooks/pre-commit", hook.read_text(encoding="utf-8"))
+    c.commit("hook")
+    c.git("checkout", "-q", "-b", "TC10-integration")
+    c.write("docs/specs/alpha.md", BUMPED)
+    c.git("add", "-A")
+    t.check("hook: a release branch may edit the version", hook_run(c).code == 0)
+    d = box(s)
+    d.write(".githooks/pre-commit", hook.read_text(encoding="utf-8"))
+    d.git("rm", "-q", "--cached", "scripts/delivery/gate.json")
+    (d.root / "scripts/delivery/gate.json").unlink()
+    d.commit("hook, no settings")
+    d.git("checkout", "-q", "-b", "TC10-feature")
+    d.write("docs/specs/alpha.md", BUMPED)
+    d.git("add", "-A")
+    t.check("hook: does nothing without change-note settings", hook_run(d).code == 0)
+    import time
+    t0 = time.time()
+    hook_run(b)
+    t.check("hook: runs in under 2 s", time.time() - t0 < 2.0, "%.2f s" % (time.time() - t0))
+
+
 SCENARIOS = [
     ("check-pass", sc_check_pass, "check passes with only a note"),
+    ("staged", sc_staged, "check --staged"),
+    ("staged-hook", sc_staged_hook, "the pre-commit hook runs the staged check"),
     ("check-version", sc_check_version, "version edit"),
     ("check-changelog", sc_check_changelog, "change-log edit"),
     ("check-changelog-file", sc_check_changelog_file, "CHANGELOG edit"),

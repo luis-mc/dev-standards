@@ -30,6 +30,43 @@ if [ -z "$staged_files" ]; then
   exit 0
 fi
 
+# --- Change notes: no version or change-log edit off a release branch ---------
+# The same check CI runs (change_notes.py check, STACKSPEC 13.6), on the staged
+# changes only, so the edit is refused here and not a pull request later. Does
+# nothing without change-note settings: tools/change-notes.json, or the
+# scripts/delivery/gate.json a conforming repository carries. Exit 1 refuses;
+# a usage or configuration error (exit 2) only warns, so a broken setting
+# never blocks a commit.
+cn_script=""
+for candidate in scripts/delivery/change_notes.py   claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/change_notes.py; do
+  if [ -f "$candidate" ]; then cn_script="$candidate"; break; fi
+done
+cn_config=()
+cn_on=0
+if [ -f tools/change-notes.json ]; then
+  cn_config=(--config tools/change-notes.json); cn_on=1
+elif [ -f scripts/delivery/gate.json ]; then
+  cn_on=1
+fi
+if [ -n "$cn_script" ] && [ "$cn_on" -eq 1 ]; then
+  py=$(command -v python3 || command -v python || true)
+  if [ -n "$py" ]; then
+    cn_code=0
+    cn_out=$("$py" -B "$cn_script" check --staged "${cn_config[@]}" 2>&1) || cn_code=$?
+    if [ "$cn_code" -eq 1 ]; then
+      printf '%s
+' "$cn_out" >&2
+      echo "" >&2
+      echo "Commit blocked by the change-note check (staged changes)." >&2
+      exit 1
+    elif [ "$cn_code" -ne 0 ]; then
+      echo "pre-commit: change-note check skipped (it could not run):" >&2
+      printf '%s
+' "$cn_out" | sed 's/^/    /' >&2
+    fi
+  fi
+fi
+
 fail=0
 
 # --- Layer 1: naming-convention patterns ------------------------------------
