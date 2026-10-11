@@ -498,10 +498,10 @@
       "app": "",
       "status": "To do",
       "item": "dev-standards adopts the delivery log and the freeze",
-      "detail": "its releases get the log; its integration branches freeze",
-      "expected": "11 Oct ~18:00",
-      "changed": "2026-10-11T11:56+01:00",
-      "expected_basis": "after TC6 merges (~14:30); one release"
+      "detail": "Delivery log and train freeze for dev-standards itself, done in the TC6 release",
+      "expected": "11 Oct ~15:00",
+      "changed": "2026-10-11T12:05+01:00",
+      "expected_basis": "orchestrator, after the agents report"
     },
     {
       "id": "DL11",
