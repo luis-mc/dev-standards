@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """project_artifacts.py - the only writer of a project's artifact record.
 
-Implements ARTIFACTSPEC 1.1.0: section 4 (the record, time, the record
+Implements ARTIFACTSPEC 1.2.0: section 4 (the record, time, the record
 worktree and its commits), section 7 (every command), the bookkeeping of
 section 9 (`pending`, `mark-published`; only Full Progress is published, a
 feature artifact is a standalone file) and the record-level checks of
@@ -40,6 +40,11 @@ except ImportError as _e:  # pragma: no cover - broken install
     artifact_queue = None
     _QUEUE_ERROR = str(_e)
 try:
+    import artifact_retire as AR
+except ImportError as _e:  # pragma: no cover - broken install
+    AR = None
+    _RETIRE_ERROR = str(_e)
+try:
     import render_artifacts as R
 except ImportError as _e:
     R = None
@@ -59,6 +64,7 @@ EXPECTED_RE = re.compile(
     r'^(0[1-9]|[12][0-9]|3[01]) (?:' + '|'.join(MONTHS) + r')( ~([01][0-9]|2[0-3]):[0-5][0-9])?(; \S.*)?$')
 TIME_EL_RE = re.compile(r'<time\b[^>]*\bdatetime="([^"]+)"')
 RULE_NAME = 'project-artifacts.md'
+STALE_RULE_REL = '.claude/rules/project-artifacts.md'     # the copy 1.0.0 `init` made (R10.6)
 PUBLISH_REL = os.path.join('.claude', 'artifacts-publish')      # the publish copy of Full Progress (R5.31)
 GITIGNORE_LINES = ['.claude/artifacts-queue.json', '.claude/artifacts-stop-state.json', '.claude/artifacts-publish/',
                    '.claude/worktrees/']
@@ -376,9 +382,10 @@ def no_record_fail(ctx):
 
 def ensure_sparse(ctx):
     """Check out docs/artifacts/ only (a long path elsewhere must not break the worktree)."""
+    want = ['/%s/' % RECORD_REL, '/' + STALE_RULE_REL]
     r = git(ctx.wt, 'config', '--get', 'core.sparseCheckout')
-    if r.stdout.strip() != 'true':
-        git(ctx.wt, 'sparse-checkout', 'set', '--no-cone', '/%s/' % RECORD_REL, check=True)
+    if r.stdout.strip() != 'true' or git(ctx.wt, 'sparse-checkout', 'list').stdout.split() != want:
+        git(ctx.wt, 'sparse-checkout', 'set', '--no-cone', *want, check=True)
 
 
 def ensure_worktree(ctx, tolerant=False, create=False):
@@ -456,7 +463,7 @@ def commit_record(ctx, message):
     """R4.14: commit only docs/artifacts/**; returns the new SHA or None."""
     git(ctx.wt, 'add', '-A', '--', RECORD_REL, check=True)
     names = [n for n in git(ctx.wt, 'diff', '--cached', '--name-only', '-z').stdout.split('\0') if n]
-    bad = [n for n in names if not n.startswith(RECORD_REL + '/')]
+    bad = [n for n in names if not n.startswith(RECORD_REL + '/') and n != STALE_RULE_REL]
     if bad:
         git(ctx.wt, 'reset', '--quiet')
         raise Fail(1, 'refusing to commit paths outside %s/: %s' % (RECORD_REL, bad[0]))
@@ -559,20 +566,6 @@ def migrate_done(manifest, registry):
     return ids, bool(ids) or merged
 
 
-def migrate_feature_urls(manifest):
-    """R4.18: a feature artifact is never published, so a feature entry holds no url and no
-    published_sha256. Drops them from an older manifest; returns the keys changed. The next writing
-    command writes the manifest and renders every artifact again."""
-    keys = []
-    feats = manifest.get('feature_artifacts')
-    for e in feats if isinstance(feats, list) else []:
-        if isinstance(e, dict) and ('url' in e or 'published_sha256' in e):
-            e.pop('url', None)
-            e.pop('published_sha256', None)
-            keys.append(str(e.get('key')))
-    return keys
-
-
 class Record:
     def __init__(self, d, manifest=None, registry=None, exists=True):
         self.dir = Path(d)
@@ -593,6 +586,11 @@ class Record:
         self.old_merged = False      # merged_status read from the file as the retired Done
         self.old_urls = []           # feature keys read from the file with a url (R4.18)
         self.migrated = False
+        self.recovered = 0           # retired pages added from the history of manifest.json (R4.20)
+
+    @property
+    def retired_changed(self):
+        return bool(self.recovered)
 
     @classmethod
     def load(cls, d):
@@ -609,8 +607,10 @@ class Record:
         raw_tasks = copy.deepcopy(registry.get('tasks')) if isinstance(registry.get('tasks'), list) else None
         old_merged = manifest.get('merged_status') == 'Done'
         old_done, migrated = migrate_done(manifest, registry)
-        old_urls = migrate_feature_urls(manifest)
         rec = cls(d, manifest, registry)
+        iso = lambda: rec.now().iso      # noqa: E731 - read only when something is retired
+        old_urls = AR.move_feature_urls(manifest, iso) if AR else []         # R4.18, R4.19
+        rec.recovered = AR.recover_retired(manifest, d, iso) if AR else 0    # R4.20
         if migrated:
             rec._tasks0 = raw_tasks      # the registry differs from the file, so it is rewritten
             rec.old_done, rec.old_merged = old_done, old_merged
@@ -820,6 +820,19 @@ def validate_structure(rec):
         f('R4.2', 'manifest.json', 'feature_artifacts must be a list')
         feats = []
     feats = [e for e in feats if isinstance(e, dict)]
+    for name, fields in (('retired', ('key', 'title', 'url', 'retired')), ('deleted', ('key', 'url', 'deleted'))):
+        v = m.get(name)
+        if v is None:
+            continue
+        if not isinstance(v, list) or not all(isinstance(x, dict) for x in v):
+            f('R4.19', 'manifest.json', '%s must be a list of objects' % name)
+            continue
+        for x in v:
+            for fld in fields:
+                if not isinstance(x.get(fld), str):
+                    f('R4.19', 'manifest.json', '%s: field "%s" is missing or not a string' % (name, fld))
+            if isinstance(x.get('url'), str) and not re.match(r'^https?://\S+$', x['url']):
+                f('R4.19', 'manifest.json', '%s: url is not an http(s) URL' % name)
 
     fp_ok = isinstance(fp, dict) and bool(fp)
     if not fp_ok:
@@ -1111,6 +1124,11 @@ def run_change(ctx, apply, new_ok=False):
             try:
                 result = apply(rec) or {}
                 result = finish_change(ctx, rec, result)
+                if remove_stale_rule(ctx):
+                    rec.message = '%s; removed %s (an older copy of the plugin\'s rule)' % (
+                        rec.message or 'docs/artifacts: update', STALE_RULE_REL)
+                    result.setdefault('notes', []).append(
+                        'removed %s: an older copy of the plugin\'s rule, which the hooks now deliver' % STALE_RULE_REL)
             except BaseException as ex:
                 clean_worktree(ctx, base)
                 if rec.pre_findings and isinstance(ex, Exception) and not isinstance(ex, Fail):
@@ -1118,6 +1136,9 @@ def run_change(ctx, apply, new_ok=False):
                                   'nothing written' % (type(ex).__name__, ex), rec.pre_findings) from ex
                 raise
             sha = commit_record(ctx, rec.message or 'docs/artifacts: update')
+            local = remove_local_rule_copy(ctx)
+            if local:
+                result.setdefault('notes', []).append(local)
             result['commit'] = sha or head_sha(ctx)
             result['pushed'] = False
             if sha is None:
@@ -1142,9 +1163,36 @@ def run_change(ctx, apply, new_ok=False):
             raise Fail(1, 'git push failed: %s' % out[1])
 
 
+def shipped_rule_copy(path):
+    try:
+        return AR is not None and path.is_file() and AR.is_shipped_rule(path.read_bytes())
+    except OSError:
+        return False
+
+
+def remove_stale_rule(ctx):
+    """R10.6: stage the deletion of .claude/rules/project-artifacts.md in the record worktree when its text is
+    one a released plugin version shipped; an edited copy stays. True when staged."""
+    p = ctx.wt / STALE_RULE_REL
+    return shipped_rule_copy(p) and git(ctx.wt, 'rm', '-q', '--', STALE_RULE_REL).returncode == 0
+
+
+def remove_local_rule_copy(ctx):
+    """R10.6: the same copy in the session's checkout, when git does not track it (a tracked one is removed
+    by the record commit and reaches the checkout with the next pull). Returns a note or None."""
+    p = ctx.root / STALE_RULE_REL
+    if not shipped_rule_copy(p) or git(ctx.root, 'ls-files', '--error-unmatch', STALE_RULE_REL).returncode == 0:
+        return None
+    try:
+        p.unlink()
+    except OSError:
+        return None
+    return 'removed %s from this checkout: an older copy of the plugin\'s rule' % STALE_RULE_REL
+
+
 def finish_change(ctx, rec, result):
     """Write manifest/registry, render, README; validate the result (R7.1)."""
-    if getattr(rec, 'noop', False):
+    if getattr(rec, 'noop', False) and not rec.retired_changed:
         result['rendered'] = []
         return add_notes(result, len(rec.pre_findings), rec.skipped)
     rec.sort_tasks()
@@ -1696,6 +1744,31 @@ def cmd_mark_published(args):
     return 0
 
 
+def cmd_mark_deleted(args):
+    """R4.21: the owner confirmed and the session deleted the page (or it is gone): it leaves the retired list."""
+    ctx = make_ctx(args)
+    url = args.url
+    if not re.match(r'^https?://\S+$', url):
+        raise Fail(1, 'url must be an http(s) URL')
+    if AR is None:
+        raise Fail(2, 'artifact_retire.py cannot be imported: %s' % _RETIRE_ERROR)
+
+    def apply(rec):
+        fp = rec.manifest.get('full_progress_artifact')
+        if isinstance(fp, dict) and fp.get('url') == url:
+            raise Fail(1, 'that is the Full Progress URL: Full Progress is published, not retired')
+        try:
+            entry = AR.mark_deleted(rec.manifest, url, args.key, rec.now().iso, args.gone)
+        except ValueError as ex:
+            raise Fail(1, str(ex))
+        rec.message = 'docs/artifacts: deleted the old page of %s' % (entry['key'] or url)
+        return {'command': 'mark-deleted', 'key': entry['key'], 'url': url, 'gone': bool(args.gone)}
+
+    res = run_change(ctx, apply)
+    emit(args, res, 'recorded %s deleted (%s)' % (url, short(res)))
+    return 0
+
+
 def cmd_commit(args):
     ctx = make_ctx(args)
     with locked(ctx):
@@ -1788,8 +1861,18 @@ def feature_url_notes(rec):
     if not rec.old_urls:
         return []
     return ['manifest.json: feature artifact(s) %s hold a url or published_sha256; feature artifacts are no longer '
-            'published, so the next writing command drops them and renders every artifact again'
-            % ', '.join(sorted(rec.old_urls))]
+            'published, so the next writing command moves each url to the retired list and renders every artifact '
+            'again' % ', '.join(sorted(rec.old_urls))]
+
+
+def retired_notes(rec):
+    """A note (never a finding) listing the old claude.ai pages still to delete (R4.22)."""
+    entries = AR.retired_pages(rec.manifest) if AR else []
+    if not entries:
+        return []
+    return ['claude.ai pages of feature artifacts are still up: %s; ask the owner to confirm, delete each confirmed '
+            'one with the Artifact tool (action: delete), then run mark-deleted'
+            % '; '.join('%s %s' % (e.get('key'), e.get('url')) for e in entries)]
 
 
 def cmd_check(args):
@@ -1809,7 +1892,7 @@ def cmd_check(args):
         findings += check_html_findings(rec, key)
         findings += fresh_render_findings(rec, key)
     findings = sorted(set(findings))
-    notes = rule_copy_notes() + done_notes(rec) + feature_url_notes(rec)
+    notes = rule_copy_notes() + done_notes(rec) + feature_url_notes(rec) + retired_notes(rec)
     warnings = decision_warnings(rec)
     if getattr(args, 'json_out', False):
         result = {'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],
@@ -1912,8 +1995,10 @@ def cmd_pending(args):
             arts.append({'key': key, 'kind': kind, 'title': e.get('title', ''), 'file': e.get('file', ''),
                          'path': copy_path or str(p), 'url': e.get('url', ''), 'reason': reason})
     queue = artifact_queue.read_queue(str(ctx.root))
+    retired = [{'key': e.get('key', ''), 'title': e.get('title', ''), 'url': e.get('url', ''),
+                'retired': e.get('retired', '')} for e in (AR.retired_pages(rec.manifest) if AR and rec else [])]
     if args.json_out:
-        print(json.dumps({'artifacts': arts, 'queue': queue}, indent=2, ensure_ascii=False))
+        print(json.dumps({'artifacts': arts, 'queue': queue, 'retired': retired}, indent=2, ensure_ascii=False))
     else:
         for a in arts:
             print('publish %s (%s): %s%s' % (a['key'], a['path'], a['reason'],
@@ -1922,7 +2007,10 @@ def cmd_pending(args):
             print('queued %s -> %s (%s)' % (ev.get('id'), ev.get('suggested_status'), ev.get('event')))
         if not arts and not queue:
             print('nothing pending')
-    return 1 if (arts or queue) else 0
+        for e in retired:
+            print('retired %s "%s" %s: ask the owner to confirm, delete it with the Artifact tool (action: delete), '
+                  'then run mark-deleted %s --url %s' % (e['key'], e['title'], e['url'], e['key'], e['url']))
+    return 1 if (arts or queue) else 0     # retired pages never change the exit code (R4.22)
 
 
 def cmd_queue(args):
@@ -2041,6 +2129,13 @@ def build_parser():
     s.add_argument('key')
     s.add_argument('--url', required=True)
     s.set_defaults(func=cmd_mark_published)
+
+    s = sub.add_parser('mark-deleted', parents=[w],
+                       help='record that the owner confirmed and the session deleted an old claude.ai page of a feature artifact')
+    s.add_argument('key', nargs='?', help='the feature key of the retired page (checked against the list)')
+    s.add_argument('--url', required=True)
+    s.add_argument('--gone', action='store_true', help='the page no longer exists (404)')
+    s.set_defaults(func=cmd_mark_deleted)
 
     s = sub.add_parser('queue', parents=[j], help='show or clear queued events')
     s.add_argument('action', choices=['list', 'clear'])

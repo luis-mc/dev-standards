@@ -8,7 +8,7 @@ effort: medium
 # Task — add
 
 Records work as a task in the registry (`docs/artifacts/registry.json`,
-ARTIFACTSPEC 1.1.0) before the work starts. Only the script writes the
+ARTIFACTSPEC 1.2.0) before the work starts. Only the script writes the
 registry; never edit `registry.json` or `manifest.json` by hand.
 
 Every activity is a task before it starts, whoever does it: work given to
@@ -51,3 +51,9 @@ read the message, fix the cause and rerun.
    published.
 5. **Tell the owner** the new task ID, and that its branch name must start with
    it (`<ID>-short-name`).
+
+## Old claude.ai pages
+
+If `pending` lists `retired` pages (old claude.ai pages of feature artifacts),
+ask the owner to confirm, delete each confirmed one with the Artifact tool
+(`action: "delete"`), then run `mark-deleted <key> --url <URL>`.
