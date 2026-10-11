@@ -54,6 +54,29 @@ GROUPS = (
     ('built', 'Live or built', ('Live', 'Built')),
 )
 YOU_ORDER = ('Needs you', 'Failed', 'On hold')
+RIDER_ORDER = ('Running', 'Waiting', 'To do', 'Needs you', 'Failed', 'On hold', 'Built', 'Live')    # R5.46
+NOT_IN_RELEASE = 'Not in a release yet'
+
+
+def release_number(task):
+    """R5.45: the release number of a task row (a positive whole number), else None."""
+    n = task.get('release') if isinstance(task, dict) else None
+    return n if isinstance(n, int) and not isinstance(n, bool) and n > 0 else None
+
+
+def is_release(task) -> bool:
+    """R5.40, R5.45: a release row; an older `true` still counts (the script numbers it when it loads the record)."""
+    return isinstance(task, dict) and (task.get('release') is True or release_number(task) is not None)
+
+
+def release_name(task) -> str:
+    """R5.45: `RELEASE-<n>`, the name a release is shown by."""
+    n = release_number(task)
+    return 'RELEASE-%d' % n if n is not None else 'RELEASE'
+
+
+def _release_span(task) -> str:
+    return '<span class="release-name">%s</span>' % release_name(task)
 
 EXPECTED_RE = re.compile(
     r'^(0[1-9]|[12]\d|3[01]) (' + '|'.join(MONTHS) + r')(?: ~([01]\d|2[0-3]):([0-5]\d))?(?:; \S.*)?$')
@@ -775,7 +798,71 @@ def _tasks_of(kind: str, key: str, tasks: list) -> list:
 
 def group_tasks(tasks: list, ref: datetime, kind: str) -> list:
     """R6.2 and R6.3: [(group key, group title, shown tasks, folded tasks)], empty groups omitted.
-    Only Live rows fold into Earlier; Built rows never do (unreleased work stays visible)."""
+    Only Live rows fold into Earlier; Built rows never do (unreleased work stays visible).
+    The full-progress artifact groups by release instead (R5.46)."""
+    if kind == 'full-progress':
+        return release_groups(tasks, ref)
+    return status_groups(tasks, ref, kind)
+
+
+def _id_key(task):
+    match = TASK_ID_RE.match(str(task.get('id', '')))
+    return (match.group(1), int(match.group(2))) if match else (str(task.get('id', '')), 0)
+
+
+def _soonest(task, ref):
+    moment = _expected_datetime(task['expected'], ref)
+    return (1, datetime.max) if moment is None else (0, moment)
+
+
+def _release_heading(task: dict, ref: datetime, tasks: list) -> str:
+    """R5.46: `RELEASE-<n> · live ~HH:MM`, with ` · worst ~HH:MM` when the release has a risk."""
+    row = _release_row(task, ref, tasks)
+    match = EXPECTED_RE.match(str(task.get('expected', '')))
+    if row is not None and row['timed']:
+        text = 'live ~%s' % _hhmm(row['exp_min'])
+    elif match:
+        text = 'live %s %s' % (match.group(1), match.group(2))
+    else:
+        text = 'live %s' % task.get('expected', '')
+    if row is not None and row['worst'] is not None:
+        text += ' · worst ~%s' % _hhmm(row['worst'])
+    return '%s · %s' % (release_name(task), text)
+
+
+def release_groups(tasks: list, ref: datetime) -> list:
+    """R5.46: [(group key, title, shown, folded)] of the full-progress checklist: a group per open release (the
+    release row, then the tasks riding it), Not in a release yet, Needs you, failed or on hold, Live or built."""
+    opens = [t for t in tasks if is_release(t) and t.get('status') in OPEN_STATUSES]
+    opens.sort(key=lambda t: (_soonest(t, ref), release_number(t) or 0, _id_key(t)))
+    open_ids = {t['id'] for t in opens}
+    out, placed = [], set()
+    for rel in opens:
+        riders = [t for t in tasks if t.get('rides') == rel['id'] and t['id'] != rel['id'] and not is_release(t)]
+        riders += [t for t in tasks if t.get('rides') == rel['id'] and t['id'] != rel['id'] and is_release(t)
+                   and t['id'] not in open_ids]
+        riders.sort(key=lambda t: (RIDER_ORDER.index(t['status']), _id_key(t)))
+        shown = [rel] + riders
+        placed.update(t['id'] for t in shown)
+        out.append(('release-%s' % (release_number(rel) or rel['id']), _release_heading(rel, ref, tasks), shown, []))
+    rest = [t for t in tasks if t['id'] not in placed]
+    now = sorted([t for t in rest if t['status'] in ('Running', 'Waiting', 'To do')], key=lambda t: _soonest(t, ref))
+    you = sorted([t for t in rest if t['status'] in YOU_ORDER], key=lambda t: YOU_ORDER.index(t['status']))
+    floor = datetime.min.replace(tzinfo=timezone.utc)
+    done = sorted([t for t in rest if t['status'] in ('Live', 'Built')],
+                  key=lambda t: _parse_iso(t.get('changed'), floor), reverse=True)
+    cutoff = ref - timedelta(days=EARLIER_DAYS)
+    folded = [t for t in done if t['status'] == 'Live' and (_parse_iso(t.get('changed')) or ref) < cutoff]
+    done = [t for t in done if t not in folded]
+    for gkey, title, shown, old in (('now', NOT_IN_RELEASE, now, []), ('you', GROUPS[1][1], you, []),
+                                    ('built', GROUPS[2][1], done, folded)):
+        if shown or old:
+            out.append((gkey, title, shown, old))
+    return out
+
+
+def status_groups(tasks: list, ref: datetime, kind: str) -> list:
+    """R6.2: the groups by status, as a feature artifact draws them."""
     out = []
     for gkey, title, statuses in GROUPS:
         mine = [t for t in tasks if t['status'] in statuses]
@@ -869,8 +956,8 @@ def _glance_task(task: dict) -> str:
         expected = ' <span class="glance-expected">%s</span>' % esc(task['expected'])
         if task.get('expected_basis'):
             expected += '<span class="glance-basis">%s</span>' % esc(task['expected_basis'])
-    return '<li data-glance-task="%s"><span class="task-id">%s</span>%s%s</li>' % (
-        esc(task['id']), esc(task['id']), esc(task['item']), expected)
+    return '<li data-glance-task="%s"><span class="task-id">%s</span>%s%s%s</li>' % (
+        esc(task['id']), esc(task['id']), _release_span(task) if is_release(task) else '', esc(task['item']), expected)
 
 
 def _at_a_glance(tasks: list, decisions, ref: datetime) -> str:
@@ -966,11 +1053,21 @@ def _link(link, label: str) -> str:
     return '<a href="%s">%s</a>' % (esc(link[0]), label)
 
 
-def _row(task: dict, kind: str, feature_links: dict) -> str:
-    item = '<span class="task-id">%s</span>%s' % (esc(task['id']), esc(task['item']))
+def rode_release(task: dict, by_id: dict):
+    """R5.46: the release task that `task` rides, or None."""
+    target = by_id.get(task.get('rides')) if task.get('rides') else None
+    return target if target is not None and is_release(target) else None
+
+
+def _row(task: dict, kind: str, feature_links: dict, by_id=None, release_line: bool = False) -> str:
+    item = '<span class="task-id">%s</span>%s%s' % (
+        esc(task['id']), _release_span(task) if is_release(task) else '', esc(task['item']))
     link = feature_links.get(task.get('owner')) if kind == 'full-progress' else None
     if link and not link[1]:             # the publish copy's rows stay text; section 1 has the copy buttons
         item = _link(link, item)
+    target = rode_release(task, by_id or {}) if release_line else None
+    if target is not None:               # R5.46: the release a Live or Built row rode, in a muted line under the Item
+        item += '<span class="release-line">%s</span>' % _release_span(target)
     app = '<td>%s</td>' % ('<code>%s</code>' % esc(task['app']) if task.get('app') else '') if kind == 'full-progress' else ''
     expected = esc(task['expected'])
     if task.get('expected_basis') and task['status'] in OPEN_STATUSES:     # R6.10
@@ -985,20 +1082,26 @@ def _table(body_rows: list, kind: str, label: str) -> str:
             % (head, '\n'.join(body_rows)))
 
 
-def _checklist(tasks: list, kind: str, label: str, ref: datetime, feature_links: dict) -> str:
+def wants_release_line(kind: str, gkey: str) -> bool:
+    """R5.46: a feature artifact's rows, and the full-progress group Live or built, show the release they rode."""
+    return kind == 'feature' or gkey == 'built'
+
+
+def _checklist(tasks: list, kind: str, label: str, ref: datetime, feature_links: dict, all_tasks=None) -> str:
     groups = group_tasks(tasks, ref, kind)
+    by_id = {t['id']: t for t in (tasks if all_tasks is None else all_tasks) if 'id' in t}
     width = len(_columns(kind, label))
     rows, folded = [], []
     for gkey, title, shown, old in groups:
         if shown:
-            rows.append('<tr class="status-group" data-group="%s"><td colspan="%d"><strong>%s</strong></td></tr>'
-                        % (gkey, width, esc(title)))
-            rows += [_row(t, kind, feature_links) for t in shown]
+            rows.append('<tr class="status-group%s" data-group="%s"><td colspan="%d"><strong>%s</strong></td></tr>'
+                        % (' release-group' if gkey.startswith('release-') else '', gkey, width, esc(title)))
+            rows += [_row(t, kind, feature_links, by_id, wants_release_line(kind, gkey)) for t in shown]
         folded += old
     out = _table(rows, kind, label) if rows or not folded else ''
     if folded:
         out += ('\n<details class="earlier"><summary>Earlier</summary>\n%s\n</details>'
-                % _table([_row(t, kind, feature_links) for t in folded], kind, label))
+                % _table([_row(t, kind, feature_links, by_id, True) for t in folded], kind, label))
     return out
 
 
@@ -1008,6 +1111,7 @@ PHASE_LABELS = {'agents': 'agents', 'join': 'join', 'ci': 'PR CI', 'merge': 'mer
 TL_X0, TL_X1 = 200, 720          # today's axis, in SVG units
 TL_SLOT0, TL_SLOT_STEP = 820, 90
 TL_ROW, TL_TOP = 62, 52
+TL_WIDTH = 960                   # the design width of the drawing, in SVG units (R5.43)
 
 
 def _n(value) -> str:
@@ -1020,7 +1124,7 @@ def _hhmm(minutes) -> str:
 
 def open_releases(tasks: list) -> list:
     """R5.40, R5.42: the release tasks still open, in registry order."""
-    return [t for t in tasks if t.get('release') is True and t.get('status') in OPEN_STATUSES]
+    return [t for t in tasks if is_release(t) and t.get('status') in OPEN_STATUSES]
 
 
 def _release_row(task: dict, ref: datetime, tasks: list):
@@ -1088,13 +1192,13 @@ def release_timeline(tasks: list, ref: datetime, label: str) -> str:
         t0 = int(now_min // 30 * 30)
         t1 = t0 + 30
     slot0 = TL_SLOT0 if today else 220
-    width = max(slot0 + TL_SLOT_STEP * (max(len(days), 1) - 1) + 80, 300)
+    width = max(slot0 + TL_SLOT_STEP * (max(len(days), 1) - 1) + 80, TL_WIDTH)     # R5.43: never drawn smaller than the design width
     x = lambda m: TL_X0 + (m - t0) * (TL_X1 - TL_X0) / (t1 - t0)
     slot = lambda day: slot0 + TL_SLOT_STEP * days.index(day)
     out, aria, y = [], [], TL_TOP
     for r in rows:
         t = r['task']
-        name = '%s · %s' % (t['id'], t['item'])
+        name = '%s · %s' % (release_name(t) if release_number(t) is not None else t['id'], t['item'])
         sub = ', '.join(r['riders'])
         out.append('<text class="rt-name" x="0" y="%d"><title>%s</title>%s</text>' % (y + 8, esc(name), esc(_cut(name, 26))))
         if sub:
@@ -1152,9 +1256,9 @@ def release_timeline(tasks: list, ref: datetime, label: str) -> str:
               'An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>'
               % tuple(sw(k) for k in RELEASE_PHASES))
     return ('<figure class="release-timeline">\n<figcaption>Next releases (%s)</figcaption>\n'
-            '<div class="timeline-scroll"><svg viewBox="0 0 %d %d" role="img" aria-label="%s" style="min-width:%dpx">'
+            '<div class="timeline-scroll"><svg viewBox="0 0 %d %d" role="img" aria-label="%s" style="min-width:%dpx;max-width:%dpx">'
             '<g class="rt-axis">%s</g>\n%s\n%s\n</svg></div>\n%s\n</figure>\n'
-            % (esc(label), width, height, esc('Next releases: ' + '; '.join(aria) + '.'), max(360, round(width * 640 / 900)),
+            % (esc(label), width, height, esc('Next releases: ' + '; '.join(aria) + '.'), max(360, round(width * 640 / 900)), width,
                ''.join(grid), '\n'.join(out), now, legend))
 
 
@@ -1179,13 +1283,18 @@ def _state_cell(tasks: list, decisions=()) -> str:
     return '<td data-col="state"><span class="state-chips">%s</span></td>' % chips
 
 
+def tile_label(status: str, count: int) -> str:
+    """R5.8a: what a tile counts, `tasks live`, and `task running` for one."""
+    return '%s %s' % ('task' if count == 1 else 'tasks', status.lower())
+
+
 def _tiles(tasks: list) -> str:
     counts = {s: 0 for s in STATUSES}
     for task in tasks:
         counts[task['status']] += 1
     return '<div class="status-count-tiles">' + ''.join(
         '<div class="status-count-tile %s"><div class="count">%d</div><div class="label">%s</div></div>'
-        % (status_class(s), counts[s], s.lower()) for s in STATUSES if counts[s]) + '</div>'
+        % (status_class(s), counts[s], tile_label(s, counts[s])) for s in STATUSES if counts[s]) + '</div>'
 
 
 def _key(label: str) -> str:
@@ -1471,7 +1580,7 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
         'tiles': _tiles(mine),
         'key': _key(label),
         'timeline': ('\n' + timeline.rstrip('\n')) if timeline else '',
-        'checklist': _checklist(mine, kind, label, ref, feature_links),
+        'checklist': _checklist(mine, kind, label, ref, feature_links, tasks),
         'sections': body,
         'registry': _registry_script(registry) if kind == 'full-progress' else '',
     }
@@ -1664,6 +1773,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
     except ContentError as exc:
         return [('R6.1' if 'status' in p else 'R4.7', p) for p in exc.problems]
     mine = _tasks_of(kind, key, all_tasks)
+    all_by_id = {t['id']: t for t in all_tasks if 'id' in t}
     feature_files = {e['key']: e.get('file', '') for e in manifest.get('feature_artifacts') or []}
     root = parse_dom(html)
     _check_document(html, root, kind, add)
@@ -1859,7 +1969,13 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             item_cell = cells[1] if len(cells) > 1 else None
             idnode = find(item_cell, 'span', 'task-id') if item_cell else None
             row['label'] = text_of(idnode) if idnode else ''
-            row['item'] = text_of(item_cell, skip=lambda n: has_class(n, 'task-id')) if item_cell else ''
+            skipped = lambda n: has_class(n, 'task-id') or has_class(n, 'release-name') or has_class(n, 'release-line')
+            row['item'] = text_of(item_cell, skip=skipped) if item_cell else ''
+            line = find(item_cell, 'span', 'release-line') if item_cell else None
+            row['release_line'] = text_of(line) if line else ''
+            leading = [n for n in find_all(item_cell, 'span', 'release-name')
+                       if not has_ancestor(n, lambda a: has_class(a, 'release-line'))] if item_cell else []
+            row['release_name'] = ' '.join(text_of(n) for n in leading)
             anchor = find(item_cell, 'a') if item_cell else None
             row['href'] = anchor.attrs.get('href') if anchor else None
             offset = 1 if kind == 'full-progress' else 0
@@ -1883,24 +1999,41 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         elif row['chip_class'] != [status_class(row['status'])]:
             add('R6.1', 'task %s chip class %s does not match status %r' % (row['id'], row['chip_class'], row['status']))
 
-    # R6.2 and R6.3 groups, order and the Earlier fold
-    group_of = {s: (gkey, gtitle) for gkey, gtitle, sts in GROUPS for s in sts}
+    # R6.2, R5.46 and R6.3 groups, order and the Earlier fold
+    greq = 'R5.46' if kind == 'full-progress' else 'R6.2'
     expected_groups = group_tasks([t for t in mine if t.get('status') in STATUSES], ref, kind)
+    group_of_task = {t['id']: gkey for gkey, _, shown, _ in expected_groups for t in shown}
     shown_wanted = [(g, t) for g, t, shown, _ in expected_groups if shown]
     shown_found = [(m[0], m[1]) for m in group_marks]
     if shown_found != shown_wanted:
-        add('R6.2', 'the checklist groups are %s; the registry needs %s, in that order' % (
+        add(greq, 'the checklist groups are %s; the registry needs %s, in that order' % (
             [t for _, t in shown_found], [t for _, t in shown_wanted]))
     for row in rows:
-        if row['status'] in group_of and not row['folded'] and row['group'] != group_of[row['status']][0]:
-            add('R6.2', 'task %s (%s) is under group %r; it belongs under %r' % (
-                row['id'], row['status'], row['group'], group_of[row['status']][0]))
+        if row['id'] in group_of_task and not row['folded'] and row['group'] != group_of_task[row['id']]:
+            add(greq, 'task %s (%s) is under group %r; it belongs under %r' % (
+                row['id'], row['status'], row['group'], group_of_task[row['id']]))
     by_id = {t['id']: t for t in mine if 'id' in t}
     for gkey, _, shown, _ in expected_groups:
         want = [t['id'] for t in shown]
         have = [r['id'] for r in rows if r['group'] == gkey and not r['folded'] and r['id'] in want]
         if have != [i for i in want if i in have]:
-            add('R6.2', 'rows under group %r are in the order %s; they must be %s' % (gkey, have, [i for i in want if i in have]))
+            add(greq, 'rows under group %r are in the order %s; they must be %s' % (gkey, have, [i for i in want if i in have]))
+    # R5.45, R5.46 the release name of a release row, and the release line of a row that rode one
+    shown_line = {t['id'] for gkey, _, shown, old in expected_groups for t in shown if wants_release_line(kind, gkey)}
+    shown_line |= {t['id'] for _, _, _, old in expected_groups for t in old}
+    for row in rows:
+        task = by_id.get(row['id'])
+        if task is None:
+            continue
+        want_name = release_name(task) if is_release(task) else ''
+        if row['release_name'] != want_name:
+            add('R5.45', 'task %s must show the release name %r at the start of its Item; it shows %r'
+                % (row['id'], want_name, row['release_name']))
+        target = rode_release(task, all_by_id) if row['id'] in shown_line else None
+        want_line = release_name(target) if target is not None else ''
+        if row['release_line'] != want_line:
+            add('R5.46', 'task %s must show the release line %r under its Item; it shows %r'
+                % (row['id'], want_line, row['release_line']))
     details = find_all(root, 'details', 'earlier')
     folded_wanted = {t['id'] for _, _, _, old in expected_groups for t in old}
     folded_found = {r['id'] for r in rows if r['folded']}
@@ -1957,8 +2090,8 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         count, lab = find(tile, 'div', 'count'), find(tile, 'div', 'label')
         have_tiles.append((text_of(lab) if lab else '', text_of(count) if count else '',
                            [c for c in tile.attrs.get('class', '').split() if c.startswith('status-') and c != 'status-count-tile']))
-    want_tiles = [(s.lower(), str(sum(1 for t in mine if t.get('status') == s)), [status_class(s)])
-                  for s in STATUSES if any(t.get('status') == s for t in mine)]
+    want_tiles = [(tile_label(s, sum(1 for t in mine if t.get('status') == s)), str(sum(1 for t in mine if t.get('status') == s)),
+                   [status_class(s)]) for s in STATUSES if any(t.get('status') == s for t in mine)]
     if have_tiles != want_tiles:
         add('R5.8', 'the tiles read %s; the registry needs %s' % (
             [(a, b) for a, b, _ in have_tiles], [(a, b) for a, b, _ in want_tiles]))

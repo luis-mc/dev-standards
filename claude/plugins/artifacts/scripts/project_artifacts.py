@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """project_artifacts.py - the only writer of a project's artifact record.
 
-Implements ARTIFACTSPEC 1.4.0: section 4 (the record, time, the record
+Implements ARTIFACTSPEC 1.6.0: section 4 (the record, time, the record
 worktree and its commits), section 7 (every command), the bookkeeping of
 section 9 (`pending`, `mark-published`; only Full Progress is published, a
 feature artifact is a standalone file) and the record-level checks of
@@ -779,6 +779,37 @@ def migrate_done(manifest, registry):
     return ids, bool(ids) or merged
 
 
+def release_number(task):
+    """R5.45: the number of a release row (a positive whole number), else None."""
+    n = task.get('release') if isinstance(task, dict) else None
+    return n if isinstance(n, int) and not isinstance(n, bool) and n > 0 else None
+
+
+def is_release(task):
+    """R5.40: a release row; an older `"release": true` still counts until the migration numbers it."""
+    return isinstance(task, dict) and (task.get('release') is True or release_number(task) is not None)
+
+
+def next_release_number(tasks):
+    return max([release_number(t) or 0 for t in tasks if isinstance(t, dict)], default=0) + 1
+
+
+def migrate_releases(registry):
+    """R5.45: number the rows that still say `"release": true`, oldest `changed` first, ties by ID, after the
+    highest number in use. Returns the IDs numbered; the next writing command writes them."""
+    tasks = registry.get('tasks')
+    tasks = tasks if isinstance(tasks, list) else []
+    old = [t for t in tasks if isinstance(t, dict) and t.get('release') is True]
+    floor = datetime.min.replace(tzinfo=timezone.utc)
+    n = next_release_number(tasks)
+    ids = []
+    for t in sorted(old, key=lambda t: (parse_iso(t.get('changed')) or floor, task_sort_key(t))):
+        t['release'] = n
+        n += 1
+        ids.append(str(t.get('id')))
+    return ids
+
+
 class Record:
     def __init__(self, d, manifest=None, registry=None, exists=True):
         self.dir = Path(d)
@@ -798,6 +829,7 @@ class Record:
         self.old_done = []           # IDs read from the file with the retired status Done
         self.old_merged = False      # merged_status read from the file as the retired Done
         self.old_urls = []           # feature keys read from the file with a url (R4.18)
+        self.old_releases = []       # IDs read from the file with "release": true, numbered on load (R5.45)
         self.migrated = False
         self.recovered = 0           # retired pages added from the history of manifest.json (R4.20)
 
@@ -820,6 +852,8 @@ class Record:
         raw_tasks = copy.deepcopy(registry.get('tasks')) if isinstance(registry.get('tasks'), list) else None
         old_merged = manifest.get('merged_status') == 'Done'
         old_done, migrated = migrate_done(manifest, registry)
+        old_releases = migrate_releases(registry)
+        migrated = migrated or bool(old_releases)
         rec = cls(d, manifest, registry)
         iso = lambda: rec.now().iso      # noqa: E731 - read only when something is retired
         old_urls = AR.move_feature_urls(manifest, iso) if AR else []         # R4.18, R4.19
@@ -827,6 +861,7 @@ class Record:
         if migrated:
             rec._tasks0 = raw_tasks      # the registry differs from the file, so it is rewritten
             rec.old_done, rec.old_merged = old_done, old_merged
+            rec.old_releases = old_releases
         if migrated or old_urls:
             rec.migrated = True
             rec.old_urls = old_urls
@@ -1753,14 +1788,22 @@ def parse_risk(text):
 
 
 def release_problems(task, by_id):
-    """R5.40, R5.41: [(requirement, message)] for the release fields of one task row."""
+    """R5.40, R5.41, R5.45, R5.47: [(requirement, message)] for the release fields of one task row."""
     out = []
     rel = task.get('release')
     phases, risk, rides = task.get('phases'), task.get('risk'), task.get('rides')
-    if 'release' in task and rel is not True:
-        out.append(('R5.40', 'release must be true when present'))
-    if (phases is not None or risk is not None) and rel is not True:
+    if rel is True:
+        out.append(('R5.45', 'release is still true; it needs a number (the next writing command numbers it)'))
+    elif 'release' in task and release_number(task) is None:
+        out.append(('R5.45', 'release must be a positive whole number (RELEASE-n)'))
+    elif release_number(task) is not None and any(
+            x is not task and release_number(x) == rel for x in by_id.values()):
+        out.append(('R5.45', 'RELEASE-%d is used by more than one task' % rel))
+    if (phases is not None or risk is not None) and not is_release(task):
         out.append(('R5.40', 'phases and risk belong to a release task (--release)'))
+    if task.get('status') in ('Running', 'Built') and not is_release(task) and not rides:
+        out.append(('R5.47', 'a %s task rides a release; give it --rides RELEASE-n (or the release task ID)'
+                    % task['status']))
     good = []
     if phases is not None:
         if not isinstance(phases, list) or not phases:
@@ -1787,7 +1830,7 @@ def release_problems(task, by_id):
         target = by_id.get(rides) if isinstance(rides, str) else None
         if target is None:
             out.append(('R5.40', 'rides names %r, which is not a task' % (rides,)))
-        elif target is task or target.get('release') is not True:
+        elif target is task or not is_release(target):
             out.append(('R5.40', 'rides names %s, which is not a release task' % rides))
     if good and task.get('status') in OPEN_STATUSES and isinstance(task.get('expected'), str):
         end = max(good)
@@ -1799,10 +1842,21 @@ def release_problems(task, by_id):
     return out
 
 
+def resolve_rides(text, by_id):
+    """R5.45: `rides` stores a release's task ID; `RELEASE-<n>` names it by number."""
+    m = re.match(r'^RELEASE-(\d+)$', text, re.I)
+    if not m:
+        return text
+    for t in by_id.values():
+        if release_number(t) == int(m.group(1)):
+            return str(t.get('id'))
+    raise Fail(1, '--rides %s: no release has that number' % text)
+
+
 def apply_release_fields(task, by_id, args, now_dt):
     """Set or clear the release fields of `task` from --release/--phase/--risk/--rides; refuse a bad result."""
-    if getattr(args, 'release', False):
-        task['release'] = True
+    if getattr(args, 'release', False) and release_number(task) is None:
+        task['release'] = next_release_number(list(by_id.values()))       # R5.45: never reused
     if args.phase is not None:
         phases = parse_phases(args.phase, now_dt)
         if phases:
@@ -1817,7 +1871,7 @@ def apply_release_fields(task, by_id, args, now_dt):
             task.pop('risk', None)
     if args.rides is not None:
         if args.rides.strip():
-            task['rides'] = args.rides.strip()
+            task['rides'] = resolve_rides(args.rides.strip(), by_id)
         else:
             task.pop('rides', None)
     problems = release_problems(task, by_id)
@@ -2318,6 +2372,15 @@ def done_notes(rec):
     return out
 
 
+def release_notes(rec):
+    """A note (never a finding) for older rows that say `"release": true`, numbered when the record loads (R5.45)."""
+    if not rec.old_releases:
+        return []
+    by_id = {t.get('id'): t for t in rec.tasks()}
+    return ['registry.json: %s say "release": true; they are read as %s and the next writing command numbers them'
+            % (', '.join(sorted(rec.old_releases)), ', '.join('RELEASE-%s' % by_id[i].get('release') for i in sorted(rec.old_releases)))]
+
+
 def feature_url_notes(rec):
     """A note (never a finding) for an older manifest whose feature entries hold a url (R4.18)."""
     if not rec.old_urls:
@@ -2354,7 +2417,7 @@ def cmd_check(args):
         findings += check_html_findings(rec, key)
         findings += fresh_render_findings(rec, key)
     findings = sorted(set(findings))
-    notes = rule_copy_notes() + done_notes(rec) + feature_url_notes(rec) + retired_notes(rec)
+    notes = rule_copy_notes() + done_notes(rec) + release_notes(rec) + feature_url_notes(rec) + retired_notes(rec)
     warnings = decision_warnings(rec) + lede_warnings(rec)
     if getattr(args, 'json_out', False):
         result = {'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],
@@ -2581,11 +2644,11 @@ def build_parser():
     s.add_argument('--app')
     s.add_argument('--status', default='To do')
     s.add_argument('--prefix')
-    s.add_argument('--release', action='store_true', help='this task is a release (R5.40)')
+    s.add_argument('--release', action='store_true', help='this task is a release; it gets the next number, RELEASE-n (R5.40, R5.45)')
     s.add_argument('--phase', action='append', metavar='NAME=HH:MM-HH:MM',
                    help='a release phase (agents, join, ci, merge), repeatable; "" clears them')
     s.add_argument('--risk', metavar='LABEL=MINUTES', help='the named risk of a release, for example "+1 fix round=10"; "" clears it')
-    s.add_argument('--rides', metavar='ID', help='the release task this task rides; "" clears it')
+    s.add_argument('--rides', metavar='ID', help='the release this task rides, its task ID or RELEASE-n (a Running or Built task needs one, R5.47); "" clears it')
     s.set_defaults(func=cmd_task_add)
 
     s = sub.add_parser('set-task-status', parents=[w], help='change one task')
@@ -2595,11 +2658,11 @@ def build_parser():
     s.add_argument('--expected')
     s.add_argument('--basis', help='what sets the estimate; "" clears it (open statuses only)')
     s.add_argument('--history')
-    s.add_argument('--release', action='store_true', help='this task is a release (R5.40)')
+    s.add_argument('--release', action='store_true', help='this task is a release; it gets the next number, RELEASE-n (R5.40, R5.45)')
     s.add_argument('--phase', action='append', metavar='NAME=HH:MM-HH:MM',
                    help='a release phase (agents, join, ci, merge), repeatable; "" clears them')
     s.add_argument('--risk', metavar='LABEL=MINUTES', help='the named risk of a release, for example "+1 fix round=10"; "" clears it')
-    s.add_argument('--rides', metavar='ID', help='the release task this task rides; "" clears it')
+    s.add_argument('--rides', metavar='ID', help='the release this task rides, its task ID or RELEASE-n (a Running or Built task needs one, R5.47); "" clears it')
     s.set_defaults(func=cmd_set_task_status)
 
     s = sub.add_parser('export-content', parents=[j], help="copy an artifact's content files out of the record")

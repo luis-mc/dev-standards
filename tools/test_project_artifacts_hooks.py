@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the luismc-artifacts hooks (ARTIFACTSPEC 1.4.0 section 8, R13.2).
+"""Tests for the luismc-artifacts hooks (ARTIFACTSPEC 1.6.0 section 8, R13.2).
 
 Feeds sample hook input to each hook in throwaway git repos (with a bare remote)
 and asserts the queue, the exit code and the output, including R8.2, R8.4, R8.5,
@@ -1445,6 +1445,13 @@ def rule_file_carries_the_release_rule():
     lines = [ln[2:] for ln in RULE.splitlines() if ln.startswith('- ')]
     assert any("release's Expected is the end of its last phase" in ln and '--risk' in ln and 'instead of padding' in ln
                for ln in lines), lines
+
+
+@test
+def rule_file_carries_the_rides_rule():
+    """R5.47: every Running or Built task rides a release; --release gives the release its number."""
+    lines = [ln[2:] for ln in RULE.splitlines() if ln.startswith('- ')]
+    assert any('Running or Built' in ln and '--rides' in ln and '--release' in ln and 'RELEASE-n' in ln for ln in lines), lines
 
 
 # --- registration and invariants ------------------------------------------------------

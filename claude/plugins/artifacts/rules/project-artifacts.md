@@ -14,3 +14,4 @@
 - Old claude.ai pages of feature artifacts are deleted only with the owner's confirmation: when pending lists retired pages, ask the owner, delete each confirmed one with the Artifact tool, then run mark-deleted.
 - When you give an Expected time, give its basis too (what it waits on and how long).
 - A release's Expected is the end of its last phase (`--phase`); name any risk with `--risk` instead of padding it.
+- Every Running or Built task rides a release (`--rides`); `--release` gives a release its RELEASE-n number.
