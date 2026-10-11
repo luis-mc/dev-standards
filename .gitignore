@@ -7,3 +7,4 @@ __pycache__/
 .claude/artifacts-stop-state.json
 .claude/artifacts-publish/
 .claude/worktrees/
+.claude/artifacts-local.json
