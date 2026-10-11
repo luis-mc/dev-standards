@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T10:19+01:00",
+  "updated": "2026-10-11T10:40+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -346,12 +346,11 @@
       "id": "AR37",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "Full Progress feature links that work from claude.ai",
-      "detail": "From claude.ai a file:/// link cannot open and the long path wraps; the published copy names each feature with a Copy link button instead",
-      "expected": "11 Oct ~11:30",
-      "changed": "2026-10-11T10:08+01:00",
-      "expected_basis": "local suites ~10:45, join and gate ~11:05, then ready-PR CI ~25 min"
+      "detail": "On branch AR37-copy-feature-links (bca72f0): render 94/94, artifacts 184/184, change notes ok",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T10:40+01:00"
     },
     {
       "id": "AR38",
