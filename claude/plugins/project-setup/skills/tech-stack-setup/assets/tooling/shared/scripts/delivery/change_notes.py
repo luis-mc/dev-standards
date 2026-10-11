@@ -104,11 +104,12 @@ def load_config(root: Path, config: str | None) -> dict:
         cfg.setdefault("changelog_heading", "What changed")
         if not isinstance(cfg["changelog_heading"], str) or not cfg["changelog_heading"].strip():
             raise dc.DeliveryError("%s: 'changelog_heading' must be a non-empty string" % where)
+        for key in ("specs", "release_branches"):
+            cfg[key] = dc._str_list(cfg, key, where)
     else:
         cfg = dc.load_gate(root)
         where = dc.GATE_JSON_PATH
-    for key in ("specs", "release_branches", "plugins"):
-        cfg[key] = dc._str_list(cfg, key, where)
+    cfg["plugins"] = dc._str_list(cfg, "plugins", where)
     heads = cfg.setdefault("changelog_headings", {})
     if not isinstance(heads, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in heads.items()):
         raise dc.DeliveryError("%s: 'changelog_headings' must be an object of spec path to heading" % where)
