@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the three luismc-artifacts hooks (ARTIFACTSPEC 1.3.1 section 8, R13.2).
+"""Tests for the luismc-artifacts hooks (ARTIFACTSPEC 1.3.1 section 8, R13.2).
 
 Feeds sample hook input to each hook in throwaway git repos (with a bare remote)
 and asserts the queue, the exit code and the output, including R8.2, R8.4, R8.5,
@@ -26,6 +26,7 @@ PLUGIN = os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'artifacts')
 SCRIPTS = os.path.join(PLUGIN, 'scripts')
 AFTER = os.path.join(SCRIPTS, 'hook_after_command.py')
 STOP = os.path.join(SCRIPTS, 'hook_end_of_turn.py')
+BEFORE = os.path.join(SCRIPTS, 'hook_before_command.py')
 START = os.path.join(SCRIPTS, 'hook_session_start.py')
 
 TESTS = []
@@ -416,6 +417,14 @@ here = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(here, "calls.log"), "a") as f:
     f.write(" ".join(sys.argv[1:]) + "\\n")
 mode = open(os.path.join(here, "mode")).read().strip() if os.path.exists(os.path.join(here, "mode")) else ""
+if sys.argv[1:2] == ["push"]:
+    if mode == "pushfail":
+        sys.stderr.write("record push refused by main protection")
+        sys.exit(4)
+    sys.exit(0)
+if mode in ("broken", "pushfail"):
+    if mode == "pushfail":
+        mode = ""
 if mode == "broken":
     sys.stderr.write("boom")
     sys.exit(2)
@@ -630,11 +639,101 @@ def stop_fails_open_when_pending_cannot_be_read():
     assert rc == 0 and out.strip() == '' and 'pending failed (exit 2)' in err, (rc, out, err)
     env2 = {'CLAUDE_ARTIFACTS_SCRIPT': os.path.join(work, 'missing.py')}
     rc, out, err, _ = stop(work, env2)
-    assert rc == 0 and out.strip() == '', (rc, out)
+    assert rc == 0 and 'decision' not in parse_stop(out), (rc, out)       # at most the push message (R8.17)
     # ... but a queued event in the queue file still blocks
     after(work, 'gh pr ready')
     res = parse_stop(stop(work, env)[1])
     assert res.get('decision') == 'block' and 'set-task-status AR5' in res['reason'], res
+
+
+@test
+def stop_pushes_the_record_before_it_decides():
+    """R8.17: the end-of-turn hook runs `push` first; it does not matter whether anything is pending."""
+    work = make_repo()
+    env = set_pending(work)
+    rc, out, err, _ = stop(work, env)
+    assert rc == 0 and out.strip() == '', (rc, out, err)
+    calls = open(os.path.join(os.path.dirname(work), 'stubs', 'calls.log')).read().split('\n')
+    assert calls.index('push') < calls.index('pending --json'), calls
+
+
+@test
+def stop_says_so_when_the_push_fails_and_does_not_block():
+    """R8.17: a failed push is a systemMessage; it never blocks the stop and never loops."""
+    work = make_repo()
+    env = set_pending(work, mode='pushfail')
+    rc, out, err, _ = stop(work, env)
+    res = parse_stop(out)
+    assert rc == 0 and 'decision' not in res, (rc, out, err)
+    assert 'record push failed (exit 4' in res['systemMessage'] and 'stay local' in res['systemMessage'], res
+    # beside a pending artifact it blocks for the artifact and still carries the push message
+    env = set_pending(work, artifacts=[art('demo')], mode='pushfail')
+    res = parse_stop(stop(work, env)[1])
+    assert res['decision'] == 'block' and 'record push failed' in res['systemMessage'], res
+    # the push failure is not part of the block count (R8.4)
+    for _ in range(3):
+        res = parse_stop(stop(work, env)[1])
+    assert 'decision' not in res and 'letting the turn end' in res['systemMessage'], res
+
+
+def before(work, command, env=None, tool='Bash'):
+    d = {'session_id': 's1', 'cwd': work, 'hook_event_name': 'PreToolUse', 'tool_name': tool,
+         'tool_input': {'command': command}}
+    return run_hook(BEFORE, d, work, env)
+
+
+@test
+def before_command_pushes_the_record_for_pr_commands():
+    """R8.16: gh pr create, ready and merge are preceded by `push`; nothing else is."""
+    for cmd, tool in (('gh pr create --title t', 'Bash'), ('gh pr ready', 'Bash'), ('gh pr merge 3 --squash', 'Bash'),
+                      ('cd x && rtk gh pr create --fill', 'Bash'), ('gh pr ready; gh pr view', 'PowerShell'),
+                      ('gh pr merge 3 --auto', 'Bash')):
+        work = make_repo()
+        env = set_pending(work)
+        rc, out, err, _ = before(work, cmd, env, tool)
+        assert rc == 0 and out.strip() == '', (cmd, rc, out, err)
+        log = os.path.join(os.path.dirname(work), 'stubs', 'calls.log')
+        assert open(log).read().split('\n')[:1] == ['push'], cmd
+    for cmd in ('git status', 'gh pr view 3', 'gh pr list', 'git commit -m "gh pr create"', 'gh run watch 1'):
+        work = make_repo()
+        env = set_pending(work)
+        assert before(work, cmd, env)[0] == 0
+        assert not os.path.exists(os.path.join(os.path.dirname(work), 'stubs', 'calls.log')), cmd
+
+
+@test
+def before_command_never_blocks_on_a_failed_push():
+    work = make_repo()
+    env = set_pending(work, mode='pushfail')
+    rc, out, err, _ = before(work, 'gh pr create', env)
+    res = json.loads(out)
+    assert rc == 0 and 'decision' not in res and 'permissionDecision' not in json.dumps(res), (rc, out)
+    assert 'record push failed (exit 4' in res['systemMessage'], res
+    # a script that cannot start is a warning too
+    rc, out, _e, _ = before(work, 'gh pr ready', {'CLAUDE_ARTIFACTS_SCRIPT': os.path.join(work, 'missing.py')})
+    assert rc == 0 and 'record push failed' in json.loads(out)['systemMessage'], out
+
+
+@test
+def before_command_does_nothing_without_a_manifest_or_when_off():
+    work = make_repo(manifest=False)
+    env = set_pending(work)
+    assert before(work, 'gh pr create', env)[1].strip() == ''
+    assert not os.path.exists(os.path.join(os.path.dirname(work), 'stubs', 'calls.log'))
+    work = make_repo()
+    env = dict(set_pending(work), CLAUDE_ARTIFACTS_HOOKS='off')
+    assert before(work, 'gh pr create', env)[1].strip() == ''
+    assert not os.path.exists(os.path.join(os.path.dirname(work), 'stubs', 'calls.log'))
+    for raw in ('garbage', '', '[]', '{"tool_input": {"command": 5}}'):
+        assert run_hook(BEFORE, raw, work, set_pending(work))[0] == 0, raw
+
+
+@test
+def hooks_json_registers_the_before_command_hook():
+    cfg = read_json(os.path.join(PLUGIN, 'hooks', 'hooks.json'))
+    entries = cfg['hooks']['PreToolUse']
+    assert len(entries) == 1 and set(entries[0]['matcher'].split('|')) == {'Bash', 'PowerShell'}, entries
+    assert 'hook_before_command.py' in entries[0]['hooks'][0]['command']
 
 
 @test

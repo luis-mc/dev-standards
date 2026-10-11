@@ -97,7 +97,9 @@ the repository instead (the session's scratchpad directory, in a new folder).
 
 Once, at the end of the turn, never mid-turn. Repeat until `pending` exits 0:
 
-1. Run `pending --json`. It lists Full Progress (the only artifact it lists)
+1. Run `pending --json`. It first pushes the record commits of the turn (a
+   failed push is reported as `push_error` and does not stop the listing), then
+   lists Full Progress (the only artifact it lists)
    when its committed render changed since the last publish, and writes the
    publish copy: the same page with absolute `file:///` links to the feature
    files (some browsers block `file:` links from a web page; the page shows

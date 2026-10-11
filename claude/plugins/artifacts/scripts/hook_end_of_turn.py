@@ -10,7 +10,9 @@ hook_after_command, R8.8) and the registry has no task in Running, Waiting or
 Needs you (R8.10); once such a task exists the marker is cleared. After 3
 consecutive blocks in one session with no change in what is pending it lets the
 turn end and prints a systemMessage instead (R8.4), so a session that cannot
-publish never loops. It only reads the record (INV-4).
+publish never loops. Before it decides it pushes the record commits that writing commands left unpushed
+(`project_artifacts.py push`, R8.17); a failed push never blocks the turn, it adds a
+systemMessage saying the commits stay local. Otherwise it only reads the record (INV-4).
 
 Per-session state: <repo>/.claude/artifacts-stop-state.json, shaped
 {session_id: {"blocks": n, "last": <hash of what was pending>,
@@ -33,9 +35,25 @@ from hook_after_command import (STATE_NAME, command_for, hook_root, hooks_off,  
 
 BLOCK_LIMIT = 3          # R8.4; the ceiling in section 12 is 5, it may only be lowered
 PENDING_TIMEOUT = 90
+PUSH_TIMEOUT = 40
 ACTIVE_STATUSES = ('Running', 'Waiting', 'Needs you')   # R8.10
 BACKGROUND_NOTE = 'work started in the background with no Running task'
 MIGRATION_NOTE = 'the artifact record needs migrating (run render)'
+
+
+def push_record(root, script):
+    """R8.17: push the unpushed record commits. '' when pushed or nothing to push, else the message to show."""
+    r = run(command_for(script) + ['push'], root, PUSH_TIMEOUT)
+    if r is None:
+        warn('push could not run (%s)' % script)
+        return 'luismc-artifacts: the record push could not run; the record commits stay local.'
+    if r[0] == 0:
+        return ''
+    detail = (r[2] or r[1]).strip().splitlines()
+    warn('push failed (exit %d)' % r[0])
+    return ('luismc-artifacts: the record push failed (exit %d%s); the record commits stay local and the next '
+            'push (end of the next turn, pending, or before gh pr create, ready or merge) tries again.'
+            % (r[0], ': ' + detail[-1][:200] if detail else ''))
 
 
 def pending_items(root, script):
@@ -206,6 +224,11 @@ def main():
     if manifest is None:
         return 0
     script = script_path()
+    try:
+        push_note = push_record(root, script)
+    except Exception as exc:
+        warn('record push skipped (%s: %s)' % (type(exc).__name__, exc))
+        push_note = ''
     found = pending_items(root, script)
     # pending unreadable: fail open on artifacts, but the queue file is still a fact
     artifacts, queue, retired = found if found is not None else ([], [], [])
@@ -239,6 +262,7 @@ def main():
     except Exception as exc:
         warn('retired pages not listed (%s: %s)' % (type(exc).__name__, exc))
         told = ''
+    told = '\n'.join(part for part in (push_note, told) if part)
     if not artifacts and not queue and not background and not migration:
         state = read_state(state_path)
         if sid in state:

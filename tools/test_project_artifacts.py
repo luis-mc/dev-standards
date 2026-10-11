@@ -4,11 +4,10 @@
 Every case builds throwaway git repositories with a local bare remote and runs
 the real command line against them. Nothing here pushes to any real remote.
 
-Two groups run the same cases:
-  fake  a small stand-in for render_artifacts.py, written into a temp copy of
-        the plugin, so this file proves the script on its own;
-  real  the plugin's own render_artifacts.py; skipped, with a message, while
-        that module is not importable.
+The cases run against the plugin's own render_artifacts.py only (TC3: a
+stand-in renderer group used to run them a second time and never caught a bug
+the real one missed); the file reports a skip, with a message, while that
+module is not importable.
 
 Run:  python -I tools/test_project_artifacts.py
 """
@@ -31,158 +30,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 REAL_PLUGIN = ROOT / 'claude' / 'plugins' / 'artifacts'
 NOW = '2026-10-10T11:39:00+00:00'
-
-FAKE_RENDER = r'''
-"""A stand-in renderer with the exact API the script expects (tests only)."""
-import html as _h
-import json
-import re
-from pathlib import Path
-
-STATUSES = ['Live', 'Built', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed']
-REQUIRED_TOKENS = ['--paper', '--ink']
-
-
-class ContentError(Exception):
-    def __init__(self, problems):
-        super().__init__('; '.join(problems))
-        self.problems = list(problems)
-        self.partial = None
-
-
-def _read(p):
-    return p.read_bytes().decode('utf-8').replace('\r\n', '\n')
-
-
-def artifact_file(kind, title):
-    words = title.split(':', 1)[1] if ':' in title else title
-    return '%s-%s.html' % (kind, re.sub(r'[^a-z0-9]+', '-', words.lower()).strip('-'))
-
-
-def check_tokens(css):
-    return ['token %s is not defined on :root' % t for t in REQUIRED_TOKENS if t + ':' not in css]
-
-
-def load_content(record_dir, key, plugin_dir=None):
-    d = Path(record_dir) / 'content' / key
-    problems, meta, sections, history = [], {}, [], []
-    mp = d / 'meta.json'
-    if not mp.is_file():
-        problems.append('R4.4 content/%s/meta.json is missing' % key)
-    else:
-        try:
-            meta = json.loads(_read(mp))
-        except ValueError:
-            problems.append('R4.4 meta.json is not valid JSON')
-        for field in ('title', 'hero', 'lede'):
-            if not isinstance(meta.get(field), str) or not meta[field].strip():
-                problems.append('R4.4 meta.json: "%s" must be a non-empty string' % field)
-    n = 0
-    for p in sorted(d.glob('*.html')) if d.is_dir() else []:
-        m = re.match(r'^(\d\d)-[a-z0-9-]+\.html$', p.name)
-        if not m:
-            problems.append('R4.1 %s is not named NN-slug.html' % p.name)
-            continue
-        n += 1
-        if int(m.group(1)) != n:
-            problems.append('R5.2 sections must be numbered 01..N without gaps')
-        text = _read(p)
-        first, _, rest = text.partition('\n')
-        mt = re.match(r'^<!-- title: (.+) -->$', first)
-        if not mt:
-            problems.append('R4.10 %s: first line must be a title comment' % p.name)
-            continue
-        if re.search(r'<script|<style', text, re.I):
-            problems.append('R4.10 %s contains <script> or <style>' % p.name)
-        if mt.group(1).strip().lower() == 'decisions' and key != 'full-progress':
-            problems.append('R5.19 %s: a section titled Decisions is drawn from decisions.json only' % p.name)
-        sections.append({'title': mt.group(1), 'html': rest})
-    hp = d / 'history.json'
-    if hp.is_file():
-        history = json.loads(_read(hp))
-    content = {'meta': meta, 'sections': sections, 'history': history}
-    if problems:
-        err = ContentError(problems)
-        if meta:
-            err.partial = content
-        raise err
-    return content
-
-
-def check_html(html, key, manifest, registry, plugin_dir, record_dir):
-    out = []
-    want = 'Full Progress: ' if key == 'full-progress' else 'Feature: '
-    m = re.search(r'<title>(.*?)</title>', html)
-    if not m or not m.group(1).startswith(want):
-        out.append(('R5.1', 'title must start with "%s"' % want))
-    if 'FAKE-BAD-HTML' in html:
-        out.append(('R5.3', 'the fake checker found its marker'))
-    m = re.search(r'<script type="application/json" id="task-registry">(.*?)</script>', html, re.S)
-    if key == 'full-progress':
-        if not m:
-            out.append(('R5.9', 'the full-progress artifact must embed the registry'))
-        elif json.loads(m.group(1).replace('<\\/', '</')) != registry:
-            out.append(('R5.9', 'the embedded registry differs from the task registry'))
-    return out
-
-
-def render_artifact(manifest, registry, contents, key, plugin_dir, record_dir, stamp_text, stamp_iso, links=None):
-    esc = _h.escape
-    if manifest.get('design') == 'design.css':
-        bad = check_tokens((Path(record_dir) / 'design.css').read_text(encoding='utf-8'))
-        if bad:
-            raise ContentError(['design: ' + b for b in bad])
-    fp = key == 'full-progress'
-    entry = manifest['full_progress_artifact'] if fp else next(
-        e for e in manifest['feature_artifacts'] if e['key'] == key)
-    c = contents[key]
-    tasks = registry['tasks'] if fp else [t for t in registry['tasks'] if t['owner'] == key]
-    order = {s: i for i, s in enumerate(STATUSES)}
-    tasks = sorted(tasks, key=lambda t: (order[t['status']], t['id']))
-    hrefs = {e['key']: (links or {}).get(e['key'], (e['file'], ''))[0] for e in manifest['feature_artifacts']}
-    shown = {e['key']: (links or {}).get(e['key'], (e['file'], ''))[1] for e in manifest['feature_artifacts']}
-    needs = ['%s %s' % (t['id'], t['item']) for t in tasks if t['status'] in ('Needs you', 'Failed')]
-    out = ['<title>%s</title>' % esc(entry['title']),
-           '<h1>%s</h1>' % esc(c['meta'].get('hero', '')),
-           '<h2>0. Status and checklist</h2>',
-           '<p>Last update: <time datetime="%s">%s</time> (%s)</p>' % (
-               stamp_iso, stamp_text, esc(manifest['timezone_label'])),
-           '<p>%s %s</p>' % (esc(c['meta'].get('lede', '')),
-                             ('Needs you: ' + '; '.join(needs)) if needs else 'Nothing needs you.')]
-    out.append('<table><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected</th></tr>')
-    for t in tasks:
-        item = esc(t['item'])
-        if fp and t['owner'] in hrefs and not shown[t['owner']]:        # the publish copy's rows stay text
-            item = '<a href="%s">%s</a>' % (esc(hrefs[t['owner']]), item)
-        out.append('<tr><td>%s</td><td>%s %s</td><td>%s</td><td>%s</td></tr>' % (
-            esc(t['status']), esc(t['id']), item, esc(t['detail']), esc(t['expected'])))
-    out.append('</table>')
-    n = 1
-    if fp:
-        out.append('<h2>1. Features</h2>')
-        for e in manifest['feature_artifacts']:
-            name = esc(e['title'])
-            if shown[e['key']]:       # the publish copy: the name as text and a button that copies the address
-                name += (' <button type="button" class="copy-link" data-copy="%s" title="%s">Copy link</button>'
-                         '<code class="local-path" hidden>%s</code>'
-                         % (esc(hrefs[e['key']]), esc(shown[e['key']]), esc(hrefs[e['key']])))
-            else:
-                name += ' ' + esc(hrefs[e['key']])
-            out.append('<p>%s %s</p>' % (name, esc(contents[e['key']]['meta'].get('lede', '').split('.')[0])))
-        n = 2
-    for s in c['sections']:
-        out.append('<h2>%d. %s</h2>\n%s' % (n, esc(s['title']), s['html']))
-        n += 1
-    if not fp:
-        out.append('<h2>%d. History</h2><table><tr><th>Date</th><th>Change</th></tr>' % n)
-        for h in c['history']:
-            out.append('<tr><td>%s</td><td>%s</td></tr>' % (esc(h['date']), esc(h['change'])))
-        out.append('</table>')
-    if fp:      # R5.9: the whole registry, `updated` included
-        out.append('<script type="application/json" id="task-registry">%s</script>' %
-                   json.dumps(registry, ensure_ascii=False, indent=1).replace('</', '<\\/'))
-    return '\n'.join(out) + '\n'
-'''
 
 RULE_TEXT = '- Record work as a task before starting it.\n'
 
@@ -236,25 +83,12 @@ def git(cwd, *a, check=True):
 
 
 class Env:
-    """One plugin layout (fake or real renderer) and its throwaway projects."""
+    """The plugin under test and its throwaway projects."""
 
-    def __init__(self, kind):
-        self.kind = kind
+    def __init__(self):
         self.n = 0
         self._template = None
-        if kind == 'fake':
-            self.plugin = TMP / 'fake-plugin'
-            (self.plugin / 'scripts').mkdir(parents=True)
-            for sub in ('templates', 'design'):
-                if (REAL_PLUGIN / sub).is_dir():
-                    shutil.copytree(str(REAL_PLUGIN / sub), str(self.plugin / sub))
-            (self.plugin / 'rules').mkdir()
-            (self.plugin / 'rules' / 'project-artifacts.md').write_text(RULE_TEXT, encoding='utf-8')
-            for f in ('project_artifacts.py', 'artifact_queue.py', 'artifact_retire.py'):
-                shutil.copyfile(str(REAL_PLUGIN / 'scripts' / f), str(self.plugin / 'scripts' / f))
-            (self.plugin / 'scripts' / 'render_artifacts.py').write_text(FAKE_RENDER, encoding='utf-8')
-        else:
-            self.plugin = REAL_PLUGIN
+        self.plugin = REAL_PLUGIN
         self.script = self.plugin / 'scripts' / 'project_artifacts.py'
 
     # -- projects
@@ -282,10 +116,14 @@ class Env:
         return self.project(template=self._template)
 
 
+WRITING_COMMANDS = ('init', 'feature-new', 'task-add', 'set-task-status', 'edit-content', 'design', 'render',
+                    'mark-published', 'mark-deleted')
+
+
 class Project:
     def __init__(self, env, name, template=None):
         self.env = env
-        self.root = TMP / ('%s-%s' % (env.kind, name))
+        self.root = TMP / name
         self.bare = self.root / 'remote.git'
         self.clone = self.root / 'clone'
         self.root.mkdir(parents=True)
@@ -309,7 +147,12 @@ class Project:
         git(self.root, 'clone', '-q', self.bare, d)
         return d
 
-    def run(self, *args, cwd=None, env=None):
+    def run(self, *args, cwd=None, env=None, push=True):
+        """Run a command. Writing commands commit without pushing (R4.28); most cases read the remote
+        afterwards, so they get --push unless the case passes push=False or its own --push/--no-push."""
+        args = list(args)
+        if push and args and args[0] in WRITING_COMMANDS and '--push' not in args and '--no-push' not in args:
+            args.append('--push')
         r = subprocess.run([sys.executable, str(self.env.script)] + [str(a) for a in args],
                            cwd=str(cwd or self.clone), capture_output=True, text=True,
                            encoding='utf-8', errors='replace', env=base_env(env))
@@ -351,7 +194,7 @@ class Project:
 
     def record_copy(self, name):
         """A copy of the pushed record, for fixtures that damage it."""
-        dest = TMP / ('rec-%s-%s-%d' % (self.env.kind, name, self.env.n))
+        dest = TMP / ('rec-%s-%d' % (name, self.env.n))
         self.env.n += 1
         if dest.exists():
             _rmtree(dest)
@@ -379,6 +222,9 @@ class InProc:
         spec.loader.exec_module(self.mod)
 
     def call(self, cwd, *argv, env=None):
+        argv = list(argv)
+        if argv and argv[0] in WRITING_COMMANDS and '--push' not in argv and '--no-push' not in argv:
+            argv.append('--push')       # as Project.run: the race cases need the push
         old_env, old_cwd = dict(os.environ), os.getcwd()
         os.environ.update(base_env(env))
         out, err = io.StringIO(), io.StringIO()
@@ -393,14 +239,12 @@ class InProc:
         return Res(code, out.getvalue(), err.getvalue())
 
 
-TESTS = []          # (name, fn, fake_only)
+TESTS = []          # (name, fn)
 
 
-def case(fn=None, fake_only=False):
-    def deco(f):
-        TESTS.append((f.__name__, f, fake_only))
-        return f
-    return deco(fn) if fn else deco
+def case(fn):
+    TESTS.append((fn.__name__, fn))
+    return fn
 
 
 def has_line(text, req, file=None):
@@ -695,7 +539,7 @@ def dirty(p):
 
 
 def export(p, key, name):
-    dest = TMP / ('exp-%s-%s-%d' % (p.env.kind, name, p.env.n))
+    dest = TMP / ('exp-%s-%d' % (name, p.env.n))
     p.env.n += 1
     p.ok('export-content', key, '--to', dest)
     return dest
@@ -708,7 +552,7 @@ def test_export_content(env):
     assert sorted(x.name for x in d.iterdir()) == ['01-what-and-why.html', 'history.json', 'meta.json']
     assert (d / '01-what-and-why.html').read_text(encoding='utf-8') == p.show(
         'docs/artifacts/content/artifacts/01-what-and-why.html')
-    r = p.ok('export-content', 'full-progress', '--to', TMP / ('exp-fp-%s-%d' % (env.kind, env.n)), '--json')
+    r = p.ok('export-content', 'full-progress', '--to', TMP / ('exp-fp-%d' % (env.n)), '--json')
     assert 'meta.json' in r.json()['files']
     # refuses a folder that already has files, and unknown keys; reads nothing it should not
     r = p.run('export-content', 'artifacts', '--to', d)
@@ -765,7 +609,7 @@ def test_edit_content_invalid_writes_nothing(env):
     r = p.run('edit-content', 'artifacts', '--from', TMP / 'no-such-folder')
     assert r.code == 1 and 'not a folder' in r.err
     # a folder without meta.json cannot replace the content
-    empty = TMP / ('empty-%s-%d' % (env.kind, env.n))
+    empty = TMP / ('empty-%d' % (env.n))
     env.n += 1
     empty.mkdir()
     r = p.run('edit-content', 'artifacts', '--from', empty)
@@ -938,7 +782,6 @@ def test_mark_published_refuses_a_feature_artifact(env):
 @case
 def test_publish_copy_links_and_committed_links(env):
     """R5.30, R5.31: relative links in the committed file, a Copy link button with the absolute file:/// address in the copy."""
-    need_real(env)
     p = env.baseline()
     a = p.run('pending', '--json').json()['artifacts'][0]
     copy = Path(a['path']).read_text(encoding='utf-8')
@@ -969,7 +812,6 @@ def test_publish_copy_links_and_committed_links(env):
 @case
 def test_publish_copy_path_encoding_with_spaces(env):
     """R5.31: a space in the path is %20 in the URL and a plain space in the text; `&` is %26 / &amp;."""
-    need_real(env)
     env.baseline()
     q = Project(env, 'a b&c %d' % env.n, env._template)
     a = q.run('pending', '--json').json()['artifacts'][0]
@@ -987,7 +829,6 @@ def test_publish_copy_path_encoding_with_spaces(env):
 @case
 def test_publish_copy_falls_back_to_the_record_worktree(env):
     """R5.31: a session checkout that does not have the feature file yet links to the record worktree's."""
-    need_real(env)
     p = env.project()
     p.init()
     p.ok('feature-new', '--key', 'a', '--title', 'A', '--prefix', 'AA', '--apps', 'x')
@@ -1003,7 +844,6 @@ def test_publish_copy_falls_back_to_the_record_worktree(env):
 def test_old_feature_urls_migrate(env):
     """R4.18: a manifest whose feature entries hold a url or a hash is read without them, noted by check,
     rewritten by the next writing command, and its feature pages and Full Progress links are rendered again."""
-    need_real(env)
     p = env.baseline()
     other = p.clone_again('legacy')
     f = other / 'docs' / 'artifacts' / 'manifest.json'
@@ -1062,9 +902,9 @@ def test_pending_queue(env):
 @case
 def test_pending_without_record(env):
     p = env.project()
-    d = TMP / ('noexp-%s-%d' % (env.kind, env.n))
+    d = TMP / ('noexp-%d' % (env.n))
     env.n += 1
-    empty = TMP / ('noexp-empty-%s-%d' % (env.kind, env.n))
+    empty = TMP / ('noexp-empty-%d' % (env.n))
     empty.mkdir()
     for argv in (['pending', '--json'], ['pending'], ['check'], ['path'], ['export-content', 'x', '--to', d],
                  ['render'], ['set-task-status', 'AR1', 'Live'], ['edit-content', 'x', '--from', empty],
@@ -1158,7 +998,7 @@ def registered_worktrees(p):
 
 
 def elsewhere(env, name):
-    d = TMP / ('wt-%s-%s-%d' % (env.kind, name, env.n))
+    d = TMP / ('wt-%s-%d' % (name, env.n))
     env.n += 1
     return d
 
@@ -1365,10 +1205,11 @@ def test_no_push_then_commit(env):
     reg = json.loads((p.rdir / 'registry.json').read_text(encoding='utf-8'))
     assert {t['id']: t['status'] for t in reg['tasks']}['AR1'] == 'Waiting'
     # pending reads the record worktree state (the committed change)
-    assert p.run('pending').code == 1
-    r = p.ok('commit')
-    assert 'pushed' in r.out
+    assert p.run('pending', '--json').code == 1
+    assert p.head() != before, 'pending pushes first (R7.6)'
+    assert p.ok('push').out.strip() == 'nothing to push'
     assert p.task('AR1')['status'] == 'Waiting' and p.task('SI1')['status'] == 'Running'
+    assert p.ok('push').out.strip() == 'nothing to push'
     assert p.ok('commit').out.strip() == 'nothing to commit or push'
 
 
@@ -1388,7 +1229,9 @@ def test_commit_dirty_with_message(env):
     assert r.code == 1 and has_line(r.err, 'R4.7'), r.err
     next(t for t in reg['tasks'] if t['id'] == 'AR1')['status'] = 'Running'
     (p.rdir / 'registry.json').write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
-    p.ok('commit', '--message', 'docs/artifacts: manual')
+    r = p.ok('commit', '--message', 'docs/artifacts: manual')
+    assert 'not pushed' in r.out and git(p.wt, 'rev-parse', 'HEAD').stdout.strip() != p.head()
+    p.ok('push')
     assert git(p.bare, 'log', '-1', '--format=%s', 'main').stdout.strip() == 'docs/artifacts: manual'
     assert p.task('AR1')['detail'] == 'Hand detail.'
 
@@ -1421,6 +1264,127 @@ def test_protection_refusal_and_retry(env):
     hook.unlink()
     p.ok('set-task-status', 'AR2', 'Built')
     assert p.task('SI1')['status'] == 'Waiting' and p.task('AR2')['status'] == 'Built'
+
+
+@case
+def test_writing_commands_do_not_push_by_default(env):
+    """R4.28: a writing command commits and leaves the push to the end of the turn."""
+    p = env.baseline()
+    before = p.head()
+    p.ok('set-task-status', 'AR1', 'Waiting', push=False)
+    assert p.head() == before, 'origin must not move'
+    p.ok('task-add', '--owner', 'site', '--item', 'x', '--detail', 'd', '--expected', '14 Oct', push=False)
+    p.ok('set-task-status', 'SI1', 'Running', '--json', push=False)
+    assert p.head() == before
+    assert git(p.wt, 'rev-list', '--count', 'origin/main..HEAD').stdout.strip() == '3'
+    # --push pushes everything at once, the earlier commits included
+    p.ok('set-task-status', 'AR2', 'Built', '--push', push=False)
+    assert git(p.bare, 'rev-list', '--count', '%s..main' % before).stdout.strip() == '4'
+    assert p.task('AR1')['status'] == 'Waiting' and p.task('AR2')['status'] == 'Built'
+    assert p.run('push').out.strip() == 'nothing to push'
+    # --no-push still wins over --push
+    p.ok('set-task-status', 'AR1', 'Running', '--push', '--no-push', push=False)
+    assert p.task('AR1')['status'] == 'Waiting'
+
+
+@case
+def test_push_command(env):
+    """R4.28: push sends every unpushed record commit; JSON says how many."""
+    p = env.baseline()
+    assert p.run('push').code == 0, 'no worktree yet is nothing to push'
+    p.ok('set-task-status', 'AR1', 'Waiting', push=False)
+    p.ok('set-task-status', 'SI1', 'Running', push=False)
+    res = p.ok('push', '--json').json()
+    assert res['pushed'] is True and res['commits'] == 2 and res['changed'] is True, res
+    assert p.task('AR1')['status'] == 'Waiting' and p.task('SI1')['status'] == 'Running'
+    assert p.ok('push', '--json').json()['pushed'] is False
+
+
+@case
+def test_push_refused_keeps_commits(env):
+    """R4.16 for push: exit 4, the commits stay, the next push after the protection lifts sends them."""
+    p = env.baseline()
+    hook = p.bare / 'hooks' / 'pre-receive'
+    p.ok('set-task-status', 'AR1', 'Waiting', push=False)
+    hook.write_bytes(b'#!/bin/sh\necho "protected branch: pull request required" >&2\nexit 1\n')
+    os.chmod(str(hook), 0o755)
+    r = p.run('push')
+    assert r.code == 4 and 'record push refused by main protection' in r.err, r.all
+    assert git(p.wt, 'rev-list', '--count', 'origin/main..HEAD').stdout.strip() == '1'
+    hook.unlink()
+    p.ok('push')
+    assert p.task('AR1')['status'] == 'Waiting'
+
+
+@case
+def test_unpushed_commits_survive_a_moved_main(env):
+    """R4.29: main moved while local record commits were unpushed; sync rebases them, never drops them."""
+    p = env.baseline()
+    other = p.clone_again('clone-b')
+    p.ok('set-task-status', 'AR1', 'Waiting', push=False)                    # unpushed
+    assert p.run('set-task-status', 'SI1', 'Running', cwd=other).code == 0   # main moves
+    # the next writing command syncs: the unpushed commit must survive on top of the new main
+    p.ok('set-task-status', 'AR2', 'Built', push=False)
+    log = [x for x in git(p.wt, 'log', '--format=%s', 'origin/main..HEAD').stdout.split('\n') if x]
+    assert log[0] == 'docs/artifacts: AR2 Built' and log[-1] == 'docs/artifacts: AR1 Waiting', log
+    assert set(log) <= {'docs/artifacts: AR2 Built', 'docs/artifacts: AR1 Waiting',
+                        'docs/artifacts: render after rebase'}, log
+    assert git(p.wt, 'merge-base', '--is-ancestor', 'origin/main', 'HEAD', check=False).returncode == 0
+    p.ok('push')
+    assert p.task('AR1')['status'] == 'Waiting' and p.task('SI1')['status'] == 'Running' \
+        and p.task('AR2')['status'] == 'Built'
+    assert p.run('check').code == 0
+
+
+@case
+def test_push_after_main_moved_rebases(env):
+    """R4.15 for push: a rejected push fetches, rebases the unpushed commits and pushes again."""
+    p = env.baseline()
+    other = p.clone_again('clone-b')
+    p.ok('set-task-status', 'AR1', 'Waiting', push=False)
+    assert p.run('set-task-status', 'SI1', 'Running', cwd=other).code == 0
+    r = p.ok('push')
+    assert 'pushed' in r.out
+    assert p.task('AR1')['status'] == 'Waiting' and p.task('SI1')['status'] == 'Running'
+    assert p.run('check').code == 0
+    assert git(p.wt, 'rev-list', '--count', 'origin/main..HEAD').stdout.strip() == '0'
+
+
+@case
+def test_conflicting_unpushed_commit_is_kept(env):
+    """R4.29: a rebase that conflicts is aborted, exit 2, and the unpushed commit is not lost."""
+    p = env.baseline()
+    other = p.clone_again('clone-b')
+    p.ok('set-task-status', 'AR1', 'Waiting', push=False)
+    assert p.run('set-task-status', 'AR1', 'Failed', cwd=other).code == 0
+    r = p.run('set-task-status', 'AR2', 'Built', push=False)
+    assert r.code == 2 and 'cannot rebase' in r.err, r.all
+    assert git(p.wt, 'rev-list', '--count', 'origin/main..HEAD').stdout.strip() == '1'
+    assert git(p.wt, 'status', '--porcelain').stdout.strip() == ''
+    assert git(p.wt, 'log', '-1', '--format=%s').stdout.strip() == 'docs/artifacts: AR1 Waiting'
+
+
+@case
+def test_pending_pushes_first(env):
+    """R7.6: pending pushes the unpushed record, then lists; a failed push is reported, not fatal."""
+    p = env.baseline()
+    before = p.head()
+    p.ok('set-task-status', 'AR1', 'Waiting', push=False)
+    assert p.head() == before
+    r = p.run('pending', '--json')
+    assert r.code == 1 and 'push_error' not in r.json(), r.all
+    assert p.head() != before and p.task('AR1')['status'] == 'Waiting', 'pending must have pushed'
+    # a refused push does not stop the listing
+    hook = p.bare / 'hooks' / 'pre-receive'
+    p.ok('set-task-status', 'AR2', 'Built', push=False)
+    hook.write_bytes(b'#!/bin/sh\necho "protected branch: pull request required" >&2\nexit 1\n')
+    os.chmod(str(hook), 0o755)
+    r = p.run('pending', '--json')
+    assert r.code == 1, r.all
+    res = r.json()
+    assert 'exit 4' in res['push_error'] and res['artifacts'], res
+    assert 'record push failed' in r.err
+    assert git(p.wt, 'rev-list', '--count', 'origin/main..HEAD').stdout.strip() == '1', 'the commit stays'
 
 
 @case
@@ -1831,7 +1795,7 @@ def test_check_fixtures(env):
     n = 0
 
     def fresh(name):
-        d = TMP / ('fx-%s-%d' % (env.kind, n))
+        d = TMP / ('fx-%d' % (n))
         if d.exists():
             _rmtree(d)
         shutil.copytree(str(base.parent.parent), str(d))
@@ -1867,14 +1831,16 @@ def test_check_fixtures(env):
     assert any(ln.startswith('R6.6  registry.json: AR1') for ln in lines), lines
 
 
-@case(fake_only=True)
+@case
 def test_check_runs_check_html(env):
     p = env.baseline()
     rec = p.record_copy('html')
     f = rec / 'feature-the-site.html'
-    f.write_text(f.read_text(encoding='utf-8').replace('<h1>', 'FAKE-BAD-HTML<h1>', 1), encoding='utf-8')
+    text = f.read_text(encoding='utf-8')
+    assert '<title>Feature: ' in text
+    f.write_text(text.replace('<title>Feature: ', '<title>Wrong: ', 1), encoding='utf-8')
     r = check_record(env, rec)
-    assert r.code == 1 and has_line(r.out, 'R5.3', 'feature-the-site.html'), r.all
+    assert r.code == 1 and has_line(r.out, 'R5.1', 'feature-the-site.html'), r.all
     assert has_line(r.out, 'INV-3', 'feature-the-site.html')
 
 
@@ -2152,16 +2118,15 @@ def test_feature_new_needs_project_when_no_record(env):
 
 
 def valid_design(env, marker='#123456'):
-    """A token block that satisfies the contract of whichever renderer is under test."""
-    base = (REAL_PLUGIN / 'design' / 'default-design.css').read_text(encoding='utf-8') \
-        if env.kind == 'real' else ':root { --paper: #fff; --ink: #000; }\n'
+    """A token block that satisfies the renderer's token contract."""
+    base = (REAL_PLUGIN / 'design' / 'default-design.css').read_text(encoding='utf-8')
     return base + '\n/* %s */\n' % marker
 
 
 @case
 def test_design_set_and_default(env):
     p = env.baseline()
-    f = TMP / ('design-%s-%d.css' % (env.kind, env.n))
+    f = TMP / ('design-%d.css' % (env.n))
     env.n += 1
     f.write_text(valid_design(env), encoding='utf-8')
     r = p.ok('design', 'set', f)
@@ -2172,7 +2137,7 @@ def test_design_set_and_default(env):
     files = git(p.bare, 'show', '--name-only', '--format=', 'main').stdout.split()
     assert all(x.startswith('docs/artifacts/') for x in files)
     for name in ('feature-artifacts.html', 'feature-the-site.html', p.man()['full_progress_artifact']['file']):
-        assert '#123456' in p.show('docs/artifacts/' + name) or env.kind == 'fake', name
+        assert '#123456' in p.show('docs/artifacts/' + name), name
     assert p.run('check').code == 0
     # the same file again changes nothing
     before = p.head()
@@ -2188,7 +2153,7 @@ def test_design_set_and_default(env):
 @case
 def test_design_set_validates_tokens(env):
     p = env.baseline()
-    f = TMP / ('bad-design-%s-%d.css' % (env.kind, env.n))
+    f = TMP / ('bad-design-%d.css' % (env.n))
     env.n += 1
     f.write_text(':root { --nothing: 1; }\n', encoding='utf-8')
     before = p.head()
@@ -2198,7 +2163,7 @@ def test_design_set_validates_tokens(env):
     r = p.run('design', 'set', TMP / 'no-such.css')
     assert r.code == 1 and 'does not exist' in r.err
     # a design.css that lost its tokens on main is a record finding
-    g = TMP / ('ok-design-%s-%d.css' % (env.kind, env.n))
+    g = TMP / ('ok-design-%d.css' % (env.n))
     env.n += 1
     g.write_text(valid_design(env), encoding='utf-8')
     p.ok('design', 'set', g)
@@ -2256,7 +2221,7 @@ def test_mark_published_leaves_registry_byte_identical(env):
 def test_non_task_commands_leave_registry_alone(env):
     p = env.baseline()
     before = p.show('docs/artifacts/registry.json')
-    f = TMP / ('regdesign-%s-%d.css' % (env.kind, env.n))
+    f = TMP / ('regdesign-%d.css' % (env.n))
     env.n += 1
     f.write_text(valid_design(env, '#abcdef'), encoding='utf-8')
     p.ok('design', 'set', f, env=later(1))
@@ -2312,14 +2277,8 @@ def edit_decisions(p, decisions, name, key='artifacts', extra=None):
     return d
 
 
-def need_real(env):
-    if env.kind == 'fake':
-        SKIP('the stand-in renderer does not know decisions')
-
-
 @case
 def test_decisions_edit_content_renders_and_checks(env):
-    need_real(env)
     p = env.baseline()
     d = edit_decisions(p, [d_dec(1), d_open(2, task='AR1')], 'dec1')
     p.ok('set-task-status', 'AR1', 'Needs you', '--expected', '11 Oct')
@@ -2344,7 +2303,6 @@ def test_decisions_edit_content_renders_and_checks(env):
 
 @case
 def test_decisions_invalid_file_writes_nothing(env):
-    need_real(env)
     p = env.baseline()
     before = p.head()
     bad = [
@@ -2379,7 +2337,6 @@ def test_decisions_invalid_file_writes_nothing(env):
 
 @case
 def test_decisions_are_append_only_through_edit_content(env):
-    need_real(env)
     p = env.baseline()
     p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1), d_open(2)], 'ao1'))
     before = p.head()
@@ -2406,7 +2363,6 @@ def test_decisions_are_append_only_through_edit_content(env):
 
 @case
 def test_decisions_image_assets_round_trip_byte_for_byte(env):
-    need_real(env)
     p = env.baseline()
     png = b'\x89PNG\r\n\x1a\n' + b'\r\n' * 5 + bytes(range(256))
     dec = [d_dec(1, options=[d_opt('A', image='assets/a.png'), d_opt('B')], chosen='B', owner_words=None)]
@@ -2432,7 +2388,6 @@ def test_decisions_image_assets_round_trip_byte_for_byte(env):
 
 @case
 def test_check_warns_about_an_open_decision_without_a_needs_you_task(env):
-    need_real(env)
     p = env.baseline()
     p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_open(1, task=None)], 'w1'))
     r = p.run('check')
@@ -2465,14 +2420,13 @@ def test_check_warns_about_an_open_decision_without_a_needs_you_task(env):
 
 @case
 def test_check_decisions_against_the_record(env):
-    need_real(env)
     p = env.baseline()
     p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1), d_open(2, task='AR1')], 'c1'))
     base = p.record_copy('decisions')
     assert check_record(env, base).code == 0
 
     def fresh(name):
-        dest = TMP / ('dfx-%s-%s' % (env.kind, name))
+        dest = TMP / ('dfx-%s' % (name))
         if dest.exists():
             _rmtree(dest)
         shutil.copytree(str(base.parent.parent), str(dest))
@@ -2504,7 +2458,6 @@ def test_check_decisions_against_the_record(env):
 @case
 def test_an_invalid_decisions_file_is_left_alone_until_edit_content_fixes_it(env):
     """R7.1: the other writing commands neither refuse nor render the feature; edit-content repairs it."""
-    need_real(env)
     p = env.baseline()
     p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1)], 'wc1'))
     other = p.clone_again('other')
@@ -2817,24 +2770,22 @@ def real_available():
     return None
 
 
-def run_group(kind):
-    env = Env(kind)
+def run_group():
+    env = Env()
     passed = failed = skipped = 0
-    for name, fn, fake_only in TESTS:
-        if fake_only and kind != 'fake':
-            continue
+    for name, fn in TESTS:
         if ONLY and not any(o in name for o in ONLY):
             continue
         try:
             fn(env)
             passed += 1
-            print('PASS  [%s] %s' % (kind, name))
+            print('PASS  %s' % name)
         except Skipped as why:
             skipped += 1
-            print('SKIP  [%s] %s: %s' % (kind, name, why))
+            print('SKIP  %s: %s' % (name, why))
         except Exception:
             failed += 1
-            print('FAIL  [%s] %s' % (kind, name))
+            print('FAIL  %s' % name)
             print('      ' + traceback.format_exc().strip().replace('\n', '\n      ')[-1800:])
     return passed, failed, skipped
 
@@ -2849,24 +2800,14 @@ def main():
     (TMP / 'nullconfig').write_text('', encoding='utf-8')
     total_p = total_f = 0
     try:
-        if '--real-only' not in sys.argv:
-            p, f, s = run_group('fake')
-            print('fake renderer: %d passed, %d failed, %d skipped' % (p, f, s))
-            total_p += p
-            total_f += f
-        why = None if '--fake-only' in sys.argv else real_available()
-        if '--fake-only' in sys.argv:
-            pass
-        elif why:
-            print('SKIP  [real] the real-renderer group is skipped: %s' % why)
+        why = real_available()
+        if why:
+            print('SKIP  the suite is skipped: %s' % why)
         else:
-            p, f, s = run_group('real')
-            print('real renderer: %d passed, %d failed, %d skipped' % (p, f, s))
-            total_p += p
-            total_f += f
+            total_p, total_f, skipped = run_group()
+            print('%d passed, %d failed, %d skipped' % (total_p, total_f, skipped))
     finally:
         _rmtree(TMP)
-    print('%d passed, %d failed' % (total_p, total_f))
     return 1 if total_f else 0
 
 

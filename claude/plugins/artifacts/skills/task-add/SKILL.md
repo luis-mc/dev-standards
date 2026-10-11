@@ -47,7 +47,7 @@ read the message, fix the cause and rerun.
    `task-add --owner <key|project> --item "TEXT" --detail "TEXT" --expected "DD Mon" [--basis "TEXT"] [--app A] [--status S] [--prefix P]`.
    For `--owner project`, `--prefix` picks one of the project's prefixes; a new
    prefix that no feature uses is registered by the command. The command prints the new ID and renders and commits the
-   record.
+   record (the push comes once, at the end of the turn).
 4. **Do not publish now.** Status changes accumulate during the turn;
    Full Progress is published once, at the end of the turn, per "Publishing" in
    the `task-status-update` skill (claude.ai allows 200 publishes per account

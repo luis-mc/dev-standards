@@ -347,7 +347,8 @@ def make_ctx(args, branch=None):
     if not root:
         raise Fail(2, 'not inside a git repository')
     ctx = Ctx(root, branch or detect_default_branch(root, getattr(args, 'default_branch', None)))
-    ctx.no_push = bool(getattr(args, 'no_push', False))
+    # R4.28: a writing command commits and leaves the push to the end of the turn unless --push asks for it
+    ctx.no_push = bool(getattr(args, 'no_push', False)) or not bool(getattr(args, 'push', False))
     return ctx
 
 
@@ -452,8 +453,8 @@ def move_worktree(ctx):
             continue
         ahead = git(old, 'rev-list', '--count', 'origin/%s..HEAD' % ctx.branch)
         if ahead.returncode == 0 and ahead.stdout.strip() not in ('', '0'):
-            raise Fail(1, 'the old record worktree %s holds %s record commit(s) not pushed; run a command with the old '
-                       'setting to push them, or remove it by hand' % (old, ahead.stdout.strip()))
+            raise Fail(1, 'the old record worktree %s holds %s record commit(s) not pushed; run push with the old '
+                       'setting, or remove it by hand' % (old, ahead.stdout.strip()))
         r = git(ctx.root, 'worktree', 'remove', '--force', old)
         if r.returncode != 0:
             raise Fail(2, 'cannot remove the old record worktree %s: %s' % (old, (r.stderr or r.stdout).strip()[:200]))
@@ -511,10 +512,151 @@ def clean_worktree(ctx, to=None):
     git(ctx.wt, 'clean', '-fdq', '--', RECORD_REL)
 
 
+_MISSING = object()
+
+
+class JsonConflict(Exception):
+    pass
+
+
+def _by_ident(items):
+    """The identifying field of a list of objects (tasks have `id`, feature entries `key`), or None."""
+    for field in ('id', 'key'):
+        if items and all(isinstance(x, dict) and field in x for x in items):
+            return field
+    return None
+
+
+def merge3(base, a, b):
+    """Three-way merge of two JSON values that both changed `base` (a = origin, b = the local commit).
+    Objects merge key by key, lists of objects merge by `id` or `key`, the `updated` stamp takes the later
+    one; two different edits of the same value are a conflict."""
+    if a == b or b == base:
+        return a
+    if a == base:
+        return b
+    if isinstance(a, dict) and isinstance(b, dict) and isinstance(base, dict):
+        out = {}
+        for k in list(a) + [k for k in b if k not in a] + [k for k in base if k not in a and k not in b]:
+            va, vb, v0 = a.get(k, _MISSING), b.get(k, _MISSING), base.get(k, _MISSING)
+            if va == vb:
+                v = va
+            elif va == v0:
+                v = vb
+            elif vb == v0:
+                v = va
+            elif k == 'updated' and isinstance(va, str) and isinstance(vb, str):
+                v = max(va, vb)
+            elif va is _MISSING or vb is _MISSING:
+                raise JsonConflict(k)
+            else:
+                v = merge3(None if v0 is _MISSING else v0, va, vb)
+            if v is not _MISSING:
+                out[k] = v
+        return out
+    if isinstance(a, list) and isinstance(b, list) and isinstance(base, list):
+        field = _by_ident(a + b + base)
+        if field is None:
+            raise JsonConflict('list')
+        index = {name: {x[field]: x for x in items} for name, items in (('a', a), ('b', b), ('0', base))}
+        order = [x[field] for x in a] + [x[field] for x in b if x[field] not in index['a']]
+        out = []
+        for ident in order:
+            va, vb, v0 = (index[n].get(ident, _MISSING) for n in ('a', 'b', '0'))
+            if va == vb:
+                v = va
+            elif va == v0:
+                v = vb
+            elif vb == v0:
+                v = va
+            elif va is _MISSING or vb is _MISSING:
+                raise JsonConflict(str(ident))
+            else:
+                v = merge3({} if v0 is _MISSING else v0, va, vb)
+            if v is not _MISSING:
+                out.append(v)
+        return out
+    raise JsonConflict('value')
+
+
+def resolve_conflict(ctx, rel):
+    """One conflicted path of the rebase (R4.29). A rendered page at the top of docs/artifacts/ is regenerated,
+    so origin's copy is taken (the render after the rebase redraws it); manifest.json and registry.json are merged
+    as JSON. Anything else, or two different edits of one value, is not resolved: returns False."""
+    wt = ctx.wt
+    rec_prefix = RECORD_REL + '/'
+    name = rel[len(rec_prefix):] if rel.startswith(rec_prefix) else None
+    if name is None:
+        return False
+    if '/' not in name and name.endswith('.html'):
+        return git(wt, 'checkout', '--ours', '--', rel).returncode == 0
+    if name in ('manifest.json', 'registry.json'):
+        stages = []
+        for n in (1, 2, 3):
+            r = git(wt, 'show', ':%d:%s' % (n, rel))
+            if r.returncode != 0:
+                return False
+            try:
+                stages.append(json.loads(r.stdout))
+            except ValueError:
+                return False
+        try:
+            merged = merge3(*stages)
+        except JsonConflict:
+            return False
+        if name == 'registry.json' and isinstance(merged.get('tasks'), list):
+            merged['tasks'] = sorted(merged['tasks'], key=task_sort_key)
+        write_text(wt / rel, dump_json(merged))
+        return True
+    return False
+
+
+def identity_args(ctx):
+    ident = []
+    if not git_out(ctx.wt, 'config', 'user.name'):
+        ident += ['-c', 'user.name=project-artifacts']
+    if not git_out(ctx.wt, 'config', 'user.email'):
+        ident += ['-c', 'user.email=project-artifacts@localhost']
+    return ident
+
+
+def rebase_unpushed(ctx):
+    """R4.29: put the unpushed record commits on top of the fetched origin/<default branch>, resolving the
+    conflicts that two writers always cause (the `updated` stamps, the rendered pages, edits of different
+    tasks), then redraw any page the merge left stale. A conflict that is not resolved aborts the rebase:
+    exit 2, and the commits stay where they were."""
+    b = ctx.branch
+    if git(ctx.wt, 'merge-base', '--is-ancestor', 'origin/' + b, 'HEAD').returncode == 0:
+        return                                      # origin has not moved
+    ident = identity_args(ctx)
+    r = git(ctx.wt, *(ident + ['rebase', '--quiet', 'origin/' + b]))
+    while r.returncode != 0:
+        files = [f for f in git(ctx.wt, 'diff', '--name-only', '--diff-filter=U').stdout.split('\n') if f.strip()]
+        if not files or not all(resolve_conflict(ctx, f.strip()) for f in files):
+            git(ctx.wt, 'rebase', '--abort')
+            raise Fail(2, 'cannot rebase the unpushed record commit onto origin/%s: %s; the commits stay in the '
+                       'record worktree' % (b, ', '.join(files) or (r.stderr or r.stdout).strip()[:200]))
+        git(ctx.wt, 'add', '--', *files)
+        r = git(ctx.wt, *(ident + ['-c', 'core.editor=true', 'rebase', '--continue']))
+    refresh_after_rebase(ctx)
+
+
+def refresh_after_rebase(ctx):
+    """A merged page can be stale even when git merged it cleanly (counts, the embedded registry): redraw
+    every page that differs from a fresh render and commit that, so INV-3 holds for what gets pushed."""
+    rec = Record.load(ctx.record_dir)
+    rec.pre_findings = all_findings(rec)
+    refresh_stale(rec)
+    if not rec.render_keys:
+        return
+    finish_change(ctx, rec, {})
+    commit_record(ctx, 'docs/artifacts: render after rebase')
+
+
 def sync(ctx, readonly=False, create=False):
     """Fetch and reset the record worktree to origin/<default_branch> (R4.13).
 
-    Unpushed record commits (kept after a refused push or --no-push) are
+    Unpushed record commits (kept until the end-of-turn push, after a refused push or --no-push) are
     rebased onto it, not dropped. Uncommitted edits are discarded: the session
     never edits this worktree (it uses export-content / edit-content).
     """
@@ -524,11 +666,7 @@ def sync(ctx, readonly=False, create=False):
     if git(ctx.wt, 'rev-parse', '--verify', '-q', 'origin/' + ctx.branch).returncode != 0:
         raise Fail(2, 'origin/%s does not exist' % ctx.branch)
     if ahead_count(ctx):
-        r = git(ctx.wt, 'rebase', '--quiet', 'origin/' + ctx.branch)
-        if r.returncode != 0:
-            git(ctx.wt, 'rebase', '--abort')
-            raise Fail(2, 'cannot rebase the unpushed record commit onto origin/%s: %s'
-                       % (ctx.branch, (r.stderr or r.stdout).strip()[:200]))
+        rebase_unpushed(ctx)
     else:
         git(ctx.wt, 'reset', '--hard', '--quiet', 'origin/' + ctx.branch, check=True)
     git(ctx.wt, 'clean', '-fdq', '--', RECORD_REL)
@@ -1186,7 +1324,7 @@ def readme_text(manifest):
 
 
 def run_change(ctx, apply, new_ok=False):
-    """sync -> validate -> apply -> render -> validate -> commit -> push, with R4.15 retries."""
+    """sync -> validate -> apply -> render -> validate -> commit [-> push with --push, with R4.15 retries]."""
     with locked(ctx):
         retries = 0
         while True:
@@ -1895,12 +2033,33 @@ def cmd_mark_deleted(args):
     return 0
 
 
+def push_unpushed(ctx):
+    """Push the unpushed record commits (R4.15 retries: a lost race fetches and rebases, then pushes again).
+    The caller holds the lock and has the worktree. Raises Fail 3 (race lost), 4 (refused) or 1 (other error)."""
+    retries = 0
+    while True:
+        ctx.attempt = retries + 1
+        out = push(ctx)
+        if out == 'ok':
+            return
+        if out == 'refused':
+            raise refused_fail(ctx)
+        if out == 'race':
+            retries += 1
+            if retries > PUSH_RETRIES:
+                raise Fail(3, 'record push lost the race %d times' % (PUSH_RETRIES + 1))
+            fetch(ctx)
+            rebase_unpushed(ctx)
+            continue
+        raise Fail(1, 'git push failed: %s' % out[1])
+
+
 def cmd_commit(args):
+    """Commit uncommitted edits in the record worktree. Pushes only with --push (or --retry)."""
     ctx = make_ctx(args)
     with locked(ctx):
         ensure_worktree(ctx)
         dirty = dirty_paths(ctx)
-        sha = None
         if dirty:
             if args.retry:
                 raise Fail(1, 'the record worktree has uncommitted edits; run commit without --retry')
@@ -1908,36 +2067,53 @@ def cmd_commit(args):
             findings = validate_structure(rec)
             if findings:
                 raise Fail(1, 'the record is invalid; nothing committed', findings)
-            sha = commit_record(ctx, args.message or 'docs/artifacts: update')
+            commit_record(ctx, args.message or 'docs/artifacts: update')
         if not ahead_count(ctx):
             emit(args, {'command': 'commit', 'changed': False, 'pushed': False}, 'nothing to commit or push')
             return 0
-        if args.no_push:
+        if ctx.no_push and not args.retry:
             emit(args, {'command': 'commit', 'changed': True, 'pushed': False, 'commit': head_sha(ctx)},
                  'committed %s, not pushed' % head_sha(ctx)[:7])
             return 0
-        retries = 0
-        while True:
-            ctx.attempt = retries + 1
-            out = push(ctx)
-            if out == 'ok':
-                break
-            if out == 'refused':
-                raise refused_fail(ctx)
-            if out == 'race':
-                retries += 1
-                if retries > PUSH_RETRIES:
-                    raise Fail(3, 'record push lost the race %d times' % (PUSH_RETRIES + 1))
-                fetch(ctx)
-                r = git(ctx.wt, 'rebase', '--quiet', 'origin/' + ctx.branch)
-                if r.returncode != 0:
-                    git(ctx.wt, 'rebase', '--abort')
-                    raise Fail(2, 'cannot rebase the record commit onto origin/%s' % ctx.branch)
-                continue
-            raise Fail(1, 'git push failed: %s' % out[1])
+        push_unpushed(ctx)
     emit(args, {'command': 'commit', 'changed': True, 'pushed': True, 'commit': head_sha(ctx)},
          'pushed %s to %s' % (head_sha(ctx)[:7], ctx.branch))
     return 0
+
+
+def do_push(args):
+    """R4.28: push the record commits not yet on origin/<default branch>; nothing else is committed.
+    Returns the result dict; raises Fail 3 (race lost), 4 (refused) or 1 (other error)."""
+    ctx = make_ctx(args)
+    with locked(ctx):
+        if not (ctx.wt / '.git').exists():
+            return {'command': 'push', 'changed': False, 'pushed': False}
+        ensure_worktree(ctx, tolerant=True)
+        n = ahead_count(ctx)
+        if not n:
+            return {'command': 'push', 'changed': False, 'pushed': False}
+        push_unpushed(ctx)
+        return {'command': 'push', 'changed': True, 'pushed': True, 'commits': n, 'commit': head_sha(ctx),
+                'branch': ctx.branch}
+
+
+def cmd_push(args):
+    res = do_push(args)
+    emit(args, res, ('pushed %d record commit(s) to %s' % (res['commits'], res['branch'])) if res['pushed']
+         else 'nothing to push')
+    return 0
+
+
+def push_before_listing(args):
+    """pending (R7.6): push first. Returns None when pushed or nothing to push, else the failure text.
+    A failure never stops the listing; a missing record is left for the read to report."""
+    try:
+        do_push(args)
+    except Fail as f:
+        if f.code in (1, 3, 4):
+            warn('record push failed (exit %d): %s' % (f.code, f.msg))
+            return 'exit %d: %s' % (f.code, f.msg)
+    return None
 
 
 def load_for_read(args):
@@ -2097,6 +2273,7 @@ def write_publish_copy(ctx, rec, key, e):
 def cmd_pending(args):
     """Lists Full Progress when its committed render changed since the last publish, and queued events.
     A feature artifact is never listed (R9.5)."""
+    push_error = push_before_listing(args)
     ctx, rec = load_for_read(args)
     arts = []
     if rec is not None:
@@ -2124,13 +2301,18 @@ def cmd_pending(args):
     retired = [{'key': e.get('key', ''), 'title': e.get('title', ''), 'url': e.get('url', ''),
                 'retired': e.get('retired', '')} for e in (AR.retired_pages(rec.manifest) if AR and rec else [])]
     if args.json_out:
-        print(json.dumps({'artifacts': arts, 'queue': queue, 'retired': retired}, indent=2, ensure_ascii=False))
+        out = {'artifacts': arts, 'queue': queue, 'retired': retired}
+        if push_error:
+            out['push_error'] = push_error
+        print(json.dumps(out, indent=2, ensure_ascii=False))
     else:
         for a in arts:
             print('publish %s (%s): %s%s' % (a['key'], a['path'], a['reason'],
                                              '' if a['url'] else ' [no URL yet]'))
         for ev in queue:
             print('queued %s -> %s (%s)' % (ev.get('id'), ev.get('suggested_status'), ev.get('event')))
+        if push_error:
+            print('record push failed (%s); the commits stay local' % push_error)
         if not arts and not queue:
             print('nothing pending')
         for e in retired:
@@ -2194,7 +2376,8 @@ def build_parser():
     j = argparse.ArgumentParser(add_help=False)
     j.add_argument('--json', dest='json_out', action='store_true', help='machine-readable output')
     w = argparse.ArgumentParser(add_help=False, parents=[j])
-    w.add_argument('--no-push', action='store_true', help='commit in the record worktree, do not push')
+    w.add_argument('--no-push', action='store_true', help='commit in the record worktree, do not push (the default)')
+    w.add_argument('--push', action='store_true', help='push at once (the default is to push at the end of the turn)')
 
     p = argparse.ArgumentParser(prog='project_artifacts.py', description=__doc__.split('\n\n')[0])
     sub = p.add_subparsers(dest='command', required=True, metavar='command')
@@ -2288,8 +2471,12 @@ def build_parser():
     s.add_argument('--id')
     s.set_defaults(func=cmd_queue)
 
-    s = sub.add_parser('commit', parents=[w], help='commit and push the record (also done by every writing command)')
-    s.add_argument('--retry', action='store_true', help='push a commit kept after a refused push')
+    s = sub.add_parser('push', parents=[j], help='push the unpushed record commits (retries a lost race)')
+    s.add_argument('--default-branch')
+    s.set_defaults(func=cmd_push)
+
+    s = sub.add_parser('commit', parents=[w], help='commit uncommitted record edits; pushes only with --push or --retry')
+    s.add_argument('--retry', action='store_true', help='push a commit kept after a refused push (same as push)')
     s.add_argument('--message')
     s.set_defaults(func=cmd_commit)
 
