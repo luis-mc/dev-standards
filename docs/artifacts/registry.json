@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T01:25+01:00",
+  "updated": "2026-10-11T02:12+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -701,6 +701,16 @@
       "detail": "Your decision: this repo uses U7 too. Branches add notes under docs/specs/changes/; the release folds them into STACKSPEC/ARTIFACTSPEC versions and change entries. Starts once DS34's tooling is built.",
       "expected": "11 Oct ~05:30",
       "changed": "2026-10-11T01:24+01:00"
+    },
+    {
+      "id": "DS39",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "CI skips docs-only changes",
+      "detail": "Your rule: a merge that differs from the tested PR head only in docs, Markdown or (per project) mobile files skips the second full suite; docs-only pushes such as the luismc-artifacts record commits start no full CI at all. Skip-safe paths default to docs/ and *.md; a project adds its mobile folders when they have their own workflows. Rides STACKSPEC 7.1.0.",
+      "expected": "11 Oct ~05:30",
+      "changed": "2026-10-11T02:12+01:00"
     },
     {
       "id": "MP1",
