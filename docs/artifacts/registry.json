@@ -350,9 +350,9 @@
       "status": "Running",
       "item": "Full Progress feature links that work from claude.ai",
       "detail": "From claude.ai a file:/// link cannot open and the long path wraps; the published copy names each feature with a Copy link button instead",
-      "expected": "11 Oct ~13:00",
-      "changed": "2026-10-11T10:06+01:00",
-      "expected_basis": "the script change, then the suites (~15 min) and CI (~25 min)"
+      "expected": "11 Oct ~11:30",
+      "changed": "2026-10-11T10:08+01:00",
+      "expected_basis": "local suites ~10:45, join and gate ~11:05, then ready-PR CI ~25 min"
     },
     {
       "id": "AR38",
