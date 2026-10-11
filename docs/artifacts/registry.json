@@ -434,6 +434,18 @@
       "rides": "DS54"
     },
     {
+      "id": "AR46",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "Timeline: releases past midnight keep their phase bars",
+      "detail": "Owner saw RELEASE-3 (Expected 12 Oct ~00:05, page drawn 11 Oct 23:57) as a bare day diamond: render_artifacts.py:1165 puts on the time axis only an Expected on the stamp's date. Fix: any timed Expected within 24 h of the stamp is on the axis, which can cross midnight",
+      "expected": "12 Oct ~00:25",
+      "changed": "2026-10-12T00:01+01:00",
+      "expected_basis": "one agent ~20 min incl. branch CI",
+      "rides": "DS56"
+    },
+    {
       "id": "DL1",
       "owner": "delivery-speed",
       "app": "",

@@ -1120,6 +1120,18 @@ tr.status-group.release-group td { color: var(--ink); }
    "rides": "DS54"
   },
   {
+   "id": "AR46",
+   "owner": "artifacts",
+   "app": "luismc-artifacts",
+   "status": "Running",
+   "item": "Timeline: releases past midnight keep their phase bars",
+   "detail": "Owner saw RELEASE-3 (Expected 12 Oct ~00:05, page drawn 11 Oct 23:57) as a bare day diamond: render_artifacts.py:1165 puts on the time axis only an Expected on the stamp's date. Fix: any timed Expected within 24 h of the stamp is on the axis, which can cross midnight",
+   "expected": "12 Oct ~00:25",
+   "changed": "2026-10-12T00:01+01:00",
+   "expected_basis": "one agent ~20 min incl. branch CI",
+   "rides": "DS56"
+  },
+  {
    "id": "DL1",
    "owner": "delivery-speed",
    "app": "",
@@ -2115,6 +2127,7 @@ tr.status-group.release-group td { color: var(--ink); }
 </div>
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
+<li data-glance-task="AR46"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars <span class="glance-expected">12 Oct ~00:25</span><span class="glance-basis">one agent ~20 min incl. branch CI</span></li>
 <li data-glance-task="DS56"><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~00:36</span><span class="glance-basis">agents ~20 min (small fixes); #53: CI 3.4 min, merge 4</span></li>
 </ul>
 </div>
@@ -2132,12 +2145,13 @@ tr.status-group.release-group td { color: var(--ink); }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">129</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">129</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
 <div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS56 (AR46 train: join, PR CI, merge, cleanup) expected live about 00:36, worst case 00:46." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">00:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">00:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">01:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-4 · AR46 train: join, PR CI, merge, cleanup</title>RELEASE-4 · AR46 train: j…</text>
+<text class="rt-sub" x="0" y="77"><title>AR46</title>AR46</text>
 <rect class="rt-bar agents" x="243.3" y="52" width="173.3" height="22"><title>agents 00:05-00:25</title></rect>
 <rect class="rt-bar join" x="416.7" y="52" width="26" height="22"><title>join 00:25-00:28</title></rect>
 <rect class="rt-bar ci" x="442.7" y="52" width="34.7" height="22"><title>PR CI 00:28-00:32</title></rect>
@@ -2154,6 +2168,7 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group release-group" data-group="release-4"><td colspan="5"><strong>RELEASE-4 · live ~00:36 · worst ~00:46</strong></td></tr>
 <tr data-task="DS56"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</td><td></td><td>Timeline fix and cleanup race fix; integration branch DS56-integration</td><td>12 Oct ~00:36<span class="expected-basis">agents ~20 min (small fixes); #53: CI 3.4 min, merge 4</span></td></tr>
+<tr data-task="AR46"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</a></td><td><code>luismc-artifacts</code></td><td>Owner saw RELEASE-3 (Expected 12 Oct ~00:05, page drawn 11 Oct 23:57) as a bare day diamond: render_artifacts.py:1165 puts on the time axis only an Expected on the stamp&#x27;s date. Fix: any timed Expected within 24 h of the stamp is on the axis, which can cross midnight</td><td>12 Oct ~00:25<span class="expected-basis">one agent ~20 min incl. branch CI</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="DS55"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup</td><td></td><td>#53 merged on green 00:00 (CI 3m23s); join fix: suites.json lacked TC10&#x27;s new test. Cleanup raced the train-cleanup workflow (release and TC9 branch already gone); a second run finished it and added the delivery log</td><td>12 Oct</td></tr>
 <tr data-task="TC9"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</a><span class="release-line"><span class="release-name">RELEASE-3</span></span></td><td><code>luismc-project-setup</code></td><td>Released in #53 (fe3af00, 00:00): STACKSPEC 8.2.0, luismc-project-setup 14.2.0, luismc-artifacts 1.6.1</td><td>12 Oct</td></tr>
@@ -2292,8 +2307,8 @@ tr.status-group.release-group td { color: var(--ink); }
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
+<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862661"><time datetime="2026-10-12T00:01+01:00">12 Oct 00:01</time></td><td>AR2 to AR46</td><td data-col="state"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862661"><time datetime="2026-10-12T00:01+01:00">12 Oct 00:01</time></td><td>TC1 to TC11</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
-<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862631"><time datetime="2026-10-11T23:31+01:00">11 Oct 23:31</time></td><td>AR2 to AR45</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29862629"><time datetime="2026-10-11T23:29+01:00">11 Oct 23:29</time></td><td>DL1 to DL13</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29862629"><time datetime="2026-10-11T23:29+01:00">11 Oct 23:29</time></td><td>MP1 to MP7, DS2 to DS5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
 </tbody></table></div>
