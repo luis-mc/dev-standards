@@ -1120,10 +1120,10 @@
       "app": "",
       "status": "Running",
       "item": "Release the test-cost train (all eight fixes and DS48)",
-      "detail": "One integration branch, three agents by file ownership, change notes folded, one ready-PR CI run, merge on green",
-      "expected": "11 Oct ~14:30",
-      "changed": "2026-10-11T11:29+01:00",
-      "expected_basis": "agents ~1h30 in parallel, join ~15 min, ready-PR CI ~10 min"
+      "detail": "One release for TC1 to TC5, DS43 to DS48, AR40 and DL1 to DL10; 3 of 7 branches joined",
+      "expected": "11 Oct ~15:00",
+      "changed": "2026-10-11T12:05+01:00",
+      "expected_basis": "slowest agent ~14:15, join and fold ~15 min, ready-PR CI ~20 min"
     }
   ]
 }
