@@ -18,7 +18,9 @@ retired name the script stores as `Built`); release work still to come (join,
 CI, release) is its own task, Running or To do. Before a turn
 ends with work still running in the background, its task is `Running`. Only the script writes the registry; never edit
 `registry.json` or `manifest.json` by hand, and never type a status row into an
-artifact.
+artifact. The statuses reach the artifact's At a glance block by themselves, so
+never write them into a lede: a `meta.json` lede holds one or two sentences of
+context the registry cannot show (an incident, a constraint, a plan).
 
 Every command below is
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/project_artifacts.py" <command>`, run from

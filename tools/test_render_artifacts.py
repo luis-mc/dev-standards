@@ -139,6 +139,26 @@ def reqs(findings):
     return sorted({r for r, _ in findings})
 
 
+def glance(html):
+    """{group key: (task ids, decision ids, 'and N more' text, 'none' text)} of the At a glance block."""
+    root = R.parse_dom(html)
+    out = {}
+    for g in R.find_all(root, 'div', 'glance-group'):
+        more, none = R.find(g, 'li', 'glance-more'), R.find(g, 'p', 'glance-none')
+        out[g.attrs['data-glance']] = (
+            [li.attrs['data-glance-task'] for li in R.find_all(g, 'li', pred=lambda n: 'data-glance-task' in n.attrs)],
+            [li.attrs['data-glance-decision'] for li in R.find_all(g, 'li', pred=lambda n: 'data-glance-decision' in n.attrs)],
+            R.text_of(more) if more else '', R.text_of(none) if none else '')
+    return out
+
+
+def drop_item(html, attr, value):
+    import re
+    pattern = r'<li data-glance-%s="%s">.*?</li>\n?' % (attr, re.escape(value))
+    assert len(re.findall(pattern, html)) == 1, (attr, value)
+    return re.sub(pattern, '', html)
+
+
 TESTS = []
 
 
@@ -488,13 +508,15 @@ def a_group_with_only_folded_rows_is_still_closed_correctly(fx):
 def needs_you_sentence(fx):
     out = fx.render('full-progress')
     lede = R.text_of(R.find(R.parse_dom(out), 'p', 'lede'))
-    assert lede == ('All ongoing work in dev-standards. More words follow. '
-                    'Needs you: DS9 Sign off the <rules> & ship; DS11 Release CI.'), lede
+    assert lede == 'All ongoing work in dev-standards. More words follow.', lede     # R5.7: the note only
+    assert glance(out)['you'][:2] == (['DS9', 'DS11'], []), glance(out)['you']
     # a feature artifact lists only its own tasks, and says so when there are none
-    assert R.text_of(R.find(R.parse_dom(fx.render('artifacts')), 'p', 'lede')).endswith('Nothing needs you.')
+    assert glance(fx.render('artifacts'))['you'] == ([], [], '', 'Nothing needs you.')
     fx.registry['tasks'][0]['status'] = 'Needs you'
     fx.registry['tasks'][0]['expected'] = '12 Oct'
-    assert R.text_of(R.find(R.parse_dom(fx.render('artifacts')), 'p', 'lede')).endswith('Needs you: AR5 ARTIFACTSPEC 1.0.0.')
+    assert glance(fx.render('artifacts'))['you'][:2] == (['AR5'], [])
+    # the sentence generator is still the reference for the set
+    assert R.needs_you_sentence(fx.registry['tasks'][:1]) == 'Needs you: AR5 ARTIFACTSPEC 1.0.0.'
 
 
 @test
@@ -842,9 +864,13 @@ def check_r56_feature_list(fx):
 @with_fixture
 def check_r57_lede(fx):
     fp = fx.render('full-progress')
-    expect(fx, sub1(fp, 'Needs you: DS9 Sign off the &lt;rules&gt; &amp; ship; DS11 Release CI.', 'Nothing needs you.'), 'full-progress', ['R5.7'])
+    expect(fx, drop_item(fp, 'task', 'DS11'), 'full-progress', ['R5.7'])                    # a Failed task missing
     out = fx.render('artifacts')
-    expect(fx, sub1(out, 'Nothing needs you.', 'Needs you: AR6 Templates.'), 'artifacts', ['R5.7'])
+    wrong = sub1(out, '<p class="glance-none">Nothing needs you.</p>', '<ul><li data-glance-task="AR6"><span class="task-id">AR6</span>Templates</li></ul>')
+    expect(fx, wrong, 'artifacts', ['R5.7'])                                                # a task that does not need you
+    expect(fx, sub1(out, 'Nothing needs you.', 'All clear.'), 'artifacts', ['R5.7'])        # the exact text
+    # a long or missing lede is not a finding
+    assert fx.check(out, 'artifacts') == []
 
 
 @test
@@ -1193,7 +1219,7 @@ def the_structure_stylesheet_holds_no_literal_colour():
 @with_fixture
 def templates_hold_only_known_placeholders(fx):
     import re
-    known = {'title', 'fonts_link', 'design_css', 'structure_css', 'extra_css', 'kind_label', 'project', 'hero', 'contents',
+    known = {'title', 'fonts_link', 'design_css', 'structure_css', 'extra_css', 'kind_label', 'project', 'hero', 'contents', 'glance',
              'sections', 'stamp', 'lede', 'tiles', 'key', 'checklist', 'registry'}
     for name in ('feature-artifact.html', 'full-progress-artifact.html'):
         text = open(os.path.join(PLUGIN, 'templates', name), encoding='utf-8').read()
@@ -1728,18 +1754,17 @@ def decisions_render_adds_no_script_and_is_deterministic(fx):
 def decisions_lede_lists_open_decisions(fx):
     registry = sample(fx)
     out = fx.render('artifacts', registry=registry)
-    lede = R.text_of(R.find(R.parse_dom(out), 'p', 'lede'))
-    assert lede.endswith('Needs you: AR7 project_artifacts.py; D2 Should History also list decisions?'), lede
-    assert not lede.endswith('?.')
-    # tasks first, then decisions; the sentence ends with a full stop when a task comes last of nothing
+    assert glance(out)['you'][:2] == (['AR7'], ['D2']), glance(out)['you']        # tasks first, then decisions
+    assert 'D2</span>Should History also list decisions?' in out
+    assert R.needs_you_sentence(registry['tasks'], R.open_decisions(fx.contents['artifacts']['decisions'])).endswith('decisions?')
     registry2 = copy.deepcopy(registry)
     registry2['tasks'][2]['status'] = 'To do'
     out2 = fx.render('artifacts', registry=registry2)
-    assert R.text_of(R.find(R.parse_dom(out2), 'p', 'lede')).endswith('Needs you: D2 Should History also list decisions?')
+    assert glance(out2)['you'][:2] == ([], ['D2'])
     # a replaced open decision, and a decided one, are not listed
     put_decisions(fx, [open_dec(1), dec(2, replaces='D1')])
     fx.reload()
-    assert R.text_of(R.find(R.parse_dom(fx.render('artifacts')), 'p', 'lede')).endswith('Nothing needs you.')
+    assert glance(fx.render('artifacts'))['you'] == ([], [], '', 'Nothing needs you.')
     # the existing sentence is unchanged without decisions
     assert R.needs_you_sentence([{'id': 'AR1', 'status': 'Needs you', 'item': 'Sign off'}]) == 'Needs you: AR1 Sign off.'
     assert R.needs_you_sentence([]) == 'Nothing needs you.'
@@ -1833,7 +1858,7 @@ def decisions_section_position_and_presence_are_checked(fx):
 def decisions_lede_check_catches_a_missing_open_decision(fx):
     registry = sample(fx)
     clean = fx.render('artifacts', registry=registry)
-    bad = sub1(clean, '; D2 Should History also list decisions?', '')
+    bad = drop_item(clean, 'decision', 'D2')
     assert 'R5.7' in reqs(fx.check(bad, 'artifacts', registry=registry))
 
 
@@ -1851,6 +1876,148 @@ def decisions_css_is_structure_only_and_phone_ready():
     block = css[css.index('/* Decisions'):css.index('/* Phone width */')]
     assert not re.search(r'#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(', block)       # tokens only
     assert 'var(--signal)' in block and 'var(--on-signal)' in block and 'var(--surface-2)' in block
+
+
+# ------------------------------------------------------------------ AR40: At a glance
+def glance_registry():
+    """Fixture registry plus ten Live tasks changed within 24 h of the stamp, and one just outside it."""
+    registry = base_registry()
+    for n in range(10):
+        registry['tasks'].append(task('LV%d' % (n + 1), 'project', 'Live', 'Shipped %d' % (n + 1), '10 Oct',
+                                      '2026-10-10T%02d:00+01:00' % (n + 1), 'luismc-project-setup'))
+    registry['tasks'].append(task('LV11', 'project', 'Live', 'Shipped long ago', '08 Oct', '2026-10-09T12:00+01:00'))   # 24 h 39 min: out
+    return registry
+
+
+QUIET = {'spec': R.SPEC, 'updated': STAMP_ISO, 'tasks': [
+    task('MP1', 'models', 'Live', 'Role rules', '08 Oct', '2026-10-08T10:00+01:00')]}
+
+
+@test
+@with_fixture
+def at_a_glance_groups_and_order(fx):
+    """R5.33, R5.34: the groups, in order, each from its statuses; To do is not listed; Live is 24 h and capped at 8."""
+    out = fx.render('full-progress', registry=glance_registry())
+    got = glance(out)
+    assert list(got) == ['you', 'running', 'built', 'waiting', 'live'], list(got)
+    assert got['you'][0] == ['DS9', 'DS11'] and got['running'][0] == ['DS6', 'AR6', 'MP2'], got
+    assert got['built'][0] == ['AR5', 'AR16'] and got['waiting'][0] == ['DS7', 'DS10'], got
+    assert got['live'][0] == ['LV10', 'LV9', 'LV8', 'LV7', 'LV6', 'LV5', 'LV4', 'LV3'] and got['live'][2] == 'and 2 more', got['live']
+    assert 'AR7' not in str(got) and 'DS8' not in str(got)                                   # To do
+    # the line: id, item, then the Expected for open statuses
+    row = out[out.index('data-glance-task="DS6"'):]
+    row = row[:row.index('</li>')]
+    assert '<span class="glance-expected">10 Oct ~13:45</span>' in row, row
+    fx.registry = glance_registry()
+    by_id = {t['id']: t for t in fx.registry['tasks']}
+    by_id['AR6']['expected_basis'] = 'agent slot'
+    by_id['LV10']['expected_basis'] = 'not shown'
+    out = fx.render('artifacts')
+    assert '<span class="glance-basis">agent slot</span>' in out and 'not shown' not in out
+    assert fx.check(out, 'artifacts') == []
+    assert fx.check(fx.render('full-progress'), 'full-progress') == []
+    # an empty group is omitted, and Needs you always shows
+    out = fx.render('models', registry=QUIET)
+    assert list(glance(out)) == ['you'] and glance(out)['you'] == ([], [], '', 'Nothing needs you.')
+    assert fx.check(out, 'models', registry=QUIET) == []
+
+
+@test
+@with_fixture
+def at_a_glance_is_deterministic_and_placed(fx):
+    """R5.33: after the lede, before the tiles; same bytes each time (R7.4)."""
+    out = fx.render('artifacts')
+    assert out == fx.render('artifacts')
+    assert out.index('class="lede"') < out.index('class="at-a-glance"') < out.index('class="status-count-tiles"')
+
+
+@test
+@with_fixture
+def check_r532_block_and_order(fx):
+    """R5.3 (order, lede optional) and R5.33 (groups in order)."""
+    out = fx.render('artifacts')
+    start = out.index('<div class="at-a-glance">')
+    end = out.index('</div>\n</div>', start) + len('</div>\n</div>')
+    block = out[start:end]
+    after_tiles = sub1(out[:start] + out[end:], '<p class="note">Key:', block + '\n<p class="note">Key:')
+    expect(fx, after_tiles, 'artifacts', ['R5.3'])                                           # block after the tiles
+    expect(fx, out[:start] + out[end:], 'artifacts', ['R5.3'])                               # block missing
+    lede = out[out.index('<p class="lede">'):out.index('</p>', out.index('<p class="lede">')) + 4]
+    lede_late = sub1(out, lede + '\n', '')
+    lede_late = sub1(lede_late, block, block + '\n' + lede)
+    expect(fx, lede_late, 'artifacts', ['R5.3'])                                             # lede after the block
+    expect(fx, sub1(out, lede + '\n', ''), 'artifacts', [])                                  # no lede: still clean
+    swapped = (out.replace('data-glance="running"', 'data-glance="TMP"').replace('data-glance="built"', 'data-glance="running"')
+               .replace('data-glance="TMP"', 'data-glance="built"'))
+    expect(fx, swapped, 'artifacts', ['R5.33', 'R5.35'])
+
+
+@test
+@with_fixture
+def check_r534_each_group_lists_its_tasks(fx):
+    """R5.34, R5.35: a missing or extra task in a group, or a wrong 'and N more', is a finding."""
+    fx.registry = glance_registry()
+    fp = fx.render('full-progress')
+    expect(fx, drop_item(fp, 'task', 'DS6'), 'full-progress', ['R5.35'])                     # Running task missing
+    expect(fx, drop_item(fp, 'task', 'AR5'), 'full-progress', ['R5.35'])                     # Built task missing
+    expect(fx, drop_item(fp, 'task', 'DS10'), 'full-progress', ['R5.35'])                    # On hold task missing
+    expect(fx, drop_item(fp, 'task', 'LV9'), 'full-progress', ['R5.35'])                     # Live task missing
+    expect(fx, sub1(fp, 'and 2 more', 'and 3 more'), 'full-progress', ['R5.35'])
+    extra = sub1(fp, '<li data-glance-task="AR5">', '<li data-glance-task="AR7"><span class="task-id">AR7</span>x</li>\n<li data-glance-task="AR5">')
+    expect(fx, extra, 'full-progress', ['R5.35'])                                            # To do task listed
+    old_live = sub1(fp, '<li data-glance-task="LV3">', '<li data-glance-task="LV11"><span class="task-id">LV11</span>x</li>\n<li data-glance-task="LV3">')
+    expect(fx, old_live, 'full-progress', ['R5.35'])                                         # Live task older than 24 h listed
+    # the window follows the stamp: exactly 24 h before it is in
+    fx.registry['tasks'][-1]['changed'] = '2026-10-09T12:39+01:00'
+    assert 'LV11' not in glance(fx.render('full-progress'))['live'][0]                     # cut by the cap, still not shown past 8
+    assert fx.check(fx.render('full-progress'), 'full-progress') == []
+
+
+@test
+@with_fixture
+def lede_is_a_short_optional_note(fx):
+    """R5.7, R5.37: an empty lede renders no paragraph; over 300 characters warns, never fails."""
+    folder = os.path.join(fx.record, 'content', 'artifacts')
+    write(os.path.join(folder, 'meta.json'), json.dumps({'title': 'artifacts', 'hero': 'h', 'lede': '', 'extra_css': ''}))
+    fx.reload()
+    out = fx.render('artifacts')
+    assert 'class="lede"' not in out and fx.check(out, 'artifacts') == []
+    assert R.lede_warnings(fx.contents['artifacts']) == []
+    write(os.path.join(folder, 'meta.json'), json.dumps({'title': 'artifacts', 'hero': 'h', 'lede': 'Word. ' * 60, 'extra_css': ''}))
+    fx.reload()
+    warned = R.lede_warnings(fx.contents['artifacts'])
+    assert len(warned) == 1 and 'one or two sentences' in warned[0] and 'At a glance' in warned[0], warned
+    assert fx.check(fx.render('artifacts'), 'artifacts') == []                              # a warning, not a finding
+    write(os.path.join(folder, 'meta.json'), json.dumps({'title': 'artifacts', 'hero': 'h', 'lede': 'x' * 300, 'extra_css': ''}))
+    fx.reload()
+    assert R.lede_warnings(fx.contents['artifacts']) == []
+
+
+@test
+@with_fixture
+def section_one_never_blank(fx):
+    """R5.36: a feature with an empty lede gets its generated summary in Where it stands."""
+    folder = os.path.join(fx.record, 'content', 'models')
+    write(os.path.join(folder, 'meta.json'), json.dumps({'title': 'models', 'hero': 'h', 'lede': '', 'extra_css': ''}))
+    fx.reload()
+    out = fx.render('full-progress')
+    s1 = R.find(R.parse_dom(out), 'section', pred=lambda n: n.attrs.get('id') == 's1')
+    cells = [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1, 'tr', pred=lambda n: R.find(n, 'td'))]
+    assert cells[1][2] == '1 running, 2 live, nothing needs you.', cells
+    assert R.feature_summary([task('X1', 'a', 'Needs you', 'i', '10 Oct')]) == '1 needs you'
+    assert fx.check(out, 'full-progress') == []
+
+
+@test
+def at_a_glance_css_uses_tokens_and_fits_a_phone():
+    import re
+    css = R.structure_css(PLUGIN)
+    for selector in ('.at-a-glance', '.glance-group', '.glance-label', '.glance-you', '.glance-running', '.glance-expected', '.glance-more'):
+        assert selector in css, selector
+    block = css[css.index('.at-a-glance {'):css.index('/* Status chips */')]
+    assert 'var(--signal)' in block and 'var(--running-bg)' in block and 'var(--waiting-bg)' in block and 'var(--ink-muted)' in block
+    assert not re.search(r'#[0-9a-fA-F]{3,6}\b', block), 'colours must be tokens'
+    assert re.search(r'@media \(max-width: 40rem\)\s*\{\s*\.glance-group\s*\{\s*grid-template-columns:\s*1fr', block)
 
 
 def main() -> int:
