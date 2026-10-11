@@ -12,19 +12,12 @@ name: spec-lint
 on:
   push:
     branches: [main]
-    paths:
-      - 'claude/plugins/project-setup/skills/tech-stack-setup/references/**'
-      - 'claude/plugins/project-setup/skills/auth-setup/references/**'
-      - 'claude/plugins/specs/skills/spec-new/assets/spec-template.md'
-      - 'claude/plugins/specs/skills/spec-check/assets/spec_check.py'
-      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/stack-profile.md'
-      - 'tools/**'
-      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/preflight.py'
-      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/**'
-      - 'claude/plugins/**/SKILL.md'
-      - 'claude/plugins/artifacts/**'
-      - 'claude/plugins/project-setup/skills/claude-setup/assets/**'
-      - '.github/workflows/spec-lint.yml'
+    # DS44: the areas job asks ci_skip_check.py whether a push to main differs
+    # from the tested pull request head only under docs/artifacts/; that helper
+    # reads this list, so it names exactly those paths. Which areas a push runs
+    # is decided by tools/ci_areas.py, not by a paths filter.
+    paths-ignore:
+      - 'docs/artifacts/**'
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
@@ -39,16 +32,86 @@ on:
       - 'claude/plugins/**/SKILL.md'
       - 'claude/plugins/artifacts/**'
       - 'claude/plugins/project-setup/skills/claude-setup/assets/**'
+      - 'docs/specs/changes/**'
       - '.github/workflows/spec-lint.yml'
   workflow_dispatch:
+    inputs:
+      mutants:
+        description: 'Run the mutation passes too'
+        type: boolean
+        default: false
+  # The nightly workflow (TC1) calls this one with mutants on.
+  workflow_call:
+    inputs:
+      mutants:
+        description: 'Run the mutation passes too'
+        type: boolean
+        default: false
+
+# TC4: a new push to a pull request replaces the run it supersedes. Runs on
+# main are never cancelled, so every merge keeps its result.
+concurrency:
+  group: spec-lint-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
 
 env:
   AUTHSPEC: claude/plugins/project-setup/skills/auth-setup/references/authentication.md
 
 jobs:
-  structure:
-    name: numbering and internal references (all specs)
+  # Reads the changed paths and says which areas below run (DS43). Every area
+  # job waits for it and runs only when its output is true; the jobs run in
+  # parallel. A change to a shared path, an unmapped path under tools/ or
+  # claude/, or a manual or scheduled run turns every area on.
+  areas:
+    name: which areas does this change touch
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    outputs:
+      specs: ${{ steps.areas.outputs.specs }}
+      delivery: ${{ steps.areas.outputs.delivery }}
+      artifacts: ${{ steps.areas.outputs.artifacts }}
+      profiles: ${{ steps.areas.outputs.profiles }}
+      mutants: ${{ steps.areas.outputs.mutants }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # DS44: a push to main whose content equals a pull request head that
+      # already passed this workflow, apart from docs/artifacts/, repeats
+      # nothing. ci_skip_check.py decides; on any doubt it answers skip=false.
+      - name: Can this push to main skip the suite
+        id: skip
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/ci_skip_check.py
+
+      - name: Decide the areas
+        id: areas
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          FORCE_MUTANTS: ${{ inputs.mutants }}
+          SKIP: ${{ steps.skip.outputs.skip }}
+        run: |
+          python3 tools/ci_areas.py --event "$EVENT" --base "$BASE" --head "$HEAD" \
+            --mutants "$FORCE_MUTANTS" --skip "$SKIP"
+
+  specs:
+    name: specs, templates and AUTHSPEC
+    needs: areas
+    if: needs.areas.outputs.specs == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -94,119 +157,11 @@ jobs:
       - name: Prove every check still fires
         run: python3 tools/test_spec_check.py
 
-      # auth-setup refuses to run on a repository tech-stack-setup has not
-      # prepared, and that refusal is a script rather than a sentence in a
-      # SKILL.md because a prose precondition is advisory. A guard nobody has
-      # watched fail is indistinguishable from one that always exits 0.
-      - name: Prove the setup preflight still blocks
-        run: python3 tools/test_preflight.py
-
-      # tech-stack-setup copies the delivery scripts into every repository it
-      # generates, and an agent trusts the gate's result as the only check a
-      # branch gets before it joins. A gate that exits 0 when it could not decide,
-      # or a trust rule that accepts a stale head or base, makes every generated
-      # repository report green over work nobody tested. The test builds
-      # throwaway repositories with a local bare remote and runs each script
-      # through every trust-rule branch and exit code, and proves each check can
-      # fail.
-      - name: Prove the branch gate and its trust rule still hold
-        run: python3 tools/test_delivery_gate.py
-
-      # The CI half of the same scripts: the watcher that waits for a commit's
-      # workflow runs, the default-branch skip check, and the reachability check,
-      # plus a structural check of the four ci.yml templates (a decide job, the
-      # job conditions, E2E not advisory). A watcher that returns early reads a
-      # pull request's checks before the new run is listed, and a ci.yml that lost
-      # its decide job re-runs a suite that already passed, which is the cost
-      # 6.0.0 exists to remove. Stub `gh` on PATH keeps this offline.
-      - name: Prove the CI scripts and workflow templates still hold
-        run: python3 tools/test_delivery_ci.py
-
-      # STACKSPEC 7.0.0 §13.6: once a train merges, cleanup.py removes its
-      # branches, gate-result refs and worktrees. A cleanup that deletes a
-      # branch with an open pull request, unmerged work, or a worktree holding
-      # uncommitted changes destroys work nobody can get back, so every safety
-      # rule is proved against throwaway repositories and a stub `gh`.
-      - name: Prove train cleanup removes only what is finished
-        run: python3 tools/test_delivery_cleanup.py
-
-      # STACKSPEC 7.0.0 §13.1: only the newest build artifact of each name is
-      # kept, because artifact storage is billed. A pruner that keeps the oldest,
-      # misses a page or keeps nothing either costs money or loses the latest
-      # build. Stub `gh` on PATH keeps this offline.
-      - name: Prove artifact pruning keeps exactly the newest of each name
-        run: python3 tools/test_artifact_prune.py
-
-      # STACKSPEC 7.1.0 §13.6: branches add change notes and the release folds
-      # them, so parallel branches never conflict on a spec's version line. A
-      # check that lets a version edit through, or a fold that bumps wrongly or
-      # loses a note, breaks every release; the suite proves each can fail.
-      - name: Prove change notes are enforced and folded correctly
-        run: python3 tools/test_change_notes.py
-
-      # dev-standards keeps its own versions the way STACKSPEC 7.1.0 §13.6 asks
-      # of products: a branch adds a note under docs/specs/changes/ and never
-      # edits a spec's or plugin's version or a spec's change log; the integration
-      # branch folds. The checkout is shallow, so fetch the base and the history
-      # the merge base needs; the head branch name is passed because the pull
-      # request checkout is detached, and a release (`*-integration`) branch
-      # may edit versions.
-      - name: Change notes only (no version edits off release branches)
-        if: github.event_name == 'pull_request'
-        env:
-          BASE_REF: ${{ github.base_ref }}
-          HEAD_REF: ${{ github.head_ref }}
-        run: |
-          git fetch --no-tags --quiet --unshallow || true
-          git fetch --no-tags --quiet origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
-          python3 claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/change_notes.py check \
-            --config tools/change-notes.json --base-ref "origin/${BASE_REF}" --branch "${HEAD_REF}"
-
-      # Every SKILL.md names the model and effort it runs at, and the profile
-      # table is the single statement of what each skill needs. A skill whose
-      # frontmatter drifted from the table runs on the wrong model silently: the
-      # expensive reasoning skills fall to a cheaper default, or a mechanical one
-      # burns the larger model. The test reads every SKILL.md and compares.
-      - name: Prove every skill's model and effort match the profile table
-        run: python3 tools/test_model_profiles.py
-
       # ARTIFACTSPEC is what luismc-artifacts is built from, so it obeys the
       # same numbering and reference rules as the other binding specs.
       - name: Check ARTIFACTSPEC numbering and references
         run: |
           python3 tools/spec_check.py             claude/plugins/artifacts/references/artifactspec.md
-
-      # The renderer is pure (record in, HTML out): the same record and stamp
-      # must give byte-identical HTML, and every structural rule of the spec's
-      # section 5 must hold in what it produces. A renderer that drifts makes
-      # every project's artifacts disagree with their own record.
-      - name: Prove the artifact renderer still holds
-        run: python3 -I tools/test_render_artifacts.py
-
-      # The only writer of the record. The test builds throwaway repositories
-      # with a bare remote and runs each command, each conformance check and the
-      # push-race and protected-branch exits, so a check that went quiet fails
-      # here instead of reporting a clean record forever.
-      - name: Prove the artifact commands and checks still hold
-        run: python3 -I tools/test_project_artifacts.py
-
-      # The hooks only queue and never write the record, and every one does
-      # nothing in a project without a manifest. The end-of-turn hook must also
-      # let a turn end after three blocks, or a session that cannot publish
-      # would loop forever.
-      - name: Prove the artifact hooks still hold
-        run: python3 -I tools/test_project_artifacts_hooks.py
-
-  authspec:
-    name: authentication.md content consistency
-    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
 
       # Blocking, and now the whole check set. authspec_check.py holds the
       # checks that need AUTHSPEC's own content — §4 entity tables, §19.4
@@ -246,3 +201,153 @@ jobs:
               --route-map tools/route-ratelimit-map.json --only "$check"
           done
 
+  delivery:
+    name: delivery scripts, CI templates, cleanup, prune, change notes
+    needs: areas
+    if: needs.areas.outputs.delivery == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # auth-setup refuses to run on a repository tech-stack-setup has not
+      # prepared, and that refusal is a script rather than a sentence in a
+      # SKILL.md because a prose precondition is advisory. A guard nobody has
+      # watched fail is indistinguishable from one that always exits 0.
+      - name: Prove the setup preflight still blocks
+        run: python3 tools/test_preflight.py
+
+      # tech-stack-setup copies the delivery scripts into every repository it
+      # generates, and an agent trusts the gate's result as the only check a
+      # branch gets before it joins. A gate that exits 0 when it could not decide,
+      # or a trust rule that accepts a stale head or base, makes every generated
+      # repository report green over work nobody tested. The test builds
+      # throwaway repositories with a local bare remote and runs each script
+      # through every trust-rule branch and exit code, and proves each check can
+      # fail.
+      - name: Prove the branch gate and its trust rule still hold
+        run: python3 tools/test_delivery_gate.py ${{ needs.areas.outputs.mutants != 'true' && '--no-mutants' || '' }}
+
+      # The CI half of the same scripts: the watcher that waits for a commit's
+      # workflow runs, the default-branch skip check, and the reachability check,
+      # plus a structural check of the four ci.yml templates (a decide job, the
+      # job conditions, E2E not advisory). A watcher that returns early reads a
+      # pull request's checks before the new run is listed, and a ci.yml that lost
+      # its decide job re-runs a suite that already passed, which is the cost
+      # 6.0.0 exists to remove. Stub `gh` on PATH keeps this offline.
+      - name: Prove the CI scripts and workflow templates still hold
+        run: python3 tools/test_delivery_ci.py
+
+      # STACKSPEC 7.0.0 §13.6: once a train merges, cleanup.py removes its
+      # branches, gate-result refs and worktrees. A cleanup that deletes a
+      # branch with an open pull request, unmerged work, or a worktree holding
+      # uncommitted changes destroys work nobody can get back, so every safety
+      # rule is proved against throwaway repositories and a stub `gh`.
+      - name: Prove train cleanup removes only what is finished
+        run: python3 tools/test_delivery_cleanup.py ${{ needs.areas.outputs.mutants != 'true' && '--no-mutants' || '' }}
+
+      # STACKSPEC 7.0.0 §13.1: only the newest build artifact of each name is
+      # kept, because artifact storage is billed. A pruner that keeps the oldest,
+      # misses a page or keeps nothing either costs money or loses the latest
+      # build. Stub `gh` on PATH keeps this offline.
+      - name: Prove artifact pruning keeps exactly the newest of each name
+        run: python3 tools/test_artifact_prune.py
+
+      # STACKSPEC 7.1.0 §13.6: branches add change notes and the release folds
+      # them, so parallel branches never conflict on a spec's version line. A
+      # check that lets a version edit through, or a fold that bumps wrongly or
+      # loses a note, breaks every release; the suite proves each can fail.
+      - name: Prove change notes are enforced and folded correctly
+        run: python3 tools/test_change_notes.py ${{ needs.areas.outputs.mutants != 'true' && '--no-mutants' || '' }}
+
+      # The area mapping is what decides which of these jobs run at all, so a
+      # wrong rule silently skips a suite. Shared paths (this file, ci_areas.py
+      # and its test) run every area, so this runs whenever either changes.
+      - name: Prove the area mapping and the main-after-merge skip hold
+        run: python3 tools/test_ci_areas.py
+  # Not an area: the notes rule applies to every pull request, including one
+  # that touches only docs/specs/changes/, so it never waits for `areas`.
+  change-notes:
+    name: change notes
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # dev-standards keeps its own versions the way STACKSPEC 7.1.0 §13.6 asks
+      # of products: a branch adds a note under docs/specs/changes/ and never
+      # edits a spec's or plugin's version or a spec's change log; the integration
+      # branch folds. The checkout is shallow, so fetch the base and the history
+      # the merge base needs; the head branch name is passed because the pull
+      # request checkout is detached, and a release (`*-integration`) branch
+      # may edit versions.
+      - name: Change notes only (no version edits off release branches)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          git fetch --no-tags --quiet --unshallow || true
+          git fetch --no-tags --quiet origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
+          python3 claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/change_notes.py check \
+            --config tools/change-notes.json --base-ref "origin/${BASE_REF}" --branch "${HEAD_REF}"
+
+  profiles:
+    name: model profiles
+    needs: areas
+    if: needs.areas.outputs.profiles == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # Every SKILL.md names the model and effort it runs at, and the profile
+      # table is the single statement of what each skill needs. A skill whose
+      # frontmatter drifted from the table runs on the wrong model silently: the
+      # expensive reasoning skills fall to a cheaper default, or a mechanical one
+      # burns the larger model. The test reads every SKILL.md and compares.
+      - name: Prove every skill's model and effort match the profile table
+        run: python3 tools/test_model_profiles.py
+
+  artifacts:
+    name: artifact renderer, commands and hooks
+    needs: areas
+    if: needs.areas.outputs.artifacts == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # The renderer is pure (record in, HTML out): the same record and stamp
+      # must give byte-identical HTML, and every structural rule of the spec's
+      # section 5 must hold in what it produces. A renderer that drifts makes
+      # every project's artifacts disagree with their own record.
+      - name: Prove the artifact renderer still holds
+        run: python3 -I tools/test_render_artifacts.py
+
+      # The only writer of the record. The test builds throwaway repositories
+      # with a bare remote and runs each command, each conformance check and the
+      # push-race and protected-branch exits, so a check that went quiet fails
+      # here instead of reporting a clean record forever.
+      - name: Prove the artifact commands and checks still hold
+        run: python3 -I tools/test_project_artifacts.py
+
+      # The hooks only queue and never write the record, and every one does
+      # nothing in a project without a manifest. The end-of-turn hook must also
+      # let a turn end after three blocks, or a session that cannot publish
+      # would loop forever.
+      - name: Prove the artifact hooks still hold
+        run: python3 -I tools/test_project_artifacts_hooks.py
