@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T03:32+01:00",
+  "updated": "2026-10-11T03:59+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -306,11 +306,11 @@
       "id": "AR33",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "Expected says what sets the estimate",
-      "detail": "Idea from another project's page: an Expected entry may carry its basis (e.g. 'agent slot ~01:30, ~1.5 h'). Starts after AR31, which owns the same files. Started 03:10 (one agent for both); rides STACKSPEC 7.1.0.",
-      "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T03:05+01:00"
+      "detail": "Built in #44 and joined (not released): --basis on task-add/set-task-status, stored as expected_basis, shown under Expected on open rows (max 80 chars, dropped when a row is Live, Built or Failed). luismc-artifacts 1.3.0.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T03:59+01:00"
     },
     {
       "id": "AR34",
