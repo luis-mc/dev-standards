@@ -16,7 +16,11 @@ script builds a minimal product around one track's template and checks that:
   5. the guard PASSES when the marker sits inside a nested directory that has
      its own .git (another checkout, such as an agent's worktree), and fails
      again once that .git is removed (so the pass is the skip, not blindness);
-  6. the setup commands FAIL when the lockfile is stale, and pass again once it
+  6. the guard reports a planted marker in a nested directory with `/`
+     separators on every OS (a starter that prints the platform's own
+     backslashes fails this on Windows; CI runs the check on windows-latest
+     as well);
+  7. the setup commands FAIL when the lockfile is stale, and pass again once it
      is restored.
 
 Commands are taken from the template's gate.json, not hard-coded, and run with
@@ -54,9 +58,22 @@ MARKER_END = ">" * 7 + " other-branch"
 PLANTED = f"a: 1\n{MARKER_START}\nb: 2\n{MARKER_SEP}\nc: 3\n{MARKER_END}\n"
 
 STEP_TIMEOUT_SECONDS = 1500
-# Resolved through PATH, not by CreateProcess: on Windows a bare "bash" finds
-# System32's WSL launcher before Git's bash.
-BASH = shutil.which("bash") or "bash"
+
+
+def find_bash() -> str:
+    """bash from PATH; on Windows Git's own, never System32's WSL launcher (a
+    bare "bash" finds that one first, and it cannot see Windows paths)."""
+    if os.name == "nt":
+        git = shutil.which("git")
+        if git:
+            for rel in ("../bin/bash.exe", "../../bin/bash.exe"):
+                cand = (Path(git).resolve().parent / rel).resolve()
+                if cand.exists():
+                    return str(cand)
+    return shutil.which("bash") or "bash"
+
+
+BASH = find_bash()
 
 
 class Checker:
@@ -204,7 +221,7 @@ def new_scaffold(c: Checker) -> None:
 
 
 def guard_checks(c: Checker, guards_cmd: str, ran: list[str], env: dict[str, str] | None = None) -> None:
-    """The same four checks for every track, around the gate's own guards command."""
+    """The same five checks for every track, around the gate's own guards command."""
     c.expect_exit("guards pass on a clean tree and the guard really ran", guards_cmd, True, env, ran)
 
     marker = c.plant_marker()
@@ -213,6 +230,18 @@ def guard_checks(c: Checker, guards_cmd: str, ran: list[str], env: dict[str, str
         guards_cmd, False, env, [r"conflicted\.yml:2:"],
     )
     marker.unlink()
+
+    # STACKSPEC U9: paths are matched and reported with '/' on every OS. The
+    # pattern accepts no backslash before the path on its line, so a starter that
+    # prints a back-slashed relative path or an absolute `C:` path fails.
+    nested = c.write("nested/dir/conflicted.yml", PLANTED)
+    c.expect_exit(
+        "guards report a planted marker in a nested directory with '/' separators",
+        guards_cmd, False, env, [r"(?m)^[^\\\r\n]*nested/dir/conflicted\.yml:2:"],
+    )
+    nested.unlink()
+    nested.parent.rmdir()
+    nested.parent.parent.rmdir()
 
     others = c.plant_other_checkouts()
     c.expect_exit(

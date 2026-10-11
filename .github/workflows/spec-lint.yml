@@ -137,6 +137,31 @@ jobs:
       - name: Prove artifact pruning keeps exactly the newest of each name
         run: python3 tools/test_artifact_prune.py
 
+      # STACKSPEC 7.1.0 §13.6: branches add change notes and the release folds
+      # them, so parallel branches never conflict on a spec's version line. A
+      # check that lets a version edit through, or a fold that bumps wrongly or
+      # loses a note, breaks every release; the suite proves each can fail.
+      - name: Prove change notes are enforced and folded correctly
+        run: python3 tools/test_change_notes.py
+
+      # dev-standards keeps its own versions the way STACKSPEC 7.1.0 §13.6 asks
+      # of products: a branch adds a note under docs/specs/changes/ and never
+      # edits a spec's or plugin's version or a spec's change log; the integration
+      # branch folds. The checkout is shallow, so fetch the base and the history
+      # the merge base needs; the head branch name is passed because the pull
+      # request checkout is detached, and a release (`*-integration`) branch
+      # may edit versions.
+      - name: Change notes only (no version edits off release branches)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          git fetch --no-tags --quiet --unshallow || true
+          git fetch --no-tags --quiet origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
+          python3 claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/change_notes.py check \
+            --config tools/change-notes.json --base-ref "origin/${BASE_REF}" --branch "${HEAD_REF}"
+
       # Every SKILL.md names the model and effort it runs at, and the profile
       # table is the single statement of what each skill needs. A skill whose
       # frontmatter drifted from the table runs on the wrong model silently: the

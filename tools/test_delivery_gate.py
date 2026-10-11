@@ -387,7 +387,7 @@ def sc_scopes(t: T, shared: Path) -> None:
     t.eq("base placeholder is the merge base", log[4], ["secret-scan", box.main_sha])
     res = box.result()
     t.eq("result: contract keys present",
-         sorted(res), sorted(["schema", "kind", "branch", "head", "base", "base_ref", "widened",
+         sorted(res), sorted(["schema", "kind", "branch", "head", "base", "base_ref", "base_fetched", "widened",
                               "changed_dirs", "steps", "pass", "timed_out", "partial", "started_at",
                               "finished_at", "tool"]))
     t.eq("result: branch", res["branch"], "feat/web")
@@ -1098,6 +1098,243 @@ def sc_fast_guards(t: T, shared: Path) -> None:
     t.eq("no pre_push step configured: exit 2", r.code, 2)
 
 
+def e2e_gate_json(with_map: bool = True, placeholder: bool = True) -> dict:
+    cfg = Box.gate_json()
+    for s in cfg["steps"]:
+        if s["name"] == "e2e":
+            s["run"] = Box.step_cmd("e2e", "{e2e_specs}" if placeholder else "")
+            s["run_full"] = Box.step_cmd("e2e", "FULL")
+    if with_map:
+        cfg["e2e_map"] = {
+            "specs": [
+                {"spec": "e2e/checkout.spec.ts", "paths": ["apps/web/checkout/"]},
+                {"spec": "e2e/ui.spec.ts", "paths": ["packages/ui/"]},
+                {"spec": "e2e/core.spec.ts", "paths": ["packages/core/"]},
+            ],
+            "full_on": ["playwright.config.txt"],
+        }
+    return cfg
+
+
+def sc_e2e_map(t: T, shared: Path) -> None:
+    """U1: the e2e step runs only the specs the changed files map to."""
+    box = Box(shared, gate_json=e2e_gate_json())
+
+    def e2e(files: dict, *args: str):
+        box.branch("feat/e", files)
+        box.clear_log()
+        r = box.gate("--no-publish", *args)
+        entry = {s["name"]: s for s in box.result()["steps"]}["e2e"]
+        return r, [x for x in box.ran() if x[0] == "e2e"], entry
+
+    r, ran, entry = e2e({"apps/web/checkout/a.txt": "a\n"})
+    t.eq("a mapped change runs only its spec", (r.code, ran), (0, [["e2e", "e2e/checkout.spec.ts"]]))
+    t.eq("... the result says affected, and which", (entry.get("selection"), entry.get("specs")),
+         ("affected", ["e2e/checkout.spec.ts"]))
+    t.check("... the recorded command has the specs filled in", "e2e/checkout.spec.ts" in entry["command"]
+            and "{" not in entry["command"], entry["command"])
+
+    r, ran, entry = e2e({"apps/web/checkout/a.txt": "a\n", "packages/ui/b.txt": "b\n"})
+    t.eq("two mapped changes run both specs, sorted", ran, [["e2e", "e2e/checkout.spec.ts", "e2e/ui.spec.ts"]])
+    t.eq("... recorded", entry.get("specs"), ["e2e/checkout.spec.ts", "e2e/ui.spec.ts"])
+
+    r, ran, entry = e2e({"apps/web/checkout/a.txt": "a\n", "packages/core/c.txt": "c\n"})
+    t.eq("a non-UI file under a spec's paths adds that spec", entry.get("specs"),
+         ["e2e/checkout.spec.ts", "e2e/core.spec.ts"])
+
+    r, ran, entry = e2e({"apps/web/checkout/a.txt": "a\n", "apps/web/other.txt": "o\n"})
+    t.eq("an unmapped UI file: the whole suite", (r.code, ran), (0, [["e2e", "FULL"]]))
+    t.eq("... the result says full, no specs", (entry.get("selection"), entry.get("specs")), ("full", []))
+
+    r, ran, entry = e2e({"apps/web/checkout/a.txt": "a\n", "playwright.config.txt": "c\n"})
+    t.eq("a full_on file: the whole suite", ran, [["e2e", "FULL"]])
+    t.eq("... the result says full", (entry.get("selection"), entry.get("specs")), ("full", []))
+
+    r, ran, entry = e2e({"apps/web/checkout/a.txt": "a\n", "pnpm-lock.yaml": "lock\nl1\nchanged\n"})
+    t.eq("a widened gate: the whole suite", ran, [["e2e", "FULL"]])
+    t.eq("... the result says full", (entry.get("selection"), entry.get("specs")), ("full", []))
+
+    r, ran, entry = e2e({"apps/web/checkout/a.txt": "a\n"}, "--full")
+    t.eq("--full: the whole suite", ran, [["e2e", "FULL"]])
+
+    box.branch("feat/api", {"apps/api/a.txt": "a\n"})
+    box.clear_log()
+    box.gate("--no-publish")
+    entry = {s["name"]: s for s in box.result()["steps"]}["e2e"]
+    t.eq("no UI change: e2e is skipped, with no selection fields",
+         (entry["outcome"], "selection" in entry, "specs" in entry), ("skip", False, False))
+
+    # no map: the placeholder is empty and the step runs as it always did
+    nomap = Box(shared, gate_json=e2e_gate_json(with_map=False))
+    nomap.branch("feat/e", {"apps/web/checkout/a.txt": "a\n"})
+    r = nomap.gate("--no-publish")
+    entry = {s["name"]: s for s in nomap.result()["steps"]}["e2e"]
+    t.eq("no e2e_map: the placeholder is empty", (r.code, [x for x in nomap.ran() if x[0] == "e2e"]),
+         (0, [["e2e"]]))
+    t.eq("... and the selection is full", (entry.get("selection"), entry.get("specs")), ("full", []))
+    plain = Box(shared)
+    plain.branch("feat/e", {"apps/web/checkout/a.txt": "a\n"})
+    plain.gate("--no-publish")
+    entry = {s["name"]: s for s in plain.result()["steps"]}["e2e"]
+    t.eq("a step without the placeholder: unchanged, no selection fields",
+         (entry["outcome"], "selection" in entry), ("pass", False))
+
+    for bad in ("x", {"specs": "x"}, {"specs": [{"spec": "a"}]}, {"specs": [{"spec": "", "paths": ["a/"]}]},
+                {"specs": [{"spec": "a", "paths": []}]}, {"specs": [], "full_on": "x"}):
+        cfg = e2e_gate_json()
+        cfg["e2e_map"] = bad
+        b = Box(shared, gate_json=cfg)
+        b.branch("feat/e", {"apps/web/checkout/a.txt": "a\n"})
+        t.eq("e2e_map %r is a configuration error" % (bad,), b.gate("--no-publish").code, 2)
+
+
+def advanced_box(shared: Path, gate_json: dict | None = None) -> tuple[Box, str]:
+    """A box whose origin/main is behind the remote: another clone added a commit
+    to main (apps/api) and pushed feat/x, cut from that commit. The box has the
+    commits of feat/x (fetched by name) but its origin/main is stale. Returns the
+    box, on feat/x, and the new main sha."""
+    box = Box(shared, gate_json=gate_json)
+    other = box.root / "other"
+    run(["git", "clone", "-q", box.origin.as_posix(), other])
+    box.g("checkout", "-q", "main", cwd=other)
+    new_main = commit_in(box, other, {"apps/api/new.txt": "n\n"}, "main moves")
+    box.g("push", "-q", "origin", "main", cwd=other)
+    box.g("checkout", "-q", "-b", "feat/x", cwd=other)
+    commit_in(box, other, {"apps/web/x.txt": "x\n"}, "work on x")
+    box.g("push", "-q", "origin", "feat/x", cwd=other)
+    box.g("fetch", "-q", "origin", "feat/x")
+    box.g("checkout", "-q", "-B", "feat/x", "FETCH_HEAD")
+    return box, new_main
+
+
+def commit_in(box: Box, cwd: Path, files: dict, msg: str) -> str:
+    """Commit files in another clone of the box's origin."""
+    for rel, text in files.items():
+        p = cwd / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(text, encoding="utf-8", newline="\n")
+    box.g("add", "-A", cwd=cwd)
+    box.g("commit", "-q", "-m", msg, cwd=cwd)
+    return box.g("rev-parse", "HEAD", cwd=cwd)
+
+
+def sc_base_fetch(t: T, shared: Path) -> None:
+    """U2: the gate and fast_guards fetch the base first; offline they warn and go on."""
+    box, new_main = advanced_box(shared)
+    t.check("setup: origin/main is behind", box.g("rev-parse", "origin/main") != new_main)
+    r = box.gate("--no-publish")
+    res = box.result()
+    t.eq("gate: exit 0", r.code, 0)
+    t.eq("gate: the base is the fetched head", res["base"], new_main)
+    t.eq("gate: so only the branch's own package changed", res["changed_dirs"], ["apps/web"])
+    t.eq("gate: base_fetched is true", res["base_fetched"], True)
+    t.eq("gate: origin/main moved", box.g("rev-parse", "origin/main"), new_main)
+    t.check("gate: no warning when the fetch worked", "not fetched" not in r.text, r.text)
+
+    box, new_main = advanced_box(shared)
+    r = box.script("fast_guards.py", "--base-ref", "origin/main")
+    t.eq("fast_guards: exit 0", r.code, 0)
+    t.eq("fast_guards: {base} is the fetched head", box.ran()[1], ["secret-scan", new_main])
+
+    # offline: the remote cannot be reached
+    box, new_main = advanced_box(shared)
+    box.g("remote", "set-url", "origin", (box.root / "gone.git").as_posix())
+    stale = box.g("rev-parse", "origin/main")
+    r = box.gate("--no-publish")
+    res = box.result()
+    t.eq("offline gate: still runs", r.code, 0)
+    t.has("offline gate: warns", r.err, "base not fetched")
+    t.has("offline gate: says the local ref is used", r.err, "using the local ref")
+    t.eq("offline gate: base_fetched is false", res["base_fetched"], False)
+    t.eq("offline gate: the stale local ref is the base", res["base"], stale)
+    box.clear_log()
+    r = box.script("fast_guards.py", "--base-ref", "origin/main")
+    t.eq("offline fast_guards: still runs", r.code, 0)
+    t.has("offline fast_guards: warns", r.err, "base not fetched")
+
+    # nothing to fetch: a local branch, a commit
+    box = Box(shared)
+    box.branch("feat/l", {"apps/web/a.txt": "a\n"})
+    r = box.gate("--no-publish", base_ref="main")
+    t.eq("a local base branch: no fetch, no warning",
+         (r.code, box.result()["base_fetched"], "not fetched" in r.text), (0, False, False))
+    r = box.gate("--no-publish", base_ref=box.main_sha)
+    t.eq("a commit as base: no fetch, no warning",
+         (r.code, box.result()["base_fetched"], "not fetched" in r.text), (0, False, False))
+
+
+def fork_box(shared: Path) -> Box:
+    """origin has main and integ (one commit ahead of main); the box has both."""
+    box = Box(shared)
+    box.branch("integ", {"apps/api/i.txt": "i\n"})
+    box.push("integ")
+    return box
+
+
+def fork_base(box: Box, *args: str) -> tuple[R, str | None]:
+    r = box.script("fast_guards.py", "--base-ref", "auto", *args)
+    m = re.search(r"^base: (\S+) \(fork point\)\r?$", r.out, re.M)
+    return r, m.group(1) if m else None
+
+
+def sc_fork_point(t: T, shared: Path) -> None:
+    """U3: --base-ref auto picks the remote branch the commit was cut from."""
+    box = fork_box(shared)
+    integ = box.g("rev-parse", "integ")
+    box.g("remote", "set-head", "origin", "integ")  # origin/HEAD -> integ: it must never be picked
+    box.branch("feat/f", {"apps/web/f.txt": "f\n"}, frm="integ")
+    box.clear_log()
+    r, base = fork_base(box)
+    t.eq("a branch cut from an integration branch picks it", (r.code, base), (0, "origin/integ"))
+    t.eq("... and {base} is that branch's head", box.ran()[1], ["secret-scan", integ])
+    box.push("feat/f")
+    r, base = fork_base(box)
+    t.eq("the pushed branch itself is never the base (checked-out name)", base, "origin/integ")
+    box.g("checkout", "-q", "integ")
+    r, base = fork_base(box, "--commit", "feat/f", "--branch", "feat/f")
+    t.eq("... nor with --branch, for a commit that is not checked out", (r.code, base), (0, "origin/integ"))
+
+    box.g("remote", "set-head", "origin", "main")
+    box.branch("feat/m", {"apps/web/m.txt": "m\n"}, frm="main")
+    box.clear_log()
+    r, base = fork_base(box)
+    t.eq("a branch cut from main picks main", (r.code, base), (0, "origin/main"))
+    t.eq("... {base} is main's head", box.ran()[1], ["secret-scan", box.main_sha])
+
+    # ties go to the default branch, then to name order
+    box = Box(shared)
+    box.g("push", "-q", "origin", "main:refs/heads/aaa")
+    box.g("fetch", "-q", "origin")
+    box.branch("feat/t", {"apps/web/t.txt": "t\n"}, frm="main")
+    r, base = fork_base(box)
+    t.eq("a tie with the default branch: the default branch", base, "origin/main")
+
+    box = Box(shared)
+    box.branch("b-int", {"apps/api/b.txt": "b\n"})
+    box.push("b-int")
+    box.g("push", "-q", "origin", "b-int:refs/heads/a-int")
+    box.g("fetch", "-q", "origin")
+    box.branch("feat/t", {"apps/web/t.txt": "t\n"}, frm="b-int")
+    r, base = fork_base(box)
+    t.eq("a tie between other branches: name order", base, "origin/a-int")
+
+    # no candidate: the default branch
+    box = Box(shared)
+    box.branch("feat/n", {"apps/web/n.txt": "n\n"})
+    r, base = fork_base(box, "--branch", "main")
+    t.eq("no candidate: the default branch", (r.code, base), (0, "origin/main"))
+
+    # an unrelated branch is skipped, not an error
+    box = Box(shared)
+    box.g("checkout", "-q", "--orphan", "island")
+    box.g("rm", "-rfq", ".")
+    box.commit({"island.txt": "i\n"}, "island")
+    box.g("push", "-q", "origin", "island")
+    box.branch("feat/u", {"apps/web/u.txt": "u\n"}, frm="main")
+    r, base = fork_base(box)
+    t.eq("a branch with no common ancestor is skipped", (r.code, base), (0, "origin/main"))
+
+
 def push_leftovers(box: Box) -> list:
     """What a finished fast_guards.py --commit run must not leave: directories under
     .delivery/push-check/, and worktrees registered with the repository."""
@@ -1402,6 +1639,26 @@ def sc_hook(t: T, shared: Path) -> None:
     t.has("... with a warning", r.text, "NOT run")
 
 
+def sc_hook_auto(t: T, shared: Path) -> None:
+    """U3: the hook passes --base-ref auto for a ref the remote does not have, and only then."""
+    box = fork_box(shared)
+    integ = box.g("rev-parse", "integ")
+    box.g("config", "core.hooksPath", ".githooks")
+    box.branch("feat/h", {"apps/web/h.txt": "h\n"}, frm="integ")
+    box.clear_log()
+    r = run(["git", "push", "-q", "-u", "origin", "feat/h"], cwd=box.work)
+    t.eq("a new branch cut from an integration branch: allowed", r.code, 0)
+    t.has("... the hook asked for the fork point", r.text, "base: origin/integ (fork point)")
+    t.eq("... and the guards compared with that branch", box.ran()[1], ["secret-scan", integ])
+
+    first = box.g("rev-parse", "HEAD")
+    box.commit({"apps/web/h2.txt": "h\n"}, "second")
+    box.clear_log()
+    r = run(["git", "push", "-q", "origin", "feat/h"], cwd=box.work)
+    t.eq("an update compares with what the remote had", box.ran()[1], ["secret-scan", first])
+    t.check("... and does not look for a fork point", "fork point" not in r.text, r.text)
+
+
 def sc_hook_local(t: T, shared: Path) -> None:
     """The project's own check, kept beside the template as pre-push.local."""
     box = Box(shared)
@@ -1630,6 +1887,10 @@ def sc_hook_ranges(t: T, shared: Path) -> None:
     # no default branch to compare with: the push is blocked, and says why
     box.branch("feat/r2", {"apps/web/b.txt": "b\n"})
     box.g("update-ref", "-d", "refs/remotes/origin/main")
+    box.g("update-ref", "-d", "refs/remotes/origin/feat/r")  # no other remote branch for a fork point either
+    # and nothing to fetch it from (fetches fail; pushes still reach the real origin)
+    box.g("remote", "set-url", "--push", "origin", box.origin.as_posix())
+    box.g("remote", "set-url", "origin", (box.root / "gone.git").as_posix())
     box.clear_log()
     r = run(["git", "push", "-q", "-u", "origin", "feat/r2"], cwd=box.work)
     t.check("a first push with no origin/main: blocked", r.code != 0, r.text)
@@ -1840,9 +2101,14 @@ def sc_agent_setup(t: T, shared: Path) -> None:
     syntax = run([bash, "-n", script.as_posix()])
     t.eq("agent_setup.sh parses", syntax.code, 0)
 
-    version = json.loads((shared / "scripts/delivery/tools.json").read_text())["gitleaks"]
+    pin = json.loads((shared / "scripts/delivery/tools.json").read_text())["gitleaks"]
+    version = pin if isinstance(pin, str) else pin["version"]
     box = Box(shared)
     sh = box.work / "scripts/delivery/agent_setup.sh"
+    # This scenario drives the old tools.json form ({"gitleaks": "x.y.z"}): the archive is
+    # checked against the release's checksums file. The pinned form (SHA-256 in tools.json)
+    # is covered in test_delivery_ci.py.
+    (box.work / "scripts/delivery/tools.json").write_text(json.dumps({"gitleaks": version}) + "\n")
     path = Path(PY).parent.as_posix() + os.pathsep + os.environ.get("PATH", "")
     base_env = {"PATH": path}
 
@@ -1890,6 +2156,7 @@ def sc_agent_setup(t: T, shared: Path) -> None:
         env = {**base_env, "DELIVERY_BIN": bin_dir.as_posix(), "DELIVERY_GITLEAKS_BASE_URL": base_url}
         r = run([bash, sh.as_posix()], cwd=box.work, extra_env=env)
         t.eq("install with a matching checksum: exit 0", r.code, 0)
+        t.has("... the old tools.json form warns", r.err, "old form")
         t.check("... gitleaks is in DELIVERY_BIN", (bin_dir / exe).exists(), r.text)
         t.eq("... gate.json setup ran", [x[0] for x in box.ran(True)], ["setup"])
         t.eq("... hooks path set", box.g("config", "--get", "core.hooksPath"), ".githooks")
@@ -1965,6 +2232,12 @@ def unfrozen_setup(cmds: list[str]) -> list[str]:
 def sc_assets(t: T, shared: Path) -> None:
     tools = json.loads((shared / "scripts/delivery/tools.json").read_text())
     ver = tools.get("gitleaks", "")
+    if isinstance(ver, dict):  # the pinned form: version plus a SHA-256 per platform
+        pins = ver.get("sha256", {})
+        t.eq("tools.json pins the five platforms", sorted(pins),
+             ["darwin_arm64", "darwin_x64", "linux_arm64", "linux_x64", "windows_x64"])
+        t.check("... each pin is a SHA-256", all(re.fullmatch(r"[0-9a-f]{64}", v) for v in pins.values()), str(pins))
+        ver = ver.get("version", "")
     t.check("tools.json pins gitleaks to an exact x.y.z", re.fullmatch(r"\d+\.\d+\.\d+", ver) is not None, ver)
     parts = tuple(int(x) for x in ver.split(".")) if re.fullmatch(r"\d+\.\d+\.\d+", ver) else (0, 0, 0)
     t.check("... new enough for the `git` subcommand (8.19+)", parts >= (8, 19, 0), ver)
@@ -1997,7 +2270,7 @@ def sc_assets(t: T, shared: Path) -> None:
         t.check(label + ": secret-scan uses `gitleaks git` over {base}..HEAD",
                 "gitleaks git " in steps["secret-scan"]["run"] and "--log-opts={base}..HEAD" in steps["secret-scan"]["run"])
         t.check(label + ": only known placeholders",
-                all(set(re.findall(r"\{(\w+)\}", s.get("run", "") + s.get("run_full", ""))) <= {"base", "changed_dirs", "affected_dirs"}
+                all(set(re.findall(r"\{(\w+)\}", s.get("run", "") + s.get("run_full", ""))) <= {"base", "changed_dirs", "affected_dirs", "e2e_specs"}
                     for s in cfg["steps"]))
         t.check(label + ": has typecheck, lint-or-build and unit steps",
                 {"typecheck", "unit"} <= set(steps))
@@ -2014,6 +2287,10 @@ def sc_assets(t: T, shared: Path) -> None:
     t.check("ts gate.json matches the contract example commands",
             any("--filter" in s["run"] and "{base}" in s["run"] for s in ts["steps"] if s["name"] == "typecheck")
             and any(s["name"] == "unit" and "{affected_dirs}" in s["run"] and "--project unit" in s["run"] and "--passWithNoTests" in s["run"] for s in ts["steps"]))
+    e2e_step = {s["name"]: s for s in ts["steps"]}["e2e"]
+    t.check("ts gate.json: the e2e step takes {e2e_specs}, run_full runs the whole suite",
+            e2e_step["run"].endswith("playwright test {e2e_specs}") and "{e2e_specs}" not in e2e_step["run_full"]
+            and e2e_step["run_full"].endswith("playwright test") and "e2e_map" not in ts, str(e2e_step))
     runners = {s["name"]: s for s in ts["steps"]}
     t.check("ts: the test-runner steps run with CI=true, as CI does (timeouts, forbidOnly)",
             all(runners[n].get("env") == {"CI": "true"} for n in ("unit", "guards", "e2e")),
@@ -2295,6 +2572,53 @@ MUTANTS = [
     ("pre-push.local gets no stdin", ".githooks/pre-push",
      '"$hooks_dir/pre-push.local" "$@" < "$stdin_file"\n  else',
      '"$hooks_dir/pre-push.local" "$@" < /dev/null\n  else', "hook_local"),
+    ("an unmapped UI file does not force the whole suite", "scripts/delivery/delivery_common.py",
+     'if not hits and any(f.startswith(p) for p in ctx.cfg["ui_paths"]):', "if False:", "e2e_map"),
+    ("a full_on file does not force the whole suite", "scripts/delivery/delivery_common.py",
+     'for e in emap["full_on"]):', "for e in []):", "e2e_map"),
+    ("a widened gate still selects specs", "scripts/delivery/delivery_common.py",
+     "if not emap or ctx.widened:", "if not emap:", "e2e_map"),
+    ("the selection is not recorded", "scripts/delivery/delivery_common.py",
+     "entry.update(e2e_info(step, ctx))", "entry.update({})", "e2e_map"),
+    ("{e2e_specs} is never filled", "scripts/delivery/delivery_common.py",
+     'cmd.replace("{e2e_specs}", e2e_specs)', 'cmd.replace("{e2e_specs}", "")', "e2e_map"),
+    ("the full-suite command is not used for a full selection", "scripts/delivery/delivery_common.py",
+     'cmd, why = step.get("run_full") or step["run"], "full suite (e2e_map)"', 'cmd, why = step["run"], "full suite (e2e_map)"',
+     "e2e_map"),
+    ("e2e_map is not validated", "scripts/delivery/delivery_common.py",
+     'cfg["e2e_map"] = _check_e2e_map(cfg["e2e_map"], where)', "pass", "e2e_map"),
+    ("the gate does not fetch its base", "scripts/delivery/delivery_common.py",
+     "fetched, why_not = fetch_base(root, base_ref)", "fetched, why_not = False, None", "base_fetch"),
+    ("a failed fetch is not warned about", "scripts/delivery/delivery_common.py",
+     "    if why_not:\n", "    if False:\n", "base_fetch"),
+    ("base_fetched is always true", "scripts/delivery/delivery_common.py",
+     "base_fetched=fetched,", "base_fetched=True,", "base_fetch"),
+    ("base_fetched is not in the result", "scripts/delivery/branch_gate.py",
+     '        "base_fetched": ctx.base_fetched,\n', "", "scopes"),
+    ("a failed fetch stops the gate", "scripts/delivery/delivery_common.py",
+     "    if p.returncode == 0:\n        return True, None\n",
+     "    if p.returncode == 0:\n        return True, None\n    raise DeliveryError('fetch failed')\n", "base_fetch"),
+    ("a local base branch is fetched as if it were a remote", "scripts/delivery/delivery_common.py",
+     "    if parts is None:\n        return False, None\n", "    if parts is None:\n        parts = ('origin', base_ref)\n", "base_fetch"),
+    ("--base-ref auto is not resolved", "scripts/delivery/fast_guards.py",
+     'if args.base_ref == "auto":', "if False:", "fork_point"),
+    ("the farthest branch is picked, not the nearest", "scripts/delivery/delivery_common.py",
+     "if best is None or key < best:", "if best is None or key > best:", "fork_point"),
+    ("a tie does not go to the default branch", "scripts/delivery/delivery_common.py",
+     "0 if name == default_branch else 1", "1", "fork_point"),
+    ("the pushed branch can be its own base", "scripts/delivery/delivery_common.py",
+     'if not name or name == "HEAD" or name == pushed_branch:', 'if not name or name == "HEAD":', "fork_point"),
+    ("origin/HEAD can be the base", "scripts/delivery/delivery_common.py",
+     'if not name or name == "HEAD" or name == pushed_branch:', "if not name or name == pushed_branch:", "fork_point"),
+    ("--branch is ignored", "scripts/delivery/fast_guards.py",
+     "args.branch or dc.current_branch(root)", "dc.current_branch(root)", "fork_point"),
+    ("an unrelated branch stops --base-ref auto", "scripts/delivery/delivery_common.py",
+     "        if mb.returncode != 0 or not mb.stdout.strip():\n            continue\n        n = ",
+     "        n = ", "fork_point"),
+    ("pre-push never asks for the fork point", ".githooks/pre-push",
+     'elif [ "$remote_sha" = "$zero" ]; then', "elif false; then", "hook_auto"),
+    ("pre-push ignores the sha the remote had", ".githooks/pre-push",
+     'if [ "$remote_sha" != "$zero" ] && git cat-file', 'if false && git cat-file', "hook_auto"),
     ("agent_setup prints the Windows path in the PATH hint", "scripts/delivery/agent_setup.sh",
      'export PATH=\\"$bin_path:\\$PATH\\""', 'export PATH=\\"$bin_dir:\\$PATH\\""', "agent_setup"),
     ("agent_setup skips the checksum", "scripts/delivery/agent_setup.sh",
@@ -2323,6 +2647,10 @@ SCENARIOS = {
     "hook_ranges": sc_hook_ranges,
     "hook": sc_hook,
     "hook_local": sc_hook_local,
+    "hook_auto": sc_hook_auto,
+    "e2e_map": sc_e2e_map,
+    "base_fetch": sc_base_fetch,
+    "fork_point": sc_fork_point,
     "join_clean": sc_join_clean,
     "join_untrusted": sc_join_untrusted,
     "join_conflicts": sc_join_conflicts,

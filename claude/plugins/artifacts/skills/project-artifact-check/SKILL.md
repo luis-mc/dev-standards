@@ -43,7 +43,7 @@ structure stylesheet by hand.
      or a hand-written Decisions section): export the content, fix
      `decisions.json` there, then `edit-content`. A warning that an open decision
      has no task in Needs you (R5.26) is fixed with `set-task-status <ID> "Needs you"`.
-   - A task row that is wrong (R6.6 expected format, R4.5 or R4.6 IDs and
+   - A task row that is wrong (R6.6 expected format, R6.10 basis, R4.5 or R4.6 IDs and
      prefixes, R6.1 status): change it with `set-task-status` or `task-add`,
      never by hand.
    - A structure stylesheet that differs (R5.10): run `render --all`; the

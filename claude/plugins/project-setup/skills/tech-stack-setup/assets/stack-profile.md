@@ -1,7 +1,7 @@
 # Stack Profile — `<PRODUCT>`
 
 **Status:** Binding for this product
-**Conforms to:** `STACKSPEC <7.0.0>`, `AUTHSPEC <VERSION>`
+**Conforms to:** `STACKSPEC <7.1.0>`, `AUTHSPEC <VERSION>`
 **Last reviewed:** `<YYYY-MM-DD>` by `<NAME>`
 
 This is the declared stack document for this product. It is what `AUTHSPEC §2.1`
@@ -26,7 +26,7 @@ aligned so a conformance run can check them positionally.
 
 | Spec | Version implemented | Notes |
 |---|---|---|
-| `STACKSPEC` | `<7.0.0>` | |
+| `STACKSPEC` | `<7.1.0>` | |
 | `AUTHSPEC` | `<x.y.z>` | |
 
 ## 2. Track and selections

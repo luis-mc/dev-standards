@@ -107,6 +107,12 @@ at the first failure and gives up after 30 minutes. A merged train's branches,
 gate results and worktrees are removed automatically, and only the newest build
 artifact of each name (an installer, a bundle, a report) is kept on GitHub.
 
+Since 7.1.0 the gate fetches its base first and runs only the end-to-end specs a
+change affects, the pre-push hook compares with the branch a push forks from,
+scanner checksums are pinned, runners are a repository setting, and a
+default-branch run skips merges that differ only in documentation. Branches add
+change notes instead of editing spec versions; the release folds them.
+
 Supports four language tracks: **TypeScript, Go, Rust, and .NET**. Every
 vendor choice — Postgres or MySQL, Neon or RDS, Vercel or Fly — is yours;
 the wizard never tells you which one to pick, only which ones are compatible

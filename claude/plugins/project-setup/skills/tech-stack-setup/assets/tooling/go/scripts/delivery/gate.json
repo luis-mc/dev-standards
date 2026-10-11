@@ -38,6 +38,12 @@
       "run": "go test -run \"^TestGuard\" ./..."
     },
     {
+      "name": "change-notes",
+      "scope": "always",
+      "pre_push": true,
+      "run": "python3 scripts/delivery/change_notes.py check --base-ref {base} || python scripts/delivery/change_notes.py check --base-ref {base}"
+    },
+    {
       "name": "secret-scan",
       "scope": "always",
       "pre_push": true,

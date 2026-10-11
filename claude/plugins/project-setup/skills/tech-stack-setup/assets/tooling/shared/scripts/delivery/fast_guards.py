@@ -201,7 +201,11 @@ def run_guards(root: Path, work: Path, args: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="fast_guards.py", description=__doc__.split("\n\n")[0])
-    ap.add_argument("--base-ref", help="ref or commit the pushed work is compared with (default origin/<default_branch>)")
+    ap.add_argument("--base-ref", help="ref or commit the pushed work is compared with (default "
+                                       "origin/<default_branch>); 'auto' picks the remote branch the commit "
+                                       "was cut from (nearest fork point)")
+    ap.add_argument("--branch", metavar="NAME",
+                    help="name of the branch being pushed; --base-ref auto never picks it (default: the checked-out branch)")
     ap.add_argument("--commit", metavar="SHA",
                     help="commit to check (default: the checked-out one); another commit is checked out in a "
                          "temporary worktree under %s/" % PUSH_CHECK_DIR)
@@ -212,10 +216,18 @@ def main(argv: list[str] | None = None) -> int:
         ap.error("--timeout-minutes must be greater than 0")
 
     root = dc.repo_root()
+    commit = None
     if args.commit:
         commit = dc.rev(args.commit, root)
         if commit is None:
             raise dc.DeliveryError("--commit '%s' is not a commit of this repository" % args.commit)
+    if args.base_ref == "auto":
+        cfg = dc.load_gate(root)
+        args.base_ref = dc.fork_point_base(
+            root, commit or "HEAD", cfg["default_branch"], args.branch or dc.current_branch(root)
+        )
+        print("base: %s (fork point)" % args.base_ref, flush=True)
+    if commit is not None:
         if commit != dc.rev("HEAD", root):
             return run_in_push_worktree(root, commit, args)
     return run_guards(root, root, args)

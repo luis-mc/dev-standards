@@ -8,7 +8,7 @@ effort: medium
 # Full-progress artifact — new
 
 Creates the project's one full-progress artifact from the record
-(`docs/artifacts/`, ARTIFACTSPEC 1.2.0). The script is the only writer of
+(`docs/artifacts/`, ARTIFACTSPEC 1.3.0). The script is the only writer of
 `manifest.json` and `registry.json`; never edit either by hand.
 
 Every command below is
@@ -23,8 +23,12 @@ claude.ai allows 200 publishes per account per day and every republish counts.
 Feature artifacts are standalone HTML files in the repository; Full Progress
 links to them as local files.
 
-The record lives in the record worktree `<repo>/.claude/worktrees/artifacts-record`
-(a worktree of the default branch). Never write into it, and never into the
+The record lives in the record worktree (a worktree of the default branch);
+`python "${CLAUDE_PLUGIN_ROOT}/scripts/project_artifacts.py" worktree` prints its path. By default it is
+`<repo>/.claude/worktrees/artifacts-record`; the project may move it with the
+environment variable `LUISMC_ARTIFACTS_WORKTREE` or `record_worktree` in the
+git-ignored `.claude/artifacts-local.json` (an absolute path; the next command
+moves the worktree there). Never write into it, and never into the
 session's own working tree: the script resets the record worktree before each
 change and would discard the edit. Edit content in a scratch directory outside
 the repository instead (the session's scratchpad directory, in a new folder).
@@ -75,12 +79,13 @@ the repository instead (the session's scratchpad directory, in a new folder).
    `edit-content full-progress --from <scratch dir>` and fix any validation
    error in the scratch files.
 6. **Add the project's tasks**, for work that belongs to no feature, with
-   `task-add --owner project --prefix P --item "TEXT" --detail "TEXT" --expected "DD Mon" --status "To do" [--app A]`
+   `task-add --owner project --prefix P --item "TEXT" --detail "TEXT" --expected "DD Mon" [--basis "TEXT"] --status "To do" [--app A]`
    (or the status it truly has). `--app` names the app or service shown in the
    App / service column. `item` is at most 80 characters. `expected` is a real
    date from `date` in the project's zone, `DD Mon` or `DD Mon ~HH:MM`,
    optionally followed by `; ` and a note; never `today`, `soon` or `next`
-   alone. This artifact shows all work, so every activity is a task here, the
+   alone. When you give an Expected time, give its basis too (what it waits on
+   and how long) with `--basis`, at most 80 characters. This artifact shows all work, so every activity is a task here, the
    session's own included (contracts, joins, test runs, releases, cleanup);
    `Built` means finished but not released; release work still to come is a task of its own.
 7. **Publish** Full Progress at the end of the turn, per "Publishing" below.

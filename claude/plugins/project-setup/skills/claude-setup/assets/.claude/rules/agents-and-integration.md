@@ -5,7 +5,9 @@
 - Merges and checks: scripts. Conflicts a script cannot resolve: one Sonnet agent. Log triage: `model: "haiku"`.
 - Agents whose definition pins a model or effort keep it.
 - Trivial edits (a typo, a one-line value): do them directly.
-- Max 5 agents at once. Split by file ownership; give overlapping UI work to one agent.
+- Max 5 agents at once, and at most 3 when they run heavy test suites on the same machine. Split by file ownership; give overlapping UI work to one agent.
+- Agents test fast locally: suites without the mutation pass (`--no-mutants` where supported), no local Docker unless a failure only reproduces there. Mutation passes and Linux run in CI: the agent triggers the workflow on its branch (`gh workflow run <workflow> --ref <branch>`; drafts skip CI) and watches it with `scripts/delivery/ci_watch.py`.
+- Agents stop only processes and containers they started themselves; never kill by name or stop every container.
 - Agents write their report first, push after every step, and keep the report current.
 - Commit shared contracts to the integration branch before launching agents.
 - Before briefing an agent that needs an external site, run `scripts/delivery/reach_check.py` in its sandbox; if it fails, fetch the material locally and commit it.

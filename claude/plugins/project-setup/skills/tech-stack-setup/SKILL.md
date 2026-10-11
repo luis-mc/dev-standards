@@ -11,12 +11,12 @@ This skill does two things:
 1. **Guides the user to a coherent stack.** Not a menu — a filtered interview
    where every option offered is compatible with everything already chosen, and
    every consequence is stated at the moment of the choice.
-2. **Generates a repository** conforming to **`STACKSPEC` 7.0.0**, the binding
+2. **Generates a repository** conforming to **`STACKSPEC` 7.1.0**, the binding
    invariants specification at `references/invariants.md`.
 
 ## The two halves, and why they are separate
 
-`STACKSPEC` 7.0.0 contains **no technology names**. It specifies properties —
+`STACKSPEC` 7.1.0 contains **no technology names**. It specifies properties —
 contract-first APIs, atomic enqueue, adapter boundaries, retention and erasure,
 consent-gated analytics, three-tier promotion — that hold whether the product is
 TypeScript on Vercel or Rust in a container.
@@ -294,6 +294,26 @@ as an MSI, a bundle, a report) gives each kind a stable name, with no version,
 run number or commit in it, and is added to `artifact-prune.yml`'s
 `workflows:` list (`§13.1`).
 
+**Runners (`§13.1`).** Ask whether CI runs on hosted or self-hosted runners.
+Every workflow template reads its runner labels from the repository variable
+`CI_RUNS_ON` (a JSON string or list; unset means `ubuntu-latest`). For
+self-hosted or shared runners, set it and turn on one-at-a-time ready-PR CI
+(`§13.6`): `gh variable set CI_RUNS_ON --body '["self-hosted","linux"]'` and
+`gh variable set CI_SERIAL --body true`. These are repository settings the user
+owns: ask before changing them on an existing repository.
+
+**End-to-end selection (`§13.5`).** When the product has more than a handful of
+end-to-end specs, add an `e2e_map` to `gate.json` (specs to source paths, plus
+`full_on` for shared configuration and the API contract), so a branch gate runs
+only the affected specs. Without a map the gate runs them all.
+
+**Change notes (`§13.6`).** Create `docs/specs/changes/` with a short README:
+branches add a note per spec change instead of editing a spec's version line
+or change log; `scripts/delivery/change_notes.py fold` applies them on the
+release branch. The `change-notes` gate step enforces it. If the product's
+specs number their change-log headings, set `changelog_headings` in
+`gate.json`.
+
 Install the pre-push hook so a project's existing check survives:
 
 - Find the existing pre-push hook: in `.githooks/`, in the directory `core.hooksPath` points to, or `.git/hooks/pre-push` when `core.hooksPath` is unset.
@@ -387,6 +407,13 @@ check, performed by reading.
    its claimed version and list each of the four as an upgrade item. Upgrading is
    the repair pass in step 7 plus a profile edit: change the claimed version to
    6.0.0 only after the re-check passes, never before.
+
+   A profile claiming **7.0.x** conforms to 7.1.0 as it stands (7.1.0 adds no
+   `MUST`). Offer the 7.1.0 improvements as suggestions, not findings: the
+   current delivery scripts (the gate fetches its base, pre-push compares with
+   the fork point, pinned scanner checksums, the default-branch skip for
+   ignored paths), runner labels as a setting, an `e2e_map`, change notes, and
+   one-at-a-time ready-PR CI on shared runners.
 
    A profile claiming **6.x** predates `STACKSPEC` 7.0.0's new `MUST`s, listed
    in the spec's `§0.1` 7.0.0 entry: `§13.1` keeps only the newest build
