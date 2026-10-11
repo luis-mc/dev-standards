@@ -306,11 +306,11 @@
       "id": "AR33",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "Expected says what sets the estimate",
-      "detail": "Built in #44 and joined (not released): --basis on task-add/set-task-status, stored as expected_basis, shown under Expected on open rows (max 80 chars, dropped when a row is Live, Built or Failed). luismc-artifacts 1.3.0.",
+      "detail": "Released in STACKSPEC 7.1.0 / luismc-project-setup 13.1.0 / luismc-artifacts 1.3.0 (#45, 48205a9, 04:17). --basis on task-add/set-task-status, stored as expected_basis, shown under Expected on open rows (max 80 chars, dropped when a row is Live, Built or Failed). luismc-artifacts 1.3.0.",
       "expected": "11 Oct",
-      "changed": "2026-10-11T03:59+01:00"
+      "changed": "2026-10-11T04:19+01:00"
     },
     {
       "id": "AR34",
