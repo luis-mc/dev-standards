@@ -439,6 +439,17 @@
       "expected_basis": "after TC6 merges (~14:30); one release"
     },
     {
+      "id": "DL7",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Runner health warnings",
+      "detail": "join and ci_watch warn on offline runners and long queues; setup warns on single-runner labels",
+      "expected": "11 Oct ~18:00",
+      "changed": "2026-10-11T11:56+01:00",
+      "expected_basis": "after TC6 merges (~14:30); one release"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",

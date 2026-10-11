@@ -1018,6 +1018,17 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "expected_basis": "after TC6 merges (~14:30); one release"
   },
   {
+   "id": "DL7",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "Runner health warnings",
+   "detail": "join and ci_watch warn on offline runners and long queues; setup warns on single-runner labels",
+   "expected": "11 Oct ~18:00",
+   "changed": "2026-10-11T11:56+01:00",
+   "expected_basis": "after TC6 merges (~14:30); one release"
+  },
+  {
    "id": "DS1",
    "owner": "project",
    "app": "luismc-project-setup",
@@ -1638,7 +1649,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
 <p class="last-update">Last update: <time datetime="2026-10-11T11:56+01:00">11 Oct 11:56</time> (Lisbon)</p>
 <p class="lede">All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class="task-id">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class="task-id">AR12</span>), and the secret-scan fixes (<span class="task-id">DS15</span>, <span class="task-id">AR19</span>, <span class="task-id">DS16</span>). Not released yet: the round toward STACKSPEC 7.0.0 (<span class="task-id">DS17</span> to <span class="task-id">DS21</span>) is built and joined, so those rows say Done. The tests on the joined branch are running; then one ready PR, its CI, and the merge, about 21:45. Each row turns Live only when the merge lands. <strong>Nothing needs you.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">88</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">7</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">6</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">88</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">7</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">7</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
@@ -1651,6 +1662,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <tr data-task="DL4"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL4</span>Narrower gate valves: lockfile and shared UI</a></td><td></td><td>lockfile widens only for affected deps; shared UI runs importing apps e2e</td><td>11 Oct ~18:00<span class="expected-basis">after TC6 merges (~14:30); one release</span></td></tr>
 <tr data-task="DL5"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL5</span>Build-artifact workflows only when their inputs change</a></td><td></td><td>never for docs-only or record-only merges</td><td>11 Oct ~18:00<span class="expected-basis">after TC6 merges (~14:30); one release</span></td></tr>
 <tr data-task="DL6"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL6</span>Train freeze while the ready PR runs CI</a></td><td></td><td>pre-push refuses train pushes; offline warns; DELIVERY_FREEZE_OVERRIDE=1</td><td>11 Oct ~18:00<span class="expected-basis">after TC6 merges (~14:30); one release</span></td></tr>
+<tr data-task="DL7"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL7</span>Runner health warnings</a></td><td></td><td>join and ci_watch warn on offline runners and long queues; setup warns on single-runner labels</td><td>11 Oct ~18:00<span class="expected-basis">after TC6 merges (~14:30); one release</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="DS45"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DS45</span>Agents test only what they touch</td><td></td><td>Rule text on TC6-integration; join skips its gate when the tree equals a trusted branch head (3 new mutants caught)</td><td>11 Oct</td></tr>
 <tr data-task="DS48"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DS48</span>cleanup.py also removes the branches a train joined</td><td></td><td>cleanup --pr also removes branches whose tips are in the merged PR head (6 new mutants caught)</td><td>11 Oct</td></tr>
@@ -1754,7 +1766,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <tr><td><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td>AR2 to AR39</td><td>luismc-artifacts 1.3.0 is live (ARTIFACTSPEC 1.3.0, released 11 October) and installed on the owner’s machine; 1.3.1 (AR35, AR37) is in progress.</td></tr>
 <tr><td><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td>MP1 to MP7, DS2 to DS5</td><td>The owner’s default is now Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 with STACKSPEC 7.0.0 (MP7, 11 October).</td></tr>
 <tr><td><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td>TC1 to TC6</td><td>Studied 11 October: the checks are good, but they run too often and for everything.</td></tr>
-<tr><td><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td>DL1 to DL6</td><td>Planned.</td></tr>
+<tr><td><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td>DL1 to DL7</td><td>Planned.</td></tr>
 </tbody></table></div>
 </section>
 <section id="s2"><h2><span class="section-number">&sect; 2</span>How it stays current</h2>
