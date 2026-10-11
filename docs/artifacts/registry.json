@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T03:02+01:00",
+  "updated": "2026-10-11T03:03+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -596,11 +596,11 @@
       "id": "DS28",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Document the pre-push worktree's borrowed dependencies",
-      "detail": "Written into CONTRACT.md on DS27-integration (6e794ba): the pre-push worktree borrows node_modules, so a guard importing a workspace package reads the checked-out version; the branch gate, which installs, checks it properly. Ships with DS27.",
+      "detail": "Released in luismc-artifacts 1.2.0 / luismc-project-setup 13.0.1 (#42, 5babc30, 03:02). CONTRACT.md documents that the pre-push worktree borrows node_modules.",
       "expected": "11 Oct",
-      "changed": "2026-10-11T00:52+01:00"
+      "changed": "2026-10-11T03:03+01:00"
     },
     {
       "id": "DS29",
