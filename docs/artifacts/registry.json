@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T11:56+01:00",
+  "updated": "2026-10-11T11:59+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -371,6 +371,17 @@
       "detail": "#46 merged on green at 11:04 (one CI run: spec-lint, secret-scan); branches and worktrees removed; plugin updated",
       "expected": "11 Oct",
       "changed": "2026-10-11T11:06+01:00"
+    },
+    {
+      "id": "AR40",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "At a glance block in section 0 instead of one prose paragraph",
+      "detail": "Generated groups (needs you, running, built not released, waiting, live 24 h); the lede becomes a short note",
+      "expected": "11 Oct ~14:30",
+      "changed": "2026-10-11T11:59+01:00",
+      "expected_basis": "agent ~1h, ships in the TC6 train"
     },
     {
       "id": "DL1",
