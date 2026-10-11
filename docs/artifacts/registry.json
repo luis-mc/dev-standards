@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T23:05+01:00",
+  "updated": "2026-10-11T23:06+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1315,10 +1315,10 @@
       "app": "luismc-project-setup",
       "status": "Needs you",
       "item": "Light or heavy from measured suite times, not the session's guess",
-      "detail": "AR45: brief called test_project_artifacts 'light' (it takes 12+ min locally), then the session re-ran it in full before CI. Proposal: record suite times, classify by them, hook warns on a local full run of a heavy suite. Awaiting go-ahead",
+      "detail": "Proposal: 4 guards shipped by luismc-project-setup to every project. 1 measured suite times; 2 hook blocks a local full run of a heavy suite and a repeat full run of an already-tested tree; 3 pre-commit runs the change-notes check; 4 hook blocks a ready PR not from an *-integration branch. Plus join.py works without gate.json. Awaiting go-ahead",
       "expected": "12 Oct",
-      "changed": "2026-10-11T23:00+01:00",
-      "expected_basis": "owner's go-ahead, then study ~30 min and one agent"
+      "changed": "2026-10-11T23:06+01:00",
+      "expected_basis": "owner's go-ahead, then one agent ~40 min, one train"
     }
   ]
 }
