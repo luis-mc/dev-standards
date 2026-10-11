@@ -641,7 +641,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-11T17:31+01:00",
+ "updated": "2026-10-11T17:38+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1042,6 +1042,17 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "detail": "Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0",
    "expected": "11 Oct",
    "changed": "2026-10-11T14:41+01:00"
+  },
+  {
+   "id": "AR43",
+   "owner": "artifacts",
+   "app": "luismc-artifacts",
+   "status": "Needs you",
+   "item": "Full Progress: release timeline above the status table",
+   "detail": "Hand-made preview published (Version 69) for the owner to validate; then renderer + ARTIFACTSPEC",
+   "expected": "11 Oct",
+   "changed": "2026-10-11T17:38+01:00",
+   "expected_basis": "waits on the owner's review of the preview"
   },
   {
    "id": "DL1",
@@ -1843,11 +1854,13 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T17:31+01:00">11 Oct 17:31</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T17:38+01:00">11 Oct 17:38</time> (Lisbon)</p>
 <p class="lede">Release #47 (11 October, 14:37) shipped STACKSPEC 8.0.0, luismc-project-setup 14.0.0 and luismc-artifacts 1.4.0; from now on each new request rides a small train of its own.</p>
 <div class="at-a-glance">
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
-<p class="glance-none">Nothing needs you.</p>
+<ul>
+<li data-glance-task="AR43"><span class="task-id">AR43</span>Full Progress: release timeline above the status table <span class="glance-expected">11 Oct</span><span class="glance-basis">waits on the owner&#x27;s review of the preview</span></li>
+</ul>
 </div>
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
@@ -1875,7 +1888,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">114</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">114</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">running</div></div><div class="status-count-tile status-needs-you"><div class="count">1</div><div class="label">needs you</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
@@ -1883,6 +1896,8 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <tr data-task="TC7"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC7</span>PR CI: mutants per suite, delivery suites in parallel</a></td><td></td><td>Mutants per suite, delivery suites in parallel, gate mutants in 4 shards; one Sonnet agent</td><td>11 Oct ~18:20<span class="expected-basis">agent ~30 min, then the train&#x27;s PR CI ~5 min</span></td></tr>
 <tr data-task="DS51"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS51</span>DL12 train: join, PR CI, merge, cleanup</td><td></td><td>Small train: DL12, DL13 and TC7 (faster PR CI); two agent branches</td><td>11 Oct ~18:25<span class="expected-basis">TC7 agent to ~17:55, join ~5 min, PR CI ~5 min, merge and cleanup ~3 min</span></td></tr>
 <tr data-task="TC8"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards</a></td><td></td><td>STACKSPEC SHOULD, Playwright sharding in the e2e template, ci_watch slowest-job summary; next small train</td><td>12 Oct<span class="expected-basis">starts after the DL12 train merges, about 1 h of work and CI</span></td></tr>
+<tr class="status-group" data-group="you"><td colspan="5"><strong>Needs you, failed or on hold</strong></td></tr>
+<tr data-task="AR43"><td><span class="status-chip status-needs-you">Needs you</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR43</span>Full Progress: release timeline above the status table</a></td><td><code>luismc-artifacts</code></td><td>Hand-made preview published (Version 69) for the owner to validate; then renderer + ARTIFACTSPEC</td><td>11 Oct<span class="expected-basis">waits on the owner&#x27;s review of the preview</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="DL13"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL13</span>Save the STACKSPEC 8.0.0 upgrade prompt</a></td><td></td><td>docs/upgrades/stackspec-8.0.0.md on DL12-integration; ships with DS51</td><td>11 Oct</td></tr>
 <tr data-task="AR41"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</a></td><td><code>luismc-artifacts</code></td><td>Five notes rewritten as one or two sentences (103 to 179 characters); check shows no warnings</td><td>11 Oct</td></tr>
@@ -2007,10 +2022,10 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th>Where it stands</th></tr></thead><tbody>
+<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862278"><time datetime="2026-10-11T17:38+01:00">11 Oct 17:38</time></td><td>AR2 to AR43</td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862271"><time datetime="2026-10-11T17:31+01:00">11 Oct 17:31</time></td><td>TC1 to TC8</td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
 <tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29862263"><time datetime="2026-10-11T17:23+01:00">11 Oct 17:23</time></td><td>DL1 to DL13</td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29862102"><time datetime="2026-10-11T14:42+01:00">11 Oct 14:42</time></td><td>MP1 to MP7, DS2 to DS5</td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
-<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862102"><time datetime="2026-10-11T14:42+01:00">11 Oct 14:42</time></td><td>AR2 to AR42</td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 </tbody></table></div>
 </section>
 <section id="s2"><h2><span class="section-number">&sect; 2</span>How it stays current</h2>

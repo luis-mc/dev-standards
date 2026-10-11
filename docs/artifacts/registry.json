@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T17:31+01:00",
+  "updated": "2026-10-11T17:38+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -401,6 +401,17 @@
       "detail": "Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0",
       "expected": "11 Oct",
       "changed": "2026-10-11T14:41+01:00"
+    },
+    {
+      "id": "AR43",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Needs you",
+      "item": "Full Progress: release timeline above the status table",
+      "detail": "Hand-made preview published (Version 69) for the owner to validate; then renderer + ARTIFACTSPEC",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T17:38+01:00",
+      "expected_basis": "waits on the owner's review of the preview"
     },
     {
       "id": "DL1",
