@@ -109,7 +109,7 @@ RULES: list[tuple[str, frozenset[str]]] = [
     # delivery
     (re.escape(TOOLING) + r"/.*", frozenset({"delivery"})),
     (re.escape(TS) + r"/assets/preflight\.py", frozenset({"delivery"})),
-    (r"tools/(test_delivery_[a-z]+|test_artifact_prune|test_change_notes|test_preflight)\.py",
+    (r"tools/(test_delivery_[a-z]+|test_artifact_prune|test_change_notes|test_preflight|test_smoke_packaged)\.py",
      frozenset({"delivery"})),
 ]
 COMPILED = [(re.compile(p), a) for p, a in RULES]

@@ -11,12 +11,12 @@ This skill does two things:
 1. **Guides the user to a coherent stack.** Not a menu — a filtered interview
    where every option offered is compatible with everything already chosen, and
    every consequence is stated at the moment of the choice.
-2. **Generates a repository** conforming to **`STACKSPEC` 7.1.0**, the binding
+2. **Generates a repository** conforming to **`STACKSPEC` 8.0.0**, the binding
    invariants specification at `references/invariants.md`.
 
 ## The two halves, and why they are separate
 
-`STACKSPEC` 7.1.0 contains **no technology names**. It specifies properties —
+`STACKSPEC` 8.0.0 contains **no technology names**. It specifies properties —
 contract-first APIs, atomic enqueue, adapter boundaries, retention and erasure,
 consent-gated analytics, three-tier promotion — that hold whether the product is
 TypeScript on Vercel or Rust in a container.
@@ -351,6 +351,18 @@ host that runs a command and skips the build on exit 0 can be given
 `git diff --quiet HEAD^ HEAD -- . ':!docs'`. This is a hosting setting, not a
 repository file; record it in the Stack Profile's environment inventory.
 
+**Delivery log (`§13.6`).** The deploy job, after its production smoke test,
+runs `python3 scripts/delivery/delivery_log.py live --pr <N>` (the merged PR
+number) with `contents: write`, so the train's release notes record when each
+change went live. A failure there warns and never fails the deploy.
+
+**Packaged programs (`§13.7`, a `MUST`).** A product that ships a packaged
+program (single executable, installer, app bundle, container image) declares
+its start command and every worker's readiness line in
+`scripts/delivery/smoke.json`; the track's `package.yml` builds the packaged
+form and runs `scripts/delivery/smoke_packaged.py` on it. An empty `start` means
+the product ships no packaged program.
+
 ### The seam is at steps 4 and 5 — do not paper over it
 
 - **Step 4 is entirely `auth-setup`'s.** Do not create the auth module, not even
@@ -413,6 +425,15 @@ check, performed by reading.
    its claimed version and list each of the four as an upgrade item. Upgrading is
    the repair pass in step 7 plus a profile edit: change the claimed version to
    6.0.0 only after the re-check passes, never before.
+
+   A profile claiming **7.x** predates `STACKSPEC` 8.0.0's one new `MUST`,
+   `§13.7`: a product that ships a packaged program has CI start the packaged
+   form and exercise every worker it starts (`smoke.json` plus a `package.yml`
+   job). List it as an upgrade item only for such a product; a product that
+   ships none conforms to 8.0.0 as it stands. Offer the 8.0.0 improvements as
+   suggestions: `inert_paths` and `lockfile_scope` in `gate.json`, the quick join
+   check, the train freeze in pre-push, runner-health warnings, path-filtered
+   build-artifact workflows and the delivery log in release notes.
 
    A profile claiming **7.0.x** conforms to 7.1.0 as it stands (7.1.0 adds no
    `MUST`). Offer the 7.1.0 improvements as suggestions, not findings: the
