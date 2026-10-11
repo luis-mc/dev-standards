@@ -1198,12 +1198,11 @@
       "id": "TC7",
       "owner": "test-cost",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "PR CI: mutants per suite, delivery suites in parallel",
-      "detail": "Mutants per suite, delivery suites in parallel, gate mutants in 4 shards; one Sonnet agent",
-      "expected": "11 Oct ~18:20",
-      "changed": "2026-10-11T17:29+01:00",
-      "expected_basis": "agent ~30 min, then the train's PR CI ~5 min"
+      "detail": "767b853 on TC7-ci-parallel-suites; ci_areas tests pass, gate scenarios 711/0, shards 34/34/34/33 disjoint",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T17:46+01:00"
     },
     {
       "id": "TC8",
