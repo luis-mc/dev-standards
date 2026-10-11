@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T17:23+01:00",
+  "updated": "2026-10-11T17:26+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1040,9 +1040,9 @@
       "status": "Running",
       "item": "DL12 train: join, PR CI, merge, cleanup",
       "detail": "Small train for DL12 and DL13; one agent branch plus the upgrade doc",
-      "expected": "11 Oct ~18:45",
-      "changed": "2026-10-11T17:22+01:00",
-      "expected_basis": "agent ~15 min, PR CI ~20-30 min, then merge and cleanup"
+      "expected": "11 Oct ~18:05",
+      "changed": "2026-10-11T17:26+01:00",
+      "expected_basis": "agent done ~17:40, PR CI ~11 min (measured on #47), merge and cleanup ~3 min"
     },
     {
       "id": "MP1",

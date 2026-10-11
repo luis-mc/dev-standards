@@ -641,7 +641,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-11T17:23+01:00",
+ "updated": "2026-10-11T17:26+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1681,9 +1681,9 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "status": "Running",
    "item": "DL12 train: join, PR CI, merge, cleanup",
    "detail": "Small train for DL12 and DL13; one agent branch plus the upgrade doc",
-   "expected": "11 Oct ~18:45",
-   "changed": "2026-10-11T17:22+01:00",
-   "expected_basis": "agent ~15 min, PR CI ~20-30 min, then merge and cleanup"
+   "expected": "11 Oct ~18:05",
+   "changed": "2026-10-11T17:26+01:00",
+   "expected_basis": "agent done ~17:40, PR CI ~11 min (measured on #47), merge and cleanup ~3 min"
   },
   {
    "id": "MP1",
@@ -1821,7 +1821,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T17:23+01:00">11 Oct 17:23</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T17:26+01:00">11 Oct 17:26</time> (Lisbon)</p>
 <p class="lede">Release #47 (11 October, 14:37) shipped STACKSPEC 8.0.0, luismc-project-setup 14.0.0 and luismc-artifacts 1.4.0; from now on each new request rides a small train of its own.</p>
 <div class="at-a-glance">
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
@@ -1829,8 +1829,8 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </div>
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
+<li data-glance-task="DS51"><span class="task-id">DS51</span>DL12 train: join, PR CI, merge, cleanup <span class="glance-expected">11 Oct ~18:05</span><span class="glance-basis">agent done ~17:40, PR CI ~11 min (measured on #47), merge and cleanup ~3 min</span></li>
 <li data-glance-task="DL12"><span class="task-id">DL12</span>Delivery log: label its times as UTC, CI start from the first run <span class="glance-expected">11 Oct ~18:15</span><span class="glance-basis">agent ~15 min plus local delivery suite</span></li>
-<li data-glance-task="DS51"><span class="task-id">DS51</span>DL12 train: join, PR CI, merge, cleanup <span class="glance-expected">11 Oct ~18:45</span><span class="glance-basis">agent ~15 min, PR CI ~20-30 min, then merge and cleanup</span></li>
 </ul>
 </div>
 <div class="glance-group glance-built" data-glance="built"><div class="glance-label">Built, not released</div>
@@ -1856,8 +1856,8 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
+<tr data-task="DS51"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS51</span>DL12 train: join, PR CI, merge, cleanup</td><td></td><td>Small train for DL12 and DL13; one agent branch plus the upgrade doc</td><td>11 Oct ~18:05<span class="expected-basis">agent done ~17:40, PR CI ~11 min (measured on #47), merge and cleanup ~3 min</span></td></tr>
 <tr data-task="DL12"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL12</span>Delivery log: label its times as UTC, CI start from the first run</a></td><td></td><td>One Sonnet agent on DL12-delivery-log-times</td><td>11 Oct ~18:15<span class="expected-basis">agent ~15 min plus local delivery suite</span></td></tr>
-<tr data-task="DS51"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS51</span>DL12 train: join, PR CI, merge, cleanup</td><td></td><td>Small train for DL12 and DL13; one agent branch plus the upgrade doc</td><td>11 Oct ~18:45<span class="expected-basis">agent ~15 min, PR CI ~20-30 min, then merge and cleanup</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="DL13"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL13</span>Save the STACKSPEC 8.0.0 upgrade prompt</a></td><td></td><td>docs/upgrades/stackspec-8.0.0.md on DL12-integration; ships with DS51</td><td>11 Oct</td></tr>
 <tr data-task="AR41"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</a></td><td><code>luismc-artifacts</code></td><td>Five notes rewritten as one or two sentences (103 to 179 characters); check shows no warnings</td><td>11 Oct</td></tr>
