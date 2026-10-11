@@ -706,11 +706,11 @@
       "id": "DS39",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "CI skips docs-only changes",
-      "detail": "Contract and STACKSPEC 7.1.0 text written (§13.1): a default-branch run also skips when the merge differs from the tested PR head only in paths the workflow ignores (docs/**, **/*.md, mobile folders with their own workflows), read from the workflow's own paths-ignore so there is one list. Docs-only pushes such as the record commits already start no run. Being built by the agent that owns ci.yml.",
-      "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T02:13+01:00"
+      "detail": "Built in #40 and joined into DS37-integration (not released). CI skips docs-only changes: done as contracted; Windows suites green; CI on its branch green (spec-lint; template build on Linux and Windows for Go, Rust and .NET).",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T03:01+01:00"
     },
     {
       "id": "DS40",
