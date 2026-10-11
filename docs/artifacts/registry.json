@@ -397,11 +397,11 @@
       "id": "AR42",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "Feature table: Last updated column, newest first, sortable headers",
-      "detail": "Joined: Last updated column, newest first, sortable headers checked in a browser; feature pages show Full Progress's publish; no publish loop (tested)",
+      "detail": "Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0",
       "expected": "11 Oct",
-      "changed": "2026-10-11T13:17+01:00"
+      "changed": "2026-10-11T14:41+01:00"
     },
     {
       "id": "DL1",
