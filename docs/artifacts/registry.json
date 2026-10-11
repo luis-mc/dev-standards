@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T18:22+01:00",
+  "updated": "2026-10-11T18:23+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1081,8 +1081,8 @@
       "status": "Running",
       "item": "TC8 train: join, PR CI, merge, cleanup",
       "detail": "Own small train beside AR43; merges after AR43",
-      "expected": "11 Oct ~19:00",
-      "changed": "2026-10-11T18:22+01:00",
+      "expected": "11 Oct ~18:58",
+      "changed": "2026-10-11T18:23+01:00",
       "expected_basis": "agent 18:00-18:50, PR CI ~4 min, merge and cleanup ~4 min; +1 fix round ~10 min"
     },
     {
