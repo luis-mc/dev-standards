@@ -818,12 +818,12 @@
       "id": "DS45",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Agents test only what they touch",
-      "detail": "Local suites for changed files only, no branch CI unless Linux-specific, join trusts an unchanged gate",
-      "expected": "12 Oct",
-      "changed": "2026-10-11T10:11+01:00",
-      "expected_basis": "after the 1.3.1 release; rule text and join.py"
+      "detail": "Agent on TC2-mutants-and-cleanup (join) and TC6-integration (rule text, done), part of the TC6 train",
+      "expected": "11 Oct ~13:30",
+      "changed": "2026-10-11T11:31+01:00",
+      "expected_basis": "agent work ~1h30 in parallel, then join"
     },
     {
       "id": "DS46",
