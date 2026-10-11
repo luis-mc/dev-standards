@@ -62,3 +62,11 @@ structure stylesheet by hand.
    what it lists as `task-status-update` describes (once; never mid-turn;
    feature artifacts are files and are never published).
 6. **Report** findings fixed and findings left, each with its requirement ID.
+
+## Old claude.ai pages
+
+`check` notes retired pages (old claude.ai pages of feature artifacts) and the
+older record format; neither is a finding. Offer the owner to delete each
+retired page: after the owner confirms, delete it with the Artifact tool
+(`action: "delete"`), then run `mark-deleted <key> --url <URL>`. A record in the
+older format migrates with `render`.

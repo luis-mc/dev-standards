@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """After-command hook (PostToolUse and PostToolUseFailure for Bash; PostToolUse for Agent and Task).
 
-ARTIFACTSPEC 1.1.0 section 8.1. Takes the task ID from the current branch name,
+ARTIFACTSPEC 1.2.0 section 8.1. Takes the task ID from the current branch name,
 and when the command that just ran is one of the table rows, appends a status
 event to the queue <repo>/.claude/artifacts-queue.json. It only queues: it never
 writes the record (INV-4, R8.1), finishes fast and never fails the tool call
@@ -22,6 +22,7 @@ manifest lookup, subprocess seams). Standard library only.
 
 Disable: CLAUDE_ARTIFACTS_HOOKS=off.
 """
+import hashlib
 import json
 import os
 import posixpath
@@ -33,11 +34,16 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+try:
+    import artifact_retire as AR
+except ImportError:   # a broken install: the hooks still queue and block as before
+    AR = None
+
 DISABLE_VALUES = {'off', '0', 'false', 'no'}
 TASK_ID_RE = re.compile(r'^([A-Z]{2,5}[0-9]+)-')
 MANIFEST_REL = 'manifest.json'
 STATE_NAME = os.path.join('.claude', 'artifacts-stop-state.json')
-MAX_SESSIONS = 20
+MAX_SESSIONS = 40       # stop-state entries (a session has up to two: its blocks and its delivered rule)
 BACKGROUND_TOOLS = ('Agent', 'Task')
 
 
@@ -164,6 +170,169 @@ def hook_root(data):
     cwd = data.get('cwd')
     start = cwd if isinstance(cwd, str) and os.path.isdir(cwd) else None
     return repo_root(start)
+
+
+# --- the rule and what a session must be told (R8.9, R8.12 to R8.15) -----------------------
+
+RULE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         'rules', 'project-artifacts.md')
+RULE_HEADING = 'luismc-artifacts: rules for work in this project (ARTIFACTSPEC 1.2.0)'
+UPDATED_LINE = ('luismc-artifacts was updated; this rule replaces earlier instructions about publishing '
+                'feature artifacts.')
+WORKTREE_PARTS = ('.claude', 'worktrees', 'artifacts-record')
+STALE_RULE_REL = '.claude/rules/project-artifacts.md'
+
+
+def script_path():
+    return os.environ.get('CLAUDE_ARTIFACTS_SCRIPT') or os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), 'project_artifacts.py')
+
+
+def rule_text():
+    """The rule file's text; '' when the plugin has none (R8.9)."""
+    try:
+        with open(RULE_PATH, encoding='utf-8') as f:
+            return f.read().strip()
+    except OSError:
+        warn('rules/project-artifacts.md cannot be read; the rule was not delivered')
+        return ''
+
+
+def rule_digest(text):
+    return hashlib.sha256(text.replace('\r\n', '\n').encode('utf-8')).hexdigest()[:16]
+
+
+def record_text(root, manifest, rel):
+    """A record file as text from the freshest source: the record worktree, origin/<branch>, the checkout."""
+    branch = manifest.get('default_branch') if isinstance(manifest.get('default_branch'), str) else 'main'
+    paths = [os.path.join(root, *WORKTREE_PARTS, 'docs', 'artifacts', rel)]
+    for source in paths + ['origin', os.path.join(root, 'docs', 'artifacts', rel)]:
+        if source == 'origin':
+            text = origin_record_file(root, branch, rel)
+        else:
+            try:
+                with open(source, encoding='utf-8') as f:
+                    text = f.read()
+            except OSError:
+                continue
+        if text is not None:
+            return text
+    return None
+
+
+def record_dir_and_rev(root, manifest):
+    """(directory to run the history scan in, revision) or (None, None)."""
+    branch = manifest.get('default_branch') if isinstance(manifest.get('default_branch'), str) else 'main'
+    r = git(root, 'rev-parse', '--verify', '-q', 'refs/remotes/origin/' + branch)
+    rev = 'origin/' + branch if r and r[0] == 0 else 'HEAD'
+    for d in (os.path.join(root, *WORKTREE_PARTS, 'docs', 'artifacts'), os.path.join(root, 'docs', 'artifacts')):
+        if os.path.isdir(d):
+            return d, rev
+    return None, None
+
+
+def fresh_manifest(root, fallback):
+    text = record_text(root, fallback, 'manifest.json')
+    data = parse_json(text, 'manifest.json') if text is not None else None
+    return data if data is not None else fallback
+
+
+def retired_pages_now(root, manifest):
+    """Read-only (R8.13): the manifest's retired list plus feature URLs found in the history of manifest.json
+    that are neither retired, deleted nor Full Progress's. [{key, title, url}]"""
+    if AR is None:
+        return []
+    m = fresh_manifest(root, manifest)
+    out = [{'key': e.get('key', ''), 'title': e.get('title', ''), 'url': e.get('url', '')}
+           for e in AR.retired_pages(m) if e.get('url')]
+    known = AR.known_urls(m)
+    d, rev = record_dir_and_rev(root, m)
+    if d:
+        for h in AR.history_feature_urls(d, rev):
+            if h['url'] not in known:
+                known.add(h['url'])
+                out.append(h)
+    return out
+
+
+def migration_reasons_now(root, manifest):
+    """Read-only (R8.14, INV-4): why the record needs migrating, or []."""
+    if AR is None:
+        return []
+    m = fresh_manifest(root, manifest)
+    text = record_text(root, m, 'registry.json')
+    registry = parse_json(text, 'registry.json') if text is not None else None
+    return AR.migration_reasons(m, registry or {}, lambda rel: record_text(root, m, rel))
+
+
+def stale_rule_present(root, manifest):
+    if os.path.isfile(os.path.join(root, *STALE_RULE_REL.split('/'))):
+        return True
+    branch = manifest.get('default_branch') if isinstance(manifest.get('default_branch'), str) else 'main'
+    r = git(root, 'cat-file', '-e', 'origin/%s:%s' % (branch, STALE_RULE_REL))
+    return bool(r and r[0] == 0)
+
+
+def context_text(root, manifest, updated=False):
+    """The rule plus what this session must do about the record (R8.9, R8.12 to R8.15); '' without a rule."""
+    text = rule_text()
+    if not text:
+        return ''
+    parts = ['%s\n\n%s' % (RULE_HEADING, text)]
+    if updated:
+        parts.append(UPDATED_LINE)
+    py = 'python "%s"' % script_path()
+    try:
+        if stale_rule_present(root, manifest):
+            parts.append('If `%s` exists in this repo, it is an older copy; this rule replaces it (the next '
+                         'writing command removes it when it is unedited).' % STALE_RULE_REL)
+        reasons = migration_reasons_now(root, manifest)
+        if reasons:
+            parts.append('This project\'s artifact record is in an older format (%s). Run `%s render` now to '
+                         'migrate the record.' % ('; '.join(reasons), py))
+        retired = retired_pages_now(root, manifest)
+        if retired:
+            parts.append('Old claude.ai pages of feature artifacts are still up. At the start of the session, offer '
+                         'the owner to delete them:\n' + AR.pending_text(retired, py))
+    except Exception as exc:   # the rule itself is still delivered
+        warn('record checks skipped (%s: %s)' % (type(exc).__name__, exc))
+    return '\n\n'.join(parts)
+
+
+def mark_delivered(root, sid, text, **more):
+    """Record in the stop state that this session has the current rule (R8.12)."""
+    path = os.path.join(root, STATE_NAME)
+    state = read_state(path)
+    key = 'rule:' + sid
+    entry = state.get(key) if isinstance(state.get(key), dict) else {}
+    entry['rule'] = rule_digest(text)
+    entry.update(more)
+    state.pop(key, None)   # keeps the most recently used session last
+    state[key] = entry
+    write_state(path, state)
+
+
+def deliver_rule(data):
+    """R8.12: print the rule once per session and per rule text, for a session that did not get it at start."""
+    root = hook_root(data)
+    if not root:
+        return
+    manifest = load_manifest(root)
+    if manifest is None:
+        return
+    text = rule_text()
+    if not text:
+        return
+    sid = str(data.get('session_id') or 'default')
+    entry = read_state(os.path.join(root, STATE_NAME)).get('rule:' + sid)
+    if isinstance(entry, dict) and entry.get('rule') == rule_digest(text):
+        return
+    context = context_text(root, manifest, updated=True)
+    mark_delivered(root, sid, text)
+    event = data.get('hook_event_name')
+    print(json.dumps({'hookSpecificOutput': {
+        'hookEventName': event if event in ('PostToolUse', 'PostToolUseFailure') else 'PostToolUse',
+        'additionalContext': context}}))
 
 
 # --- after-command hook ----------------------------------------------------------------
@@ -300,6 +469,15 @@ def main():
     if hooks_off():
         return 0
     data = read_input()
+    code = queue_events(data)
+    try:
+        deliver_rule(data)
+    except Exception as exc:   # R8.2: a rule that cannot be delivered must not fail the tool call
+        warn('rule delivery skipped (%s: %s)' % (type(exc).__name__, exc))
+    return code
+
+
+def queue_events(data):
     if starts_background_work(data):
         try:
             note_background_work(data)

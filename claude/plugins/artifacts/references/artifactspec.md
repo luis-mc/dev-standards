@@ -1,11 +1,12 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
-**Last reviewed:** 2026-10-10
+**Last reviewed:** 2026-10-11
+**Changes in 1.2.0:** the claude.ai pages that feature artifacts had before they became files are retired, not lost: their URLs move to the manifest's `retired` list, are recovered from the history of `manifest.json` when an earlier version already dropped them, are listed by `pending`, `check` and the hooks, and are deleted only with the owner's confirmation, then recorded with `mark-deleted` (R4.19 to R4.23, R8.13); and a project upgrading from an older version needs no manual step: the after-command hook delivers the rule once per session without a restart, the hooks tell the session to migrate an older record and the end-of-turn hook blocks until it has, and an older copy of the rule file is removed (R8.12, R8.14, R8.15, R10.6). The record format string stays `ARTIFACTSPEC 1.0.0`.
 **Changes in 1.1.0:** the activity rule and the status `Built` (R3.2 to R3.5, R6.1, R6.9), the rule delivered at session start (R8.9, R10.4, R10.5), the end-of-turn check on background work (R8.8, R8.10), §5.4 Decisions (`decisions.json`, R5.14 to R5.26), feature artifacts as standalone HTML files in the repository that are never published (R5.27 to R5.29, R9.5), Full Progress published once per turn, at its end (R3.1, R9.1), with local-file links to the feature files (§5.5, R5.30 to R5.32), the Earlier fold for `Live` rows only (R6.3), and the end-of-turn background check armed by background agents only (R8.8). Plugin 1.1.1 made R7.1 incremental: a writing command refuses only a change that adds a finding (R7.1, R7.1a). The record format string in `manifest.json` and `registry.json` stays `ARTIFACTSPEC 1.0.0`: existing records stay valid.
 
 ---
@@ -83,6 +84,26 @@ nothing was running while much was. 1.1.0 adds:
 The record format is unchanged: `spec` in the manifest and the registry stays
 `"ARTIFACTSPEC 1.0.0"`, so a 1.0.0 record is valid under 1.1.0.
 
+### 0.5 What changed in 1.2.0
+
+Version 1.1.0 stopped publishing feature artifacts and dropped their URLs on
+migration, so the old claude.ai pages stayed up, stale, and could no longer be
+found from the record; and a project upgrading from 1.0.0 needed four manual
+steps (restart for the rule, a writing command to migrate, delete the old rule
+copy, find and delete the old pages). 1.2.0 adds:
+
+- the `retired` and `deleted` lists in the manifest, the recovery of dropped
+  URLs from git history, and `mark-deleted` (R4.19 to R4.22);
+- deletion of an old page only with the owner's confirmation (R4.23);
+- `pending`, `check` and the hooks surface retired pages without ever blocking
+  on them (R4.22, R8.13);
+- the rule reaches an already open session through the after-command hook
+  (R8.12);
+- an older record is migrated because the hooks say so, and the end-of-turn
+  hook blocks until it is (R8.14);
+- an older copy of the rule file is removed by the migration commit (R8.15,
+  R10.6).
+
 ---
 
 ## Decision record
@@ -105,6 +126,10 @@ The record format is unchanged: `spec` in the manifest and the registry stays
 | D14 | Are feature artifacts published? | No. Each is a standalone HTML file in the repository, `docs/artifacts/feature-<slug>.html`. | It opens by double-click in any browser and costs no publish; Full Progress links to it as a local file (R5.27, §5.5, R9.5). |
 | D15 | Which rows fold into Earlier? | `Live` rows older than 14 days; `Built` rows never fold. | Unreleased work is never hidden (R6.3). |
 | D16 | What arms the end-of-turn background check? | A background `Agent`, `Task` or `Bash` call: `tool_input.run_in_background` is true. | A foreground sub-agent no longer asks for a Running task (R8.8). |
+| D17 | What happens to the claude.ai pages of feature artifacts published before feature artifacts became files? | Each URL moves to the manifest's `retired` list, recovered from the history of `manifest.json` when an earlier version already dropped it; a page is deleted only with the owner's confirmation, then recorded with `mark-deleted`. | No old page is orphaned, and none is deleted without the owner (R4.19 to R4.23). |
+| D18 | Does a retired page block anything? | No: not `pending`'s exit code, not the end-of-turn hook. They are listed, and the session is told once to ask the owner. | Publishing never waits for a decision only the owner can take (R4.22, R8.13). |
+| D19 | How does an upgraded project get the new rule and migrate? | The after-command hook delivers the rule once per session and rule text; the hooks tell the session to run `render`; the end-of-turn hook blocks until the record is migrated. | No restart and no manual step (R8.12, R8.14). |
+| D20 | What happens to the rule copy that 1.0.0 `init` made? | The migration commit deletes it when its text is one a released version shipped; an edited copy stays and `check` notes it. | The old text, which says to publish feature artifacts, stops competing with the rule (R8.15, R10.6). |
 
 ---
 
@@ -167,6 +192,7 @@ The record format is unchanged: `spec` in the manifest and the registry stays
 | `scripts/project_artifacts.py` | The only writer of the record. Every command in §7. Python 3.10+, standard library only. |
 | `scripts/render_artifacts.py` | Pure functions: record in, HTML out (§5). Imported by the script. |
 | `scripts/artifact_queue.py` | Reads and writes the queue (§8.1). Imported by the hooks and the script. |
+| `scripts/artifact_retire.py` | Retired and deleted pages, the history recovery, the migration check and the shipped rule hashes (R4.19 to R4.23, R10.6). Pure and read-only except where the script applies it. Imported by the hooks and the script. |
 | `scripts/hook_after_command.py`, `hook_end_of_turn.py`, `hook_session_start.py` | The three hooks (§8). |
 | `templates/feature-artifact.html`, `templates/full-progress-artifact.html` | Skeletons with placeholders: the first is a complete HTML document, the second a fragment (§5.1). |
 | `templates/project-artifact.css` | The fixed structure stylesheet. |
@@ -263,6 +289,8 @@ docs/artifacts/
 | `merged_status` | string | Status a merge suggests: `"Live"` (default) or `"Built"`. |
 | `full_progress_artifact` | object | `{key:"full-progress", title, url, file, published_sha256}` |
 | `feature_artifacts` | array | `{key, title, file, prefix, apps:[...]}` each: no `url` and no `published_sha256`, because a feature artifact is never published |
+| `retired` | array | Optional. `[{key, title, url, retired}]`: claude.ai pages of feature artifacts still to delete (R4.19). |
+| `deleted` | array | Optional. `[{key, url, deleted}]`, plus `"gone": true` for a page that no longer existed: pages recorded as deleted (R4.19). |
 | `project_prefixes` | array | Task prefixes owned by the project, e.g. `["DS"]`. |
 | `updated` | string | ISO time of the last change, with offset. |
 
@@ -350,11 +378,49 @@ comment holding the section title: `<!-- title: The design -->`.
 - **R4.18** — A manifest whose feature entry still holds `url` or
   `published_sha256` (a record made before feature artifacts stopped being
   published) is read as if the entry did not have them. The next writing
-  command rewrites the manifest without them and renders every artifact again
-  (a feature artifact as a standalone document, Full Progress with relative
-  links); `check` reports the dropped fields as a note, not a finding, and
+  command rewrites the manifest without them, moves each `url` to the
+  `retired` list (R4.19) and renders every artifact again (a feature artifact
+  as a standalone document, Full Progress with relative links); `check`
+  reports the dropped fields as a note, not a finding, and
   `mark-published` never records a feature URL (R9.5). Verified by
   `test_old_feature_urls_migrate`.
+- **R4.19** — `retired` is `[{"key", "title", "url", "retired": "<ISO time>"}]`
+  and `deleted` is `[{"key", "url", "deleted": "<ISO time>"}]`, with
+  `"gone": true` when the page no longer existed; both are optional, and an
+  absent list is an empty one. Migration (R4.18) moves a feature entry's `url`
+  to `retired` instead of dropping it, unless that URL is already retired or
+  deleted. A URL is in at most one of the two lists, and Full Progress's URL is
+  in neither. `check` reports a malformed list as a finding. Verified by
+  `test_migration_keeps_feature_urls_as_retired` and
+  `test_full_progress_url_is_never_retired`.
+- **R4.20** — A record already migrated by 1.1.0 to 1.1.2 (feature URLs gone)
+  recovers them: when the record loads (so in `check`, `pending` and every
+  writing command), the script scans the history of `manifest.json` reachable
+  from the record worktree's `HEAD` (the default branch) for feature entries
+  that had a `url`, and adds each URL not already retired, deleted or Full
+  Progress's to `retired`. The scan is bounded (the 200 most recent commits
+  that touch a `url` line, read with two git calls) and keeps no cache outside
+  the record; a writing command writes the recovered entries to the manifest.
+  Verified by `test_retired_urls_are_recovered_from_history`.
+- **R4.21** — `mark-deleted [KEY] --url URL [--gone]` moves the retired entry
+  with that URL to `deleted` (stamped with the time), so it is never listed
+  again, also not by the history recovery. `--gone` records a page that no
+  longer exists (404) and has the same effect, with `"gone": true`. It refuses
+  a URL that is not retired, a KEY that is not the entry's, and Full Progress's
+  URL, and changes nothing. Verified by
+  `test_mark_deleted_removes_the_page_for_good` and `test_mark_deleted_gone`.
+- **R4.22** — `pending` lists every retired page, with its title and URL and
+  the instruction to ask the owner to confirm, delete it with the Artifact tool
+  (`action: delete`) and run `mark-deleted`; in `--json` they are the `retired`
+  array. A retired page never changes `pending`'s exit code. `check` reports
+  the retired pages as a note, not a finding. Verified by
+  `test_pending_lists_retired_pages_without_changing_its_exit_code` and
+  `test_check_notes_retired_pages`.
+- **R4.23** — A retired page is deleted only with the owner's confirmation:
+  the script cannot delete a claude.ai page, so the session asks the owner,
+  deletes each confirmed page with the Artifact tool, then runs `mark-deleted`.
+  A page the owner declines stays listed. The rule file says so (R10.3).
+  Verified by `rule_file_carries_the_retired_pages_rule`.
 
 ---
 
@@ -645,10 +711,11 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
 | `export-content KEY --to DIR` | Copies the artifact's content files from the record to DIR for editing, `decisions.json` and its `assets/` folder included. |
 | `edit-content KEY --from DIR` | Replaces the artifact's content files in the record with those in DIR (after the fetch and reset of R4.13), validates, renders and commits. The session never edits the record worktree directly; the reset would discard it. It refuses an edit that removes a decision or changes the choice of a decided one (R5.15). |
 | `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design`, renders and commits; `default` removes it. |
-| `render [--all]` | Renders every artifact whose output would change (committed renders, with relative links). |
-| `check [--record PATH]` | The conformance checks of §14; lists findings with their requirement ID, then any warnings (R5.26), which do not change the exit code. |
-| `pending` | Lists the full-progress artifact when the hash of its committed render differs from `published_sha256` (a feature artifact is never listed, R9.5), and queued events. When it lists Full Progress it writes the publish copy (R5.31). Exit 1 when anything is listed. `--json` prints `{"artifacts": [{"key", "kind", "title", "file", "path", "url", "reason"}], "queue": [events]}`; `path` is the absolute path of the publish copy to publish. |
+| `render [--all]` | Renders every artifact whose output would change (committed renders, with relative links). It is the migration of an older record (R8.14). |
+| `check [--record PATH]` | The conformance checks of §14; lists findings with their requirement ID, then notes (including retired pages, R4.22) and any warnings (R5.26), which do not change the exit code. |
+| `pending` | Lists the full-progress artifact when the hash of its committed render differs from `published_sha256` (a feature artifact is never listed, R9.5), and queued events. When it lists Full Progress it writes the publish copy (R5.31). Exit 1 when anything is listed. `--json` prints `{"artifacts": [{"key", "kind", "title", "file", "path", "url", "reason"}], "queue": [events]}`; `path` is the absolute path of the publish copy to publish. It also lists the retired pages (R4.22): `--json` adds `"retired": [{"key", "title", "url", "retired"}]`, and they never change the exit code. |
 | `mark-published KEY --url URL` | Records the URL and the hash of the committed render (R5.32). Refuses a feature artifact (R9.5). |
+| `mark-deleted [KEY] --url URL [--gone]` | Records that the owner confirmed and the session deleted a retired page (or that it no longer exists): moves it to `deleted` (R4.21). |
 | `queue list\|clear [--id ID]` | Shows or removes queued events. |
 | `commit [--retry] [--message M]` | Commits and pushes the record (also done by every writing command). |
 
@@ -703,7 +770,8 @@ Reads the hook input; takes the task ID from the current branch name
 | a production deploy (`vercel deploy --prod`, `fly deploy`, `wrangler deploy`, `firebase deploy`) | Live |
 
 - **R8.1** — The hook only queues; it never writes the record (INV-4). A
-  command with no task ID in the branch queues nothing.
+  command with no task ID in the branch queues nothing. (It also delivers the
+  rule, R8.12, which writes only the stop state.)
 - **R8.2** — The hook finishes in under 2 s and never fails the tool call: any
   error exits 0 with a one-line message on stderr.
 
@@ -750,7 +818,8 @@ Reads the hook input; takes the task ID from the current branch name
   `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext":
   ...}}`, alongside the `systemMessage` when there is one, every session,
   whether or not `gh` works. Without a manifest it prints nothing. It stays
-  inside R8.2's rule of never failing. Verified by
+  inside R8.2's rule of never failing. The same context then carries what
+  R8.13 to R8.15 say. Verified by
   `start_delivers_the_rule_as_additional_context` and
   `start_delivers_the_rule_when_gh_is_missing`.
 - **R8.10** — The end-of-turn hook blocks the stop when the session has
@@ -768,6 +837,47 @@ Reads the hook input; takes the task ID from the current branch name
   `pending` for a feature artifact (from a script older than R9.5) is ignored:
   it neither blocks the stop nor counts towards R8.4's give-up. Verified by
   `stop_counts_only_full_progress`.
+
+### 8.5 Upgrading a project
+
+- **R8.12** — The after-command hook also delivers the rule, so a session that
+  is already open when the plugin updates does not need a restart: on a
+  `PostToolUse` of Bash, Agent or Task in a repository with a manifest, when
+  this session (`session_id`) has not yet been given the current rule text, it
+  prints `{"hookSpecificOutput": {"hookEventName": "PostToolUse",
+  "additionalContext": ...}}` with the rule text, the context of R8.13 to R8.15
+  and the line `luismc-artifacts was updated; this rule replaces earlier
+  instructions about publishing feature artifacts.` It records a hash of the
+  delivered text per session in `.claude/artifacts-stop-state.json` (key
+  `rule:<session_id>`; the session-start hook records it too), so it prints
+  once per session and again after the rule text changes. It stays inside
+  R8.2's rule of never failing and writes that file only (INV-4). Verified by
+  `after_delivers_the_rule_once_per_session_and_again_when_it_changes` and
+  `start_records_the_delivery_so_after_stays_quiet`.
+- **R8.13** — When retired pages exist (the manifest's `retired` list, plus
+  feature URLs the history of `manifest.json` still shows that are neither
+  retired nor deleted), the session-start and after-command contexts list them
+  and tell the session to offer the owner their deletion at the start of the
+  session, with the commands of R4.22. The end-of-turn hook never blocks on
+  them: it prints a `systemMessage` listing them once per session (and again
+  only when the list changes). Verified by
+  `start_context_offers_deleting_retired_pages` and
+  `stop_tells_retired_pages_once_and_does_not_block`.
+- **R8.14** — When the record needs migrating, which the hooks read without
+  writing (a feature entry holding `url` or `published_sha256`, a task or
+  `merged_status` still `Done`, or a feature file in the old fragment form),
+  both contexts say `run project_artifacts.py render now to migrate the
+  record`, and the end-of-turn hook blocks the stop with that instruction as
+  its reason until the record is migrated. The block shares R8.4's give-up rule:
+  after 3 consecutive blocks with no change it lets the turn end with a
+  `systemMessage`. The hooks never write the record (INV-4). Verified by
+  `stop_blocks_while_the_record_needs_migrating`,
+  `stop_migration_gives_up_after_three_blocks` and
+  `test_hooks_never_write_record`.
+- **R8.15** — Until the migration commit removes it (R10.6), the context of both
+  hooks adds: `If .claude/rules/project-artifacts.md exists in this repo, it is
+  an older copy; this rule replaces it.` Verified by
+  `start_context_names_an_older_rule_copy`.
 
 ---
 
@@ -821,7 +931,9 @@ Reads the hook input; takes the task ID from the current branch name
   the end of the turn, never mid-turn, and never publish a feature artifact;
   never type a status row by hand; put every doc under `docs/`;
   record the options the owner chose between, and the choice, in the feature's
-  `decisions.json` in the same turn (§5.4); and the four lines of R3.2 to R3.5.
+  `decisions.json` in the same turn (§5.4); the four lines of R3.2 to R3.5;
+  and that old claude.ai pages of feature artifacts are deleted only with the
+  owner's confirmation (R4.23).
 - **R10.4** — The plugin delivers the rule file itself: the session-start hook
   (R8.9) prints it in every project that has a record, every session, so a rule
   change reaches every project with the plugin and no copy can go stale.
@@ -830,6 +942,17 @@ Reads the hook input; takes the task ID from the current branch name
   finding: it does not change the exit code, and it says that the plugin now
   delivers the rule at session start and the copy can be deleted. Verified by
   `test_check_notes_a_differing_rule_copy`.
+- **R10.6** — The `.claude/rules/project-artifacts.md` that `init` of 1.0.0
+  copied into the project is removed by the next writing command: in the same
+  record commit (the record worktree's sparse checkout includes that one path)
+  when its text, with line endings normalised and surrounding whitespace
+  stripped, has the SHA-256 of a rule file a released plugin version shipped
+  (the script holds the hash of each) or of the current one; the commit message
+  and the command output say so. A copy that differs (the owner edited it) is
+  kept, and `check` keeps noting it (R10.5). A copy in the session's checkout
+  that git does not track is removed too. Verified by
+  `test_stale_rule_copy_is_removed_with_the_migration_commit` and
+  `test_edited_rule_copy_is_kept`.
 
 ---
 
@@ -865,11 +988,11 @@ Reads the hook input; takes the task ID from the current branch name
 
 - **R13.1** — `tools/test_project_artifacts.py` builds throwaway git repos with
   a bare remote and proves each command, each check of §14 (one fixture per
-  check that fails without it), INV-1 to INV-3, R4.13 to R4.18, R5.31, R5.32,
-  R7.4 and R9.5.
+  check that fails without it), INV-1 to INV-3, R4.13 to R4.23, R5.31, R5.32,
+  R7.4, R9.5 and R10.6.
 - **R13.2** — `tools/test_project_artifacts_hooks.py` feeds sample hook input
   to each hook and asserts the queue, the exit code and the output, including
-  R8.4, R8.8 to R8.11 and INV-4, and that every hook does nothing without a
+  R8.4, R8.8 to R8.15 and INV-4, and that every hook does nothing without a
   manifest.
 - **R13.3** — Before release, the plugin is run on a scratch clone of the
   plugin's own repository: its existing record is converted to this format,
@@ -907,6 +1030,8 @@ Reads the hook input; takes the task ID from the current branch name
 | Structure stylesheet byte-identical; token block complete | R5.10, R5.11 |
 | `extra_css` redefines no structure selector | R4.11 |
 | Rendered HTML equals a fresh render | INV-3 |
+| `retired` and `deleted` are lists of well-formed entries | R4.19 |
+| Note, not a finding: retired pages still to delete; feature `url` fields still to move | R4.18, R4.22 |
 
 Exit 0 clean, 1 findings, 2 unreadable.
 
@@ -946,6 +1071,17 @@ Progress links to it by relative link in the committed file (works from a
 checkout) and by absolute `file:///` link in the publish copy (works from the
 owner's machine); browsers that block `file:` links from a web page still show
 the path as text.
+
+**Why an old page is never deleted without the owner.** Deleting a claude.ai
+artifact cannot be undone and stops its link for everyone who has it. The
+script cannot delete one, and a hook that made the session delete would turn a
+cleanup into a decision taken without the owner. The pages are therefore
+listed, the owner is asked, and the end of the turn never waits for the answer.
+
+**Why the hooks tell the session to migrate.** A hook may not write the record
+(INV-4), and waiting for an unrelated writing command left an upgraded project
+half migrated for days. The hooks read the record, say what is old, and the
+end-of-turn block makes the session run the one command that migrates it.
 
 **Why Expected is a date.** "today" is true when written and wrong the next
 morning without anyone changing it. A date goes visibly stale.

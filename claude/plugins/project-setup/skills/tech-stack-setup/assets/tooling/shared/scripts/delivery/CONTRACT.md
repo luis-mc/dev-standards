@@ -229,7 +229,14 @@ linked into it with a symlink or a Windows junction, and Rust builds share the
 main checkout's target directory through `CARGO_TARGET_DIR`), runs the steps
 there, and always
 removes the worktree afterwards, also on failure or interruption. Without
-`--commit`, or when it equals `HEAD`, it runs in place as before. Each step has a limit of 5 minutes (killed like a
+`--commit`, or when it equals `HEAD`, it runs in place as before.
+
+**Known limit (accepted).** The temporary worktree borrows the checkout's
+dependency directories instead of installing. A workspace package imported by a
+guard therefore resolves to the checked-out version of that package, not the
+pushed one. Guards scan files and rarely import workspace code; a guard that
+does must not rely on the pushed version of that package at pre-push time (the
+branch gate, which installs, checks it properly). Each step has a limit of 5 minutes (killed like a
 gate step, outcome `fail`, reason `timed out after 5 min`). A failure is
 reported the way the gate reports one (`FAIL <step>: ...`, the log path, the
 last 40 lines), so a blocked push always says which check failed and why. The `pre-push` hook calls it once per pushed ref,
@@ -281,6 +288,23 @@ merging is **kept** and listed. For each finished branch:
   it is kept and listed; then delete the local branch (`git branch -D`, since
   squash merges are not ancestors) unless a kept worktree still holds it;
   finally `git worktree prune`.
+
+**Scaffolding branches.** A local branch with no pull request is finished
+when it has no commits outside the default branch on the remote
+(`git rev-list --count <remote>/<default>..<branch>` is 0) and no worktree
+holds it, or the only worktree holding it is clean; agent tools leave such
+branches behind (e.g. `worktree-agent-<id>`). It is removed locally only (it was
+never pushed); a scaffolding branch whose name exists on the remote is
+classified like any other branch. Every mode that touches local branches
+(default, `--local`) removes them, also without `gh`, since the rule needs no
+pull-request state.
+
+**Stale push-check folders.** `cleanup.py` (default and `--local`) also sweeps
+`.delivery/push-check/*` left by a pre-push check that was killed: for each
+entry whose owning process (the `<pid>` suffix) is not running, it removes the
+dependency links first (never their targets), then the worktree
+(`git worktree remove --force`, or the folder plus `git worktree prune` when git
+no longer knows it). Rows: `push-check <name>  deleted` or `kept: <reason>`.
 
 Never touches the default branch, a detached worktree (such as
 `.claude/worktrees/artifacts-record`), the main working tree, or a branch it

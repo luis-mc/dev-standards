@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Session-start hook (SessionStart).
 
-ARTIFACTSPEC 1.1.0 section 8.3. Delivers the plugin's rule file as
+ARTIFACTSPEC 1.2.0 section 8.3. Delivers the plugin's rule file as
 `hookSpecificOutput.additionalContext` in any repository that has a record
-manifest, every session, whether or not `gh` works (R8.9). Then catches up on
+manifest, every session, whether or not `gh` works (R8.9), followed by what the
+session must do about the record: the old rule copy, a migration, old claude.ai
+pages to delete (R8.13 to R8.15). Notes the delivery in the stop state so the
+after-command hook does not repeat it (R8.12). Then catches up on
 changes made outside a session: fetches the default branch, lists pull requests with `gh pr list`, and queues
 `merged_status` for every task in Running, Waiting or To do whose branch `<ID>-*`
 was merged, and `On hold` for one whose only pull requests were closed unmerged
@@ -21,14 +24,12 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from hook_after_command import (TASK_ID_RE, command_for, git, hook_root, hooks_off,  # noqa: E402
-                                load_manifest, merged_status_of, origin_record_file, parse_json,
-                                read_input, run, warn)
+from hook_after_command import (RULE_HEADING, RULE_PATH, TASK_ID_RE, command_for, context_text,  # noqa: E402,F401
+                                git, hook_root, hooks_off, load_manifest, mark_delivered,
+                                merged_status_of, origin_record_file, parse_json, read_input,
+                                rule_text, run, warn)
 
 OPEN_STATUSES = ('Running', 'Waiting', 'To do')
-RULE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                         'rules', 'project-artifacts.md')
-RULE_HEADING = 'luismc-artifacts: rules for work in this project (ARTIFACTSPEC 1.1.0)'
 GH_TIMEOUT = 30
 FETCH_TIMEOUT = 25
 
@@ -84,15 +85,10 @@ def outcomes_by_task(prs):
     return result
 
 
-def rule_context():
-    """The rule file's text for additionalContext; '' when the plugin has none (R8.9)."""
-    try:
-        with open(RULE_PATH, encoding='utf-8') as f:
-            text = f.read().strip()
-    except OSError:
-        warn('rules/project-artifacts.md cannot be read; the rule was not delivered')
-        return ''
-    return '%s\n\n%s' % (RULE_HEADING, text) if text else ''
+def rule_context(root, manifest):
+    """The rule file's text, then what this session must do about the record, for additionalContext;
+    '' when the plugin has no rule (R8.9, R8.12 to R8.15)."""
+    return context_text(root, manifest)
 
 
 def catch_up(root, manifest):
@@ -154,8 +150,16 @@ def main():
     out = {}
     if messages:
         out['systemMessage'] = '\n'.join(messages)
-    context = rule_context()
+    try:
+        context = rule_context(root, manifest)
+    except Exception as exc:
+        warn('rule not delivered (%s: %s)' % (type(exc).__name__, exc))
+        context = ''
     if context:
+        try:
+            mark_delivered(root, str(data.get('session_id') or 'default'), rule_text())
+        except Exception as exc:
+            warn('delivery not recorded (%s: %s)' % (type(exc).__name__, exc))
         out['hookSpecificOutput'] = {'hookEventName': 'SessionStart', 'additionalContext': context}
     if out:
         print(json.dumps(out))
