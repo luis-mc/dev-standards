@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T17:26+01:00",
+  "updated": "2026-10-11T17:29+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1173,6 +1173,17 @@
       "detail": "#47 merged on green at 14:37 after two fix-forwards; cleanup removed every train branch; plugins and ~/.claude rules updated",
       "expected": "11 Oct",
       "changed": "2026-10-11T14:41+01:00"
+    },
+    {
+      "id": "TC7",
+      "owner": "test-cost",
+      "app": "",
+      "status": "Running",
+      "item": "PR CI: mutants per suite, delivery suites in parallel",
+      "detail": "One Sonnet agent on TC7-ci-parallel-suites; rides the DL12 train",
+      "expected": "11 Oct ~18:05",
+      "changed": "2026-10-11T17:29+01:00",
+      "expected_basis": "agent ~20 min, then the DL12 train's PR CI"
     }
   ]
 }
