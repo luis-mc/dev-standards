@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T13:00+01:00",
+  "updated": "2026-10-11T13:14+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -501,12 +501,12 @@
       "id": "DL10",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "dev-standards adopts the delivery log and the freeze",
-      "detail": "Delivery log and train freeze for dev-standards itself, done in the TC6 release",
-      "expected": "11 Oct ~15:00",
-      "changed": "2026-10-11T12:05+01:00",
-      "expected_basis": "orchestrator, after the agents report"
+      "detail": "pre-push freeze committed on TC6-integration; hooks switched on and this train's release notes after the merge",
+      "expected": "11 Oct ~15:15",
+      "changed": "2026-10-11T13:14+01:00",
+      "expected_basis": "right after the TC6 merge"
     },
     {
       "id": "DL11",
