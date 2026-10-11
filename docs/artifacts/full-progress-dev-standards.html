@@ -1899,30 +1899,30 @@ tr.status-group.release-group td { color: var(--ink); }
    "status": "Running",
    "item": "AR46 train: join, PR CI, merge, cleanup",
    "detail": "Contract on DS56-integration (R5.42a + change notes); agents on AR46 (timeline) and DS57 (cleanup race), each ends with CI on its branch; then join, fold, ready PR",
-   "expected": "12 Oct ~00:39",
+   "expected": "12 Oct ~00:34",
    "changed": "2026-10-12T00:03+01:00",
    "expected_basis": "agents ~20 min incl. branch CI; #53: CI 3.4 min, merge 4",
    "release": 4,
    "phases": [
     {
      "name": "agents",
-     "start": "2026-10-12T00:08+01:00",
-     "end": "2026-10-12T00:28+01:00"
+     "start": "2026-10-12T00:03+01:00",
+     "end": "2026-10-12T00:23+01:00"
     },
     {
      "name": "join",
-     "start": "2026-10-12T00:28+01:00",
-     "end": "2026-10-12T00:31+01:00"
+     "start": "2026-10-12T00:23+01:00",
+     "end": "2026-10-12T00:26+01:00"
     },
     {
      "name": "ci",
-     "start": "2026-10-12T00:31+01:00",
-     "end": "2026-10-12T00:35+01:00"
+     "start": "2026-10-12T00:26+01:00",
+     "end": "2026-10-12T00:30+01:00"
     },
     {
      "name": "merge",
-     "start": "2026-10-12T00:35+01:00",
-     "end": "2026-10-12T00:39+01:00"
+     "start": "2026-10-12T00:30+01:00",
+     "end": "2026-10-12T00:34+01:00"
     }
    ],
    "risk": {
@@ -2141,7 +2141,7 @@ tr.status-group.release-group td { color: var(--ink); }
 <ul>
 <li data-glance-task="AR46"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars <span class="glance-expected">12 Oct ~00:25</span><span class="glance-basis">one agent ~20 min incl. branch CI</span></li>
 <li data-glance-task="DS57"><span class="task-id">DS57</span>cleanup.py: no failure when the train-cleanup workflow got there first <span class="glance-expected">12 Oct ~00:25</span><span class="glance-basis">one agent ~20 min incl. branch CI</span></li>
-<li data-glance-task="DS56"><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~00:39</span><span class="glance-basis">agents ~20 min incl. branch CI; #53: CI 3.4 min, merge 4</span></li>
+<li data-glance-task="DS56"><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~00:34</span><span class="glance-basis">agents ~20 min incl. branch CI; #53: CI 3.4 min, merge 4</span></li>
 </ul>
 </div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
@@ -2162,25 +2162,25 @@ tr.status-group.release-group td { color: var(--ink); }
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS56 (AR46 train: join, PR CI, merge, cleanup) expected live about 00:39, worst case 00:49." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">00:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">00:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">01:00</text></g>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS56 (AR46 train: join, PR CI, merge, cleanup) expected live about 00:34, worst case 00:44." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">00:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">00:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">01:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-4 · AR46 train: join, PR CI, merge, cleanup</title>RELEASE-4 · AR46 train: j…</text>
 <text class="rt-sub" x="0" y="77"><title>AR46, DS57</title>AR46, DS57</text>
-<rect class="rt-bar agents" x="269.3" y="52" width="173.3" height="22"><title>agents 00:08-00:28</title></rect>
-<rect class="rt-bar join" x="442.7" y="52" width="26" height="22"><title>join 00:28-00:31</title></rect>
-<rect class="rt-bar ci" x="468.7" y="52" width="34.7" height="22"><title>PR CI 00:31-00:35</title></rect>
-<rect class="rt-bar merge" x="503.3" y="52" width="34.7" height="22"><title>merge + cleanup 00:35-00:39</title></rect>
-<rect class="rt-risk" x="538" y="58" width="86.7" height="10"><title>+1 fix round</title></rect>
-<polygon class="rt-worst" points="624.7,51 631.7,63 624.7,75 617.7,63"/>
-<text class="rt-risk-label" x="635.7" y="67">+1 fix round → worst ~00:49</text>
-<polygon class="rt-expected" points="538,50 546,63 538,76 530,63"/>
-<text class="rt-live-label" x="538" y="92">live ~00:39</text>
+<rect class="rt-bar agents" x="226" y="52" width="173.3" height="22"><title>agents 00:03-00:23</title></rect>
+<rect class="rt-bar join" x="399.3" y="52" width="26" height="22"><title>join 00:23-00:26</title></rect>
+<rect class="rt-bar ci" x="425.3" y="52" width="34.7" height="22"><title>PR CI 00:26-00:30</title></rect>
+<rect class="rt-bar merge" x="460" y="52" width="34.7" height="22"><title>merge + cleanup 00:30-00:34</title></rect>
+<rect class="rt-risk" x="494.7" y="58" width="86.7" height="10"><title>+1 fix round</title></rect>
+<polygon class="rt-worst" points="581.3,51 588.3,63 581.3,75 574.3,63"/>
+<text class="rt-risk-label" x="592.3" y="67">+1 fix round → worst ~00:44</text>
+<polygon class="rt-expected" points="494.7,50 502.7,63 494.7,76 486.7,63"/>
+<text class="rt-live-label" x="494.7" y="92">live ~00:34</text>
 <line class="rt-now" x1="226" y1="36" x2="226" y2="148"/><text class="rt-now-label" x="226" y="161">now 00:03</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group release-group" data-group="release-4"><td colspan="5"><strong>RELEASE-4 · live ~00:39 · worst ~00:49</strong></td></tr>
-<tr data-task="DS56"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</td><td></td><td>Contract on DS56-integration (R5.42a + change notes); agents on AR46 (timeline) and DS57 (cleanup race), each ends with CI on its branch; then join, fold, ready PR</td><td>12 Oct ~00:39<span class="expected-basis">agents ~20 min incl. branch CI; #53: CI 3.4 min, merge 4</span></td></tr>
+<tr class="status-group release-group" data-group="release-4"><td colspan="5"><strong>RELEASE-4 · live ~00:34 · worst ~00:44</strong></td></tr>
+<tr data-task="DS56"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</td><td></td><td>Contract on DS56-integration (R5.42a + change notes); agents on AR46 (timeline) and DS57 (cleanup race), each ends with CI on its branch; then join, fold, ready PR</td><td>12 Oct ~00:34<span class="expected-basis">agents ~20 min incl. branch CI; #53: CI 3.4 min, merge 4</span></td></tr>
 <tr data-task="AR46"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</a></td><td><code>luismc-artifacts</code></td><td>Owner saw RELEASE-3 (Expected 12 Oct ~00:05, page drawn 11 Oct 23:57) as a bare day diamond: render_artifacts.py:1165 puts on the time axis only an Expected on the stamp&#x27;s date. Fix: any timed Expected within 24 h of the stamp is on the axis, which can cross midnight</td><td>12 Oct ~00:25<span class="expected-basis">one agent ~20 min incl. branch CI</span></td></tr>
 <tr data-task="DS57"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS57</span>cleanup.py: no failure when the train-cleanup workflow got there first</td><td><code>delivery scripts</code></td><td>#53: cleanup.py failed on a release tag and a branch the workflow had just made or deleted; a branch already gone and an existing release should count as done (update the release)</td><td>12 Oct ~00:25<span class="expected-basis">one agent ~20 min incl. branch CI</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
