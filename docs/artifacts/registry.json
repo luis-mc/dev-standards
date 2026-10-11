@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T10:18+01:00",
+  "updated": "2026-10-11T10:19+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -843,9 +843,9 @@
       "app": "",
       "status": "Running",
       "item": "Study test and validation cost, with a feature page",
-      "detail": "Hypotheses tested against CI history, transcripts and timed runs; findings and fixes on a feature page",
+      "detail": "Measuring: CI history, transcripts, timed runs",
       "expected": "11 Oct ~12:30",
-      "changed": "2026-10-11T10:18+01:00",
+      "changed": "2026-10-11T10:19+01:00",
       "expected_basis": "timed local runs wait for the two suites now running (~10:45)"
     },
     {
