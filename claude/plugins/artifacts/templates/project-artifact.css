@@ -331,6 +331,22 @@ a .task-id { color: inherit; }
 }
 .copy-link:hover, .copy-link:focus-visible { color: var(--signal); border-color: var(--signal); }
 
+/* Section 1 sort headers (R5.39) */
+.sort-header {
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  text-align: inherit;
+  cursor: pointer;
+}
+.sort-header:hover, .sort-header:focus-visible { color: var(--signal); }
+.sort-arrow { display: inline-block; min-width: 1ch; }
+
+/* A feature page's line under its stamp (R5.38) */
+.full-progress-published { margin: .2rem 0 0; font-size: .85rem; color: var(--ink-muted); }
+
 /* The address itself, shown only when the clipboard refuses, to copy by hand */
 .local-path {
   display: block;
