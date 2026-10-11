@@ -669,9 +669,11 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">11</div><div class="label">live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">11</div><div class="label">live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next</strong></td></tr>
+<tr data-task="DL12"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL12</span>Delivery log: label its times as UTC, CI start from the first run</td><td>The table in release train-2026-10-11-47 shows UTC times without saying so, and CI start is the last run&#x27;s start</td><td>12 Oct<span class="expected-basis">next small train; delivery_log.py and its scenarios</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
 <tr data-task="DL1"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL1</span>Inert paths keep gate results valid</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
 <tr data-task="DL2"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL2</span>Quick join check instead of a second full gate</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>

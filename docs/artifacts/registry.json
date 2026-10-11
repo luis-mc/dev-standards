@@ -513,6 +513,17 @@
       "changed": "2026-10-11T14:41+01:00"
     },
     {
+      "id": "DL12",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Delivery log: label its times as UTC, CI start from the first run",
+      "detail": "The table in release train-2026-10-11-47 shows UTC times without saying so, and CI start is the last run's start",
+      "expected": "12 Oct",
+      "changed": "2026-10-11T14:42+01:00",
+      "expected_basis": "next small train; delivery_log.py and its scenarios"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
