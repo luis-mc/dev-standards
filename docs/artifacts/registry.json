@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T22:08+01:00",
+  "updated": "2026-10-11T22:09+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -428,10 +428,10 @@
       "app": "luismc-artifacts",
       "status": "Running",
       "item": "RELEASE-n numbers; Full Progress groups items by release",
-      "detail": "Spec 1.6.0 contract committed (859b30b, branch AR45-release-numbers): RELEASE-n numbers, Full Progress grouped by release, Running/Built ride a release, tiles say tasks; plus fix: timeline drawing never scaled up. Agent implementing since 22:20",
-      "expected": "11 Oct ~23:40",
-      "changed": "2026-10-11T22:08+01:00",
-      "expected_basis": "agent ~70 min incl. timeline fix, review ~10",
+      "detail": "Spec 1.6.0 contract 859b30b; agent on branch AR45-release-numbers: version bump and renderer (release names, groups, release lines, tiles) committed by 22:08; commands, check, migration, timeline fix and tests next",
+      "expected": "11 Oct ~22:50",
+      "changed": "2026-10-11T22:09+01:00",
+      "expected_basis": "AR43, a similar change, took 39 min to Built; renderer already done",
       "rides": "DS54"
     },
     {
