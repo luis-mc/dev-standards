@@ -286,6 +286,18 @@ def read_notes(root: Path) -> tuple[list[Note], list[str]]:
 # check
 # --------------------------------------------------------------------------
 
+def path_offences(root: Path, cfg: dict, base: str, new: str, path: str) -> list[str]:
+    """What one changed path breaks: a CHANGELOG file, a spec's version or change log, a plugin's version.
+    `new` is the ref the change ends at, or "" for the index (the staged changes)."""
+    if re.match(r"(?i)^changelog", path.rsplit("/", 1)[-1]):
+        return ["%s: a changelog file is changed" % path]
+    if is_spec(path, cfg):
+        return spec_offences(root, base, path, heading_for(cfg, path), new)
+    if is_plugin(path, cfg):
+        return plugin_offences(root, base, path, new)
+    return []
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     root = dc.repo_root()
     cfg = load_config(root, args.config)
@@ -296,13 +308,8 @@ def cmd_check(args: argparse.Namespace) -> int:
         # The index against HEAD: what the commit about to be made changes. No base ref, no fetch.
         if dc.rev("HEAD", root) is not None:  # a repository with no commit yet has nothing to protect
             out = dc.run_git(["diff", "--cached", "--name-only", "--no-renames", "-z"], cwd=root).stdout
-            for path in sorted(f for f in out.split("\0") if f):
-                if re.match(r"(?i)^changelog", path.rsplit("/", 1)[-1]):
-                    problems.append("%s: a changelog file is changed" % path)
-                elif is_spec(path, cfg):
-                    problems += spec_offences(root, "HEAD", path, heading_for(cfg, path), "")
-                elif is_plugin(path, cfg):
-                    problems += plugin_offences(root, "HEAD", path, "")
+            for path in sorted(f for f in out.split(chr(0)) if f):
+                problems += path_offences(root, cfg, "HEAD", "", path)
     elif not release:
         base_ref = args.base_ref or "origin/" + cfg["default_branch"]
         if dc.rev(base_ref, root) is None:
@@ -312,12 +319,7 @@ def cmd_check(args: argparse.Namespace) -> int:
             raise dc.DeliveryError("HEAD and '%s' have no common ancestor" % base_ref)
         base = mb.stdout.strip()
         for path in dc.changed_files(base, root):
-            if re.match(r"(?i)^changelog", path.rsplit("/", 1)[-1]):
-                problems.append("%s: a changelog file is changed" % path)
-            elif is_spec(path, cfg):
-                problems += spec_offences(root, base, path, heading_for(cfg, path))
-            elif is_plugin(path, cfg):
-                problems += plugin_offences(root, base, path)
+            problems += path_offences(root, cfg, base, "HEAD", path)
     if problems:
         print("change-notes: FAIL")
         for p in problems:

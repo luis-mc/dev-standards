@@ -729,7 +729,7 @@ MUTANTS = [
     ("change_notes.py", "if config:\n        path = root / config", "if False:\n        path = root / config", ["config"]),
     ("change_notes.py", "return cfg[\"changelog_headings\"].get(spec, cfg[\"changelog_heading\"])", "return cfg[\"changelog_heading\"]", ["headings"]),
     ("change_notes.py", "if heading:  # a spec", "if True:  # a spec", ["headings"]),
-    ("change_notes.py", "elif is_plugin(path, cfg):", "elif False:", ["plugins"]),
+    ("change_notes.py", "if is_plugin(path, cfg):", "if False:", ["plugins", "staged"]),
     ("change_notes.py", "if n.plugin:\n            by_plugin", "if False:\n            by_plugin", ["plugins"]),
     ("change_notes.py", "if not spec and not plugin:", "if False:", ["plugins"]),
     ("delivery_common.py", "or not cfg[\"changelog_heading\"].strip():", "or False:", ["gate-json"]),
