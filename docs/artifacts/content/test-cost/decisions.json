@@ -171,6 +171,27 @@
    "decided": "2026-10-11",
    "task": "TC5",
    "owner_words": "Once per turn (Recommended)"
+  },
+  {
+   "id": "D9",
+   "question": "When does the nightly full run with mutants start?",
+   "asked": "2026-10-11",
+   "status": "decided",
+   "options": [
+    {
+     "label": "03:00 UTC",
+     "summary": "04:00 Lisbon, while the owner sleeps.",
+     "recommended": true
+    },
+    {
+     "label": "Another time",
+     "summary": "Owner names it."
+    }
+   ],
+   "chosen": "03:00 UTC",
+   "decided": "2026-10-11",
+   "task": "TC1",
+   "owner_words": "03:00 UTC (Recommended)"
   }
  ]
 }

@@ -587,7 +587,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>The question</a><a href="#s2"><b>2</b>How it was measured</a><a href="#s3"><b>3</b>Hypotheses and verdicts</a><a href="#s4"><b>4</b>Where the time goes</a><a href="#s5"><b>5</b>The mutation pass</a><a href="#s6"><b>6</b>Repeats and noise</a><a href="#s7"><b>7</b>What is wrong</a><a href="#s8"><b>8</b>Solutions, ranked</a><a href="#s9"><b>9</b>Decisions</a><a href="#s10"><b>10</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Test and validation cost</h1><p>What our tests and checks cost, where they repeat, and what to cut</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T12:05+01:00">11 Oct 12:05</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T13:14+01:00">11 Oct 13:14</time> (Lisbon)</p>
 <p class="lede">Studied 11 October: the checks are good, but they run too often and for everything. Half of all CI time was agents’ branch runs, a luismc-artifacts change waits 17.5 min where 3.8 would prove the same, and the mutation pass and a duplicate renderer group are most of the rest. Eight fixes are ranked below; the owner’s choices are in D1 to D8, and all eight are To do. <strong>Nothing needs you.</strong></p>
 <div class="status-count-tiles"><div class="status-count-tile status-built"><div class="count">5</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
@@ -761,6 +761,21 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </section>
 <section id="s9"><h2><span class="section-number">&sect; 9</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D9">
+<h3 class="decision-head"><span class="decision-id">D9</span> <span class="decision-question">When does the nightly full run with mutants start?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC1</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">03:00 UTC</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">04:00 Lisbon, while the owner sleeps.</p>
+<blockquote class="decision-words">&ldquo;03:00 UTC (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Another time</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Owner names it.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D8">
 <h3 class="decision-head"><span class="decision-id">D8</span> <span class="decision-question">How often should the record push to main?</span></h3>
 <p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC5</p>
