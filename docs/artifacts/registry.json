@@ -1124,12 +1124,11 @@
       "id": "DS54",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "AR45 train: join, PR CI, merge, cleanup",
-      "detail": "#51 CI: all artifacts tests passed (suite 2m41s in CI); failed only the change-notes check (version edited on a feature branch). Moved to a change note, joined into DS54-integration, folded to 1.6.0; ready PR #52, CI running",
-      "expected": "11 Oct ~23:20",
-      "changed": "2026-10-11T23:05+01:00",
-      "expected_basis": "#51 CI took 3m27s; merge+cleanup ~5 min",
+      "detail": "#52 merged on green 23:09 (CI 3m28s) after #51 failed the change-notes check; cleanup removed every train branch and worktree and the old TC8 branch; delivery log in train-2026-10-11-52",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T23:31+01:00",
       "release": 2,
       "phases": [
         {
