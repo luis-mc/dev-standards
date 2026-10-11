@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T18:39+01:00",
+  "updated": "2026-10-11T20:34+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1249,12 +1249,11 @@
       "id": "TC8",
       "owner": "test-cost",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Generic CI speed: split or shard the dominant step, e2e shards",
-      "detail": "One Sonnet agent on TC8-ci-speed-generic",
-      "expected": "11 Oct ~19:12",
-      "changed": "2026-10-11T18:39+01:00",
-      "expected_basis": "agent ~50 min from 18:22",
+      "detail": "8eec285: STACKSPEC 13.1 SHOULD, ts e2e 2 shards, ci_watch slowest-job summary, hook allows github.token; test_delivery_ci 60/0",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T20:34+01:00",
       "rides": "DS53"
     }
   ]
