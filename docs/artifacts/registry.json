@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T23:00+01:00",
+  "updated": "2026-10-11T23:05+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1126,10 +1126,10 @@
       "app": "",
       "status": "Running",
       "item": "AR45 train: join, PR CI, merge, cleanup",
-      "detail": "Ready PR #51, CI started 22:59; then merge and cleanup (incl. leftover TC8 branch); luismc-artifacts 1.6.0",
-      "expected": "11 Oct ~23:12",
-      "changed": "2026-10-11T22:59+01:00",
-      "expected_basis": "#50 CI 2m27s, merge+cleanup 4 min",
+      "detail": "#51 CI: all artifacts tests passed (suite 2m41s in CI); failed only the change-notes check (version edited on a feature branch). Moved to a change note, joined into DS54-integration, folded to 1.6.0; ready PR #52, CI running",
+      "expected": "11 Oct ~23:20",
+      "changed": "2026-10-11T23:05+01:00",
+      "expected_basis": "#51 CI took 3m27s; merge+cleanup ~5 min",
       "release": true,
       "phases": [
         {
@@ -1139,23 +1139,23 @@
         },
         {
           "name": "join",
-          "start": "2026-10-11T22:47+01:00",
-          "end": "2026-10-11T22:59+01:00"
+          "start": "2026-10-11T23:03+01:00",
+          "end": "2026-10-11T23:10+01:00"
         },
         {
           "name": "ci",
-          "start": "2026-10-11T22:59+01:00",
-          "end": "2026-10-11T23:06+01:00"
+          "start": "2026-10-11T23:10+01:00",
+          "end": "2026-10-11T23:15+01:00"
         },
         {
           "name": "merge",
-          "start": "2026-10-11T23:06+01:00",
-          "end": "2026-10-11T23:12+01:00"
+          "start": "2026-10-11T23:15+01:00",
+          "end": "2026-10-11T23:20+01:00"
         }
       ],
       "risk": {
         "label": "+1 fix round",
-        "minutes": 15
+        "minutes": 10
       }
     },
     {
