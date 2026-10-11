@@ -728,9 +728,9 @@ double-click.
   absolute `file:///` URL built from the repository root on this machine:
   `file:///` plus the absolute path with forward slashes, each segment
   percent-encoded (a space is `%20`), for example
-  `file:///C:/GitHub/dev-standards/docs/artifacts/feature-x.html`. The target is
-  the feature file in the session's checkout (`<root>/docs/artifacts/`) when
-  that file exists there, else the same file in the record worktree. The address
+  `file:///C:/GitHub/dev-standards/.claude/worktrees/artifacts-record/docs/artifacts/feature-x.html`.
+  The target is the feature file in the record worktree, never the session's
+  checkout, which may be on another branch with an older copy. The address
   is shown as selectable text (`<code class="local-path">`, hidden until then)
   only when the clipboard refuses. The publish copy has no link to a feature
   file anywhere: its checklist rows carry none, and only section 1 has the

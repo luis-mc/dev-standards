@@ -885,7 +885,7 @@ def test_publish_copy_links_and_committed_links(env):
     for h in hrefs:
         target = Path(url_path(h))
         assert target.is_absolute() and target.is_file() and target.parent.name == 'artifacts'
-        assert os.path.samefile(str(target), str(p.clone / 'docs' / 'artifacts' / target.name)), (h, target)   # the session's checkout
+        assert os.path.samefile(str(target), str(p.rdir / target.name)), (h, target)   # the record worktree, never the checkout
         assert '<code class="local-path" hidden>%s</code>' % h in copy
     # the checklist rows (AR1, AR2, SI1) carry no link and no button
     table = copy[copy.index('<table class="status-checklist"'):]
@@ -909,15 +909,15 @@ def test_publish_copy_path_encoding_with_spaces(env):
     assert 'href="file:' not in copy
     assert len(hrefs) == 2 and all('%20' in h and ' ' not in h and '%26' in h and '&' not in h for h in hrefs), hrefs
     for h in hrefs:
-        assert os.path.samefile(url_path(h), str(q.clone / 'docs' / 'artifacts' / h.rsplit('/', 1)[1])), h
+        assert os.path.samefile(url_path(h), str(q.rdir / h.rsplit('/', 1)[1])), h
         assert '\\' not in h                                              # forward slashes only
     assert re.search(r'title="[^"]*a b&amp;c[^"]*feature-artifacts\.html"', copy), 'path text keeps the space'
     assert q.run('check').code == 0
 
 
 @case
-def test_publish_copy_falls_back_to_the_record_worktree(env):
-    """R5.31: a session checkout that does not have the feature file yet links to the record worktree's."""
+def test_publish_copy_links_to_the_record_worktree(env):
+    """R5.31: Copy link targets the record worktree's file, whatever the session's checkout holds."""
     p = env.project()
     p.init()
     p.ok('feature-new', '--key', 'a', '--title', 'A', '--prefix', 'AA', '--apps', 'x')
