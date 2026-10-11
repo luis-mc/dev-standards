@@ -1143,9 +1143,9 @@
       "status": "Running",
       "item": "Release the test-cost train (all eight fixes and DS48)",
       "detail": "PR #47 open with everything joined and folded (8.0.0 / 14.0.0 / 1.4.0); its CI is the one full run",
-      "expected": "11 Oct ~14:05",
+      "expected": "11 Oct ~13:45",
       "changed": "2026-10-11T13:23+01:00",
-      "expected_basis": "spec-lint with mutants ~15 min from 13:48, then merge"
+      "expected_basis": "spec-lint with mutants ~15 min from 13:23, then merge"
     }
   ]
 }
