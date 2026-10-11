@@ -2335,6 +2335,91 @@ def timeline_is_never_scaled_up(fx):
 
 @test
 @with_fixture
+def tiles_say_tasks(fx):
+    """R5.8a: a tile reads `tasks live` and, for one, `task running`."""
+    out = fx.render('full-progress')
+    assert '<div class="count">4</div><div class="label">tasks live</div>' in out
+    assert '<div class="count">1</div><div class="label">task waiting</div>' in out
+
+
+@test
+@with_fixture
+def full_progress_groups_by_release(fx):
+    """R5.46: a group per open release (release row, then its riders), then Not in a release yet, then the others."""
+    registry = two_releases(fx)
+    out = fx.render('full-progress', registry=registry)
+    rows = table_rows(out)
+    groups = [r for r in rows if r[0] == 'group']
+    assert [g[1] for g in groups] == ['release-1', 'release-2', 'now', 'you', 'built'], groups
+    assert [g[2] for g in groups][:2] == ['RELEASE-1 · live ~18:00 · worst ~18:10', 'RELEASE-2 · live 12 Oct'], groups
+    assert [g[2] for g in groups][2] == 'Not in a release yet'
+    first = [r[1] for r in rows[:rows.index(groups[1])] if r[0] == 'task']
+    assert first == ['DS51', 'AR6', 'DS6'], first                  # the release, then its riders (ties by ID)
+    # a task appears in exactly one group
+    ids = [r[1] for r in rows if r[0] == 'task'] + [r[1] for r in table_rows(out, 1) if r[0] == 'task']
+    assert len(ids) == len(set(ids)) == len(registry['tasks'])
+    assert 'AR6' not in [r[1] for r in rows[rows.index(groups[2]):] if r[0] == 'task']
+    assert fx.check(out, 'full-progress', registry=registry) == []
+    # a feature artifact keeps the groups of R6.2
+    feature = table_rows(fx.render('artifacts', registry=registry))
+    assert [r[1] for r in feature if r[0] == 'group'] == ['now', 'built'], feature
+
+
+@test
+@with_fixture
+def release_group_heading_with_risk(fx):
+    """R5.46: ` · worst ~HH:MM` only when the release has a risk; a release row starts with its RELEASE-n name."""
+    registry = two_releases(fx)
+    out = fx.render('full-progress', registry=registry)
+    assert '<strong>RELEASE-1 · live ~18:00 · worst ~18:10</strong>' in out
+    assert '<strong>RELEASE-2 · live 12 Oct</strong>' in out and 'RELEASE-2 · live 12 Oct · worst' not in out
+    assert '<span class="task-id">DS51</span><span class="release-name">RELEASE-1</span>DL12 release' in out
+    assert '<li data-glance-task="DS51"><span class="task-id">DS51</span><span class="release-name">RELEASE-1</span>' in out
+    # a timed release without a risk: live time only
+    registry = with_releases(fx, release('DS51', 'Plain', '10 Oct ~19:00', status='Running'))
+    assert '<strong>RELEASE-1 · live ~19:00</strong>' in fx.render('full-progress', registry=registry)
+
+
+@test
+@with_fixture
+def rows_show_the_release_they_rode(fx):
+    """R5.46: Live or built rows (and a feature artifact's rows) that ride a release show it in a muted line."""
+    registry = two_releases(fx)
+    registry['tasks'].append(release('DS53', 'Shipped', '09 Oct', status='Live'))
+    for t in registry['tasks']:
+        if t['id'] in ('AR5', 'MP1'):
+            t['rides'] = 'DS53'
+    out = fx.render('full-progress', registry=registry)
+    for tid, name in (('AR5', 'RELEASE-3'), ('MP1', 'RELEASE-3')):
+        row = out[out.index('<tr data-task="%s">' % tid):]
+        row = row[:row.index('</tr>')]
+        assert '<span class="release-line"><span class="release-name">%s</span></span>' % name in row, row
+    feature = fx.render('artifacts', registry=registry)
+    ar6 = feature[feature.index('<tr data-task="AR6">'):]
+    assert '<span class="release-line"><span class="release-name">RELEASE-1</span></span>' in ar6[:ar6.index('</tr>')]
+    assert fx.check(out, 'full-progress', registry=registry) == []
+    assert fx.check(feature, 'artifacts', registry=registry) == []
+
+
+@test
+@with_fixture
+def check_finds_a_row_in_the_wrong_release_group(fx):
+    """R5.46, R5.45: a rider outside its release group, a wrong heading, a missing release line or name are findings."""
+    registry = two_releases(fx)
+    registry['tasks'].append(release('DS53', 'Shipped', '09 Oct', status='Live'))
+    for t in registry['tasks']:
+        if t['id'] == 'AR5':
+            t['rides'] = 'DS53'
+    out = fx.render('full-progress', registry=registry)
+    expect(fx, move_row(out, 'AR6', 'data-group="release-2"'), 'full-progress', ['R5.46'], registry=registry)
+    expect(fx, sub1(out, 'RELEASE-1 · live ~18:00 · worst ~18:10', 'RELEASE-1 · live ~18:00'), 'full-progress', ['R5.46'], registry=registry)
+    expect(fx, sub1(out, '<span class="release-line"><span class="release-name">RELEASE-3</span></span>', ''), 'full-progress', ['R5.46'], registry=registry)
+    expect(fx, sub1(out, '<span class="task-id">DS52</span><span class="release-name">RELEASE-2</span>', '<span class="task-id">DS52</span>'),
+           'full-progress', ['R5.45'], registry=registry)
+
+
+@test
+@with_fixture
 def state_column_counts(fx):
     """R5.44: Complete for a finished feature, else a chip per open status in order, then open decisions."""
     out = fx.render('full-progress')

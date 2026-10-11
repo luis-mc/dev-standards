@@ -46,7 +46,9 @@ read the message, fix the cause and rerun.
    A release (`--release`) may carry phases, repeatable `--phase NAME=HH:MM-HH:MM`
    (`agents`, `join`, `ci`, `merge`) and one named `--risk "LABEL=MINUTES"`; its
    Expected is the end of its last phase, and the risk is named, never padded in.
-   Work that rides a release says so with `--rides <release ID>`.
+   `--release` gives the task the next release number, shown as `RELEASE-<n>`.
+   Work that rides a release says so with `--rides <release ID or RELEASE-n>`;
+   every Running or Built task that is not itself a release must (the command refuses otherwise).
 3. **Add it:**
    `task-add --owner <key|project> --item "TEXT" --detail "TEXT" --expected "DD Mon" [--basis "TEXT"] [--app A] [--status S] [--prefix P]`.
    For `--owner project`, `--prefix` picks one of the project's prefixes; a new

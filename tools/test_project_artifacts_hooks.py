@@ -1447,6 +1447,13 @@ def rule_file_carries_the_release_rule():
                for ln in lines), lines
 
 
+@test
+def rule_file_carries_the_rides_rule():
+    """R5.47: every Running or Built task rides a release; --release gives the release its number."""
+    lines = [ln[2:] for ln in RULE.splitlines() if ln.startswith('- ')]
+    assert any('Running or Built' in ln and '--rides' in ln and '--release' in ln and 'RELEASE-n' in ln for ln in lines), lines
+
+
 # --- registration and invariants ------------------------------------------------------
 
 @test

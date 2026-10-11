@@ -103,14 +103,14 @@ class Env:
             p.init()
             p.ok('feature-new', '--key', 'artifacts', '--title', 'Artifacts', '--prefix', 'AR', '--apps', 'plugin')
             p.ok('feature-new', '--key', 'site', '--title', 'The site', '--prefix', 'SI', '--apps', 'web,api')
+            p.ok('task-add', '--owner', 'project', '--prefix', 'DS', '--item', 'Standards',
+                 '--detail', 'Keep them.', '--expected', '13 Oct', '--release')         # DS1, RELEASE-1
             p.ok('task-add', '--owner', 'artifacts', '--item', 'Spec', '--detail', 'Write it.',
-                 '--expected', '10 Oct ~14:15', '--status', 'Running')
+                 '--expected', '10 Oct ~14:15', '--status', 'Running', '--rides', 'RELEASE-1')
             p.ok('task-add', '--owner', 'artifacts', '--item', 'Script', '--detail', 'Build it.',
                  '--expected', '11 Oct')
             p.ok('task-add', '--owner', 'site', '--item', 'Landing', '--detail', 'Ship it.',
                  '--expected', '12 Oct; with copy')
-            p.ok('task-add', '--owner', 'project', '--prefix', 'DS', '--item', 'Standards',
-                 '--detail', 'Keep them.', '--expected', '13 Oct')
             p.ok('set-task-status', 'AR2', 'Live')
             self._template = p
         return self.project(template=self._template)
@@ -147,10 +147,21 @@ class Project:
         git(self.root, 'clone', '-q', self.bare, d)
         return d
 
-    def run(self, *args, cwd=None, env=None, push=True):
+    def run(self, *args, cwd=None, env=None, push=True, rides=True):
         """Run a command. Writing commands commit without pushing (R4.28); most cases read the remote
-        afterwards, so they get --push unless the case passes push=False or its own --push/--no-push."""
+        afterwards, so they get --push unless the case passes push=False or its own --push/--no-push.
+        A Running or Built task must ride a release (R5.47); to keep the cases about other things short, a case
+        that gives no --rides gets the baseline release DS1 (RELEASE-1), unless it passes rides=False."""
         args = list(args)
+        if rides and args and args[0] in ('task-add', 'set-task-status') and '--rides' not in args and '--release' not in args:
+            if args[0] == 'task-add':
+                status = args[args.index('--status') + 1] if '--status' in args else ''
+                target = None
+            else:
+                status = args[2] if len(args) > 2 else ''
+                target = args[1] if len(args) > 1 else None
+            if status.lower() in ('running', 'built', 'done') and target != 'DS1':
+                args += ['--rides', 'DS1']
         if push and args and args[0] in WRITING_COMMANDS and '--push' not in args and '--no-push' not in args:
             args.append('--push')
         r = subprocess.run([sys.executable, str(self.env.script)] + [str(a) for a in args],
@@ -437,7 +448,7 @@ def test_release_flags_store_the_fields(env):
              '--phase', 'merge=17:54-18:00', '--risk', '+1 fix round=10')
     rel = r.out.strip()
     t = p.task(rel)
-    assert t['release'] is True and t['risk'] == {'label': '+1 fix round', 'minutes': 10}, t
+    assert t['release'] == 2 and t['risk'] == {'label': '+1 fix round', 'minutes': 10}, t
     assert [(x['name'], x['start'], x['end']) for x in t['phases']] == [
         ('agents', '2026-10-10T17:30+01:00', '2026-10-10T17:45+01:00'),
         ('join', '2026-10-10T17:45+01:00', '2026-10-10T17:48+01:00'),
@@ -454,8 +465,8 @@ def test_release_flags_store_the_fields(env):
     assert p.task(rel)['phases'][0]['name'] == 'agents' and len(p.task(rel)['phases']) == 1
     p.ok('set-task-status', rel, 'Running', '--phase', '', '--risk', '', '--rides', '')
     t = p.task(rel)
-    assert 'phases' not in t and 'risk' not in t and t['release'] is True, t
-    p.ok('set-task-status', 'AR1', 'Running', '--rides', '')
+    assert 'phases' not in t and 'risk' not in t and t['release'] == 2, t
+    p.ok('set-task-status', 'AR1', 'Waiting', '--rides', '')
     assert 'rides' not in p.task('AR1')
     assert p.run('check').code == 0
 
@@ -510,6 +521,89 @@ def test_release_refusals(env):
         r = p.run(*argv)
         assert r.code == 1 and word in r.err, (argv, r.all)
     assert p.head() == before, 'a refused change writes nothing'
+
+
+@case
+def test_release_numbers_are_assigned_and_never_reused(env):
+    """R5.45: --release gives the next number (highest + 1), keeps an existing one, and a number is never reused."""
+    p = env.baseline()
+    assert p.task('DS1')['release'] == 1
+    r = p.ok('task-add', '--owner', 'project', '--item', 'Second', '--detail', 'd', '--expected', '14 Oct', '--release')
+    second = r.out.strip()
+    assert p.task(second)['release'] == 2
+    p.ok('set-task-status', second, 'Running', '--release')                 # an existing number is left alone
+    assert p.task(second)['release'] == 2
+    # a Live release keeps its number, and the next one is the highest plus one
+    p.ok('set-task-status', second, 'Live')
+    r = p.ok('task-add', '--owner', 'project', '--item', 'Third', '--detail', 'd', '--expected', '15 Oct', '--release')
+    assert p.task(r.out.strip())['release'] == 3
+    # --release on an existing plain task numbers it too
+    p.ok('set-task-status', 'SI1', 'To do', '--release')
+    assert p.task('SI1')['release'] == 4
+    fp = p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
+    assert '<span class="release-name">RELEASE-4</span>' in fp
+    assert p.run('check').code == 0
+
+
+@case
+def test_rides_accepts_the_release_name(env):
+    """R5.45: --rides takes RELEASE-<n> and stores the release's task ID; an unknown number is refused."""
+    p = env.baseline()
+    p.ok('set-task-status', 'SI1', 'Running', '--rides', 'RELEASE-1')
+    assert p.task('SI1')['rides'] == 'DS1', p.task('SI1')
+    before = p.head()
+    r = p.run('set-task-status', 'SI1', 'Running', '--rides', 'RELEASE-9')
+    assert r.code == 1 and 'RELEASE-9' in r.err and p.head() == before, r.all
+
+
+@case
+def test_migration_numbers_old_releases(env):
+    """R5.45: rows that say "release": true are numbered by the migration, oldest changed first, ties by ID."""
+    p = env.baseline()
+    other = p.clone_again('old-releases')
+    rp = other / 'docs' / 'artifacts' / 'registry.json'
+    reg = json.loads(rp.read_text(encoding='utf-8'))
+    for t in reg['tasks']:
+        if t['id'] == 'DS1':
+            t['release'] = True
+            t['changed'] = '2026-10-09T10:00+01:00'
+    for i, when in enumerate(['2026-10-08T10:00+01:00', '2026-10-09T10:00+01:00']):
+        reg['tasks'].append({'id': 'DS%d' % (i + 2), 'owner': 'project', 'app': '', 'status': 'Live', 'item': 'old %d' % i,
+                             'detail': 'd', 'expected': '08 Oct', 'changed': when, 'release': True})
+    rp.write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
+    git(other, 'commit', '-q', '-a', '-m', 'age the record to release: true')
+    git(other, 'push', '-q', 'origin', 'main')
+    out = p.run('check', '--json').json()
+    assert any('DS1' in n and 'release' in n for n in out['notes']), out
+    p.ok('render')
+    nums = {t['id']: t.get('release') for t in p.reg()['tasks'] if 'release' in t}
+    assert nums == {'DS2': 1, 'DS1': 2, 'DS3': 3}, nums           # oldest first; DS1 and DS3 tie, DS1 first
+    assert p.run('check').code == 0, p.run('check').all
+
+
+@case
+def test_running_and_built_must_ride_a_release(env):
+    """R5.47: Running and Built tasks (not releases) need --rides; refused otherwise; old findings do not freeze."""
+    p = env.baseline()
+    before = p.head()
+    for argv in (['task-add', '--owner', 'site', '--item', 'x', '--detail', 'd', '--expected', '14 Oct', '--status', 'Running'],
+                 ['set-task-status', 'SI1', 'Running'], ['set-task-status', 'SI1', 'Built']):
+        r = p.run(*argv, rides=False)
+        assert r.code == 1 and '--rides' in r.err, (argv, r.all)
+    assert p.head() == before
+    p.ok('set-task-status', 'SI1', 'Built', '--rides', 'DS1')
+    p.ok('task-add', '--owner', 'project', '--item', 'a release', '--detail', 'd', '--expected', '14 Oct',
+         '--status', 'Running', '--release')                          # a release itself needs no release
+    # an older record with a Running task riding nothing: check reports it, other changes still go through
+    other = p.clone_again('no-rides')
+    rp = other / 'docs' / 'artifacts' / 'registry.json'
+    reg = json.loads(rp.read_text(encoding='utf-8'))
+    next(t for t in reg['tasks'] if t['id'] == 'AR1').pop('rides')
+    rp.write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
+    git(other, 'commit', '-q', '-a', '-m', 'a task that rides nothing')
+    git(other, 'push', '-q', 'origin', 'main')
+    assert 'R5.47' in p.run('check').out
+    p.ok('set-task-status', 'AR2', 'Live', '--detail', 'still works')
 
 
 @case
@@ -1876,14 +1970,18 @@ REGISTRY_FIXTURES = [
     ('basis empty', 'R6.10', lambda r: task(r, 'AR1').update(expected_basis='  ')),
     ('basis not a string', 'R6.10', lambda r: task(r, 'AR1').update(expected_basis=5)),
     ('basis on a Live row', 'R6.10', lambda r: task(r, 'AR1').update(status='Live', expected='10 Oct', expected_basis='x')),
-    ('release false', 'R5.40', lambda r: task(r, 'AR1').update(release=False)),
+    ('release false', 'R5.45', lambda r: task(r, 'AR1').update(release=False)),
+    ('release zero', 'R5.45', lambda r: task(r, 'AR1').update(release=0)),
+    ('release repeated', 'R5.45', lambda r: task(r, 'AR1').update(release=1)),
+    ('running task rides nothing', 'R5.47', lambda r: task(r, 'AR1').pop('rides')),
+    ('built task rides nothing', 'R5.47', lambda r: task(r, 'SI1').update(status='Built', expected='10 Oct')),
     ('phases on a non-release', 'R5.40', lambda r: task(r, 'AR1').update(phases=[{'name': 'agents', 'start': '2026-10-10T17:30+01:00', 'end': '2026-10-10T17:45+01:00'}])),
-    ('bad phase name', 'R5.40', lambda r: task(r, 'AR1').update(release=True, phases=[{'name': 'deploy', 'start': '2026-10-10T17:30+01:00', 'end': '2026-10-10T17:45+01:00'}])),
-    ('phase ends before it starts', 'R5.40', lambda r: task(r, 'AR1').update(release=True, phases=[{'name': 'ci', 'start': '2026-10-10T17:45+01:00', 'end': '2026-10-10T17:30+01:00'}])),
-    ('bad risk', 'R5.40', lambda r: task(r, 'AR1').update(release=True, risk={'label': '', 'minutes': 0})),
+    ('bad phase name', 'R5.40', lambda r: task(r, 'AR1').update(release=5, phases=[{'name': 'deploy', 'start': '2026-10-10T17:30+01:00', 'end': '2026-10-10T17:45+01:00'}])),
+    ('phase ends before it starts', 'R5.40', lambda r: task(r, 'AR1').update(release=5, phases=[{'name': 'ci', 'start': '2026-10-10T17:45+01:00', 'end': '2026-10-10T17:30+01:00'}])),
+    ('bad risk', 'R5.40', lambda r: task(r, 'AR1').update(release=5, risk={'label': '', 'minutes': 0})),
     ('rides a non-release', 'R5.40', lambda r: task(r, 'SI1').update(rides='AR2')),
     ('rides an unknown task', 'R5.40', lambda r: task(r, 'SI1').update(rides='ZZ9')),
-    ('expected is not the end of the last phase', 'R5.41', lambda r: task(r, 'AR1').update(release=True, expected='10 Oct ~19:00', phases=[{'name': 'agents', 'start': '2026-10-10T17:30+01:00', 'end': '2026-10-10T17:45+01:00'}])),
+    ('expected is not the end of the last phase', 'R5.41', lambda r: task(r, 'AR1').update(release=5, expected='10 Oct ~19:00', phases=[{'name': 'agents', 'start': '2026-10-10T17:30+01:00', 'end': '2026-10-10T17:45+01:00'}])),
     ('expected relative word', 'R6.6', lambda r: task(r, 'AR1').update(expected='today')),
     ('expected soon', 'R6.6', lambda r: task(r, 'SI1').update(expected='soon; very')),
     ('one-digit day', 'R6.6', lambda r: task(r, 'SI1').update(expected='2 Oct')),
