@@ -1110,11 +1110,11 @@
       "id": "TC3",
       "owner": "test-cost",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Retire the fake-renderer group",
-      "detail": "Fake-renderer group removed; its one unique case now uses the real renderer",
+      "detail": "Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0",
       "expected": "11 Oct",
-      "changed": "2026-10-11T12:01+01:00"
+      "changed": "2026-10-11T14:40+01:00"
     },
     {
       "id": "TC4",
