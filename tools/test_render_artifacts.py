@@ -2306,6 +2306,44 @@ def check_finds_a_wrong_timeline(fx):
 
 
 @test
+@with_fixture
+def timeline_crosses_midnight(fx):
+    """R5.42a: a release due just after midnight keeps its bars and diamond on an axis that crosses midnight."""
+    def ph(name, a, b):
+        return {'name': name, 'start': a, 'end': b}
+    row = release('DS51', 'Midnight release', '12 Oct ~00:05',
+                  [ph('agents', '2026-10-11T23:40+01:00', '2026-10-11T23:51+01:00'), ph('join', '2026-10-11T23:51+01:00', '2026-10-11T23:56+01:00'),
+                   ph('ci', '2026-10-11T23:56+01:00', '2026-10-12T00:00+01:00'), ph('merge', '2026-10-12T00:00+01:00', '2026-10-12T00:05+01:00')],
+                  {'label': '+1 fix round', 'minutes': 10})
+    stamp = '2026-10-11T23:57+01:00'
+    out = R.release_timeline([row], R._parse_iso(stamp), 'Lisbon')
+    fig = R.parse_dom(out)
+    assert len(R.find_all(fig, 'rect', 'rt-bar')) == 4 and R.find(fig, 'polygon', 'rt-expected') is not None
+    assert R.find(fig, 'polygon', 'rt-day') is None
+    ticks = [R.text_of(t) for t in R.find_all(R.find(fig, 'g', 'rt-axis'), 'text')]
+    assert ticks[:3] == ['23:30', '12 Oct 00:00', '12 Oct 00:30'], ticks
+    assert R.text_of(R.find(fig, 'text', 'rt-now-label')) == 'now 23:57'
+    assert R.text_of(R.find(fig, 'text', 'rt-live-label')) == 'live ~00:05'
+    # the whole artifact checks clean, and a release more than 24 hours away still takes a day slot
+    registry = with_releases(fx, row, release('DS52', 'Far release', '14 Oct ~09:00'))
+    kw = dict(registry=registry, stamp_text='11 Oct 23:57', stamp_iso=stamp)
+    html = fx.render('full-progress', **kw)
+    assert len(R.find_all(timeline_of(html), 'polygon', 'rt-day')) == 1
+    assert fx.check(html, 'full-progress', **kw) == []
+
+
+@test
+@with_fixture
+def check_finds_a_timed_release_in_a_day_slot(fx):
+    """R5.42a: a timed release within 24 hours drawn as a day slot is reported."""
+    registry = with_releases(fx, release('DS51', 'Soon release', '10 Oct ~16:00'))
+    out = fx.render('full-progress', registry=registry)
+    assert 'R5.42a' not in reqs(fx.check(out, 'full-progress', registry=registry))
+    bad = sub1(out, 'class="rt-expected"', 'class="rt-day"')
+    assert 'R5.42a' in reqs(fx.check(bad, 'full-progress', registry=registry))
+
+
+@test
 def timeline_css_uses_tokens():
     """R5.43: the timeline styles use design tokens and no literal colour; the bars use the four phase tokens."""
     import re
