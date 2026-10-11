@@ -43,12 +43,23 @@
         "delivery scripts",
         "luismc-artifacts"
       ]
+    },
+    {
+      "key": "delivery-speed",
+      "title": "Feature: Delivery speed",
+      "file": "feature-delivery-speed.html",
+      "prefix": "DL",
+      "apps": [
+        "delivery scripts",
+        "STACKSPEC",
+        "tech-stack-setup"
+      ]
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-10-11T11:50+01:00",
+  "updated": "2026-10-11T11:52+01:00",
   "retired": [],
   "deleted": [
     {
