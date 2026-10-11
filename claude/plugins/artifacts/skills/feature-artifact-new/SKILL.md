@@ -95,8 +95,9 @@ the repository instead (the session's scratchpad directory, in a new folder).
 7. **Do not publish the feature artifact**, and do not publish Full Progress
    yet: it is published once, at the end of the turn, per "Publishing" below.
 8. **Check:** run `check`. Report any finding with its requirement ID. The
-   script commits and pushes the record on every writing command; if `pending`
-   or a push fails, say so and stop.
+   script commits the record on every writing command and pushes it once, at the
+   end of the turn (the end-of-turn hook, `pending`, and before `gh pr create`,
+   `gh pr ready` and `gh pr merge`); if `pending` or a push fails, say so and stop.
 9. **Tell the owner** where the file is (`docs/artifacts/<file>` in the
    repository; open it by double-click), its task IDs, and that branch names
    for these tasks must start with the task ID (`<ID>-short-name`).

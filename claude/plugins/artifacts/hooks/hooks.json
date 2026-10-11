@@ -1,6 +1,18 @@
 {
-  "description": "luismc-artifacts: queue status events after commands, note background work, keep Full Progress published (once, at the end of a turn) and background work recorded, deliver the rule and catch up at session start (ARTIFACTSPEC section 8)",
+  "description": "luismc-artifacts: push the record before gh pr create, ready and merge, queue status events after commands, note background work, keep Full Progress published (once, at the end of a turn) and background work recorded, deliver the rule and catch up at session start (ARTIFACTSPEC section 8)",
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_before_command.py\" || python \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_before_command.py\"",
+            "timeout": 70
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Bash|Agent|Task",

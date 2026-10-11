@@ -381,8 +381,8 @@ comment holding the section title: `<!-- title: The design -->`.
 - **R4.13** — The script writes the record in a record worktree at the location
   of R4.24 (by default `<repo>/.claude/worktrees/artifacts-record`), a detached worktree of
   `origin/<default_branch>`, created on first use. Before each change it
-  fetches and resets that worktree to `origin/<default_branch>`; after it, it
-  commits and pushes to `<default_branch>`. The session's own working tree is
+  fetches and syncs that worktree to `origin/<default_branch>` (R4.29); after it, it
+  commits. It pushes to `<default_branch>` only as R4.28 says. The session's own working tree is
   never touched — a session on a task branch would otherwise carry record
   changes into its pull request.
 - **R4.14** — A record commit changes only paths under `docs/artifacts/`; the
@@ -392,10 +392,10 @@ comment holding the section title: `<!-- title: The design -->`.
   fetch and re-apply, at most 3 times; then the command fails with exit 3.
 - **R4.16** — A push rejected by branch protection fails with exit 4 and the
   message `record push refused by <default_branch> protection`; the change
-  stays committed in the record worktree for `commit --retry`.
+  stays committed in the record worktree for the next `push` (or `commit --retry`).
 - **R4.17** — With `--no-push` (tests and the real-repo test), the script
-  commits in the record worktree and does not push.
-
+  commits in the record worktree and does not push. This is now what
+  a writing command does without a flag (R4.28); `--no-push` stays accepted.
 ### 4.7 Older records
 
 - **R4.18** — A manifest whose feature entry still holds `url` or
@@ -474,6 +474,34 @@ comment holding the section title: `<!-- title: The design -->`.
   record commits not pushed, the command exits 1 and removes nothing. Verified
   by `test_moving_the_worktree_removes_the_old_one` and
   `test_moving_refuses_unpushed_commits`.
+
+### 4.9 Pushing the record
+
+- **R4.28** — A writing command commits in the record worktree and does not
+  push, unless it is given `--push`, which pushes at once with the retries of
+  R4.15 and the refusal of R4.16. The record is pushed, once for all the
+  commits of the turn, at these points: the end-of-turn hook (R8.17); `pending`
+  before it lists (R7.6); the before-command hook ahead of `gh pr create`,
+  `gh pr ready` and `gh pr merge` (R8.16); and the `push` command (§7). A push
+  pushes every record commit not yet on `origin/<default_branch>`. A push that
+  fails at a hook point leaves the commits in the record worktree and says so;
+  it never loses them and never blocks the session forever.
+- **R4.29** — Syncing the record worktree before a change never discards a
+  record commit that is not on `origin/<default_branch>`: after the fetch it
+  rebases those commits onto the fetched head (and resets only when there are
+  none), so a race in which the default branch moved while commits were
+  unpushed ends with the commits on top of the new head. Two writers always
+  disagree on the `updated` stamps and the rendered pages, so the rebase
+  resolves those itself: `manifest.json` and `registry.json` are merged as JSON
+  (objects key by key, tasks by `id`, features by `key`, the later `updated`),
+  a rendered page at the top of `docs/artifacts/` takes origin's copy, and
+  every page the merge leaves different from a fresh render is drawn again in
+  one more commit, `docs/artifacts: render after rebase`. Anything else, or two
+  different edits of one value (the same task's status set two ways), is not
+  resolved: the command aborts the rebase, exits 2, names the conflicting
+  files, and the commits stay in the record worktree. Verified by
+  `test_unpushed_commits_survive_a_moved_main`, `test_push_after_main_moved_rebases`
+  and `test_conflicting_unpushed_commit_is_kept`.
 
 ---
 
@@ -779,7 +807,8 @@ All commands run as `python <plugin>/scripts/project_artifacts.py <command>`
 from anywhere inside the project's repository, read `docs/artifacts/` from the
 record worktree (§4.6), and exit 0 on success, 1 on findings or a refused
 action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
-`--json` prints a machine-readable result.
+`--json` prints a machine-readable result. Every writing command accepts
+`--no-push` (the default, R4.28) and `--push` (push at once).
 
 | Command | Does |
 |---|---|
@@ -792,12 +821,13 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
 | `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design`, renders and commits; `default` removes it. |
 | `render [--all]` | Renders every artifact whose output would change (committed renders, with relative links). It is the migration of an older record (R8.14). |
 | `check [--record PATH]` | The conformance checks of §14; lists findings with their requirement ID, then notes (including retired pages, R4.22) and any warnings (R5.26), which do not change the exit code. |
-| `pending` | Lists the full-progress artifact when the hash of its committed render differs from `published_sha256` (a feature artifact is never listed, R9.5), and queued events. When it lists Full Progress it writes the publish copy (R5.31). Exit 1 when anything is listed. `--json` prints `{"artifacts": [{"key", "kind", "title", "file", "path", "url", "reason"}], "queue": [events]}`; `path` is the absolute path of the publish copy to publish. It also lists the retired pages (R4.22): `--json` adds `"retired": [{"key", "title", "url", "retired"}]`, and they never change the exit code. |
+| `pending` | Pushes the record first (R7.6), then lists the full-progress artifact when the hash of its committed render differs from `published_sha256` (a feature artifact is never listed, R9.5), and queued events. When it lists Full Progress it writes the publish copy (R5.31). Exit 1 when anything is listed. `--json` prints `{"artifacts": [{"key", "kind", "title", "file", "path", "url", "reason"}], "queue": [events]}`; `path` is the absolute path of the publish copy to publish. It also lists the retired pages (R4.22): `--json` adds `"retired": [{"key", "title", "url", "retired"}]`, and they never change the exit code. |
 | `mark-published KEY --url URL` | Records the URL and the hash of the committed render (R5.32). Refuses a feature artifact (R9.5). |
 | `mark-deleted [KEY] --url URL [--gone]` | Records that the owner confirmed and the session deleted a retired page (or that it no longer exists): moves it to `deleted` (R4.21). |
 | `worktree` | Prints the record worktree's path as R4.24 resolves it. |
 | `queue list\|clear [--id ID]` | Shows or removes queued events. |
-| `commit [--retry] [--message M]` | Commits and pushes the record (also done by every writing command). |
+| `push` | Pushes the record commits not yet on `origin/<default_branch>`, with the retries of R4.15; prints nothing to push when there are none. Exit 3 when the race is lost, 4 when protection refuses (R4.16). |
+| `commit [--retry] [--message M]` | Commits uncommitted edits in the record worktree and pushes only with `--push`; `--retry` pushes the commits a refused push kept (the same as `push`). Every writing command commits too (R4.28). |
 
 - **R7.1** — Every writing command validates the record before and after the
   change and writes nothing when the change adds a finding: one the record
@@ -828,13 +858,19 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
   the stylesheet brings every page up to date at the next change, not only the
   pages that change names (INV-3). An artifact whose content is invalid is
   skipped as in R7.1a. A page that is already up to date keeps its stamp.
+- **R7.6** — `pending` pushes the unpushed record commits (as `push`, R4.28)
+  before it reads the record, so Full Progress is published from a pushed
+  record. A failed push never stops the listing: `pending` prints the failure on
+  stderr, adds `"push_error"` to its `--json` output, and lists as before.
+  Verified by `test_pending_pushes_first`.
 
 ---
 
 ## 8. Hooks
 
-All three hooks are registered in the plugin's `hooks/hooks.json` (the
-after-command hook for `Bash`, `Agent` and `Task`), run
+All four hooks are registered in the plugin's `hooks/hooks.json` (the
+after-command hook for `Bash`, `Agent` and `Task`; the before-command hook for
+`Bash` and `PowerShell`), run
 `python <plugin>/scripts/hook_*.py`, and exit 0 doing nothing when the
 project has no `docs/artifacts/manifest.json` in the current checkout or on
 `origin/<default branch>`.
@@ -965,6 +1001,21 @@ Reads the hook input; takes the task ID from the current branch name
   an older copy; this rule replaces it.` Verified by
   `start_context_names_an_older_rule_copy`.
 
+### 8.6 Pushing the record
+
+- **R8.16** — Before a command that runs `gh pr create`, `gh pr ready` or
+  `gh pr merge` (in any segment of the command line), the hook runs `push`
+  (R4.28), so the pull request, the readiness and the merge see the record the
+  work recorded; the after-command hook runs too late for that. It never
+  blocks the command: when the push fails or cannot run, the hook prints a
+  `systemMessage` saying the commits stay local and exits 0. Any other command
+  passes through at once. Verified by `test_before_command_pushes_the_record`.
+- **R8.17** — Before it decides, the hook runs `push` (R4.28), so the record
+  commits of the turn are pushed once, at its end. A failed push never blocks
+  the stop and is not counted in R8.4: the hook adds a `systemMessage` saying
+  the record push failed and the commits stay local, and the next push point
+  tries again. Verified by `test_end_of_turn_pushes_the_record`.
+
 ---
 
 ## 9. Publishing and recreation
@@ -1074,11 +1125,11 @@ Reads the hook input; takes the task ID from the current branch name
 
 - **R13.1** — `tools/test_project_artifacts.py` builds throwaway git repos with
   a bare remote and proves each command, each check of §14 (one fixture per
-  check that fails without it), INV-1 to INV-3, R4.13 to R4.27, R6.10, R6.11, R5.31, R5.32,
-  R7.4, R7.5, R9.5 and R10.6.
+  check that fails without it), INV-1 to INV-3, R4.13 to R4.29, R6.10, R6.11, R5.31, R5.32,
+  R7.4 to R7.6, R9.5 and R10.6.
 - **R13.2** — `tools/test_project_artifacts_hooks.py` feeds sample hook input
   to each hook and asserts the queue, the exit code and the output, including
-  R8.4, R8.8 to R8.15 and INV-4, and that every hook does nothing without a
+  R8.4, R8.8 to R8.17 and INV-4, and that every hook does nothing without a
   manifest.
 - **R13.3** — Before release, the plugin is run on a scratch clone of the
   plugin's own repository: its existing record is converted to this format,
