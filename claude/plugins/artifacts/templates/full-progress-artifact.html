@@ -49,6 +49,30 @@
         row.scrollLeft = current.offsetLeft - row.clientWidth / 2 + current.offsetWidth / 2;
       }
     }
+    // The publish copy's feature links (R5.31): copy the file:/// address; if the clipboard refuses, show it
+    Array.prototype.forEach.call(document.querySelectorAll('button.copy-link'), function (button) {
+      button.addEventListener('click', function () {
+        var shown = button.nextElementSibling;
+        function reveal() {
+          if (!shown) return;
+          shown.hidden = false;
+          var range = document.createRange();
+          range.selectNodeContents(shown);
+          var selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+        function done() {
+          button.textContent = 'Copied: paste in the address bar';
+          setTimeout(function () { button.textContent = 'Copy link'; }, 2500);
+        }
+        try {
+          navigator.clipboard.writeText(button.getAttribute('data-copy')).then(done, reveal);
+        } catch (error) {
+          reveal();
+        }
+      });
+    });
     window.addEventListener('scroll', markCurrent, { passive: true });
     window.addEventListener('resize', markCurrent);
     markCurrent();

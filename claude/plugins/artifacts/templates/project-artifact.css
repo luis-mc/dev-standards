@@ -271,7 +271,23 @@ a .task-id { color: inherit; }
   overflow-wrap: anywhere;
 }
 
-/* The path of a linked feature file, beside its link in the publish copy, to copy by hand */
+/* The publish copy's button that copies a feature file's file:/// address (R5.31) */
+.copy-link {
+  margin-left: .5rem;
+  padding: .1rem .5rem;
+  font: inherit;
+  font-size: .72rem;
+  line-height: 1.4;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.copy-link:hover, .copy-link:focus-visible { color: var(--signal); border-color: var(--signal); }
+
+/* The address itself, shown only when the clipboard refuses, to copy by hand */
 .local-path {
   display: block;
   font-family: var(--font-mono);

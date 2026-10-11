@@ -152,10 +152,8 @@ def render_artifact(manifest, registry, contents, key, plugin_dir, record_dir, s
     out.append('<table><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected</th></tr>')
     for t in tasks:
         item = esc(t['item'])
-        if fp and t['owner'] in hrefs:
+        if fp and t['owner'] in hrefs and not shown[t['owner']]:        # the publish copy's rows stay text
             item = '<a href="%s">%s</a>' % (esc(hrefs[t['owner']]), item)
-            if shown[t['owner']]:
-                item += ' <span class="local-path">%s</span>' % esc(shown[t['owner']])
         out.append('<tr><td>%s</td><td>%s %s</td><td>%s</td><td>%s</td></tr>' % (
             esc(t['status']), esc(t['id']), item, esc(t['detail']), esc(t['expected'])))
     out.append('</table>')
@@ -163,8 +161,14 @@ def render_artifact(manifest, registry, contents, key, plugin_dir, record_dir, s
     if fp:
         out.append('<h2>1. Features</h2>')
         for e in manifest['feature_artifacts']:
-            out.append('<p>%s %s %s</p>' % (esc(e['title']), esc(hrefs[e['key']]),
-                                          esc(contents[e['key']]['meta'].get('lede', '').split('.')[0])))
+            name = esc(e['title'])
+            if shown[e['key']]:       # the publish copy: the name as text and a button that copies the address
+                name += (' <button type="button" class="copy-link" data-copy="%s" title="%s">Copy link</button>'
+                         '<code class="local-path" hidden>%s</code>'
+                         % (esc(hrefs[e['key']]), esc(shown[e['key']]), esc(hrefs[e['key']])))
+            else:
+                name += ' ' + esc(hrefs[e['key']])
+            out.append('<p>%s %s</p>' % (name, esc(contents[e['key']]['meta'].get('lede', '').split('.')[0])))
         n = 2
     for s in c['sections']:
         out.append('<h2>%d. %s</h2>\n%s' % (n, esc(s['title']), s['html']))
@@ -912,7 +916,7 @@ def test_mark_published_refuses_a_feature_artifact(env):
 
 @case
 def test_publish_copy_links_and_committed_links(env):
-    """R5.30, R5.31: relative in the committed file, absolute file:/// in the copy, path text beside each link."""
+    """R5.30, R5.31: relative links in the committed file, a Copy link button with the absolute file:/// address in the copy."""
     need_real(env)
     p = env.baseline()
     a = p.run('pending', '--json').json()['artifacts'][0]
@@ -920,23 +924,20 @@ def test_publish_copy_links_and_committed_links(env):
     committed = p.show('docs/artifacts/' + a['file'])
     # committed: relative file names only
     assert 'href="feature-artifacts.html"' in committed and 'href="feature-the-site.html"' in committed
-    assert 'file:' not in committed and 'class="local-path"' not in committed
-    # the copy: absolute file:/// URLs to the feature files, in section 1 and on every feature task
-    hrefs = sorted(set(re.findall(r'href="(file:///[^"]+)"', copy)))
-    assert [h.rsplit('/', 1)[1] for h in hrefs] == ['feature-artifacts.html', 'feature-the-site.html'], hrefs
+    assert 'href="file:' not in committed and 'class="local-path"' not in committed and 'copy-link"' not in committed and 'data-copy="' not in committed
+    # the copy: one button per feature in section 1 holds the absolute file:/// address; no anchor, rows carry no link
+    hrefs = re.findall(r'class="copy-link" data-copy="(file:///[^"]+)"', copy)
+    assert sorted(h.rsplit('/', 1)[1] for h in hrefs) == ['feature-artifacts.html', 'feature-the-site.html'], hrefs
+    assert copy.count('class="copy-link"') == 2 and 'href="file:' not in copy and 'href="feature-' not in copy
     for h in hrefs:
         target = Path(url_path(h))
         assert target.is_absolute() and target.is_file() and target.parent.name == 'artifacts'
         assert os.path.samefile(str(target), str(p.clone / 'docs' / 'artifacts' / target.name)), (h, target)   # the session's checkout
-        assert '<span class="local-path">%s</span>' % target.as_posix().replace('&', '&amp;') in copy or \
-            re.search(r'<span class="local-path">[^<]*%s</span>' % re.escape(target.name), copy), target
-    assert copy.count('class="local-path"') == 2 + 3, copy.count('class="local-path"')   # section 1 (2) + AR1, AR2, SI1
-    assert 'href="feature-' not in copy
-    # the same page: undo the links and it is the committed render
-    back = re.sub(r' <span class="local-path">[^<]*</span>', '', copy)
-    for h in hrefs:
-        back = back.replace('href="%s"' % h, 'href="%s"' % h.rsplit('/', 1)[1])
-    assert back == committed
+        assert '<code class="local-path" hidden>%s</code>' % h in copy
+    # the checklist rows (AR1, AR2, SI1) carry no link and no button
+    table = copy[copy.index('<table class="status-checklist"'):]
+    table = table[:table.index('</table>')]
+    assert '<a ' not in table and 'copy-link' not in table and 'file:///' not in table
     # the copy is outside the record and ignored once .gitignore says so (R10.2)
     assert 'does not ignore' in p.run('pending').err
     (p.clone / '.gitignore').write_text('.claude/artifacts-publish/\n', encoding='utf-8')
@@ -952,12 +953,13 @@ def test_publish_copy_path_encoding_with_spaces(env):
     q = Project(env, 'a b&c %d' % env.n, env._template)
     a = q.run('pending', '--json').json()['artifacts'][0]
     copy = Path(a['path']).read_text(encoding='utf-8')
-    hrefs = sorted(set(re.findall(r'href="(file:///[^"]+)"', copy)))
+    hrefs = sorted(set(re.findall(r'data-copy="(file:///[^"]+)"', copy)))
+    assert 'href="file:' not in copy
     assert len(hrefs) == 2 and all('%20' in h and ' ' not in h and '%26' in h and '&' not in h for h in hrefs), hrefs
     for h in hrefs:
         assert os.path.samefile(url_path(h), str(q.clone / 'docs' / 'artifacts' / h.rsplit('/', 1)[1])), h
         assert '\\' not in h                                              # forward slashes only
-    assert re.search(r'<span class="local-path">[^<]*a b&amp;c[^<]*feature-artifacts\.html</span>', copy), 'path text keeps the space'
+    assert re.search(r'title="[^"]*a b&amp;c[^"]*feature-artifacts\.html"', copy), 'path text keeps the space'
     assert q.run('check').code == 0
 
 
@@ -971,7 +973,7 @@ def test_publish_copy_falls_back_to_the_record_worktree(env):
     assert not (p.clone / 'docs').exists()                                  # the session is on a checkout without the record
     a = p.run('pending', '--json').json()['artifacts'][0]
     copy = Path(a['path']).read_text(encoding='utf-8')
-    (href,) = sorted(set(re.findall(r'href="(file:///[^"]+)"', copy)))
+    (href,) = sorted(set(re.findall(r'data-copy="(file:///[^"]+)"', copy)))
     target = Path(url_path(href))
     assert target.is_file() and os.path.samefile(str(target), str(p.rdir / 'feature-a.html')), (href, target)
 
