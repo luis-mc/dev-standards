@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T11:59+01:00",
+  "updated": "2026-10-11T12:01+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1110,12 +1110,11 @@
       "id": "TC5",
       "owner": "test-cost",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Push the record once per turn",
-      "detail": "Agent on TC5-record-push-once, part of the TC6 train",
-      "expected": "11 Oct ~13:30",
-      "changed": "2026-10-11T11:31+01:00",
-      "expected_basis": "agent work ~1h30 in parallel, then join"
+      "detail": "On TC5-record-push-once: commit always, push at turn end, in pending and before gh pr create/ready/merge; 106 + 88 tests pass",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T12:01+01:00"
     },
     {
       "id": "TC6",
