@@ -23,6 +23,17 @@ the main working tree or the one this script runs in. A locked worktree (Claude
 Code leaves its agent worktrees locked) is removed only after those checks.
 Detached worktrees and the default branch are never touched.
 
+SCAFFOLDING BRANCHES: a local branch with no pull request (or one gh cannot
+classify, or no gh at all) that has no commit outside <remote>/<default> and whose
+name is not on the remote is finished too (agent tools leave such branches,
+e.g. worktree-agent-<id>). One commit outside keeps it ("commits not on <default>");
+a worktree holding it must be clean. Local only; the same checks as above apply.
+
+STALE PUSH-CHECK FOLDERS (default and --local): .delivery/push-check/<sha12>-<pid>
+left by a pre-push check that was killed is removed when process <pid> is not
+running: the dependency links first (never their targets), then the worktree.
+Rows: `push-check <name>  deleted` / `kept: <reason>` / `would delete`.
+
 --pr N considers only the train of that merged pull request (its head branch and
 every branch whose pull request had that head as base); N must be merged into the
 default branch, or the script exits 2. Without it, every branch on the remote
@@ -51,6 +62,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True  # keep scripts/delivery/ free of __pycache__ (a clean tree is required)
 
 import delivery_common as dc
+import fast_guards as fg  # the push-check folder naming and link removal
 
 PR_FIELDS = "number,state,baseRefName,headRefOid,mergedAt"
 MAX_PRS = "200"
@@ -223,6 +235,109 @@ def assess_local(ctx: Ctx, branch: str) -> Verdict:
     if upstream_gone(ctx, branch):
         return Verdict(False, NEEDS_GH, cannot_classify=True, needs_gh=True)
     return Verdict(False, why + " and its upstream is not gone", cannot_classify=True)
+
+
+def scaffolding_verdict(ctx: Ctx, branch: str, v: Verdict, local_branches: list[str]) -> tuple[Verdict | None, str | None]:
+    """A branch gh has no pull request for (or cannot classify) and that holds nothing
+    the default branch on the remote lacks is scaffolding: finished. Returns
+    (verdict, None) when it is, (None, reason) when it is a candidate with commits
+    of its own, (None, None) when the rule does not apply."""
+    if branch in ctx.protected or branch not in local_branches or v.finished:
+        return None, None
+    if not (v.cannot_classify or v.reason == "no pull request"):
+        return None, None
+    if ctx.remote_heads is None or branch in ctx.remote_heads or branch in ctx.result_refs:
+        return None, None  # on the remote (or the remote cannot be read): an ordinary branch
+    base = "%s/%s" % (ctx.remote, ctx.default)
+    if dc.rev("refs/remotes/" + base, ctx.root) is None:
+        return None, None
+    p = ctx.git(["rev-list", "--count", "refs/remotes/%s..refs/heads/%s" % (base, branch)])
+    if p.returncode != 0 or not p.stdout.strip().isdigit():
+        return None, None
+    if int(p.stdout.strip()) > 0:
+        return None, "commits not on %s" % ctx.default
+    return Verdict(True, "scaffolding branch: no commits outside %s" % base), None
+
+
+# --------------------------------------------------------------------------
+# stale push-check folders
+# --------------------------------------------------------------------------
+
+def pid_alive(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        import ctypes
+        k32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+        h = k32.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+        if not h:
+            return k32.GetLastError() == 5  # access denied: it exists
+        try:
+            code = ctypes.c_ulong()
+            return bool(k32.GetExitCodeProcess(h, ctypes.byref(code))) and code.value == 259  # STILL_ACTIVE
+        finally:
+            k32.CloseHandle(h)
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except OSError:
+        return True  # PermissionError: it exists
+    return True
+
+
+def links_in(path: Path) -> list[Path]:
+    """Every symlink or junction inside `path`, found without following any."""
+    found: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(path):
+        keep = []
+        for name in dirnames:
+            full = Path(dirpath) / name
+            if fg.is_link(full):
+                found.append(full)
+            else:
+                keep.append(name)
+        dirnames[:] = keep
+        found += [Path(dirpath) / n for n in filenames if os.path.islink(Path(dirpath) / n)]
+    return found
+
+
+def sweep_push_check(ctx: Ctx) -> list[Row]:
+    base = ctx.root / fg.PUSH_CHECK_DIR
+    if not base.is_dir():
+        return []
+    rows: list[Row] = []
+    for entry in sorted(base.iterdir(), key=lambda e: e.name):
+        row = Row("push-check " + entry.name)
+        rows.append(row)
+        _, _, suffix = entry.name.rpartition("-")
+        if not suffix.isdigit():
+            row.status, row.detail = "kept", "name is not <sha12>-<pid>"
+            continue
+        if pid_alive(int(suffix)):
+            row.status, row.detail = "kept", "process %s is running" % suffix
+            continue
+        if ctx.dry:
+            row.status = "would delete"
+            continue
+        # the links come off first, and nothing is removed unless none is left
+        links = [entry] if fg.is_link(entry) else links_in(entry)
+        stuck = [lk for lk in links if not fg.remove_link(lk)]
+        if stuck or (not fg.is_link(entry) and entry.is_dir() and links_in(entry)):
+            row.status, row.detail = "kept", "could not remove the link %s" % dc.posix(stuck[0] if stuck else entry)
+            continue
+        if entry.is_dir():
+            fg.remove_worktree(ctx.root, entry, [])  # git worktree remove --force, else the folder itself
+            ctx.git(["worktree", "prune"])
+        if os.path.lexists(entry):
+            row.status, row.detail = "failed", "could not remove %s" % dc.posix(entry)
+        else:
+            row.status = "deleted"
+    try:
+        base.rmdir()
+    except OSError:
+        pass
+    return rows
 
 
 # --------------------------------------------------------------------------
@@ -411,6 +526,12 @@ def main(argv: list[str] | None = None) -> int:
         remote_here = do_remote and (branch in heads or branch in ctx.result_refs)
         # a branch only a local-mode run can see may be classified without gh
         v = assess_local(ctx, branch) if (args.local or (local_here and not remote_here)) else assess(ctx, branch)
+        if do_local and args.pr is None:
+            sv, commits_why = scaffolding_verdict(ctx, branch, v, local_branches)
+            if sv is not None:
+                v = sv
+            elif commits_why and not v.needs_gh:
+                v = Verdict(False, "%s (%s)" % (commits_why, v.reason), cannot_classify=v.cannot_classify)
         if v.needs_gh:
             row.status, row.detail = "would delete", NEEDS_GH  # listed, never done
             continue
@@ -444,6 +565,8 @@ def main(argv: list[str] | None = None) -> int:
         except RuntimeError as exc:
             row.status, row.detail = "failed", str(exc)
 
+    if do_local:
+        rows += sweep_push_check(ctx)
     if do_local and not ctx.dry:
         ctx.git(["worktree", "prune"])
 
