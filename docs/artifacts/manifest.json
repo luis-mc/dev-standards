@@ -38,18 +38,17 @@
     "DS"
   ],
   "updated": "2026-10-11T03:03+01:00",
-  "retired": [
-    {
-      "key": "models",
-      "title": "Feature: Model and effort profiles",
-      "url": "https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn",
-      "retired": "2026-10-11T03:02+01:00"
-    }
-  ],
+  "retired": [],
   "deleted": [
     {
       "key": "artifacts",
       "url": "https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq",
+      "deleted": "2026-10-11T03:03+01:00",
+      "gone": true
+    },
+    {
+      "key": "models",
+      "url": "https://claude.ai/artifact/9MMjfeWhPCwH19NV39oBBn",
       "deleted": "2026-10-11T03:03+01:00",
       "gone": true
     }
