@@ -176,9 +176,10 @@ def show(root: Path, ref: str, path: str) -> list[str] | None:
     return p.stdout.splitlines() if p.returncode == 0 else None
 
 
-def changed_lines(root: Path, base: str, path: str) -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
-    """(removed, added) lines of one file between base and HEAD: (line number, text)."""
-    diff = dc.run_git(["diff", "-U0", "--no-renames", "--no-color", base, "HEAD", "--", path], cwd=root).stdout
+def changed_lines(root: Path, base: str, path: str, new: str = "HEAD") -> tuple[list[tuple[int, str]], list[tuple[int, str]]]:
+    """(removed, added) lines of one file between base and `new` (a ref, or "" for the index): (line number, text)."""
+    ends = [base, new] if new else ["--cached", base]
+    diff = dc.run_git(["diff", "-U0", "--no-renames", "--no-color", *ends, "--", path], cwd=root).stdout
     removed: list[tuple[int, str]] = []
     added: list[tuple[int, str]] = []
     old = new = 0
@@ -196,12 +197,12 @@ def changed_lines(root: Path, base: str, path: str) -> tuple[list[tuple[int, str
     return removed, added
 
 
-def spec_offences(root: Path, base: str, path: str, heading: str) -> list[str]:
+def spec_offences(root: Path, base: str, path: str, heading: str, new: str = "HEAD") -> list[str]:
     old_lines = show(root, base, path)
-    new_lines = show(root, "HEAD", path)
+    new_lines = show(root, new, path)
     if old_lines is None or new_lines is None:  # a spec added or deleted has no version to protect
         return []
-    removed, added = changed_lines(root, base, path)
+    removed, added = changed_lines(root, base, path, new)
     old_rng = changelog_range(old_lines, heading) if heading else None
     new_rng = changelog_range(new_lines, heading) if heading else None
     found: dict[int, str] = {}
@@ -214,11 +215,11 @@ def spec_offences(root: Path, base: str, path: str, heading: str) -> list[str]:
     return [found[k] for k in sorted(found)]
 
 
-def plugin_offences(root: Path, base: str, path: str) -> list[str]:
+def plugin_offences(root: Path, base: str, path: str, new: str = "HEAD") -> list[str]:
     """A plugin manifest's "version" line changed (a file added or deleted has none to protect)."""
-    if show(root, base, path) is None or show(root, "HEAD", path) is None:
+    if show(root, base, path) is None or show(root, new, path) is None:
         return []
-    removed, added = changed_lines(root, base, path)
+    removed, added = changed_lines(root, base, path, new)
     found = {no: "%s:%d: the plugin \"version\" line is changed" % (path, no)
              for no, text in removed + added if PLUGIN_VERSION_RE.match(text)}
     return [found[k] for k in sorted(found)]
@@ -285,13 +286,31 @@ def read_notes(root: Path) -> tuple[list[Note], list[str]]:
 # check
 # --------------------------------------------------------------------------
 
+def path_offences(root: Path, cfg: dict, base: str, new: str, path: str) -> list[str]:
+    """What one changed path breaks: a CHANGELOG file, a spec's version or change log, a plugin's version.
+    `new` is the ref the change ends at, or "" for the index (the staged changes)."""
+    if re.match(r"(?i)^changelog", path.rsplit("/", 1)[-1]):
+        return ["%s: a changelog file is changed" % path]
+    if is_spec(path, cfg):
+        return spec_offences(root, base, path, heading_for(cfg, path), new)
+    if is_plugin(path, cfg):
+        return plugin_offences(root, base, path, new)
+    return []
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     root = dc.repo_root()
     cfg = load_config(root, args.config)
     problems = read_notes(root)[1]
     names = branch_names(root, args.branch)
     release = is_release_branch(names, cfg)
-    if not release:
+    if not release and args.staged:
+        # The index against HEAD: what the commit about to be made changes. No base ref, no fetch.
+        if dc.rev("HEAD", root) is not None:  # a repository with no commit yet has nothing to protect
+            out = dc.run_git(["diff", "--cached", "--name-only", "--no-renames", "-z"], cwd=root).stdout
+            for path in sorted(f for f in out.split(chr(0)) if f):
+                problems += path_offences(root, cfg, "HEAD", "", path)
+    elif not release:
         base_ref = args.base_ref or "origin/" + cfg["default_branch"]
         if dc.rev(base_ref, root) is None:
             raise dc.DeliveryError("base ref '%s' not found. Run 'git fetch' or pass --base-ref." % base_ref)
@@ -300,12 +319,7 @@ def cmd_check(args: argparse.Namespace) -> int:
             raise dc.DeliveryError("HEAD and '%s' have no common ancestor" % base_ref)
         base = mb.stdout.strip()
         for path in dc.changed_files(base, root):
-            if re.match(r"(?i)^changelog", path.rsplit("/", 1)[-1]):
-                problems.append("%s: a changelog file is changed" % path)
-            elif is_spec(path, cfg):
-                problems += spec_offences(root, base, path, heading_for(cfg, path))
-            elif is_plugin(path, cfg):
-                problems += plugin_offences(root, base, path)
+            problems += path_offences(root, cfg, base, "HEAD", path)
     if problems:
         print("change-notes: FAIL")
         for p in problems:
@@ -428,6 +442,7 @@ def main() -> int:
     conf.add_argument("--config", help="settings JSON (relative to the repository root) used instead of scripts/delivery/gate.json")
     c = sub.add_parser("check", parents=[conf], help="fail on a version or change-log edit off a release branch")
     c.add_argument("--base-ref", help="base to diff against (default origin/<default_branch>); the merge base is used")
+    c.add_argument("--staged", action="store_true", help="judge the staged changes (index against HEAD), as the pre-commit hook does; no base ref")
     c.add_argument("--branch", help="branch name to judge (default: the checked-out branch)")
     c.set_defaults(fn=cmd_check)
     f = sub.add_parser("fold", parents=[conf], help="fold the notes into versions and change logs")

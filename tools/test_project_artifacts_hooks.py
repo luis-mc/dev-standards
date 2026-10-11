@@ -13,6 +13,7 @@ Standard library only. Prints "N passed, 0 failed" and exits 0 when all pass.
 import hashlib
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -23,6 +24,14 @@ import traceback
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PLUGIN = os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'artifacts')
+
+
+def rule_file_text():
+    """The plugin's rule file without its <!-- check/advice --> tags: what a session is shown."""
+    with open(os.path.join(PLUGIN, 'rules', 'project-artifacts.md'), encoding='utf-8') as f:
+        return re.sub(r'[ \t]*<!-- (?:check:[^>]*|advice) -->', '', f.read())
+
+
 SCRIPTS = os.path.join(PLUGIN, 'scripts')
 AFTER = os.path.join(SCRIPTS, 'hook_after_command.py')
 STOP = os.path.join(SCRIPTS, 'hook_end_of_turn.py')
@@ -1122,7 +1131,7 @@ def start_garbage_stdin_exits_zero():
 
 @test
 def start_delivers_the_rule_as_additional_context():
-    rule = open(os.path.join(PLUGIN, 'rules', 'project-artifacts.md'), encoding='utf-8').read().strip()
+    rule = rule_file_text().strip()
     work = make_repo(branch='main')
     rc, out, err, _ = start(work, gh_env(work, prs=[]))
     res = json.loads(out)
@@ -1138,7 +1147,7 @@ def start_delivers_the_rule_as_additional_context():
 
 @test
 def start_delivers_the_rule_when_gh_is_missing():
-    rule = open(os.path.join(PLUGIN, 'rules', 'project-artifacts.md'), encoding='utf-8').read().strip()
+    rule = rule_file_text().strip()
     work = make_repo(branch='main')
     for env in ({'CLAUDE_ARTIFACTS_GH': os.path.join(work, 'no-such-gh-binary')}, gh_env(work, fail=True)):
         rc, out, _e, _ = start(work, env)
@@ -1149,7 +1158,7 @@ def start_delivers_the_rule_when_gh_is_missing():
 
 @test
 def start_delivers_the_rule_even_when_the_catch_up_breaks():
-    rule = open(os.path.join(PLUGIN, 'rules', 'project-artifacts.md'), encoding='utf-8').read().strip()
+    rule = rule_file_text().strip()
     work = make_repo(branch='main')
     write(os.path.join(work, '.claude', 'artifacts-queue.json'), '{"events": 5}')
     rc, out, _e, _ = start(work, gh_env(work, prs=[{'headRefName': 'AR5-x', 'state': 'MERGED'}]))
@@ -1158,7 +1167,7 @@ def start_delivers_the_rule_even_when_the_catch_up_breaks():
 
 @test
 def start_delivers_the_rule_on_a_task_branch_with_the_manifest_only_on_origin():
-    rule = open(os.path.join(PLUGIN, 'rules', 'project-artifacts.md'), encoding='utf-8').read().strip()
+    rule = rule_file_text().strip()
     work = make_repo(manifest_on_origin_only=True)
     rc, out, _e, _ = start(work, gh_env(work, prs=[]))
     assert rc == 0 and rule in json.loads(out)['hookSpecificOutput']['additionalContext'], out
@@ -1174,8 +1183,7 @@ def start_delivers_no_rule_without_a_manifest():
 @test
 def rule_file_carries_the_activity_rules():
     """R3.2 to R3.5, R10.3: each of the four lines is in the plugin's rule file."""
-    lines = [ln[2:] for ln in open(os.path.join(PLUGIN, 'rules', 'project-artifacts.md'),
-                                   encoding='utf-8').read().splitlines() if ln.startswith('- ')]
+    lines = [ln[2:] for ln in rule_file_text().splitlines() if ln.startswith('- ')]
     for old in ('Record work as a task before starting it.', 'Start branch names with the task ID.',
                 'Change status only with `set-task-status`.',
                 'Never type a status row by hand.', 'Put every doc under `docs/`.'):
@@ -1198,7 +1206,7 @@ def rule_file_carries_the_activity_rules():
 
 # --- upgrading a project: the rule, migration, old pages (R8.12 to R8.15) -------------------
 
-RULE = open(os.path.join(PLUGIN, 'rules', 'project-artifacts.md'), encoding='utf-8').read().strip()
+RULE = rule_file_text().strip()
 UPDATED = 'luismc-artifacts was updated; this rule replaces earlier instructions about publishing feature artifacts.'
 OLD_URL_A = 'https://claude.ai/artifact/old-a'
 OLD_URL_B = 'https://claude.ai/artifact/old-b'

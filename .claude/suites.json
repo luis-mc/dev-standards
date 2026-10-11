@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "comment": "Suites of this repository for session_guard.py and run_suite.py (STACKSPEC 13.8). Every suite is tools/test_*.py, run from the repository root. cases: one case name goes where {cases} is (-k SUBSTRING, or the case name as an argument). measure=false: never run in full locally, CI runs it.",
+  "suites": [
+    {"name": "delivery-gate", "full": "python tools/test_delivery_gate.py", "full_args": ["--no-mutants"], "cases": "python tools/test_delivery_gate.py --no-mutants -k {cases}", "measure": false},
+    {"name": "delivery-cleanup", "full": "python tools/test_delivery_cleanup.py", "full_args": ["--no-mutants"], "cases": "python tools/test_delivery_cleanup.py --no-mutants -k {cases}", "measure": false},
+    {"name": "delivery-ci", "full": "python tools/test_delivery_ci.py", "cases": "", "measure": false},
+    {"name": "project-artifacts", "full": "python tools/test_project_artifacts.py", "cases": "python tools/test_project_artifacts.py {cases}", "measure": false},
+    {"name": "project-artifacts-hooks", "full": "python tools/test_project_artifacts_hooks.py", "cases": "", "measure": false},
+    {"name": "render-artifacts", "full": "python tools/test_render_artifacts.py", "cases": "", "measure": false},
+    {"name": "artifact-prune", "full": "python tools/test_artifact_prune.py", "cases": ""},
+    {"name": "authspec-check", "full": "python tools/test_authspec_check.py", "cases": ""},
+    {"name": "change-notes", "full": "python tools/test_change_notes.py", "full_args": ["--no-mutants"], "cases": "python tools/test_change_notes.py --no-mutants -k {cases}"},
+    {"name": "ci-areas", "full": "python tools/test_ci_areas.py", "cases": ""},
+    {"name": "model-profiles", "full": "python tools/test_model_profiles.py", "cases": ""},
+    {"name": "preflight", "full": "python tools/test_preflight.py", "cases": ""},
+    {"name": "rule-tags", "full": "python tools/test_rule_tags.py", "cases": ""},
+    {"name": "session-guard", "full": "python tools/test_session_guard.py", "cases": "python tools/test_session_guard.py {cases}"},
+    {"name": "smoke-packaged", "full": "python tools/test_smoke_packaged.py", "full_args": ["--no-mutants"], "cases": "python tools/test_smoke_packaged.py --no-mutants -k {cases}"},
+    {"name": "spec-check", "full": "python tools/test_spec_check.py", "cases": ""}
+  ]
+}

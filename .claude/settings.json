@@ -1,5 +1,18 @@
 {
   "enabledPlugins": {
     "luismc-artifacts@dev-standards": true
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v python3 >/dev/null 2>&1; then python3 \"$CLAUDE_PROJECT_DIR/claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/session_guard.py\"; else python \"$CLAUDE_PROJECT_DIR/claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/session_guard.py\"; fi"
+          }
+        ]
+      }
+    ]
   }
 }

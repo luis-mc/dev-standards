@@ -195,6 +195,15 @@ def summary_lines(run: dict, jobs: list) -> list[str]:
     return lines
 
 
+def record_suite_times(run: dict, jobs: list) -> None:
+    """STACKSPEC 13.8: store the CI time of each declared suite (suites.json ci_step) for run_suite.py's guard."""
+    try:
+        import run_suite
+        run_suite.record_ci_times(run_suite.repo_root(), run, jobs)
+    except Exception:  # noqa: BLE001 - recording must never break the watch
+        return
+
+
 def print_slowest_job_summary(runs: list[dict], repo: str | None) -> None:
     """Information only: any error, anywhere, prints nothing and changes nothing."""
     try:
@@ -203,6 +212,7 @@ def print_slowest_job_summary(runs: list[dict], repo: str | None) -> None:
             data = gh_json(["run", "view", str(run.get("databaseId")), "--json", "jobs",
                             *repo_args(repo)])
             jobs = data.get("jobs", []) if isinstance(data, dict) else []
+            record_suite_times(run, jobs)
             out += summary_lines(run, jobs)
         if out:
             print("ci_watch: slowest job per run")

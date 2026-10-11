@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 8.1.0
+**Version:** 8.2.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -23,6 +23,10 @@ recorded in the product's Stack Profile (§18). This document does not name
 vendors and does not rank them.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+
+**8.2.0 — 2026-10-11.**
+
+- §13.8 Guards for agent sessions: measured suite times (heavy = over 3 minutes locally or unmeasured), a test guard that refuses full local runs of heavy suites and repeat full runs of a tested tree, the change-note check at commit, ready pull requests only from release branches, the join working without a gate config, and every shipped rule line tagged with its check or as advice.
 
 **8.1.0 — 2026-10-11.**
 
@@ -1518,6 +1522,43 @@ development.
 
 A product that ships no packaged program declares none and the check has nothing
 to start.
+
+### 13.8 Guards for agent sessions
+
+Rules a session only reads are rules it can forget or misjudge. These guards
+refuse the action instead; each says why and what to do instead.
+
+- **Suite times.** The repository declares its test suites in
+  `scripts/delivery/suites.json`: for each, a name, the command of a full run, and
+  how to run named cases only. `scripts/delivery/run_suite.py` runs a suite
+  (all of it, or named cases) and records how long it took, per machine, in a
+  git-ignored file. A suite is **heavy** when its last full local run took over
+  3 minutes, or when it has no local measurement yet. CI runs record their times
+  the same way from the job's step times, kept apart from local ones.
+- **Test guard.** A hook that runs before each shell command of an agent session
+  MUST refuse (1) a full local run of a heavy suite, pointing to a run of named
+  cases and to CI for the full run; and (2) a full local run of a suite whose
+  last full run, local or in CI, passed on the same tree. A suite with no local
+  measurement can be measured once with `run_suite.py --measure NAME`; the guard
+  refuses `--measure` when a measurement under 30 days old exists. The guard
+  recognises the suites by the commands declared in `suites.json`, whether they
+  are typed directly or through `run_suite.py`.
+- **Change notes at commit.** The pre-commit hook runs the change-note check
+  (§13.6) on staged changes, so a version or change-log edit off a release branch
+  is refused at commit time, not in CI. It takes under 2 seconds and does nothing
+  in a repository with no change-note settings.
+- **Ready pull requests.** A hook before `gh pr create` and `gh pr ready` MUST
+  refuse a ready (non-draft) pull request whose head branch is not a release
+  branch (by default `*-integration`). Draft pull requests from task branches stay
+  allowed.
+- **Join without a gate config.** The merge script of §13.6 MUST work in a
+  repository with no branch-gate configuration: it joins, says the gate is not
+  configured, and records that no gate ran, instead of stopping.
+- **Rules name their check.** Every rule line in a rule file shipped to projects
+  ends with a tag: `<!-- check: <path> -->` naming the file (and, after `#`, the
+  function or step) that enforces it, or `<!-- advice -->` when no machine can
+  check it. A test fails on an untagged line and on a check path that does not
+  exist, so a new rule ships with its check or says plainly that it is advice.
 
 ---
 

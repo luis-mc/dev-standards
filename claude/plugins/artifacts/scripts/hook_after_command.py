@@ -199,11 +199,20 @@ def script_path():
         os.path.dirname(os.path.abspath(__file__)), 'project_artifacts.py')
 
 
+RULE_TAG_RE = re.compile(r'[ \t]*<!-- (?:check:[^>]*|advice) -->')
+
+
+def strip_rule_tags(text):
+    """The rule text without its trailing `<!-- check: ... -->` / `<!-- advice -->` tags: they are for
+    maintainers and tools/test_rule_tags.py, not for the session."""
+    return RULE_TAG_RE.sub('', text)
+
+
 def rule_text():
-    """The rule file's text; '' when the plugin has none (R8.9)."""
+    """The rule file's text, tags stripped; '' when the plugin has none (R8.9)."""
     try:
         with open(RULE_PATH, encoding='utf-8') as f:
-            return f.read().strip()
+            return strip_rule_tags(f.read()).strip()
     except OSError:
         warn('rules/project-artifacts.md cannot be read; the rule was not delivered')
         return ''
