@@ -703,7 +703,7 @@ tr.status-group.release-group td { color: var(--ink); }
 </div>
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
-<li data-glance-task="TC9"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess <span class="glance-expected">12 Oct ~00:15</span><span class="glance-basis">agent ~40 min from 23:35</span></li>
+<li data-glance-task="TC9"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess <span class="glance-expected">12 Oct ~00:15</span><span class="glance-basis">agent ~40 min from 23:40</span></li>
 </ul>
 </div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
@@ -723,7 +723,7 @@ tr.status-group.release-group td { color: var(--ink); }
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next</strong></td></tr>
-<tr data-task="TC9"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess<span class="release-line"><span class="release-name">RELEASE-2</span></span></td><td>Owner chose (D15-D18): four blocking checks in luismc-project-setup, heavy = over 3 min locally, plus rule lines tagged check or advice with a test. Brief and plan by the session, then one agent</td><td>12 Oct ~00:15<span class="expected-basis">agent ~40 min from 23:35</span></td></tr>
+<tr data-task="TC9"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess<span class="release-line"><span class="release-name">RELEASE-3</span></span></td><td>Agent A, branch TC9-test-and-pr-guards: suites.json + run_suite.py (times), test guard hook, ready-PR guard hook, join.py without gate config. Contract 1f3115a (STACKSPEC §13.8)</td><td>12 Oct ~00:15<span class="expected-basis">agent ~40 min from 23:40</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
 <tr data-task="TC8"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards<span class="release-line"><span class="release-name">RELEASE-1</span></span></td><td>Released in #50 (469da89, 20:37): STACKSPEC 8.1.0, luismc-project-setup 14.1.0</td><td>11 Oct</td></tr>
 <tr data-task="TC7"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC7</span>PR CI: mutants per suite, delivery suites in parallel</td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>
