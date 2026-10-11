@@ -12,8 +12,9 @@ on:
     types: [closed]
 
 permissions:
-  contents: write
+  contents: write      # the delivery log is appended to the train's release notes
   pull-requests: read
+  actions: read        # CI start and end of the ready pull request's runs
 
 concurrency:
   group: train-cleanup
@@ -31,6 +32,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
+      # Before the branches go it records their timestamps; the table lands in the
+      # train's GitHub release notes (delivery_log.py), never in a commit. Offline or
+      # without permission it warns and the cleanup goes on.
       - name: Delete the train's branches and gate-result refs
         env:
           GH_TOKEN: ${{ github.token }}

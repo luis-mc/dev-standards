@@ -1,0 +1,12 @@
+{
+  "_note": "STACKSPEC 13.7. Fill start (the PACKAGED program) and list a readiness line for the program and every worker it starts in expect. An empty start means the product ships no packaged program.",
+  "smoke": {
+    "build": "cargo build --locked --release",
+    "start": "",
+    "expect": [],
+    "health": [],
+    "timeout_s": 60,
+    "cwd": ".",
+    "example_start": "./target/release/app"
+  }
+}

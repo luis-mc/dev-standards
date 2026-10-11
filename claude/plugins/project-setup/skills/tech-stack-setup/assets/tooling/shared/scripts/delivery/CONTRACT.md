@@ -23,6 +23,10 @@ are built against; change it first, then the code.
 | `scripts/delivery/reach_check.py` | same | ci |
 | `scripts/delivery/cleanup.py` | same | cleanup |
 | `scripts/delivery/artifact_prune.py` | same | ci |
+| `scripts/delivery/delivery_log.py` | same | cleanup |
+| `scripts/delivery/smoke_packaged.py` | same | ci |
+| `scripts/delivery/smoke.json` | `tooling/<track>/scripts/delivery/smoke.json` | ci |
+| `.github/workflows/package.yml` | `tooling/<track>/.github/workflows/package.yml` | ci |
 | `.github/workflows/train-cleanup.yml` | `tooling/shared/.github/workflows/train-cleanup.yml` | cleanup |
 | `.github/workflows/artifact-prune.yml` | `tooling/shared/.github/workflows/artifact-prune.yml` | ci |
 | `scripts/delivery/tools.json` | same | gate |
@@ -475,7 +479,7 @@ then runs `gate.json`'s `setup` commands. Idempotent.
   It becomes a required check.
 - Gitleaks in CI installs the version in `tools.json` (checksum verified).
 - `artifact-prune.yml` (every track): `on: workflow_run` (`workflows:` lists
-  every workflow of the repository that uploads an artifact: `CI` in the
+  every workflow of the repository that uploads an artifact: `CI` and `Package` in the
   template; a product that adds a release workflow adds its name here),
   `types: [completed]`; plus a daily `schedule` and `workflow_dispatch`. One
   job, `permissions: actions: write`, `GH_TOKEN: ${{ github.token }}`, runs
@@ -487,7 +491,7 @@ then runs `gate.json`'s `setup` commands. Idempotent.
   (a draft into an integration branch also closes as merged when `join.py`
   pushes; the train goes only when the ready pull request merges),
   `permissions: contents: write,
-  pull-requests: read`, checkout with `fetch-depth: 0`, then
+  pull-requests: read, actions: read`, checkout with `fetch-depth: 0`, then
   `python3 scripts/delivery/cleanup.py --remote-only --pr ${{ github.event.pull_request.number }}`
   with `GH_TOKEN: ${{ github.token }}`.
 
@@ -508,6 +512,10 @@ then runs `gate.json`'s `setup` commands. Idempotent.
   locked, dirty and detached cases, `--pr`, `--local`, `--remote-only`,
   `--dry-run`, join.py's best-effort call, and the structure of
   `train-cleanup.yml`.
+- `tools/test_smoke_packaged.py` — smoke_packaged.py against a fake packaged program
+  that starts workers: all up, one missing, the program exiting, health probes,
+  the declaration's errors, the process tree stopped on every path, and the
+  structure of the tracks' `package.yml` and `smoke.json`.
 - `tools/test_artifact_prune.py` — artifact_prune.py with a stub `gh` serving
   artifact pages: grouping, ties, expired, `--keep`, `--dry-run`, a failed
   deletion, pagination, and the structure of `artifact-prune.yml`.
@@ -666,3 +674,69 @@ lists at least `docs/**` and `**/*.md` under push `paths-ignore` (plus the
 mobile app folders when those have their own workflows), so docs-only pushes,
 such as the record commits, start no run at all.
 
+## STACKSPEC 8.0.0 additions
+
+### DL5 — build-artifact workflows run only when their inputs change
+
+A workflow that builds a shipped artifact (installer, bundle, package, image) is
+its own workflow, not a job of `ci.yml`, so the paths that feed it can filter it.
+`tooling/<track>/.github/workflows/package.yml` (workflow name `Package`) is the
+template: `on: pull_request` (types as `ci.yml`, drafts skipped by the job-level
+`if`) and `push` to the default branch, both with a `paths:` list of the
+directories and manifests that feed the packaged program, the workflow itself and
+`scripts/delivery/smoke.json`, followed by the exclusions `'!docs/**'` and
+`'!**/*.md'` (a documentation-only or record-only merge never builds); and
+`workflow_dispatch:` so a build can always be started by hand. The runner is
+`vars.CI_RUNS_ON` like every workflow. Its artifact has one stable name
+(`packaged-program`) and `artifact-prune.yml` lists `Package`. A product adjusts
+the `paths:` list to its own layout; a product with no packaged program deletes
+`package.yml` and its `artifact-prune.yml` entry.
+
+### DL9 — `smoke_packaged.py` and `smoke.json`
+
+```
+smoke_packaged.py [--config scripts/delivery/smoke.json] [--start CMD] [--expect TEXT ...]
+                  [--health URL ...] [--timeout SECONDS] [--cwd DIR]
+```
+
+`scripts/delivery/smoke.json` declares the check:
+`{"smoke": {"start": "./dist/app", "expect": ["api ready", "worker-queue ready"], "health": ["http://127.0.0.1:8080/healthz"], "timeout_s": 60, "cwd": "."}}`.
+`start` runs the PACKAGED program (executable, installed bundle, `docker run` of
+the image). `expect` holds one readiness line per process the program starts,
+itself included; each must appear in its combined output, in any order. `health`
+URLs must answer 2xx. The script exits 0 when everything was seen, 1 when the
+program exited first or a line never came (naming each one missing and showing
+the last output), 4 on the time limit, 2 for a declaration it cannot use: no
+file, invalid, or a `start` with nothing in `expect` and `health`. An empty
+`start` means "this product ships no packaged program" and exits 0 with a
+notice; it is the template's default until the product fills it. The whole
+process tree is stopped at the end on every path; only processes the script
+started are touched. `package.yml` runs it after the build.
+
+### DL8 — `delivery_log.py`, the delivery log in the release notes
+
+```
+delivery_log.py publish --pr N [--remote origin] [--repo OWNER/NAME] [--dry-run]
+delivery_log.py live    --pr N [--at ISO] [--remote origin] [--repo OWNER/NAME] [--dry-run]
+```
+
+`cleanup.py --pr N` collects, before it deletes anything, one row per change of
+the train (the ready pull request's branch and every branch joined into it):
+finished (the branch's last commit), joined (the merge commit that brought it into
+the integration branch), CI start and end (the earliest start and latest end of
+the runs on the ready pull request's head, from `gh run list --commit`), queued
+(the longest created-to-started wait among those runs) and merged (`mergedAt`).
+After the deletions it writes the table into the train's GitHub release notes
+(`--no-delivery-log` skips it; `--dry-run` writes nothing). The deploy job calls
+`delivery_log.py live --pr N` after its smoke test; it sets `live` on every row
+that has none. Time to live is live minus finished and is split into testing (CI
+end minus CI start), queueing, and waiting (the rest: before CI, in the train,
+the merge and the deploy). The release is the one whose tag points at the merge
+commit; without one, `train-<merge date>-<N>` is created for the merge commit.
+The table sits between `<!-- delivery-log:start -->` and `<!-- delivery-log:end -->`
+with its rows as JSON in a comment, so a second call replaces the table, keeps
+every value already recorded, and leaves the rest of the notes alone. Nothing is
+committed to the default branch. A missing timestamp is `unknown` and so is every
+figure that needs it; offline, without `gh`, without permission, or on any error
+the script warns on stderr and exits 0, because the log must never fail a cleanup
+or a deploy.
