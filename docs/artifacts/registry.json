@@ -497,12 +497,11 @@
       "id": "DL10",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "dev-standards adopts the delivery log and the freeze",
-      "detail": "pre-push freeze committed on TC6-integration; hooks switched on and this train's release notes after the merge",
-      "expected": "11 Oct ~15:15",
-      "changed": "2026-10-11T13:14+01:00",
-      "expected_basis": "right after the TC6 merge"
+      "detail": "Hooks on here (core.hooksPath .githooks: secret check and train freeze); the first delivery log is in release train-2026-10-11-47",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T14:41+01:00"
     },
     {
       "id": "DL11",

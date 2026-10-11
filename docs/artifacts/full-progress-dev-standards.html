@@ -1138,12 +1138,11 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "id": "DL10",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "dev-standards adopts the delivery log and the freeze",
-   "detail": "pre-push freeze committed on TC6-integration; hooks switched on and this train's release notes after the merge",
-   "expected": "11 Oct ~15:15",
-   "changed": "2026-10-11T13:14+01:00",
-   "expected_basis": "right after the TC6 merge"
+   "detail": "Hooks on here (core.hooksPath .githooks: secret check and train freeze); the first delivery log is in release train-2026-10-11-47",
+   "expected": "11 Oct",
+   "changed": "2026-10-11T14:41+01:00"
   },
   {
    "id": "DL11",
@@ -1804,7 +1803,6 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <ul>
 <li data-glance-task="TC6"><span class="task-id">TC6</span>Release the test-cost train (all eight fixes and DS48) <span class="glance-expected">11 Oct ~14:45</span><span class="glance-basis">spec-lint with mutants ~20 min from 14:25</span></li>
 <li data-glance-task="DL11"><span class="task-id">DL11</span>Release STACKSPEC 8.0.0 (DL1 to DL10) <span class="glance-expected">11 Oct ~15:00</span><span class="glance-basis">the TC6 merge</span></li>
-<li data-glance-task="DL10"><span class="task-id">DL10</span>dev-standards adopts the delivery log and the freeze <span class="glance-expected">11 Oct ~15:15</span><span class="glance-basis">right after the TC6 merge</span></li>
 </ul>
 </div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
@@ -1817,18 +1815,17 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <li data-glance-task="DL4"><span class="task-id">DL4</span>Narrower gate valves: lockfile and shared UI</li>
 <li data-glance-task="DL5"><span class="task-id">DL5</span>Build-artifact workflows only when their inputs change</li>
 <li data-glance-task="DL6"><span class="task-id">DL6</span>Train freeze while the ready PR runs CI</li>
-<li class="glance-more">and 82 more</li>
+<li class="glance-more">and 83 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">109</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">110</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
 <tr data-task="TC6"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC6</span>Release the test-cost train (all eight fixes and DS48)</a></td><td></td><td>PR #47 second fix forward: the artifact-prune test now expects Package next to CI; CI re-running</td><td>11 Oct ~14:45<span class="expected-basis">spec-lint with mutants ~20 min from 14:25</span></td></tr>
 <tr data-task="AR41"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</a></td><td><code>luismc-artifacts</code></td><td>After the TC6 release: update the plugin here, rewrite Full Progress and feature ledes as one or two sentences, render</td><td>11 Oct ~15:00<span class="expected-basis">after the TC6 merge; three content edits</span></td></tr>
 <tr data-task="DL11"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL11</span>Release STACKSPEC 8.0.0 (DL1 to DL10)</a></td><td></td><td>The same release as TC6: one integration branch, one ready-PR CI, one merge</td><td>11 Oct ~15:00<span class="expected-basis">the TC6 merge</span></td></tr>
-<tr data-task="DL10"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL10</span>dev-standards adopts the delivery log and the freeze</a></td><td></td><td>pre-push freeze committed on TC6-integration; hooks switched on and this train&#x27;s release notes after the merge</td><td>11 Oct ~15:15<span class="expected-basis">right after the TC6 merge</span></td></tr>
 <tr data-task="DS50"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS50</span>Write the STACKSPEC 8.0.0 upgrade prompt for projects</td><td></td><td>Generic, no project names; tells a project to rerun the tech-stack-setup audit and apply the 8.0.0 items</td><td>11 Oct ~15:15<span class="expected-basis">right after the TC6 merge</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR40"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR40</span>At a glance block in section 0 instead of one prose paragraph</a></td><td><code>luismc-artifacts</code></td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
@@ -1842,6 +1839,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <tr data-task="DL7"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL7</span>Runner health warnings</a></td><td></td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
 <tr data-task="DL8"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL8</span>Delivery log in release notes</a></td><td></td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
 <tr data-task="DL9"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL9</span>Packaged-program smoke test (MUST, STACKSPEC 8.0.0)</a></td><td></td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
+<tr data-task="DL10"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-delivery-speed.html"><span class="task-id">DL10</span>dev-standards adopts the delivery log and the freeze</a></td><td></td><td>Hooks on here (core.hooksPath .githooks: secret check and train freeze); the first delivery log is in release train-2026-10-11-47</td><td>11 Oct</td></tr>
 <tr data-task="DS49"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS49</span>Agent branches: a short Linux CI run of their area instead of local</td><td></td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
 <tr data-task="DS43"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS43</span>Path-scoped spec-lint jobs</td><td></td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
 <tr data-task="DS44"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS44</span>Skip the main re-run of a tested tree</td><td></td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>

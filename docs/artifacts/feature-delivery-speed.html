@@ -658,7 +658,6 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
 <li data-glance-task="DL11"><span class="task-id">DL11</span>Release STACKSPEC 8.0.0 (DL1 to DL10) <span class="glance-expected">11 Oct ~15:00</span><span class="glance-basis">the TC6 merge</span></li>
-<li data-glance-task="DL10"><span class="task-id">DL10</span>dev-standards adopts the delivery log and the freeze <span class="glance-expected">11 Oct ~15:15</span><span class="glance-basis">right after the TC6 merge</span></li>
 </ul>
 </div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
@@ -671,16 +670,15 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <li data-glance-task="DL6"><span class="task-id">DL6</span>Train freeze while the ready PR runs CI</li>
 <li data-glance-task="DL7"><span class="task-id">DL7</span>Runner health warnings</li>
 <li data-glance-task="DL8"><span class="task-id">DL8</span>Delivery log in release notes</li>
-<li class="glance-more">and 1 more</li>
+<li class="glance-more">and 2 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">9</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">10</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next</strong></td></tr>
 <tr data-task="DL11"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL11</span>Release STACKSPEC 8.0.0 (DL1 to DL10)</td><td>The same release as TC6: one integration branch, one ready-PR CI, one merge</td><td>11 Oct ~15:00<span class="expected-basis">the TC6 merge</span></td></tr>
-<tr data-task="DL10"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL10</span>dev-standards adopts the delivery log and the freeze</td><td>pre-push freeze committed on TC6-integration; hooks switched on and this train&#x27;s release notes after the merge</td><td>11 Oct ~15:15<span class="expected-basis">right after the TC6 merge</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
 <tr data-task="DL1"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL1</span>Inert paths keep gate results valid</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
 <tr data-task="DL2"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL2</span>Quick join check instead of a second full gate</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
@@ -691,6 +689,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <tr data-task="DL7"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL7</span>Runner health warnings</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
 <tr data-task="DL8"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL8</span>Delivery log in release notes</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
 <tr data-task="DL9"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL9</span>Packaged-program smoke test (MUST, STACKSPEC 8.0.0)</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
+<tr data-task="DL10"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL10</span>dev-standards adopts the delivery log and the freeze</td><td>Hooks on here (core.hooksPath .githooks: secret check and train freeze); the first delivery log is in release train-2026-10-11-47</td><td>11 Oct</td></tr>
 </tbody></table></div>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>What and why</h2>
