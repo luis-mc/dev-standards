@@ -431,12 +431,12 @@
       "id": "DL4",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Narrower gate valves: lockfile and shared UI",
-      "detail": "lockfile widens only for affected deps; shared UI runs importing apps e2e",
-      "expected": "11 Oct ~18:00",
-      "changed": "2026-10-11T11:55+01:00",
-      "expected_basis": "after TC6 merges (~14:30); one release"
+      "detail": "Agent on DL1-gate-scope-and-inert, in the TC6 release",
+      "expected": "11 Oct ~15:00",
+      "changed": "2026-10-11T12:04+01:00",
+      "expected_basis": "agents ~1h30 in parallel, then one join and one ready-PR CI"
     },
     {
       "id": "DL5",
