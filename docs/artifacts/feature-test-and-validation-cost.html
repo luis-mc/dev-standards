@@ -701,32 +701,27 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
-<div class="glance-group glance-built" data-glance="built"><div class="glance-label">Built, not released</div>
-<ul>
-<li data-glance-task="TC11"><span class="task-id">TC11</span>Use the session guards in dev-standards itself</li>
-</ul>
-</div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
 <li data-glance-task="TC9"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</li>
 <li data-glance-task="TC10"><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check</li>
+<li data-glance-task="TC11"><span class="task-id">TC11</span>Use the session guards in dev-standards itself</li>
 <li data-glance-task="TC8"><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards</li>
 <li data-glance-task="TC7"><span class="task-id">TC7</span>PR CI: mutants per suite, delivery suites in parallel</li>
 <li data-glance-task="TC6"><span class="task-id">TC6</span>Release the test-cost train (all eight fixes and DS48)</li>
 <li data-glance-task="TC1"><span class="task-id">TC1</span>Mutation passes only when their files change, all nightly</li>
 <li data-glance-task="TC2"><span class="task-id">TC2</span>A mutant stops at its first failed check</li>
-<li data-glance-task="TC3"><span class="task-id">TC3</span>Retire the fake-renderer group</li>
-<li class="glance-more">and 2 more</li>
+<li class="glance-more">and 3 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">10</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">11</div><div class="label">tasks live</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
 <tr data-task="TC9"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess<span class="release-line"><span class="release-name">RELEASE-3</span></span></td><td>Released in #53 (fe3af00, 00:00): STACKSPEC 8.2.0, luismc-project-setup 14.2.0, luismc-artifacts 1.6.1</td><td>12 Oct</td></tr>
 <tr data-task="TC10"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check<span class="release-line"><span class="release-name">RELEASE-3</span></span></td><td>Released in #53 (fe3af00, 00:00): STACKSPEC 8.2.0, luismc-project-setup 14.2.0, luismc-artifacts 1.6.1</td><td>12 Oct</td></tr>
-<tr data-task="TC11"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">TC11</span>Use the session guards in dev-standards itself<span class="release-line"><span class="release-name">RELEASE-3</span></span></td><td>Same branch: .claude/suites.json lists the 15 tools/test_*.py suites (the six slow ones never measured locally); guard hook in this repo&#x27;s .claude/settings.json</td><td>11 Oct</td></tr>
+<tr data-task="TC11"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC11</span>Use the session guards in dev-standards itself<span class="release-line"><span class="release-name">RELEASE-3</span></span></td><td>Released in #53 (fe3af00, 00:00): STACKSPEC 8.2.0, luismc-project-setup 14.2.0, luismc-artifacts 1.6.1</td><td>12 Oct</td></tr>
 <tr data-task="TC8"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards<span class="release-line"><span class="release-name">RELEASE-1</span></span></td><td>Released in #50 (469da89, 20:37): STACKSPEC 8.1.0, luismc-project-setup 14.1.0</td><td>11 Oct</td></tr>
 <tr data-task="TC7"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC7</span>PR CI: mutants per suite, delivery suites in parallel</td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>
 <tr data-task="TC6"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC6</span>Release the test-cost train (all eight fixes and DS48)</td><td>#47 merged on green at 14:37 after two fix-forwards; cleanup removed every train branch; plugins and ~/.claude rules updated</td><td>11 Oct</td></tr>

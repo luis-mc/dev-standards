@@ -2058,11 +2058,11 @@ tr.status-group.release-group td { color: var(--ink); }
    "id": "TC11",
    "owner": "test-cost",
    "app": "dev-standards",
-   "status": "Built",
+   "status": "Live",
    "item": "Use the session guards in dev-standards itself",
-   "detail": "Same branch: .claude/suites.json lists the 15 tools/test_*.py suites (the six slow ones never measured locally); guard hook in this repo's .claude/settings.json",
-   "expected": "11 Oct",
-   "changed": "2026-10-11T23:52+01:00",
+   "detail": "Released in #53 (fe3af00, 00:00): STACKSPEC 8.2.0, luismc-project-setup 14.2.0, luismc-artifacts 1.6.1",
+   "expected": "12 Oct",
+   "changed": "2026-10-12T00:01+01:00",
    "rides": "DS55"
   }
  ]
@@ -2081,26 +2081,21 @@ tr.status-group.release-group td { color: var(--ink); }
 <li data-glance-task="DS55"><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~00:05</span><span class="glance-basis">#52: CI 3.5 min, merge+cleanup 5</span></li>
 </ul>
 </div>
-<div class="glance-group glance-built" data-glance="built"><div class="glance-label">Built, not released</div>
-<ul>
-<li data-glance-task="TC11"><span class="task-id">TC11</span>Use the session guards in dev-standards itself</li>
-</ul>
-</div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
 <li data-glance-task="TC9"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</li>
 <li data-glance-task="TC10"><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check</li>
+<li data-glance-task="TC11"><span class="task-id">TC11</span>Use the session guards in dev-standards itself</li>
 <li data-glance-task="AR45"><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release</li>
 <li data-glance-task="DS54"><span class="task-id">DS54</span><span class="release-name">RELEASE-2</span>AR45 train: join, PR CI, merge, cleanup</li>
 <li data-glance-task="DS53"><span class="task-id">DS53</span><span class="release-name">RELEASE-1</span>TC8 train: join, PR CI, merge, cleanup</li>
 <li data-glance-task="TC8"><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards</li>
 <li data-glance-task="AR43"><span class="task-id">AR43</span>Full Progress: release timeline above the status table</li>
-<li data-glance-task="DS52"><span class="task-id">DS52</span>AR43 train: join, PR CI, merge, cleanup</li>
-<li class="glance-more">and 75 more</li>
+<li class="glance-more">and 76 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">127</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">128</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
@@ -2123,9 +2118,9 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group release-group" data-group="release-3"><td colspan="5"><strong>RELEASE-3 · live ~00:05 · worst ~00:15</strong></td></tr>
 <tr data-task="DS55"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup</td><td></td><td>Joined TC9, TC10 (fixed: suites.json lacked TC10&#x27;s new test); folded to STACKSPEC 8.2.0, project-setup 14.2.0, artifacts 1.6.1; ready PR #53, CI from 23:56</td><td>12 Oct ~00:05<span class="expected-basis">#52: CI 3.5 min, merge+cleanup 5</span></td></tr>
-<tr data-task="TC11"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC11</span>Use the session guards in dev-standards itself</a></td><td><code>dev-standards</code></td><td>Same branch: .claude/suites.json lists the 15 tools/test_*.py suites (the six slow ones never measured locally); guard hook in this repo&#x27;s .claude/settings.json</td><td>11 Oct</td></tr>
 <tr data-task="TC9"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</a></td><td><code>luismc-project-setup</code></td><td>Released in #53 (fe3af00, 00:00): STACKSPEC 8.2.0, luismc-project-setup 14.2.0, luismc-artifacts 1.6.1</td><td>12 Oct</td></tr>
 <tr data-task="TC10"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check</a></td><td><code>luismc-project-setup</code></td><td>Released in #53 (fe3af00, 00:00): STACKSPEC 8.2.0, luismc-project-setup 14.2.0, luismc-artifacts 1.6.1</td><td>12 Oct</td></tr>
+<tr data-task="TC11"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC11</span>Use the session guards in dev-standards itself</a></td><td><code>dev-standards</code></td><td>Released in #53 (fe3af00, 00:00): STACKSPEC 8.2.0, luismc-project-setup 14.2.0, luismc-artifacts 1.6.1</td><td>12 Oct</td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR45"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release</a><span class="release-line"><span class="release-name">RELEASE-2</span></span></td><td><code>luismc-artifacts</code></td><td>Released in #52 (c306304, 23:09): ARTIFACTSPEC 1.6.0, luismc-artifacts 1.6.0</td><td>11 Oct</td></tr>
 <tr data-task="DS54"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS54</span><span class="release-name">RELEASE-2</span>AR45 train: join, PR CI, merge, cleanup</td><td></td><td>#52 merged on green 23:09 (CI 3m28s) after #51 failed the change-notes check; cleanup removed every train branch and worktree and the old TC8 branch; delivery log in train-2026-10-11-52</td><td>11 Oct</td></tr>
@@ -2260,7 +2255,7 @@ tr.status-group.release-group td { color: var(--ink); }
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862661"><time datetime="2026-10-12T00:01+01:00">12 Oct 00:01</time></td><td>TC1 to TC11</td><td data-col="state"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
+<tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862661"><time datetime="2026-10-12T00:01+01:00">12 Oct 00:01</time></td><td>TC1 to TC11</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
 <tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862631"><time datetime="2026-10-11T23:31+01:00">11 Oct 23:31</time></td><td>AR2 to AR45</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29862629"><time datetime="2026-10-11T23:29+01:00">11 Oct 23:29</time></td><td>DL1 to DL13</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29862629"><time datetime="2026-10-11T23:29+01:00">11 Oct 23:29</time></td><td>MP1 to MP7, DS2 to DS5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>

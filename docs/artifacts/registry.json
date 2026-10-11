@@ -1372,11 +1372,11 @@
       "id": "TC11",
       "owner": "test-cost",
       "app": "dev-standards",
-      "status": "Built",
+      "status": "Live",
       "item": "Use the session guards in dev-standards itself",
-      "detail": "Same branch: .claude/suites.json lists the 15 tools/test_*.py suites (the six slow ones never measured locally); guard hook in this repo's .claude/settings.json",
-      "expected": "11 Oct",
-      "changed": "2026-10-11T23:52+01:00",
+      "detail": "Released in #53 (fe3af00, 00:00): STACKSPEC 8.2.0, luismc-project-setup 14.2.0, luismc-artifacts 1.6.1",
+      "expected": "12 Oct",
+      "changed": "2026-10-12T00:01+01:00",
       "rides": "DS55"
     }
   ]
