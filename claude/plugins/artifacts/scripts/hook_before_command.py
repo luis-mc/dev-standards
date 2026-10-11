@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Before-command hook (PreToolUse for Bash and PowerShell).
 
-ARTIFACTSPEC 1.4.0 section 8.6 (R8.16). Before `gh pr create`, `gh pr ready` or `gh pr merge`
+ARTIFACTSPEC 1.6.0 section 8.6 (R8.16). Before `gh pr create`, `gh pr ready` or `gh pr merge`
 runs, pushes the record commits that writing commands left unpushed
 (`project_artifacts.py push`), so the pull request and the merge see the record the
 work recorded. It never blocks the command: when the push fails or cannot run, it prints
