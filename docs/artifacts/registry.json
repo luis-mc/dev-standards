@@ -831,12 +831,11 @@
       "id": "DS46",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Audit the test suites for duplicates",
-      "detail": "A Sonnet agent lists overlapping tests and proposes removals; nothing deleted without the owner's OK",
-      "expected": "11 Oct ~11:00",
-      "changed": "2026-10-11T10:11+01:00",
-      "expected_basis": "one read-only agent, ~45 min"
+      "detail": "Read-only audit returned 8 ranked items; its estimates are being tested by DS47",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T10:18+01:00"
     },
     {
       "id": "MP1",
