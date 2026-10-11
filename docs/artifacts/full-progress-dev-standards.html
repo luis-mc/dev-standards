@@ -1932,8 +1932,9 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "item": "Generic CI speed: split or shard the dominant step, e2e shards",
    "detail": "One Sonnet agent on TC8-ci-speed-generic",
    "expected": "11 Oct ~19:12",
-   "changed": "2026-10-11T18:23+01:00",
-   "expected_basis": "agent ~50 min from 18:22"
+   "changed": "2026-10-11T18:39+01:00",
+   "expected_basis": "agent ~50 min from 18:22",
+   "rides": "DS53"
   }
  ]
 }</script>
@@ -1973,6 +1974,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <figcaption>Next releases (Lisbon)</figcaption>
 <div class="timeline-scroll"><svg viewBox="0 0 900 164" role="img" aria-label="Next releases: DS53 (TC8 train: join, PR CI, merge, cleanup) expected live about 19:20, worst case 19:30." style="min-width:640px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">18:00</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">18:30</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">19:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">19:30</text></g>
 <text class="rt-name" x="0" y="60"><title>DS53 · TC8 train: join, PR CI, merge, cleanup</title>DS53 · TC8 train: join, P…</text>
+<text class="rt-sub" x="0" y="77"><title>TC8</title>TC8</text>
 <rect class="rt-bar agents" x="327.1" y="52" width="288.9" height="22"><title>agents 18:22-19:12</title></rect>
 <rect class="rt-bar ci" x="616" y="52" width="23.1" height="22"><title>PR CI 19:12-19:16</title></rect>
 <rect class="rt-bar merge" x="639.1" y="52" width="23.1" height="22"><title>merge + cleanup 19:16-19:20</title></rect>
@@ -2120,9 +2122,9 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
 <tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862339"><time datetime="2026-10-11T18:39+01:00">11 Oct 18:39</time></td><td>AR2 to AR44</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
+<tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862339"><time datetime="2026-10-11T18:39+01:00">11 Oct 18:39</time></td><td>TC1 to TC8</td><td data-col="state"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
 <tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29862332"><time datetime="2026-10-11T18:32+01:00">11 Oct 18:32</time></td><td>DL1 to DL13</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29862332"><time datetime="2026-10-11T18:32+01:00">11 Oct 18:32</time></td><td>MP1 to MP7, DS2 to DS5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
-<tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862332"><time datetime="2026-10-11T18:32+01:00">11 Oct 18:32</time></td><td>TC1 to TC8</td><td data-col="state"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
 </tbody></table></div>
 </section>
 <section id="s2"><h2><span class="section-number">&sect; 2</span>How it stays current</h2>
