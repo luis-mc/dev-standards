@@ -1125,13 +1125,39 @@
       "id": "DS54",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "AR45 train: join, PR CI, merge, cleanup",
-      "detail": "Ready PR after AR45 is Built; luismc-artifacts 1.6.0",
-      "expected": "12 Oct",
-      "changed": "2026-10-11T22:00+01:00",
-      "expected_basis": "after AR45 Built: join 10, CI ~40, merge 5",
-      "release": true
+      "detail": "AR45 review run, then join, ready PR CI, merge; luismc-artifacts 1.6.0",
+      "expected": "11 Oct ~23:25",
+      "changed": "2026-10-11T22:56+01:00",
+      "expected_basis": "#50: CI 2m27s, Built to Live 4 min; review run sets start",
+      "release": true,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-10-11T22:03+01:00",
+          "end": "2026-10-11T23:05+01:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-10-11T23:05+01:00",
+          "end": "2026-10-11T23:10+01:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-10-11T23:10+01:00",
+          "end": "2026-10-11T23:20+01:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-10-11T23:20+01:00",
+          "end": "2026-10-11T23:25+01:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 15
+      }
     },
     {
       "id": "MP1",
