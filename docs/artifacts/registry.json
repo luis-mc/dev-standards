@@ -673,6 +673,16 @@
       "changed": "2026-10-11T01:23+01:00"
     },
     {
+      "id": "DS37",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Integrate and release STACKSPEC 7.1.0",
+      "detail": "Contracts first on DS37-integration, then agents; one ready PR after the DS27/AR31 release merges; CI watched by commit; merge on green.",
+      "expected": "11 Oct ~05:30",
+      "changed": "2026-10-11T01:23+01:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
