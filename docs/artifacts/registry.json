@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T01:12+01:00",
+  "updated": "2026-10-11T01:22+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -581,6 +581,16 @@
       "detail": "Written into CONTRACT.md on DS27-integration (6e794ba): the pre-push worktree borrows node_modules, so a guard importing a workspace package reads the checked-out version; the branch gate, which installs, checks it properly. Ships with DS27.",
       "expected": "11 Oct",
       "changed": "2026-10-11T00:52+01:00"
+    },
+    {
+      "id": "DS29",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "E2E runs only the affected specs",
+      "detail": "From another project's learnings (U1): gate.json maps e2e specs to paths; a branch gate runs only the specs its change touches, anything unmapped or a config/contract change runs all; the ready PR's CI still runs all.",
+      "expected": "11 Oct ~05:30",
+      "changed": "2026-10-11T01:22+01:00"
     },
     {
       "id": "MP1",
