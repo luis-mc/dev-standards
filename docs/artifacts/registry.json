@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T01:01+01:00",
+  "updated": "2026-10-11T01:05+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -281,6 +281,16 @@
       "detail": "Committed on DS27-integration (6e794ba): .claude/settings.json enables luismc-artifacts@dev-standards for every session of this repo. Ships with DS27; then the local-only setting is removed.",
       "expected": "11 Oct",
       "changed": "2026-10-11T00:53+01:00"
+    },
+    {
+      "id": "AR31",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "Old claude.ai feature pages get deleted, with the owner's confirmation",
+      "detail": "Gap found by the owner in another project: the 1.1 migration turns feature artifacts into files but never deletes their old claude.ai pages, and it drops their URLs so no one can find them. Fix: keep them as retired (recovering URLs already dropped from the record's git history); pending, check and the end-of-turn hook list them until each is deleted with the owner's confirmation and recorded with a new command. luismc-artifacts 1.2.0.",
+      "expected": "11 Oct ~02:30",
+      "changed": "2026-10-11T01:05+01:00"
     },
     {
       "id": "DS1",
