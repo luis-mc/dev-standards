@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T02:42+01:00",
+  "updated": "2026-10-11T02:49+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -286,11 +286,11 @@
       "id": "AR31",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "Old claude.ai feature pages get deleted, with the owner's confirmation",
-      "detail": "Owner: fix the plugin so no project needs manual steps when it upgrades. Building in luismc-artifacts 1.2.0: (1) a running session gets the new rule on its next command, no restart; (2) an unmigrated record is migrated on the session's first turn (the hooks ask for it and block the turn until done); (3) the old copied rule file is deleted in the migration commit when it is an unedited plugin copy; (4) old claude.ai feature pages are kept as retired (URLs recovered from git history) and offered for deletion with the owner's confirmation.",
-      "expected": "11 Oct ~03:00",
-      "changed": "2026-10-11T01:06+01:00"
+      "detail": "Built in #41 and joined (not released): a project upgrading needs no manual step (rule delivered on the next command, migration on the first turn, old rule copy deleted when unedited, old claude.ai pages kept as retired and offered for deletion with your confirmation; URLs recovered from git history). Windows suites green; Linux CI green on its branch. While testing, the agent stopped processes and containers it had not started; the other agents were warned to re-run anything that died.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T02:49+01:00"
     },
     {
       "id": "AR32",
