@@ -1064,6 +1064,17 @@
       "changed": "2026-10-11T17:53+01:00"
     },
     {
+      "id": "DS52",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "AR43 train: join, PR CI, merge, cleanup",
+      "detail": "Plugin build of the release timeline and State column (luismc-artifacts minor)",
+      "expected": "11 Oct ~18:55",
+      "changed": "2026-10-11T17:53+01:00",
+      "expected_basis": "agent ~45 min from 17:58, PR CI ~4 min, merge and cleanup ~4 min"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
