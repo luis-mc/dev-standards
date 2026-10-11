@@ -1161,12 +1161,11 @@
       "id": "DS55",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "TC9 train: join, PR CI, merge, cleanup",
-      "detail": "Joined TC9, TC10 (fixed: suites.json lacked TC10's new test); folded to STACKSPEC 8.2.0, project-setup 14.2.0, artifacts 1.6.1; ready PR #53, CI from 23:56",
-      "expected": "12 Oct ~00:05",
-      "changed": "2026-10-11T23:56+01:00",
-      "expected_basis": "#52: CI 3.5 min, merge+cleanup 5",
+      "detail": "#53 merged on green 00:00 (CI 3m23s); join fix: suites.json lacked TC10's new test. Cleanup raced the train-cleanup workflow (release and TC9 branch already gone); a second run finished it and added the delivery log",
+      "expected": "12 Oct",
+      "changed": "2026-10-12T00:01+01:00",
       "release": 3,
       "phases": [
         {
