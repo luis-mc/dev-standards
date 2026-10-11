@@ -113,6 +113,30 @@ check("skip beats run_all",
       ca.classify([], run_all=True, force_mutants=True, skip=True)["mutants"], False)
 
 
+# branch advice
+check("advice light", ca.advice(["claude/plugins/project-setup/skills/x/SKILL.md", "docs/a.md"]),
+      "light: test locally only")
+check("advice docs only", ca.advice(["docs/a.md"]), "light: test locally only")
+check("advice specs light", ca.advice([f"{TS}/references/invariants.md"]),
+      "light: test locally only")
+check("advice heavy delivery", ca.advice([f"{TS}/assets/preflight.py"], "DS9-a"),
+      "heavy: delivery -> run `gh workflow run spec-lint.yml --ref DS9-a -f areas=delivery`")
+check("advice heavy lists touched areas",
+      ca.advice(["claude/plugins/artifacts/x.py", "tools/test_model_profiles.py"], "b"),
+      "heavy: artifacts -> run `gh workflow run spec-lint.yml --ref b -f areas=artifacts,profiles`")
+check("advice shared path is every area, heavy",
+      ca.advice(["tools/ci_areas.py"], "b"),
+      "heavy: delivery,artifacts -> run `gh workflow run spec-lint.yml --ref b "
+      "-f areas=specs,delivery,artifacts,profiles`")
+check("parse_areas order and trim", ca.parse_areas(" profiles,specs "), ["specs", "profiles"])
+check("parse_areas empty", ca.parse_areas(""), [])
+try:
+    ca.parse_areas("x")
+    check("parse_areas unknown raises", False, True)
+except ValueError:
+    pass
+
+
 # end to end: the CLI, with real git ranges and $GITHUB_OUTPUT
 def git(cwd: str, *args: str) -> str:
     env = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t",
@@ -161,7 +185,48 @@ with tempfile.TemporaryDirectory() as tmp:
     check("cli push delivery mutants",
           cli(tmp, "--event", "push", "--base", prof, "--head", dgate),
           {**none, "delivery": "true", "mutants": "true"})
-    check("cli dispatch", cli(tmp, "--event", "workflow_dispatch"), every)
+    check("cli dispatch on the default branch runs everything (no origin/main)",
+          cli(tmp, "--event", "workflow_dispatch"), every)
+    check("cli dispatch override",
+          cli(tmp, "--event", "workflow_dispatch", "--areas", "delivery, profiles"),
+          {**none, "delivery": "true", "profiles": "true"})
+    check("cli dispatch override of one area ignores the diff",
+          cli(tmp, "--event", "workflow_dispatch", "--areas", "specs"),
+          {**none, "specs": "true"})
+    check("cli dispatch override with mutants",
+          cli(tmp, "--event", "workflow_dispatch", "--areas", "delivery", "--mutants", "true"),
+          {**none, "delivery": "true", "mutants": "true"})
+    check("areas override only applies to dispatch",
+          cli(tmp, "--event", "schedule", "--areas", "specs"), every)
+    bad = subprocess.run([sys.executable, str(Path(ca.__file__)), "--event", "workflow_dispatch",
+                          "--areas", "nope"], cwd=tmp, capture_output=True, text=True)
+    check("cli dispatch bad area exits 2", bad.returncode, 2)
+    # dispatch with no override: diff against origin/main, not everything
+    git(tmp, "branch", "feature", prof)
+    git(tmp, "update-ref", "refs/remotes/origin/main", docs)
+    git(tmp, "checkout", "-q", "feature")
+    check("cli dispatch diffs the branch against the default branch",
+          cli(tmp, "--event", "workflow_dispatch"), {**none, "profiles": "true"})
+    check("cli dispatch --head names the branch tip",
+          cli(tmp, "--event", "workflow_dispatch", "--head", dgate),
+          {**none, "profiles": "true", "delivery": "true", "mutants": "true"})
+    git(tmp, "update-ref", "refs/remotes/origin/main", prof)
+    check("cli dispatch on the default branch tip runs everything",
+          cli(tmp, "--event", "workflow_dispatch"), every)
+    git(tmp, "update-ref", "refs/remotes/origin/main", docs)
+
+    def advice_cli(*a: str) -> str:
+        return subprocess.run([sys.executable, str(Path(ca.__file__)), "--branch-advice", *a],
+                              cwd=tmp, capture_output=True, text=True).stdout.strip()
+
+    check("cli advice from the branch diff", advice_cli("--branch", "f"),
+          "light: test locally only")
+    git(tmp, "checkout", "-q", dgate)
+    check("cli advice heavy from the diff", advice_cli("--branch", "DS1-x"),
+          "heavy: delivery -> run `gh workflow run spec-lint.yml --ref DS1-x "
+          "-f areas=delivery,profiles`")
+    check("cli advice with paths", advice_cli("--branch", "b", "docs/a.md"),
+          "light: test locally only")
     check("cli schedule nightly", cli(tmp, "--event", "schedule", "--mutants", "true"),
           {**every, "mutants": "true"})
     check("cli push new branch (zero before)",
@@ -181,6 +246,7 @@ for area in ca.AREAS:
     check(f"workflow gates job {area}", f"if: needs.areas.outputs.{area} == 'true'" in wf, True)
 check("workflow concurrency",
       "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in wf, True)
+check("workflow dispatch areas input", "areas:" in wf and "--areas" in wf, True)
 check("workflow no-mutants wiring", wf.count("mutants != 'true' && '--no-mutants'"), 3)
 
 if FAILS:

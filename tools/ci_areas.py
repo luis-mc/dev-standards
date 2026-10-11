@@ -36,8 +36,18 @@ hooks, or test_delivery_gate.py / test_delivery_cleanup.py, or when the caller
 forces it (nightly). Otherwise the suites run with --no-mutants.
 
 Events: pull_request diffs `base...head`; push diffs the pushed range
-`before..head`; workflow_dispatch, schedule and any range that cannot be read
-run every area. `--skip` (DS44: a push to main that differs from the tested PR
+`before..head`; schedule and any range that cannot be read run every area.
+workflow_dispatch (DS49) runs the areas named by `--areas` (comma-separated
+subset of specs,delivery,artifacts,profiles); with no override it diffs the
+branch against the default branch (`origin/main...head`) and runs what that
+touches, and runs every area only when the branch is the default branch itself
+or the diff cannot be read.
+
+Branch advice (DS49): `--branch-advice [paths...]` prints whether a change wants
+a branch CI run. HEAVY areas (delivery, artifacts: local suites over about
+three minutes on Windows) say "heavy: ... -> run `gh workflow run spec-lint.yml
+--ref <branch> -f areas=...`"; anything else says "light: test locally only".
+With no paths it diffs the current branch against origin/main. `--skip` (DS44: a push to main that differs from the tested PR
 head only under docs/artifacts/, decided by scripts/delivery/ci_skip_check.py)
 turns every output off.
 
@@ -54,6 +64,7 @@ import sys
 AREAS = ("specs", "delivery", "artifacts", "profiles")
 ALL = frozenset(AREAS)
 NONE: frozenset[str] = frozenset()
+HEAVY = ("delivery", "artifacts")
 
 PS = "claude/plugins/project-setup/skills"
 TS = PS + "/tech-stack-setup"
@@ -161,6 +172,46 @@ def changed_paths(event: str, base: str, head: str) -> list[str] | None:
     return [p for p in proc.stdout.splitlines() if p]
 
 
+def parse_areas(value: str) -> list[str]:
+    """Validate a comma-separated area list; unknown names are an error."""
+    names = [v.strip().lower() for v in value.split(",") if v.strip()]
+    bad = [n for n in names if n not in ALL]
+    if bad:
+        raise ValueError(f"unknown area(s) {','.join(bad)}; choose from {','.join(AREAS)}")
+    return [a for a in AREAS if a in names]
+
+
+def git_out(*args: str) -> str | None:
+    try:
+        proc = subprocess.run(["git", *args], capture_output=True, text=True,
+                              encoding="utf-8", timeout=120)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return proc.stdout.strip() if proc.returncode == 0 else None
+
+
+def branch_paths(default_branch: str, head: str = "HEAD") -> list[str] | None:
+    """Paths the branch changed against the default branch, None when unreadable
+    or when the branch is the default branch (nothing to compare)."""
+    ref = f"origin/{default_branch}"
+    tip, base = git_out("rev-parse", head), git_out("rev-parse", ref)
+    if not tip or not base or tip == base:
+        return None
+    out = git_out("diff", "--name-only", "--no-renames", f"{ref}...{head}")
+    return None if out is None else [p for p in out.splitlines() if p]
+
+
+def advice(paths: list[str], branch: str = "<branch>") -> str:
+    """Whether a branch run is wanted for these changed files."""
+    out = classify(paths)
+    touched = [a for a in AREAS if out[a]]
+    heavy = [a for a in HEAVY if out[a]]
+    if not heavy:
+        return "light: test locally only"
+    return (f"heavy: {','.join(heavy)} -> run `gh workflow run spec-lint.yml "
+            f"--ref {branch} -f areas={','.join(touched)}`")
+
+
 def emit(out: dict[str, bool], note: str) -> None:
     lines = [f"{k}={'true' if v else 'false'}" for k, v in out.items()]
     print(f"ci_areas: {note}")
@@ -182,17 +233,48 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--head", default="")
     ap.add_argument("--mutants", default="", help="true forces the mutation passes (nightly)")
     ap.add_argument("--skip", default="", help="true: DS44 main-after-merge skip, run nothing")
+    ap.add_argument("--areas", default=None,
+                    help="workflow_dispatch override: comma-separated areas to run")
+    ap.add_argument("--default-branch", default="main",
+                    help="dispatch with no --areas diffs the branch against origin/<this>")
+    ap.add_argument("--branch-advice", action="store_true",
+                    help="print whether the given paths (default: this branch's diff) want a branch run")
+    ap.add_argument("--branch", default="", help="branch name for --branch-advice output")
+    ap.add_argument("paths", nargs="*", help="changed files for --branch-advice")
     args = ap.parse_args(argv)
+
+    if args.branch_advice:
+        name = args.branch or git_out("rev-parse", "--abbrev-ref", "HEAD") or "<branch>"
+        paths = args.paths or branch_paths(args.default_branch)
+        if paths is None:
+            print("heavy: unreadable diff, treat as every area -> run `gh workflow run "
+                  f"spec-lint.yml --ref {name} -f areas={','.join(AREAS)}`")
+            return 0
+        print(advice(paths, name))
+        return 0
 
     skip = truthy(args.skip)
     force = truthy(args.mutants)
     paths = None if skip else changed_paths(args.event, args.base, args.head)
+    if not skip and args.event == "workflow_dispatch" and (args.areas or "").strip():
+        try:
+            chosen = parse_areas(args.areas)
+        except ValueError as exc:
+            print(f"ci_areas: {exc}", file=sys.stderr)
+            return 2
+        out = {a: a in chosen for a in AREAS}
+        out["mutants"] = force and out["delivery"]
+        emit(out, f"dispatch override: {','.join(chosen)}")
+        return 0
+    if not skip and args.event == "workflow_dispatch":
+        paths = branch_paths(args.default_branch, args.head or "HEAD")
     if skip:
         emit(classify([], skip=True),
              "skipped, main differs from the tested PR head only in ignored paths")
     elif paths is None:
         emit(classify([], run_all=True, force_mutants=force),
-             f"event {args.event or '?'} (or an unreadable range) runs every area")
+             f"event {args.event or '?'} (or an unreadable range, or the default "
+             "branch) runs every area")
     else:
         emit(classify(paths, force_mutants=force), f"{len(paths)} changed path(s)")
     return 0

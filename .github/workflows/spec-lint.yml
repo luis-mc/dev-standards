@@ -40,6 +40,10 @@ on:
         description: 'Run the mutation passes too'
         type: boolean
         default: false
+      areas:
+        description: 'Areas to run, comma-separated (specs,delivery,artifacts,profiles); empty = what this branch changed against origin/main'
+        type: string
+        default: ''
   # The nightly workflow (TC1) calls this one with mutants on.
   workflow_call:
     inputs:
@@ -47,6 +51,10 @@ on:
         description: 'Run the mutation passes too'
         type: boolean
         default: false
+      areas:
+        description: 'Areas to run, comma-separated (specs,delivery,artifacts,profiles); empty = what this branch changed against origin/main'
+        type: string
+        default: ''
 
 # TC4: a new push to a pull request replaces the run it supersedes. Runs on
 # main are never cancelled, so every merge keeps its result.
@@ -103,10 +111,11 @@ jobs:
           BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
           HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           FORCE_MUTANTS: ${{ inputs.mutants }}
+          AREAS: ${{ inputs.areas }}
           SKIP: ${{ steps.skip.outputs.skip }}
         run: |
           python3 tools/ci_areas.py --event "$EVENT" --base "$BASE" --head "$HEAD" \
-            --mutants "$FORCE_MUTANTS" --skip "$SKIP"
+            --mutants "$FORCE_MUTANTS" --skip "$SKIP" --areas "$AREAS"
 
   specs:
     name: specs, templates and AUTHSPEC
