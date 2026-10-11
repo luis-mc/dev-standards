@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T10:45+01:00",
+  "updated": "2026-10-11T11:02+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -916,6 +916,17 @@
       "detail": "Released in STACKSPEC 7.0.0 (#27, 137e0d0, 00:31). Opus and Sonnet at medium effort everywhere: skill profiles, claude-setup's preselected answers, top-level effort, the architect agent and the rule's agent lines (specs 1.2.0, audits 1.2.0, agents 1.1.0, artifacts 1.1.2). Your ~/.claude already uses medium for both.",
       "expected": "11 Oct",
       "changed": "2026-10-11T00:34+01:00"
+    },
+    {
+      "id": "TC1",
+      "owner": "test-cost",
+      "app": "",
+      "status": "Needs you",
+      "item": "Mutation passes only when their files change, all nightly",
+      "detail": "S2: saves 8.8 min on PRs that leave the delivery scripts alone; waits on decision D6",
+      "expected": "12 Oct",
+      "changed": "2026-10-11T11:02+01:00",
+      "expected_basis": "your choice in D6, then one workflow change"
     }
   ]
 }

@@ -571,12 +571,13 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Test and validation cost</h1><p>What our tests and checks cost, where they repeat, and what to cut</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T10:45+01:00">11 Oct 10:45</time> (Lisbon)</p>
-<p class="lede">Planned. Work has not started. <strong>Nothing needs you.</strong></p>
-<div class="status-count-tiles"></div>
+<p class="last-update">Last update: <time datetime="2026-10-11T11:02+01:00">11 Oct 11:02</time> (Lisbon)</p>
+<p class="lede">Planned. Work has not started. <strong>Needs you: TC1 Mutation passes only when their files change, all nightly.</strong></p>
+<div class="status-count-tiles"><div class="status-count-tile status-needs-you"><div class="count">1</div><div class="label">needs you</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-
+<tr class="status-group" data-group="you"><td colspan="4"><strong>Needs you, failed or on hold</strong></td></tr>
+<tr data-task="TC1"><td><span class="status-chip status-needs-you">Needs you</span></td><td><span class="task-id">TC1</span>Mutation passes only when their files change, all nightly</td><td>S2: saves 8.8 min on PRs that leave the delivery scripts alone; waits on decision D6</td><td>12 Oct<span class="expected-basis">your choice in D6, then one workflow change</span></td></tr>
 </tbody></table></div>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>What and why</h2>
