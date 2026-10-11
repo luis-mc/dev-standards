@@ -32,12 +32,23 @@
       "apps": [
         "luismc-project-setup"
       ]
+    },
+    {
+      "key": "test-cost",
+      "title": "Feature: Test and validation cost",
+      "file": "feature-test-and-validation-cost.html",
+      "prefix": "TC",
+      "apps": [
+        "spec-lint",
+        "delivery scripts",
+        "luismc-artifacts"
+      ]
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-10-11T10:40+01:00",
+  "updated": "2026-10-11T10:45+01:00",
   "retired": [],
   "deleted": [
     {
