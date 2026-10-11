@@ -1888,6 +1888,9 @@ def sc_hook_ranges(t: T, shared: Path) -> None:
     box.branch("feat/r2", {"apps/web/b.txt": "b\n"})
     box.g("update-ref", "-d", "refs/remotes/origin/main")
     box.g("update-ref", "-d", "refs/remotes/origin/feat/r")  # no other remote branch for a fork point either
+    # and nothing to fetch it from (fetches fail; pushes still reach the real origin)
+    box.g("remote", "set-url", "--push", "origin", box.origin.as_posix())
+    box.g("remote", "set-url", "origin", (box.root / "gone.git").as_posix())
     box.clear_log()
     r = run(["git", "push", "-q", "-u", "origin", "feat/r2"], cwd=box.work)
     t.check("a first push with no origin/main: blocked", r.code != 0, r.text)
