@@ -1066,12 +1066,11 @@
       "id": "DS52",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "AR43 train: join, PR CI, merge, cleanup",
-      "detail": "PR #49 open (30631b7); CI running",
-      "expected": "11 Oct ~18:45",
-      "changed": "2026-10-11T18:35+01:00",
-      "expected_basis": "PR CI ~4 min from 18:37, merge and cleanup ~4 min; +1 fix round ~10 min"
+      "detail": "#49 merged 18:38 on one 3.4 min CI run; cleanup done; delivery log in train-2026-10-11-49",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T18:39+01:00"
     },
     {
       "id": "DS53",
