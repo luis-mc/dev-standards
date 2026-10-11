@@ -856,7 +856,7 @@ double-click.
   time axis drawn to scale: from the earliest phase start, Expected or stamp to
   the latest Expected or worst case, floored and ceiled to the half hour, with a
   tick every 30 minutes (every hour beyond 4 hours). A release whose Expected is
-  another day, or has no time, sits after an axis break in one slot per day, as
+  more than 24 hours after the stamp, or has no time, sits after an axis break in one slot per day, as
   an outline diamond with the day. A release without phases is a filled diamond at
   its Expected only. The figure is deterministic (R7.4): the "now" mark is the
   render stamp, never the wall clock. `check` finds a missing, extra or misplaced
