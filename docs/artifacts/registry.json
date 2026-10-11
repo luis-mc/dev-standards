@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T20:38+01:00",
+  "updated": "2026-10-11T22:00+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1108,6 +1108,18 @@
         "label": "+1 fix round",
         "minutes": 10
       }
+    },
+    {
+      "id": "DS54",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "AR45 train: join, PR CI, merge, cleanup",
+      "detail": "Ready PR after AR45 is Built; luismc-artifacts 1.6.0",
+      "expected": "12 Oct",
+      "changed": "2026-10-11T22:00+01:00",
+      "expected_basis": "after AR45 Built: join 10, CI ~40, merge 5",
+      "release": true
     },
     {
       "id": "MP1",
