@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T04:19+01:00",
+  "updated": "2026-10-11T04:20+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -321,6 +321,16 @@
       "detail": "Released in STACKSPEC 7.1.0 / luismc-project-setup 13.1.0 / luismc-artifacts 1.3.0 (#45, 48205a9, 04:17). the record worktree location comes from LUISMC_ARTIFACTS_WORKTREE or a git-ignored .claude/artifacts-local.json, else the default; moving it removes the old worktree unless it holds unpushed record commits.",
       "expected": "11 Oct",
       "changed": "2026-10-11T04:19+01:00"
+    },
+    {
+      "id": "AR35",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "Re-render every page when the templates change",
+      "detail": "Found after 1.3.0 merged: a stylesheet change left the Model and effort profiles page stale until a manual render, because status changes re-render only the pages a task appears on. check caught it (INV-3, R5.10). Fix: any command re-renders every artifact when the plugin's templates or stylesheet differ from what the record was rendered with.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T04:20+01:00"
     },
     {
       "id": "DS1",
