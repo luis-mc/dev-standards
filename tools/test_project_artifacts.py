@@ -812,6 +812,27 @@ def test_render_repairs_stale_html(env):
     assert p.run('check').code == 0
 
 
+@case
+def test_a_writing_command_refreshes_every_stale_page(env):
+    """R7.5: a page with an older look (a plugin upgrade changed the templates) is rendered again by the next
+    status change, though the change is not about it; an up-to-date page keeps its stamp."""
+    p = env.baseline()
+    other = p.clone_again('old-look')
+    site = other / 'docs' / 'artifacts' / 'feature-the-site.html'
+    site.write_text(site.read_text(encoding='utf-8') + '<!-- older template -->\n', encoding='utf-8', newline='\n')
+    git(other, 'commit', '-qam', 'older template')
+    git(other, 'push', '-q', 'origin', 'main')
+    r = p.run('check')
+    assert r.code == 1 and has_line(r.out, 'INV-3', 'feature-the-site.html'), r.all
+    r = p.ok('set-task-status', 'AR1', 'Running', '--json', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-11T08:00:00+00:00'})
+    assert 'site' in r.json()['rendered'], r.all
+    assert 'older template' not in p.show('docs/artifacts/feature-the-site.html')
+    assert p.run('check').code == 0
+    # nothing stale now: a change to AR1 again renders its own pages only
+    r = p.ok('set-task-status', 'AR1', 'Waiting', '--json', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-11T09:00:00+00:00'})
+    assert 'site' not in r.json()['rendered'], r.all
+
+
 # --------------------------------------------------------------------------
 # pending, mark-published, queue
 # --------------------------------------------------------------------------

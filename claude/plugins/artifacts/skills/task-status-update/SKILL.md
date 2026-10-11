@@ -48,7 +48,8 @@ read the message, fix the cause and rerun.
      Built or Failed drops it.
    - `--history`: one line for the feature artifact's History table, for a
      feature task whose change the owner should be able to look up later.
-   The command renders every artifact that shows the task, removes the task's
+   The command renders every artifact that shows the task, and any other page
+   whose look is older than the installed plugin's (R7.5), removes the task's
    queued events and commits the record. Exit 3 or 4 means the record could not
    be pushed; report that and stop, because the change would be lost.
 3. **Do not publish yet.** Change as many statuses as the turn needs, each

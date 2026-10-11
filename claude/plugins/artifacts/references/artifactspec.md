@@ -812,6 +812,12 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
   nearest allowed status (`Merged` → `Live`).
 - **R7.4** — Rendering is deterministic: the same record and the same stamp give
   byte-identical HTML.
+- **R7.5** — Every writing command except `render` (which does this itself) also
+  renders, with a new stamp, each artifact whose file differs from a fresh render
+  with that file's own stamp, so a plugin upgrade that changes the templates or
+  the stylesheet brings every page up to date at the next change, not only the
+  pages that change names (INV-3). An artifact whose content is invalid is
+  skipped as in R7.1a. A page that is already up to date keeps its stamp.
 
 ---
 
@@ -1059,7 +1065,7 @@ Reads the hook input; takes the task ID from the current branch name
 - **R13.1** — `tools/test_project_artifacts.py` builds throwaway git repos with
   a bare remote and proves each command, each check of §14 (one fixture per
   check that fails without it), INV-1 to INV-3, R4.13 to R4.27, R6.10, R6.11, R5.31, R5.32,
-  R7.4, R9.5 and R10.6.
+  R7.4, R7.5, R9.5 and R10.6.
 - **R13.2** — `tools/test_project_artifacts_hooks.py` feeds sample hook input
   to each hook and asserts the queue, the exit code and the output, including
   R8.4, R8.8 to R8.15 and INV-4, and that every hook does nothing without a
