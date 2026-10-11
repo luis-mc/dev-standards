@@ -111,10 +111,22 @@ SPEC_B = """# Beta spec
 """
 
 
+PLUGIN_JSON = """{
+  "name": "p",
+  "description": "A plugin.",
+  "version": "2.3.4",
+  "author": {
+    "name": "X"
+  }
+}
+"""
+PLUGIN = "plugins/p/.claude-plugin/plugin.json"
+
+
 class Box:
     """A repository on `main` with two specs; the scripts under test live in scripts/delivery."""
 
-    def __init__(self, scripts: Path, gate: dict | None = None):
+    def __init__(self, scripts: Path, gate: dict | None = None, config: dict | None = None):
         self.root = Path(tempfile.mkdtemp(dir=_TMP))
         self.scripts = scripts
         self.git("init", "-q")
@@ -122,10 +134,14 @@ class Box:
         d.mkdir(parents=True)
         for f in FILES:
             shutil.copy2(scripts / f, d / f)
-        cfg = {"schema": 1, "default_branch": "main", "packages": {"kind": "go-modules"},
-               "steps": [{"name": "x", "scope": "always", "run": "true"}]}
-        cfg.update(gate or {})
-        self.write("scripts/delivery/gate.json", json.dumps(cfg, indent=2))
+        if config is None:
+            cfg = {"schema": 1, "default_branch": "main", "packages": {"kind": "go-modules"},
+                   "steps": [{"name": "x", "scope": "always", "run": "true"}]}
+            cfg.update(gate or {})
+            self.write("scripts/delivery/gate.json", json.dumps(cfg, indent=2))
+        else:  # no gate.json at all: the settings live in --config
+            self.write("tools/cfg.json", json.dumps(config, indent=2))
+        self.write("plugins/p/.claude-plugin/plugin.json", PLUGIN_JSON)
         self.write("docs/specs/alpha.md", SPEC_A)
         self.write("docs/specs/beta.md", SPEC_B)
         self.write("CHANGELOG.md", "# Changelog\n")
@@ -152,9 +168,11 @@ class Box:
     def branch(self, name: str) -> None:
         self.git("checkout", "-q", "-b", name)
 
-    def note(self, name: str, spec: str, change: str, text: str) -> None:
+    def note(self, name: str, spec: str, change: str, text: str, plugin: str = "") -> None:
         self.write("docs/specs/changes/%s.md" % name,
-                   "---\nspec: %s       # the spec\nchange: %s\n---\n%s\n" % (spec, change, text))
+                   "---\n%s%schange: %s\n---\n%s\n" % (
+                       "spec: %s       # the spec\n" % spec if spec else "",
+                       "plugin: %s\n" % plugin if plugin else "", change, text))
 
     def check(self, *extra: str) -> R:
         return run([PY, "scripts/delivery/change_notes.py", "check", "--base-ref", "main", *extra], self.root)
@@ -165,6 +183,10 @@ class Box:
 
 def box(scripts: Path, gate: dict | None = None) -> Box:
     return Box(scripts, gate)
+
+
+def box_cfg(scripts: Path, config: dict) -> Box:
+    return Box(scripts, config=config)
 
 
 # --------------------------------------------------------------------------
@@ -415,6 +437,145 @@ def sc_gate_json(t: T, s: Path) -> None:
     t.check("valid values are accepted", r.code == 0, r.text)
 
 
+CFG = {"specs": ["docs/specs/*.md"], "plugins": ["plugins/*/.claude-plugin/plugin.json"],
+       "release_branches": ["*-integration"], "default_branch": "main"}
+
+
+def cfg_run(b: Box, cmd: str, *extra: str) -> R:
+    base = ["--base-ref", "main"] if cmd == "check" else ["--date", "2026-10-11"]
+    return run([PY, "scripts/delivery/change_notes.py", cmd, "--config", "tools/cfg.json", *base, *extra], b.root)
+
+
+def sc_config(t: T, s: Path) -> None:
+    b = box_cfg(s, CFG)
+    b.branch("DS14-feature")
+    b.note("DS14-a", "docs/specs/alpha.md", "minor", "Added.")
+    b.write("docs/specs/alpha.md", SPEC_A.replace("Text.", "Text, edited."))
+    b.commit("note")
+    r = cfg_run(b, "check")
+    t.check("--config needs no gate.json; a note passes", r.code == 0 and "ok" in r.out, r.text)
+    b.write("docs/specs/alpha.md", SPEC_A.replace("7.0.0\n\n## 1", "7.1.0\n\n## 1"))
+    b.commit("bump")
+    r = cfg_run(b, "check")
+    t.check("--config: a Version edit fails", r.code == 1 and "alpha.md:3:" in r.out, r.text)
+    r = run([PY, "scripts/delivery/change_notes.py", "check", "--base-ref", "main"], b.root)
+    t.check("without --config the missing gate.json is a usage error", r.code == 2 and "gate.json" in r.text, r.text)
+    b.git("checkout", "-q", "-b", "DS14-integration", "main")
+    b.write("docs/specs/alpha.md", SPEC_A.replace("7.0.0\n\n## 1", "7.1.0\n\n## 1"))
+    b.commit("release bump")
+    t.check("--config: release_branches is honoured", cfg_run(b, "check").code == 0)
+    b.git("checkout", "-q", "-b", "release/9", "main")
+    b.write("CHANGELOG.md", "# Changelog\n\n- x\n")
+    b.commit("cl")
+    t.check("--config: the default release globs are replaced", cfg_run(b, "check").code == 1)
+    c = box_cfg(s, CFG)
+    c.branch("DS14-integration")
+    c.note("DS14-b", "docs/specs/alpha.md", "patch", "Fixed.")
+    c.commit("note")
+    r = cfg_run(c, "fold")
+    t.check("--config: fold bumps", r.code == 0 and "**Version:** 7.0.1\n" in c.read("docs/specs/alpha.md"), r.text)
+    d = box_cfg(s, {"specs": "x"})
+    r = cfg_run(d, "fold")
+    t.check("--config: a bad value is named with the config path", r.code == 2 and "tools/cfg.json: 'specs' must be a list" in r.text, r.text)
+    d = box_cfg(s, {"changelog_headings": {"docs/specs/alpha.md": 3}})
+    r = cfg_run(d, "fold")
+    t.check("--config: changelog_headings must map to strings", r.code == 2 and "changelog_headings" in r.text, r.text)
+    d = box_cfg(s, {"default_branch": ""})
+    r = cfg_run(d, "fold")
+    t.check("--config: default_branch must be non-empty", r.code == 2 and "default_branch" in r.text, r.text)
+    d = box_cfg(s, CFG)
+    r = run([PY, "scripts/delivery/change_notes.py", "fold", "--config", "tools/nope.json"], d.root)
+    t.check("--config: a missing file is a usage error", r.code == 2 and "nope.json not found" in r.text, r.text)
+    d.write("tools/bad.json", "{")
+    r = run([PY, "scripts/delivery/change_notes.py", "fold", "--config", "tools/bad.json"], d.root)
+    t.check("--config: invalid JSON is a usage error", r.code == 2 and "not valid JSON" in r.text, r.text)
+
+
+def sc_headings(t: T, s: Path) -> None:
+    cfg = dict(CFG, changelog_heading="What changed", changelog_headings={"docs/specs/beta.md": "History", "docs/specs/alpha.md": ""})
+    beta = SPEC_B.replace("What changed since 1.0", "History of beta")
+    b = box_cfg(s, cfg)
+    b.write("docs/specs/beta.md", beta)
+    b.commit("beta heading")
+    b.branch("DS15-feature")
+    b.write("docs/specs/beta.md", beta + "\n**1.5.0 \u2014 2026-02-02.** x.\n")
+    b.commit("beta log")
+    r = cfg_run(b, "check")
+    t.check("a per-spec heading marks that spec's change log", r.code == 1 and "beta.md" in r.out and "History" in r.out, r.text)
+    b.git("checkout", "-q", "main")
+    b.git("checkout", "-q", "-b", "DS15-other")
+    b.write("docs/specs/alpha.md", SPEC_A.replace("**7.0.0 \u2014 2026-01-01.** First.", "**7.0.0 \u2014 2026-01-01.** First, edited."))
+    b.commit("alpha log")
+    t.check("a spec with heading \"\" has no change log to guard", cfg_run(b, "check").code == 0)
+    b.write("docs/specs/alpha.md", SPEC_A.replace("7.0.0\n\n## 1", "7.0.1\n\n## 1"))
+    b.commit("alpha version")
+    t.check("but its Version is still guarded", cfg_run(b, "check").code == 1)
+    c = box_cfg(s, cfg)
+    c.write("docs/specs/beta.md", beta)
+    c.commit("beta heading")
+    c.branch("DS15-integration")
+    c.note("DS15-a", "docs/specs/alpha.md", "minor", "Alpha thing.")
+    c.note("DS15-b", "docs/specs/beta.md", "patch", "Beta thing.")
+    c.commit("notes")
+    r = cfg_run(c, "fold")
+    a, bt = c.read("docs/specs/alpha.md"), c.read("docs/specs/beta.md")
+    t.check("fold uses each spec's own heading", r.code == 0 and "## History of beta\n\n**1.4.3 \u2014 2026-10-11.**\n\n- Beta thing." in bt, r.text + bt)
+    t.check("a spec with no change log is only bumped", a == SPEC_A.replace("7.0.0\n\n## 1", "7.1.0\n\n## 1"), a)
+
+
+def sc_plugins(t: T, s: Path) -> None:
+    b = box_cfg(s, CFG)
+    b.branch("DS16-feature")
+    b.write(PLUGIN, PLUGIN_JSON.replace("A plugin.", "Another plugin."))
+    b.commit("description")
+    t.check("a plugin.json edit other than version passes", cfg_run(b, "check").code == 0)
+    b.write(PLUGIN, PLUGIN_JSON.replace("2.3.4", "2.4.0"))
+    b.commit("version")
+    r = cfg_run(b, "check")
+    t.check("a plugin version edit fails and names file:line", r.code == 1 and "%s:4:" % PLUGIN in r.out and "version" in r.out, r.text)
+    t.check("and points at a change note", "change note" in r.out, r.text)
+    b.git("checkout", "-q", "-b", "DS16-integration")
+    t.check("a release branch accepts a plugin version edit", cfg_run(b, "check").code == 0)
+    n = box_cfg(s, dict(CFG, plugins=[]))
+    n.branch("DS16-unlisted")
+    n.write(PLUGIN, PLUGIN_JSON.replace("2.3.4", "2.4.0"))
+    n.commit("version")
+    t.check("a plugin not in 'plugins' is not guarded", cfg_run(n, "check").code == 0)
+    for kind, want in (("patch", "2.3.5"), ("minor", "2.4.0"), ("major", "3.0.0")):
+        f = box_cfg(s, CFG)
+        f.branch("DS16b-integration")
+        f.note("DS16b-a", "", kind, "Plugin %s." % kind, plugin=PLUGIN)
+        f.commit("note")
+        r = cfg_run(f, "fold")
+        text = f.read(PLUGIN)
+        t.check("%s bumps the plugin to %s, rest untouched" % (kind, want), r.code == 0 and text == PLUGIN_JSON.replace("2.3.4", want), r.text + text)
+        t.check("%s removes the note" % kind, not (f.root / "docs/specs/changes/DS16b-a.md").exists())
+    g = box_cfg(s, CFG)
+    g.branch("DS16c-integration")
+    g.note("DS16c-a", "docs/specs/alpha.md", "patch", "Both.", plugin=PLUGIN)
+    g.note("DS16c-b", "", "minor", "Plugin only.", plugin=PLUGIN)
+    g.commit("notes")
+    r = cfg_run(g, "fold", "--dry-run")
+    t.check("dry run reports spec and plugin", r.code == 0 and "2.3.4 -> 2.4.0" in r.out and "7.0.0 -> 7.0.1" in r.out, r.text)
+    t.check("dry run writes nothing", g.read(PLUGIN) == PLUGIN_JSON)
+    r = cfg_run(g, "fold")
+    t.check("a note may name both; the plugin takes the highest kind of its notes",
+            r.code == 0 and '"version": "2.4.0"' in g.read(PLUGIN) and "**Version:** 7.0.1\n" in g.read("docs/specs/alpha.md"), r.text)
+    h = box_cfg(s, CFG)
+    h.branch("DS16d-integration")
+    h.note("DS16d-a", "", "minor", "x.", plugin="plugins/none/.claude-plugin/plugin.json")
+    r = cfg_run(h, "fold")
+    t.check("a note for a missing plugin fails (exit 2)", r.code == 2 and "none" in r.text, r.text)
+    h = box_cfg(s, CFG)
+    h.write("plugins/q.json", "{}\n")
+    h.note("DS16e-a", "", "minor", "x.", plugin="plugins/q.json")
+    r = cfg_run(h, "fold")
+    t.check("a plugin without a version line fails (exit 2)", r.code == 2 and "version" in r.text, r.text)
+    h.write("docs/specs/changes/DS16e-b.md", "---\nchange: minor\n---\nx\n")
+    r = cfg_run(h, "check")
+    t.check("a note naming neither spec nor plugin is malformed", r.code == 1 and "DS16e-b.md" in r.out, r.text)
+
+
 def sc_track_gates(t: T, s: Path) -> None:
     for track in ("ts", "go", "rust", "dotnet"):
         cfg = json.loads((SHARED.parent / track / "scripts/delivery/gate.json").read_text(encoding="utf-8"))
@@ -439,6 +600,9 @@ SCENARIOS = [
     ("fold-dry", sc_fold_dry, "dry run"),
     ("fold-errors", sc_fold_errors, "fold errors, CRLF"),
     ("gate-json", sc_gate_json, "gate.json validation"),
+    ("config", sc_config, "--config instead of gate.json"),
+    ("headings", sc_headings, "per-spec change-log headings"),
+    ("plugins", sc_plugins, "plugin versions"),
     ("track-gates", sc_track_gates, "track gate.json steps"),
 ]
 
@@ -461,6 +625,12 @@ MUTANTS = [
     ("change_notes.py", "eol = \"\\r\\n\" if \"\\r\\n\" in text else \"\\n\"", "eol = \"\\n\"", ["fold-errors"]),
     ("change_notes.py", "if kind not in KINDS:", "if False:", ["bad-notes"]),
     ("change_notes.py", "if not notes:\n        print", "if False:\n        print", ["fold-several"]),
+    ("change_notes.py", "if config:\n        path = root / config", "if False:\n        path = root / config", ["config"]),
+    ("change_notes.py", "return cfg[\"changelog_headings\"].get(spec, cfg[\"changelog_heading\"])", "return cfg[\"changelog_heading\"]", ["headings"]),
+    ("change_notes.py", "if heading:  # a spec", "if True:  # a spec", ["headings"]),
+    ("change_notes.py", "elif is_plugin(path, cfg):", "elif False:", ["plugins"]),
+    ("change_notes.py", "if n.plugin:\n            by_plugin", "if False:\n            by_plugin", ["plugins"]),
+    ("change_notes.py", "if not spec and not plugin:", "if False:", ["plugins"]),
     ("delivery_common.py", "or not cfg[\"changelog_heading\"].strip():", "or False:", ["gate-json"]),
     ("delivery_common.py", "    for key in (\"specs\", \"release_branches\"):\n        cfg[key] = _str_list(cfg, key, where)\n", "", ["gate-json"]),
 ]

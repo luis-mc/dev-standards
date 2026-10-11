@@ -506,6 +506,16 @@ One or two sentences for the change log.
   one change-log entry under the change-log heading (new version, date, one
   bullet per note), deletes the folded notes, prints a summary. Idempotent; no
   notes → nothing to do.
+- `--config PATH` (both commands) reads the settings from that JSON file
+  (relative to the repository root; no `schema` or `steps`) instead of
+  `gate.json`. It takes the same keys and two more, both also valid in
+  `gate.json`: `changelog_headings` (spec path → heading, overriding
+  `changelog_heading` for that spec; `""` = the spec has no change log, so only
+  its version is guarded and bumped) and `plugins` (globs of plugin manifests).
+  A note may also carry `plugin: <path of plugin.json>` (with or without
+  `spec:`); `check` refuses a `"version"` edit in a listed manifest off release
+  branches, and `fold` bumps that `"version"` by the highest kind of the notes
+  naming it (no change-log entry).
 - Template `gate.json`s get the step; the README documents notes and fold.
 
 ### DS39 — skip a merge that differs only in ignored paths
