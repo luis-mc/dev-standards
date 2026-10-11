@@ -723,6 +723,16 @@
       "changed": "2026-10-11T02:24+01:00"
     },
     {
+      "id": "DS41",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Integrate and release luismc-artifacts 1.2.0 and project-setup 13.0.1",
+      "detail": "AR31, DS27, DS28 and AR30 joined into DS27-integration; ready PR #42 open; CI running, watched by commit; merge on green, then AR32 updates the installed plugins.",
+      "expected": "11 Oct ~03:30",
+      "changed": "2026-10-11T02:49+01:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
