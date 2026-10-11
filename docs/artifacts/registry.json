@@ -406,6 +406,17 @@
       "expected_basis": "after TC6 merges (~14:30); one release"
     },
     {
+      "id": "DL4",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Narrower gate valves: lockfile and shared UI",
+      "detail": "lockfile widens only for affected deps; shared UI runs importing apps e2e",
+      "expected": "11 Oct ~18:00",
+      "changed": "2026-10-11T11:55+01:00",
+      "expected_basis": "after TC6 merges (~14:30); one release"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
