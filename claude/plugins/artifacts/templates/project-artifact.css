@@ -335,6 +335,8 @@ a .task-id { color: inherit; }
 .sort-header {
   padding: 0;
   font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
   color: inherit;
   background: transparent;
   border: 0;
