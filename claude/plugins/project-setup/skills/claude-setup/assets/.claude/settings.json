@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ -f \"$CLAUDE_PROJECT_DIR/scripts/delivery/session_guard.py\" ] || exit 0; python3 \"$CLAUDE_PROJECT_DIR/scripts/delivery/session_guard.py\" || python \"$CLAUDE_PROJECT_DIR/scripts/delivery/session_guard.py\""
+            "command": "[ -f \"$CLAUDE_PROJECT_DIR/scripts/delivery/session_guard.py\" ] || exit 0; if command -v python3 >/dev/null 2>&1; then python3 \"$CLAUDE_PROJECT_DIR/scripts/delivery/session_guard.py\"; else python \"$CLAUDE_PROJECT_DIR/scripts/delivery/session_guard.py\"; fi"
           }
         ]
       }

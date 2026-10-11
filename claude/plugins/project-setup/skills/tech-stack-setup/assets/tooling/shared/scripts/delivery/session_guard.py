@@ -36,15 +36,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import run_suite as rs  # noqa: E402
 
 DEFAULT_RELEASE_BRANCHES = ["*-integration"]
+REDIRECT = re.compile(r"^\d*>{1,2}(&\d+|\S*)$")
 SPLIT = re.compile(r"&&|\|\||[;|\n]")
 INTERPRETERS = {"python3": "python", "py": "python", "python3.11": "python", "python3.12": "python"}
 
 
 def tokens(segment: str) -> list[str]:
+    if os.name == "nt":
+        segment = segment.replace("\\", "/")  # Windows paths; shlex would read them as escapes
     try:
         toks = shlex.split(segment)
     except ValueError:
         toks = segment.split()
+    toks = [t for t in toks if not REDIRECT.match(t)]
     # leading noise: VAR=x, rtk, timeout N, env
     while toks:
         t = toks[0]

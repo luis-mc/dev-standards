@@ -173,11 +173,16 @@ def passed_on_tree(times: dict, name: str, tree: str | None) -> str | None:
     return None
 
 
+def quote_args(cases: list[str]) -> str:
+    """Quote for the shell subprocess uses: cmd.exe on Windows, sh elsewhere."""
+    return subprocess.list2cmdline(cases) if os.name == "nt" else " ".join(shlex.quote(c) for c in cases)
+
+
 def cases_command(suite: dict, cases: list[str]) -> str:
     template = suite.get("cases") or ""
     if "{cases}" not in template:
         raise SuiteError("suite '%s' does not declare how to run named cases" % suite["name"])
-    return template.replace("{cases}", " ".join(shlex.quote(c) for c in cases))
+    return template.replace("{cases}", quote_args(cases))
 
 
 def record_ci_times(root: Path, run: dict, jobs: list) -> None:
