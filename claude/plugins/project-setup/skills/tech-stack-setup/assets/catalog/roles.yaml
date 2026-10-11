@@ -5,11 +5,11 @@
 #   derived  — computed from an earlier answer; announced, never asked
 #   fixed    — part of the foundation; announced once, never asked
 #
-# `binds` lists the STACKSPEC 8.0.0 clauses that constrain whatever is chosen.
+# `binds` lists the STACKSPEC 8.1.0 clauses that constrain whatever is chosen.
 # The wizard reads those clauses aloud when the choice has consequences.
 
 version: 1
-spec: STACKSPEC 8.0.0
+spec: STACKSPEC 8.1.0
 
 # ---------------------------------------------------------------------------
 # Fixed foundation — announced in Phase 0, never asked.

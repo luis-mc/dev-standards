@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 8.0.0
+**Version:** 8.1.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -23,6 +23,10 @@ recorded in the product's Stack Profile (§18). This document does not name
 vendors and does not rank them.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+
+**8.1.0 — 2026-10-11.**
+
+- STACKSPEC §13.1 gains a SHOULD: split the job or step that dominates CI wall time into its own job, and run a splittable test step as parallel shards. The ts template runs its Playwright suite as two shards behind the same required check, and `ci_watch.py` prints a slowest-job summary (slowest job, its share of the run, its two slowest steps) when the runs complete.
 
 **8.0.0 — 2026-10-11.**
 
