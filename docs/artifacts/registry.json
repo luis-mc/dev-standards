@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T03:26+01:00",
+  "updated": "2026-10-11T03:32+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -696,11 +696,11 @@
       "id": "DS38",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "dev-standards adopts change notes",
-      "detail": "Agent adopting change notes in dev-standards: a small config instead of a product gate.json, notes in docs/specs/changes/, plugin.json versions folded the same way, a spec-lint step that refuses version edits off release branches.",
-      "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T02:58+01:00"
+      "detail": "Built in #43 and joined (not released): dev-standards checks change notes in spec-lint (tools/change-notes.json: the three specs, every plugin.json, release branches *-integration); notes go in docs/specs/changes/; fold bumps spec and plugin versions. From the next round, branches here add notes instead of editing versions.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T03:32+01:00"
     },
     {
       "id": "DS39",
