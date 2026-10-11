@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T17:48+01:00",
+  "updated": "2026-10-11T17:49+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -409,9 +409,9 @@
       "status": "To do",
       "item": "Full Progress: release timeline above the status table",
       "detail": "Owner confirmed the design with Expected = sum of phases and a named fix-round risk; plugin build is the next small train",
-      "expected": "11 Oct ~19:30",
-      "changed": "2026-10-11T17:48+01:00",
-      "expected_basis": "starts after DS51 merges: one agent ~45 min, PR CI ~6 min"
+      "expected": "11 Oct ~18:55",
+      "changed": "2026-10-11T17:49+01:00",
+      "expected_basis": "after DS51 (~18:00): agent ~45 min, PR CI ~6 min, merge ~4 min"
     },
     {
       "id": "AR44",
