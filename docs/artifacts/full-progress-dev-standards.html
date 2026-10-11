@@ -679,7 +679,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-11T22:00+01:00",
+ "updated": "2026-10-11T22:02+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1107,10 +1107,10 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "app": "luismc-artifacts",
    "status": "Running",
    "item": "RELEASE-n numbers; Full Progress groups items by release",
-   "detail": "Spec 1.6.0 contract by the session (Running and Built must ride a release), then one agent implements commands, check, render, tests",
+   "detail": "Spec 1.6.0 contract committed (859b30b, branch AR45-release-numbers): RELEASE-n numbers, Full Progress grouped by release, Running/Built ride a release, tiles say tasks. Agent implementing since 22:20",
    "expected": "11 Oct ~23:30",
-   "changed": "2026-10-11T22:00+01:00",
-   "expected_basis": "spec ~20 min, agent ~60 min, review ~10",
+   "changed": "2026-10-11T22:02+01:00",
+   "expected_basis": "agent ~60 min, review ~10",
    "rides": "DS54"
   },
   {
@@ -1977,7 +1977,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </div>
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
-<li data-glance-task="AR45"><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release <span class="glance-expected">11 Oct ~23:30</span><span class="glance-basis">spec ~20 min, agent ~60 min, review ~10</span></li>
+<li data-glance-task="AR45"><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release <span class="glance-expected">11 Oct ~23:30</span><span class="glance-basis">agent ~60 min, review ~10</span></li>
 </ul>
 </div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
@@ -2008,7 +2008,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </figure>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
-<tr data-task="AR45"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release</a></td><td><code>luismc-artifacts</code></td><td>Spec 1.6.0 contract by the session (Running and Built must ride a release), then one agent implements commands, check, render, tests</td><td>11 Oct ~23:30<span class="expected-basis">spec ~20 min, agent ~60 min, review ~10</span></td></tr>
+<tr data-task="AR45"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release</a></td><td><code>luismc-artifacts</code></td><td>Spec 1.6.0 contract committed (859b30b, branch AR45-release-numbers): RELEASE-n numbers, Full Progress grouped by release, Running/Built ride a release, tiles say tasks. Agent implementing since 22:20</td><td>11 Oct ~23:30<span class="expected-basis">agent ~60 min, review ~10</span></td></tr>
 <tr data-task="DS54"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS54</span>AR45 train: join, PR CI, merge, cleanup</td><td></td><td>Ready PR after AR45 is Built; luismc-artifacts 1.6.0</td><td>12 Oct<span class="expected-basis">after AR45 Built: join 10, CI ~40, merge 5</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="DS53"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS53</span>TC8 train: join, PR CI, merge, cleanup</td><td></td><td>#50 merged 20:37, CI 2m27s; cleanup done (an empty locked folder dev-standards-TC8 remains); delivery log in train-2026-10-11-50</td><td>11 Oct</td></tr>

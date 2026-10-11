@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T22:00+01:00",
+  "updated": "2026-10-11T22:02+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -428,10 +428,10 @@
       "app": "luismc-artifacts",
       "status": "Running",
       "item": "RELEASE-n numbers; Full Progress groups items by release",
-      "detail": "Spec 1.6.0 contract by the session (Running and Built must ride a release), then one agent implements commands, check, render, tests",
+      "detail": "Spec 1.6.0 contract committed (859b30b, branch AR45-release-numbers): RELEASE-n numbers, Full Progress grouped by release, Running/Built ride a release, tiles say tasks. Agent implementing since 22:20",
       "expected": "11 Oct ~23:30",
-      "changed": "2026-10-11T22:00+01:00",
-      "expected_basis": "spec ~20 min, agent ~60 min, review ~10",
+      "changed": "2026-10-11T22:02+01:00",
+      "expected_basis": "agent ~60 min, review ~10",
       "rides": "DS54"
     },
     {
