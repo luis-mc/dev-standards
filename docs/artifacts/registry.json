@@ -1245,6 +1245,18 @@
       }
     },
     {
+      "id": "DS57",
+      "owner": "project",
+      "app": "delivery scripts",
+      "status": "Running",
+      "item": "cleanup.py: no failure when the train-cleanup workflow got there first",
+      "detail": "#53: cleanup.py failed on a release tag and a branch the workflow had just made or deleted; a branch already gone and an existing release should count as done (update the release)",
+      "expected": "12 Oct ~00:25",
+      "changed": "2026-10-12T00:01+01:00",
+      "expected_basis": "one agent ~20 min incl. branch CI",
+      "rides": "DS56"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
