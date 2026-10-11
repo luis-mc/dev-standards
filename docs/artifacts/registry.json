@@ -963,12 +963,12 @@
       "id": "TC4",
       "owner": "test-cost",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Cancel superseded ready-PR spec-lint runs",
-      "detail": "S7: two full DS17 runs ran side by side at 00:07; add a concurrency group",
-      "expected": "12 Oct",
-      "changed": "2026-10-11T11:02+01:00",
-      "expected_basis": "after the 1.3.1 release; three workflow lines"
+      "detail": "Agent on DS43-ci-scoping, part of the TC6 train",
+      "expected": "11 Oct ~13:30",
+      "changed": "2026-10-11T11:31+01:00",
+      "expected_basis": "agent work ~1h30 in parallel, then join"
     },
     {
       "id": "TC5",
