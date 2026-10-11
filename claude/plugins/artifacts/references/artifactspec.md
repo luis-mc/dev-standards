@@ -661,17 +661,22 @@ double-click.
   and `check_r530_relative_links`.
 - **R5.31** — `pending` hands the session a separate publish copy: the same
   render with the same stamp, written to `.claude/artifacts-publish/<file>` in
-  the session's repository (git-ignored, R10.2), in which every link of R5.30 is
-  an absolute `file:///` URL built from the repository root on this machine:
+  the session's repository (git-ignored, R10.2). A page on claude.ai cannot open
+  a `file:` link, so in the publish copy each feature artifact in section 1 is
+  named as text with a "Copy link" button (`<button class="copy-link">`) that
+  copies its address to paste into the browser's address bar; the address is an
+  absolute `file:///` URL built from the repository root on this machine:
   `file:///` plus the absolute path with forward slashes, each segment
   percent-encoded (a space is `%20`), for example
   `file:///C:/GitHub/dev-standards/docs/artifacts/feature-x.html`. The target is
   the feature file in the session's checkout (`<root>/docs/artifacts/`) when
-  that file exists there, else the same file in the record worktree. Next to each
-  link the publish copy shows the path as text (`<span class="local-path">`),
-  because some browsers block `file:` links from a web page; the text can be
-  copied. The publish copy is never committed. Verified by
-  `publish_copy_has_file_links`, `publish_copy_path_encoding` and
+  that file exists there, else the same file in the record worktree. The address
+  is shown as selectable text (`<code class="local-path">`, hidden until then)
+  only when the clipboard refuses. The publish copy has no link to a feature
+  file anywhere: its checklist rows carry none, and only section 1 has the
+  buttons, one per feature. The publish copy is never committed. Verified by
+  `publish_copy_has_file_links`, `publish_copy_path_encoding`,
+  `publish_copy_with_partial_links_keeps_relative_for_the_rest` and
   `test_pending_and_mark_published`.
 - **R5.32** — `mark-published` records the SHA-256 of the committed render, not
   of the publish copy (R4.3), so writing a publish copy never makes the record
