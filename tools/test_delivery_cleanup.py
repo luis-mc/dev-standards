@@ -93,7 +93,12 @@ elif argv[:2] == ["pr", "view"]:
 elif argv[:2] == ["run", "list"]:
     if "runs-error" in fx:
         fail("HTTP 500 for run list")
-    print(json.dumps(fx.get("runs", {}).get(opt("--commit"), [])))
+    if opt("--branch"):
+        if "branch-runs-error" in fx:
+            fail("HTTP 500 for branch run list")
+        print(json.dumps(fx.get("branch_runs", {}).get(opt("--branch"), [])))
+    else:
+        print(json.dumps(fx.get("runs", {}).get(opt("--commit"), [])))
 elif argv[:2] in (["release", "view"], ["release", "create"], ["release", "edit"]):
     if fx.get("releases-error"):
         fail("HTTP 403: Resource not accessible by integration")
@@ -1080,7 +1085,7 @@ def check_workflow(text: str, ci_text: str) -> list[str]:
         bad.append("actions/checkout is pinned differently from the track ci.yml")
     if "python3 scripts/delivery/cleanup.py --remote-only --pr ${{ github.event.pull_request.number }}" not in text:
         bad.append("command is not cleanup.py --remote-only --pr <number>")
-    if "GH_TOKEN: ${{ github.token }}" not in text:
+    if "GH_TOKEN: ${{ github.token }}" not in text:  # secret-scan:ignore
         bad.append("GH_TOKEN is not github.token")
     return bad
 
@@ -1102,7 +1107,7 @@ def sc_workflow(t: T, shared: Path) -> None:
         "checkout pin differs": text.replace("actions/checkout@v4", "actions/checkout@v3"),
         "wrong command": text.replace("--remote-only ", ""),
         "no pr number": text.replace(" --pr ${{ github.event.pull_request.number }}", ""),
-        "no token": text.replace("GH_TOKEN: ${{ github.token }}", "GH_TOKEN: x"),
+        "no token": text.replace("GH_TOKEN: ${{ github.token }}", "GH_TOKEN: x"),  # secret-scan:ignore
     }
     for label, body in broken.items():
         t.check("checker reports a defect: %s" % label, body != text and bool(check_workflow(body, ci)),
@@ -1191,6 +1196,8 @@ def sc_delivery_log(t: T, shared: Path) -> None:
     t.eq("testing is CI start to CI end, queueing the longest wait", cells[8:10], ["9m 30s", "1m 00s"])
     t.eq("without live, waiting and time to live are unknown", [cells[7], cells[10]], ["unknown", "unknown"])
     t.eq("the train's branches are gone all the same", w.remote_heads(), {"main"})
+    t.has("the time headers say UTC", body, "| Change | Finished (UTC) | Joined (UTC) | CI start (UTC) | CI end (UTC) | Merged (UTC) | Live (UTC) |")
+    t.has("the footnote says the times are UTC", body, "Times are UTC.")
 
     # the deploy adds live; the branches are gone, so the notes alone hold the rows
     live = [PY, str(w.work / "scripts/delivery/delivery_log.py"), "live", "--pr", "7", "--at"]
@@ -1204,6 +1211,38 @@ def sc_delivery_log(t: T, shared: Path) -> None:
     run([*live, "2100-01-01T00:00:00Z"], cwd=w.work, extra_env=w.stub.env())
     body2 = releases(w)["train-2026-10-10-7"]["body"]
     t.check("a later live call does not move a live time already recorded", "2099-01-01 00:00" in body2 and "2100-01-01" not in body2)
+
+
+def sc_delivery_log_rounds(t: T, shared: Path) -> None:
+    """CI start is the first round's start on the branch (after the PR was created); a run
+    from before the PR is ignored; CI end is the final head's."""
+    def run_of(cid, created, started, updated):
+        return {"databaseId": cid, "workflowName": "CI", "status": "completed", "conclusion": "success",
+                "createdAt": created, "startedAt": started, "updatedAt": updated}
+    w, n, mc = log_world(shared)
+    w.stub.fx["views"]["7"]["createdAt"] = "2026-10-10T08:00:00Z"
+    w.stub.fx["branch_runs"] = {"integ": [
+        run_of(10, "2026-10-10T07:00:00Z", "2026-10-10T07:00:10Z", "2026-10-10T07:30:00Z"),   # before the PR: ignored
+        run_of(11, "2026-10-10T08:30:00Z", "2026-10-10T08:45:00Z", "2026-10-10T09:00:00Z"),   # first round, older commit
+        run_of(1, "2026-10-10T10:00:00Z", "2026-10-10T10:00:30Z", "2026-10-10T10:05:00Z"),
+        run_of(2, "2026-10-10T10:00:00Z", "2026-10-10T10:01:00Z", "2026-10-10T10:10:00Z")]}
+    w.stub.save()
+    r = w.cleanup("--remote-only", "--pr", str(n))
+    exit_is(t, "cleanup --pr N after a fix-forward round: exit 0", r, 0)
+    body = releases(w).get("train-2026-10-10-7", {}).get("body", "")
+    cells = cells_of(body, "integ")
+    t.eq("CI start is the first round's start, CI end the final head's", cells[3:5], ["2026-10-10 08:45", "2026-10-10 10:10"])
+    t.eq("queueing is the longest wait among the rounds", cells[9], "15m 00s")
+
+    # the branch listing fails: the final head's figures
+    w, n, mc = log_world(shared)
+    w.stub.fx["views"]["7"]["createdAt"] = "2026-10-10T08:00:00Z"
+    w.stub.fx["branch-runs-error"] = True
+    w.stub.save()
+    r = w.cleanup("--remote-only", "--pr", str(n))
+    exit_is(t, "branch run listing failing: exit 0", r, 0)
+    cells = cells_of(releases(w).get("train-2026-10-10-7", {}).get("body", ""), "integ")
+    t.eq("... CI start and end fall back to the final head's runs", cells[3:5], ["2026-10-10 10:00", "2026-10-10 10:10"])
 
 
 def sc_delivery_log_notes(t: T, shared: Path) -> None:
@@ -1449,6 +1488,8 @@ MUTANTS = [
     ("live overwrites a live time already recorded", L, 'r.get("live") or live', "live", "delivery_log"),
     ("CI start is the latest start, not the earliest", L,
      'out["ci_start"] = iso(min(starts))', 'out["ci_start"] = iso(max(starts))', "delivery_log"),
+    ("CI start ignores the earlier rounds of the branch", L,
+     "                rounds = since_runs\n", "                pass\n", "delivery_log_rounds"),
 ]
 
 SCENARIOS = {
@@ -1468,6 +1509,7 @@ SCENARIOS = {
     "workflow": sc_workflow,
     "assets": sc_assets,
     "delivery_log": sc_delivery_log,
+    "delivery_log_rounds": sc_delivery_log_rounds,
     "delivery_log_notes": sc_delivery_log_notes,
     "delivery_log_figures": sc_delivery_log_figures,
     "delivery_log_offline": sc_delivery_log_offline,
