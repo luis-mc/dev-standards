@@ -401,6 +401,95 @@ def watch_bad_sha_is_exit_2():
         sb.close()
 
 
+def timed_job(name: str, start: str, end: str, steps: list | None = None) -> dict:
+    return {"name": name, "conclusion": "success", "startedAt": f"2026-10-11T10:{start}Z",
+            "completedAt": f"2026-10-11T10:{end}Z", "steps": steps or []}
+
+
+def step(name: str, start: str, end: str) -> dict:
+    return {"name": name, "conclusion": "success", "startedAt": f"2026-10-11T10:{start}Z",
+            "completedAt": f"2026-10-11T10:{end}Z"}
+
+
+SLOW_JOBS = {"jobs": [
+    timed_job("lint", "00:00", "01:00"),
+    timed_job("e2e", "00:00", "08:00", [
+        step("Install", "00:00", "01:00"), step("Playwright", "01:00", "07:30"),
+        step("Upload", "07:30", "07:40")])]}
+
+
+@test
+def watch_summary_names_slowest_job_share_and_two_slowest_steps():
+    sb = Sandbox()
+    try:
+        rc, out, err = watch(sb, {"run_list": [[run_obj(1, "completed", "success")]],
+                                  "run_view": {"1": SLOW_JOBS}})
+        expect_exit(rc, 0, out, err)
+        check("slowest job e2e 8m00s (100% of the run)" in out and "wall 8m00s" in out,
+              f"summary lacks the slowest job and its share: {out}")
+        check("Playwright 6m30s" in out and "Install 1m00s" in out and "Upload" not in out,
+              f"summary should list the two slowest steps only: {out}")
+        # Contrast: a shorter slowest job gives a smaller share, so the share is computed.
+        sb2 = Sandbox()
+        try:
+            jobs = {"jobs": [timed_job("lint", "00:00", "02:00"), timed_job("e2e", "00:00", "08:00"),
+                             timed_job("late", "08:00", "10:00")]}
+            rc2, out2, err2 = watch(sb2, {"run_list": [[run_obj(1, "completed", "success")]],
+                                          "run_view": {"1": jobs}})
+            expect_exit(rc2, 0, out2, err2)
+            check("slowest job e2e 8m00s (80% of the run)" in out2, f"share not computed: {out2}")
+        finally:
+            sb2.close()
+    finally:
+        sb.close()
+
+
+@test
+def watch_summary_is_printed_on_failure_without_changing_exit():
+    sb = Sandbox()
+    try:
+        rc, out, err = watch(sb, {"run_list": [[run_obj(7, "completed", "failure")]],
+                                  "run_view": {"7": SLOW_JOBS}})
+        expect_exit(rc, 1, out, err)
+        check("slowest job e2e" in out, f"no summary after a failed run: {out}")
+    finally:
+        sb.close()
+
+
+@test
+def watch_summary_errors_print_nothing_extra():
+    sb = Sandbox()
+    try:
+        # No run_view fixture: the stub's gh fails; the verdict and exit stay the same.
+        rc, out, err = watch(sb, {"run_list": [[run_obj(1, "completed", "success")]]})
+        expect_exit(rc, 0, out, err)
+        check("slowest" not in out, f"summary printed despite an error: {out}")
+        # Jobs without times: nothing extra either.
+        sb2 = Sandbox()
+        try:
+            rc2, out2, err2 = watch(sb2, {"run_list": [[run_obj(1, "completed", "success")]],
+                                          "run_view": {"1": {"jobs": [{"name": "x", "steps": []}]}}})
+            expect_exit(rc2, 0, out2, err2)
+            check("slowest" not in out2, f"summary printed without times: {out2}")
+        finally:
+            sb2.close()
+    finally:
+        sb.close()
+
+
+@test
+def watch_no_summary_while_runs_are_pending():
+    sb = Sandbox()
+    try:
+        rc, out, err = watch(sb, {"run_list": [[run_obj(1, "in_progress", "")]],
+                                  "run_view": {"1": SLOW_JOBS}},
+                             ["--interval", "0.1", "--timeout", "1"])
+        expect_exit(rc, 4, out, err)
+        check("slowest" not in out, f"summary printed before the run completed: {out}")
+    finally:
+        sb.close()
+
+
 # ---------------------------------------------------------------------------
 # ci_skip_check
 # ---------------------------------------------------------------------------
@@ -1096,7 +1185,7 @@ def check_workflow(track: str, text: str) -> list[str]:
     for name, block in jobs.items():
         if name == "decide":
             continue
-        if not re.search(r"^    needs: decide\s*$", block, re.M):
+        if not re.search(r"^    needs: (decide|\[decide, [\w-]+\])\s*$", block, re.M):
             problems.append(f"job {name}: missing 'needs: decide'")
         if f"\n    if: {IF_COND}\n" not in block:
             problems.append(f"job {name}: missing the exact decide-aware 'if:' condition")
@@ -1156,15 +1245,25 @@ def runs_on_problems(text: str) -> list[str]:
 def check_ts_e2e(text: str, jobs: dict[str, str]) -> list[str]:
     problems = []
     e = jobs.get("e2e")
+    sh = jobs.get("e2e-shard")
     if e is None:
         return ["ts: e2e job missing"]
+    if sh is None:
+        return ["ts: e2e-shard job missing (the browser suite must run as shards)"]
     if not re.search(r"^    name: web E2E \(§11\.2\)\s*$", e, re.M):
         problems.append("ts: e2e job must be named 'web E2E (§11.2)'")
-    if re.search(r"^    continue-on-error:", e, re.M):
-        problems.append("ts: e2e must not be continue-on-error at job level")
-    if "advisory" in e.lower():
-        problems.append("ts: e2e is still described as advisory")
-    steps = split_steps(e)
+    if not re.search(r"^    needs: \[decide, e2e-shard\]\s*$", e, re.M):
+        problems.append("ts: e2e (the required check) must need e2e-shard")
+    for name, block in (("e2e", e), ("e2e-shard", sh)):
+        if re.search(r"^    continue-on-error:", block, re.M):
+            problems.append(f"ts: {name} must not be continue-on-error at job level")
+        if "advisory" in block.lower():
+            problems.append(f"ts: {name} is still described as advisory")
+    if not re.search(r"^      fail-fast: false\s*$", sh, re.M):
+        problems.append("ts: e2e-shard needs fail-fast: false")
+    if not re.search(r"^        shard: \[1, 2\]\s*$", sh, re.M):
+        problems.append("ts: e2e-shard must set the shard list in one place, default 2 shards")
+    steps = split_steps(sh)
     quarantine = [s for s in steps if "E2E_QUARANTINE: only" in s]
     gating = [s for s in steps if "playwright test" in s and "E2E_QUARANTINE" not in s]
     if len(quarantine) != 1:
@@ -1175,6 +1274,11 @@ def check_ts_e2e(text: str, jobs: dict[str, str]) -> list[str]:
         problems.append("ts: e2e needs exactly one gating playwright step")
     elif "continue-on-error" in gating[0]:
         problems.append("ts: the gating E2E step must not be continue-on-error")
+    for s in gating + quarantine:
+        if "--shard=${{ matrix.shard }}/${{ strategy.job-total }}" not in s:
+            problems.append("ts: a playwright step does not pass --shard")
+    if '[ "$SHARDS" = "success" ]' not in e:
+        problems.append("ts: the e2e summary must fail unless every shard succeeded")
     return problems
 
 
@@ -1271,8 +1375,17 @@ def workflow_checker_detects_each_defect():
          lambda t: mutate(t, "        continue-on-error: true\n        env:\n          E2E_QUARANTINE",
                           "        env:\n          E2E_QUARANTINE")),
         ("ts", ts, "gating E2E step must not be continue-on-error",
-         lambda t: mutate(t, "        run: pnpm exec playwright test\n",
-                          "        continue-on-error: true\n        run: pnpm exec playwright test\n")),
+         lambda t: mutate(t, "        run: pnpm exec playwright test --shard",
+                          "        continue-on-error: true\n        run: pnpm exec playwright test --shard")),
+        ("ts", ts, "e2e-shard needs fail-fast: false",
+         lambda t: mutate(t, "fail-fast: false", "fail-fast: true")),
+        ("ts", ts, "does not pass --shard",
+         lambda t: mutate(t, "playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}",
+                          "playwright test")),
+        ("ts", ts, "must fail unless every shard succeeded",
+         lambda t: mutate(t, '[ "$SHARDS" = "success" ]', "true")),
+        ("ts", ts, "must need e2e-shard",
+         lambda t: mutate(t, "needs: [decide, e2e-shard]", "needs: decide")),
         ("ts", ts, "exactly one step running with E2E_QUARANTINE",
          lambda t: mutate(t, "E2E_QUARANTINE: only", "E2E_QUARANTINE: no")),
     ]

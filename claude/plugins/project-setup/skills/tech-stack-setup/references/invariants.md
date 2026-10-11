@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 8.0.0
+**Version:** 8.1.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -23,6 +23,10 @@ recorded in the product's Stack Profile (§18). This document does not name
 vendors and does not rank them.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+
+**8.1.0 — 2026-10-11.**
+
+- STACKSPEC §13.1 gains a SHOULD: split the job or step that dominates CI wall time into its own job, and run a splittable test step as parallel shards. The ts template runs its Playwright suite as two shards behind the same required check, and `ci_watch.py` prints a slowest-job summary (slowest job, its share of the run, its two slowest steps) when the runs complete.
 
 **8.0.0 — 2026-10-11.**
 
@@ -1308,6 +1312,11 @@ per job, rounded up to a whole unit of time:
   is sound only because §2.2 requires every environment variable a task reads to
   be declared in the runner's configuration; otherwise a cache hit can replay a
   result computed under different inputs.
+- CI wall time is set by its slowest job, so a job or step that takes most of a
+  run SHOULD get its own job, and a test step that can be split SHOULD run as
+  parallel shards. Small steps stay together, because every job repeats setup.
+  A project finds the dominant job from the slowest-job summary `ci_watch`
+  prints when its runs complete (§13.6).
 
 Which runners a workflow uses is a repository setting, not a value written into
 each workflow, so a product can move between hosted and self-hosted runners
@@ -1770,7 +1779,7 @@ Every item is checkable regardless of stack.
 - [ ] All twelve §13.1 gates present and failing the build
 - [ ] Secret scan covers full history
 - [ ] Workflows path-filtered; expensive runners not used on unrelated changes
-- [ ] CI cost kept down (SHOULD): no sub-minute job that could be a step, superseded PR runs cancelled but never default-branch runs, drafts skip CI, installs and task-runner results cached
+- [ ] CI cost kept down (SHOULD): no sub-minute job that could be a step, superseded PR runs cancelled but never default-branch runs, drafts skip CI, installs and task-runner results cached; a dominant job or step split into its own job or parallel shards
 - [ ] Default-branch push runs skip a tree a pull-request run already passed
 - [ ] Only the newest build artifact of each name is kept; artifact names stable per kind
 - [ ] Artifact-building workflows run only when their inputs change, never for docs-only merges, and can be started by hand (SHOULD)

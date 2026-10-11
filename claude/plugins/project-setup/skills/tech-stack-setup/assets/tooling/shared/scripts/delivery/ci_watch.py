@@ -19,6 +19,11 @@ carries its labels, or, when the runners cannot be listed (that needs admin righ
 as "queued 10+ min". It never changes the exit code. GitHub-hosted labels are not
 checked: a queued hosted job is the platform's wait, not a missing runner.
 
+Slowest job (TC8, information only): once every run is complete, one summary lists each run's
+wall time (first job start to last job end), its slowest job with that job's share of the
+run, and the job's two slowest steps, from `gh run view --json jobs`. It never changes the
+exit code and prints nothing extra when anything cannot be read.
+
 Python 3.11+, standard library only; `gh` is the one external tool.
 """
 from __future__ import annotations
@@ -150,6 +155,62 @@ def print_failed_jobs(run: dict, repo: str | None) -> None:
                 print(f"      step: {step.get('name')} ({step.get('conclusion')})")
 
 
+def parse_time(raw: object) -> float | None:
+    if not isinstance(raw, str) or raw.startswith("0001"):
+        return None
+    try:
+        return datetime.fromisoformat(raw.replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return None
+
+
+def span(item: dict) -> float | None:
+    start, end = parse_time(item.get("startedAt")), parse_time(item.get("completedAt"))
+    return end - start if start is not None and end is not None and end >= start else None
+
+
+def fmt_duration(seconds: float) -> str:
+    seconds = int(round(seconds))
+    return f"{seconds // 60}m{seconds % 60:02d}s"
+
+
+def summary_lines(run: dict, jobs: list) -> list[str]:
+    """The summary of one run: wall time, slowest job and its share, two slowest steps."""
+    timed = [(span(j), j) for j in jobs if isinstance(j, dict)]
+    timed = [(d, j) for d, j in timed if d is not None]
+    starts = [parse_time(j.get("startedAt")) for _, j in timed]
+    ends = [parse_time(j.get("completedAt")) for _, j in timed]
+    if not timed or None in starts or None in ends:
+        return []
+    wall = max(ends) - min(starts)
+    dur, job = max(timed, key=lambda t: t[0])
+    share = f"{round(100 * dur / wall)}% of the run" if wall > 0 else "the whole run"
+    lines = [f"  run {run.get('databaseId')} ({run.get('workflowName')}): wall {fmt_duration(wall)}, "
+             f"slowest job {job.get('name')} {fmt_duration(dur)} ({share})"]
+    steps = [(span(s), s) for s in job.get("steps", []) or [] if isinstance(s, dict)]
+    steps = sorted(((d, s) for d, s in steps if d is not None), key=lambda t: -t[0])[:2]
+    if steps:
+        lines.append("    slowest steps: " + "; ".join(
+            f"{s.get('name')} {fmt_duration(d)}" for d, s in steps))
+    return lines
+
+
+def print_slowest_job_summary(runs: list[dict], repo: str | None) -> None:
+    """Information only: any error, anywhere, prints nothing and changes nothing."""
+    try:
+        out: list[str] = []
+        for run in runs:
+            data = gh_json(["run", "view", str(run.get("databaseId")), "--json", "jobs",
+                            *repo_args(repo)])
+            jobs = data.get("jobs", []) if isinstance(data, dict) else []
+            out += summary_lines(run, jobs)
+        if out:
+            print("ci_watch: slowest job per run")
+            print(chr(10).join(out))
+    except Exception:  # noqa: BLE001 - a summary must never break the watch
+        return
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         description="Wait for the CI workflow runs of a commit (never reads PR checks).")
@@ -208,11 +269,13 @@ def main(argv: list[str] | None = None) -> int:
                 if not bad:
                     print(f"ci_watch: {len(runs)} {args.workflow} run(s) for {sha[:10]} "
                           "succeeded")
+                    print_slowest_job_summary(runs, args.repo)
                     return 0
                 print(f"ci_watch: {len(bad)} of {len(runs)} {args.workflow} run(s) for "
                       f"{sha[:10]} did not succeed")
                 for run in bad:
                     print_failed_jobs(run, args.repo)
+                print_slowest_job_summary(runs, args.repo)
                 return 1
         if state != last_state:
             print(f"ci_watch: waiting, {state}", flush=True)

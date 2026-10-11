@@ -11,12 +11,12 @@ This skill does two things:
 1. **Guides the user to a coherent stack.** Not a menu — a filtered interview
    where every option offered is compatible with everything already chosen, and
    every consequence is stated at the moment of the choice.
-2. **Generates a repository** conforming to **`STACKSPEC` 8.0.0**, the binding
+2. **Generates a repository** conforming to **`STACKSPEC` 8.1.0**, the binding
    invariants specification at `references/invariants.md`.
 
 ## The two halves, and why they are separate
 
-`STACKSPEC` 8.0.0 contains **no technology names**. It specifies properties —
+`STACKSPEC` 8.1.0 contains **no technology names**. It specifies properties —
 contract-first APIs, atomic enqueue, adapter boundaries, retention and erasure,
 consent-gated analytics, three-tier promotion — that hold whether the product is
 TypeScript on Vercel or Rust in a container.
@@ -307,6 +307,12 @@ repos/{owner}/{repo}/actions/runners` lists them when the user has admin rights;
 if that runner is offline, every job waits. Suggest a second runner with the label, or a
 fallback job on hosted labels, and warn, never block. `join.py` and `ci_watch.py` warn at
 run time when no online runner carries a job's labels (`§13.6`).
+
+**Splitting the dominant CI job (`§13.1`, SHOULD).** The ts template already runs the
+browser suite as two Playwright shards behind the unchanged `web E2E (§11.2)` check (one
+`shard:` list sets the count). For any track, once CI has run, read the slowest-job summary
+`ci_watch.py` prints; if one job or test step takes most of the run, give it its own job
+or shards, and leave small steps together, since every job repeats setup.
 
 **End-to-end selection (`§13.5`).** When the product has more than a handful of
 end-to-end specs, add an `e2e_map` to `gate.json` (specs to source paths, plus
