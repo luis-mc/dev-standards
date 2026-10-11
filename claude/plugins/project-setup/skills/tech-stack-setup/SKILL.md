@@ -308,6 +308,12 @@ if that runner is offline, every job waits. Suggest a second runner with the lab
 fallback job on hosted labels, and warn, never block. `join.py` and `ci_watch.py` warn at
 run time when no online runner carries a job's labels (`§13.6`).
 
+**Splitting the dominant CI job (`§13.1`, SHOULD).** The ts template already runs the
+browser suite as two Playwright shards behind the unchanged `web E2E (§11.2)` check (one
+`shard:` list sets the count). For any track, once CI has run, read the slowest-job summary
+`ci_watch.py` prints; if one job or test step takes most of the run, give it its own job
+or shards, and leave small steps together, since every job repeats setup.
+
 **End-to-end selection (`§13.5`).** When the product has more than a handful of
 end-to-end specs, add an `e2e_map` to `gate.json` (specs to source paths, plus
 `full_on` for shared configuration and the API contract), so a branch gate runs

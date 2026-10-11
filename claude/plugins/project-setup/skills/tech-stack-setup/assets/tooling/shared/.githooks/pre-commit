@@ -56,7 +56,8 @@ pattern='(DATABASE_URL|[A-Za-z0-9_]*_(TOKEN|SECRET|PASS|KEY))[[:space:]]*[:=]'
 # below), so this must allow for the "<lineno>:" prefix grep -n adds.
 comment_line='^[0-9]+:[[:space:]]*(//|#|\*)'
 ignore_marker='secret-scan:ignore'
-doc_shape='[:=][[:space:]]*(\.\.\.|\$\{\{[[:space:]]*secrets\.)'
+# `${{ github.token }}` is skipped too, as .gitleaks.toml's allowlist does.
+doc_shape='[:=][[:space:]]*(\.\.\.|\$\{\{[[:space:]]*(secrets\.[A-Za-z0-9_]+|github\.token)[[:space:]]*\}\})'
 # The throwaway CI Postgres service-container DSN, allowlisted identically in
 # .gitleaks.toml. Layer 1 skips .github/workflows/* by path, which covers a
 # product's own workflow but not a copy vendored elsewhere in the tree — this
