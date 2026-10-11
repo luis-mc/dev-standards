@@ -593,6 +593,16 @@
       "changed": "2026-10-11T01:22+01:00"
     },
     {
+      "id": "DS30",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Gate fetches its base first",
+      "detail": "Bug found (U2): the gate diffed against the local base ref and never fetched, so results were recorded against a stale base and rejected. It now fetches the base first; offline it uses the local ref and says so.",
+      "expected": "11 Oct ~05:30",
+      "changed": "2026-10-11T01:22+01:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
