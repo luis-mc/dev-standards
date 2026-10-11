@@ -1195,6 +1195,44 @@
       }
     },
     {
+      "id": "DS56",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "AR46 train: join, PR CI, merge, cleanup",
+      "detail": "Timeline fix and cleanup race fix; integration branch DS56-integration",
+      "expected": "12 Oct ~00:36",
+      "changed": "2026-10-12T00:01+01:00",
+      "expected_basis": "agents ~20 min (small fixes); #53: CI 3.4 min, merge 4",
+      "release": 4,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-10-12T00:05+01:00",
+          "end": "2026-10-12T00:25+01:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-10-12T00:25+01:00",
+          "end": "2026-10-12T00:28+01:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-10-12T00:28+01:00",
+          "end": "2026-10-12T00:32+01:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-10-12T00:32+01:00",
+          "end": "2026-10-12T00:36+01:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 10
+      }
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
