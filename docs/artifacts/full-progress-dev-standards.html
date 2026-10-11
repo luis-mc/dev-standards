@@ -1102,6 +1102,18 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "changed": "2026-10-11T17:53+01:00"
   },
   {
+   "id": "AR45",
+   "owner": "artifacts",
+   "app": "luismc-artifacts",
+   "status": "Running",
+   "item": "RELEASE-n numbers; Full Progress groups items by release",
+   "detail": "Spec 1.6.0 contract by the session (Running and Built must ride a release), then one agent implements commands, check, render, tests",
+   "expected": "11 Oct ~23:30",
+   "changed": "2026-10-11T22:00+01:00",
+   "expected_basis": "spec ~20 min, agent ~60 min, review ~10",
+   "rides": "DS54"
+  },
+  {
    "id": "DL1",
    "owner": "delivery-speed",
    "app": "",
@@ -1963,6 +1975,11 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
+<div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
+<ul>
+<li data-glance-task="AR45"><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release <span class="glance-expected">11 Oct ~23:30</span><span class="glance-basis">spec ~20 min, agent ~60 min, review ~10</span></li>
+</ul>
+</div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
 <li data-glance-task="DS53"><span class="task-id">DS53</span>TC8 train: join, PR CI, merge, cleanup</li>
@@ -1977,12 +1994,13 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">123</div><div class="label">live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">123</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
 <div class="timeline-scroll"><svg viewBox="0 0 300 164" role="img" aria-label="Next releases: DS54 (AR45 train: join, PR CI, merge, cleanup) expected 12 Oct." style="min-width:360px"><g class="rt-axis"><line class="rt-grid" x1="220" y1="36" x2="220" y2="140"/><text x="220" y="28">12 Oct</text></g>
 <text class="rt-name" x="0" y="60"><title>DS54 · AR45 train: join, PR CI, merge, cleanup</title>DS54 · AR45 train: join,…</text>
+<text class="rt-sub" x="0" y="77"><title>AR45</title>AR45</text>
 <polygon class="rt-day" points="220,52 228,65 220,78 212,65"/><text class="rt-day-label" x="236" y="69">12 Oct</text>
 
 </svg></div>
@@ -1990,6 +2008,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </figure>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
+<tr data-task="AR45"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release</a></td><td><code>luismc-artifacts</code></td><td>Spec 1.6.0 contract by the session (Running and Built must ride a release), then one agent implements commands, check, render, tests</td><td>11 Oct ~23:30<span class="expected-basis">spec ~20 min, agent ~60 min, review ~10</span></td></tr>
 <tr data-task="DS54"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS54</span>AR45 train: join, PR CI, merge, cleanup</td><td></td><td>Ready PR after AR45 is Built; luismc-artifacts 1.6.0</td><td>12 Oct<span class="expected-basis">after AR45 Built: join 10, CI ~40, merge 5</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="DS53"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS53</span>TC8 train: join, PR CI, merge, cleanup</td><td></td><td>#50 merged 20:37, CI 2m27s; cleanup done (an empty locked folder dev-standards-TC8 remains); delivery log in train-2026-10-11-50</td><td>11 Oct</td></tr>
@@ -2123,8 +2142,8 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
+<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862540"><time datetime="2026-10-11T22:00+01:00">11 Oct 22:00</time></td><td>AR2 to AR45</td><td data-col="state"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862458"><time datetime="2026-10-11T20:38+01:00">11 Oct 20:38</time></td><td>TC1 to TC8</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
-<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862339"><time datetime="2026-10-11T18:39+01:00">11 Oct 18:39</time></td><td>AR2 to AR44</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29862332"><time datetime="2026-10-11T18:32+01:00">11 Oct 18:32</time></td><td>DL1 to DL13</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29862332"><time datetime="2026-10-11T18:32+01:00">11 Oct 18:32</time></td><td>MP1 to MP7, DS2 to DS5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
 </tbody></table></div>

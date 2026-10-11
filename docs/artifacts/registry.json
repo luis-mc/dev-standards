@@ -423,6 +423,18 @@
       "changed": "2026-10-11T17:53+01:00"
     },
     {
+      "id": "AR45",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "RELEASE-n numbers; Full Progress groups items by release",
+      "detail": "Spec 1.6.0 contract by the session (Running and Built must ride a release), then one agent implements commands, check, render, tests",
+      "expected": "11 Oct ~23:30",
+      "changed": "2026-10-11T22:00+01:00",
+      "expected_basis": "spec ~20 min, agent ~60 min, review ~10",
+      "rides": "DS54"
+    },
+    {
       "id": "DL1",
       "owner": "delivery-speed",
       "app": "",
