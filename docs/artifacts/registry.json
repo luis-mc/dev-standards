@@ -623,6 +623,16 @@
       "changed": "2026-10-11T01:22+01:00"
     },
     {
+      "id": "DS33",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Runner labels are a setting",
+      "detail": "U5 and U6: workflows no longer hard-code ubuntu-latest; a repository variable chosen in the wizard sets the runners. The 'fold short jobs' cost rule applies to hosted runners only (STACKSPEC 7.1.0).",
+      "expected": "11 Oct ~05:30",
+      "changed": "2026-10-11T01:22+01:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
