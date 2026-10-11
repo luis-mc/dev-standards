@@ -6,7 +6,8 @@ reads the changed paths and writes GitHub outputs (appended to $GITHUB_OUTPUT,
 and printed):
 
     specs, delivery, artifacts, profiles   true | false
-    mutants                                true | false
+    mutants                                true | false  (any suite below)
+    mutants_gate, mutants_cleanup, mutants_notes   true | false  (TC7, one per suite)
 
 Area map (first matching rule wins; see RULES):
 
@@ -31,9 +32,10 @@ checked by the always-on `change-notes` job on pull requests, not by an area),
 plugin.json manifests (same job), the tech-stack-setup catalog, other
 workflows (they have their own triggers), and files outside tools/ and claude/.
 
-Mutants (TC1): true only when the change touches the delivery scripts, the git
-hooks, or test_delivery_gate.py / test_delivery_cleanup.py, or when the caller
-forces it (nightly). Otherwise the suites run with --no-mutants.
+Mutants (TC1, TC7): one flag per delivery suite that has a mutation pass, true
+only when a file that suite tests changes (see SUITE_MUTANTS), or when the
+caller forces it (nightly, the `mutants` dispatch input). `mutants` is true when
+any of them is. Otherwise that suite runs with --no-mutants.
 
 Events: pull_request diffs `base...head`; push diffs the pushed range
 `before..head`; schedule and any range that cannot be read run every area.
@@ -71,7 +73,33 @@ TS = PS + "/tech-stack-setup"
 TOOLING = TS + "/assets/tooling"
 DELIVERY_SCRIPTS = TOOLING + "/shared/scripts/delivery/"
 HOOKS = TOOLING + "/shared/.githooks/"
-MUTANT_FILES = {"tools/test_delivery_gate.py", "tools/test_delivery_cleanup.py"}
+DS = DELIVERY_SCRIPTS
+# TC7: suite -> the files whose change turns its mutation pass on. Derived from
+# what each suite copies, imports or mutates. A path ending in "/" is a folder.
+SUITE_MUTANTS: dict[str, frozenset[str]] = {
+    # test_delivery_gate.py: copies the whole shared tree and mutates these.
+    "gate": frozenset({
+        "tools/test_delivery_gate.py",
+        DS + "agent_setup.sh", DS + "branch_gate.py", DS + "delivery_common.py",
+        DS + "fast_guards.py", DS + "gate_verify.py", DS + "join.py",
+        DS + "runner_health.py", DS + "tools.json", DS + "train_freeze.py",
+        HOOKS,
+    }),
+    # test_delivery_cleanup.py: DELIVERY_FILES plus join.py (calls cleanup), the
+    # train-cleanup.yml and ts ci.yml it checks, and the gate suite's harness.
+    "cleanup": frozenset({
+        "tools/test_delivery_cleanup.py", "tools/test_delivery_gate.py",
+        DS + "delivery_common.py", DS + "fast_guards.py", DS + "delivery_log.py",
+        DS + "cleanup.py", DS + "join.py",
+        TOOLING + "/shared/.github/workflows/train-cleanup.yml",
+        TOOLING + "/ts/.github/workflows/ci.yml",
+    }),
+    # test_change_notes.py: copies delivery_common.py and change_notes.py.
+    "notes": frozenset({
+        "tools/test_change_notes.py", DS + "delivery_common.py", DS + "change_notes.py",
+    }),
+}
+MUTANT_KEYS = {suite: "mutants_" + suite for suite in SUITE_MUTANTS}
 
 # (regex fullmatch on the repo-relative path with forward slashes, areas).
 RULES: list[tuple[str, frozenset[str]]] = [
@@ -133,25 +161,31 @@ def areas_for(path: str) -> frozenset[str]:
     return NONE
 
 
-def touches_mutants(path: str) -> bool:
+def touches_mutants(path: str, suite: str) -> bool:
+    """Does a change to this path turn on that suite's mutation pass?"""
     path = norm(path)
-    return (path.startswith(DELIVERY_SCRIPTS) or path.startswith(HOOKS)
-            or path in MUTANT_FILES)
+    return any(path == f or (f.endswith("/") and path.startswith(f))
+               for f in SUITE_MUTANTS[suite])
+
+
+def mutant_flags(paths: list[str], force: bool, delivery: bool) -> dict[str, bool]:
+    out = {key: delivery and (force or any(touches_mutants(p, s) for p in paths))
+           for s, key in MUTANT_KEYS.items()}
+    return {"mutants": any(out.values()), **out}
 
 
 def classify(paths: list[str], *, run_all: bool = False, force_mutants: bool = False,
              skip: bool = False) -> dict[str, bool]:
     """The outputs for a set of changed paths."""
     if skip:
-        return {**{a: False for a in AREAS}, "mutants": False}
+        return {**{a: False for a in AREAS}, **mutant_flags([], False, False)}
     if run_all:
-        return {**{a: True for a in AREAS}, "mutants": force_mutants}
+        return {**{a: True for a in AREAS}, **mutant_flags([], force_mutants, True)}
     hit: set[str] = set()
     for p in paths:
         hit |= areas_for(p)
     out = {a: a in hit for a in AREAS}
-    mutants = force_mutants or any(touches_mutants(p) for p in paths)
-    out["mutants"] = mutants and out["delivery"]
+    out.update(mutant_flags(paths, force_mutants, out["delivery"]))
     return out
 
 
@@ -263,7 +297,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"ci_areas: {exc}", file=sys.stderr)
             return 2
         out = {a: a in chosen for a in AREAS}
-        out["mutants"] = force and out["delivery"]
+        out.update(mutant_flags([], force, out["delivery"]))
         emit(out, f"dispatch override: {','.join(chosen)}")
         return 0
     if not skip and args.event == "workflow_dispatch":

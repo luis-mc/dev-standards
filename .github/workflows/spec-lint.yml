@@ -85,6 +85,9 @@ jobs:
       artifacts: ${{ steps.areas.outputs.artifacts }}
       profiles: ${{ steps.areas.outputs.profiles }}
       mutants: ${{ steps.areas.outputs.mutants }}
+      mutants_gate: ${{ steps.areas.outputs.mutants_gate }}
+      mutants_cleanup: ${{ steps.areas.outputs.mutants_cleanup }}
+      mutants_notes: ${{ steps.areas.outputs.mutants_notes }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -210,8 +213,14 @@ jobs:
               --route-map tools/route-ratelimit-map.json --only "$check"
           done
 
-  delivery:
-    name: delivery scripts, CI templates, cleanup, prune, change notes
+  # TC7: the delivery area is one job per suite, so the suites run side by side
+  # and the area takes as long as its slowest one. Each suite's mutation pass is
+  # decided by its own flag from tools/ci_areas.py (mutants_gate, mutants_cleanup,
+  # mutants_notes), so a change to one script no longer turns on every pass.
+  # The job named `delivery` at the end keeps the old check name.
+
+  delivery-preflight:
+    name: delivery - setup preflight
     needs: areas
     if: needs.areas.outputs.delivery == 'true'
     runs-on: ubuntu-latest
@@ -229,57 +238,200 @@ jobs:
       - name: Prove the setup preflight still blocks
         run: python3 tools/test_preflight.py
 
-      # tech-stack-setup copies the delivery scripts into every repository it
-      # generates, and an agent trusts the gate's result as the only check a
-      # branch gets before it joins. A gate that exits 0 when it could not decide,
-      # or a trust rule that accepts a stale head or base, makes every generated
-      # repository report green over work nobody tested. The test builds
-      # throwaway repositories with a local bare remote and runs each script
-      # through every trust-rule branch and exit code, and proves each check can
-      # fail.
-      - name: Prove the branch gate and its trust rule still hold
-        run: python3 tools/test_delivery_gate.py ${{ needs.areas.outputs.mutants != 'true' && '--no-mutants' || '' }}
+  # tech-stack-setup copies the delivery scripts into every repository it
+  # generates, and an agent trusts the gate's result as the only check a
+  # branch gets before it joins. A gate that exits 0 when it could not decide,
+  # or a trust rule that accepts a stale head or base, makes every generated
+  # repository report green over work nobody tested. The test builds
+  # throwaway repositories with a local bare remote and runs each script
+  # through every trust-rule branch and exit code, and proves each check can
+  # fail.
+  # The scenarios always run here, in their own job; the mutation pass (when
+  # mutants_gate is on) runs beside it in delivery-gate-shards, so the scenarios
+  # do not add to the slowest shard.
+  delivery-gate:
+    name: delivery - branch gate and trust rule
+    needs: areas
+    if: needs.areas.outputs.delivery == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      # The CI half of the same scripts: the watcher that waits for a commit's
-      # workflow runs, the default-branch skip check, and the reachability check,
-      # plus a structural check of the four ci.yml templates (a decide job, the
-      # job conditions, E2E not advisory). A watcher that returns early reads a
-      # pull request's checks before the new run is listed, and a ci.yml that lost
-      # its decide job re-runs a suite that already passed, which is the cost
-      # 6.0.0 exists to remove. Stub `gh` on PATH keeps this offline.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Prove the branch gate and its trust rule still hold
+        run: python3 tools/test_delivery_gate.py --no-mutants
+
+  # Mutants on: the mutation pass as a 4-way matrix, every shard running every
+  # 4th mutant (tools/test_delivery_gate.py --shard I/N). A shard with no
+  # mutants passes.
+  delivery-gate-shards:
+    name: delivery - branch gate and trust rule (shard ${{ matrix.shard }}/4)
+    needs: areas
+    if: needs.areas.outputs.delivery == 'true' && needs.areas.outputs.mutants_gate == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Prove every gate rule is guarded by a check (mutation pass)
+        run: python3 tools/test_delivery_gate.py --no-scenarios --shard ${{ matrix.shard }}/4
+
+  # The CI half of the same scripts: the watcher that waits for a commit's
+  # workflow runs, the default-branch skip check, and the reachability check,
+  # plus a structural check of the four ci.yml templates (a decide job, the
+  # job conditions, E2E not advisory). A watcher that returns early reads a
+  # pull request's checks before the new run is listed, and a ci.yml that lost
+  # its decide job re-runs a suite that already passed, which is the cost
+  # 6.0.0 exists to remove. Stub `gh` on PATH keeps this offline.
+  delivery-ci-scripts:
+    name: delivery - CI scripts and workflow templates
+    needs: areas
+    if: needs.areas.outputs.delivery == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
       - name: Prove the CI scripts and workflow templates still hold
         run: python3 tools/test_delivery_ci.py
 
-      # STACKSPEC 7.0.0 §13.6: once a train merges, cleanup.py removes its
-      # branches, gate-result refs and worktrees. A cleanup that deletes a
-      # branch with an open pull request, unmerged work, or a worktree holding
-      # uncommitted changes destroys work nobody can get back, so every safety
-      # rule is proved against throwaway repositories and a stub `gh`.
-      - name: Prove train cleanup removes only what is finished
-        run: python3 tools/test_delivery_cleanup.py ${{ needs.areas.outputs.mutants != 'true' && '--no-mutants' || '' }}
+  # STACKSPEC 7.0.0 section 13.6: once a train merges, cleanup.py removes its
+  # branches, gate-result refs and worktrees. A cleanup that deletes a
+  # branch with an open pull request, unmerged work, or a worktree holding
+  # uncommitted changes destroys work nobody can get back, so every safety
+  # rule is proved against throwaway repositories and a stub `gh`.
+  delivery-cleanup:
+    name: delivery - train cleanup
+    needs: areas
+    if: needs.areas.outputs.delivery == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      # STACKSPEC 7.0.0 §13.1: only the newest build artifact of each name is
-      # kept, because artifact storage is billed. A pruner that keeps the oldest,
-      # misses a page or keeps nothing either costs money or loses the latest
-      # build. Stub `gh` on PATH keeps this offline.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Prove train cleanup removes only what is finished
+        run: python3 tools/test_delivery_cleanup.py ${{ needs.areas.outputs.mutants_cleanup != 'true' && '--no-mutants' || '' }}
+
+  # STACKSPEC 7.0.0 section 13.1: only the newest build artifact of each name is
+  # kept, because artifact storage is billed. A pruner that keeps the oldest,
+  # misses a page or keeps nothing either costs money or loses the latest
+  # build. Stub `gh` on PATH keeps this offline.
+  delivery-prune:
+    name: delivery - artifact pruning
+    needs: areas
+    if: needs.areas.outputs.delivery == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
       - name: Prove artifact pruning keeps exactly the newest of each name
         run: python3 tools/test_artifact_prune.py
+
+  delivery-smoke:
+    name: delivery - packaged-program smoke test
+    needs: areas
+    if: needs.areas.outputs.delivery == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
 
       - name: Prove the packaged-program smoke test starts and stops what it declares
         run: python3 tools/test_smoke_packaged.py
 
-      # STACKSPEC 7.1.0 §13.6: branches add change notes and the release folds
-      # them, so parallel branches never conflict on a spec's version line. A
-      # check that lets a version edit through, or a fold that bumps wrongly or
-      # loses a note, breaks every release; the suite proves each can fail.
-      - name: Prove change notes are enforced and folded correctly
-        run: python3 tools/test_change_notes.py ${{ needs.areas.outputs.mutants != 'true' && '--no-mutants' || '' }}
+  # STACKSPEC 7.1.0 section 13.6: branches add change notes and the release folds
+  # them, so parallel branches never conflict on a spec's version line. A
+  # check that lets a version edit through, or a fold that bumps wrongly or
+  # loses a note, breaks every release; the suite proves each can fail.
+  delivery-change-notes:
+    name: delivery - change notes enforced and folded
+    needs: areas
+    if: needs.areas.outputs.delivery == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      # The area mapping is what decides which of these jobs run at all, so a
-      # wrong rule silently skips a suite. Shared paths (this file, ci_areas.py
-      # and its test) run every area, so this runs whenever either changes.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Prove change notes are enforced and folded correctly
+        run: python3 tools/test_change_notes.py ${{ needs.areas.outputs.mutants_notes != 'true' && '--no-mutants' || '' }}
+
+  # The area mapping is what decides which of these jobs run at all, so a
+  # wrong rule silently skips a suite. Shared paths (this file, ci_areas.py
+  # and its test) run every area, so this runs whenever either changes.
+  delivery-area-mapping:
+    name: delivery - area mapping
+    needs: areas
+    if: needs.areas.outputs.delivery == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
       - name: Prove the area mapping and the main-after-merge skip hold
         run: python3 tools/test_ci_areas.py
+
+  # The old single job's name, kept for whatever still requires it (a branch
+  # protection rule, a reader of the check list). It passes when every suite
+  # job passed or was skipped (the gate shards skip when mutants are off) and fails if
+  # any failed or was cancelled. `always()` so a failed suite is reported here
+  # instead of this job being skipped, which a required check reads as passing.
+  delivery:
+    name: delivery scripts, CI templates, cleanup, prune, change notes
+    needs:
+      - areas
+      - delivery-preflight
+      - delivery-gate
+      - delivery-gate-shards
+      - delivery-ci-scripts
+      - delivery-cleanup
+      - delivery-prune
+      - delivery-smoke
+      - delivery-change-notes
+      - delivery-area-mapping
+    if: always() && needs.areas.outputs.delivery == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every delivery suite passed or was skipped
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "suite results: $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in
+              success|skipped) ;;
+              *) echo "a delivery suite finished as '$r'"; exit 1 ;;
+            esac
+          done
+
   # Not an area: the notes rule applies to every pull request, including one
   # that touches only docs/specs/changes/, so it never waits for `areas`.
   change-notes:

@@ -16,7 +16,7 @@ scripts, breaks one rule in the copy (an `if` made unconditional, a flag
 dropped) and requires the scenario that guards that rule to report a failure.
 A mutant that goes undetected is a check that cannot fail, and fails this run.
 
-Run:  python3 tools/test_delivery_gate.py [--no-mutants] [-k SUBSTRING]
+Run:  python3 tools/test_delivery_gate.py [--no-mutants] [--shard I/N] [--no-scenarios] [-k SUBSTRING]
 Exit: 0 all passed, 1 otherwise.
 """
 from __future__ import annotations
@@ -3409,16 +3409,48 @@ def mutated_shared(rel: str, old: str, new: str) -> Path | None:
     return dst / "shared"
 
 
+def parse_shard(text: str) -> tuple[int, int]:
+    try:
+        i, n = (int(x) for x in text.split("/"))
+    except ValueError:
+        raise argparse.ArgumentTypeError("--shard wants I/N, for example 2/4") from None
+    if not 1 <= i <= n:
+        raise argparse.ArgumentTypeError("--shard I/N needs 1 <= I <= N")
+    return i, n
+
+
+def selected_mutants(k: str | None, shard_i: int = 1, shard_n: int = 1) -> list:
+    """The mutants to run: the -k filter first, then every N-th one for shard I.
+    A shard may be empty (more shards than mutants); that is not a failure."""
+    picked = [m for m in MUTANTS if not k or k in m[4] or k in m[0]]
+    return [m for idx, m in enumerate(picked) if idx % shard_n == shard_i - 1]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--no-mutants", action="store_true", help="skip the mutation pass")
     ap.add_argument("-k", metavar="SUBSTRING", help="run only scenarios/mutants whose name contains it")
+    ap.add_argument("--shard", metavar="I/N", type=parse_shard,
+                    help="CI sharding: run mutant number m (from 0) only when m %% N == I-1, "
+                         "and the scenarios only in shard 1")
+    ap.add_argument("--no-scenarios", action="store_true",
+                    help="skip the scenarios (CI runs them in their own job beside the shards)")
+    ap.add_argument("--list-mutants", action="store_true",
+                    help="print the mutants this run would execute (honours --shard, -k) and exit")
     args = ap.parse_args()
+    shard_i, shard_n = args.shard or (1, 1)
+
+    if args.list_mutants:
+        for label, _rel, _old, _new, scenario in selected_mutants(args.k, shard_i, shard_n):
+            print(label)
+        return 0
 
     fails = total = 0
     for name, fn in SCENARIOS.items():
         if args.k and args.k not in name:
             continue
+        if shard_i != 1 or args.no_scenarios:
+            break  # scenarios run in shard 1 only, and not at all with --no-scenarios
         t = T(name)
         try:
             fn(t, SHARED)
@@ -3429,9 +3461,7 @@ def main() -> int:
 
     if not args.no_mutants:
         print("\n--- mutation pass: break one rule in a copy; the scenario for it must fail ---")
-        for label, rel, old, new, scenario in MUTANTS:
-            if args.k and args.k not in scenario and args.k not in label:
-                continue
+        for label, rel, old, new, scenario in selected_mutants(args.k, shard_i, shard_n):
             shared = mutated_shared(rel, old, new)
             total += 1
             if shared is None:
