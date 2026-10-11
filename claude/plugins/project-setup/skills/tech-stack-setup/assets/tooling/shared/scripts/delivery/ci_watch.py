@@ -13,6 +13,12 @@ Exit codes (shared by the delivery scripts): 0 every run succeeded or was
 skipped, 1 any other conclusion (the failed jobs are printed), 2 usage error or
 `gh` missing or unusable, 4 timed out. It never exits 0 when it could not decide.
 
+Runner health (DL7, warnings only): while it waits, a job that has been queued for
+more than 10 minutes (--queue-warn-seconds) is reported once, when no online runner
+carries its labels, or, when the runners cannot be listed (that needs admin rights),
+as "queued 10+ min". It never changes the exit code. GitHub-hosted labels are not
+checked: a queued hosted job is the platform's wait, not a missing runner.
+
 Python 3.11+, standard library only; `gh` is the one external tool.
 """
 from __future__ import annotations
@@ -24,10 +30,16 @@ import shutil
 import subprocess
 import sys
 import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # -I leaves the script dir off sys.path
+import runner_health  # noqa: E402
 
 OK_CONCLUSIONS = {"success", "skipped"}
 LIST_FIELDS = "databaseId,workflowName,status,conclusion,event,headSha"
 MAX_CONSECUTIVE_GH_ERRORS = 5
+QUEUE_WARN_SECONDS = 600
 
 
 class GhError(Exception):
@@ -69,6 +81,55 @@ def list_runs(sha: str, workflow: str, repo: str | None) -> list[dict]:
             and str(r.get("headSha", sha)).startswith(sha[:7])]
 
 
+def queued_age(job: dict, now: float) -> float | None:
+    """Seconds a job has been queued, from its created_at; None when unknown."""
+    raw = job.get("created_at")
+    if not isinstance(raw, str):
+        return None
+    try:
+        return now - datetime.fromisoformat(raw.replace("Z", "+00:00")).astimezone(timezone.utc).timestamp()
+    except ValueError:
+        return None
+
+
+def warn_queued_jobs(pending: list[dict], repo: str | None, warned: set, threshold: float,
+                     now: float | None = None) -> None:
+    """Warn once per job queued over `threshold` seconds with no online runner for its
+    labels (or, when runners cannot be listed, say it has been queued that long)."""
+    now = time.time() if now is None else now
+    runners: list | None | str = "unlisted"
+    why = ""
+    for run in pending:
+        base = f"repos/{repo}" if repo else "repos/{owner}/{repo}"
+        try:
+            data = gh_json(["api", f"{base}/actions/runs/{run.get('databaseId')}/jobs?per_page=100"])
+        except GhError:
+            continue
+        for job in (data.get("jobs", []) if isinstance(data, dict) else []):
+            jid = job.get("id")
+            if job.get("status") != "queued" or jid in warned:
+                continue
+            age = queued_age(job, now)
+            if age is None or age < threshold:
+                continue
+            labels = [str(x) for x in job.get("labels") or []]
+            if labels and runner_health.is_hosted(labels):
+                continue
+            if runners == "unlisted":
+                runners, why = runner_health.list_online_runners(repo)
+            minutes = int(age // 60)
+            name = f"{run.get('workflowName')} / {job.get('name')}"
+            if runners is None:
+                print(f"ci_watch: WARNING: job {name} has been queued 10+ min ({minutes} min); "
+                      f"the online runners could not be listed ({why})", flush=True)
+            elif labels and not any(runner_health.runner_carries(r, labels) for r in runners):
+                print(f"ci_watch: WARNING: job {name} has been queued {minutes} min and no online "
+                      f"runner carries its labels [{', '.join(labels)}]", flush=True)
+            else:
+                continue  # a runner exists; the job is waiting its turn
+            warned.add(jid)
+
+
 def print_failed_jobs(run: dict, repo: str | None) -> None:
     rid = run.get("databaseId")
     print(f"  run {rid} ({run.get('workflowName')}, {run.get('event')}): "
@@ -99,6 +160,9 @@ def main(argv: list[str] | None = None) -> int:
                     help="seconds to wait before giving up with exit 4 (default 3600)")
     ap.add_argument("--interval", type=float, default=30,
                     help="seconds between polls (default 30)")
+    ap.add_argument("--queue-warn-seconds", type=float, default=QUEUE_WARN_SECONDS,
+                    help="warn about a job queued this long with no runner for its labels "
+                         "(default 600)")
     ap.add_argument("--repo", help="OWNER/NAME (default: the current repository)")
     args = ap.parse_args(argv)
 
@@ -118,6 +182,7 @@ def main(argv: list[str] | None = None) -> int:
     deadline = time.monotonic() + args.timeout
     errors = 0
     last_state = ""
+    warned: set = set()
     while True:
         state = ""
         try:
@@ -137,6 +202,7 @@ def main(argv: list[str] | None = None) -> int:
                 state = f"no {args.workflow} run for {sha[:10]} yet"
             elif pending:
                 state = f"{len(pending)} of {len(runs)} run(s) not completed"
+                warn_queued_jobs(pending, args.repo, warned, args.queue_warn_seconds)
             else:
                 bad = [r for r in runs if r.get("conclusion") not in OK_CONCLUSIONS]
                 if not bad:

@@ -1948,11 +1948,11 @@ def sc_join_clean(t: T, shared: Path) -> None:
     jr = join_result(box)
     t.eq("join-result.json: joined, no stop", (jr["joined"], jr["stopped_at"], jr["conflicts"]),
          (["feat/a", "feat/b"], None, []))
-    res = box.result()
-    t.eq("the gate ran on the joined head", res["head"], box.g("rev-parse", "HEAD"))
-    t.eq("... against the default branch", res["base_ref"], "origin/main")
-    t.eq("... covering both branches' packages", res["changed_dirs"], ["apps/api", "apps/web"])
-    t.eq("... and passed", res["pass"], True)
+    qc = jr["quick_check"]
+    t.eq("the quick check ran on the joined head", qc["head"], box.g("rev-parse", "HEAD"))
+    t.eq("... against the default branch", qc["base_ref"], "origin/main")
+    t.eq("... covering both branches' packages", qc["changed_dirs"], ["apps/api", "apps/web"])
+    t.eq("... and passed", qc["pass"], True)
     t.eq("nothing pushed without --push", box.g("rev-parse", "origin/integ"), integ_before)
     t.eq("... and no result published without --push", box.remote_ref("refs/gate-results/integ"), None)
     t.eq("working tree left clean", box.clean(), True)
@@ -1967,12 +1967,8 @@ def sc_join_clean(t: T, shared: Path) -> None:
     t.eq("a branch that could fast-forward still gets a merge commit",
          box.g("log", "--merges", "--format=%s", "integ").splitlines(), ["Join feat/b", "Join feat/a"])
     t.eq("--push: integration pushed", box.g("rev-parse", "origin/integ"), head)
-    ref = box.remote_ref("refs/gate-results/integ")
-    t.check("--push: its gate result published", ref is not None)
-    t.eq("--push: the result is for the pushed head and passes",
-         json.loads(box.origin_git("show", "refs/gate-results/integ:gate-result.json"))["head"], head)
-    t.eq("--push: gate_verify trusts the pushed integration branch",
-         verify(box, "integ", base_ref="origin/main").code, 0)
+    t.eq("--push: the quick check publishes no gate result (CI is the one full suite)",
+         box.remote_ref("refs/gate-results/integ"), None)
 
     # --no-gate
     box = integ_box(shared)
@@ -1987,7 +1983,7 @@ def sc_join_clean(t: T, shared: Path) -> None:
     box.gated("feat/b", {"apps/api/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
     before = box.g("rev-parse", "origin/integ")
     r = join(box, "--into", "integ", "feat/a", "feat/b", "--push", env={"GATE_TEST_FAIL": "unit"})
-    t.eq("a failing gate on the joined head: exit 1", r.code, 1)
+    t.eq("a failing quick check on the joined head: exit 1", r.code, 1)
     t.eq("... and nothing is pushed", box.g("rev-parse", "origin/integ"), before)
 
     # preconditions
@@ -2484,6 +2480,321 @@ def sc_packages(t: T, shared: Path) -> None:
 
 
 # --------------------------------------------------------------------------
+# scenarios: quick join check, train freeze, runner health (DL2, DL6, DL7)
+# --------------------------------------------------------------------------
+
+# The two scripts of DL6 and DL7 are copied into every box.
+for _name in ("runner_health.py", "train_freeze.py"):
+    if _name not in SCRIPT_FILES:
+        SCRIPT_FILES.append(_name)
+
+# A `gh` that answers from a JSON fixture (GH_STUB_FIXTURE) and logs its calls.
+GH_STUB = r'''
+import json, os, sys
+argv = sys.argv[1:]
+with open(os.environ["GH_STUB_LOG"], "a", encoding="utf-8") as fh:
+    fh.write(json.dumps(argv) + "\n")
+fx = json.load(open(os.environ["GH_STUB_FIXTURE"], encoding="utf-8"))
+def fail(msg):
+    sys.stderr.write(msg + "\n")
+    sys.exit(1)
+if argv[:2] == ["pr", "list"]:
+    if fx.get("pr_error"):
+        fail("HTTP 502: bad gateway")
+    head = argv[argv.index("--head") + 1] if "--head" in argv else None
+    state = argv[argv.index("--state") + 1] if "--state" in argv else None
+    rows = [p for p in fx.get("prs", []) if head in (None, p["headRefName"]) and state in (None, "all", p["state"])]
+    print(json.dumps([{k: v for k, v in p.items() if k not in ("headRefName", "state")} for p in rows]))
+elif argv[:2] == ["run", "list"]:
+    print(json.dumps(fx.get("runs", [])))
+elif argv[:1] == ["api"]:
+    if fx.get("runners_error"):
+        fail("HTTP 403: Must have admin rights to Repository.")
+    print(json.dumps({"runners": fx.get("runners", [])}))
+elif argv[:2] == ["variable", "get"]:
+    v = fx.get("vars", {}).get(argv[2])
+    if v is None:
+        fail("could not find variable")
+    print(v)
+else:
+    fail("stub gh: unexpected call " + " ".join(argv))
+'''
+
+
+class GhStub:
+    """A stub `gh` first on PATH for the scripts a test runs."""
+
+    def __init__(self, box: Box, fixture: dict):
+        self.dir = box.root / "ghbin"
+        self.dir.mkdir(exist_ok=True)
+        (self.dir / "gh.py").write_text(GH_STUB, encoding="utf-8")
+        if os.name == "nt":
+            (self.dir / "gh.cmd").write_text('@"%s" "%%~dp0gh.py" %%*\r\n' % sys.executable, encoding="utf-8")
+        else:
+            shim = self.dir / "gh"
+            shim.write_text('#!/bin/sh\nexec "%s" "$(dirname "$0")/gh.py" "$@"\n' % sys.executable, encoding="utf-8")
+            shim.chmod(0o755)
+        self.fixture = self.dir / "fixture.json"
+        self.log = self.dir / "gh.log"
+        self.set(fixture)
+
+    def set(self, fixture: dict) -> None:
+        self.fixture.write_text(json.dumps(fixture), encoding="utf-8")
+        if self.log.exists():
+            self.log.unlink()
+
+    def calls(self) -> list:
+        if not self.log.exists():
+            return []
+        return [json.loads(x) for x in self.log.read_text(encoding="utf-8").splitlines() if x]
+
+    def env(self, extra: dict | None = None) -> dict:
+        env = {"PATH": str(self.dir) + os.pathsep + os.environ.get("PATH", ""),
+               "GH_STUB_FIXTURE": str(self.fixture), "GH_STUB_LOG": str(self.log)}
+        env.update(extra or {})
+        return env
+
+
+def ws_box(shared: Path) -> Box:
+    """An integration box whose packages depend on each other: web -> ui -> core, api -> core."""
+
+    class WsBox(Box):
+        INIT_FILES = {
+            **Box.INIT_FILES,
+            "packages/core/package.json": '{"name": "@x/core"}\n',
+            "packages/ui/package.json": '{"name": "@x/ui", "dependencies": {"@x/core": "workspace:*"}}\n',
+            "apps/web/package.json": '{"name": "@x/web", "devDependencies": {"@x/ui": "workspace:*"}}\n',
+            "apps/api/package.json": '{"name": "@x/api"}\n',
+        }
+
+    box = WsBox(shared)
+    box.g("checkout", "-q", "-B", "integ", "main")
+    box.push("integ")
+    return box
+
+
+def sc_join_quick(t: T, shared: Path) -> None:
+    """DL2: the join runs setup, build/typecheck/unit for the union of the branches' affected
+    packages plus their dependents, not the full gate; it records the time of each step."""
+    box = ws_box(shared)
+    box.gated("feat/core", {"packages/core/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
+    box.gated("feat/api", {"apps/api/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
+    box.clear_log()
+    r = join(box, "--into", "integ", "feat/core", "feat/api", "--push")
+    t.eq("two branches joined: exit 0", r.code, 0)
+    t.eq("the quick check runs the install, then typecheck and unit only (no lint, guards, scan, e2e)",
+         [x[0] for x in box.ran(True)], ["setup", "typecheck", "unit"])
+    union = ["apps/api", "apps/web", "packages/core", "packages/ui"]
+    t.eq("typecheck gets the union of the branches' packages plus their dependents (D6)",
+         [x for x in box.ran() if x[0] == "typecheck"], [["typecheck"] + union])
+    t.eq("... unit too", [x for x in box.ran() if x[0] == "unit"], [["unit"] + union])
+    jr = join_result(box)
+    qc = jr.get("quick_check", {})
+    t.eq("join-result.json records the quick check", (qc.get("pass"), qc.get("affected_dirs")), (True, union))
+    t.eq("... with a time per step", [(s["name"], isinstance(s["seconds"], float)) for s in qc.get("steps", [])],
+         [("setup", True), ("typecheck", True), ("unit", True)])
+    t.check("... and a total", isinstance(qc.get("seconds"), float))
+    t.has("stdout lists the time of each step", r.out, "typecheck ")
+    t.has("... and the total", r.out, "quick check passed in")
+    t.eq("it is not a gate: no result is published for the integration branch",
+         box.remote_ref("refs/gate-results/integ"), None)
+    t.eq("... and the integration branch was pushed", box.g("rev-parse", "origin/integ"), box.g("rev-parse", "HEAD"))
+
+    # a failing test in the union stops the join before the push
+    box = ws_box(shared)
+    box.gated("feat/core", {"packages/core/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
+    box.gated("feat/api", {"apps/api/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
+    before = box.g("rev-parse", "origin/integ")
+    r = join(box, "--into", "integ", "feat/core", "feat/api", "--push", env={"GATE_TEST_FAIL": "unit"})
+    t.eq("a failing unit step: exit 1", r.code, 1)
+    t.eq("... nothing pushed", box.g("rev-parse", "origin/integ"), before)
+    t.eq("... and the failure is recorded", join_result(box).get("quick_check", {}).get("pass"), False)
+
+    # a failing step that the quick check does not run is left to the ready PR's CI
+    box = ws_box(shared)
+    box.gated("feat/core", {"packages/core/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
+    box.gated("feat/api", {"apps/api/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
+    r = join(box, "--into", "integ", "feat/core", "feat/api", env={"GATE_TEST_FAIL": "lint,e2e"})
+    t.eq("lint is not part of the quick check", r.code, 0)
+
+    # nothing but docs changed: install only, and it passes
+    box = ws_box(shared)
+    box.gated("feat/docs", {"docs/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
+    box.gated("feat/docs2", {"docs/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
+    box.clear_log()
+    r = join(box, "--into", "integ", "feat/docs", "feat/docs2")
+    t.eq("no package changed: exit 0, only the install ran", (r.code, [x[0] for x in box.ran(True)]), (0, ["setup"]))
+
+    # a widening file (the lockfile) runs the full commands
+    box = ws_box(shared)
+    box.gated("feat/lock", {"pnpm-lock.yaml": "lock\nl1\nchanged\n"}, frm="integ", base_ref="origin/integ")
+    box.gated("feat/api", {"apps/api/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
+    box.clear_log()
+    r = join(box, "--into", "integ", "feat/lock", "feat/api")
+    t.eq("a widened join runs the full commands", [x for x in box.ran() if x[0] == "unit"], [["unit", "FULL"]])
+
+    # --no-gate and the trusted-tree skip stay
+    box = ws_box(shared)
+    box.gated("feat/api", {"apps/api/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
+    box.clear_log()
+    r = join(box, "--into", "integ", "feat/api", "--no-gate")
+    t.eq("--no-gate: no quick check", (r.code, box.ran(True), "quick_check" in join_result(box)), (0, [], False))
+    box = ws_box(shared)
+    box.gated("feat/api", {"apps/api/b.txt": "b\n"}, base_ref="origin/main", frm="integ")
+    box.clear_log()
+    r = join(box, "--into", "integ", "feat/api")
+    t.eq("a joined tree equal to a trusted branch head: the check is skipped, and says so",
+         (r.code, box.ran(True), "gate on the joined head skipped" in r.out), (0, [], True))
+
+
+def hook_box(shared: Path, fixture: dict) -> tuple[Box, GhStub]:
+    box = Box(shared)
+    box.g("config", "core.hooksPath", ".githooks")
+    stub = GhStub(box, fixture)
+    box.branch("train", {"apps/web/a.txt": "a\n"})
+    return box, stub
+
+
+def push(box: Box, stub: GhStub, *args: str, env: dict | None = None) -> R:
+    return run(["git", "push", "-q", *args], cwd=box.work, extra_env=stub.env(env))
+
+
+def sc_freeze(t: T, shared: Path) -> None:
+    """DL6: no push to a branch whose ready PR is being tested."""
+    ready = {"number": 12, "isDraft": False, "url": "https://example.test/pr/12", "headRefOid": "b" * 40,
+             "headRefName": "train", "state": "open"}
+    running = {"databaseId": 9001, "workflowName": "ci", "status": "in_progress", "conclusion": ""}
+    done = {"databaseId": 9001, "workflowName": "ci", "status": "completed", "conclusion": "failure"}
+
+    box, stub = hook_box(shared, {"prs": [], "runs": []})
+    r = push(box, stub, "-u", "origin", "train")
+    t.eq("no pull request: the push is allowed", r.code, 0)
+    t.eq("... with one gh call (the hook stays fast)", [c[:2] for c in stub.calls()], [["pr", "list"]])
+    t.check("... and the branch arrived", box.remote_ref("refs/heads/train") is not None)
+    tip = box.g("rev-parse", "HEAD")
+
+    def next_commit(n: str) -> None:
+        box.commit({"apps/web/%s.txt" % n: n + "\n"}, "more " + n)
+
+    stub.set({"prs": [ready], "runs": [running]})
+    next_commit("b")
+    r = push(box, stub, "origin", "train")
+    t.check("a ready PR whose CI is running: the push is refused", r.code != 0, r.text)
+    t.has("... naming the pull request", r.text, "#12")
+    t.has("... and the run", r.text, "9001")
+    t.eq("... the remote did not move", box.remote_ref("refs/heads/train"), tip)
+    t.eq("... two gh calls at most", [c[:2] for c in stub.calls()], [["pr", "list"], ["run", "list"]])
+    t.has("... and the hint names the override", r.text, "DELIVERY_FREEZE_OVERRIDE=1")
+
+    r = push(box, stub, "origin", "train", env={"DELIVERY_FREEZE_OVERRIDE": "1"})
+    t.eq("DELIVERY_FREEZE_OVERRIDE=1: the push goes through", r.code, 0)
+    t.has("... and says the running CI will restart", r.text, "will restart")
+    t.eq("... the remote moved", box.remote_ref("refs/heads/train"), box.g("rev-parse", "HEAD"))
+
+    stub.set({"prs": [ready], "runs": [done]})
+    next_commit("c")
+    r = push(box, stub, "origin", "train")
+    t.eq("CI finished, failed: the push is allowed (fix forward)", r.code, 0)
+    stub.set({"prs": [ready], "runs": [{**done, "conclusion": "success"}]})
+    next_commit("d")
+    t.eq("CI finished, passed: allowed", push(box, stub, "origin", "train").code, 0)
+
+    stub.set({"prs": [{**ready, "isDraft": True}], "runs": [running]})
+    next_commit("e")
+    t.eq("a draft PR: allowed", push(box, stub, "origin", "train").code, 0)
+
+    stub.set({"prs": [{**ready, "state": "closed"}], "runs": [running]})
+    next_commit("f")
+    t.eq("the ready PR was closed unmerged (train abandoned): allowed", push(box, stub, "origin", "train").code, 0)
+
+    stub.set({"prs": [ready], "runs": [], "pr_error": True})
+    next_commit("g")
+    r = push(box, stub, "origin", "train")
+    t.eq("GitHub unreachable: allowed", r.code, 0)
+    t.check("... with a warning", "warning" in r.text and "allowing the push" in r.text, r.text)
+
+    stub.set({"prs": [ready], "runs": []})
+    next_commit("h")
+    t.eq("a ready PR with no run listed yet: allowed", push(box, stub, "origin", "train").code, 0)
+
+    # a run of another commit does not matter: the query is for the PR's head commit
+    stub.set({"prs": [ready], "runs": [running]})
+    next_commit("i")
+    push(box, stub, "origin", "train")
+    t.eq("the run list is asked for the PR's head commit",
+         [c for c in stub.calls() if c[:2] == ["run", "list"]][0][2:4], ["--commit", "b" * 40])
+
+    # pushing tags skips the freeze
+    stub.set({"prs": [ready], "runs": [running]})
+    box.g("tag", "v1")
+    r = push(box, stub, "origin", "v1")
+    t.eq("a tag push does not ask GitHub", (r.code, stub.calls()), (0, []))
+
+
+def runner_fixture(box: Box, files: dict) -> None:
+    box.g("checkout", "-q", "integ")
+    for name, text in files.items():
+        box.write(".github/workflows/" + name, text)
+    box.g("add", "-A")
+    box.g("commit", "-q", "-m", "workflows")
+    box.g("push", "-q", "origin", "integ")
+
+
+WF_VAR = ("name: ci\non: push\njobs:\n  build:\n    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '\"ubuntu-latest\"') }}\n"
+          "    steps:\n      - run: echo hi\n")
+
+
+def sc_runner_health(t: T, shared: Path) -> None:
+    """DL7: join warns, never blocks, when no online runner carries a self-hosted label set."""
+    selfhosted = {"CI_RUNS_ON": '["self-hosted","gpu"]'}
+    online = {"status": "online", "labels": [{"name": "self-hosted"}, {"name": "linux"}]}
+    gpu = {"status": "online", "labels": [{"name": "self-hosted"}, {"name": "gpu"}]}
+
+    def run_join(fixture: dict, wf: dict | None = None):
+        box = integ_box(shared)
+        box.gated("feat/a", {"apps/web/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
+        runner_fixture(box, wf or {"ci.yml": WF_VAR})
+        stub = GhStub(box, fixture)
+        r = join(box, "--into", "integ", "feat/a", "--no-gate", env=stub.env())
+        return r, box, stub
+
+    r, box, stub = run_join({"vars": selfhosted, "runners": [online]})
+    t.eq("no online runner with the label: join still succeeds (warnings only)", r.code, 0)
+    t.check("... and warns, naming the label", "WARNING" in r.out and "gpu" in r.out, r.out)
+    t.eq("... the report says warn", join_result(box)["runner_health"]["status"], "warn")
+
+    r, box, stub = run_join({"vars": selfhosted, "runners": [online, gpu]})
+    t.check("an online runner carries every label: no warning", "WARNING" not in r.out and "runner health: ok" in r.out, r.out)
+
+    r, box, stub = run_join({"vars": selfhosted, "runners": [{**gpu, "status": "offline"}]})
+    t.check("the only runner with the label is offline: warning", "WARNING" in r.out, r.out)
+
+    r, box, stub = run_join({"vars": {}, "runners": []})
+    t.check("the variable unset: the default is ubuntu-latest, hosted, no warning and no runner list",
+            "WARNING" not in r.out and not [c for c in stub.calls() if c[0] == "api"], r.out)
+
+    wf_hosted = {"ci.yml": "jobs:\n  a:\n    runs-on: windows-2022\n  b:\n    runs-on: [macos-14]\n"
+                           "  c:\n    runs-on:\n      - ubuntu-24.04\n"}
+    r, box, stub = run_join({"runners": []}, wf_hosted)
+    t.check("standard hosted labels count as available",
+            "WARNING" not in r.out and not [c for c in stub.calls() if c[0] == "api"], r.out)
+
+    wf_self = {"ci.yml": "jobs:\n  a:\n    runs-on: [self-hosted, linux, arm64]\n"}
+    wf_block = {"ci.yml": "jobs:\n  a:\n    runs-on:\n      - self-hosted\n      - arm64\n    steps: []\n"}
+    r, box, stub = run_join({"runners": [online]}, wf_block)
+    t.check("a block list of labels is read", "WARNING" in r.out and "arm64" in r.out, r.out)
+    r, box, stub = run_join({"runners": [online]}, wf_self)
+    t.check("a literal self-hosted label list is checked too", "WARNING" in r.out and "arm64" in r.out, r.out)
+    r, box, stub = run_join({"runners": [{**online, "labels": online["labels"] + [{"name": "arm64"}]}]}, wf_self)
+    t.check("... and passes when one runner has all three", "WARNING" not in r.out, r.out)
+
+    r, box, stub = run_join({"vars": selfhosted, "runners_error": True})
+    t.eq("runners cannot be listed: join succeeds", r.code, 0)
+    t.check("... and says the check was skipped and why", "check skipped" in r.out and "admin" in r.out, r.out)
+    t.eq("... the report says skipped", join_result(box)["runner_health"]["status"], "skipped")
+
+
+# --------------------------------------------------------------------------
 # mutation pass
 # --------------------------------------------------------------------------
 
@@ -2695,6 +3006,52 @@ MUTANTS = [
      'export PATH=\\"$bin_path:\\$PATH\\""', 'export PATH=\\"$bin_dir:\\$PATH\\""', "agent_setup"),
     ("agent_setup skips the checksum", "scripts/delivery/agent_setup.sh",
      "if got != want:", "if False:", "agent_setup"),
+    ("the quick check runs every step", "scripts/delivery/join.py",
+     'QUICK_STEPS = ("build", "typecheck", "unit", "test")', 'QUICK_STEPS = ("build", "typecheck", "unit", "test", "lint", "guards")', "join_quick"),
+    ("the quick check leaves out the dependents", "scripts/delivery/join.py",
+     'copy[key].replace("{changed_dirs}", "{affected_dirs}")', 'copy[key]', "join_quick"),
+    ("a failed quick check still passes", "scripts/delivery/join.py",
+     'ok = not timed_out and not any(e["outcome"] == "fail" for e in entries)', "ok = True", "join_quick"),
+    ("a failed quick check does not stop the join", "scripts/delivery/join.py",
+     '        if code != 0:\n            dc.eprint("join: the quick check', '        if False:\n            dc.eprint("join: the quick check', "join_quick"),
+    ("the quick check records no step times", "scripts/delivery/join.py",
+     '"steps": [{"name": e["name"], "outcome": e["outcome"], "seconds": e["seconds"]} for e in entries],', '"steps": [],', "join_quick"),
+    ("--no-gate still runs the quick check", "scripts/delivery/join.py",
+     "    elif not args.no_gate:\n        code, qc", "    else:\n        code, qc", "join_quick"),
+    ("a push to a frozen branch is allowed", "scripts/delivery/train_freeze.py",
+     "    if not running:\n        return None", "    if True:\n        return None", "freeze"),
+    ("a draft PR freezes its branch", "scripts/delivery/train_freeze.py",
+     'isinstance(p, dict) and not p.get("isDraft")]', "isinstance(p, dict)]", "freeze"),
+    ("a finished CI still freezes", "scripts/delivery/train_freeze.py",
+     'isinstance(r, dict) and r.get("status") != "completed"]', "isinstance(r, dict)]", "freeze"),
+    ("the freeze override is ignored", "scripts/delivery/train_freeze.py",
+     'os.environ.get("DELIVERY_FREEZE_OVERRIDE") == "1"', "False", "freeze"),
+    ("the override does not say the CI restarts", "scripts/delivery/train_freeze.py",
+     "The running CI will restart on the new head.", "Pushing.", "freeze"),
+    ("an unreachable GitHub refuses the push", "scripts/delivery/train_freeze.py",
+     'decides the merge." % (args.branch, exc), file=sys.stderr)\n        return 0', 'decides the merge." % (args.branch, exc), file=sys.stderr)\n        return 1', "freeze"),
+    ("an unreachable GitHub is allowed silently", "scripts/delivery/train_freeze.py",
+     'print("pre-push: warning: could not check', 'print("pre-push: could not check', "freeze"),
+    ("a closed PR still freezes its branch", "scripts/delivery/train_freeze.py",
+     '"--head", branch, "--state", "open", ', '"--head", branch, ', "freeze"),
+    ("the freeze looks at another commit's runs", "scripts/delivery/train_freeze.py",
+     '["run", "list", "--commit", sha,', '["run", "list", "--commit", "0" * 40,', "freeze"),
+    ("pre-push ignores the freeze", ".githooks/pre-push",
+     '--branch "${remote_ref#refs/heads/}" </dev/null || exit 1', '--branch "${remote_ref#refs/heads/}" </dev/null || true', "freeze"),
+    ("a hosted label needs a runner", "scripts/delivery/runner_health.py",
+     '    return "self-hosted" not in low and any(x.startswith(HOSTED_PREFIXES) for x in low)', "    return False", "runner_health"),
+    ("one matching label is enough", "scripts/delivery/runner_health.py",
+     "return all(n.lower() in have for n in needed)", "return any(n.lower() in have for n in needed)", "runner_health"),
+    ("an offline runner counts", "scripts/delivery/runner_health.py",
+     'if isinstance(r, dict) and r.get("status") == "online":', "if isinstance(r, dict):", "runner_health"),
+    ("the CI_RUNS_ON variable is not read", "scripts/delivery/runner_health.py",
+     "        value = var_lookup(name)\n", "        value = None\n", "runner_health"),
+    ("a block list of labels is not read", "scripts/delivery/runner_health.py",
+     'n = re.match(r"^\\s+-\\s*(.+)$", lines[i])', "n = None", "runner_health"),
+    ("unlistable runners are not reported", "scripts/delivery/runner_health.py",
+     'print("%s: check skipped: %s" % (prefix, res["reason"]))', "pass", "runner_health"),
+    ("a missing runner is not a warning", "scripts/delivery/runner_health.py",
+     '    if result["warnings"]:\n        result["status"] = "warn"', "    pass", "runner_health"),
 ]
 
 SCENARIOS = {
@@ -2730,6 +3087,9 @@ SCENARIOS = {
     "agent_setup": sc_agent_setup,
     "assets": sc_assets,
     "packages": sc_packages,
+    "join_quick": sc_join_quick,
+    "freeze": sc_freeze,
+    "runner_health": sc_runner_health,
 }
 
 

@@ -302,6 +302,12 @@ self-hosted or shared runners, set it and turn on one-at-a-time ready-PR CI
 `gh variable set CI_SERIAL --body true`. These are repository settings the user
 owns: ask before changing them on an existing repository.
 
+Warn against requiring a label that only one runner carries (`gh api
+repos/{owner}/{repo}/actions/runners` lists them when the user has admin rights; else ask):
+if that runner is offline, every job waits. Suggest a second runner with the label, or a
+fallback job on hosted labels, and warn, never block. `join.py` and `ci_watch.py` warn at
+run time when no online runner carries a job's labels (`§13.6`).
+
 **End-to-end selection (`§13.5`).** When the product has more than a handful of
 end-to-end specs, add an `e2e_map` to `gate.json` (specs to source paths, plus
 `full_on` for shared configuration and the API contract), so a branch gate runs

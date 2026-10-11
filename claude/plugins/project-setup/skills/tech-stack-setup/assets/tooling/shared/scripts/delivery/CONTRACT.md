@@ -17,6 +17,8 @@ are built against; change it first, then the code.
 | `scripts/delivery/agent_setup.sh` | same | gate |
 | `scripts/delivery/delivery_common.py` | same (shared helpers: git, JSON, gate.json loading) | gate |
 | `scripts/delivery/ci_watch.py` | same | ci |
+| `scripts/delivery/runner_health.py` | same (runner labels against online runners; used by `join.py` and `ci_watch.py`) | gate |
+| `scripts/delivery/train_freeze.py` | same (called by the `pre-push` hook) | gate |
 | `scripts/delivery/ci_skip_check.py` | same | ci |
 | `scripts/delivery/reach_check.py` | same | ci |
 | `scripts/delivery/cleanup.py` | same | cleanup |
@@ -175,8 +177,8 @@ One ref per branch, so parallel agents never contend.
 **Trust rule** (`gate_verify.py`): a result is trusted when `head` equals the
 branch's current head on the remote, `base` equals the current head of the branch
 it joins, `pass` is true and `partial` is not. `--allow-older-base` relaxes the second condition
-to "`base` is an ancestor of the current head" (used by `join.py`, which re-gates
-the joined head unless its tree equals a trusted joined branch's tree).
+to "`base` is an ancestor of the current head" (used by `join.py`, which runs its quick check
+on the joined head unless its tree equals a trusted joined branch's tree).
 
 ## Command lines
 
@@ -248,6 +250,20 @@ exits 2. Never publishes a result.
 After the guards pass, the `pre-push` hook runs `pre-push.local` from its own
 directory when that file exists, with the same arguments and the same stdin (it
 reads the ref lines once and feeds both); a non-zero exit fails the push.
+
+**Train freeze** (`train_freeze.py --branch NAME`, called by the hook for every pushed
+`refs/heads/*` ref before the guards). A branch is *frozen* when an open, non-draft pull
+request has it as head (an integration branch, `*-integration`, or whatever head the ready
+pull request has) and a workflow run of that pull request's head commit has not completed.
+A frozen branch refuses the push (exit 1), naming the pull request and the run. Allowed:
+CI finished, passed or failed (fix forward works); the ready pull request closed unmerged
+(the train is abandoned); a draft pull request; no pull request; no run listed yet. When
+GitHub cannot say (offline, `gh` missing, an API error, no answer within 8 s) the push is
+allowed with a warning (D4): the ready pull request's CI still decides the merge.
+`DELIVERY_FREEZE_OVERRIDE=1` allows the push and prints that the running CI will restart
+(D9). A branch that is late rides the next train. The hook stays fast: one `gh pr list
+--head NAME --state open` call, and a second, `gh run list --commit SHA`, only when a ready
+pull request exists. Tags, deletions and refs outside `refs/heads/` are not checked.
 `pre-push.local` is the project's own pre-push check, moved there at install so
 the template never overwrites it.
 
@@ -263,14 +279,33 @@ lockfile is resolved by taking INTEGRATION's version and re-running `setup`; if
 join exits 3 (the conflict goes to one agent). `.delivery/join-result.json`
 (`{"joined": [...], "stopped_at": BRANCH|null, "conflicts": [paths]}`, plus a
 `reason` when a branch is refused or a step fails) is written on success and on
-failure. After the last merge it runs `branch_gate.py --base-ref origin/<default_branch>`
-on the joined head (unless `--no-gate`) and pushes INTEGRATION and its result
-with `--push`. **The gate on the joined head is skipped, and the output says so,
+failure. After the last merge it runs a **quick check** on the joined head (unless `--no-gate`): the
+`setup` commands, then the steps of `gate.json` named `build`, `typecheck`, `unit` and `test`
+(a step's own `"join": true` or `false` overrides the name), with the gate's own affected
+set against `origin/<default_branch>` (`delivery_common.build_context`): every package any
+joined branch changed **plus their dependents** (D6), so an interaction between branches
+shows before the ready pull request; a `{changed_dirs}` in such a step is filled with that
+set, and a widened join runs the `run_full` commands. It is not the full gate: no `lint`,
+`guards`, scan or end-to-end step, no result is written to `refs/gate-results/`, and the
+ready pull request's CI is the one full suite. Each step's time is printed and written to
+`join-result.json` as `quick_check` (`pass`, `seconds`, `affected_dirs`, and `steps` with
+`name`, `outcome`, `seconds`); a package-less join (only docs changed) passes after the
+install. A failed check exits 1 (4 on timeout) and pushes nothing. `--push` pushes
+INTEGRATION. **The quick check is skipped, and the output says so,
 when the joined tree equals the tree of a joined branch's head whose gate result
 `gate_verify.py` trusts for that head and for the same base the join gate would use
 (`origin/<default_branch>`, without `--allow-older-base`)**: those files were
-already gated against that base. Otherwise it runs as above. A skipped gate
-publishes no result for INTEGRATION. Before the first fetch it runs `cleanup.py --local` (best effort:
+already gated against that base. Otherwise it runs as above. Neither publishes a result for INTEGRATION.
+Last, before the join says it is done, **runner health** (`runner_health.py`, D5) prints a
+warning for every job whose `runs-on` labels no online runner carries, and never stops the
+join; it is recorded as `runner_health` in `join-result.json` (`status` `ok`, `warn` or
+`skipped`, with `warnings` and `reason`). It reads every `.github/workflows/*.yml|yaml`,
+resolves `${{ fromJSON(vars.NAME || '"default"') }}` through the repository variable (`gh
+variable get`; the default is used, with a note, when it cannot be read), counts
+`ubuntu-*`, `windows-*` and `macos-*` label sets as available, and for a `self-hosted` set
+needs one online runner (`gh api repos/{owner}/{repo}/actions/runners`) carrying every label.
+Listing runners needs admin rights; without them the check prints that it was skipped, and
+why. Hosted-only workflows make no runner call. Before the first fetch it runs `cleanup.py --local` (best effort:
 its failure is printed and never stops the join), so worktrees of trains
 already merged are gone before new ones are made.
 
@@ -352,6 +387,11 @@ Waits until at least one run of the workflow exists for SHA and every run of it
 for SHA is completed. Exit 0 all `success` (or `skipped`), 1 any other
 conclusion (prints the failed jobs from `gh run view --json jobs`), 2 after 5
 consecutive `gh` failures, 4 timeout. It never reads a pull request's check list.
+While it waits (`--queue-warn-seconds`, default 600) it reads the jobs of each unfinished run
+(`gh api repos/{owner}/{repo}/actions/runs/ID/jobs`) and warns **once per job** that has been
+queued longer, when no online runner carries the job's labels, or, when the runners cannot
+be listed, that the job has been queued 10+ min. GitHub-hosted label sets are not checked.
+A warning never changes the exit code (D5).
 
 ```
 ci_skip_check.py
@@ -415,7 +455,8 @@ then runs `gate.json`'s `setup` commands. Idempotent.
 
 ## Tests (in `tools/` of this repository)
 
-- `tools/test_delivery_gate.py` — branch_gate, gate_verify, fast_guards, join
+- `tools/test_delivery_gate.py` — branch_gate, gate_verify, fast_guards, join (quick check,
+  train freeze, runner health)
   against throwaway git repositories with a local bare remote and a `gate.json`
   whose steps are small Python commands. Every trust-rule branch and every exit
   code is exercised.
