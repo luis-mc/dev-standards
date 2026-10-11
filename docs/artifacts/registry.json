@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T18:32+01:00",
+  "updated": "2026-10-11T18:35+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1068,10 +1068,10 @@
       "app": "",
       "status": "Running",
       "item": "AR43 train: join, PR CI, merge, cleanup",
-      "detail": "Plugin build of the release timeline and State column (luismc-artifacts minor)",
-      "expected": "11 Oct ~18:50",
-      "changed": "2026-10-11T17:54+01:00",
-      "expected_basis": "agent 17:58-18:42, PR CI ~4 min, merge and cleanup ~4 min; +1 fix round ~10 min"
+      "detail": "PR #49 open (30631b7); CI running",
+      "expected": "11 Oct ~18:45",
+      "changed": "2026-10-11T18:35+01:00",
+      "expected_basis": "PR CI ~4 min from 18:37, merge and cleanup ~4 min; +1 fix round ~10 min"
     },
     {
       "id": "DS53",
