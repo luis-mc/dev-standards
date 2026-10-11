@@ -845,6 +845,29 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </section>
 <section id="s9"><h2><span class="section-number">&sect; 9</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D10">
+<h3 class="decision-head"><span class="decision-id">D10</span> <span class="decision-question">Shorten the PR CI run (11 min, one serial delivery job with every suite&#x27;s mutants on for any delivery change)?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC7</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">1+2, next small release</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Mutants per suite and the delivery suites as parallel jobs, as their own release after DL12; a change like DL12 goes from ~11 to ~2 min.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">1+2+3</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Also shard the gate mutation pass into parallel jobs (~7.8 to ~2.5 min when the gate scripts change).</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Add to DL12 now</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">Fold 1+2 into the running DL12 release so DL12 itself gets the faster CI.</p>
+<blockquote class="decision-words">&ldquo;Add to DL12 now&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave as is</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep the 11 min run.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D9">
 <h3 class="decision-head"><span class="decision-id">D9</span> <span class="decision-question">When does the nightly full run with mutants start?</span></h3>
 <p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC1</p>
