@@ -11,23 +11,35 @@ of going quiet:
   * reach_check.py runs against an http.server on localhost.
   * the four ci.yml files, the Playwright config and the tooling README are
     checked structurally (text and regex, no YAML library). The checker is run on
-    deliberately broken copies and must report each defect.
+    deliberately broken copies and must report each defect. That covers the
+    runs-on expression (U5), the concurrency block (U8) and the pinned gitleaks
+    checksum step (U4); the two shared workflows are checked for runs-on too.
+  * tools_pin.py runs against a local checksums file, and agent_setup.sh against
+    a local http.server holding a fake release, to prove the pinned SHA-256 is what
+    the archive is checked against (the checksums file is never fetched), that the
+    old tools.json form still works with a warning, and that the checks can fail
+    (a tampered archive, a script with the comparison removed).
 
 Run:  python3 tools/test_delivery_ci.py
 """
 from __future__ import annotations
 
+import hashlib
 import http.server
+import io
 import json
 import os
 import re
+import shutil
 import socket
 import stat
 import subprocess
 import sys
+import tarfile
 import tempfile
 import threading
 import traceback
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -36,6 +48,9 @@ DELIVERY = TOOLING / "shared/scripts/delivery"
 CI_WATCH = DELIVERY / "ci_watch.py"
 CI_SKIP = DELIVERY / "ci_skip_check.py"
 REACH = DELIVERY / "reach_check.py"
+TOOLS_PIN = DELIVERY / "tools_pin.py"
+AGENT_SETUP = DELIVERY / "agent_setup.sh"
+SHARED_WORKFLOWS = ("artifact-prune.yml", "train-cleanup.yml")
 TRACKS = ("ts", "go", "rust", "dotnet")
 
 SHA = "a" * 40
@@ -777,6 +792,20 @@ REQUIRED_NAMES = {
 }
 
 
+RUNS_ON = "runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '\"ubuntu-latest\"') }}"
+
+CONCURRENCY = (
+    "concurrency:\n"
+    "  # Outdated PR runs are cancelled. Runs on main never are: every commit on main\n"
+    "  # must finish its run, because cancelling one can leave a merged commit\n"
+    "  # unverified. With the repository variable CI_SERIAL=true (self-hosted or\n"
+    "  # shared runners) ready-PR runs queue one at a time and are never cancelled.\n"
+    "  group: ${{ vars.CI_SERIAL == 'true' && github.event_name == 'pull_request' && 'ci-ready-serial' "
+    "|| format('ci-{0}', github.ref) }}\n"
+    "  cancel-in-progress: ${{ github.event_name == 'pull_request' && vars.CI_SERIAL != 'true' }}\n"
+)
+
+
 def read(path: Path) -> str:
     return path.read_text(encoding="utf-8").replace("\r\n", "\n")
 
@@ -856,18 +885,38 @@ def check_workflow(track: str, text: str) -> list[str]:
         problems.append("verify checkout must use fetch-depth: 0 (gitleaks scans full history)")
     if "sha256sum -c" not in v:
         problems.append("gitleaks download is not checksum verified")
+    if "['sha256']['linux_x64']" not in v:
+        problems.append("gitleaks is not checked against the SHA-256 pinned in tools.json")
+    elif 'echo "${sha}  ${archive}" | sha256sum -c -' not in v:
+        problems.append("the pinned SHA-256 is not what the archive is checked against")
+    if "::warning::" not in v or "old form" not in v:
+        problems.append("the old tools.json form must be read with a warning")
+    if v.count("checksums.txt") != 2:
+        problems.append("the release's checksums file must only be the fallback for the old form")
 
     # triggers, paths-ignore, concurrency kept
     if text.count("docs/**") < 2:
         problems.append("docs/** must stay in paths-ignore for pull_request and push")
-    if "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" not in text:
-        problems.append("concurrency must cancel only pull-request runs")
+    if "\n" + CONCURRENCY not in text:
+        problems.append("concurrency block differs from CONTRACT U8 (one ready-PR run at a time)")
+    if "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in text:
+        problems.append("concurrency must cancel only pull-request runs, and not under CI_SERIAL")
+    problems += runs_on_problems(text)
     if "branches: [main]" not in text or "ready_for_review" not in text:
         problems.append("push/pull_request triggers changed")
 
     if track == "ts":
         problems += check_ts_e2e(text, jobs)
     return problems
+
+
+def runs_on_problems(text: str) -> list[str]:
+    """Every job takes its runner from the CI_RUNS_ON variable (U5)."""
+    lines = re.findall(r"^\s*runs-on:.*$", text, re.M)
+    if not lines:
+        return ["no runs-on found"]
+    return [f"runs-on is not the CI_RUNS_ON expression: {ln.strip()}"
+            for ln in lines if ln.strip() != RUNS_ON]
 
 
 def check_ts_e2e(text: str, jobs: dict[str, str]) -> list[str]:
@@ -909,6 +958,15 @@ def workflows_conform():
 
 
 @test
+def shared_workflows_take_their_runner_from_the_variable():
+    for name in SHARED_WORKFLOWS:
+        text = read(TOOLING / "shared/.github/workflows" / name)
+        check(not runs_on_problems(text), f"{name}: {runs_on_problems(text)}")
+        check(runs_on_problems(text.replace(RUNS_ON, "runs-on: ubuntu-latest")),
+              f"{name}: a hard-coded runner was not detected")
+
+
+@test
 def workflow_checker_detects_each_defect():
     ts = read(TOOLING / "ts/.github/workflows/ci.yml")
     go = read(TOOLING / "go/.github/workflows/ci.yml")
@@ -941,9 +999,33 @@ def workflow_checker_detects_each_defect():
         ("ts", ts, "tools.json", lambda t: mutate(t, "scripts/delivery/tools.json", "tools.json", 10)),
         ("ts", ts, "docs/**", lambda t: mutate(t, "      - 'docs/**'\n", "", 2)),
         ("go", go, "docs/**", lambda t: mutate(t, "'docs/**'", "'doc/**'", 2)),
-        ("ts", ts, "cancel only pull-request",
-         lambda t: mutate(t, "cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
+        ("ts", ts, "concurrency block differs",
+         lambda t: mutate(t, "cancel-in-progress: ${{ github.event_name == 'pull_request' && vars.CI_SERIAL != 'true' }}",
                           "cancel-in-progress: true")),
+        ("go", go, "concurrency block differs",
+         lambda t: mutate(t, "'ci-ready-serial'", "'ci-serial'")),
+        ("rust", read(TOOLING / "rust/.github/workflows/ci.yml"), "concurrency block differs",
+         lambda t: mutate(t, "format('ci-{0}', github.ref)", "format('ci-{0}', github.workflow)")),
+        ("dotnet", read(TOOLING / "dotnet/.github/workflows/ci.yml"), "concurrency must cancel only",
+         lambda t: t.replace(CONCURRENCY, "concurrency:\n  group: ci-${{ github.ref }}\n"
+                             "  cancel-in-progress: ${{ github.event_name == 'pull_request' }}\n")),
+        ("ts", ts, "runs-on is not the CI_RUNS_ON expression",
+         lambda t: mutate(t, RUNS_ON, "runs-on: ubuntu-latest", 1)),
+        ("go", go, "runs-on is not the CI_RUNS_ON expression",
+         lambda t: mutate(t, RUNS_ON, "runs-on: ${{ vars.CI_RUNS_ON }}", 2)),
+        ("rust", read(TOOLING / "rust/.github/workflows/ci.yml"), "runs-on is not the CI_RUNS_ON expression",
+         lambda t: mutate(t, RUNS_ON, "runs-on: windows-latest", 3)),
+        ("dotnet", read(TOOLING / "dotnet/.github/workflows/ci.yml"), "runs-on is not the CI_RUNS_ON expression",
+         lambda t: mutate(t, RUNS_ON, "runs-on: ubuntu-24.04", 1)),
+        ("ts", ts, "not checked against the SHA-256 pinned",
+         lambda t: mutate(t, "g['sha256']['linux_x64']", "g['version']")),
+        ("go", go, "pinned SHA-256 is not what the archive",
+         lambda t: mutate(t, 'echo "${sha}  ${archive}" | sha256sum -c -', 'echo "${sha}  ${archive}"')),
+        ("rust", read(TOOLING / "rust/.github/workflows/ci.yml"), "old tools.json form must be read with a warning",
+         lambda t: mutate(t, "::warning::", "::notice::")),
+        ("dotnet", read(TOOLING / "dotnet/.github/workflows/ci.yml"), "only be the fallback",
+         lambda t: mutate(t, "          fi\n          tar -xzf",
+                          "          fi\n          curl -sSfL -O \"${base}/gitleaks_${version}_checksums.txt\"\n          tar -xzf")),
         ("ts", ts, "job name",
          lambda t: mutate(t, "name: integration tests (ephemeral Postgres)", "name: integration")),
         ("ts", ts, "named 'web E2E",
@@ -1002,6 +1084,277 @@ def readme_problems(text: str) -> list[str]:
     if "E2E is advisory" in text or "web E2E (advisory" in text:
         out.append("still calls E2E advisory")
     return out
+
+
+# ---------------------------------------------------------------------------
+# tools.json pins: tools_pin.py and agent_setup.sh
+# ---------------------------------------------------------------------------
+
+VERSION = "8.30.1"
+PLATFORM_ASSETS = {
+    "linux_x64": "linux_x64.tar.gz", "linux_arm64": "linux_arm64.tar.gz",
+    "darwin_x64": "darwin_x64.tar.gz", "darwin_arm64": "darwin_arm64.tar.gz",
+    "windows_x64": "windows_x64.zip",
+}
+
+
+def fake_checksums(version: str = VERSION, skip: str | None = None) -> tuple[str, dict[str, str]]:
+    """A release checksums file (extra platforms included) and the digest per pin key."""
+    digests, lines = {}, []
+    for i, (key, suffix) in enumerate(PLATFORM_ASSETS.items(), start=1):
+        digests[key] = f"{i:x}" * 64
+        if key != skip:
+            lines.append(f"{digests[key]}  gitleaks_{version}_{suffix}")
+    lines.append("f" * 64 + f"  gitleaks_{version}_linux_armv7.tar.gz")
+    return "\n".join(lines) + "\n", digests
+
+
+def run_py(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess:
+    env = {**os.environ, "PYTHONUTF8": "1", "NO_PROXY": "127.0.0.1,localhost"}
+    return subprocess.run([sys.executable, "-I", *args], cwd=cwd, env=env, capture_output=True,
+                          text=True, encoding="utf-8", errors="replace", timeout=120)
+
+
+@test
+def tools_pin_writes_the_five_digests_from_a_local_checksums_file():
+    with tempfile.TemporaryDirectory(prefix="ds32-") as d:
+        d = Path(d)
+        text, digests = fake_checksums()
+        (d / "sums.txt").write_text(text, encoding="utf-8")
+        tools = d / "tools.json"
+        tools.write_text('{"gitleaks": "8.0.0", "other": 1}\n', encoding="utf-8")
+        r = run_py([str(TOOLS_PIN), "gitleaks", VERSION, "--checksums", str(d / "sums.txt"),
+                    "--tools-json", str(tools)])
+        expect_exit(r.returncode, 0, r.stdout, r.stderr)
+        got = json.loads(tools.read_text(encoding="utf-8"))
+        check(got["gitleaks"] == {"version": VERSION, "sha256": digests},
+              f"unexpected tools.json: {got}")
+        check(got["other"] == 1, "unrelated keys must be kept")
+        check(tools.read_text(encoding="utf-8").endswith("\n"), "file should end with a newline")
+
+        # Contrast: a platform missing from the file is exit 1 and tools.json stays as it was.
+        text, _ = fake_checksums(skip="windows_x64")
+        (d / "sums.txt").write_text(text, encoding="utf-8")
+        before = tools.read_text(encoding="utf-8")
+        r = run_py([str(TOOLS_PIN), "gitleaks", VERSION, "--checksums", str(d / "sums.txt"),
+                    "--tools-json", str(tools)])
+        expect_exit(r.returncode, 1, r.stdout, r.stderr)
+        check("windows_x64" in r.stderr, r.stderr)
+        check(tools.read_text(encoding="utf-8") == before, "tools.json must not change on failure")
+        # ... and a version the file does not list is the same failure.
+        r = run_py([str(TOOLS_PIN), "gitleaks", "9.9.9", "--checksums", str(d / "sums.txt"),
+                    "--tools-json", str(tools)])
+        expect_exit(r.returncode, 1, r.stdout, r.stderr)
+
+
+@test
+def tools_pin_usage_and_download_errors():
+    r = run_py([str(TOOLS_PIN), "gitleaks", "latest"])
+    expect_exit(r.returncode, 2, r.stdout, r.stderr)
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+    with tempfile.TemporaryDirectory(prefix="ds32-") as d:
+        tools = Path(d) / "tools.json"
+        r = run_py([str(TOOLS_PIN), "gitleaks", VERSION, "--base-url", f"http://127.0.0.1:{port}",
+                    "--tools-json", str(tools)])
+        expect_exit(r.returncode, 2, r.stdout, r.stderr)
+        check(not tools.exists(), "nothing may be written when the download fails")
+        r = run_py([str(TOOLS_PIN), "gitleaks", VERSION, "--checksums", str(Path(d) / "absent.txt"),
+                    "--tools-json", str(tools)])
+        expect_exit(r.returncode, 2, r.stdout, r.stderr)
+
+
+class _Release(http.server.BaseHTTPRequestHandler):
+    files: dict[str, bytes] = {}
+    requests: list[str] = []
+
+    def do_GET(self):  # noqa: N802
+        name = self.path.lstrip("/")
+        _Release.requests.append(name)
+        body = _Release.files.get(name)
+        self.send_response(200 if body is not None else 404)
+        self.send_header("Content-Length", str(len(body or b"")))
+        self.end_headers()
+        self.wfile.write(body or b"")
+
+    def log_message(self, *a):  # silence
+        pass
+
+
+def host_platform() -> tuple[str, str] | None:
+    """(tools.json key, executable name) for this machine, as agent_setup.sh sees it."""
+    import platform
+    os_name = {"Linux": "linux", "Darwin": "darwin", "Windows": "windows"}.get(platform.system())
+    arch = {"x86_64": "x64", "amd64": "x64", "arm64": "arm64", "aarch64": "arm64"}.get(
+        platform.machine().lower())
+    if not os_name or not arch or f"{os_name}_{arch}" not in PLATFORM_ASSETS:
+        return None
+    return f"{os_name}_{arch}", "gitleaks.exe" if os_name == "windows" else "gitleaks"
+
+
+def fake_archive(asset: str, exe: str) -> bytes:
+    payload = f"#!/bin/sh\necho {VERSION}\n".encode()
+    buf = io.BytesIO()
+    if asset.endswith(".zip"):
+        with zipfile.ZipFile(buf, "w") as z:
+            z.writestr(exe, payload)
+    else:
+        with tarfile.open(fileobj=buf, mode="w:gz") as tf:
+            info = tarfile.TarInfo(exe)
+            info.size, info.mode = len(payload), 0o755
+            tf.addfile(info, io.BytesIO(payload))
+    return buf.getvalue()
+
+
+def find_bash() -> str | None:
+    if os.name == "nt":  # Git's bash, not the WSL launcher in System32
+        exe = shutil.which("git")
+        if exe:
+            for rel in ("../bin/bash.exe", "../../bin/bash.exe"):
+                cand = (Path(exe).resolve().parent / rel).resolve()
+                if cand.exists():
+                    return cand.as_posix()
+    return shutil.which("bash")
+
+
+def run_agent_setup(script_text: str, tools: dict | str, archive: bytes, bin_name: str,
+                    asset: str, with_checksums: str | None = None) -> dict:
+    """Install from a fake release with `script_text` and a tools.json of `tools`.
+
+    Returns exit code, stderr, whether the executable was installed, and which files
+    the fake release server was asked for."""
+    bash = find_bash()
+    with tempfile.TemporaryDirectory(prefix="ds32-") as d:
+        d = Path(d)
+        deliv = d / "work/scripts/delivery"
+        deliv.mkdir(parents=True)
+        (deliv / "agent_setup.sh").write_text(script_text, encoding="utf-8", newline="\n")
+        (deliv / "tools.json").write_text(
+            tools if isinstance(tools, str) else json.dumps({"gitleaks": tools}), encoding="utf-8")
+        (deliv / "gate.json").write_text('{"setup": []}\n', encoding="utf-8")
+        _Release.files = {asset: archive}
+        if with_checksums is not None:
+            _Release.files[f"gitleaks_{VERSION}_checksums.txt"] = with_checksums.encode()
+        _Release.requests = []
+        srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), _Release)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        try:
+            bin_dir = d / "bin"
+            env = {**os.environ, "DELIVERY_BIN": bin_dir.as_posix(),
+                   "DELIVERY_GITLEAKS_BASE_URL": f"http://127.0.0.1:{srv.server_address[1]}",
+                   "PATH": Path(sys.executable).parent.as_posix() + os.pathsep + os.environ.get("PATH", ""),
+                   "NO_PROXY": "127.0.0.1,localhost"}
+            for k in ("HTTP_PROXY", "http_proxy", "HTTPS_PROXY", "https_proxy"):
+                env.pop(k, None)
+            proc = subprocess.run([bash, (deliv / "agent_setup.sh").as_posix()], cwd=d / "work",
+                                  env=env, capture_output=True, text=True, encoding="utf-8",
+                                  errors="replace", timeout=120)
+            return {"code": proc.returncode, "err": proc.stderr, "out": proc.stdout,
+                    "installed": (bin_dir / bin_name).exists(), "requests": list(_Release.requests)}
+        finally:
+            srv.shutdown()
+
+
+def agent_setup_problems(script_text: str) -> list[str]:
+    """What is wrong with this agent_setup.sh, judged from a fake release. Empty when it conforms."""
+    plat = host_platform()
+    if plat is None or find_bash() is None:
+        return ["SKIP"]
+    key, exe = plat
+    asset = f"gitleaks_{VERSION}_{PLATFORM_ASSETS[key]}"
+    archive = fake_archive(asset, exe)
+    good = hashlib.sha256(archive).hexdigest()
+    pins = {k: "0" * 64 for k in PLATFORM_ASSETS}
+    problems: list[str] = []
+
+    # 1. the pinned digest is what the archive is checked against, and the checksums file
+    #    is never fetched (the server does not even have one).
+    pins[key] = good
+    r = run_agent_setup(script_text, {"version": VERSION, "sha256": pins}, archive, exe, asset)
+    if r["code"] != 0 or not r["installed"]:
+        problems.append(f"a matching pin must install (exit {r['code']}): {r['err'][-300:]}")
+    if any("checksums" in q for q in r["requests"]):
+        problems.append("the pinned form must not download the checksums file")
+    if "old form" in r["err"]:
+        problems.append("the pinned form must not warn")
+
+    # 2. a pin that does not match the archive installs nothing, and the checksums
+    #    file cannot overrule it (the server's file lists the right digest).
+    bad = dict(pins, **{key: "1" * 64})
+    right_sums = f"{good}  {asset}\n"
+    r = run_agent_setup(script_text, {"version": VERSION, "sha256": bad}, archive, exe, asset,
+                        with_checksums=right_sums)
+    if r["code"] != 2 or r["installed"] or "checksum mismatch" not in r["err"]:
+        problems.append(f"a wrong pin must exit 2 with nothing installed (exit {r['code']}, "
+                        f"installed {r['installed']}): {r['err'][-300:]}")
+
+    # 3. a pinned form with no pin for this platform is refused, not guessed.
+    r = run_agent_setup(script_text, {"version": VERSION, "sha256": {k: v for k, v in pins.items() if k != key}},
+                        archive, exe, asset, with_checksums=right_sums)
+    if r["code"] != 2 or r["installed"]:
+        problems.append(f"a missing platform pin must exit 2 with nothing installed (exit {r['code']})")
+
+    # 4. the old form still installs, with a warning, through the checksums file.
+    r = run_agent_setup(script_text, json.dumps({"gitleaks": VERSION}), archive, exe, asset,
+                        with_checksums=right_sums)
+    if r["code"] != 0 or not r["installed"]:
+        problems.append(f"the old form must still install (exit {r['code']}): {r['err'][-300:]}")
+    if "old form" not in r["err"]:
+        problems.append("the old form must warn")
+    if not any("checksums" in q for q in r["requests"]):
+        problems.append("the old form must fall back to the checksums file")
+    wrong_sums = f"{'1' * 64}  {asset}\n"
+    r = run_agent_setup(script_text, json.dumps({"gitleaks": VERSION}), archive, exe, asset,
+                        with_checksums=wrong_sums)
+    if r["code"] != 2 or r["installed"]:
+        problems.append("the old form must still refuse a checksums-file mismatch")
+    return problems
+
+
+@test
+def agent_setup_checks_the_archive_against_the_pin():
+    script = AGENT_SETUP.read_text(encoding="utf-8").replace("\r\n", "\n")
+    problems = agent_setup_problems(script)
+    if problems == ["SKIP"]:
+        print("SKIP  agent_setup pin path: no bash or an unsupported platform")
+        return
+    check(not problems, "agent_setup.sh:\n  " + "\n  ".join(problems))
+
+
+@test
+def agent_setup_pin_check_detects_each_defect():
+    if agent_setup_problems(AGENT_SETUP.read_text(encoding="utf-8").replace("\r\n", "\n")) == ["SKIP"]:
+        print("SKIP  agent_setup pin mutants: no bash or an unsupported platform")
+        return
+    script = AGENT_SETUP.read_text(encoding="utf-8").replace("\r\n", "\n")
+    cases = [
+        ("the comparison removed", "if got != want:", "if False:", "wrong pin must exit 2"),
+        ("the pin ignored", 'want = pin.lower() or None', 'want = None',
+         "a matching pin must install"),
+        ("the pin never read", 'print("" if isinstance(g, str) else g.get("sha256", {}).get(sys.argv[2], ""))',
+         'print("")', "a matching pin must install"),
+        ("no warning for the old form", 'say "warning: tools.json uses the old form;', 'say "note: tools.json;',
+         "the old form must warn"),
+        ("a missing pin falls through", 'die "tools.json has no pinned SHA-256 for', 'say "tools.json has no pinned SHA-256 for',
+         "a missing platform pin must exit 2"),
+    ]
+    for label, old, new, expect in cases:
+        mutated = mutate(script, old, new)
+        found = agent_setup_problems(mutated)
+        check(any(expect in p for p in found),
+              f"mutation '{label}' expecting {expect!r} was not detected; got {found}")
+
+
+@test
+def tools_json_ships_real_pins():
+    data = json.loads((DELIVERY / "tools.json").read_text(encoding="utf-8"))["gitleaks"]
+    check(isinstance(data, dict), "tools.json must ship in the pinned form")
+    check(re.fullmatch(r"\d+\.\d+\.\d+", data["version"]), data["version"])
+    check(sorted(data["sha256"]) == sorted(PLATFORM_ASSETS), f"platforms: {sorted(data['sha256'])}")
+    for key, digest in data["sha256"].items():
+        check(re.fullmatch(r"[0-9a-f]{64}", digest) and len(set(digest)) > 2, f"{key}: {digest!r} is not a real digest")
+    check(len(set(data["sha256"].values())) == 5, "each platform needs its own digest")
 
 
 # ---------------------------------------------------------------------------

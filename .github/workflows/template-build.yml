@@ -10,6 +10,10 @@ name: template-build
 # be run locally with the toolchain installed:
 #
 #   python3 tools/template_build_check.py --track go|rust|dotnet
+#
+# Each job runs on ubuntu-latest and on windows-latest (STACKSPEC U9): a guard
+# starter that matches or prints platform path separators passes on one and
+# fails on the other, and the check plants a nested path to tell them apart.
 
 # Only the default branch and ready pull requests run this. Agent branches and
 # draft pull requests are checked in the agent's sandbox (STACKSPEC 13.6);
@@ -46,9 +50,13 @@ permissions:
 
 jobs:
   go:
-    name: Go starter compiles, guard can fail, setup catches a stale go.sum
+    name: Go starter compiles, guard can fail, setup catches a stale go.sum (${{ matrix.os }})
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -65,12 +73,16 @@ jobs:
           cache: false
 
       - name: Scaffold the Go template and run its guard and setup checks
-        run: python3 tools/template_build_check.py --track go
+        run: python tools/template_build_check.py --track go
 
   rust:
-    name: Rust starter compiles, guard can fail, setup catches a stale Cargo.lock
+    name: Rust starter compiles, guard can fail, setup catches a stale Cargo.lock (${{ matrix.os }})
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -86,12 +98,16 @@ jobs:
           components: clippy
 
       - name: Scaffold the Rust template and run its guard and setup checks
-        run: python3 tools/template_build_check.py --track rust
+        run: python tools/template_build_check.py --track rust
 
   dotnet:
-    name: .NET starter compiles, guard can fail, setup catches a stale lock file
+    name: .NET starter compiles, guard can fail, setup catches a stale lock file (${{ matrix.os }})
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -107,4 +123,4 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Scaffold the .NET template and run its guard and setup checks
-        run: python3 tools/template_build_check.py --track dotnet
+        run: python tools/template_build_check.py --track dotnet

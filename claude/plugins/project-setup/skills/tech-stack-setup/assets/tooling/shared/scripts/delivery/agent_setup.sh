@@ -5,8 +5,10 @@
 #
 #   1. Python 3.11+            apt-get (root or sudo) or brew; else a message, exit 2
 #   2. gitleaks (tools.json)   release archive for this OS/arch, SHA-256 checked
-#                              against the release's checksums file, installed
-#                              into $DELIVERY_BIN (default ~/.local/bin)
+#                              against the value pinned in tools.json (the old
+#                              form, a bare version, warns and falls back to the
+#                              release's checksums file), installed into
+#                              $DELIVERY_BIN (default ~/.local/bin)
 #   3. git hooks               core.hooksPath -> .githooks, if unset
 #   4. gate.json "setup"       each command, from the repository root
 #
@@ -79,8 +81,13 @@ fi
 say "python: $("$py" --version 2>&1)"
 
 # --- 2. gitleaks -----------------------------------------------------------
-gl_version=$("$py" -I -c 'import json, sys; print(json.load(open(sys.argv[1]))["gitleaks"])' "$here/tools.json") ||
-  die "tools.json has no gitleaks version"
+# tools.json: {"gitleaks": {"version": "x.y.z", "sha256": {"linux_x64": "..."}}}, or the
+# old form {"gitleaks": "x.y.z"} (no pins).
+gl_version=$("$py" -I -c '
+import json, sys
+g = json.load(open(sys.argv[1]))["gitleaks"]
+print(g if isinstance(g, str) else g["version"])
+' "$here/tools.json") || die "tools.json has no gitleaks version"
 
 case "$(uname -s)" in
   Linux)                os=linux;   ext=tar.gz ;;
@@ -101,9 +108,29 @@ checksums="gitleaks_${gl_version}_checksums.txt"
 base_url=${DELIVERY_GITLEAKS_BASE_URL:-https://github.com/gitleaks/gitleaks/releases/download/v${gl_version}}
 if [ "$os" = windows ]; then exe=gitleaks.exe; else exe=gitleaks; fi
 
+# The pinned SHA-256 for this platform; empty for the old tools.json form.
+gl_sha=$("$py" -I -c '
+import json, sys
+g = json.load(open(sys.argv[1]))["gitleaks"]
+print("" if isinstance(g, str) else g.get("sha256", {}).get(sys.argv[2], ""))
+' "$here/tools.json" "${os}_${arch}") || die "tools.json is not valid"
+gl_form=pinned
+if [ -z "$gl_sha" ]; then
+  if "$py" -I -c 'import json, sys; sys.exit(0 if isinstance(json.load(open(sys.argv[1]))["gitleaks"], str) else 1)' "$here/tools.json"; then
+    gl_form=old
+    say "warning: tools.json uses the old form; the archive is checked against the release's checksums file. Run: python3 scripts/delivery/tools_pin.py gitleaks $gl_version"
+  else
+    die "tools.json has no pinned SHA-256 for ${os}_${arch}; add one with scripts/delivery/tools_pin.py or install gitleaks $gl_version manually"
+  fi
+fi
+
 if [ -n "$dry_run" ]; then
   say "dry run: would download $base_url/$asset"
-  say "dry run: would verify it against $base_url/$checksums"
+  if [ "$gl_form" = pinned ]; then
+    say "dry run: would verify it against the SHA-256 pinned in tools.json for ${os}_${arch}"
+  else
+    say "dry run: would verify it against $base_url/$checksums"
+  fi
   say "dry run: would install $exe into $bin_dir"
   echo "$base_url/$asset"
   exit 0
@@ -124,20 +151,21 @@ else
   cat > "$work/install_gitleaks.py" <<'PY'
 import hashlib, io, os, sys, tarfile, urllib.request, zipfile
 
-base, asset, sums, dest, exe = sys.argv[1:6]
+base, asset, sums, dest, exe, pin = sys.argv[1:7]
 
 def fetch(name):
     with urllib.request.urlopen(base.rstrip("/") + "/" + name, timeout=120) as r:
         return r.read()
 
 archive = fetch(asset)
-want = None
-for line in fetch(sums).decode().splitlines():
-    parts = line.split()
-    if len(parts) == 2 and parts[1].lstrip("*") == asset:
-        want = parts[0].lower()
-if want is None:
-    sys.exit("agent_setup: %s is not listed in %s" % (asset, sums))
+want = pin.lower() or None
+if want is None:  # old tools.json form: no pin, use the release's checksums file
+    for line in fetch(sums).decode().splitlines():
+        parts = line.split()
+        if len(parts) == 2 and parts[1].lstrip("*") == asset:
+            want = parts[0].lower()
+    if want is None:
+        sys.exit("agent_setup: %s is not listed in %s" % (asset, sums))
 got = hashlib.sha256(archive).hexdigest()
 if got != want:
     sys.exit("agent_setup: checksum mismatch for %s (expected %s, got %s); nothing installed" % (asset, want, got))
@@ -160,7 +188,7 @@ os.chmod(tmp, 0o755)
 os.replace(tmp, target)
 print("agent_setup: checksum ok, installed " + target, file=sys.stderr)
 PY
-  "$py" -I "$work/install_gitleaks.py" "$base_url" "$asset" "$checksums" "$bin_dir" "$exe" ||
+  "$py" -I "$work/install_gitleaks.py" "$base_url" "$asset" "$checksums" "$bin_dir" "$exe" "$gl_sha" ||
     die "could not install gitleaks $gl_version (download or checksum failed)"
 fi
 

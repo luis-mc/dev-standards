@@ -80,7 +80,9 @@ fn guard_no_conflict_markers() {
         for (i, line) in text.lines().enumerate() {
             if is_marker(line) {
                 let rel = file.strip_prefix(&root).unwrap_or(file);
-                hits.push(format!("{}:{}: {}", rel.display(), i + 1, line));
+                // '/' on every OS, so the report reads the same on Windows.
+                let rel = rel.to_string_lossy().replace('\\', "/");
+                hits.push(format!("{}:{}: {}", rel, i + 1, line));
             }
         }
     }

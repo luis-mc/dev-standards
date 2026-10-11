@@ -109,7 +109,9 @@ func TestGuardNoConflictMarkers(t *testing.T) {
 			line := strings.TrimRight(sc.Text(), "\r")
 			if markerStart.MatchString(line) || markerSep.MatchString(line) || markerEnd.MatchString(line) {
 				rel, _ := filepath.Rel(root, path)
-				hits = append(hits, filepath.ToSlash(rel)+":"+strconv.Itoa(n)+": "+line)
+				// '/' on every OS, so the report reads the same on Windows.
+				rel = filepath.ToSlash(rel)
+				hits = append(hits, rel+":"+strconv.Itoa(n)+": "+line)
 			}
 		}
 		return sc.Err()
