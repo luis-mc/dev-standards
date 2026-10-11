@@ -406,12 +406,12 @@
       "id": "AR43",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Running",
       "item": "Full Progress: release timeline above the status table",
-      "detail": "Owner confirmed the design with Expected = sum of phases and a named fix-round risk; plugin build is the next small train",
-      "expected": "11 Oct ~18:55",
-      "changed": "2026-10-11T17:49+01:00",
-      "expected_basis": "after DS51 (~18:00): agent ~45 min, PR CI ~6 min, merge ~4 min"
+      "detail": "One Sonnet agent on AR43-release-timeline",
+      "expected": "11 Oct ~18:45",
+      "changed": "2026-10-11T17:53+01:00",
+      "expected_basis": "agent ~45 min from 17:58"
     },
     {
       "id": "AR44",

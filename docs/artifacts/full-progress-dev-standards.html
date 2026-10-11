@@ -1047,12 +1047,12 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "id": "AR43",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Running",
    "item": "Full Progress: release timeline above the status table",
-   "detail": "Owner confirmed the design with Expected = sum of phases and a named fix-round risk; plugin build is the next small train",
-   "expected": "11 Oct ~18:55",
-   "changed": "2026-10-11T17:49+01:00",
-   "expected_basis": "after DS51 (~18:00): agent ~45 min, PR CI ~6 min, merge ~4 min"
+   "detail": "One Sonnet agent on AR43-release-timeline",
+   "expected": "11 Oct ~18:45",
+   "changed": "2026-10-11T17:53+01:00",
+   "expected_basis": "agent ~45 min from 17:58"
   },
   {
    "id": "AR44",
@@ -1880,6 +1880,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </div>
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
+<li data-glance-task="AR43"><span class="task-id">AR43</span>Full Progress: release timeline above the status table <span class="glance-expected">11 Oct ~18:45</span><span class="glance-basis">agent ~45 min from 17:58</span></li>
 <li data-glance-task="DS52"><span class="task-id">DS52</span>AR43 train: join, PR CI, merge, cleanup <span class="glance-expected">11 Oct ~18:55</span><span class="glance-basis">agent ~45 min from 17:58, PR CI ~4 min, merge and cleanup ~4 min</span></li>
 </ul>
 </div>
@@ -1897,11 +1898,11 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">119</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">119</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
-<tr data-task="AR43"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR43</span>Full Progress: release timeline above the status table</a></td><td><code>luismc-artifacts</code></td><td>Owner confirmed the design with Expected = sum of phases and a named fix-round risk; plugin build is the next small train</td><td>11 Oct ~18:55<span class="expected-basis">after DS51 (~18:00): agent ~45 min, PR CI ~6 min, merge ~4 min</span></td></tr>
+<tr data-task="AR43"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR43</span>Full Progress: release timeline above the status table</a></td><td><code>luismc-artifacts</code></td><td>One Sonnet agent on AR43-release-timeline</td><td>11 Oct ~18:45<span class="expected-basis">agent ~45 min from 17:58</span></td></tr>
 <tr data-task="DS52"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS52</span>AR43 train: join, PR CI, merge, cleanup</td><td></td><td>Plugin build of the release timeline and State column (luismc-artifacts minor)</td><td>11 Oct ~18:55<span class="expected-basis">agent ~45 min from 17:58, PR CI ~4 min, merge and cleanup ~4 min</span></td></tr>
 <tr data-task="TC8"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards</a></td><td></td><td>STACKSPEC SHOULD, Playwright sharding in the e2e template, ci_watch slowest-job summary; next small train</td><td>12 Oct<span class="expected-basis">starts after the DL12 train merges, about 1 h of work and CI</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
