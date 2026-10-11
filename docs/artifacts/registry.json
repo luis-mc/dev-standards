@@ -384,6 +384,17 @@
       "expected_basis": "agent ~1h, ships in the TC6 train"
     },
     {
+      "id": "AR41",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "Apply At a glance here: short notes instead of long ledes",
+      "detail": "After the TC6 release: update the plugin here, rewrite Full Progress and feature ledes as one or two sentences, render",
+      "expected": "11 Oct ~15:00",
+      "changed": "2026-10-11T11:59+01:00",
+      "expected_basis": "after the TC6 merge; three content edits"
+    },
+    {
       "id": "DL1",
       "owner": "delivery-speed",
       "app": "",
