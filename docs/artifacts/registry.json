@@ -1120,11 +1120,11 @@
       "id": "TC4",
       "owner": "test-cost",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Cancel superseded ready-PR spec-lint runs",
-      "detail": "On DS43-ci-scoping (d0e97e3): ci_areas test passes; the workflow first runs in the ready PR",
+      "detail": "Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0",
       "expected": "11 Oct",
-      "changed": "2026-10-11T11:37+01:00"
+      "changed": "2026-10-11T14:40+01:00"
     },
     {
       "id": "TC5",
