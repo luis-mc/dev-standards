@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T02:50+01:00",
+  "updated": "2026-10-11T02:58+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -656,11 +656,11 @@
       "id": "DS34",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Change notes instead of version bumps on branches",
-      "detail": "U7: branches add a change note under docs/specs/changes/; a gate step refuses version and changelog edits off release branches; a fold script applies the notes at release. SHOULD in STACKSPEC 7.1.0.",
-      "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T01:22+01:00"
+      "detail": "Built in #39 and joined (not released): change_notes.py check refuses spec version and change-log edits off release branches; fold bumps versions by the highest change kind, writes entries, deletes notes. A change-notes step in every track's gate.json. 74 checks and 18 mutants on Windows; Linux CI green on its branch.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T02:58+01:00"
     },
     {
       "id": "DS35",
