@@ -626,11 +626,11 @@
       "id": "DS31",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Pre-push compares with the real fork point",
-      "detail": "Built in #38 and joined (not released): for a branch new on the remote, pre-push compares with the nearest branch it forks from (--base-ref auto), not the default branch.",
+      "detail": "Released in STACKSPEC 7.1.0 / luismc-project-setup 13.1.0 / luismc-artifacts 1.3.0 (#45, 48205a9, 04:17). for a branch new on the remote, pre-push compares with the nearest branch it forks from (--base-ref auto), not the default branch.",
       "expected": "11 Oct",
-      "changed": "2026-10-11T03:26+01:00"
+      "changed": "2026-10-11T04:18+01:00"
     },
     {
       "id": "DS32",
