@@ -1,0 +1,41 @@
+<!-- title: Where the time goes -->
+<h3>Full spec-lint runs, by what started them</h3>
+<figure class="tc-figure">
+<svg class="tc-chart" viewBox="0 0 640 118" role="img" aria-label="spec-lint used 269 CI minutes: 132 on agent branch runs, 89 on ready pull requests, 49 on main after merges">
+<rect class="tc-a" x="20" y="20" width="275" height="34"></rect>
+<rect class="tc-b" x="295" y="20" width="184" height="34"></rect>
+<rect class="tc-c" x="479" y="20" width="101" height="34"></rect>
+<text x="26" y="42" class="tc-on">132 min</text>
+<text x="301" y="42" class="tc-on">89 min</text>
+<text x="485" y="42" class="tc-on">49 min</text>
+<text x="20" y="76">Agent branch runs (10)</text>
+<text x="295" y="76">Ready PRs (9)</text>
+<text x="479" y="76">main after merge (5)</text>
+<text x="20" y="104" class="tc-muted">269 CI minutes, 10 Oct 20:35 to 11 Oct 11:00 · runs under 1 minute (skipped drafts, record pushes) left out</text>
+</svg>
+<figcaption>Half of all CI time was agents testing their own branches; the ready PR then ran the same suites on the joined result, and <code>main</code> ran them a third time after the merge.</figcaption>
+</figure>
+
+<h3>One ready-PR run, step by step (7.1.0, 17.5 min)</h3>
+<figure class="tc-figure">
+<svg class="tc-chart" viewBox="0 0 640 300" role="img" aria-label="Of a 17.5 minute ready-PR run, the gate suite's mutation pass takes 8.8 minutes; the steps an artifacts-only change needs take about 3.8 minutes">
+<g>
+<text x="0" y="30">Gate suite: mutants</text><rect class="tc-b" x="190" y="18" width="356" height="18"></rect><text x="552" y="31">8.8</text>
+<text x="0" y="60">Gate suite: scenarios</text><rect class="tc-b" x="190" y="48" width="85" height="18"></rect><text x="281" y="61">2.1</text>
+<text x="0" y="90">Artifacts commands</text><rect class="tc-a" x="190" y="78" width="125" height="18"></rect><text x="321" y="91">3.1</text>
+<text x="0" y="120">Train cleanup</text><rect class="tc-b" x="190" y="108" width="69" height="18"></rect><text x="265" y="121">1.7</text>
+<text x="0" y="150">CI scripts, templates</text><rect class="tc-b" x="190" y="138" width="32" height="18"></rect><text x="228" y="151">0.8</text>
+<text x="0" y="180">Artifacts hooks</text><rect class="tc-a" x="190" y="168" width="12" height="18"></rect><text x="208" y="181">0.3</text>
+<text x="0" y="210">Change notes</text><rect class="tc-b" x="190" y="198" width="12" height="18"></rect><text x="208" y="211">0.3</text>
+<text x="0" y="240">Spec checks, renderer, rest</text><rect class="tc-a" x="190" y="228" width="16" height="18"></rect><text x="212" y="241">0.4</text>
+</g>
+<line class="tc-axis" x1="190" y1="256" x2="594" y2="256"></line>
+<text x="190" y="274" class="tc-muted">0</text><text x="392" y="274" class="tc-muted" text-anchor="middle">5 min</text><text x="594" y="274" class="tc-muted" text-anchor="end">10 min</text>
+<rect class="tc-a" x="0" y="284" width="12" height="10"></rect><text x="18" y="293" class="tc-muted">needed by a luismc-artifacts change</text>
+<rect class="tc-b" x="270" y="284" width="12" height="10"></rect><text x="288" y="293" class="tc-muted">not touched by one</text>
+</svg>
+<figcaption>Step times from the CI run of PR #45; the gate suite's split from E2 (81% mutants). A change to luismc-artifacts alone needs about 3.8 of the 17.5 minutes; the other 13.7 test the delivery scripts it never touched.</figcaption>
+</figure>
+
+<h3>The full run doubled in six hours</h3>
+<p>The full ready-PR run took 8.5 min at 21:36 on 10 October and 17.5 min at 03:59 on 11 October. Every release added tests and mutants, nothing was removed, and all of it runs for every change.</p>

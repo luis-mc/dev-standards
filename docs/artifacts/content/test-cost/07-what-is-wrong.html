@@ -1,0 +1,9 @@
+<!-- title: What is wrong -->
+<p>The owner was right about duplication, and wrong in one place it would be easy to cut: the checks themselves are good. All 94 gate mutants are caught, and the extra CI runs found three Linux-only bugs and one weak test. What is wrong is <em>how often</em> and <em>how indiscriminately</em> they run. Four causes:</p>
+<ol>
+<li><strong>Everything runs for every change.</strong> spec-lint is one job of 17 steps with no scoping, so a luismc-artifacts patch pays 13.7 minutes for delivery-script tests it cannot affect, including an 8.8-minute mutation pass.</li>
+<li><strong>The same commit is tested at three stages.</strong> Agents ran the full workflow on their branches (half of all CI time), the ready PR ran it again on the joined result, and <code>main</code> ran it a third time on a tree that differs only in record files.</li>
+<li><strong>Tests that once had a reason were never retired.</strong> The fake-renderer group covered the time before the real renderer existed; it now doubles the artifacts suite. Mutants rerun whole scenarios after they are already caught.</li>
+<li><strong>The record writes to main like a chat.</strong> One push per status change: 264 commits in a day, each scanned, all of them moving <code>main</code> under the CI runs that are meant to test a fixed tree.</li>
+</ol>
+<p>What this cost the owner: a release that changes only luismc-artifacts waits about 17.5 minutes for its ready-PR run where about 3.8 would prove the same, plus 17.4 more on <code>main</code>. A train like 7.1.0 spent 1 h 54 between its first branch run and its merge.</p>

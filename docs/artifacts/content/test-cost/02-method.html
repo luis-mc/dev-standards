@@ -1,0 +1,12 @@
+<!-- title: How it was measured -->
+<p>Each suspicion was written down as a hypothesis first, then tested against data that could prove it wrong. Four sources:</p>
+<table>
+<thead><tr><th>Source</th><th>What it gave</th></tr></thead>
+<tbody>
+<tr><td>GitHub run history (300 runs, <code>gh run list</code>)</td><td>Every workflow run: trigger, branch, commit, duration, result.</td></tr>
+<tr><td>CI logs of the 7.1.0 ready PR and of every failed run</td><td>Per-step times, the time split inside a suite (from log timestamps), and what each failure was.</td></tr>
+<tr><td>Session and agent transcripts on this PC (45 files)</td><td>Every local suite execution, with its flags, before and after the 02:30 testing rule.</td></tr>
+<tr><td>Timed experiments on this PC (Windows), in a scratch worktree of <code>main</code></td><td>E1: every case of the artifacts suite timed in both renderer groups. E2: every scenario and each of the 94 mutants of the gate suite timed to its end and to its first failed check. A static read of the suites replaced a planned E3 (see H4).</td></tr>
+</tbody>
+</table>
+<p>Two hypotheses I had stated earlier turned out false and are kept below as false, with the evidence. One estimate from the read-only audit (DS46) was tested and corrected.</p>

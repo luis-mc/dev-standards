@@ -1,0 +1,49 @@
+{"decisions": [
+ {"id": "D1", "question": "Make path-scoped CI jobs? (asked as one of four cuts in a single multi-select question)", "asked": "2026-10-11", "status": "decided",
+  "options": [
+   {"label": "Yes", "summary": "Split spec-lint into areas (delivery, artifacts, specs, auth) that run only when their files change; an artifacts change takes ~4 min instead of 17; shared files still run everything."},
+   {"label": "No", "summary": "Keep one job that runs every suite for every change."}],
+  "chosen": "Yes", "decided": "2026-10-11", "task": "DS43",
+  "owner_words": "Path-scoped CI jobs, Skip the main re-run, Agents test only what they touch, Audit the suites for duplicates"},
+ {"id": "D2", "question": "Skip the main re-run when its files equal what the ready PR tested? (same multi-select question)", "asked": "2026-10-11", "status": "decided",
+  "options": [
+   {"label": "Yes", "summary": "After a merge, skip CI on main when its files are identical to what the ready PR tested; also a STACKSPEC rule for every project."},
+   {"label": "No", "summary": "Keep the full run on main after every merge."}],
+  "chosen": "Yes", "decided": "2026-10-11", "task": "DS44",
+  "owner_words": "Path-scoped CI jobs, Skip the main re-run, Agents test only what they touch, Audit the suites for duplicates"},
+ {"id": "D3", "question": "Agents test only what they touch? (same multi-select question)", "asked": "2026-10-11", "status": "decided",
+  "options": [
+   {"label": "Yes", "summary": "Agents run locally only the suites for files they changed, no branch CI run unless the change is Linux-specific; the ready PR stays the one full run."},
+   {"label": "No", "summary": "Agents keep running full suites locally and on their branches."}],
+  "chosen": "Yes", "decided": "2026-10-11", "task": "DS45",
+  "owner_words": "Path-scoped CI jobs, Skip the main re-run, Agents test only what they touch, Audit the suites for duplicates"},
+ {"id": "D4", "question": "Audit the suites for duplicates? (same multi-select question)", "asked": "2026-10-11", "status": "decided",
+  "options": [
+   {"label": "Yes", "summary": "A Sonnet agent lists overlapping tests and proposes what to remove; nothing deleted without the owner's OK."},
+   {"label": "No", "summary": "No audit."}],
+  "chosen": "Yes", "decided": "2026-10-11", "task": "DS46",
+  "owner_words": "Path-scoped CI jobs, Skip the main re-run, Agents test only what they touch, Audit the suites for duplicates"},
+ {"id": "D5", "question": "AR35 and AR37 are being tested now. Cut their testing short?", "asked": "2026-10-11", "status": "decided",
+  "options": [
+   {"label": "One CI run only", "summary": "Finish the local runs already going, skip branch CI runs, join, and let the ready PR's CI be the only check before merge.", "recommended": true},
+   {"label": "Keep the current flow", "summary": "Run everything as today."}],
+  "chosen": "One CI run only", "decided": "2026-10-11", "task": "AR39",
+  "owner_words": "One CI run only (Recommended)"},
+ {"id": "D6", "question": "When should the mutation passes run?", "asked": "2026-10-11", "status": "open",
+  "options": [
+   {"label": "When their files change, plus nightly", "summary": "S2: on a PR only when the mutated scripts or their test change; every mutant on main once a night. Saves 8.8 min on most PRs.", "recommended": true},
+   {"label": "Nightly only", "summary": "Never on a PR; a weak test is found the next morning instead of before the merge."},
+   {"label": "Every PR, as today", "summary": "8.8 min on every ready PR whatever changed."}],
+  "chosen": null, "decided": null, "task": "TC1"},
+ {"id": "D7", "question": "Retire the artifacts suite's fake-renderer group?", "asked": "2026-10-11", "status": "open",
+  "options": [
+   {"label": "Retire it", "summary": "S6: drop the group, move its one unique case (test_check_runs_check_html) into the real group. Saves 46% of the suite.", "recommended": true},
+   {"label": "Run it nightly only", "summary": "Keep the stand-in for a nightly run; PRs run the real group alone."},
+   {"label": "Keep both groups", "summary": "Every run keeps testing every case twice."}],
+  "chosen": null, "decided": null, "task": "TC3"},
+ {"id": "D8", "question": "How often should the record push to main?", "asked": "2026-10-11", "status": "open",
+  "options": [
+   {"label": "Once per turn", "summary": "S8: commit on every change, push at the end of the turn and before any PR, merge or publish. About 250 fewer pushes and scans a day.", "recommended": true},
+   {"label": "On every change, as today", "summary": "Every status change is pushed and scanned at once; main keeps moving under CI."}],
+  "chosen": null, "decided": null, "task": "TC5"}
+]}

@@ -565,14 +565,14 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
   nav.contents a.current { border-color: var(--signal); }
 }
 </style>
-<style id="extra-css"></style>
+<style id="extra-css">.tc-figure{margin:1rem 0 1.5rem;overflow-x:auto}.tc-chart{display:block;width:100%;max-width:640px;height:auto}.tc-chart text{font-family:var(--font-mono);font-size:12px;fill:var(--ink)}.tc-chart .tc-muted{fill:var(--ink-muted);font-size:11px}.tc-chart .tc-on{fill:var(--on-signal);font-weight:600}.tc-a{fill:var(--signal)}.tc-b{fill:var(--rule-strong)}.tc-c{fill:var(--running-mark)}.tc-axis{stroke:var(--rule-strong);stroke-width:1}.tc-figure figcaption{font-size:.85rem;color:var(--ink-muted);margin-top:.4rem;max-width:65ch}</style>
 </head>
 <body>
-<div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
+<div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>The question</a><a href="#s2"><b>2</b>How it was measured</a><a href="#s3"><b>3</b>Hypotheses and verdicts</a><a href="#s4"><b>4</b>Where the time goes</a><a href="#s5"><b>5</b>The mutation pass</a><a href="#s6"><b>6</b>Repeats and noise</a><a href="#s7"><b>7</b>What is wrong</a><a href="#s8"><b>8</b>Solutions, ranked</a><a href="#s9"><b>9</b>Decisions</a><a href="#s10"><b>10</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Test and validation cost</h1><p>What our tests and checks cost, where they repeat, and what to cut</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T11:02+01:00">11 Oct 11:02</time> (Lisbon)</p>
-<p class="lede">Planned. Work has not started. <strong>Needs you: TC1 Mutation passes only when their files change, all nightly; TC3 Retire the fake-renderer group; TC5 Push the record once per turn.</strong></p>
+<p class="last-update">Last update: <time datetime="2026-10-11T11:03+01:00">11 Oct 11:03</time> (Lisbon)</p>
+<p class="lede">Studied 11 October: the checks are good, but they run too often and for everything. Half of all CI time was agents’ branch runs, a luismc-artifacts change waits 17.5 min where 3.8 would prove the same, and the mutation pass and a duplicate renderer group are most of the rest. Eight fixes are ranked below; three of them wait on your choice (D6 to D8). <strong>Needs you: TC1 Mutation passes only when their files change, all nightly; TC3 Retire the fake-renderer group; TC5 Push the record once per turn; D6 When should the mutation passes run?; D7 Retire the artifacts suite&#x27;s fake-renderer group?; D8 How often should the record push to main?</strong></p>
 <div class="status-count-tiles"><div class="status-count-tile status-needs-you"><div class="count">3</div><div class="label">needs you</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
@@ -585,10 +585,293 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <tr data-task="TC5"><td><span class="status-chip status-needs-you">Needs you</span></td><td><span class="task-id">TC5</span>Push the record once per turn</td><td>S8: 264 of 276 commits on main are record pushes; commit each, push at turn end; waits on D8</td><td>12 Oct<span class="expected-basis">your choice in D8, then a plugin change</span></td></tr>
 </tbody></table></div>
 </section>
-<section id="s1"><h2><span class="section-number">&sect; 1</span>What and why</h2>
-<p>Describe what this feature is and why it exists.</p>
+<section id="s1"><h2><span class="section-number">&sect; 1</span>The question</h2>
+<p>On 11 October the owner wrote: <q>I'm concerned we're overdoing it in terms of tests and validations and there might be a lot of duplication and unnecessary tests being run.</q> This page answers that with measurements, not impressions: what runs, how often, for how long, and what each run actually caught.</p>
+<p>Scope: the test suites in <code>tools/</code>, the GitHub workflows of this repository (<code>spec-lint</code>, <code>secret-scan</code>, <code>template-build</code>, <code>train-cleanup</code>), the runs agents and the session made on this PC, and the record commands of luismc-artifacts. Window: 10 October 20:35 to 11 October 11:00 (Lisbon), the two days in which STACKSPEC 7.0.0 and 7.1.0 and luismc-artifacts 1.1.0 to 1.3.1 were built.</p>
+<p><strong>One correction up front.</strong> This repository is public, so GitHub Actions minutes are free (a sampled run reports 0 billable milliseconds). The cost is not money: it is the owner's waiting time before a merge, this PC's CPU while agents test, and noise in the history. The findings below are weighed on those three.</p>
 </section>
-<section id="s2"><h2><span class="section-number">&sect; 2</span>History</h2>
+<section id="s2"><h2><span class="section-number">&sect; 2</span>How it was measured</h2>
+<p>Each suspicion was written down as a hypothesis first, then tested against data that could prove it wrong. Four sources:</p>
+<table>
+<thead><tr><th>Source</th><th>What it gave</th></tr></thead>
+<tbody>
+<tr><td>GitHub run history (300 runs, <code>gh run list</code>)</td><td>Every workflow run: trigger, branch, commit, duration, result.</td></tr>
+<tr><td>CI logs of the 7.1.0 ready PR and of every failed run</td><td>Per-step times, the time split inside a suite (from log timestamps), and what each failure was.</td></tr>
+<tr><td>Session and agent transcripts on this PC (45 files)</td><td>Every local suite execution, with its flags, before and after the 02:30 testing rule.</td></tr>
+<tr><td>Timed experiments on this PC (Windows), in a scratch worktree of <code>main</code></td><td>E1: every case of the artifacts suite timed in both renderer groups. E2: every scenario and each of the 94 mutants of the gate suite timed to its end and to its first failed check. A static read of the suites replaced a planned E3 (see H4).</td></tr>
+</tbody>
+</table>
+<p>Two hypotheses I had stated earlier turned out false and are kept below as false, with the evidence. One estimate from the read-only audit (DS46) was tested and corrected.</p>
+</section>
+<section id="s3"><h2><span class="section-number">&sect; 3</span>Hypotheses and verdicts</h2>
+<p>Ten hypotheses, each with the test that could have proved it wrong. Three were false or overstated, and say so.</p>
+<table>
+<thead><tr><th>#</th><th>Hypothesis</th><th>Test</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td>H1</td><td>One change is tested many times over</td><td>Count spec-lint runs per stage in the run history</td><td><strong>True.</strong> 24 full runs in 14 hours for 5 releases. In the 7.1.0 train, 10 agent-branch runs used 132 of 167 CI minutes (79%); the ready PR then repeated all of it.</td></tr>
+<tr><td>H2</td><td>Mutation passes dominate CI time</td><td>E2: time every scenario and mutant of the gate suite</td><td><strong>True.</strong> 94 mutants take 81% of the gate suite (1,357 of 1,682 s on Windows), and the gate suite is 62% of a ready-PR run (10.9 of 17.5 min).</td></tr>
+<tr><td>H3</td><td>The run on <code>main</code> after a merge repeats the ready PR</td><td>Compare the merged tree with the tested tree; read every failed <code>main</code> run</td><td><strong>True.</strong> In all three merges checked, the only difference was record files under <code>docs/artifacts/</code>. Its one failure was a flake (<code>git clone</code> could not copy a file), not a bug.</td></tr>
+<tr><td>H4</td><td>The artifacts suite's fake-renderer group repeats the real group</td><td>Static read of every case; E1: time every case in both groups; read every failed run</td><td><strong>True.</strong> The real group runs every case but one, and every assertion that differs is weaker in the fake group. Each group costs the same per case (median ratio 1.02), so the fake group is 46% of the suite. It never caught a bug the real group missed.</td></tr>
+<tr><td>H4a</td><td>The fake group is twice as slow as the real one (my earlier claim)</td><td>E1, measured directly</td><td><strong>False.</strong> The CI log timestamps I used come from buffered output. Measured: fake 485 s, real 561 s.</td></tr>
+<tr><td>H5</td><td>Agents' local runs wasted this PC's CPU</td><td>Count local suite executions in 45 transcripts, before and after the 02:30 rule</td><td><strong>True before 02:30, fixed after.</strong> Before the rule: 17 full mutation runs of the gate suite at about 28 min each (E2), about 8 CPU-hours. After it: 1.</td></tr>
+<tr><td>H6</td><td>A join re-runs the suites (my earlier claim)</td><td>Look for <code>join.py</code> and <code>branch_gate.py</code> runs in this repository</td><td><strong>False here.</strong> dev-standards has no <code>gate.json</code>; its joins are plain git merges. The gate on join exists only in the templates products get.</td></tr>
+<tr><td>H7</td><td>Record commands cost a lot (each validates and renders every page)</td><td>Time <code>check</code>, <code>render</code>, <code>pending</code>, <code>set-task-status</code></td><td><strong>False.</strong> 1.6 to 1.8 s each, 4.0 s for a status change including the push.</td></tr>
+<tr><td>H8</td><td>Record commits flood <code>main</code> and its checks</td><td>Classify every commit on <code>main</code> and every secret-scan run</td><td><strong>True.</strong> 264 of 276 commits on <code>main</code> since 10 October are record commits, and 189 of 194 secret-scan runs on <code>main</code> scanned one. Cheap (10 s each), but they bury the 12 real commits and keep <code>main</code> moving under every CI run.</td></tr>
+<tr><td>H9</td><td>Stopping a mutant at its first failed check would halve the mutation pass</td><td>E2: for each mutant, time to its first failed check against its full run</td><td><strong>Partly true.</strong> 51% of mutant time comes after the first failure, so about 49% is saved, not the audit's 45 to 65%. Uneven: <code>e2e_map</code>, <code>push_check</code> and <code>fast_report</code> fail in the first third; <code>timeout</code> and <code>verify</code> fail late and save little.</td></tr>
+</tbody>
+</table>
+<p><strong>What the extra runs did catch.</strong> In the window, CI found three Linux-only bugs that Windows runs could not (DS17 twice: a test PATH that dropped <code>/usr/bin</code>; DS29: a missing <code>origin/main</code> case) and one weak test (a DS29 mutant nobody caught). So the checks themselves earn their place. The problem is running them several times, and running all of them whatever changed.</p>
+</section>
+<section id="s4"><h2><span class="section-number">&sect; 4</span>Where the time goes</h2>
+<h3>Full spec-lint runs, by what started them</h3>
+<figure class="tc-figure">
+<svg class="tc-chart" viewBox="0 0 640 118" role="img" aria-label="spec-lint used 269 CI minutes: 132 on agent branch runs, 89 on ready pull requests, 49 on main after merges">
+<rect class="tc-a" x="20" y="20" width="275" height="34"></rect>
+<rect class="tc-b" x="295" y="20" width="184" height="34"></rect>
+<rect class="tc-c" x="479" y="20" width="101" height="34"></rect>
+<text x="26" y="42" class="tc-on">132 min</text>
+<text x="301" y="42" class="tc-on">89 min</text>
+<text x="485" y="42" class="tc-on">49 min</text>
+<text x="20" y="76">Agent branch runs (10)</text>
+<text x="295" y="76">Ready PRs (9)</text>
+<text x="479" y="76">main after merge (5)</text>
+<text x="20" y="104" class="tc-muted">269 CI minutes, 10 Oct 20:35 to 11 Oct 11:00 · runs under 1 minute (skipped drafts, record pushes) left out</text>
+</svg>
+<figcaption>Half of all CI time was agents testing their own branches; the ready PR then ran the same suites on the joined result, and <code>main</code> ran them a third time after the merge.</figcaption>
+</figure>
+
+<h3>One ready-PR run, step by step (7.1.0, 17.5 min)</h3>
+<figure class="tc-figure">
+<svg class="tc-chart" viewBox="0 0 640 300" role="img" aria-label="Of a 17.5 minute ready-PR run, the gate suite's mutation pass takes 8.8 minutes; the steps an artifacts-only change needs take about 3.8 minutes">
+<g>
+<text x="0" y="30">Gate suite: mutants</text><rect class="tc-b" x="190" y="18" width="356" height="18"></rect><text x="552" y="31">8.8</text>
+<text x="0" y="60">Gate suite: scenarios</text><rect class="tc-b" x="190" y="48" width="85" height="18"></rect><text x="281" y="61">2.1</text>
+<text x="0" y="90">Artifacts commands</text><rect class="tc-a" x="190" y="78" width="125" height="18"></rect><text x="321" y="91">3.1</text>
+<text x="0" y="120">Train cleanup</text><rect class="tc-b" x="190" y="108" width="69" height="18"></rect><text x="265" y="121">1.7</text>
+<text x="0" y="150">CI scripts, templates</text><rect class="tc-b" x="190" y="138" width="32" height="18"></rect><text x="228" y="151">0.8</text>
+<text x="0" y="180">Artifacts hooks</text><rect class="tc-a" x="190" y="168" width="12" height="18"></rect><text x="208" y="181">0.3</text>
+<text x="0" y="210">Change notes</text><rect class="tc-b" x="190" y="198" width="12" height="18"></rect><text x="208" y="211">0.3</text>
+<text x="0" y="240">Spec checks, renderer, rest</text><rect class="tc-a" x="190" y="228" width="16" height="18"></rect><text x="212" y="241">0.4</text>
+</g>
+<line class="tc-axis" x1="190" y1="256" x2="594" y2="256"></line>
+<text x="190" y="274" class="tc-muted">0</text><text x="392" y="274" class="tc-muted" text-anchor="middle">5 min</text><text x="594" y="274" class="tc-muted" text-anchor="end">10 min</text>
+<rect class="tc-a" x="0" y="284" width="12" height="10"></rect><text x="18" y="293" class="tc-muted">needed by a luismc-artifacts change</text>
+<rect class="tc-b" x="270" y="284" width="12" height="10"></rect><text x="288" y="293" class="tc-muted">not touched by one</text>
+</svg>
+<figcaption>Step times from the CI run of PR #45; the gate suite's split from E2 (81% mutants). A change to luismc-artifacts alone needs about 3.8 of the 17.5 minutes; the other 13.7 test the delivery scripts it never touched.</figcaption>
+</figure>
+
+<h3>The full run doubled in six hours</h3>
+<p>The full ready-PR run took 8.5 min at 21:36 on 10 October and 17.5 min at 03:59 on 11 October. Every release added tests and mutants, nothing was removed, and all of it runs for every change.</p>
+</section>
+<section id="s5"><h2><span class="section-number">&sect; 5</span>The mutation pass</h2>
+<p>A mutant breaks one rule in a copy of the delivery scripts and reruns the scenario that should notice. All 94 gate mutants were caught: the tests are strong. But each mutant reruns its <em>whole</em> scenario even after the first check has already failed, and the pass runs for every change, including ones that never touch the files it mutates.</p>
+<figure class="tc-figure">
+<svg class="tc-chart" viewBox="0 0 640 262" role="img" aria-label="For each group of mutants, total run time against time to the first failed check: about half of the mutation pass runs after the mutant is already caught">
+<text x="0" y="30">timeout (7)</text><rect class="tc-b" x="130" y="18" width="400" height="18"></rect><rect class="tc-a" x="130" y="18" width="331" height="18"></rect><text x="536" y="31">196 s</text>
+<text x="0" y="60">e2e_map (7)</text><rect class="tc-b" x="130" y="48" width="355" height="18"></rect><rect class="tc-a" x="130" y="48" width="98" height="18"></rect><text x="491" y="61">174 s</text>
+<text x="0" y="90">push_check (13)</text><rect class="tc-b" x="130" y="78" width="353" height="18"></rect><rect class="tc-a" x="130" y="78" width="110" height="18"></rect><text x="489" y="91">173 s</text>
+<text x="0" y="120">verify (8)</text><rect class="tc-b" x="130" y="108" width="320" height="18"></rect><rect class="tc-a" x="130" y="108" width="239" height="18"></rect><text x="456" y="121">157 s</text>
+<text x="0" y="150">fast_report (7)</text><rect class="tc-b" x="130" y="138" width="318" height="18"></rect><rect class="tc-a" x="130" y="138" width="106" height="18"></rect><text x="454" y="151">156 s</text>
+<text x="0" y="180">fork_point (7)</text><rect class="tc-b" x="130" y="168" width="192" height="18"></rect><rect class="tc-a" x="130" y="168" width="73" height="18"></rect><text x="328" y="181">94 s</text>
+<text x="0" y="210">the other 45</text><rect class="tc-b" x="130" y="198" width="415" height="18"></rect><rect class="tc-a" x="130" y="198" width="227" height="18"></rect><text x="551" y="211">407 s*</text>
+<rect class="tc-a" x="0" y="236" width="12" height="10"></rect><text x="18" y="245" class="tc-muted">until the first failed check</text>
+<rect class="tc-b" x="200" y="236" width="12" height="10"></rect><text x="218" y="245" class="tc-muted">rest of the scenario, after the mutant is already caught</text>
+<text x="0" y="260" class="tc-muted">E2, Windows · 2.04 px per second · * this row at half scale</text>
+</svg>
+<figcaption>E2 on this PC: 1,357 s of mutant runs, 692 s of them up to the first failed check (51%). Stopping at the first failure saves about 49%, about 4.3 of the 8.8 minutes on Linux.</figcaption>
+</figure>
+<p>The larger saving is <em>when</em> it runs. The gate mutants guard six files under <code>tooling/shared/scripts/delivery/</code> and the pre-push hook. Of the five releases in the window, two changed those files (STACKSPEC 7.0.0 and 7.1.0). A third (#42) changed only <code>cleanup.py</code>, which the cleanup suite's own 54 mutants guard. For #42 and the other two (luismc-artifacts 1.1.0 and 1.1.1) the gate's 8.8 minutes proved nothing new, checked with <code>git diff</code> of each merge.</p>
+</section>
+<section id="s6"><h2><span class="section-number">&sect; 6</span>Repeats and noise</h2>
+<h3>The artifacts suite runs every case twice</h3>
+<figure class="tc-figure">
+<svg class="tc-chart" viewBox="0 0 640 132" role="img" aria-label="On Windows the artifacts suite spends 485 seconds on the fake-renderer group and 561 on the real one; the fake group repeats the real group's cases">
+<text x="0" y="30">fake renderer, 99 cases</text><rect class="tc-b" x="180" y="18" width="346" height="22"></rect><text x="532" y="34">485 s</text>
+<text x="0" y="66">real renderer, 98 cases</text><rect class="tc-a" x="180" y="54" width="400" height="22"></rect><text x="586" y="70">561 s</text>
+<text x="0" y="104" class="tc-muted">E1, Windows. Per case the two cost the same (median fake/real 1.02).</text>
+<text x="0" y="122" class="tc-muted">The fake group's only unique case: test_check_runs_check_html.</text>
+</svg>
+<figcaption>The fake group was written while the real renderer did not exist yet, so the script could be tested on its own. The real renderer now always ships with it, and the fake group is 46% of the suite: about 8 minutes on this PC and 1.5 on Linux.</figcaption>
+</figure>
+
+<h3>Record commits drown main</h3>
+<figure class="tc-figure">
+<svg class="tc-chart" viewBox="0 0 640 96" role="img" aria-label="264 of 276 commits on main since 10 October are record commits from luismc-artifacts; 12 are releases">
+<rect class="tc-b" x="0" y="18" width="612" height="28"></rect>
+<rect class="tc-a" x="612" y="18" width="28" height="28"></rect>
+<text x="8" y="37" class="tc-on">264 record commits (docs/artifacts: …), each one a push and a secret-scan run</text>
+<text x="640" y="64" text-anchor="end">12 real commits</text>
+<text x="0" y="88" class="tc-muted">main, 10 Oct 00:00 to 11 Oct 10:15 · 189 of 194 secret-scan runs on main scanned a record commit</text>
+</svg>
+<figcaption>Every status change commits and pushes the record to <code>main</code> right away. Each push is cheap (a 10 s scan), but together they bury the release commits and keep <code>main</code> moving under every ready-PR run. In each of the three merges checked, the merged tree differed from the tree its PR tested only by these record files.</figcaption>
+</figure>
+
+<h3>Other repeats found</h3>
+<ul>
+<li><strong>No cancel on spec-lint.</strong> A new push to a ready PR starts a second full run while the first keeps going: on 11 October at 00:07, two 9 to 11 minute runs of the DS17 PR ran side by side.</li>
+<li><strong>Not a repeat after all: the checksum tests.</strong> The audit (DS46) flagged the installer's checksum check as tested twice. Reading both: <code>test_delivery_gate.py</code> tests the old checksums-file fallback (lines 2109 to 2188), <code>test_delivery_ci.py</code> the pinned form (lines 1550 to 1584). Two code paths, so both stay.</li>
+<li><strong>On this PC, Windows is the slow part.</strong> The same artifacts suite takes 3.1 min on Linux and 17.5 on Windows, because every case starts several Python and git processes. That cost is spent only by local runs.</li>
+</ul>
+</section>
+<section id="s7"><h2><span class="section-number">&sect; 7</span>What is wrong</h2>
+<p>The owner was right about duplication, and wrong in one place it would be easy to cut: the checks themselves are good. All 94 gate mutants are caught, and the extra CI runs found three Linux-only bugs and one weak test. What is wrong is <em>how often</em> and <em>how indiscriminately</em> they run. Four causes:</p>
+<ol>
+<li><strong>Everything runs for every change.</strong> spec-lint is one job of 17 steps with no scoping, so a luismc-artifacts patch pays 13.7 minutes for delivery-script tests it cannot affect, including an 8.8-minute mutation pass.</li>
+<li><strong>The same commit is tested at three stages.</strong> Agents ran the full workflow on their branches (half of all CI time), the ready PR ran it again on the joined result, and <code>main</code> ran it a third time on a tree that differs only in record files.</li>
+<li><strong>Tests that once had a reason were never retired.</strong> The fake-renderer group covered the time before the real renderer existed; it now doubles the artifacts suite. Mutants rerun whole scenarios after they are already caught.</li>
+<li><strong>The record writes to main like a chat.</strong> One push per status change: 264 commits in a day, each scanned, all of them moving <code>main</code> under the CI runs that are meant to test a fixed tree.</li>
+</ol>
+<p>What this cost the owner: a release that changes only luismc-artifacts waits about 17.5 minutes for its ready-PR run where about 3.8 would prove the same, plus 17.4 more on <code>main</code>. A train like 7.1.0 spent 1 h 54 between its first branch run and its merge.</p>
+</section>
+<section id="s8"><h2><span class="section-number">&sect; 8</span>Solutions, ranked</h2>
+<p>Ranked by what they save the owner's wait, with what each could let slip. Savings are Linux CI minutes unless marked.</p>
+<table>
+<thead><tr><th>#</th><th>Change</th><th>Saves</th><th>Risk, and how it is covered</th><th>Task</th></tr></thead>
+<tbody>
+<tr><td>S1</td><td>Split spec-lint into jobs by area (delivery, artifacts, specs, auth) that run only when their files change; anything shared runs all</td><td>A luismc-artifacts PR: 17.5 → about 3.8 min. Jobs also run side by side, so a full run's wait becomes its longest job, not the sum</td><td>A file used by two areas but listed under one. Covered by a "shared" path list that runs every job, checked by a test</td><td>DS43 (chosen)</td></tr>
+<tr><td>S2</td><td>Run each mutation pass only when the files it mutates (or its test) change; run all mutants on <code>main</code> once a night</td><td>8.8 min on every PR that does not touch the delivery scripts (3 of 5 releases in the window)</td><td>A mutant's target text drifting unseen: it can only drift when its file changes, which is exactly when the pass runs. The nightly run covers Python and runner image changes</td><td>TC1 (open: D6)</td></tr>
+<tr><td>S3</td><td>A mutant stops at its first failed check</td><td>About 4.3 of the 8.8 mutant minutes whenever they do run (E2: 49%)</td><td>A mutant caught only by a later check would show as NOT CAUGHT: loud, never silent</td><td>TC2</td></tr>
+<tr><td>S4</td><td>No full branch runs by agents; the ready PR is the one full run. An agent triggers CI on its branch only for a Linux-specific change, and then only its area's job</td><td>About 132 min per train like 7.1.0, and this PC's CPU</td><td>Linux-only bugs surface at the ready PR, not on the branch: 3 in the window, each one more fix-forward round (about 4 to 17 min)</td><td>DS45 (chosen)</td></tr>
+<tr><td>S5</td><td>Skip the full run on <code>main</code> when the merge differs from the tested tree only under <code>docs/artifacts/</code> and other ignored paths</td><td>17.4 min per merge</td><td>Drift on <code>main</code> between test and merge: covered by the nightly full run of S2</td><td>DS44 (chosen)</td></tr>
+<tr><td>S6</td><td>Retire the fake-renderer group; move its one unique case into the real group</td><td>46% of the artifacts suite: about 1.5 min in CI, 8 min per local run on this PC</td><td>A script bug hidden by the real renderer's behaviour: none found in the window; the real group already runs a superset of the cases</td><td>TC3 (open: D7)</td></tr>
+<tr><td>S7</td><td>Cancel a ready PR's older spec-lint run when a newer commit arrives</td><td>A whole duplicate run each time a ready PR gets a fix (twice for DS17)</td><td>None: the newer commit's run decides</td><td>TC4</td></tr>
+<tr><td>S8</td><td>The record commits on every change but pushes once, at the end of the turn (the end-of-turn hook already runs there)</td><td>About 250 pushes and scans a day; <code>main</code> stops moving under CI, so S5's tree check can match exactly</td><td>A session that dies before the end of its turn loses that turn's status changes until the next push. Covered by pushing before any PR, merge or publish</td><td>TC5 (open: D8)</td></tr>
+</tbody>
+</table>
+<p><strong>Together</strong>, for a release that changes only luismc-artifacts: S1, S5 and S6 take the wait from about 35 minutes (ready PR plus <code>main</code>) to about 2.5. For a release of the delivery scripts: S3 and S5 take it from about 35 to about 13. S4 removes the branch runs before either.</p>
+<p><strong>Not recommended.</strong> Removing <code>template-build</code>'s Windows jobs: they exist for a path-separator bug that only Windows shows. Rewriting the artifacts suite to run in one process: it would cut the Windows time several-fold, but S4 and S6 already take most local runs away, so the rewrite is not worth its risk now.</p>
+</section>
+<section id="s9"><h2><span class="section-number">&sect; 9</span>Decisions</h2>
+<div class="decision-list">
+<article class="decision decision-open" data-decision="D8">
+<h3 class="decision-head"><span class="decision-id">D8</span> <span class="decision-question">How often should the record push to main?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
+<p class="decision-meta">Asked 11 Oct · Task TC5</p>
+<div class="decision-options">
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Once per turn</span> <span class="decision-tag">Recommended</span></div>
+<p class="decision-summary">S8: commit on every change, push at the end of the turn and before any PR, merge or publish. About 250 fewer pushes and scans a day.</p>
+</div>
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">On every change, as today</span></div>
+<p class="decision-summary">Every status change is pushed and scanned at once; main keeps moving under CI.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-open" data-decision="D7">
+<h3 class="decision-head"><span class="decision-id">D7</span> <span class="decision-question">Retire the artifacts suite&#x27;s fake-renderer group?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
+<p class="decision-meta">Asked 11 Oct · Task TC3</p>
+<div class="decision-options">
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Retire it</span> <span class="decision-tag">Recommended</span></div>
+<p class="decision-summary">S6: drop the group, move its one unique case (test_check_runs_check_html) into the real group. Saves 46% of the suite.</p>
+</div>
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Run it nightly only</span></div>
+<p class="decision-summary">Keep the stand-in for a nightly run; PRs run the real group alone.</p>
+</div>
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Keep both groups</span></div>
+<p class="decision-summary">Every run keeps testing every case twice.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-open" data-decision="D6">
+<h3 class="decision-head"><span class="decision-id">D6</span> <span class="decision-question">When should the mutation passes run?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
+<p class="decision-meta">Asked 11 Oct · Task TC1</p>
+<div class="decision-options">
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">When their files change, plus nightly</span> <span class="decision-tag">Recommended</span></div>
+<p class="decision-summary">S2: on a PR only when the mutated scripts or their test change; every mutant on main once a night. Saves 8.8 min on most PRs.</p>
+</div>
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Nightly only</span></div>
+<p class="decision-summary">Never on a PR; a weak test is found the next morning instead of before the merge.</p>
+</div>
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Every PR, as today</span></div>
+<p class="decision-summary">8.8 min on every ready PR whatever changed.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D5">
+<h3 class="decision-head"><span class="decision-id">D5</span> <span class="decision-question">AR35 and AR37 are being tested now. Cut their testing short?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task AR39</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One CI run only</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">Finish the local runs already going, skip branch CI runs, join, and let the ready PR&#x27;s CI be the only check before merge.</p>
+<blockquote class="decision-words">&ldquo;One CI run only (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep the current flow</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Run everything as today.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D4">
+<h3 class="decision-head"><span class="decision-id">D4</span> <span class="decision-question">Audit the suites for duplicates? (same multi-select question)</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task DS46</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">A Sonnet agent lists overlapping tests and proposes what to remove; nothing deleted without the owner&#x27;s OK.</p>
+<blockquote class="decision-words">&ldquo;Path-scoped CI jobs, Skip the main re-run, Agents test only what they touch, Audit the suites for duplicates&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No audit.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D3">
+<h3 class="decision-head"><span class="decision-id">D3</span> <span class="decision-question">Agents test only what they touch? (same multi-select question)</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task DS45</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">Agents run locally only the suites for files they changed, no branch CI run unless the change is Linux-specific; the ready PR stays the one full run.</p>
+<blockquote class="decision-words">&ldquo;Path-scoped CI jobs, Skip the main re-run, Agents test only what they touch, Audit the suites for duplicates&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Agents keep running full suites locally and on their branches.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D2">
+<h3 class="decision-head"><span class="decision-id">D2</span> <span class="decision-question">Skip the main re-run when its files equal what the ready PR tested? (same multi-select question)</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task DS44</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">After a merge, skip CI on main when its files are identical to what the ready PR tested; also a STACKSPEC rule for every project.</p>
+<blockquote class="decision-words">&ldquo;Path-scoped CI jobs, Skip the main re-run, Agents test only what they touch, Audit the suites for duplicates&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep the full run on main after every merge.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D1">
+<h3 class="decision-head"><span class="decision-id">D1</span> <span class="decision-question">Make path-scoped CI jobs? (asked as one of four cuts in a single multi-select question)</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task DS43</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">Split spec-lint into areas (delivery, artifacts, specs, auth) that run only when their files change; an artifacts change takes ~4 min instead of 17; shared files still run everything.</p>
+<blockquote class="decision-words">&ldquo;Path-scoped CI jobs, Skip the main re-run, Agents test only what they touch, Audit the suites for duplicates&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep one job that runs every suite for every change.</p>
+</div>
+</div>
+</article>
+</div>
+</section>
+<section id="s10"><h2><span class="section-number">&sect; 10</span>History</h2>
 <div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
 <tr><td>11 Oct 10:45</td><td>Feature artifact created.</td></tr>
 </tbody></table></div>

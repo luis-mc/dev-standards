@@ -1,0 +1,18 @@
+<!-- title: The mutation pass -->
+<p>A mutant breaks one rule in a copy of the delivery scripts and reruns the scenario that should notice. All 94 gate mutants were caught: the tests are strong. But each mutant reruns its <em>whole</em> scenario even after the first check has already failed, and the pass runs for every change, including ones that never touch the files it mutates.</p>
+<figure class="tc-figure">
+<svg class="tc-chart" viewBox="0 0 640 262" role="img" aria-label="For each group of mutants, total run time against time to the first failed check: about half of the mutation pass runs after the mutant is already caught">
+<text x="0" y="30">timeout (7)</text><rect class="tc-b" x="130" y="18" width="400" height="18"></rect><rect class="tc-a" x="130" y="18" width="331" height="18"></rect><text x="536" y="31">196 s</text>
+<text x="0" y="60">e2e_map (7)</text><rect class="tc-b" x="130" y="48" width="355" height="18"></rect><rect class="tc-a" x="130" y="48" width="98" height="18"></rect><text x="491" y="61">174 s</text>
+<text x="0" y="90">push_check (13)</text><rect class="tc-b" x="130" y="78" width="353" height="18"></rect><rect class="tc-a" x="130" y="78" width="110" height="18"></rect><text x="489" y="91">173 s</text>
+<text x="0" y="120">verify (8)</text><rect class="tc-b" x="130" y="108" width="320" height="18"></rect><rect class="tc-a" x="130" y="108" width="239" height="18"></rect><text x="456" y="121">157 s</text>
+<text x="0" y="150">fast_report (7)</text><rect class="tc-b" x="130" y="138" width="318" height="18"></rect><rect class="tc-a" x="130" y="138" width="106" height="18"></rect><text x="454" y="151">156 s</text>
+<text x="0" y="180">fork_point (7)</text><rect class="tc-b" x="130" y="168" width="192" height="18"></rect><rect class="tc-a" x="130" y="168" width="73" height="18"></rect><text x="328" y="181">94 s</text>
+<text x="0" y="210">the other 45</text><rect class="tc-b" x="130" y="198" width="415" height="18"></rect><rect class="tc-a" x="130" y="198" width="227" height="18"></rect><text x="551" y="211">407 s*</text>
+<rect class="tc-a" x="0" y="236" width="12" height="10"></rect><text x="18" y="245" class="tc-muted">until the first failed check</text>
+<rect class="tc-b" x="200" y="236" width="12" height="10"></rect><text x="218" y="245" class="tc-muted">rest of the scenario, after the mutant is already caught</text>
+<text x="0" y="260" class="tc-muted">E2, Windows · 2.04 px per second · * this row at half scale</text>
+</svg>
+<figcaption>E2 on this PC: 1,357 s of mutant runs, 692 s of them up to the first failed check (51%). Stopping at the first failure saves about 49%, about 4.3 of the 8.8 minutes on Linux.</figcaption>
+</figure>
+<p>The larger saving is <em>when</em> it runs. The gate mutants guard six files under <code>tooling/shared/scripts/delivery/</code> and the pre-push hook. Of the five releases in the window, two changed those files (STACKSPEC 7.0.0 and 7.1.0). A third (#42) changed only <code>cleanup.py</code>, which the cleanup suite's own 54 mutants guard. For #42 and the other two (luismc-artifacts 1.1.0 and 1.1.1) the gate's 8.8 minutes proved nothing new, checked with <code>git diff</code> of each merge.</p>

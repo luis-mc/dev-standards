@@ -1,0 +1,30 @@
+<!-- title: Repeats and noise -->
+<h3>The artifacts suite runs every case twice</h3>
+<figure class="tc-figure">
+<svg class="tc-chart" viewBox="0 0 640 132" role="img" aria-label="On Windows the artifacts suite spends 485 seconds on the fake-renderer group and 561 on the real one; the fake group repeats the real group's cases">
+<text x="0" y="30">fake renderer, 99 cases</text><rect class="tc-b" x="180" y="18" width="346" height="22"></rect><text x="532" y="34">485 s</text>
+<text x="0" y="66">real renderer, 98 cases</text><rect class="tc-a" x="180" y="54" width="400" height="22"></rect><text x="586" y="70">561 s</text>
+<text x="0" y="104" class="tc-muted">E1, Windows. Per case the two cost the same (median fake/real 1.02).</text>
+<text x="0" y="122" class="tc-muted">The fake group's only unique case: test_check_runs_check_html.</text>
+</svg>
+<figcaption>The fake group was written while the real renderer did not exist yet, so the script could be tested on its own. The real renderer now always ships with it, and the fake group is 46% of the suite: about 8 minutes on this PC and 1.5 on Linux.</figcaption>
+</figure>
+
+<h3>Record commits drown main</h3>
+<figure class="tc-figure">
+<svg class="tc-chart" viewBox="0 0 640 96" role="img" aria-label="264 of 276 commits on main since 10 October are record commits from luismc-artifacts; 12 are releases">
+<rect class="tc-b" x="0" y="18" width="612" height="28"></rect>
+<rect class="tc-a" x="612" y="18" width="28" height="28"></rect>
+<text x="8" y="37" class="tc-on">264 record commits (docs/artifacts: …), each one a push and a secret-scan run</text>
+<text x="640" y="64" text-anchor="end">12 real commits</text>
+<text x="0" y="88" class="tc-muted">main, 10 Oct 00:00 to 11 Oct 10:15 · 189 of 194 secret-scan runs on main scanned a record commit</text>
+</svg>
+<figcaption>Every status change commits and pushes the record to <code>main</code> right away. Each push is cheap (a 10 s scan), but together they bury the release commits and keep <code>main</code> moving under every ready-PR run. In each of the three merges checked, the merged tree differed from the tree its PR tested only by these record files.</figcaption>
+</figure>
+
+<h3>Other repeats found</h3>
+<ul>
+<li><strong>No cancel on spec-lint.</strong> A new push to a ready PR starts a second full run while the first keeps going: on 11 October at 00:07, two 9 to 11 minute runs of the DS17 PR ran side by side.</li>
+<li><strong>Not a repeat after all: the checksum tests.</strong> The audit (DS46) flagged the installer's checksum check as tested twice. Reading both: <code>test_delivery_gate.py</code> tests the old checksums-file fallback (lines 2109 to 2188), <code>test_delivery_ci.py</code> the pinned form (lines 1550 to 1584). Two code paths, so both stay.</li>
+<li><strong>On this PC, Windows is the slow part.</strong> The same artifacts suite takes 3.1 min on Linux and 17.5 on Windows, because every case starts several Python and git processes. That cost is spent only by local runs.</li>
+</ul>
