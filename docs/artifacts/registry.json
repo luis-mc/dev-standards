@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T17:30+01:00",
+  "updated": "2026-10-11T17:31+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1184,6 +1184,17 @@
       "expected": "11 Oct ~18:20",
       "changed": "2026-10-11T17:29+01:00",
       "expected_basis": "agent ~30 min, then the train's PR CI ~5 min"
+    },
+    {
+      "id": "TC8",
+      "owner": "test-cost",
+      "app": "",
+      "status": "To do",
+      "item": "Generic CI speed: split or shard the dominant step, e2e shards",
+      "detail": "STACKSPEC SHOULD, Playwright sharding in the e2e template, ci_watch slowest-job summary; next small train",
+      "expected": "12 Oct",
+      "changed": "2026-10-11T17:31+01:00",
+      "expected_basis": "starts after the DL12 train merges, about 1 h of work and CI"
     }
   ]
 }
