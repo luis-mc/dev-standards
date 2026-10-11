@@ -1126,31 +1126,31 @@
       "app": "",
       "status": "Running",
       "item": "AR45 train: join, PR CI, merge, cleanup",
-      "detail": "AR45 review run, then join, ready PR CI, merge; luismc-artifacts 1.6.0",
-      "expected": "11 Oct ~23:25",
-      "changed": "2026-10-11T22:56+01:00",
-      "expected_basis": "#50: CI 2m27s, Built to Live 4 min; review run sets start",
+      "detail": "Ready PR #51, CI started 22:59; then merge and cleanup (incl. leftover TC8 branch); luismc-artifacts 1.6.0",
+      "expected": "11 Oct ~23:12",
+      "changed": "2026-10-11T22:59+01:00",
+      "expected_basis": "#50 CI 2m27s, merge+cleanup 4 min",
       "release": true,
       "phases": [
         {
           "name": "agents",
           "start": "2026-10-11T22:03+01:00",
-          "end": "2026-10-11T23:05+01:00"
+          "end": "2026-10-11T22:47+01:00"
         },
         {
           "name": "join",
-          "start": "2026-10-11T23:05+01:00",
-          "end": "2026-10-11T23:10+01:00"
+          "start": "2026-10-11T22:47+01:00",
+          "end": "2026-10-11T22:59+01:00"
         },
         {
           "name": "ci",
-          "start": "2026-10-11T23:10+01:00",
-          "end": "2026-10-11T23:20+01:00"
+          "start": "2026-10-11T22:59+01:00",
+          "end": "2026-10-11T23:06+01:00"
         },
         {
           "name": "merge",
-          "start": "2026-10-11T23:20+01:00",
-          "end": "2026-10-11T23:25+01:00"
+          "start": "2026-10-11T23:06+01:00",
+          "end": "2026-10-11T23:12+01:00"
         }
       ],
       "risk": {
