@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-12T00:20+01:00",
+  "updated": "2026-10-12T00:23+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -437,11 +437,11 @@
       "id": "AR46",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "Timeline: releases past midnight keep their phase bars",
-      "detail": "33f81ab: a timed release within 24 h of the stamp stays on the time axis across midnight (ticks dated at midnight); R5.42a check; 2 new cases reproduce 23:57 -> 00:05. Branch CI green 3m32s; guard refused a local full renderer run, as designed",
+      "detail": "Released in #54 (eaeec1d, 00:22): ARTIFACTSPEC 1.6.1, luismc-artifacts 1.6.2",
       "expected": "12 Oct",
-      "changed": "2026-10-12T00:09+01:00",
+      "changed": "2026-10-12T00:23+01:00",
       "rides": "DS56"
     },
     {
