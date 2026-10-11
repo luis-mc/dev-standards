@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T01:06+01:00",
+  "updated": "2026-10-11T01:12+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -291,6 +291,16 @@
       "detail": "Owner: fix the plugin so no project needs manual steps when it upgrades. Building in luismc-artifacts 1.2.0: (1) a running session gets the new rule on its next command, no restart; (2) an unmigrated record is migrated on the session's first turn (the hooks ask for it and block the turn until done); (3) the old copied rule file is deleted in the migration commit when it is an unedited plugin copy; (4) old claude.ai feature pages are kept as retired (URLs recovered from git history) and offered for deletion with the owner's confirmation.",
       "expected": "11 Oct ~03:00",
       "changed": "2026-10-11T01:06+01:00"
+    },
+    {
+      "id": "AR32",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "Update the installed plugins to 1.2.0",
+      "detail": "Approved by you for tonight: after the DS27/AR31 release merges, update luismc-artifacts (1.2.0) and luismc-project-setup on this PC, backups first, and remove the local-only luismc-artifacts setting once the repo's project setting is live (AR30).",
+      "expected": "11 Oct ~03:30",
+      "changed": "2026-10-11T01:12+01:00"
     },
     {
       "id": "DS1",
