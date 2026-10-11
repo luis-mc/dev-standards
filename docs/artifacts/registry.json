@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T11:37+01:00",
+  "updated": "2026-10-11T11:49+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -938,12 +938,11 @@
       "id": "TC2",
       "owner": "test-cost",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "A mutant stops at its first failed check",
-      "detail": "Agent on TC2-mutants-and-cleanup, part of the TC6 train",
-      "expected": "11 Oct ~13:30",
-      "changed": "2026-10-11T11:31+01:00",
-      "expected_basis": "agent work ~1h30 in parallel, then join"
+      "detail": "On TC2-mutants-and-cleanup (17ee580): mutants stop at the first failed check; gate 606/606, cleanup 236/236 without mutants; full pass runs in the ready PR",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T11:49+01:00"
     },
     {
       "id": "TC3",
