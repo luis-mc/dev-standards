@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T23:33+01:00",
+  "updated": "2026-10-11T23:34+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1161,33 +1161,33 @@
       "id": "DS55",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "TC9 train: join, PR CI, merge, cleanup",
-      "detail": "Integration branch DS55-integration, fold change notes, ready PR, merge on green, cleanup",
-      "expected": "12 Oct ~00:30",
-      "changed": "2026-10-11T23:31+01:00",
-      "expected_basis": "agent ~40 min from 23:35; #52: CI 3.5 min, merge+cleanup 5",
+      "detail": "Contract 1f3115a on DS55-integration; agents A (TC9, TC11) and B (TC10) running; each ends with CI on its branch, then join, fold, ready PR",
+      "expected": "12 Oct ~00:35",
+      "changed": "2026-10-11T23:34+01:00",
+      "expected_basis": "agents ~40 min incl. branch CI; #52: CI 3.5 min, merge+cleanup 5",
       "release": 3,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-10-11T23:35+01:00",
-          "end": "2026-10-12T00:15+01:00"
-        },
-        {
-          "name": "join",
-          "start": "2026-10-12T00:15+01:00",
+          "start": "2026-10-11T23:40+01:00",
           "end": "2026-10-12T00:20+01:00"
         },
         {
-          "name": "ci",
+          "name": "join",
           "start": "2026-10-12T00:20+01:00",
           "end": "2026-10-12T00:25+01:00"
         },
         {
-          "name": "merge",
+          "name": "ci",
           "start": "2026-10-12T00:25+01:00",
           "end": "2026-10-12T00:30+01:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-10-12T00:30+01:00",
+          "end": "2026-10-12T00:35+01:00"
         }
       ],
       "risk": {
