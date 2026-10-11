@@ -65,8 +65,9 @@ the repository instead (the session's scratchpad directory, in a new folder).
 4. **Write the content.** Run `export-content <key> --to <scratch dir>` and edit
    the files there:
    - `meta.json`: `title`, `hero` (one line saying what the feature is), `lede`
-     (one or two sentences on where the work stands now; the script appends the
-     needs-you line), `extra_css` (empty unless needed).
+     (a note of one or two sentences of context the registry cannot show: an
+     incident, a constraint, a plan; never restate statuses, the At a glance
+     block lists them; may be empty), `extra_css` (empty unless needed).
    - Replace the stub `01-what-and-why.html` and add `02-...`, `03-...` as the
      feature needs (design, how it works, links). Number files from
      `01-` upward, with no gaps. Do not write a section titled Decisions: the

@@ -355,9 +355,11 @@ docs/artifacts/
 
 ### 4.4 Content
 
-`meta.json`: `{title, hero, lede, extra_css}`. `lede` is the session's
-sentence about where the work stands; the script appends the needs-you line
-(§5.2). Each `NN-<slug>.html` is an HTML fragment whose first line is an HTML
+`meta.json`: `{title, hero, lede, extra_css}`. `lede` is a short note: one or
+two sentences of context the registry cannot show (an incident, a constraint, a
+plan). It never restates statuses: the generated At a glance block (§5.2) lists
+what is live, built, running, waiting and needs the owner. It may be empty, and
+a lede over 300 characters is a warning (R5.37). Each `NN-<slug>.html` is an HTML fragment whose first line is an HTML
 comment holding the section title: `<!-- title: The design -->`.
 `history.json`: `[{"date": "10 Oct 12:23", "change": "..."}]`, newest first.
 `decisions.json` is described in §5.4.
@@ -521,7 +523,8 @@ an HTML fragment beginning with `<title>`, as the Artifact tool expects (no
 - **R5.2** — Sections are numbered from 0 in order with no gaps, and the
   contents list shows the same numbers and titles.
 - **R5.3** — Section 0 is titled `Status and checklist` and holds, in order:
-  the stamp, the lede, the tiles, the status key and the checklist.
+  the stamp, the lede (omitted when empty, R5.7), the At a glance block (R5.33),
+  the tiles, the status key and the checklist.
 - **R5.4** — A feature artifact's last section is `History`, a table
   `Date | Change`, newest first. The full-progress artifact has no History.
 - **R5.5** — The stamp reads `Last update: DD Mon HH:MM (<timezone_label>)` in
@@ -529,14 +532,37 @@ an HTML fragment beginning with `<title>`, as the Artifact tool expects (no
 - **R5.6** — The full-progress artifact's section 1 lists every feature
   artifact with its link to the feature's file (R5.30, R5.31), its task ID
   range and one line on where it stands (taken from its `meta.json` lede's
-  first sentence). Section 1 is generated, so the full-progress artifact's
+  first sentence, or its generated summary when the lede is empty, R5.36). Section 1 is generated, so the full-progress artifact's
   content files `01-*.html` onward render as sections 2 and up.
 
-### 5.2 Lede and tiles
+### 5.2 Lede, At a glance and tiles
 
-- **R5.7** — The lede is the content lede followed by a generated sentence:
-  `Needs you: <ID> <item>; ...` listing every task in Needs you or Failed, or
-  `Nothing needs you.` when none is.
+- **R5.7** — The lede is the content lede alone, in `<p class="lede">`: a short
+  note (§4.4). When the content lede is empty the paragraph is omitted. The
+  statuses are not in it: the At a glance block's Needs you group (R5.34) lists
+  every task in Needs you or Failed, then every open decision (R5.25), and reads
+  `Nothing needs you.` when none waits. `check` finds a Needs you group that
+  differs from the generated set.
+- **R5.33** — Section 0 holds, right after the lede and before the tiles, an
+  *At a glance* block generated from the registry: `<div class="at-a-glance">`
+  with one `<div class="glance-group" data-glance="<kind>">` per kind, a
+  `glance-label` and a list of items one per line. An item is the task ID
+  (`<span class="task-id">`), the item text and, for an open status, the
+  Expected (and its `expected_basis`, R6.10). The block is the same on a feature
+  artifact (its own tasks and decisions) and on the full-progress artifact (all
+  tasks; decisions as in R5.25, which the full-progress artifact has none of),
+  and is deterministic (R7.4).
+- **R5.34** — The groups, in this order, each omitted when empty except the
+  first: `you` *Needs you* (tasks in Needs you, then Failed, then open decisions
+  as in R5.25); `running` *Running now* (Running tasks, soonest Expected first);
+  `built` *Built, not released* (Built, newest first); `waiting` *Waiting or on
+  hold* (Waiting, then On hold); `live` *Live in the last 24 hours* (Live tasks
+  whose `changed` is within 24 hours of the stamp, newest first, at most 8, then
+  an item `and N more`). To do tasks are not listed. A group in a feature
+  artifact never names a task of another owner.
+- **R5.35** — `check` finds a group that does not list exactly the tasks (and
+  decisions) of its statuses in the order of R5.34, a missing or extra group, a
+  group out of order, or a wrong `and N more`.
 - **R5.8** — Tiles show the count of each status that has at least one task,
   in the order of §6.1, computed from the registry.
 - **R5.9** — The full-progress artifact embeds the registry as
@@ -645,14 +671,22 @@ and drawn by the renderer; they are never written as a content section.
 
 **Where decisions surface**
 
-- **R5.25** — The generated needs-you sentence (R5.7) also lists every open,
-  unreplaced decision after the tasks, as `<ID> <question>`; the sentence is
+- **R5.25** — The Needs you group (R5.7, R5.34) also lists every open,
+  unreplaced decision after the tasks, as `<ID> <question>`; it reads
   `Nothing needs you.` only when no task and no decision waits. In the
   full-progress artifact's section 1 a feature's line ends with `n decisions
   open.` (`1 decision open.`) when it has any.
 - **R5.26** — `check` warns, without failing, for an open, unreplaced decision
   whose `task` is not a task of that feature in Needs you, or, when it names no
   task, when the feature has no task in Needs you.
+- **R5.36** — When a feature's lede is empty, its line in the full-progress
+  artifact's section 1 (R5.6) is its generated summary, from the registry:
+  counts of its Running, Built, Waiting, To do, On hold and Live tasks, then
+  `nothing needs you` or `N need(s) you`, as `2 running, 3 built, nothing needs
+  you.` The column is never blank.
+- **R5.37** — `check` warns, without failing, for a lede over 300 characters:
+  keep the note to one or two sentences; the At a glance block lists the
+  statuses. Records written before this requirement stay valid.
 
 ### 5.5 Standalone files, the publish copy and links
 
@@ -820,7 +854,7 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
 | `edit-content KEY --from DIR` | Replaces the artifact's content files in the record with those in DIR (after the fetch and reset of R4.13), validates, renders and commits. The session never edits the record worktree directly; the reset would discard it. It refuses an edit that removes a decision or changes the choice of a decided one (R5.15). |
 | `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design`, renders and commits; `default` removes it. |
 | `render [--all]` | Renders every artifact whose output would change (committed renders, with relative links). It is the migration of an older record (R8.14). |
-| `check [--record PATH]` | The conformance checks of §14; lists findings with their requirement ID, then notes (including retired pages, R4.22) and any warnings (R5.26), which do not change the exit code. |
+| `check [--record PATH]` | The conformance checks of §14; lists findings with their requirement ID, then notes (including retired pages, R4.22) and any warnings (R5.26, R5.37), which do not change the exit code. |
 | `pending` | Pushes the record first (R7.6), then lists the full-progress artifact when the hash of its committed render differs from `published_sha256` (a feature artifact is never listed, R9.5), and queued events. When it lists Full Progress it writes the publish copy (R5.31). Exit 1 when anything is listed. `--json` prints `{"artifacts": [{"key", "kind", "title", "file", "path", "url", "reason"}], "queue": [events]}`; `path` is the absolute path of the publish copy to publish. It also lists the retired pages (R4.22): `--json` adds `"retired": [{"key", "title", "url", "retired"}]`, and they never change the exit code. |
 | `mark-published KEY --url URL` | Records the URL and the hash of the committed render (R5.32). Refuses a feature artifact (R9.5). |
 | `mark-deleted [KEY] --url URL [--gone]` | Records that the owner confirmed and the session deleted a retired page (or that it no longer exists): moves it to `deleted` (R4.21). |
@@ -1126,7 +1160,7 @@ Reads the hook input; takes the task ID from the current branch name
 - **R13.1** — `tools/test_project_artifacts.py` builds throwaway git repos with
   a bare remote and proves each command, each check of §14 (one fixture per
   check that fails without it), INV-1 to INV-3, R4.13 to R4.29, R6.10, R6.11, R5.31, R5.32,
-  R7.4 to R7.6, R9.5 and R10.6.
+  R5.33 to R5.37, R7.4 to R7.6, R9.5 and R10.6.
 - **R13.2** — `tools/test_project_artifacts_hooks.py` feeds sample hook input
   to each hook and asserts the queue, the exit code and the output, including
   R8.4, R8.8 to R8.17 and INV-4, and that every hook does nothing without a
@@ -1148,7 +1182,8 @@ Reads the hook input; takes the task ID from the current branch name
 |---|---|
 | Titles start with `Feature: ` or `Full Progress: ` | R5.1 |
 | Exactly one full-progress artifact when any feature artifact exists | INV-2 |
-| Section 0 first, named `Status and checklist`, holding its five parts in order | R5.3 |
+| Section 0 first, named `Status and checklist`, holding the stamp, the lede (optional), At a glance, tiles, key and checklist in order | R5.3 |
+| At a glance block: groups in order; each group lists exactly its tasks; Live within 24 hours, at most 8 | R5.33 to R5.35 |
 | Sections numbered 0..N without gaps; contents match | R5.2 |
 | Stamp format, `datetime` attribute and zone label | R5.5 |
 | Checklist columns per kind | R6.4 |
@@ -1163,8 +1198,9 @@ Reads the hook input; takes the task ID from the current branch name
 | `decisions.json` valid: fields, IDs, options, choice, previews, images, task | R5.14 to R5.18 |
 | No hand-written Decisions section | R5.19 |
 | Decisions section just before History, newest first, one card per option, the choice marked, open and replaced decisions shown | R5.20 to R5.23 |
-| Needs-you sentence lists open decisions | R5.25 |
+| Needs you group equals the generated set (tasks, then open decisions); `Nothing needs you.` when empty | R5.7, R5.25 |
 | Warning: open decision with no task in Needs you | R5.26 |
+| Warning: lede over 300 characters | R5.37 |
 | Structure stylesheet byte-identical; token block complete | R5.10, R5.11 |
 | `extra_css` redefines no structure selector | R4.11 |
 | Rendered HTML equals a fresh render | INV-3 |

@@ -2195,7 +2195,7 @@ def cmd_check(args):
         findings += fresh_render_findings(rec, key)
     findings = sorted(set(findings))
     notes = rule_copy_notes() + done_notes(rec) + feature_url_notes(rec) + retired_notes(rec)
-    warnings = decision_warnings(rec)
+    warnings = decision_warnings(rec) + lede_warnings(rec)
     if getattr(args, 'json_out', False):
         result = {'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],
                   'notes': notes}
@@ -2209,6 +2209,15 @@ def cmd_check(args):
         for f, m in warnings:
             print('warning  %s: %s' % (f, m))
     return 1 if findings else 0
+
+
+def lede_warnings(rec):
+    """R5.37: a lede over 300 characters, per artifact's meta.json. [(file, message)]"""
+    warn_of = getattr(R, 'lede_warnings', None)
+    if warn_of is None:
+        return []
+    contents, _findings = load_contents(rec)
+    return [('content/%s/meta.json' % key, m) for key, content in sorted(contents.items()) for m in warn_of(content)]
 
 
 def decision_warnings(rec):
