@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T04:22+01:00",
+  "updated": "2026-10-11T09:50+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -756,11 +756,11 @@
       "id": "DS42",
       "owner": "project",
       "app": "",
-      "status": "Waiting",
+      "status": "Running",
       "item": "Remove four agent worktrees still in use",
-      "detail": "After 7.1.0 merged, cleanup.py removed every finished branch and three worktrees, but four agent worktrees refused (Permission denied): their agents still run background jobs inside them. Not killed (rule: stop only what you started). Re-run cleanup.py once those jobs end.",
+      "detail": "The PC restarted, so the agents' jobs ended; removing the four worktrees",
       "expected": "11 Oct ~05:00",
-      "changed": "2026-10-11T04:22+01:00"
+      "changed": "2026-10-11T09:50+01:00"
     },
     {
       "id": "MP1",
