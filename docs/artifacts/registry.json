@@ -646,11 +646,11 @@
       "id": "DS33",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Runner labels are a setting",
-      "detail": "U5 and U6: workflows no longer hard-code ubuntu-latest; a repository variable chosen in the wizard sets the runners. The 'fold short jobs' cost rule applies to hosted runners only (STACKSPEC 7.1.0).",
-      "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T01:22+01:00"
+      "detail": "Built in #40 and joined into DS37-integration (not released). Runner labels are a setting: done as contracted; Windows suites green; CI on its branch green (spec-lint; template build on Linux and Windows for Go, Rust and .NET).",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T03:00+01:00"
     },
     {
       "id": "DS34",
