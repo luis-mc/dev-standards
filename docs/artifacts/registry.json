@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T11:02+01:00",
+  "updated": "2026-10-11T11:06+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -326,11 +326,11 @@
       "id": "AR35",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "Re-render every page when the templates change",
-      "detail": "On branch AR35-rerender-on-template-change (8421878): suite 185/186, the one fake-group failure was the new test itself, fixed and re-run green",
-      "expected": "11 Oct ~11:30",
-      "changed": "2026-10-11T10:18+01:00"
+      "detail": "Released in luismc-artifacts 1.3.1 (#46, 17d306a); installed here at user and project scope",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T11:06+01:00"
     },
     {
       "id": "AR36",

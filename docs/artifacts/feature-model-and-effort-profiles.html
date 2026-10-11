@@ -364,7 +364,23 @@ a .task-id { color: inherit; }
   overflow-wrap: anywhere;
 }
 
-/* The path of a linked feature file, beside its link in the publish copy, to copy by hand */
+/* The publish copy's button that copies a feature file's file:/// address (R5.31) */
+.copy-link {
+  margin-left: .5rem;
+  padding: .1rem .5rem;
+  font: inherit;
+  font-size: .72rem;
+  line-height: 1.4;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.copy-link:hover, .copy-link:focus-visible { color: var(--signal); border-color: var(--signal); }
+
+/* The address itself, shown only when the clipboard refuses, to copy by hand */
 .local-path {
   display: block;
   font-family: var(--font-mono);
@@ -590,7 +606,7 @@ figure.diagram figcaption b{color:var(--ink)}
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Today</a><a href="#s3"><b>3</b>Where model and effort come from</a><a href="#s4"><b>4</b>Consequences</a><a href="#s5"><b>5</b>The profiles</a><a href="#s6"><b>6</b>Requirements and tests</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Model and effort profiles</h1><p>Which model and which effort every kind of agent and every skill uses, where each setting lives, and what follows from it. Built into <code>claude-setup</code> in luismc-project-setup.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T04:20+01:00">11 Oct 04:20</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T11:06+01:00">11 Oct 11:06</time> (Lisbon)</p>
 <p class="lede">The owner&rsquo;s default is now <strong>Opus at medium and Sonnet at medium everywhere</strong>, released in luismc-project-setup 13.0.0 with STACKSPEC 7.0.0 (MP7, 11 October). Role rules, per-skill profiles and the alias-drift warning came earlier, in 12.0.0 (DS6, #10). Every task here is also on <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">Full Progress: dev-standards</a>. <strong>Nothing needs you.</strong></p>
 <div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">9</div><div class="label">live</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>

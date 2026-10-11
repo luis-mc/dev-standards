@@ -364,7 +364,23 @@ a .task-id { color: inherit; }
   overflow-wrap: anywhere;
 }
 
-/* The path of a linked feature file, beside its link in the publish copy, to copy by hand */
+/* The publish copy's button that copies a feature file's file:/// address (R5.31) */
+.copy-link {
+  margin-left: .5rem;
+  padding: .1rem .5rem;
+  font: inherit;
+  font-size: .72rem;
+  line-height: 1.4;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.copy-link:hover, .copy-link:focus-visible { color: var(--signal); border-color: var(--signal); }
+
+/* The address itself, shown only when the clipboard refuses, to copy by hand */
 .local-path {
   display: block;
   font-family: var(--font-mono);
@@ -571,16 +587,16 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T10:45+01:00">11 Oct 10:45</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T11:06+01:00">11 Oct 11:06</time> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.3.0 is live (ARTIFACTSPEC 1.3.0, released 11 October) and installed on the owner&rsquo;s machine; 1.3.1 (AR35, AR37) is in progress. Every activity is a task, <em>Built</em> replaces <em>Done</em>, decisions are shown as option cards, and only Full Progress is published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">Full Progress: dev-standards</a>. Feature artifacts, this one included, are HTML files in <code>docs/artifacts/</code>. <strong>Nothing needs you.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">34</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">2</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">35</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next</strong></td></tr>
 <tr data-task="AR39"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">AR39</span>Release luismc-artifacts 1.3.1 (AR35, AR37)</td><td>PR #46 open; its CI is the one full run</td><td>11 Oct ~11:15<span class="expected-basis">spec-lint on the ready PR, ~17 min from 10:41</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
+<tr data-task="AR35"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR35</span>Re-render every page when the templates change</td><td>Released in luismc-artifacts 1.3.1 (#46, 17d306a); installed here at user and project scope</td><td>11 Oct</td></tr>
 <tr data-task="AR37"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">AR37</span>Full Progress feature links that work from claude.ai</td><td>On branch AR37-copy-feature-links (bca72f0): render 94/94, artifacts 184/184, change notes ok</td><td>11 Oct</td></tr>
-<tr data-task="AR35"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">AR35</span>Re-render every page when the templates change</td><td>On branch AR35-rerender-on-template-change (8421878): suite 185/186, the one fake-group failure was the new test itself, fixed and re-run green</td><td>11 Oct ~11:30</td></tr>
 <tr data-task="AR38"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR38</span>Current Where it stands lines</td><td>Section 1 now says luismc-artifacts 1.3.0 is live and 1.3.1 is in progress; the models line (13.0.0 brought the medium default) was already right</td><td>11 Oct</td></tr>
 <tr data-task="AR36"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR36</span>Update the installed plugins to the 7.1.0 release</td><td>Done at 04:22 (backup first): luismc-artifacts 1.3.0 and luismc-project-setup 13.1.0 installed for your user; sessions pick them up on restart.</td><td>11 Oct</td></tr>
 <tr data-task="AR33"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR33</span>Expected says what sets the estimate</td><td>Released in STACKSPEC 7.1.0 / luismc-project-setup 13.1.0 / luismc-artifacts 1.3.0 (#45, 48205a9, 04:17). --basis on task-add/set-task-status, stored as expected_basis, shown under Expected on open rows (max 80 chars, dropped when a row is Live, Built or Failed). luismc-artifacts 1.3.0.</td><td>11 Oct</td></tr>
