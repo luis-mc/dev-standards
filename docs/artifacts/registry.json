@@ -653,6 +653,16 @@
       "changed": "2026-10-11T01:23+01:00"
     },
     {
+      "id": "DS36",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Guard starters safe on Windows",
+      "detail": "U9: guard starters normalise path separators; the template build check also runs on Windows.",
+      "expected": "11 Oct ~05:30",
+      "changed": "2026-10-11T01:23+01:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
