@@ -24,6 +24,7 @@ import os
 import re
 import shutil
 import stat
+import subprocess
 import sys
 import tempfile
 import traceback
@@ -167,7 +168,7 @@ class Stub:
 # a throwaway repository
 # --------------------------------------------------------------------------
 
-DELIVERY_FILES = ["delivery_common.py", "cleanup.py"]
+DELIVERY_FILES = ["delivery_common.py", "fast_guards.py", "cleanup.py"]
 
 
 class World:
@@ -714,6 +715,192 @@ def sc_local_without_gh(t: T, shared: Path) -> None:
 
 
 # --------------------------------------------------------------------------
+# scenarios: scaffolding branches and stale push-check folders
+# --------------------------------------------------------------------------
+
+def scaffold_world(shared: Path):
+    """Branches an isolated agent leaves: empty ones (with and without a clean worktree), one with a
+    commit, one with a dirty worktree, one whose name is on the remote, a closed pull request."""
+    w = World(shared)
+    w.g("branch", "worktree-agent-bare", "main")
+    w.g("branch", "worktree-agent-clean", "main")
+    wt_clean = w.worktree("agent-clean", "worktree-agent-clean")
+    w.g("branch", "worktree-agent-dirty", "main")
+    wt_dirty = w.worktree("agent-dirty", "worktree-agent-dirty")
+    w.write("scratch.txt", "untracked\n", base=wt_dirty)
+    w.branch("worktree-agent-work", push=False)           # one commit of its own, never pushed
+    w.g("branch", "worktree-agent-onremote", "main")
+    w.g("push", "-q", "origin", "worktree-agent-onremote")  # empty, but its name is on the remote
+    w.g("branch", "worktree-agent-closed", "main")
+    w.stub.pr("worktree-agent-closed", "CLOSED", w.tip("worktree-agent-closed"))
+    return w, wt_clean, wt_dirty
+
+
+def sc_scaffolding(t: T, shared: Path) -> None:
+    for label, gh in (("with gh", True), ("without gh", False)):
+        for flags in (["--local"], []):
+            tag = "%s%s" % (label, " " + " ".join(flags) if flags else "")
+            w, wt_clean, wt_dirty = scaffold_world(shared)
+            r, rows = w.rows(*flags, gh=gh)
+            exit_is(t, "%s: exit 0" % tag, r, 0)
+            t.eq("%s: an empty scaffolding branch is removed" % tag,
+                 (status(rows, "worktree-agent-bare"), "worktree-agent-bare" in w.local_branches()), ("deleted", False))
+            t.eq("%s: so is one held by a clean worktree, worktree included" % tag,
+                 (status(rows, "worktree-agent-clean"), "worktree-agent-clean" in w.local_branches(), wt_clean.exists()),
+                 ("deleted", False, False))
+            t.check("%s: a commit not on main keeps the branch" % tag,
+                    is_kept(rows, "worktree-agent-work", "commits not on main")
+                    and "worktree-agent-work" in w.local_branches(), status(rows, "worktree-agent-work"))
+            t.check("%s: a dirty worktree keeps its branch" % tag,
+                    is_kept(rows, "worktree-agent-dirty", "uncommitted") and wt_dirty.exists()
+                    and "worktree-agent-dirty" in w.local_branches(), status(rows, "worktree-agent-dirty"))
+            t.check("%s: a name on the remote is an ordinary branch (kept, not scaffolding)" % tag,
+                    "worktree-agent-onremote" in w.local_branches() and "worktree-agent-onremote" in w.remote_heads()
+                    and is_kept(rows, "worktree-agent-onremote"), status(rows, "worktree-agent-onremote"))
+            t.check("%s: main is untouched" % tag, "main" in w.local_branches() and "main" not in rows)
+            if gh:
+                t.check("%s: a pull request closed without merging is not scaffolding" % tag,
+                        is_kept(rows, "worktree-agent-closed", "closed without merging")
+                        and "worktree-agent-closed" in w.local_branches(), status(rows, "worktree-agent-closed"))
+                t.check("%s: the remote-named one is kept as 'no pull request'" % tag,
+                        is_kept(rows, "worktree-agent-onremote", "no pull request"), status(rows, "worktree-agent-onremote"))
+            t.eq("%s: the remote is untouched" % tag, "worktree-agent-onremote" in w.remote_heads() and "main" in w.remote_heads(), True)
+
+    # --remote-only never touches local branches
+    w, _, _ = scaffold_world(shared)
+    before = w.snapshot()
+    r, rows = w.rows("--remote-only")
+    t.eq("--remote-only leaves scaffolding branches alone", w.snapshot(), before)
+
+    # dry run
+    w, wt_clean, _ = scaffold_world(shared)
+    before = w.snapshot()
+    r, rows = w.rows("--dry-run", "--local")
+    t.eq("--dry-run: an empty scaffolding branch is 'would delete'", status(rows, "worktree-agent-bare"), "would delete")
+    t.eq("--dry-run: nothing is changed", w.snapshot(), before)
+    t.check("--dry-run: the worktree is still there", wt_clean.is_dir())
+    t.has("--dry-run: plain output says would delete", w.cleanup("--dry-run", "--local", gh=False).out,
+          "worktree-agent-bare  would delete")
+
+    # a branch strictly behind the remote's default branch holds nothing
+    w, _, _ = scaffold_world(shared)
+    old = w.g("rev-parse", "main")
+    w.commit("main moves on")
+    w.g("push", "-q", "origin", "main")
+    w.g("branch", "worktree-agent-old", old)
+    r, rows = w.rows("--local", gh=False)
+    t.eq("a branch strictly behind the default branch holds nothing: removed",
+         (status(rows, "worktree-agent-old"), "worktree-agent-old" in w.local_branches()), ("deleted", False))
+
+    # the default branch on the remote decides, not the local one
+    w, _, _ = scaffold_world(shared)
+    w.commit("local main only, not pushed")
+    w.g("branch", "worktree-agent-ahead")  # at the unpushed local main
+    r, rows = w.rows("--local", gh=False)
+    t.check("a commit only on the local default branch (not on the remote's) keeps the branch",
+            is_kept(rows, "worktree-agent-ahead", "commits not on main"), status(rows, "worktree-agent-ahead"))
+
+
+def _mklink(link: Path, target: Path) -> None:
+    link.parent.mkdir(parents=True, exist_ok=True)
+    if os.name == "nt":
+        p = subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(target)], capture_output=True)
+        if p.returncode != 0:
+            raise RuntimeError("mklink failed: %s" % p.stderr)
+    else:
+        os.symlink(target, link, target_is_directory=True)
+
+
+def _unlink_dir(link: Path) -> None:
+    if os.name == "nt":
+        os.rmdir(link)
+    else:
+        os.unlink(link)
+
+
+def sc_push_check_sweep(t: T, shared: Path) -> None:
+    w = World(shared)
+    sha = w.g("rev-parse", "HEAD")
+    nm = w.work / "node_modules"
+    (nm / "pkg").mkdir(parents=True)
+    (nm / "pkg/index.js").write_text("keep\n", encoding="utf-8")
+    deep = w.work / "deps-web"
+    (deep / "dep").mkdir(parents=True)
+    (deep / "dep/x.js").write_text("keep\n", encoding="utf-8")
+    dead = subprocess.Popen([PY, "-c", "pass"])
+    dead.wait()
+    base = w.work / ".delivery/push-check"
+
+    def folder(pid: int, known: bool = True) -> Path:
+        path = base / ("%s-%d" % (sha[:12], pid))
+        base.mkdir(parents=True, exist_ok=True)
+        w.g("worktree", "add", "-q", "--detach", str(path), "main")
+        _mklink(path / "node_modules", nm)
+        _mklink(path / "apps/web/node_modules", deep)
+        if not known:  # git forgot it (its administrative directory is gone); the folder remains
+            for adm in (w.work / ".git/worktrees").iterdir():
+                gd = (adm / "gitdir").read_text(encoding="utf-8").strip().replace("\\", "/")
+                if gd.endswith("%s-%d/.git" % (sha[:12], pid)):
+                    shutil.rmtree(adm)
+        return path
+
+    def intact(label: str) -> None:
+        t.check("... the node_modules targets are intact (%s)" % label,
+                (nm / "pkg/index.js").read_text(encoding="utf-8") == "keep\n"
+                and (deep / "dep/x.js").read_text(encoding="utf-8") == "keep\n")
+
+    stale = folder(dead.pid)
+    live = folder(os.getpid())
+    before = w.snapshot()
+    r, rows = w.rows("--dry-run", "--local")
+    key = "push-check " + stale.name
+    t.eq("--dry-run: a stale folder is 'would delete'", status(rows, key), "would delete")
+    t.check("--dry-run: ... and still there with its links", stale.is_dir() and (stale / "node_modules/pkg").is_dir())
+    t.eq("--dry-run: nothing else changes", w.snapshot(), before)
+    t.has("--dry-run: plain output", w.cleanup("--dry-run", "--local").out, "push-check %s  would delete" % stale.name)
+
+    r, rows = w.rows("--local")
+    exit_is(t, "sweep: exit 0", r, 0)
+    t.eq("a stale folder (dead pid) is deleted", (status(rows, key), stale.exists()), ("deleted", False))
+    intact("stale")
+    t.check("... and git no longer lists it", stale.name not in w.worktrees())
+    t.check("a folder whose pid is alive is kept",
+            is_kept(rows, "push-check " + live.name, "running") and live.is_dir()
+            and (live / "node_modules/pkg/index.js").is_file(), status(rows, "push-check " + live.name))
+    intact("live")
+
+    # git forgot the folder: the folder goes, and the worktree list is pruned
+    forgotten = folder(dead.pid + 100000, known=False)
+    t.check("control: git does not list the forgotten folder",
+            all(forgotten.name not in x for x in w.g("worktree", "list").splitlines()))
+    r, rows = w.rows()  # default mode sweeps too
+    k2 = "push-check " + forgotten.name
+    t.eq("a folder git no longer knows is removed", (status(rows, k2), forgotten.exists()), ("deleted", False))
+    intact("unknown to git")
+    t.check("... the live one is still kept", live.is_dir() and (live / "node_modules/pkg/index.js").is_file())
+
+    # a registered worktree whose folder is gone is pruned
+    gone = folder(dead.pid + 200000)
+    _unlink_dir(gone / "node_modules")
+    _unlink_dir(gone / "apps/web/node_modules")
+    tdg.rmtree(gone)
+    w.rows("--local")
+    t.check("a registered worktree with no folder is pruned", gone.name not in w.worktrees())
+
+    # --remote-only does not sweep
+    again = folder(dead.pid + 300000)
+    w.rows("--remote-only")
+    t.check("--remote-only leaves push-check folders alone", again.is_dir())
+    # a name that is not <sha>-<pid> is kept
+    odd = base / "oddly-named"
+    odd.mkdir()
+    r, rows = w.rows("--local")
+    t.check("a folder not named <sha12>-<pid> is kept", is_kept(rows, "push-check oddly-named") and odd.is_dir(),
+            status(rows, "push-check oddly-named"))
+    t.eq("... the stale one beside it is deleted", (status(rows, "push-check " + again.name), again.exists()), ("deleted", False))
+    intact("end")
+
+# --------------------------------------------------------------------------
 # scenarios: join.py
 # --------------------------------------------------------------------------
 
@@ -944,6 +1131,29 @@ MUTANTS = [
      "", "local_without_gh"),
     ("no gh: upstream-gone is never true", D,
      'return merge.removeprefix("refs/heads/") not in ctx.remote_heads', "return False", "local_without_gh"),
+    # scaffolding branches and push-check folders
+    ("a scaffolding branch with a commit is removed", D, "    if int(p.stdout.strip()) > 0:", "    if int(p.stdout.strip()) > 99:", "scaffolding"),
+    ("a scaffolding branch whose name is on the remote is removed", D,
+     "branch in ctx.remote_heads or branch in ctx.result_refs:", "False:", "scaffolding"),
+    ("scaffolding branches need gh", D,
+     '    if not (v.cannot_classify or v.reason == "no pull request"):', '    if not v.reason == "no pull request":', "scaffolding"),
+    ("scaffolding branches are compared with the local default branch", D,
+     '"refs/remotes/%s..refs/heads/%s" % (base, branch)', '"refs/heads/%s..refs/heads/%s" % (ctx.default, branch)', "scaffolding"),
+    ("the rule also finishes a branch whose pull request was closed", D,
+     'or v.reason == "no pull request"):', 'or v.reason.startswith("pull requests closed") or v.reason == "no pull request"):', "scaffolding"),
+    ("a live push-check folder is swept", D, "        if pid_alive(int(suffix)):", "        if False:", "push_check_sweep"),
+    ("--dry-run sweeps push-check folders", D, '        if ctx.dry:\n            row.status = "would delete"',
+     '        if False:\n            row.status = "would delete"', "push_check_sweep"),
+    ("the sweep deletes link targets", D, "        stuck = [lk for lk in links if not fg.remove_link(lk)]\n",
+     "        for lk in links:\n            shutil.rmtree(os.path.realpath(lk), ignore_errors=True)\n"
+     "        stuck = [lk for lk in links if not fg.remove_link(lk)]\n", "push_check_sweep"),
+    ("the sweep leaves the folder git forgot", D, "        if entry.is_dir():\n            fg.remove_worktree",
+     "        if False:\n            fg.remove_worktree", "push_check_sweep"),
+    ("the sweep never runs", D, "    if do_local:\n        rows += sweep_push_check(ctx)",
+     "    if False:\n        rows += sweep_push_check(ctx)", "push_check_sweep"),
+    ("--remote-only sweeps push-check folders", D, "    if do_local:\n        rows += sweep_push_check(ctx)",
+     "    if True:\n        rows += sweep_push_check(ctx)", "push_check_sweep"),
+    ("a folder not named <sha>-<pid> is swept", D, "        if not suffix.isdigit():", "        if False:", "push_check_sweep"),
     # join.py
     ("join never runs cleanup.py", "scripts/delivery/join.py",
      'parent / "cleanup.py"', 'parent / "nocleanup.py"', "join_cleanup"),
@@ -961,6 +1171,8 @@ SCENARIOS = {
     "dry_run": sc_dry_run,
     "worktrees": sc_worktrees,
     "local_without_gh": sc_local_without_gh,
+    "scaffolding": sc_scaffolding,
+    "push_check_sweep": sc_push_check_sweep,
     "join_cleanup": sc_join_cleanup,
     "workflow": sc_workflow,
     "assets": sc_assets,
