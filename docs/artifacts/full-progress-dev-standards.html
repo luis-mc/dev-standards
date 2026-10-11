@@ -1895,12 +1895,11 @@ tr.status-group.release-group td { color: var(--ink); }
    "id": "DS56",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "AR46 train: join, PR CI, merge, cleanup",
-   "detail": "PR #54 CI rerun on 96cc49d from 00:18: guard-test fix, and test_session_guard.py now runs in CI (TC9 never wired it in, so the first run passed with it failing)",
-   "expected": "12 Oct ~00:26",
-   "changed": "2026-10-12T00:20+01:00",
-   "expected_basis": "#53: CI 3.4 min, merge+cleanup 4",
+   "detail": "#54 merged on green 00:22 (rerun after two join fixes: suites test pin, and test_session_guard.py now in CI). Cleanup done; an empty DS56 folder stays locked by this session's shell until it ends",
+   "expected": "12 Oct",
+   "changed": "2026-10-12T00:23+01:00",
    "release": 4,
    "phases": [
     {
@@ -2135,51 +2134,27 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
-<div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
-<ul>
-<li data-glance-task="DS56"><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~00:26</span><span class="glance-basis">#53: CI 3.4 min, merge+cleanup 4</span></li>
-</ul>
-</div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
 <li data-glance-task="AR46"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</li>
+<li data-glance-task="DS56"><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</li>
 <li data-glance-task="DS57"><span class="task-id">DS57</span>cleanup.py: no failure when the train-cleanup workflow got there first</li>
 <li data-glance-task="DS55"><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup</li>
 <li data-glance-task="TC9"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</li>
 <li data-glance-task="TC10"><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check</li>
 <li data-glance-task="TC11"><span class="task-id">TC11</span>Use the session guards in dev-standards itself</li>
 <li data-glance-task="AR45"><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release</li>
-<li data-glance-task="DS54"><span class="task-id">DS54</span><span class="release-name">RELEASE-2</span>AR45 train: join, PR CI, merge, cleanup</li>
-<li class="glance-more">and 77 more</li>
+<li class="glance-more">and 78 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">131</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">132</div><div class="label">tasks live</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<figure class="release-timeline">
-<figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS56 (AR46 train: join, PR CI, merge, cleanup) expected live about 00:26, worst case 00:36." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">12 Oct 00:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">12 Oct 00:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">01:00</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-4 · AR46 train: join, PR CI, merge, cleanup</title>RELEASE-4 · AR46 train: j…</text>
-<text class="rt-sub" x="0" y="77"><title>AR46, DS57</title>AR46, DS57</text>
-<rect class="rt-bar agents" x="226" y="52" width="60.7" height="22"><title>agents 00:03-00:10</title></rect>
-<rect class="rt-bar join" x="286.7" y="52" width="69.3" height="22"><title>join 00:10-00:18</title></rect>
-<rect class="rt-bar ci" x="356" y="52" width="34.7" height="22"><title>PR CI 00:18-00:22</title></rect>
-<rect class="rt-bar merge" x="390.7" y="52" width="34.7" height="22"><title>merge + cleanup 00:22-00:26</title></rect>
-<rect class="rt-risk" x="425.3" y="58" width="86.7" height="10"><title>+1 fix round</title></rect>
-<polygon class="rt-worst" points="512,51 519,63 512,75 505,63"/>
-<text class="rt-risk-label" x="523" y="67">+1 fix round → worst ~00:36</text>
-<polygon class="rt-expected" points="425.3,50 433.3,63 425.3,76 417.3,63"/>
-<text class="rt-live-label" x="425.3" y="92">live ~00:26</text>
-<line class="rt-now" x1="399.3" y1="36" x2="399.3" y2="148"/><text class="rt-now-label" x="399.3" y="161">now 00:23</text>
-</svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
-</figure>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group release-group" data-group="release-4"><td colspan="5"><strong>RELEASE-4 · live ~00:26 · worst ~00:36</strong></td></tr>
-<tr data-task="DS56"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</td><td></td><td>PR #54 CI rerun on 96cc49d from 00:18: guard-test fix, and test_session_guard.py now runs in CI (TC9 never wired it in, so the first run passed with it failing)</td><td>12 Oct ~00:26<span class="expected-basis">#53: CI 3.4 min, merge+cleanup 4</span></td></tr>
-<tr data-task="AR46"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</a></td><td><code>luismc-artifacts</code></td><td>Released in #54 (eaeec1d, 00:22): ARTIFACTSPEC 1.6.1, luismc-artifacts 1.6.2</td><td>12 Oct</td></tr>
-<tr data-task="DS57"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS57</span>cleanup.py: no failure when the train-cleanup workflow got there first</td><td><code>delivery scripts</code></td><td>Released in #54 (eaeec1d, 00:22): luismc-project-setup 14.2.1; its first real run updated the train release without the collision</td><td>12 Oct</td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
+<tr data-task="AR46"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</a><span class="release-line"><span class="release-name">RELEASE-4</span></span></td><td><code>luismc-artifacts</code></td><td>Released in #54 (eaeec1d, 00:22): ARTIFACTSPEC 1.6.1, luismc-artifacts 1.6.2</td><td>12 Oct</td></tr>
+<tr data-task="DS56"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</td><td></td><td>#54 merged on green 00:22 (rerun after two join fixes: suites test pin, and test_session_guard.py now in CI). Cleanup done; an empty DS56 folder stays locked by this session&#x27;s shell until it ends</td><td>12 Oct</td></tr>
+<tr data-task="DS57"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS57</span>cleanup.py: no failure when the train-cleanup workflow got there first<span class="release-line"><span class="release-name">RELEASE-4</span></span></td><td><code>delivery scripts</code></td><td>Released in #54 (eaeec1d, 00:22): luismc-project-setup 14.2.1; its first real run updated the train release without the collision</td><td>12 Oct</td></tr>
 <tr data-task="DS55"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup</td><td></td><td>#53 merged on green 00:00 (CI 3m23s); join fix: suites.json lacked TC10&#x27;s new test. Cleanup raced the train-cleanup workflow (release and TC9 branch already gone); a second run finished it and added the delivery log</td><td>12 Oct</td></tr>
 <tr data-task="TC9"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</a><span class="release-line"><span class="release-name">RELEASE-3</span></span></td><td><code>luismc-project-setup</code></td><td>Released in #53 (fe3af00, 00:00): STACKSPEC 8.2.0, luismc-project-setup 14.2.0, luismc-artifacts 1.6.1</td><td>12 Oct</td></tr>
 <tr data-task="TC10"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check</a><span class="release-line"><span class="release-name">RELEASE-3</span></span></td><td><code>luismc-project-setup</code></td><td>Released in #53 (fe3af00, 00:00): STACKSPEC 8.2.0, luismc-project-setup 14.2.0, luismc-artifacts 1.6.1</td><td>12 Oct</td></tr>

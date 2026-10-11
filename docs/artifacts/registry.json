@@ -1209,12 +1209,11 @@
       "id": "DS56",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "AR46 train: join, PR CI, merge, cleanup",
-      "detail": "PR #54 CI rerun on 96cc49d from 00:18: guard-test fix, and test_session_guard.py now runs in CI (TC9 never wired it in, so the first run passed with it failing)",
-      "expected": "12 Oct ~00:26",
-      "changed": "2026-10-12T00:20+01:00",
-      "expected_basis": "#53: CI 3.4 min, merge+cleanup 4",
+      "detail": "#54 merged on green 00:22 (rerun after two join fixes: suites test pin, and test_session_guard.py now in CI). Cleanup done; an empty DS56 folder stays locked by this session's shell until it ends",
+      "expected": "12 Oct",
+      "changed": "2026-10-12T00:23+01:00",
       "release": 4,
       "phases": [
         {
