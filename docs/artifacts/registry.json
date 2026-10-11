@@ -276,11 +276,11 @@
       "id": "AR30",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "Enable luismc-artifacts in dev-standards' project settings",
-      "detail": "Committed on DS27-integration (6e794ba): .claude/settings.json enables luismc-artifacts@dev-standards for every session of this repo. Ships with DS27; then the local-only setting is removed.",
+      "detail": "Released in luismc-artifacts 1.2.0 / luismc-project-setup 13.0.1 (#42, 5babc30, 03:02). .claude/settings.json enables luismc-artifacts for every session of this repo.",
       "expected": "11 Oct",
-      "changed": "2026-10-11T00:53+01:00"
+      "changed": "2026-10-11T03:03+01:00"
     },
     {
       "id": "AR31",
