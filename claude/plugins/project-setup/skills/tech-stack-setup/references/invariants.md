@@ -36,6 +36,9 @@ pull requests of different trains overloaded a shared runner.
 - §13.5: the gate fetches its base first; end-to-end tests at the gate run the
   specs a change affects; the pre-push hook compares with the branch the push
   forks from.
+- §13.1: a default-branch run also skips when the merge differs from the tested
+  pull-request head only in paths the workflow ignores (docs, Markdown, apps with
+  their own workflows), so docs committed meanwhile do not re-run the suite.
 - §13.6 (SHOULD): branches add change notes and the release folds them; on
   shared runners, one ready pull request's CI runs at a time.
 
@@ -1305,8 +1308,11 @@ without editing its workflows.
 A push run on the default branch MUST NOT repeat a suite that already passed.
 When the pushed commit's tree is identical to the tree of a pull-request head
 whose run of the same workflow passed, the default-branch run records that and
-skips its jobs; otherwise it runs in full. The comparison is by tree, so a merge
-that changed anything runs the suite, and a failure to decide runs it too.
+skips its jobs; otherwise it runs in full. The comparison is by tree, except
+that paths the workflow itself ignores (documentation, Markdown, apps tested by
+their own workflows) may differ: a merge that differs from the tested head only
+there skips too. A merge that changed anything else runs the suite, and a
+failure to decide runs it too.
 
 **Build artifacts.** The CI platform MUST keep only the newest build artifact of
 each name. A build artifact is any output a workflow uploads to the platform's
