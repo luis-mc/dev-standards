@@ -686,7 +686,7 @@ tr.status-group.release-group td { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-12T00:13+01:00",
+ "updated": "2026-10-12T00:20+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1897,10 +1897,10 @@ tr.status-group.release-group td { color: var(--ink); }
    "app": "",
    "status": "Running",
    "item": "AR46 train: join, PR CI, merge, cleanup",
-   "detail": "Joined AR46, DS57; ready PR #54. My suites.json edit broke a guard test; the fix waits for the frozen CI run to end, then pushes and CI reruns",
-   "expected": "12 Oct ~00:28",
-   "changed": "2026-10-12T00:13+01:00",
-   "expected_basis": "frozen run ends ~00:15, rerun 3.5 min, merge+cleanup 4",
+   "detail": "PR #54 CI rerun on 96cc49d from 00:18: guard-test fix, and test_session_guard.py now runs in CI (TC9 never wired it in, so the first run passed with it failing)",
+   "expected": "12 Oct ~00:26",
+   "changed": "2026-10-12T00:20+01:00",
+   "expected_basis": "#53: CI 3.4 min, merge+cleanup 4",
    "release": 4,
    "phases": [
     {
@@ -1911,17 +1911,17 @@ tr.status-group.release-group td { color: var(--ink); }
     {
      "name": "join",
      "start": "2026-10-12T00:10+01:00",
-     "end": "2026-10-12T00:16+01:00"
+     "end": "2026-10-12T00:18+01:00"
     },
     {
      "name": "ci",
-     "start": "2026-10-12T00:16+01:00",
-     "end": "2026-10-12T00:24+01:00"
+     "start": "2026-10-12T00:18+01:00",
+     "end": "2026-10-12T00:22+01:00"
     },
     {
      "name": "merge",
-     "start": "2026-10-12T00:24+01:00",
-     "end": "2026-10-12T00:28+01:00"
+     "start": "2026-10-12T00:22+01:00",
+     "end": "2026-10-12T00:26+01:00"
     }
    ],
    "risk": {
@@ -2130,14 +2130,14 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-12T00:13+01:00">12 Oct 00:13</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-12T00:20+01:00">12 Oct 00:20</time> (Lisbon)</p>
 <div class="at-a-glance">
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
-<li data-glance-task="DS56"><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~00:28</span><span class="glance-basis">frozen run ends ~00:15, rerun 3.5 min, merge+cleanup 4</span></li>
+<li data-glance-task="DS56"><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~00:26</span><span class="glance-basis">#53: CI 3.4 min, merge+cleanup 4</span></li>
 </ul>
 </div>
 <div class="glance-group glance-built" data-glance="built"><div class="glance-label">Built, not released</div>
@@ -2164,25 +2164,25 @@ tr.status-group.release-group td { color: var(--ink); }
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS56 (AR46 train: join, PR CI, merge, cleanup) expected live about 00:28, worst case 00:38." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">00:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">00:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">01:00</text></g>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS56 (AR46 train: join, PR CI, merge, cleanup) expected live about 00:26, worst case 00:36." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">00:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">00:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">01:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-4 · AR46 train: join, PR CI, merge, cleanup</title>RELEASE-4 · AR46 train: j…</text>
 <text class="rt-sub" x="0" y="77"><title>AR46, DS57</title>AR46, DS57</text>
 <rect class="rt-bar agents" x="226" y="52" width="60.7" height="22"><title>agents 00:03-00:10</title></rect>
-<rect class="rt-bar join" x="286.7" y="52" width="52" height="22"><title>join 00:10-00:16</title></rect>
-<rect class="rt-bar ci" x="338.7" y="52" width="69.3" height="22"><title>PR CI 00:16-00:24</title></rect>
-<rect class="rt-bar merge" x="408" y="52" width="34.7" height="22"><title>merge + cleanup 00:24-00:28</title></rect>
-<rect class="rt-risk" x="442.7" y="58" width="86.7" height="10"><title>+1 fix round</title></rect>
-<polygon class="rt-worst" points="529.3,51 536.3,63 529.3,75 522.3,63"/>
-<text class="rt-risk-label" x="540.3" y="67">+1 fix round → worst ~00:38</text>
-<polygon class="rt-expected" points="442.7,50 450.7,63 442.7,76 434.7,63"/>
-<text class="rt-live-label" x="442.7" y="92">live ~00:28</text>
-<line class="rt-now" x1="312.7" y1="36" x2="312.7" y2="148"/><text class="rt-now-label" x="312.7" y="161">now 00:13</text>
+<rect class="rt-bar join" x="286.7" y="52" width="69.3" height="22"><title>join 00:10-00:18</title></rect>
+<rect class="rt-bar ci" x="356" y="52" width="34.7" height="22"><title>PR CI 00:18-00:22</title></rect>
+<rect class="rt-bar merge" x="390.7" y="52" width="34.7" height="22"><title>merge + cleanup 00:22-00:26</title></rect>
+<rect class="rt-risk" x="425.3" y="58" width="86.7" height="10"><title>+1 fix round</title></rect>
+<polygon class="rt-worst" points="512,51 519,63 512,75 505,63"/>
+<text class="rt-risk-label" x="523" y="67">+1 fix round → worst ~00:36</text>
+<polygon class="rt-expected" points="425.3,50 433.3,63 425.3,76 417.3,63"/>
+<text class="rt-live-label" x="425.3" y="92">live ~00:26</text>
+<line class="rt-now" x1="373.3" y1="36" x2="373.3" y2="148"/><text class="rt-now-label" x="373.3" y="161">now 00:20</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group release-group" data-group="release-4"><td colspan="5"><strong>RELEASE-4 · live ~00:28 · worst ~00:38</strong></td></tr>
-<tr data-task="DS56"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</td><td></td><td>Joined AR46, DS57; ready PR #54. My suites.json edit broke a guard test; the fix waits for the frozen CI run to end, then pushes and CI reruns</td><td>12 Oct ~00:28<span class="expected-basis">frozen run ends ~00:15, rerun 3.5 min, merge+cleanup 4</span></td></tr>
+<tr class="status-group release-group" data-group="release-4"><td colspan="5"><strong>RELEASE-4 · live ~00:26 · worst ~00:36</strong></td></tr>
+<tr data-task="DS56"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</td><td></td><td>PR #54 CI rerun on 96cc49d from 00:18: guard-test fix, and test_session_guard.py now runs in CI (TC9 never wired it in, so the first run passed with it failing)</td><td>12 Oct ~00:26<span class="expected-basis">#53: CI 3.4 min, merge+cleanup 4</span></td></tr>
 <tr data-task="AR46"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</a></td><td><code>luismc-artifacts</code></td><td>33f81ab: a timed release within 24 h of the stamp stays on the time axis across midnight (ticks dated at midnight); R5.42a check; 2 new cases reproduce 23:57 -&gt; 00:05. Branch CI green 3m32s; guard refused a local full renderer run, as designed</td><td>12 Oct</td></tr>
 <tr data-task="DS57"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DS57</span>cleanup.py: no failure when the train-cleanup workflow got there first</td><td><code>delivery scripts</code></td><td>0731837: an existing train release is updated, a remote branch already gone counts as deleted; 2 race scenarios; branch CI green 1m59s</td><td>12 Oct</td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
