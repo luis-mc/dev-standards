@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T03:05+01:00",
+  "updated": "2026-10-11T03:26+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -606,11 +606,11 @@
       "id": "DS29",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "E2E runs only the affected specs",
-      "detail": "From another project's learnings (U1): gate.json maps e2e specs to paths; a branch gate runs only the specs its change touches, anything unmapped or a config/contract change runs all; the ready PR's CI still runs all.",
-      "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T01:22+01:00"
+      "detail": "Built in #38 and joined (not released): gate.json e2e_map; a branch gate runs only the affected specs ({e2e_specs}); unmapped UI files, full_on hits, a widened gate or no map run the full suite; the result records selection and specs.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T03:26+01:00"
     },
     {
       "id": "DS30",
