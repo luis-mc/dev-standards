@@ -1,11 +1,12 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
 **Last reviewed:** 2026-10-11
+**Changes in 1.3.0:** an open row's Expected can say what sets the estimate: an optional `expected_basis` (at most 80 characters, open statuses only), given with `--basis`, shown in a small muted line under the Expected value and dropped when the row goes Live, Built or Failed (R6.10, R6.11); and where the record worktree lives is a per-project setting, the environment variable `LUISMC_ARTIFACTS_WORKTREE` first, else `record_worktree` in the git-ignored `.claude/artifacts-local.json`, else the default, resolved by one function for the script and the hooks, with the old worktree removed when the setting moves (R4.24 to R4.27). Nothing is required of an existing record or project.
 **Changes in 1.2.0:** the claude.ai pages that feature artifacts had before they became files are retired, not lost: their URLs move to the manifest's `retired` list, are recovered from the history of `manifest.json` when an earlier version already dropped them, are listed by `pending`, `check` and the hooks, and are deleted only with the owner's confirmation, then recorded with `mark-deleted` (R4.19 to R4.23, R8.13); and a project upgrading from an older version needs no manual step: the after-command hook delivers the rule once per session without a restart, the hooks tell the session to migrate an older record and the end-of-turn hook blocks until it has, and an older copy of the rule file is removed (R8.12, R8.14, R8.15, R10.6). The record format string stays `ARTIFACTSPEC 1.0.0`.
 **Changes in 1.1.0:** the activity rule and the status `Built` (R3.2 to R3.5, R6.1, R6.9), the rule delivered at session start (R8.9, R10.4, R10.5), the end-of-turn check on background work (R8.8, R8.10), §5.4 Decisions (`decisions.json`, R5.14 to R5.26), feature artifacts as standalone HTML files in the repository that are never published (R5.27 to R5.29, R9.5), Full Progress published once per turn, at its end (R3.1, R9.1), with local-file links to the feature files (§5.5, R5.30 to R5.32), the Earlier fold for `Live` rows only (R6.3), and the end-of-turn background check armed by background agents only (R8.8). Plugin 1.1.1 made R7.1 incremental: a writing command refuses only a change that adds a finding (R7.1, R7.1a). The record format string in `manifest.json` and `registry.json` stays `ARTIFACTSPEC 1.0.0`: existing records stay valid.
 
@@ -104,6 +105,20 @@ copy, find and delete the old pages). 1.2.0 adds:
 - an older copy of the rule file is removed by the migration commit (R8.15,
   R10.6).
 
+### 0.6 What changed in 1.3.0
+
+An Expected time with no stated reason cannot be judged: the owner could not tell
+an estimate that waits on an agent slot from one that waits on a person. And a
+project that keeps all its worktrees outside the repository had no way to keep
+the record worktree there. 1.3.0 adds, both optional:
+
+- `expected_basis`, the `--basis` option of `task-add` and `set-task-status`, its
+  display under the Expected value and its checks (R6.10, R6.11);
+- the record worktree location as a setting, one resolver, and the move of an
+  existing worktree (R4.24 to R4.27).
+
+The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new field is valid.
+
 ---
 
 ## Decision record
@@ -130,6 +145,8 @@ copy, find and delete the old pages). 1.2.0 adds:
 | D18 | Does a retired page block anything? | No: not `pending`'s exit code, not the end-of-turn hook. They are listed, and the session is told once to ask the owner. | Publishing never waits for a decision only the owner can take (R4.22, R8.13). |
 | D19 | How does an upgraded project get the new rule and migrate? | The after-command hook delivers the rule once per session and rule text; the hooks tell the session to run `render`; the end-of-turn hook blocks until the record is migrated. | No restart and no manual step (R8.12, R8.14). |
 | D20 | What happens to the rule copy that 1.0.0 `init` made? | The migration commit deletes it when its text is one a released version shipped; an edited copy stays and `check` notes it. | The old text, which says to publish feature artifacts, stops competing with the rule (R8.15, R10.6). |
+| D21 | Is the basis of an estimate part of Expected? | No: its own optional field `expected_basis`, not a `; note`. | Expected stays machine-readable (R6.6); the basis is shown apart and validated apart (R6.10). |
+| D22 | Where does the record worktree live? | By default in the repository; a project may set another absolute path, by environment variable or a git-ignored local file. | The value is machine-specific and is never committed; the plugin names no project path (R4.24, R4.26). |
 
 ---
 
@@ -325,7 +342,8 @@ docs/artifacts/
   its ID, so a feature task may also carry a prefix from `project_prefixes`.
 - **R4.7** — `status` is one of the eight statuses of §6.1. `changed` is set by
   the script on every status change, never by hand.
-- **R4.8** — `expected` follows §6.4. `item` is at most 80 characters; `detail`
+- **R4.8** — `expected` follows §6.4; an open row may also carry
+  `expected_basis` (R6.10). `item` is at most 80 characters; `detail`
   is plain text, at most 600 characters.
 - **R4.9** — Tasks are stored in ID order (prefix, then number); rendering
   orders them (§6.2), the file does not.
@@ -355,8 +373,8 @@ comment holding the section title: `<!-- title: The design -->`.
 
 ### 4.6 Committing the record
 
-- **R4.13** — The script writes the record in a record worktree at
-  `<repo>/.claude/worktrees/artifacts-record`, a detached worktree of
+- **R4.13** — The script writes the record in a record worktree at the location
+  of R4.24 (by default `<repo>/.claude/worktrees/artifacts-record`), a detached worktree of
   `origin/<default_branch>`, created on first use. Before each change it
   fetches and resets that worktree to `origin/<default_branch>`; after it, it
   commits and pushes to `<default_branch>`. The session's own working tree is
@@ -421,6 +439,36 @@ comment holding the section title: `<!-- title: The design -->`.
   deletes each confirmed page with the Artifact tool, then runs `mark-deleted`.
   A page the owner declines stays listed. The rule file says so (R10.3).
   Verified by `rule_file_carries_the_retired_pages_rule`.
+
+### 4.8 Where the record worktree lives
+
+- **R4.24** — The location of the record worktree is a per-project setting,
+  resolved by one function, `artifact_queue.record_worktree(root)`, that the
+  script and every hook call: the environment variable
+  `LUISMC_ARTIFACTS_WORKTREE` (an absolute path) first, else `record_worktree`
+  in `<repo>/.claude/artifacts-local.json`, else
+  `<repo>/.claude/worktrees/artifacts-record`. `project_artifacts.py worktree`
+  prints the result, so a skill or a person never computes it. Verified by
+  `test_worktree_setting_environment`, `test_worktree_setting_local_file`,
+  `test_worktree_setting_default` and `hooks_and_script_agree_on_the_worktree`.
+- **R4.25** — A setting that is not an absolute path (on Windows, one with a
+  drive or a UNC share), is an empty value in the local file, is the repository
+  or holds it, lies inside `.git`, or a local file that is not a JSON object, is
+  refused (an empty environment variable counts as unset): the script
+  exits 2 naming the setting and changes nothing; a hook, which never blocks
+  on it, reads the default. Verified by `test_worktree_setting_refused`.
+- **R4.26** — The value is machine-specific: `init` adds
+  `.claude/artifacts-local.json` to `.gitignore`, the record never holds it, and
+  the plugin's files name no project's path. Verified by
+  `test_init_ignores_the_local_settings_file`.
+- **R4.27** — When the setting points elsewhere than the worktree git has
+  registered for the record (the default location, or the one the script last
+  used, remembered in the repository's common git directory), the next command
+  removes the old one with `git worktree remove --force` (it is a disposable
+  checkout of the default branch) and creates the new one. If the old one holds
+  record commits not pushed, the command exits 1 and removes nothing. Verified
+  by `test_moving_the_worktree_removes_the_old_one` and
+  `test_moving_refuses_unpushed_commits`.
 
 ---
 
@@ -692,6 +740,27 @@ double-click.
   finding. Verified by `test_done_is_a_deprecated_alias_of_built` and
   `test_old_done_records_migrate_to_built`.
 
+### 6.6 The basis of Expected
+
+- **R6.10** — A task on an open status (Running, Waiting, To do, Needs you, On
+  hold) may carry `expected_basis`, a plain-text line of at most 80 characters
+  saying what sets the estimate: what it waits on and how long (for example
+  `agent slot ~01:30, ~1.5 h`). `task-add` and `set-task-status` take it as
+  `--basis TEXT`; `--basis ""` clears it on `set-task-status`; the field is
+  absent when there is none. A task whose status becomes Live, Built or Failed
+  loses it, as Expected itself is replaced (R6.7, R6.8); `--basis` given for such
+  a status is ignored with a warning. `check` reports an empty or longer
+  basis, and a basis on a row that is not open (R6.10). Verified by
+  `test_basis_is_stored`, `test_basis_dropped_when_closed`, `test_basis_over_80_refused` and the basis
+  fixtures of `test_check_fixtures`.
+- **R6.11** — Both artifact kinds show the basis in a small, muted line under the
+  Expected value (`span.expected-basis`, design tokens only, wrapping at phone
+  width), on open rows only; the checklist still equals the registry (INV-1).
+  The rule file says: when you give an Expected time, give its basis too (what
+  it waits on and how long) (R10.3), and the skills that give one say so.
+  Verified by `render_shows_the_expected_basis`, `check_expected_basis_matches_registry`,
+  `basis_style_uses_tokens_and_wraps` and `rule_file_carries_the_basis_rule`.
+
 ---
 
 ## 7. Commands
@@ -706,8 +775,8 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
 |---|---|
 | `init --project NAME [--timezone IANA] [--label L] [--windows-timezone ID] [--default-branch B]` | Creates the manifest, an empty registry and the full-progress artifact's content. Refuses if a manifest exists. Zone defaults to the machine's. |
 | `feature-new --key K --title NAME --prefix P --apps a,b [--hero TEXT] [init flags]` | Adds a feature artifact (content folder with `meta.json`, a section `01-what-and-why.html` stub and a first History row; its manifest entry has no `url`). Runs `init` first, with the same `init` flags, when there is no manifest; `--project` is then required. |
-| `task-add --owner K\|project --item TEXT --detail TEXT --expected TEXT [--app A] [--status S] [--prefix P]` | Adds a task with the next free number; prints its ID. For `--owner project`, `--prefix` picks one of `project_prefixes`, and a new prefix not used by any feature is registered. |
-| `set-task-status ID STATUS [--detail TEXT] [--expected TEXT] [--history TEXT]` | Changes one task; adds a History row to its feature artifact when `--history` is given. |
+| `task-add --owner K\|project --item TEXT --detail TEXT --expected TEXT [--basis TEXT] [--app A] [--status S] [--prefix P]` | Adds a task with the next free number; prints its ID. For `--owner project`, `--prefix` picks one of `project_prefixes`, and a new prefix not used by any feature is registered. |
+| `set-task-status ID STATUS [--detail TEXT] [--expected TEXT] [--basis TEXT] [--history TEXT]` | Changes one task; adds a History row to its feature artifact when `--history` is given. |
 | `export-content KEY --to DIR` | Copies the artifact's content files from the record to DIR for editing, `decisions.json` and its `assets/` folder included. |
 | `edit-content KEY --from DIR` | Replaces the artifact's content files in the record with those in DIR (after the fetch and reset of R4.13), validates, renders and commits. The session never edits the record worktree directly; the reset would discard it. It refuses an edit that removes a decision or changes the choice of a decided one (R5.15). |
 | `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design`, renders and commits; `default` removes it. |
@@ -716,6 +785,7 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
 | `pending` | Lists the full-progress artifact when the hash of its committed render differs from `published_sha256` (a feature artifact is never listed, R9.5), and queued events. When it lists Full Progress it writes the publish copy (R5.31). Exit 1 when anything is listed. `--json` prints `{"artifacts": [{"key", "kind", "title", "file", "path", "url", "reason"}], "queue": [events]}`; `path` is the absolute path of the publish copy to publish. It also lists the retired pages (R4.22): `--json` adds `"retired": [{"key", "title", "url", "retired"}]`, and they never change the exit code. |
 | `mark-published KEY --url URL` | Records the URL and the hash of the committed render (R5.32). Refuses a feature artifact (R9.5). |
 | `mark-deleted [KEY] --url URL [--gone]` | Records that the owner confirmed and the session deleted a retired page (or that it no longer exists): moves it to `deleted` (R4.21). |
+| `worktree` | Prints the record worktree's path as R4.24 resolves it. |
 | `queue list\|clear [--id ID]` | Shows or removes queued events. |
 | `commit [--retry] [--message M]` | Commits and pushes the record (also done by every writing command). |
 
@@ -933,7 +1003,7 @@ Reads the hook input; takes the task ID from the current branch name
   record the options the owner chose between, and the choice, in the feature's
   `decisions.json` in the same turn (§5.4); the four lines of R3.2 to R3.5;
   and that old claude.ai pages of feature artifacts are deleted only with the
-  owner's confirmation (R4.23).
+  owner's confirmation (R4.23); and that an Expected time comes with its basis (R6.11).
 - **R10.4** — The plugin delivers the rule file itself: the session-start hook
   (R8.9) prints it in every project that has a record, every session, so a rule
   change reaches every project with the plugin and no copy can go stale.
@@ -988,7 +1058,7 @@ Reads the hook input; takes the task ID from the current branch name
 
 - **R13.1** — `tools/test_project_artifacts.py` builds throwaway git repos with
   a bare remote and proves each command, each check of §14 (one fixture per
-  check that fails without it), INV-1 to INV-3, R4.13 to R4.23, R5.31, R5.32,
+  check that fails without it), INV-1 to INV-3, R4.13 to R4.27, R6.10, R6.11, R5.31, R5.32,
   R7.4, R9.5 and R10.6.
 - **R13.2** — `tools/test_project_artifacts_hooks.py` feeds sample hook input
   to each hook and asserts the queue, the exit code and the output, including
@@ -1017,6 +1087,7 @@ Reads the hook input; takes the task ID from the current branch name
 | Checklist columns per kind | R6.4 |
 | Only the eight statuses; each row in its group; only `Live` rows older than 14 days in Earlier | R6.1, R6.2, R6.3 |
 | Expected format on open rows | R6.6 |
+| `expected_basis`: a string of 1 to 80 characters, on open rows only | R6.10 |
 | Checklists and tiles equal the registry | INV-1, R5.8 |
 | Every feature task on the full-progress artifact, linked to the feature file by a relative link | R6.5, R5.30 |
 | A feature artifact is a complete HTML document with its CSS inlined and no external resource but the fonts link; Full Progress is a fragment beginning with `<title>` | R5.27, R5.28, R5.29 |

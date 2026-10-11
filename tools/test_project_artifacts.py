@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prove project_artifacts.py does what ARTIFACTSPEC 1.2.0 section 7 says (R13.1).
+"""Prove project_artifacts.py does what ARTIFACTSPEC 1.3.0 section 7 says (R13.1).
 
 Every case builds throwaway git repositories with a local bare remote and runs
 the real command line against them. Nothing here pushes to any real remote.
@@ -214,7 +214,8 @@ def base_env(extra=None):
     env.update({'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': str(TMP / 'nullconfig'),
                 'GIT_TERMINAL_PROMPT': '0', 'CLAUDE_ARTIFACTS_NOW': NOW})
     for k in ('GIT_AUTHOR_NAME', 'GIT_AUTHOR_EMAIL', 'GIT_COMMITTER_NAME', 'GIT_COMMITTER_EMAIL',
-              'CLAUDE_ARTIFACTS_NO_ZONEINFO', 'CLAUDE_ARTIFACTS_NO_POWERSHELL', 'GIT_DIR', 'GIT_WORK_TREE'):
+              'CLAUDE_ARTIFACTS_NO_ZONEINFO', 'CLAUDE_ARTIFACTS_NO_POWERSHELL', 'GIT_DIR', 'GIT_WORK_TREE',
+              'LUISMC_ARTIFACTS_WORKTREE'):
         env.pop(k, None)
     env.update(extra or {})
     return env
@@ -524,6 +525,58 @@ def test_task_add(env):
     assert 'OPS' in p.man()['project_prefixes']
     assert git(p.bare, 'log', '-1', '--format=%s', 'main').stdout.strip() == 'docs/artifacts: OPS1 To do'
     assert p.run('check').code == 0
+
+
+# --------------------------------------------------------------------------
+# the basis of Expected (R6.10)
+# --------------------------------------------------------------------------
+
+@case
+def test_basis_is_stored(env):
+    p = env.baseline()
+    r = p.ok('task-add', '--owner', 'artifacts', '--item', 'Hooks', '--detail', 'Three hooks.',
+             '--expected', '14 Oct ~09:00', '--basis', 'agent slot ~01:30,   ~1.5 h')
+    tid = r.out.strip()
+    assert p.task(tid)['expected_basis'] == 'agent slot ~01:30, ~1.5 h', p.task(tid)
+    assert 'expected_basis' not in p.task('AR1'), 'no basis, no field'
+    # an open row keeps it across a status change between open statuses, and it can change or be cleared
+    p.ok('set-task-status', tid, 'Waiting')
+    assert p.task(tid)['expected_basis'] == 'agent slot ~01:30, ~1.5 h'
+    r = p.ok('set-task-status', tid, 'Running', '--basis', 'CI run, ~20 min', '--json')
+    assert p.task(tid)['expected_basis'] == 'CI run, ~20 min' and r.json()['expected_basis'] == 'CI run, ~20 min'
+    p.ok('set-task-status', tid, 'Running', '--basis', '')
+    assert 'expected_basis' not in p.task(tid)
+    assert p.run('check').code == 0
+
+
+@case
+def test_basis_dropped_when_closed(env):
+    p = env.baseline()
+    p.ok('set-task-status', 'AR1', 'Running', '--basis', 'owner reply, ~1 day')
+    assert p.task('AR1')['expected_basis'] == 'owner reply, ~1 day'
+    for status in ('Built', 'Live', 'Failed'):
+        p.ok('set-task-status', 'AR1', 'Running', '--basis', 'agent slot')
+        r = p.ok('set-task-status', 'AR1', status)
+        assert 'expected_basis' not in p.task('AR1'), status
+        assert p.run('check').code == 0, status
+    # a basis asked for on a row that is not open is ignored with a warning, not stored
+    r = p.ok('set-task-status', 'AR1', 'Built', '--basis', 'x')
+    assert 'expected_basis' not in p.task('AR1') and '--basis ignored' in r.err, r.err
+    r = p.ok('task-add', '--owner', 'artifacts', '--item', 'Done thing', '--detail', 'd', '--expected', '10 Oct',
+             '--status', 'Built', '--basis', 'x')
+    assert 'expected_basis' not in p.task(r.out.strip()) and '--basis ignored' in r.err, r.err
+
+
+@case
+def test_basis_over_80_refused(env):
+    p = env.baseline()
+    before = p.head()
+    for argv in (['task-add', '--owner', 'artifacts', '--item', 'x', '--detail', 'd', '--expected', '14 Oct'],
+                 ['set-task-status', 'AR1', 'Running']):
+        r = p.run(*argv, '--basis', 'b' * 81)
+        assert r.code == 1 and '80' in r.err, r.all
+    assert p.run('set-task-status', 'AR1', 'Running', '--basis', 'b' * 80).code == 0
+    assert p.head() != before
 
 
 @case
@@ -1063,6 +1116,142 @@ def test_edit_content_no_change(env):
     assert p.head() != before
 
 
+# --------------------------------------------------------------------------
+# where the record worktree lives (R4.24 - R4.27)
+# --------------------------------------------------------------------------
+
+def same_path(a, b):
+    return os.path.normcase(os.path.realpath(str(a))) == os.path.normcase(os.path.realpath(str(b)))
+
+
+def worktree_of(p, env=None):
+    r = p.ok('worktree', '--json', env=env)
+    return r.json()['worktree']
+
+
+def registered_worktrees(p):
+    out = git(p.clone, 'worktree', 'list', '--porcelain').stdout
+    return [ln[len('worktree '):] for ln in out.splitlines() if ln.startswith('worktree ')]
+
+
+def elsewhere(env, name):
+    d = TMP / ('wt-%s-%s-%d' % (env.kind, name, env.n))
+    env.n += 1
+    return d
+
+
+@case
+def test_worktree_setting_default(env):
+    p = env.baseline()
+    assert same_path(worktree_of(p), p.wt)
+    assert p.run('worktree').out.strip() == worktree_of(p)
+    # a local file without the key, and an empty variable, leave the default
+    (p.clone / '.claude').mkdir(exist_ok=True)
+    (p.clone / '.claude' / 'artifacts-local.json').write_text('{"other": 1}\n', encoding='utf-8')
+    assert same_path(worktree_of(p, env={'LUISMC_ARTIFACTS_WORKTREE': ''}), p.wt)
+
+
+@case
+def test_worktree_setting_environment(env):
+    p = env.baseline()
+    where = elsewhere(env, 'env')
+    other = elsewhere(env, 'other')
+    (p.clone / '.claude').mkdir(exist_ok=True)
+    (p.clone / '.claude' / 'artifacts-local.json').write_text(json.dumps({'record_worktree': str(other)}), encoding='utf-8')
+    # the variable wins over the local file
+    assert same_path(worktree_of(p, env={'LUISMC_ARTIFACTS_WORKTREE': str(where)}), where)
+    p.ok('set-task-status', 'AR1', 'Waiting', env={'LUISMC_ARTIFACTS_WORKTREE': str(where)})
+    assert (where / 'docs' / 'artifacts' / 'manifest.json').is_file() and not other.exists()
+
+
+@case
+def test_worktree_setting_local_file(env):
+    p = env.baseline()
+    where = elsewhere(env, 'file')
+    (p.clone / '.claude').mkdir(exist_ok=True)
+    (p.clone / '.claude' / 'artifacts-local.json').write_text(json.dumps({'record_worktree': str(where)}), encoding='utf-8')
+    assert same_path(worktree_of(p), where)
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    assert (where / 'docs' / 'artifacts' / 'manifest.json').is_file() and p.task('AR1')['status'] == 'Waiting'
+    assert not p.wt.exists(), 'the default location is not created when the setting points elsewhere'
+    # a session sitting inside the moved worktree still finds the checkout's root
+    assert same_path(worktree_of(p, env=None), where)
+    r = p.run('worktree', '--json', cwd=where)
+    assert r.code == 0 and same_path(r.json()['worktree'], where), r.all
+
+
+@case
+def test_worktree_setting_refused(env):
+    p = env.baseline()
+    head = p.head()
+    (p.clone / '.claude').mkdir(exist_ok=True)
+    local = p.clone / '.claude' / 'artifacts-local.json'
+    bad_env = ['relative/path', '.', '..' + os.sep + 'x', str(p.clone), str(p.clone.parent), str(p.clone / '.git' / 'x')]
+    if os.name == 'nt':
+        bad_env += ['\\no-drive', 'C:no-slash']
+    for value in bad_env:
+        for argv in (['worktree'], ['set-task-status', 'AR1', 'Waiting']):
+            r = p.run(*argv, env={'LUISMC_ARTIFACTS_WORKTREE': value})
+            assert r.code == 2 and 'LUISMC_ARTIFACTS_WORKTREE' in r.err, (value, argv, r.all)
+    assert p.head() == head, 'a refused setting writes nothing'
+    for text in ('{"record_worktree": "rel/x"}', '{"record_worktree": ""}', '{"record_worktree": 5}', '[1]', '{not json'):
+        local.write_text(text, encoding='utf-8')
+        r = p.run('set-task-status', 'AR1', 'Waiting')
+        assert r.code == 2 and 'artifacts-local.json' in r.err, (text, r.all)
+    assert p.head() == head
+
+
+@case
+def test_init_ignores_the_local_settings_file(env):
+    p = env.project()
+    p.init()
+    gi = (p.clone / '.gitignore').read_text(encoding='utf-8')
+    assert '.claude/artifacts-local.json' in gi.splitlines(), gi
+    where = elsewhere(env, 'ign')
+    (p.clone / '.claude').mkdir(exist_ok=True)
+    (p.clone / '.claude' / 'artifacts-local.json').write_text(json.dumps({'record_worktree': str(where)}), encoding='utf-8')
+    assert 'artifacts-local' not in git(p.clone, 'status', '--porcelain').stdout
+
+
+@case
+def test_moving_the_worktree_removes_the_old_one(env):
+    p = env.baseline()
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    assert (p.wt / '.git').exists() and any(same_path(w, p.wt) for w in registered_worktrees(p))
+    first = elsewhere(env, 'first')
+    second = elsewhere(env, 'second')
+    r = p.ok('set-task-status', 'AR1', 'Running', env={'LUISMC_ARTIFACTS_WORKTREE': str(first)})
+    assert 'moved' in r.err, r.err
+    assert not p.wt.exists() and not any(same_path(w, p.wt) for w in registered_worktrees(p)), registered_worktrees(p)
+    assert (first / 'docs' / 'artifacts' / 'manifest.json').is_file()
+    assert any(same_path(w, first) for w in registered_worktrees(p))
+    assert p.task('AR1')['status'] == 'Running'
+    # an unchanged setting moves nothing
+    r = p.ok('set-task-status', 'AR1', 'Waiting', env={'LUISMC_ARTIFACTS_WORKTREE': str(first)})
+    assert 'moved' not in r.err, r.err
+    # moving again, then back to the default
+    p.ok('set-task-status', 'AR1', 'Running', env={'LUISMC_ARTIFACTS_WORKTREE': str(second)})
+    assert not first.exists() and (second / '.git').exists()
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    assert not second.exists() and (p.wt / '.git').exists()
+    assert [w for w in registered_worktrees(p) if '.claude' in w.replace('\\', '/') and 'artifacts-record' in w] != []
+    assert p.run('check').code == 0
+
+
+@case
+def test_moving_refuses_unpushed_commits(env):
+    p = env.baseline()
+    p.ok('set-task-status', 'AR1', 'Waiting', '--no-push')
+    where = elsewhere(env, 'unpushed')
+    r = p.run('set-task-status', 'AR1', 'Running', env={'LUISMC_ARTIFACTS_WORKTREE': str(where)})
+    assert r.code == 1 and 'not pushed' in r.err, r.all
+    assert (p.wt / '.git').exists() and not where.exists()
+    # the old setting pushes them; then the move goes through
+    p.ok('commit', '--retry')
+    p.ok('set-task-status', 'AR1', 'Running', env={'LUISMC_ARTIFACTS_WORKTREE': str(where)})
+    assert not p.wt.exists() and (where / '.git').exists()
+
+
 @case
 def test_record_worktree_is_sparse(env):
     p = env.baseline()
@@ -1502,6 +1691,10 @@ REGISTRY_FIXTURES = [
     ('item length', 'R4.8', lambda r: task(r, 'AR1').update(item='x' * 81)),
     ('detail length', 'R4.8', lambda r: task(r, 'AR1').update(detail='x' * 601)),
     ('id order', 'R4.9', lambda r: r['tasks'].reverse()),
+    ('basis too long', 'R6.10', lambda r: task(r, 'AR1').update(expected_basis='b' * 81)),
+    ('basis empty', 'R6.10', lambda r: task(r, 'AR1').update(expected_basis='  ')),
+    ('basis not a string', 'R6.10', lambda r: task(r, 'AR1').update(expected_basis=5)),
+    ('basis on a Live row', 'R6.10', lambda r: task(r, 'AR1').update(status='Live', expected='10 Oct', expected_basis='x')),
     ('expected relative word', 'R6.6', lambda r: task(r, 'AR1').update(expected='today')),
     ('expected soon', 'R6.6', lambda r: task(r, 'SI1').update(expected='soon; very')),
     ('one-digit day', 'R6.6', lambda r: task(r, 'SI1').update(expected='2 Oct')),

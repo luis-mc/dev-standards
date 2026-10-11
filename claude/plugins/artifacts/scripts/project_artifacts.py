@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """project_artifacts.py - the only writer of a project's artifact record.
 
-Implements ARTIFACTSPEC 1.2.0: section 4 (the record, time, the record
+Implements ARTIFACTSPEC 1.3.0: section 4 (the record, time, the record
 worktree and its commits), section 7 (every command), the bookkeeping of
 section 9 (`pending`, `mark-published`; only Full Progress is published, a
 feature artifact is a standalone file) and the record-level checks of
@@ -53,7 +53,8 @@ except ImportError as _e:
 SPEC = 'ARTIFACTSPEC 1.0.0'
 FP_NAME = 'full-progress'
 RECORD_REL = 'docs/artifacts'
-WORKTREE_REL = os.path.join('.claude', 'worktrees', 'artifacts-record')
+BASIS_MAX = 80            # R6.10: longest Expected basis
+OPEN_STATUSES = ('Running', 'Waiting', 'To do', 'Needs you', 'On hold')     # R6.6
 PUSH_RETRIES = 3          # R4.15: retries after the first push attempt
 MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 KEY_RE = re.compile(r'^[a-z0-9]+(?:-[a-z0-9]+)*$')
@@ -67,7 +68,7 @@ RULE_NAME = 'project-artifacts.md'
 STALE_RULE_REL = '.claude/rules/project-artifacts.md'     # the copy 1.0.0 `init` made (R10.6)
 PUBLISH_REL = os.path.join('.claude', 'artifacts-publish')      # the publish copy of Full Progress (R5.31)
 GITIGNORE_LINES = ['.claude/artifacts-queue.json', '.claude/artifacts-stop-state.json', '.claude/artifacts-publish/',
-                   '.claude/worktrees/']
+                   '.claude/artifacts-local.json', '.claude/worktrees/']
 
 # Test seam (tests only): called as hook(ctx, attempt) right before each push.
 _TEST_BEFORE_PUSH = None
@@ -296,6 +297,18 @@ def session_root(start=None):
     tail = '/.claude/worktrees/artifacts-record'
     if norm.endswith(tail):
         return norm[:-len(tail)]
+    # a record worktree set elsewhere (R4.24): its common git dir leads back to the checkout
+    r = git(top, 'rev-parse', '--git-common-dir')
+    common = r.stdout.strip() if r.returncode == 0 else ''
+    if common:
+        common = os.path.normpath(os.path.join(top, common))
+        main = os.path.dirname(common)
+        if os.path.basename(common) == '.git' and not artifact_queue._same_path(main, top):
+            try:
+                if artifact_queue._same_path(artifact_queue.record_worktree(main), top):
+                    return main
+            except artifact_queue.WorktreeSettingError:
+                pass
     return top
 
 
@@ -303,7 +316,10 @@ class Ctx:
     def __init__(self, root, branch):
         self.root = Path(root)
         self.branch = branch
-        self.wt = self.root / WORKTREE_REL
+        try:
+            self.wt = Path(artifact_queue.record_worktree(str(self.root)))       # R4.24
+        except artifact_queue.WorktreeSettingError as e:
+            raise Fail(2, 'the record worktree setting is refused: %s' % e)
         self.record_dir = self.wt / RECORD_REL
         self.attempt = 0
 
@@ -388,6 +404,62 @@ def ensure_sparse(ctx):
         git(ctx.wt, 'sparse-checkout', 'set', '--no-cone', *want, check=True)
 
 
+MARKER_NAME = 'luismc-artifacts-record-worktree'
+
+
+def _git_common_dir(ctx):
+    r = git(ctx.root, 'rev-parse', '--git-common-dir')
+    return os.path.normpath(os.path.join(str(ctx.root), r.stdout.strip())) if r.returncode == 0 and r.stdout.strip() else None
+
+
+def _read_marker(ctx):
+    common = _git_common_dir(ctx)
+    try:
+        return Path(common, MARKER_NAME).read_text(encoding='utf-8').strip() if common else ''
+    except OSError:
+        return ''
+
+
+def _write_marker(ctx):
+    common = _git_common_dir(ctx)
+    if common:
+        try:
+            Path(common, MARKER_NAME).write_text(str(ctx.wt) + '\n', encoding='utf-8')
+        except OSError:
+            warn('cannot remember where the record worktree is (%s)' % common)
+
+
+def move_worktree(ctx):
+    """R4.24: when the setting points elsewhere than the registered record worktree, remove the old one.
+
+    The old one is a disposable checkout of the default branch; it is refused only while it holds
+    record commits that were never pushed. The new one is created by ensure_worktree.
+    """
+    same = artifact_queue._same_path
+    default = artifact_queue.default_worktree(str(ctx.root))
+    marker = _read_marker(ctx)
+    if not (marker and not same(marker, ctx.wt)) and not (not marker and not same(ctx.wt, default)):
+        return
+    olds = []
+    for p in (marker, default):
+        if p and not same(p, ctx.wt) and not any(same(p, o) for o in olds):
+            olds.append(p)
+    git(ctx.root, 'worktree', 'prune')
+    listed = git(ctx.root, 'worktree', 'list', '--porcelain').stdout
+    registered = [ln[len('worktree '):].strip() for ln in listed.splitlines() if ln.startswith('worktree ')]
+    for old in olds:
+        if not any(same(old, r) for r in registered):
+            continue
+        ahead = git(old, 'rev-list', '--count', 'origin/%s..HEAD' % ctx.branch)
+        if ahead.returncode == 0 and ahead.stdout.strip() not in ('', '0'):
+            raise Fail(1, 'the old record worktree %s holds %s record commit(s) not pushed; run a command with the old '
+                       'setting to push them, or remove it by hand' % (old, ahead.stdout.strip()))
+        r = git(ctx.root, 'worktree', 'remove', '--force', old)
+        if r.returncode != 0:
+            raise Fail(2, 'cannot remove the old record worktree %s: %s' % (old, (r.stderr or r.stdout).strip()[:200]))
+        warn('the record worktree moved: removed %s, using %s' % (old, ctx.wt))
+
+
 def ensure_worktree(ctx, tolerant=False, create=False):
     """Fetch and create the detached, sparse record worktree on first use.
 
@@ -395,9 +467,11 @@ def ensure_worktree(ctx, tolerant=False, create=False):
     exits 2 when origin/<default> has no record, leaving no worktree behind.
     """
     fetched = fetch(ctx, tolerant)
+    move_worktree(ctx)
     wt = ctx.wt
     if (wt / '.git').exists():
         ensure_sparse(ctx)
+        _write_marker(ctx)
         return fetched
     if git(ctx.root, 'rev-parse', '--verify', '-q', 'refs/remotes/origin/' + ctx.branch).returncode != 0:
         raise Fail(2, 'origin/%s does not exist' % ctx.branch)
@@ -411,6 +485,7 @@ def ensure_worktree(ctx, tolerant=False, create=False):
     git(ctx.root, 'worktree', 'add', '--detach', '--no-checkout', '--quiet', str(wt), 'origin/' + ctx.branch, check=True)
     ensure_sparse(ctx)
     git(ctx.wt, 'reset', '--hard', '--quiet', 'origin/' + ctx.branch, check=True)
+    _write_marker(ctx)
     return fetched
 
 
@@ -941,6 +1016,14 @@ def validate_structure(rec):
             f('R4.8', 'registry.json', '%s: item is longer than 80 characters' % label)
         if isinstance(t.get('detail'), str) and len(t['detail']) > 600:
             f('R4.8', 'registry.json', '%s: detail is longer than 600 characters' % label)
+        if 'expected_basis' in t:
+            eb = t['expected_basis']
+            if not isinstance(eb, str) or not eb.strip():
+                f('R6.10', 'registry.json', '%s: expected_basis must be a non-empty string' % label)
+            elif len(eb) > BASIS_MAX:
+                f('R6.10', 'registry.json', '%s: expected_basis is longer than %d characters' % (label, BASIS_MAX))
+            if isinstance(st, str) and st in statuses and st not in OPEN_STATUSES:
+                f('R6.10', 'registry.json', '%s: expected_basis belongs on an open row, not on a %s row' % (label, st))
         ex = t.get('expected')
         if isinstance(ex, str) and isinstance(st, str) and st in statuses:
             if st in ('Live', 'Built'):
@@ -1438,9 +1521,21 @@ def cmd_feature_new(args):
     return 0
 
 
+def clean_basis(text):
+    """R6.10: the basis as stored ('' clears it); refused when longer than BASIS_MAX."""
+    text = ' '.join(str(text).split())
+    if len(text) > BASIS_MAX:
+        raise Fail(1, '--basis is %d characters; at most %d (what the estimate waits on, and how long)' % (len(text), BASIS_MAX))
+    return text
+
+
 def cmd_task_add(args):
     ctx = make_ctx(args)
     status = require_status(args.status)
+    basis = clean_basis(args.basis) if args.basis is not None else ''
+    if basis and status not in OPEN_STATUSES:
+        warn('--basis ignored: a %s row has no estimate to base' % status)
+        basis = ''
 
     def apply(rec):
         m, reg = rec.manifest, rec.registry
@@ -1476,9 +1571,12 @@ def cmd_task_add(args):
                 if ID_RE.match(str(t.get('id', ''))) and ID_RE.match(t['id']).group(1) == pfx]
         tid = '%s%d' % (pfx, max(nums, default=0) + 1)
         now = rec.now()
-        reg['tasks'].append({'id': tid, 'owner': owner, 'app': app, 'status': status,
-                             'item': args.item, 'detail': args.detail, 'expected': args.expected,
-                             'changed': now.iso})
+        row = {'id': tid, 'owner': owner, 'app': app, 'status': status,
+               'item': args.item, 'detail': args.detail, 'expected': args.expected,
+               'changed': now.iso}
+        if basis:
+            row['expected_basis'] = basis
+        reg['tasks'].append(row)
         if owner != 'project':
             rec.render_keys[owner] = 'new'
         rec.render_keys[FP_NAME] = 'new'
@@ -1494,6 +1592,7 @@ def cmd_task_add(args):
 
 def cmd_set_task_status(args):
     status = require_status(args.status)
+    basis = clean_basis(args.basis) if args.basis is not None else None
     ctx = make_ctx(args)
 
     def apply(rec):
@@ -1510,6 +1609,15 @@ def cmd_set_task_status(args):
             task['expected'] = args.expected
         elif status in ('Live', 'Built'):
             task['expected'] = now.date          # R6.8
+        if status not in OPEN_STATUSES:
+            task.pop('expected_basis', None)     # R6.10: only an open row has an estimate to base
+            if basis:
+                warn('--basis ignored: a %s row has no estimate to base' % status)
+        elif basis is not None:
+            if basis:
+                task['expected_basis'] = basis
+            else:
+                task.pop('expected_basis', None)
         owner = task['owner']
         if owner != 'project':
             rec.render_keys[owner] = 'new'
@@ -1527,7 +1635,7 @@ def cmd_set_task_status(args):
         rec.render_keys[FP_NAME] = 'new'
         rec.message = 'docs/artifacts: %s %s' % (args.id, status)
         return {'command': 'set-task-status', 'id': args.id, 'status': status, 'previous': prev,
-                'expected': task['expected']}
+                'expected': task['expected'], 'expected_basis': task.get('expected_basis', '')}
 
     res = run_change(ctx, apply)
     removed = 0
@@ -2013,6 +2121,21 @@ def cmd_pending(args):
     return 1 if (arts or queue) else 0     # retired pages never change the exit code (R4.22)
 
 
+def cmd_worktree(args):
+    """Prints the record worktree's path, as the setting of R4.24 resolves it."""
+    if artifact_queue is None:
+        raise Fail(2, 'artifact_queue.py cannot be imported: %s' % _QUEUE_ERROR)
+    root = session_root()
+    if not root:
+        raise Fail(2, 'not inside a git repository')
+    try:
+        path = artifact_queue.record_worktree(root)
+    except artifact_queue.WorktreeSettingError as e:
+        raise Fail(2, 'the record worktree setting is refused: %s' % e)
+    emit(args, {'worktree': path}, path)
+    return 0
+
+
 def cmd_queue(args):
     if artifact_queue is None:
         raise Fail(2, 'artifact_queue.py cannot be imported: %s' % _QUEUE_ERROR)
@@ -2086,6 +2209,7 @@ def build_parser():
     s.add_argument('--item', required=True)
     s.add_argument('--detail', required=True)
     s.add_argument('--expected', required=True)
+    s.add_argument('--basis', help='what sets the estimate, at most 80 characters (open statuses only)')
     s.add_argument('--app')
     s.add_argument('--status', default='To do')
     s.add_argument('--prefix')
@@ -2096,6 +2220,7 @@ def build_parser():
     s.add_argument('status')
     s.add_argument('--detail')
     s.add_argument('--expected')
+    s.add_argument('--basis', help='what sets the estimate; "" clears it (open statuses only)')
     s.add_argument('--history')
     s.set_defaults(func=cmd_set_task_status)
 
@@ -2136,6 +2261,9 @@ def build_parser():
     s.add_argument('--url', required=True)
     s.add_argument('--gone', action='store_true', help='the page no longer exists (404)')
     s.set_defaults(func=cmd_mark_deleted)
+
+    s = sub.add_parser('worktree', parents=[j], help="print the record worktree's path (R4.24)")
+    s.set_defaults(func=cmd_worktree)
 
     s = sub.add_parser('queue', parents=[j], help='show or clear queued events')
     s.add_argument('action', choices=['list', 'clear'])

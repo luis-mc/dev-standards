@@ -8,7 +8,7 @@ effort: medium
 # Feature artifact — new
 
 Creates one feature artifact from the project's record (`docs/artifacts/`,
-ARTIFACTSPEC 1.2.0). The script is the only writer of `manifest.json` and
+ARTIFACTSPEC 1.3.0). The script is the only writer of `manifest.json` and
 `registry.json`; never edit either by hand. A feature artifact is a standalone
 HTML file in the repository (`docs/artifacts/feature-<slug>.html`, CSS inlined,
 opens by double-click). It is never published to claude.ai, because claude.ai
@@ -21,8 +21,12 @@ anywhere inside the project's repository. Exit 0 is success; on any other exit
 read the message, fix the cause and rerun. Never work around a refusal by
 editing the record.
 
-The record lives in the record worktree `<repo>/.claude/worktrees/artifacts-record`
-(a worktree of the default branch). Never write into it, and never into the
+The record lives in the record worktree (a worktree of the default branch);
+`python "${CLAUDE_PLUGIN_ROOT}/scripts/project_artifacts.py" worktree` prints its path. By default it is
+`<repo>/.claude/worktrees/artifacts-record`; the project may move it with the
+environment variable `LUISMC_ARTIFACTS_WORKTREE` or `record_worktree` in the
+git-ignored `.claude/artifacts-local.json` (an absolute path; the next command
+moves the worktree there). Never write into it, and never into the
 session's own working tree: the script resets the record worktree before each
 change and would discard the edit. Edit content in a scratch directory outside
 the repository instead (the session's scratchpad directory, in a new folder).
@@ -79,11 +83,13 @@ the repository instead (the session's scratchpad directory, in a new folder).
 5. **Apply and validate:** `edit-content <key> --from <scratch dir>`. Fix any
    validation error it reports in the scratch files and run it again.
 6. **Add the feature's tasks**, one per unit of work, with
-   `task-add --owner <key> --item "TEXT" --detail "TEXT" --expected "DD Mon" --status "To do"`
+   `task-add --owner <key> --item "TEXT" --detail "TEXT" --expected "DD Mon" [--basis "TEXT"] --status "To do"`
    (or the status it truly has). The command prints each task's ID. `item` is at
    most 80 characters. `expected` is a real date from `date` in the project's
    zone, `DD Mon` or `DD Mon ~HH:MM`, optionally followed by `; ` and a note;
-   never `today`, `soon` or `next` alone. Every activity is a task, the
+   never `today`, `soon` or `next` alone. When you give an Expected time, give its
+   basis too (what it waits on and how long) with `--basis`, at most 80
+   characters. Every activity is a task, the
    session's own included; `Built` means finished but not released, and
    release work still to come (join, release) is a task of its own.
 7. **Do not publish the feature artifact**, and do not publish Full Progress

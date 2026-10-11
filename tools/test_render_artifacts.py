@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for claude/plugins/artifacts/scripts/render_artifacts.py (ARTIFACTSPEC 1.2.0, sections 4 to 6 and 14).
+"""Tests for claude/plugins/artifacts/scripts/render_artifacts.py (ARTIFACTSPEC 1.3.0, sections 4 to 6 and 14).
 
 Every check of check_html gets a fixture that breaks exactly that rule and must produce exactly that
 requirement ID; the clean fixtures must produce nothing. A check nobody has seen fire is not a check.
@@ -703,6 +703,59 @@ def check_r66_expected_format(fx):
     registry['tasks'][0]['expected'] = 'yesterday'
     registry['tasks'][12]['expected'] = 'soon'
     assert fx.check(fx.render('full-progress', registry=registry), 'full-progress', registry=registry) == []
+
+
+@test
+@with_fixture
+def render_shows_the_expected_basis(fx):
+    """R6.10, R6.11: a muted line under Expected on open rows of both kinds; never on Live or Built rows."""
+    registry = copy.deepcopy(fx.registry)
+    by_id = {t['id']: t for t in registry['tasks']}
+    by_id['AR6']['expected_basis'] = 'agent slot ~01:30, ~1.5 h'            # Running
+    by_id['DS9']['expected_basis'] = 'your review <& reply>'                  # Needs you
+    by_id['DS1']['expected_basis'] = 'zzclosed'                               # Live: not shown
+    for key, kind, wanted in (('artifacts', 'feature', ['AR6']), ('full-progress', 'full-progress', ['AR6', 'DS9'])):
+        out = fx.render(key, registry=registry)
+        assert out.count('class="expected-basis"') == len(wanted), (kind, out.count('class="expected-basis"'))
+        assert '<span class="expected-basis">agent slot ~01:30, ~1.5 h</span></td>' in out, kind
+        assert 'expected-basis">zzclosed' not in out, kind
+        assert fx.check(out, key, registry=registry) == [], (kind, fx.check(out, key, registry=registry))
+        if kind == 'full-progress':
+            assert '<span class="expected-basis">your review &lt;&amp; reply&gt;</span></td>' in out
+        # the Expected value itself is still the date, and the basis follows it
+        assert '10 Oct ~15:30<span class="expected-basis">' in out, kind
+    # no basis, no markup
+    assert 'expected-basis' not in fx.render('artifacts').replace('.expected-basis', '')
+
+
+@test
+@with_fixture
+def check_expected_basis_matches_registry(fx):
+    registry = copy.deepcopy(fx.registry)
+    registry['tasks'][1]['expected_basis'] = 'CI run, ~20 min'                   # AR6, Running
+    out = fx.render('artifacts', registry=registry)
+    shown = '<span class="expected-basis">CI run, ~20 min</span>'
+    expect(fx, sub1(out, shown, ''), 'artifacts', ['R6.10'], registry=registry)
+    expect(fx, sub1(out, shown, shown.replace('20 min', '5 min')), 'artifacts', ['R6.10'], registry=registry)
+    # a basis the registry does not have
+    expect(fx, out, 'artifacts', ['R6.10'], registry=fx.registry)
+    # a registry basis that is not a string is refused before rendering
+    registry['tasks'][1]['expected_basis'] = 5
+    try:
+        fx.render('artifacts', registry=registry)
+    except R.ContentError as e:
+        assert 'expected_basis' in str(e)
+    else:
+        raise AssertionError('a non-string basis must be refused')
+
+
+@test
+def basis_style_uses_tokens_and_wraps():
+    css = R.structure_css(PLUGIN)
+    block = css[css.index('.expected-basis'):]
+    block = block[:block.index('}')]
+    assert 'display: block' in block and 'overflow-wrap: anywhere' in block and 'var(--ink-muted)' in block, block
+    assert not re.search(r'#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(', block), block      # tokens only
 
 
 @test
