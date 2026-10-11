@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.6.0
+**Version:** 1.5.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,13 +52,6 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
-
-**1.6.0 — 2026-10-11.**
-
-- Releases are numbered: a release row carries `"release": <n>`, shown everywhere as `RELEASE-<n>`; `--release` gives the next number, never reused, and an older record's `"release": true` rows are numbered by the migration (R5.45). `--rides` also takes `RELEASE-<n>`.
-- Full Progress groups its checklist by release: one group per open release with the release row and every task riding it, then `Not in a release yet`, then the other groups; a Live or Built row shows the release it rode (R5.46).
-- Every Running or Built task that is not itself a release rides a release (R5.47).
-- Tiles say what they count: `123` over `tasks live` (R5.8a).
 
 **1.5.0 — 2026-10-11.**
 
