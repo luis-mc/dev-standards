@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 7.0.0
+**Version:** 7.1.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -22,7 +22,25 @@ chosen per product through the selection catalog that accompanies this spec, and
 recorded in the product's Stack Profile (§18). This document does not name
 vendors and does not rank them.
 
-### 0.1 What changed in 7.0, 6.0 and 5.x, and why
+### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+
+**7.1.0 — gates that check the right thing on any runner.** Learned on a
+product: the branch gate diffed against a stale base and its result was then
+rejected; a new branch's pre-push check re-checked other branches' commits; one
+UI change ran every end-to-end spec; workflows assumed hosted runners; parallel
+branches each bumped a spec's version and conflicted at every join; and ready
+pull requests of different trains overloaded a shared runner.
+
+- §13.1: the "no sub-minute job" cost point applies to runners billed per
+  minute; runner labels are a repository setting, not written into workflows.
+- §13.5: the gate fetches its base first; end-to-end tests at the gate run the
+  specs a change affects; the pre-push hook compares with the branch the push
+  forks from.
+- §13.6 (SHOULD): branches add change notes and the release folds them; on
+  shared runners, one ready pull request's CI runs at a time.
+
+No new `MUST`, so this is a minor version (§20). A product conforming to 7.0.0
+still conforms.
 
 **7.0.0 — nothing left behind, and a gate that cannot hang.** Under 6.0.0 the
 branch gate trusted whatever dependencies were already installed, so a stale
@@ -1268,7 +1286,9 @@ CI cost SHOULD be kept down without dropping a gate, because CI platforms bill
 per job, rounded up to a whole unit of time:
 
 - No job runs for much less than a minute when it could be a step in another job.
-  A few-second check as its own job is billed as a full minute.
+  A few-second check as its own job is billed as a full minute. This applies to
+  runners billed per job-minute; on self-hosted runners a separate short job
+  costs nothing and needs no deviation.
 - A run superseded by a newer push to the same pull request is cancelled. A run on
   the default branch is never cancelled — a merged commit should never be left
   unverified.
@@ -1277,6 +1297,10 @@ per job, rounded up to a whole unit of time:
   is sound only because §2.2 requires every environment variable a task reads to
   be declared in the runner's configuration; otherwise a cache hit can replay a
   result computed under different inputs.
+
+Which runners a workflow uses is a repository setting, not a value written into
+each workflow, so a product can move between hosted and self-hosted runners
+without editing its workflows.
 
 A push run on the default branch MUST NOT repeat a suite that already passed.
 When the pushed commit's tree is identical to the tree of a pull-request head
@@ -1349,7 +1373,15 @@ will join, it runs:
    unseen.
 5. The secret scan over the branch's new commits.
 6. End-to-end tests, only when a user-facing app, or a package it renders,
-   changed.
+   changed. The gate SHOULD run only the specs the change affects, through a
+   committed map from specs to source paths; a change the map does not cover,
+   or one to shared configuration or the API contract, runs them all. The
+   ready pull request's CI always runs every spec.
+
+Because a result is trusted only against the current head of the branch it
+joins, the gate fetches that branch before computing the merge base; only when
+the remote cannot be reached does it use the local copy, and its result then
+says so.
 
 Before the first step the gate installs dependencies from the committed
 lockfile in frozen mode, so a lockfile that no longer matches the manifests
@@ -1368,7 +1400,10 @@ branch it joins. A claim in prose, such as a report saying "green", is not a
 result. Results travel with the repository, never in pull-request comments.
 
 The guard tests and the secret scan MUST also run as a pre-push hook. They take
-seconds and catch the failures that otherwise reach pull-request CI. Every
+seconds and catch the failures that otherwise reach pull-request CI. For a
+branch pushed for the first time, the hook compares with the branch it forks
+from (the nearest one), not with the default branch, so it checks only what the
+push adds. Every
 scanner CI uses MUST be installed by the repository's agent setup script, so the
 gate runs the scanner CI runs.
 
@@ -1388,6 +1423,11 @@ gate runs the scanner CI runs.
   next one.
 - CI is watched through the workflow runs for the head commit, never through a
   pull request's check list, which can be read before the new run is listed.
+- Branches SHOULD NOT edit a spec's version or change log. Each adds a change
+  note naming the spec and the kind of change; the release folds the notes
+  into the versions and change logs, so parallel branches do not conflict.
+- On shared or self-hosted runners, ready pull requests' CI SHOULD run one at a
+  time; the next train waits for the run, not for a merge.
 - Once the ready pull request merges, the train is removed automatically: on the
   remote, the integration branch, every branch joined into it and their
   gate-result refs; locally, their branches and the worktrees they were built

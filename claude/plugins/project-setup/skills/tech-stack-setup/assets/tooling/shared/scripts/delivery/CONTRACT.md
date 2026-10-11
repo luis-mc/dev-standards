@@ -398,3 +398,113 @@ then runs `gate.json`'s `setup` commands. Idempotent.
   deletion, pagination, and the structure of `artifact-prune.yml`.
 
 Each test proves its check can fail, like `tools/test_spec_check.py`.
+
+## STACKSPEC 7.1.0 additions
+
+### U1 — affected end-to-end specs (`gate.json` `e2e_map`, optional)
+
+```json
+"e2e_map": {
+  "specs": [{"spec": "e2e/checkout.spec.ts", "paths": ["apps/web/src/checkout/", "packages/cart/"]}],
+  "full_on": ["playwright.config.ts", "packages/contract/", "apps/web/app.config.ts"]
+}
+```
+When the e2e step runs at the gate (scope `ui-changed`) and `e2e_map` exists:
+every changed file under a `ui_paths` prefix must match some spec's `paths`
+(same prefix/glob rules as `widen_on`), and no changed file may match
+`full_on`; then the step's command gets `{e2e_specs}` = the matched specs,
+space-separated, sorted. Otherwise (no map, an unmapped UI file, a `full_on`
+hit, a widened gate) `{e2e_specs}` is empty and the step runs `run_full` (the
+whole suite). The result entry for e2e adds `"selection": "affected"|"full"` and
+`"specs": [...]`. The ready PR's CI is untouched: it always runs every spec.
+Template TS `gate.json`: `"run": "pnpm exec playwright install chromium && pnpm exec playwright test {e2e_specs}"`,
+`"run_full"` without the placeholder, and an example `e2e_map` commented in the
+README (not in gate.json; a product writes its own).
+
+### U2 — the gate fetches its base
+
+`build_context` runs `git fetch --quiet --no-tags <remote> <branch>` for the
+base ref (`origin/<x>` → remote `origin`, branch `x`) before the merge base.
+On failure (offline, no remote) it warns `base not fetched: <reason>; using the
+local ref` and continues. The result adds `"base_fetched": true|false`.
+`gate_verify` is unchanged (it already compares with the remote head).
+`fast_guards.py` fetches the same way.
+
+### U3 — pre-push base by fork point
+
+For a ref the remote does not have yet (remote sha all zeros), the hook passes
+`--base-ref auto`. `fast_guards.py --base-ref auto` picks, among the remote's
+branches (`refs/remotes/<remote>/*`, excluding `HEAD` and the pushed branch
+itself), the one whose merge base with the pushed commit is nearest to it
+(fewest commits in `<merge-base>..<commit>`; ties → the default branch, then
+name order), and prints `base: <ref> (fork point)`. No candidates → the default
+branch.
+
+### U4 — pinned scanner checksums (`tools.json`)
+
+```json
+{"gitleaks": {"version": "8.30.1",
+  "sha256": {"linux_x64": "...", "linux_arm64": "...", "darwin_x64": "...", "darwin_arm64": "...", "windows_x64": "..."}}}
+```
+`agent_setup.sh` and every `ci.yml` read version and the platform's SHA-256
+from here and verify the downloaded archive against it; they no longer download
+the release's checksums file. The old form `{"gitleaks": "8.30.1"}` is still
+read, with a warning, and then falls back to the checksums file.
+`scripts/delivery/tools_pin.py gitleaks <version>` (maintainer use) downloads
+the release's checksums once and rewrites `tools.json` with the five SHA-256
+values. The shipped `tools.json` carries real values for 8.30.1.
+
+### U5 / U6 — runners as a setting
+
+Every workflow template's `runs-on` reads a repository variable:
+`runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}` (a JSON string
+or array of labels, e.g. `["self-hosted","linux"]`). Jobs that need a specific
+OS keep their own label. tech-stack-setup asks hosted or self-hosted and sets
+it with `gh variable set CI_RUNS_ON --body '<json>'` (asks before changing an
+existing repository).
+
+### U8 — one ready-PR CI at a time
+
+Every track's `ci.yml` concurrency becomes:
+```yaml
+concurrency:
+  group: ${{ vars.CI_SERIAL == 'true' && github.event_name == 'pull_request' && 'ci-ready-serial' || format('ci-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' && vars.CI_SERIAL != 'true' }}
+```
+With `CI_SERIAL=true` (set by tech-stack-setup for self-hosted or shared
+runners) ready PRs' runs queue one at a time and are never cancelled; drafts
+still skip. Default-branch runs keep their own group.
+
+### U9 — Windows-safe guard starters
+
+Every guard starter normalises paths to `/` before matching (TS
+`replaceAll('\\', '/')`, Go `filepath.ToSlash`, Rust `.replace('\\', "/")`,
+.NET `.Replace('\\', '/')`). `template-build.yml` runs its Go, Rust and .NET jobs
+on `windows-latest` as well as `ubuntu-latest`.
+
+### U7 — change notes (`scripts/delivery/change_notes.py`)
+
+A change note is `docs/specs/changes/<task-id>-<slug>.md`:
+```markdown
+---
+spec: docs/specs/stack-profile.md      # the spec file it changes
+change: minor                          # patch | minor | major
+---
+One or two sentences for the change log.
+```
+- `change_notes.py check [--base-ref REF]` (a `gate.json` step `change-notes`,
+  scope `always`, `pre_push: true`): on a branch that is not a release branch,
+  fails when the diff against the base changes a spec's `**Version:**` line or
+  its change-log section, or any `CHANGELOG*` file, and names the files and the
+  fix ("add a change note instead"). A spec is any file listed in `gate.json`
+  `specs` (default: `docs/specs/*.md`); its change-log section is the heading
+  named in `gate.json` `changelog_heading` (default: a heading starting
+  `What changed`). Release branches: `gate.json` `release_branches` (globs;
+  default `["*-integration", "release/*"]`).
+- `change_notes.py fold` (run on a release branch before the ready PR): for
+  each spec with notes, bumps `**Version:**` by the highest change kind, writes
+  one change-log entry under the change-log heading (new version, date, one
+  bullet per note), deletes the folded notes, prints a summary. Idempotent; no
+  notes → nothing to do.
+- Template `gate.json`s get the step; the README documents notes and fold.
+
