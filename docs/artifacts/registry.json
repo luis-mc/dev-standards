@@ -974,12 +974,12 @@
       "id": "TC5",
       "owner": "test-cost",
       "app": "",
-      "status": "Needs you",
+      "status": "To do",
       "item": "Push the record once per turn",
-      "detail": "S8: 264 of 276 commits on main are record pushes; commit each, push at turn end; waits on D8",
+      "detail": "Chosen by the owner 11 Oct; next train after this study",
       "expected": "12 Oct",
-      "changed": "2026-10-11T11:02+01:00",
-      "expected_basis": "your choice in D8, then a plugin change"
+      "changed": "2026-10-11T11:25+01:00",
+      "expected_basis": "the next train, one change per task"
     }
   ]
 }

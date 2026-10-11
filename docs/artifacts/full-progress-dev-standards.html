@@ -1553,12 +1553,12 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "id": "TC5",
    "owner": "test-cost",
    "app": "",
-   "status": "Needs you",
+   "status": "To do",
    "item": "Push the record once per turn",
-   "detail": "S8: 264 of 276 commits on main are record pushes; commit each, push at turn end; waits on D8",
+   "detail": "Chosen by the owner 11 Oct; next train after this study",
    "expected": "12 Oct",
-   "changed": "2026-10-11T11:02+01:00",
-   "expected_basis": "your choice in D8, then a plugin change"
+   "changed": "2026-10-11T11:25+01:00",
+   "expected_basis": "the next train, one change per task"
   }
  ]
 }</script>
@@ -1567,8 +1567,8 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
 <p class="last-update">Last update: <time datetime="2026-10-11T11:25+01:00">11 Oct 11:25</time> (Lisbon)</p>
-<p class="lede">All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class="task-id">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class="task-id">AR12</span>), and the secret-scan fixes (<span class="task-id">DS15</span>, <span class="task-id">AR19</span>, <span class="task-id">DS16</span>). Not released yet: the round toward STACKSPEC 7.0.0 (<span class="task-id">DS17</span> to <span class="task-id">DS21</span>) is built and joined, so those rows say Done. The tests on the joined branch are running; then one ready PR, its CI, and the merge, about 21:45. Each row turns Live only when the merge lands. <strong>Needs you: TC5 Push the record once per turn.</strong></p>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">88</div><div class="label">live</div></div><div class="status-count-tile status-needs-you"><div class="count">1</div><div class="label">needs you</div></div><div class="status-count-tile status-to-do"><div class="count">8</div><div class="label">to do</div></div></div>
+<p class="lede">All ongoing work in dev-standards, across every plugin. Live today: STACKSPEC 6.0.0 and luismc-project-setup 12.0.0 (<span class="task-id">DS6</span>, 12:56), luismc-artifacts 1.0.0 with luismc-project-setup 12.1.0 (<span class="task-id">AR12</span>), and the secret-scan fixes (<span class="task-id">DS15</span>, <span class="task-id">AR19</span>, <span class="task-id">DS16</span>). Not released yet: the round toward STACKSPEC 7.0.0 (<span class="task-id">DS17</span> to <span class="task-id">DS21</span>) is built and joined, so those rows say Done. The tests on the joined branch are running; then one ready PR, its CI, and the merge, about 21:45. Each row turns Live only when the merge lands. <strong>Nothing needs you.</strong></p>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">88</div><div class="label">live</div></div><div class="status-count-tile status-to-do"><div class="count">9</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
@@ -1580,8 +1580,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <tr data-task="TC2"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC2</span>A mutant stops at its first failed check</a></td><td></td><td>S3: E2 measured 49% of mutant time after the first failure; about 4.3 min</td><td>12 Oct<span class="expected-basis">after the 1.3.1 release; two test harness changes</span></td></tr>
 <tr data-task="TC3"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC3</span>Retire the fake-renderer group</a></td><td></td><td>Chosen by the owner 11 Oct; next train after this study</td><td>12 Oct<span class="expected-basis">the next train, one change per task</span></td></tr>
 <tr data-task="TC4"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC4</span>Cancel superseded ready-PR spec-lint runs</a></td><td></td><td>S7: two full DS17 runs ran side by side at 00:07; add a concurrency group</td><td>12 Oct<span class="expected-basis">after the 1.3.1 release; three workflow lines</span></td></tr>
-<tr class="status-group" data-group="you"><td colspan="5"><strong>Needs you, failed or on hold</strong></td></tr>
-<tr data-task="TC5"><td><span class="status-chip status-needs-you">Needs you</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC5</span>Push the record once per turn</a></td><td></td><td>S8: 264 of 276 commits on main are record pushes; commit each, push at turn end; waits on D8</td><td>12 Oct<span class="expected-basis">your choice in D8, then a plugin change</span></td></tr>
+<tr data-task="TC5"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC5</span>Push the record once per turn</a></td><td></td><td>Chosen by the owner 11 Oct; next train after this study</td><td>12 Oct<span class="expected-basis">the next train, one change per task</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR35"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR35</span>Re-render every page when the templates change</a></td><td><code>luismc-artifacts</code></td><td>Released in luismc-artifacts 1.3.1 (#46, 17d306a); installed here at user and project scope</td><td>11 Oct</td></tr>
 <tr data-task="AR37"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR37</span>Full Progress feature links that work from claude.ai</a></td><td><code>luismc-artifacts</code></td><td>Released in luismc-artifacts 1.3.1 (#46, 17d306a); Full Progress shows Copy link buttons after the next render</td><td>11 Oct</td></tr>
