@@ -676,11 +676,11 @@
       "id": "DS36",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Guard starters safe on Windows",
-      "detail": "Built in #40 and joined into DS37-integration (not released). Guard starters safe on Windows: done as contracted; Windows suites green; CI on its branch green (spec-lint; template build on Linux and Windows for Go, Rust and .NET).",
+      "detail": "Released in STACKSPEC 7.1.0 / luismc-project-setup 13.1.0 / luismc-artifacts 1.3.0 (#45, 48205a9, 04:17). Guard starters safe on Windows: done as contracted; Windows suites green; CI on its branch green (spec-lint; template build on Linux and Windows for Go, Rust and .NET).",
       "expected": "11 Oct",
-      "changed": "2026-10-11T03:01+01:00"
+      "changed": "2026-10-11T04:18+01:00"
     },
     {
       "id": "DS37",
