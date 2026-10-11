@@ -296,10 +296,10 @@
       "id": "AR32",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Update the installed plugins to 1.2.0",
-      "detail": "Updating the installed plugins after #42 (backups first): luismc-artifacts 1.2.0, luismc-project-setup 13.0.1; removing the local-only luismc-artifacts setting now that the repo's project setting is live.",
-      "expected": "11 Oct ~03:15",
+      "detail": "Done at 03:08 (backups first): luismc-artifacts 1.2.0 and luismc-project-setup 13.0.1 installed for your user; the local-only luismc-artifacts setting removed (the repo's project setting enables it). Each session picks the update up on restart; your other projects then upgrade by themselves on their next session.",
+      "expected": "11 Oct",
       "changed": "2026-10-11T03:04+01:00"
     },
     {
