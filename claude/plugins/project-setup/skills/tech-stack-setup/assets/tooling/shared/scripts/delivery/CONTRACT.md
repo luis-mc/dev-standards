@@ -25,6 +25,9 @@ are built against; change it first, then the code.
 | `scripts/delivery/artifact_prune.py` | same | ci |
 | `scripts/delivery/delivery_log.py` | same | cleanup |
 | `scripts/delivery/smoke_packaged.py` | same | ci |
+| `scripts/delivery/run_suite.py` | same (declared suites, named cases, per-machine times in `.delivery/suite-times.json`; STACKSPEC 13.8) | gate |
+| `scripts/delivery/session_guard.py` | same (Claude Code PreToolUse hook for Bash: test guard and ready-PR guard; exit 2 refuses; STACKSPEC 13.8) | gate |
+| `scripts/delivery/suites.json` | per product (`suites`: name, `full`, `cases` with `{cases}`, `full_args`, `ci_step`, `measure`); or `.claude/suites.json`, or `$SUITES_JSON` | gate |
 | `scripts/delivery/smoke.json` | `tooling/<track>/scripts/delivery/smoke.json` | ci |
 | `.github/workflows/package.yml` | `tooling/<track>/.github/workflows/package.yml` | ci |
 | `.github/workflows/train-cleanup.yml` | `tooling/shared/.github/workflows/train-cleanup.yml` | cleanup |
@@ -749,3 +752,19 @@ committed to the default branch. A missing timestamp is `unknown` and so is ever
 figure that needs it; offline, without `gh`, without permission, or on any error
 the script warns on stderr and exits 0, because the log must never fail a cleanup
 or a deploy.
+
+### Guards for agent sessions (STACKSPEC 13.8)
+
+`suites.json` declares the suites; `run_suite.py NAME [CASE ...]`, `--measure NAME`,
+`--list` and `--record-ci NAME --seconds S` run and time them. Local times go to
+`.delivery/suite-times.json` (git-ignored with `.delivery/`), CI times apart from them;
+`ci_watch.py` stores the step named by a suite's `ci_step` when it prints its summary.
+Heavy: last full local run over 180 s, no local measurement, or `"measure": false`.
+`session_guard.py` is the Claude Code `PreToolUse` hook for `Bash`
+(`python scripts/delivery/session_guard.py`; `--check "CMD"` tests a command by hand).
+It exits 2 with the reason on stderr to refuse: a full local run of a heavy suite or of
+a suite that passed on the same tree (local or CI record), `--measure` under 30 days
+after a measurement, `gh pr create` without `--draft` and `gh pr ready` from a branch
+not matching `release_branches` of `tools/change-notes.json` (default `*-integration`).
+Named-case runs are always allowed. `join.py` works without `gate.json`: it says the gate
+is not configured and writes `"gate": "not configured"` to `join-result.json`.
