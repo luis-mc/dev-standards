@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T12:56+01:00",
+  "updated": "2026-10-11T13:00+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1003,12 +1003,11 @@
       "id": "DS49",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Agent branches: a short Linux CI run of their area instead of local",
-      "detail": "spec-lint dispatch takes the areas to run; the agents rule swaps the local run for that run; the ready PR stays the one full run",
-      "expected": "11 Oct ~15:00",
-      "changed": "2026-10-11T12:22+01:00",
-      "expected_basis": "agent ~40 min, in the TC6 release"
+      "detail": "Joined: spec-lint dispatch takes areas; ci_areas --branch-advice; rule: heavy changes use an area CI run instead of the local full run",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T13:00+01:00"
     },
     {
       "id": "MP1",
