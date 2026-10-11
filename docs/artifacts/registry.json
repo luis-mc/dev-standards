@@ -1361,11 +1361,11 @@
       "id": "TC10",
       "owner": "test-cost",
       "app": "luismc-project-setup",
-      "status": "Built",
+      "status": "Live",
       "item": "Change notes at commit; every shipped rule line names its check",
-      "detail": "Branch TC10-commit-check-and-rule-tags (5b3889c): pre-commit runs change_notes.py check --staged; 39 shipped rule lines tagged (13 check, 26 advice), test_rule_tags.py in CI. Branch CI green 3m14s",
-      "expected": "11 Oct",
-      "changed": "2026-10-11T23:56+01:00",
+      "detail": "Released in #53 (fe3af00, 00:00): STACKSPEC 8.2.0, luismc-project-setup 14.2.0, luismc-artifacts 1.6.1",
+      "expected": "12 Oct",
+      "changed": "2026-10-12T00:01+01:00",
       "rides": "DS55"
     },
     {
