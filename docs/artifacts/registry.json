@@ -376,11 +376,11 @@
       "id": "AR40",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "At a glance block in section 0 instead of one prose paragraph",
-      "detail": "On AR40-at-a-glance (76eccd9): render 101/101, hooks 82/82; sample checked in a browser; the long-note warning gets wired into check at the join",
+      "detail": "Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0",
       "expected": "11 Oct",
-      "changed": "2026-10-11T12:15+01:00"
+      "changed": "2026-10-11T14:41+01:00"
     },
     {
       "id": "AR41",
