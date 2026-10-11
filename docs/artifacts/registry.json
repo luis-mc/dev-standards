@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T11:49+01:00",
+  "updated": "2026-10-11T11:55+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -371,6 +371,17 @@
       "detail": "#46 merged on green at 11:04 (one CI run: spec-lint, secret-scan); branches and worktrees removed; plugin updated",
       "expected": "11 Oct",
       "changed": "2026-10-11T11:06+01:00"
+    },
+    {
+      "id": "DL1",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Inert paths keep gate results valid",
+      "detail": "gate.json inert_paths; gate_verify trusts a base moved only by inert commits",
+      "expected": "11 Oct ~18:00",
+      "changed": "2026-10-11T11:55+01:00",
+      "expected_basis": "after TC6 merges (~14:30); one release"
     },
     {
       "id": "DS1",
