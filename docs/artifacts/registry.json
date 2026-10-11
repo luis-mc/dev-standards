@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T17:52+01:00",
+  "updated": "2026-10-11T17:53+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -547,11 +547,11 @@
       "id": "DL13",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Save the STACKSPEC 8.0.0 upgrade prompt",
-      "detail": "docs/upgrades/stackspec-8.0.0.md on DL12-integration; ships with DS51",
+      "detail": "Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1",
       "expected": "11 Oct",
-      "changed": "2026-10-11T17:23+01:00"
+      "changed": "2026-10-11T17:53+01:00"
     },
     {
       "id": "DS1",
