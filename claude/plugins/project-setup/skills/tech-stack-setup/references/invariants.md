@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 8.1.0
+**Version:** 8.2.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -23,6 +23,10 @@ recorded in the product's Stack Profile (§18). This document does not name
 vendors and does not rank them.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+
+**8.2.0 — 2026-10-11.**
+
+- §13.8 Guards for agent sessions: measured suite times (heavy = over 3 minutes locally or unmeasured), a test guard that refuses full local runs of heavy suites and repeat full runs of a tested tree, the change-note check at commit, ready pull requests only from release branches, the join working without a gate config, and every shipped rule line tagged with its check or as advice.
 
 **8.1.0 — 2026-10-11.**
 
