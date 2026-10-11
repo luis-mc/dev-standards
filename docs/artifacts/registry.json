@@ -357,12 +357,11 @@
       "id": "AR38",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Current Where it stands lines",
-      "detail": "Section 1 of Full Progress still quotes luismc-artifacts 1.1.2 and project-setup 13.0.0",
-      "expected": "11 Oct ~11:00",
-      "changed": "2026-10-11T10:06+01:00",
-      "expected_basis": "two content edits"
+      "detail": "Section 1 now says luismc-artifacts 1.3.0 is live and 1.3.1 is in progress; the models line (13.0.0 brought the medium default) was already right",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T10:06+01:00"
     },
     {
       "id": "DS1",
