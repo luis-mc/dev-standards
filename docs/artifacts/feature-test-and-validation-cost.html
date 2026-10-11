@@ -694,20 +694,16 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>The question</a><a href="#s2"><b>2</b>How it was measured</a><a href="#s3"><b>3</b>Hypotheses and verdicts</a><a href="#s4"><b>4</b>Where the time goes</a><a href="#s5"><b>5</b>The mutation pass</a><a href="#s6"><b>6</b>Repeats and noise</a><a href="#s7"><b>7</b>What is wrong</a><a href="#s8"><b>8</b>Solutions, ranked</a><a href="#s9"><b>9</b>Decisions</a><a href="#s10"><b>10</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Test and validation cost</h1><p>What our tests and checks cost, where they repeat, and what to cut</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T23:52+01:00">11 Oct 23:52</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T23:56+01:00">11 Oct 23:56</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Oct 23:52</a> (Lisbon)</p>
 <p class="lede">All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</p>
 <div class="at-a-glance">
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
-<div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
-<ul>
-<li data-glance-task="TC10"><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check <span class="glance-expected">12 Oct ~00:10</span><span class="glance-basis">agent ~30 min from 23:40</span></li>
-</ul>
-</div>
 <div class="glance-group glance-built" data-glance="built"><div class="glance-label">Built, not released</div>
 <ul>
+<li data-glance-task="TC10"><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check</li>
 <li data-glance-task="TC9"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</li>
 <li data-glance-task="TC11"><span class="task-id">TC11</span>Use the session guards in dev-standards itself</li>
 </ul>
@@ -725,12 +721,11 @@ tr.status-group.release-group td { color: var(--ink); }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">8</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">2</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">8</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">3</div><div class="label">tasks built</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group" data-group="now"><td colspan="4"><strong>Running now and next</strong></td></tr>
-<tr data-task="TC10"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check<span class="release-line"><span class="release-name">RELEASE-3</span></span></td><td>Agent B, branch TC10-commit-check-and-rule-tags: pre-commit change-note check, rule tags on shipped rule files (project-setup and artifacts), test for untagged lines</td><td>12 Oct ~00:10<span class="expected-basis">agent ~30 min from 23:40</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="4"><strong>Live or built</strong></td></tr>
+<tr data-task="TC10"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check<span class="release-line"><span class="release-name">RELEASE-3</span></span></td><td>Branch TC10-commit-check-and-rule-tags (5b3889c): pre-commit runs change_notes.py check --staged; 39 shipped rule lines tagged (13 check, 26 advice), test_rule_tags.py in CI. Branch CI green 3m14s</td><td>11 Oct</td></tr>
 <tr data-task="TC9"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess<span class="release-line"><span class="release-name">RELEASE-3</span></span></td><td>Branch TC9-test-and-pr-guards (0cbd767): suites.json + run_suite.py (times in .delivery/), session_guard.py blocks full local runs of heavy suites, repeat full runs of a tested tree and ready PRs off *-integration; join.py works without gate.json. Branch CI green 3m33s; 17 new guard cases</td><td>11 Oct</td></tr>
 <tr data-task="TC11"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">TC11</span>Use the session guards in dev-standards itself<span class="release-line"><span class="release-name">RELEASE-3</span></span></td><td>Same branch: .claude/suites.json lists the 15 tools/test_*.py suites (the six slow ones never measured locally); guard hook in this repo&#x27;s .claude/settings.json</td><td>11 Oct</td></tr>
 <tr data-task="TC8"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards<span class="release-line"><span class="release-name">RELEASE-1</span></span></td><td>Released in #50 (469da89, 20:37): STACKSPEC 8.1.0, luismc-project-setup 14.1.0</td><td>11 Oct</td></tr>

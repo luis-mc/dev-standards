@@ -686,7 +686,7 @@ tr.status-group.release-group td { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-11T23:52+01:00",
+ "updated": "2026-10-11T23:56+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -2047,12 +2047,11 @@ tr.status-group.release-group td { color: var(--ink); }
    "id": "TC10",
    "owner": "test-cost",
    "app": "luismc-project-setup",
-   "status": "Running",
+   "status": "Built",
    "item": "Change notes at commit; every shipped rule line names its check",
-   "detail": "Agent B, branch TC10-commit-check-and-rule-tags: pre-commit change-note check, rule tags on shipped rule files (project-setup and artifacts), test for untagged lines",
-   "expected": "12 Oct ~00:10",
-   "changed": "2026-10-11T23:33+01:00",
-   "expected_basis": "agent ~30 min from 23:40",
+   "detail": "Branch TC10-commit-check-and-rule-tags (5b3889c): pre-commit runs change_notes.py check --staged; 39 shipped rule lines tagged (13 check, 26 advice), test_rule_tags.py in CI. Branch CI green 3m14s",
+   "expected": "11 Oct",
+   "changed": "2026-10-11T23:56+01:00",
    "rides": "DS55"
   },
   {
@@ -2072,19 +2071,19 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T23:52+01:00">11 Oct 23:52</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T23:56+01:00">11 Oct 23:56</time> (Lisbon)</p>
 <div class="at-a-glance">
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
-<li data-glance-task="TC10"><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check <span class="glance-expected">12 Oct ~00:10</span><span class="glance-basis">agent ~30 min from 23:40</span></li>
 <li data-glance-task="DS55"><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~00:35</span><span class="glance-basis">agents ~40 min incl. branch CI; #52: CI 3.5 min, merge+cleanup 5</span></li>
 </ul>
 </div>
 <div class="glance-group glance-built" data-glance="built"><div class="glance-label">Built, not released</div>
 <ul>
+<li data-glance-task="TC10"><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check</li>
 <li data-glance-task="TC9"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</li>
 <li data-glance-task="TC11"><span class="task-id">TC11</span>Use the session guards in dev-standards itself</li>
 </ul>
@@ -2103,7 +2102,7 @@ tr.status-group.release-group td { color: var(--ink); }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">125</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">2</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">125</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">3</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
@@ -2118,8 +2117,8 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group release-group" data-group="release-3"><td colspan="5"><strong>RELEASE-3 · live ~00:35 · worst ~00:45</strong></td></tr>
 <tr data-task="DS55"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup</td><td></td><td>Contract 1f3115a on DS55-integration; agents A (TC9, TC11) and B (TC10) running; each ends with CI on its branch, then join, fold, ready PR</td><td>12 Oct ~00:35<span class="expected-basis">agents ~40 min incl. branch CI; #52: CI 3.5 min, merge+cleanup 5</span></td></tr>
-<tr data-task="TC10"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check</a></td><td><code>luismc-project-setup</code></td><td>Agent B, branch TC10-commit-check-and-rule-tags: pre-commit change-note check, rule tags on shipped rule files (project-setup and artifacts), test for untagged lines</td><td>12 Oct ~00:10<span class="expected-basis">agent ~30 min from 23:40</span></td></tr>
 <tr data-task="TC9"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</a></td><td><code>luismc-project-setup</code></td><td>Branch TC9-test-and-pr-guards (0cbd767): suites.json + run_suite.py (times in .delivery/), session_guard.py blocks full local runs of heavy suites, repeat full runs of a tested tree and ready PRs off *-integration; join.py works without gate.json. Branch CI green 3m33s; 17 new guard cases</td><td>11 Oct</td></tr>
+<tr data-task="TC10"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check</a></td><td><code>luismc-project-setup</code></td><td>Branch TC10-commit-check-and-rule-tags (5b3889c): pre-commit runs change_notes.py check --staged; 39 shipped rule lines tagged (13 check, 26 advice), test_rule_tags.py in CI. Branch CI green 3m14s</td><td>11 Oct</td></tr>
 <tr data-task="TC11"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC11</span>Use the session guards in dev-standards itself</a></td><td><code>dev-standards</code></td><td>Same branch: .claude/suites.json lists the 15 tools/test_*.py suites (the six slow ones never measured locally); guard hook in this repo&#x27;s .claude/settings.json</td><td>11 Oct</td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR45"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release</a><span class="release-line"><span class="release-name">RELEASE-2</span></span></td><td><code>luismc-artifacts</code></td><td>Released in #52 (c306304, 23:09): ARTIFACTSPEC 1.6.0, luismc-artifacts 1.6.0</td><td>11 Oct</td></tr>
@@ -2255,7 +2254,7 @@ tr.status-group.release-group td { color: var(--ink); }
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862652"><time datetime="2026-10-11T23:52+01:00">11 Oct 23:52</time></td><td>TC1 to TC11</td><td data-col="state"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-built">2 Built</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
+<tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862656"><time datetime="2026-10-11T23:56+01:00">11 Oct 23:56</time></td><td>TC1 to TC11</td><td data-col="state"><span class="state-chips"><span class="status-chip status-built">3 Built</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
 <tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862631"><time datetime="2026-10-11T23:31+01:00">11 Oct 23:31</time></td><td>AR2 to AR45</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29862629"><time datetime="2026-10-11T23:29+01:00">11 Oct 23:29</time></td><td>DL1 to DL13</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29862629"><time datetime="2026-10-11T23:29+01:00">11 Oct 23:29</time></td><td>MP1 to MP7, DS2 to DS5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
