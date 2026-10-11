@@ -938,6 +938,17 @@
       "expected": "12 Oct",
       "changed": "2026-10-11T11:02+01:00",
       "expected_basis": "after the 1.3.1 release; two test harness changes"
+    },
+    {
+      "id": "TC3",
+      "owner": "test-cost",
+      "app": "",
+      "status": "Needs you",
+      "item": "Retire the fake-renderer group",
+      "detail": "S6: it repeats the real group (46% of the suite); move its one unique case; waits on D7",
+      "expected": "12 Oct",
+      "changed": "2026-10-11T11:02+01:00",
+      "expected_basis": "your choice in D7, then one test change"
     }
   ]
 }
