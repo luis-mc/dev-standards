@@ -587,8 +587,8 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>The question</a><a href="#s2"><b>2</b>How it was measured</a><a href="#s3"><b>3</b>Hypotheses and verdicts</a><a href="#s4"><b>4</b>Where the time goes</a><a href="#s5"><b>5</b>The mutation pass</a><a href="#s6"><b>6</b>Repeats and noise</a><a href="#s7"><b>7</b>What is wrong</a><a href="#s8"><b>8</b>Solutions, ranked</a><a href="#s9"><b>9</b>Decisions</a><a href="#s10"><b>10</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Test and validation cost</h1><p>What our tests and checks cost, where they repeat, and what to cut</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T11:06+01:00">11 Oct 11:06</time> (Lisbon)</p>
-<p class="lede">Studied 11 October: the checks are good, but they run too often and for everything. Half of all CI time was agents’ branch runs, a luismc-artifacts change waits 17.5 min where 3.8 would prove the same, and the mutation pass and a duplicate renderer group are most of the rest. Eight fixes are ranked below; three of them wait on your choice (D6 to D8). <strong>Needs you: TC1 Mutation passes only when their files change, all nightly; TC3 Retire the fake-renderer group; TC5 Push the record once per turn; D6 When should the mutation passes run?; D7 Retire the artifacts suite&#x27;s fake-renderer group?; D8 How often should the record push to main?</strong></p>
+<p class="last-update">Last update: <time datetime="2026-10-11T11:25+01:00">11 Oct 11:25</time> (Lisbon)</p>
+<p class="lede">Studied 11 October: the checks are good, but they run too often and for everything. Half of all CI time was agents’ branch runs, a luismc-artifacts change waits 17.5 min where 3.8 would prove the same, and the mutation pass and a duplicate renderer group are most of the rest. Eight fixes are ranked below; the owner chose all of them (D1 to D8), and they are To do. <strong>Needs you: TC1 Mutation passes only when their files change, all nightly; TC3 Retire the fake-renderer group; TC5 Push the record once per turn.</strong></p>
 <div class="status-count-tiles"><div class="status-count-tile status-needs-you"><div class="count">3</div><div class="label">needs you</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
@@ -760,52 +760,55 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </section>
 <section id="s9"><h2><span class="section-number">&sect; 9</span>Decisions</h2>
 <div class="decision-list">
-<article class="decision decision-open" data-decision="D8">
-<h3 class="decision-head"><span class="decision-id">D8</span> <span class="decision-question">How often should the record push to main?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
-<p class="decision-meta">Asked 11 Oct · Task TC5</p>
+<article class="decision decision-decided" data-decision="D8">
+<h3 class="decision-head"><span class="decision-id">D8</span> <span class="decision-question">How often should the record push to main?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC5</p>
 <div class="decision-options">
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Once per turn</span> <span class="decision-tag">Recommended</span></div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Once per turn</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
 <p class="decision-summary">S8: commit on every change, push at the end of the turn and before any PR, merge or publish. About 250 fewer pushes and scans a day.</p>
+<blockquote class="decision-words">&ldquo;Once per turn (Recommended)&rdquo;</blockquote>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">On every change, as today</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">On every change, as today</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Every status change is pushed and scanned at once; main keeps moving under CI.</p>
 </div>
 </div>
 </article>
-<article class="decision decision-open" data-decision="D7">
-<h3 class="decision-head"><span class="decision-id">D7</span> <span class="decision-question">Retire the artifacts suite&#x27;s fake-renderer group?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
-<p class="decision-meta">Asked 11 Oct · Task TC3</p>
+<article class="decision decision-decided" data-decision="D7">
+<h3 class="decision-head"><span class="decision-id">D7</span> <span class="decision-question">Retire the artifacts suite&#x27;s fake-renderer group?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC3</p>
 <div class="decision-options">
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Retire it</span> <span class="decision-tag">Recommended</span></div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Retire it</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
 <p class="decision-summary">S6: drop the group, move its one unique case (test_check_runs_check_html) into the real group. Saves 46% of the suite.</p>
+<blockquote class="decision-words">&ldquo;Retire it (Recommended)&rdquo;</blockquote>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Run it nightly only</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Run it nightly only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Keep the stand-in for a nightly run; PRs run the real group alone.</p>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Keep both groups</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep both groups</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Every run keeps testing every case twice.</p>
 </div>
 </div>
 </article>
-<article class="decision decision-open" data-decision="D6">
-<h3 class="decision-head"><span class="decision-id">D6</span> <span class="decision-question">When should the mutation passes run?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
-<p class="decision-meta">Asked 11 Oct · Task TC1</p>
+<article class="decision decision-decided" data-decision="D6">
+<h3 class="decision-head"><span class="decision-id">D6</span> <span class="decision-question">When should the mutation passes run?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC1</p>
 <div class="decision-options">
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">When their files change, plus nightly</span> <span class="decision-tag">Recommended</span></div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">When their files change, plus nightly</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
 <p class="decision-summary">S2: on a PR only when the mutated scripts or their test change; every mutant on main once a night. Saves 8.8 min on most PRs.</p>
+<blockquote class="decision-words">&ldquo;Files change + nightly (Recommended)&rdquo;</blockquote>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Nightly only</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Nightly only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Never on a PR; a weak test is found the next morning instead of before the merge.</p>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Every PR, as today</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Every PR, as today</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">8.8 min on every ready PR whatever changed.</p>
 </div>
 </div>
