@@ -213,6 +213,12 @@ jobs:
               --route-map tools/route-ratelimit-map.json --only "$check"
           done
 
+      # STACKSPEC 13.8: every rule line a plugin ships to projects ends with the
+      # check that enforces it, or with `advice`. A tag naming a path that does
+      # not exist, or an untagged line, fails here.
+      - name: Every shipped rule line names its check
+        run: python3 tools/test_rule_tags.py
+
   # TC7: the delivery area is one job per suite, so the suites run side by side
   # and the area takes as long as its slowest one. Each suite's mutation pass is
   # decided by its own flag from tools/ci_areas.py (mutants_gate, mutants_cleanup,
