@@ -527,12 +527,11 @@
       "id": "DL12",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Delivery log: label its times as UTC, CI start from the first run",
-      "detail": "One Sonnet agent on DL12-delivery-log-times",
-      "expected": "11 Oct ~18:15",
-      "changed": "2026-10-11T17:22+01:00",
-      "expected_basis": "agent ~15 min plus local delivery suite"
+      "detail": "9d2013a on DL12-delivery-log-times; delivery-log suite 290 checks, 0 failed; ships with DS51",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T17:38+01:00"
     },
     {
       "id": "DL13",
