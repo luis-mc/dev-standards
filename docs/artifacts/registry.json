@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T03:00+01:00",
+  "updated": "2026-10-11T03:01+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -666,11 +666,11 @@
       "id": "DS35",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "One ready-PR CI at a time on shared runners",
-      "detail": "U8: on shared or self-hosted runners, ready pull requests' CI runs one at a time (a repository variable switches it on). SHOULD in STACKSPEC 7.1.0.",
-      "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T01:23+01:00"
+      "detail": "Built in #40 and joined into DS37-integration (not released). One ready-PR CI at a time on shared runners: done as contracted; Windows suites green; CI on its branch green (spec-lint; template build on Linux and Windows for Go, Rust and .NET).",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T03:01+01:00"
     },
     {
       "id": "DS36",
