@@ -289,6 +289,30 @@
       "decided": "2026-10-11",
       "task": "TC8",
       "owner_words": "Start now, in parallel (Recommended)"
+    },
+    {
+      "id": "D14",
+      "question": "How should TC8 get past the pre-commit false positive on `GH_TOKEN: ${{ github.token }}`?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Hook: allow GitHub expressions",
+          "summary": "The pattern layer skips `${{ github.token }}` and `${{ secrets.X }}` as .gitleaks.toml already does; fixed in the shared hook too."
+        },
+        {
+          "label": "Markers on those 4 lines",
+          "summary": "`# secret-scan:ignore` on the template line and three test lines; the marker ships in products' ci.yml."
+        },
+        {
+          "label": "Hook: scan added lines only",
+          "summary": "Only lines a commit adds are checked; an old literal secret is no longer re-flagged."
+        }
+      ],
+      "chosen": "Hook: allow GitHub expressions",
+      "decided": "2026-10-11",
+      "task": "TC8",
+      "owner_words": "Hook: allow GitHub expressions (Recommended)"
     }
   ]
 }
