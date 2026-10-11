@@ -1755,12 +1755,11 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "id": "DS53",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "TC8 train: join, PR CI, merge, cleanup",
-   "detail": "PR #50 (9cc6672) in CI; late: commit blocked by the hook until the owner chose a fix, then a hung shell",
-   "expected": "11 Oct ~20:42",
-   "changed": "2026-10-11T20:34+01:00",
-   "expected_basis": "PR CI ~4 min from 20:34, merge and cleanup ~4 min",
+   "detail": "#50 merged 20:37, CI 2m27s; cleanup done (an empty locked folder dev-standards-TC8 remains); delivery log in train-2026-10-11-50",
+   "expected": "11 Oct",
+   "changed": "2026-10-11T20:38+01:00",
    "release": true,
    "phases": [
     {
@@ -1952,13 +1951,9 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
-<div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
-<ul>
-<li data-glance-task="DS53"><span class="task-id">DS53</span>TC8 train: join, PR CI, merge, cleanup <span class="glance-expected">11 Oct ~20:42</span><span class="glance-basis">PR CI ~4 min from 20:34, merge and cleanup ~4 min</span></li>
-</ul>
-</div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
+<li data-glance-task="DS53"><span class="task-id">DS53</span>TC8 train: join, PR CI, merge, cleanup</li>
 <li data-glance-task="TC8"><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards</li>
 <li data-glance-task="AR43"><span class="task-id">AR43</span>Full Progress: release timeline above the status table</li>
 <li data-glance-task="DS52"><span class="task-id">DS52</span>AR43 train: join, PR CI, merge, cleanup</li>
@@ -1966,35 +1961,15 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <li data-glance-task="DL13"><span class="task-id">DL13</span>Save the STACKSPEC 8.0.0 upgrade prompt</li>
 <li data-glance-task="DS51"><span class="task-id">DS51</span>DL12 train: join, PR CI, merge, cleanup</li>
 <li data-glance-task="TC7"><span class="task-id">TC7</span>PR CI: mutants per suite, delivery suites in parallel</li>
-<li data-glance-task="DL12"><span class="task-id">DL12</span>Delivery log: label its times as UTC, CI start from the first run</li>
-<li class="glance-more">and 80 more</li>
+<li class="glance-more">and 81 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">122</div><div class="label">live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">123</div><div class="label">live</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<figure class="release-timeline">
-<figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 900 164" role="img" aria-label="Next releases: DS53 (TC8 train: join, PR CI, merge, cleanup) expected live about 20:42, worst case 20:52." style="min-width:640px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">18:00</text><line class="rt-grid" x1="286.7" y1="36" x2="286.7" y2="140"/><text x="286.7" y="28">18:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">19:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">19:30</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">20:00</text><line class="rt-grid" x1="633.3" y1="36" x2="633.3" y2="140"/><text x="633.3" y="28">20:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">21:00</text></g>
-<text class="rt-name" x="0" y="60"><title>DS53 · TC8 train: join, PR CI, merge, cleanup</title>DS53 · TC8 train: join, P…</text>
-<text class="rt-sub" x="0" y="77"><title>TC8</title>TC8</text>
-<rect class="rt-bar agents" x="263.6" y="52" width="52" height="22"><title>agents 18:22-18:40</title></rect>
-<rect class="rt-bar join" x="315.6" y="52" width="329.3" height="22"><title>join 18:40-20:34</title></rect>
-<rect class="rt-bar ci" x="644.9" y="52" width="11.6" height="22"><title>PR CI 20:34-20:38</title></rect>
-<rect class="rt-bar merge" x="656.4" y="52" width="11.6" height="22"><title>merge + cleanup 20:38-20:42</title></rect>
-<rect class="rt-risk" x="668" y="58" width="28.9" height="10"><title>+1 fix round</title></rect>
-<polygon class="rt-worst" points="696.9,51 703.9,63 696.9,75 689.9,63"/>
-<text class="rt-risk-label" x="707.9" y="67">+1 fix round → worst ~20:52</text>
-<polygon class="rt-expected" points="668,50 676,63 668,76 660,63"/>
-<text class="rt-live-label" x="668" y="92">live ~20:42</text>
-<line class="rt-now" x1="656.4" y1="36" x2="656.4" y2="148"/><text class="rt-now-label" x="656.4" y="161">now 20:38</text>
-</svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
-</figure>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
-<tr data-task="DS53"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS53</span>TC8 train: join, PR CI, merge, cleanup</td><td></td><td>PR #50 (9cc6672) in CI; late: commit blocked by the hook until the owner chose a fix, then a hung shell</td><td>11 Oct ~20:42<span class="expected-basis">PR CI ~4 min from 20:34, merge and cleanup ~4 min</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
+<tr data-task="DS53"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS53</span>TC8 train: join, PR CI, merge, cleanup</td><td></td><td>#50 merged 20:37, CI 2m27s; cleanup done (an empty locked folder dev-standards-TC8 remains); delivery log in train-2026-10-11-50</td><td>11 Oct</td></tr>
 <tr data-task="TC8"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC8</span>Generic CI speed: split or shard the dominant step, e2e shards</a></td><td></td><td>Released in #50 (469da89, 20:37): STACKSPEC 8.1.0, luismc-project-setup 14.1.0</td><td>11 Oct</td></tr>
 <tr data-task="AR43"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR43</span>Full Progress: release timeline above the status table</a></td><td><code>luismc-artifacts</code></td><td>Released in #49 (051005d, 18:38): luismc-artifacts 1.5.0, ARTIFACTSPEC 1.5.0</td><td>11 Oct</td></tr>
 <tr data-task="DS52"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS52</span>AR43 train: join, PR CI, merge, cleanup</td><td></td><td>#49 merged 18:38 on one 3.4 min CI run; cleanup done; delivery log in train-2026-10-11-49</td><td>11 Oct</td></tr>
