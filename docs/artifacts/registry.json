@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T12:15+01:00",
+  "updated": "2026-10-11T12:22+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -392,6 +392,17 @@
       "expected": "11 Oct ~15:00",
       "changed": "2026-10-11T11:59+01:00",
       "expected_basis": "after the TC6 merge; three content edits"
+    },
+    {
+      "id": "AR42",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "Feature table: Last updated column, newest first, sortable headers",
+      "detail": "Section 1 shows each feature page's stamp; click Feature artifact or Last updated to sort; feature pages show Full Progress's last publish",
+      "expected": "11 Oct ~15:00",
+      "changed": "2026-10-11T12:22+01:00",
+      "expected_basis": "agent ~1h, in the TC6 release"
     },
     {
       "id": "DL1",
