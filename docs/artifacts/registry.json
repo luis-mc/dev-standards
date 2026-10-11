@@ -368,7 +368,7 @@
       "app": "luismc-artifacts",
       "status": "Live",
       "item": "Release luismc-artifacts 1.3.1 (AR35, AR37)",
-      "detail": "#46 merged on green at 11:20 (one CI run: spec-lint, secret-scan); branches and worktrees removed; plugin updated",
+      "detail": "#46 merged on green at 11:04 (one CI run: spec-lint, secret-scan); branches and worktrees removed; plugin updated",
       "expected": "11 Oct",
       "changed": "2026-10-11T11:06+01:00"
     },
