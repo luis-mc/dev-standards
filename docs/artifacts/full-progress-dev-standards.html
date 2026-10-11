@@ -679,7 +679,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-11T22:59+01:00",
+ "updated": "2026-10-11T23:00+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1987,6 +1987,17 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
    "expected": "11 Oct",
    "changed": "2026-10-11T20:38+01:00",
    "rides": "DS53"
+  },
+  {
+   "id": "TC9",
+   "owner": "test-cost",
+   "app": "luismc-project-setup",
+   "status": "Needs you",
+   "item": "Light or heavy from measured suite times, not the session's guess",
+   "detail": "AR45: brief called test_project_artifacts 'light' (it takes 12+ min locally), then the session re-ran it in full before CI. Proposal: record suite times, classify by them, hook warns on a local full run of a heavy suite. Awaiting go-ahead",
+   "expected": "12 Oct",
+   "changed": "2026-10-11T23:00+01:00",
+   "expected_basis": "owner's go-ahead, then study ~30 min and one agent"
   }
  ]
 }</script>
@@ -1994,10 +2005,12 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T22:59+01:00">11 Oct 22:59</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T23:00+01:00">11 Oct 23:00</time> (Lisbon)</p>
 <div class="at-a-glance">
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
-<p class="glance-none">Nothing needs you.</p>
+<ul>
+<li data-glance-task="TC9"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess <span class="glance-expected">12 Oct</span><span class="glance-basis">owner&#x27;s go-ahead, then study ~30 min and one agent</span></li>
+</ul>
 </div>
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
@@ -2023,7 +2036,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">123</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">123</div><div class="label">live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">running</div></div><div class="status-count-tile status-needs-you"><div class="count">1</div><div class="label">needs you</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
@@ -2039,13 +2052,15 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <text class="rt-risk-label" x="713.7" y="67">+1 fix round → worst ~23:27</text>
 <polygon class="rt-expected" points="616,50 624,63 616,76 608,63"/>
 <text class="rt-live-label" x="616" y="92">live ~23:12</text>
-<line class="rt-now" x1="540.9" y1="36" x2="540.9" y2="148"/><text class="rt-now-label" x="540.9" y="161">now 22:59</text>
+<line class="rt-now" x1="546.7" y1="36" x2="546.7" y2="148"/><text class="rt-now-label" x="546.7" y="161">now 23:00</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Running now and next</strong></td></tr>
 <tr data-task="DS54"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS54</span>AR45 train: join, PR CI, merge, cleanup</td><td></td><td>Ready PR #51, CI started 22:59; then merge and cleanup (incl. leftover TC8 branch); luismc-artifacts 1.6.0</td><td>11 Oct ~23:12<span class="expected-basis">#50 CI 2m27s, merge+cleanup 4 min</span></td></tr>
+<tr class="status-group" data-group="you"><td colspan="5"><strong>Needs you, failed or on hold</strong></td></tr>
+<tr data-task="TC9"><td><span class="status-chip status-needs-you">Needs you</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</a></td><td><code>luismc-project-setup</code></td><td>AR45: brief called test_project_artifacts &#x27;light&#x27; (it takes 12+ min locally), then the session re-ran it in full before CI. Proposal: record suite times, classify by them, hook warns on a local full run of a heavy suite. Awaiting go-ahead</td><td>12 Oct<span class="expected-basis">owner&#x27;s go-ahead, then study ~30 min and one agent</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR45"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release</a></td><td><code>luismc-artifacts</code></td><td>4 commits on AR45-release-numbers; agent&#x27;s local runs 116+122+90 pass; PR #51 CI is the full run</td><td>11 Oct</td></tr>
 <tr data-task="DS53"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS53</span>TC8 train: join, PR CI, merge, cleanup</td><td></td><td>#50 merged 20:37, CI 2m27s; cleanup done (an empty locked folder dev-standards-TC8 remains); delivery log in train-2026-10-11-50</td><td>11 Oct</td></tr>
@@ -2179,8 +2194,8 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
+<tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862600"><time datetime="2026-10-11T23:00+01:00">11 Oct 23:00</time></td><td>TC1 to TC9</td><td data-col="state"><span class="state-chips"><span class="status-chip status-needs-you">1 Needs you</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
 <tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862599"><time datetime="2026-10-11T22:59+01:00">11 Oct 22:59</time></td><td>AR2 to AR45</td><td data-col="state"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
-<tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862458"><time datetime="2026-10-11T20:38+01:00">11 Oct 20:38</time></td><td>TC1 to TC8</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
 <tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29862332"><time datetime="2026-10-11T18:32+01:00">11 Oct 18:32</time></td><td>DL1 to DL13</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29862332"><time datetime="2026-10-11T18:32+01:00">11 Oct 18:32</time></td><td>MP1 to MP7, DS2 to DS5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
 </tbody></table></div>

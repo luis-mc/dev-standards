@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T22:59+01:00",
+  "updated": "2026-10-11T23:00+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1308,6 +1308,17 @@
       "expected": "11 Oct",
       "changed": "2026-10-11T20:38+01:00",
       "rides": "DS53"
+    },
+    {
+      "id": "TC9",
+      "owner": "test-cost",
+      "app": "luismc-project-setup",
+      "status": "Needs you",
+      "item": "Light or heavy from measured suite times, not the session's guess",
+      "detail": "AR45: brief called test_project_artifacts 'light' (it takes 12+ min locally), then the session re-ran it in full before CI. Proposal: record suite times, classify by them, hook warns on a local full run of a heavy suite. Awaiting go-ahead",
+      "expected": "12 Oct",
+      "changed": "2026-10-11T23:00+01:00",
+      "expected_basis": "owner's go-ahead, then study ~30 min and one agent"
     }
   ]
 }
