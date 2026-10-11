@@ -85,32 +85,59 @@ check("union", hit(["docs/a.md", "tools/test_render_artifacts.py",
 check("backslashes", hit(["tools\\test_render_artifacts.py"]), {"artifacts"})
 check("empty diff", hit([]), set())
 
+NOMUT = {"mutants": False, "mutants_gate": False, "mutants_cleanup": False,
+         "mutants_notes": False}
+
 # mutants
 D = f"{TS}/assets/tooling/shared/scripts/delivery/"
+TOOL = f"{TS}/assets/tooling"
+
+
+def mflags(path_list, **kw):
+    out = ca.classify(path_list, **kw)
+    return tuple(out[k] for k in ("mutants", "mutants_gate", "mutants_cleanup", "mutants_notes"))
+
+
+T, F = True, False
+# (path, (any, gate, cleanup, notes))
 for path, want in [
-    (D + "cleanup.py", True), (D + "CONTRACT.md", True),
-    (f"{TS}/assets/tooling/shared/.githooks/pre-push", True),
-    ("tools/test_delivery_gate.py", True), ("tools/test_delivery_cleanup.py", True),
-    ("tools/test_change_notes.py", False), ("tools/test_delivery_ci.py", False),
-    (f"{TS}/assets/preflight.py", False),
-    (f"{TS}/assets/tooling/ts/vitest.config.ts", False),
-    ("tools/test_render_artifacts.py", False),
-    ("docs/a.md", False),
+    (D + "cleanup.py", (T, F, T, F)), (D + "delivery_log.py", (T, F, T, F)),
+    (D + "branch_gate.py", (T, T, F, F)), (D + "gate_verify.py", (T, T, F, F)),
+    (D + "agent_setup.sh", (T, T, F, F)), (D + "train_freeze.py", (T, T, F, F)),
+    (D + "join.py", (T, T, T, F)), (D + "fast_guards.py", (T, T, T, F)),
+    (D + "delivery_common.py", (T, T, T, T)),
+    (D + "change_notes.py", (T, F, F, T)),
+    (D + "CONTRACT.md", (F, F, F, F)), (D + "ci_watch.py", (F, F, F, F)),
+    (D + "smoke_packaged.py", (F, F, F, F)), (D + "artifact_prune.py", (F, F, F, F)),
+    (f"{TOOL}/shared/.githooks/pre-push", (T, T, F, F)),
+    (f"{TOOL}/shared/.github/workflows/train-cleanup.yml", (T, F, T, F)),
+    (f"{TOOL}/ts/.github/workflows/ci.yml", (T, F, T, F)),
+    ("tools/test_delivery_gate.py", (T, T, T, F)),
+    ("tools/test_delivery_cleanup.py", (T, F, T, F)),
+    ("tools/test_change_notes.py", (T, F, F, T)),
+    ("tools/test_delivery_ci.py", (F, F, F, F)),
+    (f"{TS}/assets/preflight.py", (F, F, F, F)),
+    (f"{TS}/assets/tooling/ts/vitest.config.ts", (F, F, F, F)),
+    ("tools/test_render_artifacts.py", (F, F, F, F)),
+    ("docs/a.md", (F, F, F, F)),
 ]:
-    check(f"mutants {path}", ca.classify([path])["mutants"], want)
-check("mutants with other changes", ca.classify(["docs/a.md", D + "join.py"])["mutants"], True)
+    check(f"mutants {path}", mflags([path]), want)
+check("mutants: delivery_log + cleanup test only cleanup",
+      mflags([D + "delivery_log.py", "tools/test_delivery_cleanup.py"]), (T, F, T, F))
+check("mutants with other changes", mflags(["docs/a.md", D + "join.py"]), (T, T, T, F))
 check("forced mutants need delivery work",
-      ca.classify(["tools/test_model_profiles.py"], force_mutants=True)["mutants"], False)
-check("mutants forced with delivery", ca.classify([D + "x.py"], force_mutants=True)["mutants"], True)
+      mflags(["tools/test_model_profiles.py"], force_mutants=True), (F, F, F, F))
+check("mutants forced with delivery", mflags([D + "x.py"], force_mutants=True), (T, T, T, T))
 check("mutants forced run_all", ca.classify([], run_all=True, force_mutants=True),
-      {**{a: True for a in ca.AREAS}, "mutants": True})
-check("run_all without force", ca.classify([], run_all=True)["mutants"], False)
+      {**{a: True for a in ca.AREAS}, "mutants": True, "mutants_gate": True,
+       "mutants_cleanup": True, "mutants_notes": True})
+check("run_all without force", mflags([], run_all=True), (F, F, F, F))
 
 # main-after-merge skip: nothing runs, even for a shared path
 check("skip", ca.classify([".github/workflows/spec-lint.yml"], skip=True),
-      {**{a: False for a in ca.AREAS}, "mutants": False})
+      {**{a: False for a in ca.AREAS}, **NOMUT})
 check("skip beats run_all",
-      ca.classify([], run_all=True, force_mutants=True, skip=True)["mutants"], False)
+      mflags([], run_all=True, force_mutants=True, skip=True), (F, F, F, F))
 
 
 # branch advice
@@ -172,9 +199,13 @@ with tempfile.TemporaryDirectory() as tmp:
     prof = commit(tmp, "tools/test_model_profiles.py")
     dgate = commit(tmp, "tools/test_delivery_gate.py")
     none = {"specs": "false", "delivery": "false", "artifacts": "false", "profiles": "false",
-            "mutants": "false"}
-    every = {"specs": "true", "delivery": "true", "artifacts": "true", "profiles": "true",
-             "mutants": "false"}
+            "mutants": "false", "mutants_gate": "false", "mutants_cleanup": "false",
+            "mutants_notes": "false"}
+    every = {**none, "specs": "true", "delivery": "true", "artifacts": "true",
+             "profiles": "true"}
+    allmut = {"mutants": "true", "mutants_gate": "true", "mutants_cleanup": "true",
+              "mutants_notes": "true"}
+    gatemut = {"mutants": "true", "mutants_gate": "true", "mutants_cleanup": "true"}
     check("cli pr docs-only",
           cli(tmp, "--event", "pull_request", "--base", base, "--head", docs), none)
     check("cli pr profiles",
@@ -184,7 +215,7 @@ with tempfile.TemporaryDirectory() as tmp:
           {**none, "profiles": "true"})
     check("cli push delivery mutants",
           cli(tmp, "--event", "push", "--base", prof, "--head", dgate),
-          {**none, "delivery": "true", "mutants": "true"})
+          {**none, "delivery": "true", **gatemut})
     check("cli dispatch on the default branch runs everything (no origin/main)",
           cli(tmp, "--event", "workflow_dispatch"), every)
     check("cli dispatch override",
@@ -195,7 +226,7 @@ with tempfile.TemporaryDirectory() as tmp:
           {**none, "specs": "true"})
     check("cli dispatch override with mutants",
           cli(tmp, "--event", "workflow_dispatch", "--areas", "delivery", "--mutants", "true"),
-          {**none, "delivery": "true", "mutants": "true"})
+          {**none, "delivery": "true", **allmut})
     check("areas override only applies to dispatch",
           cli(tmp, "--event", "schedule", "--areas", "specs"), every)
     bad = subprocess.run([sys.executable, str(Path(ca.__file__)), "--event", "workflow_dispatch",
@@ -209,7 +240,7 @@ with tempfile.TemporaryDirectory() as tmp:
           cli(tmp, "--event", "workflow_dispatch"), {**none, "profiles": "true"})
     check("cli dispatch --head names the branch tip",
           cli(tmp, "--event", "workflow_dispatch", "--head", dgate),
-          {**none, "profiles": "true", "delivery": "true", "mutants": "true"})
+          {**none, "profiles": "true", "delivery": "true", **gatemut})
     git(tmp, "update-ref", "refs/remotes/origin/main", prof)
     check("cli dispatch on the default branch tip runs everything",
           cli(tmp, "--event", "workflow_dispatch"), every)
@@ -228,7 +259,7 @@ with tempfile.TemporaryDirectory() as tmp:
     check("cli advice with paths", advice_cli("--branch", "b", "docs/a.md"),
           "light: test locally only")
     check("cli schedule nightly", cli(tmp, "--event", "schedule", "--mutants", "true"),
-          {**every, "mutants": "true"})
+          {**every, **allmut})
     check("cli push new branch (zero before)",
           cli(tmp, "--event", "push", "--base", "0" * 40, "--head", dgate), every)
     check("cli unreadable range",
@@ -247,7 +278,10 @@ for area in ca.AREAS:
 check("workflow concurrency",
       "cancel-in-progress: ${{ github.event_name == 'pull_request' }}" in wf, True)
 check("workflow dispatch areas input", "areas:" in wf and "--areas" in wf, True)
-check("workflow no-mutants wiring", wf.count("mutants != 'true' && '--no-mutants'"), 3)
+for suite in ca.SUITE_MUTANTS:
+    check(f"workflow wires mutants_{suite}",
+          f"needs.areas.outputs.mutants_{suite}" in wf, True)
+check("workflow runs the gate as 4 shards", "--shard ${{ matrix.shard }}/4" in wf, True)
 
 if FAILS:
     print("FAILED:\n  " + "\n  ".join(FAILS))
