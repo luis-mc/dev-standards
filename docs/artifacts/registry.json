@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-12T00:23+01:00",
+  "updated": "2026-10-12T00:24+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -454,6 +454,17 @@
       "expected": "12 Oct",
       "changed": "2026-10-12T00:23+01:00",
       "expected_basis": "next train; owner to choose the approach"
+    },
+    {
+      "id": "AR48",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "Tasks that ship nothing: --no-release with a reason",
+      "detail": "R5.47 refused a Running publish timer (DS58 attempt, 00:26). Owner chose an explicit no-release flag with a reason; such a task may be Running without a release, Built still rides one",
+      "expected": "12 Oct",
+      "changed": "2026-10-12T00:24+01:00",
+      "expected_basis": "next train with AR47"
     },
     {
       "id": "DL1",
