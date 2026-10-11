@@ -358,7 +358,8 @@ docs/artifacts/
 - **R4.7** — `status` is one of the eight statuses of §6.1. `changed` is set by
   the script on every status change, never by hand.
 - **R4.8** — `expected` follows §6.4; an open row may also carry
-  `expected_basis` (R6.10). `item` is at most 80 characters; `detail`
+  `expected_basis` (R6.10); a release row may also carry `release`, `phases`,
+  `risk` and any row `rides` (R5.40). `item` is at most 80 characters; `detail`
   is plain text, at most 600 characters.
 - **R4.9** — Tasks are stored in ID order (prefix, then number); rendering
   orders them (§6.2), the file does not.
@@ -550,10 +551,10 @@ an HTML fragment beginning with `<title>`, as the Artifact tool expects (no
 - **R5.5** — The stamp reads `Last update: DD Mon HH:MM (<timezone_label>)` in
   a `<time>` element whose `datetime` attribute is the ISO time with offset.
 - **R5.6** — The full-progress artifact's section 1 lists every feature
-  artifact in a table `Feature artifact | Last updated | Tasks | Where it stands`:
+  artifact in a table `Feature artifact | Last updated | Tasks | State | Where it stands`:
   its link to the feature's file (R5.30, R5.31), the time its page was last
   updated (its stamp, `DD Mon HH:MM` in a `<time>` element, from the manifest
-  entry's `updated`, R4.30), its task ID range and one line on where it stands
+  entry's `updated`, R4.30), its task ID range, its State (R5.44) and one line on where it stands
   (taken from its `meta.json` lede's first sentence, or its generated summary
   when the lede is empty, R5.36). The committed rows are in the default order
   (R5.39): Last updated, newest first, ties by title. Section 1 is generated, so the full-progress artifact's
@@ -799,6 +800,79 @@ double-click.
   keep working in any order. Verified by `check_r539_sort_headers` and
   `test_full_progress_sort_script`.
 
+### 5.7 Releases, the release timeline and the State column
+
+- **R5.40** — A task may be a **release**. A release row carries `"release": true`
+  and may carry `"phases"`, `"risk"`; any task may carry `"rides"`. All are
+  optional, so a record without them stays valid:
+
+  ```json
+  {"id": "DS51", "release": true, "expected": "10 Oct ~18:00",
+   "phases": [{"name": "agents", "start": "2026-10-10T17:30+01:00", "end": "2026-10-10T17:45+01:00"},
+              {"name": "merge", "start": "2026-10-10T17:54+01:00", "end": "2026-10-10T18:00+01:00"}],
+   "risk": {"label": "+1 fix round", "minutes": 10}}
+  ```
+
+  A phase `name` is `agents`, `join`, `ci` or `merge` (merge and cleanup), at
+  most once each; `start` and `end` are ISO times with an offset, `end` after
+  `start`. `risk` is one named risk: a `label` of at most 40 characters and
+  whole `minutes` of at least 1. `rides` is the ID of a release task, which must
+  exist and be a release. Phases and risk belong to a release row only. The
+  commands set them: `task-add` and `set-task-status` take `--release`,
+  `--phase NAME=HH:MM-HH:MM` (today, in the project's zone) or
+  `--phase "NAME=DD Mon HH:MM-DD Mon HH:MM"`, repeatable and replacing all
+  phases, `--phase ""` to clear them, `--risk "LABEL=MINUTES"` (`--risk ""`
+  clears it) and `--rides ID` (`--rides ""` clears it). A command refuses a
+  `--rides` that is not a release, and phases or risk on a task that is not a
+  release. `check` reports the same (R5.40). Verified by `test_release_flags_store_the_fields`,
+  `test_release_refusals` and the release fixtures of `test_check_fixtures`.
+- **R5.41** — A release's Expected is the sum of its phases: when a release in
+  an open status has phases, its Expected (before any `; note`) must equal
+  `DD Mon ~HH:MM`, the end of its last phase to the minute. A writing command
+  that would leave a mismatch is refused, and `check` reports one (R5.41). There
+  is no silent padding: a margin for what may go wrong is named as the
+  release's `risk`, not added to Expected. Verified by `test_release_expected_is_the_end_of_the_last_phase`,
+  `rule_file_carries_the_release_rule` and the R5.41 fixture of `test_check_fixtures`.
+- **R5.42** — Section 0 of the full-progress artifact holds, after the status key
+  and before the checklist, the **release timeline** whenever at least one
+  release is open (Running, Waiting, To do, Needs you or On hold) and nothing
+  otherwise: `<figure class="release-timeline">` with a `<figcaption>` reading
+  `Next releases (<timezone_label>)`, an inline `<svg>` and a legend. It has one
+  row per open release, ordered by Expected (ties by ID); each label is
+  `<ID> · <item>` and, below it, the IDs of the tasks whose `rides` names it.
+  Today's releases (a time in Expected, or phases, on the stamp's date) share a
+  time axis drawn to scale: from the earliest phase start, Expected or stamp to
+  the latest Expected or worst case, floored and ceiled to the half hour, with a
+  tick every 30 minutes (every hour beyond 4 hours). A release whose Expected is
+  another day, or has no time, sits after an axis break in one slot per day, as
+  an outline diamond with the day. A release without phases is a filled diamond at
+  its Expected only. The figure is deterministic (R7.4): the "now" mark is the
+  render stamp, never the wall clock. `check` finds a missing, extra or misplaced
+  timeline and a wrong caption (R5.42). Verified by `timeline_rows_axis_and_break`,
+  `timeline_axis_is_to_scale_from_the_earliest_phase`, `timeline_is_absent_without_open_releases`,
+  `timeline_without_phases_is_a_diamond_at_expected` and `check_finds_a_wrong_timeline`.
+- **R5.43** — The look of the timeline uses the design tokens only, through
+  classes of the structure stylesheet: phases are bars in `--running-mark`
+  (agents), `--signal` (join), `--live` (PR CI) and `--ink` (merge and cleanup);
+  Expected is a filled diamond labelled `live ~HH:MM`; a risk is a thin
+  `--rule-strong` extension from Expected to Expected plus its minutes ending in
+  an outline diamond labelled `LABEL → worst ~HH:MM`; a `--failed` line labelled
+  `now HH:MM` marks the stamp when it falls inside today's axis. The `<svg>` has
+  `role="img"` and an `aria-label` stating each release's Expected and worst
+  case; the legend under it names the four colours and says Expected is the sum
+  of the phases. At phone width the figure scrolls inside its own
+  `div.timeline-scroll` (the `<svg>` has a `min-width`), so the page does not.
+  Both themes follow from the tokens. Verified by `timeline_risk_now_and_accessibility`,
+  `timeline_is_deterministic_and_uses_the_stamp_for_now` and `timeline_css_uses_tokens`.
+- **R5.44** — The feature table of section 1 has a `State` column right after
+  `Tasks`. A feature with no task in an open status (any status but Live) and no
+  open decision (R5.23) shows one `Complete` chip (`status-live`); otherwise one
+  chip per status with its count, as `2 Running`, in the order Running, Needs
+  you, Failed, Waiting, Built, To do, On hold, then `N open decision(s)` in a
+  Needs you chip. `check` finds a State that differs from the registry
+  (R5.44). Verified by `state_column_counts`, `check_state_column` and
+  `test_state_column_counts_in_the_record`.
+
 ---
 
 ## 6. Statuses and the checklist
@@ -897,8 +971,8 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
 |---|---|
 | `init --project NAME [--timezone IANA] [--label L] [--windows-timezone ID] [--default-branch B]` | Creates the manifest, an empty registry and the full-progress artifact's content. Refuses if a manifest exists. Zone defaults to the machine's. |
 | `feature-new --key K --title NAME --prefix P --apps a,b [--hero TEXT] [init flags]` | Adds a feature artifact (content folder with `meta.json`, a section `01-what-and-why.html` stub and a first History row; its manifest entry has no `url`). Runs `init` first, with the same `init` flags, when there is no manifest; `--project` is then required. |
-| `task-add --owner K\|project --item TEXT --detail TEXT --expected TEXT [--basis TEXT] [--app A] [--status S] [--prefix P]` | Adds a task with the next free number; prints its ID. For `--owner project`, `--prefix` picks one of `project_prefixes`, and a new prefix not used by any feature is registered. |
-| `set-task-status ID STATUS [--detail TEXT] [--expected TEXT] [--basis TEXT] [--history TEXT]` | Changes one task; adds a History row to its feature artifact when `--history` is given. |
+| `task-add --owner K\|project --item TEXT --detail TEXT --expected TEXT [--basis TEXT] [--app A] [--status S] [--prefix P] [--release] [--phase NAME=HH:MM-HH:MM]... [--risk LABEL=MINUTES] [--rides ID]` | Adds a task with the next free number; prints its ID. For `--owner project`, `--prefix` picks one of `project_prefixes`, and a new prefix not used by any feature is registered. |
+| `set-task-status ID STATUS [--detail TEXT] [--expected TEXT] [--basis TEXT] [--history TEXT] [--release] [--phase NAME=HH:MM-HH:MM]... [--risk LABEL=MINUTES] [--rides ID]` | Changes one task; adds a History row to its feature artifact when `--history` is given. |
 | `export-content KEY --to DIR` | Copies the artifact's content files from the record to DIR for editing, `decisions.json` and its `assets/` folder included. |
 | `edit-content KEY --from DIR` | Replaces the artifact's content files in the record with those in DIR (after the fetch and reset of R4.13), validates, renders and commits. The session never edits the record worktree directly; the reset would discard it. It refuses an edit that removes a decision or changes the choice of a decided one (R5.15). |
 | `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design`, renders and commits; `default` removes it. |
@@ -1242,7 +1316,9 @@ Reads the hook input; takes the task ID from the current branch name
 | `expected_basis`: a string of 1 to 80 characters, on open rows only | R6.10 |
 | Checklists and tiles equal the registry | INV-1, R5.8 |
 | Every feature task on the full-progress artifact, linked to the feature file by a relative link | R6.5, R5.30 |
-| Section 1 of Full Progress: the four columns, a Last updated time per feature, sort buttons, rows in the default order | R5.6, R5.39 |
+| Section 1 of Full Progress: the five columns, a Last updated time and a State per feature, sort buttons, rows in the default order | R5.6, R5.39, R5.44 |
+| Release fields: `release`, `phases`, `risk`, `rides`; Expected is the end of the last phase | R5.40, R5.41 |
+| The release timeline is present exactly when a release is open, between the key and the checklist, with its caption and `aria-label` | R5.42, R5.43 |
 | A feature page's Full Progress published line equals the manifest's | R5.38 |
 | `updated` and `published_at` in the manifest are ISO times with an offset | R4.30 |
 | A feature artifact is a complete HTML document with its CSS inlined and no external resource but the fonts link; Full Progress is a fragment beginning with `<title>` | R5.27, R5.28, R5.29 |

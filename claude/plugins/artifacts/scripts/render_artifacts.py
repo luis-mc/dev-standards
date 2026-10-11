@@ -1002,6 +1002,183 @@ def _checklist(tasks: list, kind: str, label: str, ref: datetime, feature_links:
     return out
 
 
+# ------------------------------------------------------------------ release timeline (R5.42, R5.43)
+RELEASE_PHASES = ('agents', 'join', 'ci', 'merge')      # R5.40
+PHASE_LABELS = {'agents': 'agents', 'join': 'join', 'ci': 'PR CI', 'merge': 'merge + cleanup'}
+TL_X0, TL_X1 = 200, 720          # today's axis, in SVG units
+TL_SLOT0, TL_SLOT_STEP = 820, 90
+TL_ROW, TL_TOP = 62, 52
+
+
+def _n(value) -> str:
+    return ('%.1f' % value).rstrip('0').rstrip('.')
+
+
+def _hhmm(minutes) -> str:
+    return '%02d:%02d' % (int(minutes) // 60 % 24, int(minutes) % 60)
+
+
+def open_releases(tasks: list) -> list:
+    """R5.40, R5.42: the release tasks still open, in registry order."""
+    return [t for t in tasks if t.get('release') is True and t.get('status') in OPEN_STATUSES]
+
+
+def _release_row(task: dict, ref: datetime, tasks: list):
+    """The facts of one open release, or None when its Expected does not parse."""
+    midnight = datetime.combine(ref.date(), datetime.min.time())
+    local = ref.tzinfo
+
+    def minutes(iso):
+        moment = _parse_iso(iso)
+        if moment is None:
+            return None
+        return (moment.astimezone(local).replace(tzinfo=None) - midnight).total_seconds() / 60
+
+    phases = []
+    for p in task.get('phases') or []:
+        if not isinstance(p, dict) or p.get('name') not in RELEASE_PHASES:
+            continue
+        a, b = minutes(p.get('start')), minutes(p.get('end'))
+        if a is not None and b is not None and b > a:
+            phases.append((p['name'], a, b))
+    expected = str(task.get('expected', ''))
+    match = EXPECTED_RE.match(expected)
+    exp_dt = _expected_datetime(expected, ref)
+    if phases:
+        exp_min = max(b for _, _, b in phases)
+        exp_dt = midnight + timedelta(minutes=exp_min)
+    elif exp_dt is None:
+        return None
+    else:
+        exp_min = (exp_dt - midnight).total_seconds() / 60
+    timed = bool(phases) or bool(match and match.group(3))
+    risk = task.get('risk') if isinstance(task.get('risk'), dict) else None
+    worst = None
+    if risk and isinstance(risk.get('minutes'), int) and risk['minutes'] > 0 and timed:
+        worst = exp_min + risk['minutes']
+    riders = [t['id'] for t in tasks if t.get('rides') == task['id']]
+    return {'task': task, 'phases': phases, 'exp_dt': exp_dt, 'exp_min': exp_min, 'timed': timed,
+            'today': timed and exp_dt.date() == ref.date(), 'risk': risk if worst is not None else None,
+            'worst': worst, 'riders': riders}
+
+
+def _cut(text: str, limit: int) -> str:
+    return text if len(text) <= limit else text[:limit - 1].rstrip() + '…'
+
+
+def release_timeline(tasks: list, ref: datetime, label: str) -> str:
+    """R5.42, R5.43: the release timeline figure of section 0, '' when no release is open. Deterministic:
+    `ref` (the render stamp) is "now", never the wall clock."""
+    rows = [r for r in (_release_row(t, ref, tasks) for t in open_releases(tasks)) if r is not None]
+    if not rows:
+        return ''
+    rows.sort(key=lambda r: (r['exp_dt'], r['task']['id']))
+    today = [r for r in rows if r['today']]
+    days = sorted({r['exp_dt'].date() for r in rows if not r['today']})
+    now_min = ref.hour * 60 + ref.minute
+    if today:
+        starts = [a for r in today for _, a, _ in r['phases']]
+        lo = min(starts) if starts else min([now_min] + [r['exp_min'] for r in today])
+        hi = max(r['worst'] or r['exp_min'] for r in today)
+        t0 = int(lo // 30 * 30)
+        t1 = int(-(-hi // 30) * 30)
+        if t1 <= t0:
+            t1 = t0 + 30
+    else:
+        t0 = int(now_min // 30 * 30)
+        t1 = t0 + 30
+    slot0 = TL_SLOT0 if today else 220
+    width = max(slot0 + TL_SLOT_STEP * (max(len(days), 1) - 1) + 80, 300)
+    x = lambda m: TL_X0 + (m - t0) * (TL_X1 - TL_X0) / (t1 - t0)
+    slot = lambda day: slot0 + TL_SLOT_STEP * days.index(day)
+    out, aria, y = [], [], TL_TOP
+    for r in rows:
+        t = r['task']
+        name = '%s · %s' % (t['id'], t['item'])
+        sub = ', '.join(r['riders'])
+        out.append('<text class="rt-name" x="0" y="%d"><title>%s</title>%s</text>' % (y + 8, esc(name), esc(_cut(name, 26))))
+        if sub:
+            out.append('<text class="rt-sub" x="0" y="%d"><title>%s</title>%s</text>' % (y + 25, esc(sub), esc(_cut(sub, 34))))
+        if r['today']:
+            for name_, a, b in r['phases']:
+                out.append('<rect class="rt-bar %s" x="%s" y="%d" width="%s" height="22"><title>%s</title></rect>'
+                           % (name_, _n(x(a)), y, _n(x(b) - x(a)), esc('%s %s-%s' % (PHASE_LABELS[name_], _hhmm(a), _hhmm(b)))))
+            ex = x(r['exp_min'])
+            if r['worst'] is not None:
+                rx = x(r['worst'])
+                out.append('<rect class="rt-risk" x="%s" y="%d" width="%s" height="10"><title>%s</title></rect>'
+                           % (_n(ex), y + 6, _n(rx - ex), esc(r['risk']['label'])))
+                out.append('<polygon class="rt-worst" points="%s,%d %s,%d %s,%d %s,%d"/>'
+                           % (_n(rx), y - 1, _n(rx + 7), y + 11, _n(rx), y + 23, _n(rx - 7), y + 11))
+                out.append('<text class="rt-risk-label" x="%s" y="%d">%s</text>'
+                           % (_n(rx + 11), y + 15, esc('%s → worst ~%s' % (r['risk']['label'], _hhmm(r['worst'])))))
+            out.append('<polygon class="rt-expected" points="%s,%d %s,%d %s,%d %s,%d"/>'
+                       % (_n(ex), y - 2, _n(ex + 8), y + 11, _n(ex), y + 24, _n(ex - 8), y + 11))
+            out.append('<text class="rt-live-label" x="%s" y="%d">live ~%s</text>' % (_n(ex), y + 40, _hhmm(r['exp_min'])))
+            said = 'expected live about %s' % _hhmm(r['exp_min'])
+            if r['worst'] is not None:
+                said += ', worst case %s' % _hhmm(r['worst'])
+        else:
+            day = r['exp_dt'].date()
+            sx = slot(day)
+            text = '%02d %s' % (day.day, MONTHS[day.month - 1])
+            out.append('<polygon class="rt-day" points="%d,%d %d,%d %d,%d %d,%d"/><text class="rt-day-label" x="%d" y="%d">%s</text>'
+                       % (sx, y, sx + 8, y + 13, sx, y + 26, sx - 8, y + 13, sx + 16, y + 17, esc(text)))
+            said = 'expected %s' % text
+        aria.append('%s (%s) %s' % (t['id'], t['item'], said))
+        y += TL_ROW
+    height = y + 50
+    grid = []
+    if today:
+        step = 30 if t1 - t0 <= 240 else 60
+        m = -(-t0 // step) * step
+        while m <= t1:
+            grid.append('<line class="rt-grid" x1="%s" y1="36" x2="%s" y2="%d"/><text x="%s" y="28">%s</text>'
+                        % (_n(x(m)), _n(x(m)), height - 24, _n(x(m)), _hhmm(m)))
+            m += step
+    for day in days:
+        grid.append('<line class="rt-grid" x1="%d" y1="36" x2="%d" y2="%d"/><text x="%d" y="28">%02d %s</text>'
+                    % (slot(day), slot(day), height - 24, slot(day), day.day, MONTHS[day.month - 1]))
+    if today and days:
+        grid.append('<path class="rt-break" d="M738 30 l8 -8 M750 30 l8 -8"/>')
+    now = ''
+    if today and t0 <= now_min <= t1:
+        nx = x(now_min)
+        now = ('<line class="rt-now" x1="%s" y1="36" x2="%s" y2="%d"/><text class="rt-now-label" x="%s" y="%d">now %s</text>'
+               % (_n(nx), _n(nx), height - 16, _n(nx), height - 3, _hhmm(now_min)))
+    sw = lambda k: '<span class="rt-swatch %s"></span>%s' % (k, PHASE_LABELS[k])
+    legend = ('<p class="timeline-legend">Bars: %s, %s, %s and %s; Expected (filled diamond) is the sum of the phases. '
+              'The thin grey extension is a named risk from the estimate\'s basis, ending at the outlined worst case. '
+              'An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>'
+              % tuple(sw(k) for k in RELEASE_PHASES))
+    return ('<figure class="release-timeline">\n<figcaption>Next releases (%s)</figcaption>\n'
+            '<div class="timeline-scroll"><svg viewBox="0 0 %d %d" role="img" aria-label="%s" style="min-width:%dpx">'
+            '<g class="rt-axis">%s</g>\n%s\n%s\n</svg></div>\n%s\n</figure>\n'
+            % (esc(label), width, height, esc('Next releases: ' + '; '.join(aria) + '.'), max(360, round(width * 640 / 900)),
+               ''.join(grid), '\n'.join(out), now, legend))
+
+
+# ------------------------------------------------------------------ State column (R5.44)
+STATE_ORDER = ('Running', 'Needs you', 'Failed', 'Waiting', 'Built', 'To do', 'On hold')
+
+
+def state_chips(tasks: list, decisions=()) -> list:
+    """R5.44: [(chip class, text)] for one feature: Complete, or a chip per open status and per open decision."""
+    counts = {s: sum(1 for t in tasks if t.get('status') == s) for s in STATE_ORDER}
+    waiting = len(open_decisions(decisions))
+    if not any(counts.values()) and not waiting:
+        return [('status-live', 'Complete')]
+    chips = [(status_class(s), '%d %s' % (counts[s], s)) for s in STATE_ORDER if counts[s]]
+    if waiting:
+        chips.append(('status-needs-you', '%d open decision%s' % (waiting, '' if waiting == 1 else 's')))
+    return chips
+
+
+def _state_cell(tasks: list, decisions=()) -> str:
+    chips = ''.join('<span class="status-chip %s">%s</span>' % (c, esc(t)) for c, t in state_chips(tasks, decisions))
+    return '<td data-col="state"><span class="state-chips">%s</span></td>' % chips
+
+
 def _tiles(tasks: list) -> str:
     counts = {s: 0 for s in STATUSES}
     for task in tasks:
@@ -1148,13 +1325,14 @@ def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list
         iso = feature_updated(entry, record_dir)
         when = ('<time datetime="%s">%s</time>' % (esc(iso), esc(_fmt_stamp(datetime.fromisoformat(iso)))) if iso else '')
         rows.append((not iso, -_utc_minutes(iso) if iso else 0, str(entry['title']).lower(),
-                     '<tr><td data-value="%s">%s</td><td data-value="%d">%s</td><td>%s</td><td>%s</td></tr>' % (
+                     '<tr><td data-value="%s">%s</td><td data-value="%d">%s</td><td>%s</td>%s<td>%s</td></tr>' % (
                          esc(str(entry['title']).lower()), link, _utc_minutes(iso) if iso else 0, when,
                          esc(_id_ranges(entry['key'], entry.get('prefix', ''), tasks)),
+                         _state_cell([t for t in tasks if t.get('owner') == entry['key']], content.get('decisions')),
                          esc(stands + _decisions_open_line(content.get('decisions'))))))
     rows.sort(key=lambda r: r[:3])      # newest first, no stamp last, ties by title
     return ('<div class="table-scroll"><table class="feature-list"><thead><tr>%s%s<th>Tasks</th>'
-            '<th>Where it stands</th></tr></thead><tbody>\n%s\n</tbody></table></div>\n'
+            '<th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>\n%s\n</tbody></table></div>\n'
             % (_sort_header('Feature artifact', 'name', ''), _sort_header('Last updated', 'updated', 'descending'),
                '\n'.join(r[3] for r in rows)))
 
@@ -1274,6 +1452,7 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
     nav = ''.join('<a href="#s%d"><b>%d</b>%s</a>' % (i, i, esc(t)) for i, t in enumerate(all_titles))
     body = '\n'.join(_section(i, t, inner) for i, (t, inner) in enumerate(sections, 1))
     ref = moment
+    timeline = release_timeline(tasks, moment, label) if kind == 'full-progress' else ''
 
     values = {
         'title': esc(title),
@@ -1291,6 +1470,7 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
         'glance': _at_a_glance(mine, decisions, moment),
         'tiles': _tiles(mine),
         'key': _key(label),
+        'timeline': ('\n' + timeline.rstrip('\n')) if timeline else '',
         'checklist': _checklist(mine, kind, label, ref, feature_links),
         'sections': body,
         'registry': _registry_script(registry) if kind == 'full-progress' else '',
@@ -1357,15 +1537,15 @@ def _check_decisions(node, decisions, add) -> None:
             add('R5.23', '%s shows the Needs you chip exactly when it is open and not replaced' % did)
 
 
-def _check_feature_table(s1, manifest: dict, record_dir: str, add) -> None:
-    """R5.6, R5.39: the columns, the sort buttons, a Last updated time per feature and the default order."""
+def _check_feature_table(s1, manifest: dict, record_dir: str, add, tasks=(), plugin_dir: str = PLUGIN_DIR) -> None:
+    """R5.6, R5.39, R5.44: the columns, the sort buttons, a Last updated time and a State per feature and the default order."""
     table = find(s1, 'table', 'feature-list')
     if table is None:
         add('R5.6', 'section 1 must be a table of the feature artifacts')
         return
     heads = find_all(table, 'th')
-    if [text_of(th).rstrip(' ↑↓') for th in heads] != ['Feature artifact', 'Last updated', 'Tasks', 'Where it stands']:
-        add('R5.6', 'section 1 must have the columns Feature artifact, Last updated, Tasks, Where it stands')
+    if [text_of(th).rstrip(' ↑↓') for th in heads] != ['Feature artifact', 'Last updated', 'Tasks', 'State', 'Where it stands']:
+        add('R5.6', 'section 1 must have the columns Feature artifact, Last updated, Tasks, State, Where it stands')
         return
     buttons = [(find(th, 'button', 'sort-header') if i < 2 else None) for i, th in enumerate(heads)]
     for button, name in zip(buttons[:2], ('name', 'updated')):
@@ -1379,7 +1559,7 @@ def _check_feature_table(s1, manifest: dict, record_dir: str, add) -> None:
     keys = []
     for row in find_all(table, 'tr'):
         cells = [c for c in row.children if getattr(c, 'tag', None) == 'td']
-        if len(cells) != 4:
+        if len(cells) != 5:
             continue
         title = text_of(cells[0]).replace('Copy link', '').strip()
         anchor = find(cells[0], 'a')
@@ -1394,6 +1574,16 @@ def _check_feature_table(s1, manifest: dict, record_dir: str, add) -> None:
         elif iso and shown != _fmt_stamp(datetime.fromisoformat(iso)):
             add('R5.6', 'the Last updated time of %r must read DD Mon HH:MM; it shows %r' % (title, shown))
         keys.append((not iso, -_utc_minutes(iso) if iso else 0, title.lower()))
+        if entry is not None:
+            try:
+                dec = load_content(record_dir, entry['key'], plugin_dir).get('decisions') or []
+            except (ContentError, OSError):
+                dec = []
+            want_chips = state_chips([t for t in tasks if t.get('owner') == entry['key']], dec)
+            have_chips = [([c for c in n.attrs.get('class', '').split() if c.startswith('status-') and c != 'status-chip'], text_of(n))
+                          for n in find_all(cells[3], 'span', 'status-chip')]
+            if have_chips != [([c], t) for c, t in want_chips]:
+                add('R5.44', 'the State of %r must read %s; it shows %s' % (title, [t for _, t in want_chips], [t for _, t in have_chips]))
     if keys != sorted(keys):
         add('R5.39', 'the committed table must list the features by Last updated, newest first, ties by title')
 
@@ -1579,6 +1769,31 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             add('R5.5', 'the stamp %r must read DD Mon HH:MM' % shown)
         if tail != 'Last update: (%s)' % label:
             add('R5.5', 'the stamp must read "Last update: DD Mon HH:MM (%s)"; around the time it reads %r' % (label, tail))
+
+    # R5.42, R5.43 the release timeline: present exactly when a release is open, between the key and the checklist
+    if kind == 'full-progress' and s0 is not None:
+        want_fig = release_timeline(all_tasks, ref, label)
+        figs = find_all(s0, 'figure', 'release-timeline')
+        if not want_fig:
+            if figs:
+                add('R5.42', 'the release timeline belongs only when a release is open')
+        elif len(figs) != 1:
+            add('R5.42', 'section 0 must hold exactly one release timeline while a release is open; it holds %d' % len(figs))
+        else:
+            want_node = find(parse_dom(want_fig), 'figure')
+            svg, want_svg = find(figs[0], 'svg'), find(want_node, 'svg')
+            cap, want_cap = find(figs[0], 'figcaption'), find(want_node, 'figcaption')
+            if cap is None or text_of(cap) != text_of(want_cap):
+                add('R5.42', 'the timeline caption must read %r' % text_of(want_cap))
+            if svg is None or svg.attrs.get('role') != 'img' or svg.attrs.get('aria-label') != want_svg.attrs.get('aria-label'):
+                add('R5.43', 'the timeline must be an svg with role="img" and the aria-label %r' % want_svg.attrs.get('aria-label'))
+            if find(figs[0], 'p', 'timeline-legend') is None or find(figs[0], 'div', 'timeline-scroll') is None:
+                add('R5.43', 'the timeline needs its legend and its scrolling box')
+            key_p, checklist_t = find(s0, 'p', 'note'), find(s0, 'table', 'status-checklist')
+            order_s0 = list(elements(s0))
+            if key_p is not None and checklist_t is not None and not (
+                    order_s0.index(key_p) < order_s0.index(figs[0]) < order_s0.index(checklist_t)):
+                add('R5.42', 'the release timeline must sit between the status key and the checklist')
 
     # R5.7 the Needs you group, R5.33 to R5.35 the At a glance block
     glance = find(s0, 'div', 'at-a-glance') if s0 is not None else None
@@ -1777,7 +1992,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
                 elif not any(a.attrs.get('href') == e.get('file') for a in anchors):
                     add('R5.30', 'section 1 must link %r to %s, relative to this file; it links to %r'
                         % (e.get('title'), e.get('file'), anchors[0].attrs.get('href')))
-            _check_feature_table(s1, manifest, record_dir, add)
+            _check_feature_table(s1, manifest, record_dir, add, all_tasks, plugin_dir)
 
     # R5.4 History
     history_sections = [i for i in info if i['title'] == 'History']
