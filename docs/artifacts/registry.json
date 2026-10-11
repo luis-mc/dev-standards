@@ -603,6 +603,16 @@
       "changed": "2026-10-11T01:22+01:00"
     },
     {
+      "id": "DS31",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Pre-push compares with the real fork point",
+      "detail": "U3: a new branch's pre-push check compared with the default branch, re-checking other branches' commits. It now uses the nearest branch it forks from.",
+      "expected": "11 Oct ~05:30",
+      "changed": "2026-10-11T01:22+01:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
