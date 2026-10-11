@@ -112,6 +112,11 @@ elif argv[:2] in (["release", "view"], ["release", "create"], ["release", "edit"
     else:
         if argv[1] == "edit" and tag not in rel:
             fail("release not found")
+        if argv[1] == "create" and fx.get("race_release") and tag not in rel:
+            # the workflow creates the release between our view and our create
+            rel[tag] = {"body": "created by the workflow\\n", "target": opt("--target")}
+            json.dump(rel, open(store, "w", encoding="utf-8"))
+            fail("HTTP 422: Validation Failed (https://api.github.com/repos/o/r/releases) Release.tag_name already exists")
         notes = open(opt("--notes-file"), encoding="utf-8").read()
         rel[tag] = {"body": notes, "target": opt("--target") or rel.get(tag, {}).get("target")}
         json.dump(rel, open(store, "w", encoding="utf-8"))
@@ -457,6 +462,39 @@ def sc_failed_deletion(t: T, shared: Path) -> None:
     t.check("... that row says failed", rows.get("feat/keepme", {}).get("status") == "failed", status(rows, "feat/keepme"))
     t.eq("... and the other branch was still deleted", status(rows, "feat/a"), "deleted")
     t.eq("... the refused branch is still there", "feat/keepme" in w.remote_heads(), True)
+
+
+def sc_remote_gone_race(t: T, shared: Path) -> None:
+    """A workflow deleted the remote branch between the listing and our push: it counts as deleted."""
+    w = World(shared)
+    hook = w.origin / "hooks/pre-receive"
+    # the deletion races: the ref disappears, and the push is refused all the same
+    lines = ["#!/bin/sh", "while read old new ref; do", '  case "$ref" in', "    *racy*)",
+             '      [ "$new" = "%s" ] && { git update-ref -d "$ref"; echo gone >&2; exit 1; } ;;' % ZERO,
+             "  esac", "done", "exit 0", ""]
+    hook.write_text(chr(10).join(lines), encoding="utf-8", newline=chr(10))
+    hook.chmod(0o755)
+    b = w.branch("feat/racy")
+    w.stub.pr("feat/racy", "MERGED", b)
+    r, rows = w.rows("--remote-only")
+    exit_is(t, "a remote branch deleted by someone else meanwhile: exit 0", r, 0)
+    t.check("... the row is not failed", status(rows, "feat/racy") != "failed", status(rows, "feat/racy"))
+    t.eq("... it counts as deleted", status(rows, "feat/racy"), "deleted")
+    t.eq("... and it is gone", "feat/racy" in w.remote_heads(), False)
+
+
+def sc_release_race(t: T, shared: Path) -> None:
+    """The workflow created the release between our view and our create: update it instead."""
+    w, n, mc = log_world(shared)
+    w.stub.fx["race_release"] = True
+    w.stub.save()
+    r = w.cleanup("--remote-only", "--pr", str(n))
+    exit_is(t, "release created meanwhile by the workflow: exit 0", r, 0)
+    t.check("... no 'not published' warning", "not published" not in (r.err), r.err)
+    body = releases(w).get("train-2026-10-10-7", {}).get("body", "")
+    t.eq("... the release now holds the table once", body.count("<!-- delivery-log:start -->"), 1)
+    t.eq("... with a row per change",
+         sorted(re.findall(r"^\| (feat/d1|feat/d2|integ) \|", body, re.M)), ["feat/d1", "feat/d2", "integ"])
 
 
 def sc_pr(t: T, shared: Path) -> None:
@@ -1497,6 +1535,8 @@ SCENARIOS = {
     "gh_failure": sc_gh_failure,
     "default_branch": sc_default_branch,
     "failed_deletion": sc_failed_deletion,
+    "remote_gone_race": sc_remote_gone_race,
+    "release_race": sc_release_race,
     "pr": sc_pr,
     "joined": sc_joined,
     "modes": sc_modes,

@@ -303,39 +303,44 @@ def write_release(root: Path, repo: str | None, info: dict, rows: list[dict], dr
     if not tag:
         warn("no merge date for pull request #%s; the delivery log is not published" % info["pr"])
         return False
-    body, exists = "", False
-    try:
-        data = gh(["release", "view", tag, "--json", "body,tagName"], repo, as_json=True)
-        if isinstance(data, dict):
-            body, exists = data.get("body") or "", True
-    except GhFailure:
-        exists = False
-    if exists:
-        info["rows"] = merge_rows(existing_info(body), rows)
-    if live:  # the deploy went live: every change of the train that has no live time gets it
-        info["rows"] = [{**r, "live": r.get("live") or live} for r in info["rows"]]
-    section = render(info)
-    if dry:
-        print(section)
-        return True
-    with tempfile.TemporaryDirectory(prefix="delivery-log-") as tmp:
-        notes = Path(tmp) / "notes.md"
-        notes.write_text(replace_section(body, section) if exists else section + "\n", encoding="utf-8")
+    for attempt in (1, 2):
+        body, exists = "", False
         try:
-            if exists:
-                gh(["release", "edit", tag, "--notes-file", str(notes)], repo)
-            else:
-                cmd = ["release", "create", tag, "--title", "Train #%s" % info["pr"], "--notes-file", str(notes)]
-                if not tag_exists:
-                    target = info.get("merge_commit")
-                    if not target:
-                        warn("merge commit of pull request #%s unknown; the delivery log is not published" % info["pr"])
-                        return False
-                    cmd += ["--target", target]
-                gh(cmd, repo)
-        except GhFailure as exc:
-            warn("%s; the delivery log is not published" % exc)
-            return False
+            data = gh(["release", "view", tag, "--json", "body,tagName"], repo, as_json=True)
+            if isinstance(data, dict):
+                body, exists = data.get("body") or "", True
+        except GhFailure:
+            exists = False
+        rows_now = merge_rows(existing_info(body), rows) if exists else rows
+        if live:  # the deploy went live: every change of the train that has no live time gets it
+            rows_now = [{**r, "live": r.get("live") or live} for r in rows_now]
+        section = render({**info, "rows": rows_now})
+        if dry:
+            print(section)
+            return True
+        with tempfile.TemporaryDirectory(prefix="delivery-log-") as tmp:
+            notes = Path(tmp) / "notes.md"
+            notes.write_text(replace_section(body, section) if exists else section + "\n", encoding="utf-8")
+            try:
+                if exists:
+                    gh(["release", "edit", tag, "--notes-file", str(notes)], repo)
+                else:
+                    cmd = ["release", "create", tag, "--title", "Train #%s" % info["pr"], "--notes-file", str(notes)]
+                    if not tag_exists:
+                        target = info.get("merge_commit")
+                        if not target:
+                            warn("merge commit of pull request #%s unknown; the delivery log is not published" % info["pr"])
+                            return False
+                        cmd += ["--target", target]
+                    gh(cmd, repo)
+            except GhFailure as exc:
+                # the train-cleanup workflow created the release between our view and our create:
+                # read it again and update it the way an existing release is updated
+                if not exists and attempt == 1 and "already exists" in str(exc):
+                    continue
+                warn("%s; the delivery log is not published" % exc)
+                return False
+        break
     print("delivery_log: release %s updated for pull request #%s" % (tag, info["pr"]))
     return True
 

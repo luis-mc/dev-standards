@@ -372,6 +372,10 @@ def push_delete(ctx: Ctx, ref: str) -> str | None:
     p = ctx.git(["push", "--quiet", "--no-verify", ctx.remote, "--delete", ref])
     if p.returncode == 0 or "remote ref does not exist" in p.stderr:
         return None
+    # a workflow may have deleted it between our listing and this push: gone is deleted
+    look = ctx.git(["ls-remote", ctx.remote, ref])
+    if look.returncode == 0 and not look.stdout.strip():
+        return None
     return p.stderr.strip().splitlines()[-1] if p.stderr.strip() else "push failed"
 
 
