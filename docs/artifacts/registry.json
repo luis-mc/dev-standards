@@ -450,6 +450,17 @@
       "expected_basis": "after TC6 merges (~14:30); one release"
     },
     {
+      "id": "DL8",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Delivery log in release notes",
+      "detail": "branch timestamps before cleanup, live from deploy, time-to-live split per train",
+      "expected": "11 Oct ~18:00",
+      "changed": "2026-10-11T11:56+01:00",
+      "expected_basis": "after TC6 merges (~14:30); one release"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
