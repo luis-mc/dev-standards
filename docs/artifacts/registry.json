@@ -386,12 +386,12 @@
       "id": "AR41",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Running",
       "item": "Apply At a glance here: short notes instead of long ledes",
-      "detail": "After the TC6 release: update the plugin here, rewrite Full Progress and feature ledes as one or two sentences, render",
+      "detail": "Rewriting the five notes as one or two sentences each",
       "expected": "11 Oct ~15:00",
-      "changed": "2026-10-11T11:59+01:00",
-      "expected_basis": "after the TC6 merge; three content edits"
+      "changed": "2026-10-11T14:41+01:00",
+      "expected_basis": "five content edits"
     },
     {
       "id": "AR42",
