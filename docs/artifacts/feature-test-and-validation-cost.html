@@ -649,7 +649,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>The question</a><a href="#s2"><b>2</b>How it was measured</a><a href="#s3"><b>3</b>Hypotheses and verdicts</a><a href="#s4"><b>4</b>Where the time goes</a><a href="#s5"><b>5</b>The mutation pass</a><a href="#s6"><b>6</b>Repeats and noise</a><a href="#s7"><b>7</b>What is wrong</a><a href="#s8"><b>8</b>Solutions, ranked</a><a href="#s9"><b>9</b>Decisions</a><a href="#s10"><b>10</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Test and validation cost</h1><p>What our tests and checks cost, where they repeat, and what to cut</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T17:29+01:00">11 Oct 17:29</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T17:30+01:00">11 Oct 17:30</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Oct 17:24</a> (Lisbon)</p>
 <p class="lede">All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</p>
 <div class="at-a-glance">
@@ -845,8 +845,22 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </section>
 <section id="s9"><h2><span class="section-number">&sect; 9</span>Decisions</h2>
 <div class="decision-list">
-<article class="decision decision-decided" data-decision="D10">
-<h3 class="decision-head"><span class="decision-id">D10</span> <span class="decision-question">Shorten the PR CI run (11 min, one serial delivery job with every suite&#x27;s mutants on for any delivery change)?</span></h3>
+<article class="decision decision-decided" data-decision="D11">
+<h3 class="decision-head"><span class="decision-id">D11</span> <span class="decision-question">Which of the three CI cuts go into DL12 now?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC7 · Replaces D10</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">1+2</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Mutants per suite and parallel delivery jobs.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">1+2+3</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">Also shard the gate mutation pass into 4 parallel jobs.</p>
+<blockquote class="decision-words">&ldquo;I meant all the 3 points&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<details class="decision decision-replaced" data-decision="D10"><summary><span class="decision-id">D10</span> <span class="decision-question">Shorten the PR CI run (11 min, one serial delivery job with every suite&#x27;s mutants on for any delivery change)?</span> <span class="decision-replaced-by">Replaced by D11</span></summary>
 <p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC7</p>
 <div class="decision-options">
 <div class="decision-option decision-muted">
@@ -867,7 +881,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <p class="decision-summary">Keep the 11 min run.</p>
 </div>
 </div>
-</article>
+</details>
 <article class="decision decision-decided" data-decision="D9">
 <h3 class="decision-head"><span class="decision-id">D9</span> <span class="decision-question">When does the nightly full run with mutants start?</span></h3>
 <p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task TC1</p>

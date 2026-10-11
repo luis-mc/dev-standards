@@ -220,6 +220,27 @@
       "decided": "2026-10-11",
       "task": "TC7",
       "owner_words": "Add to DL12 now"
+    },
+    {
+      "id": "D11",
+      "replaces": "D10",
+      "question": "Which of the three CI cuts go into DL12 now?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "1+2",
+          "summary": "Mutants per suite and parallel delivery jobs."
+        },
+        {
+          "label": "1+2+3",
+          "summary": "Also shard the gate mutation pass into 4 parallel jobs."
+        }
+      ],
+      "chosen": "1+2+3",
+      "decided": "2026-10-11",
+      "task": "TC7",
+      "owner_words": "I meant all the 3 points"
     }
   ]
 }
