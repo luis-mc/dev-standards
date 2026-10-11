@@ -586,11 +586,11 @@
       "id": "DS27",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Cleanup removes agent scaffolding branches",
-      "detail": "Built in #37 and joined into DS27-integration (not released): cleanup.py removes empty agent scaffolding branches (no pull request, name not on the remote, no commits outside the default branch) and stale pre-push check folders (owning process gone; links removed first, node_modules never touched). 274 checks on Windows; Linux and the mutation pass green in CI on its branch.",
+      "detail": "Released in luismc-artifacts 1.2.0 / luismc-project-setup 13.0.1 (#42, 5babc30, 03:02). cleanup.py removes empty agent scaffolding branches and stale pre-push check folders; node_modules is never touched.",
       "expected": "11 Oct",
-      "changed": "2026-10-11T02:42+01:00"
+      "changed": "2026-10-11T03:02+01:00"
     },
     {
       "id": "DS28",
