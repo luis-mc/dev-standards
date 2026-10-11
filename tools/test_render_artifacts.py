@@ -63,9 +63,9 @@ def base_manifest():
                                    'file': 'full-progress-dev-standards.html', 'published_sha256': ''},
         'feature_artifacts': [
             {'key': 'artifacts', 'title': 'Feature: Project artifacts standard',
-             'file': AR_FILE, 'prefix': 'AR', 'apps': ['luismc-artifacts']},
+             'file': AR_FILE, 'prefix': 'AR', 'apps': ['luismc-artifacts'], 'updated': '2026-10-10T12:39+01:00'},
             {'key': 'models', 'title': 'Feature: Model and effort profiles',
-             'file': MP_FILE, 'prefix': 'MP', 'apps': ['luismc-project-setup']},
+             'file': MP_FILE, 'prefix': 'MP', 'apps': ['luismc-project-setup'], 'updated': '2026-10-09T18:00+01:00'},
         ],
         'project_prefixes': ['DS'], 'updated': STAMP_ISO,
     }
@@ -372,8 +372,8 @@ def full_progress_structure(fx):
     # R5.6: link, task ID range, first sentence of the lede
     s1node = R.find(dom, 'section', pred=lambda n: n.attrs.get('id') == 's1')
     cells = [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1node, 'tr', pred=lambda n: R.find(n, 'td'))]
-    assert cells == [['Feature: Project artifacts standard', 'AR5 to AR16', 'The design is agreed.'],
-                     ['Feature: Model and effort profiles', 'MP1 to MP2, DS2', 'Effort question is live!']], cells
+    assert cells == [['Feature: Project artifacts standard', '10 Oct 12:39', 'AR5 to AR16', 'The design is agreed.'],
+                     ['Feature: Model and effort profiles', '09 Oct 18:00', 'MP1 to MP2, DS2', 'Effort question is live!']], cells
     anchors = [a.attrs['href'] for a in R.find_all(s1node, 'a')]
     assert anchors == [AR_FILE, MP_FILE], anchors  # R5.30: every feature is linked to its file, relative
 
@@ -857,7 +857,7 @@ def check_r56_feature_list(fx):
     expect(fx, sub1(fp, '<a href="%s">Feature: Project artifacts standard</a>' % AR_FILE, 'Feature: Project artifacts standard'), 'full-progress', ['R5.6'])
     expect(fx, sub1(fp, '<a href="%s">Feature: Model and effort profiles</a>' % MP_FILE, '<a href="https://claude.ai/artifact/x">Feature: Model and effort profiles</a>'),
            'full-progress', ['R5.30'])
-    expect(fx, sub1(fp, '<td><a href="%s">Feature: Model and effort profiles</a></td>' % MP_FILE, '<td>Feature: Model and effort</td>'), 'full-progress', ['R5.6'])
+    expect(fx, sub1(fp, '<td data-value="feature: model and effort profiles"><a href="%s">Feature: Model and effort profiles</a></td>' % MP_FILE, '<td>Feature: Model and effort</td>'), 'full-progress', ['R5.6'])
 
 
 @test
@@ -1220,7 +1220,7 @@ def the_structure_stylesheet_holds_no_literal_colour():
 def templates_hold_only_known_placeholders(fx):
     import re
     known = {'title', 'fonts_link', 'design_css', 'structure_css', 'extra_css', 'kind_label', 'project', 'hero', 'contents', 'glance',
-             'sections', 'stamp', 'lede', 'tiles', 'key', 'checklist', 'registry'}
+             'sections', 'stamp', 'published', 'lede', 'tiles', 'key', 'checklist', 'registry'}
     for name in ('feature-artifact.html', 'full-progress-artifact.html'):
         text = open(os.path.join(PLUGIN, 'templates', name), encoding='utf-8').read()
         found = set(re.findall(r'\{\{(\w+)\}\}', text))
@@ -1780,15 +1780,15 @@ def decisions_full_progress_line_counts_open_decisions(fx):
         s1 = R.find(R.parse_dom(out), 'section', pred=lambda n: n.attrs.get('id') == 's1')
         return [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1, 'tr', pred=lambda n: R.find(n, 'td'))]
     out = fx.render('full-progress', registry=registry)
-    assert cells(out)[0] == ['Feature: Project artifacts standard', 'AR5 to AR16', 'The design is agreed. 1 decision open.']
-    assert cells(out)[1][2] == 'Effort question is live!'
+    assert cells(out)[0] == ['Feature: Project artifacts standard', '10 Oct 12:39', 'AR5 to AR16', 'The design is agreed. 1 decision open.']
+    assert cells(out)[1][3] == 'Effort question is live!'
     assert fx.check(out, 'full-progress', registry=registry) == []
     put_decisions(fx, [open_dec(1), open_dec(2), dec(3)])
     fx.reload()
-    assert cells(fx.render('full-progress'))[0][2] == 'The design is agreed. 2 decisions open.'
+    assert cells(fx.render('full-progress'))[0][3] == 'The design is agreed. 2 decisions open.'
     put_decisions(fx, [dec(1)])
     fx.reload()
-    assert cells(fx.render('full-progress'))[0][2] == 'The design is agreed.'
+    assert cells(fx.render('full-progress'))[0][3] == 'The design is agreed.'
 
 
 # ---- check_html: each Decisions check fires alone
@@ -2003,7 +2003,7 @@ def section_one_never_blank(fx):
     out = fx.render('full-progress')
     s1 = R.find(R.parse_dom(out), 'section', pred=lambda n: n.attrs.get('id') == 's1')
     cells = [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1, 'tr', pred=lambda n: R.find(n, 'td'))]
-    assert cells[1][2] == '1 running, 2 live, nothing needs you.', cells
+    assert cells[1][3] == '1 running, 2 live, nothing needs you.', cells
     assert R.feature_summary([task('X1', 'a', 'Needs you', 'i', '10 Oct')]) == '1 needs you'
     assert fx.check(out, 'full-progress') == []
 
@@ -2018,6 +2018,134 @@ def at_a_glance_css_uses_tokens_and_fits_a_phone():
     assert 'var(--signal)' in block and 'var(--running-bg)' in block and 'var(--waiting-bg)' in block and 'var(--ink-muted)' in block
     assert not re.search(r'#[0-9a-fA-F]{3,6}\b', block), 'colours must be tokens'
     assert re.search(r'@media \(max-width: 40rem\)\s*\{\s*\.glance-group\s*\{\s*grid-template-columns:\s*1fr', block)
+
+
+def _s1_rows(out):
+    s1 = R.find(R.parse_dom(out), 'section', pred=lambda n: n.attrs.get('id') == 's1')
+    return [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1, 'tr', pred=lambda n: R.find(n, 'td'))]
+
+
+@test
+@with_fixture
+def section_one_orders_by_last_updated_newest_first(fx):
+    """R5.6, R5.39: four columns, a time per feature, the newest page on top, ties by title."""
+    out = fx.render('full-progress')
+    dom = R.parse_dom(out)
+    heads = R.find_all(R.find(dom, 'table', 'feature-list'), 'th')
+    assert [R.text_of(h).rstrip(' ↑↓') for h in heads] == ['Feature artifact', 'Last updated', 'Tasks', 'Where it stands']
+    assert heads[1].attrs['aria-sort'] == 'descending' and 'aria-sort' not in heads[0].attrs
+    assert R.text_of(heads[1]).endswith('↓')
+    assert [b.attrs['data-sort'] for b in R.find_all(dom, 'button', 'sort-header')] == ['name', 'updated']
+    assert [r[0] for r in _s1_rows(out)] == ['Feature: Project artifacts standard', 'Feature: Model and effort profiles']
+    manifest = base_manifest()
+    manifest['feature_artifacts'][1]['updated'] = '2026-10-11T12:08+01:00'                   # models changed last
+    out = fx.render('full-progress', manifest=manifest)
+    assert [r[:2] for r in _s1_rows(out)] == [['Feature: Model and effort profiles', '11 Oct 12:08'],
+                                              ['Feature: Project artifacts standard', '10 Oct 12:39']]
+    assert fx.check(out, 'full-progress', manifest=manifest) == []
+    manifest['feature_artifacts'][1]['updated'] = manifest['feature_artifacts'][0]['updated']    # a tie: by title
+    out = fx.render('full-progress', manifest=manifest)
+    assert [r[0] for r in _s1_rows(out)] == ['Feature: Model and effort profiles', 'Feature: Project artifacts standard']
+    # another offset: compared as instants, not as text
+    manifest['feature_artifacts'][0]['updated'] = '2026-10-10T12:39+00:00'
+    manifest['feature_artifacts'][1]['updated'] = '2026-10-10T12:00-01:00'                   # 13:00 UTC, newer
+    out = fx.render('full-progress', manifest=manifest)
+    assert [r[0] for r in _s1_rows(out)] == ['Feature: Model and effort profiles', 'Feature: Project artifacts standard']
+    assert fx.check(out, 'full-progress', manifest=manifest) == []
+
+
+@test
+@with_fixture
+def section_one_reads_an_older_record_from_the_feature_file(fx):
+    """R4.30: a manifest entry without `updated` takes the stamp of the feature file."""
+    manifest = base_manifest()
+    for entry in manifest['feature_artifacts']:
+        del entry['updated']
+    assert [r[1] for r in _s1_rows(fx.render('full-progress', manifest=manifest))] == ['', '']      # no file yet
+    write(os.path.join(fx.record, MP_FILE), '<p>x</p><time datetime="2026-10-11T08:05+01:00">11 Oct 08:05</time>')
+    out = fx.render('full-progress', manifest=manifest)
+    assert [r[:2] for r in _s1_rows(out)] == [['Feature: Model and effort profiles', '11 Oct 08:05'],
+                                              ['Feature: Project artifacts standard', '']]
+    assert fx.check(out, 'full-progress', manifest=manifest) == []
+
+
+@test
+@with_fixture
+def check_r539_sort_headers_and_order(fx):
+    fp = fx.render('full-progress')
+    expect(fx, sub1(fp, 'data-sort="updated"', 'data-sort="date"'), 'full-progress', ['R5.39'])
+    expect(fx, sub1(fp, ' aria-sort="descending"', ''), 'full-progress', ['R5.39'])
+    def in_table(new):                       # the second such time: the first is the page's stamp
+        cut = fp.rindex('<time datetime="2026-10-10T12:39+01:00">10 Oct 12:39</time>')
+        return fp[:cut] + new + fp[cut + len('<time datetime="2026-10-10T12:39+01:00">10 Oct 12:39</time>'):]
+    expect(fx, in_table('<time datetime="2026-10-08T12:39+01:00">08 Oct 12:39</time>'), 'full-progress', ['R5.6', 'R5.39'])                                                          # wrong time, and out of order
+    expect(fx, in_table('<time datetime="2026-10-10T12:39+01:00">10 Oct 12:40</time>'), 'full-progress', ['R5.6'])
+    expect(fx, sub1(fp, '<th>Tasks</th>', '<th>Task IDs</th>'), 'full-progress', ['R5.6'])
+
+
+@test
+@with_fixture
+def feature_page_says_when_full_progress_was_published(fx):
+    """R5.38: under the stamp, omitted before the first publish."""
+    plain = fx.render('artifacts')
+    assert '<p class="full-progress-published"' not in plain
+    manifest = base_manifest()
+    manifest['full_progress_artifact']['published_at'] = '2026-10-11T12:08+01:00'
+    manifest['full_progress_artifact']['url'] = ''
+    assert '<p class="full-progress-published"' not in fx.render('artifacts', manifest=manifest)                  # no URL yet
+    manifest['full_progress_artifact']['url'] = FP_URL
+    out = fx.render('artifacts', manifest=manifest)
+    line_html = '<p class="full-progress-published">Full Progress published: <a href="%s">11 Oct 12:08</a> (Lisbon)</p>\n' % FP_URL
+    assert out.count(line_html) == 1 and out.replace(line_html, '') == plain       # nothing else on the page moves, not even the stamp
+    s0 = R.find(R.parse_dom(out), 'section')
+    kids = [n for n in s0.children if n.tag != '#text']
+    assert R.has_class(kids[1], 'last-update') and R.has_class(kids[2], 'full-progress-published')   # right under the stamp
+    assert fx.check(out, 'artifacts', manifest=manifest) == []
+    expect(fx, plain, 'artifacts', ['R5.38'], manifest=manifest)                                       # the line is missing
+    expect(fx, out, 'artifacts', ['R5.38'])                                                            # the manifest has no such publish
+    expect(fx, sub1(out, '>11 Oct 12:08<', '>11 Oct 12:09<'), 'artifacts', ['R5.38'], manifest=manifest)
+    assert '<p class="full-progress-published"' not in fx.render('full-progress', manifest=manifest)
+
+
+@test
+@with_fixture
+def full_progress_sort_script(fx):
+    """R5.39: the template's script sorts the rows on a click and keeps the arrow and aria-sort."""
+    import subprocess
+    text = open(os.path.join(PLUGIN, 'templates', 'full-progress-artifact.html'), encoding='utf-8').read()
+    start, end = text.index('    // Section 1: click'), text.index("    window.addEventListener('scroll'")
+    node = shutil.which('node')
+    if not node:
+        assert 'sortRows' in text[start:end]
+        return
+    harness = r"""
+function el(attrs) { return {attrs: attrs || {}, listeners: {}, textContent: '',
+  getAttribute: function (k) { return k in this.attrs ? this.attrs[k] : null; },
+  setAttribute: function (k, v) { this.attrs[k] = v; }, removeAttribute: function (k) { delete this.attrs[k]; },
+  addEventListener: function (n, f) { this.listeners[n] = f; }, querySelector: function () { return this.arrow; }}; }
+function row(name, minutes) { return {name: name, cells: [el({'data-value': name}), el({'data-value': String(minutes)})]}; }
+var rows = [row('b', 30), row('a', 30), row('c', 10), row('d', 20)];
+var body = {rows: rows, appendChild: function (r) { rows.splice(rows.indexOf(r), 1); rows.push(r); }};
+var heads = [el({}), el({'aria-sort': 'descending'})];
+var buttons = [el({'data-sort': 'name'}), el({'data-sort': 'updated'})];
+buttons.forEach(function (b, i) { b.parentNode = heads[i]; b.arrow = el({}); });
+var table = {tBodies: [body], querySelectorAll: function () { return buttons; }};
+var document = {querySelector: function () { return table; }};
+function order() { return rows.map(function (r) { return r.name; }).join(''); }
+function click(i) { buttons[i].listeners.click(); }
+var out = [];
+SCRIPT
+click(1); out.push(order(), heads[1].attrs['aria-sort'], buttons[1].arrow.textContent);
+click(1); out.push(order(), heads[1].attrs['aria-sort']);
+click(0); out.push(order(), heads[0].attrs['aria-sort'], heads[1].attrs['aria-sort'] || '-', buttons[0].arrow.textContent, buttons[1].arrow.textContent === '');
+click(0); out.push(order(), heads[0].attrs['aria-sort']);
+click(1); out.push(order(), heads[1].attrs['aria-sort']);
+console.log(JSON.stringify(out));
+""".replace('SCRIPT', text[start:end])
+    done = subprocess.run([node, '-e', harness], capture_output=True, text=True, encoding='utf-8', timeout=60)
+    assert done.returncode == 0, done.stderr
+    assert json.loads(done.stdout) == ['cdab', 'ascending', '↑', 'abdc', 'descending',
+                                       'abcd', 'ascending', '-', '↑', True, 'dcba', 'descending', 'abdc', 'descending'], done.stdout
 
 
 def main() -> int:

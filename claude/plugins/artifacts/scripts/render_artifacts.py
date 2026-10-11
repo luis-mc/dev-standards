@@ -1097,7 +1097,42 @@ def _decisions_open_line(decisions) -> str:
     return '' if not count else ' %d decision%s open.' % (count, '' if count == 1 else 's')
 
 
-def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list, feature_links: dict) -> str:
+TIME_ATTR_RE = re.compile(r'<time\b[^>]*\bdatetime="([^"]+)"')
+
+
+def feature_updated(entry: dict, record_dir: str) -> str:
+    """The ISO stamp of a feature's page, as Full Progress section 1 shows it (R5.6): the manifest entry's
+    `updated` (written whenever the script writes the page with a new stamp, R4.20), else the `<time datetime>`
+    of the feature file for a record that has none, else ''."""
+    value = entry.get('updated')
+    if isinstance(value, str) and ISO_OFFSET_RE.match(value) and _parse_iso(value) is not None:
+        return value
+    try:
+        text = _read(os.path.join(record_dir, str(entry.get('file', ''))))
+    except (OSError, ContentError):
+        return ''
+    found = TIME_ATTR_RE.search(text)
+    if found and ISO_OFFSET_RE.match(found.group(1)) and _parse_iso(found.group(1)) is not None:
+        return found.group(1)
+    return ''
+
+
+def _utc_minutes(iso: str) -> int:
+    moment = _parse_iso(iso)
+    if moment is None:
+        return 0
+    return int(moment.astimezone(timezone.utc).timestamp() // 60)
+
+
+def _sort_header(label: str, name: str, order: str) -> str:
+    arrow = {'ascending': '&uarr;', 'descending': '&darr;'}.get(order, '')
+    return ('<th scope="col"%s><button type="button" class="sort-header" data-sort="%s">%s '
+            '<span class="sort-arrow" aria-hidden="true">%s</span></button></th>'
+            % (' aria-sort="%s"' % order if order else '', name, esc(label), arrow))
+
+
+def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list, feature_links: dict,
+                     record_dir: str = '') -> str:
     rows = []
     for entry in manifest.get('feature_artifacts') or []:
         content = contents.get(entry['key'])
@@ -1110,11 +1145,32 @@ def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list
         if not stands:                    # R5.36: an empty note never leaves the column blank
             stands = feature_summary([t for t in tasks if t.get('owner') == entry['key']], content.get('decisions')) + '.'
             stands = stands[0].upper() + stands[1:]
-        rows.append('<tr><td>%s</td><td>%s</td><td>%s</td></tr>' % (
-            link, esc(_id_ranges(entry['key'], entry.get('prefix', ''), tasks)),
-            esc(stands + _decisions_open_line(content.get('decisions')))))
-    return ('<div class="table-scroll"><table class="feature-list"><thead><tr><th>Feature artifact</th><th>Tasks</th>'
-            '<th>Where it stands</th></tr></thead><tbody>\n%s\n</tbody></table></div>\n' % '\n'.join(rows))
+        iso = feature_updated(entry, record_dir)
+        when = ('<time datetime="%s">%s</time>' % (esc(iso), esc(_fmt_stamp(datetime.fromisoformat(iso)))) if iso else '')
+        rows.append((not iso, -_utc_minutes(iso) if iso else 0, str(entry['title']).lower(),
+                     '<tr><td data-value="%s">%s</td><td data-value="%d">%s</td><td>%s</td><td>%s</td></tr>' % (
+                         esc(str(entry['title']).lower()), link, _utc_minutes(iso) if iso else 0, when,
+                         esc(_id_ranges(entry['key'], entry.get('prefix', ''), tasks)),
+                         esc(stands + _decisions_open_line(content.get('decisions'))))))
+    rows.sort(key=lambda r: r[:3])      # newest first, no stamp last, ties by title
+    return ('<div class="table-scroll"><table class="feature-list"><thead><tr>%s%s<th>Tasks</th>'
+            '<th>Where it stands</th></tr></thead><tbody>\n%s\n</tbody></table></div>\n'
+            % (_sort_header('Feature artifact', 'name', ''), _sort_header('Last updated', 'updated', 'descending'),
+               '\n'.join(r[3] for r in rows)))
+
+
+def _published_line(manifest: dict, label: str) -> str:
+    """A feature page's line under its stamp: when Full Progress was last published, linking to it (R5.38).
+    Empty before the first publish. It comes from the manifest, never moves the page's stamp."""
+    fp = manifest.get('full_progress_artifact')
+    if not isinstance(fp, dict):
+        return ''
+    url, at = fp.get('url'), fp.get('published_at')
+    if not (isinstance(url, str) and re.match(r'^https?://\S+$', url) and isinstance(at, str)
+            and ISO_OFFSET_RE.match(at) and _parse_iso(at) is not None):
+        return ''
+    return ('<p class="full-progress-published">Full Progress published: <a href="%s">%s</a> (%s)</p>\n'
+            % (esc(url), esc(_fmt_stamp(datetime.fromisoformat(at))), esc(label)))
 
 
 def _registry_script(registry: dict) -> str:
@@ -1205,7 +1261,7 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
     sections = []  # (title, inner html) for sections 1..N
     if kind == 'full-progress':
         feature_problems = []
-        sections.append(('Feature artifacts', _feature_section(manifest, tasks, contents, feature_problems, feature_links)))
+        sections.append(('Feature artifacts', _feature_section(manifest, tasks, contents, feature_problems, feature_links, record_dir)))
         if feature_problems:
             raise ContentError(feature_problems)
     sections += [(s['title'], s['html']) for s in content['sections']]
@@ -1230,6 +1286,7 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
         'hero': meta['hero'],
         'contents': nav,
         'stamp': '<time datetime="%s">%s</time> (%s)' % (esc(stamp_iso), esc(stamp_text), esc(label)),
+        'published': _published_line(manifest, label) if kind == 'feature' else '',
         'lede': lede,
         'glance': _at_a_glance(mine, decisions, moment),
         'tiles': _tiles(mine),
@@ -1300,7 +1357,48 @@ def _check_decisions(node, decisions, add) -> None:
             add('R5.23', '%s shows the Needs you chip exactly when it is open and not replaced' % did)
 
 
-FONT_HOST_RE = re.compile(r'^https://fonts\.(googleapis|gstatic)\.com(/|$)')
+def _check_feature_table(s1, manifest: dict, record_dir: str, add) -> None:
+    """R5.6, R5.39: the columns, the sort buttons, a Last updated time per feature and the default order."""
+    table = find(s1, 'table', 'feature-list')
+    if table is None:
+        add('R5.6', 'section 1 must be a table of the feature artifacts')
+        return
+    heads = find_all(table, 'th')
+    if [text_of(th).rstrip(' ↑↓') for th in heads] != ['Feature artifact', 'Last updated', 'Tasks', 'Where it stands']:
+        add('R5.6', 'section 1 must have the columns Feature artifact, Last updated, Tasks, Where it stands')
+        return
+    buttons = [(find(th, 'button', 'sort-header') if i < 2 else None) for i, th in enumerate(heads)]
+    for button, name in zip(buttons[:2], ('name', 'updated')):
+        if button is None or button.attrs.get('data-sort') != name or button.attrs.get('type') != 'button':
+            add('R5.39', 'the %s column header must be a <button type="button" class="sort-header" data-sort="%s">'
+                % ('Feature artifact' if name == 'name' else 'Last updated', name))
+            return
+    if heads[1].attrs.get('aria-sort') != 'descending' or heads[0].attrs.get('aria-sort'):
+        add('R5.39', 'the committed table is sorted by Last updated, newest first: that header carries aria-sort="descending"')
+    entries = {e.get('title'): e for e in manifest.get('feature_artifacts') or []}
+    keys = []
+    for row in find_all(table, 'tr'):
+        cells = [c for c in row.children if getattr(c, 'tag', None) == 'td']
+        if len(cells) != 4:
+            continue
+        title = text_of(cells[0]).replace('Copy link', '').strip()
+        anchor = find(cells[0], 'a')
+        title = text_of(anchor) if anchor is not None else title
+        time_node = find(cells[1], 'time')
+        shown = text_of(cells[1]).strip()
+        iso = time_node.attrs.get('datetime', '') if time_node is not None else ''
+        entry = entries.get(title)
+        want = feature_updated(entry, record_dir) if entry is not None else ''
+        if iso != want:
+            add('R5.6', 'the Last updated time of %r must be its page\'s stamp %r; it shows %r' % (title, want, iso))
+        elif iso and shown != _fmt_stamp(datetime.fromisoformat(iso)):
+            add('R5.6', 'the Last updated time of %r must read DD Mon HH:MM; it shows %r' % (title, shown))
+        keys.append((not iso, -_utc_minutes(iso) if iso else 0, title.lower()))
+    if keys != sorted(keys):
+        add('R5.39', 'the committed table must list the features by Last updated, newest first, ties by title')
+
+
+FONT_HOST_RE =re.compile(r'^https://fonts\.(googleapis|gstatic)\.com(/|$)')
 
 
 def _check_document(html: str, root, kind: str, add) -> None:
@@ -1445,8 +1543,25 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         if key_node is not None and [text_of(c) for c in find_all(key_node, 'span', 'status-chip')] != list(STATUSES):
             add('R5.3', 'the status key must show the eight statuses in order')
 
+    # R5.38 the line under a feature's stamp: when Full Progress was last published
+    if s0 is not None:
+        want_line = _published_line(manifest, label) if kind == 'feature' else ''
+        lines = find_all(s0, 'p', 'full-progress-published')
+        stamp_node = find(s0, 'p', 'last-update')
+        if want_line:
+            want_node = find(parse_dom(want_line), 'p')
+            anchor, want_anchor = (find(lines[0], 'a') if lines else None), find(want_node, 'a')
+            order_s0 = list(elements(s0))
+            if len(lines) != 1 or text_of(lines[0]) != text_of(want_node) \
+                    or anchor is None or anchor.attrs.get('href') != want_anchor.attrs.get('href'):
+                add('R5.38', 'the line under the stamp must read %r and link to Full Progress\'s URL' % text_of(want_node))
+            elif stamp_node is None or order_s0.index(lines[0]) != order_s0.index(stamp_node) + 1 + len(list(elements(stamp_node))):
+                add('R5.38', 'the Full Progress published line must come right under the stamp')
+        elif lines:
+            add('R5.38', 'the Full Progress published line belongs only on a feature artifact, after Full Progress was published')
+
     # R5.5 stamp
-    ref = _parse_iso('2000-01-01T00:00+00:00')
+    ref =_parse_iso('2000-01-01T00:00+00:00')
     stamp_p = find(s0, 'p', 'last-update') if s0 is not None else None
     time_node = find(stamp_p, 'time') if stamp_p else None
     if time_node is None:
@@ -1662,6 +1777,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
                 elif not any(a.attrs.get('href') == e.get('file') for a in anchors):
                     add('R5.30', 'section 1 must link %r to %s, relative to this file; it links to %r'
                         % (e.get('title'), e.get('file'), anchors[0].attrs.get('href')))
+            _check_feature_table(s1, manifest, record_dir, add)
 
     # R5.4 History
     history_sections = [i for i in info if i['title'] == 'History']

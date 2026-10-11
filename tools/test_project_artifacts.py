@@ -745,6 +745,95 @@ def test_pending_and_mark_published(env):
     assert r.code == 1 and 'unknown artifact key' in r.err
 
 
+def _stamp_of(text):
+    return re.search(r'<time datetime="([^"]+)"', text).group(1)
+
+
+def _fp_row_time(fp_html, title):
+    """The ISO time Full Progress section 1 shows for a feature."""
+    m = re.search(r'<td data-value="[^"]*"><a href="[^"]*">%s</a></td><td data-value="\d+"><time datetime="([^"]+)"' % re.escape(title), fp_html)
+    return m.group(1) if m else None
+
+
+@case
+def test_feature_updated_and_published_line(env):
+    """R4.30, R5.6, R5.38: `updated` follows the page's stamp, Full Progress shows it and is rendered after the features."""
+    p = env.baseline()
+    m = p.man()
+    arts = next(e for e in m['feature_artifacts'] if e['key'] == 'artifacts')
+    site = next(e for e in m['feature_artifacts'] if e['key'] == 'site')
+    fp = m['full_progress_artifact']
+    later = '2026-10-11T09:00:00+01:00'
+    p.ok('set-task-status', 'AR1', 'Waiting', env={'CLAUDE_ARTIFACTS_NOW': later})
+    m = p.man()
+    arts2 = next(e for e in m['feature_artifacts'] if e['key'] == 'artifacts')
+    site2 = next(e for e in m['feature_artifacts'] if e['key'] == 'site')
+    page = p.show('docs/artifacts/' + arts['file'])
+    assert arts2['updated'] == _stamp_of(page) and arts2['updated'] != arts.get('updated')      # the page's own stamp
+    assert site2.get('updated') == site.get('updated')                                          # untouched pages keep theirs
+    fp_html = p.show('docs/artifacts/' + fp['file'])
+    assert _fp_row_time(fp_html, 'Feature: Artifacts') == arts2['updated']                      # section 1 shows it (INV-3 holds: check is clean)
+    assert _fp_row_time(fp_html, 'Feature: The site') == _stamp_of(p.show('docs/artifacts/' + site['file']))
+    # newest first: the page that just changed is on top
+    assert fp_html.index('Feature: Artifacts</a>') < fp_html.index('Feature: The site</a>')
+    assert 'full-progress-published' not in page.split('</style>')[-1]                         # nothing published yet
+    assert p.run('check').code == 0
+    # an older record without `updated` is read from the feature file, and rewritten at the next change
+    d = p.record_copy('noupdated')
+    man = json.loads((d / 'manifest.json').read_text(encoding='utf-8'))
+    for e in man['feature_artifacts']:
+        e.pop('updated', None)
+    (d / 'manifest.json').write_text(json.dumps(man, indent=1), encoding='utf-8')
+    assert check_record(env, d).code == 0, check_record(env, d).all
+    man['feature_artifacts'][0]['updated'] = 'yesterday'
+    (d / 'manifest.json').write_text(json.dumps(man, indent=1), encoding='utf-8')
+    r = check_record(env, d)
+    assert r.code == 1 and 'R4.30' in r.out, r.all
+
+
+@case
+def test_publish_does_not_loop(env):
+    """R5.38: recording a publish puts the line on the feature pages without moving their stamps, so Full
+    Progress does not change and `pending` has nothing to list, again and again."""
+    p = env.baseline()
+    m = p.man()
+    files = {e['key']: e['file'] for e in m['feature_artifacts']}
+    fp_file = m['full_progress_artifact']['file']
+    before = {k: p.show('docs/artifacts/' + f) for k, f in files.items()}
+    fp_before = p.show('docs/artifacts/' + fp_file)
+    at = '2026-10-12T10:30:00+01:00'
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/one', env={'CLAUDE_ARTIFACTS_NOW': at})
+    m = p.man()
+    assert m['full_progress_artifact']['published_at'] == '2026-10-12T10:30+01:00'
+    assert p.run('pending', '--json').json() == {'artifacts': [], 'queue': [], 'retired': []}      # nothing to publish again
+    assert p.show('docs/artifacts/' + fp_file) == fp_before                                        # Full Progress did not change
+    for key, f in files.items():
+        page = p.show('docs/artifacts/' + f)
+        assert '<a href="https://claude.ai/artifact/one">12 Oct 10:30</a> (Lisbon)' in page and 'Full Progress published: ' in page
+        assert _stamp_of(page) == _stamp_of(before[key])                                           # the stamp did not move
+        assert page.replace(re.search(r'<p class="full-progress-published">.*?</p>\n', page).group(0), '') == before[key]
+        e = next(x for x in m['feature_artifacts'] if x['key'] == key)
+        assert e.get('updated') == next(x for x in p.man('main~1')['feature_artifacts'] if x['key'] == key).get('updated')
+    assert p.run('check').code == 0
+    # a second publish with a new URL: the links move, the stamps and Full Progress do not, pending stays empty
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/two', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-12T11:45:00+01:00'})
+    assert p.run('pending', '--json').json() == {'artifacts': [], 'queue': [], 'retired': []}
+    assert p.show('docs/artifacts/' + fp_file) == fp_before
+    for key, f in files.items():
+        page = p.show('docs/artifacts/' + f)
+        assert '<a href="https://claude.ai/artifact/two">12 Oct 11:45</a>' in page and '/one' not in page
+        assert _stamp_of(page) == _stamp_of(before[key])
+    assert p.run('check').code == 0
+    # and a real change still lists Full Progress once, and publishing it again ends there
+    p.ok('set-task-status', 'AR1', 'Waiting', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-13T08:00:00+01:00'})
+    assert [a['key'] for a in p.run('pending', '--json').json()['artifacts']] == ['full-progress']
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/two', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-13T08:05:00+01:00'})
+    assert p.run('pending', '--json').json() == {'artifacts': [], 'queue': [], 'retired': []}
+    page = p.show('docs/artifacts/' + files['artifacts'])
+    assert '13 Oct 08:05' in page and _stamp_of(page).startswith('2026-10-13T08:00')               # the line follows the publish, the stamp the change
+    assert p.run('check').code == 0
+
+
 @case
 def test_pending_never_lists_a_feature_artifact(env):
     """R9.5: not when it is new, not when its file or content changed, not when it was never published."""
@@ -2289,7 +2378,7 @@ def test_decisions_edit_content_renders_and_checks(env):
     html = p.show('docs/artifacts/feature-artifacts.html')
     assert 'Chosen by the owner &middot; 10 Oct' in html and 'single page, fewer clicks' in html and 'Not chosen' in html
     assert html.index('>Decisions</h2>') < html.index('>History</h2>')
-    assert 'Needs you: AR1 Spec; D2 Should History also list decisions?' in html, html[html.index('class="lede"'):][:300]
+    assert 'data-glance-task="AR1"' in html and 'data-glance-decision="D2"' in html, html[html.index('class="lede"'):][:600]   # At a glance (R5.34)
     assert '1 decision open' in p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
     r = p.run('check')
     assert r.code == 0 and 'record is clean' in r.out and 'warning' not in r.out, r.all

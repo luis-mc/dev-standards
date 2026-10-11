@@ -73,6 +73,50 @@
         }
       });
     });
+    // Section 1: click "Feature artifact" or "Last updated" to sort the rows, click again to reverse (R5.39).
+    // The page is rendered in the default order (Last updated, newest first); nothing is stored.
+    var featureTable = document.querySelector('table.feature-list');
+    if (featureTable && featureTable.tBodies.length) {
+      var sortButtons = Array.prototype.slice.call(featureTable.querySelectorAll('button.sort-header'));
+      var sortBody = featureTable.tBodies[0];
+      var sortCell = { name: 0, updated: 1 };
+      var sortState = { key: 'updated', dir: 'descending' };
+      var sortRows = function () {
+        var key = sortState.key;
+        var sign = sortState.dir === 'ascending' ? 1 : -1;
+        var rows = Array.prototype.slice.call(sortBody.rows);
+        var value = function (row, name) { return row.cells[sortCell[name]].getAttribute('data-value') || ''; };
+        rows.sort(function (a, b) {
+          var x = value(a, key), y = value(b, key), order = 0;
+          if (key === 'updated') {
+            x = parseInt(x, 10) || 0;
+            y = parseInt(y, 10) || 0;
+          }
+          if (x < y) order = -1;
+          else if (x > y) order = 1;
+          if (order !== 0) return order * sign;
+          var n = value(a, 'name'), m = value(b, 'name');
+          return n < m ? -1 : n > m ? 1 : 0;
+        });
+        rows.forEach(function (row) { sortBody.appendChild(row); });
+        sortButtons.forEach(function (button) {
+          var active = button.getAttribute('data-sort') === key;
+          var cell = button.parentNode;
+          if (active) cell.setAttribute('aria-sort', sortState.dir);
+          else cell.removeAttribute('aria-sort');
+          var arrow = button.querySelector('.sort-arrow');
+          if (arrow) arrow.textContent = active ? (sortState.dir === 'ascending' ? '↑' : '↓') : '';
+        });
+      };
+      sortButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          var key = button.getAttribute('data-sort');
+          if (sortState.key === key) sortState.dir = sortState.dir === 'ascending' ? 'descending' : 'ascending';
+          else sortState = { key: key, dir: key === 'name' ? 'ascending' : 'descending' };
+          sortRows();
+        });
+      });
+    }
     window.addEventListener('scroll', markCurrent, { passive: true });
     window.addEventListener('resize', markCurrent);
     markCurrent();

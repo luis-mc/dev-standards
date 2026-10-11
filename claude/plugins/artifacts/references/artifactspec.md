@@ -309,8 +309,8 @@ docs/artifacts/
 | `design` | string | `"default"` or `"design.css"`. |
 | `default_branch` | string | Where the record is committed, e.g. `main`. |
 | `merged_status` | string | Status a merge suggests: `"Live"` (default) or `"Built"`. |
-| `full_progress_artifact` | object | `{key:"full-progress", title, url, file, published_sha256}` |
-| `feature_artifacts` | array | `{key, title, file, prefix, apps:[...]}` each: no `url` and no `published_sha256`, because a feature artifact is never published |
+| `full_progress_artifact` | object | `{key:"full-progress", title, url, file, published_sha256, published_at}`; `published_at` is the ISO time (with offset) of the last `mark-published`, absent before the first publish (R4.30) |
+| `feature_artifacts` | array | `{key, title, file, prefix, apps:[...], updated}` each: no `url` and no `published_sha256`, because a feature artifact is never published; `updated` is the ISO time (with offset) of the stamp of the feature's page, written whenever the script writes that page with a new stamp, and absent in an older record (R4.30) |
 | `retired` | array | Optional. `[{key, title, url, retired}]`: claude.ai pages of feature artifacts still to delete (R4.19). |
 | `deleted` | array | Optional. `[{key, url, deleted}]`, plus `"gone": true` for a page that no longer existed: pages recorded as deleted (R4.19). |
 | `project_prefixes` | array | Task prefixes owned by the project, e.g. `["DS"]`. |
@@ -504,6 +504,16 @@ comment holding the section title: `<!-- title: The design -->`.
   files, and the commits stay in the record worktree. Verified by
   `test_unpushed_commits_survive_a_moved_main`, `test_push_after_main_moved_rebases`
   and `test_conflicting_unpushed_commit_is_kept`.
+- **R4.30** — A feature entry's `updated` is the ISO time (with offset) of the
+  stamp of the feature's page; the script sets it whenever it writes that page
+  with a new stamp (a task status change, a content edit, a decision, a plugin
+  upgrade that redraws the page), and never when it writes the page keeping its
+  stamp (R5.38). Full Progress section 1 shows it (R5.6); a record without it
+  is read from the `<time datetime>` of the feature file. The full-progress
+  entry's `published_at` is the time `mark-published` last ran; the feature
+  pages show it (R5.38). Both are ISO times with an offset, or absent; the
+  rebase keeps the later of two (R4.29). `check` reports a malformed one.
+  Verified by `test_feature_updated_and_published_line`.
 
 ---
 
@@ -530,9 +540,13 @@ an HTML fragment beginning with `<title>`, as the Artifact tool expects (no
 - **R5.5** — The stamp reads `Last update: DD Mon HH:MM (<timezone_label>)` in
   a `<time>` element whose `datetime` attribute is the ISO time with offset.
 - **R5.6** — The full-progress artifact's section 1 lists every feature
-  artifact with its link to the feature's file (R5.30, R5.31), its task ID
-  range and one line on where it stands (taken from its `meta.json` lede's
-  first sentence, or its generated summary when the lede is empty, R5.36). Section 1 is generated, so the full-progress artifact's
+  artifact in a table `Feature artifact | Last updated | Tasks | Where it stands`:
+  its link to the feature's file (R5.30, R5.31), the time its page was last
+  updated (its stamp, `DD Mon HH:MM` in a `<time>` element, from the manifest
+  entry's `updated`, R4.30), its task ID range and one line on where it stands
+  (taken from its `meta.json` lede's first sentence, or its generated summary
+  when the lede is empty, R5.36). The committed rows are in the default order
+  (R5.39): Last updated, newest first, ties by title. Section 1 is generated, so the full-progress artifact's
   content files `01-*.html` onward render as sections 2 and up.
 
 ### 5.2 Lede, At a glance and tiles
@@ -750,6 +764,26 @@ double-click.
   look stale: `pending` compares the committed file with `published_sha256`.
   Verified by `test_pending_and_mark_published`.
 
+- **R5.38** — Right under the stamp, a feature artifact shows `Full Progress
+  published: DD Mon HH:MM (<timezone_label>)` in `<p class="full-progress-published">`,
+  the time linking to Full Progress's `url`. It comes from the manifest's
+  `published_at` and `url` and is omitted before the first publish. Recording a
+  publish never moves a page's stamp: `mark-published` draws the feature pages
+  again keeping their stamp and their `updated`, so Full Progress, which shows
+  those stamps, does not change and is not listed by `pending` again. A command
+  that renders features and Full Progress draws the features first, then Full
+  Progress, so its section 1 shows the stamps just written (R7.4, INV-3).
+  Verified by `test_publish_does_not_loop` and `check_r538_published_line`.
+- **R5.39** — The headers `Feature artifact` and `Last updated` of section 1 are
+  buttons (`<button type="button" class="sort-header" data-sort="name|updated">`):
+  a click sorts the rows by that column, a second click reverses the order, an
+  arrow and `aria-sort` on the header show the current order. The page starts
+  in Last updated, newest first (the committed order); sorting is done by the
+  template's own script on the page, stores nothing and calls nothing outside
+  the page, so it works in the publish copy, whose Copy link buttons (R5.31)
+  keep working in any order. Verified by `check_r539_sort_headers` and
+  `test_full_progress_sort_script`.
+
 ---
 
 ## 6. Statuses and the checklist
@@ -886,7 +920,8 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
   nearest allowed status (`Merged` → `Live`).
 - **R7.4** — Rendering is deterministic: the same record and the same stamp give
   byte-identical HTML.
-- **R7.5** — Every writing command except `render` (which does this itself) also
+- **R7.5** — A command that renders Full Progress draws it after the feature
+  pages it draws in the same command (R5.38). Every writing command except `render` (which does this itself) also
   renders, with a new stamp, each artifact whose file differs from a fresh render
   with that file's own stamp, so a plugin upgrade that changes the templates or
   the stylesheet brings every page up to date at the next change, not only the
@@ -1160,7 +1195,7 @@ Reads the hook input; takes the task ID from the current branch name
 - **R13.1** — `tools/test_project_artifacts.py` builds throwaway git repos with
   a bare remote and proves each command, each check of §14 (one fixture per
   check that fails without it), INV-1 to INV-3, R4.13 to R4.29, R6.10, R6.11, R5.31, R5.32,
-  R5.33 to R5.37, R7.4 to R7.6, R9.5 and R10.6.
+  R5.33 to R5.39, R4.30, R7.4 to R7.6, R9.5 and R10.6.
 - **R13.2** — `tools/test_project_artifacts_hooks.py` feeds sample hook input
   to each hook and asserts the queue, the exit code and the output, including
   R8.4, R8.8 to R8.17 and INV-4, and that every hook does nothing without a
@@ -1192,6 +1227,9 @@ Reads the hook input; takes the task ID from the current branch name
 | `expected_basis`: a string of 1 to 80 characters, on open rows only | R6.10 |
 | Checklists and tiles equal the registry | INV-1, R5.8 |
 | Every feature task on the full-progress artifact, linked to the feature file by a relative link | R6.5, R5.30 |
+| Section 1 of Full Progress: the four columns, a Last updated time per feature, sort buttons, rows in the default order | R5.6, R5.39 |
+| A feature page's Full Progress published line equals the manifest's | R5.38 |
+| `updated` and `published_at` in the manifest are ISO times with an offset | R4.30 |
 | A feature artifact is a complete HTML document with its CSS inlined and no external resource but the fonts link; Full Progress is a fragment beginning with `<title>` | R5.27, R5.28, R5.29 |
 | IDs unique, prefixes registered | R4.5, R4.6 |
 | History last on feature artifacts, Date / Change | R5.4 |

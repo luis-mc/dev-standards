@@ -545,7 +545,7 @@ def merge3(base, a, b):
                 v = vb
             elif vb == v0:
                 v = va
-            elif k == 'updated' and isinstance(va, str) and isinstance(vb, str):
+            elif k in ('updated', 'published_at') and isinstance(va, str) and isinstance(vb, str):
                 v = max(va, vb)
             elif va is _MISSING or vb is _MISSING:
                 raise JsonConflict(k)
@@ -1079,6 +1079,11 @@ def validate_structure(rec):
             f('R4.3', 'manifest.json', '%s: published_sha256 is not a SHA-256' % label)
         if h and not url:
             f('R4.3', 'manifest.json', '%s: published_sha256 is set but url is empty' % label)
+        for fld in ('published_at',) if kind == 'full-progress' else ('updated',):    # R4.30
+            v = e.get(fld)
+            if v is not None and (not isinstance(v, str) or (v != '' and (
+                    not R.ISO_OFFSET_RE.match(v) or parse_iso(v) is None))):
+                f('R4.30', 'manifest.json', '%s: field "%s" must be an ISO time with an offset' % (label, fld))
         title = e.get('title')
         want = 'Full Progress: ' if kind == 'full-progress' else 'Feature: '
         if isinstance(title, str):
@@ -1428,13 +1433,25 @@ def finish_change(ctx, rec, result):
                 rec.render_keys.setdefault(key, 'new')
     else:
         refresh_stale(rec)
+    if rec.entry(FP_NAME) is not None and any(
+            v == 'new' and k != FP_NAME for k, v in rec.render_keys.items()):
+        rec.render_keys.setdefault(FP_NAME, 'new')     # section 1 shows each feature's stamp (R5.6)
     rec.touch()
     now = rec.now()
+    for key, how in rec.render_keys.items():           # the stamp Full Progress shows for a feature (R4.30)
+        e = rec.entry(key)
+        if how == 'new' and e is not None and rec.kind(key) == 'feature':
+            e['updated'] = now.iso
     write_text(rec.dir / 'manifest.json', dump_json(rec.manifest))
     write_text(rec.dir / 'registry.json', dump_json(rec.registry))
     rec.invalidate()
-    for key in sorted(rec.render_keys, key=lambda k: (k != FP_NAME, k)):
-        rec.write_html(key, render_one(rec, key, now.text, now.iso))
+    for key in sorted(rec.render_keys, key=lambda k: (k == FP_NAME, k)):    # Full Progress last (R7.5)
+        stamp_t, stamp_i = now.text, now.iso
+        if rec.render_keys[key] == 'keep':             # the page keeps its stamp (R5.38)
+            kept = existing_stamp(read_html(rec.html_path(key)))
+            if kept is not None:
+                stamp_t, stamp_i = stamp_text_from_iso(kept), kept
+        rec.write_html(key, render_one(rec, key, stamp_t, stamp_i))
     write_text(rec.dir / 'README.md', readme_text(rec.manifest))
     post = validate_structure(rec)
     for key in sorted(rec.rendered):
@@ -2000,6 +2017,16 @@ def cmd_mark_published(args):
         # the hash of the committed render, not of the publish copy (R5.32): nothing links to the url,
         # so no other artifact changes
         e['published_sha256'] = sha_of_file(rec.html_path(key))
+        e['published_at'] = rec.now().iso
+        # each feature page says when Full Progress was published (R5.38), without a new stamp: a new stamp
+        # would change Full Progress's section 1, which would need publishing again, and so on
+        for fkey, _k, fe in rec.artifacts():
+            if fkey == key or fkey in rec.broken() or not isinstance(fe.get('file'), str):
+                continue
+            fold = read_html(rec.dir / fe['file'])
+            fst = existing_stamp(fold)
+            if fst is not None and render_one(rec, fkey, stamp_text_from_iso(fst), fst).replace('\r\n', '\n') != fold:
+                rec.render_keys[fkey] = 'keep'
         rec.message = 'docs/artifacts: published %s' % key
         return {'command': 'mark-published', 'key': key, 'url': url, 'sha256': e['published_sha256']}
 
