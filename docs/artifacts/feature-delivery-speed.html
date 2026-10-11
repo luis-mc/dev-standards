@@ -587,7 +587,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-11T12:56+01:00">11 Oct 12:56</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-11T13:13+01:00">11 Oct 13:13</time> (Lisbon)</p>
 <p class="lede">Planned 11 October from a prompt measured in one product: each delivery layer will do only its share. Ten changes (DL1 to DL10), released as STACKSPEC 8.0.0 once the TC6 train merges; every question is decided (D1 to D9). <strong>Nothing needs you.</strong></p>
 <div class="status-count-tiles"><div class="status-count-tile status-built"><div class="count">6</div><div class="label">built</div></div><div class="status-count-tile status-running"><div class="count">4</div><div class="label">running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
@@ -639,6 +639,74 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D13">
+<h3 class="decision-head"><span class="decision-id">D13</span> <span class="decision-question">Turn hooks on here (core.hooksPath .githooks), which also activates the pre-commit secret check?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task DL10</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, both hooks</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">Secret check on every commit, freeze on every push.</p>
+<blockquote class="decision-words">&ldquo;Yes, both hooks (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Freeze only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Only pre-push.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Not now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave hooks off.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D12">
+<h3 class="decision-head"><span class="decision-id">D12</span> <span class="decision-question">Merge this release on green CI without asking again?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task DL11</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Merge on green</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">One ready PR, its CI, squash-merge when green, fix forward if red.</p>
+<blockquote class="decision-words">&ldquo;Merge on green (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ask me before merging</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Stop at a green ready PR.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D11">
+<h3 class="decision-head"><span class="decision-id">D11</span> <span class="decision-question">Install the train freeze in this repo’s own git hooks?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task DL10</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">.githooks/pre-push next to pre-commit.</p>
+<blockquote class="decision-words">&ldquo;Yes (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Products only.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D10">
+<h3 class="decision-head"><span class="decision-id">D10</span> <span class="decision-question">dev-standards is public: create a public GitHub release per train for the delivery log?</span></h3>
+<p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task DL10</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, public releases</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Oct</span></div>
+<p class="decision-summary">One release per train, notes = the delivery log.</p>
+<blockquote class="decision-words">&ldquo;Yes, public releases (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Draft releases only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Visible only with write access.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Skip the log here</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Adopt only the freeze.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D9">
 <h3 class="decision-head"><span class="decision-id">D9</span> <span class="decision-question">Point 4: how is the train freeze overridden on purpose?</span></h3>
 <p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task DL6</p>

@@ -194,6 +194,98 @@
    "decided": "2026-10-11",
    "task": "DL6",
    "owner_words": "Env variable, logged (Recommended)"
+  },
+  {
+   "id": "D10",
+   "question": "dev-standards is public: create a public GitHub release per train for the delivery log?",
+   "asked": "2026-10-11",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Yes, public releases",
+     "summary": "One release per train, notes = the delivery log.",
+     "recommended": true
+    },
+    {
+     "label": "Draft releases only",
+     "summary": "Visible only with write access."
+    },
+    {
+     "label": "Skip the log here",
+     "summary": "Adopt only the freeze."
+    }
+   ],
+   "chosen": "Yes, public releases",
+   "decided": "2026-10-11",
+   "task": "DL10",
+   "owner_words": "Yes, public releases (Recommended)"
+  },
+  {
+   "id": "D11",
+   "question": "Install the train freeze in this repo’s own git hooks?",
+   "asked": "2026-10-11",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Yes",
+     "summary": ".githooks/pre-push next to pre-commit.",
+     "recommended": true
+    },
+    {
+     "label": "No",
+     "summary": "Products only."
+    }
+   ],
+   "chosen": "Yes",
+   "decided": "2026-10-11",
+   "task": "DL10",
+   "owner_words": "Yes (Recommended)"
+  },
+  {
+   "id": "D12",
+   "question": "Merge this release on green CI without asking again?",
+   "asked": "2026-10-11",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Merge on green",
+     "summary": "One ready PR, its CI, squash-merge when green, fix forward if red.",
+     "recommended": true
+    },
+    {
+     "label": "Ask me before merging",
+     "summary": "Stop at a green ready PR."
+    }
+   ],
+   "chosen": "Merge on green",
+   "decided": "2026-10-11",
+   "task": "DL11",
+   "owner_words": "Merge on green (Recommended)"
+  },
+  {
+   "id": "D13",
+   "question": "Turn hooks on here (core.hooksPath .githooks), which also activates the pre-commit secret check?",
+   "asked": "2026-10-11",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Yes, both hooks",
+     "summary": "Secret check on every commit, freeze on every push.",
+     "recommended": true
+    },
+    {
+     "label": "Freeze only",
+     "summary": "Only pre-push."
+    },
+    {
+     "label": "Not now",
+     "summary": "Leave hooks off."
+    }
+   ],
+   "chosen": "Yes, both hooks",
+   "decided": "2026-10-11",
+   "task": "DL10",
+   "owner_words": "Yes, both hooks (Recommended)"
   }
  ]
 }
