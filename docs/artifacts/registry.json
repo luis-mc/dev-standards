@@ -1247,11 +1247,11 @@
       "id": "DS57",
       "owner": "project",
       "app": "delivery scripts",
-      "status": "Built",
+      "status": "Live",
       "item": "cleanup.py: no failure when the train-cleanup workflow got there first",
-      "detail": "0731837: an existing train release is updated, a remote branch already gone counts as deleted; 2 race scenarios; branch CI green 1m59s",
+      "detail": "Released in #54 (eaeec1d, 00:22): luismc-project-setup 14.2.1; its first real run updated the train release without the collision",
       "expected": "12 Oct",
-      "changed": "2026-10-12T00:13+01:00",
+      "changed": "2026-10-12T00:23+01:00",
       "rides": "DS56"
     },
     {

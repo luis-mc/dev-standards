@@ -1933,11 +1933,11 @@ tr.status-group.release-group td { color: var(--ink); }
    "id": "DS57",
    "owner": "project",
    "app": "delivery scripts",
-   "status": "Built",
+   "status": "Live",
    "item": "cleanup.py: no failure when the train-cleanup workflow got there first",
-   "detail": "0731837: an existing train release is updated, a remote branch already gone counts as deleted; 2 race scenarios; branch CI green 1m59s",
+   "detail": "Released in #54 (eaeec1d, 00:22): luismc-project-setup 14.2.1; its first real run updated the train release without the collision",
    "expected": "12 Oct",
-   "changed": "2026-10-12T00:13+01:00",
+   "changed": "2026-10-12T00:23+01:00",
    "rides": "DS56"
   },
   {
@@ -2140,26 +2140,21 @@ tr.status-group.release-group td { color: var(--ink); }
 <li data-glance-task="DS56"><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~00:26</span><span class="glance-basis">#53: CI 3.4 min, merge+cleanup 4</span></li>
 </ul>
 </div>
-<div class="glance-group glance-built" data-glance="built"><div class="glance-label">Built, not released</div>
-<ul>
-<li data-glance-task="DS57"><span class="task-id">DS57</span>cleanup.py: no failure when the train-cleanup workflow got there first</li>
-</ul>
-</div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
 <li data-glance-task="AR46"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</li>
+<li data-glance-task="DS57"><span class="task-id">DS57</span>cleanup.py: no failure when the train-cleanup workflow got there first</li>
 <li data-glance-task="DS55"><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup</li>
 <li data-glance-task="TC9"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</li>
 <li data-glance-task="TC10"><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check</li>
 <li data-glance-task="TC11"><span class="task-id">TC11</span>Use the session guards in dev-standards itself</li>
 <li data-glance-task="AR45"><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release</li>
 <li data-glance-task="DS54"><span class="task-id">DS54</span><span class="release-name">RELEASE-2</span>AR45 train: join, PR CI, merge, cleanup</li>
-<li data-glance-task="DS53"><span class="task-id">DS53</span><span class="release-name">RELEASE-1</span>TC8 train: join, PR CI, merge, cleanup</li>
-<li class="glance-more">and 76 more</li>
+<li class="glance-more">and 77 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">130</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">131</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
@@ -2182,8 +2177,8 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group release-group" data-group="release-4"><td colspan="5"><strong>RELEASE-4 · live ~00:26 · worst ~00:36</strong></td></tr>
 <tr data-task="DS56"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</td><td></td><td>PR #54 CI rerun on 96cc49d from 00:18: guard-test fix, and test_session_guard.py now runs in CI (TC9 never wired it in, so the first run passed with it failing)</td><td>12 Oct ~00:26<span class="expected-basis">#53: CI 3.4 min, merge+cleanup 4</span></td></tr>
-<tr data-task="DS57"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DS57</span>cleanup.py: no failure when the train-cleanup workflow got there first</td><td><code>delivery scripts</code></td><td>0731837: an existing train release is updated, a remote branch already gone counts as deleted; 2 race scenarios; branch CI green 1m59s</td><td>12 Oct</td></tr>
 <tr data-task="AR46"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</a></td><td><code>luismc-artifacts</code></td><td>Released in #54 (eaeec1d, 00:22): ARTIFACTSPEC 1.6.1, luismc-artifacts 1.6.2</td><td>12 Oct</td></tr>
+<tr data-task="DS57"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS57</span>cleanup.py: no failure when the train-cleanup workflow got there first</td><td><code>delivery scripts</code></td><td>Released in #54 (eaeec1d, 00:22): luismc-project-setup 14.2.1; its first real run updated the train release without the collision</td><td>12 Oct</td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="DS55"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup</td><td></td><td>#53 merged on green 00:00 (CI 3m23s); join fix: suites.json lacked TC10&#x27;s new test. Cleanup raced the train-cleanup workflow (release and TC9 branch already gone); a second run finished it and added the delivery log</td><td>12 Oct</td></tr>
 <tr data-task="TC9"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-test-and-validation-cost.html"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</a><span class="release-line"><span class="release-name">RELEASE-3</span></span></td><td><code>luismc-project-setup</code></td><td>Released in #53 (fe3af00, 00:00): STACKSPEC 8.2.0, luismc-project-setup 14.2.0, luismc-artifacts 1.6.1</td><td>12 Oct</td></tr>
