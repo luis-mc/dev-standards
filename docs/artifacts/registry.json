@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T03:04+01:00",
+  "updated": "2026-10-11T03:05+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -306,11 +306,11 @@
       "id": "AR33",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Running",
       "item": "Expected says what sets the estimate",
-      "detail": "Idea from another project's page: an Expected entry may carry its basis (e.g. 'agent slot ~01:30, ~1.5 h'). Starts after AR31, which owns the same files.",
+      "detail": "Idea from another project's page: an Expected entry may carry its basis (e.g. 'agent slot ~01:30, ~1.5 h'). Starts after AR31, which owns the same files. Started 03:10 (one agent for both); rides STACKSPEC 7.1.0.",
       "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T01:23+01:00"
+      "changed": "2026-10-11T03:05+01:00"
     },
     {
       "id": "AR34",
