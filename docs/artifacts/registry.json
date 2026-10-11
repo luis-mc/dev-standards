@@ -952,12 +952,12 @@
       "id": "TC3",
       "owner": "test-cost",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Retire the fake-renderer group",
-      "detail": "Chosen by the owner 11 Oct; next train after this study",
-      "expected": "12 Oct",
-      "changed": "2026-10-11T11:25+01:00",
-      "expected_basis": "the next train, one change per task"
+      "detail": "Agent on TC5-record-push-once, part of the TC6 train",
+      "expected": "11 Oct ~13:30",
+      "changed": "2026-10-11T11:31+01:00",
+      "expected_basis": "agent work ~1h30 in parallel, then join"
     },
     {
       "id": "TC4",
