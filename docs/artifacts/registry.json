@@ -1100,11 +1100,11 @@
       "id": "TC2",
       "owner": "test-cost",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "A mutant stops at its first failed check",
-      "detail": "On TC2-mutants-and-cleanup (17ee580): mutants stop at the first failed check; gate 606/606, cleanup 236/236 without mutants; full pass runs in the ready PR",
+      "detail": "Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0",
       "expected": "11 Oct",
-      "changed": "2026-10-11T11:49+01:00"
+      "changed": "2026-10-11T14:40+01:00"
     },
     {
       "id": "TC3",
