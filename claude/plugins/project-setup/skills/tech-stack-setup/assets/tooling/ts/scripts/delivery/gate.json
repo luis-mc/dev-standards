@@ -59,7 +59,8 @@
     {
       "name": "e2e",
       "scope": "ui-changed",
-      "run": "pnpm exec playwright install chromium && pnpm exec playwright test",
+      "run": "pnpm exec playwright install chromium && pnpm exec playwright test {e2e_specs}",
+      "run_full": "pnpm exec playwright install chromium && pnpm exec playwright test",
       "env": {"CI": "true"}
     }
   ]
