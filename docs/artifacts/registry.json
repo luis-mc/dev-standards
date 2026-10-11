@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T02:23+01:00",
+  "updated": "2026-10-11T02:24+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -716,11 +716,11 @@
       "id": "DS40",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Agents test fast locally; CI does mutants and Linux",
-      "detail": "Your decision after agents ran for hours: agents run suites without the mutation pass locally (--no-mutants where supported); mutation passes and Linux run once in CI (an agent triggers the workflow on its branch, since drafts skip CI); at most 3 agents at once when they run heavy suites on one machine. In your ~/.claude rules now; in the shipped rule file with STACKSPEC 7.1.0.",
-      "expected": "11 Oct ~05:30",
-      "changed": "2026-10-11T02:23+01:00"
+      "detail": "In your ~/.claude rules now (backup first) and in the shipped rule file on DS37-integration (with STACKSPEC 7.1.0): suites run locally without the mutation pass; mutants and Linux run once in CI, triggered on the agent's branch; at most 3 agents when they run heavy suites on one machine. The five running agents were told to switch now and finish through CI.",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T02:24+01:00"
     },
     {
       "id": "MP1",
