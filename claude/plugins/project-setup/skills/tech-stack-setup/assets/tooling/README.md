@@ -163,6 +163,15 @@ Copied to `scripts/delivery/` (see `shared/scripts/delivery/CONTRACT.md`):
   branches and worktrees, and keeps anything open, unmerged or dirty (`§13.6`).
   `shared/.github/workflows/train-cleanup.yml` does the remote part when the
   ready pull request merges; `join.py` does the local part before each join.
+- `delivery_log.py`: `cleanup.py --pr N` calls it before deleting a branch; it appends
+  a table of each change's time to live (waiting, testing, queueing) to the train's
+  release notes (`§13.6`). The deploy job runs `delivery_log.py live --pr N` after
+  its smoke test. Offline or without permission it warns and the cleanup goes on.
+- `smoke_packaged.py`: starts the packaged program declared in
+  `scripts/delivery/smoke.json` and waits for a readiness line from it and from
+  every worker it starts (`§13.7`). Each track's `package.yml` runs it after the
+  build; the workflow runs only when a path that feeds the artifact changes, never
+  for docs-only merges, and can be started by hand.
 
 ## Adapting a track
 

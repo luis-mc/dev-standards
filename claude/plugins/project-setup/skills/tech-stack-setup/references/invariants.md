@@ -1324,6 +1324,12 @@ for its kind — `windows-installer`, never `windows-installer-1.4.2-run-812`; t
 version and commit go inside the artifact. A build that must outlive the next
 one (a release) is published as a release asset, not kept as an artifact.
 
+A workflow that builds a shipped artifact (an installer, a bundle, a package, an
+image) SHOULD be a workflow of its own that runs only when a path that feeds it
+changes, never for a documentation-only or record-only change, and that can
+always be started by hand. The path filter is the cost control: a merge that
+changed nothing the artifact is built from builds nothing.
+
 ### 13.2 Promotion
 
 **The three-tier promotion flow is not optional**, whichever host is chosen:
@@ -1441,6 +1447,30 @@ gate runs the scanner CI runs.
   gate-result refs; locally, their branches and the worktrees they were built
   in. A branch with an open pull request, a branch not merged, and a worktree
   holding uncommitted work are never removed; they are listed instead.
+- Delivery log (SHOULD). Before the train is removed, the time each change
+  finished, joined, started and ended CI and merged is collected from its
+  branch; the deploy adds when it went live. A table of the time to live of
+  each change, split into waiting, testing and queueing, is appended to the
+  train's release notes. It is never committed to the default branch, a time
+  that cannot be found is shown as unknown, and a log that cannot be written
+  (offline, no permission) never stops the cleanup or the deploy.
+
+### 13.7 Packaged-program smoke test
+
+A product that ships a packaged program (a single executable, an installer, an
+app bundle or a container image) MUST have CI start the packaged form, not the
+development server, and exercise every child process or worker it starts: CI
+waits for a readiness signal (a log line or a health probe) from the program and
+from each of those processes, and MUST fail the build when one does not come up
+within a stated time. The list of signals is declared in the repository, so adding
+a worker means adding its signal; the process tree is stopped when the check ends,
+whether it passed or not. A program that starts but whose worker never does is
+the failure this check exists for: it passes every unit test and breaks only when
+packaged, where paths, bundled files and process launching differ from
+development.
+
+A product that ships no packaged program declares none and the check has nothing
+to start.
 
 ---
 
@@ -1705,6 +1735,8 @@ Every item is checkable regardless of stack.
 - [ ] CI cost kept down (SHOULD): no sub-minute job that could be a step, superseded PR runs cancelled but never default-branch runs, drafts skip CI, installs and task-runner results cached
 - [ ] Default-branch push runs skip a tree a pull-request run already passed
 - [ ] Only the newest build artifact of each name is kept; artifact names stable per kind
+- [ ] Artifact-building workflows run only when their inputs change, never for docs-only merges, and can be started by hand (SHOULD)
+- [ ] A packaged program is started by CI in its packaged form and every worker it starts must report ready, or the build fails (§13.7)
 - [ ] End-to-end tests of critical web journeys gate the ready pull request; flaky specs quarantined, never retried until green
 - [ ] Branch gate: dependents type-checked and linted with every error reported, guard tests always run, secret scan, E2E only when a UI app changed
 - [ ] Branch gate installs from the lockfile in frozen mode first, stops at the first failure, and has a time limit
@@ -1712,6 +1744,7 @@ Every item is checkable regardless of stack.
 - [ ] Guard tests and secret scan run as a pre-push hook; the agent setup script installs every scanner CI uses
 - [ ] Integration through a merge script and one ready pull request; CI watched by commit
 - [ ] A merged train's branches, gate-result refs and worktrees removed automatically
+- [ ] A delivery log (time to live per change: waiting, testing, queueing) appended to the train's release notes, never committed (SHOULD)
 - [ ] Three-tier promotion; migrations before serving; rollback documented and rehearsed
 - [ ] Release order enforced: additive API → web/admin → mobile submission
 - [ ] Mobile signing material stored reproducibly with a tested recovery procedure
