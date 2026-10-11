@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T23:34+01:00",
+  "updated": "2026-10-11T23:52+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1350,12 +1350,11 @@
       "id": "TC9",
       "owner": "test-cost",
       "app": "luismc-project-setup",
-      "status": "Running",
+      "status": "Built",
       "item": "Light or heavy from measured suite times, not the session's guess",
-      "detail": "Agent A, branch TC9-test-and-pr-guards: suites.json + run_suite.py (times), test guard hook, ready-PR guard hook, join.py without gate config. Contract 1f3115a (STACKSPEC §13.8)",
-      "expected": "12 Oct ~00:15",
-      "changed": "2026-10-11T23:32+01:00",
-      "expected_basis": "agent ~40 min from 23:40",
+      "detail": "Branch TC9-test-and-pr-guards (0cbd767): suites.json + run_suite.py (times in .delivery/), session_guard.py blocks full local runs of heavy suites, repeat full runs of a tested tree and ready PRs off *-integration; join.py works without gate.json. Branch CI green 3m33s; 17 new guard cases",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T23:52+01:00",
       "rides": "DS55"
     },
     {
