@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.4.1
+**Version:** 1.5.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.5.0 — 2026-10-11.**
+
+- Release tasks (`--release`, `--phase`, `--risk`, `--rides`; Expected is the end of the last phase) with a release timeline in Full Progress section 0, and a State column in the feature table (R5.40 to R5.44).
 
 **1.4.1 — 2026-10-11.**
 
