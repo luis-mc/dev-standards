@@ -1380,8 +1380,10 @@ will join, it runs:
 5. The secret scan over the branch's new commits.
 6. End-to-end tests, only when a user-facing app, or a package it renders,
    changed. The gate SHOULD run only the specs the change affects, through a
-   committed map from specs to source paths; a change the map does not cover,
-   or one to shared configuration or the API contract, runs them all. The
+   committed map from specs to source paths or, when there is no map, the specs
+   of the apps that depend on the changed package (from the workspace dependency
+   graph); a change the map does not cover, or one to shared configuration or
+   the API contract, runs them all. The
    ready pull request's CI always runs every spec.
 
 Because a result is trusted only against the current head of the branch it
@@ -1396,14 +1398,28 @@ unless it is asked to go on, and it has a time limit (30 minutes by default):
 when the limit is reached, the running step is stopped with its child processes
 and the result records a timeout. A gate that could not finish never passes.
 
-A change to the lockfile, the task runner's configuration or the CI workflows
-widens the gate to every package.
+A change to the task runner's configuration or the CI workflows widens the gate
+to every package. A change to the lockfile widens it too, unless the lockfile
+format lets the gate see which packages' dependencies changed (a per-package
+lockfile, or a workspace lockfile with a section per package): then the gate
+SHOULD treat those packages as changed and widen only for a change it cannot
+attribute to a package, such as one to the root package or to a transitive
+resolution. A lockfile whose format the gate does not read widens as before.
 
 The gate MUST write a machine-readable result: the head commit, the base commit,
 each step with its outcome, and an overall pass. A result is trusted only when
 its head is the branch's current head and its base is the current head of the
 branch it joins. A claim in prose, such as a report saying "green", is not a
 result. Results travel with the repository, never in pull-request comments.
+
+A result gated against an older base SHOULD stay valid when that base is an
+ancestor of the branch's current base and every commit in between touches only
+inert paths (the repository declares them; the default is the documentation
+directory, which already covers the project record when the artifacts plugin is
+enabled), so a branch is not gated again because a note was merged. The ready
+pull request's CI still tests the real merge, which is why this is safe. The
+check reports why it accepted the result, and a strict mode keeps the exact-base
+rule.
 
 The guard tests and the secret scan MUST also run as a pre-push hook. They take
 seconds and catch the failures that otherwise reach pull-request CI. For a

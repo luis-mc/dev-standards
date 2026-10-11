@@ -55,7 +55,9 @@ timed out. A script never exits 0 when it could not decide.
   "setup": ["pnpm install --frozen-lockfile"],
   "timeout_minutes": 30,
   "packages": {"kind": "pnpm-workspace"},
-  "widen_on": ["pnpm-lock.yaml", "package.json", "turbo.jsonc", ".github/", "scripts/delivery/"],
+  "widen_on": ["package.json", "turbo.jsonc", ".github/", "scripts/delivery/"],
+  "lockfile_scope": "pnpm-importers",
+  "inert_paths": ["docs/**"],
   "ui_paths": ["apps/web/", "apps/admin/", "packages/ui/"],
   "steps": [
     {"name": "typecheck", "scope": "changed+dependents",
@@ -86,6 +88,31 @@ timed out. A script never exits 0 when it could not decide.
   glob over the full path; anything else is a root-level file only (a nested
   `package.json` does not widen). Per-package lockfiles use globs (`*go.sum`,
   `*packages.lock.json`).
+- `lockfile_scope` (optional, default `widen`): how a lockfile change is scoped.
+  `widen`: the lockfile is whatever `widen_on` says (an entry there widens the gate
+  to every package; a gate.json written before this key keeps working, and a
+  lockfile still listed in `widen_on` widens whatever the scope says).
+  `pnpm-importers`: `pnpm-lock.yaml` is compared with its version at the base; each
+  entry of its `importers:` section whose text differs is a package whose
+  dependencies changed, and that package counts as changed (its steps run scoped,
+  its dependents are affected, a ui package triggers `ui-changed`). The gate
+  widens instead when the change cannot be pinned to a package: the root importer
+  (`.`) changed, the lockfile differs only outside `importers:` (a transitive
+  resolution), or the lockfile was added or removed. `per-package`: the lockfiles
+  live next to their package (`go.mod`/`go.sum` per Go module, `packages.lock.json`
+  per .NET project), so they are not `widen_on` entries and a change makes just
+  that package changed; a root-level file such as `go.work` or `go.work.sum`
+  still widens. Per track: `ts` pnpm-importers; `go` and `dotnet` per-package;
+  `rust` widen, because `Cargo.lock` is one file for the workspace and mapping
+  its changed entries to the crates that depend on them needs a dependency graph
+  the gate does not build, so any change to it widens. (The older `lockfiles`
+  array is unrelated: it only lists extra files `join.py` may resolve.)
+- `inert_paths` (optional, default `["docs/**"]`): globs (same rules as
+  `widen_on`) for paths whose change cannot affect what a gate result tested.
+  `gate_verify.py` keeps a result valid across a move of the base that touches only
+  these paths. tech-stack-setup writes the key into each track's `gate.json`; when
+  luismc-artifacts is enabled it adds `docs/artifacts/**` only if `docs/**` is not
+  already listed, and the default already covers it.
 - `env` (optional, per step): an object of names to string values added to the
   environment of that step's command, e.g. `"env": {"CI": "true"}` for a test
   runner whose timeouts depend on it. Inline `VAR=x cmd` does not work in
@@ -178,6 +205,17 @@ it joins, `pass` is true and `partial` is not. `--allow-older-base` relaxes the 
 to "`base` is an ancestor of the current head" (used by `join.py`, which re-gates
 the joined head unless its tree equals a trusted joined branch's tree).
 
+**Inert moves of the base.** Without `--allow-older-base`, a `base` that is not the
+current head still passes when it is an ancestor of the current head and the
+difference between them (`git diff --name-only base current`) touches only
+`inert_paths`. The net difference decides, so a merge commit counts by its diff
+and a change made and reverted inside the range counts as nothing. The verdict
+gets `"inert_commits": N` (the commits in `base..current`; `null` otherwise) and
+the output says `base moved only by inert commits: N`. A base that is not an
+ancestor (a rewound branch) is stale as before. `--strict-base` turns the
+exception off. The exception is safe because the ready pull request's CI still
+tests the real merge, and it SHOULD be used, not required.
+
 ## Command lines
 
 ```
@@ -213,7 +251,7 @@ partial. Refuses (exit 2) on a dirty working tree. Exit 0 pass, 1 a step
 failed, 2 usage, 4 timed out.
 
 ```
-gate_verify.py BRANCH [--base-ref REF] [--remote origin] [--allow-older-base] [--json]
+gate_verify.py BRANCH [--base-ref REF] [--remote origin] [--allow-older-base] [--strict-base] [--json]
 ```
 Fetches the branch, the base ref and `refs/gate-results/BRANCH`; prints why a
 result is or is not trusted. Exit 0 trusted and passing, 1 otherwise, 2 no result.
@@ -456,6 +494,20 @@ whole suite). The result entry for e2e adds `"selection": "affected"|"full"` and
 Template TS `gate.json`: `"run": "pnpm exec playwright install chromium && pnpm exec playwright test {e2e_specs}"`,
 `"run_full"` without the placeholder, and an example `e2e_map` commented in the
 README (not in gate.json; a product writes its own).
+
+**Without an `e2e_map` (DL4), `pnpm-workspace` only.** When the e2e step has the
+`{e2e_specs}` placeholder and the gate is not widened, the specs come from the
+workspace dependency graph. The ui packages the change affects are the changed
+packages under `ui_paths` (a file there that is in no package, or a lockfile
+change that touches a ui package, counts) and every ui package that depends on
+one of them. Each affected ui package contributes its spec directory:
+`<package>/e2e` or, failing that, `e2e/<last segment of the package path>`, when it
+exists. The placeholder becomes those directories (sorted, space-separated,
+Playwright takes them as path filters), and the result records
+`"selection": "affected"`. It is the whole suite instead (placeholder empty) when
+any changed ui package neither has a spec directory nor is imported by an affected
+ui package that has one, when a ui file is in no package, or for any other kind of
+workspace. A present `e2e_map` wins and is applied exactly as above.
 
 ### U2 — the gate fetches its base
 
