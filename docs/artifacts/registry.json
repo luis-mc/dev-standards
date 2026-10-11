@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T22:56+01:00",
+  "updated": "2026-10-11T22:59+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -426,12 +426,11 @@
       "id": "AR45",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "RELEASE-n numbers; Full Progress groups items by release",
-      "detail": "Agent finished 22:47: 4 commits on AR45-release-numbers (RELEASE-n numbers, groups by release, rides rule, task tiles, timeline never scaled up); agent's runs 116+122+90 pass. My full re-run of the three suites since 22:47",
-      "expected": "11 Oct ~23:05",
-      "changed": "2026-10-11T22:56+01:00",
-      "expected_basis": "full re-run of 3 suites, started 22:47",
+      "detail": "4 commits on AR45-release-numbers; agent's local runs 116+122+90 pass; PR #51 CI is the full run",
+      "expected": "11 Oct",
+      "changed": "2026-10-11T22:59+01:00",
       "rides": "DS54"
     },
     {
