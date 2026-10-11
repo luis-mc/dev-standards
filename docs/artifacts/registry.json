@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T17:38+01:00",
+  "updated": "2026-10-11T17:39+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -408,9 +408,9 @@
       "app": "luismc-artifacts",
       "status": "Needs you",
       "item": "Full Progress: release timeline above the status table",
-      "detail": "Hand-made preview published (Version 69) for the owner to validate; then renderer + ARTIFACTSPEC",
+      "detail": "Preview on Full Progress: release timeline + feature State column (Complete or open counts); owner validates, then plugin",
       "expected": "11 Oct",
-      "changed": "2026-10-11T17:38+01:00",
+      "changed": "2026-10-11T17:39+01:00",
       "expected_basis": "waits on the owner's review of the preview"
     },
     {
