@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T23:31+01:00",
+  "updated": "2026-10-11T23:32+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1354,9 +1354,9 @@
       "item": "Light or heavy from measured suite times, not the session's guess",
       "detail": "Owner chose (D15-D18): four blocking checks in luismc-project-setup, heavy = over 3 min locally, plus rule lines tagged check or advice with a test. Brief and plan by the session, then one agent",
       "expected": "12 Oct ~00:15",
-      "changed": "2026-10-11T23:31+01:00",
+      "changed": "2026-10-11T23:32+01:00",
       "expected_basis": "agent ~40 min from 23:35",
-      "rides": "DS55"
+      "rides": "DS54"
     }
   ]
 }
