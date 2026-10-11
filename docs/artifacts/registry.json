@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-11T01:23+01:00",
+  "updated": "2026-10-11T01:24+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -681,6 +681,16 @@
       "detail": "Contracts first on DS37-integration, then agents; one ready PR after the DS27/AR31 release merges; CI watched by commit; merge on green.",
       "expected": "11 Oct ~05:30",
       "changed": "2026-10-11T01:23+01:00"
+    },
+    {
+      "id": "DS38",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "dev-standards adopts change notes",
+      "detail": "Your decision: this repo uses U7 too. Branches add notes under docs/specs/changes/; the release folds them into STACKSPEC/ARTIFACTSPEC versions and change entries. Starts once DS34's tooling is built.",
+      "expected": "11 Oct ~05:30",
+      "changed": "2026-10-11T01:24+01:00"
     },
     {
       "id": "MP1",
