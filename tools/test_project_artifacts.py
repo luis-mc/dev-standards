@@ -117,7 +117,7 @@ class Env:
 
 
 WRITING_COMMANDS = ('init', 'feature-new', 'task-add', 'set-task-status', 'edit-content', 'design', 'render',
-                    'mark-published', 'mark-deleted')
+                    'mark-published', 'mark-deferred', 'mark-deleted')
 
 
 class Project:
@@ -153,7 +153,8 @@ class Project:
         A Running or Built task must ride a release (R5.47); to keep the cases about other things short, a case
         that gives no --rides gets the baseline release DS1 (RELEASE-1), unless it passes rides=False."""
         args = list(args)
-        if rides and args and args[0] in ('task-add', 'set-task-status') and '--rides' not in args and '--release' not in args:
+        if rides and args and args[0] in ('task-add', 'set-task-status') and '--rides' not in args and '--release' not in args \
+                and '--no-release' not in args:
             if args[0] == 'task-add':
                 status = args[args.index('--status') + 1] if '--status' in args else ''
                 target = None
@@ -607,6 +608,67 @@ def test_running_and_built_must_ride_a_release(env):
 
 
 @case
+def test_no_release_tasks_may_run_without_a_release(env):
+    """R5.47a: --no-release REASON on task-add and set-task-status; the task may be Running (or any open status) with
+    no release, goes Live when finished, shows `ships nothing` in Full Progress, and check is clean."""
+    p = env.baseline()
+    p.ok('task-add', '--owner', 'artifacts', '--item', 'Publish limit study', '--detail', 'Read only.',
+         '--expected', '14 Oct', '--status', 'Running', '--no-release', 'a study, nothing to ship')
+    assert p.task('AR3')['no_release'] == 'a study, nothing to ship' and 'rides' not in p.task('AR3')
+    for status in ('Waiting', 'Needs you', 'To do', 'Running'):
+        p.ok('set-task-status', 'AR3', status, rides=False)
+        assert p.task('AR3')['no_release'] == 'a study, nothing to ship'
+    fp = p.man()['full_progress_artifact']['file']
+    page = p.show('docs/artifacts/' + fp)
+    row = page[page.index('<tr data-task="AR3">'):]
+    assert '<span class="no-release-line">ships nothing: a study, nothing to ship</span>' in row[:row.index('</tr>')]
+    assert 'Not in a release yet' in page[:page.index('<tr data-task="AR3">')]
+    assert p.run('check').code == 0, p.run('check').all
+    p.ok('set-task-status', 'AR3', 'Live', rides=False)
+    assert p.task('AR3')['status'] == 'Live' and p.run('check').code == 0
+    # a task that was set Running by hand without a release is still refused once the reason is cleared
+    p.ok('set-task-status', 'AR3', 'Waiting', '--no-release', '', rides=False)
+    assert 'no_release' not in p.task('AR3')
+    r = p.run('set-task-status', 'AR3', 'Running', rides=False)
+    assert r.code == 1 and '--rides' in r.err and '--no-release' in r.err, r.all
+    p.ok('set-task-status', 'AR3', 'Running', '--no-release', 'a cleanup')
+    assert p.task('AR3')['no_release'] == 'a cleanup'
+
+
+@case
+def test_no_release_refusals(env):
+    """R5.47a: --no-release is refused with --release or --rides, over 80 characters, on a task that rides, and
+    Built on a task that carries it; check reports a record that breaks the rule."""
+    p = env.baseline()
+    before = p.head()
+    p.ok('task-add', '--owner', 'site', '--item', 'x', '--detail', 'd', '--expected', '14 Oct', '--no-release', 'nothing')
+    before = p.head()
+    for argv, word in ((['task-add', '--owner', 'site', '--item', 'x', '--detail', 'd', '--expected', '14 Oct',
+                         '--no-release', 'r', '--release'], '--release'),
+                       (['task-add', '--owner', 'site', '--item', 'x', '--detail', 'd', '--expected', '14 Oct',
+                         '--no-release', 'r', '--rides', 'RELEASE-1'], '--rides'),
+                       (['set-task-status', 'SI2', 'Waiting', '--no-release', 'r', '--release'], '--release'),
+                       (['set-task-status', 'SI2', 'Waiting', '--no-release', 'r', '--rides', 'DS1'], '--rides'),
+                       (['set-task-status', 'SI2', 'Waiting', '--no-release', 'x' * 81], '80'),
+                       (['set-task-status', 'SI2', 'Built'], 'never Built'),
+                       (['set-task-status', 'AR1', 'Waiting', '--no-release', 'it rides'], 'rides none')):
+        r = p.run(*argv, rides=False)
+        assert r.code == 1 and word in r.err, (argv, r.all)
+    assert p.head() == before
+    p.ok('set-task-status', 'SI2', 'Waiting', '--no-release', 'x' * 80, rides=False)
+    # check reports a record that carries both, or a Built task that ships nothing
+    for name, edit in (('both', lambda t: t.update({'rides': 'DS1'})), ('built', lambda t: t.update({'status': 'Built', 'expected': '10 Oct'})),
+                       ('empty', lambda t: t.update({'no_release': ''})), ('long', lambda t: t.update({'no_release': 'y' * 81}))):
+        d = p.record_copy('nr-' + name)
+        rp = d / 'registry.json'
+        reg = json.loads(rp.read_text(encoding='utf-8'))
+        edit(next(t for t in reg['tasks'] if t['id'] == 'SI2'))
+        rp.write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
+        r = check_record(env, d)
+        assert 'R5.47a' in r.out, (name, r.all)
+
+
+@case
 def test_state_column_counts_in_the_record(env):
     """R5.44: Full Progress's State shows Complete for a finished feature and counts per open status otherwise."""
     p = env.baseline()
@@ -942,6 +1004,108 @@ def test_pending_and_mark_published(env):
     assert r.code == 1 and 'http' in r.err
     r = p.run('mark-published', 'ghost', '--url', 'https://x.example/a')
     assert r.code == 1 and 'unknown artifact key' in r.err
+
+
+def _publish_full_progress(p, **kw):
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc', **kw)
+    assert p.run('pending', '--json').json() == {'artifacts': [], 'queue': [], 'retired': []}
+
+
+@case
+def test_detail_only_change_needs_no_publish(env):
+    """R9.6: a change to a detail, a basis or a content section is committed and rendered, but pending stays empty;
+    a record with no stored fingerprint needs one publish."""
+    p = env.baseline()
+    _publish_full_progress(p)
+    assert len(p.man()['full_progress_artifact']['published_fingerprint']) == 64
+    fp_file = p.man()['full_progress_artifact']['file']
+    page = p.show('docs/artifacts/' + fp_file)
+    p.ok('set-task-status', 'AR1', 'Running', '--detail', 'Now it is written differently.')
+    p.ok('set-task-status', 'AR1', 'Running', '--basis', 'waits on a review, 10 min')
+    assert p.show('docs/artifacts/' + fp_file) != page, 'the new detail is rendered and committed'
+    r = p.run('pending', '--json')
+    assert r.code == 0 and r.json() == {'artifacts': [], 'queue': [], 'retired': []}, r.all
+    assert p.run('pending').out.strip() == 'nothing pending'
+    assert p.run('check').code == 0
+    # it rides the next publish: a status change lists Full Progress, and publishing ends it
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    assert [a['key'] for a in p.run('pending', '--json').json()['artifacts']] == ['full-progress']
+    _publish_full_progress(p)
+    # an older record has no fingerprint: one publish is needed, then it is recorded
+    other = p.clone_again('no-fingerprint')
+    mp = other / 'docs' / 'artifacts' / 'manifest.json'
+    man = json.loads(mp.read_text(encoding='utf-8'))
+    man['full_progress_artifact'].pop('published_fingerprint')
+    mp.write_text(json.dumps(man, indent=2) + '\n', encoding='utf-8')
+    git(other, 'commit', '-q', '-a', '-m', 'an older record')
+    git(other, 'push', '-q', 'origin', 'main')
+    p.ok('set-task-status', 'AR1', 'Waiting', '--detail', 'only a detail')
+    again = p.run('pending', '--json')
+    assert again.code == 1 and again.json()['artifacts'][0]['reason'] == 'changed since last publish', again.all
+    _publish_full_progress(p)
+    assert 'published_fingerprint' in p.man()['full_progress_artifact']
+
+
+@case
+def test_status_change_needs_a_publish(env):
+    """R9.6: a task added, or a task's status, item, Expected or release fields change what the owner sees."""
+    p = env.baseline()
+    _publish_full_progress(p)
+    steps = (
+        ('status', ['set-task-status', 'AR1', 'Waiting']),
+        ('added', ['task-add', '--owner', 'site', '--item', 'New', '--detail', 'd', '--expected', '15 Oct']),
+        ('expected', ['set-task-status', 'SI1', 'To do', '--expected', '16 Oct']),
+        ('rides', ['set-task-status', 'AR1', 'Waiting', '--rides', '']),
+        ('no_release', ['set-task-status', 'AR1', 'Waiting', '--no-release', 'a study']),
+        ('release', ['set-task-status', 'DS1', 'Running', '--risk', '+1 round=10']),
+    )
+    for name, argv in steps:
+        p.ok(*argv, rides=False)
+        r = p.run('pending', '--json')
+        assert r.code == 1 and [a['key'] for a in r.json()['artifacts']] == ['full-progress'], (name, r.all)
+        _publish_full_progress(p)
+    # the same Expected with a new detail changes nothing the owner sees
+    p.ok('set-task-status', 'SI1', 'To do', '--detail', 'same', '--expected', '16 Oct')
+    assert p.run('pending').code == 0
+
+
+@case
+def test_deferred_publish_does_not_block_until_the_reset(env):
+    """R9.7: mark-deferred full-progress --until <ISO>: until then pending lists it as deferred and exits 0; after
+    that time it lists it as before; mark-published clears the deferral."""
+    p = env.baseline()
+    _publish_full_progress(p)
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    assert p.run('pending').code == 1
+    until = '2026-10-11T01:00:00+01:00'
+    p.ok('mark-deferred', 'full-progress', '--until', until)
+    assert p.man()['full_progress_artifact']['deferred_until'] == '2026-10-11T01:00+01:00'
+    r = p.run('pending')
+    assert r.code == 0 and 'deferred full-progress' in r.out and 'deferred until 01:00 (Lisbon)' in r.out, r.all
+    assert 'publish full-progress' not in r.out
+    j = p.run('pending', '--json')
+    assert j.code == 0 and j.json()['artifacts'] == [] and j.json()['deferred'][0]['key'] == 'full-progress', j.all
+    assert j.json()['deferred'][0]['reason'] == 'deferred until 01:00 (Lisbon)'
+    assert p.run('check').code == 0
+    # after the reset both behave as before
+    late = {'CLAUDE_ARTIFACTS_NOW': '2026-10-11T01:30:00+01:00'}
+    r = p.run('pending', '--json', env=late)
+    assert r.code == 1 and [a['key'] for a in r.json()['artifacts']] == ['full-progress'] and 'deferred' not in r.json(), r.all
+    # a later publish clears the deferral
+    p.ok('mark-deferred', 'full-progress', '--until', '2026-10-12T00:00:00+00:00')
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
+    assert 'deferred_until' not in p.man()['full_progress_artifact']
+    assert p.run('pending', '--json').json() == {'artifacts': [], 'queue': [], 'retired': []}
+    # refusals: a past time, a bad time, a feature artifact, an unknown key
+    before = p.head()
+    for argv, word in ((['mark-deferred', 'full-progress', '--until', '2026-10-10T10:00:00+00:00'], 'future'),
+                       (['mark-deferred', 'full-progress', '--until', 'tomorrow'], 'ISO'),
+                       (['mark-deferred', 'full-progress', '--until', '2026-10-12T00:00:00'], 'ISO'),
+                       (['mark-deferred', 'artifacts', '--until', until], 'feature artifact'),
+                       (['mark-deferred', 'ghost', '--until', until], 'unknown artifact key')):
+        r = p.run(*argv)
+        assert r.code == 1 and word in r.err, (argv, r.all)
+    assert p.head() == before
 
 
 def _stamp_of(text):

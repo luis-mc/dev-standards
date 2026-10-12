@@ -1053,6 +1053,15 @@ def _link(link, label: str) -> str:
     return '<a href="%s">%s</a>' % (esc(link[0]), label)
 
 
+NO_RELEASE_LINE = 'ships nothing: %s'
+
+
+def no_release_reason(task) -> str:
+    """R5.47a: the reason a task ships nothing (`no_release`), '' when it has none."""
+    reason = task.get('no_release') if isinstance(task, dict) else None
+    return ' '.join(reason.split()) if isinstance(reason, str) else ''
+
+
 def rode_release(task: dict, by_id: dict):
     """R5.46: the release task that `task` rides, or None."""
     target = by_id.get(task.get('rides')) if task.get('rides') else None
@@ -1068,6 +1077,8 @@ def _row(task: dict, kind: str, feature_links: dict, by_id=None, release_line: b
     target = rode_release(task, by_id or {}) if release_line else None
     if target is not None:               # R5.46: the release a Live or Built row rode, in a muted line under the Item
         item += '<span class="release-line">%s</span>' % _release_span(target)
+    if no_release_reason(task):          # R5.47a: a task that ships nothing says so, in a muted line under the Item
+        item += '<span class="no-release-line">%s</span>' % esc(NO_RELEASE_LINE % no_release_reason(task))
     app = '<td>%s</td>' % ('<code>%s</code>' % esc(task['app']) if task.get('app') else '') if kind == 'full-progress' else ''
     expected = esc(task['expected'])
     if task.get('expected_basis') and task['status'] in OPEN_STATUSES:     # R6.10
@@ -1982,10 +1993,12 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             item_cell = cells[1] if len(cells) > 1 else None
             idnode = find(item_cell, 'span', 'task-id') if item_cell else None
             row['label'] = text_of(idnode) if idnode else ''
-            skipped = lambda n: has_class(n, 'task-id') or has_class(n, 'release-name') or has_class(n, 'release-line')
+            skipped = lambda n: has_class(n, 'task-id') or has_class(n, 'release-name') or has_class(n, 'release-line') or has_class(n, 'no-release-line')
             row['item'] = text_of(item_cell, skip=skipped) if item_cell else ''
             line = find(item_cell, 'span', 'release-line') if item_cell else None
             row['release_line'] = text_of(line) if line else ''
+            nline = find(item_cell, 'span', 'no-release-line') if item_cell else None
+            row['no_release_line'] = text_of(nline) if nline else ''
             leading = [n for n in find_all(item_cell, 'span', 'release-name')
                        if not has_ancestor(n, lambda a: has_class(a, 'release-line'))] if item_cell else []
             row['release_name'] = ' '.join(text_of(n) for n in leading)
@@ -2047,6 +2060,10 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         if row['release_line'] != want_line:
             add('R5.46', 'task %s must show the release line %r under its Item; it shows %r'
                 % (row['id'], want_line, row['release_line']))
+        want_nr = NO_RELEASE_LINE % no_release_reason(task) if no_release_reason(task) else ''
+        if row['no_release_line'] != want_nr:
+            add('R5.47a', 'task %s must show the line %r under its Item; it shows %r'
+                % (row['id'], want_nr, row['no_release_line']))
     details = find_all(root, 'details', 'earlier')
     folded_wanted = {t['id'] for _, _, _, old in expected_groups for t in old}
     folded_found = {r['id'] for r in rows if r['folded']}

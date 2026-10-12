@@ -1119,6 +1119,13 @@ def validate_structure(rec):
             if v is not None and (not isinstance(v, str) or (v != '' and (
                     not R.ISO_OFFSET_RE.match(v) or parse_iso(v) is None))):
                 f('R4.30', 'manifest.json', '%s: field "%s" must be an ISO time with an offset' % (label, fld))
+        if kind == 'full-progress':
+            pf = e.get('published_fingerprint')
+            if pf is not None and not (isinstance(pf, str) and SHA_RE.match(pf)):
+                f('R9.6', 'manifest.json', '%s: published_fingerprint is not a SHA-256' % label)
+            du = e.get('deferred_until')
+            if du is not None and (not isinstance(du, str) or parse_iso(du) is None):
+                f('R9.7', 'manifest.json', '%s: deferred_until is not an ISO time with an offset' % label)
         title = e.get('title')
         want = 'Full Progress: ' if kind == 'full-progress' else 'Feature: '
         if isinstance(title, str):
@@ -1733,6 +1740,7 @@ def cmd_feature_new(args):
 
 PHASE_NAMES = ('agents', 'join', 'ci', 'merge')       # R5.40
 RISK_LABEL_MAX = 40
+NO_RELEASE_MAX = 80          # R5.47a: longest `no_release` reason
 _POINT_RE = re.compile(r'^\s*(?:(\d{1,2}) (' + '|'.join(MONTHS) + r') )?([01]?\d|2[0-3]):([0-5]\d)\s*$')
 
 
@@ -1801,9 +1809,19 @@ def release_problems(task, by_id):
         out.append(('R5.45', 'RELEASE-%d is used by more than one task' % rel))
     if (phases is not None or risk is not None) and not is_release(task):
         out.append(('R5.40', 'phases and risk belong to a release task (--release)'))
-    if task.get('status') in ('Running', 'Built') and not is_release(task) and not rides:
-        out.append(('R5.47', 'a %s task rides a release; give it --rides RELEASE-n (or the release task ID)'
-                    % task['status']))
+    if 'no_release' in task:                        # R5.47a: a task that ships nothing
+        nr = task['no_release']
+        if not isinstance(nr, str) or not nr.strip():
+            out.append(('R5.47a', 'no_release must be a non-empty reason of at most %d characters' % NO_RELEASE_MAX))
+        elif len(nr) > NO_RELEASE_MAX:
+            out.append(('R5.47a', 'no_release is %d characters; at most %d' % (len(nr), NO_RELEASE_MAX)))
+        if is_release(task) or rides:
+            out.append(('R5.47a', 'a task that ships nothing is not a release and rides none (drop --no-release, or --release / --rides)'))
+        if task.get('status') == 'Built':
+            out.append(('R5.47a', 'a task that ships nothing is never Built; finished, it goes Live'))
+    elif task.get('status') in ('Running', 'Built') and not is_release(task) and not rides:
+        out.append(('R5.47', 'a %s task rides a release; give it --rides RELEASE-n (or the release task ID), '
+                    'or --no-release REASON when it ships nothing' % task['status']))
     good = []
     if phases is not None:
         if not isinstance(phases, list) or not phases:
@@ -1855,6 +1873,16 @@ def resolve_rides(text, by_id):
 
 def apply_release_fields(task, by_id, args, now_dt):
     """Set or clear the release fields of `task` from --release/--phase/--risk/--rides; refuse a bad result."""
+    no_release = getattr(args, 'no_release', None)
+    if no_release is not None and no_release.strip():
+        if getattr(args, 'release', False) or (args.rides is not None and args.rides.strip()):
+            raise Fail(1, '--no-release says the task ships nothing; it cannot be given with --release or --rides')
+        reason = ' '.join(no_release.split())
+        if len(reason) > NO_RELEASE_MAX:
+            raise Fail(1, '--no-release is %d characters; at most %d' % (len(reason), NO_RELEASE_MAX))
+        task['no_release'] = reason
+    elif no_release is not None:
+        task.pop('no_release', None)
     if getattr(args, 'release', False) and release_number(task) is None:
         task['release'] = next_release_number(list(by_id.values()))       # R5.45: never reused
     if args.phase is not None:
@@ -2181,6 +2209,72 @@ def cmd_render(args):
     return 0
 
 
+FINGERPRINT_TASK_FIELDS = ('id', 'owner', 'status', 'item', 'expected', 'release', 'rides', 'phases', 'risk', 'no_release')
+
+
+def publish_fingerprint(rec):
+    """R9.6: a hash of what the owner sees in Full Progress and can change: each task's id, owner, status, item,
+    Expected and release fields, each open decision, and each feature row of section 1 (title and the note it
+    quotes). A detail, a basis, a content section and the stamps are left out on purpose."""
+    tasks = [[t.get(k) for k in FINGERPRINT_TASK_FIELDS] for t in rec.tasks() if isinstance(t, dict)]
+    contents = rec.render_contents()
+    open_of = getattr(R, 'open_decisions', None)
+    features, decisions = [], []
+    for key, kind, e in rec.artifacts():
+        content = contents.get(key)
+        if kind != 'feature' or not isinstance(content, dict):
+            continue
+        meta = content.get('meta') if isinstance(content.get('meta'), dict) else {}
+        try:
+            note = R._first_sentence(meta['lede']) if meta.get('lede') else ''
+        except Exception:
+            note = str(meta.get('lede', ''))
+        features.append([key, e.get('title'), e.get('prefix'), note])
+        for d in (open_of(content.get('decisions') or []) if open_of else []):
+            decisions.append([key, d.get('id'), d.get('question'), d.get('task')])
+    blob = json.dumps({'tasks': sorted(tasks, key=lambda x: str(x[0])), 'features': sorted(features, key=lambda x: str(x[0])),
+                       'decisions': sorted(decisions, key=lambda x: (str(x[0]), str(x[1])))},
+                      sort_keys=True, ensure_ascii=False, separators=(',', ':'))
+    return hashlib.sha256(blob.encode('utf-8')).hexdigest()
+
+
+def deferral(rec, e):
+    """R9.7: (until as a datetime, text 'HH:MM (label)') while the publish is deferred, else None."""
+    until = parse_iso(e.get('deferred_until')) if isinstance(e.get('deferred_until'), str) else None
+    if until is None or current_instant() >= until:
+        return None
+    zone = rec.manifest.get('timezone')
+    local = _zoneinfo_now(until.astimezone(timezone.utc), zone) if zone else None
+    local = local or until
+    label = str(rec.manifest.get('timezone_label', '')).strip()
+    return until, '%02d:%02d%s' % (local.hour, local.minute, ' (%s)' % label if label else '')
+
+
+def cmd_mark_deferred(args):
+    """R9.7: the daily publish limit was hit; Full Progress is not asked for again until the reset."""
+    ctx = make_ctx(args)
+    until = parse_iso(args.until)
+    if until is None:
+        raise Fail(1, '--until must be an ISO time with an offset, for example 2026-10-13T00:00:00+00:00')
+    if until <= current_instant():
+        raise Fail(1, '--until %s is not in the future' % args.until)
+
+    def apply(rec):
+        e = rec.entry(args.key)
+        if e is None:
+            raise Fail(1, 'unknown artifact key "%s"' % args.key)
+        if rec.kind(args.key) != 'full-progress':
+            raise Fail(1, '%s is a feature artifact: feature artifacts are never published; only the full-progress '
+                          'artifact is (R9.5)' % args.key)
+        e['deferred_until'] = until.isoformat(timespec='minutes')
+        rec.message = 'docs/artifacts: %s publish deferred' % args.key
+        return {'command': 'mark-deferred', 'key': args.key, 'until': e['deferred_until']}
+
+    res = run_change(ctx, apply)
+    emit(args, res, 'recorded %s deferred until %s (%s)' % (args.key, res['until'], short(res)))
+    return 0
+
+
 def cmd_mark_published(args):
     ctx = make_ctx(args)
     key, url = args.key, args.url
@@ -2205,6 +2299,8 @@ def cmd_mark_published(args):
         # so no other artifact changes
         e['published_sha256'] = sha_of_file(rec.html_path(key))
         e['published_at'] = rec.now().iso
+        e['published_fingerprint'] = publish_fingerprint(rec)       # R9.6
+        e.pop('deferred_until', None)                                # R9.7: a publish ends any deferral
         # each feature page says when Full Progress was published (R5.38), without a new stamp: a new stamp
         # would change Full Progress's section 1, which would need publishing again, and so on
         for fkey, _k, fe in rec.artifacts():
@@ -2505,7 +2601,7 @@ def cmd_pending(args):
     A feature artifact is never listed (R9.5)."""
     push_error = push_before_listing(args)
     ctx, rec = load_for_read(args)
-    arts = []
+    arts, deferred = [], []
     if rec is not None:
         for key, kind, e in rec.artifacts():
             if kind != 'full-progress':
@@ -2521,8 +2617,18 @@ def cmd_pending(args):
                 elif e.get('url') and not e.get('published_sha256'):
                     reason = 'adopted, not yet published from the record'
                 elif h != e.get('published_sha256'):
+                    # R9.6: a render that differs only in a detail, a basis, a content section or the stamp is no
+                    # reason to publish; a record with no stored fingerprint needs one publish
+                    if e.get('published_fingerprint') == publish_fingerprint(rec):
+                        continue
                     reason = 'changed since last publish'
                 else:
+                    continue
+                wait = deferral(rec, e)
+                if wait is not None:          # R9.7: listed, not asked for, until the reset
+                    deferred.append({'key': key, 'kind': kind, 'title': e.get('title', ''), 'file': e.get('file', ''),
+                                     'until': wait[0].isoformat(timespec='minutes'),
+                                     'reason': 'deferred until %s' % wait[1]})
                     continue
                 copy_path = write_publish_copy(ctx, rec, key, e)
             arts.append({'key': key, 'kind': kind, 'title': e.get('title', ''), 'file': e.get('file', ''),
@@ -2532,6 +2638,8 @@ def cmd_pending(args):
                 'retired': e.get('retired', '')} for e in (AR.retired_pages(rec.manifest) if AR and rec else [])]
     if args.json_out:
         out = {'artifacts': arts, 'queue': queue, 'retired': retired}
+        if deferred:
+            out['deferred'] = deferred
         if push_error:
             out['push_error'] = push_error
         print(json.dumps(out, indent=2, ensure_ascii=False))
@@ -2543,7 +2651,9 @@ def cmd_pending(args):
             print('queued %s -> %s (%s)' % (ev.get('id'), ev.get('suggested_status'), ev.get('event')))
         if push_error:
             print('record push failed (%s); the commits stay local' % push_error)
-        if not arts and not queue:
+        for d in deferred:
+            print('deferred %s (%s): %s' % (d['key'], d['file'], d['reason']))
+        if not arts and not queue and not deferred:
             print('nothing pending')
         for e in retired:
             print('retired %s "%s" %s: ask the owner to confirm, delete it with the Artifact tool (action: delete), '
@@ -2649,6 +2759,7 @@ def build_parser():
                    help='a release phase (agents, join, ci, merge), repeatable; "" clears them')
     s.add_argument('--risk', metavar='LABEL=MINUTES', help='the named risk of a release, for example "+1 fix round=10"; "" clears it')
     s.add_argument('--rides', metavar='ID', help='the release this task rides, its task ID or RELEASE-n (a Running or Built task needs one, R5.47); "" clears it')
+    s.add_argument('--no-release', metavar='REASON', help='this task ships nothing (a publish, a study, a cleanup), at most 80 characters; it rides no release and is never Built (R5.47a); "" clears it')
     s.set_defaults(func=cmd_task_add)
 
     s = sub.add_parser('set-task-status', parents=[w], help='change one task')
@@ -2663,6 +2774,7 @@ def build_parser():
                    help='a release phase (agents, join, ci, merge), repeatable; "" clears them')
     s.add_argument('--risk', metavar='LABEL=MINUTES', help='the named risk of a release, for example "+1 fix round=10"; "" clears it')
     s.add_argument('--rides', metavar='ID', help='the release this task rides, its task ID or RELEASE-n (a Running or Built task needs one, R5.47); "" clears it')
+    s.add_argument('--no-release', metavar='REASON', help='this task ships nothing (a publish, a study, a cleanup), at most 80 characters; it rides no release and is never Built (R5.47a); "" clears it')
     s.set_defaults(func=cmd_set_task_status)
 
     s = sub.add_parser('export-content', parents=[j], help="copy an artifact's content files out of the record")
@@ -2695,6 +2807,11 @@ def build_parser():
     s.add_argument('key')
     s.add_argument('--url', required=True)
     s.set_defaults(func=cmd_mark_published)
+
+    s = sub.add_parser('mark-deferred', parents=[w], help='record that claude.ai refused the publish for its daily limit; pending stops asking until then')
+    s.add_argument('key')
+    s.add_argument('--until', required=True, metavar='ISO', help='when the limit resets, an ISO time with an offset')
+    s.set_defaults(func=cmd_mark_deferred)
 
     s = sub.add_parser('mark-deleted', parents=[w],
                        help='record that the owner confirmed and the session deleted an old claude.ai page of a feature artifact')

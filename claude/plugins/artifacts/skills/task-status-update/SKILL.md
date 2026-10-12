@@ -17,7 +17,9 @@ something or someone. `Built` means finished but not released (`Live` is release
 retired name the script stores as `Built`); release work still to come (join,
 CI, release) is its own task, Running or To do. A task set to `Running` or `Built`
 rides a release (`--rides <ID or RELEASE-n>` in the same call; the command refuses otherwise)
-unless it is a release itself. Before a turn
+unless it is a release itself, or ships nothing (`--no-release "REASON"`, at most 80
+characters, never together with `--release` or `--rides`; such a task is never Built, finished it
+goes Live; `--no-release ""` clears it). Before a turn
 ends with work still running in the background, its task is `Running`. Only the script writes the registry; never edit
 `registry.json` or `manifest.json` by hand, and never type a status row into an
 artifact. The statuses reach the artifact's At a glance block by themselves, so
@@ -39,7 +41,7 @@ read the message, fix the cause and rerun.
    outside the eight maps to the nearest (`Merged` is `Live`, or `Built` when the
    project's `merged_status` says so).
 2. **Change it:**
-   `set-task-status <ID> "<Status>" [--detail "TEXT"] [--expected "DD Mon"] [--basis "TEXT"] [--history "TEXT"]`.
+   `set-task-status <ID> "<Status>" [--detail "TEXT"] [--expected "DD Mon"] [--basis "TEXT"] [--history "TEXT"] [--no-release "REASON"]`.
    - `--detail`: plain text, at most 600 characters, when what the row says
      changed.
    - `--expected`: a real date from `date` in the project's zone, `DD Mon` or
@@ -87,6 +89,17 @@ Once, at the end of the turn, never mid-turn. Repeat until `pending` exits 0:
   `path`; changes to the generated sections are dropped.
 - Run `mark-published full-progress --url <URL>` with the URL the publish
   returned.
+- `pending` lists Full Progress only when what the owner sees changed (a task
+  added, or its status, item, Expected or release fields, an open decision, a
+  feature row); a change to a detail, a basis or a content section rides the
+  next publish.
+- If claude.ai refuses the publish for its daily limit, do not retry: run
+  `mark-deferred full-progress --until <ISO time of the reset>` (for a limit
+  that resets at UTC midnight, the next UTC midnight, for example
+  `2026-10-13T00:00:00+00:00`). Until then `pending` lists Full Progress as
+  `deferred until HH:MM (<zone>)` and exits 0, and the end-of-turn hook does
+  not block; it prints one line. After that time `pending` lists it again; a
+  later `mark-published` clears the deferral.
 
 ## Old claude.ai pages
 

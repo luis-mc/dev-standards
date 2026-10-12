@@ -453,10 +453,12 @@ def stub_dir(work):
     return d
 
 
-def set_pending(work, artifacts=(), queue=(), mode='', retired=()):
+def set_pending(work, artifacts=(), queue=(), mode='', retired=(), deferred=()):
     d = stub_dir(work)
-    write(os.path.join(d, 'pending.json'), json.dumps({'artifacts': list(artifacts), 'queue': list(queue),
-                                                       'retired': list(retired)}))
+    data = {'artifacts': list(artifacts), 'queue': list(queue), 'retired': list(retired)}
+    if deferred:
+        data['deferred'] = list(deferred)
+    write(os.path.join(d, 'pending.json'), json.dumps(data))
     write(os.path.join(d, 'mode'), mode)
     return {'CLAUDE_ARTIFACTS_SCRIPT': os.path.join(d, 'project_artifacts.py')}
 
@@ -1368,6 +1370,28 @@ def stop_tells_retired_pages_once_and_does_not_block():
     res = parse_stop(stop(work, env)[1])
     assert res['decision'] == 'block' and OLD_URL_A in res['systemMessage'] and OLD_URL_A not in res['reason'], res
     assert 'systemMessage' not in parse_stop(stop(work, env)[1])
+
+
+@test
+def end_of_turn_reminds_once_while_deferred():
+    """R9.7: while the publish is deferred the hook does not block; it prints one line, once per session."""
+    work = make_repo()
+    wait = {'key': 'full-progress', 'kind': 'full-progress', 'title': 'Full Progress: Demo',
+            'file': 'full-progress-demo.html', 'until': '2026-10-13T01:00+01:00',
+            'reason': 'deferred until 01:00 (Lisbon)'}
+    env = set_pending(work, deferred=[wait])
+    rc, out, err, _ = stop(work, env)
+    res = json.loads(out)
+    assert rc == 0 and 'decision' not in res, (rc, out, err)
+    assert res['systemMessage'].count('\n') == 0 and 'deferred' in res['systemMessage'] and '01:00 (Lisbon)' in res['systemMessage'], res
+    assert stop_state(work) == {}
+    assert stop(work, env)[1].strip() == ''                                   # once per session
+    assert 'deferred' in json.loads(stop(work, env, session='s2')[1])['systemMessage']
+    # a later deferral is told again; after the reset pending lists the artifact and the hook blocks as before
+    later = dict(wait, until='2026-10-14T01:00+01:00', reason='deferred until 01:00 (Lisbon) tomorrow')
+    assert 'tomorrow' in json.loads(stop(work, set_pending(work, deferred=[later]))[1])['systemMessage']
+    env = set_pending(work, artifacts=[art('demo')])
+    assert parse_stop(stop(work, env, session='s3')[1]).get('decision') == 'block'
 
 
 @test
