@@ -686,7 +686,7 @@ tr.status-group.release-group td { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-12T00:24+01:00",
+ "updated": "2026-10-12T01:01+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1965,12 +1965,11 @@ tr.status-group.release-group td { color: var(--ink); }
    "id": "DS58",
    "owner": "project",
    "app": "",
-   "status": "Waiting",
+   "status": "Live",
    "item": "Publish Full Progress after the daily publish limit resets",
-   "detail": "Account hit 200 publishes/day at ~00:19; a background timer wakes the session at 01:01 Lisbon to publish once and record it (AR47)",
-   "expected": "12 Oct ~01:02",
-   "changed": "2026-10-12T00:24+01:00",
-   "expected_basis": "limit resets at UTC midnight = 01:00 Lisbon"
+   "detail": "Limit reset at 01:00 Lisbon; Full Progress published once at 01:01 and recorded",
+   "expected": "12 Oct",
+   "changed": "2026-10-12T01:01+01:00"
   },
   {
    "id": "MP1",
@@ -2162,18 +2161,14 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-12T00:24+01:00">12 Oct 00:24</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-12T01:01+01:00">12 Oct 01:01</time> (Lisbon)</p>
 <div class="at-a-glance">
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
-<div class="glance-group glance-waiting" data-glance="waiting"><div class="glance-label">Waiting or on hold</div>
-<ul>
-<li data-glance-task="DS58"><span class="task-id">DS58</span>Publish Full Progress after the daily publish limit resets <span class="glance-expected">12 Oct ~01:02</span><span class="glance-basis">limit resets at UTC midnight = 01:00 Lisbon</span></li>
-</ul>
-</div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
+<li data-glance-task="DS58"><span class="task-id">DS58</span>Publish Full Progress after the daily publish limit resets</li>
 <li data-glance-task="AR46"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</li>
 <li data-glance-task="DS56"><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</li>
 <li data-glance-task="DS57"><span class="task-id">DS57</span>cleanup.py: no failure when the train-cleanup workflow got there first</li>
@@ -2181,19 +2176,18 @@ tr.status-group.release-group td { color: var(--ink); }
 <li data-glance-task="TC9"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</li>
 <li data-glance-task="TC10"><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check</li>
 <li data-glance-task="TC11"><span class="task-id">TC11</span>Use the session guards in dev-standards itself</li>
-<li data-glance-task="AR45"><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release</li>
-<li class="glance-more">and 78 more</li>
+<li class="glance-more">and 66 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">132</div><div class="label">tasks live</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">133</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group" data-group="now"><td colspan="5"><strong>Not in a release yet</strong></td></tr>
-<tr data-task="DS58"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DS58</span>Publish Full Progress after the daily publish limit resets</td><td></td><td>Account hit 200 publishes/day at ~00:19; a background timer wakes the session at 01:01 Lisbon to publish once and record it (AR47)</td><td>12 Oct ~01:02<span class="expected-basis">limit resets at UTC midnight = 01:00 Lisbon</span></td></tr>
 <tr data-task="AR47"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR47</span>End-of-turn hook knows the daily publish limit</a></td><td><code>luismc-artifacts</code></td><td>00:20: claude.ai refused publishes (200/day, resets 01:00 Lisbon) and the end-of-turn hook kept blocking a publish nobody could make. Also: Full Progress publishes once per turn, so a busy night spends the budget</td><td>12 Oct<span class="expected-basis">next train; owner to choose the approach</span></td></tr>
 <tr data-task="AR48"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR48</span>Tasks that ship nothing: --no-release with a reason</a></td><td><code>luismc-artifacts</code></td><td>R5.47 refused a Running publish timer (DS58 attempt, 00:26). Owner chose an explicit no-release flag with a reason; such a task may be Running without a release, Built still rides one</td><td>12 Oct<span class="expected-basis">next train with AR47</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
+<tr data-task="DS58"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS58</span>Publish Full Progress after the daily publish limit resets</td><td></td><td>Limit reset at 01:00 Lisbon; Full Progress published once at 01:01 and recorded</td><td>12 Oct</td></tr>
 <tr data-task="AR46"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</a><span class="release-line"><span class="release-name">RELEASE-4</span></span></td><td><code>luismc-artifacts</code></td><td>Released in #54 (eaeec1d, 00:22): ARTIFACTSPEC 1.6.1, luismc-artifacts 1.6.2</td><td>12 Oct</td></tr>
 <tr data-task="DS56"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</td><td></td><td>#54 merged on green 00:22 (rerun after two join fixes: suites test pin, and test_session_guard.py now in CI). Cleanup done; an empty DS56 folder stays locked by this session&#x27;s shell until it ends</td><td>12 Oct</td></tr>
 <tr data-task="DS57"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS57</span>cleanup.py: no failure when the train-cleanup workflow got there first<span class="release-line"><span class="release-name">RELEASE-4</span></span></td><td><code>delivery scripts</code></td><td>Released in #54 (eaeec1d, 00:22): luismc-project-setup 14.2.1; its first real run updated the train release without the collision</td><td>12 Oct</td></tr>

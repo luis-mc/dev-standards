@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-12T00:24+01:00",
+  "updated": "2026-10-12T01:01+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1279,12 +1279,11 @@
       "id": "DS58",
       "owner": "project",
       "app": "",
-      "status": "Waiting",
+      "status": "Live",
       "item": "Publish Full Progress after the daily publish limit resets",
-      "detail": "Account hit 200 publishes/day at ~00:19; a background timer wakes the session at 01:01 Lisbon to publish once and record it (AR47)",
-      "expected": "12 Oct ~01:02",
-      "changed": "2026-10-12T00:24+01:00",
-      "expected_basis": "limit resets at UTC midnight = 01:00 Lisbon"
+      "detail": "Limit reset at 01:00 Lisbon; Full Progress published once at 01:01 and recorded",
+      "expected": "12 Oct",
+      "changed": "2026-10-12T01:01+01:00"
     },
     {
       "id": "MP1",
