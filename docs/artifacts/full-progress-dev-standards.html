@@ -2024,20 +2024,12 @@ tr.status-group.release-group td { color: var(--ink); }
    "id": "DS60",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "luismc-artifacts 1.7.1 straight to main, no CI (owner's call)",
-   "detail": "Patch: version labels.",
-   "expected": "12 Oct ~07:40",
-   "changed": "2026-10-12T07:30+01:00",
-   "expected_basis": "edit, local test, push",
-   "release": 6,
-   "phases": [
-    {
-     "name": "merge",
-     "start": "2026-10-12T07:30+01:00",
-     "end": "2026-10-12T07:40+01:00"
-    }
-   ]
+   "detail": "0b9c8ef pushed straight to main, no CI (owner's call); change note folded on a local DS60-integration branch, deleted after",
+   "expected": "12 Oct",
+   "changed": "2026-10-12T07:32+01:00",
+   "release": 6
   },
   {
    "id": "MP1",
@@ -2234,44 +2226,26 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
-<div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
-<ul>
-<li data-glance-task="DS60"><span class="task-id">DS60</span><span class="release-name">RELEASE-6</span>luismc-artifacts 1.7.1 straight to main, no CI (owner&#x27;s call) <span class="glance-expected">12 Oct ~07:40</span><span class="glance-basis">edit, local test, push</span></li>
-</ul>
-</div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
 <li data-glance-task="AR49"><span class="task-id">AR49</span>Version labels say ARTIFACTSPEC 1.7.0</li>
+<li data-glance-task="DS60"><span class="task-id">DS60</span><span class="release-name">RELEASE-6</span>luismc-artifacts 1.7.1 straight to main, no CI (owner&#x27;s call)</li>
 <li data-glance-task="AR47"><span class="task-id">AR47</span>End-of-turn hook knows the daily publish limit</li>
 <li data-glance-task="AR48"><span class="task-id">AR48</span>Tasks that ship nothing: --no-release with a reason</li>
 <li data-glance-task="DS59"><span class="task-id">DS59</span><span class="release-name">RELEASE-5</span>AR47 train: join, PR CI, merge, cleanup</li>
 <li data-glance-task="DS58"><span class="task-id">DS58</span>Publish Full Progress after the daily publish limit resets</li>
 <li data-glance-task="AR46"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</li>
 <li data-glance-task="DS56"><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</li>
-<li data-glance-task="DS57"><span class="task-id">DS57</span>cleanup.py: no failure when the train-cleanup workflow got there first</li>
-<li class="glance-more">and 48 more</li>
+<li class="glance-more">and 49 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">137</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">138</div><div class="label">tasks live</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<figure class="release-timeline">
-<figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS60 (luismc-artifacts 1.7.1 straight to main, no CI (owner&#x27;s call)) expected live about 07:40." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">07:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">08:00</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-6 · luismc-artifacts 1.7.1 straight to main, no CI (owner&#x27;s call)</title>RELEASE-6 · luismc-artifa…</text>
-<text class="rt-sub" x="0" y="77"><title>AR49</title>AR49</text>
-<rect class="rt-bar merge" x="200" y="52" width="173.3" height="22"><title>merge + cleanup 07:30-07:40</title></rect>
-<polygon class="rt-expected" points="373.3,50 381.3,63 373.3,76 365.3,63"/>
-<text class="rt-live-label" x="373.3" y="92">live ~07:40</text>
-<line class="rt-now" x1="234.7" y1="36" x2="234.7" y2="148"/><text class="rt-now-label" x="234.7" y="161">now 07:32</text>
-</svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
-</figure>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group release-group" data-group="release-6"><td colspan="5"><strong>RELEASE-6 · live ~07:40</strong></td></tr>
-<tr data-task="DS60"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS60</span><span class="release-name">RELEASE-6</span>luismc-artifacts 1.7.1 straight to main, no CI (owner&#x27;s call)</td><td></td><td>Patch: version labels.</td><td>12 Oct ~07:40<span class="expected-basis">edit, local test, push</span></td></tr>
-<tr data-task="AR49"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR49</span>Version labels say ARTIFACTSPEC 1.7.0</a></td><td><code>luismc-artifacts</code></td><td>Pushed to main as 0b9c8ef: luismc-artifacts 1.7.1; no CI (owner&#x27;s call)</td><td>12 Oct</td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
+<tr data-task="AR49"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR49</span>Version labels say ARTIFACTSPEC 1.7.0</a><span class="release-line"><span class="release-name">RELEASE-6</span></span></td><td><code>luismc-artifacts</code></td><td>Pushed to main as 0b9c8ef: luismc-artifacts 1.7.1; no CI (owner&#x27;s call)</td><td>12 Oct</td></tr>
+<tr data-task="DS60"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS60</span><span class="release-name">RELEASE-6</span>luismc-artifacts 1.7.1 straight to main, no CI (owner&#x27;s call)</td><td></td><td>0b9c8ef pushed straight to main, no CI (owner&#x27;s call); change note folded on a local DS60-integration branch, deleted after</td><td>12 Oct</td></tr>
 <tr data-task="AR47"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR47</span>End-of-turn hook knows the daily publish limit</a><span class="release-line"><span class="release-name">RELEASE-5</span></span></td><td><code>luismc-artifacts</code></td><td>Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0</td><td>12 Oct</td></tr>
 <tr data-task="AR48"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR48</span>Tasks that ship nothing: --no-release with a reason</a><span class="release-line"><span class="release-name">RELEASE-5</span></span></td><td><code>luismc-artifacts</code></td><td>Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0</td><td>12 Oct</td></tr>
 <tr data-task="DS59"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS59</span><span class="release-name">RELEASE-5</span>AR47 train: join, PR CI, merge, cleanup</td><td></td><td>#55 merged on green 01:29 (CI 3m56s), first time with no fix round; cleanup removed every branch and worktree, delivery log in train-2026-10-12-55</td><td>12 Oct</td></tr>
