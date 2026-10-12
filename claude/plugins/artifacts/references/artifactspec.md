@@ -161,7 +161,7 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 | D3 | How do changes made outside a session arrive? | At the next session start. | No cloud routine in 1.0 (§8.3). |
 | D4 | Which look? | The project's own design tokens; the plugin's default design when it has none. | One fixed structure stylesheet, free tokens (§5.3). |
 | D5 | App / service column? | On the full-progress artifact only. | Feature checklists keep four columns (§6.3). |
-| D6 | Where is the record? | In the repo, `docs/artifacts/`, committed to the default branch as docs-only commits. | A deleted artifact is recreated from it without duplicates (§9). |
+| D6 | Where is the record? | In the repo, `docs/artifacts/` of the working tree; the project commits it. | A deleted artifact is recreated from it without duplicates (§9). |
 | D7 | How does a project get the plugin? | `luismc-project-setup` installs it in every project it sets up; it also installs on its own. | Installing creates nothing until the first artifact (§10). |
 | D8 | Which clock do times use? | The owner's time zone, per project, from the manifest. | Expected and stamps name the zone (§6.4). |
 | D9 | Does the plugin's home repository touch other projects? | No. | Each project adopts the plugin in its own sessions. |
@@ -175,9 +175,10 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 | D17 | What happens to the claude.ai pages of feature artifacts published before feature artifacts became files? | Each URL moves to the manifest's `retired` list, recovered from the history of `manifest.json` when an earlier version already dropped it; a page is deleted only with the owner's confirmation, then recorded with `mark-deleted`. | No old page is orphaned, and none is deleted without the owner (R4.19 to R4.23). |
 | D18 | Does a retired page block anything? | No: not `pending`'s exit code, not the end-of-turn hook. They are listed, and the session is told once to ask the owner. | Publishing never waits for a decision only the owner can take (R4.22, R8.13). |
 | D19 | How does an upgraded project get the new rule and migrate? | The after-command hook delivers the rule once per session and rule text; the hooks tell the session to run `render`; the end-of-turn hook blocks until the record is migrated. | No restart and no manual step (R8.12, R8.14). |
-| D20 | What happens to the rule copy that 1.0.0 `init` made? | The migration commit deletes it when its text is one a released version shipped; an edited copy stays and `check` notes it. | The old text, which says to publish feature artifacts, stops competing with the rule (R8.15, R10.6). |
+| D20 | What happens to the rule copy that 1.0.0 `init` made? | The next writing command deletes it from the working tree (uncommitted) when its text is one a released version shipped; an edited copy stays and `check` notes it. | The old text, which says to publish feature artifacts, stops competing with the rule (R8.15, R10.6). |
 | D21 | Is the basis of an estimate part of Expected? | No: its own optional field `expected_basis`, not a `; note`. | Expected stays machine-readable (R6.6); the basis is shown apart and validated apart (R6.10). |
-| D22 | Where does the record worktree live? | By default in the repository; a project may set another absolute path, by environment variable or a git-ignored local file. | The value is machine-specific and is never committed; the plugin names no project path (R4.24, R4.26). |
+| D22 | Where does the record worktree live? | Retired in 1.8.0: there is none; the record is `docs/artifacts/` of the working tree. | The old setting is ignored, and an old worktree's record is copied once when newer (R4.24). |
+| D23 | Does the plugin commit or push? | No: it writes files; the project commits and pushes. | A record change never triggers a deploy by itself (R4.13, R4.28). |
 
 ---
 
@@ -189,7 +190,7 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 |---|---|
 | Kinds | Feature artifacts and the one full-progress artifact of a project. |
 | Record | `docs/artifacts/`: manifest, task registry, content, design tokens, rendered HTML. |
-| Commands | `project_artifacts.py`: create, add tasks, change status, render, check, commit, publish bookkeeping. |
+| Commands | `project_artifacts.py`: create, add tasks, change status, render, check, migrate, publish bookkeeping. |
 | Hooks | After-command, end-of-turn and session-start hooks. |
 | Look | Fixed structure stylesheet, project design tokens, default design. |
 
@@ -223,7 +224,7 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 | task registry | `docs/artifacts/registry.json`, the only store of task state. |
 | manifest | `docs/artifacts/manifest.json`, the list of the project's artifacts and settings. |
 | record | Everything under `docs/artifacts/`. |
-| record worktree | A git worktree of the default branch where the script writes and commits the record (§4.6). |
+| record worktree | Retired in 1.8.0. A git worktree of the default branch where earlier versions wrote and committed the record; `migrate` copies its record once (R4.24). |
 | render | Generating an artifact's HTML from the record. |
 | publish | Sending the full-progress artifact's publish copy to claude.ai through the session's Artifact tool. |
 | queue | Status events waiting for the session to apply (§8.1). |
@@ -268,7 +269,7 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 2. Queue: a hook writes the suggested change to the queue (§8.1), or the
    session acts directly.
 3. Apply: the session runs `set-task-status`; the script updates the registry,
-   renders every artifact that shows the task, and commits the record.
+   renders every artifact that shows the task, and writes the files in `docs/artifacts/`; it commits nothing (R4.13).
 4. Publish, once, at the end of the turn: the session publishes the
    full-progress artifact's publish copy when `pending` lists it, and runs
    `mark-published`. A feature artifact is a file in the repository and is
@@ -333,7 +334,7 @@ docs/artifacts/
 | `timezone_label` | string | Shown after times, e.g. `Lisbon`. |
 | `windows_timezone` | string | Windows zone ID for the fallback, e.g. `GMT Standard Time`. |
 | `design` | string | `"default"` or `"design.css"`. |
-| `default_branch` | string | Where the record is committed, e.g. `main`. |
+| `default_branch` | string | The project's default branch, e.g. `main`; recorded, not used to commit. |
 | `merged_status` | string | Status a merge suggests: `"Live"` (default) or `"Built"`. |
 | `full_progress_artifact` | object | `{key:"full-progress", title, url, file, published_sha256, published_at}`; `published_at` is the ISO time (with offset) of the last `mark-published`, absent before the first publish (R4.30) |
 | `feature_artifacts` | array | `{key, title, file, prefix, apps:[...], updated}` each: no `url` and no `published_sha256`, because a feature artifact is never published; `updated` is the ISO time (with offset) of the stamp of the feature's page, written whenever the script writes that page with a new stamp, and absent in an older record (R4.30) |
@@ -405,26 +406,32 @@ comment holding the section title: `<!-- title: The design -->`.
   `TimeZoneInfo` and `windows_timezone`; if that fails, the machine's local
   time with a warning on stderr.
 
-### 4.6 Committing the record
+### 4.6 Writing the record
 
-- **R4.13** — The script writes the record in a record worktree at the location
-  of R4.24 (by default `<repo>/.claude/worktrees/artifacts-record`), a detached worktree of
-  `origin/<default_branch>`, created on first use. Before each change it
-  fetches and syncs that worktree to `origin/<default_branch>` (R4.29); after it, it
-  commits. It pushes to `<default_branch>` only as R4.28 says. The session's own working tree is
-  never touched — a session on a task branch would otherwise carry record
-  changes into its pull request.
-- **R4.14** — A record commit changes only paths under `docs/artifacts/`; the
-  script refuses to commit anything else. Its message is
-  `docs/artifacts: <ID> <status>` or the message given.
-- **R4.15** — A push rejected as non-fast-forward is retried after a fresh
-  fetch and re-apply, at most 3 times; then the command fails with exit 3.
-- **R4.16** — A push rejected by branch protection fails with exit 4 and the
-  message `record push refused by <default_branch> protection`; the change
-  stays committed in the record worktree for the next `push` (or `commit --retry`).
-- **R4.17** — With `--no-push` (tests and the real-repo test), the script
-  commits in the record worktree and does not push. This is now what
-  a writing command does without a flag (R4.28); `--no-push` stays accepted.
+- **R4.13** — The script writes the record in `<repo root>/docs/artifacts/` of
+  the session's working tree (the repo root is `git rev-parse --show-toplevel`
+  of the current directory) and stops. Every writing command validates, applies,
+  renders and writes the files there; they stay uncommitted. Nothing is synced
+  from `origin` before a change. The plugin MUST NOT write git state: no script
+  or hook of it runs `git commit`, `push`, `fetch`, `pull`, `reset`, `rebase`,
+  `checkout`, `switch`, `stash`, `add`, `worktree add` or `worktree remove`, nor a
+  `gh` command that writes. The git calls it makes are read-only: `rev-parse`,
+  `symbolic-ref`, `status`, `diff`, `log`, `show`, `ls-files`, `config --get` and
+  `worktree list`. Verified by `test_writing_commands_change_files_and_leave_git_alone`
+  and `test_only_read_only_git_is_run`.
+- **R4.14** — Retired in 1.8.0: the script commits nothing. A writing command
+  changes only paths under `docs/artifacts/` (and `.gitignore` for `init` and
+  `feature-new`, R10.2, and the deletion of a stale rule copy, R10.6); the project
+  decides what to commit.
+- **R4.15** — Retired in 1.8.0: there is no push, so no push race and no exit 3.
+- **R4.16** — Retired in 1.8.0: there is no push, so no protection refusal and no exit 4.
+- **R4.17** — The lock that serialises writing commands is a file under
+  `<repo root>/.claude/` (`artifacts-record.lock`, git-ignored, R10.2), never a file
+  under `docs/artifacts/`. A change that fails puts the files under
+  `docs/artifacts/` back as they were. `--push`, `--no-push` and `commit --retry`
+  are accepted on writing commands for compatibility and do nothing (`--push`
+  prints the note of R4.28 on stderr).
+
 ### 4.7 Older records
 
 - **R4.18** — A manifest whose feature entry still holds `url` or
@@ -448,10 +455,10 @@ comment holding the section title: `<!-- title: The design -->`.
 - **R4.20** — A record already migrated by 1.1.0 to 1.1.2 (feature URLs gone)
   recovers them: when the record loads (so in `check`, `pending` and every
   writing command), the script scans the history of `manifest.json` reachable
-  from the record worktree's `HEAD` (the default branch) for feature entries
+  from `HEAD` of the working tree for feature entries
   that had a `url`, and adds each URL not already retired, deleted or Full
   Progress's to `retired`. The scan is bounded (the 200 most recent commits
-  that touch a `url` line, read with two git calls) and keeps no cache outside
+  that touch a `url` line, read with one `git log` and one `git show` per commit) and keeps no cache outside
   the record; a writing command writes the recovered entries to the manifest.
   Verified by `test_retired_urls_are_recovered_from_history`.
 - **R4.21** — `mark-deleted [KEY] --url URL [--gone]` moves the retired entry
@@ -474,63 +481,42 @@ comment holding the section title: `<!-- title: The design -->`.
   A page the owner declines stays listed. The rule file says so (R10.3).
   Verified by `rule_file_carries_the_retired_pages_rule`.
 
-### 4.8 Where the record worktree lives
+### 4.8 The retired record worktree
 
-- **R4.24** — The location of the record worktree is a per-project setting,
-  resolved by one function, `artifact_queue.record_worktree(root)`, that the
-  script and every hook call: the environment variable
-  `LUISMC_ARTIFACTS_WORKTREE` (an absolute path) first, else `record_worktree`
-  in `<repo>/.claude/artifacts-local.json`, else
-  `<repo>/.claude/worktrees/artifacts-record`. `project_artifacts.py worktree`
-  prints the result, so a skill or a person never computes it. Verified by
-  `test_worktree_setting_environment`, `test_worktree_setting_local_file`,
-  `test_worktree_setting_default` and `hooks_and_script_agree_on_the_worktree`.
-- **R4.25** — A setting that is not an absolute path (on Windows, one with a
-  drive or a UNC share), is an empty value in the local file, is the repository
-  or holds it, lies inside `.git`, or a local file that is not a JSON object, is
-  refused (an empty environment variable counts as unset): the script
-  exits 2 naming the setting and changes nothing; a hook, which never blocks
-  on it, reads the default. Verified by `test_worktree_setting_refused`.
-- **R4.26** — The value is machine-specific: `init` adds
-  `.claude/artifacts-local.json` to `.gitignore`, the record never holds it, and
-  the plugin's files name no project's path. Verified by
-  `test_init_ignores_the_local_settings_file`.
-- **R4.27** — When the setting points elsewhere than the worktree git has
-  registered for the record (the default location, or the one the script last
-  used, remembered in the repository's common git directory), the next command
-  removes the old one with `git worktree remove --force` (it is a disposable
-  checkout of the default branch) and creates the new one. If the old one holds
-  record commits not pushed, the command exits 1 and removes nothing. Verified
-  by `test_moving_the_worktree_removes_the_old_one` and
-  `test_moving_refuses_unpushed_commits`.
+- **R4.24** — The record worktree is retired. `project_artifacts.py worktree`
+  prints the record directory, `<repo root>/docs/artifacts`.
+  `LUISMC_ARTIFACTS_WORKTREE` and `record_worktree` in
+  `<repo>/.claude/artifacts-local.json` are ignored for writing and reading;
+  `check` says so once, as a note, not a finding. **Migration, once and by
+  itself:** when the old record worktree exists (by default
+  `<repo>/.claude/worktrees/artifacts-record`, or the path the old setting names)
+  and its `docs/artifacts/registry.json` is newer than the working tree's (by
+  the newest `changed` stamp of its tasks, or the working tree has no
+  registry), the files of its `docs/artifacts/` are copied into the working
+  tree's `docs/artifacts/`, and the script says, once: `luismc-artifacts: the
+  record now lives in docs/artifacts/ and is never committed or pushed by the
+  plugin; copied it from <old path>. You may remove that worktree with git
+  worktree remove <path>`. The plugin never removes the worktree itself. The
+  command `migrate` runs exactly this and prints the line only when it copies
+  (exit 0); every writing command and every read of the record runs it first,
+  and the session-start hook runs it when it applies. Verified by
+  `test_migrate_copies_the_old_record_once_and_only_when_newer`,
+  `test_migrate_runs_before_a_writing_command`,
+  `test_worktree_prints_the_record_folder_and_ignores_the_old_setting`.
+- **R4.25** — Retired in 1.8.0: a worktree setting is no longer read, so none is refused.
+- **R4.26** — The old setting file `.claude/artifacts-local.json` stays in
+  `.gitignore`; the record never holds a machine path.
+- **R4.27** — Retired in 1.8.0: the plugin does not move or remove a worktree.
 
-### 4.9 Pushing the record
+### 4.9 Not pushing the record
 
-- **R4.28** — A writing command commits in the record worktree and does not
-  push, unless it is given `--push`, which pushes at once with the retries of
-  R4.15 and the refusal of R4.16. The record is pushed, once for all the
-  commits of the turn, at these points: the end-of-turn hook (R8.17); `pending`
-  before it lists (R7.6); the before-command hook ahead of `gh pr create`,
-  `gh pr ready` and `gh pr merge` (R8.16); and the `push` command (§7). A push
-  pushes every record commit not yet on `origin/<default_branch>`. A push that
-  fails at a hook point leaves the commits in the record worktree and says so;
-  it never loses them and never blocks the session forever.
-- **R4.29** — Syncing the record worktree before a change never discards a
-  record commit that is not on `origin/<default_branch>`: after the fetch it
-  rebases those commits onto the fetched head (and resets only when there are
-  none), so a race in which the default branch moved while commits were
-  unpushed ends with the commits on top of the new head. Two writers always
-  disagree on the `updated` stamps and the rendered pages, so the rebase
-  resolves those itself: `manifest.json` and `registry.json` are merged as JSON
-  (objects key by key, tasks by `id`, features by `key`, the later `updated`),
-  a rendered page at the top of `docs/artifacts/` takes origin's copy, and
-  every page the merge leaves different from a fresh render is drawn again in
-  one more commit, `docs/artifacts: render after rebase`. Anything else, or two
-  different edits of one value (the same task's status set two ways), is not
-  resolved: the command aborts the rebase, exits 2, names the conflicting
-  files, and the commits stay in the record worktree. Verified by
-  `test_unpushed_commits_survive_a_moved_main`, `test_push_after_main_moved_rebases`
-  and `test_conflicting_unpushed_commit_is_kept`.
+- **R4.28** — The commands `commit` and `push` are removed: calling either
+  exits 1 with `the plugin no longer commits or pushes (ARTIFACTSPEC 1.8.0);
+  commit docs/artifacts/ when you choose`. Exit codes 3 and 4 are no longer
+  used. No hook pushes, and `pending` does not push. Verified by
+  `test_commit_and_push_are_removed` and `test_pending_does_not_push`.
+- **R4.29** — Retired in 1.8.0: nothing is fetched or rebased, so the merge of
+  concurrent record commits is the project's own git work.
 - **R4.30** — A feature entry's `updated` is the ISO time (with offset) of the
   stamp of the feature's page; the script sets it whenever it writes that page
   with a new stamp (a task status change, a content edit, a decision, a plugin
@@ -538,8 +524,8 @@ comment holding the section title: `<!-- title: The design -->`.
   stamp (R5.38). Full Progress section 1 shows it (R5.6); a record without it
   is read from the `<time datetime>` of the feature file. The full-progress
   entry's `published_at` is the time `mark-published` last ran; the feature
-  pages show it (R5.38). Both are ISO times with an offset, or absent; the
-  rebase keeps the later of two (R4.29). `check` reports a malformed one.
+  pages show it (R5.38). Both are ISO times with an offset, or absent.
+  `check` reports a malformed one.
   Verified by `test_feature_updated_and_published_line`.
 
 ---
@@ -752,13 +738,12 @@ double-click.
   absolute `file:///` URL built from the repository root on this machine:
   `file:///` plus the absolute path with forward slashes, each segment
   percent-encoded (a space is `%20`), for example
-  `file:///C:/GitHub/dev-standards/.claude/worktrees/artifacts-record/docs/artifacts/feature-x.html`.
-  The target is the feature file in the record worktree, never the session's
-  checkout, which may be on another branch with an older copy. The address
+  `file:///C:/GitHub/dev-standards/docs/artifacts/feature-x.html`.
+  The target is the feature file in `docs/artifacts/` of the working tree. The address
   is shown as selectable text (`<code class="local-path">`, hidden until then)
   only when the clipboard refuses. The publish copy has no link to a feature
   file anywhere: its checklist rows carry none, and only section 1 has the
-  buttons, one per feature. The publish copy is never committed. Verified by
+  buttons, one per feature. The publish copy is outside the record. Verified by
   `publish_copy_has_file_links`, `publish_copy_path_encoding`,
   `publish_copy_with_partial_links_keeps_relative_for_the_rest` and
   `test_pending_and_mark_published`.
@@ -1051,10 +1036,11 @@ double-click.
 
 All commands run as `python <plugin>/scripts/project_artifacts.py <command>`
 from anywhere inside the project's repository, read `docs/artifacts/` from the
-record worktree (§4.6), and exit 0 on success, 1 on findings or a refused
-action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
-`--json` prints a machine-readable result. Every writing command accepts
-`--no-push` (the default, R4.28) and `--push` (push at once).
+the working tree (§4.6), and exit 0 on success, 1 on findings or a refused
+action, 2 on an unreadable record (exit codes 3 and 4 are no longer used).
+`--json` prints a machine-readable result. Every writing command writes files
+and stops (R4.13); it accepts `--no-push` and `--push` for compatibility, and
+they do nothing (R4.17).
 
 | Command | Does |
 |---|---|
@@ -1063,17 +1049,18 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
 | `task-add --owner K\|project --item TEXT --detail TEXT --expected TEXT [--basis TEXT] [--app A] [--status S] [--prefix P] [--release] [--phase NAME=HH:MM-HH:MM]... [--risk LABEL=MINUTES] [--rides ID]` | Adds a task with the next free number; prints its ID. For `--owner project`, `--prefix` picks one of `project_prefixes`, and a new prefix not used by any feature is registered. |
 | `set-task-status ID STATUS [--detail TEXT] [--expected TEXT] [--basis TEXT] [--history TEXT] [--release] [--phase NAME=HH:MM-HH:MM]... [--risk LABEL=MINUTES] [--rides ID]` | Changes one task; adds a History row to its feature artifact when `--history` is given. |
 | `export-content KEY --to DIR` | Copies the artifact's content files from the record to DIR for editing, `decisions.json` and its `assets/` folder included. |
-| `edit-content KEY --from DIR` | Replaces the artifact's content files in the record with those in DIR (after the fetch and reset of R4.13), validates, renders and commits. The session never edits the record worktree directly; the reset would discard it. It refuses an edit that removes a decision or changes the choice of a decided one (R5.15). |
-| `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design`, renders and commits; `default` removes it. |
+| `edit-content KEY --from DIR` | Replaces the artifact's content files in the record with those in DIR validates, renders and writes the files. It refuses an edit that removes a decision or changes the choice of a decided one (R5.15). |
+| `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design` and renders; `default` removes it. |
 | `render [--all]` | Renders every artifact whose output would change (committed renders, with relative links). It is the migration of an older record (R8.14). |
 | `check [--record PATH]` | The conformance checks of §14; lists findings with their requirement ID, then notes (including retired pages, R4.22) and any warnings (R5.26, R5.37), which do not change the exit code. |
-| `pending` | Pushes the record first (R7.6), then lists the full-progress artifact when the hash of its committed render differs from `published_sha256` (a feature artifact is never listed, R9.5), and queued events. When it lists Full Progress it writes the publish copy (R5.31). Exit 1 when anything is listed. `--json` prints `{"artifacts": [{"key", "kind", "title", "file", "path", "url", "reason"}], "queue": [events]}`; `path` is the absolute path of the publish copy to publish. It also lists the retired pages (R4.22): `--json` adds `"retired": [{"key", "title", "url", "retired"}]`, and they never change the exit code. |
+| `pending` | Lists the full-progress artifact when the hash of its committed render differs from `published_sha256` (a feature artifact is never listed, R9.5), and queued events. When it lists Full Progress it writes the publish copy (R5.31). Exit 1 when anything is listed. `--json` prints `{"artifacts": [{"key", "kind", "title", "file", "path", "url", "reason"}], "queue": [events]}`; `path` is the absolute path of the publish copy to publish. It also lists the retired pages (R4.22): `--json` adds `"retired": [{"key", "title", "url", "retired"}]`, and they never change the exit code. |
 | `mark-published KEY --url URL` | Records the URL and the hash of the committed render (R5.32). Refuses a feature artifact (R9.5). |
 | `mark-deleted [KEY] --url URL [--gone]` | Records that the owner confirmed and the session deleted a retired page (or that it no longer exists): moves it to `deleted` (R4.21). |
-| `worktree` | Prints the record worktree's path as R4.24 resolves it. |
+| `worktree` | Prints the record directory, `<repo root>/docs/artifacts` (R4.24). |
+| `migrate` | Copies the old record worktree's `docs/artifacts/` into the working tree when it is newer, and prints the one-line note only when it copies; otherwise prints nothing. Idempotent; exit 0 (R4.24). |
 | `queue list\|clear [--id ID]` | Shows or removes queued events. |
-| `push` | Pushes the record commits not yet on `origin/<default_branch>`, with the retries of R4.15; prints nothing to push when there are none. Exit 3 when the race is lost, 4 when protection refuses (R4.16). |
-| `commit [--retry] [--message M]` | Commits uncommitted edits in the record worktree and pushes only with `--push`; `--retry` pushes the commits a refused push kept (the same as `push`). Every writing command commits too (R4.28). |
+| `push` | Removed in 1.8.0: exits 1 with the message of R4.28. |
+| `commit [--retry] [--message M]` | Removed in 1.8.0: exits 1 with the message of R4.28. |
 
 - **R7.1** — Every writing command validates the record before and after the
   change and writes nothing when the change adds a finding: one the record
@@ -1093,7 +1080,7 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
   invalid from what can be read of it.
 - **R7.2** — `set-task-status` updates the registry, renders the task's feature
   artifact (if any) and the full-progress artifact with a new stamp, removes
-  the task's queued events, and commits — in one invocation.
+  the task's queued events, and writes the files — in one invocation.
 - **R7.3** — `set-task-status` rejects a status outside §6.1 and names the
   nearest allowed status (`Merged` → `Live`).
 - **R7.4** — Rendering is deterministic: the same record and the same stamp give
@@ -1105,11 +1092,9 @@ action, 2 on an unreadable record, 3 on a push race, 4 on a protected branch.
   the stylesheet brings every page up to date at the next change, not only the
   pages that change names (INV-3). An artifact whose content is invalid is
   skipped as in R7.1a. A page that is already up to date keeps its stamp.
-- **R7.6** — `pending` pushes the unpushed record commits (as `push`, R4.28)
-  before it reads the record, so Full Progress is published from a pushed
-  record. A failed push never stops the listing: `pending` prints the failure on
-  stderr, adds `"push_error"` to its `--json` output, and lists as before.
-  Verified by `test_pending_pushes_first`.
+- **R7.6** — `pending` does not push or write git state: it reads the record in
+  the working tree and lists, as before. Its output format is unchanged.
+  Verified by `test_pending_does_not_push`.
 
 ---
 
@@ -1248,20 +1233,15 @@ Reads the hook input; takes the task ID from the current branch name
   an older copy; this rule replaces it.` Verified by
   `start_context_names_an_older_rule_copy`.
 
-### 8.6 Pushing the record
+### 8.6 No push by a hook
 
-- **R8.16** — Before a command that runs `gh pr create`, `gh pr ready` or
-  `gh pr merge` (in any segment of the command line), the hook runs `push`
-  (R4.28), so the pull request, the readiness and the merge see the record the
-  work recorded; the after-command hook runs too late for that. It never
-  blocks the command: when the push fails or cannot run, the hook prints a
-  `systemMessage` saying the commits stay local and exits 0. Any other command
-  passes through at once. Verified by `test_before_command_pushes_the_record`.
-- **R8.17** — Before it decides, the hook runs `push` (R4.28), so the record
-  commits of the turn are pushed once, at its end. A failed push never blocks
-  the stop and is not counted in R8.4: the hook adds a `systemMessage` saying
-  the record push failed and the commits stay local, and the next push point
-  tries again. Verified by `test_end_of_turn_pushes_the_record`.
+- **R8.16** — The before-command hook does not push the record before
+  `gh pr create`, `gh pr ready` or `gh pr merge`. Where it has nothing else to
+  do it exits 0 and prints nothing. Verified by
+  `test_before_command_is_silent_for_gh_pr_create`.
+- **R8.17** — The end-of-turn hook does not push. The publish gate and the
+  background-work checks (R8.4, R8.8 to R8.10) are unchanged. Verified by
+  `test_end_of_turn_does_not_push`.
 
 ---
 
@@ -1324,7 +1304,7 @@ Reads the hook input; takes the task ID from the current branch name
 - **R10.2** — Installing creates no file in the project. The first
   `feature-new` or `init` adds `.claude/artifacts-queue.json`,
   `.claude/artifacts-stop-state.json`, `.claude/artifacts-publish/` (the
-  publish copy, R5.31) and `.claude/worktrees/` to `.gitignore`.
+  publish copy, R5.31), `.claude/artifacts-record.lock` (R4.17) and `.claude/worktrees/` to `.gitignore`.
   Since 1.1.0 it no longer copies the rule file (R10.4). Verified by
   `test_init_session_files`.
 - **R10.3** — The rule file holds one short imperative line per rule: record
@@ -1345,14 +1325,12 @@ Reads the hook input; takes the task ID from the current branch name
   delivers the rule at session start and the copy can be deleted. Verified by
   `test_check_notes_a_differing_rule_copy`.
 - **R10.6** — The `.claude/rules/project-artifacts.md` that `init` of 1.0.0
-  copied into the project is removed by the next writing command: in the same
-  record commit (the record worktree's sparse checkout includes that one path)
-  when its text, with line endings normalised and surrounding whitespace
-  stripped, has the SHA-256 of a rule file a released plugin version shipped
-  (the script holds the hash of each) or of the current one; the commit message
-  and the command output say so. A copy that differs (the owner edited it) is
-  kept, and `check` keeps noting it (R10.5). A copy in the session's checkout
-  that git does not track is removed too. Verified by
+  copied into the project is deleted from the working tree by the next writing
+  command (left uncommitted) when its text, with line endings normalised and
+  surrounding whitespace stripped, has the SHA-256 of a rule file a released
+  plugin version shipped (the script holds the hash of each) or of the current
+  one; the command output says so. A copy that differs (the owner edited it) is
+  kept, and `check` keeps noting it (R10.5). Verified by
   `test_stale_rule_copy_is_removed_with_the_migration_commit` and
   `test_edited_rule_copy_is_kept`.
 
@@ -1364,7 +1342,7 @@ Reads the hook input; takes the task ID from the current branch name
 |---|---|---|
 | Artifact tool | **fail closed** for the turn, then open after 3 blocks (R8.4) | Unpublished status is the drift this exists to stop; a loop is worse. |
 | `file:` links from a claude.ai page | **fall back** to the path shown as text (R5.31) | Some browsers block `file:` links from a web page; the path beside each link can be copied and opened by hand. |
-| `git push` of the record | **fail closed** (exit 3 or 4) | A status change that is not in the repo is lost on the next reset. |
+| Committing the record | **not done** (R4.13) | The plugin writes files; the project commits them when it chooses. |
 | `gh` at session start | **fail open** (R8.6) | Catch-up is a convenience; the next session tries again. |
 | Time zone data | **fall back** (R4.12) | A slightly wrong label beats no stamp; the warning says so. |
 | Project design discovery | **fall back** to the default (R5.12) | The look never blocks a status. |
@@ -1381,7 +1359,6 @@ Reads the hook input; takes the task ID from the current branch name
 | `merged_status` | `Live` | — | `Live` or `Built` | §8.1 |
 | Earlier fold age (`Live` rows only) | 14 days | 60 days | may only be lengthened | §6.2 |
 | End-of-turn blocks | 3 | 3 | fixed | §8.2 |
-| Push retries | 3 | 5 | — | §4.6 |
 | `CLAUDE_ARTIFACTS_HOOKS` | `on` | — | `off` disables all hooks | §8 |
 
 ---
@@ -1389,7 +1366,7 @@ Reads the hook input; takes the task ID from the current branch name
 ## 13. Test gate
 
 - **R13.1** — `tools/test_project_artifacts.py` builds throwaway git repos with
-  a bare remote and proves each command, each check of §14 (one fixture per
+  a local bare remote (to prove it is never touched) and proves each command, each check of §14 (one fixture per
   check that fails without it), INV-1 to INV-3, R4.13 to R4.29, R6.10, R6.11, R5.31, R5.32,
   R5.33 to R5.39, R5.45 to R5.47, R5.8a, R4.30, R7.4 to R7.6, R9.5 and R10.6.
 - **R13.2** — `tools/test_project_artifacts_hooks.py` feeds sample hook input
@@ -1399,7 +1376,7 @@ Reads the hook input; takes the task ID from the current branch name
 - **R13.3** — Before release, the plugin is run on a scratch clone of the
   plugin's own repository: its existing record is converted to this format,
   rendered and checked with no findings, and a status change runs end to end
-  with `--no-push`.
+  and the git state is unchanged.
 - **R13.4** — `spec_check.py` passes on this document; every SKILL.md declares
   the model and effort of its kind in the model profiles.
 
@@ -1461,10 +1438,11 @@ itself.
 project's repo is its durable memory. Rendering from the repo makes the
 artifacts disposable views.
 
-**Why a record worktree.** A session usually works on a task branch. Writing
-the record there would put status changes into feature pull requests and
-conflict between parallel sessions. A detached worktree of the default branch
-keeps the record linear and the session's tree clean.
+**Why the plugin writes files and never commits.** Versions up to 1.7 kept the
+record in a worktree of the default branch and pushed it, which committed to the
+default branch of every project and triggered a paid deploy on each record
+change. From 1.8.0 the record is files in the working tree; the project, which
+knows its own branches and deploys, commits them when it chooses.
 
 **Why hooks block the turn.** A sentence in CLAUDE.md asking to keep pages
 current is what already failed. The end-of-turn hook makes "published" a
