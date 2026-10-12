@@ -56,11 +56,8 @@ read the message, fix the cause and rerun.
      feature task whose change the owner should be able to look up later.
    The command renders every artifact that shows the task, and any other page
    whose look is older than the installed plugin's (R7.5), removes the task's
-   queued events and commits the record; it does not push (the end-of-turn hook,
-   `pending` and the hook before `gh pr create|ready|merge` push once; `push`
-   does it by hand, `--push` at once). Exit 3 or 4, from `push` or `pending`,
-   means the record could not be pushed: the commits stay in the record
-   worktree; report that and stop, then run `push` again.
+   queued events and writes the record to `docs/artifacts/` in the working tree.
+   The plugin never commits or pushes it; the project commits when it chooses.
 3. **Do not publish yet.** Change as many statuses as the turn needs, each
    with `set-task-status`; they accumulate. Publish at the end of the turn, per
    "Publishing" below.

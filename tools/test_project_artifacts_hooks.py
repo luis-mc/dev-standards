@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the luismc-artifacts hooks (ARTIFACTSPEC 1.7.0 section 8, R13.2).
+"""Tests for the luismc-artifacts hooks (ARTIFACTSPEC 1.8.0 section 8, R13.2).
 
 Feeds sample hook input to each hook in throwaway git repos (with a bare remote)
 and asserts the queue, the exit code and the output, including R8.2, R8.4, R8.5,
@@ -41,6 +41,57 @@ START = os.path.join(SCRIPTS, 'hook_session_start.py')
 TESTS = []
 INV4 = {'runs': 0, 'violations': []}
 TMP_ROOT = tempfile.mkdtemp(prefix='hooks-test-')
+
+# AR50: every hook run is watched by a sitecustomize that patches subprocess.Popen. It logs each git/gh
+# call and records a violation for any git write subcommand or gh command that writes; the call fails.
+SPY_DIR = os.path.join(TMP_ROOT, 'spy')
+SPY_CODE = '''import json, os, subprocess
+_LOG = os.environ.get("SPY_LOG")
+_GIT_READ = {"rev-parse", "symbolic-ref", "status", "diff", "log", "show", "ls-files", "worktree-list",
+             "config-get", "cat-file", "ls-tree", "for-each-ref", "merge-base", "rev-list"}
+_GH_READ = {("pr", "list"), ("pr", "view"), ("pr", "status"), ("run", "list"), ("run", "view")}
+_orig = subprocess.Popen.__init__
+
+
+def _sub(args):
+    i = 1
+    while i < len(args) and args[i].startswith("-"):
+        i += 2 if args[i] in ("-C", "-c") else 1
+    return args[i] if i < len(args) else ""
+
+
+def _verdict(args):
+    name = os.path.basename(str(args[0])).lower()
+    if name in ("git", "git.exe"):
+        sub = _sub(args)
+        if sub == "worktree":
+            sub = "worktree-" + (args[args.index("worktree") + 1] if args.index("worktree") + 1 < len(args) else "")
+        if sub == "config":
+            sub = "config-get" if "--get" in args else "config-write"
+        return "git " + sub, sub in _GIT_READ
+    if name in ("gh", "gh.exe"):
+        return "gh " + " ".join(args[1:3]), tuple(args[1:3]) in _GH_READ
+    return None, True
+
+
+def _init(self, args, *a, **k):
+    if isinstance(args, (list, tuple)) and args:
+        label, ok = _verdict([str(x) for x in args])
+        if label and _LOG:
+            with open(_LOG, "a") as f:
+                f.write(json.dumps({"call": label, "write": not ok}) + chr(10))
+        if label and not ok:
+            raise OSError("spy: write refused: " + label)
+    _orig(self, args, *a, **k)
+
+
+subprocess.Popen.__init__ = _init
+'''
+os.makedirs(SPY_DIR, exist_ok=True)
+with open(os.path.join(SPY_DIR, 'sitecustomize.py'), 'w') as _f:
+    _f.write(SPY_CODE)
+SPY_LOG = os.path.join(TMP_ROOT, 'spy.log')
+GIT_WRITES = []
 
 
 def test(fn):
@@ -140,6 +191,8 @@ def run_hook(script, stdin, work, env=None, timeout=60):
     full = {k: v for k, v in os.environ.items()
             if not k.startswith('CLAUDE_ARTIFACTS_') and k != 'LUISMC_ARTIFACTS_WORKTREE'}
     full.update(env or {})
+    full['PYTHONPATH'] = SPY_DIR + os.pathsep + full.get('PYTHONPATH', '')
+    full['SPY_LOG'] = SPY_LOG
     raw = stdin if isinstance(stdin, str) else json.dumps(stdin)
     before = record_hash(work)
     t0 = time.time()
@@ -147,6 +200,13 @@ def run_hook(script, stdin, work, env=None, timeout=60):
                        capture_output=True, env=full, timeout=timeout)
     elapsed = time.time() - t0
     INV4['runs'] += 1
+    if os.path.exists(SPY_LOG):
+        with open(SPY_LOG) as f:
+            for line in f:
+                rec = json.loads(line)
+                if rec['write']:
+                    GIT_WRITES.append('%s ran %s' % (os.path.basename(script), rec['call']))
+        os.remove(SPY_LOG)
     if record_hash(work) != before:
         INV4['violations'].append('%s changed docs/artifacts' % os.path.basename(script))
     return p.returncode, p.stdout.decode('utf-8', 'replace'), p.stderr.decode('utf-8', 'replace'), elapsed
@@ -426,14 +486,10 @@ here = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(here, "calls.log"), "a") as f:
     f.write(" ".join(sys.argv[1:]) + "\\n")
 mode = open(os.path.join(here, "mode")).read().strip() if os.path.exists(os.path.join(here, "mode")) else ""
-if sys.argv[1:2] == ["push"]:
-    if mode == "pushfail":
-        sys.stderr.write("record push refused by main protection")
-        sys.exit(4)
+if sys.argv[1:2] == ["migrate"]:
+    if mode == "migrate-note":
+        print("luismc-artifacts: the record now lives in docs/artifacts/ and is never committed or pushed by the plugin; copied it from OLD")
     sys.exit(0)
-if mode in ("broken", "pushfail"):
-    if mode == "pushfail":
-        mode = ""
 if mode == "broken":
     sys.stderr.write("boom")
     sys.exit(2)
@@ -657,36 +713,6 @@ def stop_fails_open_when_pending_cannot_be_read():
     assert res.get('decision') == 'block' and 'set-task-status AR5' in res['reason'], res
 
 
-@test
-def stop_pushes_the_record_before_it_decides():
-    """R8.17: the end-of-turn hook runs `push` first; it does not matter whether anything is pending."""
-    work = make_repo()
-    env = set_pending(work)
-    rc, out, err, _ = stop(work, env)
-    assert rc == 0 and out.strip() == '', (rc, out, err)
-    calls = open(os.path.join(os.path.dirname(work), 'stubs', 'calls.log')).read().split('\n')
-    assert calls.index('push') < calls.index('pending --json'), calls
-
-
-@test
-def stop_says_so_when_the_push_fails_and_does_not_block():
-    """R8.17: a failed push is a systemMessage; it never blocks the stop and never loops."""
-    work = make_repo()
-    env = set_pending(work, mode='pushfail')
-    rc, out, err, _ = stop(work, env)
-    res = parse_stop(out)
-    assert rc == 0 and 'decision' not in res, (rc, out, err)
-    assert 'record push failed (exit 4' in res['systemMessage'] and 'stay local' in res['systemMessage'], res
-    # beside a pending artifact it blocks for the artifact and still carries the push message
-    env = set_pending(work, artifacts=[art('demo')], mode='pushfail')
-    res = parse_stop(stop(work, env)[1])
-    assert res['decision'] == 'block' and 'record push failed' in res['systemMessage'], res
-    # the push failure is not part of the block count (R8.4)
-    for _ in range(3):
-        res = parse_stop(stop(work, env)[1])
-    assert 'decision' not in res and 'letting the turn end' in res['systemMessage'], res
-
-
 def before(work, command, env=None, tool='Bash'):
     d = {'session_id': 's1', 'cwd': work, 'hook_event_name': 'PreToolUse', 'tool_name': tool,
          'tool_input': {'command': command}}
@@ -694,35 +720,76 @@ def before(work, command, env=None, tool='Bash'):
 
 
 @test
-def before_command_pushes_the_record_for_pr_commands():
-    """R8.16: gh pr create, ready and merge are preceded by `push`; nothing else is."""
+def before_command_is_silent_for_pr_commands_and_runs_nothing():
+    """AR50: gh pr create, ready and merge are not preceded by a push; the hook prints nothing."""
     for cmd, tool in (('gh pr create --title t', 'Bash'), ('gh pr ready', 'Bash'), ('gh pr merge 3 --squash', 'Bash'),
-                      ('cd x && rtk gh pr create --fill', 'Bash'), ('gh pr ready; gh pr view', 'PowerShell'),
-                      ('gh pr merge 3 --auto', 'Bash')):
+                      ('cd x && rtk gh pr create --fill', 'Bash'), ('gh pr ready; gh pr view', 'PowerShell')):
         work = make_repo()
-        env = set_pending(work)
+        env = set_pending(work, mode='broken')
         rc, out, err, _ = before(work, cmd, env, tool)
-        assert rc == 0 and out.strip() == '', (cmd, rc, out, err)
-        log = os.path.join(os.path.dirname(work), 'stubs', 'calls.log')
-        assert open(log).read().split('\n')[:1] == ['push'], cmd
-    for cmd in ('git status', 'gh pr view 3', 'gh pr list', 'git commit -m "gh pr create"', 'gh run watch 1'):
-        work = make_repo()
-        env = set_pending(work)
-        assert before(work, cmd, env)[0] == 0
+        assert rc == 0 and out.strip() == '' and err.strip() == '', (cmd, rc, out, err)
         assert not os.path.exists(os.path.join(os.path.dirname(work), 'stubs', 'calls.log')), cmd
 
 
 @test
-def before_command_never_blocks_on_a_failed_push():
+def hooks_json_registers_no_before_command_hook():
+    """AR50: the PreToolUse hook only pushed, so it is no longer registered."""
+    cfg = read_json(os.path.join(PLUGIN, 'hooks', 'hooks.json'))
+    assert 'PreToolUse' not in cfg['hooks'], list(cfg['hooks'])
+    assert 'push the record' not in cfg['description'], cfg['description']
+
+
+@test
+def start_runs_migrate_and_passes_its_note_to_the_context():
+    """AR50: the session-start hook calls `migrate`; a note goes into the context and the system message."""
     work = make_repo()
-    env = set_pending(work, mode='pushfail')
-    rc, out, err, _ = before(work, 'gh pr create', env)
+    env = set_pending(work, mode='migrate-note')
+    rc, out, err, _ = start(work, dict(env, **gh_env(work)))
     res = json.loads(out)
-    assert rc == 0 and 'decision' not in res and 'permissionDecision' not in json.dumps(res), (rc, out)
-    assert 'record push failed (exit 4' in res['systemMessage'], res
-    # a script that cannot start is a warning too
-    rc, out, _e, _ = before(work, 'gh pr ready', {'CLAUDE_ARTIFACTS_SCRIPT': os.path.join(work, 'missing.py')})
-    assert rc == 0 and 'record push failed' in json.loads(out)['systemMessage'], out
+    assert rc == 0 and 'copied it from OLD' in res['hookSpecificOutput']['additionalContext'], (rc, out, err)
+    assert 'copied it from OLD' in res['systemMessage'], res
+    calls = open(os.path.join(os.path.dirname(work), 'stubs', 'calls.log')).read().split('\n')
+    assert 'migrate' in calls, calls
+    # a silent migrate leaves no note anywhere
+    work = make_repo()
+    env = set_pending(work)
+    res = json.loads(start(work, dict(env, **gh_env(work)))[1])
+    assert 'copied it from' not in json.dumps(res), res
+
+
+@test
+def start_runs_no_git_write():
+    """AR50: no fetch, reset or worktree handling at session start (the spy refuses and records it)."""
+    work = make_repo()
+    env = set_pending(work)
+    start(work, dict(env, **gh_env(work)))
+    assert GIT_WRITES == [], GIT_WRITES
+
+
+@test
+def worktree_dir_is_the_working_tree():
+    """AR50: the record worktree is retired; the hooks ignore any setting for it."""
+    work = make_repo()
+    sys.path.insert(0, SCRIPTS)
+    try:
+        import hook_after_command
+    finally:
+        sys.path.remove(SCRIPTS)
+    write(os.path.join(work, '.claude', 'artifacts-local.json'),
+          json.dumps({'record_worktree': os.path.join(TMP_ROOT, 'x')}))
+    assert hook_after_command.worktree_dir(work) == work
+
+
+@test
+def stop_reads_the_registry_from_the_working_tree():
+    work = make_repo(statuses=NO_ACTIVE)
+    env = set_pending(work)
+    bg_started(work)
+    assert parse_stop(stop(work, env)[1]).get('decision') == 'block'
+    write(os.path.join(work, 'docs', 'artifacts', 'registry.json'), json.dumps({
+        'spec': 'ARTIFACTSPEC 1.0.0', 'tasks': [{'id': 'AR30', 'owner': 'project', 'status': 'Running', 'item': 'y'}]}))
+    rc, out, _e, _ = stop(work, env)
+    assert rc == 0 and out.strip() == '' and 's1' not in stop_state(work), (out, stop_state(work))
 
 
 @test
@@ -737,14 +804,6 @@ def before_command_does_nothing_without_a_manifest_or_when_off():
     assert not os.path.exists(os.path.join(os.path.dirname(work), 'stubs', 'calls.log'))
     for raw in ('garbage', '', '[]', '{"tool_input": {"command": 5}}'):
         assert run_hook(BEFORE, raw, work, set_pending(work))[0] == 0, raw
-
-
-@test
-def hooks_json_registers_the_before_command_hook():
-    cfg = read_json(os.path.join(PLUGIN, 'hooks', 'hooks.json'))
-    entries = cfg['hooks']['PreToolUse']
-    assert len(entries) == 1 and set(entries[0]['matcher'].split('|')) == {'Bash', 'PowerShell'}, entries
-    assert 'hook_before_command.py' in entries[0]['hooks'][0]['command']
 
 
 @test
@@ -811,116 +870,9 @@ def stop_allows_background_work_with_an_active_task_and_clears_the_marker():
         assert marker(work)
 
 
-@test
-def stop_background_clears_once_a_task_becomes_running_in_the_record_worktree():
-    work = make_repo(statuses=NO_ACTIVE)
-    env = set_pending(work)
-    bg_started(work)
-    assert parse_stop(stop(work, env)[1]).get('decision') == 'block'
-    # the session records the task: the script commits to the record worktree (freshest source)
-    record = os.path.join(work, '.claude', 'worktrees', 'artifacts-record', 'docs', 'artifacts', 'registry.json')
-    write(record, json.dumps({'spec': 'ARTIFACTSPEC 1.0.0', 'tasks': [
-        {'id': 'AR30', 'owner': 'project', 'status': 'Running', 'item': 'y'}]}))
-    rc, out, _e, _ = stop(work, env)
-    assert rc == 0 and out.strip() == '' and 's1' not in stop_state(work), (out, stop_state(work))
-    # ... and a stale Running task in the session checkout does not count over a fresher source
-    stale = make_repo(statuses=['Running'])
-    write(os.path.join(stale, '.claude', 'worktrees', 'artifacts-record', 'docs', 'artifacts', 'registry.json'),
-          json.dumps({'spec': 'ARTIFACTSPEC 1.0.0', 'tasks': [{'id': 'AR5', 'owner': 'project',
-                                                              'status': 'Built', 'item': 'x'}]}))
-    bg_started(stale)
-    assert parse_stop(stop(stale, set_pending(stale))[1]).get('decision') == 'block'
-
-
 def _running_registry(path):
     write(os.path.join(path, 'docs', 'artifacts', 'registry.json'), json.dumps({
         'spec': 'ARTIFACTSPEC 1.0.0', 'tasks': [{'id': 'AR30', 'owner': 'project', 'status': 'Running', 'item': 'y'}]}))
-
-
-@test
-def stop_background_reads_the_record_worktree_from_the_environment():
-    """R4.24: the end-of-turn hook finds the record where the setting says."""
-    work = make_repo(statuses=NO_ACTIVE)
-    where = os.path.join(TMP_ROOT, 'moved-env')
-    env = dict(set_pending(work), LUISMC_ARTIFACTS_WORKTREE=where)
-    bg_started(work)
-    assert parse_stop(stop(work, env)[1]).get('decision') == 'block'
-    _running_registry(where)
-    rc, out, _e, _ = stop(work, env)
-    assert rc == 0 and out.strip() == '' and 's1' not in stop_state(work), (out, stop_state(work))
-    # the default location no longer counts: a Running task there does not clear the block
-    other = make_repo(statuses=NO_ACTIVE)
-    _running_registry(os.path.join(other, '.claude', 'worktrees', 'artifacts-record'))
-    bg_started(other)
-    env2 = dict(set_pending(other), LUISMC_ARTIFACTS_WORKTREE=os.path.join(TMP_ROOT, 'empty-env'))
-    assert parse_stop(stop(other, env2)[1]).get('decision') == 'block'
-
-
-@test
-def stop_background_reads_the_record_worktree_from_the_local_file():
-    work = make_repo(statuses=NO_ACTIVE)
-    where = os.path.join(TMP_ROOT, 'moved-file')
-    write(os.path.join(work, '.claude', 'artifacts-local.json'), json.dumps({'record_worktree': where}))
-    env = set_pending(work)
-    bg_started(work)
-    assert parse_stop(stop(work, env)[1]).get('decision') == 'block'
-    _running_registry(where)
-    rc, out, _e, _ = stop(work, env)
-    assert rc == 0 and out.strip() == '' and 's1' not in stop_state(work), (out, stop_state(work))
-
-
-@test
-def hooks_and_script_agree_on_the_worktree():
-    """R4.24: one function; the hooks' helper, the queue module and the script's command give one answer."""
-    work = make_repo()
-    sys.path.insert(0, SCRIPTS)
-    try:
-        import artifact_queue
-        import hook_after_command
-    finally:
-        sys.path.remove(SCRIPTS)
-    script = os.path.join(SCRIPTS, 'project_artifacts.py')
-    where = os.path.join(TMP_ROOT, 'agree')
-    cases = [(None, None, os.path.join(work, '.claude', 'worktrees', 'artifacts-record')),
-             (None, where, where),
-             (where + '-env', where, where + '-env')]            # the variable wins over the file
-    old = os.environ.pop('LUISMC_ARTIFACTS_WORKTREE', None)
-    local = os.path.join(work, '.claude', 'artifacts-local.json')
-    try:
-        for env_value, file_value, want in cases:
-            if env_value is None:
-                os.environ.pop('LUISMC_ARTIFACTS_WORKTREE', None)
-            else:
-                os.environ['LUISMC_ARTIFACTS_WORKTREE'] = env_value
-            if file_value is None:
-                if os.path.exists(local):
-                    os.remove(local)
-            else:
-                write(local, json.dumps({'record_worktree': file_value}))
-            want = os.path.normpath(want)
-            assert artifact_queue.record_worktree(work) == want, (env_value, file_value)
-            assert hook_after_command.worktree_dir(work) == want
-            out = subprocess.run([sys.executable, script, 'worktree'], cwd=work, capture_output=True, text=True,
-                                 env=dict(os.environ))
-            assert out.returncode == 0 and os.path.normcase(out.stdout.strip()) == os.path.normcase(want), out.stdout + out.stderr
-        # a refused setting: the script says so, the hooks fall back to the default and do not fail
-        os.environ['LUISMC_ARTIFACTS_WORKTREE'] = 'relative/dir'
-        try:
-            artifact_queue.record_worktree(work)
-            raise AssertionError('a relative path must be refused')
-        except artifact_queue.WorktreeSettingError:
-            pass
-        assert hook_after_command.worktree_dir(work) == artifact_queue.default_worktree(work)
-        out = subprocess.run([sys.executable, script, 'worktree'], cwd=work, capture_output=True, text=True,
-                             env=dict(os.environ))
-        assert out.returncode == 2 and 'LUISMC_ARTIFACTS_WORKTREE' in out.stderr, out.stderr
-        env = dict(set_pending(work), LUISMC_ARTIFACTS_WORKTREE='relative/dir')
-        rc, _out, _err, _ = stop(work, env)
-        assert rc == 0
-    finally:
-        os.environ.pop('LUISMC_ARTIFACTS_WORKTREE', None)
-        if old is not None:
-            os.environ['LUISMC_ARTIFACTS_WORKTREE'] = old
 
 
 @test
@@ -1518,6 +1470,7 @@ def hooks_never_write_record():
     start(work, env)
     assert INV4['runs'] > 40, INV4['runs']
     assert INV4['violations'] == [], INV4['violations']
+    assert GIT_WRITES == [], GIT_WRITES      # AR50: no hook ran a git write or a gh write
 
 
 def main():
