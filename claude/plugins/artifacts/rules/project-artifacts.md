@@ -15,3 +15,5 @@
 - When you give an Expected time, give its basis too (what it waits on and how long). <!-- advice -->
 - A release's Expected is the end of its last phase (`--phase`); name any risk with `--risk` instead of padding it. <!-- advice -->
 - Every Running or Built task rides a release (`--rides`); `--release` gives a release its RELEASE-n number. <!-- check: claude/plugins/artifacts/scripts/project_artifacts.py#release_problems -->
+- A task that ships nothing (a publish, a study, a cleanup) says so with `--no-release REASON` instead of riding a release; it goes Live, never Built. <!-- check: claude/plugins/artifacts/scripts/project_artifacts.py#release_problems -->
+- If claude.ai refuses the publish for its daily limit, run `mark-deferred full-progress --until <reset time>` instead of retrying. <!-- check: claude/plugins/artifacts/scripts/project_artifacts.py#cmd_mark_deferred -->

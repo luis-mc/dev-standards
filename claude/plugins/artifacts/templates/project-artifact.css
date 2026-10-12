@@ -593,4 +593,5 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 a .release-name { color: var(--signal); }
 .release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
 .release-line .release-name { margin-right: 0; }
+.no-release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
 tr.status-group.release-group td { color: var(--ink); }
