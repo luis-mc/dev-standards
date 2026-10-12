@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the luismc-artifacts hooks (ARTIFACTSPEC 1.6.0 section 8, R13.2).
+"""Tests for the luismc-artifacts hooks (ARTIFACTSPEC 1.7.0 section 8, R13.2).
 
 Feeds sample hook input to each hook in throwaway git repos (with a bare remote)
 and asserts the queue, the exit code and the output, including R8.2, R8.4, R8.5,

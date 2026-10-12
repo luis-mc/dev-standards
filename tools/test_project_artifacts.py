@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prove project_artifacts.py does what ARTIFACTSPEC 1.6.0 section 7 says (R13.1).
+"""Prove project_artifacts.py does what ARTIFACTSPEC 1.7.0 section 7 says (R13.1).
 
 Every case builds throwaway git repositories with a local bare remote and runs
 the real command line against them. Nothing here pushes to any real remote.

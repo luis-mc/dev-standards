@@ -8,7 +8,7 @@ effort: medium
 # Feature artifact — new
 
 Creates one feature artifact from the project's record (`docs/artifacts/`,
-ARTIFACTSPEC 1.6.0). The script is the only writer of `manifest.json` and
+ARTIFACTSPEC 1.7.0). The script is the only writer of `manifest.json` and
 `registry.json`; never edit either by hand. A feature artifact is a standalone
 HTML file in the repository (`docs/artifacts/feature-<slug>.html`, CSS inlined,
 opens by double-click). It is never published to claude.ai, because claude.ai
