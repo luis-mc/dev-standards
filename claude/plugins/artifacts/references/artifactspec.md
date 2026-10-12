@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.7.0
+**Version:** 1.8.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.8.0 — 2026-10-12.**
+
+- The plugin writes files and never git state: the record is written in `docs/artifacts/` of the working tree and left uncommitted, and the project commits and pushes it when it chooses. The plugin never runs `git commit`, `push`, `fetch`, `pull`, `reset`, `rebase`, `checkout`, `switch`, `stash`, `add` or `worktree add`/`remove`, nor a `gh` command that writes. The record worktree is retired and its old copy migrates once, by itself, when newer; `commit` and `push` are removed (they exit 1) and `migrate` is added; no hook or `pending` pushes. R4.13 to R4.17, R4.24 to R4.29, R7.6, R8.16 and R8.17 are rewritten or retired, keeping their IDs; D23 is new. The record format string stays `ARTIFACTSPEC 1.0.0`.
 
 **1.7.0 — 2026-10-12.**
 
@@ -1238,10 +1242,10 @@ Reads the hook input; takes the task ID from the current branch name
 - **R8.16** — The before-command hook does not push the record before
   `gh pr create`, `gh pr ready` or `gh pr merge`. Where it has nothing else to
   do it exits 0 and prints nothing. Verified by
-  `test_before_command_is_silent_for_gh_pr_create`.
+  `before_command_is_silent_for_pr_commands_and_runs_nothing` in `tools/test_project_artifacts_hooks.py`.
 - **R8.17** — The end-of-turn hook does not push. The publish gate and the
   background-work checks (R8.4, R8.8 to R8.10) are unchanged. Verified by
-  `test_end_of_turn_does_not_push`.
+  `hooks_never_write_record` in the same file.
 
 ---
 
