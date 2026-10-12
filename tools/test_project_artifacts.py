@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prove project_artifacts.py does what ARTIFACTSPEC 1.7.0 section 7 says (R13.1).
+"""Prove project_artifacts.py does what ARTIFACTSPEC 1.8.0 section 7 says (R13.1).
 
 Every case builds throwaway git repositories with a local bare remote and runs
 the real command line against them. Nothing here pushes to any real remote.
@@ -130,6 +130,12 @@ class Project:
         if template is not None:
             shutil.copytree(str(template.bare), str(self.bare))
             git(self.root, 'clone', '-q', self.bare, self.clone)
+            # the record is only ever in the working tree (AR50): copy the template's, uncommitted
+            shutil.copytree(str(template.clone / 'docs'), str(self.clone / 'docs'))
+            if (template.clone / '.gitignore').is_file():
+                shutil.copyfile(str(template.clone / '.gitignore'), str(self.clone / '.gitignore'))
+            git(self.clone, 'add', '-A')
+            git(self.clone, 'commit', '-q', '-m', 'the project commits the record itself')
             return
         git(self.root, 'init', '-q', '--bare', '-b', 'main', self.bare)
         seed = self.root / 'seed'
@@ -143,11 +149,21 @@ class Project:
         git(self.root, 'clone', '-q', self.bare, self.clone)
 
     def clone_again(self, name):
-        d = self.root / name
-        git(self.root, 'clone', '-q', self.bare, d)
-        return d
+        """The record only exists in the working tree (AR50), so a fixture edits that one tree. The project
+        then commits it (settled before the next command, HEAD or status read), as the owner would."""
+        self._to_settle = True
+        return self.clone
+
+    _to_settle = False
+
+    def settle(self):
+        if self._to_settle:
+            self._to_settle = False
+            git(self.clone, 'add', '-A')
+            git(self.clone, 'commit', '-q', '-m', 'the project commits a hand-edited record', check=False)
 
     def run(self, *args, cwd=None, env=None, push=True, rides=True):
+        self.settle()
         """Run a command. Writing commands commit without pushing (R4.28); most cases read the remote
         afterwards, so they get --push unless the case passes push=False or its own --push/--no-push.
         A Running or Built task must ride a release (R5.47); to keep the cases about other things short, a case
@@ -163,8 +179,6 @@ class Project:
                 target = args[1] if len(args) > 1 else None
             if status.lower() in ('running', 'built', 'done') and target != 'DS1':
                 args += ['--rides', 'DS1']
-        if push and args and args[0] in WRITING_COMMANDS and '--push' not in args and '--no-push' not in args:
-            args.append('--push')
         r = subprocess.run([sys.executable, str(self.env.script)] + [str(a) for a in args],
                            cwd=str(cwd or self.clone), capture_output=True, text=True,
                            encoding='utf-8', errors='replace', env=base_env(env))
@@ -181,7 +195,12 @@ class Project:
 
     # -- reading the remote
     def show(self, path, ref='main'):
-        r = git(self.bare, 'show', '%s:%s' % (ref, path), check=False)
+        """The file in the working tree (the record is written there and never committed, AR50)."""
+        f = self.clone / path
+        return f.read_text(encoding='utf-8') if f.is_file() else None
+
+    def committed(self, path, ref='HEAD'):
+        r = git(self.clone, 'show', '%s:%s' % (ref, path), check=False)
         return r.stdout if r.returncode == 0 else None
 
     def reg(self, ref='main'):
@@ -194,15 +213,31 @@ class Project:
         return next(t for t in self.reg()['tasks'] if t['id'] == tid)
 
     def head(self):
-        return git(self.bare, 'rev-parse', 'main').stdout.strip()
+        self.settle()
+        return git(self.clone, 'rev-parse', 'HEAD').stdout.strip()
 
     @property
     def wt(self):
+        return self.clone
+
+    @property
+    def old_wt(self):
         return self.clone / '.claude' / 'worktrees' / 'artifacts-record'
 
     @property
     def rdir(self):
-        return self.wt / 'docs' / 'artifacts'
+        return self.clone / 'docs' / 'artifacts'
+
+    def files(self):
+        """{path: bytes} of the record in the working tree."""
+        self.settle()
+        return {x.relative_to(self.rdir).as_posix(): x.read_bytes() for x in self.rdir.rglob('*') if x.is_file()}
+
+    def git_state(self):
+        """HEAD, the index, the refs and the remote: what a plugin command must leave alone."""
+        return (git(self.clone, 'rev-parse', 'HEAD').stdout, git(self.clone, 'ls-files', '-s').stdout,
+                git(self.clone, 'for-each-ref').stdout, git(self.bare, 'for-each-ref').stdout,
+                git(self.clone, 'stash', 'list').stdout)
 
     def record_copy(self, name):
         """A copy of the pushed record, for fixtures that damage it."""
@@ -235,8 +270,6 @@ class InProc:
 
     def call(self, cwd, *argv, env=None):
         argv = list(argv)
-        if argv and argv[0] in WRITING_COMMANDS and '--push' not in argv and '--no-push' not in argv:
-            argv.append('--push')       # as Project.run: the race cases need the push
         old_env, old_cwd = dict(os.environ), os.getcwd()
         os.environ.update(base_env(env))
         out, err = io.StringIO(), io.StringIO()
@@ -285,8 +318,10 @@ def test_init_creates_record(env):
     assert m['project_prefixes'] == ['DS'] and m['feature_artifacts'] == []
     assert p.show('docs/artifacts/' + m['full_progress_artifact']['file']).lstrip().startswith('<title>Full Progress: Demo')
     assert p.reg()['tasks'] == []
-    log = git(p.bare, 'log', '-1', '--format=%s', 'main').stdout.strip()
-    assert log == 'docs/artifacts: init', log
+    # the plugin writes files and stops: nothing is committed or pushed (AR50)
+    assert git(p.clone, 'log', '-1', '--format=%s').stdout.strip() == 'seed'
+    assert git(p.bare, 'log', '-1', '--format=%s', 'main').stdout.strip() == 'seed'
+    assert 'docs/' in git(p.clone, 'status', '--porcelain').stdout
     # refuses a second time
     r2 = p.run('init', '--project', 'Demo')
     assert r2.code == 1 and 'already exists' in r2.err
@@ -304,7 +339,8 @@ def test_init_session_files(env):
     assert not (p.clone / '.claude' / 'rules').exists(), list((p.clone / '.claude').iterdir())
     assert 'rules/' not in r.out, r.out
     status = git(p.clone, 'status', '--porcelain').stdout
-    assert 'docs/' not in status and 'worktrees' not in status, status
+    assert 'docs/' in status and 'worktrees' not in status and 'artifacts-record.lock' not in status, status   # the record is left for the project to commit
+    assert '.claude/artifacts-record.lock' in gi, gi
     # idempotent: a second command reports no session changes
     r2 = p.ok('feature-new', '--key', 'a', '--title', 'A', '--prefix', 'AA', '--apps', 'x')
     assert 'session checkout changes' not in r2.out, r2.out
@@ -339,9 +375,9 @@ def test_feature_new_runs_init_first(env):
     assert len(hist) == 1 and hist[0]['change'] and len(hist[0]['date']) == 12, hist
     assert p.show('docs/artifacts/feature-artifacts.html') is not None
     assert 'export-content artifacts' in r.out and 'edit-content artifacts' in r.out
-    # one commit for init + feature
-    msgs = git(p.bare, 'log', '--format=%s', 'main').stdout.split('\n')
-    assert msgs[0] == 'docs/artifacts: add feature artifacts' and msgs[1] == 'seed', msgs
+    # init + feature: files only, no commit
+    msgs = git(p.clone, 'log', '--format=%s').stdout.split()
+    assert msgs == ['seed'], msgs
 
 
 @case
@@ -383,7 +419,7 @@ def test_task_add(env):
     # a new project prefix is registered
     p.ok('task-add', '--owner', 'project', '--prefix', 'OPS', '--item', 'x', '--detail', 'd', '--expected', '15 Oct')
     assert 'OPS' in p.man()['project_prefixes']
-    assert git(p.bare, 'log', '-1', '--format=%s', 'main').stdout.strip() == 'docs/artifacts: OPS1 To do'
+    assert git(p.clone, 'log', '-1', '--format=%s').stdout.strip() != 'docs/artifacts: OPS1 To do'     # never committed
     assert p.run('check').code == 0
 
 
@@ -431,12 +467,14 @@ def test_basis_dropped_when_closed(env):
 def test_basis_over_80_refused(env):
     p = env.baseline()
     before = p.head()
+    files = p.files()
     for argv in (['task-add', '--owner', 'artifacts', '--item', 'x', '--detail', 'd', '--expected', '14 Oct'],
                  ['set-task-status', 'AR1', 'Running']):
         r = p.run(*argv, '--basis', 'b' * 81)
         assert r.code == 1 and '80' in r.err, r.all
+    assert p.files() == files, 'the refused calls wrote nothing'
     assert p.run('set-task-status', 'AR1', 'Running', '--basis', 'b' * 80).code == 0
-    assert p.head() != before
+    assert p.files() != files and p.head() == before
 
 
 @case
@@ -572,8 +610,6 @@ def test_migration_numbers_old_releases(env):
         reg['tasks'].append({'id': 'DS%d' % (i + 2), 'owner': 'project', 'app': '', 'status': 'Live', 'item': 'old %d' % i,
                              'detail': 'd', 'expected': '08 Oct', 'changed': when, 'release': True})
     rp.write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
-    git(other, 'commit', '-q', '-a', '-m', 'age the record to release: true')
-    git(other, 'push', '-q', 'origin', 'main')
     out = p.run('check', '--json').json()
     assert any('DS1' in n and 'release' in n for n in out['notes']), out
     p.ok('render')
@@ -601,8 +637,6 @@ def test_running_and_built_must_ride_a_release(env):
     reg = json.loads(rp.read_text(encoding='utf-8'))
     next(t for t in reg['tasks'] if t['id'] == 'AR1').pop('rides')
     rp.write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
-    git(other, 'commit', '-q', '-a', '-m', 'a task that rides nothing')
-    git(other, 'push', '-q', 'origin', 'main')
     assert 'R5.47' in p.run('check').out
     p.ok('set-task-status', 'AR2', 'Live', '--detail', 'still works')
 
@@ -795,7 +829,13 @@ def test_set_task_status_removes_queue_events(env):
 # edit-content, render
 # --------------------------------------------------------------------------
 
+def dirty_outside(p):
+    """Changes anywhere but docs/artifacts/ (the record's own files are meant to change)."""
+    return [x for x in dirty(p) if not x[3:].startswith('docs/artifacts/')]
+
+
 def dirty(p):
+    p.settle()
     return [x for x in git(p.wt, 'status', '--porcelain').stdout.splitlines() if x.strip()]
 
 
@@ -841,15 +881,9 @@ def test_edit_content_from_folder(env):
     html = p.show('docs/artifacts/feature-artifacts.html')
     assert 'Tokens and structure.' in html and 'Design is settled.' in html and 'First.' in html
     assert 'Design is settled' in p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
-    assert git(p.bare, 'log', '-1', '--format=%s', 'main').stdout.strip() == 'docs/artifacts: edit artifacts'
     assert p.run('check').code == 0
-    assert dirty(p) == [], dirty(p)
-    # the folder is read, never the record worktree: stray edits there are discarded by the reset
-    (p.rdir / 'content' / 'artifacts' / '03-stray.html').write_text('<!-- title: Stray -->\n<p>s</p>\n', encoding='utf-8')
-    d2 = export(p, 'artifacts', 'c')
-    assert not (d2 / '03-stray.html').exists()
-    p.ok('edit-content', 'artifacts', '--from', d2)
-    assert p.show('docs/artifacts/content/artifacts/03-stray.html') is None
+    assert dirty_outside(p) == [] and p.head() == p.head(), dirty(p)       # only docs/artifacts/ changed, nothing committed
+    assert any(x.endswith('feature-artifacts.html') for x in dirty(p))
 
 
 @case
@@ -874,32 +908,20 @@ def test_edit_content_invalid_writes_nothing(env):
     env.n += 1
     empty.mkdir()
     r = p.run('edit-content', 'artifacts', '--from', empty)
-    assert r.code == 1 and p.head() != before
+    assert r.code == 1 and p.head() == before
     assert p.show('docs/artifacts/content/artifacts/meta.json') is not None
-
-
-@case
-def test_stray_worktree_edits_are_discarded(env):
-    """R4.13: the reset before each change discards anything left in the record worktree."""
-    p = env.baseline()
-    p.ok('path')
-    (p.rdir / 'content' / 'artifacts' / '02-x.html').write_text('<!-- title: X -->\n<p>x</p>\n', encoding='utf-8')
-    (p.rdir / 'registry.json').write_text('{}', encoding='utf-8')
-    p.ok('set-task-status', 'AR1', 'Waiting')
-    assert p.show('docs/artifacts/content/artifacts/02-x.html') is None
-    assert p.task('AR1')['status'] == 'Waiting' and len(p.reg()['tasks']) == 4
-    assert dirty(p) == []
 
 
 @case
 def test_render_noop_and_all(env):
     p = env.baseline()
     before = p.head()
+    files = p.files()
     r = p.ok('render')
-    assert 'nothing to do' in r.out and p.head() == before
+    assert 'nothing to do' in r.out and p.head() == before and p.files() == files
     r = p.ok('render', '--all', '--json', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-11T08:00:00+00:00'})
     assert sorted(r.json()['rendered']) == sorted(['full-progress', 'artifacts', 'site'])
-    assert p.head() != before
+    assert p.files() != files and p.head() == before
     assert 'datetime="2026-10-11T09:00+01:00"' in p.show('docs/artifacts/feature-the-site.html') or \
         '2026-10-11T09:00+01:00' in p.show('docs/artifacts/feature-the-site.html')
 
@@ -912,8 +934,6 @@ def test_render_repairs_stale_html(env):
     reg = json.loads((other / 'docs' / 'artifacts' / 'registry.json').read_text(encoding='utf-8'))
     reg['tasks'][0]['detail'] = 'Edited by hand.'
     (other / 'docs' / 'artifacts' / 'registry.json').write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
-    git(other, 'commit', '-qam', 'hand edit')
-    git(other, 'push', '-q', 'origin', 'main')
     r = p.run('check')
     assert r.code == 1 and has_line(r.out, 'INV-3', 'feature-artifacts.html'), r.all
     p.ok('render')
@@ -929,8 +949,6 @@ def test_a_writing_command_refreshes_every_stale_page(env):
     other = p.clone_again('old-look')
     site = other / 'docs' / 'artifacts' / 'feature-the-site.html'
     site.write_text(site.read_text(encoding='utf-8') + '<!-- older template -->\n', encoding='utf-8', newline='\n')
-    git(other, 'commit', '-qam', 'older template')
-    git(other, 'push', '-q', 'origin', 'main')
     r = p.run('check')
     assert r.code == 1 and has_line(r.out, 'INV-3', 'feature-the-site.html'), r.all
     r = p.ok('set-task-status', 'AR1', 'Running', '--json', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-11T08:00:00+00:00'})
@@ -1037,8 +1055,6 @@ def test_detail_only_change_needs_no_publish(env):
     man = json.loads(mp.read_text(encoding='utf-8'))
     man['full_progress_artifact'].pop('published_fingerprint')
     mp.write_text(json.dumps(man, indent=2) + '\n', encoding='utf-8')
-    git(other, 'commit', '-q', '-a', '-m', 'an older record')
-    git(other, 'push', '-q', 'origin', 'main')
     p.ok('set-task-status', 'AR1', 'Waiting', '--detail', 'only a detail')
     again = p.run('pending', '--json')
     assert again.code == 1 and again.json()['artifacts'][0]['reason'] == 'changed since last publish', again.all
@@ -1248,13 +1264,14 @@ def test_publish_copy_links_and_committed_links(env):
     for h in hrefs:
         target = Path(url_path(h))
         assert target.is_absolute() and target.is_file() and target.parent.name == 'artifacts'
-        assert os.path.samefile(str(target), str(p.rdir / target.name)), (h, target)   # the record worktree, never the checkout
+        assert os.path.samefile(str(target), str(p.rdir / target.name)), (h, target)   # docs/artifacts/ of the working tree
         assert '<code class="local-path" hidden>%s</code>' % h in copy
     # the checklist rows (AR1, AR2, SI1) carry no link and no button
     table = copy[copy.index('<table class="status-checklist"'):]
     table = table[:table.index('</table>')]
     assert '<a ' not in table and 'copy-link' not in table and 'file:///' not in table
     # the copy is outside the record and ignored once .gitignore says so (R10.2)
+    (p.clone / '.gitignore').write_text('', encoding='utf-8')
     assert 'does not ignore' in p.run('pending').err
     (p.clone / '.gitignore').write_text('.claude/artifacts-publish/\n', encoding='utf-8')
     assert 'does not ignore' not in p.run('pending').err
@@ -1279,20 +1296,6 @@ def test_publish_copy_path_encoding_with_spaces(env):
 
 
 @case
-def test_publish_copy_links_to_the_record_worktree(env):
-    """R5.31: Copy link targets the record worktree's file, whatever the session's checkout holds."""
-    p = env.project()
-    p.init()
-    p.ok('feature-new', '--key', 'a', '--title', 'A', '--prefix', 'AA', '--apps', 'x')
-    assert not (p.clone / 'docs').exists()                                  # the session is on a checkout without the record
-    a = p.run('pending', '--json').json()['artifacts'][0]
-    copy = Path(a['path']).read_text(encoding='utf-8')
-    (href,) = sorted(set(re.findall(r'data-copy="(file:///[^"]+)"', copy)))
-    target = Path(url_path(href))
-    assert target.is_file() and os.path.samefile(str(target), str(p.rdir / 'feature-a.html')), (href, target)
-
-
-@case
 def test_old_feature_urls_migrate(env):
     """R4.18: a manifest whose feature entries hold a url or a hash is read without them, noted by check,
     rewritten by the next writing command, and its feature pages and Full Progress links are rendered again."""
@@ -1303,8 +1306,6 @@ def test_old_feature_urls_migrate(env):
                             feat(m, 'site').update(url='https://claude.ai/artifact/old-b')))
     page = other / 'docs' / 'artifacts' / 'feature-artifacts.html'
     page.write_text('<title>Feature: Artifacts</title>\n<time datetime="2026-10-10T12:39+01:00">x</time>\n', encoding='utf-8')
-    git(other, 'commit', '-qam', 'a record from before feature artifacts stopped being published')
-    git(other, 'push', '-q', 'origin', 'main')
     # check reads it, notes the old fields and finds the old page form
     r = p.run('check', '--json')
     assert r.code == 1, r.all
@@ -1351,28 +1352,6 @@ def test_pending_queue(env):
     assert 'empty' in p.ok('queue', 'list').out
 
 
-@case
-def test_pending_without_record(env):
-    p = env.project()
-    d = TMP / ('noexp-%d' % (env.n))
-    env.n += 1
-    empty = TMP / ('noexp-empty-%d' % (env.n))
-    empty.mkdir()
-    for argv in (['pending', '--json'], ['pending'], ['check'], ['path'], ['export-content', 'x', '--to', d],
-                 ['render'], ['set-task-status', 'AR1', 'Live'], ['edit-content', 'x', '--from', empty],
-                 ['task-add', '--owner', 'project', '--prefix', 'DS', '--item', 'x', '--detail', 'd', '--expected', '14 Oct'],
-                 ['mark-published', 'full-progress', '--url', 'https://x.example/a'], ['design', 'set', 'default'],
-                 ['commit']):
-        r = p.run(*argv)
-        assert r.code == 2 and 'no record in this repository' in r.err, (argv, r.code, r.all)
-        assert not p.wt.exists(), 'no command may create the record worktree without a record: %s' % argv
-    r = p.run('check', '--json')
-    assert r.code == 2 and r.json()['ok'] is False
-    # init is the exception: it creates the worktree
-    p.init()
-    assert (p.wt / '.git').exists()
-
-
 # --------------------------------------------------------------------------
 # the record worktree and commits (R4.13 - R4.17)
 # --------------------------------------------------------------------------
@@ -1384,8 +1363,6 @@ def test_adopted_url_without_hash(env):
     other = p.clone_again('adopt')
     f = other / 'docs' / 'artifacts' / 'manifest.json'
     edit_json(f, lambda m: m['full_progress_artifact'].update(url='https://claude.ai/artifact/adopted'))
-    git(other, 'commit', '-qam', 'adopt an existing artifact')
-    git(other, 'push', '-q', 'origin', 'main')
     assert p.man()['full_progress_artifact']['published_sha256'] == ''
     r = p.run('check')
     assert r.code == 0, r.all
@@ -1418,9 +1395,10 @@ def test_edit_content_no_change(env):
     p = env.baseline()
     d = export(p, 'artifacts', 'same')
     before = p.head()
+    files = p.files()
     r = p.ok('edit-content', 'artifacts', '--from', d)
     assert 'no change' in r.out, r.out
-    assert p.head() == before, 'nothing committed'
+    assert p.head() == before and p.files() == files, 'nothing written'
     assert p.ok('edit-content', 'artifacts', '--from', d, '--json').json()['changed'] is False
     # CRLF copies of the same files are the same content
     for f in d.iterdir():
@@ -1428,7 +1406,7 @@ def test_edit_content_no_change(env):
     assert 'no change' in p.ok('edit-content', 'artifacts', '--from', d).out and p.head() == before
     (d / 'meta.json').write_text((d / 'meta.json').read_text(encoding='utf-8').replace('Planned', 'Planned,'), encoding='utf-8')
     p.ok('edit-content', 'artifacts', '--from', d)
-    assert p.head() != before
+    assert p.files() != files and p.head() == before
 
 
 # --------------------------------------------------------------------------
@@ -1456,67 +1434,6 @@ def elsewhere(env, name):
 
 
 @case
-def test_worktree_setting_default(env):
-    p = env.baseline()
-    assert same_path(worktree_of(p), p.wt)
-    assert p.run('worktree').out.strip() == worktree_of(p)
-    # a local file without the key, and an empty variable, leave the default
-    (p.clone / '.claude').mkdir(exist_ok=True)
-    (p.clone / '.claude' / 'artifacts-local.json').write_text('{"other": 1}\n', encoding='utf-8')
-    assert same_path(worktree_of(p, env={'LUISMC_ARTIFACTS_WORKTREE': ''}), p.wt)
-
-
-@case
-def test_worktree_setting_environment(env):
-    p = env.baseline()
-    where = elsewhere(env, 'env')
-    other = elsewhere(env, 'other')
-    (p.clone / '.claude').mkdir(exist_ok=True)
-    (p.clone / '.claude' / 'artifacts-local.json').write_text(json.dumps({'record_worktree': str(other)}), encoding='utf-8')
-    # the variable wins over the local file
-    assert same_path(worktree_of(p, env={'LUISMC_ARTIFACTS_WORKTREE': str(where)}), where)
-    p.ok('set-task-status', 'AR1', 'Waiting', env={'LUISMC_ARTIFACTS_WORKTREE': str(where)})
-    assert (where / 'docs' / 'artifacts' / 'manifest.json').is_file() and not other.exists()
-
-
-@case
-def test_worktree_setting_local_file(env):
-    p = env.baseline()
-    where = elsewhere(env, 'file')
-    (p.clone / '.claude').mkdir(exist_ok=True)
-    (p.clone / '.claude' / 'artifacts-local.json').write_text(json.dumps({'record_worktree': str(where)}), encoding='utf-8')
-    assert same_path(worktree_of(p), where)
-    p.ok('set-task-status', 'AR1', 'Waiting')
-    assert (where / 'docs' / 'artifacts' / 'manifest.json').is_file() and p.task('AR1')['status'] == 'Waiting'
-    assert not p.wt.exists(), 'the default location is not created when the setting points elsewhere'
-    # a session sitting inside the moved worktree still finds the checkout's root
-    assert same_path(worktree_of(p, env=None), where)
-    r = p.run('worktree', '--json', cwd=where)
-    assert r.code == 0 and same_path(r.json()['worktree'], where), r.all
-
-
-@case
-def test_worktree_setting_refused(env):
-    p = env.baseline()
-    head = p.head()
-    (p.clone / '.claude').mkdir(exist_ok=True)
-    local = p.clone / '.claude' / 'artifacts-local.json'
-    bad_env = ['relative/path', '.', '..' + os.sep + 'x', str(p.clone), str(p.clone.parent), str(p.clone / '.git' / 'x')]
-    if os.name == 'nt':
-        bad_env += ['\\no-drive', 'C:no-slash']
-    for value in bad_env:
-        for argv in (['worktree'], ['set-task-status', 'AR1', 'Waiting']):
-            r = p.run(*argv, env={'LUISMC_ARTIFACTS_WORKTREE': value})
-            assert r.code == 2 and 'LUISMC_ARTIFACTS_WORKTREE' in r.err, (value, argv, r.all)
-    assert p.head() == head, 'a refused setting writes nothing'
-    for text in ('{"record_worktree": "rel/x"}', '{"record_worktree": ""}', '{"record_worktree": 5}', '[1]', '{not json'):
-        local.write_text(text, encoding='utf-8')
-        r = p.run('set-task-status', 'AR1', 'Waiting')
-        assert r.code == 2 and 'artifacts-local.json' in r.err, (text, r.all)
-    assert p.head() == head
-
-
-@case
 def test_init_ignores_the_local_settings_file(env):
     p = env.project()
     p.init()
@@ -1526,403 +1443,6 @@ def test_init_ignores_the_local_settings_file(env):
     (p.clone / '.claude').mkdir(exist_ok=True)
     (p.clone / '.claude' / 'artifacts-local.json').write_text(json.dumps({'record_worktree': str(where)}), encoding='utf-8')
     assert 'artifacts-local' not in git(p.clone, 'status', '--porcelain').stdout
-
-
-@case
-def test_moving_the_worktree_removes_the_old_one(env):
-    p = env.baseline()
-    p.ok('set-task-status', 'AR1', 'Waiting')
-    assert (p.wt / '.git').exists() and any(same_path(w, p.wt) for w in registered_worktrees(p))
-    first = elsewhere(env, 'first')
-    second = elsewhere(env, 'second')
-    r = p.ok('set-task-status', 'AR1', 'Running', env={'LUISMC_ARTIFACTS_WORKTREE': str(first)})
-    assert 'moved' in r.err, r.err
-    assert not p.wt.exists() and not any(same_path(w, p.wt) for w in registered_worktrees(p)), registered_worktrees(p)
-    assert (first / 'docs' / 'artifacts' / 'manifest.json').is_file()
-    assert any(same_path(w, first) for w in registered_worktrees(p))
-    assert p.task('AR1')['status'] == 'Running'
-    # an unchanged setting moves nothing
-    r = p.ok('set-task-status', 'AR1', 'Waiting', env={'LUISMC_ARTIFACTS_WORKTREE': str(first)})
-    assert 'moved' not in r.err, r.err
-    # moving again, then back to the default
-    p.ok('set-task-status', 'AR1', 'Running', env={'LUISMC_ARTIFACTS_WORKTREE': str(second)})
-    assert not first.exists() and (second / '.git').exists()
-    p.ok('set-task-status', 'AR1', 'Waiting')
-    assert not second.exists() and (p.wt / '.git').exists()
-    assert [w for w in registered_worktrees(p) if '.claude' in w.replace('\\', '/') and 'artifacts-record' in w] != []
-    assert p.run('check').code == 0
-
-
-@case
-def test_moving_refuses_unpushed_commits(env):
-    p = env.baseline()
-    p.ok('set-task-status', 'AR1', 'Waiting', '--no-push')
-    where = elsewhere(env, 'unpushed')
-    r = p.run('set-task-status', 'AR1', 'Running', env={'LUISMC_ARTIFACTS_WORKTREE': str(where)})
-    assert r.code == 1 and 'not pushed' in r.err, r.all
-    assert (p.wt / '.git').exists() and not where.exists()
-    # the old setting pushes them; then the move goes through
-    p.ok('commit', '--retry')
-    p.ok('set-task-status', 'AR1', 'Running', env={'LUISMC_ARTIFACTS_WORKTREE': str(where)})
-    assert not p.wt.exists() and (where / '.git').exists()
-
-
-@case
-def test_record_worktree_is_sparse(env):
-    p = env.baseline()
-    p.ok('path')
-    assert (p.wt / 'docs' / 'artifacts' / 'manifest.json').is_file()
-    assert not (p.wt / 'README.md').exists(), 'only docs/artifacts is checked out'
-    assert git(p.wt, 'config', '--get', 'core.sparseCheckout').stdout.strip() == 'true'
-    # the session's own checkout is not made sparse
-    assert git(p.clone, 'config', '--get', 'core.sparseCheckout', check=False).stdout.strip() != 'true'
-    assert (p.clone / 'README.md').is_file()
-    p.ok('set-task-status', 'AR1', 'Waiting')
-    assert not (p.wt / 'README.md').exists() and p.task('AR1')['status'] == 'Waiting'
-    # a worktree made before this fix (not sparse) is converted on the next use
-    git(p.wt, 'sparse-checkout', 'disable')
-    assert (p.wt / 'README.md').exists()
-    p.ok('set-task-status', 'AR1', 'Running')
-    assert not (p.wt / 'README.md').exists()
-
-
-@case
-def test_session_checkout_untouched(env):
-    p = env.baseline()
-    git(p.clone, 'checkout', '-q', '-b', 'AR9-some-task')
-    # what init told the session to commit on its branch
-    (p.clone / '.gitignore').write_text('.claude/artifacts-queue.json\n.claude/worktrees/\n', encoding='utf-8')
-    git(p.clone, 'add', '.gitignore')
-    git(p.clone, 'commit', '-q', '-m', 'ignore the artifact queue and record worktree')
-    (p.clone / 'work.txt').write_text('wip\n', encoding='utf-8')
-    head = git(p.clone, 'rev-parse', 'HEAD').stdout
-    status = git(p.clone, 'status', '--porcelain').stdout
-    reg_before = (p.clone / 'docs' / 'artifacts' / 'registry.json').read_bytes()
-    p.ok('set-task-status', 'AR1', 'Waiting')
-    p.ok('task-add', '--owner', 'site', '--item', 'x', '--detail', 'd', '--expected', '14 Oct')
-    assert git(p.clone, 'rev-parse', 'HEAD').stdout == head
-    assert git(p.clone, 'branch', '--show-current').stdout.strip() == 'AR9-some-task'
-    assert git(p.clone, 'status', '--porcelain').stdout == status
-    assert (p.clone / 'docs' / 'artifacts' / 'registry.json').read_bytes() == reg_before, 'the session tree is stale by design'
-    # the record worktree is a detached worktree of origin/main
-    assert git(p.wt, 'rev-parse', 'HEAD').stdout.strip() == p.head()
-    assert git(p.wt, 'branch', '--show-current').stdout.strip() == ''
-
-
-@case
-def test_commits_only_docs_artifacts(env):
-    p = env.baseline()
-    p.ok('set-task-status', 'AR1', 'Waiting')
-    files = git(p.bare, 'show', '--name-only', '--format=', 'main').stdout.split()
-    assert files and all(f.startswith('docs/artifacts/') for f in files), files
-    # the commit helper refuses a staged path outside the record (R4.14)
-    ip = InProc(env)
-    mod = ip.mod
-    ctx = mod.Ctx(p.clone, 'main')
-    (p.wt / 'docs' / 'other.txt').write_text('x\n', encoding='utf-8')
-    git(p.wt, 'add', '--sparse', 'docs/other.txt')      # the sparse checkout would refuse it otherwise
-    try:
-        mod.commit_record(ctx, 'x')
-    except mod.Fail as e:
-        assert e.code == 1 and 'outside docs/artifacts' in e.msg, e.msg
-    else:
-        raise AssertionError('commit_record must refuse paths outside docs/artifacts')
-    assert git(p.wt, 'diff', '--cached', '--name-only').stdout.strip() == '', 'the refused path is unstaged'
-    git(p.wt, 'clean', '-fdq')
-
-
-@case
-def test_commit_identity_fallback(env):
-    p = env.baseline()
-    r = git(p.bare, 'log', '-1', '--format=%an <%ae>', 'main').stdout.strip()
-    assert r == 'project-artifacts <project-artifacts@localhost>', r
-    git(p.clone, 'config', 'user.name', 'Real Person')
-    git(p.clone, 'config', 'user.email', 'real@example.com')
-    p.ok('set-task-status', 'AR1', 'Waiting')
-    assert git(p.bare, 'log', '-1', '--format=%an', 'main').stdout.strip() == 'Real Person'
-
-
-@case
-def test_no_push_then_commit(env):
-    p = env.baseline()
-    before = p.head()
-    r = p.ok('set-task-status', 'AR1', 'Waiting', '--no-push')
-    assert 'not pushed' in r.out
-    assert p.head() == before, 'origin must not move'
-    assert git(p.wt, 'rev-parse', 'HEAD').stdout.strip() != before
-    assert git(p.wt, 'log', '-1', '--format=%s').stdout.strip() == 'docs/artifacts: AR1 Waiting'
-    # a second unpushed change stacks on the first
-    p.ok('set-task-status', 'SI1', 'Running', '--no-push')
-    assert p.head() == before
-    reg = json.loads((p.rdir / 'registry.json').read_text(encoding='utf-8'))
-    assert {t['id']: t['status'] for t in reg['tasks']}['AR1'] == 'Waiting'
-    # pending reads the record worktree state (the committed change)
-    assert p.run('pending', '--json').code == 1
-    assert p.head() != before, 'pending pushes first (R7.6)'
-    assert p.ok('push').out.strip() == 'nothing to push'
-    assert p.task('AR1')['status'] == 'Waiting' and p.task('SI1')['status'] == 'Running'
-    assert p.ok('push').out.strip() == 'nothing to push'
-    assert p.ok('commit').out.strip() == 'nothing to commit or push'
-
-
-@case
-def test_commit_dirty_with_message(env):
-    p = env.baseline()
-    p.ok('path')
-    reg = json.loads((p.rdir / 'registry.json').read_text(encoding='utf-8'))
-    next(t for t in reg['tasks'] if t['id'] == 'AR1')['detail'] = 'Hand detail.'
-    (p.rdir / 'registry.json').write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
-    r = p.run('commit', '--retry')
-    assert r.code == 1 and 'uncommitted' in r.err
-    # a registry that is invalid is not committed (R7.1)
-    next(t for t in reg['tasks'] if t['id'] == 'AR1')['status'] = 'Merged'
-    (p.rdir / 'registry.json').write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
-    r = p.run('commit', '--message', 'docs/artifacts: manual')
-    assert r.code == 1 and has_line(r.err, 'R4.7'), r.err
-    next(t for t in reg['tasks'] if t['id'] == 'AR1')['status'] = 'Running'
-    (p.rdir / 'registry.json').write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
-    r = p.ok('commit', '--message', 'docs/artifacts: manual')
-    assert 'not pushed' in r.out and git(p.wt, 'rev-parse', 'HEAD').stdout.strip() != p.head()
-    p.ok('push')
-    assert git(p.bare, 'log', '-1', '--format=%s', 'main').stdout.strip() == 'docs/artifacts: manual'
-    assert p.task('AR1')['detail'] == 'Hand detail.'
-
-
-@case
-def test_protection_refusal_and_retry(env):
-    p = env.baseline()
-    hook = p.bare / 'hooks' / 'pre-receive'
-    hook.write_bytes(b'#!/bin/sh\necho "protected branch: pull request required" >&2\nexit 1\n')
-    os.chmod(str(hook), 0o755)
-    before = p.head()
-    r = p.run('set-task-status', 'AR1', 'Waiting')
-    assert r.code == 4, r.all
-    assert 'record push refused by main protection' in r.err and '(exit 4)' in r.err, r.err
-    assert p.head() == before
-    # the change stays committed in the record worktree
-    assert git(p.wt, 'log', '-1', '--format=%s').stdout.strip() == 'docs/artifacts: AR1 Waiting'
-    assert git(p.wt, 'rev-parse', 'HEAD').stdout.strip() != before
-    assert dirty(p) == []
-    # still refused, still kept
-    r = p.run('commit', '--retry')
-    assert r.code == 4
-    hook.unlink()
-    p.ok('commit', '--retry')
-    assert p.task('AR1')['status'] == 'Waiting'
-    # a later change after a refusal keeps the kept commit and pushes both
-    hook.write_bytes(b'#!/bin/sh\nexit 1\n')
-    os.chmod(str(hook), 0o755)
-    assert p.run('set-task-status', 'SI1', 'Waiting').code == 4
-    hook.unlink()
-    p.ok('set-task-status', 'AR2', 'Built')
-    assert p.task('SI1')['status'] == 'Waiting' and p.task('AR2')['status'] == 'Built'
-
-
-@case
-def test_writing_commands_do_not_push_by_default(env):
-    """R4.28: a writing command commits and leaves the push to the end of the turn."""
-    p = env.baseline()
-    before = p.head()
-    p.ok('set-task-status', 'AR1', 'Waiting', push=False)
-    assert p.head() == before, 'origin must not move'
-    p.ok('task-add', '--owner', 'site', '--item', 'x', '--detail', 'd', '--expected', '14 Oct', push=False)
-    p.ok('set-task-status', 'SI1', 'Running', '--json', push=False)
-    assert p.head() == before
-    assert git(p.wt, 'rev-list', '--count', 'origin/main..HEAD').stdout.strip() == '3'
-    # --push pushes everything at once, the earlier commits included
-    p.ok('set-task-status', 'AR2', 'Built', '--push', push=False)
-    assert git(p.bare, 'rev-list', '--count', '%s..main' % before).stdout.strip() == '4'
-    assert p.task('AR1')['status'] == 'Waiting' and p.task('AR2')['status'] == 'Built'
-    assert p.run('push').out.strip() == 'nothing to push'
-    # --no-push still wins over --push
-    p.ok('set-task-status', 'AR1', 'Running', '--push', '--no-push', push=False)
-    assert p.task('AR1')['status'] == 'Waiting'
-
-
-@case
-def test_push_command(env):
-    """R4.28: push sends every unpushed record commit; JSON says how many."""
-    p = env.baseline()
-    assert p.run('push').code == 0, 'no worktree yet is nothing to push'
-    p.ok('set-task-status', 'AR1', 'Waiting', push=False)
-    p.ok('set-task-status', 'SI1', 'Running', push=False)
-    res = p.ok('push', '--json').json()
-    assert res['pushed'] is True and res['commits'] == 2 and res['changed'] is True, res
-    assert p.task('AR1')['status'] == 'Waiting' and p.task('SI1')['status'] == 'Running'
-    assert p.ok('push', '--json').json()['pushed'] is False
-
-
-@case
-def test_push_refused_keeps_commits(env):
-    """R4.16 for push: exit 4, the commits stay, the next push after the protection lifts sends them."""
-    p = env.baseline()
-    hook = p.bare / 'hooks' / 'pre-receive'
-    p.ok('set-task-status', 'AR1', 'Waiting', push=False)
-    hook.write_bytes(b'#!/bin/sh\necho "protected branch: pull request required" >&2\nexit 1\n')
-    os.chmod(str(hook), 0o755)
-    r = p.run('push')
-    assert r.code == 4 and 'record push refused by main protection' in r.err, r.all
-    assert git(p.wt, 'rev-list', '--count', 'origin/main..HEAD').stdout.strip() == '1'
-    hook.unlink()
-    p.ok('push')
-    assert p.task('AR1')['status'] == 'Waiting'
-
-
-@case
-def test_unpushed_commits_survive_a_moved_main(env):
-    """R4.29: main moved while local record commits were unpushed; sync rebases them, never drops them."""
-    p = env.baseline()
-    other = p.clone_again('clone-b')
-    p.ok('set-task-status', 'AR1', 'Waiting', push=False)                    # unpushed
-    assert p.run('set-task-status', 'SI1', 'Running', cwd=other).code == 0   # main moves
-    # the next writing command syncs: the unpushed commit must survive on top of the new main
-    p.ok('set-task-status', 'AR2', 'Built', push=False)
-    log = [x for x in git(p.wt, 'log', '--format=%s', 'origin/main..HEAD').stdout.split('\n') if x]
-    assert log[0] == 'docs/artifacts: AR2 Built' and log[-1] == 'docs/artifacts: AR1 Waiting', log
-    assert set(log) <= {'docs/artifacts: AR2 Built', 'docs/artifacts: AR1 Waiting',
-                        'docs/artifacts: render after rebase'}, log
-    assert git(p.wt, 'merge-base', '--is-ancestor', 'origin/main', 'HEAD', check=False).returncode == 0
-    p.ok('push')
-    assert p.task('AR1')['status'] == 'Waiting' and p.task('SI1')['status'] == 'Running' \
-        and p.task('AR2')['status'] == 'Built'
-    assert p.run('check').code == 0
-
-
-@case
-def test_push_after_main_moved_rebases(env):
-    """R4.15 for push: a rejected push fetches, rebases the unpushed commits and pushes again."""
-    p = env.baseline()
-    other = p.clone_again('clone-b')
-    p.ok('set-task-status', 'AR1', 'Waiting', push=False)
-    assert p.run('set-task-status', 'SI1', 'Running', cwd=other).code == 0
-    r = p.ok('push')
-    assert 'pushed' in r.out
-    assert p.task('AR1')['status'] == 'Waiting' and p.task('SI1')['status'] == 'Running'
-    assert p.run('check').code == 0
-    assert git(p.wt, 'rev-list', '--count', 'origin/main..HEAD').stdout.strip() == '0'
-
-
-@case
-def test_conflicting_unpushed_commit_is_kept(env):
-    """R4.29: a rebase that conflicts is aborted, exit 2, and the unpushed commit is not lost."""
-    p = env.baseline()
-    other = p.clone_again('clone-b')
-    p.ok('set-task-status', 'AR1', 'Waiting', push=False)
-    assert p.run('set-task-status', 'AR1', 'Failed', cwd=other).code == 0
-    r = p.run('set-task-status', 'AR2', 'Built', push=False)
-    assert r.code == 2 and 'cannot rebase' in r.err, r.all
-    assert git(p.wt, 'rev-list', '--count', 'origin/main..HEAD').stdout.strip() == '1'
-    assert git(p.wt, 'status', '--porcelain').stdout.strip() == ''
-    assert git(p.wt, 'log', '-1', '--format=%s').stdout.strip() == 'docs/artifacts: AR1 Waiting'
-
-
-@case
-def test_pending_pushes_first(env):
-    """R7.6: pending pushes the unpushed record, then lists; a failed push is reported, not fatal."""
-    p = env.baseline()
-    before = p.head()
-    p.ok('set-task-status', 'AR1', 'Waiting', push=False)
-    assert p.head() == before
-    r = p.run('pending', '--json')
-    assert r.code == 1 and 'push_error' not in r.json(), r.all
-    assert p.head() != before and p.task('AR1')['status'] == 'Waiting', 'pending must have pushed'
-    # a refused push does not stop the listing
-    hook = p.bare / 'hooks' / 'pre-receive'
-    p.ok('set-task-status', 'AR2', 'Built', push=False)
-    hook.write_bytes(b'#!/bin/sh\necho "protected branch: pull request required" >&2\nexit 1\n')
-    os.chmod(str(hook), 0o755)
-    r = p.run('pending', '--json')
-    assert r.code == 1, r.all
-    res = r.json()
-    assert 'exit 4' in res['push_error'] and res['artifacts'], res
-    assert 'record push failed' in r.err
-    assert git(p.wt, 'rev-list', '--count', 'origin/main..HEAD').stdout.strip() == '1', 'the commit stays'
-
-
-@case
-def test_push_race_is_retried(env):
-    p = env.baseline()
-    ip = InProc(env)
-    other = p.clone_again('clone-b')
-    p.ok('path', cwd=other)
-    calls = []
-
-    def hook(ctx, attempt):
-        calls.append(attempt)
-        if attempt == 1:       # another clone lands a different task between our fetch and our push
-            r = p.run('set-task-status', 'SI1', 'Running', cwd=other)
-            assert r.code == 0, r.all
-
-    ip.mod._TEST_BEFORE_PUSH = hook
-    r = ip.call(p.clone, 'set-task-status', 'AR1', 'Waiting')
-    assert r.code == 0, r.all
-    assert calls == [1, 2], calls
-    assert p.task('AR1')['status'] == 'Waiting' and p.task('SI1')['status'] == 'Running', 'both must land'
-    assert p.run('check').code == 0
-    # task-add races renumber on re-apply: two clones adding to one feature get different IDs
-    calls.clear()
-
-    def hook2(ctx, attempt):
-        calls.append(attempt)
-        if attempt == 1:
-            r = p.run('task-add', '--owner', 'site', '--item', 'B', '--detail', 'd', '--expected', '14 Oct', cwd=other)
-            assert r.out.strip() == 'SI2', r.all
-
-    ip.mod._TEST_BEFORE_PUSH = hook2
-    r = ip.call(p.clone, 'task-add', '--owner', 'site', '--item', 'A', '--detail', 'd', '--expected', '14 Oct')
-    assert r.code == 0 and r.out.strip() == 'SI3', r.all
-    assert {t['item'] for t in p.reg()['tasks'] if t['id'] in ('SI2', 'SI3')} == {'A', 'B'}
-
-
-@case
-def test_push_race_exhausted_exit_3(env):
-    p = env.baseline()
-    ip = InProc(env)
-    other = p.clone_again('clone-b')
-    n = []
-
-    def hook(ctx, attempt):
-        n.append(attempt)
-        r = p.run('set-task-status', 'SI1', ['Running', 'Waiting', 'Running', 'Waiting', 'Running'][attempt], cwd=other)
-        assert r.code == 0, r.all
-
-    ip.mod._TEST_BEFORE_PUSH = hook
-    r = ip.call(p.clone, 'set-task-status', 'AR1', 'Waiting')
-    assert r.code == 3, r.all
-    assert n == [1, 2, 3, 4], 'one try and three retries: %s' % n
-    assert '(exit 3)' in r.err
-    assert p.task('AR1')['status'] == 'Running', 'the lost change is not on origin'
-    assert dirty(p) == [] and git(p.wt, 'status', '--porcelain', '--branch').stdout.count('ahead') == 0
-
-
-@case
-def test_edit_content_survives_lost_race(env):
-    p = env.baseline()
-    ip = InProc(env)
-    other = p.clone_again('clone-b')
-    d = export(p, 'artifacts', 'race')
-    (d / '02-extra.html').write_text('<!-- title: Extra -->\n<p>kept</p>\n', encoding='utf-8')
-
-    def hook(ctx, attempt):
-        if attempt == 1:
-            assert p.run('set-task-status', 'SI1', 'Running', cwd=other).code == 0
-
-    ip.mod._TEST_BEFORE_PUSH = hook
-    r = ip.call(p.clone, 'edit-content', 'artifacts', '--from', d)
-    assert r.code == 0, r.all
-    assert p.show('docs/artifacts/content/artifacts/02-extra.html') is not None
-    assert p.task('SI1')['status'] == 'Running'
-
-
-@case
-def test_fetch_failure_is_exit_2(env):
-    p = env.baseline()
-    git(p.clone, 'remote', 'set-url', 'origin', str(p.root / 'does-not-exist.git'))
-    r = p.run('set-task-status', 'AR1', 'Waiting')
-    assert r.code == 2 and 'fetch' in r.err, r.all
-    # read-only commands fall back to the last fetched state
-    r = p.run('pending', '--json')
-    assert r.code == 1 and 'artifacts' in r.json(), r.all
 
 
 @case
@@ -2213,8 +1733,6 @@ def test_old_done_records_migrate_to_built(env):
     man = json.loads(mp.read_text(encoding='utf-8'))
     man['merged_status'] = 'Done'
     mp.write_text(json.dumps(man, indent=2) + '\n', encoding='utf-8')
-    git(other, 'commit', '-q', '-a', '-m', 'age the record to 1.0.0 statuses')
-    git(other, 'push', '-q', 'origin', 'main')
     out = p.run('check', '--json').json()
     assert any('AR2' in n and 'Done' in n for n in out['notes']), out
     assert not any('retired status' in f['message'] for f in out['findings']), out    # a note, not a finding
@@ -2341,8 +1859,6 @@ def hand_break_registry(p, tag='hand'):
     """Push to main a registry that has a finding (R6.6), as a hand edit or an older version could leave."""
     other = p.clone_again(tag)
     edit_json(other / 'docs' / 'artifacts' / 'registry.json', lambda r: task(r, 'AR1').update(expected='today'))
-    git(other, 'commit', '-qam', 'break it')
-    git(other, 'push', '-q', 'origin', 'main')
 
 
 def hand_decisions_sections(p, keys, tag='hand-d'):
@@ -2352,9 +1868,6 @@ def hand_decisions_sections(p, keys, tag='hand-d'):
         d = other / 'docs' / 'artifacts' / 'content' / key
         n = len(list(d.glob('[0-9][0-9]-*.html'))) + 1
         (d / ('%02d-decisions.html' % n)).write_text('<!-- title: Decisions -->\n<p>By hand.</p>\n', encoding='utf-8')
-    git(other, 'add', '-A')
-    git(other, 'commit', '-q', '-m', 'hand-written Decisions sections')
-    git(other, 'push', '-q', 'origin', 'main')
 
 
 @case
@@ -2366,7 +1879,7 @@ def test_earlier_findings_do_not_block_a_change(env):
     r = p.run('check')
     assert r.code == 1 and has_line(r.out, 'R6.6'), r.all
     r = p.ok('set-task-status', 'SI1', 'Waiting')
-    assert p.head() != before and p.task('SI1')['status'] == 'Waiting'
+    assert p.task('SI1')['status'] == 'Waiting' and dirty(p)
     assert re.search(r'note: \d earlier findings? remains?; run check', r.out), r.all
     r = p.run('check')
     assert r.code == 1 and has_line(r.out, 'R6.6'), r.all
@@ -2374,7 +1887,7 @@ def test_earlier_findings_do_not_block_a_change(env):
     r = p.ok('set-task-status', 'AR1', 'Waiting', '--expected', '14 Oct')
     assert 'earlier finding' not in r.all
     assert p.run('check').code == 0
-    assert dirty(p) == []
+    assert dirty_outside(p) == []
 
 
 @case
@@ -2404,8 +1917,6 @@ def test_validation_before_blocks_writes(env):
     p = env.baseline()
     other = p.clone_again('hand')
     (other / 'docs' / 'artifacts' / 'registry.json').write_text('{"spec": "x", "tasks": 5}', encoding='utf-8')
-    git(other, 'commit', '-qam', 'break it')
-    git(other, 'push', '-q', 'origin', 'main')
     before = p.head()
     for args in (('set-task-status', 'SI1', 'Waiting'),
                  ('task-add', '--owner', 'project', '--prefix', 'DS', '--item', 'X', '--detail', 'x', '--expected', '12 Oct')):
@@ -2446,9 +1957,10 @@ def test_a_record_with_two_stuck_features_repairs_in_two_edits(env):
     assert 'Waiting' in p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
     # a task of a stuck feature would leave that feature's file out of date: refused, nothing written
     before = p.head()
+    dirty_before, files_before = dirty(p), p.files()
     r = p.run('set-task-status', 'AR1', 'Waiting')
     assert r.code == 1 and 'content/artifacts is invalid; fix it with edit-content' in r.err, r.all
-    assert has_line(r.err, 'R5.19', 'content/artifacts') and p.head() == before and dirty(p) == []
+    assert has_line(r.err, 'R5.19', 'content/artifacts') and p.head() == before and dirty(p) == dirty_before
     # edit one: allowed, and the other finding stays
     d = export(p, 'artifacts', 'stuck1')
     (d / '02-decisions.html').unlink()
@@ -2467,7 +1979,7 @@ def test_a_record_with_two_stuck_features_repairs_in_two_edits(env):
     assert 'earlier finding' not in r.all
     r = p.run('check')
     assert r.code == 0 and 'clean' in r.out, r.all
-    assert dirty(p) == []
+    assert dirty_outside(p) == []
 
 
 @case
@@ -2506,8 +2018,6 @@ def test_a_record_that_is_migrating_and_stuck_repairs_one_edit_at_a_time(env):
     other = p.clone_again('old-done')
     rp = other / 'docs' / 'artifacts' / 'registry.json'
     edit_json(rp, lambda r: task(r, 'AR2').update(status='Done', rides='DS1'))
-    git(other, 'commit', '-q', '-a', '-m', 'age the record to 1.0.0 statuses')
-    git(other, 'push', '-q', 'origin', 'main')
     d = export(p, 'artifacts', 'mig1')
     (d / '02-decisions.html').unlink()
     r = p.ok('edit-content', 'artifacts', '--from', d)
@@ -2529,8 +2039,6 @@ def test_render_with_earlier_findings(env):
     hand_decisions_sections(p, ['site'])
     other = p.clone_again('hand-reg')
     edit_json(other / 'docs' / 'artifacts' / 'registry.json', lambda r: task(r, 'AR1').update(detail='Edited by hand.'))
-    git(other, 'commit', '-qam', 'hand edit')
-    git(other, 'push', '-q', 'origin', 'main')
     r = p.run('check')
     assert r.code == 1 and has_line(r.out, 'INV-3', 'feature-artifacts.html') and has_line(r.out, 'R5.19', 'content/site'), r.all
     site_html = p.show('docs/artifacts/feature-the-site.html')
@@ -2544,10 +2052,10 @@ def test_render_with_earlier_findings(env):
     before = p.head()
     r = p.ok('render', '--all', '--json', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-11T08:00:00+00:00'})
     assert sorted(r.json()['rendered']) == ['artifacts', 'full-progress'], r.out
-    assert p.show('docs/artifacts/feature-the-site.html') == site_html and p.head() != before
+    assert p.show('docs/artifacts/feature-the-site.html') == site_html and p.head() == before
     r = p.ok('render')
     assert 'nothing to do' in r.out and 'note: 1 earlier finding remains; run check' in r.out, r.all
-    assert dirty(p) == []
+    assert dirty_outside(p) == []
 
 
 @case
@@ -2597,9 +2105,8 @@ def test_design_set_and_default(env):
     assert 'design.css' in r.out
     assert p.man()['design'] == 'design.css'
     assert p.show('docs/artifacts/design.css') == f.read_text(encoding='utf-8')
-    assert git(p.bare, 'log', '-1', '--format=%s', 'main').stdout.strip() == 'docs/artifacts: design design.css'
-    files = git(p.bare, 'show', '--name-only', '--format=', 'main').stdout.split()
-    assert all(x.startswith('docs/artifacts/') for x in files)
+    assert any(x.endswith('docs/artifacts/design.css') for x in dirty(p)), dirty(p)     # a file, not a commit
+    assert dirty_outside(p) == []
     for name in ('feature-artifacts.html', 'feature-the-site.html', p.man()['full_progress_artifact']['file']):
         assert '#123456' in p.show('docs/artifacts/' + name), name
     assert p.run('check').code == 0
@@ -2757,7 +2264,7 @@ def test_decisions_edit_content_renders_and_checks(env):
     assert '1 decision open' in p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
     r = p.run('check')
     assert r.code == 0 and 'record is clean' in r.out and 'warning' not in r.out, r.all
-    assert dirty(p) == [], dirty(p)
+    assert dirty_outside(p) == [], dirty(p)
     # an export carries decisions.json back out, and writing it back changes nothing
     d2 = export(p, 'artifacts', 'dec1b')
     assert (d2 / 'decisions.json').is_file()
@@ -2831,9 +2338,7 @@ def test_decisions_image_assets_round_trip_byte_for_byte(env):
     png = b'\x89PNG\r\n\x1a\n' + b'\r\n' * 5 + bytes(range(256))
     dec = [d_dec(1, options=[d_opt('A', image='assets/a.png'), d_opt('B')], chosen='B', owner_words=None)]
     p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, dec, 'img1', extra={'assets/a.png': png}))
-    r = git(p.bare, 'show', 'main:docs/artifacts/content/artifacts/assets/a.png', check=False)
-    shown = subprocess.run(['git', 'show', 'main:docs/artifacts/content/artifacts/assets/a.png'], cwd=str(p.bare),
-                           capture_output=True).stdout
+    shown = (p.rdir / 'content' / 'artifacts' / 'assets' / 'a.png').read_bytes()
     assert shown == png, 'binary assets must not be line-ending converted'
     html = p.show('docs/artifacts/feature-artifacts.html')
     assert 'src="data:image/png;base64,' in html and 'http' not in html[html.index('decision-image'):][:60]
@@ -2926,13 +2431,9 @@ def test_an_invalid_decisions_file_is_left_alone_until_edit_content_fixes_it(env
     p.ok('edit-content', 'artifacts', '--from', edit_decisions(p, [d_dec(1)], 'wc1'))
     other = p.clone_again('other')
     path = other / 'docs' / 'artifacts' / 'content' / 'artifacts' / 'decisions.json'
-    git(other, 'config', 'core.sparseCheckout', 'false', check=False)
     data = json.loads(path.read_text(encoding='utf-8'))
     data['decisions'][0]['options'] = data['decisions'][0]['options'][:1]       # a single option: invalid
     path.write_text(json.dumps(data), encoding='utf-8')
-    git(other, 'add', '-A')
-    git(other, 'commit', '-q', '-m', 'break the decisions')
-    git(other, 'push', '-q', 'origin', 'main')
     html = p.show('docs/artifacts/feature-artifacts.html')
     for args in (('set-task-status', 'SI1', 'Waiting'), ('task-add', '--owner', 'project', '--prefix', 'DS', '--item', 'X',
                                                           '--detail', 'x', '--expected', '12 Oct'),
@@ -2966,8 +2467,7 @@ def push_manifest(p, name, fn, message='record change'):
     """Change the pushed manifest as another clone (an older plugin, or history) would."""
     other = p.clone_again(name)
     edit_json(other / 'docs' / 'artifacts' / 'manifest.json', fn)
-    git(other, 'commit', '-qam', message)
-    git(other, 'push', '-q', 'origin', 'main')
+    p.settle()
 
 
 def with_old_urls(m):
@@ -3058,6 +2558,7 @@ def test_mark_deleted_removes_the_page_for_good(env):
     p.ok('set-task-status', 'SI1', 'Running')
     assert retired_urls(p) == [URL_A, URL_B]
     before = p.head()
+    files = p.files()
     # refusals change nothing
     for args, word in ((('mark-deleted', 'site', '--url', URL_A), 'belongs to'),
                        (('mark-deleted', '--url', 'https://claude.ai/artifact/never'), 'not in the retired list'),
@@ -3065,7 +2566,7 @@ def test_mark_deleted_removes_the_page_for_good(env):
                        (('mark-deleted', 'site', '--url', 'nope'), 'http')):
         r = p.run(*args)
         assert r.code == 1 and word in r.err, (args, r.all)
-        assert p.head() == before and dirty(p) == []
+        assert p.head() == before and p.files() == files
     r = p.ok('mark-deleted', 'artifacts', '--url', URL_A)
     assert 'recorded' in r.out
     m = p.man()
@@ -3165,29 +2666,21 @@ def push_file(p, name, rel, text):
     f = other / rel
     f.parent.mkdir(parents=True, exist_ok=True)
     f.write_bytes(text.encode('utf-8'))
-    git(other, 'add', '-A')
-    git(other, 'commit', '-qm', 'the rule copy that init 1.0.0 made')
-    git(other, 'push', '-q', 'origin', 'main')
+    p.settle()
 
 
 @case
 def test_stale_rule_copy_is_removed_with_the_migration_commit(env):
-    """R10.6: a copy equal to a shipped rule text (any line endings) is deleted in the record commit, and says so."""
+    """R10.6: a copy equal to a shipped rule text (any line endings) is deleted from the working tree, uncommitted, and says so."""
     p = env.baseline()
     push_file(p, 's1', STALE, RULE_1_0_0.replace('\n', '\r\n'))
     assert p.show(STALE) is not None
-    local = p.clone / STALE                                       # an untracked copy in the session's checkout
-    local.parent.mkdir(parents=True, exist_ok=True)
-    local.write_text(RULE_1_0_0, encoding='utf-8')
-    # a record worktree made by an older script: its sparse checkout names docs/artifacts only
-    p.ok('path')
-    git(p.wt, 'sparse-checkout', 'set', '--no-cone', '/docs/artifacts/')
+    local = p.clone / STALE
+    head = p.head()
     r = p.ok('set-task-status', 'AR1', 'Waiting')
     assert 'removed .claude/rules/project-artifacts.md' in r.out, r.out
-    assert p.show(STALE) is None
-    msg = git(p.bare, 'log', '-1', '--format=%B', 'main').stdout
-    assert 'removed .claude/rules/project-artifacts.md' in msg and 'AR1' in msg, msg
-    assert not local.exists(), 'the untracked copy in the checkout is removed too'
+    assert p.show(STALE) is None and not local.exists()
+    assert p.head() == head and ' D %s' % STALE in git(p.clone, 'status', '--porcelain').stdout, 'deleted, not committed'
     assert p.show('docs/artifacts/manifest.json') is not None
     # the current plugin rule is also a copy that can go
     push_file(p, 's2', STALE, (env.plugin / 'rules' / 'project-artifacts.md').read_text(encoding='utf-8'))
@@ -3209,6 +2702,220 @@ def test_edited_rule_copy_is_kept(env):
     assert p.show(STALE) == mine and local.read_text(encoding='utf-8') == mine
     c = p.run('check')
     assert c.code == 0 and 'differs' in c.out, c.all
+
+
+# --------------------------------------------------------------------------
+# the plugin writes files and never git state (AR50, R4.13 - R4.17, R4.24, R4.28)
+# --------------------------------------------------------------------------
+
+NO_COMMIT = 'the plugin no longer commits or pushes (ARTIFACTSPEC 1.8.0); commit docs/artifacts/ when you choose'
+
+
+@case
+def test_writing_commands_change_files_and_leave_git_alone(env):
+    """Every writing command changes files under docs/artifacts/ and leaves HEAD, the index, the refs, the stash
+    and the remote exactly as they were; nothing is staged and nothing but the record (and .gitignore) changes."""
+    p = env.baseline()
+    d = export(p, 'artifacts', 'w1')
+    (d / '02-more.html').write_text('<!-- title: More -->\n<p>More.</p>\n', encoding='utf-8')
+    css = TMP / ('w-design-%d.css' % env.n)
+    env.n += 1
+    css.write_text(valid_design(env), encoding='utf-8')
+    until = '2026-10-13T00:00:00+00:00'
+    steps = [
+        ('task-add', '--owner', 'artifacts', '--item', 'Hooks', '--detail', 'Three hooks.', '--expected', '14 Oct'),
+        ('set-task-status', 'AR3', 'Waiting'),
+        ('feature-new', '--key', 'extra', '--title', 'Extra', '--prefix', 'EX', '--apps', 'x'),
+        ('edit-content', 'artifacts', '--from', d),
+        ('design', 'set', css),
+        ('render', '--all'),
+        ('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/w'),
+        ('mark-deferred', 'full-progress', '--until', until),
+    ]
+    state = p.git_state()
+    for argv in steps:
+        files = p.files()
+        r = p.ok(*argv, env={'CLAUDE_ARTIFACTS_NOW': '2026-10-11T08:00:00+00:00'} if argv[0] == 'render' else None)
+        assert p.files() != files, ('the record files changed', argv)
+        assert p.git_state() == state, ('git state moved', argv, r.all)
+        assert 'push' not in r.all.lower() or argv[0] == 'mark-published', r.all
+        assert dirty_outside(p) == [], (argv, dirty_outside(p))
+        assert git(p.clone, 'diff', '--cached', '--name-only').stdout.strip() == '', 'nothing is staged'
+    changed = [x[3:] for x in dirty(p)]
+    assert changed and all(x.startswith('docs/artifacts/') for x in changed), changed
+    # the lock is a file outside docs/artifacts/, and it is gone when the command ends
+    assert not [x for x in p.rdir.rglob('*') if 'lock' in x.name], 'no lock under docs/artifacts/'
+    assert not (p.clone / '.claude' / 'artifacts-record.lock').exists()
+    assert p.run('check').code == 0
+    # --push and --no-push are accepted and do nothing (--push says so on stderr)
+    r = p.ok('set-task-status', 'AR3', 'Running', '--push')
+    assert NO_COMMIT in r.err and p.git_state() == state, r.all
+    r = p.ok('set-task-status', 'AR3', 'Waiting', '--no-push')
+    assert r.err == '' and p.git_state() == state, r.all
+
+
+@case
+def test_a_refused_change_leaves_every_file_as_it_was(env):
+    p = env.baseline()
+    files, state = p.files(), p.git_state()
+    r = p.run('set-task-status', 'AR1', 'Waiting', '--expected', 'soon')
+    assert r.code == 1 and 'nothing written' in r.err, r.all
+    assert p.files() == files and p.git_state() == state and dirty(p) == []
+
+
+@case
+def test_commit_and_push_are_removed(env):
+    """R4.28: both commands exit 1 with the one message; exit codes 3 and 4 are no longer used."""
+    p = env.baseline()
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    state, files = p.git_state(), p.files()
+    for argv in (('commit',), ('commit', '--retry'), ('commit', '--message', 'x', '--push'), ('push',), ('push', '--json')):
+        r = p.run(*argv)
+        assert r.code == 1 and NO_COMMIT in r.all, (argv, r.code, r.all)
+        assert p.git_state() == state and p.files() == files, argv
+
+
+@case
+def test_pending_does_not_push(env):
+    p = env.baseline()
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    state = p.git_state()
+    r = p.run('pending')
+    assert r.code == 1 and r.out.startswith('publish full-progress (') and 'never published' in r.out, r.all
+    assert 'push' not in r.all.lower()
+    j = p.run('pending', '--json').json()
+    assert sorted(j) == ['artifacts', 'queue', 'retired'] and 'push_error' not in j
+    assert p.git_state() == state
+
+
+@case
+def test_worktree_prints_the_record_folder_and_ignores_the_old_setting(env):
+    """R4.24: the record worktree is retired; the setting is ignored and check says so once, as a note."""
+    p = env.baseline()
+    where = TMP / ('elsewhere-%d' % env.n)
+    env.n += 1
+    assert same_path_str(p.ok('worktree').out.strip(), p.rdir)
+    assert same_path_str(p.ok('worktree', env={'LUISMC_ARTIFACTS_WORKTREE': str(where)}).out.strip(), p.rdir)
+    assert same_path_str(p.ok('worktree', env={'LUISMC_ARTIFACTS_WORKTREE': 'relative/path'}).out.strip(), p.rdir)
+    assert same_path_str(p.ok('worktree', '--json').json()['worktree'], p.rdir)
+    assert not where.exists()
+    (p.clone / '.claude').mkdir(exist_ok=True)
+    (p.clone / '.claude' / 'artifacts-local.json').write_text(json.dumps({'record_worktree': str(where)}), encoding='utf-8')
+    r = p.run('set-task-status', 'AR1', 'Waiting')
+    assert r.code == 0 and not where.exists() and p.task('AR1')['status'] == 'Waiting', r.all
+    c = p.run('check', '--json')
+    assert c.code == 0 and c.json()['findings'] == [], c.all
+    assert len([n for n in c.json()['notes'] if 'ignored' in n and 'record_worktree' in n]) == 1, c.json()
+    clean = env.baseline()
+    assert not [n for n in clean.run('check', '--json').json()['notes'] if 'ignored' in n]
+
+
+def same_path_str(a, b):
+    return os.path.normcase(os.path.realpath(str(a))) == os.path.normcase(os.path.realpath(str(b)))
+
+
+def old_record(p, mutate=None):
+    """An old record worktree at the default path holding a copy of the record (as 1.7.x left it)."""
+    dest = p.old_wt / 'docs' / 'artifacts'
+    shutil.copytree(str(p.rdir), str(dest))
+    if mutate:
+        mutate(dest)
+    return p.old_wt
+
+
+def newer_task(dest):
+    edit_json(dest / 'registry.json', lambda r: task(r, 'AR1').update(
+        status='Waiting', changed='2026-10-10T11:50:00+00:00'))
+    edit_json(dest / 'registry.json', lambda r: r.update(updated='2026-10-10T11:50:00+00:00'))
+    (dest / 'only-in-old.txt').write_text('old\n', encoding='utf-8')
+
+
+@case
+def test_migrate_copies_the_old_record_once_and_only_when_newer(env):
+    """AR50 rule 4: copy when the old worktree's registry is newer, say so once, never remove it, change no git state."""
+    p = env.baseline()
+    state = p.git_state()
+    # no old worktree: nothing, exit 0
+    r = p.run('migrate')
+    assert r.code == 0 and r.out == '' and r.err == '', r.all
+    # an old copy that is not newer: nothing
+    old = old_record(p)
+    files = p.files()
+    r = p.run('migrate')
+    assert r.code == 0 and r.out == '' and p.files() == files, r.all
+    # a newer one: copied, one line, the worktree stays
+    newer_task(old / 'docs' / 'artifacts')
+    r = p.run('migrate')
+    assert r.code == 0 and len(r.out.strip().splitlines()) == 1, r.all
+    assert r.out.startswith('luismc-artifacts: the record now lives in docs/artifacts/ and is never committed or pushed '
+                            'by the plugin; copied it from '), r.out
+    assert 'git worktree remove' in r.out and str(old).replace('\\', '/') .lower() in r.out.replace('\\', '/').lower()
+    assert p.task('AR1')['status'] == 'Waiting' and (p.rdir / 'only-in-old.txt').is_file()
+    assert old.is_dir() and (old / 'docs' / 'artifacts' / 'registry.json').is_file(), 'the plugin never removes it'
+    assert p.git_state() == state
+    # idempotent: the same copy is not newer any more
+    r = p.run('migrate')
+    assert r.code == 0 and r.out == '', r.all
+    # the working tree moves on: an older old copy never overwrites it
+    p.ok('set-task-status', 'AR1', 'Running', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-10T12:30:00+00:00'})
+    r = p.run('migrate')
+    assert r.code == 0 and r.out == '' and p.task('AR1')['status'] == 'Running', r.all
+
+
+@case
+def test_migrate_runs_before_a_writing_command(env):
+    p = env.baseline()
+    old_record(p, lambda dest: newer_task(dest))
+    r = p.ok('task-add', '--owner', 'artifacts', '--item', 'Next', '--detail', 'd', '--expected', '14 Oct',
+             env={'CLAUDE_ARTIFACTS_NOW': '2026-10-10T12:30:00+00:00'})
+    assert 'copied it from' in r.err and p.task('AR1')['status'] == 'Waiting' and (p.rdir / 'only-in-old.txt').is_file(), r.all
+    r = p.ok('set-task-status', 'AR1', 'Running', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-10T12:40:00+00:00'})
+    assert 'copied it from' not in r.all, r.all
+
+
+@case
+def test_migrate_brings_a_record_into_a_tree_that_has_none(env):
+    p = env.project()
+    q = env.baseline()
+    old_dest = p.old_wt / 'docs' / 'artifacts'
+    shutil.copytree(str(q.rdir), str(old_dest))
+    p.run('pending')
+    assert p.rdir.joinpath('manifest.json').is_file() and p.rdir.joinpath('registry.json').is_file()
+
+
+@case
+def test_only_read_only_git_is_run(env):
+    """Rule 1: every git call the scripts make is one of the allowed read-only subcommands."""
+    p = env.baseline()
+    old_record(p, lambda dest: newer_task(dest))
+    ip = InProc(env)
+    allowed = {'rev-parse', 'symbolic-ref', 'status', 'diff', 'log', 'show', 'ls-files', 'config', 'worktree'}
+    seen = []
+    real = subprocess.run
+
+    def spy(cmd, *a, **kw):
+        if isinstance(cmd, (list, tuple)) and cmd and str(cmd[0]) == 'git':
+            args, i = list(cmd[1:]), 0
+            while i < len(args) and args[i] == '-c':
+                i += 2
+            seen.append(args[i:])
+        return real(cmd, *a, **kw)
+
+    d = export(p, 'artifacts', 'g1')
+    subprocess.run = spy
+    try:
+        for argv in (('init', '--project', 'X'), ('migrate',), ('task-add', '--owner', 'artifacts', '--item', 'G', '--detail', 'd',
+                                                                     '--expected', '14 Oct'),
+                     ('set-task-status', 'AR1', 'Waiting'), ('edit-content', 'artifacts', '--from', str(d)),
+                     ('render', '--all'), ('pending', '--json'), ('check',), ('path',), ('worktree',), ('queue', 'list'),
+                     ('commit',), ('push',)):
+            ip.call(p.clone, *argv)
+    finally:
+        subprocess.run = real
+    assert seen, 'the scripts ask git for the repository root at least'
+    bad = [a for a in seen if a[0] not in allowed or (a[0] == 'config' and '--get' not in a)
+           or (a[0] == 'worktree' and a[1:2] != ['list'])]
+    assert not bad, bad
 
 
 # --------------------------------------------------------------------------

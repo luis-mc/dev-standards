@@ -2232,7 +2232,7 @@ def write_publish_copy(ctx, rec, key, e):
         return None
     dest = ctx.root / PUBLISH_REL / e['file']
     write_text(dest, html)
-    if (git_out(ctx.root, 'status', '--porcelain', '--ignored', '--', str(dest)) or '').startswith('??'):
+    if (git_out(ctx.root, 'status', '--porcelain', '--ignored', '--untracked-files=all', '--', str(dest)) or '').startswith('??'):
         warn('.gitignore does not ignore %s/ (the publish copy); add that line' % PUBLISH_REL.replace(os.sep, '/'))
     return str(dest)
 
