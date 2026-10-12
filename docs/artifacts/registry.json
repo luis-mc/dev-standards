@@ -1291,31 +1291,31 @@
       "app": "",
       "status": "Running",
       "item": "AR47 train: join, PR CI, merge, cleanup",
-      "detail": "Contract 16f878d on DS59-integration; one agent on AR47-publish-limit (AR47 + AR48) since 01:08; then join, fold, ready PR",
-      "expected": "12 Oct ~01:49",
-      "changed": "2026-10-12T01:04+01:00",
-      "expected_basis": "one agent ~30 min incl. branch CI; #54: CI 3.5 min, merge 4",
+      "detail": "Joined AR47-publish-limit, folded to ARTIFACTSPEC and luismc-artifacts 1.7.0; ready PR #55, CI from 01:25",
+      "expected": "12 Oct ~01:33",
+      "changed": "2026-10-12T01:25+01:00",
+      "expected_basis": "#54: CI 3.5 min, merge+cleanup 4",
       "release": 5,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-10-12T01:08+01:00",
-          "end": "2026-10-12T01:38+01:00"
+          "start": "2026-10-12T01:04+01:00",
+          "end": "2026-10-12T01:24+01:00"
         },
         {
           "name": "join",
-          "start": "2026-10-12T01:38+01:00",
-          "end": "2026-10-12T01:41+01:00"
+          "start": "2026-10-12T01:24+01:00",
+          "end": "2026-10-12T01:25+01:00"
         },
         {
           "name": "ci",
-          "start": "2026-10-12T01:41+01:00",
-          "end": "2026-10-12T01:45+01:00"
+          "start": "2026-10-12T01:25+01:00",
+          "end": "2026-10-12T01:29+01:00"
         },
         {
           "name": "merge",
-          "start": "2026-10-12T01:45+01:00",
-          "end": "2026-10-12T01:49+01:00"
+          "start": "2026-10-12T01:29+01:00",
+          "end": "2026-10-12T01:33+01:00"
         }
       ],
       "risk": {
