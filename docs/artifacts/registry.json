@@ -459,12 +459,11 @@
       "id": "AR48",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "Tasks that ship nothing: --no-release with a reason",
-      "detail": "Contract 16f878d (R5.47a --no-release REASON); same agent and branch as AR47, both change project_artifacts.py",
-      "expected": "12 Oct ~01:40",
-      "changed": "2026-10-12T01:04+01:00",
-      "expected_basis": "with AR47",
+      "detail": "416785c/357204d: --no-release REASON; such a task may be Running without a release, never Built; 'ships nothing' line on its row. Branch CI green",
+      "expected": "12 Oct",
+      "changed": "2026-10-12T01:25+01:00",
       "rides": "DS59"
     },
     {
