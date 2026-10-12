@@ -2441,6 +2441,32 @@ def rows_show_the_release_they_rode(fx):
 
 @test
 @with_fixture
+def no_release_line_in_full_progress(fx):
+    """R5.47a: a task that ships nothing sits in Not in a release yet with a muted `ships nothing: <reason>` line;
+    check reports a missing or wrong line."""
+    registry = two_releases(fx)
+    for t in registry['tasks']:
+        if t['id'] == 'AR5':
+            t['status'], t['expected'] = 'Running', '10 Oct ~18:30'
+            t['no_release'] = 'a publish, nothing to ship'
+            t.pop('rides', None)
+    out = fx.render('full-progress', registry=registry)
+    row = out[out.index('<tr data-task="AR5">'):]
+    row = row[:row.index('</tr>')]
+    assert '<span class="no-release-line">ships nothing: a publish, nothing to ship</span>' in row, row
+    assert 'release-line' not in row.replace('no-release-line', '')
+    before = out[:out.index('<tr data-task="AR5">')]
+    assert before.rindex('data-group="') > 0 and 'data-group="now"' in before[before.rindex('<tr class="status-group'):]
+    assert 'Not in a release yet' in before
+    assert 'no-release-line' in fx.render('artifacts', registry=registry)
+    assert fx.check(out, 'full-progress', registry=registry) == []
+    expect(fx, sub1(out, '<span class="no-release-line">ships nothing: a publish, nothing to ship</span>', ''),
+           'full-progress', ['R5.47a'], registry=registry)
+    expect(fx, sub1(out, 'ships nothing: a publish', 'ships nothing: a study'), 'full-progress', ['R5.47a'], registry=registry)
+
+
+@test
+@with_fixture
 def check_finds_a_row_in_the_wrong_release_group(fx):
     """R5.46, R5.45: a rider outside its release group, a wrong heading, a missing release line or name are findings."""
     registry = two_releases(fx)
