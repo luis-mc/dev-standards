@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-12T21:57+01:00",
+  "updated": "2026-10-12T22:31+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -484,9 +484,9 @@
       "status": "Running",
       "item": "Plugin never pushes the record",
       "detail": "Owner: plugin never commits or pushes; writes docs/artifacts/ only, project commits. Two agents: script+spec (AR50-script), hooks+docs (AR50-hooks). ARTIFACTSPEC 1.8.0.",
-      "expected": "12 Oct ~22:25",
-      "changed": "2026-10-12T21:57+01:00",
-      "expected_basis": "one Sonnet agent, ~30 min",
+      "expected": "12 Oct ~22:45",
+      "changed": "2026-10-12T22:31+01:00",
+      "expected_basis": "hooks half done 22:10; script agent still on tests",
       "rides": "DS61"
     },
     {

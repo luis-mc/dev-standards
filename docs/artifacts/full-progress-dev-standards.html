@@ -687,7 +687,7 @@ tr.status-group.release-group td { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-12T21:57+01:00",
+ "updated": "2026-10-12T22:31+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1171,9 +1171,9 @@ tr.status-group.release-group td { color: var(--ink); }
    "status": "Running",
    "item": "Plugin never pushes the record",
    "detail": "Owner: plugin never commits or pushes; writes docs/artifacts/ only, project commits. Two agents: script+spec (AR50-script), hooks+docs (AR50-hooks). ARTIFACTSPEC 1.8.0.",
-   "expected": "12 Oct ~22:25",
-   "changed": "2026-10-12T21:57+01:00",
-   "expected_basis": "one Sonnet agent, ~30 min",
+   "expected": "12 Oct ~22:45",
+   "changed": "2026-10-12T22:31+01:00",
+   "expected_basis": "hooks half done 22:10; script agent still on tests",
    "rides": "DS61"
   },
   {
@@ -2271,15 +2271,15 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-12T21:58+01:00">12 Oct 21:58</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-12T22:31+01:00">12 Oct 22:31</time> (Lisbon)</p>
 <div class="at-a-glance">
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
-<li data-glance-task="AR50"><span class="task-id">AR50</span>Plugin never pushes the record <span class="glance-expected">12 Oct ~22:25</span><span class="glance-basis">one Sonnet agent, ~30 min</span></li>
 <li data-glance-task="DS61"><span class="task-id">DS61</span><span class="release-name">RELEASE-7</span>AR50 train: never-push fix, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~22:35</span><span class="glance-basis">agent ~30 min, CI ~5 min, merge ~3 min</span></li>
+<li data-glance-task="AR50"><span class="task-id">AR50</span>Plugin never pushes the record <span class="glance-expected">12 Oct ~22:45</span><span class="glance-basis">hooks half done 22:10; script agent still on tests</span></li>
 </ul>
 </div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
@@ -2312,14 +2312,14 @@ tr.status-group.release-group td { color: var(--ink); }
 <text class="rt-risk-label" x="644.3" y="67">+1 fix round → worst ~22:45</text>
 <polygon class="rt-expected" points="575.6,50 583.6,63 575.6,76 567.6,63"/>
 <text class="rt-live-label" x="575.6" y="92">live ~22:35</text>
-<line class="rt-now" x1="361.8" y1="36" x2="361.8" y2="148"/><text class="rt-now-label" x="361.8" y="161">now 21:58</text>
+<line class="rt-now" x1="552.4" y1="36" x2="552.4" y2="148"/><text class="rt-now-label" x="552.4" y="161">now 22:31</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group release-group" data-group="release-7"><td colspan="5"><strong>RELEASE-7 · live ~22:35 · worst ~22:45</strong></td></tr>
 <tr data-task="DS61"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS61</span><span class="release-name">RELEASE-7</span>AR50 train: never-push fix, PR CI, merge, cleanup</td><td></td><td>Urgent: plugin pushes record commits to main in every project, triggering Vercel deploys. One agent, PR CI, merge on green.</td><td>12 Oct ~22:35<span class="expected-basis">agent ~30 min, CI ~5 min, merge ~3 min</span></td></tr>
-<tr data-task="AR50"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR50</span>Plugin never pushes the record</a></td><td><code>luismc-artifacts</code></td><td>Owner: plugin never commits or pushes; writes docs/artifacts/ only, project commits. Two agents: script+spec (AR50-script), hooks+docs (AR50-hooks). ARTIFACTSPEC 1.8.0.</td><td>12 Oct ~22:25<span class="expected-basis">one Sonnet agent, ~30 min</span></td></tr>
+<tr data-task="AR50"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR50</span>Plugin never pushes the record</a></td><td><code>luismc-artifacts</code></td><td>Owner: plugin never commits or pushes; writes docs/artifacts/ only, project commits. Two agents: script+spec (AR50-script), hooks+docs (AR50-hooks). ARTIFACTSPEC 1.8.0.</td><td>12 Oct ~22:45<span class="expected-basis">hooks half done 22:10; script agent still on tests</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR49"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR49</span>Version labels say ARTIFACTSPEC 1.7.0</a><span class="release-line"><span class="release-name">RELEASE-6</span></span></td><td><code>luismc-artifacts</code></td><td>Pushed to main as 0b9c8ef: luismc-artifacts 1.7.1; no CI (owner&#x27;s call)</td><td>12 Oct</td></tr>
 <tr data-task="DS60"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS60</span><span class="release-name">RELEASE-6</span>luismc-artifacts 1.7.1 straight to main, no CI (owner&#x27;s call)</td><td></td><td>0b9c8ef pushed straight to main, no CI (owner&#x27;s call); change note folded on a local DS60-integration branch, deleted after</td><td>12 Oct</td></tr>
@@ -2467,7 +2467,7 @@ tr.status-group.release-group td { color: var(--ink); }
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29863978"><time datetime="2026-10-12T21:58+01:00">12 Oct 21:58</time></td><td>AR2 to AR50</td><td data-col="state"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
+<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29864011"><time datetime="2026-10-12T22:31+01:00">12 Oct 22:31</time></td><td>AR2 to AR50</td><td data-col="state"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29862750"><time datetime="2026-10-12T01:30+01:00">12 Oct 01:30</time></td><td>DL1 to DL13</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29862750"><time datetime="2026-10-12T01:30+01:00">12 Oct 01:30</time></td><td>MP1 to MP7, DS2 to DS5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
 <tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862750"><time datetime="2026-10-12T01:30+01:00">12 Oct 01:30</time></td><td>TC1 to TC11</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
