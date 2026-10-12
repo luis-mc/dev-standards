@@ -57,7 +57,7 @@ def push_record(root, script):
 
 
 def pending_items(root, script):
-    """(artifacts, queue, retired) from `pending --json`; None when it cannot be read. Retired pages never
+    """(artifacts, queue, retired, deferred) from `pending --json`; None when it cannot be read. Retired pages never
     change pending's exit code, so they are read from its output at exit 0 as well (R8.13)."""
     r = run(command_for(script) + ['pending', '--json'], root, PENDING_TIMEOUT)
     if r is None:
@@ -72,12 +72,13 @@ def pending_items(root, script):
         artifacts = [a for a in data.get('artifacts', []) if isinstance(a, dict)]
         queue = [e for e in data.get('queue', []) if isinstance(e, dict)]
         retired = [e for e in data.get('retired', []) if isinstance(e, dict) and e.get('url')]
+        deferred = [e for e in data.get('deferred', []) if isinstance(e, dict)]
     except (ValueError, AttributeError, TypeError):
         if rc == 0:
-            return [], [], []
+            return [], [], [], []
         warn('pending printed output that is not JSON (exit 1)')
         return None
-    return artifacts, queue, retired
+    return artifacts, queue, retired, deferred
 
 
 def only_full_progress(artifacts):
@@ -162,21 +163,40 @@ def retired_message(retired):
             % '; '.join('%s %s' % (e.get('key'), e.get('url')) for e in retired))
 
 
+def tell_once(root, sid, field, digest, message):
+    """A systemMessage told once per session and per `digest` (kept in the stop state). '' when already told."""
+    path = os.path.join(root, STATE_NAME)
+    state = read_state(path)
+    entry = state.get('rule:' + sid) if isinstance(state.get('rule:' + sid), dict) else {}
+    if entry.get(field) == digest:
+        return ''
+    entry[field] = digest
+    state.pop('rule:' + sid, None)
+    state['rule:' + sid] = entry
+    write_state(path, state)
+    return message
+
+
 def tell_retired_once(root, sid, retired):
     """R8.13: the systemMessage listing retired pages, once per session and per list. '' when already told."""
     if not retired:
         return ''
     digest = hashlib.sha256(json.dumps(sorted(e['url'] for e in retired)).encode('utf-8')).hexdigest()[:16]
-    path = os.path.join(root, STATE_NAME)
-    state = read_state(path)
-    entry = state.get('rule:' + sid) if isinstance(state.get('rule:' + sid), dict) else {}
-    if entry.get('told') == digest:
+    return tell_once(root, sid, 'told', digest, retired_message(retired))
+
+
+def deferred_message(deferred):
+    return ("luismc-artifacts: the Full Progress publish is deferred (claude.ai's daily limit): %s. Not asking for it "
+            "before then; the end of the turn does not block on it."
+            % '; '.join(str(e.get('reason') or 'deferred') for e in deferred))
+
+
+def tell_deferred_once(root, sid, deferred):
+    """R9.7: one line saying the publish is deferred and until when, once per session and per deferral."""
+    if not deferred:
         return ''
-    entry['told'] = digest
-    state.pop('rule:' + sid, None)
-    state['rule:' + sid] = entry
-    write_state(path, state)
-    return retired_message(retired)
+    digest = hashlib.sha256(json.dumps(sorted(str(e.get('until')) for e in deferred)).encode('utf-8')).hexdigest()[:16]
+    return tell_once(root, sid, 'deferred', digest, deferred_message(deferred))
 
 
 def build_reason(root, script, artifacts, queue):
@@ -231,7 +251,7 @@ def main():
         push_note = ''
     found = pending_items(root, script)
     # pending unreadable: fail open on artifacts, but the queue file is still a fact
-    artifacts, queue, retired = found if found is not None else ([], [], [])
+    artifacts, queue, retired, deferred = found if found is not None else ([], [], [], [])
     try:
         reasons = migration_reasons_now(root, manifest)       # R8.14: read-only, the hook never migrates
     except Exception as exc:
@@ -262,7 +282,12 @@ def main():
     except Exception as exc:
         warn('retired pages not listed (%s: %s)' % (type(exc).__name__, exc))
         told = ''
-    told = '\n'.join(part for part in (push_note, told) if part)
+    try:
+        told_deferred = tell_deferred_once(root, sid, only_full_progress(deferred))      # R9.7: a message, never a block
+    except Exception as exc:
+        warn('deferred publish not listed (%s: %s)' % (type(exc).__name__, exc))
+        told_deferred = ''
+    told = '\n'.join(part for part in (push_note, told, told_deferred) if part)
     if not artifacts and not queue and not background and not migration:
         state = read_state(state_path)
         if sid in state:
