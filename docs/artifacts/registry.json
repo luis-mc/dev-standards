@@ -1359,12 +1359,11 @@
       "id": "DS61",
       "owner": "project",
       "app": "",
-      "status": "Needs you",
+      "status": "Live",
       "item": "AR50 train: never-push fix, PR CI, merge, cleanup",
-      "detail": "#56 CI green on 3d1e017 (spec-lint 2m57s, secret-scan ok); merge needs the owner: auto mode refused my merge. Cleanup after.",
-      "expected": "12 Oct ~23:30",
-      "changed": "2026-10-12T23:23+01:00",
-      "expected_basis": "your merge, then cleanup ~3 min",
+      "detail": "#56 merged 23:25 on green (spec-lint 2m57s); 1.8.0 on main; cleanup removed every AR50 branch and agent worktree, delivery log in train-2026-10-12-56.",
+      "expected": "12 Oct",
+      "changed": "2026-10-12T23:26+01:00",
       "release": 7,
       "phases": [
         {
