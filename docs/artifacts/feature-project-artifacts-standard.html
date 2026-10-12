@@ -694,7 +694,7 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-12T00:24+01:00">12 Oct 00:24</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-12T01:03+01:00">12 Oct 01:03</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">12 Oct 01:01</a> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</p>
 <div class="at-a-glance">
@@ -711,7 +711,7 @@ tr.status-group.release-group td { color: var(--ink); }
 <li data-glance-task="AR40"><span class="task-id">AR40</span>At a glance block in section 0 instead of one prose paragraph</li>
 <li data-glance-task="AR42"><span class="task-id">AR42</span>Feature table: Last updated column, newest first, sortable headers</li>
 <li data-glance-task="AR35"><span class="task-id">AR35</span>Re-render every page when the templates change</li>
-<li class="glance-more">and 12 more</li>
+<li class="glance-more">and 9 more</li>
 </ul>
 </div>
 </div>
@@ -934,6 +934,40 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
 </section>
 <section id="s7"><h2><span class="section-number">&sect; 7</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D17">
+<h3 class="decision-head"><span class="decision-id">D17</span> <span class="decision-question">Start AR47 and AR48 now as the next release?</span></h3>
+<p class="decision-meta">Asked 12 Oct · Decided 12 Oct · Task AR47</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Now</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 12 Oct</span></div>
+<p class="decision-summary">One release with both, ~30 min.</p>
+<blockquote class="decision-words">&ldquo;Now&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave them To do.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D16">
+<h3 class="decision-head"><span class="decision-id">D16</span> <span class="decision-question">How should the plugin handle the 200-publishes-a-day limit?</span></h3>
+<p class="decision-meta">Asked 12 Oct · Decided 12 Oct · Task AR47</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Defer + publish less</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 12 Oct</span></div>
+<p class="decision-summary">After a refusal, record the reset time; the end-of-turn hook stops blocking until then (one reminder). Publish only when what the owner sees changes (status, Expected, release), not for every record edit.</p>
+<blockquote class="decision-words">&ldquo;Defer + publish less&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Defer only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Publish every turn; after a refusal, stop blocking until the reset.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Defer + time-based</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Defer after a refusal; publish at most every 10 minutes and at the end of a session&#x27;s work.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D15">
 <h3 class="decision-head"><span class="decision-id">D15</span> <span class="decision-question">How is Running work that ships nothing (a publish, a study, a cleanup) handled under the rule that Running and Built ride a release?</span></h3>
 <p class="decision-meta">Asked 12 Oct · Decided 12 Oct · Task AR48</p>

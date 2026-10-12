@@ -347,6 +347,52 @@
    "decided": "2026-10-12",
    "task": "AR48",
    "owner_words": "Mark it 'ships nothing'"
+  },
+  {
+   "id": "D16",
+   "question": "How should the plugin handle the 200-publishes-a-day limit?",
+   "asked": "2026-10-12",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Defer + publish less",
+     "summary": "After a refusal, record the reset time; the end-of-turn hook stops blocking until then (one reminder). Publish only when what the owner sees changes (status, Expected, release), not for every record edit.",
+     "recommended": true
+    },
+    {
+     "label": "Defer only",
+     "summary": "Publish every turn; after a refusal, stop blocking until the reset."
+    },
+    {
+     "label": "Defer + time-based",
+     "summary": "Defer after a refusal; publish at most every 10 minutes and at the end of a session's work."
+    }
+   ],
+   "chosen": "Defer + publish less",
+   "decided": "2026-10-12",
+   "task": "AR47",
+   "owner_words": "Defer + publish less"
+  },
+  {
+   "id": "D17",
+   "question": "Start AR47 and AR48 now as the next release?",
+   "asked": "2026-10-12",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Now",
+     "summary": "One release with both, ~30 min.",
+     "recommended": true
+    },
+    {
+     "label": "Later",
+     "summary": "Leave them To do."
+    }
+   ],
+   "chosen": "Now",
+   "decided": "2026-10-12",
+   "task": "AR47",
+   "owner_words": "Now"
   }
  ]
 }
