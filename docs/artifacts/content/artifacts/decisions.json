@@ -1,398 +1,420 @@
 {
- "decisions": [
-  {
-   "id": "D1",
-   "question": "How is a task’s status stored so both artifacts update automatically?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
+  "decisions": [
     {
-     "label": "One registry",
-     "summary": "Each status stored once, as a task registry inside the full-progress artifact. One command regenerates the feature artifact's and full-progress artifact's checklists from it. Cannot drift.",
-     "recommended": true
+      "id": "D1",
+      "question": "How is a task’s status stored so both artifacts update automatically?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "One registry",
+          "summary": "Each status stored once, as a task registry inside the full-progress artifact. One command regenerates the feature artifact's and full-progress artifact's checklists from it. Cannot drift.",
+          "recommended": true
+        },
+        {
+          "label": "Write both, then sync",
+          "summary": "Status written on the feature artifact and the full-progress artifact separately; a sync step compares them and flags disagreements. Closer to the original proposal; can still drift between syncs."
+        }
+      ],
+      "chosen": "One registry",
+      "decided": "2026-10-10"
     },
     {
-     "label": "Write both, then sync",
-     "summary": "Status written on the feature artifact and the full-progress artifact separately; a sync step compares them and flags disagreements. Closer to the original proposal; can still drift between syncs."
+      "id": "D2",
+      "question": "Do branch names start with the task ID?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, task ID first",
+          "summary": "Hooks match git/gh events to tasks automatically and queue the status change.",
+          "recommended": true
+        },
+        {
+          "label": "No convention",
+          "summary": "Branches stay free-form; hooks can only remind the session to update statuses, not say which task changed."
+        }
+      ],
+      "chosen": "Yes, task ID first",
+      "decided": "2026-10-10"
+    },
+    {
+      "id": "D3",
+      "question": "How do changes made outside a session reach the artifacts?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Next session start",
+          "summary": "A session-start hook checks GitHub and queues the changes. No extra cost; artifacts can lag until the next session.",
+          "recommended": true
+        },
+        {
+          "label": "Also a cloud routine",
+          "summary": "A scheduled cloud agent also checks and updates artifacts when no session is open. Always current; costs a recurring run."
+        }
+      ],
+      "chosen": "Next session start",
+      "decided": "2026-10-10"
+    },
+    {
+      "id": "D4",
+      "question": "What look do artifacts get?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Neutral, comic optional",
+          "summary": "A plain neutral theme by default; the current comic look ships as a theme a project can choose.",
+          "recommended": true
+        },
+        {
+          "label": "Comic for every project",
+          "summary": "The comic look from another project becomes the default everywhere."
+        },
+        {
+          "label": "Each project’s own design, else a default",
+          "summary": "Look and feel taken from the project it belongs to (scan its design files or web pages); a project with no design gets a default design file shipped in the plugin. The other project’s comic look is ignored."
+        }
+      ],
+      "chosen": "Each project’s own design, else a default",
+      "decided": "2026-10-10",
+      "owner_words": "ignore the [another project] look; all artificts should have a look & feel based on the project they belong too ([…]); if project has no design, then put together a default design file in this plugin; and since dev-standards proejct has no design since its just for plugins, the create the default design and its file now, and apply it to existing artifacts"
+    },
+    {
+      "id": "D5",
+      "question": "An App / service column on the full-progress artifact?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, full-progress only",
+          "summary": "It covers every app and service, so you can scan one area. Feature artifacts keep four columns.",
+          "recommended": true
+        },
+        {
+          "label": "No, four columns everywhere",
+          "summary": "Same columns on every artifact; the app or service goes in the Detail text."
+        }
+      ],
+      "chosen": "Yes, full-progress only",
+      "decided": "2026-10-10"
+    },
+    {
+      "id": "D6",
+      "question": "Where is the record kept?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Dedicated branch",
+          "summary": "An orphan branch, e.g. project-artifacts, holding only the record. Updates commit there without a checkout, so code branches, PRs and CI never see them and parallel agents can't conflict with them.",
+          "recommended": true
+        },
+        {
+          "label": "Folder on the default branch",
+          "summary": ".claude/project-artifacts/ on main. Easy to find, but every status change is a commit to main: CI has to skip those paths, and it bends the 'nothing lands on main one change at a time' rule."
+        },
+        {
+          "label": "Folder on each work branch",
+          "summary": "The status change rides the branch doing the work and reaches main with its PR. The record on main lags, and parallel branches conflict on the registry."
+        },
+        {
+          "label": "The repo’s docs/artifacts folder",
+          "summary": "The record (manifest, registry, content, last published HTML) lives in docs/artifacts/ on the repo, and every doc goes under docs/."
+        }
+      ],
+      "chosen": "The repo’s docs/artifacts folder",
+      "decided": "2026-10-10",
+      "owner_words": "on the repos docs/artifacts folder; the project-setup plugin should set a more general rule for all docs to be created in the docs/ folder;"
+    },
+    {
+      "id": "D7",
+      "question": "How does a project get the plugin?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "project-setup installs it",
+          "summary": "Every project set up by luismc-project-setup gets it, and no artifact is created until the first feature artifact is made.",
+          "recommended": true
+        },
+        {
+          "label": "Opt-in per project",
+          "summary": "You install it yourself in the projects that want it."
+        },
+        {
+          "label": "Project-setup installs it, plus independent install",
+          "summary": "Every project set up by luismc-project-setup gets it, and any project can also install it on its own. No artifact is created until the first feature artifact is made."
+        }
+      ],
+      "chosen": "Project-setup installs it, plus independent install",
+      "decided": "2026-10-10",
+      "owner_words": "option 1 plus the ability to install independently per project"
+    },
+    {
+      "id": "D8",
+      "question": "Which clock do Expected times use?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Owner's zone, per project",
+          "summary": "Set once in each project's manifest; Lisbon for your projects. The zone is named in the column header.",
+          "recommended": true
+        },
+        {
+          "label": "Always Lisbon",
+          "summary": "Fixed for every project."
+        },
+        {
+          "label": "UTC",
+          "summary": "The same everywhere, but you would have to convert it in your head."
+        }
+      ],
+      "chosen": "Owner's zone, per project",
+      "decided": "2026-10-10"
+    },
+    {
+      "id": "D9",
+      "question": "Does dev-standards move other projects onto the plugin?",
+      "asked": "2026-10-10",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Branch and draft PR",
+          "summary": "Push a task-ID branch with a draft PR. You review it and merge it yourself.",
+          "recommended": true
+        },
+        {
+          "label": "Merge on green there too",
+          "summary": "Same flow as here: one ready PR, merged on green."
+        },
+        {
+          "label": "Local only",
+          "summary": "Prepare the change in a local clone and push nothing. Leave a report for you."
+        },
+        {
+          "label": "Leave other projects alone",
+          "summary": "dev-standards ships the plugin and names or changes no other project; each project adopts it in its own sessions."
+        }
+      ],
+      "chosen": "Leave other projects alone",
+      "decided": "2026-10-10",
+      "owner_words": "why are you touch another project?"
+    },
+    {
+      "id": "D10",
+      "question": "Full Progress: release timeline above the status table and a State column in the feature table (preview, Version 70); adopt for the plugin?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "As previewed",
+          "summary": "Phases sized from the basis, hatched margin up to Expected."
+        },
+        {
+          "label": "With the two changes",
+          "summary": "Expected = the sum of the phases (no silent padding); risk drawn as a named faint extension (e.g. +1 fix round ~10 min) ending at an outlined worst-case marker, only when the basis names it."
+        },
+        {
+          "label": "Change something else",
+          "summary": "Owner names other changes."
+        }
+      ],
+      "chosen": "With the two changes",
+      "decided": "2026-10-11",
+      "task": "AR43",
+      "owner_words": "For the plugin version add the two things; also apply now to full progress page"
+    },
+    {
+      "id": "D11",
+      "question": "How does a release get its RELEASE-<n> number?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Number on the release task",
+          "summary": "The release stays a task (its ID still starts branch names); --release gives it the next project-wide number, never reused, shown as RELEASE-12.",
+          "recommended": true
+        },
+        {
+          "label": "Release is its own entity",
+          "summary": "RELEASE-12 is a separate record, not a task; join, CI and merge are ordinary tasks that point at it."
+        }
+      ],
+      "chosen": "Number on the release task",
+      "decided": "2026-10-11",
+      "task": "AR45",
+      "owner_words": "releases should be numbered with \"RELEASE-<release number>\""
+    },
+    {
+      "id": "D12",
+      "question": "How does Full Progress show which items go into each release?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Group rows by release",
+          "summary": "One group per open release in Expected order with the release row and every item riding it, then Not in a release yet, then the other groups.",
+          "recommended": true
+        },
+        {
+          "label": "Release column",
+          "summary": "Keep today's groups and add a Release column with a RELEASE-n chip on each row."
+        },
+        {
+          "label": "Both",
+          "summary": "Group by release and also show a Release chip on each row."
+        }
+      ],
+      "chosen": "Group rows by release",
+      "decided": "2026-10-11",
+      "task": "AR45",
+      "owner_words": "its hard to know what items go into each release"
+    },
+    {
+      "id": "D13",
+      "question": "Must items be assigned to a release?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Built must name one",
+          "summary": "A Built task must ride a release; other statuses may stay unassigned; Live rows keep their release.",
+          "recommended": true
+        },
+        {
+          "label": "Every open item",
+          "summary": "Running, To do, Waiting, Built and the rest all must ride a release."
+        },
+        {
+          "label": "Optional",
+          "summary": "Never required; unassigned items show as Not in a release yet."
+        },
+        {
+          "label": "Built and Running must name one",
+          "summary": "Owner's variant: the first option, with Running tasks required to ride a release too."
+        }
+      ],
+      "chosen": "Built and Running must name one",
+      "decided": "2026-10-11",
+      "task": "AR45",
+      "owner_words": "option 1 and \"running\" items too"
+    },
+    {
+      "id": "D14",
+      "question": "Should the status tiles say they count tasks?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Relabel",
+          "summary": "Tile labels read 'tasks live', 'tasks built' and so on, so 123 is not read as releases.",
+          "recommended": true
+        },
+        {
+          "label": "Keep the labels",
+          "summary": "Tiles keep the bare status word."
+        }
+      ],
+      "chosen": "Relabel",
+      "decided": "2026-10-11",
+      "task": "AR45",
+      "owner_words": "relabel; ensure all the changes are part of the artifacts plugin so other projects use it"
+    },
+    {
+      "id": "D15",
+      "question": "How is Running work that ships nothing (a publish, a study, a cleanup) handled under the rule that Running and Built ride a release?",
+      "asked": "2026-10-12",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Mark it 'ships nothing'",
+          "summary": "An explicit no-release flag with a reason lets a task be Running without a release; Built still always rides one.",
+          "recommended": true
+        },
+        {
+          "label": "Only Built must ride",
+          "summary": "Running may be unassigned; Built must ride a release."
+        },
+        {
+          "label": "Keep it strict",
+          "summary": "Every Running task rides a release, chores included."
+        }
+      ],
+      "chosen": "Mark it 'ships nothing'",
+      "decided": "2026-10-12",
+      "task": "AR48",
+      "owner_words": "Mark it 'ships nothing'"
+    },
+    {
+      "id": "D16",
+      "question": "How should the plugin handle the 200-publishes-a-day limit?",
+      "asked": "2026-10-12",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Defer + publish less",
+          "summary": "After a refusal, record the reset time; the end-of-turn hook stops blocking until then (one reminder). Publish only when what the owner sees changes (status, Expected, release), not for every record edit.",
+          "recommended": true
+        },
+        {
+          "label": "Defer only",
+          "summary": "Publish every turn; after a refusal, stop blocking until the reset."
+        },
+        {
+          "label": "Defer + time-based",
+          "summary": "Defer after a refusal; publish at most every 10 minutes and at the end of a session's work."
+        }
+      ],
+      "chosen": "Defer + publish less",
+      "decided": "2026-10-12",
+      "task": "AR47",
+      "owner_words": "Defer + publish less"
+    },
+    {
+      "id": "D17",
+      "question": "Start AR47 and AR48 now as the next release?",
+      "asked": "2026-10-12",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Now",
+          "summary": "One release with both, ~30 min.",
+          "recommended": true
+        },
+        {
+          "label": "Later",
+          "summary": "Leave them To do."
+        }
+      ],
+      "chosen": "Now",
+      "decided": "2026-10-12",
+      "task": "AR47",
+      "owner_words": "Now"
+    },
+    {
+      "id": "D18",
+      "question": "Does the plugin commit or push the record?",
+      "asked": "2026-10-12",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Commit and push to the default branch",
+          "summary": "The 1.7 behaviour: record commits pushed to main at the end of every turn; in projects on Vercel every push triggered a paid deploy."
+        },
+        {
+          "label": "Commit locally, never push",
+          "summary": "Record commits stay in the record worktree; the owner pushes when they choose."
+        },
+        {
+          "label": "Write files only, never commit or push",
+          "summary": "The record is written to docs/artifacts/ in the working tree; the project decides when to commit and push anything."
+        }
+      ],
+      "chosen": "Write files only, never commit or push",
+      "decided": "2026-10-12"
     }
-   ],
-   "chosen": "One registry",
-   "decided": "2026-10-10"
-  },
-  {
-   "id": "D2",
-   "question": "Do branch names start with the task ID?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Yes, task ID first",
-     "summary": "Hooks match git/gh events to tasks automatically and queue the status change.",
-     "recommended": true
-    },
-    {
-     "label": "No convention",
-     "summary": "Branches stay free-form; hooks can only remind the session to update statuses, not say which task changed."
-    }
-   ],
-   "chosen": "Yes, task ID first",
-   "decided": "2026-10-10"
-  },
-  {
-   "id": "D3",
-   "question": "How do changes made outside a session reach the artifacts?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Next session start",
-     "summary": "A session-start hook checks GitHub and queues the changes. No extra cost; artifacts can lag until the next session.",
-     "recommended": true
-    },
-    {
-     "label": "Also a cloud routine",
-     "summary": "A scheduled cloud agent also checks and updates artifacts when no session is open. Always current; costs a recurring run."
-    }
-   ],
-   "chosen": "Next session start",
-   "decided": "2026-10-10"
-  },
-  {
-   "id": "D4",
-   "question": "What look do artifacts get?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Neutral, comic optional",
-     "summary": "A plain neutral theme by default; the current comic look ships as a theme a project can choose.",
-     "recommended": true
-    },
-    {
-     "label": "Comic for every project",
-     "summary": "The comic look from another project becomes the default everywhere."
-    },
-    {
-     "label": "Each project’s own design, else a default",
-     "summary": "Look and feel taken from the project it belongs to (scan its design files or web pages); a project with no design gets a default design file shipped in the plugin. The other project’s comic look is ignored."
-    }
-   ],
-   "chosen": "Each project’s own design, else a default",
-   "decided": "2026-10-10",
-   "owner_words": "ignore the [another project] look; all artificts should have a look & feel based on the project they belong too ([…]); if project has no design, then put together a default design file in this plugin; and since dev-standards proejct has no design since its just for plugins, the create the default design and its file now, and apply it to existing artifacts"
-  },
-  {
-   "id": "D5",
-   "question": "An App / service column on the full-progress artifact?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Yes, full-progress only",
-     "summary": "It covers every app and service, so you can scan one area. Feature artifacts keep four columns.",
-     "recommended": true
-    },
-    {
-     "label": "No, four columns everywhere",
-     "summary": "Same columns on every artifact; the app or service goes in the Detail text."
-    }
-   ],
-   "chosen": "Yes, full-progress only",
-   "decided": "2026-10-10"
-  },
-  {
-   "id": "D6",
-   "question": "Where is the record kept?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Dedicated branch",
-     "summary": "An orphan branch, e.g. project-artifacts, holding only the record. Updates commit there without a checkout, so code branches, PRs and CI never see them and parallel agents can't conflict with them.",
-     "recommended": true
-    },
-    {
-     "label": "Folder on the default branch",
-     "summary": ".claude/project-artifacts/ on main. Easy to find, but every status change is a commit to main: CI has to skip those paths, and it bends the 'nothing lands on main one change at a time' rule."
-    },
-    {
-     "label": "Folder on each work branch",
-     "summary": "The status change rides the branch doing the work and reaches main with its PR. The record on main lags, and parallel branches conflict on the registry."
-    },
-    {
-     "label": "The repo’s docs/artifacts folder",
-     "summary": "The record (manifest, registry, content, last published HTML) lives in docs/artifacts/ on the repo, and every doc goes under docs/."
-    }
-   ],
-   "chosen": "The repo’s docs/artifacts folder",
-   "decided": "2026-10-10",
-   "owner_words": "on the repos docs/artifacts folder; the project-setup plugin should set a more general rule for all docs to be created in the docs/ folder;"
-  },
-  {
-   "id": "D7",
-   "question": "How does a project get the plugin?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "project-setup installs it",
-     "summary": "Every project set up by luismc-project-setup gets it, and no artifact is created until the first feature artifact is made.",
-     "recommended": true
-    },
-    {
-     "label": "Opt-in per project",
-     "summary": "You install it yourself in the projects that want it."
-    },
-    {
-     "label": "Project-setup installs it, plus independent install",
-     "summary": "Every project set up by luismc-project-setup gets it, and any project can also install it on its own. No artifact is created until the first feature artifact is made."
-    }
-   ],
-   "chosen": "Project-setup installs it, plus independent install",
-   "decided": "2026-10-10",
-   "owner_words": "option 1 plus the ability to install independently per project"
-  },
-  {
-   "id": "D8",
-   "question": "Which clock do Expected times use?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Owner's zone, per project",
-     "summary": "Set once in each project's manifest; Lisbon for your projects. The zone is named in the column header.",
-     "recommended": true
-    },
-    {
-     "label": "Always Lisbon",
-     "summary": "Fixed for every project."
-    },
-    {
-     "label": "UTC",
-     "summary": "The same everywhere, but you would have to convert it in your head."
-    }
-   ],
-   "chosen": "Owner's zone, per project",
-   "decided": "2026-10-10"
-  },
-  {
-   "id": "D9",
-   "question": "Does dev-standards move other projects onto the plugin?",
-   "asked": "2026-10-10",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Branch and draft PR",
-     "summary": "Push a task-ID branch with a draft PR. You review it and merge it yourself.",
-     "recommended": true
-    },
-    {
-     "label": "Merge on green there too",
-     "summary": "Same flow as here: one ready PR, merged on green."
-    },
-    {
-     "label": "Local only",
-     "summary": "Prepare the change in a local clone and push nothing. Leave a report for you."
-    },
-    {
-     "label": "Leave other projects alone",
-     "summary": "dev-standards ships the plugin and names or changes no other project; each project adopts it in its own sessions."
-    }
-   ],
-   "chosen": "Leave other projects alone",
-   "decided": "2026-10-10",
-   "owner_words": "why are you touch another project?"
-  },
-  {
-   "id": "D10",
-   "question": "Full Progress: release timeline above the status table and a State column in the feature table (preview, Version 70); adopt for the plugin?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "As previewed",
-     "summary": "Phases sized from the basis, hatched margin up to Expected."
-    },
-    {
-     "label": "With the two changes",
-     "summary": "Expected = the sum of the phases (no silent padding); risk drawn as a named faint extension (e.g. +1 fix round ~10 min) ending at an outlined worst-case marker, only when the basis names it."
-    },
-    {
-     "label": "Change something else",
-     "summary": "Owner names other changes."
-    }
-   ],
-   "chosen": "With the two changes",
-   "decided": "2026-10-11",
-   "task": "AR43",
-   "owner_words": "For the plugin version add the two things; also apply now to full progress page"
-  },
-  {
-   "id": "D11",
-   "question": "How does a release get its RELEASE-<n> number?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Number on the release task",
-     "summary": "The release stays a task (its ID still starts branch names); --release gives it the next project-wide number, never reused, shown as RELEASE-12.",
-     "recommended": true
-    },
-    {
-     "label": "Release is its own entity",
-     "summary": "RELEASE-12 is a separate record, not a task; join, CI and merge are ordinary tasks that point at it."
-    }
-   ],
-   "chosen": "Number on the release task",
-   "decided": "2026-10-11",
-   "task": "AR45",
-   "owner_words": "releases should be numbered with \"RELEASE-<release number>\""
-  },
-  {
-   "id": "D12",
-   "question": "How does Full Progress show which items go into each release?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Group rows by release",
-     "summary": "One group per open release in Expected order with the release row and every item riding it, then Not in a release yet, then the other groups.",
-     "recommended": true
-    },
-    {
-     "label": "Release column",
-     "summary": "Keep today's groups and add a Release column with a RELEASE-n chip on each row."
-    },
-    {
-     "label": "Both",
-     "summary": "Group by release and also show a Release chip on each row."
-    }
-   ],
-   "chosen": "Group rows by release",
-   "decided": "2026-10-11",
-   "task": "AR45",
-   "owner_words": "its hard to know what items go into each release"
-  },
-  {
-   "id": "D13",
-   "question": "Must items be assigned to a release?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Built must name one",
-     "summary": "A Built task must ride a release; other statuses may stay unassigned; Live rows keep their release.",
-     "recommended": true
-    },
-    {
-     "label": "Every open item",
-     "summary": "Running, To do, Waiting, Built and the rest all must ride a release."
-    },
-    {
-     "label": "Optional",
-     "summary": "Never required; unassigned items show as Not in a release yet."
-    },
-    {
-     "label": "Built and Running must name one",
-     "summary": "Owner's variant: the first option, with Running tasks required to ride a release too."
-    }
-   ],
-   "chosen": "Built and Running must name one",
-   "decided": "2026-10-11",
-   "task": "AR45",
-   "owner_words": "option 1 and \"running\" items too"
-  },
-  {
-   "id": "D14",
-   "question": "Should the status tiles say they count tasks?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Relabel",
-     "summary": "Tile labels read 'tasks live', 'tasks built' and so on, so 123 is not read as releases.",
-     "recommended": true
-    },
-    {
-     "label": "Keep the labels",
-     "summary": "Tiles keep the bare status word."
-    }
-   ],
-   "chosen": "Relabel",
-   "decided": "2026-10-11",
-   "task": "AR45",
-   "owner_words": "relabel; ensure all the changes are part of the artifacts plugin so other projects use it"
-  },
-  {
-   "id": "D15",
-   "question": "How is Running work that ships nothing (a publish, a study, a cleanup) handled under the rule that Running and Built ride a release?",
-   "asked": "2026-10-12",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Mark it 'ships nothing'",
-     "summary": "An explicit no-release flag with a reason lets a task be Running without a release; Built still always rides one.",
-     "recommended": true
-    },
-    {
-     "label": "Only Built must ride",
-     "summary": "Running may be unassigned; Built must ride a release."
-    },
-    {
-     "label": "Keep it strict",
-     "summary": "Every Running task rides a release, chores included."
-    }
-   ],
-   "chosen": "Mark it 'ships nothing'",
-   "decided": "2026-10-12",
-   "task": "AR48",
-   "owner_words": "Mark it 'ships nothing'"
-  },
-  {
-   "id": "D16",
-   "question": "How should the plugin handle the 200-publishes-a-day limit?",
-   "asked": "2026-10-12",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Defer + publish less",
-     "summary": "After a refusal, record the reset time; the end-of-turn hook stops blocking until then (one reminder). Publish only when what the owner sees changes (status, Expected, release), not for every record edit.",
-     "recommended": true
-    },
-    {
-     "label": "Defer only",
-     "summary": "Publish every turn; after a refusal, stop blocking until the reset."
-    },
-    {
-     "label": "Defer + time-based",
-     "summary": "Defer after a refusal; publish at most every 10 minutes and at the end of a session's work."
-    }
-   ],
-   "chosen": "Defer + publish less",
-   "decided": "2026-10-12",
-   "task": "AR47",
-   "owner_words": "Defer + publish less"
-  },
-  {
-   "id": "D17",
-   "question": "Start AR47 and AR48 now as the next release?",
-   "asked": "2026-10-12",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Now",
-     "summary": "One release with both, ~30 min.",
-     "recommended": true
-    },
-    {
-     "label": "Later",
-     "summary": "Leave them To do."
-    }
-   ],
-   "chosen": "Now",
-   "decided": "2026-10-12",
-   "task": "AR47",
-   "owner_words": "Now"
-  }
- ]
+  ]
 }

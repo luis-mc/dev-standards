@@ -695,7 +695,7 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-12T21:57+01:00">12 Oct 21:57</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-12T21:58+01:00">12 Oct 21:58</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">12 Oct 07:34</a> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</p>
 <div class="at-a-glance">
@@ -938,6 +938,24 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
 </section>
 <section id="s7"><h2><span class="section-number">&sect; 7</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D18">
+<h3 class="decision-head"><span class="decision-id">D18</span> <span class="decision-question">Does the plugin commit or push the record?</span></h3>
+<p class="decision-meta">Asked 12 Oct · Decided 12 Oct</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Commit and push to the default branch</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">The 1.7 behaviour: record commits pushed to main at the end of every turn; in projects on Vercel every push triggered a paid deploy.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Commit locally, never push</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Record commits stay in the record worktree; the owner pushes when they choose.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Write files only, never commit or push</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 12 Oct</span></div>
+<p class="decision-summary">The record is written to docs/artifacts/ in the working tree; the project decides when to commit and push anything.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D17">
 <h3 class="decision-head"><span class="decision-id">D17</span> <span class="decision-question">Start AR47 and AR48 now as the next release?</span></h3>
 <p class="decision-meta">Asked 12 Oct · Decided 12 Oct · Task AR47</p>
