@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-12T22:31+01:00",
+  "updated": "2026-10-12T23:19+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -481,12 +481,11 @@
       "id": "AR50",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "Plugin never pushes the record",
-      "detail": "Owner: plugin never commits or pushes; writes docs/artifacts/ only, project commits. Two agents: script+spec (AR50-script), hooks+docs (AR50-hooks). ARTIFACTSPEC 1.8.0.",
-      "expected": "12 Oct ~22:45",
-      "changed": "2026-10-12T22:31+01:00",
-      "expected_basis": "hooks half done 22:10; script agent still on tests",
+      "detail": "Joined in #56 (3d1e017): plugin writes docs/artifacts/ only, never commits or pushes; ARTIFACTSPEC 1.8.0, luismc-artifacts 1.8.0. Local suites green.",
+      "expected": "12 Oct",
+      "changed": "2026-10-12T23:19+01:00",
       "rides": "DS61"
     },
     {
