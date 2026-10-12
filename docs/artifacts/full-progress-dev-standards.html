@@ -2050,30 +2050,30 @@ tr.status-group.release-group td { color: var(--ink); }
    "status": "Running",
    "item": "AR50 train: never-push fix, PR CI, merge, cleanup",
    "detail": "Urgent: plugin pushes record commits to main in every project, triggering Vercel deploys. One agent, PR CI, merge on green.",
-   "expected": "12 Oct ~22:35",
-   "changed": "2026-10-12T21:53+01:00",
-   "expected_basis": "agent ~30 min, CI ~5 min, merge ~3 min",
+   "expected": "12 Oct ~22:55",
+   "changed": "2026-10-12T22:31+01:00",
+   "expected_basis": "script agent ~22:45, join 2 min, CI ~5 min, merge 3 min",
    "release": 7,
    "phases": [
     {
      "name": "agents",
      "start": "2026-10-12T21:55+01:00",
-     "end": "2026-10-12T22:25+01:00"
+     "end": "2026-10-12T22:45+01:00"
     },
     {
      "name": "join",
-     "start": "2026-10-12T22:25+01:00",
-     "end": "2026-10-12T22:27+01:00"
+     "start": "2026-10-12T22:45+01:00",
+     "end": "2026-10-12T22:47+01:00"
     },
     {
      "name": "ci",
-     "start": "2026-10-12T22:27+01:00",
-     "end": "2026-10-12T22:32+01:00"
+     "start": "2026-10-12T22:47+01:00",
+     "end": "2026-10-12T22:52+01:00"
     },
     {
      "name": "merge",
-     "start": "2026-10-12T22:32+01:00",
-     "end": "2026-10-12T22:35+01:00"
+     "start": "2026-10-12T22:52+01:00",
+     "end": "2026-10-12T22:55+01:00"
     }
    ],
    "risk": {
@@ -2278,8 +2278,8 @@ tr.status-group.release-group td { color: var(--ink); }
 </div>
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
-<li data-glance-task="DS61"><span class="task-id">DS61</span><span class="release-name">RELEASE-7</span>AR50 train: never-push fix, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~22:35</span><span class="glance-basis">agent ~30 min, CI ~5 min, merge ~3 min</span></li>
 <li data-glance-task="AR50"><span class="task-id">AR50</span>Plugin never pushes the record <span class="glance-expected">12 Oct ~22:45</span><span class="glance-basis">hooks half done 22:10; script agent still on tests</span></li>
+<li data-glance-task="DS61"><span class="task-id">DS61</span><span class="release-name">RELEASE-7</span>AR50 train: never-push fix, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~22:55</span><span class="glance-basis">script agent ~22:45, join 2 min, CI ~5 min, merge 3 min</span></li>
 </ul>
 </div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
@@ -2300,25 +2300,25 @@ tr.status-group.release-group td { color: var(--ink); }
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS61 (AR50 train: never-push fix, PR CI, merge, cleanup) expected live about 22:35, worst case 22:45." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">21:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">22:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">22:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">23:00</text></g>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS61 (AR50 train: never-push fix, PR CI, merge, cleanup) expected live about 22:55, worst case 23:05." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">21:30</text><line class="rt-grid" x1="330" y1="36" x2="330" y2="140"/><text x="330" y="28">22:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">22:30</text><line class="rt-grid" x1="590" y1="36" x2="590" y2="140"/><text x="590" y="28">23:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">23:30</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-7 · AR50 train: never-push fix, PR CI, merge, cleanup</title>RELEASE-7 · AR50 train: n…</text>
 <text class="rt-sub" x="0" y="77"><title>AR50</title>AR50</text>
-<rect class="rt-bar agents" x="344.4" y="52" width="173.3" height="22"><title>agents 21:55-22:25</title></rect>
-<rect class="rt-bar join" x="517.8" y="52" width="11.6" height="22"><title>join 22:25-22:27</title></rect>
-<rect class="rt-bar ci" x="529.3" y="52" width="28.9" height="22"><title>PR CI 22:27-22:32</title></rect>
-<rect class="rt-bar merge" x="558.2" y="52" width="17.3" height="22"><title>merge + cleanup 22:32-22:35</title></rect>
-<rect class="rt-risk" x="575.6" y="58" width="57.8" height="10"><title>+1 fix round</title></rect>
-<polygon class="rt-worst" points="633.3,51 640.3,63 633.3,75 626.3,63"/>
-<text class="rt-risk-label" x="644.3" y="67">+1 fix round → worst ~22:45</text>
-<polygon class="rt-expected" points="575.6,50 583.6,63 575.6,76 567.6,63"/>
-<text class="rt-live-label" x="575.6" y="92">live ~22:35</text>
-<line class="rt-now" x1="552.4" y1="36" x2="552.4" y2="148"/><text class="rt-now-label" x="552.4" y="161">now 22:31</text>
+<rect class="rt-bar agents" x="308.3" y="52" width="216.7" height="22"><title>agents 21:55-22:45</title></rect>
+<rect class="rt-bar join" x="525" y="52" width="8.7" height="22"><title>join 22:45-22:47</title></rect>
+<rect class="rt-bar ci" x="533.7" y="52" width="21.7" height="22"><title>PR CI 22:47-22:52</title></rect>
+<rect class="rt-bar merge" x="555.3" y="52" width="13" height="22"><title>merge + cleanup 22:52-22:55</title></rect>
+<rect class="rt-risk" x="568.3" y="58" width="43.3" height="10"><title>+1 fix round</title></rect>
+<polygon class="rt-worst" points="611.7,51 618.7,63 611.7,75 604.7,63"/>
+<text class="rt-risk-label" x="622.7" y="67">+1 fix round → worst ~23:05</text>
+<polygon class="rt-expected" points="568.3,50 576.3,63 568.3,76 560.3,63"/>
+<text class="rt-live-label" x="568.3" y="92">live ~22:55</text>
+<line class="rt-now" x1="464.3" y1="36" x2="464.3" y2="148"/><text class="rt-now-label" x="464.3" y="161">now 22:31</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group release-group" data-group="release-7"><td colspan="5"><strong>RELEASE-7 · live ~22:35 · worst ~22:45</strong></td></tr>
-<tr data-task="DS61"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS61</span><span class="release-name">RELEASE-7</span>AR50 train: never-push fix, PR CI, merge, cleanup</td><td></td><td>Urgent: plugin pushes record commits to main in every project, triggering Vercel deploys. One agent, PR CI, merge on green.</td><td>12 Oct ~22:35<span class="expected-basis">agent ~30 min, CI ~5 min, merge ~3 min</span></td></tr>
+<tr class="status-group release-group" data-group="release-7"><td colspan="5"><strong>RELEASE-7 · live ~22:55 · worst ~23:05</strong></td></tr>
+<tr data-task="DS61"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS61</span><span class="release-name">RELEASE-7</span>AR50 train: never-push fix, PR CI, merge, cleanup</td><td></td><td>Urgent: plugin pushes record commits to main in every project, triggering Vercel deploys. One agent, PR CI, merge on green.</td><td>12 Oct ~22:55<span class="expected-basis">script agent ~22:45, join 2 min, CI ~5 min, merge 3 min</span></td></tr>
 <tr data-task="AR50"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR50</span>Plugin never pushes the record</a></td><td><code>luismc-artifacts</code></td><td>Owner: plugin never commits or pushes; writes docs/artifacts/ only, project commits. Two agents: script+spec (AR50-script), hooks+docs (AR50-hooks). ARTIFACTSPEC 1.8.0.</td><td>12 Oct ~22:45<span class="expected-basis">hooks half done 22:10; script agent still on tests</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR49"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR49</span>Version labels say ARTIFACTSPEC 1.7.0</a><span class="release-line"><span class="release-name">RELEASE-6</span></span></td><td><code>luismc-artifacts</code></td><td>Pushed to main as 0b9c8ef: luismc-artifacts 1.7.1; no CI (owner&#x27;s call)</td><td>12 Oct</td></tr>
