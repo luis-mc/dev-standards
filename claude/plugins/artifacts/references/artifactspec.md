@@ -946,6 +946,16 @@ double-click.
   existing findings do not freeze writing commands (R7.1a). The rule file says
   so in one line. Verified by `test_running_and_built_must_ride_a_release`,
   `rule_file_carries_the_rides_rule` and the R5.47 fixture of `test_check_fixtures`.
+- **R5.47a** — A task that ships nothing (a publish, a study, a cleanup) may say
+  so: `"no_release": "<reason>"`, at most 80 characters, set by `task-add` or
+  `set-task-status` with `--no-release REASON` (`--no-release ""` clears it). Such
+  a task may be Running, and any other open status, without riding a release;
+  it is never Built (finished, it goes Live), never a release and never rides
+  one: a command refuses `--no-release` together with `--release` or `--rides`,
+  and refuses Built on a task that carries it. In Full Progress it sits in `Not
+  in a release yet` with a muted line `ships nothing: <reason>`. `check` reports
+  the same (R5.47a). Verified by `test_no_release_tasks_may_run_without_a_release`,
+  `test_no_release_refusals` and `no_release_line_in_full_progress`.
 
 ---
 
@@ -1276,6 +1286,24 @@ Reads the hook input; takes the task ID from the current branch name
   and changes nothing; `pending` never lists one. Verified by
   `test_mark_published_refuses_a_feature_artifact` and
   `test_pending_never_lists_a_feature_artifact`.
+- **R9.6** — Full Progress needs a publish only when what the owner sees
+  changes: a task added, or a task's status, item, Expected, release (`release`,
+  `rides`, `phases`, `risk`, `no_release`), an open decision, or a feature row of
+  section 1. A change to a detail, a basis, a content section or the stamp alone
+  is committed and rendered but does not make `pending` list Full Progress; it
+  rides the next publish. `mark-published` stores a fingerprint of those fields
+  (`published_fingerprint` in the manifest) and `pending` compares against it.
+  Verified by `test_detail_only_change_needs_no_publish` and
+  `test_status_change_needs_a_publish`.
+- **R9.7** — When claude.ai refuses a publish for its daily limit, the session
+  runs `mark-deferred full-progress --until <ISO time of the reset>` (for a
+  limit that resets at UTC midnight, the next UTC midnight). Until that time
+  `pending` lists Full Progress as `deferred until HH:MM (<timezone_label>)` and
+  exits 0, and the end-of-turn hook does not block on it: it prints one line
+  saying the publish is deferred and when. After that time both behave as
+  before. Any later `mark-published` clears the deferral. Verified by
+  `test_deferred_publish_does_not_block_until_the_reset` and
+  `end_of_turn_reminds_once_while_deferred`.
 
 ---
 
