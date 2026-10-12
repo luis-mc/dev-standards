@@ -1976,12 +1976,11 @@ tr.status-group.release-group td { color: var(--ink); }
    "id": "DS59",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "AR47 train: join, PR CI, merge, cleanup",
-   "detail": "Joined AR47-publish-limit, folded to ARTIFACTSPEC and luismc-artifacts 1.7.0; ready PR #55, CI from 01:25",
-   "expected": "12 Oct ~01:33",
-   "changed": "2026-10-12T01:25+01:00",
-   "expected_basis": "#54: CI 3.5 min, merge+cleanup 4",
+   "detail": "#55 merged on green 01:29 (CI 3m56s), first time with no fix round; cleanup removed every branch and worktree, delivery log in train-2026-10-12-55",
+   "expected": "12 Oct",
+   "changed": "2026-10-12T01:30+01:00",
    "release": 5,
    "phases": [
     {
@@ -2205,51 +2204,27 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
 <p class="glance-none">Nothing needs you.</p>
 </div>
-<div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
-<ul>
-<li data-glance-task="DS59"><span class="task-id">DS59</span><span class="release-name">RELEASE-5</span>AR47 train: join, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~01:33</span><span class="glance-basis">#54: CI 3.5 min, merge+cleanup 4</span></li>
-</ul>
-</div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
 <li data-glance-task="AR47"><span class="task-id">AR47</span>End-of-turn hook knows the daily publish limit</li>
 <li data-glance-task="AR48"><span class="task-id">AR48</span>Tasks that ship nothing: --no-release with a reason</li>
+<li data-glance-task="DS59"><span class="task-id">DS59</span><span class="release-name">RELEASE-5</span>AR47 train: join, PR CI, merge, cleanup</li>
 <li data-glance-task="DS58"><span class="task-id">DS58</span>Publish Full Progress after the daily publish limit resets</li>
 <li data-glance-task="AR46"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</li>
 <li data-glance-task="DS56"><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</li>
 <li data-glance-task="DS57"><span class="task-id">DS57</span>cleanup.py: no failure when the train-cleanup workflow got there first</li>
 <li data-glance-task="DS55"><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup</li>
-<li data-glance-task="TC9"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</li>
-<li class="glance-more">and 67 more</li>
+<li class="glance-more">and 68 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">135</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">136</div><div class="label">tasks live</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<figure class="release-timeline">
-<figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS59 (AR47 train: join, PR CI, merge, cleanup) expected live about 01:33, worst case 01:43." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">01:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">01:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">02:00</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-5 · AR47 train: join, PR CI, merge, cleanup</title>RELEASE-5 · AR47 train: j…</text>
-<text class="rt-sub" x="0" y="77"><title>AR47, AR48</title>AR47, AR48</text>
-<rect class="rt-bar agents" x="234.7" y="52" width="173.3" height="22"><title>agents 01:04-01:24</title></rect>
-<rect class="rt-bar join" x="408" y="52" width="8.7" height="22"><title>join 01:24-01:25</title></rect>
-<rect class="rt-bar ci" x="416.7" y="52" width="34.7" height="22"><title>PR CI 01:25-01:29</title></rect>
-<rect class="rt-bar merge" x="451.3" y="52" width="34.7" height="22"><title>merge + cleanup 01:29-01:33</title></rect>
-<rect class="rt-risk" x="486" y="58" width="86.7" height="10"><title>+1 fix round</title></rect>
-<polygon class="rt-worst" points="572.7,51 579.7,63 572.7,75 565.7,63"/>
-<text class="rt-risk-label" x="583.7" y="67">+1 fix round → worst ~01:43</text>
-<polygon class="rt-expected" points="486,50 494,63 486,76 478,63"/>
-<text class="rt-live-label" x="486" y="92">live ~01:33</text>
-<line class="rt-now" x1="460" y1="36" x2="460" y2="148"/><text class="rt-now-label" x="460" y="161">now 01:30</text>
-</svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
-</figure>
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group release-group" data-group="release-5"><td colspan="5"><strong>RELEASE-5 · live ~01:33 · worst ~01:43</strong></td></tr>
-<tr data-task="DS59"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS59</span><span class="release-name">RELEASE-5</span>AR47 train: join, PR CI, merge, cleanup</td><td></td><td>Joined AR47-publish-limit, folded to ARTIFACTSPEC and luismc-artifacts 1.7.0; ready PR #55, CI from 01:25</td><td>12 Oct ~01:33<span class="expected-basis">#54: CI 3.5 min, merge+cleanup 4</span></td></tr>
-<tr data-task="AR47"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR47</span>End-of-turn hook knows the daily publish limit</a></td><td><code>luismc-artifacts</code></td><td>Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0</td><td>12 Oct</td></tr>
-<tr data-task="AR48"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR48</span>Tasks that ship nothing: --no-release with a reason</a></td><td><code>luismc-artifacts</code></td><td>Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0</td><td>12 Oct</td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
+<tr data-task="AR47"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR47</span>End-of-turn hook knows the daily publish limit</a><span class="release-line"><span class="release-name">RELEASE-5</span></span></td><td><code>luismc-artifacts</code></td><td>Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0</td><td>12 Oct</td></tr>
+<tr data-task="AR48"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR48</span>Tasks that ship nothing: --no-release with a reason</a><span class="release-line"><span class="release-name">RELEASE-5</span></span></td><td><code>luismc-artifacts</code></td><td>Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0</td><td>12 Oct</td></tr>
+<tr data-task="DS59"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS59</span><span class="release-name">RELEASE-5</span>AR47 train: join, PR CI, merge, cleanup</td><td></td><td>#55 merged on green 01:29 (CI 3m56s), first time with no fix round; cleanup removed every branch and worktree, delivery log in train-2026-10-12-55</td><td>12 Oct</td></tr>
 <tr data-task="DS58"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS58</span>Publish Full Progress after the daily publish limit resets</td><td></td><td>Limit reset at 01:00 Lisbon; Full Progress published once at 01:01 and recorded</td><td>12 Oct</td></tr>
 <tr data-task="AR46"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</a><span class="release-line"><span class="release-name">RELEASE-4</span></span></td><td><code>luismc-artifacts</code></td><td>Released in #54 (eaeec1d, 00:22): ARTIFACTSPEC 1.6.1, luismc-artifacts 1.6.2</td><td>12 Oct</td></tr>
 <tr data-task="DS56"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</td><td></td><td>#54 merged on green 00:22 (rerun after two join fixes: suites test pin, and test_session_guard.py now in CI). Cleanup done; an empty DS56 folder stays locked by this session&#x27;s shell until it ends</td><td>12 Oct</td></tr>

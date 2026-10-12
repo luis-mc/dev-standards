@@ -1289,12 +1289,11 @@
       "id": "DS59",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "AR47 train: join, PR CI, merge, cleanup",
-      "detail": "Joined AR47-publish-limit, folded to ARTIFACTSPEC and luismc-artifacts 1.7.0; ready PR #55, CI from 01:25",
-      "expected": "12 Oct ~01:33",
-      "changed": "2026-10-12T01:25+01:00",
-      "expected_basis": "#54: CI 3.5 min, merge+cleanup 4",
+      "detail": "#55 merged on green 01:29 (CI 3m56s), first time with no fix round; cleanup removed every branch and worktree, delivery log in train-2026-10-12-55",
+      "expected": "12 Oct",
+      "changed": "2026-10-12T01:30+01:00",
       "release": 5,
       "phases": [
         {
