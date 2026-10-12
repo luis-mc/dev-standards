@@ -33,7 +33,9 @@ def default_worktree(root):
 
 
 def record_worktree(root):
-    """The one place that says where the record worktree is (R4.24).
+    """Where the retired record worktree was (R4.24); used only to migrate its record once (AR50).
+    The record now lives in docs/artifacts/ of the working tree and the plugin never commits it.
+
 
     The environment variable LUISMC_ARTIFACTS_WORKTREE first, else "record_worktree" in
     <root>/.claude/artifacts-local.json, else <root>/.claude/worktrees/artifacts-record.

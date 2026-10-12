@@ -8,7 +8,7 @@ effort: medium
 # Task — add
 
 Records work as a task in the registry (`docs/artifacts/registry.json`,
-ARTIFACTSPEC 1.7.0) before the work starts. Only the script writes the
+ARTIFACTSPEC 1.8.0) before the work starts. Only the script writes the
 registry; never edit `registry.json` or `manifest.json` by hand.
 
 Every activity is a task before it starts, whoever does it: work given to
@@ -26,10 +26,7 @@ read the message, fix the cause and rerun.
 ## Steps
 
 1. **Find the owner.** Read `docs/artifacts/manifest.json` (read only) in
-   the record worktree (`python "${CLAUDE_PLUGIN_ROOT}/scripts/project_artifacts.py" worktree` prints its path; by default
-   `<repo>/.claude/worktrees/artifacts-record`, movable with
-   `LUISMC_ARTIFACTS_WORKTREE` or `.claude/artifacts-local.json`), or on the
-   default branch if the worktree does not exist yet. The owner is a feature artifact's `key`, or
+   the working tree (the record is in `docs/artifacts/` there; the plugin never commits or pushes it). The owner is a feature artifact's `key`, or
    `project`. If the manifest does not exist, stop and offer
    `feature-artifact-new` or `full-progress-artifact-new`.
 2. **Collect** the item (at most 80 characters), the detail (plain text, at
@@ -57,8 +54,8 @@ read the message, fix the cause and rerun.
 3. **Add it:**
    `task-add --owner <key|project> --item "TEXT" --detail "TEXT" --expected "DD Mon" [--basis "TEXT"] [--app A] [--status S] [--prefix P]`.
    For `--owner project`, `--prefix` picks one of the project's prefixes; a new
-   prefix that no feature uses is registered by the command. The command prints the new ID and renders and commits the
-   record (the push comes once, at the end of the turn).
+   prefix that no feature uses is registered by the command. The command prints the new ID and renders and writes the
+   record to `docs/artifacts/` in the working tree (it never commits or pushes; the project commits when it chooses).
 4. **Do not publish now.** Status changes accumulate during the turn;
    Full Progress is published once, at the end of the turn, per "Publishing" in
    the `task-status-update` skill (claude.ai allows 200 publishes per account

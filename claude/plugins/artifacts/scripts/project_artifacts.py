@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """project_artifacts.py - the only writer of a project's artifact record.
 
-Implements ARTIFACTSPEC 1.7.0: section 4 (the record, time, the record
-worktree and its commits), section 7 (every command), the bookkeeping of
+Implements ARTIFACTSPEC 1.8.0: section 4 (the record, time, the record in the
+working tree; the plugin writes files and never commits or pushes), section 7 (every command), the bookkeeping of
 section 9 (`pending`, `mark-published`; only Full Progress is published, a
 feature artifact is a standalone file) and the record-level checks of
 section 14. Rendering lives in render_artifacts.py, the queue in
 artifact_queue.py. Python 3.10+, standard library only.
 
 Exit codes: 0 success, 1 findings or a refused action, 2 unreadable record
-(or a broken environment), 3 push race lost, 4 push refused by protection.
+(or a broken environment). Exit codes 3 and 4 are no longer used.
 """
 from __future__ import annotations
 
@@ -55,7 +55,6 @@ FP_NAME = 'full-progress'
 RECORD_REL = 'docs/artifacts'
 BASIS_MAX = 80            # R6.10: longest Expected basis
 OPEN_STATUSES = ('Running', 'Waiting', 'To do', 'Needs you', 'On hold')     # R6.6
-PUSH_RETRIES = 3          # R4.15: retries after the first push attempt
 MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 KEY_RE = re.compile(r'^[a-z0-9]+(?:-[a-z0-9]+)*$')
 PREFIX_RE = re.compile(r'^[A-Z]{2,5}$')
@@ -68,10 +67,7 @@ RULE_NAME = 'project-artifacts.md'
 STALE_RULE_REL = '.claude/rules/project-artifacts.md'     # the copy 1.0.0 `init` made (R10.6)
 PUBLISH_REL = os.path.join('.claude', 'artifacts-publish')      # the publish copy of Full Progress (R5.31)
 GITIGNORE_LINES = ['.claude/artifacts-queue.json', '.claude/artifacts-stop-state.json', '.claude/artifacts-publish/',
-                   '.claude/artifacts-local.json', '.claude/worktrees/']
-
-# Test seam (tests only): called as hook(ctx, attempt) right before each push.
-_TEST_BEFORE_PUSH = None
+                   '.claude/artifacts-local.json', '.claude/artifacts-record.lock', '.claude/worktrees/']
 
 
 # --------------------------------------------------------------------------
@@ -267,10 +263,17 @@ def parse_iso(s):
 
 
 # --------------------------------------------------------------------------
-# git and the record worktree (R4.13 - R4.17)
+# git (read-only) and the record in the working tree (R4.13 - R4.17)
 # --------------------------------------------------------------------------
 
+READ_ONLY_GIT = ('rev-parse', 'symbolic-ref', 'status', 'diff', 'log', 'show', 'ls-files', 'config', 'worktree')
+
+
 def git(cwd, *a, check=False, ok=(0,)):
+    """Run a read-only git command (R4.13). The plugin never writes git state: anything else is refused."""
+    sub = a[0] if a else ''
+    if sub not in READ_ONLY_GIT or (sub == 'config' and '--get' not in a) or (sub == 'worktree' and a[1:2] != ('list',)):
+        raise Fail(2, 'refusing to run git %s: the plugin never writes git state (ARTIFACTSPEC 1.8.0)' % ' '.join(a[:2]))
     cmd = ['git', '-c', 'core.autocrlf=false', '-c', 'core.safecrlf=false',
            '-c', 'core.quotepath=off', '-c', 'core.longpaths=true'] + list(a)
     env = dict(os.environ, GIT_TERMINAL_PROMPT='0')
@@ -290,6 +293,7 @@ def git_out(cwd, *a):
 
 
 def session_root(start=None):
+    """The top of the working tree (R4.13). Inside an old record worktree it leads back to the checkout."""
     top = artifact_queue.repo_root(start)
     if not top:
         return None
@@ -297,18 +301,6 @@ def session_root(start=None):
     tail = '/.claude/worktrees/artifacts-record'
     if norm.endswith(tail):
         return norm[:-len(tail)]
-    # a record worktree set elsewhere (R4.24): its common git dir leads back to the checkout
-    r = git(top, 'rev-parse', '--git-common-dir')
-    common = r.stdout.strip() if r.returncode == 0 else ''
-    if common:
-        common = os.path.normpath(os.path.join(top, common))
-        main = os.path.dirname(common)
-        if os.path.basename(common) == '.git' and not artifact_queue._same_path(main, top):
-            try:
-                if artifact_queue._same_path(artifact_queue.record_worktree(main), top):
-                    return main
-            except artifact_queue.WorktreeSettingError:
-                pass
     return top
 
 
@@ -316,28 +308,24 @@ class Ctx:
     def __init__(self, root, branch):
         self.root = Path(root)
         self.branch = branch
-        try:
-            self.wt = Path(artifact_queue.record_worktree(str(self.root)))       # R4.24
-        except artifact_queue.WorktreeSettingError as e:
-            raise Fail(2, 'the record worktree setting is refused: %s' % e)
-        self.record_dir = self.wt / RECORD_REL
-        self.attempt = 0
+        self.record_dir = self.root / RECORD_REL
+        self.wt = self.root          # the record lives in the working tree; the record worktree is retired (R4.24)
 
 
 def detect_default_branch(root, given=None):
+    """Only recorded in a new manifest; read-only: origin/HEAD, origin/main|master, else the current branch."""
     if given:
         return given
     ref = git_out(root, 'symbolic-ref', '--short', 'refs/remotes/origin/HEAD')
     if ref and ref.startswith('origin/'):
         return ref[len('origin/'):]
-    r = git(root, 'ls-remote', '--symref', 'origin', 'HEAD')
-    m = re.search(r'ref: refs/heads/(\S+)\s+HEAD', r.stdout or '')
-    if m:
-        return m.group(1)
     for b in ('main', 'master'):
         if git(root, 'rev-parse', '--verify', '-q', 'refs/remotes/origin/' + b).returncode == 0:
             return b
-    raise Fail(2, 'cannot tell the default branch (no origin/HEAD); pass --default-branch')
+    return git_out(root, 'symbolic-ref', '--short', '-q', 'HEAD') or 'main'
+
+
+NO_COMMIT_MSG = 'the plugin no longer commits or pushes (ARTIFACTSPEC 1.8.0); commit docs/artifacts/ when you choose'
 
 
 def make_ctx(args, branch=None):
@@ -346,16 +334,18 @@ def make_ctx(args, branch=None):
     root = session_root()
     if not root:
         raise Fail(2, 'not inside a git repository')
-    ctx = Ctx(root, branch or detect_default_branch(root, getattr(args, 'default_branch', None)))
-    # R4.28: a writing command commits and leaves the push to the end of the turn unless --push asks for it
-    ctx.no_push = bool(getattr(args, 'no_push', False)) or not bool(getattr(args, 'push', False))
-    return ctx
+    if getattr(args, 'push', False):
+        print('luismc-artifacts: ' + NO_COMMIT_MSG, file=sys.stderr)       # R4.28: --push does nothing
+    return Ctx(root, branch or detect_default_branch(root, getattr(args, 'default_branch', None)))
+
+
+LOCK_REL = os.path.join('.claude', 'artifacts-record.lock')       # outside docs/artifacts/, a git-ignored path (R4.17)
 
 
 @contextlib.contextmanager
 def locked(ctx):
-    ctx.wt.parent.mkdir(parents=True, exist_ok=True)
-    p = ctx.wt.parent / 'artifacts-record.lock'
+    p = ctx.root / LOCK_REL
+    p.parent.mkdir(parents=True, exist_ok=True)
     deadline = time.time() + 60
     while True:
         try:
@@ -371,7 +361,7 @@ def locked(ctx):
             except OSError:
                 pass
             if time.time() > deadline:
-                raise Fail(1, 'the record worktree is locked by another invocation (%s)' % p)
+                raise Fail(1, 'the record is locked by another invocation (%s)' % p)
             time.sleep(0.2)
     try:
         yield
@@ -382,340 +372,100 @@ def locked(ctx):
             pass
 
 
-def fetch(ctx, tolerant=False):
-    b = ctx.branch
-    r = git(ctx.root, 'fetch', '--quiet', 'origin', '+refs/heads/%s:refs/remotes/origin/%s' % (b, b))
-    if r.returncode != 0:
-        if tolerant:
-            warn('git fetch origin failed (%s); using the last fetched state' % (r.stderr or '').strip()[:120])
-            return False
-        raise Fail(2, 'git fetch origin %s failed: %s' % (b, (r.stderr or r.stdout).strip()))
-    return True
-
-
 def no_record_fail(ctx):
-    return Fail(2, 'no record in this repository (origin/%s has no %s/manifest.json); run init' % (ctx.branch, RECORD_REL))
+    return Fail(2, 'no record in this repository (no %s/manifest.json); run init' % RECORD_REL)
 
 
-def ensure_sparse(ctx):
-    """Check out docs/artifacts/ only (a long path elsewhere must not break the worktree)."""
-    want = ['/%s/' % RECORD_REL, '/' + STALE_RULE_REL]
-    r = git(ctx.wt, 'config', '--get', 'core.sparseCheckout')
-    if r.stdout.strip() != 'true' or git(ctx.wt, 'sparse-checkout', 'list').stdout.split() != want:
-        git(ctx.wt, 'sparse-checkout', 'set', '--no-cone', *want, check=True)
+def snapshot(ctx):
+    """{relative path: bytes} of every file under docs/artifacts/, to put back when a change fails."""
+    out = {}
+    d = ctx.record_dir
+    if d.is_dir():
+        for p in d.rglob('*'):
+            if p.is_file():
+                out[p.relative_to(d).as_posix()] = p.read_bytes()
+    return out
 
 
-MARKER_NAME = 'luismc-artifacts-record-worktree'
+def restore(ctx, snap):
+    d = ctx.record_dir
+    if d.is_dir():
+        for p in sorted(d.rglob('*'), key=lambda x: len(x.parts), reverse=True):
+            if p.is_file() and p.relative_to(d).as_posix() not in snap:
+                p.unlink()
+            elif p.is_dir() and not any(p.iterdir()):
+                p.rmdir()
+    for rel, data in snap.items():
+        p = d / rel
+        if not p.is_file() or p.read_bytes() != data:
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_bytes(data)
 
 
-def _git_common_dir(ctx):
-    r = git(ctx.root, 'rev-parse', '--git-common-dir')
-    return os.path.normpath(os.path.join(str(ctx.root), r.stdout.strip())) if r.returncode == 0 and r.stdout.strip() else None
+# --- migration of the old record worktree (R4.24, AR50 rule 4) ---------------
 
-
-def _read_marker(ctx):
-    common = _git_common_dir(ctx)
+def old_record_worktree(root):
+    """Where the retired record worktree was: the old setting if it is usable, else the default path."""
     try:
-        return Path(common, MARKER_NAME).read_text(encoding='utf-8').strip() if common else ''
-    except OSError:
-        return ''
+        return artifact_queue.record_worktree(str(root))
+    except artifact_queue.WorktreeSettingError:
+        return artifact_queue.default_worktree(str(root))
 
 
-def _write_marker(ctx):
-    common = _git_common_dir(ctx)
-    if common:
-        try:
-            Path(common, MARKER_NAME).write_text(str(ctx.wt) + '\n', encoding='utf-8')
-        except OSError:
-            warn('cannot remember where the record worktree is (%s)' % common)
-
-
-def move_worktree(ctx):
-    """R4.24: when the setting points elsewhere than the registered record worktree, remove the old one.
-
-    The old one is a disposable checkout of the default branch; it is refused only while it holds
-    record commits that were never pushed. The new one is created by ensure_worktree.
-    """
-    same = artifact_queue._same_path
-    default = artifact_queue.default_worktree(str(ctx.root))
-    marker = _read_marker(ctx)
-    if not (marker and not same(marker, ctx.wt)) and not (not marker and not same(ctx.wt, default)):
-        return
-    olds = []
-    for p in (marker, default):
-        if p and not same(p, ctx.wt) and not any(same(p, o) for o in olds):
-            olds.append(p)
-    git(ctx.root, 'worktree', 'prune')
-    listed = git(ctx.root, 'worktree', 'list', '--porcelain').stdout
-    registered = [ln[len('worktree '):].strip() for ln in listed.splitlines() if ln.startswith('worktree ')]
-    for old in olds:
-        if not any(same(old, r) for r in registered):
-            continue
-        ahead = git(old, 'rev-list', '--count', 'origin/%s..HEAD' % ctx.branch)
-        if ahead.returncode == 0 and ahead.stdout.strip() not in ('', '0'):
-            raise Fail(1, 'the old record worktree %s holds %s record commit(s) not pushed; run push with the old '
-                       'setting, or remove it by hand' % (old, ahead.stdout.strip()))
-        r = git(ctx.root, 'worktree', 'remove', '--force', old)
-        if r.returncode != 0:
-            raise Fail(2, 'cannot remove the old record worktree %s: %s' % (old, (r.stderr or r.stdout).strip()[:200]))
-        warn('the record worktree moved: removed %s, using %s' % (old, ctx.wt))
-
-
-def ensure_worktree(ctx, tolerant=False, create=False):
-    """Fetch and create the detached, sparse record worktree on first use.
-
-    Only init and feature-new (create=True) may create it; any other command
-    exits 2 when origin/<default> has no record, leaving no worktree behind.
-    """
-    fetched = fetch(ctx, tolerant)
-    move_worktree(ctx)
-    wt = ctx.wt
-    if (wt / '.git').exists():
-        ensure_sparse(ctx)
-        _write_marker(ctx)
-        return fetched
-    if git(ctx.root, 'rev-parse', '--verify', '-q', 'refs/remotes/origin/' + ctx.branch).returncode != 0:
-        raise Fail(2, 'origin/%s does not exist' % ctx.branch)
-    if not create and git(ctx.root, 'cat-file', '-e',
-                          'refs/remotes/origin/%s:%s/manifest.json' % (ctx.branch, RECORD_REL)).returncode != 0:
-        raise no_record_fail(ctx)
-    git(ctx.root, 'worktree', 'prune')
-    if wt.exists() and any(wt.iterdir()):
-        raise Fail(2, '%s exists but is not a git worktree; remove it' % wt)
-    wt.parent.mkdir(parents=True, exist_ok=True)
-    git(ctx.root, 'worktree', 'add', '--detach', '--no-checkout', '--quiet', str(wt), 'origin/' + ctx.branch, check=True)
-    ensure_sparse(ctx)
-    git(ctx.wt, 'reset', '--hard', '--quiet', 'origin/' + ctx.branch, check=True)
-    _write_marker(ctx)
-    return fetched
-
-
-def dirty_paths(ctx):
-    r = git(ctx.wt, 'status', '--porcelain', '-z', '--untracked-files=all', '--', RECORD_REL)
-    return sorted(p[3:] for p in r.stdout.split('\0') if len(p) > 3)
-
-
-def ahead_count(ctx):
-    r = git(ctx.wt, 'rev-list', '--count', 'origin/%s..HEAD' % ctx.branch)
+def newest_stamp(record_dir):
+    """The registry's newest `changed` stamp (or its `updated`) as a datetime, or None."""
     try:
-        return int(r.stdout.strip())
-    except ValueError:
-        return 0
-
-
-def head_sha(ctx):
-    return git_out(ctx.wt, 'rev-parse', 'HEAD')
-
-
-def clean_worktree(ctx, to=None):
-    git(ctx.wt, 'reset', '--hard', '--quiet', to or 'HEAD')
-    git(ctx.wt, 'clean', '-fdq', '--', RECORD_REL)
-
-
-_MISSING = object()
-
-
-class JsonConflict(Exception):
-    pass
-
-
-def _by_ident(items):
-    """The identifying field of a list of objects (tasks have `id`, feature entries `key`), or None."""
-    for field in ('id', 'key'):
-        if items and all(isinstance(x, dict) and field in x for x in items):
-            return field
-    return None
-
-
-def merge3(base, a, b):
-    """Three-way merge of two JSON values that both changed `base` (a = origin, b = the local commit).
-    Objects merge key by key, lists of objects merge by `id` or `key`, the `updated` stamp takes the later
-    one; two different edits of the same value are a conflict."""
-    if a == b or b == base:
-        return a
-    if a == base:
-        return b
-    if isinstance(a, dict) and isinstance(b, dict) and isinstance(base, dict):
-        out = {}
-        for k in list(a) + [k for k in b if k not in a] + [k for k in base if k not in a and k not in b]:
-            va, vb, v0 = a.get(k, _MISSING), b.get(k, _MISSING), base.get(k, _MISSING)
-            if va == vb:
-                v = va
-            elif va == v0:
-                v = vb
-            elif vb == v0:
-                v = va
-            elif k in ('updated', 'published_at') and isinstance(va, str) and isinstance(vb, str):
-                v = max(va, vb)
-            elif va is _MISSING or vb is _MISSING:
-                raise JsonConflict(k)
-            else:
-                v = merge3(None if v0 is _MISSING else v0, va, vb)
-            if v is not _MISSING:
-                out[k] = v
-        return out
-    if isinstance(a, list) and isinstance(b, list) and isinstance(base, list):
-        field = _by_ident(a + b + base)
-        if field is None:
-            raise JsonConflict('list')
-        index = {name: {x[field]: x for x in items} for name, items in (('a', a), ('b', b), ('0', base))}
-        order = [x[field] for x in a] + [x[field] for x in b if x[field] not in index['a']]
-        out = []
-        for ident in order:
-            va, vb, v0 = (index[n].get(ident, _MISSING) for n in ('a', 'b', '0'))
-            if va == vb:
-                v = va
-            elif va == v0:
-                v = vb
-            elif vb == v0:
-                v = va
-            elif va is _MISSING or vb is _MISSING:
-                raise JsonConflict(str(ident))
-            else:
-                v = merge3({} if v0 is _MISSING else v0, va, vb)
-            if v is not _MISSING:
-                out.append(v)
-        return out
-    raise JsonConflict('value')
-
-
-def resolve_conflict(ctx, rel):
-    """One conflicted path of the rebase (R4.29). A rendered page at the top of docs/artifacts/ is regenerated,
-    so origin's copy is taken (the render after the rebase redraws it); manifest.json and registry.json are merged
-    as JSON. Anything else, or two different edits of one value, is not resolved: returns False."""
-    wt = ctx.wt
-    rec_prefix = RECORD_REL + '/'
-    name = rel[len(rec_prefix):] if rel.startswith(rec_prefix) else None
-    if name is None:
-        return False
-    if '/' not in name and name.endswith('.html'):
-        return git(wt, 'checkout', '--ours', '--', rel).returncode == 0
-    if name in ('manifest.json', 'registry.json'):
-        stages = []
-        for n in (1, 2, 3):
-            r = git(wt, 'show', ':%d:%s' % (n, rel))
-            if r.returncode != 0:
-                return False
-            try:
-                stages.append(json.loads(r.stdout))
-            except ValueError:
-                return False
-        try:
-            merged = merge3(*stages)
-        except JsonConflict:
-            return False
-        if name == 'registry.json' and isinstance(merged.get('tasks'), list):
-            merged['tasks'] = sorted(merged['tasks'], key=task_sort_key)
-        write_text(wt / rel, dump_json(merged))
-        return True
-    return False
-
-
-def identity_args(ctx):
-    ident = []
-    if not git_out(ctx.wt, 'config', 'user.name'):
-        ident += ['-c', 'user.name=project-artifacts']
-    if not git_out(ctx.wt, 'config', 'user.email'):
-        ident += ['-c', 'user.email=project-artifacts@localhost']
-    return ident
-
-
-def rebase_unpushed(ctx):
-    """R4.29: put the unpushed record commits on top of the fetched origin/<default branch>, resolving the
-    conflicts that two writers always cause (the `updated` stamps, the rendered pages, edits of different
-    tasks), then redraw any page the merge left stale. A conflict that is not resolved aborts the rebase:
-    exit 2, and the commits stay where they were."""
-    b = ctx.branch
-    if git(ctx.wt, 'merge-base', '--is-ancestor', 'origin/' + b, 'HEAD').returncode == 0:
-        return                                      # origin has not moved
-    ident = identity_args(ctx)
-    r = git(ctx.wt, *(ident + ['rebase', '--quiet', 'origin/' + b]))
-    while r.returncode != 0:
-        files = [f for f in git(ctx.wt, 'diff', '--name-only', '--diff-filter=U').stdout.split('\n') if f.strip()]
-        if not files or not all(resolve_conflict(ctx, f.strip()) for f in files):
-            git(ctx.wt, 'rebase', '--abort')
-            raise Fail(2, 'cannot rebase the unpushed record commit onto origin/%s: %s; the commits stay in the '
-                       'record worktree' % (b, ', '.join(files) or (r.stderr or r.stdout).strip()[:200]))
-        git(ctx.wt, 'add', '--', *files)
-        r = git(ctx.wt, *(ident + ['-c', 'core.editor=true', 'rebase', '--continue']))
-    refresh_after_rebase(ctx)
-
-
-def refresh_after_rebase(ctx):
-    """A merged page can be stale even when git merged it cleanly (counts, the embedded registry): redraw
-    every page that differs from a fresh render and commit that, so INV-3 holds for what gets pushed."""
-    rec = Record.load(ctx.record_dir)
-    rec.pre_findings = all_findings(rec)
-    refresh_stale(rec)
-    if not rec.render_keys:
-        return
-    finish_change(ctx, rec, {})
-    commit_record(ctx, 'docs/artifacts: render after rebase')
-
-
-def sync(ctx, readonly=False, create=False):
-    """Fetch and reset the record worktree to origin/<default_branch> (R4.13).
-
-    Unpushed record commits (kept until the end-of-turn push, after a refused push or --no-push) are
-    rebased onto it, not dropped. Uncommitted edits are discarded: the session
-    never edits this worktree (it uses export-content / edit-content).
-    """
-    ensure_worktree(ctx, tolerant=readonly, create=create)
-    if dirty_paths(ctx):
-        clean_worktree(ctx)
-    if git(ctx.wt, 'rev-parse', '--verify', '-q', 'origin/' + ctx.branch).returncode != 0:
-        raise Fail(2, 'origin/%s does not exist' % ctx.branch)
-    if ahead_count(ctx):
-        rebase_unpushed(ctx)
-    else:
-        git(ctx.wt, 'reset', '--hard', '--quiet', 'origin/' + ctx.branch, check=True)
-    git(ctx.wt, 'clean', '-fdq', '--', RECORD_REL)
-
-
-def commit_record(ctx, message):
-    """R4.14: commit only docs/artifacts/**; returns the new SHA or None."""
-    git(ctx.wt, 'add', '-A', '--', RECORD_REL, check=True)
-    names = [n for n in git(ctx.wt, 'diff', '--cached', '--name-only', '-z').stdout.split('\0') if n]
-    bad = [n for n in names if not n.startswith(RECORD_REL + '/') and n != STALE_RULE_REL]
-    if bad:
-        git(ctx.wt, 'reset', '--quiet')
-        raise Fail(1, 'refusing to commit paths outside %s/: %s' % (RECORD_REL, bad[0]))
-    if not names:
+        reg = json.loads((Path(record_dir) / 'registry.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError):
         return None
-    ident = []
-    if not git_out(ctx.wt, 'config', 'user.name'):
-        ident += ['-c', 'user.name=project-artifacts']
-    if not git_out(ctx.wt, 'config', 'user.email'):
-        ident += ['-c', 'user.email=project-artifacts@localhost']
-    r = git(ctx.wt, *(ident + ['commit', '--quiet', '-m', message]))
-    if r.returncode != 0:
-        raise Fail(2, 'git commit failed: %s' % (r.stderr or r.stdout).strip()[:300])
-    return head_sha(ctx)
+    if not isinstance(reg, dict) or not isinstance(reg.get('tasks', []), list):
+        return None
+    stamps = [t.get('changed') for t in reg.get('tasks', []) if isinstance(t, dict)] + [reg.get('updated')]
+    parsed = [parse_iso(s) for s in stamps if isinstance(s, str)]
+    parsed = [x for x in parsed if x is not None]
+    return max(parsed) if parsed else None
 
 
-def push(ctx):
-    """One push attempt: 'ok', 'race', 'refused' or ('error', text)."""
-    if _TEST_BEFORE_PUSH is not None:
-        _TEST_BEFORE_PUSH(ctx, ctx.attempt)
-    r = git(ctx.wt, 'push', '--quiet', 'origin', 'HEAD:refs/heads/%s' % ctx.branch)
-    if r.returncode == 0:
-        return 'ok'
-    t = ((r.stderr or '') + (r.stdout or '')).lower()
-    if 'non-fast-forward' in t or 'fetch first' in t or 'stale info' in t or \
-            ('[rejected]' in t and '[remote rejected]' not in t):
-        return 'race'
-    if any(s in t for s in ('remote rejected', 'protected branch', 'gh006', 'gh013',
-                            'hook declined', 'permission denied', 'denied')):
-        return 'refused'
-    return ('error', (r.stderr or r.stdout).strip()[:300])
+def migrate_record(ctx):
+    """Copy the old record worktree's docs/artifacts/ into the working tree when its registry is newer.
+    Returns the one-line note when it copied, else None. Idempotent; never runs a git write."""
+    old = Path(old_record_worktree(ctx.root))
+    old_dir = old / RECORD_REL
+    if artifact_queue._same_path(str(old), str(ctx.root)) or not (old_dir / 'registry.json').is_file():
+        return None
+    theirs, mine = newest_stamp(old_dir), newest_stamp(ctx.record_dir)
+    if theirs is None or (mine is not None and theirs <= mine):
+        return None
+    for p in old_dir.rglob('*'):
+        if p.is_file():
+            dest = ctx.record_dir / p.relative_to(old_dir)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(str(p), str(dest))
+    return ('luismc-artifacts: the record now lives in docs/artifacts/ and is never committed or pushed by the '
+            'plugin; copied it from %s. You may remove that worktree with git worktree remove %s' % (old, old))
 
 
-def refused_fail(ctx):
-    return Fail(4, 'record push refused by %s protection' % ctx.branch)
+def migrate_quietly(ctx):
+    """The implicit run before a writing command: the note goes to stderr."""
+    note = migrate_record(ctx)
+    if note:
+        print(note, file=sys.stderr)
+    return note
 
 
-def race_fail():
-    return Fail(3, 'record push lost the race %d times; nothing was committed' % (PUSH_RETRIES + 1))
+def setting_ignored_notes(root):
+    """check says once, as info, that the old worktree setting is ignored (R4.24)."""
+    used = bool(os.environ.get(artifact_queue.WORKTREE_ENV))
+    p = Path(root) / artifact_queue.LOCAL_NAME
+    try:
+        if p.is_file() and 'record_worktree' in json.loads(p.read_text(encoding='utf-8')):
+            used = True
+    except (OSError, ValueError, TypeError):
+        pass
+    if not used:
+        return []
+    return ['%s and record_worktree in %s are ignored since ARTIFACTSPEC 1.8.0: the record lives in docs/artifacts/ '
+            'of the working tree' % (artifact_queue.WORKTREE_ENV, artifact_queue.LOCAL_NAME.replace(os.sep, '/'))]
 
 
 # --------------------------------------------------------------------------
@@ -1373,64 +1123,36 @@ def readme_text(manifest):
 
 
 def run_change(ctx, apply, new_ok=False):
-    """sync -> validate -> apply -> render -> validate -> commit [-> push with --push, with R4.15 retries]."""
+    """lock -> migrate -> validate -> apply -> render -> validate -> write files in docs/artifacts/ and stop (R7.1).
+
+    Nothing is committed or pushed; a failed change puts the files back as they were."""
     with locked(ctx):
-        retries = 0
-        while True:
-            ctx.attempt = retries + 1
-            sync(ctx, create=new_ok)
-            base = head_sha(ctx)
-            if (ctx.record_dir / 'manifest.json').is_file():
-                rec = Record.load(ctx.record_dir)
-                mb = rec.manifest.get('default_branch')
-                if isinstance(mb, str) and mb and mb != ctx.branch:
-                    ctx.branch = mb
-                    continue
-                rec.pre_findings = all_findings(rec)           # earlier findings may stay; new ones may not (R7.1)
-            else:
-                if not new_ok:
-                    raise no_record_fail(ctx)
-                rec = Record(ctx.record_dir, exists=False)
-            try:
-                result = apply(rec) or {}
-                result = finish_change(ctx, rec, result)
-                if remove_stale_rule(ctx):
-                    rec.message = '%s; removed %s (an older copy of the plugin\'s rule)' % (
-                        rec.message or 'docs/artifacts: update', STALE_RULE_REL)
-                    result.setdefault('notes', []).append(
-                        'removed %s: an older copy of the plugin\'s rule, which the hooks now deliver' % STALE_RULE_REL)
-            except BaseException as ex:
-                clean_worktree(ctx, base)
-                if rec.pre_findings and isinstance(ex, Exception) and not isinstance(ex, Fail):
-                    raise Fail(1, 'the record has earlier findings this change cannot work around (%s: %s); '
-                                  'nothing written' % (type(ex).__name__, ex), rec.pre_findings) from ex
-                raise
-            sha = commit_record(ctx, rec.message or 'docs/artifacts: update')
-            local = remove_local_rule_copy(ctx)
-            if local:
-                result.setdefault('notes', []).append(local)
-            result['commit'] = sha or head_sha(ctx)
-            result['pushed'] = False
-            if sha is None:
-                result['changed'] = False
-                return result
-            result['changed'] = True
-            if ctx.no_push:
-                return result
-            out = push(ctx)
-            if out == 'ok':
-                result['pushed'] = True
-                return result
-            if out == 'refused':
-                raise refused_fail(ctx)
-            if out == 'race':
-                clean_worktree(ctx, base)
-                fetch(ctx, tolerant=True)
-                retries += 1
-                if retries > PUSH_RETRIES:
-                    raise race_fail()
-                continue
-            raise Fail(1, 'git push failed: %s' % out[1])
+        migrate_quietly(ctx)
+        before = snapshot(ctx)
+        if (ctx.record_dir / 'manifest.json').is_file():
+            rec = Record.load(ctx.record_dir)
+            mb = rec.manifest.get('default_branch')
+            if isinstance(mb, str) and mb:
+                ctx.branch = mb
+            rec.pre_findings = all_findings(rec)           # earlier findings may stay; new ones may not (R7.1)
+        else:
+            if not new_ok:
+                raise no_record_fail(ctx)
+            rec = Record(ctx.record_dir, exists=False)
+        try:
+            result = apply(rec) or {}
+            result = finish_change(ctx, rec, result)
+            note = remove_stale_rule(ctx)
+            if note:
+                result.setdefault('notes', []).append(note)
+        except BaseException as ex:
+            restore(ctx, before)
+            if rec.pre_findings and isinstance(ex, Exception) and not isinstance(ex, Fail):
+                raise Fail(1, 'the record has earlier findings this change cannot work around (%s: %s); '
+                              'nothing written' % (type(ex).__name__, ex), rec.pre_findings) from ex
+            raise
+        result['changed'] = snapshot(ctx) != before
+        return result
 
 
 def shipped_rule_copy(path):
@@ -1441,23 +1163,16 @@ def shipped_rule_copy(path):
 
 
 def remove_stale_rule(ctx):
-    """R10.6: stage the deletion of .claude/rules/project-artifacts.md in the record worktree when its text is
-    one a released plugin version shipped; an edited copy stays. True when staged."""
-    p = ctx.wt / STALE_RULE_REL
-    return shipped_rule_copy(p) and git(ctx.wt, 'rm', '-q', '--', STALE_RULE_REL).returncode == 0
-
-
-def remove_local_rule_copy(ctx):
-    """R10.6: the same copy in the session's checkout, when git does not track it (a tracked one is removed
-    by the record commit and reaches the checkout with the next pull). Returns a note or None."""
+    """R10.6: delete .claude/rules/project-artifacts.md from the working tree when its text is one a released
+    plugin version shipped; an edited copy stays. The deletion is left uncommitted. Returns a note or None."""
     p = ctx.root / STALE_RULE_REL
-    if not shipped_rule_copy(p) or git(ctx.root, 'ls-files', '--error-unmatch', STALE_RULE_REL).returncode == 0:
+    if not shipped_rule_copy(p):
         return None
     try:
         p.unlink()
     except OSError:
         return None
-    return 'removed %s from this checkout: an older copy of the plugin\'s rule' % STALE_RULE_REL
+    return 'removed %s: an older copy of the plugin\'s rule, which the hooks now deliver' % STALE_RULE_REL
 
 
 def finish_change(ctx, rec, result):
@@ -1673,13 +1388,12 @@ def cmd_init(args):
     changed, notes = install_session_files(ctx.root)
     res['session_changes'], res['notes'] = changed, notes
     emit(args, res, ['initialised the artifact record for %s (%s)' % (project, short(res))] +
-         session_report(changed, notes) + ['record worktree: %s' % ctx.record_dir])
+         session_report(changed, notes) + ['record: %s' % ctx.record_dir])
     return 0
 
 
 def short(res):
-    s = (res.get('commit') or '')[:7]
-    return ('commit %s%s' % (s, '' if res.get('pushed') else ', not pushed')) if res.get('changed') else 'unchanged'
+    return 'written to %s/' % RECORD_REL if res.get('changed') else 'unchanged'
 
 
 def cmd_feature_new(args):
@@ -2343,104 +2057,32 @@ def cmd_mark_deleted(args):
     return 0
 
 
-def push_unpushed(ctx):
-    """Push the unpushed record commits (R4.15 retries: a lost race fetches and rebases, then pushes again).
-    The caller holds the lock and has the worktree. Raises Fail 3 (race lost), 4 (refused) or 1 (other error)."""
-    retries = 0
-    while True:
-        ctx.attempt = retries + 1
-        out = push(ctx)
-        if out == 'ok':
-            return
-        if out == 'refused':
-            raise refused_fail(ctx)
-        if out == 'race':
-            retries += 1
-            if retries > PUSH_RETRIES:
-                raise Fail(3, 'record push lost the race %d times' % (PUSH_RETRIES + 1))
-            fetch(ctx)
-            rebase_unpushed(ctx)
-            continue
-        raise Fail(1, 'git push failed: %s' % out[1])
-
-
 def cmd_commit(args):
-    """Commit uncommitted edits in the record worktree. Pushes only with --push (or --retry)."""
+    """Removed in 1.8.0 (R4.28): the plugin never commits or pushes."""
+    raise Fail(1, NO_COMMIT_MSG)
+
+
+cmd_push = cmd_commit
+
+
+def cmd_migrate(args):
+    """Copy the old record worktree's docs/artifacts/ into the working tree when newer (R4.24); idempotent."""
     ctx = make_ctx(args)
     with locked(ctx):
-        ensure_worktree(ctx)
-        dirty = dirty_paths(ctx)
-        if dirty:
-            if args.retry:
-                raise Fail(1, 'the record worktree has uncommitted edits; run commit without --retry')
-            rec = Record.load(ctx.record_dir)
-            findings = validate_structure(rec)
-            if findings:
-                raise Fail(1, 'the record is invalid; nothing committed', findings)
-            commit_record(ctx, args.message or 'docs/artifacts: update')
-        if not ahead_count(ctx):
-            emit(args, {'command': 'commit', 'changed': False, 'pushed': False}, 'nothing to commit or push')
-            return 0
-        if ctx.no_push and not args.retry:
-            emit(args, {'command': 'commit', 'changed': True, 'pushed': False, 'commit': head_sha(ctx)},
-                 'committed %s, not pushed' % head_sha(ctx)[:7])
-            return 0
-        push_unpushed(ctx)
-    emit(args, {'command': 'commit', 'changed': True, 'pushed': True, 'commit': head_sha(ctx)},
-         'pushed %s to %s' % (head_sha(ctx)[:7], ctx.branch))
+        note = migrate_record(ctx)
+    if note:
+        print(note)
     return 0
-
-
-def do_push(args):
-    """R4.28: push the record commits not yet on origin/<default branch>; nothing else is committed.
-    Returns the result dict; raises Fail 3 (race lost), 4 (refused) or 1 (other error)."""
-    ctx = make_ctx(args)
-    with locked(ctx):
-        if not (ctx.wt / '.git').exists():
-            return {'command': 'push', 'changed': False, 'pushed': False}
-        ensure_worktree(ctx, tolerant=True)
-        n = ahead_count(ctx)
-        if not n:
-            return {'command': 'push', 'changed': False, 'pushed': False}
-        push_unpushed(ctx)
-        return {'command': 'push', 'changed': True, 'pushed': True, 'commits': n, 'commit': head_sha(ctx),
-                'branch': ctx.branch}
-
-
-def cmd_push(args):
-    res = do_push(args)
-    emit(args, res, ('pushed %d record commit(s) to %s' % (res['commits'], res['branch'])) if res['pushed']
-         else 'nothing to push')
-    return 0
-
-
-def push_before_listing(args):
-    """pending (R7.6): push first. Returns None when pushed or nothing to push, else the failure text.
-    A failure never stops the listing; a missing record is left for the read to report."""
-    try:
-        do_push(args)
-    except Fail as f:
-        if f.code in (1, 3, 4):
-            warn('record push failed (exit %d): %s' % (f.code, f.msg))
-            return 'exit %d: %s' % (f.code, f.msg)
-    return None
 
 
 def load_for_read(args):
-    """Return (ctx, Record or None) for a read-only command, from the synced record worktree."""
+    """Return (ctx, Record) for a read-only command, from docs/artifacts/ of the working tree."""
     ctx = make_ctx(args)
     with locked(ctx):
-        sync(ctx, readonly=True)
+        migrate_quietly(ctx)
     if not (ctx.record_dir / 'manifest.json').is_file():
         raise no_record_fail(ctx)
-    rec = Record.load(ctx.record_dir)
-    mb = rec.manifest.get('default_branch')
-    if isinstance(mb, str) and mb and mb != ctx.branch:
-        ctx.branch = mb
-        with locked(ctx):
-            sync(ctx, readonly=True)
-        rec = Record.load(ctx.record_dir)
-    return ctx, rec
+    return ctx, Record.load(ctx.record_dir)
 
 
 def rule_copy_notes():
@@ -2513,7 +2155,7 @@ def cmd_check(args):
         findings += check_html_findings(rec, key)
         findings += fresh_render_findings(rec, key)
     findings = sorted(set(findings))
-    notes = rule_copy_notes() + done_notes(rec) + release_notes(rec) + feature_url_notes(rec) + retired_notes(rec)
+    notes = setting_ignored_notes(session_root() or '.') + rule_copy_notes() + done_notes(rec) + release_notes(rec) + feature_url_notes(rec) + retired_notes(rec)
     warnings = decision_warnings(rec) + lede_warnings(rec)
     if getattr(args, 'json_out', False):
         result = {'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],
@@ -2564,8 +2206,7 @@ def decision_warnings(rec):
 
 def feature_link_map(root, rec):
     """R5.31: {feature key: (file:/// URL, path as text)} for the publish copy. The target is the feature
-    file in the record worktree, which always holds the latest record; the session's checkout may be on
-    another branch with an older copy. The URL is the absolute path with forward slashes,
+    file in docs/artifacts/ of the working tree. The URL is the absolute path with forward slashes,
     percent-encoded by pathlib (a space is %20)."""
     out = {}
     for key, kind, e in rec.artifacts():
@@ -2591,7 +2232,7 @@ def write_publish_copy(ctx, rec, key, e):
         return None
     dest = ctx.root / PUBLISH_REL / e['file']
     write_text(dest, html)
-    if git(ctx.root, 'check-ignore', '-q', str(dest)).returncode == 1:
+    if (git_out(ctx.root, 'status', '--porcelain', '--ignored', '--untracked-files=all', '--', str(dest)) or '').startswith('??'):
         warn('.gitignore does not ignore %s/ (the publish copy); add that line' % PUBLISH_REL.replace(os.sep, '/'))
     return str(dest)
 
@@ -2599,7 +2240,6 @@ def write_publish_copy(ctx, rec, key, e):
 def cmd_pending(args):
     """Lists Full Progress when its committed render changed since the last publish, and queued events.
     A feature artifact is never listed (R9.5)."""
-    push_error = push_before_listing(args)
     ctx, rec = load_for_read(args)
     arts, deferred = [], []
     if rec is not None:
@@ -2640,8 +2280,6 @@ def cmd_pending(args):
         out = {'artifacts': arts, 'queue': queue, 'retired': retired}
         if deferred:
             out['deferred'] = deferred
-        if push_error:
-            out['push_error'] = push_error
         print(json.dumps(out, indent=2, ensure_ascii=False))
     else:
         for a in arts:
@@ -2649,8 +2287,6 @@ def cmd_pending(args):
                                              '' if a['url'] else ' [no URL yet]'))
         for ev in queue:
             print('queued %s -> %s (%s)' % (ev.get('id'), ev.get('suggested_status'), ev.get('event')))
-        if push_error:
-            print('record push failed (%s); the commits stay local' % push_error)
         for d in deferred:
             print('deferred %s (%s): %s' % (d['key'], d['file'], d['reason']))
         if not arts and not queue and not deferred:
@@ -2662,16 +2298,13 @@ def cmd_pending(args):
 
 
 def cmd_worktree(args):
-    """Prints the record worktree's path, as the setting of R4.24 resolves it."""
+    """Prints the record directory, <root>/docs/artifacts: the record worktree is retired (R4.24)."""
     if artifact_queue is None:
         raise Fail(2, 'artifact_queue.py cannot be imported: %s' % _QUEUE_ERROR)
     root = session_root()
     if not root:
         raise Fail(2, 'not inside a git repository')
-    try:
-        path = artifact_queue.record_worktree(root)
-    except artifact_queue.WorktreeSettingError as e:
-        raise Fail(2, 'the record worktree setting is refused: %s' % e)
+    path = str(Path(root) / RECORD_REL)
     emit(args, {'worktree': path}, path)
     return 0
 
@@ -2704,7 +2337,7 @@ def cmd_queue(args):
 
 def cmd_path(args):
     ctx, _rec = load_for_read(args)
-    emit(args, {'record_dir': str(ctx.record_dir), 'worktree': str(ctx.wt)}, str(ctx.record_dir))
+    emit(args, {'record_dir': str(ctx.record_dir), 'worktree': str(ctx.record_dir)}, str(ctx.record_dir))
     return 0
 
 
@@ -2716,8 +2349,8 @@ def build_parser():
     j = argparse.ArgumentParser(add_help=False)
     j.add_argument('--json', dest='json_out', action='store_true', help='machine-readable output')
     w = argparse.ArgumentParser(add_help=False, parents=[j])
-    w.add_argument('--no-push', action='store_true', help='commit in the record worktree, do not push (the default)')
-    w.add_argument('--push', action='store_true', help='push at once (the default is to push at the end of the turn)')
+    w.add_argument('--no-push', action='store_true', help='accepted for compatibility; does nothing')
+    w.add_argument('--push', action='store_true', help='accepted for compatibility; does nothing (prints a note)')
 
     p = argparse.ArgumentParser(prog='project_artifacts.py', description=__doc__.split('\n\n')[0])
     sub = p.add_subparsers(dest='command', required=True, metavar='command')
@@ -2820,7 +2453,7 @@ def build_parser():
     s.add_argument('--gone', action='store_true', help='the page no longer exists (404)')
     s.set_defaults(func=cmd_mark_deleted)
 
-    s = sub.add_parser('worktree', parents=[j], help="print the record worktree's path (R4.24)")
+    s = sub.add_parser('worktree', parents=[j], help='print the record folder, <root>/docs/artifacts (R4.24)')
     s.set_defaults(func=cmd_worktree)
 
     s = sub.add_parser('queue', parents=[j], help='show or clear queued events')
@@ -2828,16 +2461,19 @@ def build_parser():
     s.add_argument('--id')
     s.set_defaults(func=cmd_queue)
 
-    s = sub.add_parser('push', parents=[j], help='push the unpushed record commits (retries a lost race)')
+    s = sub.add_parser('migrate', parents=[j], help='copy the old record worktree into docs/artifacts/ when newer (R4.24); idempotent')
+    s.set_defaults(func=cmd_migrate)
+
+    s = sub.add_parser('push', parents=[j], help='removed: exits 1 (R4.28)')
     s.add_argument('--default-branch')
     s.set_defaults(func=cmd_push)
 
-    s = sub.add_parser('commit', parents=[w], help='commit uncommitted record edits; pushes only with --push or --retry')
-    s.add_argument('--retry', action='store_true', help='push a commit kept after a refused push (same as push)')
+    s = sub.add_parser('commit', parents=[w], help='removed: exits 1 (R4.28)')
+    s.add_argument('--retry', action='store_true', help='accepted for compatibility')
     s.add_argument('--message')
     s.set_defaults(func=cmd_commit)
 
-    s = sub.add_parser('path', parents=[j], help='print the record folder inside the record worktree')
+    s = sub.add_parser('path', parents=[j], help='print the record folder, <root>/docs/artifacts')
     s.set_defaults(func=cmd_path)
     return p
 

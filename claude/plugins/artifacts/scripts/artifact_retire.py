@@ -1,4 +1,4 @@
-"""Old claude.ai pages, older records and the stale rule copy (ARTIFACTSPEC 1.7.0, R4.19 to R4.23, R10.6).
+"""Old claude.ai pages, older records and the stale rule copy (ARTIFACTSPEC 1.8.0, R4.19 to R4.23, R10.6).
 
 Shared by project_artifacts.py (which writes the record) and the hooks (which only read). Nothing here
 writes the record. Standard library only.
@@ -131,7 +131,7 @@ def _git(cwd, args, data=None):
 
 def history_feature_urls(record_dir, rev='HEAD'):
     """[{key, title, url}] oldest first: every feature entry that had a url in a commit of manifest.json
-    reachable from `rev`. At most HISTORY_LIMIT commits that touch a url line; two git calls; nothing cached."""
+    reachable from `rev`. At most HISTORY_LIMIT commits that touch a url line; one `git log` and one `git show` per commit; nothing cached."""
     r = _git(record_dir, ['log', '-n', str(HISTORY_LIMIT), '--format=%H', '-G', '"url"', rev, '--', 'manifest.json'])
     if r is None or r.returncode != 0:
         return []
@@ -139,22 +139,13 @@ def history_feature_urls(record_dir, rev='HEAD'):
     if not shas:
         return []
     shas.reverse()
-    r = _git(record_dir, ['cat-file', '--batch'], ''.join('%s:./manifest.json\n' % s for s in shas).encode('ascii'))
-    if r is None or r.returncode != 0:
-        return []
-    out, seen, data, pos = [], set(), r.stdout, 0
-    for _sha in shas:
-        end = data.find(b'\n', pos)
-        if end < 0:
-            break
-        header = data[pos:end].decode('ascii', 'replace').split()
-        pos = end + 1
-        if len(header) < 3 or header[1] != 'blob':
+    out, seen = [], set()
+    for sha in shas:                 # read-only `git show` only: the plugin never writes git state (AR50)
+        r = _git(record_dir, ['show', '%s:./manifest.json' % sha])
+        if r is None or r.returncode != 0:
             continue
-        size = int(header[2])
-        body, pos = data[pos:pos + size], pos + size + 1
         try:
-            m = json.loads(body.decode('utf-8'))
+            m = json.loads(r.stdout.decode('utf-8'))
         except ValueError:
             continue
         feats = m.get('feature_artifacts') if isinstance(m, dict) else None
