@@ -49,6 +49,11 @@ read the message, fix the cause and rerun.
    `--release` gives the task the next release number, shown as `RELEASE-<n>`.
    Work that rides a release says so with `--rides <release ID or RELEASE-n>`;
    every Running or Built task that is not itself a release must (the command refuses otherwise).
+   A task that ships nothing (a publish, a study, a cleanup) says so instead:
+   `--no-release "REASON"`, at most 80 characters. It needs no release, is never
+   Built (finished, it goes Live), and the command refuses `--no-release` with
+   `--release` or `--rides`; Full Progress shows it under `Not in a release yet`
+   with the line `ships nothing: REASON`.
 3. **Add it:**
    `task-add --owner <key|project> --item "TEXT" --detail "TEXT" --expected "DD Mon" [--basis "TEXT"] [--app A] [--status S] [--prefix P]`.
    For `--owner project`, `--prefix` picks one of the project's prefixes; a new
