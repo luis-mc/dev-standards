@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-12T01:03+01:00",
+  "updated": "2026-10-12T01:04+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -448,12 +448,13 @@
       "id": "AR47",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Running",
       "item": "End-of-turn hook knows the daily publish limit",
-      "detail": "00:20: claude.ai refused publishes (200/day, resets 01:00 Lisbon) and the end-of-turn hook kept blocking a publish nobody could make. Also: Full Progress publishes once per turn, so a busy night spends the budget",
-      "expected": "12 Oct",
-      "changed": "2026-10-12T00:23+01:00",
-      "expected_basis": "next train; owner to choose the approach"
+      "detail": "Contract 16f878d (R9.6 publish only on visible change, R9.7 mark-deferred until the reset); one agent on AR47-publish-limit with AR48",
+      "expected": "12 Oct ~01:40",
+      "changed": "2026-10-12T01:04+01:00",
+      "expected_basis": "one agent ~30 min incl. branch CI",
+      "rides": "DS59"
     },
     {
       "id": "AR48",
