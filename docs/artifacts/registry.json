@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-12T01:30+01:00",
+  "updated": "2026-10-12T07:30+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1321,6 +1321,25 @@
         "label": "+1 fix round",
         "minutes": 10
       }
+    },
+    {
+      "id": "DS60",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "luismc-artifacts 1.7.1 straight to main, no CI (owner's call)",
+      "detail": "Patch: version labels.",
+      "expected": "12 Oct ~07:40",
+      "changed": "2026-10-12T07:30+01:00",
+      "expected_basis": "edit, local test, push",
+      "release": 6,
+      "phases": [
+        {
+          "name": "merge",
+          "start": "2026-10-12T07:30+01:00",
+          "end": "2026-10-12T07:40+01:00"
+        }
+      ]
     },
     {
       "id": "MP1",
