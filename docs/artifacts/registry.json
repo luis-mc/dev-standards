@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-12T07:30+01:00",
+  "updated": "2026-10-12T07:32+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -470,12 +470,11 @@
       "id": "AR49",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Version labels say ARTIFACTSPEC 1.7.0",
-      "detail": "Eight places still said 1.6.0 after 1.7.0 shipped, including the session-start heading.",
-      "expected": "12 Oct ~07:40",
-      "changed": "2026-10-12T07:30+01:00",
-      "expected_basis": "string edits and one local suite",
+      "detail": "Pushed to main as 0b9c8ef: luismc-artifacts 1.7.1; no CI (owner's call)",
+      "expected": "12 Oct",
+      "changed": "2026-10-12T07:32+01:00",
       "rides": "DS60"
     },
     {
