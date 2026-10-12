@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-12T01:25+01:00",
+  "updated": "2026-10-12T01:30+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -448,11 +448,11 @@
       "id": "AR47",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "End-of-turn hook knows the daily publish limit",
-      "detail": "357204d/d3e03eb: pending lists Full Progress only on a visible change (published_fingerprint); mark-deferred until the reset, hook reminds once instead of blocking. Branch CI green 3m33s",
+      "detail": "Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0",
       "expected": "12 Oct",
-      "changed": "2026-10-12T01:25+01:00",
+      "changed": "2026-10-12T01:30+01:00",
       "rides": "DS59"
     },
     {
