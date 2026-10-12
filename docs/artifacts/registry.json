@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-12T23:19+01:00",
+  "updated": "2026-10-12T23:23+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1359,12 +1359,12 @@
       "id": "DS61",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Needs you",
       "item": "AR50 train: never-push fix, PR CI, merge, cleanup",
-      "detail": "#56 ready, PR CI running on 3d1e017; merge on green, then cleanup.",
-      "expected": "12 Oct ~23:27",
-      "changed": "2026-10-12T23:19+01:00",
-      "expected_basis": "PR CI ~5 min from 23:18, merge 3 min",
+      "detail": "#56 CI green on 3d1e017 (spec-lint 2m57s, secret-scan ok); merge needs the owner: auto mode refused my merge. Cleanup after.",
+      "expected": "12 Oct ~23:30",
+      "changed": "2026-10-12T23:23+01:00",
+      "expected_basis": "your merge, then cleanup ~3 min",
       "release": 7,
       "phases": [
         {
@@ -1380,12 +1380,12 @@
         {
           "name": "ci",
           "start": "2026-10-12T23:18+01:00",
-          "end": "2026-10-12T23:24+01:00"
+          "end": "2026-10-12T23:22+01:00"
         },
         {
           "name": "merge",
-          "start": "2026-10-12T23:24+01:00",
-          "end": "2026-10-12T23:27+01:00"
+          "start": "2026-10-12T23:22+01:00",
+          "end": "2026-10-12T23:30+01:00"
         }
       ],
       "risk": {
