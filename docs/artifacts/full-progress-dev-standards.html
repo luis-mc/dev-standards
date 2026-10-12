@@ -1154,6 +1154,18 @@ tr.status-group.release-group td { color: var(--ink); }
    "rides": "DS59"
   },
   {
+   "id": "AR49",
+   "owner": "artifacts",
+   "app": "luismc-artifacts",
+   "status": "Running",
+   "item": "Version labels say ARTIFACTSPEC 1.7.0",
+   "detail": "Eight places still said 1.6.0 after 1.7.0 shipped, including the session-start heading.",
+   "expected": "12 Oct ~07:40",
+   "changed": "2026-10-12T07:30+01:00",
+   "expected_basis": "string edits and one local suite",
+   "rides": "DS60"
+  },
+  {
    "id": "DL1",
    "owner": "delivery-speed",
    "app": "",
@@ -2225,6 +2237,7 @@ tr.status-group.release-group td { color: var(--ink); }
 </div>
 <div class="glance-group glance-running" data-glance="running"><div class="glance-label">Running now</div>
 <ul>
+<li data-glance-task="AR49"><span class="task-id">AR49</span>Version labels say ARTIFACTSPEC 1.7.0 <span class="glance-expected">12 Oct ~07:40</span><span class="glance-basis">string edits and one local suite</span></li>
 <li data-glance-task="DS60"><span class="task-id">DS60</span><span class="release-name">RELEASE-6</span>luismc-artifacts 1.7.1 straight to main, no CI (owner&#x27;s call) <span class="glance-expected">12 Oct ~07:40</span><span class="glance-basis">edit, local test, push</span></li>
 </ul>
 </div>
@@ -2242,12 +2255,13 @@ tr.status-group.release-group td { color: var(--ink); }
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">136</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">136</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
 <div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS60 (luismc-artifacts 1.7.1 straight to main, no CI (owner&#x27;s call)) expected live about 07:40." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">07:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">08:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-6 · luismc-artifacts 1.7.1 straight to main, no CI (owner&#x27;s call)</title>RELEASE-6 · luismc-artifa…</text>
+<text class="rt-sub" x="0" y="77"><title>AR49</title>AR49</text>
 <rect class="rt-bar merge" x="200" y="52" width="173.3" height="22"><title>merge + cleanup 07:30-07:40</title></rect>
 <polygon class="rt-expected" points="373.3,50 381.3,63 373.3,76 365.3,63"/>
 <text class="rt-live-label" x="373.3" y="92">live ~07:40</text>
@@ -2258,6 +2272,7 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group release-group" data-group="release-6"><td colspan="5"><strong>RELEASE-6 · live ~07:40</strong></td></tr>
 <tr data-task="DS60"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS60</span><span class="release-name">RELEASE-6</span>luismc-artifacts 1.7.1 straight to main, no CI (owner&#x27;s call)</td><td></td><td>Patch: version labels.</td><td>12 Oct ~07:40<span class="expected-basis">edit, local test, push</span></td></tr>
+<tr data-task="AR49"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR49</span>Version labels say ARTIFACTSPEC 1.7.0</a></td><td><code>luismc-artifacts</code></td><td>Eight places still said 1.6.0 after 1.7.0 shipped, including the session-start heading.</td><td>12 Oct ~07:40<span class="expected-basis">string edits and one local suite</span></td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="AR47"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR47</span>End-of-turn hook knows the daily publish limit</a><span class="release-line"><span class="release-name">RELEASE-5</span></span></td><td><code>luismc-artifacts</code></td><td>Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0</td><td>12 Oct</td></tr>
 <tr data-task="AR48"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR48</span>Tasks that ship nothing: --no-release with a reason</a><span class="release-line"><span class="release-name">RELEASE-5</span></span></td><td><code>luismc-artifacts</code></td><td>Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0</td><td>12 Oct</td></tr>
@@ -2403,9 +2418,9 @@ tr.status-group.release-group td { color: var(--ink); }
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
+<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29863110"><time datetime="2026-10-12T07:30+01:00">12 Oct 07:30</time></td><td>AR2 to AR49</td><td data-col="state"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29862750"><time datetime="2026-10-12T01:30+01:00">12 Oct 01:30</time></td><td>DL1 to DL13</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29862750"><time datetime="2026-10-12T01:30+01:00">12 Oct 01:30</time></td><td>MP1 to MP7, DS2 to DS5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
-<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862750"><time datetime="2026-10-12T01:30+01:00">12 Oct 01:30</time></td><td>AR2 to AR48</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862750"><time datetime="2026-10-12T01:30+01:00">12 Oct 01:30</time></td><td>TC1 to TC11</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
 </tbody></table></div>
 </section>

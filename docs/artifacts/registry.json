@@ -467,6 +467,18 @@
       "rides": "DS59"
     },
     {
+      "id": "AR49",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "Version labels say ARTIFACTSPEC 1.7.0",
+      "detail": "Eight places still said 1.6.0 after 1.7.0 shipped, including the session-start heading.",
+      "expected": "12 Oct ~07:40",
+      "changed": "2026-10-12T07:30+01:00",
+      "expected_basis": "string edits and one local suite",
+      "rides": "DS60"
+    },
+    {
       "id": "DL1",
       "owner": "delivery-speed",
       "app": "",
