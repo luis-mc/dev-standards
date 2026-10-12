@@ -163,7 +163,7 @@ the project's one claude.ai artifact, published once at the end of each turn
 (claude.ai allows 200 publishes per account per day), and it links to the
 feature files as local files.
 They are generated from a record in the project's repository
-(`docs/artifacts/`: a manifest, a task registry, content), to the binding
+(`docs/artifacts/` in the working tree: a manifest, a task registry, content; the plugin writes these files and never commits or pushes them, the project commits when it chooses), to the binding
 `ARTIFACTSPEC`, so status is typed in one place and every view agrees. A
 deleted full-progress artifact is recreated from the record without duplicates. The artifacts
 use the project's own design, found and confirmed with you, or a default one.

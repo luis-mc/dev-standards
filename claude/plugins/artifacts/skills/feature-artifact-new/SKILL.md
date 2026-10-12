@@ -8,7 +8,7 @@ effort: medium
 # Feature artifact — new
 
 Creates one feature artifact from the project's record (`docs/artifacts/`,
-ARTIFACTSPEC 1.7.0). The script is the only writer of `manifest.json` and
+ARTIFACTSPEC 1.8.0). The script is the only writer of `manifest.json` and
 `registry.json`; never edit either by hand. A feature artifact is a standalone
 HTML file in the repository (`docs/artifacts/feature-<slug>.html`, CSS inlined,
 opens by double-click). It is never published to claude.ai, because claude.ai
@@ -21,15 +21,12 @@ anywhere inside the project's repository. Exit 0 is success; on any other exit
 read the message, fix the cause and rerun. Never work around a refusal by
 editing the record.
 
-The record lives in the record worktree (a worktree of the default branch);
-`python "${CLAUDE_PLUGIN_ROOT}/scripts/project_artifacts.py" worktree` prints its path. By default it is
-`<repo>/.claude/worktrees/artifacts-record`; the project may move it with the
-environment variable `LUISMC_ARTIFACTS_WORKTREE` or `record_worktree` in the
-git-ignored `.claude/artifacts-local.json` (an absolute path; the next command
-moves the worktree there). Never write into it, and never into the
-session's own working tree: the script resets the record worktree before each
-change and would discard the edit. Edit content in a scratch directory outside
-the repository instead (the session's scratchpad directory, in a new folder).
+The record lives in `docs/artifacts/` of the session's working tree
+(`python "${CLAUDE_PLUGIN_ROOT}/scripts/project_artifacts.py" worktree` prints
+the directory). The plugin writes the files there and stops: it never commits,
+pushes or otherwise writes git state. The project commits `docs/artifacts/`
+when it chooses. Edit content in a scratch directory outside the repository
+and pass it to the script; never edit the record files by hand.
 
 ## Steps
 
@@ -96,9 +93,9 @@ the repository instead (the session's scratchpad directory, in a new folder).
 7. **Do not publish the feature artifact**, and do not publish Full Progress
    yet: it is published once, at the end of the turn, per "Publishing" below.
 8. **Check:** run `check`. Report any finding with its requirement ID. The
-   script commits the record on every writing command and pushes it once, at the
-   end of the turn (the end-of-turn hook, `pending`, and before `gh pr create`,
-   `gh pr ready` and `gh pr merge`); if `pending` or a push fails, say so and stop.
+   script writes the record to `docs/artifacts/` in the working tree and never
+   commits or pushes it; the project commits when it chooses. If `pending`
+   fails, say so and stop.
 9. **Tell the owner** where the file is (`docs/artifacts/<file>` in the
    repository; open it by double-click), its task IDs, and that branch names
    for these tasks must start with the task ID (`<ID>-short-name`).
@@ -140,7 +137,7 @@ artifacts are never published and have no URL; `mark-published` refuses them.
 
 At the end of the turn, repeat until `pending` exits 0:
 
-1. Run `pending --json`. It lists Full Progress when its committed render
+1. Run `pending --json`. It lists Full Progress when its render
    changed since the last publish, and writes the publish copy: the same page
    with absolute `file:///` links to the feature files. Each entry carries
    `key`, `title`, `path` (the absolute path of the publish copy) and `url`
