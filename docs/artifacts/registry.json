@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-12T01:04+01:00",
+  "updated": "2026-10-12T01:25+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -448,12 +448,11 @@
       "id": "AR47",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "End-of-turn hook knows the daily publish limit",
-      "detail": "Contract 16f878d (R9.6 publish only on visible change, R9.7 mark-deferred until the reset); one agent on AR47-publish-limit with AR48",
-      "expected": "12 Oct ~01:40",
-      "changed": "2026-10-12T01:04+01:00",
-      "expected_basis": "one agent ~30 min incl. branch CI",
+      "detail": "357204d/d3e03eb: pending lists Full Progress only on a visible change (published_fingerprint); mark-deferred until the reset, hook reminds once instead of blocking. Branch CI green 3m33s",
+      "expected": "12 Oct",
+      "changed": "2026-10-12T01:25+01:00",
       "rides": "DS59"
     },
     {
