@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """After-command hook (PostToolUse and PostToolUseFailure for Bash; PostToolUse for Agent and Task).
 
-ARTIFACTSPEC 1.7.0 section 8.1. Takes the task ID from the current branch name,
+ARTIFACTSPEC 1.8.0 section 8.1. Takes the task ID from the current branch name,
 and when the command that just ran is one of the table rows, appends a status
 event to the queue <repo>/.claude/artifacts-queue.json. It only queues: it never
 writes the record (INV-4, R8.1), finishes fast and never fails the tool call
@@ -176,19 +176,15 @@ def hook_root(data):
 
 RULE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                          'rules', 'project-artifacts.md')
-RULE_HEADING = 'luismc-artifacts: rules for work in this project (ARTIFACTSPEC 1.7.0)'
+RULE_HEADING = 'luismc-artifacts: rules for work in this project (ARTIFACTSPEC 1.8.0)'
 UPDATED_LINE = ('luismc-artifacts was updated; this rule replaces earlier instructions about publishing '
                 'feature artifacts.')
 
 
 def worktree_dir(root):
-    """The record worktree, resolved by the same function as the script (R4.24); a bad setting
-    falls back to the default here, the script is what refuses it."""
-    from artifact_queue import WorktreeSettingError, default_worktree, record_worktree
-    try:
-        return record_worktree(root)
-    except WorktreeSettingError:
-        return default_worktree(root)
+    """Where the record lives: the working tree itself (<root>/docs/artifacts). The old record worktree is
+    retired (AR50); the name stays for the callers."""
+    return root
 
 
 STALE_RULE_REL = '.claude/rules/project-artifacts.md'
@@ -223,7 +219,7 @@ def rule_digest(text):
 
 
 def record_text(root, manifest, rel):
-    """A record file as text from the freshest source: the record worktree, origin/<branch>, the checkout."""
+    """A record file as text: the working tree first, then origin/<branch> (read-only)."""
     branch = manifest.get('default_branch') if isinstance(manifest.get('default_branch'), str) else 'main'
     paths = [os.path.join(worktree_dir(root), 'docs', 'artifacts', rel)]
     for source in paths + ['origin', os.path.join(root, 'docs', 'artifacts', rel)]:
@@ -289,7 +285,7 @@ def stale_rule_present(root, manifest):
     if os.path.isfile(os.path.join(root, *STALE_RULE_REL.split('/'))):
         return True
     branch = manifest.get('default_branch') if isinstance(manifest.get('default_branch'), str) else 'main'
-    r = git(root, 'cat-file', '-e', 'origin/%s:%s' % (branch, STALE_RULE_REL))
+    r = git(root, 'show', 'origin/%s:%s' % (branch, STALE_RULE_REL))
     return bool(r and r[0] == 0)
 
 

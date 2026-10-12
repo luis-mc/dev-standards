@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Session-start hook (SessionStart).
 
-ARTIFACTSPEC 1.7.0 section 8.3. Delivers the plugin's rule file as
+ARTIFACTSPEC 1.8.0 section 8.3. Delivers the plugin's rule file as
 `hookSpecificOutput.additionalContext` in any repository that has a record
 manifest, every session, whether or not `gh` works (R8.9), followed by what the
 session must do about the record: the old rule copy, a migration, old claude.ai
 pages to delete (R8.13 to R8.15). Notes the delivery in the stop state so the
-after-command hook does not repeat it (R8.12). Then catches up on
-changes made outside a session: fetches the default branch, lists pull requests with `gh pr list`, and queues
+after-command hook does not repeat it (R8.12). Before that it runs
+`project_artifacts.py migrate` (AR50): it copies the old record worktree into docs/artifacts/ when that
+copy is newer and prints a one-line note, which goes to the session context; otherwise it prints nothing.
+The hook runs no git write and no gh write: no fetch, reset or worktree handling. Then catches up on
+changes made outside a session: lists pull requests with `gh pr list` (read-only), and queues
 `merged_status` for every task in Running, Waiting or To do whose branch `<ID>-*`
 was merged, and `On hold` for one whose only pull requests were closed unmerged
 (R8.5). When `gh` is missing or not signed in it queues nothing and prints one
@@ -25,13 +28,13 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from hook_after_command import (RULE_HEADING, RULE_PATH, TASK_ID_RE, command_for, context_text,  # noqa: E402,F401
-                                git, hook_root, hooks_off, load_manifest, mark_delivered,
+                                hook_root, hooks_off, load_manifest, mark_delivered,
                                 merged_status_of, origin_record_file, parse_json, read_input,
-                                rule_text, run, warn)
+                                rule_text, run, script_path, warn)
 
 OPEN_STATUSES = ('Running', 'Waiting', 'To do')
 GH_TIMEOUT = 30
-FETCH_TIMEOUT = 25
+MIGRATE_TIMEOUT = 60
 
 
 def gh_command():
@@ -39,15 +42,15 @@ def gh_command():
 
 
 def load_registry(root, branch):
-    """The registry from origin/<branch> (the record's home), else the checkout."""
-    text = origin_record_file(root, branch, 'registry.json')
+    """The registry from the working tree (the record's home), else read-only from origin/<branch>."""
+    path = os.path.join(root, 'docs', 'artifacts', 'registry.json')
+    try:
+        with open(path, encoding='utf-8') as f:
+            text = f.read()
+    except OSError:
+        text = origin_record_file(root, branch, 'registry.json')
     if text is None:
-        path = os.path.join(root, 'docs', 'artifacts', 'registry.json')
-        try:
-            with open(path, encoding='utf-8') as f:
-                text = f.read()
-        except OSError:
-            return None
+        return None
     return parse_json(text, 'registry.json')
 
 
@@ -98,10 +101,6 @@ def catch_up(root, manifest):
     merged_status = merged_status_of(manifest)
     messages = []
 
-    f = git(root, 'fetch', 'origin', branch, timeout=FETCH_TIMEOUT)
-    if f is None or f[0] != 0:
-        warn('git fetch origin %s failed (exit %s)' % (branch, 'none' if f is None else f[0]))
-
     prs, skipped = list_pull_requests(root)
     if skipped:
         warn('gh pr list skipped: ' + skipped)
@@ -132,6 +131,18 @@ def catch_up(root, manifest):
     return messages
 
 
+def migrate_note(root):
+    """Run `migrate` (AR50): the one-line note it prints when it copied the old record worktree, else ''."""
+    r = run(command_for(script_path()) + ['migrate'], root, MIGRATE_TIMEOUT)
+    if r is None:
+        warn('migrate could not run')
+        return ''
+    if r[0] != 0:
+        warn('migrate failed (exit %d)' % r[0])
+        return ''
+    return r[1].strip()
+
+
 def main():
     if hooks_off():
         return 0
@@ -139,8 +150,15 @@ def main():
     root = hook_root(data)
     if not root:
         return 0
+    try:
+        note = migrate_note(root)
+    except Exception as exc:   # the rest still runs
+        warn('migrate skipped (%s: %s)' % (type(exc).__name__, exc))
+        note = ''
     manifest = load_manifest(root)
     if manifest is None:
+        if note:
+            print(json.dumps({'systemMessage': note}))
         return 0
     try:
         messages = catch_up(root, manifest)
@@ -148,6 +166,8 @@ def main():
         warn('catch-up skipped (%s: %s)' % (type(exc).__name__, exc))
         messages = []
     out = {}
+    if note:
+        messages.insert(0, note)
     if messages:
         out['systemMessage'] = '\n'.join(messages)
     try:
@@ -155,6 +175,8 @@ def main():
     except Exception as exc:
         warn('rule not delivered (%s: %s)' % (type(exc).__name__, exc))
         context = ''
+    if note:
+        context = (context + '\n\n' if context else '') + note
     if context:
         try:
             mark_delivered(root, str(data.get('session_id') or 'default'), rule_text())
