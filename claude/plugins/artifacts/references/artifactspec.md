@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.6.1
+**Version:** 1.7.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.7.0 — 2026-10-12.**
+
+- Full Progress needs a publish only when what the owner sees changes (R9.6); a publish refused for claude.ai's daily limit is deferred until the reset with `mark-deferred`, and the end-of-turn hook stops blocking until then (R9.7); a task that ships nothing can say so with `--no-release REASON` and be Running without a release (R5.47a).
 
 **1.6.1 — 2026-10-11.**
 
