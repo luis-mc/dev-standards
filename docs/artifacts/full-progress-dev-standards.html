@@ -1146,11 +1146,11 @@ tr.status-group.release-group td { color: var(--ink); }
    "id": "AR48",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "Built",
+   "status": "Live",
    "item": "Tasks that ship nothing: --no-release with a reason",
-   "detail": "416785c/357204d: --no-release REASON; such a task may be Running without a release, never Built; 'ships nothing' line on its row. Branch CI green",
+   "detail": "Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0",
    "expected": "12 Oct",
-   "changed": "2026-10-12T01:25+01:00",
+   "changed": "2026-10-12T01:30+01:00",
    "rides": "DS59"
   },
   {
@@ -2210,26 +2210,21 @@ tr.status-group.release-group td { color: var(--ink); }
 <li data-glance-task="DS59"><span class="task-id">DS59</span><span class="release-name">RELEASE-5</span>AR47 train: join, PR CI, merge, cleanup <span class="glance-expected">12 Oct ~01:33</span><span class="glance-basis">#54: CI 3.5 min, merge+cleanup 4</span></li>
 </ul>
 </div>
-<div class="glance-group glance-built" data-glance="built"><div class="glance-label">Built, not released</div>
-<ul>
-<li data-glance-task="AR48"><span class="task-id">AR48</span>Tasks that ship nothing: --no-release with a reason</li>
-</ul>
-</div>
 <div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
 <ul>
 <li data-glance-task="AR47"><span class="task-id">AR47</span>End-of-turn hook knows the daily publish limit</li>
+<li data-glance-task="AR48"><span class="task-id">AR48</span>Tasks that ship nothing: --no-release with a reason</li>
 <li data-glance-task="DS58"><span class="task-id">DS58</span>Publish Full Progress after the daily publish limit resets</li>
 <li data-glance-task="AR46"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</li>
 <li data-glance-task="DS56"><span class="task-id">DS56</span><span class="release-name">RELEASE-4</span>AR46 train: join, PR CI, merge, cleanup</li>
 <li data-glance-task="DS57"><span class="task-id">DS57</span>cleanup.py: no failure when the train-cleanup workflow got there first</li>
 <li data-glance-task="DS55"><span class="task-id">DS55</span><span class="release-name">RELEASE-3</span>TC9 train: join, PR CI, merge, cleanup</li>
 <li data-glance-task="TC9"><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess</li>
-<li data-glance-task="TC10"><span class="task-id">TC10</span>Change notes at commit; every shipped rule line names its check</li>
-<li class="glance-more">and 66 more</li>
+<li class="glance-more">and 67 more</li>
 </ul>
 </div>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">134</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">135</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
@@ -2252,8 +2247,8 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr class="status-group release-group" data-group="release-5"><td colspan="5"><strong>RELEASE-5 · live ~01:33 · worst ~01:43</strong></td></tr>
 <tr data-task="DS59"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS59</span><span class="release-name">RELEASE-5</span>AR47 train: join, PR CI, merge, cleanup</td><td></td><td>Joined AR47-publish-limit, folded to ARTIFACTSPEC and luismc-artifacts 1.7.0; ready PR #55, CI from 01:25</td><td>12 Oct ~01:33<span class="expected-basis">#54: CI 3.5 min, merge+cleanup 4</span></td></tr>
-<tr data-task="AR48"><td><span class="status-chip status-built">Built</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR48</span>Tasks that ship nothing: --no-release with a reason</a></td><td><code>luismc-artifacts</code></td><td>416785c/357204d: --no-release REASON; such a task may be Running without a release, never Built; &#x27;ships nothing&#x27; line on its row. Branch CI green</td><td>12 Oct</td></tr>
 <tr data-task="AR47"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR47</span>End-of-turn hook knows the daily publish limit</a></td><td><code>luismc-artifacts</code></td><td>Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0</td><td>12 Oct</td></tr>
+<tr data-task="AR48"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR48</span>Tasks that ship nothing: --no-release with a reason</a></td><td><code>luismc-artifacts</code></td><td>Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0</td><td>12 Oct</td></tr>
 <tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
 <tr data-task="DS58"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS58</span>Publish Full Progress after the daily publish limit resets</td><td></td><td>Limit reset at 01:00 Lisbon; Full Progress published once at 01:01 and recorded</td><td>12 Oct</td></tr>
 <tr data-task="AR46"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars</a><span class="release-line"><span class="release-name">RELEASE-4</span></span></td><td><code>luismc-artifacts</code></td><td>Released in #54 (eaeec1d, 00:22): ARTIFACTSPEC 1.6.1, luismc-artifacts 1.6.2</td><td>12 Oct</td></tr>
@@ -2398,7 +2393,7 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
 <tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29862750"><time datetime="2026-10-12T01:30+01:00">12 Oct 01:30</time></td><td>DL1 to DL13</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29862750"><time datetime="2026-10-12T01:30+01:00">12 Oct 01:30</time></td><td>MP1 to MP7, DS2 to DS5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
-<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862750"><time datetime="2026-10-12T01:30+01:00">12 Oct 01:30</time></td><td>AR2 to AR48</td><td data-col="state"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
+<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29862750"><time datetime="2026-10-12T01:30+01:00">12 Oct 01:30</time></td><td>AR2 to AR48</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862750"><time datetime="2026-10-12T01:30+01:00">12 Oct 01:30</time></td><td>TC1 to TC11</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
 </tbody></table></div>
 </section>

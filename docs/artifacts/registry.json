@@ -459,11 +459,11 @@
       "id": "AR48",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "Tasks that ship nothing: --no-release with a reason",
-      "detail": "416785c/357204d: --no-release REASON; such a task may be Running without a release, never Built; 'ships nothing' line on its row. Branch CI green",
+      "detail": "Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0",
       "expected": "12 Oct",
-      "changed": "2026-10-12T01:25+01:00",
+      "changed": "2026-10-12T01:30+01:00",
       "rides": "DS59"
     },
     {
