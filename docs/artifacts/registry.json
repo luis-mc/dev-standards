@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-12T23:23+01:00",
+  "updated": "2026-10-12T23:26+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -481,11 +481,11 @@
       "id": "AR50",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "Plugin never pushes the record",
-      "detail": "Joined in #56 (3d1e017): plugin writes docs/artifacts/ only, never commits or pushes; ARTIFACTSPEC 1.8.0, luismc-artifacts 1.8.0. Local suites green.",
+      "detail": "Merged in #56 (25889b3): luismc-artifacts 1.8.0, ARTIFACTSPEC 1.8.0; the plugin writes docs/artifacts/ only, never commits or pushes.",
       "expected": "12 Oct",
-      "changed": "2026-10-12T23:19+01:00",
+      "changed": "2026-10-12T23:26+01:00",
       "rides": "DS61"
     },
     {
