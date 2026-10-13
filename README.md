@@ -48,6 +48,8 @@ Sets up:
 - The Caveman output style
 - `.claude/rules/agents-and-integration.md` — how agents are run and work is
   integrated (replaces `model-delegation.md`)
+- `.claude/rules/clarifying-questions.md` — gather every clarifying question
+  and ask them all at once; written on every install and re-run
 - `.claude/hooks/effort_drift.py` — a SessionStart alias-drift warning
 - `enabledPlugins` — turns on `luismc-artifacts` for the project (project
   target only; other entries are kept, and an entry you set to `false` stays)
