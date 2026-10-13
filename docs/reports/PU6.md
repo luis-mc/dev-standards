@@ -11,4 +11,5 @@ Branch `PU6-integration`. Plugin luismc-artifacts 1.9.0 -> 1.10.0, ARTIFACTSPEC 
 - Tests: `glance_groups_are_collapsible_details`, `check_finds_a_wrong_glance_state`, updated glance helpers and CSS test.
 
 ## Status
-- Implementation done; suites and consumer check: see the PR.
+- Local: test_render_artifacts 131 passed, test_spec_check, test_change_notes and spec_check clean. test_project_artifacts is slow locally; the ready PR CI runs it.
+- Consumer check (scratch copy of comics-organizer docs/artifacts, own git repo): render --all ok, check clean; Playwright at 1280 and 390, no horizontal overflow; groups you,running,waiting open, built,live closed.
