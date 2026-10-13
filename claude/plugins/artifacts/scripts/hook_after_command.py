@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """After-command hook (PostToolUse and PostToolUseFailure for Bash; PostToolUse for Agent and Task).
 
-ARTIFACTSPEC 1.8.0 section 8.1. Takes the task ID from the current branch name,
+ARTIFACTSPEC 1.9.0 section 8.1. Takes the task ID from the current branch name,
 and when the command that just ran is one of the table rows, appends a status
 event to the queue <repo>/.claude/artifacts-queue.json. It only queues: it never
 writes the record (INV-4, R8.1), finishes fast and never fails the tool call
@@ -176,7 +176,7 @@ def hook_root(data):
 
 RULE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                          'rules', 'project-artifacts.md')
-RULE_HEADING = 'luismc-artifacts: rules for work in this project (ARTIFACTSPEC 1.8.0)'
+RULE_HEADING = 'luismc-artifacts: rules for work in this project (ARTIFACTSPEC 1.9.0)'
 UPDATED_LINE = ('luismc-artifacts was updated; this rule replaces earlier instructions about publishing '
                 'feature artifacts.')
 
