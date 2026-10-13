@@ -162,6 +162,26 @@ export function changeOf(tool: string, output: unknown): Change | null {
   }
 }
 
+/**
+ * The change a file tool's result draws folded, or null when the engine draws
+ * it: the diffs switch is off, the call errored, it changed nothing countable,
+ * or the change does not exceed the threshold. A shell call is not a file
+ * tool and is never folded here.
+ */
+export function foldedFileChange(
+  tool: string,
+  output: unknown,
+  isErrored: boolean,
+  diffsFolded: boolean,
+  foldAbove: number,
+): Change | null {
+  if (!diffsFolded || isErrored) return null
+  if (!EDIT_TOOLS.includes(tool)) return null
+  const change = changeOf(tool, output)
+  if (change === null || !isOverThreshold(change, foldAbove)) return null
+  return change
+}
+
 /** Added plus removed lines. */
 export function changedLines(change: Pick<Change, 'added' | 'removed'>): number {
   return change.added + change.removed

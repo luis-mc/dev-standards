@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import type { Change } from '../hooks/fold/change.ts'
-import { commandRow, commandText, firstLine, linesWord, planCommand, runningCommand, shellOutcome } from '../hooks/fold/shell.ts'
+import { commandRow, commandText, firstLine, linesWord, outputView, planCommand, runningCommand, shellOutcome } from '../hooks/fold/shell.ts'
 import { piecesText, piecesWidth } from '../hooks/fold/summary.ts'
 
 const edits: Change = {
@@ -105,6 +105,19 @@ test('commandRow: tiny widths still give a row within the width', () => {
 test('commandRow: wide characters in the command count as two cells', () => {
   const row = commandRow('Bash', 'echo 日本語日本語日本語', { kind: 'empty', text: 'no output' }, null, '»', 30)
   assert.ok(piecesWidth(row) <= 30)
+})
+
+test('outputView: stdout then stderr, cut to a number of lines, CRLF trimmed', () => {
+  const v = outputView({ stdout: 'a\r\nb\nc\n', stderr: 'e1\n' }, 3)
+  assert.deepEqual(v.lines, [
+    { text: 'a', isStderr: false },
+    { text: 'b', isStderr: false },
+    { text: 'c', isStderr: false },
+  ])
+  assert.equal(v.more, 1)
+  assert.deepEqual(outputView({ stdout: '', stderr: '' }, 5), { lines: [], more: 0 })
+  assert.deepEqual(outputView('text', 5), { lines: [], more: 0 })
+  assert.deepEqual(outputView({ stdout: 'a' }, 0), { lines: [], more: 1 })
 })
 
 test('commandText and runningCommand cut to one line', () => {

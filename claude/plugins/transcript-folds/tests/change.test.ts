@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { changeOf, changedLines, isOverThreshold } from '../hooks/fold/change.ts'
+import { changeOf, changedLines, foldedFileChange, isOverThreshold } from '../hooks/fold/change.ts'
 
 const hunk = (lines: string[], start = 5) => ({
   oldStart: start,
@@ -99,6 +99,21 @@ test('Bash without edit data, or with it unavailable: no change', () => {
 test('PowerShell and other tools carry no change', () => {
   assert.equal(changeOf('PowerShell', { stdout: 'x', stderr: '' }), null)
   assert.equal(changeOf('Read', { filePath: '/a' }), null)
+})
+
+test('foldedFileChange: folds over the threshold only, with the switch on, not errored', () => {
+  const out = { filePath: '/p/a.ts', structuredPatch: [hunk(['-a', '+b', '+c', '+d', '+e', '+f'])] } // 6 lines
+  assert.equal(foldedFileChange('Edit', out, false, true, 5)?.added, 5)
+  assert.equal(foldedFileChange('Edit', out, false, true, 6), null)
+  assert.equal(foldedFileChange('Edit', out, false, false, 5), null)
+  assert.equal(foldedFileChange('Edit', out, true, true, 5), null)
+  assert.equal(foldedFileChange('Bash', out, false, true, 0), null)
+  assert.equal(foldedFileChange('Edit', 'Error: no match', false, true, 0), null)
+})
+
+test('foldedFileChange: threshold 0 folds a one-line edit', () => {
+  const out = { filePath: '/p/a.ts', structuredPatch: [hunk(['-a', '+b'])] }
+  assert.ok(foldedFileChange('Edit', out, false, true, 0))
 })
 
 test('threshold: exactly at the threshold is not folded, one over is', () => {

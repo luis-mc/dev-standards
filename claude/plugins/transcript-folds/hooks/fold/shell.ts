@@ -60,6 +60,27 @@ export function shellOutcome(output: unknown, isErrored: boolean): Outcome {
   return { kind: 'output', text: linesWord(n) }
 }
 
+export type OutputLine = { text: string; isStderr: boolean }
+
+export type OutputView = { lines: OutputLine[]; more: number }
+
+/**
+ * A shell call's own output as lines (stdout, then stderr), at most `max`
+ * of them; `more` counts those left out. Used where a call that edited files
+ * is drawn with its output but without the per-file diff.
+ */
+export function outputView(output: unknown, max: number): OutputView {
+  if (!isRec(output)) return { lines: [], more: 0 }
+  const all: OutputLine[] = []
+  for (const [key, isStderr] of [['stdout', false], ['stderr', true]] as const) {
+    const text = str(output[key]).trimEnd()
+    if (text === '') continue
+    for (const raw of text.split('\n')) all.push({ text: raw.replace(/\r$/, ''), isStderr })
+  }
+  const keep = Math.max(0, Math.floor(max))
+  return { lines: all.slice(0, keep), more: Math.max(0, all.length - keep) }
+}
+
 export type CommandCall = {
   isRunning: boolean
   isErrored: boolean
