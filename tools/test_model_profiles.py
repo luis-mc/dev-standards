@@ -344,7 +344,7 @@ def m_marketplace_unexplained(r):
 def m_hardcoded_marketplace(r):
     p = r / SETTINGS
     p.write_text(p.read_text(encoding="utf-8").replace(
-        "{{MARKETPLACE}}", "luismc-dev-tools"), encoding="utf-8")
+        "{{MARKETPLACE}}", "dev-standards"), encoding="utf-8")
 
 
 def m_bad_json(r):

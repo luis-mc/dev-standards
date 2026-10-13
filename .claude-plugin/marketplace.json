@@ -1,9 +1,9 @@
 {
-  "name": "luismc-dev-tools",
+  "name": "dev-standards",
   "owner": {
     "name": "Luis Carvalho"
   },
-  "description": "Personal Claude Code plugin marketplace (luismc-dev-tools): plugins that scaffold security, compliance, and performance tooling into new or existing repos, author normative specs, and generate or audit whole products against the binding STACKSPEC/AUTHSPEC specifications.",
+  "description": "Personal Claude Code plugin marketplace: plugins that scaffold security, compliance, and performance tooling into new or existing repos, author normative specs, and generate or audit whole products against the binding STACKSPEC/AUTHSPEC specifications.",
   "plugins": [
     {
       "name": "luismc-agents",
@@ -29,6 +29,11 @@
       "name": "luismc-specs",
       "source": "./claude/plugins/specs",
       "description": "Interviews the user and writes a normative specification to specs/ — IDed, testable requirements — before implementation starts."
+    },
+    {
+      "name": "luismc-transcript-folds",
+      "source": "./claude/plugins/transcript-folds",
+      "description": "Folds long diffs and finished shell commands in the transcript into one line each, with a band above the prompt, two toggle chords and a session tally."
     }
   ]
 }
