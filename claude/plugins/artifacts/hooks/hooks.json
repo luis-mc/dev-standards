@@ -1,5 +1,5 @@
 {
-  "description": "luismc-artifacts: queue status events after commands, note background work, keep Full Progress published (once, at the end of a turn) and background work recorded, deliver the rule, migrate the old record worktree and catch up at session start; no hook commits, pushes or runs any git or gh write (ARTIFACTSPEC 1.9.0, section 8)",
+  "description": "luismc-artifacts: queue status events after commands, note background work, keep Full Progress published (once, at the end of a turn) and background work recorded, deliver the rule, migrate the old record worktree and catch up at session start; no hook commits, pushes or runs any git or gh write (ARTIFACTSPEC 1.10.0, section 8)",
   "hooks": {
     "PostToolUse": [
       {

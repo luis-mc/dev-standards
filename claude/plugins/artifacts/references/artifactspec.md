@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.9.0
+**Version:** 1.10.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.10.0 — 2026-10-13.**
+
+- Each group of the At a glance block in section 0 (Needs you, Running now, Built, Waiting, Live) is a collapsible native `<details>` like the checklist groups (R6.13): chevron, label and a task count in the `<summary>`; Built and Live start closed, the others open, and an empty Needs you group stays open with its sentence.
 
 **1.9.0 — 2026-10-13.**
 
@@ -764,8 +768,8 @@ double-click.
 
 - **R5.33** — Section 0 holds, right after the lede and before the tiles, an
   *At a glance* block generated from the registry: `<div class="at-a-glance">`
-  with one `<div class="glance-group" data-glance="<kind>">` per kind, a
-  `glance-label` and a list of items one per line. An item is the task ID
+  with one `<details class="glance-group" data-glance="<kind>">` per kind (a
+  collapsible group, R6.13), a `glance-label` and a list of items one per line. An item is the task ID
   (`<span class="task-id">`), the item text and, for an open status, the
   Expected (and its `expected_basis`, R6.10). The block is the same on a feature
   artifact (its own tasks and decisions) and on the full-progress artifact (all
@@ -1062,6 +1066,23 @@ double-click.
   `Earlier` fold outside `Live or built` (R6.12). Verified by
   `groups_are_collapsible_details`, `live_or_built_starts_closed`,
   `check_finds_a_wrong_open_state` and `collapsible_group_style_is_accessible`.
+
+- **R6.13** — Each group of the At a glance block (R5.33) is the same fold as a
+  checklist group: a native `<details class="glance-group glance-<kind>"
+  data-glance="<kind>">` whose first child is a `<summary>` holding
+  `span.glance-label` (the group label) and a muted `span.fold-count` with the
+  number of items the group lists, as `1 task` or `3 tasks` (tasks, open
+  decisions and the `and N more` of `live` all count), followed by the list or,
+  for an empty `you` group, the sentence `Nothing needs you.`. The groups `built`
+  and `live` (done work) are rendered closed, without `open`; `you`, `running`
+  and `waiting` are rendered `open`, and `you` is always shown, open, with its
+  sentence when empty. The summary is styled by the rules of R6.12 (chevron,
+  tap target of at least 2.75rem, `:focus-visible` outline, no script); the
+  coloured left bar of each group stays; the groups stack at every width, so a
+  phone never scrolls sideways. `check` reports a glance group that is not such
+  a `<details>`, one in the wrong open state and one whose count is not the
+  number of items it lists. Verified by `glance_groups_are_collapsible_details`,
+  `check_finds_a_wrong_glance_state` and `at_a_glance_css_uses_tokens_and_fits_a_phone`.
 
 ---
 
@@ -1425,6 +1446,7 @@ Reads the hook input; takes the task ID from the current branch name
 | Exactly one full-progress artifact when any feature artifact exists | INV-2 |
 | Section 0 first, named `Status and checklist`, holding the stamp, the lede (optional), At a glance, tiles, key and checklist in order | R5.3 |
 | At a glance block: groups in order; each group lists exactly its tasks; Live within 24 hours, at most 8 | R5.33 to R5.35 |
+| Each glance group a `<details class="glance-group">` with label and count in the `<summary>`; `built` and `live` closed, the others open | R6.13 |
 | Sections numbered 0..N without gaps; contents match | R5.2 |
 | Stamp format, `datetime` attribute and zone label | R5.5 |
 | Checklist columns per kind | R6.4 |

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Session-start hook (SessionStart).
 
-ARTIFACTSPEC 1.9.0 section 8.3. Delivers the plugin's rule file as
+ARTIFACTSPEC 1.10.0 section 8.3. Delivers the plugin's rule file as
 `hookSpecificOutput.additionalContext` in any repository that has a record
 manifest, every session, whether or not `gh` works (R8.9), followed by what the
 session must do about the record: the old rule copy, a migration, old claude.ai

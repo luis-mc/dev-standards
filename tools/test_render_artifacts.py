@@ -143,7 +143,7 @@ def glance(html):
     """{group key: (task ids, decision ids, 'and N more' text, 'none' text)} of the At a glance block."""
     root = R.parse_dom(html)
     out = {}
-    for g in R.find_all(root, 'div', 'glance-group'):
+    for g in R.find_all(root, 'details', 'glance-group'):
         more, none = R.find(g, 'li', 'glance-more'), R.find(g, 'p', 'glance-none')
         out[g.attrs['data-glance']] = (
             [li.attrs['data-glance-task'] for li in R.find_all(g, 'li', pred=lambda n: 'data-glance-task' in n.attrs)],
@@ -833,6 +833,44 @@ def check_finds_a_wrong_open_state(fx):
     row = '<tr data-task="DS6">'
     expect(fx, sub1(fp, row, '<tr class="status-group" data-group="now"><td colspan="5"><strong>x</strong></td></tr>' + row),
            'full-progress', ['R6.12'])
+
+
+@test
+@with_fixture
+def glance_groups_are_collapsible_details(fx):
+    """R6.13: each At a glance group is a <details> with the label and a task count in its <summary>; done groups start closed."""
+    fx.registry = glance_registry()
+    for name in ('full-progress', 'artifacts'):
+        out = fx.render(name)
+        dom = R.parse_dom(out)
+        groups = R.find_all(dom, 'details', 'glance-group')
+        assert groups and not R.find_all(dom, 'div', 'glance-group'), name
+        for g in groups:
+            kids = [n for n in g.children if n.tag != '#text']
+            assert kids[0].tag == 'summary' and R.find(kids[0], 'span', 'glance-label') is not None
+            assert ('open' in g.attrs) == (g.attrs['data-glance'] not in ('built', 'live')), (name, g.attrs)
+        assert fx.check(out, name) == []
+    out = fx.render('full-progress')
+    counts = {g.attrs['data-glance']: R.text_of(R.find(g, 'span', 'fold-count'))
+              for g in R.find_all(R.parse_dom(out), 'details', 'glance-group')}
+    got = glance(out)
+    for key, text in counts.items():
+        n = len(got[key][0]) + len(got[key][1]) + (int(''.join(c for c in got[key][2] if c.isdigit())) if got[key][2] else 0)
+        assert text == '%d task%s' % (n, '' if n == 1 else 's'), (key, text, n)
+    empty = fx.render('artifacts')
+    you = [g for g in R.find_all(R.parse_dom(empty), 'details', 'glance-group') if g.attrs['data-glance'] == 'you'][0]
+    assert 'open' in you.attrs and R.text_of(R.find(you, 'p', 'glance-none')) == 'Nothing needs you.' or R.find(you, 'li')
+
+
+@test
+@with_fixture
+def check_finds_a_wrong_glance_state(fx):
+    fx.registry = glance_registry()
+    fp = fx.render('full-progress')
+    expect(fx, sub1(fp, 'data-glance="live">', 'data-glance="live" open>'), 'full-progress', ['R6.13'])
+    expect(fx, sub1(fp, 'data-glance="running" open>', 'data-glance="running">'), 'full-progress', ['R6.13'])
+    at = fp.index('data-glance="you"')
+    expect(fx, fp[:at] + fp[at:].replace('class="fold-count">', 'class="fold-count">9', 1), 'full-progress', ['R6.13'])
 
 
 @test
@@ -2003,7 +2041,7 @@ def check_r532_block_and_order(fx):
     """R5.3 (order, lede optional) and R5.33 (groups in order)."""
     out = fx.render('artifacts')
     start = out.index('<div class="at-a-glance">')
-    end = out.index('</div>\n</div>', start) + len('</div>\n</div>')
+    end = out.index('</details>\n</div>', start) + len('</details>\n</div>')
     block = out[start:end]
     after_tiles = sub1(out[:start] + out[end:], '<p class="note">Key:', block + '\n<p class="note">Key:')
     expect(fx, after_tiles, 'artifacts', ['R5.3'])                                           # block after the tiles
@@ -2015,7 +2053,7 @@ def check_r532_block_and_order(fx):
     expect(fx, sub1(out, lede + '\n', ''), 'artifacts', [])                                  # no lede: still clean
     swapped = (out.replace('data-glance="running"', 'data-glance="TMP"').replace('data-glance="built"', 'data-glance="running"')
                .replace('data-glance="TMP"', 'data-glance="built"'))
-    expect(fx, swapped, 'artifacts', ['R5.33', 'R5.35'])
+    expect(fx, swapped, 'artifacts', ['R5.33', 'R5.35', 'R6.13'])
 
 
 @test
@@ -2083,7 +2121,8 @@ def at_a_glance_css_uses_tokens_and_fits_a_phone():
     block = css[css.index('.at-a-glance {'):css.index('/* Status chips */')]
     assert 'var(--signal)' in block and 'var(--running-bg)' in block and 'var(--waiting-bg)' in block and 'var(--ink-muted)' in block
     assert not re.search(r'#[0-9a-fA-F]{3,6}\b', block), 'colours must be tokens'
-    assert re.search(r'@media \(max-width: 40rem\)\s*\{\s*\.glance-group\s*\{\s*grid-template-columns:\s*1fr', block)
+    assert 'grid-template-columns' not in block, 'the groups are stacked blocks, so a phone never scrolls sideways'
+    assert 'min-height: 2.75rem' in css[css.index('details.glance-group > summary,'):css.index('details.glance-group > summary::-webkit')]
 
 
 def _s1_rows(out):
