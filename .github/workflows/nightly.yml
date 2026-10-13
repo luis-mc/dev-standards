@@ -23,4 +23,4 @@ jobs:
     with:
       mutants: true
       # a manual run has no diff to read: name every area
-      areas: specs,delivery,artifacts,profiles
+      areas: specs,delivery,artifacts,profiles,transcript-folds
