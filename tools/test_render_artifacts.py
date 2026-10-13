@@ -401,14 +401,17 @@ def registry_in_script_cannot_break_out(fx):
 
 # ------------------------------------------------------------------ groups, order, Earlier fold, lede, tiles
 def table_rows(html, which=0):
+    """The groups and rows of the checklist in page order; which=0 the groups outside the Earlier fold, 1 the Earlier fold."""
     dom = R.parse_dom(html)
-    table = R.find_all(dom, 'table', 'status-checklist')[which]
     out = []
-    for tr in R.find_all(table, 'tr'):
-        if R.has_class(tr, 'status-group'):
-            out.append(('group', tr.attrs['data-group'], R.text_of(tr)))
-        elif 'data-task' in tr.attrs:
-            out.append(('task', tr.attrs['data-task']))
+    for node in R.elements(dom):
+        in_earlier = R.has_ancestor(node, lambda n: n.tag == 'details' and R.has_class(n, 'earlier'))
+        if in_earlier != bool(which):
+            continue
+        if node.tag == 'details' and R.has_class(node, 'status-fold'):
+            out.append(('group', node.attrs['data-group'], R.text_of(R.find(R.find(node, 'summary'), 'strong'))))
+        elif node.tag == 'tr' and 'data-task' in node.attrs:
+            out.append(('task', node.attrs['data-task']))
     return out
 
 
@@ -442,9 +445,9 @@ def earlier_fold_older_than_14_days(fx):
     out = fx.render('full-progress')
     assert table_rows(out, 1) == [('task', 'DS1')], table_rows(out, 1)   # only a Live row folds (24 Sep)
     dom = R.parse_dom(out)
-    details = R.find_all(dom, 'details')
+    details = R.find_all(dom, 'details', 'earlier')
     assert len(details) == 1 and 'open' not in details[0].attrs and R.text_of(R.find(details[0], 'summary')) == 'Earlier'
-    assert '<details' not in fx.render('artifacts')  # a feature artifact never folds
+    assert 'class="earlier"' not in fx.render('artifacts')  # a feature artifact never folds
 
 
 @test
@@ -466,7 +469,7 @@ def built_rows_never_fold(fx):
     # a registry with only old Built rows has no Earlier fold at all
     fx.registry['tasks'] = [dict(t_, status='Built', changed='2025-01-01T10:00+00:00') for t_ in fx.registry['tasks']
                             if t_['status'] in ('Live', 'Built')]
-    assert '<details' not in fx.render('full-progress')
+    assert 'class="earlier"' not in fx.render('full-progress')
 
 
 @test
@@ -485,7 +488,7 @@ def earlier_fold_boundary_is_14_days_from_the_stamp(fx):
 @with_fixture
 def earlier_fold_follows_the_stamp_not_the_clock(fx):
     out = fx.render('full-progress', stamp_text='01 Oct 09:00', stamp_iso='2026-10-01T09:00+01:00')
-    assert '<details' not in out  # everything is within 14 days of 1 Oct except AR16 (11 days) - all shown
+    assert 'class="earlier"' not in out  # everything is within 14 days of 1 Oct except AR16 (11 days) - all shown
     assert ('task', 'AR16') in table_rows(out, 0)
 
 
@@ -498,7 +501,7 @@ def a_group_with_only_folded_rows_is_still_closed_correctly(fx):
             task_['status'] = 'Live'                                             # Built would stay shown
     out = fx.render('full-progress')
     rows = table_rows(out, 0)
-    assert ('group', 'built', 'Live or built') not in rows, rows
+    assert rows[-1] == ('group', 'built', 'Live or built'), rows               # the group holds only the Earlier fold
     assert table_rows(out, 1) == [('task', 'DS1'), ('task', 'AR16')]
     assert fx.check(out, 'full-progress') == []
 
@@ -549,9 +552,8 @@ def full_progress_links_are_relative(fx):
     """R5.30: the committed file links to feature files by file name, so it works from a checkout."""
     out = fx.render('full-progress')
     dom = R.parse_dom(out)
-    table = R.find(dom, 'table', 'status-checklist')
     hrefs = {tr.attrs['data-task']: (R.find(tr, 'a').attrs['href'] if R.find(tr, 'a') else None)
-             for tr in R.find_all(table, 'tr', pred=lambda n: 'data-task' in n.attrs)}
+             for tr in R.find_all(dom, 'tr', pred=lambda n: 'data-task' in n.attrs)}
     assert hrefs['AR6'] == AR_FILE and hrefs['AR5'] == AR_FILE and hrefs['AR16'] == AR_FILE
     assert hrefs['MP1'] == MP_FILE and hrefs['MP2'] == MP_FILE and hrefs['DS2'] == MP_FILE   # DS2 belongs to models
     assert hrefs['DS6'] is None                                                            # a project task has no link
@@ -629,13 +631,12 @@ def check_r55_stamp(fx):
 @with_fixture
 def check_r64_columns(fx):
     out = fx.render('artifacts')
-    expect(fx, sub1(out, '<th>Detail</th>', ''), 'artifacts', ['R6.4'])
-    expect(fx, sub1(out, 'Expected (Lisbon)', 'Expected'), 'artifacts', ['R6.4'])
+    expect(fx, sub1(out, '<th>Detail</th>', '', count=2), 'artifacts', ['R6.4'])
+    expect(fx, sub1(out, 'Expected (Lisbon)', 'Expected', count=2), 'artifacts', ['R6.4'])
     fp = fx.render('full-progress')
-    expect(fx, sub1(fp, '<th>App / service</th>', '', count=2), 'full-progress', ['R6.4'])
+    expect(fx, sub1(fp, '<th>App / service</th>', '', count=4), 'full-progress', ['R6.4'])
     # a feature artifact must not carry the App / service column
-    expect(fx, sub1(out, '<th>Detail</th>', '<th>App / service</th><th>Detail</th>'), 'artifacts', ['R6.4'])
-    expect(fx, sub1(out, '<td colspan="4"><strong>Live or built', '<td colspan="5"><strong>Live or built'), 'artifacts', ['R6.4'])
+    expect(fx, sub1(out, '<th>Detail</th>', '<th>App / service</th><th>Detail</th>', count=2), 'artifacts', ['R6.4'])
 
 
 @test
@@ -649,13 +650,22 @@ def check_r61_statuses(fx):
     assert 'R6.1' in reqs(got), got
 
 
+def uncollapse_replaced(h):
+    """The first replaced decision as an always-open <article> instead of a closed <details>."""
+    at = h.index('<details class="decision decision-replaced"')
+    head, tail = h[:at], h[at:]
+    tail = tail.replace('<details class="decision decision-replaced"', '<article class="decision decision-replaced"', 1)
+    tail = tail.replace('<summary>', '<h3>', 1).replace('</summary>', '</h3>', 1).replace('</details>', '</article>', 1)
+    return head + tail
+
+
 def move_row(html, task_id, after_marker):
     start = html.index('<tr data-task="%s">' % task_id)
     end = html.index('</tr>', start) + 5
     row = html[start:end]
     html = html[:start] + html[end + 1:]
     at = html.index(after_marker)
-    at = html.index('</tr>', at) + 5
+    at = html.index('<tbody>', at) + len('<tbody>')
     return html[:at] + '\n' + row + html[at:]
 
 
@@ -670,8 +680,8 @@ def check_r62_groups(fx):
     # order inside a group: AR7 (11 Oct) moved before DS6 (10 Oct)
     expect(fx, move_row(fp, 'AR7', 'data-group="now"'), 'full-progress', ['R5.46'])
     # two groups swapped
-    a, b = fp.index('<tr class="status-group" data-group="now">'), fp.index('<tr class="status-group" data-group="you">')
-    c = fp.index('<tr class="status-group" data-group="built">')
+    a, b = fp.index('<details class="status-fold" data-group="now"'), fp.index('<details class="status-fold" data-group="you"')
+    c = fp.index('<details class="status-fold" data-group="built"')
     swapped = fp[:a] + fp[b:c] + fp[a:b] + fp[c:]
     expect(fx, swapped, 'full-progress', ['R5.46'])
     # Live or built not newest first
@@ -685,7 +695,7 @@ def check_r63_earlier_fold(fx):
     fp = fx.render('full-progress')
     # un-fold: take the details out
     start = fp.index('<details class="earlier">')
-    end = fp.index('</details>') + len('</details>')
+    end = fp.index('</details>', start) + len('</details>')
     expect(fx, fp[:start] + fp[end:], 'full-progress', ['INV-1', 'R6.3'])            # rows lost entirely: also not in the checklist
     expect(fx, sub1(fp, '<details class="earlier">', '<details class="earlier" open>'), 'full-progress', ['R6.3'])
     expect(fx, sub1(fp, '<summary>Earlier</summary>', '<summary>Older</summary>'), 'full-progress', ['R6.3'])
@@ -699,7 +709,8 @@ def check_r63_earlier_fold(fx):
     end = fp.index('</tr>', start) + len('</tr>')
     row = fp[start:end]
     hidden = fp[:start] + fp[end:]
-    hidden = sub1(hidden, '</tbody></table></div>\n</details>', row + '\n</tbody></table></div>\n</details>')
+    at = hidden.index('</tbody>', hidden.index('<details class="earlier">'))
+    hidden = hidden[:at] + row + '\n' + hidden[at:]
     assert 'R6.3' in reqs(fx.check(hidden, 'full-progress')), fx.check(hidden, 'full-progress')
     # a feature artifact has no fold
     feature = fx.render('artifacts')
@@ -778,6 +789,61 @@ def basis_style_uses_tokens_and_wraps():
     block = block[:block.index('}')]
     assert 'display: block' in block and 'overflow-wrap: anywhere' in block and 'var(--ink-muted)' in block, block
     assert not re.search(r'#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(', block), block      # tokens only
+
+
+@test
+@with_fixture
+def groups_are_collapsible_details(fx):
+    """R6.12: every group is a native <details> with its heading in the <summary>, in both artifact kinds."""
+    for kind, name in (('full-progress', 'full-progress'), ('artifacts', 'artifacts')):
+        out = fx.render(name)
+        dom = R.parse_dom(out)
+        folds = R.find_all(dom, 'details', 'status-fold')
+        assert folds and not R.find_all(dom, 'tr', 'status-group'), kind
+        for fold in folds:
+            kids = [n for n in fold.children if n.tag != '#text']
+            assert kids[0].tag == 'summary' and R.find(kids[0], 'strong') is not None and R.find(fold, 'table', 'status-checklist')
+        assert '<script' not in out[out.index('<details class="status-fold"'):out.index('</details>')]
+        assert fx.check(out, name) == []
+    fp = R.parse_dom(fx.render('full-progress'))
+    built = [f for f in R.find_all(fp, 'details', 'status-fold') if f.attrs['data-group'] == 'built'][0]
+    assert R.find(built, 'details', 'earlier') is not None           # the Earlier fold stays, inside Live or built
+
+
+@test
+@with_fixture
+def live_or_built_starts_closed(fx):
+    """R6.12: Live or built is always closed, every other group open; the closed heading still counts Built rows."""
+    for name in ('full-progress', 'artifacts'):
+        dom = R.parse_dom(fx.render(name))
+        for fold in R.find_all(dom, 'details', 'status-fold'):
+            assert ('open' in fold.attrs) == (fold.attrs['data-group'] != 'built'), (name, fold.attrs)
+    fp = R.parse_dom(fx.render('full-progress'))
+    built = [f for f in R.find_all(fp, 'details', 'status-fold') if f.attrs['data-group'] == 'built'][0]
+    assert R.text_of(R.find(built, 'span', 'fold-count')) == '2 built, 4 live', R.text_of(R.find(built, 'span', 'fold-count'))
+
+
+@test
+@with_fixture
+def check_finds_a_wrong_open_state(fx):
+    fp = fx.render('full-progress')
+    expect(fx, sub1(fp, 'data-group="built">', 'data-group="built" open>'), 'full-progress', ['R6.12'])
+    expect(fx, sub1(fp, 'data-group="now" open>', 'data-group="now">'), 'full-progress', ['R6.12'])
+    # a heading kept as a table row, and an Earlier fold moved out of Live or built
+    row = '<tr data-task="DS6">'
+    expect(fx, sub1(fp, row, '<tr class="status-group" data-group="now"><td colspan="5"><strong>x</strong></td></tr>' + row),
+           'full-progress', ['R6.12'])
+
+
+@test
+def collapsible_group_style_is_accessible():
+    css = R.structure_css(PLUGIN)
+    block = css[css.index('details.status-fold > summary {'):]
+    block = block[:block.index('}')]
+    assert 'cursor: pointer' in block and 'min-height: 2.75rem' in block and 'list-style: none' in block, block
+    assert not re.search(r'#[0-9a-fA-F]{3,8}|rgba?\(|hsla?\(', block), block
+    assert 'details.status-fold > summary:focus-visible' in css and 'details.status-fold[open] > summary::before' in css
+    assert '@media print' in css and '::details-content' in css
 
 
 @test
@@ -1812,8 +1878,7 @@ def mutate_cases(fx):
         ('Recommended tag dropped', 'R5.22', lambda h: h.replace('<span class="decision-tag">Recommended</span>', '', 1)),
         ('Needs you chip dropped from the open decision', 'R5.23',
          lambda h: sub1(h, ' <span class="status-chip status-needs-you">Needs you</span></h3>', '</h3>')),
-        ('replaced decision not collapsed', 'R5.23', lambda h: sub1(h, '<details class="decision decision-replaced"', '<article class="decision decision-replaced"')
-         .replace('</details>', '</article>').replace('<summary>', '<h3>').replace('</summary>', '</h3>')),
+        ('replaced decision not collapsed', 'R5.23', lambda h: uncollapse_replaced(h)),
         ('replaced decision opened', 'R5.23', lambda h: sub1(h, '<details class="decision decision-replaced" ', '<details open class="decision decision-replaced" ')),
         ('replaced-by line names the wrong decision', 'R5.23', lambda h: sub1(h, 'Replaced by D3', 'Replaced by D2')),
         ('decision order reversed', 'R5.20', reverse_decisions),
@@ -2456,7 +2521,7 @@ def no_release_line_in_full_progress(fx):
     assert '<span class="no-release-line">ships nothing: a publish, nothing to ship</span>' in row, row
     assert 'release-line' not in row.replace('no-release-line', '')
     before = out[:out.index('<tr data-task="AR5">')]
-    assert before.rindex('data-group="') > 0 and 'data-group="now"' in before[before.rindex('<tr class="status-group'):]
+    assert before.rindex('data-group="') > 0 and 'data-group="now"' in before[before.rindex('<details class="status-fold'):]
     assert 'Not in a release yet' in before
     assert 'no-release-line' in fx.render('artifacts', registry=registry)
     assert fx.check(out, 'full-progress', registry=registry) == []

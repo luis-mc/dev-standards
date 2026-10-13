@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.8.0
+**Version:** 1.9.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.9.0 — 2026-10-13.**
+
+- Every checklist group in Full Progress and in feature artifacts is a collapsible native `<details>` (R6.12): the heading sits in the `<summary>`, `Live or built` always starts closed (and says how many Built and Live rows it holds), every other group starts open, and the `Earlier` fold now sits inside `Live or built`.
 
 **1.8.0 — 2026-10-12.**
 
@@ -927,7 +931,7 @@ double-click.
   Item, so what shipped in each release stays visible. Feature artifacts keep
   the groups of R6.2. `check` finds a row in the wrong group or order, a missing
   or extra group, a wrong heading and a missing release line (R5.46). The
-  look uses the tokens only: a group heading row like R6.2's with the release
+  look uses the tokens only: a group heading like R6.2's, in the `<summary>` of R6.12, with the release
   name in `--ink`; `.release-name` is the mono face in `--signal`. Verified by
   `full_progress_groups_by_release`, `release_group_heading_with_risk`,
   `rows_show_the_release_they_rode` and `check_finds_a_row_in_the_wrong_release_group`.
@@ -1033,6 +1037,31 @@ double-click.
   it waits on and how long) (R10.3), and the skills that give one say so.
   Verified by `render_shows_the_expected_basis`, `check_expected_basis_matches_registry`,
   `basis_style_uses_tokens_and_wraps` and `rule_file_carries_the_basis_rule`.
+
+### 6.7 Collapsible groups
+
+- **R6.12** — Every checklist group, in both artifact kinds (each open release
+  group, `Not in a release yet`, `Needs you, failed or on hold`, `Live or
+  built`, and a feature artifact's status groups), is a native
+  `<details class="status-fold" data-group="<key>">` whose first child is a
+  `<summary>` holding the group heading in `<strong>` (and a muted
+  `span.fold-count`), followed by the group's `table.status-checklist`; there is
+  no group heading row and no script. The group `built` (`Live or built`) is
+  rendered closed, without the `open` attribute, every time; every other group
+  is rendered `open`. The `Earlier` fold of R6.3 stays closed and sits inside
+  the `built` group, after its table. A closed `Live or built` summary shows how
+  many `Built` (unreleased) and `Live` rows it holds, so collapsing it does not
+  hide unreleased work (R6.3). The structure stylesheet gives the summary a
+  chevron that turns when open, a tap target of at least 2.75rem, a visible
+  `:focus-visible` outline and no reliance on colour alone; the summary is
+  keyboard operable (Enter or Space) by being a `<summary>`; printing shows the
+  groups expanded where the browser supports `::details-content`. Columns stay
+  aligned across groups with a `<colgroup>` and a fixed table layout. `check`
+  reports a group that is not such a `<details>`, a heading kept as a table row,
+  a `Live or built` group that is open, another group that is closed, and an
+  `Earlier` fold outside `Live or built` (R6.12). Verified by
+  `groups_are_collapsible_details`, `live_or_built_starts_closed`,
+  `check_finds_a_wrong_open_state` and `collapsible_group_style_is_accessible`.
 
 ---
 
@@ -1400,6 +1429,7 @@ Reads the hook input; takes the task ID from the current branch name
 | Stamp format, `datetime` attribute and zone label | R5.5 |
 | Checklist columns per kind | R6.4 |
 | Only the eight statuses; each row in its group; only `Live` rows older than 14 days in Earlier | R6.1, R6.2, R6.3 |
+| Every group a `<details class="status-fold">` with its heading in the `<summary>`; `Live or built` closed, the others open; `Earlier` inside `Live or built` | R6.12 |
 | Expected format on open rows | R6.6 |
 | `expected_basis`: a string of 1 to 80 characters, on open rows only | R6.10 |
 | Checklists and tiles equal the registry | INV-1, R5.8 |
