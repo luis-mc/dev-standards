@@ -267,26 +267,22 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
   max-width: 60em;
 }
 .glance-group {
-  display: grid;
-  grid-template-columns: 11rem 1fr;
-  gap: .3rem 1rem;
-  padding: .65em .9em;
+  display: block;
+  padding: 0 0 .5em;
   border-top: 1px solid var(--rule);
   border-left: 4px solid var(--rule-strong);
 }
 .glance-group:first-child { border-top: 0; }
 .glance-label {
-  font-family: var(--font-mono);
-  font-size: .78rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .05em;
   color: var(--ink-muted);
-  padding-top: .15em;
 }
-.glance-group ul { list-style: none; margin: 0; padding: 0; min-width: 0; }
+/* the summary is the shared fold header of R6.12; inside the bordered block it drops its own box */
+details.glance-group > summary { border: 0; background: transparent; }
+details.glance-group > summary:hover { background: var(--surface-2); }
+.glance-group ul { list-style: none; margin: 0; padding: .1em .9em .2em 2.2rem; min-width: 0; }
 .glance-group li { padding: .1em 0; overflow-wrap: anywhere; }
-.glance-group p { margin: 0; color: var(--ink-muted); }
+.glance-group p { margin: 0; padding: .1em .9em .2em 2.2rem; color: var(--ink-muted); }
 .glance-expected { font-size: .85rem; color: var(--ink-muted); margin-left: .5em; }
 .glance-more { color: var(--ink-muted); font-size: .88rem; }
 .glance-basis { display: block; font-size: .72rem; line-height: 1.3; color: var(--ink-muted); }
@@ -299,9 +295,6 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
 .glance-built { border-left-color: var(--live); }
 .glance-waiting { border-left-color: var(--rule-strong); border-left-style: dashed; }
 .glance-live { border-left-color: var(--live); }
-@media (max-width: 40rem) {
-  .glance-group { grid-template-columns: 1fr; }
-}
 
 /* Status chips */
 .status-chip {
@@ -360,14 +353,57 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
 }
 table.status-checklist td:first-child { white-space: nowrap; }
 table.status-checklist td code { white-space: nowrap; overflow-wrap: normal; }
-tr.status-group td {
+/* Collapsible checklist groups (R6.12): native <details>, no script; the heading sits in the <summary> */
+details.status-fold { margin: 1.1em 0 0; }
+details.glance-group > summary,
+details.status-fold > summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .3em .7em;
+  min-height: 2.75rem;
+  padding: .6em .7em;
+  cursor: pointer;
+  list-style: none;
   background: var(--paper);
+  border: 1px solid var(--rule);
   font-family: var(--font-mono);
   font-size: .74rem;
   text-transform: uppercase;
   letter-spacing: .06em;
   color: var(--ink-muted);
-  padding-top: 1em;
+}
+details.glance-group > summary::-webkit-details-marker,
+details.status-fold > summary::-webkit-details-marker { display: none; }
+details.glance-group > summary::before,
+details.status-fold > summary::before {
+  content: "";
+  flex: none;
+  width: .5rem;
+  height: .5rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+}
+details.glance-group[open] > summary::before,
+details.status-fold[open] > summary::before { transform: rotate(45deg); }
+details.glance-group > summary:hover,
+details.status-fold > summary:hover { background: var(--surface-2); }
+details.glance-group > summary:focus-visible,
+details.status-fold > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+details.glance-group > summary .fold-count,
+details.status-fold > summary .fold-count { margin-left: auto; text-transform: none; letter-spacing: 0; font-size: .72rem; }
+details.status-fold > .table-scroll { margin-top: 0; border-top: 0; }
+details.status-fold > details.earlier { margin: .6em .7em; }
+table.status-checklist { table-layout: fixed; }
+table.status-checklist col.col-status { width: 7.5rem; }
+table.status-checklist col.col-item { width: 30%; }
+table.status-checklist col.col-app { width: 8.5rem; }
+table.status-checklist col.col-expected { width: 9.5rem; }
+table.status-checklist td { overflow-wrap: anywhere; }
+@media print {
+  details.status-fold > summary::before, details.glance-group > summary::before { display: none; }
+  details.glance-group::details-content, details.status-fold::details-content, details.earlier::details-content { content-visibility: visible; display: block; }
 }
 table.history-table td:first-child { font-family: var(--font-mono); white-space: nowrap; }
 
@@ -682,12 +718,12 @@ a .release-name { color: var(--signal); }
 .release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
 .release-line .release-name { margin-right: 0; }
 .no-release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
-tr.status-group.release-group td { color: var(--ink); }
+details.status-fold.release-group > summary { color: var(--ink); }
 </style>
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-12T23:26+01:00",
+ "updated": "2026-10-13T22:38+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -2080,6 +2116,78 @@ tr.status-group.release-group td { color: var(--ink); }
    }
   },
   {
+   "id": "DS62",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Sync local main and remove old artifacts-record worktree",
+   "detail": "Local main fast-forwarded to origin/main (8416760); the copied record was identical to it, so nothing to commit. Old artifacts-record worktree removed; 37 line-ending-only files re-checked out.",
+   "expected": "12 Oct",
+   "changed": "2026-10-12T23:40+01:00",
+   "no_release": "local cleanup, ships nothing"
+  },
+  {
+   "id": "DS63",
+   "owner": "project",
+   "app": "",
+   "status": "Built",
+   "item": "claude-setup ships the clarifying-questions rule",
+   "detail": "New plugin-owned rule file rules/clarifying-questions.md in claude-setup assets, written to every target and overwritten unconditionally like agents-and-integration.md, so it reaches projects whose CLAUDE.md already exists. Text is the owner's, verbatim. luismc-project-setup 14.2.1 -> 14.3.0.",
+   "expected": "13 Oct",
+   "changed": "2026-10-13T22:38+01:00",
+   "release": 8,
+   "rides": "DS64"
+  },
+  {
+   "id": "DS64",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Train: DS63 + transcript-folds + marketplace rename",
+   "detail": "One release: join DS63, TF2, TF3 and DS65 on DS64-integration, fold change notes, ready PR, CI, merge, cleanup.",
+   "expected": "14 Oct ~01:45",
+   "changed": "2026-10-13T22:37+01:00",
+   "expected_basis": "agents ~1.5 h, join 15 min, PR CI ~45 min, merge 15 min",
+   "release": 9,
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-10-13T22:50+01:00",
+     "end": "2026-10-14T00:30+01:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-10-14T00:30+01:00",
+     "end": "2026-10-14T00:45+01:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-10-14T00:45+01:00",
+     "end": "2026-10-14T01:30+01:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-10-14T01:30+01:00",
+     "end": "2026-10-14T01:45+01:00"
+    }
+   ],
+   "risk": {
+    "label": "mod API refuses borrowed actions",
+    "minutes": 30
+   }
+  },
+  {
+   "id": "DS65",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Marketplace renamed to dev-standards",
+   "detail": "marketplace.json name luismc-dev-tools -> dev-standards to match the repo and registered installs; README install lines @dev-standards; tests updated.",
+   "expected": "14 Oct ~00:15",
+   "changed": "2026-10-13T22:37+01:00",
+   "expected_basis": "same agent as TF3, ~15 min"
+  },
+  {
    "id": "MP1",
    "owner": "models",
    "app": "luismc-project-setup",
@@ -2262,6 +2370,51 @@ tr.status-group.release-group td { color: var(--ink); }
    "expected": "12 Oct",
    "changed": "2026-10-12T00:01+01:00",
    "rides": "DS55"
+  },
+  {
+   "id": "TF1",
+   "owner": "transcript-folds",
+   "app": "",
+   "status": "Running",
+   "item": "Contract: plugin layout, behaviour, test approach",
+   "detail": "docs/plans/transcript-folds.md: files and ownership, pure-logic API, hooks, settings, shortcuts and actions, test plan; committed to DS64-integration before agents start.",
+   "expected": "13 Oct ~23:00",
+   "changed": "2026-10-13T22:37+01:00",
+   "expected_basis": "orchestrator writing, ~15 min",
+   "rides": "DS64"
+  },
+  {
+   "id": "TF2",
+   "owner": "transcript-folds",
+   "app": "",
+   "status": "To do",
+   "item": "luismc-transcript-folds plugin, from scratch",
+   "detail": "Manifest, hooks module and pure-logic files under claude/plugins/transcript-folds, node --test suites, claude plugin validate, CI wiring.",
+   "expected": "14 Oct ~00:30",
+   "changed": "2026-10-13T22:37+01:00",
+   "expected_basis": "one Sonnet agent, ~1.5 h"
+  },
+  {
+   "id": "TF3",
+   "owner": "transcript-folds",
+   "app": "",
+   "status": "To do",
+   "item": "claude-setup enables the plugin and writes the two chords",
+   "detail": "User target, always: enabledPlugins entry and ~/.claude/keybindings.json chords ctrl+x d and ctrl+x f merged field by field, conflict asked. SKILL.md, README, tests.",
+   "expected": "14 Oct ~00:15",
+   "changed": "2026-10-13T22:37+01:00",
+   "expected_basis": "one Sonnet agent, ~1 h"
+  },
+  {
+   "id": "TF4",
+   "owner": "transcript-folds",
+   "app": "",
+   "status": "To do",
+   "item": "Smoke test in a real terminal session",
+   "detail": "Load the plugin with --plugin-dir, confirm both chords reach their buttons, diffs and commands fold, tally counts, compact mode; record the result.",
+   "expected": "14 Oct ~00:45",
+   "changed": "2026-10-13T22:37+01:00",
+   "expected_basis": "after TF2, ~15 min in a real terminal"
   }
  ]
 }</script>
@@ -2269,29 +2422,68 @@ tr.status-group.release-group td { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-12T23:26+01:00">12 Oct 23:26</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-13T22:38+01:00">13 Oct 22:38</time> (Lisbon)</p>
 <div class="at-a-glance">
-<div class="glance-group glance-you" data-glance="you"><div class="glance-label">Needs you</div>
+<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
-</div>
-<div class="glance-group glance-live" data-glance="live"><div class="glance-label">Live in the last 24 hours</div>
+</details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
 <ul>
+<li data-glance-task="TF1"><span class="task-id">TF1</span>Contract: plugin layout, behaviour, test approach <span class="glance-expected">13 Oct ~23:00</span><span class="glance-basis">orchestrator writing, ~15 min</span></li>
+<li data-glance-task="DS64"><span class="task-id">DS64</span><span class="release-name">RELEASE-9</span>Train: DS63 + transcript-folds + marketplace rename <span class="glance-expected">14 Oct ~01:45</span><span class="glance-basis">agents ~1.5 h, join 15 min, PR CI ~45 min, merge 15 min</span></li>
+</ul>
+</details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DS63"><span class="task-id">DS63</span><span class="release-name">RELEASE-8</span>claude-setup ships the clarifying-questions rule</li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">3 tasks</span></summary>
+<ul>
+<li data-glance-task="DS62"><span class="task-id">DS62</span>Sync local main and remove old artifacts-record worktree</li>
 <li data-glance-task="AR50"><span class="task-id">AR50</span>Plugin never pushes the record</li>
 <li data-glance-task="DS61"><span class="task-id">DS61</span><span class="release-name">RELEASE-7</span>AR50 train: never-push fix, PR CI, merge, cleanup</li>
-<li data-glance-task="AR49"><span class="task-id">AR49</span>Version labels say ARTIFACTSPEC 1.7.0</li>
-<li data-glance-task="DS60"><span class="task-id">DS60</span><span class="release-name">RELEASE-6</span>luismc-artifacts 1.7.1 straight to main, no CI (owner&#x27;s call)</li>
-<li data-glance-task="AR47"><span class="task-id">AR47</span>End-of-turn hook knows the daily publish limit</li>
-<li data-glance-task="AR48"><span class="task-id">AR48</span>Tasks that ship nothing: --no-release with a reason</li>
-<li data-glance-task="DS59"><span class="task-id">DS59</span><span class="release-name">RELEASE-5</span>AR47 train: join, PR CI, merge, cleanup</li>
-<li data-glance-task="DS58"><span class="task-id">DS58</span>Publish Full Progress after the daily publish limit resets</li>
-<li class="glance-more">and 9 more</li>
 </ul>
+</details>
 </div>
-</div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">140</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">141</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">4</div><div class="label">tasks to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr class="status-group" data-group="built"><td colspan="5"><strong>Live or built</strong></td></tr>
+<figure class="release-timeline">
+<figcaption>Next releases (Lisbon)</figcaption>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS64 (Train: DS63 + transcript-folds + marketplace rename) expected live about 01:45, worst case 02:15." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">22:30</text><line class="rt-grid" x1="265" y1="36" x2="265" y2="140"/><text x="265" y="28">23:00</text><line class="rt-grid" x1="330" y1="36" x2="330" y2="140"/><text x="330" y="28">23:30</text><line class="rt-grid" x1="395" y1="36" x2="395" y2="140"/><text x="395" y="28">14 Oct 00:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">14 Oct 00:30</text><line class="rt-grid" x1="525" y1="36" x2="525" y2="140"/><text x="525" y="28">01:00</text><line class="rt-grid" x1="590" y1="36" x2="590" y2="140"/><text x="590" y="28">01:30</text><line class="rt-grid" x1="655" y1="36" x2="655" y2="140"/><text x="655" y="28">02:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">02:30</text></g>
+<text class="rt-name" x="0" y="60"><title>RELEASE-9 · Train: DS63 + transcript-folds + marketplace rename</title>RELEASE-9 · Train: DS63 +…</text>
+<text class="rt-sub" x="0" y="77"><title>DS63, TF1</title>DS63, TF1</text>
+<rect class="rt-bar agents" x="243.3" y="52" width="216.7" height="22"><title>agents 22:50-00:30</title></rect>
+<rect class="rt-bar join" x="460" y="52" width="32.5" height="22"><title>join 00:30-00:45</title></rect>
+<rect class="rt-bar ci" x="492.5" y="52" width="97.5" height="22"><title>PR CI 00:45-01:30</title></rect>
+<rect class="rt-bar merge" x="590" y="52" width="32.5" height="22"><title>merge + cleanup 01:30-01:45</title></rect>
+<rect class="rt-risk" x="622.5" y="58" width="65" height="10"><title>mod API refuses borrowed actions</title></rect>
+<polygon class="rt-worst" points="687.5,51 694.5,63 687.5,75 680.5,63"/>
+<text class="rt-risk-label" x="698.5" y="67">mod API refuses borrowed actions → worst ~02:15</text>
+<polygon class="rt-expected" points="622.5,50 630.5,63 622.5,76 614.5,63"/>
+<text class="rt-live-label" x="622.5" y="92">live ~01:45</text>
+<line class="rt-now" x1="217.3" y1="36" x2="217.3" y2="148"/><text class="rt-now-label" x="217.3" y="161">now 22:38</text>
+</svg></div>
+<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
+</figure>
+<details class="status-fold release-group" data-group="release-9" open><summary><strong>RELEASE-9 · live ~01:45 · worst ~02:15</strong><span class="fold-count">3 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS64"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS64</span><span class="release-name">RELEASE-9</span>Train: DS63 + transcript-folds + marketplace rename</td><td></td><td>One release: join DS63, TF2, TF3 and DS65 on DS64-integration, fold change notes, ready PR, CI, merge, cleanup.</td><td>14 Oct ~01:45<span class="expected-basis">agents ~1.5 h, join 15 min, PR CI ~45 min, merge 15 min</span></td></tr>
+<tr data-task="TF1"><td><span class="status-chip status-running">Running</span></td><td><a href="feature-transcript-folds.html"><span class="task-id">TF1</span>Contract: plugin layout, behaviour, test approach</a></td><td></td><td>docs/plans/transcript-folds.md: files and ownership, pure-logic API, hooks, settings, shortcuts and actions, test plan; committed to DS64-integration before agents start.</td><td>13 Oct ~23:00<span class="expected-basis">orchestrator writing, ~15 min</span></td></tr>
+<tr data-task="DS63"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DS63</span><span class="release-name">RELEASE-8</span>claude-setup ships the clarifying-questions rule</td><td></td><td>New plugin-owned rule file rules/clarifying-questions.md in claude-setup assets, written to every target and overwritten unconditionally like agents-and-integration.md, so it reaches projects whose CLAUDE.md already exists. Text is the owner&#x27;s, verbatim. luismc-project-setup 14.2.1 -&gt; 14.3.0.</td><td>13 Oct</td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">4 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS65"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS65</span>Marketplace renamed to dev-standards</td><td></td><td>marketplace.json name luismc-dev-tools -&gt; dev-standards to match the repo and registered installs; README install lines @dev-standards; tests updated.</td><td>14 Oct ~00:15<span class="expected-basis">same agent as TF3, ~15 min</span></td></tr>
+<tr data-task="TF3"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-transcript-folds.html"><span class="task-id">TF3</span>claude-setup enables the plugin and writes the two chords</a></td><td></td><td>User target, always: enabledPlugins entry and ~/.claude/keybindings.json chords ctrl+x d and ctrl+x f merged field by field, conflict asked. SKILL.md, README, tests.</td><td>14 Oct ~00:15<span class="expected-basis">one Sonnet agent, ~1 h</span></td></tr>
+<tr data-task="TF2"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-transcript-folds.html"><span class="task-id">TF2</span>luismc-transcript-folds plugin, from scratch</a></td><td></td><td>Manifest, hooks module and pure-logic files under claude/plugins/transcript-folds, node --test suites, claude plugin validate, CI wiring.</td><td>14 Oct ~00:30<span class="expected-basis">one Sonnet agent, ~1.5 h</span></td></tr>
+<tr data-task="TF4"><td><span class="status-chip status-to-do">To do</span></td><td><a href="feature-transcript-folds.html"><span class="task-id">TF4</span>Smoke test in a real terminal session</a></td><td></td><td>Load the plugin with --plugin-dir, confirm both chords reach their buttons, diffs and commands fold, tally counts, compact mode; record the result.</td><td>14 Oct ~00:45<span class="expected-basis">after TF2, ~15 min in a real terminal</span></td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">141 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS62"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS62</span>Sync local main and remove old artifacts-record worktree<span class="no-release-line">ships nothing: local cleanup, ships nothing</span></td><td></td><td>Local main fast-forwarded to origin/main (8416760); the copied record was identical to it, so nothing to commit. Old artifacts-record worktree removed; 37 line-ending-only files re-checked out.</td><td>12 Oct</td></tr>
 <tr data-task="AR50"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR50</span>Plugin never pushes the record</a><span class="release-line"><span class="release-name">RELEASE-7</span></span></td><td><code>luismc-artifacts</code></td><td>Merged in #56 (25889b3): luismc-artifacts 1.8.0, ARTIFACTSPEC 1.8.0; the plugin writes docs/artifacts/ only, never commits or pushes.</td><td>12 Oct</td></tr>
 <tr data-task="DS61"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS61</span><span class="release-name">RELEASE-7</span>AR50 train: never-push fix, PR CI, merge, cleanup</td><td></td><td>#56 merged 23:25 on green (spec-lint 2m57s); 1.8.0 on main; cleanup removed every AR50 branch and agent worktree, delivery log in train-2026-10-12-56.</td><td>12 Oct</td></tr>
 <tr data-task="AR49"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR49</span>Version labels say ARTIFACTSPEC 1.7.0</a><span class="release-line"><span class="release-name">RELEASE-6</span></span></td><td><code>luismc-artifacts</code></td><td>Pushed to main as 0b9c8ef: luismc-artifacts 1.7.1; no CI (owner&#x27;s call)</td><td>12 Oct</td></tr>
@@ -2433,17 +2625,19 @@ tr.status-group.release-group td { color: var(--ink); }
 <tr data-task="DS2"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-model-and-effort-profiles.html"><span class="task-id">DS2</span>Opus plans, Sonnet codes</a></td><td><code>luismc-project-setup</code></td><td>claude-setup writes model opus and CLAUDE_CODE_SUBAGENT_MODEL sonnet, plus the delegation rule.</td><td>01 Oct</td></tr>
 </tbody></table></div>
 <details class="earlier"><summary>Earlier</summary>
-<div class="table-scroll"><table class="status-checklist"><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS1"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS1</span>AUTHSPEC 3.1.0</td><td><code>luismc-project-setup</code></td><td>Synced passkeys allowed on the admin plane. Plugin: luismc-project-setup.</td><td>27 Sep</td></tr>
 </tbody></table></div>
+</details>
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29864066"><time datetime="2026-10-12T23:26+01:00">12 Oct 23:26</time></td><td>AR2 to AR50</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
-<tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29862750"><time datetime="2026-10-12T01:30+01:00">12 Oct 01:30</time></td><td>DL1 to DL13</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
-<tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29862750"><time datetime="2026-10-12T01:30+01:00">12 Oct 01:30</time></td><td>MP1 to MP7, DS2 to DS5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
-<tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29862750"><time datetime="2026-10-12T01:30+01:00">12 Oct 01:30</time></td><td>TC1 to TC11</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
+<tr><td data-value="feature: transcript folds"><a href="feature-transcript-folds.html">Feature: Transcript folds</a></td><td data-value="29865457"><time datetime="2026-10-13T22:37+01:00">13 Oct 22:37</time></td><td>TF1 to TF4</td><td data-col="state"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-to-do">3 To do</span></span></td><td>Building: contract written, one agent on the plugin, one on claude-setup and the marketplace rename; one release with DS63.</td></tr>
+<tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29865455"><time datetime="2026-10-13T22:35+01:00">13 Oct 22:35</time></td><td>DL1 to DL13</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29865455"><time datetime="2026-10-13T22:35+01:00">13 Oct 22:35</time></td><td>MP1 to MP7, DS2 to DS5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
+<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29865455"><time datetime="2026-10-13T22:35+01:00">13 Oct 22:35</time></td><td>AR2 to AR50</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
+<tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29865455"><time datetime="2026-10-13T22:35+01:00">13 Oct 22:35</time></td><td>TC1 to TC11</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
 </tbody></table></div>
 </section>
 <section id="s2"><h2><span class="section-number">&sect; 2</span>How it stays current</h2>

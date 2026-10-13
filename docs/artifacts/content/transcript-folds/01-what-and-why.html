@@ -1,0 +1,11 @@
+<!-- title: What and why -->
+<p>Long diffs from Edit, Write, NotebookEdit and Bash fill the terminal and push the conversation off screen. <strong>luismc-transcript-folds</strong> is a new plugin in this marketplace that draws each long diff as one line (an icon, the file and line, the lines added and removed) and each finished shell command as one line (the command, cut to fit, then how many lines it printed, its error, or what it changed in files).</p>
+<ul>
+<li><strong>ctrl+x d</strong> shows or hides diffs; <strong>ctrl+x f</strong> folds or unfolds commands. Two slash commands do the same, so nothing depends on a keyboard shortcut alone.</li>
+<li>Short diffs (5 changed lines or fewer by default) and any edit Claude asks you to review stay whole.</li>
+<li>A dim line above the prompt shows both switches and what changed this session: files, lines added and removed.</li>
+<li>Compact mode (a setting) puts the counts on the edit's own line.</li>
+<li>Both switches start on; your choice is remembered across sessions.</li>
+</ul>
+<p><strong>Why its own plugin.</strong> A change to how the transcript is drawn runs inside Claude Code as a mod, and a mod only runs from an enabled plugin. claude-setup copies files, so it enables the plugin and writes the two shortcuts to <code>~/.claude/keybindings.json</code> as part of the standard setup of every machine.</p>
+<p><strong>Written from scratch.</strong> The idea is learned from a third-party plugin (hide-diffs); none of its code, names or layout is reused. The logic lives in plain TypeScript files tested with Node's own test runner, so the plugin needs no Claude Code test kit and no npm packages.</p>

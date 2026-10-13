@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-12T23:26+01:00",
+  "updated": "2026-10-13T22:38+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1393,6 +1393,78 @@
       }
     },
     {
+      "id": "DS62",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Sync local main and remove old artifacts-record worktree",
+      "detail": "Local main fast-forwarded to origin/main (8416760); the copied record was identical to it, so nothing to commit. Old artifacts-record worktree removed; 37 line-ending-only files re-checked out.",
+      "expected": "12 Oct",
+      "changed": "2026-10-12T23:40+01:00",
+      "no_release": "local cleanup, ships nothing"
+    },
+    {
+      "id": "DS63",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "claude-setup ships the clarifying-questions rule",
+      "detail": "New plugin-owned rule file rules/clarifying-questions.md in claude-setup assets, written to every target and overwritten unconditionally like agents-and-integration.md, so it reaches projects whose CLAUDE.md already exists. Text is the owner's, verbatim. luismc-project-setup 14.2.1 -> 14.3.0.",
+      "expected": "13 Oct",
+      "changed": "2026-10-13T22:38+01:00",
+      "release": 8,
+      "rides": "DS64"
+    },
+    {
+      "id": "DS64",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Train: DS63 + transcript-folds + marketplace rename",
+      "detail": "One release: join DS63, TF2, TF3 and DS65 on DS64-integration, fold change notes, ready PR, CI, merge, cleanup.",
+      "expected": "14 Oct ~01:45",
+      "changed": "2026-10-13T22:37+01:00",
+      "expected_basis": "agents ~1.5 h, join 15 min, PR CI ~45 min, merge 15 min",
+      "release": 9,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-10-13T22:50+01:00",
+          "end": "2026-10-14T00:30+01:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-10-14T00:30+01:00",
+          "end": "2026-10-14T00:45+01:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-10-14T00:45+01:00",
+          "end": "2026-10-14T01:30+01:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-10-14T01:30+01:00",
+          "end": "2026-10-14T01:45+01:00"
+        }
+      ],
+      "risk": {
+        "label": "mod API refuses borrowed actions",
+        "minutes": 30
+      }
+    },
+    {
+      "id": "DS65",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Marketplace renamed to dev-standards",
+      "detail": "marketplace.json name luismc-dev-tools -> dev-standards to match the repo and registered installs; README install lines @dev-standards; tests updated.",
+      "expected": "14 Oct ~00:15",
+      "changed": "2026-10-13T22:37+01:00",
+      "expected_basis": "same agent as TF3, ~15 min"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
@@ -1575,6 +1647,51 @@
       "expected": "12 Oct",
       "changed": "2026-10-12T00:01+01:00",
       "rides": "DS55"
+    },
+    {
+      "id": "TF1",
+      "owner": "transcript-folds",
+      "app": "",
+      "status": "Running",
+      "item": "Contract: plugin layout, behaviour, test approach",
+      "detail": "docs/plans/transcript-folds.md: files and ownership, pure-logic API, hooks, settings, shortcuts and actions, test plan; committed to DS64-integration before agents start.",
+      "expected": "13 Oct ~23:00",
+      "changed": "2026-10-13T22:37+01:00",
+      "expected_basis": "orchestrator writing, ~15 min",
+      "rides": "DS64"
+    },
+    {
+      "id": "TF2",
+      "owner": "transcript-folds",
+      "app": "",
+      "status": "To do",
+      "item": "luismc-transcript-folds plugin, from scratch",
+      "detail": "Manifest, hooks module and pure-logic files under claude/plugins/transcript-folds, node --test suites, claude plugin validate, CI wiring.",
+      "expected": "14 Oct ~00:30",
+      "changed": "2026-10-13T22:37+01:00",
+      "expected_basis": "one Sonnet agent, ~1.5 h"
+    },
+    {
+      "id": "TF3",
+      "owner": "transcript-folds",
+      "app": "",
+      "status": "To do",
+      "item": "claude-setup enables the plugin and writes the two chords",
+      "detail": "User target, always: enabledPlugins entry and ~/.claude/keybindings.json chords ctrl+x d and ctrl+x f merged field by field, conflict asked. SKILL.md, README, tests.",
+      "expected": "14 Oct ~00:15",
+      "changed": "2026-10-13T22:37+01:00",
+      "expected_basis": "one Sonnet agent, ~1 h"
+    },
+    {
+      "id": "TF4",
+      "owner": "transcript-folds",
+      "app": "",
+      "status": "To do",
+      "item": "Smoke test in a real terminal session",
+      "detail": "Load the plugin with --plugin-dir, confirm both chords reach their buttons, diffs and commands fold, tally counts, compact mode; record the result.",
+      "expected": "14 Oct ~00:45",
+      "changed": "2026-10-13T22:37+01:00",
+      "expected_basis": "after TF2, ~15 min in a real terminal"
     }
   ]
 }

@@ -1,0 +1,6 @@
+{
+  "title": "Feature: Transcript folds",
+  "hero": "Long diffs and finished shell commands fold to one line in the transcript, toggled with ctrl+x d and ctrl+x f; claude-setup installs it on every machine.",
+  "lede": "Building: contract written, one agent on the plugin, one on claude-setup and the marketplace rename; one release with DS63.",
+  "extra_css": ""
+}

@@ -1,0 +1,131 @@
+{
+  "decisions": [
+    {
+      "id": "D1",
+      "question": "Adopt the third-party hide-diffs plugin, or build our own?",
+      "asked": "2026-10-13",
+      "status": "decided",
+      "options": [
+        {"label": "Build our own", "summary": "A new plugin in this marketplace, written from scratch; claude-setup enables it. No dependency on a third party's releases.", "recommended": true},
+        {"label": "Adopt hide-diffs", "summary": "claude-setup enables hide-diffs@gixxy22-plugins and writes its shortcuts. Small, but the standard depends on a plugin we do not control."}
+      ],
+      "chosen": "Build our own",
+      "decided": "2026-10-13",
+      "owner_words": "build our own; create the new plugin so all of this is offered in one marketplace; DO NOT copy hidediffs code"
+    },
+    {
+      "id": "D2",
+      "question": "How are the plugin's hooks tested?",
+      "asked": "2026-10-13",
+      "status": "decided",
+      "options": [
+        {"label": "Node test runner on pure logic", "summary": "All logic in plain .ts files with no Claude Code imports, tested by node --test (Node strips the types; no npm). The thin hooks file is checked by claude plugin validate and a smoke checklist.", "recommended": true},
+        {"label": "claude-code/testing kit", "summary": "Tests run through claude plugin test against a fake engine; covers the drawing code too, but ties the tests to Claude Code's early-access kit."}
+      ],
+      "chosen": "Node test runner on pure logic",
+      "decided": "2026-10-13",
+      "owner_words": "why do you need claude-code/testing? if possible avoid it"
+    },
+    {
+      "id": "D3",
+      "question": "Which single marketplace name should the repo, README and installs use?",
+      "asked": "2026-10-13",
+      "status": "decided",
+      "options": [
+        {"label": "dev-standards", "summary": "Rename marketplace.json's name to match the repo and what this machine already registered; README says @dev-standards everywhere.", "recommended": true},
+        {"label": "luismc-dev-tools", "summary": "Keep the manifest name; re-register the marketplace on this machine and re-enable the plugins."}
+      ],
+      "chosen": "dev-standards",
+      "decided": "2026-10-13"
+    },
+    {
+      "id": "D4",
+      "question": "What is the new plugin called?",
+      "asked": "2026-10-13",
+      "status": "decided",
+      "options": [
+        {"label": "luismc-transcript-folds", "summary": "Folder claude/plugins/transcript-folds; names exactly what it does.", "recommended": true},
+        {"label": "luismc-transcript", "summary": "Folder claude/plugins/transcript; shorter but more generic."},
+        {"label": "luismc-diff-summary", "summary": "Folder claude/plugins/diff-summary; says diffs only, though it also folds commands."}
+      ],
+      "chosen": "luismc-transcript-folds",
+      "decided": "2026-10-13"
+    },
+    {
+      "id": "D5",
+      "question": "Which shortcuts toggle diffs and folded commands?",
+      "asked": "2026-10-13",
+      "status": "decided",
+      "options": [
+        {"label": "ctrl+x d / ctrl+x f", "summary": "Chords in Claude Code's own ctrl+x family, both free, on every terminal and OS; slash commands as a fallback. Unlike ctrl+q (flow control) and alt+q (Option on macOS).", "recommended": true},
+        {"label": "ctrl+x h / ctrl+x c", "summary": "Same family: h for hide diffs, c for commands. Also free."},
+        {"label": "Slash commands only", "summary": "No keybindings.json changes; toggle with two slash commands."}
+      ],
+      "chosen": "ctrl+x d / ctrl+x f",
+      "decided": "2026-10-13",
+      "owner_words": "recommend other keyboard shorts different from the ones in hide-diff"
+    },
+    {
+      "id": "D6",
+      "question": "Does the first version include all four parts: hidden diffs, folded commands, the session tally and compact mode?",
+      "asked": "2026-10-13",
+      "status": "decided",
+      "options": [
+        {"label": "Yes", "summary": "Hide long diffs, fold shell commands, a session tally above the prompt and a compact-mode setting."},
+        {"label": "No", "summary": "A smaller first version with some of them left out."}
+      ],
+      "chosen": "Yes",
+      "decided": "2026-10-13"
+    },
+    {
+      "id": "D7",
+      "question": "How does claude-setup offer the new plugin?",
+      "asked": "2026-10-13",
+      "status": "decided",
+      "options": [
+        {"label": "Standard, user target", "summary": "Always applied: enables the plugin in ~/.claude/settings.json and adds the two chords to ~/.claude/keybindings.json, asking only on a chord conflict.", "recommended": true},
+        {"label": "Asked each run", "summary": "A step-1 yes/no question; the same writes on yes."},
+        {"label": "Standard, project target", "summary": "Enabled per project in .claude/settings.json; keybindings still go to ~/.claude."}
+      ],
+      "chosen": "Standard, user target",
+      "decided": "2026-10-13"
+    },
+    {
+      "id": "D8",
+      "question": "What state does a fresh install start in?",
+      "asked": "2026-10-13",
+      "status": "decided",
+      "options": [
+        {"label": "Diffs hidden, commands folded", "summary": "Both switches on; the choice is remembered across sessions afterwards.", "recommended": true},
+        {"label": "Diffs hidden, commands shown", "summary": "Only diffs fold by default."},
+        {"label": "Both off", "summary": "Nothing changes until a shortcut is pressed."}
+      ],
+      "chosen": "Diffs hidden, commands folded",
+      "decided": "2026-10-13"
+    },
+    {
+      "id": "D9",
+      "question": "Does DS63 (the clarifying-questions rule) ride the same release as this feature?",
+      "asked": "2026-10-13",
+      "status": "decided",
+      "options": [
+        {"label": "One train", "summary": "DS63, the marketplace rename and this plugin with its claude-setup change: one fold, one ready PR, one CI run, one merge.", "recommended": true},
+        {"label": "DS63 first", "summary": "Release DS63 alone now; this feature follows on a second train."}
+      ],
+      "chosen": "One train",
+      "decided": "2026-10-13"
+    },
+    {
+      "id": "D10",
+      "question": "What happens to hide-diffs on the owner's machine once this plugin is live?",
+      "asked": "2026-10-13",
+      "status": "decided",
+      "options": [
+        {"label": "Owner uninstalls it", "summary": "The owner removes it with one command; until then both coexist with different shortcuts and actions.", "recommended": true},
+        {"label": "Keep both", "summary": "No shared shortcuts, but both redraw the same tool rows; whichever loads last wins."}
+      ],
+      "chosen": "Owner uninstalls it",
+      "decided": "2026-10-13"
+    }
+  ]
+}

@@ -10,3 +10,4 @@ __pycache__/
 .claude/artifacts-local.json
 
 .delivery/
+.claude/artifacts-record.lock
