@@ -31,6 +31,7 @@ LATE = ("claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/sha
 EXPECTED = (
     "claude/plugins/artifacts/rules/project-artifacts.md",
     "claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md",
+    "claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/clarifying-questions.md",
 )
 
 

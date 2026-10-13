@@ -307,6 +307,18 @@ file name is removed, and only from a target being applied.
 tooling that has not been generated yet. Say so in the step 5 report when the
 project target has no `scripts/delivery/` directory.
 
+### `rules/clarifying-questions.md` — overwrite unconditionally
+
+`.claude/rules/clarifying-questions.md` (project) or
+`~/.claude/rules/clarifying-questions.md` (user). Part of the standard setup:
+written to every target this skill applies, new or existing, on every install
+and every re-run, with no question asked. It tells Claude to gather every
+clarifying question it needs and ask them all at once, in the questions
+interface, instead of guessing or asking a few per turn. Plugin-owned like
+`agents-and-integration.md`, and for the same reason a rule file rather than
+`CLAUDE.md` text: it reaches projects whose `CLAUDE.md` already exists. A
+local edit is drift; the fix belongs in the template. No placeholders.
+
 ### `CLAUDE.md` — add if missing, NEVER overwrite
 
 Instructions loaded into every session: `CLAUDE.md` at the repo root for a
@@ -366,6 +378,8 @@ Apply what was confirmed, then check the result rather than assuming it worked:
 - The written `rules/agents-and-integration.md` contains no
   `{{SUBAGENT_EFFORT}}` placeholder and names the chosen Sonnet effort.
 - No `rules/model-delegation.md` remains in a target that was applied.
+- Every applied target has `rules/clarifying-questions.md`, identical to the
+  template.
 - Every target that got the split has `hooks/effort_drift.py`, and its
   `hooks.SessionStart` holds the command for that target (project form
   with `$CLAUDE_PROJECT_DIR`, user form with `$HOME`), once, next to any
