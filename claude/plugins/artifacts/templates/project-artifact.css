@@ -272,14 +272,50 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
 }
 table.status-checklist td:first-child { white-space: nowrap; }
 table.status-checklist td code { white-space: nowrap; overflow-wrap: normal; }
-tr.status-group td {
+/* Collapsible checklist groups (R6.12): native <details>, no script; the heading sits in the <summary> */
+details.status-fold { margin: 1.1em 0 0; }
+details.status-fold > summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .3em .7em;
+  min-height: 2.75rem;
+  padding: .6em .7em;
+  cursor: pointer;
+  list-style: none;
   background: var(--paper);
+  border: 1px solid var(--rule);
   font-family: var(--font-mono);
   font-size: .74rem;
   text-transform: uppercase;
   letter-spacing: .06em;
   color: var(--ink-muted);
-  padding-top: 1em;
+}
+details.status-fold > summary::-webkit-details-marker { display: none; }
+details.status-fold > summary::before {
+  content: "";
+  flex: none;
+  width: .5rem;
+  height: .5rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+}
+details.status-fold[open] > summary::before { transform: rotate(45deg); }
+details.status-fold > summary:hover { background: var(--surface-2); }
+details.status-fold > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+details.status-fold > summary .fold-count { margin-left: auto; text-transform: none; letter-spacing: 0; font-size: .72rem; }
+details.status-fold > .table-scroll { margin-top: 0; border-top: 0; }
+details.status-fold > details.earlier { margin: .6em .7em; }
+table.status-checklist { table-layout: fixed; }
+table.status-checklist col.col-status { width: 7.5rem; }
+table.status-checklist col.col-item { width: 30%; }
+table.status-checklist col.col-app { width: 8.5rem; }
+table.status-checklist col.col-expected { width: 9.5rem; }
+table.status-checklist td { overflow-wrap: anywhere; }
+@media print {
+  details.status-fold > summary::before { display: none; }
+  details.status-fold::details-content, details.earlier::details-content { content-visibility: visible; display: block; }
 }
 table.history-table td:first-child { font-family: var(--font-mono); white-space: nowrap; }
 
@@ -594,4 +630,4 @@ a .release-name { color: var(--signal); }
 .release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
 .release-line .release-name { margin-right: 0; }
 .no-release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
-tr.status-group.release-group td { color: var(--ink); }
+details.status-fold.release-group > summary { color: var(--ink); }

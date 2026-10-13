@@ -1087,10 +1087,15 @@ def _row(task: dict, kind: str, feature_links: dict, by_id=None, release_line: b
         esc(task['id']), _chip(task['status']), item, app, esc(task['detail']), expected)
 
 
+COLUMN_CLASSES = {'Status': 'col-status', 'Item': 'col-item', 'App / service': 'col-app', 'Detail': 'col-detail'}
+
+
 def _table(body_rows: list, kind: str, label: str) -> str:
-    head = ''.join('<th>%s</th>' % esc(c) for c in _columns(kind, label))
-    return ('<div class="table-scroll"><table class="status-checklist"><thead><tr>%s</tr></thead><tbody>\n%s\n</tbody></table></div>'
-            % (head, '\n'.join(body_rows)))
+    cols = _columns(kind, label)
+    head = ''.join('<th>%s</th>' % esc(c) for c in cols)
+    group = '<colgroup>%s</colgroup>' % ''.join('<col class="%s">' % COLUMN_CLASSES.get(c, 'col-expected') for c in cols)
+    return ('<div class="table-scroll"><table class="status-checklist">%s<thead><tr>%s</tr></thead><tbody>\n%s\n</tbody></table></div>'
+            % (group, head, '\n'.join(body_rows)))
 
 
 def wants_release_line(kind: str, gkey: str) -> bool:
@@ -1098,22 +1103,40 @@ def wants_release_line(kind: str, gkey: str) -> bool:
     return kind == 'feature' or gkey == 'built'
 
 
+def group_open(gkey: str) -> bool:
+    """R6.12: every checklist group renders open except Live or built, which always renders closed."""
+    return gkey != 'built'
+
+
+def _count_label(gkey: str, rows: list) -> str:
+    """The closed Live or built heading still says how much unreleased work it holds: `2 built, 31 live`."""
+    if gkey == 'built' and any(t['status'] == 'Built' for t in rows):
+        built = sum(1 for t in rows if t['status'] == 'Built')
+        return '%d built, %d live' % (built, len(rows) - built)
+    return '%d task%s' % (len(rows), '' if len(rows) == 1 else 's')
+
+
 def _checklist(tasks: list, kind: str, label: str, ref: datetime, feature_links: dict, all_tasks=None) -> str:
+    """R6.12: one `<details class="status-fold">` per group, its heading in the `<summary>`, a table of its rows
+    inside; Live or built closed, the rest open. The Earlier fold sits inside Live or built (R6.3)."""
     groups = group_tasks(tasks, ref, kind)
     by_id = {t['id']: t for t in (tasks if all_tasks is None else all_tasks) if 'id' in t}
-    width = len(_columns(kind, label))
-    rows, folded = [], []
+    out = []
     for gkey, title, shown, old in groups:
+        if not shown and not old:
+            continue
+        body = ''
         if shown:
-            rows.append('<tr class="status-group%s" data-group="%s"><td colspan="%d"><strong>%s</strong></td></tr>'
-                        % (' release-group' if gkey.startswith('release-') else '', gkey, width, esc(title)))
-            rows += [_row(t, kind, feature_links, by_id, wants_release_line(kind, gkey)) for t in shown]
-        folded += old
-    out = _table(rows, kind, label) if rows or not folded else ''
-    if folded:
-        out += ('\n<details class="earlier"><summary>Earlier</summary>\n%s\n</details>'
-                % _table([_row(t, kind, feature_links, by_id, True) for t in folded], kind, label))
-    return out
+            body += _table([_row(t, kind, feature_links, by_id, wants_release_line(kind, gkey)) for t in shown],
+                           kind, label)
+        if old:
+            body += ('\n<details class="earlier"><summary>Earlier</summary>\n%s\n</details>'
+                     % _table([_row(t, kind, feature_links, by_id, True) for t in old], kind, label))
+        out.append('<details class="status-fold%s" data-group="%s"%s><summary><strong>%s</strong>'
+                   '<span class="fold-count">%s</span></summary>\n%s\n</details>'
+                   % (' release-group' if gkey.startswith('release-') else '', gkey,
+                      ' open' if group_open(gkey) else '', esc(title), _count_label(gkey, shown + old), body))
+    return '\n'.join(out) if out else _table([], kind, label)
 
 
 # ------------------------------------------------------------------ release timeline (R5.42, R5.43)
@@ -1967,18 +1990,31 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
     tables = find_all(root, 'table', 'status-checklist')
     wanted_cols = _columns(kind, label)
     rows = []
-    group_marks = []  # (group key, title, colspan) from the shown table
+    group_marks = []  # (group key, title) of each group fold, in page order
+    table_group = {}  # id(table) -> group key of the fold that holds it
+    for fold in find_all(root, 'details', 'status-fold'):
+        gkey = fold.attrs.get('data-group', '')
+        kids = [n for n in fold.children if getattr(n, 'tag', None)]
+        summary = kids[0] if kids and kids[0].tag == 'summary' else None
+        strong = find(summary, 'strong') if summary is not None else None
+        group_marks.append((gkey, text_of(strong) if strong is not None else ''))
+        if summary is None or strong is None:
+            add('R6.12', 'group %r must be a <details> whose first child is a <summary> holding the group heading in <strong>' % gkey)
+        if ('open' in fold.attrs) != group_open(gkey):
+            add('R6.12', 'group %r must render %s' % (gkey, 'open' if group_open(gkey) else 'closed (Live or built always starts closed)'))
+        for inner in find_all(fold, 'table', 'status-checklist'):
+            table_group[id(inner)] = gkey
     for table_no, table in enumerate(tables):
         folded = has_ancestor(table, lambda n: n.tag == 'details' and has_class(n, 'earlier'))
         cols = [text_of(th) for th in find_all(table, 'th')]
         if cols != wanted_cols:
             add('R6.4', 'checklist columns are %s; this kind needs %s' % (cols, wanted_cols))
-        current = ''
+        current = table_group.get(id(table), '')
+        if not current and (len(tables) > 1 or find_all(table, 'tr', pred=lambda n: has_ancestor(n, lambda a: a.tag == 'tbody'))):
+            add('R6.12', 'a checklist table must sit inside a group <details class="status-fold">')
         for tr in find_all(table, 'tr', pred=lambda n: has_ancestor(n, lambda a: a.tag == 'tbody')):
             if has_class(tr, 'status-group'):
-                cell = find(tr, 'td')
-                current = tr.attrs.get('data-group', '')
-                group_marks.append((current, text_of(cell) if cell else '', cell.attrs.get('colspan', '') if cell else ''))
+                add('R6.12', 'group headings are <summary> elements of collapsible groups, not table rows')
                 continue
             cells = [c for c in tr.children if c.tag == 'td']
             if len(cells) != len(wanted_cols):
@@ -2012,9 +2048,6 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             basis = find(cells[3 + offset], 'span', 'expected-basis') if len(cells) > 3 + offset else None
             row['basis'] = text_of(basis) if basis else ''
             rows.append(row)
-    for mark in group_marks:
-        if mark[2] != str(len(wanted_cols)):
-            add('R6.4', 'group row %r spans %r columns; the checklist has %d' % (mark[1], mark[2], len(wanted_cols)))
     if not tables:
         add('R6.4', 'the artifact has no checklist table')
 
@@ -2029,7 +2062,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
     greq = 'R5.46' if kind == 'full-progress' else 'R6.2'
     expected_groups = group_tasks([t for t in mine if t.get('status') in STATUSES], ref, kind)
     group_of_task = {t['id']: gkey for gkey, _, shown, _ in expected_groups for t in shown}
-    shown_wanted = [(g, t) for g, t, shown, _ in expected_groups if shown]
+    shown_wanted = [(g, t) for g, t, shown, old in expected_groups if shown or old]
     shown_found = [(m[0], m[1]) for m in group_marks]
     if shown_found != shown_wanted:
         add(greq, 'the checklist groups are %s; the registry needs %s, in that order' % (
@@ -2077,6 +2110,8 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             summary = find(node, 'summary')
             if 'open' in node.attrs or summary is None or text_of(summary) != 'Earlier':
                 add('R6.3', 'the Earlier fold must be a closed <details> titled "Earlier"')
+            if not has_ancestor(node, lambda n: n.tag == 'details' and has_class(n, 'status-fold') and n.attrs.get('data-group') == 'built'):
+                add('R6.3', 'the Earlier fold must sit inside the Live or built group (R6.12)')
 
     # R6.6 Expected on open rows
     for row in rows:
