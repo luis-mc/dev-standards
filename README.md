@@ -54,6 +54,10 @@ Sets up:
 - `.claude/hooks/effort_drift.py` — a SessionStart alias-drift warning
 - `enabledPlugins` — turns on `luismc-artifacts` for the project (project
   target only; other entries are kept, and an entry you set to `false` stays)
+- On every run, at user level: `luismc-transcript-folds` in your
+  `enabledPlugins` and its two chords (`ctrl+x d`, `ctrl+x f`) merged into
+  `~/.claude/keybindings.json`; an existing entry or binding is never changed,
+  and a chord bound to something else is shown as a conflict for you to decide
 
 **Model split:** the main session runs on Opus and does the thinking and
 planning; subagents run on Sonnet and write the code. Every project gets it,

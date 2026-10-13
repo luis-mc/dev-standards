@@ -14,6 +14,13 @@ What is checked against a repo root:
   M1  no model-delegation.md remains in the claude-setup assets
   E1  the settings template enables luismc-artifacts@{{MARKETPLACE}} and
       SKILL.md says how the placeholder is filled
+  K1  assets/keybindings.json parses and holds exactly the Global context with
+      the two transcript-folds chords and their actions; when the plugin's
+      source (claude/plugins/transcript-folds/hooks/) is on the branch it names
+      the same two actions, otherwise that cross-check is skipped with a
+      printed message, never silently passed
+  K2  SKILL.md names the luismc-transcript-folds enabledPlugins entry, the
+      keybindings merge and the plugin install in its report
   D1  the owner's default, medium for Opus and Sonnet alike: every profile
       is medium, the architect agent (Opus) is medium, the settings
       template's top-level effortLevel is medium, and claude-setup recommends
@@ -67,6 +74,11 @@ PLACEHOLDER = "{{SUBAGENT_EFFORT}}"
 ARTIFACTS_PLUGIN = "luismc-artifacts@{{MARKETPLACE}}"
 SKILL = SETUP + "/SKILL.md"
 ARCHITECT = "claude/plugins/agents/agents/architect.md"
+KEYBINDINGS = ASSETS + "/keybindings.json"
+FOLDS_HOOKS = "claude/plugins/transcript-folds/hooks"
+CHORDS = {"ctrl+x d": "theme:toggleSyntaxHighlighting",
+          "ctrl+x f": "theme:editCustom"}
+FOLDS_PLUGIN = "luismc-transcript-folds"
 EXPECTED_PENDING = ("P2 feature-artifact-new",)
 
 
@@ -135,6 +147,46 @@ def defaults(root):
     return found
 
 
+def plugin_source_present(root):
+    return (pathlib.Path(root) / FOLDS_HOOKS).is_dir()
+
+
+def keybindings(root):
+    """K1 and K2 findings: the keybindings asset, the plugin source, SKILL.md."""
+    root = pathlib.Path(root)
+    found = []
+    try:
+        data = json.loads((root / KEYBINDINGS).read_text(encoding="utf-8"))
+        blocks = data["bindings"]
+        assert isinstance(blocks, list)
+    except (OSError, ValueError, KeyError, TypeError, AssertionError):
+        found.append("K1 assets/keybindings.json is missing or does not parse")
+        blocks = []
+    if blocks:
+        if len(blocks) != 1 or blocks[0].get("context") != "Global":
+            found.append("K1 keybindings.json is not exactly one Global context")
+        elif blocks[0].get("bindings") != CHORDS:
+            found.append(f"K1 keybindings.json chords are not exactly {CHORDS}")
+    if plugin_source_present(root):
+        source = ""
+        for path in sorted((root / FOLDS_HOOKS).rglob("*")):
+            if path.is_file():
+                source += path.read_text(encoding="utf-8", errors="replace")
+        for action in CHORDS.values():
+            if action not in source:
+                found.append(f"K1 plugin source does not name the action {action}")
+    try:
+        text = " ".join((root / SKILL).read_text(encoding="utf-8").split())
+    except OSError:
+        text = ""
+    for needle in (f'"{FOLDS_PLUGIN}@<marketplace>"', "~/.claude/keybindings.json",
+                   f"claude plugin install {FOLDS_PLUGIN}@<marketplace>",
+                   "/reload-plugins"):
+        if needle not in text:
+            found.append(f"K2 SKILL.md lacks: {needle}")
+    return found
+
+
 def check(root):
     """Every finding for the tree at `root`, as a list of strings."""
     root = pathlib.Path(root)
@@ -196,6 +248,7 @@ def check(root):
         skill_text = ""
     if "{{MARKETPLACE}}" not in skill_text or "luismc-project-setup@" not in skill_text:
         found.append("E1 SKILL.md does not say how {{MARKETPLACE}} is filled")
+    found += keybindings(root)
     found += defaults(root)
     return found
 
@@ -347,6 +400,31 @@ def m_hardcoded_marketplace(r):
         "{{MARKETPLACE}}", "dev-standards"), encoding="utf-8")
 
 
+def m_kb_wrong_action(r):
+    edit(r / KEYBINDINGS, "theme:editCustom", "theme:other")
+
+
+def m_kb_extra_chord(r):
+    edit(r / KEYBINDINGS, '"ctrl+x f"', '"ctrl+x g": "x:y", "ctrl+x f"')
+
+
+def m_kb_missing(r):
+    (r / KEYBINDINGS).unlink()
+
+
+def m_kb_plugin_mismatch(r):
+    d = r / FOLDS_HOOKS
+    d.mkdir(parents=True)
+    (d / "transcript_folds.tsx").write_text(
+        "action: 'theme:toggleSyntaxHighlighting'\n", encoding="utf-8")
+
+
+def m_skill_no_folds(r):
+    p = r / SKILL
+    p.write_text(p.read_text(encoding="utf-8").replace(
+        "~/.claude/keybindings.json", "the keys file"), encoding="utf-8")
+
+
 def m_bad_json(r):
     (r / PROFILES).write_text("{", encoding="utf-8")
 
@@ -373,6 +451,12 @@ MUTATIONS = [
     ("E1 plugin not enabled", m_no_enabled_plugins, "does not enable luismc-artifacts"),
     ("E1 marketplace hard-coded", m_hardcoded_marketplace, "does not enable luismc-artifacts"),
     ("E1 placeholder unexplained", m_marketplace_unexplained, "does not say how {{MARKETPLACE}}"),
+    ("K1 keybinding action wrong", m_kb_wrong_action, "chords are not exactly"),
+    ("K1 extra chord", m_kb_extra_chord, "chords are not exactly"),
+    ("K1 keybindings missing", m_kb_missing, "keybindings.json is missing"),
+    ("K1 plugin source mismatch", m_kb_plugin_mismatch,
+     "plugin source does not name the action theme:editCustom"),
+    ("K2 SKILL lacks keybindings", m_skill_no_folds, "SKILL.md lacks: ~/.claude/keybindings.json"),
     ("P0 profiles unreadable", m_bad_json, "model-profiles.json unreadable"),
 ]
 
@@ -461,6 +545,9 @@ def main():
     if not real:
         print("  clean")
     fails += bool(real)
+    if not plugin_source_present(ROOT):
+        print(f"  SKIPPED K1 plugin-source cross-check: {FOLDS_HOOKS} is not on "
+              "this branch; run again after the join")
 
     print("\nChecks can fail:")
     for name, mutate, want in MUTATIONS:
