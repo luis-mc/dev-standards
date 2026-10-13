@@ -960,8 +960,15 @@ def _glance_task(task: dict) -> str:
         esc(task['id']), esc(task['id']), _release_span(task) if is_release(task) else '', esc(task['item']), expected)
 
 
+def glance_open(gkey: str) -> bool:
+    """R6.13: the At a glance groups that are done (Built, not released; Live in the last 24 hours) render closed,
+    every other group, and always Needs you, renders open."""
+    return gkey not in ('built', 'live')
+
+
 def _at_a_glance(tasks: list, decisions, ref: datetime) -> str:
-    """R5.33: the At a glance block of section 0, generated from the registry."""
+    """R5.33 and R6.13: the At a glance block of section 0, generated from the registry; each group is a
+    `<details class="glance-group">` whose `<summary>` holds the label and the count."""
     groups = []
     for gkey, label, shown, found, more in glance_groups(tasks, decisions, ref):
         items = [_glance_task(t) for t in shown]
@@ -970,8 +977,10 @@ def _at_a_glance(tasks: list, decisions, ref: datetime) -> str:
         if more:
             items.append('<li class="glance-more">and %d more</li>' % more)
         body = '<ul>\n%s\n</ul>' % '\n'.join(items) if items else '<p class="glance-none">Nothing needs you.</p>'
-        groups.append('<div class="glance-group glance-%s" data-glance="%s"><div class="glance-label">%s</div>\n%s\n</div>'
-                      % (gkey, gkey, esc(label), body))
+        count = len(shown) + len(found) + more
+        groups.append('<details class="glance-group glance-%s" data-glance="%s"%s><summary>'
+                      '<span class="glance-label">%s</span><span class="fold-count">%d task%s</span></summary>\n%s\n</details>'
+                      % (gkey, gkey, ' open' if glance_open(gkey) else '', esc(label), count, '' if count == 1 else 's', body))
     return '<div class="at-a-glance">\n%s\n</div>' % '\n'.join(groups)
 
 
@@ -1957,14 +1966,23 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
     if glance is not None:
         valid = [t for t in mine if t.get('status') in STATUSES]
         want_groups = glance_groups(valid, decisions, ref)
-        have = []
-        for g in find_all(glance, 'div', 'glance-group'):
+        have, counts = [], {}
+        for g in find_all(glance, 'details', 'glance-group'):
+            kids = [n for n in g.children if getattr(n, 'tag', None)]
+            summ = kids[0] if kids and kids[0].tag == 'summary' else None
+            if summ is None or find(summ, 'span', 'glance-label') is None or find(summ, 'span', 'fold-count') is None:
+                add('R6.13', 'glance group %r must be a <details> whose first child is a <summary> holding the label and the count' % g.attrs.get('data-glance', ''))
+            if ('open' in g.attrs) != glance_open(g.attrs.get('data-glance', '')):
+                add('R6.13', 'glance group %r must render %s' % (g.attrs.get('data-glance', ''),
+                    'open' if glance_open(g.attrs.get('data-glance', '')) else 'closed (done groups start closed)'))
             tasks_in = [li.attrs.get('data-glance-task') for li in find_all(g, 'li', pred=lambda n: 'data-glance-task' in n.attrs)]
             decs_in = [li.attrs.get('data-glance-decision') for li in find_all(g, 'li', pred=lambda n: 'data-glance-decision' in n.attrs)]
             more_li = find(g, 'li', 'glance-more')
             none_p = find(g, 'p', 'glance-none')
             have.append((g.attrs.get('data-glance', ''), tasks_in, decs_in, text_of(more_li) if more_li else '',
                          text_of(none_p) if none_p else ''))
+            fold_count = find(summ, 'span', 'fold-count') if summ is not None else None
+            counts[g.attrs.get('data-glance', '')] = text_of(fold_count) if fold_count is not None else ''
         wanted_keys = [g[0] for g in want_groups]
         if [h[0] for h in have] != wanted_keys:
             add('R5.33', 'the At a glance groups must be %s in that order; found %s' % (wanted_keys, [h[0] for h in have]))
@@ -1974,6 +1992,9 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             if h is None:
                 continue
             ids, dec_ids = [t['id'] for t in shown], [d['id'] for d in open_decs]
+            total = len(ids) + len(dec_ids) + more
+            if h[0] in counts and counts[h[0]] != '%d task%s' % (total, '' if total == 1 else 's'):
+                add('R6.13', 'glance group %r shows the count %r; it holds %d' % (gkey, counts[h[0]], total))
             if gkey == 'you':
                 empty_text = 'Nothing needs you.'
                 if (h[1], h[2]) != (ids, dec_ids) or (not ids and not dec_ids and h[4] != empty_text) or (ids or dec_ids) and h[4]:

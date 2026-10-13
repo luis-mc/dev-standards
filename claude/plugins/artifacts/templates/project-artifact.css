@@ -179,26 +179,22 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
   max-width: 60em;
 }
 .glance-group {
-  display: grid;
-  grid-template-columns: 11rem 1fr;
-  gap: .3rem 1rem;
-  padding: .65em .9em;
+  display: block;
+  padding: 0 0 .5em;
   border-top: 1px solid var(--rule);
   border-left: 4px solid var(--rule-strong);
 }
 .glance-group:first-child { border-top: 0; }
 .glance-label {
-  font-family: var(--font-mono);
-  font-size: .78rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .05em;
   color: var(--ink-muted);
-  padding-top: .15em;
 }
-.glance-group ul { list-style: none; margin: 0; padding: 0; min-width: 0; }
+/* the summary is the shared fold header of R6.12; inside the bordered block it drops its own box */
+details.glance-group > summary { border: 0; background: transparent; }
+details.glance-group > summary:hover { background: var(--surface-2); }
+.glance-group ul { list-style: none; margin: 0; padding: .1em .9em .2em 2.2rem; min-width: 0; }
 .glance-group li { padding: .1em 0; overflow-wrap: anywhere; }
-.glance-group p { margin: 0; color: var(--ink-muted); }
+.glance-group p { margin: 0; padding: .1em .9em .2em 2.2rem; color: var(--ink-muted); }
 .glance-expected { font-size: .85rem; color: var(--ink-muted); margin-left: .5em; }
 .glance-more { color: var(--ink-muted); font-size: .88rem; }
 .glance-basis { display: block; font-size: .72rem; line-height: 1.3; color: var(--ink-muted); }
@@ -211,9 +207,6 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
 .glance-built { border-left-color: var(--live); }
 .glance-waiting { border-left-color: var(--rule-strong); border-left-style: dashed; }
 .glance-live { border-left-color: var(--live); }
-@media (max-width: 40rem) {
-  .glance-group { grid-template-columns: 1fr; }
-}
 
 /* Status chips */
 .status-chip {
@@ -274,6 +267,7 @@ table.status-checklist td:first-child { white-space: nowrap; }
 table.status-checklist td code { white-space: nowrap; overflow-wrap: normal; }
 /* Collapsible checklist groups (R6.12): native <details>, no script; the heading sits in the <summary> */
 details.status-fold { margin: 1.1em 0 0; }
+details.glance-group > summary,
 details.status-fold > summary {
   display: flex;
   align-items: center;
@@ -291,7 +285,9 @@ details.status-fold > summary {
   letter-spacing: .06em;
   color: var(--ink-muted);
 }
+details.glance-group > summary::-webkit-details-marker,
 details.status-fold > summary::-webkit-details-marker { display: none; }
+details.glance-group > summary::before,
 details.status-fold > summary::before {
   content: "";
   flex: none;
@@ -301,9 +297,13 @@ details.status-fold > summary::before {
   border-bottom: 2px solid currentColor;
   transform: rotate(-45deg);
 }
+details.glance-group[open] > summary::before,
 details.status-fold[open] > summary::before { transform: rotate(45deg); }
+details.glance-group > summary:hover,
 details.status-fold > summary:hover { background: var(--surface-2); }
+details.glance-group > summary:focus-visible,
 details.status-fold > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+details.glance-group > summary .fold-count,
 details.status-fold > summary .fold-count { margin-left: auto; text-transform: none; letter-spacing: 0; font-size: .72rem; }
 details.status-fold > .table-scroll { margin-top: 0; border-top: 0; }
 details.status-fold > details.earlier { margin: .6em .7em; }
@@ -314,8 +314,8 @@ table.status-checklist col.col-app { width: 8.5rem; }
 table.status-checklist col.col-expected { width: 9.5rem; }
 table.status-checklist td { overflow-wrap: anywhere; }
 @media print {
-  details.status-fold > summary::before { display: none; }
-  details.status-fold::details-content, details.earlier::details-content { content-visibility: visible; display: block; }
+  details.status-fold > summary::before, details.glance-group > summary::before { display: none; }
+  details.glance-group::details-content, details.status-fold::details-content, details.earlier::details-content { content-visibility: visible; display: block; }
 }
 table.history-table td:first-child { font-family: var(--font-mono); white-space: nowrap; }
 
