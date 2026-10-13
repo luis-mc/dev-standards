@@ -5,7 +5,7 @@ spec-lint is split into one job per area. The first job runs this script, which
 reads the changed paths and writes GitHub outputs (appended to $GITHUB_OUTPUT,
 and printed):
 
-    specs, delivery, artifacts, profiles   true | false
+    specs, delivery, artifacts, profiles, transcript-folds   true | false
     mutants                                true | false  (any suite below)
     mutants_gate, mutants_cleanup, mutants_notes   true | false  (TC7, one per suite)
 
@@ -22,6 +22,8 @@ Area map (first matching rule wins; see RULES):
              and their tests; ARTIFACTSPEC itself counts as specs.
   profiles   every SKILL.md, the claude-setup assets, the architect agent and
              test_model_profiles.py.
+  transcript-folds  everything under claude/plugins/transcript-folds/ except
+             its .claude-plugin/ manifest (node --test over hooks/fold/*.ts).
 
 Shared paths run every area: this workflow, this script and its test,
 tools/change-notes.json, any tools/*common*. Fail safe: a path under tools/ or
@@ -40,7 +42,7 @@ any of them is. Otherwise that suite runs with --no-mutants.
 Events: pull_request diffs `base...head`; push diffs the pushed range
 `before..head`; schedule and any range that cannot be read run every area.
 workflow_dispatch (DS49) runs the areas named by `--areas` (comma-separated
-subset of specs,delivery,artifacts,profiles); with no override it diffs the
+subset of specs,delivery,artifacts,profiles,transcript-folds); with no override it diffs the
 branch against the default branch (`origin/main...head`) and runs what that
 touches, and runs every area only when the branch is the default branch itself
 or the diff cannot be read.
@@ -63,7 +65,7 @@ import re
 import subprocess
 import sys
 
-AREAS = ("specs", "delivery", "artifacts", "profiles")
+AREAS = ("specs", "delivery", "artifacts", "profiles", "transcript-folds")
 ALL = frozenset(AREAS)
 NONE: frozenset[str] = frozenset()
 HEAVY = ("delivery", "artifacts")
@@ -134,6 +136,8 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (re.escape(PS) + r"/claude-setup/assets/.*", frozenset({"profiles"})),
     (r"claude/plugins/agents/agents/.*", frozenset({"profiles"})),
     (r"tools/test_model_profiles\.py", frozenset({"profiles"})),
+    # transcript-folds (its .claude-plugin/ manifest is matched above: nothing heavy)
+    (r"claude/plugins/transcript-folds/.*", frozenset({"transcript-folds"})),
     # artifacts
     (r"claude/plugins/artifacts/.*", frozenset({"artifacts"})),
     (r"tools/(test_render_artifacts|test_project_artifacts[a-z_]*|convert_interim_record)\.py",
