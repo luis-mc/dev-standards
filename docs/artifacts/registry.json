@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-13T23:25+01:00",
+  "updated": "2026-10-13T23:27+01:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1686,6 +1686,17 @@
       "expected": "13 Oct",
       "changed": "2026-10-13T23:25+01:00",
       "rides": "DS64"
+    },
+    {
+      "id": "TF5",
+      "owner": "transcript-folds",
+      "app": "",
+      "status": "Live",
+      "item": "Install on this machine; hide-diffs removal",
+      "detail": "luismc-transcript-folds installed (user scope), luismc-project-setup updated to 14.3.0, plugins reloaded. hide-diffs is installed with local scope in another project; the owner removes it there (claude plugin uninstall hide-diffs@gixxy22-plugins --scope local).",
+      "expected": "13 Oct",
+      "changed": "2026-10-13T23:27+01:00",
+      "no_release": "machine setup, ships nothing"
     }
   ]
 }

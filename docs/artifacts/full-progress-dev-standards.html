@@ -723,7 +723,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-13T23:25+01:00",
+ "updated": "2026-10-13T23:27+01:00",
  "tasks": [
   {
    "id": "AR2",
@@ -2409,6 +2409,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "expected": "13 Oct",
    "changed": "2026-10-13T23:25+01:00",
    "rides": "DS64"
+  },
+  {
+   "id": "TF5",
+   "owner": "transcript-folds",
+   "app": "",
+   "status": "Live",
+   "item": "Install on this machine; hide-diffs removal",
+   "detail": "luismc-transcript-folds installed (user scope), luismc-project-setup updated to 14.3.0, plugins reloaded. hide-diffs is installed with local scope in another project; the owner removes it there (claude plugin uninstall hide-diffs@gixxy22-plugins --scope local).",
+   "expected": "13 Oct",
+   "changed": "2026-10-13T23:27+01:00",
+   "no_release": "machine setup, ships nothing"
   }
  ]
 }</script>
@@ -2416,13 +2427,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-13T23:25+01:00">13 Oct 23:25</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-13T23:27+01:00">13 Oct 23:27</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">10 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">9 tasks</span></summary>
 <ul>
+<li data-glance-task="TF5"><span class="task-id">TF5</span>Install on this machine; hide-diffs removal</li>
 <li data-glance-task="DS63"><span class="task-id">DS63</span><span class="release-name">RELEASE-8</span>claude-setup ships the clarifying-questions rule</li>
 <li data-glance-task="DS64"><span class="task-id">DS64</span><span class="release-name">RELEASE-9</span>Train: DS63 + transcript-folds + marketplace rename</li>
 <li data-glance-task="DS65"><span class="task-id">DS65</span>Marketplace renamed to dev-standards</li>
@@ -2430,15 +2442,15 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="TF2"><span class="task-id">TF2</span>luismc-transcript-folds plugin, from scratch</li>
 <li data-glance-task="TF3"><span class="task-id">TF3</span>claude-setup enables the plugin and writes the two chords</li>
 <li data-glance-task="TF4"><span class="task-id">TF4</span>Smoke test in a real terminal session</li>
-<li data-glance-task="DS62"><span class="task-id">DS62</span>Sync local main and remove old artifacts-record worktree</li>
-<li class="glance-more">and 2 more</li>
+<li class="glance-more">and 1 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">148</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">149</div><div class="label">tasks live</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">148 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">149 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="TF5"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-transcript-folds.html"><span class="task-id">TF5</span>Install on this machine; hide-diffs removal</a><span class="no-release-line">ships nothing: machine setup, ships nothing</span></td><td></td><td>luismc-transcript-folds installed (user scope), luismc-project-setup updated to 14.3.0, plugins reloaded. hide-diffs is installed with local scope in another project; the owner removes it there (claude plugin uninstall hide-diffs@gixxy22-plugins --scope local).</td><td>13 Oct</td></tr>
 <tr data-task="DS63"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS63</span><span class="release-name">RELEASE-8</span>claude-setup ships the clarifying-questions rule<span class="release-line"><span class="release-name">RELEASE-9</span></span></td><td></td><td>New plugin-owned rule file rules/clarifying-questions.md in claude-setup assets, written to every target and overwritten unconditionally like agents-and-integration.md, so it reaches projects whose CLAUDE.md already exists. Text is the owner&#x27;s, verbatim. luismc-project-setup 14.2.1 -&gt; 14.3.0.</td><td>13 Oct</td></tr>
 <tr data-task="DS64"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS64</span><span class="release-name">RELEASE-9</span>Train: DS63 + transcript-folds + marketplace rename</td><td></td><td>PR #60 merged (d49413f): luismc-transcript-folds 1.0.0, luismc-project-setup 14.3.0, marketplace renamed dev-standards. CI green, owner smoke test passed, branches and agent worktrees removed, marketplace update verified.</td><td>13 Oct</td></tr>
 <tr data-task="DS65"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS65</span>Marketplace renamed to dev-standards<span class="release-line"><span class="release-name">RELEASE-9</span></span></td><td></td><td>marketplace.json name luismc-dev-tools -&gt; dev-standards to match the repo and registered installs; README install lines @dev-standards; tests updated.</td><td>13 Oct</td></tr>
@@ -2596,7 +2608,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-value="feature: transcript folds"><a href="feature-transcript-folds.html">Feature: Transcript folds</a></td><td data-value="29865505"><time datetime="2026-10-13T23:25+01:00">13 Oct 23:25</time></td><td>TF1 to TF4</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Live since 13 Oct (PR #60): luismc-transcript-folds 1.0.0, installed by claude-setup 14.3.0.</td></tr>
+<tr><td data-value="feature: transcript folds"><a href="feature-transcript-folds.html">Feature: Transcript folds</a></td><td data-value="29865507"><time datetime="2026-10-13T23:27+01:00">13 Oct 23:27</time></td><td>TF1 to TF5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Live since 13 Oct (PR #60): luismc-transcript-folds 1.0.0, installed by claude-setup 14.3.0.</td></tr>
 <tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29865455"><time datetime="2026-10-13T22:35+01:00">13 Oct 22:35</time></td><td>DL1 to DL13</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29865455"><time datetime="2026-10-13T22:35+01:00">13 Oct 22:35</time></td><td>MP1 to MP7, DS2 to DS5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
 <tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29865455"><time datetime="2026-10-13T22:35+01:00">13 Oct 22:35</time></td><td>AR2 to AR50</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
