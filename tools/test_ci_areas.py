@@ -30,6 +30,12 @@ def check(name: str, got, want) -> None:
 
 ALL = set(ca.AREAS)
 
+
+def mflags_early(path_list):
+    out = ca.classify(path_list)
+    return tuple(out[k] for k in ("mutants", "mutants_gate", "mutants_cleanup", "mutants_notes"))
+
+
 # one path per area
 for path, want in [
     (f"{TS}/references/invariants.md", {"specs"}),
@@ -59,6 +65,11 @@ for path, want in [
     ("claude/plugins/project-setup/skills/claude-setup/assets/model-profiles.json", {"profiles"}),
     ("claude/plugins/agents/agents/architect.md", {"profiles"}),
     ("tools/test_model_profiles.py", {"profiles"}),
+    ("claude/plugins/transcript-folds/hooks/transcript_folds.tsx", {"transcript-folds"}),
+    ("claude/plugins/transcript-folds/hooks/fold/width.ts", {"transcript-folds"}),
+    ("claude/plugins/transcript-folds/hooks/hooks.json", {"transcript-folds"}),
+    ("claude/plugins/transcript-folds/tests/width.test.ts", {"transcript-folds"}),
+    ("claude/plugins/transcript-folds/types/state.d.ts", {"transcript-folds"}),
 ]:
     check(f"area of {path}", hit([path]), want)
 
@@ -77,6 +88,7 @@ for path in ["docs/artifacts/feature-x.html", "docs/plans/test-cost-train.md",
              "docs/specs/changes/foo.md", "README.md", ".gitignore",
              ".github/workflows/nightly.yml", ".github/workflows/template-build.yml",
              "claude/plugins/artifacts/.claude-plugin/plugin.json",
+             "claude/plugins/transcript-folds/.claude-plugin/plugin.json",
              f"{TS}/assets/catalog/tech/data.yaml", f"{TS}/assets/check_stack.py",
              "tools/template_build_check.py"]:
     check(f"none {path}", hit([path]), set())
@@ -86,6 +98,15 @@ check("docs-only mix", hit(["docs/a.md", "docs/artifacts/b.html", "README.md"]),
 check("union", hit(["docs/a.md", "tools/test_render_artifacts.py",
                     "tools/test_model_profiles.py"]), {"artifacts", "profiles"})
 check("backslashes", hit(["tools\\test_render_artifacts.py"]), {"artifacts"})
+check("transcript-folds with a manifest bump and docs",
+      hit(["claude/plugins/transcript-folds/.claude-plugin/plugin.json", "docs/a.md"]), set())
+check("transcript-folds union",
+      hit(["claude/plugins/transcript-folds/hooks/fold/lines.ts", "tools/test_model_profiles.py"]),
+      {"transcript-folds", "profiles"})
+check("transcript-folds is light advice",
+      ca.advice(["claude/plugins/transcript-folds/hooks/fold/lines.ts"]), "light: test locally only")
+check("transcript-folds does not turn on mutants",
+      mflags_early(["claude/plugins/transcript-folds/hooks/fold/lines.ts"]), (False, False, False, False))
 check("empty diff", hit([]), set())
 
 NOMUT = {"mutants": False, "mutants_gate": False, "mutants_cleanup": False,
@@ -157,7 +178,7 @@ check("advice heavy lists touched areas",
 check("advice shared path is every area, heavy",
       ca.advice(["tools/ci_areas.py"], "b"),
       "heavy: delivery,artifacts -> run `gh workflow run spec-lint.yml --ref b "
-      "-f areas=specs,delivery,artifacts,profiles`")
+      "-f areas=specs,delivery,artifacts,profiles,transcript-folds`")
 check("parse_areas order and trim", ca.parse_areas(" profiles,specs "), ["specs", "profiles"])
 check("parse_areas empty", ca.parse_areas(""), [])
 try:
@@ -202,10 +223,10 @@ with tempfile.TemporaryDirectory() as tmp:
     prof = commit(tmp, "tools/test_model_profiles.py")
     dgate = commit(tmp, "tools/test_delivery_gate.py")
     none = {"specs": "false", "delivery": "false", "artifacts": "false", "profiles": "false",
-            "mutants": "false", "mutants_gate": "false", "mutants_cleanup": "false",
+            "transcript-folds": "false", "mutants": "false", "mutants_gate": "false", "mutants_cleanup": "false",
             "mutants_notes": "false"}
     every = {**none, "specs": "true", "delivery": "true", "artifacts": "true",
-             "profiles": "true"}
+             "profiles": "true", "transcript-folds": "true"}
     allmut = {"mutants": "true", "mutants_gate": "true", "mutants_cleanup": "true",
               "mutants_notes": "true"}
     gatemut = {"mutants": "true", "mutants_gate": "true", "mutants_cleanup": "true"}
@@ -214,6 +235,10 @@ with tempfile.TemporaryDirectory() as tmp:
     check("cli pr profiles",
           cli(tmp, "--event", "pull_request", "--base", base, "--head", prof),
           {**none, "profiles": "true"})
+    tf = commit(tmp, "claude/plugins/transcript-folds/hooks/fold/lines.ts")
+    check("cli pr transcript-folds",
+          cli(tmp, "--event", "pull_request", "--base", dgate, "--head", tf),
+          {**none, "transcript-folds": "true"})
     check("cli push range", cli(tmp, "--event", "push", "--base", docs, "--head", prof),
           {**none, "profiles": "true"})
     check("cli push delivery mutants",

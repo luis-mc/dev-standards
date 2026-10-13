@@ -31,6 +31,7 @@ on:
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/**'
       - 'claude/plugins/**/SKILL.md'
       - 'claude/plugins/artifacts/**'
+      - 'claude/plugins/transcript-folds/**'
       - 'claude/plugins/project-setup/skills/claude-setup/assets/**'
       - 'docs/specs/changes/**'
       - '.github/workflows/spec-lint.yml'
@@ -41,7 +42,7 @@ on:
         type: boolean
         default: false
       areas:
-        description: 'Areas to run, comma-separated (specs,delivery,artifacts,profiles); empty = what this branch changed against origin/main'
+        description: 'Areas to run, comma-separated (specs,delivery,artifacts,profiles,transcript-folds); empty = what this branch changed against origin/main'
         type: string
         default: ''
   # The nightly workflow (TC1) calls this one with mutants on.
@@ -52,7 +53,7 @@ on:
         type: boolean
         default: false
       areas:
-        description: 'Areas to run, comma-separated (specs,delivery,artifacts,profiles); empty = what this branch changed against origin/main'
+        description: 'Areas to run, comma-separated (specs,delivery,artifacts,profiles,transcript-folds); empty = what this branch changed against origin/main'
         type: string
         default: ''
 
@@ -84,6 +85,7 @@ jobs:
       delivery: ${{ steps.areas.outputs.delivery }}
       artifacts: ${{ steps.areas.outputs.artifacts }}
       profiles: ${{ steps.areas.outputs.profiles }}
+      transcript-folds: ${{ steps.areas.outputs.transcript-folds }}
       mutants: ${{ steps.areas.outputs.mutants }}
       mutants_gate: ${{ steps.areas.outputs.mutants_gate }}
       mutants_cleanup: ${{ steps.areas.outputs.mutants_cleanup }}
@@ -526,3 +528,23 @@ jobs:
       # would loop forever.
       - name: Prove the artifact hooks still hold
         run: python3 -I tools/test_project_artifacts_hooks.py
+
+  transcript-folds:
+    name: transcript folds plugin
+    needs: areas
+    if: needs.areas.outputs.transcript-folds == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # The decision logic of luismc-transcript-folds (hooks/fold/*.ts) is pure
+      # and runs under Node's own test runner with no packages: line counting,
+      # display width, the summary text, shell outcomes and the session tally.
+      # Node 24 runs the .ts files directly; the tests are given as a glob
+      # because a directory argument is not accepted.
+      - name: Prove the transcript folds logic still holds
+        run: node --test "claude/plugins/transcript-folds/tests/*.test.ts"

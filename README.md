@@ -2,7 +2,7 @@
 
 Your personal toolkit for building software the right way, every time.
 
-This repo publishes **`luismc-dev-tools`** — a private Claude Code plugin
+This repo publishes **`dev-standards`** — a private Claude Code plugin
 marketplace. Install it once per machine, then reach for its plugins from
 any project: to scaffold a new product on solid foundations, to write specs
 before you build, or to run a rigorous audit against what already exists.
@@ -12,14 +12,15 @@ No more starting from a blank repo and hoping you remembered everything.
 
 ```bash
 claude plugin marketplace add luis-mc/dev-standards
-claude plugin install luismc-audits@luismc-dev-tools
-claude plugin install luismc-agents@luismc-dev-tools
-claude plugin install luismc-specs@luismc-dev-tools
-claude plugin install luismc-project-setup@luismc-dev-tools
-claude plugin install luismc-artifacts@<marketplace>
+claude plugin install luismc-audits@dev-standards
+claude plugin install luismc-agents@dev-standards
+claude plugin install luismc-specs@dev-standards
+claude plugin install luismc-project-setup@dev-standards
+claude plugin install luismc-artifacts@dev-standards
+claude plugin install luismc-transcript-folds@dev-standards
 ```
 
-`<marketplace>` is the name your machine registered this marketplace under, the suffix of your other `luismc-*` plugins.
+A machine that registered the marketplace under another name uses that name after the `@`.
 
 Private repo — this uses your existing git/gh credentials, nothing extra to
 configure.
@@ -48,9 +49,15 @@ Sets up:
 - The Caveman output style
 - `.claude/rules/agents-and-integration.md` — how agents are run and work is
   integrated (replaces `model-delegation.md`)
+- `.claude/rules/clarifying-questions.md` — gather every clarifying question
+  and ask them all at once; written on every install and re-run
 - `.claude/hooks/effort_drift.py` — a SessionStart alias-drift warning
 - `enabledPlugins` — turns on `luismc-artifacts` for the project (project
   target only; other entries are kept, and an entry you set to `false` stays)
+- On every run, at user level: `luismc-transcript-folds` in your
+  `enabledPlugins` and its two chords (`ctrl+x d`, `ctrl+x f`) merged into
+  `~/.claude/keybindings.json`; an existing entry or binding is never changed,
+  and a chord bound to something else is shown as a conflict for you to decide
 
 **Model split:** the main session runs on Opus and does the thinking and
 planning; subagents run on Sonnet and write the code. Every project gets it,
@@ -262,6 +269,20 @@ orphaned subsections, and references that point nowhere. Run it right after
 writing a spec, and again after every revision.
 
 ---
+
+## `luismc-transcript-folds` — keep long diffs and commands from flooding the transcript
+
+Folds the transcript to one line per change. A diff of more than a few lines
+is drawn as `» path:line (+added −removed)`, and a finished shell command as a
+single row with its outcome. A band above the prompt shows the two switches and
+a tally of files and lines changed this session. `claude-setup` enables it and
+binds its chords for you.
+
+- **Chords:** `ctrl+x d` toggles folded diffs, `ctrl+x f` toggles folded commands.
+- **Slash commands:** `/fold-diffs` and `/fold-commands` flip the same two switches.
+- **Settings** (under `/config`): `foldAbove` (default 5; diffs with this many
+  changed lines or fewer are drawn in full), `marker` (starts each folded line;
+  default `»`), `compactCounts` (put the counts on the tool call's own row).
 
 ## The two standards behind `project-setup`
 
