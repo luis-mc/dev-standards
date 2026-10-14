@@ -257,7 +257,7 @@ def delivery_block(text):
             out['owns'].append(item.group(1).strip('\'"'))
         elif kv:
             key = kv.group(1).lower()
-            if key == 'owns' and kv.group(2):
+            if key == 'owns':
                 out['owns'] += [x.strip().strip('\'"') for x in kv.group(2).strip('[]').split(',') if x.strip()]
             else:
                 out[key] = kv.group(2)
@@ -310,7 +310,7 @@ def check_launch(cfg, ledger, data, where):
         deny('D4 run non-PC-bound work in the cloud (cloud running %d of %d). Launch it with RemoteTrigger, or add a '
              '"PC-bound: <reason>" line to this brief.' % (cloud_running, cap_cloud))
     model = find_key(ti, 'model')
-    effort = find_key(ti, 'effort', 'effort_level') or block.get('effort')
+    effort = find_key(ti, 'effort_level') if where == 'cloud' else (find_key(ti, 'effort') or block.get('effort'))
     if not model and H.check_on(cfg, 'DL-37'):
         deny('DL-37 set the model (Sonnet at medium for code agents; Opus at medium) on this %s launch.'
              % ('RemoteTrigger session_context' if where == 'cloud' else 'Agent call'))

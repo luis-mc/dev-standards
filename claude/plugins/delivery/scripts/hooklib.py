@@ -199,9 +199,10 @@ def segments(command):
     out = []
     for line in (command or '').splitlines() or ['']:
         try:
-            lex = shlex.shlex(line, posix=True, punctuation_chars=';&|')
+            # non-posix keeps backslashes (Windows paths); matching outer quotes are stripped per token
+            lex = shlex.shlex(line, posix=False, punctuation_chars=';&|')
             lex.whitespace_split = True
-            toks = list(lex)
+            toks = [t[1:-1] if len(t) > 1 and t[0] == t[-1] and t[0] in '"\'' else t for t in lex]
         except ValueError:
             toks = line.split()
         cur = []
