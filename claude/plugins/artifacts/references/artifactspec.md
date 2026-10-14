@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.10.0
+**Version:** 1.11.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.11.0 — 2026-10-14.**
+
+- Full Progress is published at least hourly and whenever a release task's status or phase changes: the end-of-turn hook blocks on both (R8.18, R9.8, R9.9), `pending --refresh` and `publish_hourly.py` drive the hourly publish (R9.10), `pending` records the publish copy's hash and write time and `mark-published` refuses a stale or edited copy (R9.11), and `check` and the hook flag open rows whose Expected time has passed (R6.14, R8.19).
 
 **1.10.0 — 2026-10-13.**
 
@@ -253,6 +257,7 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 | `scripts/project_artifacts.py` | The only writer of the record. Every command in §7. Python 3.10+, standard library only. |
 | `scripts/render_artifacts.py` | Pure functions: record in, HTML out (§5). Imported by the script. |
 | `scripts/artifact_queue.py` | Reads and writes the queue (§8.1). Imported by the hooks and the script. |
+| `scripts/artifact_hourly.py`, `scripts/publish_hourly.py` | The hourly, release-change and overdue checks (R6.14, R8.18, R8.19, R9.8 to R9.10): pure helpers imported by the end-of-turn hook and the script, and the command a session's hourly cron runs. |
 | `scripts/artifact_retire.py` | Retired and deleted pages, the history recovery, the migration check and the shipped rule hashes (R4.19 to R4.23, R10.6). Pure and read-only except where the script applies it. Imported by the hooks and the script. |
 | `scripts/hook_after_command.py`, `hook_end_of_turn.py`, `hook_session_start.py` | The three hooks (§8). |
 | `templates/feature-artifact.html`, `templates/full-progress-artifact.html` | Skeletons with placeholders: the first is a complete HTML document, the second a fragment (§5.1). |
@@ -1084,6 +1089,14 @@ double-click.
   number of items it lists. Verified by `glance_groups_are_collapsible_details`,
   `check_finds_a_wrong_glance_state` and `at_a_glance_css_uses_tokens_and_fits_a_phone`.
 
+- **R6.14** — An open row (Running, Waiting, To do, Needs you, On hold) whose
+  Expected time is in the past is flagged (DL-63). A date alone (`DD Mon`)
+  ends at 23:59 of that day in the project's zone. `check` prints one warning
+  per such row, in `--json` under `warnings`, naming the task and its
+  Expected; it is a warning and not a finding, so a writing command is never
+  refused for it. The end-of-turn hook blocks on it (R8.19). Verified by
+  `test_check_flags_open_rows_past_their_expected_time`.
+
 ---
 
 ## 7. Commands
@@ -1107,7 +1120,7 @@ they do nothing (R4.17).
 | `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design` and renders; `default` removes it. |
 | `render [--all]` | Renders every artifact whose output would change (committed renders, with relative links). It is the migration of an older record (R8.14). |
 | `check [--record PATH]` | The conformance checks of §14; lists findings with their requirement ID, then notes (including retired pages, R4.22) and any warnings (R5.26, R5.37), which do not change the exit code. |
-| `pending` | Lists the full-progress artifact when the hash of its committed render differs from `published_sha256` (a feature artifact is never listed, R9.5), and queued events. When it lists Full Progress it writes the publish copy (R5.31). Exit 1 when anything is listed. `--json` prints `{"artifacts": [{"key", "kind", "title", "file", "path", "url", "reason"}], "queue": [events]}`; `path` is the absolute path of the publish copy to publish. It also lists the retired pages (R4.22): `--json` adds `"retired": [{"key", "title", "url", "retired"}]`, and they never change the exit code. |
+| `pending` | Lists the full-progress artifact when the hash of its committed render differs from `published_sha256` (a feature artifact is never listed, R9.5), and queued events. When it lists Full Progress it writes the publish copy (R5.31). Exit 1 when anything is listed. `--refresh` lists Full Progress even when unchanged (R9.8). `--json` prints `{"artifacts": [{"key", "kind", "title", "file", "path", "url", "reason", "copy_sha256", "copy_written_at"}], "queue": [events]}`; `path` is the absolute path of the publish copy to publish. It also lists the retired pages (R4.22): `--json` adds `"retired": [{"key", "title", "url", "retired"}]`, and they never change the exit code. |
 | `mark-published KEY --url URL` | Records the URL and the hash of the committed render (R5.32). Refuses a feature artifact (R9.5). |
 | `mark-deleted [KEY] --url URL [--gone]` | Records that the owner confirmed and the session deleted a retired page (or that it no longer exists): moves it to `deleted` (R4.21). |
 | `worktree` | Prints the record directory, `<repo root>/docs/artifacts` (R4.24). |
@@ -1297,6 +1310,22 @@ Reads the hook input; takes the task ID from the current branch name
   background-work checks (R8.4, R8.8 to R8.10) are unchanged. Verified by
   `hooks_never_write_record` in the same file.
 
+- **R8.18** — The hook also blocks when Full Progress has a URL and (a) its
+  `published_at` is more than 60 minutes old (the hourly fail-safe, R9.8), or
+  (b) a release task's `changed` stamp is later than `published_at` (a release
+  task's status or phase changed since the last publish, R9.9), even though
+  `pending` lists nothing. The reason names the cause and the three steps of
+  R9.10. It never blocks a project that has not published Full Progress yet
+  (the first publish is `pending`'s), nor when `pending` already lists it.
+  The R8.4 ceiling applies. Verified by
+  `stop_blocks_when_full_progress_is_over_an_hour_old`,
+  `stop_blocks_when_a_release_task_changed_since_the_publish` and
+  `stop_hourly_and_overdue_checks_need_a_published_record_and_respect_the_ceiling`.
+- **R8.19** — The hook blocks while an open row is past its Expected time
+  (R6.14), naming each row and the `set-task-status ... --expected` command
+  that fixes it; the R8.4 ceiling applies. Verified by
+  `stop_blocks_on_open_rows_past_their_expected_time`.
+
 ---
 
 ## 9. Publishing and recreation
@@ -1342,6 +1371,29 @@ Reads the hook input; takes the task ID from the current branch name
   before. Any later `mark-published` clears the deferral. Verified by
   `test_deferred_publish_does_not_block_until_the_reset` and
   `end_of_turn_reminds_once_while_deferred`.
+- **R9.8** — Full Progress is published at least every 60 minutes while the
+  project has a record (the hourly fail-safe). `pending --refresh` lists it
+  even when nothing changed (reason `refresh requested ...`) and writes a
+  fresh publish copy; the end-of-turn hook asks for it (R8.18). Verified by
+  `test_pending_refresh_lists_an_unchanged_full_progress`.
+- **R9.9** — A change to a release task's status or phase is published in the
+  same turn, not left to the hour (R8.18).
+- **R9.10** — `scripts/publish_hourly.py` prints exactly what a session's
+  hourly cron does: nothing when Full Progress was published less than 60
+  minutes ago and no release task changed since; otherwise the one-line
+  reason and the three steps (`pending --json --refresh`, publish the copy
+  unedited, `mark-published`). It only reads the record and never publishes.
+  Verified by `test_publish_hourly_prints_what_the_cron_does_or_nothing`.
+- **R9.11** — The fresh-copy check (DL-62). `pending --json` records, for the
+  publish copy it writes, `copy_sha256` and `copy_written_at` (and keeps
+  them, with a hash of the record files Full Progress is made from, beside the
+  copy in `.claude/artifacts-publish/<file>.meta.json`). `mark-published`
+  refuses, changing nothing, when that copy was edited since, or when the
+  registry, content, design or a rendered page changed after it was written:
+  the session runs `pending --json` again and publishes the fresh copy. With
+  no recorded copy it behaves as before. Verified by
+  `test_pending_records_the_publish_copy_hash_and_time` and
+  `test_mark_published_refuses_a_stale_or_edited_copy`.
 
 ---
 
@@ -1453,6 +1505,7 @@ Reads the hook input; takes the task ID from the current branch name
 | Only the eight statuses; each row in its group; only `Live` rows older than 14 days in Earlier | R6.1, R6.2, R6.3 |
 | Every group a `<details class="status-fold">` with its heading in the `<summary>`; `Live or built` closed, the others open; `Earlier` inside `Live or built` | R6.12 |
 | Expected format on open rows | R6.6 |
+| Warning: open row whose Expected time has passed | R6.14 |
 | `expected_basis`: a string of 1 to 80 characters, on open rows only | R6.10 |
 | Checklists and tiles equal the registry | INV-1, R5.8 |
 | Every feature task on the full-progress artifact, linked to the feature file by a relative link | R6.5, R5.30 |

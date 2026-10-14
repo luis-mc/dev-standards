@@ -5,6 +5,7 @@ A rule file is any `rules/*.md` a plugin ships (outside docs/). Each rule line, 
 ends with exactly one tag:
 
     <!-- check: <path>[#<function or step>] -->   the named code refuses or reports the rule
+    <!-- check: DL-37, Q-2 -->                     the named DELIVERYSPEC ids enforce it (ids must exist in the spec)
     <!-- advice -->                               nothing enforces it
 
 This test fails on an untagged bullet, on a `check:` path that does not exist in the repository
@@ -25,14 +26,24 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 
 REPO = Path(__file__).resolve().parent.parent
-TAG_RE = re.compile(r"<!-- (advice|check: (\S+)) -->$")
+TAG_RE = re.compile(r"<!-- (advice|check: (.+?)) -->$")
+ID_RE = re.compile(r"^(DL-\d\d|Q-\d+)$")
+SPEC = "docs/specs/delivery/DELIVERYSPEC.md"
 BULLET_RE = re.compile(r"^\s*[-*] ")
 LATE = ("claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/session_guard.py",)
 EXPECTED = (
     "claude/plugins/artifacts/rules/project-artifacts.md",
     "claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md",
     "claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/clarifying-questions.md",
+    "claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/delivery-timing.md",
 )
+
+
+def spec_ids(text: str | None = None) -> set[str]:
+    """Ids DELIVERYSPEC defines: DL-nn rows of section 1 and the Q-n lines of decision D8."""
+    if text is None:
+        text = (REPO / SPEC).read_text(encoding="utf-8")
+    return set(re.findall(r"^\| (DL-\d\d) \|", text, re.M)) | set(re.findall(r"^\s*- (Q-\d+) ", text, re.M))
 
 
 def rule_files() -> list[str]:
@@ -41,7 +52,7 @@ def rule_files() -> list[str]:
     return sorted(f for f in files if (REPO / f).is_file())
 
 
-def problems(rel: str, text: str, exists=None) -> list[str]:
+def problems(rel: str, text: str, exists=None, ids: set[str] | None = None) -> list[str]:
     """Findings for one rule file's text. `exists` replaces the file check in the self-tests."""
     found: list[str] = []
     for no, line in enumerate(text.splitlines(), 1):
@@ -52,6 +63,14 @@ def problems(rel: str, text: str, exists=None) -> list[str]:
             found.append("%s:%d: rule line has no `<!-- check: ... -->` or `<!-- advice -->` tag" % (rel, no))
             continue
         if m.group(1) == "advice":
+            continue
+        if ID_RE.match(m.group(2).split(",")[0].strip()):
+            known = spec_ids() if ids is None else ids
+            for one in (i.strip() for i in m.group(2).split(",")):
+                if not ID_RE.match(one):
+                    found.append("%s:%d: malformed id in check tag: %s" % (rel, no, one))
+                elif one not in known:
+                    found.append("%s:%d: check id %s is not in %s" % (rel, no, one, SPEC))
             continue
         path, _, name = m.group(2).partition("#")
         if exists is not None:
@@ -82,6 +101,15 @@ def selftest() -> list[str]:
         bad.append("a #name the file does not mention was not reported")
     if problems("x.md", "- a rule <!-- check: tools/test_rule_tags.py#problems -->\n"):
         bad.append("a valid check tag was refused")
+    fake = {"DL-01", "Q-1"}
+    if problems("x.md", "- a rule <!-- check: DL-01, Q-1 -->\n", ids=fake):
+        bad.append("a valid id tag was refused")
+    if not problems("x.md", "- a rule <!-- check: DL-99 -->\n", ids=fake):
+        bad.append("an id missing from the spec was not reported")
+    if not problems("x.md", "- a rule <!-- check: DL-01, nonsense -->\n", ids=fake):
+        bad.append("a malformed id in a list was not reported")
+    if not {"DL-31", "DL-74", "Q-2", "Q-5"} <= spec_ids():
+        bad.append("DELIVERYSPEC ids were not read")
     if not problems("x.md", "- a rule <!-- advice --> trailing\n"):
         bad.append("a tag that is not at the end of the line was accepted")
     return bad

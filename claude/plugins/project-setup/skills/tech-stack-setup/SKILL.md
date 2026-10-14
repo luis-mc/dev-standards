@@ -272,6 +272,7 @@ Copy all of this in the first commit, so the first branch is already gated:
 | `scripts/delivery/*` | `shared/scripts/delivery/` — every file **except** `CONTRACT.md`, which stays in the plugin | `§13.5`, `§13.6`, `§13.1` |
 | `scripts/delivery/gate.json` | `<track>/scripts/delivery/gate.json` — set `default_branch` to the repo's own, and `ui_paths` to the apps that exist | `§13.5` |
 | `.githooks/pre-push` | `shared/.githooks/pre-push`, beside `pre-commit` | `§13.5` |
+| `.githooks/commit-msg` | `shared/.githooks/commit-msg`, beside `pre-commit`; does nothing unless `.delivery/config.json` sets `no_attribution: true` (DL-74). `pre-commit` also refuses staged conflict markers (DL-24) | DELIVERYSPEC |
 | `e2e/quarantine.json` (TypeScript track only) | `ts/e2e/quarantine.json` | `§11.2` |
 | `.gitattributes` | `shared/.gitattributes` — LF for shell scripts, hooks and the delivery scripts, so a CRLF checkout cannot break them | `§13.5` |
 | the guard-test starter, TypeScript | `ts/guards/*.guard.test.ts` and `ts/vitest.config.ts` (its `guard` project) | `§13.5` item 4 |
@@ -335,7 +336,7 @@ Install the pre-push hook so a project's existing check survives:
 - If `core.hooksPath` is unset, copy into `.githooks/` and set it: `git config core.hooksPath .githooks`; say so in the repo's setup notes.
 
 Mark
-`agent_setup.sh` and both hooks executable (`git update-index --chmod=+x`), or a
+`agent_setup.sh` and the hooks (`pre-push`, `commit-msg`) executable (`git update-index --chmod=+x`), or a
 checkout on another machine cannot run them. Copy `.gitattributes` before the
 first commit, so those files are never stored with CRLF; if the repo already has
 one, append the four lines rather than replacing it.

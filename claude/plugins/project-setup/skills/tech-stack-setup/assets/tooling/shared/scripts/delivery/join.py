@@ -277,7 +277,13 @@ def main(argv: list[str] | None = None) -> int:
             dc.eprint("join: push of %s failed: %s" % (into, pushed.stderr.strip()))
             return dc.EXIT_FAIL
         print("join: pushed %s" % into)
+        dc.ledger_record(root, "train_state", branch=into, state="pushed", by="join.py")
 
+    head = dc.rev("HEAD", root)
+    for b in joined:
+        dc.ledger_record(root, "cargo", branch=into, task=b, by="join.py",
+                         fields={"branch": b, "gate": "pass" if gated else "none", "joined_sha": head})
+    dc.ledger_record(root, "train_state", branch=into, state="joined", by="join.py")
     print("join: joined %s" % ", ".join(joined))
     return dc.EXIT_OK
 

@@ -17,6 +17,7 @@ claude plugin install luismc-agents@dev-standards
 claude plugin install luismc-specs@dev-standards
 claude plugin install luismc-project-setup@dev-standards
 claude plugin install luismc-artifacts@dev-standards
+claude plugin install luismc-delivery@dev-standards
 claude plugin install luismc-transcript-folds@dev-standards
 ```
 
@@ -51,6 +52,14 @@ Sets up:
   integrated (replaces `model-delegation.md`)
 - `.claude/rules/clarifying-questions.md` — gather every clarifying question
   and ask them all at once; written on every install and re-run
+- `.claude/rules/delivery-timing.md` — ETA and train-timing rules; every rule
+  line in the three rule files ends with `<!-- check: DL-nn -->` / `Q-n`
+  naming the DELIVERYSPEC id that enforces it, or `<!-- advice -->`
+- `.delivery/config.json` (from `assets/delivery-config.json`, never
+  overwritten) and a `.delivery/` line in `.gitignore`; `luismc-delivery` in the
+  project's `enabledPlugins`; a user-level `no-tomorrow.mjs` Stop entry offered
+  for removal; and a table mapping your memory notes to the rule ids that now
+  enforce them (reported only, nothing deleted)
 - `.claude/hooks/effort_drift.py` — a SessionStart alias-drift warning
 - `enabledPlugins` — turns on `luismc-artifacts` for the project (project
   target only; other entries are kept, and an entry you set to `false` stays)
@@ -269,6 +278,28 @@ orphaned subsections, and references that point nowhere. Run it right after
 writing a spec, and again after every revision.
 
 ---
+
+## `luismc-delivery` — make the delivery rules mechanical
+
+Rules written in a memory note get forgotten; this plugin turns them into
+checks. Hooks (Stop, PreToolUse, PostToolUse, SessionStart) and a watcher read
+a per-repository ledger, `.delivery/ledger.json`, and enforce trains and CI
+(merge on green, never `--auto`, one train in CI at a time), agent launches
+(ETA breakdown, concurrency caps, cloud first), owner questions (the
+questions wizard, context inside each question), and attribution. The
+rules are numbered in
+[`docs/specs/delivery/DELIVERYSPEC.md`](docs/specs/delivery/DELIVERYSPEC.md)
+(DL-nn, Q-n); the rule files `claude-setup` installs tag each line with the id
+that enforces it.
+
+`/luismc-project-setup:claude-setup` enables it for a project, writes
+`.delivery/config.json` (caps, work root, time zone, label patterns, ETA
+table, outbound deny list, `no_attribution`, `runners[]` with their repair
+commands) and git-ignores `.delivery/`. When a CI runner the project uses goes
+offline, `runner_plan.py runners` reports it at once, then every 5 minutes
+repairs the runner (restart its service or container), re-checks it and only
+then re-runs the CI that needed it; every step is in the ledger (D6a). The
+plugin is built in `claude/plugins/delivery`.
 
 ## `luismc-transcript-folds` — keep long diffs and commands from flooding the transcript
 
