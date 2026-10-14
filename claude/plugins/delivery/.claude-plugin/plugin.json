@@ -1,0 +1,8 @@
+{
+  "name": "luismc-delivery",
+  "description": "Delivery guard rails for a project that opts in with a .delivery/ folder: Stop hook blocks that keep trains merged, cleaned and smoke-tested, agents checked and ETAs real; PreToolUse denies for risky merge, install, kill, launch and question calls; SessionStart summary of the delivery ledger. Without .delivery/ the hooks do nothing.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Luis Carvalho"
+  }
+}
