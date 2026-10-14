@@ -270,6 +270,7 @@ make `heavy-job.ts` call `runner_plan.py`.
 - D4 Cloud first: PreToolUse DENIES a local `Agent` call unless its prompt carries a `PC-bound:` reason line, or the cloud cap is full (DL-39).
 - D5 The watcher pushes the next train, opens its ready PR AND merges the previous train the moment its CI is green for the PR's current head (checked by the script via the head's workflow runs; never `gh pr merge --auto`). Holds (`trains[].hold`) stop it.
 - D6 Runner orchestration by the watcher: cancel CI runs a newer push to the same PR replaced; hold (cancel + re-run after) dependabot and other non-train CI runs while a train's CI runs; heavy local jobs yield to train CI (runner_plan).
+- D6a Runner offline (owner 14 Oct ~23:25): report it at once, then retry every 5 minutes; each retry first tries to repair the runners (read runner status via the GitHub API, restart the runner service or container the project names in `.delivery/config.json` `runners[].repair`) and only then re-queues or re-runs the CI that needs them. Never just wait. Every report and repair attempt goes to the ledger.
 - D7 After a lesson is enforced with its DL id, its old memory note is DELETED (not trimmed). claude-setup reports which memory files map to enforced ids; deletion is done by the orchestrator after the plugin release.
 - D8 Questions (replaces DL-70..72):
   - Q-1 every open question in one go; no 4-question cap when the owner says "ask me questions" (several wizard dialogs in one message).
