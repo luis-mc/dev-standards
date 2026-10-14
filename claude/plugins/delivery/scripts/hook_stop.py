@@ -3,8 +3,10 @@
 
 Blocks the end of a turn with {"decision": "block", "reason": ...} while the delivery ledger
 or the last assistant text breaks a rule. Each finding names its DL id and the fix. The same
-set of findings blocks at most BLOCK_LIMIT (3) times per session, then the turn ends with a
-systemMessage (artifacts R8.4), so a session that cannot fix a finding never loops. Reads the
+set of findings blocks at most enforcement.block_ceiling (default 3) times per session, then the turn ends
+with a systemMessage (artifacts R8.4), so a session that cannot fix a finding never loops. With
+enforcement.mode "warn" nothing blocks: the findings are shown as a systemMessage. Every block is appended to
+.delivery/blocks.log when enforcement.log_every_block is true. Reads the
 ledger read-only; never writes it. A project without .delivery/ is untouched.
 
 Checks: DL-02 DL-03 DL-14 DL-18 DL-30 DL-31 DL-32 DL-33 DL-63 DL-64 and Q-2.
@@ -286,14 +288,22 @@ def main():
         return 0
     cfg = H.load_config(root)
     found = findings(root, data, cfg)
+    enf = H.C.enforcement(cfg)
+    if enf['mode'] == 'warn':
+        if found:
+            print(json.dumps({'systemMessage': 'luismc-delivery (warn mode, nothing blocked): '
+                              + '; '.join(m for _, m in found)}))
+        return 0
     sid = str(data.get('session_id') or 'default')
-    verdict, blocks = H.block_decision(root, sid, [k for k, _ in found])
+    verdict, blocks = H.block_decision(root, sid, [k for k, _ in found], enf['block_ceiling'])
     if verdict == 'clear':
         return 0
     if verdict == 'release':
         print(json.dumps({'systemMessage': 'luismc-delivery: letting the turn end after %d blocks with no change. '
-                          'Still open: %s' % (H.BLOCK_LIMIT, '; '.join(m for _, m in found))}))
+                          'Still open: %s' % (enf['block_ceiling'], '; '.join(m for _, m in found))}))
         return 0
+    for _, m in found:
+        H.log_block(root, cfg, 'stop', m)
     reason = 'Delivery checks failed. Fix these in this turn:\n' + '\n'.join('- ' + m for _, m in found)
     print(json.dumps({'decision': 'block', 'reason': reason}))
     return 0

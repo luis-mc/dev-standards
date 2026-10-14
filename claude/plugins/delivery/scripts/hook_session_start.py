@@ -81,6 +81,10 @@ def main():
         parts += ['- ' + c for c in catch]
     parts.append('Keep an hourly check-in: create an hourly cron at the start of the session that checks the '
                  'ledger, the running agents and Full Progress (published at least hourly while work is open).')
+    try:
+        H.C.load_tz(cfg.get('tz') or 'UTC')
+    except ValueError as exc:
+        parts.append('WARNING: ' + str(exc) + ' Run delivery_doctor.py.')
     fresh = any((H.minutes_since(w.get('heartbeat_at'), at) or 1e9) < cfg['watcher_min'] for w in ledger['watchers'])
     if not fresh:
         parts.append('No watcher heartbeat in the last %d min: start delivery_watch.py in the background '

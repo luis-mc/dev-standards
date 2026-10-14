@@ -70,6 +70,9 @@ def load_tz(name):
         from zoneinfo import ZoneInfo
         return ZoneInfo(name)
     except Exception as exc:  # noqa: BLE001 - ZoneInfoNotFoundError, ValueError, ImportError
+        if name in ("UTC", "Etc/UTC"):       # UTC needs no database
+            from datetime import timezone
+            return timezone.utc
         raise ValueError("time zone %r cannot be loaded (%s: %s). Install tzdata (`pip install tzdata`; on Windows "
                          "it is not bundled) or fix the `tz` key; without it times would silently be UTC."
                          % (name, type(exc).__name__, exc)) from exc

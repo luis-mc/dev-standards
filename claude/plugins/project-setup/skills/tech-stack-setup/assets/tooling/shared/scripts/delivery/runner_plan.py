@@ -17,7 +17,9 @@ SIGBREAK, which also stop the child.
 Settings come from `.delivery/config.json` key `runner_plan` and are overridden by the options:
   min_free_mb (int, 0 = off), pause_service (string, the runner's service name), train_branch_regex,
   poll_seconds (60), max_wait_minutes (0 = wait forever), repo ("OWNER/NAME"; default: the current one),
-  affinity (list of CPU numbers), priority ("low" | "below-normal" | "normal").
+  affinity (list of CPU numbers), priority ("low" | "below-normal" | "normal"),
+  heavy_jobs_yield (bool, default true; false = do not wait for train CI; `heavy_local_jobs_yield` is accepted
+  too). Without runner_plan.train_branch_regex the config's top-level `train_branch_re` is used.
 
 Every job is recorded in `jobs[]` and a paused runner in `runners[].paused_by` of `.delivery/ledger.json`
 by a best-effort call to the delivery plugin's ledger module (`delivery_ledger.py`, found through
@@ -63,7 +65,7 @@ ACTIVE_RUN_STATUSES = ("queued", "in_progress", "waiting", "pending", "requested
 DEFAULTS = {
     "min_free_mb": 0, "pause_service": "", "train_branch_regex": r"^release/", "poll_seconds": 60,
     "max_wait_minutes": 0, "repo": "", "affinity": [], "priority": "normal",
-    "retry_seconds": 300, "runner_max_retries": 0, "report_command": "",
+    "retry_seconds": 300, "runner_max_retries": 0, "report_command": "", "heavy_jobs_yield": True,
 }
 GH_TIMEOUT = 30
 
@@ -280,7 +282,10 @@ class Plan:
                 left -= 1.0
 
     def ci_blocker(self):
-        """Text naming an active release/train CI run, or None. A gh failure never blocks (warned once)."""
+        """Text naming an active release/train CI run, or None. A gh failure never blocks (warned once).
+        `heavy_jobs_yield: false` in the config turns the wait off."""
+        if not self.cfg.get("heavy_jobs_yield", True):
+            return None
         args = ["run", "list", "--limit", "50", "--json", "databaseId,status,headBranch,workflowName,event"]
         if self.cfg["repo"]:
             args += ["--repo", self.cfg["repo"]]
@@ -588,6 +593,11 @@ def load_config(root: str, path: str = "") -> dict:
         section = data.get("runner_plan") if isinstance(data, dict) else None
         if isinstance(section, dict):
             cfg.update({k: v for k, v in section.items() if k in DEFAULTS})
+            if "heavy_jobs_yield" not in section and isinstance(section.get("heavy_local_jobs_yield"), bool):
+                cfg["heavy_jobs_yield"] = section["heavy_local_jobs_yield"]       # comics-organizer's spelling
+        if isinstance(data, dict) and "train_branch_regex" not in (section or {}) \
+                and isinstance(data.get("train_branch_re"), str) and data["train_branch_re"]:
+            cfg["train_branch_regex"] = data["train_branch_re"]       # the project-wide train pattern
         runners = data.get("runners") if isinstance(data, dict) else None
         cfg["runners"] = [r for r in runners if isinstance(r, dict) and r.get("name")] if isinstance(runners, list) else []
     except (OSError, ValueError):
