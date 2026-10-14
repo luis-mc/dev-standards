@@ -301,6 +301,15 @@ repairs the runner (restart its service or container), re-checks it and only
 then re-runs the CI that needed it; every step is in the ledger (D6a). The
 plugin is built in `claude/plugins/delivery`.
 
+The config is checked by `delivery_config.py validate` (a JSON Schema in the
+plugin; unknown keys warn) and `delivery_doctor.py` self-checks the setup (config,
+gh sign-in, time zone, hooks, ledger). From 0.2.0 the watcher obeys the config
+(`watcher.push_trains|open_prs|merge_on_green`, `runner_plan.cancel_replaced_runs|
+hold_dependabot_during_train|heavy_jobs_yield`) and starts the runner guard
+itself, and `enforcement` sets the mode (`block`/`warn`), the block ceiling and an
+optional `.delivery/blocks.log`. See `claude/plugins/delivery/README.md` and
+DELIVERYSPEC section 6.
+
 ## `luismc-transcript-folds` — keep long diffs and commands from flooding the transcript
 
 Folds the transcript to one line per change. A diff of more than a few lines
