@@ -157,6 +157,7 @@ Copied to `scripts/delivery/` (see `shared/scripts/delivery/CONTRACT.md`):
   request closed, or GitHub is unreachable (a warning). `DELIVERY_FREEZE_OVERRIDE=1`
   pushes anyway and the running CI restarts. A late branch rides the next train.
 - `runner_health.py`: warns when no online runner carries a label the workflows need
+- `runner_plan.py run --label NAME -- <cmd>`: heavy local job wrapper; waits while release/train CI runs, one heavy job at a time, free-memory floor, optionally pauses the local runner service and always resumes it (settings: `runner_plan` in `.delivery/config.json`)
   (hosted labels count as available); used by `join.py` and `ci_watch.py`.
 - `reach_check.py URL...`: GETs each URL from where it runs and prints status or
   error. Run it in an agent sandbox before relying on a registry, API or preview
