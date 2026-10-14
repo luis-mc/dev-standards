@@ -1473,6 +1473,90 @@ def hooks_never_write_record():
     assert GIT_WRITES == [], GIT_WRITES      # AR50: no hook ran a git write or a gh write
 
 
+# --- hourly fail-safe, release changes and overdue rows (R9.8, R9.9, R6.12) -------------------
+
+PUBLISHED = '2026-10-14T10:00+01:00'
+
+
+def published_repo(tasks=(), published_at=PUBLISHED, timezone='Europe/Lisbon'):
+    """A repo whose Full Progress was published at `published_at`, with the given registry tasks."""
+    work = make_repo()
+    m = dict(MANIFEST, timezone=timezone, full_progress_artifact={
+        'key': 'full-progress', 'file': 'full-progress.html', 'url': 'https://claude.ai/artifact/fp',
+        'published_sha256': 'a' * 64, 'published_at': published_at})
+    write(os.path.join(work, 'docs', 'artifacts', 'manifest.json'), json.dumps(m))
+    base = {'owner': 'project', 'item': 'x'}
+    write(os.path.join(work, 'docs', 'artifacts', 'registry.json'),
+          json.dumps({'spec': 'ARTIFACTSPEC 1.0.0', 'tasks': [dict(base, **t) for t in tasks]}))
+    return work
+
+
+def at(work, when, stub=True):
+    env = set_pending(work) if stub else {}
+    env['CLAUDE_ARTIFACTS_NOW'] = when
+    return env
+
+
+@test
+def stop_blocks_when_full_progress_is_over_an_hour_old():
+    work = published_repo([{'id': 'AR30', 'status': 'Live', 'expected': '14 Oct'}])
+    res = parse_stop(stop(work, at(work, '2026-10-14T10:30:00+01:00'))[1])
+    assert res == {}, res                                       # 30 minutes: fine
+    res = parse_stop(stop(work, at(work, '2026-10-14T11:10:00+01:00'))[1])        # 70 minutes
+    assert res.get('decision') == 'block', res
+    r = res['reason']
+    assert '70 minutes ago' in r and 'hourly fail-safe' in r and 'pending --json --refresh' in r and 'mark-published full-progress' in r, r
+    # exactly 60 minutes is still fine
+    res = parse_stop(stop(work, at(work, '2026-10-14T11:00:00+01:00'), session='s3')[1])
+    assert res == {}, res
+
+
+@test
+def stop_blocks_when_a_release_task_changed_since_the_publish():
+    release = {'id': 'AR31', 'status': 'Running', 'release': 2, 'expected': '14 Oct ~18:00', 'changed': '2026-10-14T10:20+01:00'}
+    work = published_repo([release, {'id': 'AR32', 'status': 'Running', 'expected': '14 Oct ~18:00', 'changed': '2026-10-14T10:25+01:00'}])
+    res = parse_stop(stop(work, at(work, '2026-10-14T10:30:00+01:00'))[1])
+    assert res.get('decision') == 'block' and 'release task AR31 changed to Running' in res['reason'], res
+    assert 'AR32' not in res['reason'], res                    # only release tasks count
+    # a release task that changed BEFORE the publish does not
+    old = dict(release, changed='2026-10-14T09:55+01:00')
+    work = published_repo([old])
+    assert parse_stop(stop(work, at(work, '2026-10-14T10:30:00+01:00'))[1]) == {}
+
+
+@test
+def stop_blocks_on_open_rows_past_their_expected_time():
+    rows = [{'id': 'AR33', 'status': 'Running', 'expected': '14 Oct ~10:15'},
+            {'id': 'AR34', 'status': 'Live', 'expected': '14 Oct ~10:15'},
+            {'id': 'AR35', 'status': 'Waiting', 'expected': '14 Oct ~23:00'},
+            {'id': 'AR36', 'status': 'To do', 'expected': '13 Oct'}]
+    work = published_repo(rows)
+    res = parse_stop(stop(work, at(work, '2026-10-14T10:30:00+01:00'))[1])
+    assert res.get('decision') == 'block', res
+    r = res['reason']
+    assert 'AR33' in r and 'AR36' in r and 'AR34' not in r and 'AR35' not in r and '"14 Oct ~10:15" has passed' in r, r
+    # once the rows are fixed the hook is silent
+    work = published_repo([dict(rows[0], expected='14 Oct ~12:00'), rows[1], rows[2]])
+    assert parse_stop(stop(work, at(work, '2026-10-14T10:30:00+01:00'))[1]) == {}
+
+
+@test
+def stop_hourly_and_overdue_checks_need_a_published_record_and_respect_the_ceiling():
+    # never published: nothing is hourly or release-driven (pending covers the first publish)
+    work = make_repo()
+    env = at(work, '2026-10-20T10:00:00+01:00')
+    assert parse_stop(stop(work, env)[1]) == {}
+    # the 3-block ceiling applies: the fourth stop with no change lets the turn end with a message
+    work = published_repo([{'id': 'AR40', 'status': 'Running', 'expected': '14 Oct ~10:15'}])
+    env = at(work, '2026-10-14T10:30:00+01:00')
+    outs = [parse_stop(stop(work, env)[1]) for _ in range(4)]
+    assert [o.get('decision') for o in outs] == ['block', 'block', 'block', None], outs
+    assert 'AR40' in outs[3]['systemMessage'], outs[3]
+    # hooks off
+    off = dict(env, CLAUDE_ARTIFACTS_HOOKS='off')
+    assert stop(work, off, session='other')[1].strip() == ''
+
+
 def main():
     passed = failed = 0
     for fn in TESTS:

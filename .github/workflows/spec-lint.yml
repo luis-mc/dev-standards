@@ -360,6 +360,23 @@ jobs:
       - name: Prove artifact pruning keeps exactly the newest of each name
         run: python3 tools/test_artifact_prune.py
 
+  # DELIVERYSPEC DL-50: runner_plan.py waits for train CI, takes one heavy job
+  # at a time, keeps a memory floor and always resumes the paused runner.
+  delivery-runner:
+    name: delivery - runner plan
+    needs: areas
+    if: needs.areas.outputs.delivery == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Prove the heavy-job wrapper yields to CI and always resumes the runner
+        run: python3 tools/test_delivery_runner.py
+
   delivery-smoke:
     name: delivery - packaged-program smoke test
     needs: areas
