@@ -295,6 +295,7 @@ class Watcher:
         train_branches = {t["branch"] for t in led["trains"]}
         base = self.cfg.get("base", "main")
         ci_running = any(t.get("state") in ACTIVE_CI_STATES for t in led["trains"])
+        seen = {h.get("id") for h in led.get("held_runs", [])}
         if ci_running:
             for status in ("in_progress", "queued"):
                 data = self.gh_json(["run", "list", "--status", status, "--limit", "50", "--json", RUN_FIELDS,
@@ -303,8 +304,9 @@ class Watcher:
                     br = r.get("headBranch")
                     if not br or br in train_branches or br == base:
                         continue
-                    if any(h.get("id") == r["databaseId"] for h in led.get("held_runs", [])):
+                    if r["databaseId"] in seen:
                         continue
+                    seen.add(r["databaseId"])
                     rc, _, _ = self.act(["gh", "run", "cancel", str(r["databaseId"]), *self.repo_args])
                     if rc == 0:
                         row = {"id": r["databaseId"], "branch": br, "sha": r.get("headSha"), "at": L.iso(self.now())}
