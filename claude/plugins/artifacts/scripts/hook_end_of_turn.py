@@ -34,6 +34,10 @@ from hook_after_command import (STATE_NAME, command_for, hook_root, hooks_off,  
 BLOCK_LIMIT = 3          # R8.4; the ceiling in section 12 is 5, it may only be lowered
 PENDING_TIMEOUT = 90
 ACTIVE_STATUSES = ('Running', 'Waiting', 'Needs you')   # R8.10
+try:
+    import artifact_hourly as H
+except ImportError:      # a broken install: the hourly and overdue checks are skipped
+    H = None
 BACKGROUND_NOTE = 'work started in the background with no Running task'
 MIGRATION_NOTE = 'the artifact record needs migrating (run render)'
 
@@ -112,16 +116,37 @@ def has_active_task(root, manifest):
     return any(t.get('status') in ACTIVE_STATUSES for t in tasks)
 
 
-def fingerprint(artifacts, queue, background=False, migration=False):
+def freshness(root, manifest, artifacts):
+    """R9.8 to R9.10, R6.12: (stale, overdue). `stale` is a list of reasons to publish Full Progress although
+    pending does not list it (published over 60 minutes ago, or a release task changed since); `overdue` is
+    [(task, expected)] for open rows whose Expected time has passed. Both [] when Full Progress was never
+    published or the registry cannot be read (fail open)."""
+    if H is None:
+        return [], []
+    tasks = registry_tasks(root, manifest) or []
+    stale = []
+    if not artifacts:       # pending already lists it: the publish below covers these too
+        mins = H.hourly_due(manifest)
+        if mins is not None:
+            stale.append('Full Progress was last published %d minutes ago (hourly fail-safe, limit %d)'
+                         % (mins, H.STALE_MINUTES))
+        for t in H.release_changes(tasks, manifest):
+            stale.append('release task %s changed to %s after the last publish' % (t.get('id'), t.get('status')))
+    return stale, H.overdue_tasks(tasks, manifest)
+
+
+def fingerprint(artifacts, queue, background=False, migration=False, stale=(), overdue=()):
     """Stable hash of what is pending (keys and queued changes, not wording)."""
     parts = sorted([['artifact', str(a.get('key'))] for a in artifacts]
                    + [['event', str(e.get('id')), str(e.get('suggested_status'))] for e in queue]
                    + ([['background']] if background else [])
-                   + ([['migration']] if migration else []))
+                   + ([['migration']] if migration else [])
+                   + [['stale', 'hourly' if r.startswith('Full Progress') else r.split()[2]] for r in stale]
+                   + [['overdue', str(t.get('id')), str(t.get('expected'))] for t, _w in overdue])
     return hashlib.sha256(json.dumps(parts).encode('utf-8')).hexdigest()[:16]
 
 
-def describe(artifacts, queue, background=False, migration=False):
+def describe(artifacts, queue, background=False, migration=False, stale=(), overdue=()):
     """One line per pending item, for the systemMessage."""
     lines = ['%s (%s)' % (a.get('title') or a.get('key'), a.get('file', '')) for a in artifacts]
     lines += ['%s -> %s' % (e.get('id'), e.get('suggested_status')) for e in queue]
@@ -129,6 +154,8 @@ def describe(artifacts, queue, background=False, migration=False):
         lines.append(BACKGROUND_NOTE)
     if migration:
         lines.append(MIGRATION_NOTE)
+    lines += list(stale)
+    lines += [H.overdue_text(t) for t, _w in overdue]
     return '; '.join(lines)
 
 
@@ -205,6 +232,21 @@ def build_reason(root, script, artifacts, queue):
     return '\n'.join(out)
 
 
+def build_stale_reason(script, stale):
+    py = 'python "%s"' % script
+    return ('Full Progress must be published again: %s. Finish this in the same turn: run %s pending --json --refresh, '
+            'publish the file it names with the Artifact tool, unedited, then run %s mark-published full-progress '
+            '--url <the artifact URL>.' % ('; '.join(stale), py, py))
+
+
+def build_overdue_reason(script, overdue):
+    py = 'python "%s"' % script
+    rows = '; '.join(H.overdue_text(t) for t, _w in overdue)
+    return ('Open rows are past their Expected time: %s. Set the real status or a new Expected for each (%s '
+            'set-task-status <ID> <status> --expected "DD Mon ~HH:MM"), then publish Full Progress if pending lists it.'
+            % (rows, py))
+
+
 def build_background_reason(script):
     py = 'python "%s"' % script
     return ('Work was started in the background this turn but no task is Running. Record it with task-add '
@@ -236,6 +278,11 @@ def main():
     migration = bool(reasons)
     artifacts = only_full_progress(artifacts)
     queue = merge_queue(root, queue)
+    try:
+        stale, overdue = freshness(root, manifest, artifacts)
+    except Exception as exc:
+        warn('hourly and overdue checks skipped (%s: %s)' % (type(exc).__name__, exc))
+        stale, overdue = [], []
     state_path = os.path.join(root, STATE_NAME)
     sid = str(data.get('session_id') or 'default')
     state = read_state(state_path)
@@ -264,7 +311,7 @@ def main():
         warn('deferred publish not listed (%s: %s)' % (type(exc).__name__, exc))
         told_deferred = ''
     told = '\n'.join(part for part in (told, told_deferred) if part)
-    if not artifacts and not queue and not background and not migration:
+    if not artifacts and not queue and not background and not migration and not stale and not overdue:
         state = read_state(state_path)
         if sid in state:
             del state[sid]
@@ -273,7 +320,7 @@ def main():
             print(json.dumps({'systemMessage': told}))
         return 0
     state = read_state(state_path)
-    digest = fingerprint(artifacts, queue, background, migration)
+    digest = fingerprint(artifacts, queue, background, migration, stale, overdue)
     blocks = entry.get('blocks', 0) if entry.get('last') == digest else 0
     if not isinstance(blocks, int):
         blocks = 0
@@ -281,7 +328,7 @@ def main():
         print(json.dumps({'systemMessage': '\n'.join(filter(None, [(
             'luismc-artifacts: letting the turn end after %d blocks with no change. Still unpublished, '
             'unapplied, unrecorded or unmigrated: %s. Run `pending` in the next session.'
-            % (BLOCK_LIMIT, describe(artifacts, queue, background, migration))), told]))}))
+            % (BLOCK_LIMIT, describe(artifacts, queue, background, migration, stale, overdue))), told]))}))
         return 0
     state.pop(sid, None)   # keeps the most recently used session last
     new = {'blocks': blocks + 1, 'last': digest}
@@ -294,6 +341,10 @@ def main():
         parts.append(build_reason(root, script, artifacts, queue))
     if migration:
         parts.insert(0, build_migration_reason(script, reasons))
+    if stale:
+        parts.append(build_stale_reason(script, stale))
+    if overdue:
+        parts.append(build_overdue_reason(script, overdue))
     if background:
         parts.append(build_background_reason(script))
     out = {'decision': 'block', 'reason': '\n\n'.join(parts)}
