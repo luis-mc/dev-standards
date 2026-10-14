@@ -1,0 +1,895 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "luismc-delivery/ledger-schema.json",
+  "title": ".delivery/ledger.json (DELIVERYSPEC section 2)",
+  "type": "object",
+  "required": [
+    "schema",
+    "updated_at",
+    "trains",
+    "agents",
+    "jobs",
+    "installs",
+    "publishes",
+    "runners",
+    "watchers",
+    "owner_questions",
+    "events"
+  ],
+  "properties": {
+    "schema": {
+      "const": 1
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "config_ref": {
+      "type": "string"
+    },
+    "trains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "release_no": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "branch": {
+            "type": "string"
+          },
+          "pr": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "planned",
+              "joining",
+              "joined",
+              "pushed",
+              "ci",
+              "green",
+              "red",
+              "merged",
+              "live",
+              "cleaned",
+              "abandoned"
+            ]
+          },
+          "hold": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string"
+                  },
+                  "by": {
+                    "type": "string",
+                    "enum": [
+                      "owner",
+                      "rule"
+                    ]
+                  },
+                  "until": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "ISO-8601 UTC timestamp"
+                  }
+                },
+                "required": [
+                  "reason",
+                  "by"
+                ],
+                "additionalProperties": true
+              }
+            ]
+          },
+          "cargo": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "task": {
+                  "type": "string"
+                },
+                "branch": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "pr": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "sha": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "gate": {
+                  "type": "string",
+                  "enum": [
+                    "pass",
+                    "fail",
+                    "none"
+                  ]
+                },
+                "joined_sha": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "paths": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "task"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "phases": {
+            "type": "object",
+            "properties": {
+              "planned": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "enum": [
+                        "join",
+                        "ci",
+                        "merge",
+                        "deploy",
+                        "smoke",
+                        "install"
+                      ]
+                    },
+                    "start": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "ISO-8601 UTC timestamp"
+                    },
+                    "end": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "ISO-8601 UTC timestamp"
+                    },
+                    "basis": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": true
+                }
+              },
+              "actual": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "enum": [
+                        "join",
+                        "ci",
+                        "merge",
+                        "deploy",
+                        "smoke",
+                        "install"
+                      ]
+                    },
+                    "start": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "ISO-8601 UTC timestamp"
+                    },
+                    "end": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "ISO-8601 UTC timestamp"
+                    },
+                    "basis": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [],
+                  "additionalProperties": true
+                }
+              }
+            },
+            "required": [],
+            "additionalProperties": true
+          },
+          "ci": {
+            "type": "object",
+            "properties": {
+              "head_sha": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "run_ids": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "running",
+                  "success",
+                  "failure"
+                ]
+              },
+              "started_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "ISO-8601 UTC timestamp"
+              }
+            },
+            "required": [],
+            "additionalProperties": true
+          },
+          "measure": {
+            "type": "object",
+            "properties": {
+              "state": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "clean",
+                  "regressions"
+                ]
+              },
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "ISO-8601 UTC timestamp"
+              },
+              "report": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [],
+            "additionalProperties": true
+          },
+          "smoke": {
+            "type": "object",
+            "properties": {
+              "state": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "ISO-8601 UTC timestamp"
+              }
+            },
+            "required": [],
+            "additionalProperties": true
+          },
+          "created_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "joined_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "pushed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "green_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "merged_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "live_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "cleaned_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "branch",
+          "state"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "agents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "where": {
+            "type": "string",
+            "enum": [
+              "local",
+              "cloud"
+            ]
+          },
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "session": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "branch": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "base_sha": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "head_sha": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "owns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "effort": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "started": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "eta": {
+            "type": "object",
+            "properties": {
+              "total_min": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "breakdown": {
+                "type": "object",
+                "properties": {
+                  "setup": {
+                    "type": "number"
+                  },
+                  "work": {
+                    "type": "number"
+                  },
+                  "checks": {
+                    "type": "number"
+                  }
+                },
+                "required": [],
+                "additionalProperties": true
+              },
+              "basis": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "due": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "ISO-8601 UTC timestamp"
+              }
+            },
+            "required": [],
+            "additionalProperties": true
+          },
+          "log_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "last_checked": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "last_activity": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "pushed",
+              "done",
+              "empty",
+              "stalled",
+              "failed",
+              "stopped"
+            ]
+          }
+        },
+        "required": [
+          "where",
+          "state"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "jobs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "cmd": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "heavy": {
+            "type": "boolean"
+          },
+          "pid": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "log_path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "started": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "typical_step_min": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "last_checked": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "running",
+              "done",
+              "failed",
+              "waiting-ci"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "state"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "installs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "type": "string"
+          },
+          "version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "via": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "installing",
+              "done",
+              "failed"
+            ]
+          },
+          "started": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "ended": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "log": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "product",
+          "state"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "publishes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "artifact": {
+            "type": "string"
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "last_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "last_version": {
+            "type": [
+              "integer",
+              "string",
+              "null"
+            ]
+          },
+          "last_state_hash": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "copy_written_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          }
+        },
+        "required": [
+          "artifact"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "runners": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "online": {
+            "type": "boolean"
+          },
+          "busy": {
+            "type": "boolean"
+          },
+          "local": {
+            "type": "boolean"
+          },
+          "paused_by": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "checked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "watchers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "pid": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "started": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "heartbeat_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          }
+        },
+        "required": [
+          "pid",
+          "kind"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "owner_questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "asked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "answered_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          },
+          "blocks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "held_runs": {
+      "description": "Non-train CI runs the watcher cancelled while a train's CI ran; re-run after (D6).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "branch": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sha": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO-8601 UTC timestamp"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "events": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "by": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "at",
+          "kind"
+        ],
+        "additionalProperties": true
+      }
+    }
+  }
+}
