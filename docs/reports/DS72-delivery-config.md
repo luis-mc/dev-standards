@@ -17,3 +17,5 @@ comics-organizer `CO159-delivery-setup` `.delivery/config.json` read. Key-name d
 - `watch_interval` / `watcher_interval_s`, `local_runners`, `base`, `eta_required`: present in the real file, in the schema.
 
 ## Progress
+- Step 2 done: `references/config-schema.json`, `scripts/delivery_config.py validate` (`--root`, `--config`, `--json`, `--strict`; exit 0 valid, 1 errors, 2 unreadable), typed accessors. Unknown keys warn, `_` keys are comments. The comics config and the claude-setup template validate with 0 errors, 0 warnings.
+- Step 3 done: watcher reads `watcher.push_trains|open_prs|merge_on_green|manage_runners` and `runner_plan.cancel_replaced_runs|hold_dependabot_during_train`; merge re-reads the PR head and merges only if unchanged since the green run (`gh pr merge N --merge --match-head-commit SHA`, never `--auto`); the watcher spawns `runner_plan.py runners` on its loop and relaunches it on exit (D6a). All flags default true = 0.1.0 behaviour. `heavy_jobs_yield` is obeyed where the wait happens, in `runner_plan.py run` (next).

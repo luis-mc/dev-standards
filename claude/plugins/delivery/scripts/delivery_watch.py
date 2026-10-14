@@ -17,6 +17,14 @@ DELIVERYSPEC section 4(a) and owner decisions D5, D6. Each pass, against .delive
   installs  configured update-state files (install_state_files: [{product, path}]).
   runners   `gh api repos/{owner}/{repo}/actions/runners`.
   watchers  a heartbeat row.
+  runners   the CI runner guard (D6a): `runner_plan.py runners` is launched by this loop, once, and
+            relaunched when it exits, so the project does not have to start it.
+
+.delivery/config.json decides what is allowed (delivery_config.py): `watcher.push_trains`,
+`watcher.open_prs`, `watcher.merge_on_green`, `watcher.manage_runners`, `runner_plan.cancel_replaced_runs`,
+`runner_plan.hold_dependabot_during_train`. All default to true, which is the 0.1.0 behaviour. A merge
+runs only when the PR head is still the commit whose CI was green: `gh pr merge N --merge
+--match-head-commit SHA`, never --auto.
 
 Every gh and git call goes through one injectable Shell, so tests mock them. --once runs a single
 pass; --dry-run prints the actions and performs none. Standard library only.
@@ -35,6 +43,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import delivery_ledger as L  # noqa: E402
+import delivery_config as C  # noqa: E402
 
 DEFAULT_INTERVAL = 60
 WORKFLOW = "ci.yml"
@@ -52,6 +61,14 @@ class Shell:
             return p.returncode, p.stdout, p.stderr
         except (OSError, subprocess.SubprocessError) as exc:
             return 127, "", str(exc)
+
+    def spawn(self, argv: list[str], cwd=None):
+        """Start a long-running child without waiting; None when it cannot start."""
+        try:
+            return subprocess.Popen(argv, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                    stderr=subprocess.DEVNULL)
+        except OSError:
+            return None
 
 
 def ci_state_from_runs(runs: list[dict]) -> str:
@@ -74,6 +91,10 @@ class Watcher:
         self.routine_fetcher = routine_fetcher or (lambda agent: None)
         self.out = out
         self.cfg = L.load_config(self.root)
+        self.flags = C.watcher_flags(self.cfg)
+        self.rp = C.runner_plan_flags(self.cfg)
+        self.runner_child = None
+        self._guard_missing_logged = False
         self.repo = repo
         self.repo_args = ["--repo", repo] if repo else []
         self.actions: list[list[str]] = []
@@ -206,7 +227,8 @@ class Watcher:
             if pr_state == "MERGED":
                 self._set_train(train, "merged", ci=None)
                 continue
-            self.cancel_superseded(train, head)
+            if self.rp["cancel_replaced_runs"]:
+                self.cancel_superseded(train, head)
             runs = self.runs_for_commit(head)
             if runs is None:
                 continue
@@ -218,7 +240,7 @@ class Watcher:
                 self._set_train(train, "red", ci=ci)
             else:
                 self._set_train(train, None, ci=ci)
-            if state == "success":
+            if state == "success" and self.flags["merge_on_green"]:
                 self.maybe_merge(train, head)
 
     def _set_train(self, train: dict, state, ci=None) -> None:
@@ -245,7 +267,13 @@ class Watcher:
             return False
         if self.cfg.get("measure_globs") and fresh.get("measure", {}).get("state") == "regressions":
             return False
-        rc, out, err = self.act(["gh", "pr", "merge", str(train["pr"]), "--merge", *self.repo_args])
+        now_head, _ = self.current_head(train)
+        if now_head != head:    # D5: only the commit whose CI was green is merged
+            self.mut(lambda led: L.add_event(led, "merge.head_moved", "%s %s -> %s" % (
+                train["id"], head[:7], (now_head or "?")[:7]), "delivery_watch"))
+            return False
+        rc, out, err = self.act(["gh", "pr", "merge", str(train["pr"]), "--merge", "--match-head-commit", head,
+                                 *self.repo_args])
         if rc != 0:
             self.mut(lambda led: L.add_event(led, "merge.failed", "%s %s" % (train["id"], (err or out).strip()[:120]),
                                              "delivery_watch"))
@@ -256,6 +284,8 @@ class Watcher:
 
     def push_next(self, exclude=None) -> None:
         """Push the next joined train and open its ready PR (not while another train's CI runs)."""
+        if not self.flags["push_trains"]:
+            return
         led = L.load(self.root)
         busy = [t for t in led["trains"] if t["id"] != exclude and t.get("state") in ACTIVE_CI_STATES + ("green",)]
         if busy:
@@ -273,7 +303,7 @@ class Watcher:
         if not pr:
             found = self.gh_json(["pr", "list", "--head", b, "--state", "open", "--json", "number", *self.repo_args])
             pr = found[0]["number"] if isinstance(found, list) and found else None
-        if not pr:
+        if not pr and self.flags["open_prs"]:
             title = "Release %s" % (nxt.get("release_no") or b)
             body = "Train %s: %s" % (nxt["id"], ", ".join(c.get("task", "") for c in nxt.get("cargo", [])))
             rc, out, _ = self.act(["gh", "pr", "create", "--base", self.cfg.get("base", "main"), "--head", b,
@@ -294,7 +324,8 @@ class Watcher:
         led = L.load(self.root)
         train_branches = {t["branch"] for t in led["trains"]}
         base = self.cfg.get("base", "main")
-        ci_running = any(t.get("state") in ACTIVE_CI_STATES for t in led["trains"])
+        ci_running = any(t.get("state") in ACTIVE_CI_STATES for t in led["trains"]) and \
+            self.rp["hold_dependabot_during_train"]
         seen = {h.get("id") for h in led.get("held_runs", [])}
         if ci_running:
             for status in ("in_progress", "queued"):
@@ -357,6 +388,43 @@ class Watcher:
                 "checked_at": at} for r in data.get("runners", [])]
         self.mut(fn)
 
+    def runner_script(self):
+        rp = self.cfg.get("runner_plan") if isinstance(self.cfg.get("runner_plan"), dict) else {}
+        for c in (os.environ.get("DELIVERY_RUNNER_PLAN"), rp.get("script"), os.path.join("scripts", "delivery", "runner_plan.py")):
+            if c:
+                path = c if os.path.isabs(c) else str(self.root / c)
+                if os.path.isfile(path):
+                    return path
+        return None
+
+    def pass_runner_guard(self) -> None:
+        """D6a: keep `runner_plan.py runners` running; it reports an offline runner, repairs it every
+        retry_seconds and re-runs the CI the outage cost. Not launched without runners[] in the config."""
+        if not self.flags["manage_runners"] or not self.cfg.get("runners"):
+            return
+        if self.runner_child is not None:
+            code = self.runner_child.poll()
+            if code is None:
+                return
+            if code != 0:
+                self.mut(lambda led: L.add_event(led, "runner.guard_exit", "exit %s" % code, "delivery_watch"))
+            self.runner_child = None
+        script = self.runner_script()
+        if script is None:
+            if not self._guard_missing_logged:
+                self._guard_missing_logged = True
+                self.out("delivery_watch: runners[] is configured but runner_plan.py was not found "
+                         "(scripts/delivery/runner_plan.py or runner_plan.script)")
+                self.mut(lambda led: L.add_event(led, "runner.guard_missing", "runner_plan.py not found", "delivery_watch"))
+            return
+        argv = [sys.executable, script, "runners", "--root", str(self.root), *self.repo_args]
+        self.actions.append(argv)
+        if self.dry:
+            self.out("dry-run: " + " ".join(argv))
+            return
+        self.runner_child = self.sh.spawn(argv, cwd=str(self.root))
+        self.mut(lambda led: L.add_event(led, "runner.guard_started", os.path.basename(script), "delivery_watch"))
+
     def heartbeat(self, started: str) -> None:
         pid, at = os.getpid(), L.iso(self.now())
 
@@ -367,7 +435,8 @@ class Watcher:
 
     def run_once(self, started: str | None = None) -> list[list[str]]:
         self.actions = []
-        for step in (self.pass_agents, self.pass_trains, self.pass_other_runs, self.pass_installs, self.pass_runners):
+        for step in (self.pass_agents, self.pass_trains, self.pass_other_runs, self.pass_installs, self.pass_runners,
+                     self.pass_runner_guard):
             try:
                 step()
             except Exception as exc:  # noqa: BLE001 - one failing pass never stops the others
@@ -396,7 +465,7 @@ def main(argv=None) -> int:
         print("delivery_watch: no .delivery/ folder found", file=sys.stderr)
         return 2
     w = Watcher(root, dry_run=args.dry_run, repo=args.repo)
-    interval = args.interval or float(w.cfg.get("watch_interval", DEFAULT_INTERVAL))
+    interval = args.interval or float(w.cfg.get("watch_interval") or w.cfg.get("watcher_interval_s") or DEFAULT_INTERVAL)
     started = L.iso()
     while True:
         w.run_once(started)
