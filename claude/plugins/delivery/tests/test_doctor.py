@@ -20,10 +20,10 @@ def stub_gh(rc):
     return str(d / "gh.py")
 
 
-def enabled_root(cfg=None, plugin_key="luismc-delivery@dev-standards"):
+def enabled_root(cfg=None, plugin_id="luismc-delivery@dev-standards"):
     root = make_root(cfg if cfg is not None else {})
     (root / ".claude").mkdir()
-    (root / ".claude" / "settings.json").write_text(json.dumps({"enabledPlugins": {plugin_key: True}}))
+    (root / ".claude" / "settings.json").write_text(json.dumps({"enabledPlugins": {plugin_id: True}}))
     return root
 
 
