@@ -18,17 +18,22 @@
     {
       "name": "luismc-audits",
       "source": "./claude/plugins/audits",
-      "description": "Security, performance, and compliance audit skills (security-audit, performance-audit, compliance-audit) — systematic checklists producing severity-ranked findings, no auto-fix."
+      "description": "Security, performance, and compliance audit skills (security-audit, performance-audit, compliance-audit) \u2014 systematic checklists producing severity-ranked findings, no auto-fix."
+    },
+    {
+      "name": "luismc-delivery",
+      "source": "./claude/plugins/delivery",
+      "description": "Enforces delivery discipline from a ledger: Stop, PreToolUse, PostToolUse and SessionStart hooks plus a watcher for trains, CI, agent ETAs, concurrency caps, owner questions and attribution, to DELIVERYSPEC."
     },
     {
       "name": "luismc-project-setup",
       "source": "./claude/plugins/project-setup",
-      "description": "Generates a new product monorepo conforming to the binding STACKSPEC/AUTHSPEC specifications, or audits an existing product against them. Ships the specs as references — products carry only a Stack Profile naming the version they conform to."
+      "description": "Generates a new product monorepo conforming to the binding STACKSPEC/AUTHSPEC specifications, or audits an existing product against them. Ships the specs as references \u2014 products carry only a Stack Profile naming the version they conform to."
     },
     {
       "name": "luismc-specs",
       "source": "./claude/plugins/specs",
-      "description": "Interviews the user and writes a normative specification to specs/ — IDed, testable requirements — before implementation starts."
+      "description": "Interviews the user and writes a normative specification to specs/ \u2014 IDed, testable requirements \u2014 before implementation starts."
     },
     {
       "name": "luismc-transcript-folds",

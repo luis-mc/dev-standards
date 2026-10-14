@@ -136,6 +136,10 @@ effort is the user's per-run choice, and one answer covers every target that
 gets the split. If the targets disagree on a saved value, show each; the
 recommended answer stays preselected.
 
+For a project target that has no `.delivery/config.json`, ask a last question
+in the same message: the delivery values (`work_root`, `tz`, `caps`,
+`no_attribution`), or the neutral defaults. See "`.delivery/config.json`" in step 2.
+
 ## Step 2 — Build a change plan per target
 
 For each chosen target, compare the templates against what is on disk and
@@ -175,6 +179,7 @@ to avoid. The keys, and what each is for:
 | `effortLevel` | `"medium"` | the effort for sessions whose model has no `modelSettings` entry, such as cloud agents, which run Opus; the per-model entries beat it |
 | `hooks.SessionStart` | the drift-hook entry, see path note below | runs `hooks/effort_drift.py` at session start |
 | `enabledPlugins."luismc-artifacts@<marketplace>"` | `true`, project target only; marketplace as found below | enables the project-artifacts plugin (ARTIFACTSPEC R10.1) |
+| `enabledPlugins."luismc-delivery@<marketplace>"` | `true`, project target only; marketplace as found below | enables the delivery plugin (DELIVERYSPEC D2); it supplies the hooks that enforce the rule tags |
 | `enabledPlugins."luismc-transcript-folds@<marketplace>"` | `true`, user level on every run, in `~/.claude/settings.json` only; marketplace as found below | enables the transcript-folds plugin (see "The transcript-folds pieces") |
 
 **The effort keys are written from the user's answer, not queued as missing.**
@@ -241,9 +246,11 @@ already names `luismc-artifacts` under a different marketplace than the one
 found, queue it as a **conflict** (the entry would enable nothing on this
 machine) and let the owner choose in step 3. Keep every other entry, and never
 remove or reorder one. The only other `enabledPlugins` entry this skill writes
-is `luismc-transcript-folds@<marketplace>` in the user's
-`~/.claude/settings.json` (below); it writes no entry for any other plugin, and
-none for luismc-artifacts to a user target. Which other plugins are enabled is
+is `luismc-delivery@<marketplace>` in a project's `.claude/settings.json`,
+with the same rules as the artifacts entry (an existing `true` or `false` stays; a
+different marketplace is a **conflict**), and `luismc-transcript-folds@<marketplace>`
+in the user's `~/.claude/settings.json` (below); it writes no entry for any other
+plugin, and none for luismc-artifacts or luismc-delivery to a user target. Which other plugins are enabled is
 the user's call, made through `/plugin` or their own settings. Enabling the plugin creates no file in
 the project; the plugin's own first `feature-new` or `init` does (its R10.2).
 Report, in step 5, the marketplace name used and where it came from, and that
@@ -374,6 +381,75 @@ interface, instead of guessing or asking a few per turn. Plugin-owned like
 `CLAUDE.md` text: it reaches projects whose `CLAUDE.md` already exists. A
 local edit is drift; the fix belongs in the template. No placeholders.
 
+### `rules/delivery-timing.md` — overwrite unconditionally
+
+`.claude/rules/delivery-timing.md` (project) or `~/.claude/rules/delivery-timing.md`
+(user). Plugin-owned like the two rule files above and written on every run, no
+question asked, no placeholders. It carries the ETA and train-timing rules (ETA =
+real start + typical duration with the dependency named; the next train is joined
+during CI and pushed at green; waits are gaps; trains leave when green at any
+hour; agent ETAs are setup + work + checks). Every rule line in the three rule
+files ends with `<!-- check: <DL id or Q id> -->` naming the DELIVERYSPEC id that
+enforces it, or `<!-- advice -->`; `tools/test_rule_tags.py` fails on an id the
+spec does not define.
+
+### `.delivery/config.json` — project target, add if missing, NEVER overwrite
+
+Per-project settings for the `luismc-delivery` plugin, from
+`assets/delivery-config.json`. Written to `<repo>/.delivery/config.json` only when
+the file is absent; an existing file is the owner's and is left exactly as it is
+(report keys the template has that it lacks, and change nothing). Keys: `caps`
+(`cloud`, `local`, `total`), `work_root`, `tz`, `train_label_re`,
+`release_branch_re`, `brief_markers`, `min_question_chars`, `eta_table`,
+`heavy_commands`, `outbound_deny`, `no_attribution`, `long_pole_globs`,
+`measure_globs`, `update_state_files`, `watcher_interval_s`. The defaults are
+neutral (no work root, UTC, no attribution rule). Strip every key that starts
+with `_` (the template's `_doc` and `_example_windows_monorepo`) when writing.
+
+Ask once in step 1 whether to fill the project's values; for a Windows monorepo
+the documented example is `work_root` `C:\\Work`, `tz` `Europe/Lisbon`, `caps`
+8/3/5 (cloud/local/total), and `no_attribution` `true`, which makes the
+`commit-msg` hook that `tech-stack-setup` installs refuse `Co-Authored-By` and AI
+attribution trailers (DL-74). Without the answer, write the neutral defaults.
+
+Add `.delivery/` to the project's `.gitignore` in the same change (the ledger,
+suite times and watcher state live there and are per machine). Append the line
+only when no line already ignores it; create the file when absent. The
+`config.json` itself is local too: it is ignored with the folder, so the
+template is the shared record.
+
+### Retire the user-level `no-tomorrow.mjs` Stop hook
+
+The delivery plugin's Stop hook ports `~/.claude/hooks/no-tomorrow.mjs` (DL-31),
+so once `luismc-delivery` is enabled the old hook only duplicates it. When
+`~/.claude/hooks/no-tomorrow.mjs` exists, or `~/.claude/settings.json` or
+`~/.claude/settings.local.json` holds a `hooks.Stop` entry whose command names
+`no-tomorrow.mjs`, report it, and queue **only the settings entry** as a
+**removal**, shown in the step 3 summary for confirmation. Remove that one hook
+entry (and its `Stop` matcher group when it becomes empty), keep every other
+hook, and leave the `.mjs` file in place for the owner to delete. Do nothing
+when the plugin is not enabled in the target being applied.
+
+### Memory-to-rule map (DELIVERYSPEC D7) — report only
+
+After a lesson is enforced under a DL or Q id, its memory note is redundant. This
+skill only reports; it never edits or deletes a memory file. Read the target
+project's memory folder, `~/.claude/projects/<project>/memory/*.md` (`<project>` is
+the repo path with separators replaced by `-`, e.g. `C--GitHub-comics-organizer`),
+and for each file name the DL/Q ids from DELIVERYSPEC section 1 and decision D8
+whose rule it states, judging by the note's content and its name against the
+"Source" column of the spec's tables. Show a table in the step 3 summary:
+
+| Memory file | Enforced by (DL / Q ids) | Delete? |
+|---|---|---|
+| `never-gh-auto-merge.md` | DL-05, DL-06 | yes, after the plugin release |
+| `some-other-note.md` | none | no, keep |
+
+A file maps only when every rule in it has an id; a partly covered note is listed
+with the covered ids and marked "keep (partly covered)". The orchestrator deletes
+the mapped files after the plugin release. Skip the table when the folder is
+absent and say so.
+
 ### `CLAUDE.md` — add if missing, NEVER overwrite
 
 Instructions loaded into every session: `CLAUDE.md` at the repo root for a
@@ -400,7 +476,7 @@ being overwritten unconditionally, what is being removed (a target's old
 `rules/model-delegation.md`), and which individual settings keys are being
 added, including the `hooks.SessionStart` entry and, for a project target, the
 `enabledPlugins` entry for `luismc-artifacts@<marketplace>` (or that it is
-already there). Always list, under the user target, the two transcript-folds
+already there). For a project target also list: the `luismc-delivery@<marketplace>` entry, the new `.delivery/config.json` and `.gitignore` line, `rules/delivery-timing.md`, the proposed removal of a `no-tomorrow.mjs` Stop entry (which lives in the user's settings, so state it lands outside the repo), and the memory-to-rule table. Always list, under the user target, the two transcript-folds
 pieces: the `luismc-transcript-folds@<marketplace>` entry (or that it is already
 there) and the chords to add to `~/.claude/keybindings.json` (or that they are
 already there, or that the file will be created). List each model-split
@@ -443,6 +519,7 @@ Apply what was confirmed, then check the result rather than assuming it worked:
   `hooks.SessionStart` holds the command for that target (project form
   with `$CLAUDE_PROJECT_DIR`, user form with `$HOME`), once, next to any
   hooks that were already there.
+- A project target's `enabledPlugins` holds `luismc-delivery@<marketplace>`, `.delivery/config.json` parses as JSON with none of the `_` keys, `.gitignore` ignores `.delivery/`, every applied target has `rules/delivery-timing.md` identical to the template, and no `hooks.Stop` entry naming `no-tomorrow.mjs` remains unless the removal was declined.
 - A project target's `enabledPlugins` holds `luismc-artifacts@<marketplace>`,
   with no `{{MARKETPLACE}}` left in the file,
   (`true`, or the owner's existing value), next to every entry that was there
@@ -476,7 +553,7 @@ declined, the marketplace name used for it, and that the plugin must be installe
 chords and the plugin take effect after `/reload-plugins` or a restart. Anything
 removed (the old
 `model-delegation.md`), and whether the project has `scripts/delivery/`, which
-the rule file cites. If both targets were
+the rule file cites. Whether `luismc-delivery` was enabled (the plugin must be installed: `claude plugin install luismc-delivery@<marketplace>`), whether `.delivery/config.json` was written or already present, the `no-tomorrow.mjs` entry removed or declined, and the memory-to-rule table for the orchestrator. If both targets were
 written, note which keys the project file now shadows.
 
 ## The alias-drift warning
