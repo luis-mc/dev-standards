@@ -1015,14 +1015,6 @@ double-click.
 - **R6.8** — `set-task-status` to Live or Built sets Expected to the current
   date when no `--expected` is given.
 
-- **R6.14** — An open row (Running, Waiting, To do, Needs you, On hold) whose
-  Expected time is in the past is flagged (DL-63). A date alone (`DD Mon`)
-  ends at 23:59 of that day in the project's zone. `check` prints one warning
-  per such row, in `--json` under `warnings`, naming the task and its
-  Expected; it is a warning and not a finding, so a writing command is never
-  refused for it. The end-of-turn hook blocks on it (R8.19). Verified by
-  `test_check_flags_open_rows_past_their_expected_time`.
-
 ### 6.5 The retired status Done
 
 - **R6.9** — `Done`, a status of 1.0.0, is retired: it meant "finished" even
@@ -1096,6 +1088,14 @@ double-click.
   a `<details>`, one in the wrong open state and one whose count is not the
   number of items it lists. Verified by `glance_groups_are_collapsible_details`,
   `check_finds_a_wrong_glance_state` and `at_a_glance_css_uses_tokens_and_fits_a_phone`.
+
+- **R6.14** — An open row (Running, Waiting, To do, Needs you, On hold) whose
+  Expected time is in the past is flagged (DL-63). A date alone (`DD Mon`)
+  ends at 23:59 of that day in the project's zone. `check` prints one warning
+  per such row, in `--json` under `warnings`, naming the task and its
+  Expected; it is a warning and not a finding, so a writing command is never
+  refused for it. The end-of-turn hook blocks on it (R8.19). Verified by
+  `test_check_flags_open_rows_past_their_expected_time`.
 
 ---
 
@@ -1210,22 +1210,6 @@ Reads the hook input; takes the task ID from the current branch name
   what is still unpublished — a session that cannot publish (no Artifact tool)
   must not loop forever.
 
-- **R8.18** — The hook also blocks when Full Progress has a URL and (a) its
-  `published_at` is more than 60 minutes old (the hourly fail-safe, R9.8), or
-  (b) a release task's `changed` stamp is later than `published_at` (a release
-  task's status or phase changed since the last publish, R9.9), even though
-  `pending` lists nothing. The reason names the cause and the three steps of
-  R9.10. It never blocks a project that has not published Full Progress yet
-  (the first publish is `pending`'s), nor when `pending` already lists it.
-  The R8.4 ceiling applies. Verified by
-  `stop_blocks_when_full_progress_is_over_an_hour_old`,
-  `stop_blocks_when_a_release_task_changed_since_the_publish` and
-  `stop_hourly_and_overdue_checks_need_a_published_record_and_respect_the_ceiling`.
-- **R8.19** — The hook blocks while an open row is past its Expected time
-  (R6.14), naming each row and the `set-task-status ... --expected` command
-  that fixes it; the R8.4 ceiling applies. Verified by
-  `stop_blocks_on_open_rows_past_their_expected_time`.
-
 ### 8.3 Session-start hook (SessionStart)
 
 - **R8.5** — The hook fetches the default branch, lists pull requests with
@@ -1325,6 +1309,22 @@ Reads the hook input; takes the task ID from the current branch name
 - **R8.17** — The end-of-turn hook does not push. The publish gate and the
   background-work checks (R8.4, R8.8 to R8.10) are unchanged. Verified by
   `hooks_never_write_record` in the same file.
+
+- **R8.18** — The hook also blocks when Full Progress has a URL and (a) its
+  `published_at` is more than 60 minutes old (the hourly fail-safe, R9.8), or
+  (b) a release task's `changed` stamp is later than `published_at` (a release
+  task's status or phase changed since the last publish, R9.9), even though
+  `pending` lists nothing. The reason names the cause and the three steps of
+  R9.10. It never blocks a project that has not published Full Progress yet
+  (the first publish is `pending`'s), nor when `pending` already lists it.
+  The R8.4 ceiling applies. Verified by
+  `stop_blocks_when_full_progress_is_over_an_hour_old`,
+  `stop_blocks_when_a_release_task_changed_since_the_publish` and
+  `stop_hourly_and_overdue_checks_need_a_published_record_and_respect_the_ceiling`.
+- **R8.19** — The hook blocks while an open row is past its Expected time
+  (R6.14), naming each row and the `set-task-status ... --expected` command
+  that fixes it; the R8.4 ceiling applies. Verified by
+  `stop_blocks_on_open_rows_past_their_expected_time`.
 
 ---
 
