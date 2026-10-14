@@ -52,6 +52,7 @@ for path, want in [
     (f"{TS}/assets/tooling/ts/.github/workflows/ci.yml", {"delivery"}),
     ("tools/test_delivery_gate.py", {"delivery"}),
     ("tools/test_artifact_prune.py", {"delivery"}),
+    ("tools/test_delivery_runner.py", {"delivery"}),
     ("tools/test_change_notes.py", {"delivery"}),
     ("tools/test_preflight.py", {"delivery"}),
     ("tools/test_rule_tags.py", {"specs"}),
