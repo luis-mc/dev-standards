@@ -1,0 +1,8 @@
+{
+  "name": "luismc-delivery",
+  "description": "Delivery ledger for trains, agents, installs, publishes, runners and owner questions (.delivery/ledger.json), a PostToolUse recorder that fills it from commands and tool calls, and a background watcher that merges a train at green CI on its current head, pushes the next train and keeps CI runs tidy.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Luis Carvalho"
+  }
+}
