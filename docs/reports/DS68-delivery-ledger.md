@@ -12,3 +12,4 @@ Branch `DS68-delivery-ledger` (from `DS67-delivery-integration`). Contract: `doc
 ## Log
 - Read the spec, artifacts plugin layout (`hook_after_command.py` pattern: never block, exit 0) and the four delivery scripts.
 - Ledger module, schema and recorder written (steps 1-2).
+- Watcher written (step 3).
