@@ -1,0 +1,42 @@
+{
+  "_doc": "Per-project config for the luismc-delivery plugin, written to .delivery/config.json by claude-setup (never overwritten once present). Keys starting with _ are ignored. Neutral defaults; _example_windows_monorepo shows values for a Windows monorepo.",
+  "caps": { "cloud": 8, "local": 3, "total": 5 },
+  "work_root": "",
+  "tz": "UTC",
+  "train_label_re": "^release/\\d+[a-z]?$",
+  "release_branch_re": "^release/",
+  "brief_markers": [
+    "no push notifications",
+    "CRITICAL RUN RULE",
+    "BRIEF.md",
+    "one affected gate"
+  ],
+  "min_question_chars": 60,
+  "eta_table": {
+    "small fix": [15, 25],
+    "ui change": [25, 35],
+    "medium": [35, 60],
+    "large": [60, 120]
+  },
+  "heavy_commands": [],
+  "outbound_deny": [
+    "gh issue create",
+    "gh issue comment",
+    "gh pr comment"
+  ],
+  "no_attribution": false,
+  "long_pole_globs": [],
+  "measure_globs": [],
+  "update_state_files": [],
+  "watcher_interval_s": 600,
+  "_example_windows_monorepo": {
+    "caps": { "cloud": 8, "local": 3, "total": 5 },
+    "work_root": "C:\\Work",
+    "tz": "Europe/Lisbon",
+    "release_branch_re": "^release/\\d+[a-z]?$",
+    "no_attribution": true,
+    "heavy_commands": ["pnpm test:full", "pnpm build:installer"],
+    "long_pole_globs": ["packages/catalogue/**"],
+    "measure_globs": ["packages/matching/**", "packages/catalogue/**"]
+  }
+}
