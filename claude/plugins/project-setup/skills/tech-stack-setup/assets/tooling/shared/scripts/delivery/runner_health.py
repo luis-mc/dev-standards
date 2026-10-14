@@ -247,6 +247,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--json", action="store_true", help="print the result as JSON")
     args = ap.parse_args(argv)
     res = check(Path.cwd(), args.repo)
+    try:  # best effort: the ledger records that the runners were checked
+        import delivery_common as dc
+        dc.ledger_record(dc.repo_root(), "event", kind="runner_health.%s" % res["status"],
+                         ref="%d warning(s)" % len(res["warnings"]), by="runner_health.py")
+    except Exception:  # noqa: BLE001
+        pass
     if args.json:
         print(json.dumps(res, indent=2))
     else:
