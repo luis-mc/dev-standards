@@ -221,6 +221,15 @@ def print_slowest_job_summary(runs: list[dict], repo: str | None) -> None:
         return
 
 
+def ledger_ci(sha: str, state: str) -> None:
+    """Best effort: record the decision in the delivery ledger (no-op without the plugin)."""
+    try:
+        import delivery_common as dc
+        dc.ledger_record(dc.repo_root(), "ci", sha=sha, state=state, by="ci_watch.py")
+    except Exception:  # noqa: BLE001
+        return
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         description="Wait for the CI workflow runs of a commit (never reads PR checks).")
@@ -280,12 +289,14 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"ci_watch: {len(runs)} {args.workflow} run(s) for {sha[:10]} "
                           "succeeded")
                     print_slowest_job_summary(runs, args.repo)
+                    ledger_ci(sha, "success")
                     return 0
                 print(f"ci_watch: {len(bad)} of {len(runs)} {args.workflow} run(s) for "
                       f"{sha[:10]} did not succeed")
                 for run in bad:
                     print_failed_jobs(run, args.repo)
                 print_slowest_job_summary(runs, args.repo)
+                ledger_ci(sha, "failure")
                 return 1
         if state != last_state:
             print(f"ci_watch: waiting, {state}", flush=True)

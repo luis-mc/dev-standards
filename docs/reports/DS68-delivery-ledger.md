@@ -13,3 +13,4 @@ Branch `DS68-delivery-ledger` (from `DS67-delivery-integration`). Contract: `doc
 - Read the spec, artifacts plugin layout (`hook_after_command.py` pattern: never block, exit 0) and the four delivery scripts.
 - Ledger module, schema and recorder written (steps 1-2).
 - Watcher written (step 3).
+- Call-ins added to join/ci_watch/cleanup/runner_health via delivery_common.ledger_record (step 4).
