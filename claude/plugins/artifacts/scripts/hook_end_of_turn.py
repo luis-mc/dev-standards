@@ -117,7 +117,7 @@ def has_active_task(root, manifest):
 
 
 def freshness(root, manifest, artifacts):
-    """R9.8 to R9.10, R6.12: (stale, overdue). `stale` is a list of reasons to publish Full Progress although
+    """R8.18, R8.19, R9.8 to R9.10, R6.14: (stale, overdue). `stale` is a list of reasons to publish Full Progress although
     pending does not list it (published over 60 minutes ago, or a release task changed since); `overdue` is
     [(task, expected)] for open rows whose Expected time has passed. Both [] when Full Progress was never
     published or the registry cannot be read (fail open)."""

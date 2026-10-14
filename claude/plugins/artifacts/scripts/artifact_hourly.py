@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hourly and on-change publishing of Full Progress (ARTIFACTSPEC R9.8 to R9.11, R6.12).
+"""Hourly and on-change publishing of Full Progress (ARTIFACTSPEC R9.8 to R9.11, R6.14).
 
 Pure helpers shared by hook_end_of_turn.py, project_artifacts.py (`check`, `pending`) and
 publish_hourly.py. They only read: the manifest's `full_progress_artifact.published_at` and the

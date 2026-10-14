@@ -2181,7 +2181,7 @@ def cmd_check(args):
 
 
 def overdue_warnings(rec):
-    """R6.12 (DL-63): an open row whose Expected time is in the past. [(file, message)]"""
+    """R6.14 (DL-63): an open row whose Expected time is in the past. [(file, message)]"""
     if H is None:
         return []
     return [('registry.json', '%s: set a new Expected (set-task-status %s <status> --expected ...) or the real status'
@@ -2241,11 +2241,11 @@ def copy_meta_path(dest):
     return Path(str(dest) + COPY_META_SUFFIX)
 
 
-def write_copy_meta(dest, html):
+def write_copy_meta(dest, rec_dir):
     """R9.11: the hash and write time of a publish copy, beside it, so mark-published can tell a stale copy."""
     meta = {'sha256': hashlib.sha256(Path(dest).read_bytes()).hexdigest(),
             'written_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
-            'written_ns': os.stat(dest).st_mtime_ns}
+            'inputs_sha256': record_inputs_hash(rec_dir)}
     write_text(copy_meta_path(dest), json.dumps(meta))
     return meta
 
@@ -2258,16 +2258,23 @@ def read_copy_meta(dest):
     return meta if isinstance(meta, dict) else None
 
 
-def latest_record_change_ns(rec_dir):
-    """Newest modification time (ns) of any file of the record folder."""
-    newest = 0
-    for d, _dirs, files in os.walk(str(rec_dir)):
-        for name in files:
+def record_inputs_hash(rec_dir):
+    """Hash of the files Full Progress is made from: the registry, the content, the design and the rendered pages.
+    The manifest and the README are left out: mark-deferred and mark-published write them without changing what
+    the owner sees. Content, not modification times, so a rewrite with the same bytes is no change."""
+    h = hashlib.sha256()
+    for d, dirs, files in os.walk(str(rec_dir)):
+        dirs.sort()
+        for name in sorted(files):
+            rel = os.path.relpath(os.path.join(d, name), str(rec_dir)).replace(os.sep, '/')
+            if not (rel in ('registry.json', 'design.css') or rel.startswith('content/') or rel.endswith('.html')):
+                continue
             try:
-                newest = max(newest, os.stat(os.path.join(d, name)).st_mtime_ns)
+                data = Path(d, name).read_bytes()
             except OSError:
-                pass
-    return newest
+                continue
+            h.update(rel.encode('utf-8') + b'\0' + hashlib.sha256(data).digest())
+    return h.hexdigest()
 
 
 def stale_copy_reason(ctx, rec, e):
@@ -2281,9 +2288,9 @@ def stale_copy_reason(ctx, rec, e):
         return None
     if hashlib.sha256(dest.read_bytes()).hexdigest() != meta.get('sha256'):
         return '%s was edited after pending wrote it; run pending --json and publish that copy unedited' % dest
-    if latest_record_change_ns(rec.dir) > os.stat(dest).st_mtime_ns:
-        return ('the record changed after the publish copy %s was written (it is older than the latest record change); '
-                'run pending --json, publish the fresh copy, then mark-published' % dest)
+    if meta.get('inputs_sha256') != record_inputs_hash(rec.dir):
+        return ('the record changed after the publish copy %s was written (the copy is older than the latest record '
+                'change); run pending --json, publish the fresh copy, then mark-published' % dest)
     return None
 
 
@@ -2301,7 +2308,7 @@ def write_publish_copy(ctx, rec, key, e):
         return None
     dest = ctx.root / PUBLISH_REL / e['file']
     write_text(dest, html)
-    write_copy_meta(dest, html)
+    write_copy_meta(dest, rec.dir)
     if (git_out(ctx.root, 'status', '--porcelain', '--ignored', '--untracked-files=all', '--', str(dest)) or '').startswith('??'):
         warn('.gitignore does not ignore %s/ (the publish copy); add that line' % PUBLISH_REL.replace(os.sep, '/'))
     return str(dest)
