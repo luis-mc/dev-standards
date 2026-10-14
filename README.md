@@ -294,7 +294,11 @@ that enforces it.
 
 `/luismc-project-setup:claude-setup` enables it for a project, writes
 `.delivery/config.json` (caps, work root, time zone, label patterns, ETA
-table, outbound deny list, `no_attribution`) and git-ignores `.delivery/`. The
+table, outbound deny list, `no_attribution`, `runners[]` with their repair
+commands) and git-ignores `.delivery/`. When a CI runner the project uses goes
+offline, `runner_plan.py runners` reports it at once, then every 5 minutes
+repairs the runner (restart its service or container), re-checks it and only
+then re-runs the CI that needed it; every step is in the ledger (D6a). The
 plugin is built in `claude/plugins/delivery`.
 
 ## `luismc-transcript-folds` — keep long diffs and commands from flooding the transcript

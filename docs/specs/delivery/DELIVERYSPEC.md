@@ -242,7 +242,7 @@ measure_globs, eta_table, heavy_commands, outbound_deny). Proposed home: a new p
 - reads the ledger only through (a)'s module; uses fixtures until (a) lands
 
 **(c) runner_plan + artifacts publish-on-change / hourly**
-- `tech-stack-setup/.../scripts/delivery/runner_plan.py` (generic heavy-job wrapper: wait for train CI, pause/resume the local runner, one heavy job at a time, memory floor, optional affinity/priority; records `jobs[]`, `runners[].paused_by`) + its test; comics `scripts/heavy-job.ts` becomes a thin caller later (project branch, not here)
+- `tech-stack-setup/.../scripts/delivery/runner_plan.py` (generic heavy-job wrapper: wait for train CI, pause/resume the local runner, one heavy job at a time, memory floor, optional affinity/priority; records `jobs[]`, `runners[].paused_by`; `runners` subcommand = D6a: report offline runners, repair via `runners[].repair` every `retry_seconds` (300), re-run the cancelled train CI, ledger events `runner.offline|repair|retry|online|rerun|giveup`) + its test; comics `scripts/heavy-job.ts` becomes a thin caller later (project branch, not here)
 - `claude/plugins/artifacts/scripts/hook_end_of_turn.py` (hourly fail-safe: block when `publishes[full-progress].last_at` > 60 min; fresh-copy check DL-62)
 - `claude/plugins/artifacts/scripts/project_artifacts.py` (`pending --json` records copy hash/time; `mark-published` refuses when no publish of the current copy is recorded; expired-Expected check DL-63)
 - `claude/plugins/artifacts/scripts/publish_hourly.py` (new: what the hourly cron/watcher calls)

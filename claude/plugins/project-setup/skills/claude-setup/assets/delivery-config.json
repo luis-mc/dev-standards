@@ -1,5 +1,5 @@
 {
-  "_doc": "Per-project config for the luismc-delivery plugin, written to .delivery/config.json by claude-setup (never overwritten once present). Keys starting with _ are ignored. Neutral defaults; _example_windows_monorepo shows values for a Windows monorepo.",
+  "_doc": "Per-project config for the luismc-delivery plugin, written to .delivery/config.json by claude-setup (never overwritten once present). Keys starting with _ are ignored. `runners[]` lists the CI runners the project uses: `name` (as GitHub shows it) and `repair` (commands run in order when the runner is offline: a string runs through the shell, a list is an argv; D6a). `runner_plan.report_command` is the project's report channel (gets the text in $DELIVERY_REPORT). Neutral defaults; _example_windows_monorepo shows values for a Windows monorepo.",
   "caps": { "cloud": 8, "local": 3, "total": 5 },
   "work_root": "",
   "tz": "UTC",
@@ -29,6 +29,8 @@
   "measure_globs": [],
   "update_state_files": [],
   "watcher_interval_s": 600,
+  "runners": [],
+  "runner_plan": { "retry_seconds": 300, "runner_max_retries": 0, "report_command": "" },
   "_example_windows_monorepo": {
     "caps": { "cloud": 8, "local": 3, "total": 5 },
     "work_root": "C:\\Work",
@@ -37,6 +39,11 @@
     "no_attribution": true,
     "heavy_commands": ["pnpm test:full", "pnpm build:installer"],
     "long_pole_globs": ["packages/catalogue/**"],
-    "measure_globs": ["packages/matching/**", "packages/catalogue/**"]
+    "measure_globs": ["packages/matching/**", "packages/catalogue/**"],
+    "runners": [
+      { "name": "win-runner-1", "repair": ["sc stop actions.runner.org-repo.win-runner-1 & sc start actions.runner.org-repo.win-runner-1"] },
+      { "name": "linux-runner-1", "repair": [["ssh", "linux-host", "sudo", "systemctl", "restart", "actions.runner.org-repo.linux-runner-1"]] }
+    ],
+    "runner_plan": { "retry_seconds": 300, "report_command": "python scripts/notify.py \"$DELIVERY_REPORT\"" }
   }
 }

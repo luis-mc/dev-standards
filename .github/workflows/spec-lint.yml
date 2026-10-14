@@ -31,6 +31,7 @@ on:
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/**'
       - 'claude/plugins/**/SKILL.md'
       - 'claude/plugins/artifacts/**'
+      - 'claude/plugins/delivery/**'
       - 'claude/plugins/transcript-folds/**'
       - 'claude/plugins/project-setup/skills/claude-setup/assets/**'
       - 'docs/specs/changes/**'
@@ -377,6 +378,25 @@ jobs:
       - name: Prove the heavy-job wrapper yields to CI and always resumes the runner
         run: python3 tools/test_delivery_runner.py
 
+  # DELIVERYSPEC: the luismc-delivery plugin: ledger, post-tool recorder, watcher and the hooks.
+  delivery-plugin:
+    name: delivery - plugin ledger, recorder, watcher and hooks
+    needs: areas
+    if: needs.areas.outputs.delivery == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Prove the ledger, recorder and watcher still hold
+        run: python3 -I -m unittest discover -s claude/plugins/delivery/tests -t claude/plugins/delivery/tests
+
+      - name: Prove the delivery hooks still block and allow what DELIVERYSPEC says
+        run: python3 -I tools/test_delivery_hooks.py
+
   delivery-smoke:
     name: delivery - packaged-program smoke test
     needs: areas
@@ -444,6 +464,8 @@ jobs:
       - delivery-ci-scripts
       - delivery-cleanup
       - delivery-prune
+      - delivery-runner
+      - delivery-plugin
       - delivery-smoke
       - delivery-change-notes
       - delivery-area-mapping

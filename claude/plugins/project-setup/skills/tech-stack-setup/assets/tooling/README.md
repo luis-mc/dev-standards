@@ -158,6 +158,7 @@ Copied to `scripts/delivery/` (see `shared/scripts/delivery/CONTRACT.md`):
   pushes anyway and the running CI restarts. A late branch rides the next train.
 - `runner_health.py`: warns when no online runner carries a label the workflows need
 - `runner_plan.py run --label NAME -- <cmd>`: heavy local job wrapper; waits while release/train CI runs, one heavy job at a time, free-memory floor, optionally pauses the local runner service and always resumes it (settings: `runner_plan` in `.delivery/config.json`)
+- `runner_plan.py runners [--once]`: D6a offline-runner repair. Reads `gh api repos/<owner>/<repo>/actions/runners` for the runners listed in `.delivery/config.json` `runners[]`; an offline one is reported at once (ledger event `runner.offline`, the project's `runner_plan.report_command`), then every `retry_seconds` (default 300) it runs that runner's `repair` commands, re-reads the status and only when the runner is online re-runs the train CI the outage cancelled or failed. Never just waits; every report, repair, retry and re-run is a ledger event.
   (hosted labels count as available); used by `join.py` and `ci_watch.py`.
 - `reach_check.py URL...`: GETs each URL from where it runs and prints status or
   error. Run it in an agent sandbox before relying on a registry, API or preview
