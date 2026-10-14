@@ -73,8 +73,8 @@ class Spy:
     def __init__(self):
         self.events = []
 
-    def record(self, kind, data, root=None):
-        self.events.append((kind, dict(data)))
+    def record(self, root, op, fields=None, by=None, **kw):
+        self.events.append((op, dict(fields if fields is not None else kw)))
 
     def states(self, kind="job"):
         return [d.get("state") if kind == "job" else d.get("paused_by") for k, d in self.events if k == kind]
@@ -264,7 +264,7 @@ def ledger_module_found_through_env():
     root = new_root()
     mod = Path(root, "led.py")
     out = Path(root, "calls.jsonl")
-    mod.write_text("import json\ndef record(kind, data, root=None):\n    open(%r,'a').write(json.dumps([kind, data['state'] if kind=='job' else data['paused_by']])+'\\n')\n" % str(out))
+    mod.write_text("import json\ndef record(root, kind, fields=None, by=None):\n    open(%r,'a').write(json.dumps([kind, fields['state'] if kind=='job' else fields['paused_by']])+'\\n')\n" % str(out))
     os.environ["DELIVERY_LEDGER"] = str(mod)
     try:
         found = rp.find_ledger_module(root)
@@ -353,6 +353,136 @@ def end_to_end_sigterm_stops_the_child_and_restarts_the_service():
     assert p.returncode == rp.EXIT_INTERRUPTED, (p.returncode, err)
     assert log.read_text().split("\n")[:2] == ["stop gh-runner", "start gh-runner"], log.read_text()
     assert not Path(root, ".delivery", rp.LOCK_NAME).exists()
+
+
+# ---------------------------------------------------------------- D6a: offline runners
+
+class RunnerWorld:
+    """Fake GitHub runner list + commands. `online_after` = number of repair commands run before it comes online."""
+    def __init__(self, online_after=1, runs=None):
+        self.repairs, self.cmds, self.sleeps, self.online_after = 0, [], [], online_after
+        self.runs = runs or []
+
+    def gh(self, args):
+        if args[0] == "api":
+            up = self.repairs >= self.online_after
+            return {"runners": [{"name": "win-1", "status": "online" if up else "offline", "busy": False}]}
+        if args[:2] == ["run", "list"]:
+            return self.runs
+        return None
+
+    def run_cmd(self, cmd, timeout=300):
+        self.cmds.append(cmd)
+        if isinstance(cmd, list) and cmd[:3] == ["gh", "run", "rerun"]:
+            return 0, ""
+        if cmd != "report":
+            self.repairs += 1 if not (isinstance(cmd, str) and cmd.startswith("echo report")) else 0
+        return 0, ""
+
+
+def guard(world, spy, **kw):
+    c = cfg(retry_seconds=300, runners=[{"name": "win-1", "repair": ["restart-svc", ["ssh", "h", "sudo", "systemctl", "restart", "x"]]}], **kw)
+    return rp.RunnerGuard("/nonexistent", c, ledger=rp.Ledger("/nonexistent", spy), gh=world.gh,
+                          run_cmd=world.run_cmd, sleep=world.sleeps.append, clock=lambda: "2026-10-14T23:00:00+00:00")
+
+
+def kinds(spy):
+    return [d["kind"] for k, d in spy.events if k == "event"]
+
+
+@scenario
+def runners_online_does_nothing():
+    w, spy = RunnerWorld(online_after=0), Spy()
+    assert guard(w, spy).ensure() == 0
+    assert w.cmds == [] and "runner.offline" not in kinds(spy)
+
+
+@scenario
+def offline_runner_is_reported_at_once_then_repaired_before_rerun():
+    w = RunnerWorld(online_after=2, runs=[
+        {"databaseId": 5, "status": "completed", "conclusion": "cancelled", "headBranch": "release/30", "createdAt": "2026-10-14T23:30:00Z"},
+        {"databaseId": 6, "status": "completed", "conclusion": "cancelled", "headBranch": "release/29", "createdAt": "2026-10-14T20:00:00Z"},
+        {"databaseId": 7, "status": "completed", "conclusion": "success", "headBranch": "release/30", "createdAt": "2026-10-14T23:30:00Z"},
+        {"databaseId": 8, "status": "completed", "conclusion": "failure", "headBranch": "feature/x", "createdAt": "2026-10-14T23:30:00Z"}])
+    spy = Spy()
+    g = guard(w, spy, report_command="echo report")
+    assert g.ensure() == 0
+    ks = kinds(spy)
+    assert ks[0] == "runner.offline", ks                                   # reported first
+    assert ks.count("runner.repair") == 2 and ks[-2:] == ["runner.online", "runner.rerun"], ks
+    # repair commands ran (string through the shell, list as argv), before the one re-run, and only for run 5
+    assert w.cmds[0] == "echo report" and w.cmds[1] == "restart-svc", w.cmds
+    assert ["ssh", "h", "sudo", "systemctl", "restart", "x"] in w.cmds
+    reruns = [c for c in w.cmds if isinstance(c, list) and c[:3] == ["gh", "run", "rerun"]]
+    assert reruns == [["gh", "run", "rerun", "5"]], reruns
+    assert w.cmds.index(reruns[0]) > w.cmds.index("restart-svc")
+    runner_rows = [d for k, d in spy.events if k == "runner"]
+    assert runner_rows[0]["online"] is False and runner_rows[-1]["online"] is True, runner_rows
+
+
+@scenario
+def retries_every_five_minutes_and_never_just_waits():
+    w, spy = RunnerWorld(online_after=6), Spy()        # three failed rounds (2 repair commands each)
+    assert guard(w, spy).ensure() == 0
+    assert w.sleeps == [300, 300], w.sleeps               # retry cadence = 5 minutes
+    ks = kinds(spy)
+    assert ks.count("runner.retry") == 2 and ks.count("runner.repair") == 6, ks
+    assert ks.index("runner.offline") < ks.index("runner.repair") < ks.index("runner.online")
+
+
+@scenario
+def gives_up_after_max_retries_or_once():
+    w, spy = RunnerWorld(online_after=99), Spy()
+    assert guard(w, spy, runner_max_retries=2).ensure() == rp.EXIT_RUNNERS
+    assert w.sleeps == [300] and kinds(spy)[-1] == "runner.giveup", (w.sleeps, kinds(spy))
+    w2, spy2 = RunnerWorld(online_after=99), Spy()
+    assert guard(w2, spy2).ensure(once=True) == rp.EXIT_RUNNERS and w2.sleeps == []
+
+
+@scenario
+def unreadable_status_is_not_online_and_missing_runner_counts_offline():
+    spy = Spy()
+    w = RunnerWorld(online_after=0)
+    g = guard(w, spy)
+    g.gh = lambda a: None
+    assert g.ensure() == 0 and kinds(spy) == []            # cannot read at start: warn only
+    g2 = guard(w, spy)
+    g2.gh = lambda a: {"runners": []}
+    assert g2.offline() == ["win-1"]
+
+
+@scenario
+def real_ledger_gets_runner_rows_and_events():
+    root = new_root()
+    Path(root, ".delivery").mkdir()
+    led = Path(__file__).resolve().parent.parent / "claude/plugins/delivery/scripts/delivery_ledger.py"
+    w = RunnerWorld(online_after=1)
+    c = cfg(runners=[{"name": "win-1", "repair": ["fix"]}])
+    g = rp.RunnerGuard(root, c, ledger=rp.Ledger(root, rp.find_ledger_module_at(str(led))), gh=w.gh,
+                       run_cmd=w.run_cmd, sleep=lambda s: None)
+    assert g.ensure() == 0
+    data = json.loads(Path(root, ".delivery", "ledger.json").read_text())
+    assert [r["online"] for r in data["runners"]] == [True] and data["runners"][0]["name"] == "win-1"
+    got = [e["kind"] for e in data["events"]]
+    assert got[:2] == ["runner.offline", "runner.repair"] and "runner.online" in got, got
+    rp.Ledger(root, rp.find_ledger_module_at(str(led))).record("job", {"id": "j1", "state": "running"})
+    rp.Ledger(root, rp.find_ledger_module_at(str(led))).record("job", {"id": "j1", "state": "done"})
+    data = json.loads(Path(root, ".delivery", "ledger.json").read_text())
+    assert [j["state"] for j in data["jobs"]] == ["done"]
+
+
+@scenario
+def runners_config_and_cli():
+    root = new_root()
+    Path(root, ".delivery").mkdir()
+    Path(root, ".delivery", "config.json").write_text(json.dumps(
+        {"runner_plan": {"retry_seconds": 60, "report_command": "notify"},
+         "runners": [{"name": "a", "repair": "x"}, "junk", {"nameless": 1}]}))
+    c = rp.load_config(root)
+    assert c["retry_seconds"] == 60 and c["report_command"] == "notify" and [r["name"] for r in c["runners"]] == ["a"]
+    assert rp.load_config(new_root())["runners"] == [] and rp.DEFAULTS["retry_seconds"] == 300
+    assert rp.main(["runners", "--root", root, "--once"]) == 0       # no gh in the sandbox: unreadable, warn only
+
 
 
 def main() -> int:

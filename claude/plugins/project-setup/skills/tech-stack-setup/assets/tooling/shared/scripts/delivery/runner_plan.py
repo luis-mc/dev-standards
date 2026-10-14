@@ -24,6 +24,16 @@ by a best-effort call to the delivery plugin's ledger module (`delivery_ledger.p
 DELIVERY_LEDGER, a sibling file, or `claude/plugins/delivery/scripts/`): `record(kind, data, root=...)`
 with kind "job" (fields as ledger `jobs[]`) or "runner" (name, paused_by). Absent or failing: no-op.
 
+Offline runners (DELIVERYSPEC D6a): `runner_plan.py runners [--once]` checks the CI runners the project lists in
+`.delivery/config.json` `runners[]` (`{"name": ..., "repair": [command, ...], "labels": [...]}`) against
+`gh api repos/<owner>/<repo>/actions/runners`. An offline runner is reported AT ONCE (ledger event `runner.offline`,
+runner row `online: false`, and the project's report channel: `runner_plan.report_command`, run with the text
+in the env var DELIVERY_REPORT). Then every `retry_seconds` (300) it repairs first (each `repair` command of every
+offline runner, run in order; a string runs through the shell, a list is an argv; ledger event `runner.repair`),
+re-reads the runner status and, only when the runners are online again, re-runs the train CI runs the outage
+cancelled or failed (`gh run rerun`; ledger event `runner.rerun`). It never just waits. Exit 0 runners online, 5 gave up
+(`runner_max_retries` > 0 only).
+
 Exit: the command's exit code; 2 usage error; 4 gave up waiting (`max_wait_minutes`); 130 interrupted.
 Python 3.8+, standard library only; `gh` is optional (without it the CI wait is skipped with a warning).
 """
@@ -46,11 +56,14 @@ import time
 EXIT_USAGE = 2
 EXIT_TIMEOUT = 4
 EXIT_INTERRUPTED = 130
+EXIT_RUNNERS = 5
+RERUN_CONCLUSIONS = ("cancelled", "failure", "timed_out", "startup_failure")
 LOCK_NAME = "runner-plan.lock"
 ACTIVE_RUN_STATUSES = ("queued", "in_progress", "waiting", "pending", "requested")
 DEFAULTS = {
     "min_free_mb": 0, "pause_service": "", "train_branch_regex": r"^release/", "poll_seconds": 60,
     "max_wait_minutes": 0, "repo": "", "affinity": [], "priority": "normal",
+    "retry_seconds": 300, "runner_max_retries": 0, "report_command": "",
 }
 GH_TIMEOUT = 30
 
@@ -175,14 +188,18 @@ def find_ledger_module(root: str):
         cands.append(os.path.join(plugin_root, "scripts", "delivery_ledger.py"))
     for c in cands:
         if c and os.path.isfile(c):
-            try:
-                spec = importlib.util.spec_from_file_location("delivery_ledger", c)
-                mod = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(mod)
-                return mod if callable(getattr(mod, "record", None)) else None
-            except Exception:       # a broken ledger module must never stop a job
-                return None
+            return find_ledger_module_at(c)
     return None
+
+
+def find_ledger_module_at(path: str):
+    try:
+        spec = importlib.util.spec_from_file_location("delivery_ledger", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod if callable(getattr(mod, "record", None)) else None
+    except Exception:       # a broken ledger module must never stop a job
+        return None
 
 
 class Ledger:
@@ -194,7 +211,11 @@ class Ledger:
         if self.module is None:
             return
         try:
-            self.module.record(kind, data, root=self.root)
+            # delivery_ledger.record(root, op, **kw): "job" and "runner" upsert one row, "event" adds an event
+            if kind == "event":
+                self.module.record(self.root, "event", by="runner_plan", **data)
+            else:
+                self.module.record(self.root, kind, fields=data, by="runner_plan")
         except Exception as exc:    # best effort
             log("ledger not updated (%s: %s)" % (type(exc).__name__, exc))
 
@@ -428,10 +449,138 @@ class Plan:
         return code
 
 
+# ---------------------------------------------------------------- offline runners (D6a)
+
+def run_command(cmd, timeout=300):
+    """Run one repair/report command (a string through the shell, a list as argv). Returns (code, output)."""
+    try:
+        p = subprocess.run(cmd, shell=isinstance(cmd, str), capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=timeout)
+        return p.returncode, (p.stdout + p.stderr).strip()
+    except (OSError, subprocess.SubprocessError) as exc:
+        return 127, "%s: %s" % (type(exc).__name__, exc)
+
+
+class RunnerGuard:
+    """A runner the project uses is offline: report at once, then every retry_seconds repair, re-check and
+    only then re-run the CI that needs it. Never just waits."""
+
+    def __init__(self, root, cfg, ledger=None, gh=gh_json, run_cmd=run_command, sleep=time.sleep,
+                 clock=utc_now):
+        self.root, self.cfg = root, cfg
+        self.ledger = ledger if ledger is not None else Ledger(root, None)
+        self.gh, self.run_cmd, self.sleep, self.clock = gh, run_cmd, sleep, clock
+        self.names = [r["name"] for r in cfg.get("runners", [])]
+        self.offline_since = None
+
+    def repo_path(self) -> str:
+        return "repos/%s/actions/runners" % (self.cfg["repo"] or "{owner}/{repo}")
+
+    def offline(self):
+        """Names of the project's runners that are not online (a missing one counts as offline);
+        None when the status cannot be read."""
+        data = self.gh(["api", self.repo_path() + "?per_page=100"])
+        if not isinstance(data, dict) or not isinstance(data.get("runners"), list):
+            return None
+        status = {r.get("name"): r for r in data["runners"] if isinstance(r, dict)}
+        at = self.clock()
+        for n in self.names:
+            r = status.get(n)
+            self.ledger.record("runner", {"name": n, "online": bool(r and r.get("status") == "online"),
+                                          "busy": bool(r and r.get("busy")), "checked_at": at})
+        return [n for n in self.names if not (status.get(n) or {}).get("status") == "online"]
+
+    def event(self, kind: str, ref: str) -> None:
+        self.ledger.record("event", {"kind": kind, "ref": ref})
+
+    def report(self, text: str) -> None:
+        log(text)
+        cmd = self.cfg.get("report_command")
+        if cmd:
+            env_old = os.environ.get("DELIVERY_REPORT")
+            os.environ["DELIVERY_REPORT"] = text
+            try:
+                self.run_cmd(cmd, 60)
+            finally:
+                if env_old is None:
+                    os.environ.pop("DELIVERY_REPORT", None)
+                else:
+                    os.environ["DELIVERY_REPORT"] = env_old
+
+    def repair(self, names) -> None:
+        for r in self.cfg.get("runners", []):
+            if r["name"] not in names:
+                continue
+            cmds = r.get("repair") or []
+            if isinstance(cmds, str):
+                cmds = [cmds]
+            if not cmds:
+                self.event("runner.repair", "%s: no repair command configured" % r["name"])
+            for c in cmds:
+                code, out = self.run_cmd(c)
+                shown = c if isinstance(c, str) else " ".join(c)
+                self.event("runner.repair", "%s: %s -> exit %s%s" % (r["name"], shown, code, (": " + out[:200]) if code else ""))
+
+    def rerun(self) -> int:
+        """Re-run the train CI runs the outage cancelled or failed. Queued runs start by themselves."""
+        args = ["run", "list", "--limit", "50", "--json", "databaseId,status,conclusion,headBranch,createdAt"]
+        if self.cfg["repo"]:
+            args += ["--repo", self.cfg["repo"]]
+        runs = self.gh(args)
+        if not isinstance(runs, list):
+            return 0
+        pattern = re.compile(self.cfg["train_branch_regex"])
+        n = 0
+        for r in runs:
+            if not isinstance(r, dict) or r.get("status") != "completed" or r.get("conclusion") not in RERUN_CONCLUSIONS:
+                continue
+            if not pattern.search(str(r.get("headBranch", ""))) or str(r.get("createdAt", "")) < (self.offline_since or ""):
+                continue
+            argv = ["gh", "run", "rerun", str(r["databaseId"])] + (["--repo", self.cfg["repo"]] if self.cfg["repo"] else [])
+            code, _ = self.run_cmd(argv, 60)
+            self.event("runner.rerun", "%s %s exit %s" % (r["databaseId"], r.get("headBranch"), code))
+            n += code == 0
+        return n
+
+    def ensure(self, once=False) -> int:
+        """0 when the runners are online (after repairing and re-running if they were not), 5 on giving up."""
+        if not self.names:
+            return 0
+        offline = self.offline()
+        if offline is None:
+            log("warning: cannot read the runner status (gh missing or failing)")
+            return 0
+        if not offline:
+            return 0
+        self.offline_since = self.clock()
+        self.event("runner.offline", ", ".join(offline))
+        self.report("CI runner offline: %s. Repairing; retrying every %g s." % (", ".join(offline), self.cfg["retry_seconds"]))
+        tries = 0
+        while True:
+            tries += 1
+            self.repair(offline)
+            offline = self.offline()
+            if offline is None:
+                offline = list(self.names)          # unreadable status is not "online"
+            if not offline:
+                self.event("runner.online", "after %d repair round(s)" % tries)
+                self.report("CI runner back online after %d repair round(s)." % tries)
+                self.rerun()
+                return 0
+            limit = int(self.cfg["runner_max_retries"] or 0)
+            if once or (limit and tries >= limit):
+                self.event("runner.giveup", "%s still offline after %d round(s)" % (", ".join(offline), tries))
+                self.report("CI runner still offline: %s (round %d)." % (", ".join(offline), tries))
+                return EXIT_RUNNERS
+            self.event("runner.retry", "%s still offline; next try in %g s" % (", ".join(offline), self.cfg["retry_seconds"]))
+            self.sleep(max(1.0, float(self.cfg["retry_seconds"])))
+
+
 # ---------------------------------------------------------------- command line
 
 def load_config(root: str, path: str = "") -> dict:
     cfg = dict(DEFAULTS)
+    cfg["runners"] = []
     p = path or os.path.join(root, ".delivery", "config.json")
     try:
         with open(p, encoding="utf-8") as f:
@@ -439,6 +588,8 @@ def load_config(root: str, path: str = "") -> dict:
         section = data.get("runner_plan") if isinstance(data, dict) else None
         if isinstance(section, dict):
             cfg.update({k: v for k, v in section.items() if k in DEFAULTS})
+        runners = data.get("runners") if isinstance(data, dict) else None
+        cfg["runners"] = [r for r in runners if isinstance(r, dict) and r.get("name")] if isinstance(runners, list) else []
     except (OSError, ValueError):
         pass
     return cfg
@@ -460,11 +611,25 @@ def build_parser():
     r.add_argument("--affinity", help="comma-separated CPU numbers")
     r.add_argument("--priority", choices=("low", "below-normal", "normal"))
     r.add_argument("command", nargs=argparse.REMAINDER, help="-- <command> [args...]")
+    g = sub.add_parser("runners", help="D6a: report offline CI runners, then repair, re-check and re-run every retry_seconds")
+    g.add_argument("--root", default=".")
+    g.add_argument("--config", default="")
+    g.add_argument("--repo")
+    g.add_argument("--retry-seconds", type=float)
+    g.add_argument("--once", action="store_true", help="one repair round, then exit 5 if still offline")
     return ap
 
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
+    if args.action == "runners":
+        root = os.path.abspath(args.root)
+        cfg = load_config(root, args.config)
+        if args.repo:
+            cfg["repo"] = args.repo
+        if args.retry_seconds is not None:
+            cfg["retry_seconds"] = args.retry_seconds
+        return RunnerGuard(root, cfg, ledger=Ledger(root)).ensure(once=args.once)
     cmd = list(args.command)
     if cmd and cmd[0] == "--":
         cmd = cmd[1:]

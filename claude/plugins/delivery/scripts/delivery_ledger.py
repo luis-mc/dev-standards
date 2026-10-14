@@ -288,7 +288,8 @@ def record(root, op: str, **kw) -> bool:
     """Best effort: apply a named write; never raises, returns whether it wrote.
 
     ops: train_state(train|pr|branch, state, **fields), cargo(train|branch, task, **fields),
-         ci(train|pr|branch, sha, state), runners(rows), event(kind, ref, by).
+         ci(train|pr|branch, sha, state), runners(rows), event(kind, ref, by),
+         job(fields) and runner(fields): upsert one `jobs[]` row by id / one `runners[]` row by name.
     """
     try:
         if root is None or not Path(root).is_dir():
@@ -298,6 +299,15 @@ def record(root, op: str, **kw) -> bool:
             by = kw.get("by", "script")
             if op == "event":
                 add_event(led, kw.get("kind", "event"), kw.get("ref", ""), by)
+                return
+            if op in ("job", "runner"):
+                key, rows = ("id", led.setdefault("jobs", [])) if op == "job" else ("name", led.setdefault("runners", []))
+                fields = dict(kw.get("fields") or {})
+                row = next((r for r in rows if r.get(key) == fields.get(key)), None)
+                if row is None:
+                    row = {}
+                    rows.append(row)
+                row.update(fields)
                 return
             if op == "runners":
                 led["runners"] = list(kw.get("rows", []))
