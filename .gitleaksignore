@@ -24,3 +24,6 @@ c11c82c19c798cde397c31bbac44a9283aca3a8e:tools/test_artifact_prune.py:project-na
 43e4d7296f45c12e18c0f2f8f3c0b0deb2dbdc24:tools/test_delivery_ci.py:project-named-secret:1599
 43e4d7296f45c12e18c0f2f8f3c0b0deb2dbdc24:tools/test_delivery_ci.py:project-named-secret:1607
 76eccd9599ab75c4a2e3ed367ec840703e5c4750:claude/plugins/artifacts/scripts/render_artifacts.py:project-named-secret:1484
+# DS72 test_doctor.py: a test variable named plugin_key (renamed in fd62734), not a secret.
+f2b683e3acc216cdc03c9cb5c4825c703e91da18:claude/plugins/delivery/tests/test_doctor.py:project-named-secret:23
+f2b683e3acc216cdc03c9cb5c4825c703e91da18:claude/plugins/delivery/tests/test_doctor.py:project-named-secret:26

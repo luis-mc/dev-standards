@@ -90,12 +90,20 @@ def load_config(root) -> dict:
         return {}
 
 
+_TZ_WARNED: set = set()
+
+
 def owner_tz(root=None, cfg: dict | None = None):
     name = (cfg if cfg is not None else (load_config(root) if root else {})).get("tz") or DEFAULT_TZ
     try:
         from zoneinfo import ZoneInfo
         return ZoneInfo(name)
-    except Exception:  # noqa: BLE001 - no tzdata: UTC is the honest fallback
+    except Exception as exc:  # noqa: BLE001 - no tzdata: the ledger must still work, but never silently
+        if name not in _TZ_WARNED:
+            _TZ_WARNED.add(name)
+            print("luismc-delivery: time zone %r cannot be loaded (%s: %s); using UTC. Install tzdata "
+                  "(pip install tzdata) or fix `tz`; delivery_doctor.py reports this as a failure."
+                  % (name, type(exc).__name__, exc), file=sys.stderr)
         return timezone.utc
 
 

@@ -288,6 +288,21 @@ def config_file_and_options():
     assert rp.main(["run", "--label", "x", "--train-branch-regex", "(", "--", "true"]) == rp.EXIT_USAGE
 
 
+@scenario
+def heavy_jobs_yield_false_does_not_wait_for_ci():
+    root = new_root()
+    plan, spy, clock, _ = make_plan(root, runs=run_obj(), config=cfg(poll_seconds=20, heavy_jobs_yield=False))
+    code, err = run_logged(plan)
+    assert code == 0 and "waiting for CI" not in err and clock.now == 0, (code, err, clock.now)
+    Path(root, ".delivery").mkdir(exist_ok=True)
+    for key in ("heavy_jobs_yield", "heavy_local_jobs_yield"):
+        Path(root, ".delivery", "config.json").write_text(json.dumps({"runner_plan": {key: False}}))
+        assert rp.load_config(root)["heavy_jobs_yield"] is False, key
+    Path(root, ".delivery", "config.json").write_text(json.dumps({"train_branch_re": "^(release|claude)/"}))
+    c = rp.load_config(root)
+    assert c["heavy_jobs_yield"] is True and c["train_branch_regex"] == "^(release|claude)/", c
+
+
 def real_run(root, extra_args, cmd, env_extra=None, wait=True):
     env = dict(os.environ)
     env.update(env_extra or {})

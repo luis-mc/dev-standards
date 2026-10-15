@@ -71,7 +71,7 @@ class MergeTests(unittest.TestCase):
         sh = FakeShell(routes_for_green())
         watcher(root, sh).run_once()
         merges = [c for c in sh.calls if c[:3] == ["gh", "pr", "merge"]]
-        self.assertEqual(merges, [["gh", "pr", "merge", "10", "--merge"]])
+        self.assertEqual(merges, [["gh", "pr", "merge", "10", "--merge", "--match-head-commit", SHA]])
         self.assertFalse(any("--auto" in c for c in sh.calls))
         t = L.load(root)["trains"][0]
         self.assertEqual(t["state"], "merged")
@@ -128,7 +128,7 @@ class MergeTests(unittest.TestCase):
         L.update(root, fn)
         sh2 = FakeShell(routes_for_green())
         watcher(root, sh2).run_once()
-        self.assertEqual([c for c in sh2.writes() if c[:3] == ["gh", "pr", "merge"]], [["gh", "pr", "merge", "10", "--merge"]])
+        self.assertEqual([c for c in sh2.writes() if c[:3] == ["gh", "pr", "merge"]], [["gh", "pr", "merge", "10", "--merge", "--match-head-commit", SHA]])
 
     def test_failed_merge_is_recorded_and_state_stays_green(self):
         root = make_root()
@@ -153,7 +153,7 @@ class MergeTests(unittest.TestCase):
         w = W.Watcher(root, sh=sh, dry_run=True, now=lambda: NOW, out=lines.append)
         w.run_once()
         self.assertEqual(sh.writes(), [])
-        self.assertTrue(any(l == "dry-run: gh pr merge 10 --merge" for l in lines))
+        self.assertTrue(any(l == "dry-run: gh pr merge 10 --merge --match-head-commit " + SHA for l in lines))
         self.assertEqual(L.load(root)["trains"][0]["state"], "ci")  # nothing written
 
 

@@ -386,8 +386,12 @@ def main():
         elif tool == 'AskUserQuestion':
             check_question(cfg, ledger, data, at)
     except Deny as d:
-        print(json.dumps({'hookSpecificOutput': {'hookEventName': 'PreToolUse', 'permissionDecision': 'deny',
-                                                 'permissionDecisionReason': str(d)}}))
+        if H.C.enforcement(cfg)['mode'] == 'warn':      # enforcement.mode warn: say it, let the call through
+            print(json.dumps({'systemMessage': 'luismc-delivery (warn mode, call allowed): ' + str(d)}))
+        else:
+            H.log_block(root, cfg, 'pre-tool', str(d))
+            print(json.dumps({'hookSpecificOutput': {'hookEventName': 'PreToolUse', 'permissionDecision': 'deny',
+                                                     'permissionDecisionReason': str(d)}}))
     return 0
 
 

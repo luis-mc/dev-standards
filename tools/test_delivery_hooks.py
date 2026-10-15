@@ -350,6 +350,65 @@ def ceiling_three_blocks_then_release_and_new_fingerprint_restarts():
     p.close()
 
 
+# --- enforcement config (0.2.0) -------------------------------------------------------------------
+
+def read_log(p):
+    path = os.path.join(p.dir, '.delivery', 'blocks.log')
+    return open(path, encoding='utf-8').read().splitlines() if os.path.exists(path) else []
+
+
+@test
+def block_ceiling_comes_from_config():
+    p = Project(ledger(trains=[train(state='green', green_at=iso(30))]), config={'enforcement': {'block_ceiling': 1}})
+    assert blocked(p.stop(''))
+    r = p.stop('')
+    assert r[1] and 'decision' not in r[1] and 'after 1 blocks' in r[1]['systemMessage'], r
+    q = Project(ledger(trains=[train(state='green', green_at=iso(30))]), config={'enforcement': {'block_ceiling': 5}})
+    for _ in range(5):
+        assert blocked(q.stop(''))
+    assert not blocked(q.stop(''))
+    p.close()
+    q.close()
+
+
+@test
+def warn_mode_never_blocks_and_logs_nothing():
+    cfg = {'enforcement': {'mode': 'warn', 'log_every_block': True}}
+    p = Project(ledger(trains=[train(state='green', green_at=iso(30))]), config=cfg)
+    r = p.stop('')
+    assert r[1] and 'decision' not in r[1] and 'warn mode' in r[1]['systemMessage'] and 'DL-03' in r[1]['systemMessage'], r
+    r = p.pre('Bash', {'command': 'gh pr merge 5 --auto'})
+    assert r[1] and 'hookSpecificOutput' not in r[1] and 'DL-05' in r[1]['systemMessage'], r
+    assert read_log(p) == []
+    p.close()
+
+
+@test
+def log_every_block_appends_time_hook_rule_message():
+    p = Project(ledger(trains=[train(state='green', green_at=iso(30))]), config={'enforcement': {'log_every_block': True}})
+    assert blocked(p.stop(''))
+    assert blocked(p.stop(''))
+    p.pre('Bash', {'command': 'gh pr merge 5 --auto'})
+    lines = read_log(p)
+    assert len(lines) == 3, lines
+    t, hook, rule, msg = lines[0].split('\t')
+    assert t == '2026-10-14T20:00:00Z' and hook == 'stop' and rule == 'DL-03' and 'is green and not merged' in msg, lines
+    assert lines[2].split('\t')[1:3] == ['pre-tool', 'DL-05'], lines
+    p.close()
+
+
+@test
+def no_blocks_log_by_default_or_when_nothing_blocks():
+    p = Project(ledger(trains=[train(state='green', green_at=iso(30))]))
+    assert blocked(p.stop(''))
+    assert read_log(p) == []
+    q = Project(ledger(), config={'enforcement': {'log_every_block': True}})
+    expect_pass(q.stop(''))
+    assert read_log(q) == []
+    p.close()
+    q.close()
+
+
 # --- PreToolUse: Bash ---------------------------------------------------------------------------
 
 def bash(p, cmd, env=None):

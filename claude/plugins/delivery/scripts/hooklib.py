@@ -6,6 +6,10 @@ helpers, command tokenising and the per-session block state (block once per fing
 3-block ceiling, the pattern of the artifacts plugin R8.4). A project without a
 .delivery/ folder is not opted in: every hook returns without output.
 
+Enforcement (config `enforcement`, see delivery_config.py): `mode` block|warn, `block_ceiling` (how often the
+same findings block a session, default 3) and `log_every_block` (every block is appended to
+.delivery/blocks.log: time, hook, rule id, message).
+
 Seams for tests: DELIVERY_NOW (ISO time), DELIVERY_GH (gh replacement), DELIVERY_FREE_GB.
 Disable: CLAUDE_DELIVERY_HOOKS=off. Standard library only.
 """
@@ -19,8 +23,12 @@ import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 
+import delivery_config as C   # noqa: E402  (same folder; the hook scripts put it on sys.path)
+
 DISABLE_VALUES = {'off', '0', 'false', 'no'}
-BLOCK_LIMIT = 3
+BLOCK_LIMIT = 3               # default of enforcement.block_ceiling
+BLOCK_LOG_REL = os.path.join('.delivery', 'blocks.log')
+RULE_ID_RE = re.compile(r'^(DL-\d+|Q-\d+|D\d+[a-z]?)\b')
 STATE_REL = os.path.join('.delivery', 'hook-state.json')
 MAX_SESSIONS = 40
 
@@ -270,9 +278,30 @@ def write_state(root, state):
         warn('state not written (%s)' % exc)
 
 
-def block_decision(root, sid, keys):
-    """('block'|'release'|'clear', blocks_so_far). Same fingerprint blocks up to BLOCK_LIMIT times, then lets the
-    turn end; a changed fingerprint starts again."""
+def rule_id(message):
+    """The DL/Q/D id a finding or denial starts with ('DL-31 the reply ...'); 'other' when it has none."""
+    m = RULE_ID_RE.match((message or '').strip())
+    return m.group(1) if m else 'other'
+
+
+def log_block(root, cfg, hook, message):
+    """enforcement.log_every_block: append `time<TAB>hook<TAB>rule<TAB>message` to .delivery/blocks.log (for the
+    owner's review). Never raises."""
+    if not C.enforcement(cfg)['log_every_block']:
+        return
+    line = '\t'.join([now().strftime('%Y-%m-%dT%H:%M:%SZ'), hook, rule_id(message),
+                      ' '.join(str(message).split())])
+    try:
+        with open(os.path.join(root, BLOCK_LOG_REL), 'a', encoding='utf-8') as f:
+            f.write(line + '\n')
+    except OSError as exc:
+        warn('blocks.log not written (%s)' % exc)
+
+
+def block_decision(root, sid, keys, ceiling=None):
+    """('block'|'release'|'clear', blocks_so_far). Same fingerprint blocks up to `ceiling` (enforcement.block_ceiling,
+    default BLOCK_LIMIT) times, then lets the turn end; a changed fingerprint starts again."""
+    ceiling = BLOCK_LIMIT if ceiling is None else ceiling
     state = read_state(root)
     if not keys:
         if sid in state:
@@ -284,7 +313,7 @@ def block_decision(root, sid, keys):
     blocks = entry.get('blocks', 0) if entry.get('last') == digest else 0
     if not isinstance(blocks, int):
         blocks = 0
-    if blocks >= BLOCK_LIMIT:
+    if blocks >= ceiling:
         return 'release', blocks
     state.pop(sid, None)
     state[sid] = {'blocks': blocks + 1, 'last': digest}
