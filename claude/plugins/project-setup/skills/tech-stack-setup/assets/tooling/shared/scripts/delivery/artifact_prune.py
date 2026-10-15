@@ -203,8 +203,9 @@ def main(argv: list[str] | None = None) -> int:
         print("artifact_prune: --keep must be at least 1 (keeping 0 would delete every "
               "artifact)", file=sys.stderr)
         return 2
-    if shutil.which("gh") is None:
-        print("artifact_prune: the GitHub CLI (gh) is not installed or not on PATH",
+    if shutil.which("gh") is None and not (os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")):
+        print("artifact_prune: the GitHub CLI (gh) is not installed or not on PATH, and neither "
+              "GH_TOKEN nor GITHUB_TOKEN is set (the REST fallback needs one of them)",
               file=sys.stderr)
         return 2
     try:
