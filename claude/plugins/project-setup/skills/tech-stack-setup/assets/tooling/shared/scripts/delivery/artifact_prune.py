@@ -35,6 +35,8 @@ import os
 import re
 import shutil
 import subprocess
+import urllib.request
+import urllib.error
 from datetime import datetime, timezone
 
 REPO_RE = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
@@ -52,9 +54,38 @@ class GhResult:
         self.stderr = stderr
 
 
+def rest_call(args: list[str], timeout: int) -> GhResult:
+    """The `gh` calls this script makes, over the REST API with GH_TOKEN, for a runner without gh:
+    `api [--paginate] PATH` (pages printed one JSON document each, as gh does) and
+    `api --method DELETE PATH`. Anything else (repo view) is not supported: pass --repo."""
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if not token or not args or args[0] != "api":
+        return GhResult(1, "", "gh is not on PATH and the REST fallback needs GH_TOKEN and an api call")
+    method = "DELETE" if "DELETE" in args else "GET"
+    url = "https://api.github.com/" + args[-1]
+    out: list[str] = []
+    while url:
+        req = urllib.request.Request(url, method=method, headers={
+            "Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "artifact-prune"})
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                out.append(resp.read().decode("utf-8"))
+                link = resp.headers.get("Link") or ""
+        except urllib.error.HTTPError as exc:
+            return GhResult(1, "", f"HTTP {exc.code} {exc.reason}")
+        except (OSError, ValueError) as exc:
+            return GhResult(1, "", f"could not call the GitHub API: {exc}")
+        nxt = re.search(r'<([^>]+)>;\s*rel="next"', link)
+        url = nxt.group(1) if nxt and "--paginate" in args else ""
+    return GhResult(0, chr(10).join(out), "")
+
+
 def run_gh(args: list[str], timeout: int = 300) -> GhResult:
     """Run `gh` with an argument list (never a shell string)."""
     # The resolved path, so Windows finds gh whatever its extension.
+    if shutil.which("gh") is None:
+        return rest_call(args, timeout)
     gh = shutil.which("gh") or "gh"
     try:
         proc = subprocess.run(
