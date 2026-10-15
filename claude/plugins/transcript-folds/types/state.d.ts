@@ -1,6 +1,6 @@
 // The state luismc-transcript-folds keeps for the session ($.state), declared
-// as a contract. The two switches are also written to $.store so they survive
-// a restart.
+// as a contract. The two switches start folded in every session; a toggle
+// lasts for that session only.
 
 export type TranscriptFoldsTally = {
   /** Paths touched this session, each once. */

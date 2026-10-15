@@ -78,8 +78,8 @@ going further.
 | `marker` | string | `»` | Starts every folded diff line; empty for none. |
 | `compactCounts` | boolean | `false` | Compact mode: the counts go on the tool call's own row and the line under it is dropped. |
 
-**State** (`$.state` atoms declared in `types/state.d.ts`; the two switches are
-also written to `$.store` so they survive restarts): diffs folded (default
+**State** (`$.state` atoms declared in `types/state.d.ts`; the two switches start
+folded in every session; a toggle lasts for that session only): diffs folded (default
 `true`), commands folded (default `true`), the session tally (files touched,
 lines added, lines removed), the project root at session start (paths are
 shown relative to it), the counts of each finished call by `tool_use_id`, and
