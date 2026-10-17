@@ -1,0 +1,38 @@
+{
+  "//": [
+    "The runner plan's map (scripts/delivery/area_select.py; ci.yml job `plan`). Edit it for this repository.",
+    "jobs: every job the plan can switch. always_jobs: run whatever changed (the static gates).",
+    "run_everything: a change under these runs every job. docs: a change under these runs no test.",
+    "areas: a changed path under `paths` runs the `jobs` of that area; `tests` are the area's test globs for tools that want them.",
+    "A path in none of the four lists runs everything (the safe default). A plain path also matches everything under it."
+  ],
+  "jobs": ["verify", "integration", "e2e"],
+  "always_jobs": ["verify"],
+  "run_everything": [
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "tsconfig.json",
+    "turbo.jsonc",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    ".nvmrc",
+    ".github",
+    "scripts/delivery",
+    "packages/contract",
+    "packages/db"
+  ],
+  "docs": ["docs", "**/*.md", ".claude", ".vscode", ".editorconfig"],
+  "areas": {
+    "api": {
+      "paths": ["apps/api"],
+      "jobs": ["integration"],
+      "tests": ["apps/api/**/*.test.ts"]
+    },
+    "web": {
+      "paths": ["apps/web"],
+      "jobs": ["integration", "e2e"],
+      "tests": ["apps/web/**/*.test.ts"]
+    }
+  }
+}

@@ -53,6 +53,7 @@ for path, want in [
     ("tools/test_delivery_gate.py", {"delivery"}),
     ("tools/test_artifact_prune.py", {"delivery"}),
     ("tools/test_delivery_runner.py", {"delivery"}),
+    ("tools/test_ci_speedups.py", {"delivery"}),
     ("claude/plugins/delivery/scripts/delivery_ledger.py", {"delivery"}),
     ("tools/test_delivery_hooks.py", {"delivery"}),
     ("tools/test_change_notes.py", {"delivery"}),
