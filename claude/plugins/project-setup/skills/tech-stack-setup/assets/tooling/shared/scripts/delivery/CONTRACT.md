@@ -24,6 +24,10 @@ are built against; change it first, then the code.
 | `scripts/delivery/reach_check.py` | same | ci |
 | `scripts/delivery/cleanup.py` | same | cleanup |
 | `scripts/delivery/artifact_prune.py` | same | ci |
+| `scripts/delivery/shard_balance.py` | same (balanced test shards from a timings file; `update` refreshes it from a runner's JSON report; DS9) | ci |
+| `scripts/delivery/area_select.py` | same (changed paths + the project's area map -> the jobs and test areas a change needs; DS9) | ci |
+| `scripts/delivery/ci-areas.json`, `scripts/delivery/ci-timings.json` | `tooling/ts/scripts/delivery/` (the area map and the shard timings; the project edits them) | ci |
+| `.github/workflows/nightly-full.yml` (ts only) | `tooling/ts/.github/workflows/nightly-full.yml` | ci |
 | `scripts/delivery/delivery_log.py` | same | cleanup |
 | `scripts/delivery/smoke_packaged.py` | same | ci |
 | `scripts/delivery/run_suite.py` | same (declared suites, named cases, per-machine times in `.delivery/suite-times.json`; STACKSPEC 13.8) | gate |
@@ -504,6 +508,33 @@ then runs `gate.json`'s `setup` commands. Idempotent.
   `python3 scripts/delivery/cleanup.py --remote-only --pr ${{ github.event.pull_request.number }}`
   with `GH_TOKEN: ${{ github.token }}`.
 
+### DS9 — generic CI speed-ups (`shard_balance.py`, `area_select.py`, `nightly-full.yml`)
+
+- `shard_balance.py --shard K/N [--timings FILE] [--glob PATTERN]... [--files-from FILE|-] [FILE...] [--join SEP]`
+  prints the test files of shard K, longest first onto the lightest shard, sorted, deterministic. The
+  timings file (default `scripts/delivery/ci-timings.json`, `{"seconds": {"path": s}}` or a flat map)
+  is committed; a file without a figure gets the median of the measured files in the list (the whole
+  file's median, then 1 s), a missing file weighs every file the same. `shard_balance.py update --report
+  FILE... [--timings FILE] [--format auto|vitest|playwright] [--root DIR] [--prune-missing]` folds a
+  vitest/jest or Playwright JSON report in (a file in several reports is averaged, an unmeasured file keeps
+  its figure). Exit 0, 2 usage or unreadable file, 3 nothing to split.
+- `area_select.py [--map FILE] [--base REF | --changed-file FILE|- | PATH...] [--all] [--github-output] [--json]`
+  reads the changed paths and the committed map (default `scripts/delivery/ci-areas.json`: `jobs`,
+  `always_jobs`, `run_everything`, `docs`, `areas` -> `paths`, `jobs`, `tests`). Per path: `run_everything`
+  -> mode `all`; `docs` -> nothing; an area's `paths` -> that area; no match -> `all` (an unknown path is never
+  skipped). No path at all is `all`; only documentation is `none`; `--all` forces `all`. Output `mode`,
+  `areas`, `tests`, `<job>=true|false`, `reason`; `--github-output` appends them to `$GITHUB_OUTPUT`. Exit 0, 2.
+- ts `ci.yml`: a `plan` job (`runner plan: which jobs this change needs`) runs `area_select.py --base <PR base>`
+  on pull requests and `--all` otherwise. `integration` and `e2e-shard` add `needs.plan.outputs.<job> != 'false'`
+  to the decide-aware condition (so a failed or empty plan runs them); the `e2e` summary accepts a planned skip
+  and still fails when a shard that ran failed. `verify` is never planned away. The e2e shards run the files
+  `shard_balance.py` assigns (fallback: Playwright's `--shard`).
+- ts `nightly-full.yml`: `schedule` + `workflow_dispatch`; runners from `NIGHTLY_RUNS_ON`, else `CI_RUNS_ON`,
+  else `ubuntu-latest`; job `changed` (default branch only) compares the default branch head with the
+  `head_sha` of the last successful run of this workflow and outputs `run=false` when equal; the integration
+  and browser jobs (every file, every spec) need `run == 'true'` and test the compared commit. go, rust and
+  dotnet get none: their `ci.yml` has no area selection to catch up on.
+
 ## Tests (in `tools/` of this repository)
 
 - `tools/test_delivery_gate.py` — branch_gate, gate_verify, fast_guards, join (quick check,
@@ -528,6 +559,12 @@ then runs `gate.json`'s `setup` commands. Idempotent.
 - `tools/test_artifact_prune.py` — artifact_prune.py with a stub `gh` serving
   artifact pages: grouping, ties, expired, `--keep`, `--dry-run`, a failed
   deletion, pagination, and the structure of `artifact-prune.yml`.
+
+- `tools/test_ci_speedups.py` — shard_balance.py (greedy split, median for unknown files, glob and
+  stdin input, `update` from vitest and Playwright reports), area_select.py (areas, shared, unknown,
+  docs-only, `--base` on a throwaway git repository, `$GITHUB_OUTPUT`), the starter files, the structure
+  of `nightly-full.yml` and its compare step run with bash against a stub `gh`; scripts with one rule
+  broken must each fail a scenario.
 
 Each test proves its check can fail, like `tools/test_spec_check.py`.
 

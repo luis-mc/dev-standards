@@ -71,6 +71,50 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
   # ---------------------------------------------------------------------------
+  # Runner plan (§13.1 SHOULD): which of the expensive jobs this change needs.
+  # scripts/delivery/area_select.py reads the changed paths and the project's
+  # committed map (scripts/delivery/ci-areas.json). A path in no area, a shared
+  # path (the lockfile, root configuration, this workflow) and every push to
+  # main run everything; a documentation-only change runs none. `verify` (lint,
+  # types, boundaries, secret scan) always runs.
+  #
+  # A job the plan leaves out is SKIPPED, which GitHub reports as passing, and
+  # is never counted as a failure: the job conditions below skip only on an
+  # explicit 'false', so an empty output (a missing map, a failed step) runs the
+  # job. The map's other half is the nightly-full workflow, which runs the
+  # whole suite once a night when the default branch moved.
+  # ---------------------------------------------------------------------------
+  plan:
+    name: 'runner plan: which jobs this change needs'
+    needs: decide
+    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    permissions:
+      contents: read
+    outputs:
+      integration: ${{ steps.areas.outputs.integration }}
+      e2e: ${{ steps.areas.outputs.e2e }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The base commit must be present to diff against it.
+          fetch-depth: 0
+
+      - name: Select the jobs from the changed paths
+        id: areas
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "$EVENT" = pull_request ]; then
+            python3 scripts/delivery/area_select.py --base "$BASE_SHA" --github-output \
+              || echo "::warning::runner plan failed; every job runs"
+          else
+            python3 scripts/delivery/area_select.py --all --github-output \
+              || echo "::warning::runner plan failed; every job runs"
+          fi
+
+  # ---------------------------------------------------------------------------
   # Static gates: everything that needs no database.
   # ---------------------------------------------------------------------------
   verify:
@@ -206,8 +250,8 @@ jobs:
   # ---------------------------------------------------------------------------
   integration:
     name: integration tests (ephemeral Postgres)
-    needs: decide
-    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    needs: [decide, plan]
+    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && needs.plan.outputs.integration != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     services:
       postgres:
@@ -292,8 +336,8 @@ jobs:
   # every shard did.
   e2e-shard:
     name: web E2E shard ${{ matrix.shard }}
-    needs: decide
-    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    needs: [decide, plan]
+    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && needs.plan.outputs.e2e != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     strategy:
       fail-fast: false
@@ -330,11 +374,26 @@ jobs:
         if: steps.probe.outputs.present == 'true'
         run: pnpm exec playwright install --with-deps chromium
 
+      # Shards balanced by measured seconds (scripts/delivery/shard_balance.py,
+      # the committed scripts/delivery/ci-timings.json). Without a timings file,
+      # or when the spec glob finds nothing, Playwright's own --shard runs.
+      # Refresh the file with `shard_balance.py update` (see its header).
+      - name: Balance the shards
+        id: balance
+        if: steps.probe.outputs.present == 'true'
+        run: |
+          files=$(python3 scripts/delivery/shard_balance.py --glob 'tests/**/*.spec.ts' --join ' ' --shard ${{ matrix.shard }}/${{ strategy.job-total }}) || files=""
+          if [ -f scripts/delivery/ci-timings.json ] && [ -n "$files" ]; then
+            echo "args=$files" >> "$GITHUB_OUTPUT"
+          else
+            echo "args=--shard=${{ matrix.shard }}/${{ strategy.job-total }}" >> "$GITHUB_OUTPUT"
+          fi
+
       # Every spec not listed in e2e/quarantine.json. A failure here fails the
       # job; finding no spec at all fails too (§11.3).
       - name: E2E (gating specs)
         if: steps.probe.outputs.present == 'true'
-        run: pnpm exec playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+        run: pnpm exec playwright test ${{ steps.balance.outputs.args }}
 
       # Quarantined specs only. They run and report, and cannot fail the build.
       # `--pass-with-no-tests` because an empty quarantine list is the normal
@@ -344,19 +403,26 @@ jobs:
         continue-on-error: true
         env:
           E2E_QUARANTINE: only
-        run: pnpm exec playwright test --pass-with-no-tests --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+        run: pnpm exec playwright test --pass-with-no-tests ${{ steps.balance.outputs.args }}
 
   # The required check. Its name stays 'web E2E (§11.2)' whatever the shard
   # count, so branch protection never needs editing when shards are added.
   e2e:
     name: web E2E (§11.2)
-    needs: [decide, e2e-shard]
+    needs: [decide, plan, e2e-shard]
     if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     steps:
       - name: Every shard passed
         env:
           SHARDS: ${{ needs.e2e-shard.result }}
+          PLANNED: ${{ needs.plan.outputs.e2e }}
         run: |
-          echo "E2E shards: $SHARDS"
+          echo "E2E shards: $SHARDS (planned: ${PLANNED:-yes})"
+          # A planned skip (the runner plan found no change the browser suite
+          # covers) is not a failure; a skipped shard otherwise is.
+          if [ "$PLANNED" = "false" ]; then
+            echo "Skipped by the runner plan."
+            exit 0
+          fi
           [ "$SHARDS" = "success" ]

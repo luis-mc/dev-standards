@@ -164,6 +164,18 @@ Copied to `scripts/delivery/` (see `shared/scripts/delivery/CONTRACT.md`):
 - `reach_check.py URL...`: GETs each URL from where it runs and prints status or
   error. Run it in an agent sandbox before relying on a registry, API or preview
   host being reachable.
+- `shard_balance.py --shard K/N`: prints the test files of one shard, balanced by the seconds in the
+  committed `scripts/delivery/ci-timings.json` (greedy, longest first; a file without a figure gets
+  the median). `shard_balance.py update --report FILE...` refreshes that file from a vitest/jest or
+  Playwright JSON report; run it now and then and commit the result. The ts `ci.yml` runs its
+  Playwright shards through it.
+- `area_select.py`: from the changed paths and the project's committed `scripts/delivery/ci-areas.json`
+  (areas, their paths, jobs and test globs; a `run_everything` list; a `docs` list) prints which jobs a
+  change needs. An unknown or shared path runs everything; documentation only runs none. The ts
+  `ci.yml` `plan` job uses it; a job the plan leaves out is a planned skip, never a failure. Edit the
+  starter map for the repository. `ts/.github/workflows/nightly-full.yml` is the other half: it runs
+  the whole integration and browser suites once a night, and only when the default branch moved since the
+  last successful run (runners from the `NIGHTLY_RUNS_ON` / `CI_RUNS_ON` variables).
 - `artifact_prune.py`: keeps only the newest build artifact of each name and
   deletes the rest (`§13.1`). `shared/.github/workflows/artifact-prune.yml` runs
   it after every `CI` run and daily; add any other workflow that uploads an

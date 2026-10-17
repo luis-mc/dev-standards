@@ -1,0 +1,144 @@
+name: Nightly full
+
+# The pull-request runner plan (ci.yml `plan`, scripts/delivery/area_select.py)
+# runs only the integration and browser jobs a change reaches. This is the safety
+# net: once a night the whole suite runs on the default branch, and only when the
+# default branch moved since the last SUCCESSFUL run of this workflow. An unchanged
+# head runs nothing. `verify` (lint, types, boundaries, secret scan) is never
+# area-selected, so it is not repeated here.
+#
+# Runners come from repository variables, not from this file: NIGHTLY_RUNS_ON, else
+# CI_RUNS_ON, else ubuntu-latest. Each is a JSON runner value, e.g. a self-hosted
+# label list: ["self-hosted","Linux","X64","my-label"].
+on:
+  schedule:
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: nightly-full
+  cancel-in-progress: false
+
+jobs:
+  changed:
+    name: 'default branch moved?'
+    # A scheduled run uses the default branch; a manual run from another branch
+    # does nothing, so a nightly result always describes the default branch.
+    if: ${{ github.ref_name == github.event.repository.default_branch }}
+    runs-on: ${{ fromJSON(vars.NIGHTLY_RUNS_ON || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.compare.outputs.run }}
+      sha: ${{ steps.compare.outputs.sha }}
+    steps:
+      - name: Compare the default branch with the last successful run
+        id: compare
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          head=$(gh api "repos/$REPO/commits/$BRANCH" --jq .sha)
+          last=$(gh api "repos/$REPO/actions/workflows/nightly-full.yml/runs?status=success&per_page=1" --jq '.workflow_runs[0].head_sha // ""')
+          echo "sha=$head" >> "$GITHUB_OUTPUT"
+          if [ "$head" = "$last" ]; then
+            echo "$BRANCH unchanged since $last: nothing to run"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "$BRANCH at $head; last successful run: ${last:-none}"
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  integration:
+    name: integration tests, every file (ephemeral Postgres)
+    needs: changed
+    if: ${{ needs.changed.outputs.run == 'true' }}
+    runs-on: ${{ fromJSON(vars.NIGHTLY_RUNS_ON || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    timeout-minutes: 60
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      # Throwaway service-container credentials, as in ci.yml.
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.changed.outputs.sha }}
+
+      - run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Migrate (seed through the migration chain)
+        run: pnpm turbo migrate
+
+      - name: Integration tests
+        run: pnpm vitest run --project integration
+
+      - name: Route authorization coverage
+        run: pnpm vitest run --project authz
+
+  e2e:
+    name: web E2E, every spec
+    needs: changed
+    if: ${{ needs.changed.outputs.run == 'true' }}
+    runs-on: ${{ fromJSON(vars.NIGHTLY_RUNS_ON || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.changed.outputs.sha }}
+
+      # A repository with no web app has no playwright.config.ts: nothing to run.
+      - name: Is there an E2E suite?
+        id: probe
+        run: |
+          if [ -f playwright.config.ts ]; then
+            echo 'present=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'present=false' >> "$GITHUB_OUTPUT"
+            echo "No playwright.config.ts: no web app to test."
+          fi
+
+      - if: steps.probe.outputs.present == 'true'
+        run: corepack enable
+
+      - if: steps.probe.outputs.present == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install (frozen lockfile)
+        if: steps.probe.outputs.present == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        if: steps.probe.outputs.present == 'true'
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: E2E (gating specs)
+        if: steps.probe.outputs.present == 'true'
+        run: pnpm exec playwright test

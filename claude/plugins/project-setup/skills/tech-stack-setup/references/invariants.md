@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 8.2.0
+**Version:** 8.3.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -23,6 +23,10 @@ recorded in the product's Stack Profile (§18). This document does not name
 vendors and does not rank them.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+
+**8.3.0 — 2026-10-17.**
+
+- STACKSPEC §13.1 gains two SHOULDs, planned job selection by a committed area map (a planned skip is never a failure; the full suite still runs on the default branch each night it moved) and test shards balanced by measured seconds; the ts template ships them as `area_select.py`, `shard_balance.py` (with a timings refresh from a runner's JSON report), a `plan` job in `ci.yml` and a `nightly-full.yml`.
 
 **8.2.0 — 2026-10-11.**
 
@@ -1321,6 +1325,19 @@ per job, rounded up to a whole unit of time:
   parallel shards. Small steps stay together, because every job repeats setup.
   A project finds the dominant job from the slowest-job summary `ci_watch`
   prints when its runs complete (§13.6).
+- A pull request SHOULD run only the expensive jobs (integration, browser) its
+  change reaches. The project commits a map of areas to paths and jobs; a change
+  under a shared path (the lockfile, root configuration, the CI itself), under a
+  path in no area, or on the default branch runs everything, and a
+  documentation-only change runs none. A job the map leaves out is a planned skip
+  and MUST NOT count as a failure; a job that cannot read the plan runs. Because
+  a skipped area is only skipped, the full suite SHOULD still run on the default
+  branch on a schedule, and only when the default branch moved since the last
+  successful scheduled run.
+- Test shards SHOULD be balanced by measured seconds from a committed timings
+  file, longest file first, rather than by file count; a file with no measurement
+  weighs the median. The ts template ships this (`shard_balance.py`,
+  `area_select.py`, a `plan` job, `nightly-full.yml`).
 
 Which runners a workflow uses is a repository setting, not a value written into
 each workflow, so a product can move between hosted and self-hosted runners

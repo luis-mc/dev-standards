@@ -322,6 +322,9 @@ jobs:
       - name: Prove the CI scripts and workflow templates still hold
         run: python3 tools/test_delivery_ci.py
 
+      - name: Prove the shard balancer, area select and nightly template
+        run: python3 tools/test_ci_speedups.py
+
   # STACKSPEC 7.0.0 section 13.6: once a train merges, cleanup.py removes its
   # branches, gate-result refs and worktrees. A cleanup that deletes a
   # branch with an open pull request, unmerged work, or a worktree holding
