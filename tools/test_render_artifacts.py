@@ -2475,6 +2475,55 @@ def timeline_is_never_scaled_up(fx):
     assert fx.check(out, 'full-progress', registry=registry) == []
 
 
+def no_release_task(tid, item, expected, status='Running', basis='', started=None):
+    row = task(tid, 'project', status, item, expected, '2026-10-10T12:00+01:00', 'luismc-artifacts')
+    row['no_release'] = 'catalogue check'
+    if basis:
+        row['expected_basis'] = basis
+    if started:
+        row['started'] = started
+    return row
+
+
+@test
+@with_fixture
+def other_work_strip_renders_beside_the_release_rows(fx):
+    """R5.42b: one release and two no-release tasks draw both strips; Built or Live no-release tasks are left out."""
+    registry = with_releases(fx, release('DS51', 'DL12 release', '10 Oct ~18:00',
+                                         [phase('agents', '17:30', '18:00')]),
+                             no_release_task('DS60', 'Catalogue check', '10 Oct ~16:00', basis='scan 40 min', started='2026-10-10T14:00+01:00'),
+                             no_release_task('DS61', 'Study of covers', '11 Oct', status='To do'),
+                             no_release_task('DS62', 'Old publish', '09 Oct', status='Live'),
+                             no_release_task('DS63', 'Done check', '10 Oct ~15:00', status='Built'))
+    out = fx.render('full-progress', registry=registry)
+    fig = timeline_of(out)
+    assert fig is not None
+    assert R.text_of(R.find(fig, 'text', 'rt-strip-title')) == 'Other work (no release)'
+    names = [R.text_of(n, skip=lambda x: x.tag == 'title') for n in R.find_all(fig, 'text', 'rt-name')]
+    assert names == ['RELEASE-1 · DL12 release', 'DS60 · Catalogue check', 'DS61 · Study of covers'], names
+    bars = R.find_all(fig, 'rect', 'rt-other')
+    assert len(bars) == 1 and 'status-running' in bars[0].attrs['class'], bars
+    assert 'scan 40 min' in R.text_of(R.find(fig, 'text', 'rt-other-label'))
+    assert 'DS62' not in str(fig.attrs) and 'Old publish' not in out.split('Other work')[1].split('</figure>')[0]
+    assert 'Done check' not in out.split('Other work')[1].split('</figure>')[0]
+    assert fx.check(out, 'full-progress', registry=registry) == []
+
+
+@test
+@with_fixture
+def other_work_strip_alone_and_overdue(fx):
+    """R5.42b: with no open release the strip still draws; a task past its Expected is outlined as overdue."""
+    registry = copy.deepcopy(fx.registry)
+    registry['tasks'].append(no_release_task('DS60', 'Late check', '10 Oct ~11:00', status='Waiting'))
+    out = fx.render('full-progress', registry=registry)
+    fig = timeline_of(out)
+    assert fig is not None and 'overdue' in R.find(fig, 'rect', 'rt-other').attrs['class']
+    assert fx.check(out, 'full-progress', registry=registry) == []
+    plain = copy.deepcopy(fx.registry)
+    plain['tasks'].append(no_release_task('DS60', 'Live check', '10 Oct ~11:00', status='Live'))
+    assert timeline_of(fx.render('full-progress', registry=plain)) is None
+
+
 @test
 @with_fixture
 def tiles_say_tasks(fx):

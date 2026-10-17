@@ -258,7 +258,8 @@ def _rec_ci_watch(led, argv, exit_code, now):
         return
     t = next((x for x in led["trains"] if (x.get("ci") or {}).get("head_sha", "") and
               x["ci"]["head_sha"].startswith(sha[:7])), None)
-    if t is None:
+    if t is None:                       # another repository's sha, or a head no train has: record nothing but the event
+        L.add_event(led, "ci_watch.no_train", sha[:7], "hook_post_tool", now)
         return
     if exit_code == 0:
         L.add_event(led, "ci_watch.passed", t["id"], "hook_post_tool", now)

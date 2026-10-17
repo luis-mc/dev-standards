@@ -1209,6 +1209,34 @@ def _release_row(task: dict, ref: datetime, tasks: list):
             'worst': worst, 'riders': riders}
 
 
+OTHER_STATUSES = ('Running', 'Waiting', 'Needs you', 'To do')
+OTHER_TITLE = 'Other work (no release)'
+
+
+def _other_row(task: dict, ref: datetime):
+    """R5.42b: the facts of one open no-release task for the second strip, or None when it does not belong
+    (not open, a release, no `no_release`, or an Expected that is not today or tomorrow)."""
+    if (not isinstance(task, dict) or task.get('status') not in OTHER_STATUSES or is_release(task)
+            or not no_release_reason(task)):
+        return None
+    exp_dt = _expected_datetime(str(task.get('expected', '')), ref)
+    if exp_dt is None or exp_dt.date() > ref.date() + timedelta(days=1):
+        return None
+    midnight = datetime.combine(ref.date(), datetime.min.time())
+    now_min = (ref.replace(tzinfo=None) - midnight).total_seconds() / 60
+    exp_min = (exp_dt - midnight).total_seconds() / 60
+    match = EXPECTED_RE.match(str(task.get('expected', '')))
+    timed = bool(match and match.group(3))
+    start = _parse_iso(task.get('started'))
+    start_min = now_min
+    if start is not None:
+        start_min = (start.astimezone(ref.tzinfo).replace(tzinfo=None) - midnight).total_seconds() / 60
+    start_min = max(0, min(start_min, exp_min))
+    return {'task': task, 'exp_dt': exp_dt, 'exp_min': exp_min, 'start_min': start_min, 'timed': timed,
+            'today': timed and abs(exp_dt - ref.replace(tzinfo=None)) <= timedelta(hours=24),
+            'overdue': exp_dt < ref.replace(tzinfo=None), 'phases': [], 'worst': None, 'risk': None}
+
+
 def _cut(text: str, limit: int) -> str:
     return text if len(text) <= limit else text[:limit - 1].rstrip() + '…'
 
@@ -1217,14 +1245,17 @@ def release_timeline(tasks: list, ref: datetime, label: str) -> str:
     """R5.42, R5.43: the release timeline figure of section 0, '' when no release is open. Deterministic:
     `ref` (the render stamp) is "now", never the wall clock."""
     rows = [r for r in (_release_row(t, ref, tasks) for t in open_releases(tasks)) if r is not None]
-    if not rows:
+    others = [r for r in (_other_row(t, ref) for t in tasks) if r is not None]
+    if not rows and not others:
         return ''
     rows.sort(key=lambda r: (r['exp_dt'], r['task']['id']))
-    today = [r for r in rows if r['today']]
-    days = sorted({r['exp_dt'].date() for r in rows if not r['today']})
+    others.sort(key=lambda r: (r['exp_dt'], r['task']['id']))
+    every = rows + others
+    today = [r for r in every if r['today']]
+    days = sorted({r['exp_dt'].date() for r in every if not r['today']})
     now_min = ref.hour * 60 + ref.minute
     if today:
-        starts = [a for r in today for _, a, _ in r['phases']]
+        starts = [a for r in today for _, a, _ in r['phases']] + [r['start_min'] for r in others if r['today']]
         lo = min(starts) if starts else min([now_min] + [r['exp_min'] for r in today])
         hi = max(r['worst'] or r['exp_min'] for r in today)
         t0 = int(lo // 30 * 30)
@@ -1238,7 +1269,7 @@ def release_timeline(tasks: list, ref: datetime, label: str) -> str:
     width = max(slot0 + TL_SLOT_STEP * (max(len(days), 1) - 1) + 80, TL_WIDTH)     # R5.43: never drawn smaller than the design width
     x = lambda m: TL_X0 + (m - t0) * (TL_X1 - TL_X0) / (t1 - t0)
     slot = lambda day: slot0 + TL_SLOT_STEP * days.index(day)
-    out, aria, y = [], [], TL_TOP
+    out, aria, aria_other, y = [], [], [], TL_TOP
     for r in rows:
         t = r['task']
         name = '%s · %s' % (release_name(t) if release_number(t) is not None else t['id'], t['item'])
@@ -1274,6 +1305,37 @@ def release_timeline(tasks: list, ref: datetime, label: str) -> str:
             said = 'expected %s' % text
         aria.append('%s (%s) %s' % (t['id'], t['item'], said))
         y += TL_ROW
+    if others:                                            # R5.42b: the second strip, same axis
+        out.append('<text class="rt-strip-title" x="0" y="%d">%s</text>' % (y + 8, esc(OTHER_TITLE)))
+        y += 34
+        for r in others:
+            t = r['task']
+            name = '%s · %s' % (t['id'], t['item'])
+            cls = ' overdue' if r['overdue'] else ''
+            out.append('<text class="rt-name" x="0" y="%d"><title>%s</title>%s</text>' % (y + 8, esc(name), esc(_cut(name, 26))))
+            basis = t.get('expected_basis') or ''
+            if r['today']:
+                bx = x(r['start_min'])
+                bw = max(x(r['exp_min']) - bx, 4)
+                out.append('<rect class="rt-other %s%s" x="%s" y="%d" width="%s" height="16"><title>%s</title></rect>'
+                           % (status_class(t['status']), cls, _n(bx), y + 3, _n(bw),
+                              esc('%s %s-%s' % (t['status'], _hhmm(r['start_min']), _hhmm(r['exp_min'])))))
+                label = ('~%s' % _hhmm(r['exp_min'])) + (' · %s' % basis if basis else '')
+                out.append('<text class="rt-other-label" x="%s" y="%d">%s</text>' % (_n(bx), y + 36, esc(_cut(label, 60))))
+                said = '%s, expected about %s' % (t['status'], _hhmm(r['exp_min']))
+            else:
+                day = r['exp_dt'].date()
+                sx = slot(day)
+                text = '%02d %s' % (day.day, MONTHS[day.month - 1])
+                out.append('<polygon class="rt-day%s" points="%d,%d %d,%d %d,%d %d,%d"/><text class="rt-day-label" x="%d" y="%d">%s</text>'
+                           % (cls, sx, y, sx + 8, y + 13, sx, y + 26, sx - 8, y + 13, sx + 16, y + 17, esc(text)))
+                if basis:
+                    out.append('<text class="rt-other-label" x="%d" y="%d">%s</text>' % (sx - 8, y + 40, esc(_cut(basis, 60))))
+                said = '%s, expected %s' % (t['status'], text)
+            if r['overdue']:
+                said += ', overdue'
+            aria_other.append('%s (%s) %s' % (t['id'], t['item'], said))
+            y += TL_ROW
     height = y + 50
     grid = []
     if today:
@@ -1302,10 +1364,13 @@ def release_timeline(tasks: list, ref: datetime, label: str) -> str:
               'The thin grey extension is a named risk from the estimate\'s basis, ending at the outlined worst case. '
               'An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>'
               % tuple(sw(k) for k in RELEASE_PHASES))
+    if others:
+        legend = legend[:-4] + (' Under %s, a bar runs from the start to its Expected, coloured by status; '
+                                'a red outline means it is past its Expected.</p>' % OTHER_TITLE)
     return ('<figure class="release-timeline">\n<figcaption>Next releases (%s)</figcaption>\n'
             '<div class="timeline-scroll"><svg viewBox="0 0 %d %d" role="img" aria-label="%s" style="min-width:%dpx;max-width:%dpx">'
             '<g class="rt-axis">%s</g>\n%s\n%s\n</svg></div>\n%s\n</figure>\n'
-            % (esc(label), width, height, esc('Next releases: ' + '; '.join(aria) + '.'), max(360, round(width * 640 / 900)), width,
+            % (esc(label), width, height, esc(('Next releases: ' + '; '.join(aria) + '.' if aria else '') + ((' ' if aria else '') + OTHER_TITLE + ': ' + '; '.join(aria_other) + '.' if aria_other else '')), max(360, round(width * 640 / 900)), width,
                ''.join(grid), '\n'.join(out), now, legend))
 
 
@@ -1957,7 +2022,8 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         figs = find_all(s0, 'figure', 'release-timeline')
         if len(figs) == 1:
             rows = [r for r in (_release_row(t, ref, all_tasks) for t in open_releases(all_tasks)) if r is not None]
-            want_slots = sum(1 for r in rows if not r['today'])
+            want_slots = sum(1 for r in rows if not r['today']) + sum(
+                1 for r in (_other_row(t, ref) for t in all_tasks) if r is not None and not r['today'])
             if len(find_all(figs[0], 'polygon', 'rt-day')) > want_slots:
                 add('R5.42a', 'a release with a time within 24 hours of the stamp must be drawn on the time axis, not in a day slot')
 
