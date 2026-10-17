@@ -105,13 +105,16 @@ class BashTests(unittest.TestCase):
         seed(self.root, branch="release/40", state="ci", ci=ci(sha))
         H.handle(bash("python scripts/delivery/ci_watch.py %s" % sha, "ci_watch: 1 ci.yml run(s) succeeded"), self.root)
         t = self.led()["trains"][1]
-        self.assertEqual((t["state"], t["ci"]["state"]), ("green", "success"))
+        self.assertEqual((t["state"], t["ci"]["state"]), ("ci", "running"))     # a pass never greens: the watcher does
+        self.assertIn("ci_watch.passed", [e["kind"] for e in self.led()["events"]])
         seed(self.root, branch="release/41", state="ci", ci=ci("1111111"))
         H.handle(bash("python ci_watch.py 1111111", "Exit code 1\nfailed", event="PostToolUseFailure"), self.root)
         self.assertEqual(self.led()["trains"][2]["state"], "red")
         seed(self.root, branch="release/42", state="ci", ci=ci("2222222"))
         H.handle(bash("python ci_watch.py 2222222", "Exit code 4", event="PostToolUseFailure"), self.root)
         self.assertEqual(self.led()["trains"][3]["state"], "ci")
+        H.handle(bash("python ci_watch.py 9999999", "ci_watch: ok"), self.root)    # unknown head: no train is guessed
+        self.assertNotIn("green", [t["state"] for t in self.led()["trains"]])
 
     def test_ci_watch_of_another_sha_or_repo_marks_no_train(self):
         ci = lambda s: {"head_sha": s, "run_ids": [], "state": "running", "started_at": None}  # noqa: E731

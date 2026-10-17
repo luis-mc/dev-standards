@@ -157,6 +157,61 @@ class MergeTests(unittest.TestCase):
         self.assertEqual(L.load(root)["trains"][0]["state"], "ci")  # nothing written
 
 
+class GreenNeedsEveryRequiredWorkflowTests(unittest.TestCase):
+    def run_with(self, cfg, per_workflow, state="ci", green_at=None):
+        root = make_root(cfg)
+        seed(root, [{"branch": "release/41", "pr": 10, "state": state, "green_at": green_at}])
+        routes = routes_for_green()
+
+        def listing(argv):
+            wf = argv[argv.index("--workflow") + 1]
+            return 0, runs(*per_workflow.get(wf, []))
+        routes[("gh", "run", "list", "--commit")] = listing
+        sh = FakeShell(routes)
+        watcher(root, sh).run_once()
+        return root, sh
+
+    def train(self, root):
+        return L.load(root)["trains"][0]
+
+    def test_sibling_workflow_success_does_not_green_while_ci_runs(self):
+        cfg = {"watcher": {"ci_workflows": ["ci.yml", "installer.yml"]}}
+        root, sh = self.run_with(cfg, {"ci.yml": [(1, "in_progress", None, SHA, "release/41")],
+                                       "installer.yml": [(2, "completed", "success", SHA, "release/41")]})
+        t = self.train(root)
+        self.assertNotEqual(t["state"], "green")
+        self.assertIsNone(t["green_at"])
+        self.assertEqual([c for c in sh.calls if c[:3] == ["gh", "pr", "merge"]], [])
+
+    def test_missing_required_workflow_is_not_green(self):
+        cfg = {"watcher": {"ci_workflows": ["ci.yml", "installer.yml"]}}
+        root, _ = self.run_with(cfg, {"ci.yml": [(1, "completed", "success", SHA, "release/41")]})
+        self.assertIsNone(self.train(root)["green_at"])
+
+    def test_all_required_workflows_success_is_green_and_skipped_is_not_success(self):
+        cfg = {"watcher": {"ci_workflows": ["ci.yml", "installer.yml"]}}
+        ok = (1, "completed", "success", SHA, "release/41")
+        root, _ = self.run_with(cfg, {"ci.yml": [ok], "installer.yml": [(2, "completed", "success", SHA, "r")]})
+        self.assertTrue(self.train(root)["green_at"])
+        root, _ = self.run_with(cfg, {"ci.yml": [ok], "installer.yml": [(2, "completed", "skipped", SHA, "r")]})
+        self.assertIsNone(self.train(root)["green_at"])
+
+    def test_failed_required_workflow_is_red(self):
+        root, _ = self.run_with({}, {"ci.yml": [(1, "completed", "failure", SHA, "release/41")]})
+        self.assertEqual(self.train(root)["state"], "red")
+
+    def test_green_is_revoked_when_a_required_run_is_running_again(self):
+        root, sh = self.run_with({}, {"ci.yml": [(1, "completed", "success", SHA, "r"), (3, "in_progress", None, SHA, "r")]},
+                                 state="green", green_at="2026-10-14T11:00:00Z")
+        t = self.train(root)
+        self.assertEqual((t["state"], t["green_at"]), ("ci", None))
+        self.assertEqual([c for c in sh.calls if c[:3] == ["gh", "pr", "merge"]], [])
+
+    def test_latest_run_of_a_workflow_counts(self):
+        root, _ = self.run_with({}, {"ci.yml": [(1, "completed", "failure", SHA, "r"), (2, "completed", "success", SHA, "r")]})
+        self.assertTrue(self.train(root)["green_at"])
+
+
 class NextTrainTests(unittest.TestCase):
     def test_merge_then_push_next_joined_train_and_open_ready_pr(self):
         root = make_root()

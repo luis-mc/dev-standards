@@ -269,6 +269,14 @@
           "type": "boolean",
           "default": true,
           "description": "Launch `runner_plan.py runners` on the loop (D6a)."
+        },
+        "ci_workflows": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Workflow files that must all complete with success on the PR head before a train is green (default [\"ci.yml\"]). A completed sibling workflow never counts for another."
         }
       }
     },
@@ -394,6 +402,13 @@
           "description": "Path of runner_plan.py for the watcher (default scripts/delivery/runner_plan.py under the repository root)."
         }
       }
+    },
+    "pr_proven_jobs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "DL-76: job names the release PR proves; none may run on the default branch after the release merges (default [], check off)."
     }
   }
 }

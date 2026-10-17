@@ -50,6 +50,7 @@ DEFAULTS = {
     'check_min': 30,                          # DL-32
     'watcher_min': 20,                        # DL-33
     'install_stale_min': 90,                  # DL-55 an install older than this no longer blocks
+    'pr_proven_jobs': [],                     # DL-76 job names (globs ok) that must not re-run on the default branch
     'checks_off': [],                         # ids switched off, e.g. ["DL-64"]
 }
 TERMINAL_TRAIN = ('cleaned', 'abandoned')

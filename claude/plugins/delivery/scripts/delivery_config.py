@@ -57,6 +57,20 @@ def watcher_flags(cfg) -> dict:
     return {k: _flag(w, (k,), d) for k, d in WATCHER_DEFAULTS.items()}
 
 
+def ci_workflows(cfg) -> list:
+    """watcher.ci_workflows: the workflow files that must all succeed on the PR head before a train is green."""
+    v = _section(cfg, "watcher").get("ci_workflows")
+    if isinstance(v, list) and v and all(isinstance(x, str) and x.strip() for x in v):
+        return [x.strip() for x in v]
+    return ["ci.yml"]
+
+
+def pr_proven_jobs(cfg) -> list:
+    """pr_proven_jobs: job names a release PR proves, which must not re-run on the default branch after the merge."""
+    v = cfg.get("pr_proven_jobs") if isinstance(cfg, dict) else None
+    return [x.strip() for x in v if isinstance(x, str) and x.strip()] if isinstance(v, list) else []
+
+
 def runner_plan_flags(cfg) -> dict:
     r = _section(cfg, "runner_plan")
     return {"cancel_replaced_runs": _flag(r, ("cancel_replaced_runs",), True),

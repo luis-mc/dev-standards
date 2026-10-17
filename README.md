@@ -307,7 +307,9 @@ gh sign-in, time zone, hooks, ledger). From 0.2.0 the watcher obeys the config
 (`watcher.push_trains|open_prs|merge_on_green`, `runner_plan.cancel_replaced_runs|
 hold_dependabot_during_train|heavy_jobs_yield`) and starts the runner guard
 itself, and `enforcement` sets the mode (`block`/`warn`), the block ceiling and an
-optional `.delivery/blocks.log`. See `claude/plugins/delivery/README.md` and
+optional `.delivery/blocks.log`. From 0.3.0 a train is green only when every
+`watcher.ci_workflows` run succeeded on the PR head, DL-31 skips measured
+durations, and DL-76 (`pr_proven_jobs`) enforces one CI per release. See `claude/plugins/delivery/README.md` and
 DELIVERYSPEC section 6.
 
 ## `luismc-transcript-folds` — keep long diffs and commands from flooding the transcript
