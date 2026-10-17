@@ -1103,6 +1103,17 @@ def reach_rejects_non_http_urls():
 IF_COND = ("${{ !cancelled() && needs.decide.outputs.skip != 'true' && "
            "(github.event_name != 'pull_request' || !github.event.pull_request.draft) }}")
 
+# The ts runner plan (DS9) adds one clause to the jobs it can skip: a planned skip is an explicit 'false'.
+PLAN_CLAUSE = re.compile(r" && needs\.plan\.outputs\.(integration|e2e) != 'false'")
+
+
+def if_cond_ok(block: str) -> bool:
+    for m in re.finditer(r"^    if: (.*)$", block, re.M):
+        if m.group(1) == IF_COND or PLAN_CLAUSE.sub("", m.group(1)) == IF_COND:
+            return True
+    return False
+
+
 REQUIRED_NAMES = {
     "ts": ["lint, types, boundaries, unit + contract tests",
            "integration tests (ephemeral Postgres)", "web E2E (§11.2)"],
@@ -1185,9 +1196,9 @@ def check_workflow(track: str, text: str) -> list[str]:
     for name, block in jobs.items():
         if name == "decide":
             continue
-        if not re.search(r"^    needs: (decide|\[decide, [\w-]+\])\s*$", block, re.M):
+        if not re.search(r"^    needs: (decide|\[decide(, [\w-]+)+\])\s*$", block, re.M):
             problems.append(f"job {name}: missing 'needs: decide'")
-        if f"\n    if: {IF_COND}\n" not in block:
+        if not if_cond_ok(block):
             problems.append(f"job {name}: missing the exact decide-aware 'if:' condition")
     for name, block in jobs.items():
         if re.search(r"^    continue-on-error:", block, re.M):
@@ -1242,6 +1253,10 @@ def runs_on_problems(text: str) -> list[str]:
             for ln in lines if ln.strip() != RUNS_ON]
 
 
+def jobs_of(text: str) -> dict[str, str]:
+    return split_jobs(text)
+
+
 def check_ts_e2e(text: str, jobs: dict[str, str]) -> list[str]:
     problems = []
     e = jobs.get("e2e")
@@ -1252,7 +1267,7 @@ def check_ts_e2e(text: str, jobs: dict[str, str]) -> list[str]:
         return ["ts: e2e-shard job missing (the browser suite must run as shards)"]
     if not re.search(r"^    name: web E2E \(§11\.2\)\s*$", e, re.M):
         problems.append("ts: e2e job must be named 'web E2E (§11.2)'")
-    if not re.search(r"^    needs: \[decide, e2e-shard\]\s*$", e, re.M):
+    if not re.search(r"^    needs: \[decide, plan, e2e-shard\]\s*$", e, re.M):
         problems.append("ts: e2e (the required check) must need e2e-shard")
     for name, block in (("e2e", e), ("e2e-shard", sh)):
         if re.search(r"^    continue-on-error:", block, re.M):
@@ -1263,6 +1278,20 @@ def check_ts_e2e(text: str, jobs: dict[str, str]) -> list[str]:
         problems.append("ts: e2e-shard needs fail-fast: false")
     if not re.search(r"^        shard: \[1, 2\]\s*$", sh, re.M):
         problems.append("ts: e2e-shard must set the shard list in one place, default 2 shards")
+    plan = jobs_of(text).get("plan")
+    if plan is None:
+        problems.append("ts: the runner plan job is missing")
+    else:
+        if not re.search(r"^    name: ['\"]?runner plan: ", plan, re.M):
+            problems.append("ts: the plan job must be named 'runner plan: ...'")
+        if "python3 scripts/delivery/area_select.py --base" not in plan:
+            problems.append("ts: the runner plan must run area_select.py")
+    for name, block in (("integration", jobs_of(text).get("integration", "")), ("e2e-shard", sh)):
+        want = "integration" if name == "integration" else "e2e"
+        if f"needs.plan.outputs.{want} != 'false'" not in block:
+            problems.append(f"ts: {name} must skip only on an explicit 'false' from the runner plan")
+    if 'if [ "$PLANNED" = "false" ]' not in e:
+        problems.append("ts: the e2e summary must accept a planned skip")
     steps = split_steps(sh)
     quarantine = [s for s in steps if "E2E_QUARANTINE: only" in s]
     gating = [s for s in steps if "playwright test" in s and "E2E_QUARANTINE" not in s]
@@ -1274,8 +1303,13 @@ def check_ts_e2e(text: str, jobs: dict[str, str]) -> list[str]:
         problems.append("ts: e2e needs exactly one gating playwright step")
     elif "continue-on-error" in gating[0]:
         problems.append("ts: the gating E2E step must not be continue-on-error")
+    balance = [s for s in steps if "id: balance" in s]
+    if len(balance) != 1 or "shard_balance.py" not in balance[0]:
+        problems.append("ts: e2e-shard needs one balance step running shard_balance.py")
+    elif 'echo "args=--shard=${{ matrix.shard }}/${{ strategy.job-total }}" >> "$GITHUB_OUTPUT"' not in balance[0]:
+        problems.append("ts: the balance step does not fall back to --shard")
     for s in gating + quarantine:
-        if "--shard=${{ matrix.shard }}/${{ strategy.job-total }}" not in s:
+        if "${{ steps.balance.outputs.args }}" not in s:
             problems.append("ts: a playwright step does not pass --shard")
     if '[ "$SHARDS" = "success" ]' not in e:
         problems.append("ts: the e2e summary must fail unless every shard succeeded")
@@ -1375,17 +1409,27 @@ def workflow_checker_detects_each_defect():
          lambda t: mutate(t, "        continue-on-error: true\n        env:\n          E2E_QUARANTINE",
                           "        env:\n          E2E_QUARANTINE")),
         ("ts", ts, "gating E2E step must not be continue-on-error",
-         lambda t: mutate(t, "        run: pnpm exec playwright test --shard",
-                          "        continue-on-error: true\n        run: pnpm exec playwright test --shard")),
+         lambda t: mutate(t, "        run: pnpm exec playwright test ${{ steps.balance.outputs.args }}",
+                          "        continue-on-error: true\n        run: pnpm exec playwright test ${{ steps.balance.outputs.args }}")),
         ("ts", ts, "e2e-shard needs fail-fast: false",
          lambda t: mutate(t, "fail-fast: false", "fail-fast: true")),
         ("ts", ts, "does not pass --shard",
-         lambda t: mutate(t, "playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}",
-                          "playwright test")),
+         lambda t: mutate(t, "playwright test ${{ steps.balance.outputs.args }}", "playwright test")),
+        ("ts", ts, "balance step does not fall back to --shard",
+         lambda t: mutate(t, 'echo "args=--shard=${{ matrix.shard }}/${{ strategy.job-total }}"', 'echo "args="')),
+        ("ts", ts, "needs one balance step",
+         lambda t: mutate(t, "shard_balance.py --glob", "shard_balance_x.py --glob")),
         ("ts", ts, "must fail unless every shard succeeded",
          lambda t: mutate(t, '[ "$SHARDS" = "success" ]', "true")),
+        ("ts", ts, "runner plan job is missing", lambda t: mutate(t, "  plan:\n", "  planx:\n")),
+        ("ts", ts, "must run area_select.py", lambda t: mutate(t, "python3 scripts/delivery/area_select.py --base", "echo --base")),
+        ("ts", ts, "integration must skip only on an explicit",
+         lambda t: mutate(t, "needs.plan.outputs.integration != 'false'", "needs.plan.outputs.integration == 'true'")),
+        ("ts", ts, "e2e-shard must skip only on an explicit",
+         lambda t: mutate(t, "needs.plan.outputs.e2e != 'false'", "needs.plan.outputs.e2e == 'true'")),
+        ("ts", ts, "must accept a planned skip", lambda t: mutate(t, 'if [ "$PLANNED" = "false" ]', 'if false')),
         ("ts", ts, "must need e2e-shard",
-         lambda t: mutate(t, "needs: [decide, e2e-shard]", "needs: decide")),
+         lambda t: mutate(t, "needs: [decide, plan, e2e-shard]", "needs: decide")),
         ("ts", ts, "exactly one step running with E2E_QUARANTINE",
          lambda t: mutate(t, "E2E_QUARANTINE: only", "E2E_QUARANTINE: no")),
     ]
