@@ -1,6 +1,6 @@
 # CO220 report: luismc-delivery checks
 
-Branch `claude/CO220-delivery-checks`. Plugin version: **0.3.0** (was 0.2.0).
+Branch `claude/CO220-delivery-checks`. Plugin version: **0.3.0 after the fold** (this branch keeps 0.2.0 and carries the minor change note `docs/specs/changes/CO220-delivery-checks.md`; the repo CI forbids a version or CHANGELOG edit on a feature branch).
 
 ## 1. DL-31 false positives (done)
 `hook_stop.py`: an ETA sentence is skipped when it reports a measured duration, saving or cost (took, saves, costs, each, per, was...) or lists two or more durations; a clock time or dependency anywhere in the same bullet covers its sentences. Real ETAs ("ready in about 5 minutes", "takes about 1 hour") still flag. Tests in `tests/test_stop.py`: the three examples from the owner (no flag), real ETAs (flag), clock time in the same bullet.
