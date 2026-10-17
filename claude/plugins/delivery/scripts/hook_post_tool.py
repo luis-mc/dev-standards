@@ -8,7 +8,7 @@ repository without a .delivery/ folder. Standard library only.
 
 Recorded:
   Bash   git push of a train branch (pushed), gh pr create / ready (pr, ci), gh pr merge
-         (merged), msiexec / schtasks UpdateNow (installs), ci_watch.py (ci, green/red)
+         (merged), msiexec / schtasks UpdateNow (installs), ci_watch.py (red on failure; green is set only by the watcher)
   Agent, RemoteTrigger create|run   an agents[] row; a fenced ```delivery block in the prompt
          gives task, branch, owns and the eta breakdown (setup, work, checks)
   Artifact publish   publishes[]
@@ -250,26 +250,24 @@ def _rec_install(led, argv, command, exit_code, now):
 
 
 def _rec_ci_watch(led, argv, exit_code, now):
+    """ci_watch.py result. A pass never turns a train green here: ci_watch.py can pass on one workflow while another
+    required one still runs (RELEASE-41), so only delivery_watch.py, which reads every required workflow of the
+    head commit, sets green. A failure is safe to record at once. The train is found by head SHA only."""
     sha = next((a for a in argv[2:] if re.fullmatch(r"[0-9a-fA-F]{7,40}", a)), None)
     if not sha:
         return
     t = next((x for x in led["trains"] if (x.get("ci") or {}).get("head_sha", "") and
               x["ci"]["head_sha"].startswith(sha[:7])), None)
     if t is None:
-        t = next((x for x in led["trains"] if x.get("state") in ("pushed", "ci")), None)
-    if t is None:
         return
-    t["ci"]["head_sha"] = sha
     if exit_code == 0:
-        t["ci"]["state"] = "success"
-        L.set_train_state(t, "green", now)
+        L.add_event(led, "ci_watch.passed", t["id"], "hook_post_tool", now)
     elif exit_code == 1:
         t["ci"]["state"] = "failure"
         L.set_train_state(t, "red", now)
+        L.add_event(led, "ci.failure", t["id"], "hook_post_tool", now)
     else:
         L.add_event(led, "ci_watch.exit%d" % exit_code, t["id"], "hook_post_tool", now)
-        return
-    L.add_event(led, "ci.%s" % t["ci"]["state"], t["id"], "hook_post_tool", now)
 
 
 def rec_agent(led, data, cfg, now, where="local") -> None:

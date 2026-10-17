@@ -71,14 +71,24 @@ class Shell:
             return None
 
 
-def ci_state_from_runs(runs: list[dict]) -> str:
-    """queued (none yet), running, success or failure for the runs of one commit."""
-    if not runs:
-        return "queued"
-    if any(r.get("status") != "completed" for r in runs):
+def ci_state_from_runs(runs: list[dict], required: list[str] | None = None) -> str:
+    """queued (a required workflow has no run yet), running, success or failure for the runs of one commit.
+    Success needs every required workflow's latest run completed with conclusion success (DL-03); a sibling
+    workflow that finished first never counts for another. Runs carry `_workflow` (the file asked for)."""
+    required = required or [WORKFLOW]
+    latest: dict[str, dict] = {}
+    for r in runs or []:
+        key = r.get("_workflow") or r.get("workflowName") or WORKFLOW
+        if key not in latest or (r.get("databaseId") or 0) >= (latest[key].get("databaseId") or 0):
+            latest[key] = r
+    mine = [latest[w] for w in required if w in latest]
+    if any(r.get("status") != "completed" for r in mine):
         return "running"
-    ok = all(r.get("conclusion") in ("success", "skipped") for r in runs)
-    return "success" if ok else "failure"
+    if any(r.get("conclusion") != "success" for r in mine):
+        return "failure"
+    if len(mine) < len(required):
+        return "queued" if not mine else "running"
+    return "success"
 
 
 class Watcher:
@@ -197,11 +207,16 @@ class Watcher:
         return data.get("headRefOid"), data.get("state")
 
     def runs_for_commit(self, sha: str):
-        data = self.gh_json(["run", "list", "--commit", sha, "--workflow", WORKFLOW, "--limit", "100",
-                             "--json", RUN_FIELDS, *self.repo_args])
-        if not isinstance(data, list):
-            return None
-        return [r for r in data if isinstance(r, dict) and str(r.get("headSha", sha)).startswith(sha[:7])]
+        """The runs of every required workflow (watcher.ci_workflows) for one commit; None when gh failed."""
+        out = []
+        for wf in C.ci_workflows(self.cfg):
+            data = self.gh_json(["run", "list", "--commit", sha, "--workflow", wf, "--limit", "100",
+                                 "--json", RUN_FIELDS, *self.repo_args])
+            if not isinstance(data, list):
+                return None
+            out += [dict(r, _workflow=wf) for r in data
+                    if isinstance(r, dict) and str(r.get("headSha", sha)).startswith(sha[:7])]
+        return out
 
     def cancel_superseded(self, train: dict, head: str) -> list[int]:
         data = self.gh_json(["run", "list", "--branch", train["branch"], "--workflow", WORKFLOW, "--limit", "50",
@@ -232,16 +247,29 @@ class Watcher:
             runs = self.runs_for_commit(head)
             if runs is None:
                 continue
-            state = ci_state_from_runs(runs)
+            state = ci_state_from_runs(runs, C.ci_workflows(self.cfg))
             ci = {"head_sha": head, "run_ids": [r["databaseId"] for r in runs], "state": state}
             if state == "success" and train.get("state") != "green":
                 self._set_train(train, "green", ci=ci)
             elif state == "failure" and train.get("state") != "red":
                 self._set_train(train, "red", ci=ci)
+            elif state in ("running", "queued") and train.get("state") == "green":
+                self._revoke_green(train, ci)     # a required run is not done: not green (DL-03)
             else:
                 self._set_train(train, None, ci=ci)
             if state == "success" and self.flags["merge_on_green"]:
                 self.maybe_merge(train, head)
+
+    def _revoke_green(self, train: dict, ci: dict) -> None:
+        def fn(led):
+            t = L.find_train(led, train["id"])
+            if t is None or t.get("merged_at"):
+                return
+            t["ci"].update(ci)
+            t["state"], t["green_at"] = "ci", None
+            L.add_event(led, "train.green_revoked", t["id"], "delivery_watch")
+        self.mut(fn)
+        train["state"] = "ci"
 
     def _set_train(self, train: dict, state, ci=None) -> None:
         def fn(led):

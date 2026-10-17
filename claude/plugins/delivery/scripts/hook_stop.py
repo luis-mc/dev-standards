@@ -9,12 +9,14 @@ enforcement.mode "warn" nothing blocks: the findings are shown as a systemMessag
 .delivery/blocks.log when enforcement.log_every_block is true. Reads the
 ledger read-only; never writes it. A project without .delivery/ is untouched.
 
-Checks: DL-02 DL-03 DL-14 DL-18 DL-30 DL-31 DL-32 DL-33 DL-63 DL-64 and Q-2.
+Checks: DL-02 DL-03 DL-14 DL-18 DL-30 DL-31 DL-32 DL-33 DL-63 DL-64 DL-76 and Q-2.
 Disable one in .delivery/config.json "checks_off", all with CLAUDE_DELIVERY_HOOKS=off.
 """
+import fnmatch
 import json
 import os
 import re
+import subprocess
 import sys
 from datetime import datetime, timedelta
 
@@ -29,6 +31,10 @@ DEPENDENCY_RE = re.compile(r'\b(?:after|once|when|since|from|depends?|dependent|
                            r'starts? at|started|waiting (?:for|on)|ci|build|run|merge|deploy|install|train)\b', re.I)
 ETA_RE = re.compile(r'\bETAs?\b|\b(?:in|within|about|around|~)\s*~?\s*\d+(?:[.,]\d+)?\s*'
                     r'(?:-\s*\d+\s*)?(?:min(?:ute)?s?|h(?:ours?|rs?)?)\b|\bexpected (?:at|by|in)\b', re.I)
+DURATION_RE = re.compile(r'\d+(?:[.,]\d+)?\s*(?:-\s*\d+\s*)?(?:min(?:ute)?s?|h(?:ours?|rs?)?)\b', re.I)
+# a sentence that reports a measured duration, a saving or a cost is not an estimate (DL-31)
+MEASURED_RE = re.compile(r'\b(?:took|taken|spent|saved?|saves|saving|savings|costs?|costing|cost|measured|lasted|elapsed|'
+                         r'ran for|each|per|average|so far|already|was|were|had)\b', re.I)
 TOMORROW_RE = re.compile(r"\btomorrow\b|\bnext round\b|\bin the morning\b|\bnext day\b|\bnext morning\b", re.I)
 PAST_MIDNIGHT_RE = re.compile(r'\b(?:past|after) midnight\b|\b0[0-5][:h][0-5]\d\b', re.I)
 FENCE_RE = re.compile(r'```.*?```', re.S)
@@ -80,6 +86,12 @@ def sentences(text):
     return [s for s in re.split(r'(?<=[.!?])\s+|\n+', text) if s.strip()]
 
 
+def is_measured(sentence):
+    """True for a sentence that states past or typical durations, not a forecast: a past/saving/cost verb, or a
+    list of two or more durations (\"UI coding takes about 1 h, a full check 35-50 min, and CI about 20 min\")."""
+    return bool(MEASURED_RE.search(sentence)) or len(DURATION_RE.findall(sentence)) >= 2
+
+
 def check_eta_text(text):
     """DL-31 / D9. Findings (key, message) for the reply text."""
     out = []
@@ -89,18 +101,21 @@ def check_eta_text(text):
         out.append(('DL-31:tomorrow', 'DL-31 the reply defers with "%s". Give a computed clock time (past midnight if it '
                     'is) from the real start plus the typical duration, naming the dependency; no "tomorrow", '
                     '"next round" or "in the morning".' % m.group(0)))
-    for s in sentences(body):
-        if not ETA_RE.search(s):
-            continue
-        missing = []
-        if not CLOCK_RE.search(s):
-            missing.append('a clock time')
-        if not DEPENDENCY_RE.search(s):
-            missing.append('the dependency it counts from')
-        if missing:
-            out.append(('DL-31:eta:' + s.strip()[:60], 'DL-31 an ETA lacks %s: "%s". Rewrite it as a clock time '
-                        '(real start + typical duration, in the owner\'s zone) and name what it depends on, e.g. '
-                        '"ready 16:40, 25 min after the CI run started 16:15".' % (' and '.join(missing), s.strip()[:120])))
+    for line in body.splitlines():
+        # a clock time or a dependency anywhere in the same bullet or line covers all its sentences
+        line_clock, line_dep = bool(CLOCK_RE.search(line)), bool(DEPENDENCY_RE.search(line))
+        for s in sentences(line):
+            if not ETA_RE.search(s) or is_measured(s):
+                continue
+            missing = []
+            if not (CLOCK_RE.search(s) or line_clock):
+                missing.append('a clock time')
+            if not (DEPENDENCY_RE.search(s) or line_dep):
+                missing.append('the dependency it counts from')
+            if missing:
+                out.append(('DL-31:eta:' + s.strip()[:60], 'DL-31 an ETA lacks %s: "%s". Rewrite it as a clock time '
+                            '(real start + typical duration, in the owner\'s zone) and name what it depends on, e.g. '
+                            '"ready 16:40, 25 min after the CI run started 16:15".' % (' and '.join(missing), s.strip()[:120])))
     return out
 
 
@@ -201,6 +216,55 @@ def check_agents(ledger, cfg, at):
     return out
 
 
+# --- DL-76: one CI per release -----------------------------------------------------------------
+
+def gh_json(argv, root):
+    """`gh` JSON output, None on any failure (the check then stays silent)."""
+    try:
+        p = subprocess.run(['gh'] + argv, cwd=root, capture_output=True, text=True, encoding='utf-8',
+                           errors='replace', timeout=25)
+        return json.loads(p.stdout) if p.returncode == 0 else None
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return None
+
+
+def check_one_ci_per_release(root, ledger, cfg, gh=gh_json):
+    """DL-76. From each merged, not yet cleaned train's merge commit, list the default-branch workflow runs and flag
+    every job named in `pr_proven_jobs` that ran there on a tree the release PR already proved. `gh` is the seam."""
+    names = [n.lower() for n in H.C.pr_proven_jobs(cfg)]
+    if not names:
+        return []
+    out = []
+    for t in ledger['trains']:
+        if not t.get('merged_at') or not t.get('pr') or t.get('state') in H.TERMINAL_TRAIN:
+            continue
+        pr = gh(['pr', 'view', str(t['pr']), '--json', 'mergeCommit,baseRefName,headRefOid'], root)
+        merge = ((pr or {}).get('mergeCommit') or {}).get('oid')
+        if not merge or not pr.get('baseRefName'):
+            continue
+        trees = [((gh(['api', 'repos/{owner}/{repo}/git/commits/' + sha, '--jq', '{tree: .tree.sha}'], root) or {})
+                  .get('tree')) for sha in (merge, pr.get('headRefOid') or '')]
+        if not trees[0] or trees[0] != trees[1]:
+            continue        # the base moved: the merge commit is a new tree and may be tested once
+        runs = gh(['run', 'list', '--branch', pr['baseRefName'], '--commit', merge, '--limit', '50',
+                   '--json', 'databaseId,workflowName'], root) or []
+        repeated = []
+        for r in runs:
+            jobs = ((gh(['run', 'view', str(r.get('databaseId')), '--json', 'jobs'], root) or {}).get('jobs')) or []
+            for j in jobs:
+                n = str(j.get('name', ''))
+                if j.get('conclusion') != 'skipped' and any(fnmatch.fnmatchcase(n.lower(), g) for g in names):
+                    repeated.append('%s / %s' % (r.get('workflowName'), n))
+        if repeated:
+            out.append(('DL-76:' + str(t.get('id')), 'DL-76 %s merged and %s re-ran on %s on the same tree the PR proved: '
+                        '%s. A release runs CI once: nothing after the merge re-runs what the release PR proved on the '
+                        'same tree; only publish, deploy and production smoke run on the default branch. Remove those '
+                        'jobs from the default-branch triggers (or gate them with a tree check).'
+                        % (H.release_name(t), 'job' if len(repeated) == 1 else 'jobs', pr['baseRefName'],
+                           ', '.join(sorted(set(repeated))[:6]))))
+    return out
+
+
 def in_flight(ledger):
     items = ['agent %s' % (a.get('task') or a.get('id')) for a in ledger['agents'] if a.get('state') == 'running']
     items += ['%s CI' % H.release_name(t) for t in ledger['trains'] if t.get('state') in ('pushed', 'ci')]
@@ -272,6 +336,7 @@ def findings(root, data, cfg):
     out += check_agents(ledger, cfg, at)
     out += check_watcher(ledger, cfg, at)
     out += check_registry(root, cfg, at)
+    out += check_one_ci_per_release(root, ledger, cfg)
     if text:
         out += check_eta_text(text)
         out += check_label_text(text, cfg, ledger)
