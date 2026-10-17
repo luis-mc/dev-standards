@@ -877,6 +877,13 @@ double-click.
   timeline and a wrong caption (R5.42). Verified by `timeline_rows_axis_and_break`,
   `timeline_axis_is_to_scale_from_the_earliest_phase`, `timeline_is_absent_without_open_releases`,
   `timeline_without_phases_is_a_diamond_at_expected` and `check_finds_a_wrong_timeline`.
+- **R5.42a** — The time axis may cross midnight: a tick at midnight, and the
+  first tick after it, carry the date (`12 Oct 00:00`), and the "now" mark is
+  drawn wherever the stamp falls on the axis. A release expected at `00:05` the
+  next day, drawn at `23:57`, keeps its phase bars and its Expected diamond on
+  the axis; it never falls back to a bare day slot. `check` finds a timed
+  release within 24 hours drawn in a day slot (R5.42a). Verified by
+  `timeline_crosses_midnight` and `check_finds_a_timed_release_in_a_day_slot`.
 - **R5.42b** — The release timeline carries a second strip, **Other work (no
   release)**, below the release rows and in the same figure, so it shares the
   axis, the axis break and the phone-width scroll. It has one row per task that
@@ -893,13 +900,6 @@ double-click.
   `Next releases (<timezone_label>)`. Verified by
   `other_work_strip_renders_beside_the_release_rows` and
   `other_work_strip_alone_and_overdue`.
-- **R5.42a** — The time axis may cross midnight: a tick at midnight, and the
-  first tick after it, carry the date (`12 Oct 00:00`), and the "now" mark is
-  drawn wherever the stamp falls on the axis. A release expected at `00:05` the
-  next day, drawn at `23:57`, keeps its phase bars and its Expected diamond on
-  the axis; it never falls back to a bare day slot. `check` finds a timed
-  release within 24 hours drawn in a day slot (R5.42a). Verified by
-  `timeline_crosses_midnight` and `check_finds_a_timed_release_in_a_day_slot`.
 - **R5.43** — The look of the timeline uses the design tokens only, through
   classes of the structure stylesheet: phases are bars in `--running-mark`
   (agents), `--signal` (join), `--live` (PR CI) and `--ink` (merge and cleanup);
