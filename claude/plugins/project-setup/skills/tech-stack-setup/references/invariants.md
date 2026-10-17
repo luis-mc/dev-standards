@@ -1321,6 +1321,19 @@ per job, rounded up to a whole unit of time:
   parallel shards. Small steps stay together, because every job repeats setup.
   A project finds the dominant job from the slowest-job summary `ci_watch`
   prints when its runs complete (§13.6).
+- A pull request SHOULD run only the expensive jobs (integration, browser) its
+  change reaches. The project commits a map of areas to paths and jobs; a change
+  under a shared path (the lockfile, root configuration, the CI itself), under a
+  path in no area, or on the default branch runs everything, and a
+  documentation-only change runs none. A job the map leaves out is a planned skip
+  and MUST NOT count as a failure; a job that cannot read the plan runs. Because
+  a skipped area is only skipped, the full suite SHOULD still run on the default
+  branch on a schedule, and only when the default branch moved since the last
+  successful scheduled run.
+- Test shards SHOULD be balanced by measured seconds from a committed timings
+  file, longest file first, rather than by file count; a file with no measurement
+  weighs the median. The ts template ships this (`shard_balance.py`,
+  `area_select.py`, a `plan` job, `nightly-full.yml`).
 
 Which runners a workflow uses is a repository setting, not a value written into
 each workflow, so a product can move between hosted and self-hosted runners
