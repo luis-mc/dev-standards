@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.11.0
+**Version:** 1.12.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.12.0 — 2026-10-17.**
+
+- R5.42b: the release timeline gains a second strip, Other work (no release), with one bar per open no-release task due today or tomorrow, on the same axis.
 
 **1.11.0 — 2026-10-14.**
 
@@ -873,6 +877,22 @@ double-click.
   timeline and a wrong caption (R5.42). Verified by `timeline_rows_axis_and_break`,
   `timeline_axis_is_to_scale_from_the_earliest_phase`, `timeline_is_absent_without_open_releases`,
   `timeline_without_phases_is_a_diamond_at_expected` and `check_finds_a_wrong_timeline`.
+- **R5.42b** — The release timeline carries a second strip, **Other work (no
+  release)**, below the release rows and in the same figure, so it shares the
+  axis, the axis break and the phone-width scroll. It has one row per task that
+  is Running, Waiting, Needs you or To do, carries `no_release` (R5.47a) and has
+  an Expected today or tomorrow (an overdue one stays); a Built, Live, Failed or
+  On hold task is not shown. Each row is labelled `<ID> · <item>` (cut like the
+  release rows), and a task due within 24 hours is a bar from its start (the
+  task's optional `started` ISO time, else the stamp) to its Expected, coloured
+  by status with the status key's colours, with the Expected and its
+  `expected_basis` as the label under it; a later or untimed Expected is an
+  outline diamond in its day slot. A row past its Expected is outlined in the
+  failed colour. Rows are ordered by Expected (ties by ID). With no open
+  release the figure still appears when the strip has a row. The caption stays
+  `Next releases (<timezone_label>)`. Verified by
+  `other_work_strip_renders_beside_the_release_rows` and
+  `other_work_strip_alone_and_overdue`.
 - **R5.42a** — The time axis may cross midnight: a tick at midnight, and the
   first tick after it, carry the date (`12 Oct 00:00`), and the "now" mark is
   drawn wherever the stamp falls on the axis. A release expected at `00:05` the
