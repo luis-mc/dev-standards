@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 8.2.0
+**Version:** 8.3.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -23,6 +23,10 @@ recorded in the product's Stack Profile (§18). This document does not name
 vendors and does not rank them.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+
+**8.3.0 — 2026-10-17.**
+
+- STACKSPEC §13.1 gains two SHOULDs, planned job selection by a committed area map (a planned skip is never a failure; the full suite still runs on the default branch each night it moved) and test shards balanced by measured seconds; the ts template ships them as `area_select.py`, `shard_balance.py` (with a timings refresh from a runner's JSON report), a `plan` job in `ci.yml` and a `nightly-full.yml`.
 
 **8.2.0 — 2026-10-11.**
 
