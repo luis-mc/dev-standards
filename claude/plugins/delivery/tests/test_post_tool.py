@@ -116,6 +116,17 @@ class BashTests(unittest.TestCase):
         H.handle(bash("python ci_watch.py 9999999", "ci_watch: ok"), self.root)    # unknown head: no train is guessed
         self.assertNotIn("green", [t["state"] for t in self.led()["trains"]])
 
+    def test_ci_watch_started_in_background_records_nothing(self):
+        sha = "abcdef1234567"
+        seed(self.root, branch="release/47", state="ci", ci={"head_sha": sha, "run_ids": [], "state": "running", "started_at": None})
+        d = bash("python ci_watch.py %s" % sha, "")
+        d["tool_input"]["run_in_background"] = True
+        H.handle(d, self.root)
+        self.assertEqual(self.led()["trains"][-1]["ci"]["state"], "running")
+        self.assertEqual([e for e in self.led()["events"] if e["kind"].startswith("ci_watch")], [])
+        H.handle(bash("python ci_watch.py %s" % sha, ""), self.root)             # foreground but no all-green output
+        self.assertEqual([e for e in self.led()["events"] if e["kind"].startswith("ci_watch")], [])
+
     def test_ci_watch_of_another_sha_or_repo_marks_no_train(self):
         ci = lambda s: {"head_sha": s, "run_ids": [], "state": "running", "started_at": None}  # noqa: E731
         seed(self.root, branch="release/45", state="ci", ci=ci("aaaaaaa1111"))

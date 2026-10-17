@@ -219,7 +219,8 @@ def rec_bash(led, data, cfg, failed: bool, now: str) -> None:
         elif prog in ("msiexec", "msiexec.exe") or (prog.startswith("schtasks") and "UpdateNow" in command):
             _rec_install(led, argv, command, exit_code, now)
         elif any(os.path.basename(a) == "ci_watch.py" for a in argv[:3]):
-            _rec_ci_watch(led, argv, exit_code, now)
+            if not inp.get("run_in_background"):    # a backgrounded start has not finished: nothing to record
+                _rec_ci_watch(led, argv, exit_code, now, text)
 
 
 def _rec_push(led, cfg, argv, cwd, failed, now):
@@ -323,10 +324,12 @@ def _rec_install(led, argv, command, exit_code, now):
     L.add_event(led, "install.%s" % state, product, "hook_post_tool", now)
 
 
-def _rec_ci_watch(led, argv, exit_code, now):
+def _rec_ci_watch(led, argv, exit_code, now, text=""):
     """ci_watch.py result. A pass never turns a train green here: ci_watch.py can pass on one workflow while another
     required one still runs (RELEASE-41), so only delivery_watch.py, which reads every required workflow of the
     head commit, sets green. A failure is safe to record at once. The train is found by head SHA only."""
+    if exit_code == 0 and not re.search(r"\bsucceeded\b", text or ""):   # empty or partial output: it did not finish
+        return
     sha = next((a for a in argv[2:] if re.fullmatch(r"[0-9a-fA-F]{7,40}", a)), None)
     if not sha:
         return

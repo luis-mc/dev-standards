@@ -40,6 +40,7 @@ class Project:
             os.makedirs(os.path.join(self.dir, 'docs', 'artifacts'))
             self.write('docs/artifacts/registry.json', {'tasks': registry})
         self.gh_out = None
+        self.repo = 'luis-mc/here'
 
     def write(self, rel, value):
         with open(os.path.join(self.dir, rel), 'w', encoding='utf-8') as f:
@@ -48,7 +49,8 @@ class Project:
     def stub_gh(self, view=None, merged=None):
         body = ("import sys, json\na = sys.argv[1:]\n"
                 "if a[:2] == ['pr', 'view']:\n    print(json.dumps(%r))\n"
-                "elif a[:2] == ['pr', 'list']:\n    print(json.dumps(%r))\n" % (view or {}, merged or []))
+                "elif a[:2] == ['repo', 'view']:\n    print(json.dumps({'nameWithOwner': %r}))\n"
+                "elif a[:2] == ['pr', 'list']:\n    print(json.dumps(%r))\n" % (view or {}, self.repo, merged or []))
         self.write('gh_stub.py', body)
         return os.path.join(self.dir, 'gh_stub.py')
 
@@ -208,6 +210,37 @@ def dl14_and_dl18_merged_train():
     t.update(cleaned_at=iso(5), smoke={'state': 'ok'})
     p = Project(ledger(trains=[t]))
     expect_pass(p.stop(''))
+    p.close()
+
+
+@test
+def dl14_dl18_hold_suppresses_until_it_lapses():
+    held = {'reason': 'catalogue check', 'by': 'rule', 'until': iso(-40)}
+    t = train(state='merged', green_at=iso(30), merged_at=iso(20), hold=held)
+    p = Project(ledger(trains=[t]))
+    expect_pass(p.stop(''))
+    p.close()
+    t['hold'] = dict(held, until=iso(1))
+    p = Project(ledger(trains=[t]))
+    r = p.stop('')
+    assert 'DL-14' in reason(r) and 'DL-18' in reason(r), r
+    p.close()
+
+
+@test
+def dl06_cross_repo_pr_is_not_judged_by_the_current_repos_pr():
+    p = Project(ledger(trains=[train(pr=426, ci={'head_sha': 'old', 'state': 'running'})]))
+    gh = p.stub_gh(view={'number': 426, 'headRefOid': 'other'})
+    expect_pass(bash(p, 'gh pr merge 426 --repo luis-mc/other --squash', {'DELIVERY_GH': gh}))
+    r = bash(p, 'gh pr merge 426 --squash', {'DELIVERY_GH': gh})
+    assert denied(r) and 'DL-06' in why(r), r
+    p.close()
+    # a train that carries the repo is still gated, against that repo's PR head
+    p = Project(ledger(trains=[train(pr=426, repo='luis-mc/other', ci={'head_sha': 'good', 'state': 'success'})]))
+    gh = p.stub_gh(view={'number': 426, 'headRefOid': 'good'})
+    expect_pass(bash(p, 'gh pr merge 426 --repo luis-mc/other', {'DELIVERY_GH': gh}))
+    gh = p.stub_gh(view={'number': 426, 'headRefOid': 'newer'})
+    assert denied(bash(p, 'gh pr merge 426 --repo luis-mc/other', {'DELIVERY_GH': gh}))
     p.close()
 
 
