@@ -4,6 +4,8 @@
   "suites": [
     {"name": "delivery-gate", "full": "python tools/test_delivery_gate.py", "full_args": ["--no-mutants"], "cases": "python tools/test_delivery_gate.py --no-mutants -k {cases}", "measure": false},
     {"name": "delivery-cleanup", "full": "python tools/test_delivery_cleanup.py", "full_args": ["--no-mutants"], "cases": "python tools/test_delivery_cleanup.py --no-mutants -k {cases}", "measure": false},
+    {"name": "delivery-runner", "full": "python tools/test_delivery_runner.py", "cases": ""},
+    {"name": "delivery-hooks", "full": "python tools/test_delivery_hooks.py", "cases": ""},
     {"name": "delivery-ci", "full": "python tools/test_delivery_ci.py", "cases": "", "measure": false},
     {"name": "project-artifacts", "full": "python tools/test_project_artifacts.py", "cases": "python tools/test_project_artifacts.py {cases}", "measure": false},
     {"name": "project-artifacts-hooks", "full": "python tools/test_project_artifacts_hooks.py", "cases": "", "measure": false},

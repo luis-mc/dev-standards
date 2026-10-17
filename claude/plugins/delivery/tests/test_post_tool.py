@@ -113,6 +113,17 @@ class BashTests(unittest.TestCase):
         H.handle(bash("python ci_watch.py 2222222", "Exit code 4", event="PostToolUseFailure"), self.root)
         self.assertEqual(self.led()["trains"][3]["state"], "ci")
 
+    def test_ci_watch_of_another_sha_or_repo_marks_no_train(self):
+        ci = lambda s: {"head_sha": s, "run_ids": [], "state": "running", "started_at": None}  # noqa: E731
+        seed(self.root, branch="release/45", state="ci", ci=ci("aaaaaaa1111"))
+        H.handle(bash("python ci_watch.py 28cd8a0346bd --repo luis-mc/dev-standards --workflow spec-lint.yml",
+                      "ci_watch: 1 spec-lint.yml run(s) succeeded"), self.root)
+        t = self.led()["trains"][-1]
+        self.assertEqual((t["state"], t["ci"]["state"], t["ci"]["head_sha"]), ("ci", "running", "aaaaaaa1111"))
+        seed(self.root, branch="release/46", state="pushed", ci=ci(""))
+        H.handle(bash("python ci_watch.py 9999999abc", "ci_watch: succeeded"), self.root)
+        self.assertEqual(self.led()["trains"][-1]["state"], "pushed")
+
     def test_unrelated_command_adds_no_event(self):
         n = len(self.led()["events"])
         H.handle(bash("ls -la"), self.root)
