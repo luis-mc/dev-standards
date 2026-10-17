@@ -117,6 +117,10 @@ def split_commands(command: str) -> list[list[str]]:
     return out
 
 
+def _is_abs(d: str) -> bool:
+    return os.path.isabs(d) or bool(re.match(r"^[A-Za-z]:[\\/]", d)) or d.startswith("/")
+
+
 def _cd_target(part: str, cwd: str | None) -> str | None:
     """The directory a `cd <dir>` part moves to, or None when the part is not a cd."""
     words = part.strip().split(None, 1)
@@ -127,7 +131,7 @@ def _cd_target(part: str, cwd: str | None) -> str | None:
         d = d[3:].strip().strip("\"'")
     if not d or d == "-":
         return None
-    return os.path.normpath(os.path.join(cwd, d)) if cwd and not os.path.isabs(d) else d
+    return os.path.normpath(os.path.join(cwd, d)) if cwd and not _is_abs(d) else d
 
 
 def split_commands_cwd(command: str, cwd: str | None) -> list[tuple[list[str], str | None]]:
@@ -145,7 +149,7 @@ def split_commands_cwd(command: str, cwd: str | None) -> list[tuple[list[str], s
                 i = argv.index("-C")
                 if i + 1 < len(argv):
                     d = argv[i + 1]
-                    where = os.path.normpath(os.path.join(cur, d)) if cur and not os.path.isabs(d) else d
+                    where = os.path.normpath(os.path.join(cur, d)) if cur and not _is_abs(d) else d
                     argv = argv[:i] + argv[i + 2:]
             out.append((argv, where))
     return out
