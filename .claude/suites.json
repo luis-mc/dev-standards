@@ -11,6 +11,7 @@
     {"name": "project-artifacts-hooks", "full": "python tools/test_project_artifacts_hooks.py", "cases": "", "measure": false},
     {"name": "render-artifacts", "full": "python tools/test_render_artifacts.py", "cases": ""},
     {"name": "artifact-prune", "full": "python tools/test_artifact_prune.py", "cases": ""},
+    {"name": "ci-speedups", "full": "python tools/test_ci_speedups.py", "cases": ""},
     {"name": "authspec-check", "full": "python tools/test_authspec_check.py", "cases": ""},
     {"name": "change-notes", "full": "python tools/test_change_notes.py", "full_args": ["--no-mutants"], "cases": "python tools/test_change_notes.py --no-mutants -k {cases}"},
     {"name": "ci-areas", "full": "python tools/test_ci_areas.py", "cases": ""},
