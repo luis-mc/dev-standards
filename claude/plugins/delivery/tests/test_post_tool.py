@@ -132,6 +132,75 @@ class BashTests(unittest.TestCase):
         H.handle(bash("ls -la"), self.root)
         self.assertEqual(len(self.led()["events"]), n)
 
+class LedgerGapTests(unittest.TestCase):
+    """DS8: body-file PRs on a release branch with no train yet, fix-forward pushes, cd / -C directories."""
+
+    def setUp(self):
+        self.root = make_root()
+
+    def led(self):
+        return L.load(self.root)
+
+    def test_pr_create_with_repo_and_body_file_creates_the_train(self):
+        cmd = ("gh pr create --repo luis-mc/comics-organizer --base master --head release/40 "
+               "--title \"R40\" --body-file C:/ComicsWork/briefs/r44-pr.md")
+        with mock.patch.object(H, "rev_parse", return_value="a" * 40):
+            H.handle(bash(cmd, "https://github.com/luis-mc/comics-organizer/pull/418\n"), self.root)
+        trains = self.led()["trains"]
+        self.assertEqual(len(trains), 1)
+        t = trains[0]
+        self.assertEqual((t["branch"], t["pr"], t["state"]), ("release/40", 418, "ci"))
+        self.assertEqual(t["ci"]["head_sha"], "a" * 40)
+
+    def test_pr_create_of_a_known_train_gets_head_sha(self):
+        seed(self.root, state="pushed")
+        with mock.patch.object(H, "rev_parse", return_value="b" * 40):
+            H.handle(bash("gh pr create --head release/29 --body-file x.md", "https://github.com/o/r/pull/9"), self.root)
+        t = self.led()["trains"][0]
+        self.assertEqual((t["pr"], t["state"], t["ci"]["head_sha"]), (9, "ci", "b" * 40))
+
+    def test_pr_create_of_a_non_release_branch_creates_no_train(self):
+        H.handle(bash("gh pr create --repo o/r --head CO1-x --body-file x.md", "https://github.com/o/r/pull/5"), self.root)
+        self.assertEqual(self.led()["trains"], [])
+
+    def test_pr_create_failed_creates_no_train(self):
+        H.handle(bash("gh pr create --head release/41 --body-file x.md", "Exit code 1", event="PostToolUseFailure"), self.root)
+        self.assertEqual(self.led()["trains"], [])
+
+    def test_push_with_existing_pr_resets_ci(self):
+        seed(self.root, branch="release/41", pr=422, state="green", green_at="2026-10-17T10:00:00Z",
+             ci={"head_sha": "old", "run_ids": [1], "state": "success", "started_at": "x"})
+        with mock.patch.object(H, "rev_parse", return_value="c" * 40):
+            H.handle(bash("git push origin release/41"), self.root)
+        t = self.led()["trains"][0]
+        self.assertEqual((t["state"], t["ci"]["state"], t["green_at"]), ("ci", "queued", None))
+        self.assertEqual((t["ci"]["head_sha"], t["ci"]["run_ids"]), ("c" * 40, []))
+
+    def test_push_without_pr_still_just_pushed(self):
+        seed(self.root, branch="release/43", state="joined")
+        H.handle(bash("git push origin release/43"), self.root)
+        self.assertEqual(self.led()["trains"][0]["state"], "pushed")
+
+    def test_cd_prefix_resolves_branch_in_that_directory(self):
+        seed(self.root, branch="release/44", state="joined")
+        seen = []
+        with mock.patch.object(H, "current_branch", side_effect=lambda c: seen.append(c) or "release/44"):
+            H.handle(bash("cd C:/work/wt && git push", cwd="C:/elsewhere"), self.root)
+        self.assertEqual(seen, ["C:/work/wt"])
+        self.assertEqual(self.led()["trains"][0]["state"], "pushed")
+
+    def test_git_dash_c_resolves_branch_in_that_directory(self):
+        seed(self.root, branch="release/44", state="joined")
+        seen = []
+        with mock.patch.object(H, "current_branch", side_effect=lambda c: seen.append(c) or "release/44"):
+            H.handle(bash("git -C C:/work/wt push", cwd="C:/elsewhere"), self.root)
+        self.assertEqual(seen, ["C:/work/wt"])
+        self.assertEqual(self.led()["trains"][0]["state"], "pushed")
+
+    def test_split_commands_cwd_relative_cd(self):
+        out = H.split_commands_cwd("cd sub && git status", os.path.abspath("base"))
+        self.assertEqual(out[0][1], os.path.normpath(os.path.join(os.path.abspath("base"), "sub")))
+
 
 BLOCK = """Do the work.
 

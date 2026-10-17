@@ -117,6 +117,50 @@ def split_commands(command: str) -> list[list[str]]:
     return out
 
 
+def _cd_target(part: str, cwd: str | None) -> str | None:
+    """The directory a `cd <dir>` part moves to, or None when the part is not a cd."""
+    words = part.strip().split(None, 1)
+    if len(words) != 2 or words[0] != "cd":
+        return None
+    d = words[1].strip().strip("\"'")
+    if d.startswith("/d "):
+        d = d[3:].strip().strip("\"'")
+    if not d or d == "-":
+        return None
+    return os.path.normpath(os.path.join(cwd, d)) if cwd and not os.path.isabs(d) else d
+
+
+def split_commands_cwd(command: str, cwd: str | None) -> list[tuple[list[str], str | None]]:
+    """Each simple command with the directory it runs in: `cd <dir> && ...` and `git -C <dir> ...` move it."""
+    out = []
+    cur = cwd
+    for part in re.split(r"&&|\|\||;|\n|\|", command or ""):
+        moved = _cd_target(part, cur)
+        if moved is not None:
+            cur = moved
+            continue
+        for argv in split_commands(part):
+            where = cur
+            if os.path.basename(argv[0]) in ("git", "git.exe") and "-C" in argv[1:3]:
+                i = argv.index("-C")
+                if i + 1 < len(argv):
+                    d = argv[i + 1]
+                    where = os.path.normpath(os.path.join(cur, d)) if cur and not os.path.isabs(d) else d
+                    argv = argv[:i] + argv[i + 2:]
+            out.append((argv, where))
+    return out
+
+
+def rev_parse(ref: str, cwd: str | None) -> str | None:
+    try:
+        p = subprocess.run(["git", "rev-parse", "--verify", "--quiet", ref], cwd=cwd or None,
+                           capture_output=True, text=True, timeout=5)
+        out = p.stdout.strip()
+        return out if p.returncode == 0 and re.fullmatch(r"[0-9a-f]{7,64}", out) else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def opt_value(argv: list[str], *names: str) -> str | None:
     for i, a in enumerate(argv):
         for n in names:
@@ -162,8 +206,7 @@ def rec_bash(led, data, cfg, failed: bool, now: str) -> None:
     text = response_text(data)
     code_m = TOOL_ERR_RE.search(text) if failed else None
     exit_code = int(code_m.group(1)) if code_m else (1 if failed else 0)
-    cwd = data.get("cwd")
-    for argv in split_commands(command):
+    for argv, cwd in split_commands_cwd(command, data.get("cwd")):
         prog = os.path.basename(argv[0])
         if prog in ("git", "git.exe") and "push" in argv[:3]:
             _rec_push(led, cfg, argv, cwd, failed, now)
@@ -192,6 +235,20 @@ def _rec_push(led, cfg, argv, cwd, failed, now):
         if failed:
             L.add_event(led, "push.failed", t["id"], "hook_post_tool", now)
             continue
+        if t.get("pr") and t.get("state") not in ("merged", "live", "cleaned"):
+            # a fix-forward push to a release branch that already has its PR: CI starts over on the new head
+            ci = t.setdefault("ci", {})
+            sha = rev_parse(b, cwd)
+            if sha:
+                ci["head_sha"] = sha
+            ci["state"] = "queued"
+            ci["run_ids"] = []
+            ci["started_at"] = None
+            t["green_at"] = None
+            t["pushed_at"] = now
+            L.set_train_state(t, "ci", now)
+            L.add_event(led, "train.repushed", t["id"], "hook_post_tool", now)
+            continue
         L.set_train_state(t, "pushed", now)
         t["pushed_at"] = now
         L.add_event(led, "train.pushed", t["id"], "hook_post_tool", now)
@@ -201,6 +258,8 @@ def _rec_gh_pr(led, cfg, argv, text, cwd, failed, now):
     verb = argv[2]
     if verb in ("create", "ready"):
         branch = opt_value(argv, "--head", "-H") if verb == "create" else None
+        if branch and ":" in branch:        # owner:branch
+            branch = branch.split(":", 1)[1]
         num = None
         m = PR_URL_RE.search(text)
         if m:
@@ -213,12 +272,23 @@ def _rec_gh_pr(led, cfg, argv, text, cwd, failed, now):
         if t is None:
             br = branch or current_branch(cwd)
             t = L.find_train(led, branch=br) if br else None
+        if t is None and not failed and verb == "create" and num is not None:
+            br = branch or current_branch(cwd)
+            if br and re.search(cfg.get("train_branch_re") or DEFAULT_TRAIN_RE, br):
+                t = L.new_train(led, br, cfg=cfg)       # a release PR opened before any train was planned
+                sha = rev_parse(br, cwd)
+                if sha:
+                    t["ci"]["head_sha"] = sha
         if t is None or failed:
             if failed and t is not None:
                 L.add_event(led, "pr.%s.failed" % verb, t["id"], "hook_post_tool", now)
             return
         if num is not None:
             t["pr"] = num
+        if verb == "create" and not (t.get("ci") or {}).get("head_sha"):
+            sha = rev_parse(t["branch"], cwd)
+            if sha:
+                t.setdefault("ci", {})["head_sha"] = sha
         if verb == "ready" or "--draft" not in argv:
             if t.get("state") in ("planned", "joining", "joined", "pushed"):
                 L.set_train_state(t, "ci", now)
