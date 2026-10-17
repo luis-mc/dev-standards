@@ -55,12 +55,38 @@ def pr_arg(tokens):
     return None
 
 
+def repo_arg(tokens):
+    """OWNER/NAME after --repo / -R of a gh command; None when absent."""
+    rest = H.strip_prefix(tokens)
+    for i, t in enumerate(rest):
+        if t in ('--repo', '-R') and i + 1 < len(rest):
+            return rest[i + 1]
+        if t.startswith('--repo='):
+            return t[len('--repo='):]
+    return None
+
+
 def check_merge(root, seg, ledger):
     if flag(seg, '--auto'):
         deny('DL-05 gh pr merge --auto is never used. Wait for ci_watch.py to pass for the current head, then run '
              'gh pr merge without --auto.')
     arg = pr_arg(seg)
     ref = [arg] if arg else []
+    repo = repo_arg(seg)
+    if repo:
+        # the PR lives in --repo: judge it by the train that carries that repo; a repo the ledger does not track
+        # (another project's) is not this ledger's to gate
+        carried = [t for t in ledger['trains'] if str(t.get('repo') or '').lower() == repo.lower()]
+        here = H.gh(root, ['repo', 'view', '--json', 'nameWithOwner'])
+        current = None
+        if here and here[0] == 0:
+            try:
+                current = json.loads(here[1]).get('nameWithOwner')
+            except (ValueError, AttributeError):
+                pass
+        if not carried and current and current.lower() != repo.lower():
+            return
+        ref += ['--repo', repo]
     r = H.gh(root, ['pr', 'view'] + ref + ['--json', 'number,headRefOid'])
     number, head = None, None
     if r and r[0] == 0:
@@ -71,7 +97,8 @@ def check_merge(root, seg, ledger):
             pass
     if number is None and arg and arg.isdigit():
         number = int(arg)
-    trains = [t for t in ledger['trains'] if number is not None and t.get('pr') == number]
+    trains = [t for t in ledger['trains'] if number is not None and t.get('pr') == number
+              and (not repo or not t.get('repo') or str(t['repo']).lower() == repo.lower())]
     ok = [t for t in trains if (t.get('ci') or {}).get('state') == 'success'
           and (head is None or (t.get('ci') or {}).get('head_sha') == head)]
     if not ok:

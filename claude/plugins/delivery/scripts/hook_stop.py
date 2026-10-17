@@ -183,6 +183,8 @@ def check_trains(ledger, cfg, at):
     for t in ledger['trains']:
         if not t.get('merged_at') or t.get('state') in H.TERMINAL_TRAIN:
             continue
+        if H.on_hold(t, at):        # a recorded hold (delivery_ledger.py hold) suspends DL-14 and DL-18 until its `until`
+            continue
         if not t.get('cleaned_at'):
             out.append(('DL-14:' + str(t.get('id')), 'DL-14 %s is merged and not cleaned. Run cleanup.py --pr %s.'
                         % (H.release_name(t), t.get('pr', 'N'))))
