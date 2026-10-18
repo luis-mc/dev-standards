@@ -41,7 +41,7 @@ read the message, fix the cause and rerun.
    outside the eight maps to the nearest (`Merged` is `Live`, or `Built` when the
    project's `merged_status` says so).
 2. **Change it:**
-   `set-task-status <ID> "<Status>" [--detail "TEXT"] [--expected "DD Mon"] [--basis "TEXT"] [--history "TEXT"] [--no-release "REASON"]`.
+   `set-task-status <ID> "<Status>" [--detail "TEXT"] [--expected "DD Mon"] [--item "TEXT"] [--basis "TEXT"] [--history "TEXT"] [--no-release "REASON"]`.
    - `--detail`: plain text, at most 600 characters, when what the row says
      changed.
    - `--expected`: a real date from `date` in the project's zone, `DD Mon` or
