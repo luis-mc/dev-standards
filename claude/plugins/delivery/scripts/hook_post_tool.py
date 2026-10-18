@@ -13,6 +13,7 @@ Recorded:
          gives task, branch, owns and the eta breakdown (setup, work, checks)
   Artifact publish   publishes[]
   AskUserQuestion    owner_questions[]; the next UserPromptSubmit marks them answered
+  UserPromptSubmit   owner_prompt {at, session, asked_for_questions} (Q-5 reads it)
 
 Disable: CLAUDE_DELIVERY_HOOKS=off.
 """
@@ -382,6 +383,7 @@ def rec_agent(led, data, cfg, now, where="local") -> None:
         L.add_event(led, "agent.no_eta", str(blk.get("task") or inp.get("description") or ""), "hook_post_tool", now)
     row = {
         "task": blk.get("task") or None, "where": blk.get("where") or where, "id": ident, "session": None,
+        "launched_by": data.get("session_id") or None,
         "branch": blk.get("branch"), "base_sha": None, "head_sha": None, "owns": blk.get("owns", []),
         "model": blk.get("model") or inp.get("model"), "effort": blk.get("effort"), "started": now, "eta": eta,
         "log_path": None, "last_checked": None, "last_activity": now,
@@ -438,6 +440,15 @@ def rec_question(led, data, cfg, now) -> None:
         L.add_event(led, "owner.asked", "%d" % len(texts), "hook_post_tool", now)
 
 
+ASK_QUESTIONS_RE = re.compile(r"\bask\s+(?:me|us)\b[^.\n]{0,30}\bquestions?\b|\bask\s+(?:me\s+)?question", re.I)
+
+
+def rec_prompt(led, prompt, session, now) -> None:
+    """The owner's latest prompt: when, and whether it asked for questions (Q-5 allows a dialog then)."""
+    led["owner_prompt"] = {"at": now, "session": session or None,
+                           "asked_for_questions": bool(ASK_QUESTIONS_RE.search(prompt))}
+
+
 def mark_answered(led, now) -> int:
     n = 0
     for q in led["owner_questions"]:
@@ -463,9 +474,12 @@ def handle(data: dict, root=None) -> bool:
     now = L.iso()
 
     if event == "UserPromptSubmit":
-        if not any(not q.get("answered_at") for q in L.load(root)["owner_questions"]):
-            return False
-        L.update(root, lambda led: mark_answered(led, now))
+        prompt = data.get("prompt") if isinstance(data.get("prompt"), str) else ""
+
+        def on_prompt(led):
+            rec_prompt(led, prompt, data.get("session_id"), now)
+            mark_answered(led, now)
+        L.update(root, on_prompt)
         return True
 
     def fn(led):

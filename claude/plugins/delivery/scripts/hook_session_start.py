@@ -5,15 +5,34 @@ Prints hookSpecificOutput.additionalContext with a short ledger summary (trains,
 overdue, installs, Full Progress age), trains that gh reports merged but the ledger still
 shows open (the catch-up; this hook only reports, delivery_ledger.py writes), the rule to
 keep an hourly check-in, and the prompt to start delivery_watch.py when no watcher has a
-fresh heartbeat. Read-only; a project without .delivery/ gets nothing.
+fresh heartbeat. Also delivers the plugin's rules/ files (clarifying-questions, Q-1..Q-5) every session. Read-only; a project
+without .delivery/ gets nothing.
 """
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import hooklib as H  # noqa: E402
+
+
+RULES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'rules')
+RULE_FILES = ('clarifying-questions.md',)
+RULE_TAG_RE = re.compile(r'[ \t]*<!-- (?:check:[^>]*|advice) -->')
+
+
+def rules_text():
+    """The plugin's rule files (tags stripped: they are for maintainers and tools/test_rule_tags.py)."""
+    out = []
+    for name in RULE_FILES:
+        try:
+            with open(os.path.join(RULES_DIR, name), encoding='utf-8') as f:
+                out.append(RULE_TAG_RE.sub('', f.read()).strip())
+        except OSError:
+            H.warn('rules/%s cannot be read; the rule was not delivered' % name)
+    return '\n\n'.join(out)
 
 
 def merged_catchup(root, ledger):
@@ -89,6 +108,9 @@ def main():
     if not fresh:
         parts.append('No watcher heartbeat in the last %d min: start delivery_watch.py in the background '
                      '(run_in_background) before launching work.' % cfg['watcher_min'])
+    rules = rules_text()
+    if rules:
+        parts.append('luismc-delivery: rules for work in this project (DELIVERYSPEC D8)\n\n' + rules)
     out = {'hookSpecificOutput': {'hookEventName': 'SessionStart', 'additionalContext': '\n'.join(parts)}}
     print(json.dumps(out))
     return 0

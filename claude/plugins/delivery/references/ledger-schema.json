@@ -535,6 +535,24 @@
               "failed",
               "stopped"
             ]
+          },
+          "launched_by": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "session_id of the session that launched the agent (Q-5)"
+          },
+          "blocked_on": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "owner",
+              null
+            ],
+            "description": "owner = idle until the owner answers a question (Q-5 allows a dialog)"
           }
         },
         "required": [
@@ -890,6 +908,28 @@
         ],
         "additionalProperties": true
       }
+    },
+    "owner_prompt": {
+      "type": "object",
+      "description": "The owner's latest prompt (Q-5).",
+      "properties": {
+        "at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "session": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "asked_for_questions": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
     }
   }
 }

@@ -390,6 +390,34 @@ def check_question(cfg, ledger, data, at):
                  % '; '.join(todo[:3]))
 
 
+def check_trickle(cfg, ledger, data, at):
+    """Q-5: no second question batch while this session's agents still run (park it until the wave reports)."""
+    sid = data.get('session_id')
+    mine = [a for a in H.running_agents(ledger) if not sid or not a.get('launched_by') or a.get('launched_by') == sid]
+    if not mine or all(a.get('blocked_on') == 'owner' for a in mine):
+        return
+    prompt = ledger.get('owner_prompt') if isinstance(ledger.get('owner_prompt'), dict) else {}
+    if prompt.get('asked_for_questions'):
+        return
+    since = H.parse_ts(prompt.get('at'))
+    window = float(cfg['question_window_min'])
+    batch = float(cfg['question_batch_sec']) / 60.0
+    recent = []
+    for q in ledger['owner_questions']:
+        asked = H.parse_ts(q.get('asked_at'))
+        if asked is None or (since is not None and asked < since):
+            continue
+        age = H.minutes_since(q.get('asked_at'), at)
+        if age is not None and age <= window:
+            recent.append(age)
+    # dialogs of one message arrive seconds apart (Q-1): only a batch older than that makes this a trickle
+    if recent and min(recent) > batch:
+        deny('Q-5 you already asked the owner a question batch %d min ago and %d agent(s) of this session are still '
+             'running (%s). Park the question until the running agents of this wave report, then ask everything at '
+             'once. Allowed when every running agent is blocked on the answer, or when the owner asked you to ask '
+             'questions.' % (round(min(recent)), len(mine), ', '.join(str(a.get('task') or a.get('id')) for a in mine[:3])))
+
+
 def main():
     if H.hooks_off():
         return 0
@@ -412,6 +440,8 @@ def main():
             check_launch(cfg, ledger, data, 'cloud')
         elif tool == 'AskUserQuestion':
             check_question(cfg, ledger, data, at)
+            if H.check_on(cfg, 'Q-5'):
+                check_trickle(cfg, ledger, data, at)
     except Deny as d:
         if H.C.enforcement(cfg)['mode'] == 'warn':      # enforcement.mode warn: say it, let the call through
             print(json.dumps({'systemMessage': 'luismc-delivery (warn mode, call allowed): ' + str(d)}))
