@@ -39,6 +39,8 @@ DEFAULTS = {
     'min_free_gb': 8,                         # DL-38 local agents need more free memory than this
     'brief_markers': [],                      # DL-36 strings every cloud brief must contain
     'min_question_chars': 60,                 # D8 Q-3
+    'question_window_min': 60,                # D8 Q-5 minutes a question batch stays 'recent' while agents run
+    'question_batch_sec': 90,                 # D8 Q-1 dialogs this close together are one message
     'send_deny': ['gh issue comment', 'gh issue create', 'gh pr comment', 'gh pr review',
                   'sendmail', 'mutt', 'mailx'],       # DL-73
     'no_attribution': False,                  # DL-74

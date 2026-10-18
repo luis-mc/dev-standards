@@ -61,6 +61,16 @@
       "type": "integer",
       "minimum": 0
     },
+    "question_window_min": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Q-5: minutes a question batch counts as recent while this session's agents run (default 60)."
+    },
+    "question_batch_sec": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Q-1: AskUserQuestion calls this many seconds after the previous batch belong to the same message (default 90)."
+    },
     "eta_required": {
       "type": "boolean"
     },
