@@ -1002,7 +1002,8 @@ def test_pending_and_mark_published(env):
     assert sorted(j) == ['artifacts', 'queue', 'retired'] and j['queue'] == [] and j['retired'] == []
     assert [a['key'] for a in j['artifacts']] == ['full-progress'], j['artifacts']          # a feature is never listed (R9.5)
     a = j['artifacts'][0]
-    assert sorted(a) == ['file', 'key', 'kind', 'path', 'reason', 'title', 'url'] and a['kind'] == 'full-progress'
+    assert sorted(a) == ['copy_sha256', 'copy_written_at', 'file', 'key', 'kind', 'path', 'reason', 'title', 'url'] \
+        and a['kind'] == 'full-progress'
     assert a['reason'] == 'never published' and a['url'] == ''
     assert '/' not in a['file'] and os.sep not in a['file'] and a['file'].endswith('.html')
     copy = Path(a['path'])
@@ -2978,6 +2979,93 @@ def run_group():
 
 TMP = None
 ONLY = [a for a in sys.argv[1:] if not a.startswith('--')]     # run only cases whose name contains one
+
+
+@case
+def test_pending_records_the_publish_copy_hash_and_time(env):
+    """R9.11: pending --json names the hash and write time of the publish copy it wrote."""
+    p = env.baseline()
+    a = p.run('pending', '--json').json()['artifacts'][0]
+    copy = Path(a['path'])
+    assert a['copy_sha256'] == sha(copy.read_text(encoding='utf-8')) or \
+        a['copy_sha256'] == __import__('hashlib').sha256(copy.read_bytes()).hexdigest(), a
+    assert re.match(r'^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d', a['copy_written_at']), a
+
+
+@case
+def test_mark_published_refuses_a_stale_or_edited_copy(env):
+    """R9.11 (DL-62): a copy older than the latest record change, or edited after pending wrote it, is refused."""
+    import time
+    p = env.baseline()
+    a = p.run('pending', '--json').json()['artifacts'][0]
+    time.sleep(0.05)
+    p.ok('set-task-status', 'AR1', 'Waiting')                      # the record changes after the copy was written
+    r = p.run('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
+    assert r.code == 1 and 'older than the latest record change' in r.err, r.all
+    assert not p.man()['full_progress_artifact'].get('url')
+    a = p.run('pending', '--json').json()['artifacts'][0]          # a fresh copy
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
+    # an edited copy
+    p.ok('set-task-status', 'AR1', 'Running')
+    a = p.run('pending', '--json').json()['artifacts'][0]
+    Path(a['path']).write_text('<title>edited</title>', encoding='utf-8')
+    r = p.run('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
+    assert r.code == 1 and 'edited after pending wrote it' in r.err, r.all
+    p.run('pending', '--json')
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
+
+
+@case
+def test_pending_refresh_lists_an_unchanged_full_progress(env):
+    """R9.8: --refresh lists Full Progress although nothing changed, with a fresh copy; plain pending does not."""
+    p = env.baseline()
+    p.run('pending', '--json')
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
+    assert p.run('pending', '--json').code == 0
+    r = p.run('pending', '--json', '--refresh')
+    j = r.json()['artifacts']
+    assert r.code == 1 and len(j) == 1 and 'refresh' in j[0]['reason'] and j[0]['url'].endswith('/ccc'), r.all
+    assert Path(j[0]['path']).is_file() and j[0]['copy_sha256']
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
+
+
+@case
+def test_check_flags_open_rows_past_their_expected_time(env):
+    """R6.12 (DL-63): an open row whose Expected time has passed is a warning of check, not a finding."""
+    p = env.baseline()
+    r = p.run('check', '--json')
+    assert r.code == 0 and not [w for w in r.json().get('warnings', []) if 'Expected' in w['message']], r.out
+    late = {'CLAUDE_ARTIFACTS_NOW': '2026-10-10T15:00:00+01:00'}          # AR1 was due 10 Oct ~14:15
+    r = p.run('check', '--json', env=late)
+    assert r.code == 0, r.all
+    msgs = [w['message'] for w in r.json()['warnings'] if 'has passed' in w['message']]
+    assert len(msgs) == 1 and msgs[0].startswith('AR1 ') and '10 Oct ~14:15' in msgs[0], msgs
+    assert 'warning' in p.run('check', env=late).out
+    p.ok('set-task-status', 'AR1', 'Built', env=late)                     # no longer open
+    assert not [w for w in p.run('check', '--json', env=late).json().get('warnings', []) if 'has passed' in w['message']]
+
+
+@case
+def test_publish_hourly_prints_what_the_cron_does_or_nothing(env):
+    """R9.10: silent while published under 60 minutes ago; otherwise the three commands."""
+    p = env.baseline()
+    script = str(env.plugin / 'scripts' / 'publish_hourly.py')
+
+    def hourly(now):
+        e = base_env({'CLAUDE_ARTIFACTS_NOW': now})
+        r = subprocess.run([sys.executable, script, '--root', str(p.clone)], capture_output=True, text=True, env=e)
+        assert r.returncode == 0, r.stderr
+        return r.stdout
+    assert 'not been published' in hourly('2026-10-12T10:30:00+01:00')
+    p.run('pending', '--json')
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-12T10:30:00+01:00'})
+    assert hourly('2026-10-12T11:20:00+01:00') == ''                       # 50 minutes
+    out = hourly('2026-10-12T11:45:00+01:00')                              # 75 minutes
+    assert '75 minutes ago' in out and 'pending --json --refresh' in out and 'mark-published full-progress' in out, out
+    assert 'https://claude.ai/artifact/ccc' in out
+    # a release task that changed after the publish is due at once
+    p.ok('set-task-status', 'DS1', 'Waiting', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-12T10:40:00+01:00'})
+    assert 'release task DS1 changed' in hourly('2026-10-12T10:41:00+01:00')
 
 
 def main():

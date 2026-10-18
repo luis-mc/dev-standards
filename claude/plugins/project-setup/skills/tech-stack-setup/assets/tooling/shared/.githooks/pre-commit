@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Blocks a commit if any staged change looks like it introduces a live
-# secret. Two layers:
+# Blocks a commit that stages a merge conflict marker (DL-24), or any staged
+# change that looks like it introduces a live secret. Secret layers:
 #
 #   1. A dependency-free pattern check for common env-var shapes
 #      (DATABASE_URL, *_TOKEN, *_SECRET, *_PASS, *_KEY) — always runs, no
@@ -68,6 +68,19 @@ if [ -n "$cn_script" ] && [ "$cn_on" -eq 1 ]; then
 fi
 
 fail=0
+
+# --- Conflict markers (DL-24) --------------------------------------------------
+# A staged line that starts with a merge conflict marker is refused. Markdown is
+# scanned too, but `=======` alone is not (it is a setext heading underline).
+for f in $staged_files; do
+  case "$f" in .githooks/*) continue ;; esac
+  markers=$(git show ":$f" 2>/dev/null | grep -nE '^(<<<<<<<( |$)|>>>>>>>( |$))' || true)
+  if [ -n "$markers" ]; then
+    echo "pre-commit: conflict marker in '$f':" >&2
+    echo "$markers" | sed 's/^/    /' >&2
+    fail=1
+  fi
+done
 
 # --- Layer 1: naming-convention patterns ------------------------------------
 # Matches an assignment/definition of DATABASE_URL, or any NAME ending in

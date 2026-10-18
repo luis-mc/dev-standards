@@ -1400,7 +1400,7 @@ MUTANTS = [
     ("gate-result refs are not deleted", D,
      "ctx.result_refs.add(ref[len(dc.RESULT_REF_PREFIX):])", "pass", "classify"),
     ("the exit code ignores failed deletions", D,
-     "return dc.EXIT_FAIL if any(r.status == \"failed\" for r in rows) else dc.EXIT_OK", "return dc.EXIT_OK",
+     "return dc.EXIT_FAIL if failed else dc.EXIT_OK", "return dc.EXIT_OK",
      "failed_deletion"),
     # --pr
     ("--pr is ignored", D, "if args.pr is not None:", "if False:", "pr"),

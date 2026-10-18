@@ -14,8 +14,8 @@ import type { Piece, Tone } from './fold/summary.ts'
 import { EMPTY_TALLY, addToTally, bandParts, switchSentence } from './fold/tally.ts'
 import type { Tally } from './fold/tally.ts'
 
-// Session state. Its contract is types/state.d.ts. The two switches are also
-// written to $.store (below) so they survive a restart.
+// Session state. Its contract is types/state.d.ts. The two switches start
+// folded in every session.
 const diffsFolded = atom({ plugin: 'luismc-transcript-folds', key: 'diffsFolded' } as const, true)
 const commandsFolded = atom({ plugin: 'luismc-transcript-folds', key: 'commandsFolded' } as const, true)
 const tally = atom({ plugin: 'luismc-transcript-folds', key: 'tally' } as const, EMPTY_TALLY as Tally)
@@ -23,22 +23,15 @@ const root = atom({ plugin: 'luismc-transcript-folds', key: 'root' } as const, '
 const COUNTS = { plugin: 'luismc-transcript-folds', key: 'counts' } as const
 const OUTCOMES = { plugin: 'luismc-transcript-folds', key: 'outcomes' } as const
 
-const STORE_KEYS = { diffs: 'diffsFolded', commands: 'commandsFolded' } as const
-
 type Which = 'diffs' | 'commands'
 
-// Flips a switch, keeps it past the session, and answers its new state.
-async function flip($: Pick<EngineInterface, 'state' | 'store'>, which: Which): Promise<boolean> {
+// Flips a switch for this session and answers its new state.
+async function flip($: Pick<EngineInterface, 'state'>, which: Which): Promise<boolean> {
   // The scan reads update's source by name, so each switch has its own call.
   const isFolded =
     which === 'diffs'
       ? await update($, diffsFolded, value => !value)
       : await update($, commandsFolded, value => !value)
-  try {
-    await $.store.set(STORE_KEYS[which], isFolded)
-  } catch {
-    // The switch still holds for this session.
-  }
   return isFolded
 }
 
@@ -76,18 +69,8 @@ export const register: Register = (on, options) => {
     if (held.value === undefined || held.value === '') {
       await $.state.set({ plugin: 'luismc-transcript-folds', key: 'root' }, e.cwd)
     }
-    try {
-      const savedDiffs = await $.store.get(STORE_KEYS.diffs)
-      if (typeof savedDiffs === 'boolean') {
-        await $.state.set({ plugin: 'luismc-transcript-folds', key: 'diffsFolded' }, savedDiffs)
-      }
-      const savedCommands = await $.store.get(STORE_KEYS.commands)
-      if (typeof savedCommands === 'boolean') {
-        await $.state.set({ plugin: 'luismc-transcript-folds', key: 'commandsFolded' }, savedCommands)
-      }
-    } catch {
-      // No stored choice: the defaults stand.
-    }
+    // Every session starts with diffs and commands folded (owner, 16 Oct): a
+    // toggle holds for this session only, so a stray ctrl+x f never carries over.
     await $.command.register({ name: 'fold-diffs', description: 'Fold or show long diffs in the transcript' })
     await $.command.register({ name: 'fold-commands', description: 'Fold or show finished shell commands in the transcript' })
     return next(e)

@@ -143,9 +143,10 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"tools/(test_render_artifacts|test_project_artifacts[a-z_]*|convert_interim_record)\.py",
      frozenset({"artifacts"})),
     # delivery
+    (r"claude/plugins/delivery/.*", frozenset({"delivery"})),
     (re.escape(TOOLING) + r"/.*", frozenset({"delivery"})),
     (re.escape(TS) + r"/assets/preflight\.py", frozenset({"delivery"})),
-    (r"tools/(test_delivery_[a-z]+|test_artifact_prune|test_change_notes|test_preflight|test_smoke_packaged)\.py",
+    (r"tools/(test_delivery_[a-z]+|test_artifact_prune|test_change_notes|test_preflight|test_smoke_packaged|test_ci_speedups)\.py",
      frozenset({"delivery"})),
 ]
 COMPILED = [(re.compile(p), a) for p, a in RULES]

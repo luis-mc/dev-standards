@@ -672,7 +672,10 @@ def main(argv: list[str] | None = None) -> int:
             print("%s  %s" % (r.branch, text))
         if not rows:
             print("cleanup: nothing to consider")
-    return dc.EXIT_FAIL if any(r.status == "failed" for r in rows) else dc.EXIT_OK
+    failed = any(r.status == "failed" for r in rows)
+    if args.pr is not None and not args.dry_run and not failed:
+        dc.ledger_record(root, "train_state", pr=args.pr, state="cleaned", by="cleanup.py")
+    return dc.EXIT_FAIL if failed else dc.EXIT_OK
 
 
 if __name__ == "__main__":

@@ -157,10 +157,25 @@ Copied to `scripts/delivery/` (see `shared/scripts/delivery/CONTRACT.md`):
   request closed, or GitHub is unreachable (a warning). `DELIVERY_FREEZE_OVERRIDE=1`
   pushes anyway and the running CI restarts. A late branch rides the next train.
 - `runner_health.py`: warns when no online runner carries a label the workflows need
+- `runner_plan.py run --label NAME -- <cmd>`: heavy local job wrapper; waits while release/train CI runs, one heavy job at a time, free-memory floor, optionally pauses the local runner service and always resumes it (settings: `runner_plan` in `.delivery/config.json`)
+- `runner_plan.py runners [--once]`: D6a offline-runner repair. Reads `gh api repos/<owner>/<repo>/actions/runners` for the runners listed in `.delivery/config.json` `runners[]`; an offline one is reported at once (ledger event `runner.offline`, the project's `runner_plan.report_command`), then every `retry_seconds` (default 300) it runs that runner's `repair` commands, re-reads the status and only when the runner is online re-runs the train CI the outage cancelled or failed. Never just waits; every report, repair, retry and re-run is a ledger event.
+- `runner_plan.heavy_jobs_yield` (default true; `heavy_local_jobs_yield` is accepted): `false` makes `runner_plan.py run` skip the wait for train CI. Without `runner_plan.train_branch_regex` the config's top-level `train_branch_re` is the train pattern. The luismc-delivery watcher starts `runner_plan.py runners` itself when `runners[]` is configured (`watcher.manage_runners`), so the project does not have to.
   (hosted labels count as available); used by `join.py` and `ci_watch.py`.
 - `reach_check.py URL...`: GETs each URL from where it runs and prints status or
   error. Run it in an agent sandbox before relying on a registry, API or preview
   host being reachable.
+- `shard_balance.py --shard K/N`: prints the test files of one shard, balanced by the seconds in the
+  committed `scripts/delivery/ci-timings.json` (greedy, longest first; a file without a figure gets
+  the median). `shard_balance.py update --report FILE...` refreshes that file from a vitest/jest or
+  Playwright JSON report; run it now and then and commit the result. The ts `ci.yml` runs its
+  Playwright shards through it.
+- `area_select.py`: from the changed paths and the project's committed `scripts/delivery/ci-areas.json`
+  (areas, their paths, jobs and test globs; a `run_everything` list; a `docs` list) prints which jobs a
+  change needs. An unknown or shared path runs everything; documentation only runs none. The ts
+  `ci.yml` `plan` job uses it; a job the plan leaves out is a planned skip, never a failure. Edit the
+  starter map for the repository. `ts/.github/workflows/nightly-full.yml` is the other half: it runs
+  the whole integration and browser suites once a night, and only when the default branch moved since the
+  last successful run (runners from the `NIGHTLY_RUNS_ON` / `CI_RUNS_ON` variables).
 - `artifact_prune.py`: keeps only the newest build artifact of each name and
   deletes the rest (`§13.1`). `shared/.github/workflows/artifact-prune.yml` runs
   it after every `CI` run and daily; add any other workflow that uploads an

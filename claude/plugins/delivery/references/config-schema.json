@@ -1,0 +1,424 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "luismc-delivery/config-schema.json",
+  "title": "luismc-delivery .delivery/config.json",
+  "description": "Schema of the per-project config (plugin 0.2.0). Validated by `delivery_config.py validate`, which reads the JSON Schema subset used here (type, enum, const, properties, items, minimum, minItems, pattern, oneOf, additionalProperties). Keys starting with _ are comments. Keys not listed warn (they never fail). Every key is optional; a 0.1.0 config stays valid.",
+  "type": "object",
+  "properties": {
+    "caps": {
+      "type": "object",
+      "description": "Concurrency caps (DL-38).",
+      "properties": {
+        "cloud": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "local": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "work_root": {
+      "type": "string",
+      "description": "Folder agent worktrees live under (DL-53); empty = not checked."
+    },
+    "tz": {
+      "type": "string",
+      "description": "IANA zone of the owner (e.g. Europe/Lisbon). Must load through zoneinfo; if it cannot (no tzdata) validate and delivery_doctor.py fail, and hooks warn on stderr before falling back to UTC.",
+      "default": "UTC"
+    },
+    "base": {
+      "type": "string",
+      "description": "Default branch (default main)."
+    },
+    "train_label_re": {
+      "type": "string",
+      "format": "regex",
+      "description": "DL-64: labels the reply must not use instead of RELEASE-n."
+    },
+    "release_branch_re": {
+      "type": "string",
+      "format": "regex"
+    },
+    "train_branch_re": {
+      "type": "string",
+      "format": "regex",
+      "description": "Head branches that are trains (runner_plan.train_branch_regex falls back to it)."
+    },
+    "brief_markers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "DL-36: strings every cloud brief must contain."
+    },
+    "min_question_chars": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "question_window_min": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Q-5: minutes a question batch counts as recent while this session's agents run (default 60)."
+    },
+    "question_batch_sec": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Q-1: AskUserQuestion calls this many seconds after the previous batch belong to the same message (default 90)."
+    },
+    "eta_required": {
+      "type": "boolean"
+    },
+    "eta_table": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 2
+      }
+    },
+    "heavy_commands": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": ""
+    },
+    "outbound_deny": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": ""
+    },
+    "send_deny": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": ""
+    },
+    "no_attribution": {
+      "type": "boolean",
+      "description": "DL-74: refuse AI attribution in commits and PR text."
+    },
+    "long_pole_globs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": ""
+    },
+    "measure_globs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": ""
+    },
+    "md_allow": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": ""
+    },
+    "gate_markers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": ""
+    },
+    "registry_open": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": ""
+    },
+    "update_state_files": {
+      "type": "array"
+    },
+    "install_state_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "min_free_gb": {
+      "type": "number",
+      "minimum": 0
+    },
+    "join_push_min": {
+      "type": "number",
+      "minimum": 0
+    },
+    "check_min": {
+      "type": "number",
+      "minimum": 0
+    },
+    "watcher_min": {
+      "type": "number",
+      "minimum": 0
+    },
+    "install_stale_min": {
+      "type": "number",
+      "minimum": 0
+    },
+    "watch_interval": {
+      "type": "number",
+      "minimum": 1,
+      "description": "Seconds between watcher passes (default 60)."
+    },
+    "watcher_interval_s": {
+      "type": "number",
+      "minimum": 1,
+      "description": "0.1.0 name kept for old configs; watch_interval wins."
+    },
+    "checks_off": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(DL-\\d+|Q-\\d+)$"
+      },
+      "description": "Check ids switched off."
+    },
+    "local_runners": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Runner names that live on the owner's PC."
+    },
+    "enforcement": {
+      "type": "object",
+      "description": "How the Stop hook enforces (0.2.0).",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "block",
+            "warn"
+          ],
+          "default": "block",
+          "description": "block: a finding blocks the end of the turn. warn: it is shown as a systemMessage and the turn ends."
+        },
+        "block_ceiling": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 3,
+          "description": "The same findings block at most this many times per session, then the turn ends (artifacts R8.4). Replaces the hard-coded 3."
+        },
+        "log_every_block": {
+          "type": "boolean",
+          "default": false,
+          "description": "Append every block to .delivery/blocks.log: time, hook, rule id, message."
+        }
+      }
+    },
+    "watcher": {
+      "type": "object",
+      "description": "What delivery_watch.py is allowed to do (0.2.0). All default true, which is 0.1.0 behaviour.",
+      "properties": {
+        "push_trains": {
+          "type": "boolean",
+          "default": true,
+          "description": "Push the next joined train."
+        },
+        "open_prs": {
+          "type": "boolean",
+          "default": true,
+          "description": "Open the ready PR of a pushed train that has none."
+        },
+        "merge_on_green": {
+          "type": "boolean",
+          "default": true,
+          "description": "Merge a train whose CI is green for its current head (D5), only if the head SHA is unchanged since the green run."
+        },
+        "merge_method": {
+          "type": "string",
+          "enum": [
+            "merge"
+          ],
+          "default": "merge",
+          "description": "Only `merge` exists: gh pr merge --merge."
+        },
+        "merge_flag": {
+          "type": "string",
+          "enum": [
+            "--merge"
+          ],
+          "default": "--merge",
+          "description": "Alias of merge_method kept as written in comics-organizer."
+        },
+        "never_auto_merge": {
+          "type": "boolean",
+          "enum": [
+            true
+          ],
+          "default": true,
+          "description": "Documentation of D5; `gh pr merge --auto` is never run whatever this says (false is an error)."
+        },
+        "manage_runners": {
+          "type": "boolean",
+          "default": true,
+          "description": "Launch `runner_plan.py runners` on the loop (D6a)."
+        },
+        "ci_workflows": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Workflow files that must all complete with success on the PR head before a train is green (default [\"ci.yml\"]). A completed sibling workflow never counts for another."
+        }
+      }
+    },
+    "runners": {
+      "type": "array",
+      "description": "CI runners the project uses (D6a).",
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "os": {
+            "type": "string"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          "repair": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                }
+              ]
+            },
+            "description": "Run in order when the runner is offline: a string through the shell, a list as argv."
+          }
+        }
+      }
+    },
+    "runner_plan": {
+      "type": "object",
+      "properties": {
+        "retry_seconds": {
+          "type": "number",
+          "minimum": 1,
+          "default": 300
+        },
+        "runner_max_retries": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "report_command": {
+          "type": "string",
+          "description": "Gets the report text in $DELIVERY_REPORT."
+        },
+        "cancel_replaced_runs": {
+          "type": "boolean",
+          "default": true,
+          "description": "Watcher cancels CI runs of a branch whose head has moved on."
+        },
+        "hold_dependabot_during_train": {
+          "type": "boolean",
+          "default": true,
+          "description": "Watcher cancels and later re-runs non-train CI runs while a train's CI runs."
+        },
+        "heavy_jobs_yield": {
+          "type": "boolean",
+          "default": true,
+          "description": "runner_plan.py run waits for train CI before starting a heavy job."
+        },
+        "heavy_local_jobs_yield": {
+          "type": "boolean",
+          "default": true,
+          "description": "Alias of heavy_jobs_yield (comics-organizer name)."
+        },
+        "min_free_mb": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pause_service": {
+          "type": "string"
+        },
+        "train_branch_regex": {
+          "type": "string",
+          "format": "regex"
+        },
+        "poll_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max_wait_minutes": {
+          "type": "number",
+          "minimum": 0
+        },
+        "repo": {
+          "type": "string"
+        },
+        "affinity": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "low",
+            "below-normal",
+            "normal"
+          ]
+        },
+        "script": {
+          "type": "string",
+          "description": "Path of runner_plan.py for the watcher (default scripts/delivery/runner_plan.py under the repository root)."
+        }
+      }
+    },
+    "pr_proven_jobs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "DL-76: job names the release PR proves; none may run on the default branch after the release merges (default [], check off)."
+    }
+  }
+}

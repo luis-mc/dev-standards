@@ -45,6 +45,11 @@ except ImportError as _e:  # pragma: no cover - broken install
     AR = None
     _RETIRE_ERROR = str(_e)
 try:
+    import artifact_hourly as H
+except ImportError as _e:  # pragma: no cover - broken install
+    H = None
+    _HOURLY_ERROR = str(_e)
+try:
     import render_artifacts as R
 except ImportError as _e:
     R = None
@@ -2031,6 +2036,9 @@ def cmd_mark_published(args):
             raise Fail(1, '%s has not been rendered; run render first' % e['file'])
         if render_one(rec, key, stamp_text_from_iso(st), st).replace('\r\n', '\n') != old:
             raise Fail(1, '%s differs from a fresh render; run render first' % e['file'])
+        stale = stale_copy_reason(ctx, rec, e)
+        if stale:
+            raise Fail(1, 'refusing to mark published: ' + stale)
         e['url'] = url
         # the hash of the committed render, not of the publish copy (R5.32): nothing links to the url,
         # so no other artifact changes
@@ -2179,7 +2187,7 @@ def cmd_check(args):
         findings += fresh_render_findings(rec, key)
     findings = sorted(set(findings))
     notes = setting_ignored_notes(session_root() or '.') + rule_copy_notes() + done_notes(rec) + release_notes(rec) + feature_url_notes(rec) + retired_notes(rec)
-    warnings = decision_warnings(rec) + lede_warnings(rec)
+    warnings = decision_warnings(rec) + lede_warnings(rec) + overdue_warnings(rec)
     if getattr(args, 'json_out', False):
         result = {'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],
                   'notes': notes}
@@ -2193,6 +2201,14 @@ def cmd_check(args):
         for f, m in warnings:
             print('warning  %s: %s' % (f, m))
     return 1 if findings else 0
+
+
+def overdue_warnings(rec):
+    """R6.14 (DL-63): an open row whose Expected time is in the past. [(file, message)]"""
+    if H is None:
+        return []
+    return [('registry.json', '%s: set a new Expected (set-task-status %s <status> --expected ...) or the real status'
+             % (H.overdue_text(t), t.get('id'))) for t, _when in H.overdue_tasks(rec.tasks(), rec.manifest)]
 
 
 def lede_warnings(rec):
@@ -2241,6 +2257,66 @@ def feature_link_map(root, rec):
     return out
 
 
+COPY_META_SUFFIX = '.meta.json'
+
+
+def copy_meta_path(dest):
+    return Path(str(dest) + COPY_META_SUFFIX)
+
+
+def write_copy_meta(dest, rec_dir):
+    """R9.11: the hash and write time of a publish copy, beside it, so mark-published can tell a stale copy."""
+    meta = {'sha256': hashlib.sha256(Path(dest).read_bytes()).hexdigest(),
+            'written_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+            'inputs_sha256': record_inputs_hash(rec_dir)}
+    write_text(copy_meta_path(dest), json.dumps(meta))
+    return meta
+
+
+def read_copy_meta(dest):
+    try:
+        meta = json.loads(copy_meta_path(dest).read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return None
+    return meta if isinstance(meta, dict) else None
+
+
+def record_inputs_hash(rec_dir):
+    """Hash of the files Full Progress is made from: the registry, the content, the design and the rendered pages.
+    The manifest and the README are left out: mark-deferred and mark-published write them without changing what
+    the owner sees. Content, not modification times, so a rewrite with the same bytes is no change."""
+    h = hashlib.sha256()
+    for d, dirs, files in os.walk(str(rec_dir)):
+        dirs.sort()
+        for name in sorted(files):
+            rel = os.path.relpath(os.path.join(d, name), str(rec_dir)).replace(os.sep, '/')
+            if not (rel in ('registry.json', 'design.css') or rel.startswith('content/') or rel.endswith('.html')):
+                continue
+            try:
+                data = Path(d, name).read_bytes()
+            except OSError:
+                continue
+            h.update(rel.encode('utf-8') + b'\0' + hashlib.sha256(data).digest())
+    return h.hexdigest()
+
+
+def stale_copy_reason(ctx, rec, e):
+    """R9.11 (DL-62): why the publish copy of Full Progress must not be marked published, or None. A copy that was
+    never written has nothing to go stale (the committed file is published as it is)."""
+    dest = ctx.root / PUBLISH_REL / str(e.get('file', ''))
+    if not dest.is_file():
+        return None
+    meta = read_copy_meta(dest)
+    if meta is None:
+        return None
+    if hashlib.sha256(dest.read_bytes()).hexdigest() != meta.get('sha256'):
+        return '%s was edited after pending wrote it; run pending --json and publish that copy unedited' % dest
+    if meta.get('inputs_sha256') != record_inputs_hash(rec.dir):
+        return ('the record changed after the publish copy %s was written (the copy is older than the latest record '
+                'change); run pending --json, publish the fresh copy, then mark-published' % dest)
+    return None
+
+
 def write_publish_copy(ctx, rec, key, e):
     """R5.31: render Full Progress, from the committed render's stamp, with absolute links to the feature
     files, to .claude/artifacts-publish/<file> (git-ignored). Returns its path, or None when it cannot be made."""
@@ -2255,6 +2331,7 @@ def write_publish_copy(ctx, rec, key, e):
         return None
     dest = ctx.root / PUBLISH_REL / e['file']
     write_text(dest, html)
+    write_copy_meta(dest, rec.dir)
     if (git_out(ctx.root, 'status', '--porcelain', '--ignored', '--untracked-files=all', '--', str(dest)) or '').startswith('??'):
         warn('.gitignore does not ignore %s/ (the publish copy); add that line' % PUBLISH_REL.replace(os.sep, '/'))
     return str(dest)
@@ -2264,6 +2341,7 @@ def cmd_pending(args):
     """Lists Full Progress when its committed render changed since the last publish, and queued events.
     A feature artifact is never listed (R9.5)."""
     ctx, rec = load_for_read(args)
+    refresh = bool(getattr(args, 'refresh', False))
     arts, deferred = [], []
     if rec is not None:
         for key, kind, e in rec.artifacts():
@@ -2282,9 +2360,11 @@ def cmd_pending(args):
                 elif h != e.get('published_sha256'):
                     # R9.6: a render that differs only in a detail, a basis, a content section or the stamp is no
                     # reason to publish; a record with no stored fingerprint needs one publish
-                    if e.get('published_fingerprint') == publish_fingerprint(rec):
+                    if e.get('published_fingerprint') == publish_fingerprint(rec) and not refresh:
                         continue
                     reason = 'changed since last publish'
+                elif refresh:
+                    reason = 'refresh requested (hourly or release change)'
                 else:
                     continue
                 wait = deferral(rec, e)
@@ -2294,8 +2374,13 @@ def cmd_pending(args):
                                      'reason': 'deferred until %s' % wait[1]})
                     continue
                 copy_path = write_publish_copy(ctx, rec, key, e)
-            arts.append({'key': key, 'kind': kind, 'title': e.get('title', ''), 'file': e.get('file', ''),
-                         'path': copy_path or str(p), 'url': e.get('url', ''), 'reason': reason})
+            item = {'key': key, 'kind': kind, 'title': e.get('title', ''), 'file': e.get('file', ''),
+                    'path': copy_path or str(p), 'url': e.get('url', ''), 'reason': reason}
+            meta = read_copy_meta(copy_path) if copy_path else None
+            if meta:          # R9.11: what mark-published will compare the copy against
+                item['copy_sha256'] = meta.get('sha256')
+                item['copy_written_at'] = meta.get('written_at')
+            arts.append(item)
     queue = artifact_queue.read_queue(str(ctx.root))
     retired = [{'key': e.get('key', ''), 'title': e.get('title', ''), 'url': e.get('url', ''),
                 'retired': e.get('retired', '')} for e in (AR.retired_pages(rec.manifest) if AR and rec else [])]
@@ -2458,6 +2543,7 @@ def build_parser():
     s.set_defaults(func=cmd_check)
 
     s = sub.add_parser('pending', parents=[j], help='Full Progress to publish (with its publish copy) and queued events; exit 1 when any')
+    s.add_argument('--refresh', action='store_true', help='list Full Progress even when unchanged (the hourly publish, R9.8)')
     s.set_defaults(func=cmd_pending)
 
     s = sub.add_parser('mark-published', parents=[w], help='record the URL and the hash of the committed render of Full Progress')

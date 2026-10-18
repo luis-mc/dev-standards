@@ -1,0 +1,4 @@
+{
+  "_note": "Seconds per test file; refreshed by `shard_balance.py update` from a runner's JSON report. Empty until the first refresh: shards then weigh every file the same.",
+  "seconds": {}
+}

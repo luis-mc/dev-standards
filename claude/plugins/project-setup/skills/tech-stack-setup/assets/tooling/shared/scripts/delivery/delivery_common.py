@@ -1135,6 +1135,39 @@ def is_lockfile(path: str, cfg: dict) -> bool:
     return name in DEFAULT_LOCKFILES or path in cfg.get("lockfiles", []) or name in cfg.get("lockfiles", [])
 
 
+def ledger_record(root, op: str, **kw) -> bool:
+    """Best effort: write to the delivery ledger (.delivery/ledger.json) through the
+    luismc-delivery plugin's delivery_ledger module. A no-op, returning False, when the
+    module or the .delivery/ folder is absent or anything fails; it never raises.
+    The module is found on sys.path, in $DELIVERY_PLUGIN_DIR/scripts, or in an installed
+    plugin folder under ~/.claude/plugins."""
+    try:
+        if root is None or not (Path(root) / ".delivery").is_dir():
+            return False
+        mod = sys.modules.get("delivery_ledger")
+        if mod is None:
+            dirs = []
+            env = os.environ.get("DELIVERY_PLUGIN_DIR")
+            if env:
+                dirs.append(Path(env) / "scripts")
+            home = Path.home() / ".claude" / "plugins"
+            if home.is_dir():
+                dirs += [p.parent for p in home.glob("**/delivery/scripts/delivery_ledger.py")][:3]
+            for d in dirs:
+                if (d / "delivery_ledger.py").is_file():
+                    sys.path.insert(0, str(d))
+                    try:
+                        import delivery_ledger as mod  # noqa: F811
+                    finally:
+                        sys.path.remove(str(d))
+                    break
+            else:
+                import delivery_ledger as mod  # noqa: F811
+        return bool(mod.record(root, op, by=kw.pop("by", "delivery-script"), **kw))
+    except Exception:  # noqa: BLE001 - recording never breaks a delivery script
+        return False
+
+
 def main_guard(fn):
     """Run fn(); turn DeliveryError into a message and its exit code."""
     try:

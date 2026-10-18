@@ -664,6 +664,16 @@ def usage_and_gh_failures_exit_2():
         # gh is not installed
         rc, out, err = sb.run(SCRIPT, ["--repo", REPO], with_stub=False)
         check(rc == 2 and "gh" in err, f"no gh: exit {rc}\n{out}\n{err}")
+        check("GH_TOKEN" in err and "GITHUB_TOKEN" in err, f"no gh, no token must name both: {err}")
+        # gh missing but a token set: the REST fallback is used, so the "not installed" refusal
+        # does not fire (the dead proxy makes the REST call fail fast, offline).
+        dead = {"GH_TOKEN": "x", "HTTPS_PROXY": "http://127.0.0.1:9", "https_proxy": "http://127.0.0.1:9"}
+        rc, out, err = sb.run(SCRIPT, ["--repo", REPO], env_extra=dead, with_stub=False)
+        check(rc == 2 and "not installed" not in err and "could not call the GitHub API" in err,
+              f"no gh + token must reach the REST call: exit {rc} {out} {err}")
+        # resolve_repo needs no gh when GITHUB_REPOSITORY is set (Actions)
+        rc, out, err = sb.run(SCRIPT, [], env_extra={**dead, "GITHUB_REPOSITORY": REPO}, with_stub=False)
+        check("no repository" not in err and "not installed" not in err, f"GITHUB_REPOSITORY: {err}")
     finally:
         sb.close()
 
