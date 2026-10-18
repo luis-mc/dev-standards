@@ -294,7 +294,9 @@ class OtherToolTests(unittest.TestCase):
         self.assertTrue(all(q["answered_at"] is None for q in qs))
         self.assertTrue(H.handle({"hook_event_name": "UserPromptSubmit", "prompt": "yes"}, root))
         self.assertTrue(all(q["answered_at"] for q in L.load(root)["owner_questions"]))
-        self.assertFalse(H.handle({"hook_event_name": "UserPromptSubmit", "prompt": "again"}, root))
+        answered = [q["answered_at"] for q in L.load(root)["owner_questions"]]
+        H.handle({"hook_event_name": "UserPromptSubmit", "prompt": "again"}, root)     # records owner_prompt only
+        self.assertEqual([q["answered_at"] for q in L.load(root)["owner_questions"]], answered)
         H.handle({"hook_event_name": "PostToolUse", "tool_name": "AskUserQuestion",
                   "tool_input": {"questions": [{"question": "More?"}]}, "tool_response": ""}, root)
         self.assertEqual(L.load(root)["owner_questions"][-1]["id"], "Q3")
