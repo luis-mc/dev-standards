@@ -913,7 +913,11 @@ double-click.
   the checklists, the At a glance block and the timeline, starts with a
   `<span class="release-name">RELEASE-<n></span>` before its text; the timeline
   label reads `RELEASE-<n> · <item>` (replacing `<ID> · <item>` of R5.42) and
-  the task ID stays in the row's ID cell. Verified by
+  the task ID stays in the row's ID cell. When the item itself already starts with
+  its own `RELEASE-<n>` (optionally followed by `:` or ` · `), that lead is left
+  out of the item text shown, so the number appears once (`RELEASE-55: ops` shows
+  as `RELEASE-55 · ops` in the timeline); the registry keeps the item as written,
+  and `check` compares the item as shown. Verified by `release_number_is_shown_once`,
   `test_release_numbers_are_assigned_and_never_reused`,
   `test_rides_accepts_the_release_name`, `test_migration_numbers_old_releases`
   and the R5.45 fixtures of `test_check_fixtures`.
@@ -1101,7 +1105,7 @@ they do nothing (R4.17).
 | `init --project NAME [--timezone IANA] [--label L] [--windows-timezone ID] [--default-branch B]` | Creates the manifest, an empty registry and the full-progress artifact's content. Refuses if a manifest exists. Zone defaults to the machine's. |
 | `feature-new --key K --title NAME --prefix P --apps a,b [--hero TEXT] [init flags]` | Adds a feature artifact (content folder with `meta.json`, a section `01-what-and-why.html` stub and a first History row; its manifest entry has no `url`). Runs `init` first, with the same `init` flags, when there is no manifest; `--project` is then required. |
 | `task-add --owner K\|project --item TEXT --detail TEXT --expected TEXT [--basis TEXT] [--app A] [--status S] [--prefix P] [--release] [--phase NAME=HH:MM-HH:MM]... [--risk LABEL=MINUTES] [--rides ID]` | Adds a task with the next free number; prints its ID. For `--owner project`, `--prefix` picks one of `project_prefixes`, and a new prefix not used by any feature is registered. |
-| `set-task-status ID STATUS [--detail TEXT] [--expected TEXT] [--basis TEXT] [--history TEXT] [--release] [--phase NAME=HH:MM-HH:MM]... [--risk LABEL=MINUTES] [--rides ID]` | Changes one task; adds a History row to its feature artifact when `--history` is given. |
+| `set-task-status ID STATUS [--item TEXT] [--detail TEXT] [--expected TEXT] [--basis TEXT] [--history TEXT] [--release] [--phase NAME=HH:MM-HH:MM]... [--risk LABEL=MINUTES] [--rides ID]` | Changes one task; adds a History row to its feature artifact when `--history` is given. `--item TEXT` corrects the task's title (1 to 80 characters, as R4.8) and records `<ID> item changed from "<old>" to "<new>"` in the History of a feature task (a project task has no History; a warning says so). Verified by `test_set_task_status_item_corrects_title`. |
 | `export-content KEY --to DIR` | Copies the artifact's content files from the record to DIR for editing, `decisions.json` and its `assets/` folder included. |
 | `edit-content KEY --from DIR` | Replaces the artifact's content files in the record with those in DIR validates, renders and writes the files. It refuses an edit that removes a decision or changes the choice of a decided one (R5.15). |
 | `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design` and renders; `default` removes it. |

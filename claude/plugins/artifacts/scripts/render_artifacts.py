@@ -75,6 +75,17 @@ def release_name(task) -> str:
     return 'RELEASE-%d' % n if n is not None else 'RELEASE'
 
 
+def shown_item(task) -> str:
+    """R5.45: the Item of a release row without its own `RELEASE-<n>` lead (optionally followed by `:` or ` · `),
+    so the number shows once; any other item is returned as it is."""
+    item = str(task.get('item', ''))
+    if release_number(task) is None:
+        return item
+    m = re.match(r'^%s(?:\s*[:·]\s*|\s+|$)' % re.escape(release_name(task)), item)
+    rest = item[m.end():] if m else item
+    return rest if m and rest else item
+
+
 def _release_span(task) -> str:
     return '<span class="release-name">%s</span>' % release_name(task)
 
@@ -957,7 +968,7 @@ def _glance_task(task: dict) -> str:
         if task.get('expected_basis'):
             expected += '<span class="glance-basis">%s</span>' % esc(task['expected_basis'])
     return '<li data-glance-task="%s"><span class="task-id">%s</span>%s%s%s</li>' % (
-        esc(task['id']), esc(task['id']), _release_span(task) if is_release(task) else '', esc(task['item']), expected)
+        esc(task['id']), esc(task['id']), _release_span(task) if is_release(task) else '', esc(shown_item(task)), expected)
 
 
 def glance_open(gkey: str) -> bool:
@@ -1079,7 +1090,7 @@ def rode_release(task: dict, by_id: dict):
 
 def _row(task: dict, kind: str, feature_links: dict, by_id=None, release_line: bool = False) -> str:
     item = '<span class="task-id">%s</span>%s%s' % (
-        esc(task['id']), _release_span(task) if is_release(task) else '', esc(task['item']))
+        esc(task['id']), _release_span(task) if is_release(task) else '', esc(shown_item(task)))
     link = feature_links.get(task.get('owner')) if kind == 'full-progress' else None
     if link and not link[1]:             # the publish copy's rows stay text; section 1 has the copy buttons
         item = _link(link, item)
@@ -1241,7 +1252,7 @@ def release_timeline(tasks: list, ref: datetime, label: str) -> str:
     out, aria, y = [], [], TL_TOP
     for r in rows:
         t = r['task']
-        name = '%s · %s' % (release_name(t) if release_number(t) is not None else t['id'], t['item'])
+        name = '%s · %s' % (release_name(t) if release_number(t) is not None else t['id'], shown_item(t))
         sub = ', '.join(r['riders'])
         out.append('<text class="rt-name" x="0" y="%d"><title>%s</title>%s</text>' % (y + 8, esc(name), esc(_cut(name, 26))))
         if sub:
@@ -1272,7 +1283,7 @@ def release_timeline(tasks: list, ref: datetime, label: str) -> str:
             out.append('<polygon class="rt-day" points="%d,%d %d,%d %d,%d %d,%d"/><text class="rt-day-label" x="%d" y="%d">%s</text>'
                        % (sx, y, sx + 8, y + 13, sx, y + 26, sx - 8, y + 13, sx + 16, y + 17, esc(text)))
             said = 'expected %s' % text
-        aria.append('%s (%s) %s' % (t['id'], t['item'], said))
+        aria.append('%s (%s) %s' % (t['id'], shown_item(t), said))
         y += TL_ROW
     height = y + 50
     grid = []
@@ -2154,7 +2165,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             add('INV-1', 'task %s is in the registry but not in the checklist' % tid)
             continue
         row = seen[tid][0]
-        pairs = [('status', task.get('status'), row['status']), ('item', _norm(task.get('item', '')), row['item']),
+        pairs = [('status', task.get('status'), row['status']), ('item', _norm(shown_item(task)), row['item']),
                  ('detail', _norm(task.get('detail', '')), row['detail']), ('expected', _norm(task.get('expected', '')), row['expected'])]
         if kind == 'full-progress':
             pairs.append(('app', _norm(task.get('app', '')), row['app']))

@@ -2305,6 +2305,23 @@ def timeline_is_absent_without_open_releases(fx):
 
 @test
 @with_fixture
+def release_number_is_shown_once(fx):
+    """R5.45: an item that starts with its own RELEASE-<n> does not repeat it in the timeline or the rows."""
+    a = release('DS51', 'RELEASE-1: DL12 release', '10 Oct ~18:00')
+    b = release('DS52', 'RELEASE-2 · Timeline', '12 Oct', status='To do')
+    c = release('DS53', 'RELEASE-3', '13 Oct', status='To do')
+    d = release('DS54', 'RELEASE-40 cargo', '14 Oct', status='To do', number=4)
+    registry = with_releases(fx, a, b, c, d)
+    assert [R.shown_item(t) for t in registry['tasks'][-4:]] == ['DL12 release', 'Timeline', 'RELEASE-3', 'RELEASE-40 cargo']
+    out = fx.render('full-progress', registry=registry)
+    names = [R.text_of(n, skip=lambda x: x.tag == 'title') for n in R.find_all(timeline_of(out), 'text', 'rt-name')]
+    assert names[:2] == ['RELEASE-1 · DL12 release', 'RELEASE-2 · Timeline'], names
+    assert '<span class="release-name">RELEASE-1</span>DL12 release' in out and '</span>RELEASE-1: DL12' not in out and '(RELEASE-1: DL12' not in out
+    assert fx.check(out, 'full-progress', registry=registry) == []
+
+
+@test
+@with_fixture
 def timeline_rows_axis_and_break(fx):
     """R5.42: a row per open release by Expected, riders under the label, a half-hour axis, a day slot after a break."""
     registry = two_releases(fx)

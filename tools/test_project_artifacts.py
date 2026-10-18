@@ -446,6 +446,21 @@ def test_basis_is_stored(env):
 
 
 @case
+def test_set_task_status_item_corrects_title(env):
+    p = env.baseline()
+    old = p.task('AR1')['item']
+    p.ok('set-task-status', 'AR1', 'Running', '--item', '  A   corrected title ')
+    assert p.task('AR1')['item'] == 'A corrected title'
+    hist = json.loads(p.show('docs/artifacts/content/artifacts/history.json'))
+    assert hist[0]['change'] == 'AR1 item changed from "%s" to "A corrected title"' % old, hist[0]
+    assert p.run('check').code == 0
+    for bad, text in (('x' * 81, '80'), ('  ', 'empty')):
+        r = p.run('set-task-status', 'AR1', 'Running', '--item', bad)
+        assert r.code == 1 and text in r.err, r.all
+    assert p.task('AR1')['item'] == 'A corrected title'
+
+
+@case
 def test_basis_dropped_when_closed(env):
     p = env.baseline()
     p.ok('set-task-status', 'AR1', 'Running', '--basis', 'owner reply, ~1 day')

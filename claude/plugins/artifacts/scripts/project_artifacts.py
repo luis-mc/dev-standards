@@ -1691,8 +1691,22 @@ def cmd_task_add(args):
     return 0
 
 
+ITEM_MAX = 80
+
+
+def clean_item(text):
+    """R4.8: the item as stored; refused when empty or longer than ITEM_MAX, as `check` reports it."""
+    text = ' '.join(str(text).split())
+    if not text:
+        raise Fail(1, '--item is empty; give the task title')
+    if len(text) > ITEM_MAX:
+        raise Fail(1, '--item is %d characters; at most %d' % (len(text), ITEM_MAX))
+    return text
+
+
 def cmd_set_task_status(args):
     status = require_status(args.status)
+    new_item = clean_item(args.item) if args.item is not None else None
     basis = clean_basis(args.basis) if args.basis is not None else None
     ctx = make_ctx(args)
 
@@ -1702,8 +1716,11 @@ def cmd_set_task_status(args):
             raise Fail(1, 'unknown task ID "%s"' % args.id)
         now = rec.now()
         prev = task['status']
+        old_item = task['item']
         task['status'] = status
         task['changed'] = now.iso
+        if new_item is not None:
+            task['item'] = new_item
         if args.detail is not None:
             task['detail'] = args.detail
         if args.expected is not None:
@@ -1723,17 +1740,23 @@ def cmd_set_task_status(args):
         owner = task['owner']
         if owner != 'project':
             rec.render_keys[owner] = 'new'
+            changes = []
+            if new_item is not None and new_item != old_item:
+                changes.append('%s item changed from "%s" to "%s"' % (args.id, old_item, new_item))
             if args.history:
+                changes.append(args.history)
+            if changes:
                 hp = rec.dir / 'content' / owner / 'history.json'
                 try:
                     hist = json.loads(hp.read_text(encoding='utf-8')) if hp.is_file() else []
                 except ValueError:
                     raise Fail(1, 'content/%s/history.json is not valid JSON' % owner)
-                hist.insert(0, {'date': now.text, 'change': args.history})
+                for change in reversed(changes):
+                    hist.insert(0, {'date': now.text, 'change': change})
                 write_text(hp, dump_json(hist))
                 rec.invalidate()
-        elif args.history:
-            warn('%s is a project task; project tasks have no History, --history ignored' % args.id)
+        elif args.history or new_item is not None:
+            warn('%s is a project task; project tasks have no History, nothing recorded there' % args.id)
         rec.render_keys[FP_NAME] = 'new'
         rec.message = 'docs/artifacts: %s %s' % (args.id, status)
         return {'command': 'set-task-status', 'id': args.id, 'status': status, 'previous': prev,
@@ -2398,6 +2421,7 @@ def build_parser():
     s = sub.add_parser('set-task-status', parents=[w], help='change one task')
     s.add_argument('id')
     s.add_argument('status')
+    s.add_argument('--item', help='a corrected task title, at most 80 characters; recorded in the History of a feature task')
     s.add_argument('--detail')
     s.add_argument('--expected')
     s.add_argument('--basis', help='what sets the estimate; "" clears it (open statuses only)')
