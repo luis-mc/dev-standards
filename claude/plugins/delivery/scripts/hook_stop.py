@@ -9,6 +9,9 @@ enforcement.mode "warn" nothing blocks: the findings are shown as a systemMessag
 .delivery/blocks.log when enforcement.log_every_block is true. Reads the
 ledger read-only; never writes it. A project without .delivery/ is untouched.
 
+The loop limit (config `stop_repeat_limit`, default 3, 0 = never): a finding that blocked `limit` turn ends in a row
+with its key and the ledger fields it depends on unchanged stops blocking and is announced once per session.
+
 Checks: DL-02 DL-03 DL-14 DL-18 DL-30 DL-31 DL-32 DL-33 DL-63 DL-64 DL-76 and Q-2.
 Disable one in .delivery/config.json "checks_off", all with CLAUDE_DELIVERY_HOOKS=off.
 """
@@ -185,13 +188,84 @@ def check_trains(ledger, cfg, at):
             continue
         if H.on_hold(t, at):        # a recorded hold (delivery_ledger.py hold) suspends DL-14 and DL-18 until its `until`
             continue
+        pr = t.get('pr', 'N')
         if not t.get('cleaned_at'):
-            out.append(('DL-14:' + str(t.get('id')), 'DL-14 %s is merged and not cleaned. Run cleanup.py --pr %s.'
-                        % (H.release_name(t), t.get('pr', 'N'))))
+            out.append(('DL-14:' + str(t.get('id')), 'DL-14 %s is merged and not cleaned. %s'
+                        % (H.release_name(t), record_hint(cfg, 'cleanup_command', 'cleaned', pr,
+                                                          'Run cleanup.py --pr %s' % pr))))
         if not (t.get('smoke') or {}).get('state'):
-            out.append(('DL-18:' + str(t.get('id')), 'DL-18 %s is merged and production was not smoke-tested. Run the '
-                        'smoke step after its deploy and record it (delivery_log.py live).' % H.release_name(t)))
+            out.append(('DL-18:' + str(t.get('id')), 'DL-18 %s is merged and production was not smoke-tested. %s'
+                        % (H.release_name(t), record_hint(cfg, 'smoke_command', 'smoke', pr,
+                                                          'Run the smoke step after its deploy'))))
     return out
+
+
+def record_hint(cfg, cfg_key, subcommand, pr, fallback):
+    """The sentence that names the command doing the work (the project's configured one, else `fallback`) and the
+    plugin command that records its result in the ledger, which the hook reads (the project's scripts may not)."""
+    configured = cfg.get(cfg_key)
+    if isinstance(configured, str) and configured.strip():
+        todo = 'Run `%s`' % configured.replace('{pr}', str(pr))
+    else:
+        todo = fallback
+    ledger_py = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'delivery_ledger.py')
+    return '%s, then record it with `python %s %s --pr %s` (it checks the facts and writes the ledger).' % (
+        todo, ledger_py, subcommand, pr)
+
+
+# --- loop limit (stop_repeat_limit) --------------------------------------------------------------
+
+DEPENDS_TRAIN = ('state', 'pr', 'pushed_at', 'green_at', 'merged_at', 'live_at', 'cleaned_at', 'smoke', 'hold',
+                 'release_no')
+DEPENDS_AGENT = ('state', 'last_checked', 'eta', 'started')
+
+
+def depends_on(ledger, key):
+    """The ledger fields a finding depends on, as a JSON-able value: a train's or an agent's fields for a key that
+    names one (DL-02/03/14/18/76, DL-30/32), nothing for the rest."""
+    ident = key.split(':', 1)[1] if ':' in key else None
+    if ident:
+        for rows, fields in ((ledger['trains'], DEPENDS_TRAIN), (ledger['agents'], DEPENDS_AGENT)):
+            for r in rows:
+                if str(r.get('id')) == ident:
+                    return {f: r.get(f) for f in fields}
+    return None
+
+
+def repeat_limit(found, ledger, root, sid, limit):
+    """(still_blocking, newly_limited). A finding whose key and dependent ledger fields were the same on `limit`
+    earlier turn ends stops blocking (the loop limit); one notice per session is returned for the findings that just
+    hit the limit. A changed field or a new finding counts from 1 again. limit 0 = never."""
+    if limit <= 0 or not found:
+        return found, []
+    state = H.read_state(root)
+    skey = 'repeat:' + sid
+    old = state.get(skey) if isinstance(state.get(skey), dict) else {}
+    new, blocking, noticed = {}, [], []
+    for key, msg in found:
+        fp = H.fingerprint([key, json.dumps(depends_on(ledger, key), sort_keys=True, default=str)])
+        prev = old.get(key) if isinstance(old.get(key), dict) else {}
+        n = prev.get('n', 0) + 1 if prev.get('fp') == fp and isinstance(prev.get('n'), int) else 1
+        entry = {'fp': fp, 'n': n, 'noticed': bool(prev.get('noticed')) if prev.get('fp') == fp else False}
+        if n > limit:
+            if not entry['noticed']:
+                entry['noticed'] = True
+                noticed.append((key, msg))
+        else:
+            blocking.append((key, msg))
+        new[key] = entry
+    state.pop(skey, None)
+    state[skey] = new
+    H.write_state(root, state)
+    return blocking, noticed
+
+
+def limit_notice(noticed, limit):
+    rules = sorted({k.split(':')[0] for k, _ in noticed})
+    names = sorted({(re.match(r'DL-\d+ (RELEASE-\d+|the train)\b', m) or [None, k])[1] for k, m in noticed})
+    return ('luismc-delivery: letting the turn end after %d blocks with no change. %s for %s still open after %d tries; '
+            'the turn is no longer blocked for it. Record it with the command named below, or ask the owner. %s'
+            % (limit, '/'.join(rules), ', '.join(names), limit, ' '.join(m for _, m in noticed)))
 
 
 def check_agents(ledger, cfg, at):
@@ -362,8 +436,13 @@ def main():
                               + '; '.join(m for _, m in found)}))
         return 0
     sid = str(data.get('session_id') or 'default')
+    limit = H.repeat_limit(cfg, enf['block_ceiling'])
+    found, noticed = repeat_limit(found, H.load_ledger(root), root, sid, limit)
+    notice = {'systemMessage': limit_notice(noticed, limit)} if noticed else {}
     verdict, blocks = H.block_decision(root, sid, [k for k, _ in found], enf['block_ceiling'])
     if verdict == 'clear':
+        if notice:
+            print(json.dumps(notice))
         return 0
     if verdict == 'release':
         print(json.dumps({'systemMessage': 'luismc-delivery: letting the turn end after %d blocks with no change. '
@@ -372,7 +451,7 @@ def main():
     for _, m in found:
         H.log_block(root, cfg, 'stop', m)
     reason = 'Delivery checks failed. Fix these in this turn:\n' + '\n'.join('- ' + m for _, m in found)
-    print(json.dumps({'decision': 'block', 'reason': reason}))
+    print(json.dumps(dict(notice, decision='block', reason=reason)))
     return 0
 
 

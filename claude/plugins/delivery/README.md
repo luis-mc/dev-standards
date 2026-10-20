@@ -35,6 +35,9 @@ New in 0.2.0:
 |---|---|---|
 | `enforcement.mode` | `block` | `warn` shows findings and denials as a message and blocks nothing |
 | `enforcement.block_ceiling` | 3 | the same findings block a session this many times, then the turn ends |
+| `stop_repeat_limit` | `block_ceiling` | the Stop hook stops blocking a finding after it blocked this many turn ends in a row with no change to the ledger fields it depends on; 0 = never limit |
+| `cleanup_command`, `smoke_command` | unset | the project's commands (`{pr}` = PR number) that the DL-14 and DL-18 messages name before the recording command |
+| `smoke_workflow` | `Production smoke` | the workflow `delivery_ledger.py smoke` looks for |
 | `enforcement.log_every_block` | false | append every block to `.delivery/blocks.log`: time, hook (`stop`/`pre-tool`), rule id, message (tab separated) |
 | `watcher.push_trains` | true | push the next joined train |
 | `watcher.open_prs` | true | open its ready PR |
@@ -45,6 +48,17 @@ New in 0.2.0:
 | `runner_plan.heavy_jobs_yield` | true | `runner_plan.py run` waits for train CI (`heavy_local_jobs_yield` is accepted too) |
 
 Accepted spellings from the comics-organizer config: `watcher.merge_method: "merge"` or `merge_flag: "--merge"` (plus `never_auto_merge: true`) and `heavy_local_jobs_yield`. The plugin's earlier names (`caps`, `runners[]`, `runner_plan.retry_seconds`, `watcher_interval_s`, ...) are unchanged.
+
+**Recording the smoke and the cleanup (DL-14, DL-18).** The Stop hook reads `cleaned_at` and `smoke.state` of the train row, which only the ledger writes. Project scripts (`cleanup.py`, `delivery_log.py live`) may not, so the plugin has its own commands; the DL-14 and DL-18 messages name the project's configured command, then these:
+
+```
+python <plugin>/scripts/delivery_ledger.py smoke --pr N [--run <id|url>]
+python <plugin>/scripts/delivery_ledger.py cleaned --pr N
+```
+
+`smoke` uses `gh` to find the newest `Production smoke` run (`smoke_workflow`) on the PR's merge commit (or the run you pass): success records `smoke {state: pass, at, run}` and `live_at` on every row with that `pr`; a failed run records `fail` and exits 1; a missing or unfinished run records nothing and exits 1. `cleaned` checks with `git ls-remote` that the train's branch and its cargo branches are gone from `origin` and with `git worktree list` that no worktree holds them, then records `cleaned_at` on every row with that `pr`; otherwise it lists what is left and records nothing. Both write through the ledger lock, touch only those fields and add an event. CI fields are never touched.
+
+**Loop limit (`stop_repeat_limit`).** `.delivery/hook-state.json` keeps, per session, each finding's key plus the ledger fields it depends on (the train's or agent's row). The same unchanged finding blocks that many turn ends (3), then the next turn ends are not blocked for it: one notice per session says it is still open and names the command. A change to those fields, or a new finding, starts again. It matters for findings that only the owner or an outside step can clear: DL-14, DL-18, DL-03, DL-02, DL-76 and DL-63. Findings you can clear by acting now (DL-33 watcher heartbeat, DL-30 and DL-32 agent checks, DL-31 and DL-64 wording, Q-2) are limited the same way, but each rewrite or fix changes the finding, so they keep blocking as before.
 
 **Questions (Q-5).** `AskUserQuestion` is denied when this session's agents are still running and a question batch was already asked within `question_window_min` (default 60) since the owner's last prompt: park the question until the wave reports, then ask everything at once. Allowed when every running agent has `blocked_on: "owner"`, when the owner's latest prompt asked for questions ("ask me questions"), or for dialogs issued within `question_batch_sec` (default 90) of the previous one (several dialogs in one message, Q-1). `checks_off: ["Q-5"]` switches it off.
 

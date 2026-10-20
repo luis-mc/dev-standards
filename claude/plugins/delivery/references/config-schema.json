@@ -419,6 +419,25 @@
         "type": "string"
       },
       "description": "DL-76: job names the release PR proves; none may run on the default branch after the release merges (default [], check off)."
+    },
+    "stop_repeat_limit": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 3,
+      "description": "The Stop hook stops blocking a finding that blocked this many turn ends in a row with no change to the ledger fields it depends on, and announces it once per session. 0 = never limit. Unset, it follows enforcement.block_ceiling (default 3)."
+    },
+    "cleanup_command": {
+      "type": "string",
+      "description": "DL-14: the project's cleanup command, {pr} is the PR number; the Stop message names it, then the plugin command that records the result."
+    },
+    "smoke_command": {
+      "type": "string",
+      "description": "DL-18: the project's production smoke command, {pr} is the PR number; named in the Stop message like cleanup_command."
+    },
+    "smoke_workflow": {
+      "type": "string",
+      "default": "Production smoke",
+      "description": "Name of the workflow that `delivery_ledger.py smoke` looks for on the PR's merge commit."
     }
   }
 }

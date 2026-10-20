@@ -259,6 +259,13 @@ def gh(root, args, timeout=20):
 
 # --- per-session block state (artifacts R8.4 pattern) ---------------------------------------
 
+def repeat_limit(cfg, default=3):
+    """stop_repeat_limit: how many turn ends the same unchanged finding may block; 0 = never limit.
+    Unset, it follows enforcement.block_ceiling (passed as `default`)."""
+    v = cfg.get('stop_repeat_limit')
+    return v if isinstance(v, int) and not isinstance(v, bool) and v >= 0 else default
+
+
 def fingerprint(keys):
     return hashlib.sha256(json.dumps(sorted(keys)).encode('utf-8')).hexdigest()[:16]
 
