@@ -13,6 +13,8 @@ CLI:
     delivery_ledger.py hold --train T-... --reason "owner asked" [--until ISO] [--release]
     delivery_ledger.py measure --train T-... --state clean|regressions|none [--report path]
     delivery_ledger.py show [--json]
+    delivery_ledger.py smoke --pr N [--run ID|URL]   record the production smoke of a merged train (needs gh)
+    delivery_ledger.py cleaned --pr N                record that a merged train's branches and worktrees are gone
 
 Standard library only. Config: .delivery/config.json (tz, base, ...).
 """
@@ -22,6 +24,8 @@ import argparse
 import contextlib
 import json
 import os
+import re
+import subprocess
 import sys
 import tempfile
 import time
@@ -429,6 +433,143 @@ def _cmd_show(root, args) -> int:
     return 0
 
 
+# --- sanctioned recording of the smoke and the cleanup (DL-14, DL-18) --------------------
+
+DEFAULT_SMOKE_WORKFLOW = "Production smoke"
+
+
+def _run(argv, root, timeout=60):
+    """(returncode, stdout) of a command, (127, '') when it cannot run. The seam the tests replace."""
+    try:
+        p = subprocess.run(argv, cwd=str(root), capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", timeout=timeout)
+        return p.returncode, p.stdout
+    except (OSError, subprocess.SubprocessError):
+        return 127, ""
+
+
+def _gh_json(argv, root, run):
+    code, out = run(["gh"] + argv, root)
+    if code != 0:
+        return None
+    try:
+        return json.loads(out)
+    except ValueError:
+        return None
+
+
+def _rows_for_pr(led: dict, pr: int) -> list:
+    rows = [t for t in led.get("trains", []) if t.get("pr") == pr]
+    if not rows:
+        raise LedgerError("no train row with pr=%d in the ledger" % pr)
+    return rows
+
+
+def _run_id(text: str) -> str:
+    m = re.search(r"/runs/(\d+)", text) or re.fullmatch(r"\s*(\d+)\s*", text)
+    if not m:
+        raise LedgerError("--run must be a run id or a run URL, got %r" % text)
+    return m.group(1)
+
+
+def smoke_result(root, pr: int, cfg: dict, run_id=None, run=_run):
+    """(state, run_info) for the production smoke of PR `pr`: state is pass, fail or None (missing or unfinished),
+    with a plain message in run_info['message'] when None."""
+    name = cfg.get("smoke_workflow") or DEFAULT_SMOKE_WORKFLOW
+    fields = "databaseId,status,conclusion,createdAt,url,workflowName,headSha"
+    if run_id:
+        rid = _run_id(run_id)
+        info = _gh_json(["run", "view", rid, "--json", fields], root, run)
+        if not info:
+            return None, {"message": "gh could not read run %s" % rid}
+    else:
+        pr_info = _gh_json(["pr", "view", str(pr), "--json", "mergeCommit"], root, run)
+        merge = ((pr_info or {}).get("mergeCommit") or {}).get("oid")
+        if not merge:
+            return None, {"message": "gh found no merge commit for PR %d (is it merged, and is gh signed in?)" % pr}
+        runs = _gh_json(["run", "list", "--workflow", name, "--commit", merge, "--limit", "20", "--json", fields],
+                        root, run) or []
+        if not runs:
+            return None, {"message": "no '%s' run found on merge commit %s of PR %d yet" % (name, merge[:9], pr)}
+        info = sorted(runs, key=lambda r: str(r.get("createdAt")))[-1]
+    ref = str(info.get("url") or info.get("databaseId"))
+    if info.get("status") != "completed":
+        return None, {"message": "the '%s' run %s is not finished (%s)" % (name, ref, info.get("status"))}
+    info["ref"] = ref
+    return ("pass" if info.get("conclusion") == "success" else "fail"), info
+
+
+def _cmd_smoke(root, args, run=_run) -> int:
+    cfg = load_config(root)
+    pr = args.pr
+    _rows_for_pr(load(root), pr)
+    state, info = smoke_result(root, pr, cfg, args.run, run)
+    if state is None:
+        print("delivery_ledger: smoke not recorded: %s" % info["message"], file=sys.stderr)
+        return 1
+    at = iso()
+
+    def fn(led):
+        for t in _rows_for_pr(led, pr):
+            t["smoke"] = {"state": state, "at": at, "run": info["ref"]}
+            if state == "pass":
+                t["live_at"] = t.get("live_at") or at
+                if t.get("state") in ("merged", "pushed", "ci", "green"):
+                    t["state"] = "live"
+            add_event(led, "smoke.%s" % state, "%s pr=%d run=%s" % (t["id"], pr, info["ref"]), "delivery_ledger")
+    update(root, fn)
+    print("smoke %s recorded for PR %d (run %s)" % (state, pr, info["ref"]))
+    return 0 if state == "pass" else 1
+
+
+def train_branches(train: dict) -> list:
+    names = [train.get("branch")] + [c.get("branch") for c in train.get("cargo") or [] if isinstance(c, dict)]
+    return sorted({n for n in names if isinstance(n, str) and n})
+
+
+def leftovers(root, train: dict, run=_run) -> list:
+    """What still exists of a train: remote branches and worktrees (as text), [] when it is all gone."""
+    left = []
+    branches = train_branches(train)
+    for b in branches:
+        code, out = run(["git", "ls-remote", "--heads", "origin", b], root)
+        if code != 0:
+            raise LedgerError("git ls-remote origin failed for %s; cannot verify the cleanup" % b)
+        if out.strip():
+            left.append("remote branch %s" % b)
+    code, out = run(["git", "worktree", "list", "--porcelain"], root)
+    if code != 0:
+        raise LedgerError("git worktree list failed; cannot verify the cleanup")
+    path = None
+    for line in out.splitlines() + [""]:
+        if line.startswith("worktree "):
+            path = line[len("worktree "):]
+        elif line.startswith("branch ") and line[len("branch "):].replace("refs/heads/", "", 1) in branches:
+            left.append("worktree %s (branch %s)" % (path, line.split("refs/heads/", 1)[-1]))
+    return left
+
+
+def _cmd_cleaned(root, args, run=_run) -> int:
+    rows = _rows_for_pr(load(root), args.pr)
+    left = []
+    for t in rows:
+        left += [x for x in leftovers(root, t, run) if x not in left]
+    if left:
+        print("delivery_ledger: cleanup not recorded; still present for PR %d:\n  - %s" % (args.pr, "\n  - ".join(left)),
+              file=sys.stderr)
+        return 1
+    at = iso()
+
+    def fn(led):
+        for t in _rows_for_pr(led, args.pr):
+            set_train_state(t, "cleaned", at)
+            t["cleaned_at"] = t.get("cleaned_at") or at
+            add_event(led, "cleaned", "%s pr=%d" % (t["id"], args.pr), "delivery_ledger")
+    update(root, fn)
+    print("cleanup recorded for PR %d (%d train row%s)" % (args.pr, len(rows), "" if len(rows) == 1 else "s"))
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--root", help="repository root (default: nearest folder with .delivery/ or .git)")
@@ -448,6 +589,11 @@ def main(argv=None) -> int:
     p.add_argument("--train", required=True)
     p.add_argument("--state", required=True, choices=("none", "clean", "regressions"))
     p.add_argument("--report")
+    p = sub.add_parser("smoke")
+    p.add_argument("--pr", required=True, type=int)
+    p.add_argument("--run", help="a run id or URL (default: the newest smoke run on the PR's merge commit)")
+    p = sub.add_parser("cleaned")
+    p.add_argument("--pr", required=True, type=int)
     p = sub.add_parser("show")
     p.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
@@ -456,7 +602,8 @@ def main(argv=None) -> int:
         print("delivery_ledger: no repository root found", file=sys.stderr)
         return 2
     try:
-        return {"plan": _cmd_plan, "hold": _cmd_hold, "measure": _cmd_measure, "show": _cmd_show}[args.cmd](root, args)
+        return {"plan": _cmd_plan, "hold": _cmd_hold, "measure": _cmd_measure, "show": _cmd_show,
+                "smoke": _cmd_smoke, "cleaned": _cmd_cleaned}[args.cmd](root, args)
     except LedgerError as exc:
         print("delivery_ledger: %s" % exc, file=sys.stderr)
         return 1
