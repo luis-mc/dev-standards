@@ -35,7 +35,7 @@ New in 0.2.0:
 |---|---|---|
 | `enforcement.mode` | `block` | `warn` shows findings and denials as a message and blocks nothing |
 | `enforcement.block_ceiling` | 3 | the same findings block a session this many times, then the turn ends |
-| `stop_repeat_limit` | 3 | the Stop hook stops blocking a finding after it blocked this many turn ends in a row with no change to the ledger fields it depends on; 0 = never limit |
+| `stop_repeat_limit` | `block_ceiling` | the Stop hook stops blocking a finding after it blocked this many turn ends in a row with no change to the ledger fields it depends on; 0 = never limit |
 | `cleanup_command`, `smoke_command` | unset | the project's commands (`{pr}` = PR number) that the DL-14 and DL-18 messages name before the recording command |
 | `smoke_workflow` | `Production smoke` | the workflow `delivery_ledger.py smoke` looks for |
 | `enforcement.log_every_block` | false | append every block to `.delivery/blocks.log`: time, hook (`stop`/`pre-tool`), rule id, message (tab separated) |

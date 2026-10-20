@@ -424,7 +424,7 @@
       "type": "integer",
       "minimum": 0,
       "default": 3,
-      "description": "The Stop hook stops blocking a finding that blocked this many turn ends in a row with no change to the ledger fields it depends on, and announces it once per session. 0 = never limit."
+      "description": "The Stop hook stops blocking a finding that blocked this many turn ends in a row with no change to the ledger fields it depends on, and announces it once per session. 0 = never limit. Unset, it follows enforcement.block_ceiling (default 3)."
     },
     "cleanup_command": {
       "type": "string",

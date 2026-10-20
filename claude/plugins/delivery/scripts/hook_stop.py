@@ -263,9 +263,9 @@ def repeat_limit(found, ledger, root, sid, limit):
 def limit_notice(noticed, limit):
     rules = sorted({k.split(':')[0] for k, _ in noticed})
     names = sorted({(re.match(r'DL-\d+ (RELEASE-\d+|the train)\b', m) or [None, k])[1] for k, m in noticed})
-    return ('luismc-delivery: %s for %s still open after %d tries; the turn is no longer blocked for it. Record it with '
-            'the command named below, or ask the owner. %s'
-            % ('/'.join(rules), ', '.join(names), limit, ' '.join(m for _, m in noticed)))
+    return ('luismc-delivery: letting the turn end after %d blocks with no change. %s for %s still open after %d tries; '
+            'the turn is no longer blocked for it. Record it with the command named below, or ask the owner. %s'
+            % (limit, '/'.join(rules), ', '.join(names), limit, ' '.join(m for _, m in noticed)))
 
 
 def check_agents(ledger, cfg, at):
@@ -436,7 +436,7 @@ def main():
                               + '; '.join(m for _, m in found)}))
         return 0
     sid = str(data.get('session_id') or 'default')
-    limit = H.repeat_limit(cfg)
+    limit = H.repeat_limit(cfg, enf['block_ceiling'])
     found, noticed = repeat_limit(found, H.load_ledger(root), root, sid, limit)
     notice = {'systemMessage': limit_notice(noticed, limit)} if noticed else {}
     verdict, blocks = H.block_decision(root, sid, [k for k, _ in found], enf['block_ceiling'])
