@@ -193,6 +193,30 @@ def draft_prs_allowed_ready_only_from_release_branches():
 
 
 @case
+def ready_with_repo_looks_up_the_pull_request_there():
+    r = make_repo(None, branch="DS1-integration")
+    seen = []
+    real = sg.subprocess.run
+
+    def fake(cmd, **kw):
+        if cmd[:3] == ["gh", "pr", "view"]:
+            seen.append(cmd)
+            head = "DS9-integration" if "acme/tools" in cmd else "feature-x"
+            return subprocess.CompletedProcess(cmd, 0, head, "")
+        return real(cmd, **kw)
+
+    sg.subprocess.run = fake
+    try:
+        assert refused(r, "gh pr ready 83 -R acme/tools") is None
+        assert seen[-1][:4] == ["gh", "pr", "view", "83"] and seen[-1][4:6] == ["-R", "acme/tools"], seen
+        assert refused(r, "gh pr ready 83 --repo=acme/other"), "the other repository's head is judged"
+        assert refused(r, "gh pr ready -R acme/tools 83") is None, "the repository value is not the target"
+        assert seen[-1][3] == "83", seen
+    finally:
+        sg.subprocess.run = real
+
+
+@case
 def release_branches_come_from_change_notes_json():
     r = make_repo(None, branch="release/1", notes={"release_branches": ["release/*"]})
     assert refused(r, "gh pr create --fill") is None
