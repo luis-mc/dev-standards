@@ -3,13 +3,17 @@
 
     delivery_doctor.py [self-check] [--root DIR] [--json]
 
-Five checks, each `ok` or `FAIL` with the fix:
+Six checks, each `ok` or `FAIL` with the fix:
   config   .delivery/config.json passes delivery_config.py validate (no errors; a missing file is fine)
   gh       `gh auth status` succeeds (the watcher and the hooks need a signed-in gh; DELIVERY_GH replaces gh in tests)
   tz       the configured `tz` loads through zoneinfo; if tzdata is missing this FAILS instead of quietly using UTC
   hooks    the plugin's hooks.json names the five hook scripts and they exist, and luismc-delivery is enabled in
            .claude/settings.json, .claude/settings.local.json or ~/.claude/settings.json (enabledPlugins)
   ledger   .delivery/ is writable and ledger.json, when present, is valid JSON
+  runner   (DL-79) whether ACTIONS_RUNNER_HOOK_JOB_STARTED points at runner_load_gate on this machine: in the
+           environment, in the Windows user/machine environment, or in the .env of a runner folder
+           (DELIVERY_RUNNER_DIRS, `runner_dirs` in the machine file, or actions-runner* next to home, drive root and /opt).
+           FAIL only when a runner folder exists without the hook; a machine with no runner is ok.
 Exit 0 all ok, 1 at least one FAIL, 2 no .delivery/ folder. Standard library only.
 """
 from __future__ import annotations
@@ -101,7 +105,70 @@ def check_ledger(root, cfg):
     return True, "writable"
 
 
-CHECKS = (("config", check_config), ("gh", check_gh), ("tz", check_tz), ("hooks", check_hooks), ("ledger", check_ledger))
+HOOK_VAR = "ACTIONS_RUNNER_HOOK_JOB_STARTED"
+
+
+def _runner_dirs():
+    import glob
+    import load as L
+    dirs = [d for d in os.environ.get("DELIVERY_RUNNER_DIRS", "").split(os.pathsep) if d]
+    machine = L._read(L.machine_file())
+    if isinstance(machine, dict) and isinstance(machine.get("runner_dirs"), list):
+        dirs += [d for d in machine["runner_dirs"] if isinstance(d, str)]
+    if not dirs:
+        for base in (os.path.expanduser("~"), "C:\\", "/opt", "/srv"):
+            dirs += glob.glob(os.path.join(base, "actions-runner*"))
+    return [d for d in dirs if os.path.isfile(os.path.join(d, ".runner")) or os.path.isfile(os.path.join(d, "config.sh"))
+            or os.path.isfile(os.path.join(d, "config.cmd"))]
+
+
+def _hook_value(text):
+    for line in text.splitlines():
+        if line.strip().startswith(HOOK_VAR + "="):
+            return line.split("=", 1)[1].strip()
+    return None
+
+
+def _windows_env_hook():
+    if not sys.platform.startswith("win"):
+        return None
+    import subprocess
+    for key in ("HKCU\\Environment", "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"):
+        try:
+            out = subprocess.run(["reg", "query", key, "/v", HOOK_VAR], capture_output=True, text=True, timeout=10).stdout
+        except (OSError, subprocess.SubprocessError):
+            continue
+        for line in out.splitlines():
+            if HOOK_VAR in line:
+                return line.split(None, 2)[-1].strip()
+    return None
+
+
+def check_runner(root, cfg):
+    env = os.environ.get(HOOK_VAR) or _windows_env_hook()
+    dirs = _runner_dirs()
+    hooked, bare = [], []
+    for d in dirs:
+        try:
+            with open(os.path.join(d, ".env"), encoding="utf-8", errors="replace") as f:
+                v = _hook_value(f.read())
+        except OSError:
+            v = None
+        (hooked if v and "runner_load_gate" in v else bare).append(d)
+    if env and "runner_load_gate" in env and not bare:
+        return True, "%s is set to %s" % (HOOK_VAR, env)
+    if hooked and not bare:
+        return True, "%s set in the .env of %s" % (HOOK_VAR, ", ".join(hooked))
+    if env and "runner_load_gate" not in env:
+        return False, "%s is set to %s, not runner_load_gate. See the README, 'CI runner gate'." % (HOOK_VAR, env)
+    if bare:
+        return False, ("runner folder(s) %s have no %s=...runner_load_gate hook: new jobs can start over the load limits. "
+                       "See the README, 'CI runner gate' (the doctor changes nothing)." % (", ".join(bare), HOOK_VAR))
+    return True, "no self-hosted runner found on this machine (nothing to hook)"
+
+
+CHECKS = (("config", check_config), ("gh", check_gh), ("tz", check_tz), ("hooks", check_hooks), ("ledger", check_ledger),
+          ("runner", check_runner))
 
 
 def run_checks(root):

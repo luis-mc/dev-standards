@@ -751,7 +751,7 @@ def hooks_json_wires_every_script():
     assert 'hook_stop.py' in cmds('Stop')[0]
     assert 'hook_session_start.py' in cmds('SessionStart')[0]
     pre = h['PreToolUse'][0]
-    assert pre['matcher'] == 'Bash|Agent|RemoteTrigger|AskUserQuestion|Write' and 'hook_pre_tool.py' in pre['hooks'][0]['command']
+    assert pre['matcher'] == 'Bash|PowerShell|Agent|Workflow|RemoteTrigger|AskUserQuestion|Write' and 'hook_pre_tool.py' in pre['hooks'][0]['command']
     for ev in ('PostToolUse', 'PostToolUseFailure'):
         assert h[ev][0]['matcher'] == 'Bash|Agent|RemoteTrigger|Artifact|AskUserQuestion'
         assert 'hook_post_tool.py' in h[ev][0]['hooks'][0]['command']

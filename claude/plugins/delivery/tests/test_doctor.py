@@ -37,7 +37,7 @@ class DoctorTests(unittest.TestCase):
     def test_all_ok(self):
         res = run(enabled_root({"tz": "Europe/Lisbon"}))
         self.assertTrue(all(r["ok"] for r in res.values()), res)
-        self.assertEqual(set(res), {"config", "gh", "tz", "hooks", "ledger"})
+        self.assertEqual(set(res), {"config", "gh", "tz", "hooks", "ledger", "runner"})
 
     def test_invalid_config_fails(self):
         res = run(enabled_root({"enforcement": {"mode": "stop"}}))

@@ -1,9 +1,9 @@
 {
-  "description": "luismc-delivery: Stop blocks (trains, agents, ETAs, watcher, registry, wording, questions), PreToolUse denies, SessionStart ledger summary, PostToolUse ledger writes (DELIVERYSPEC section 5). Opt-in: nothing happens in a project without .delivery/",
+  "description": "luismc-delivery: Stop blocks (trains, agents, ETAs, watcher, registry, wording, questions), PreToolUse denies, SessionStart ledger summary, PostToolUse ledger writes (DELIVERYSPEC section 5). Opt-in: nothing happens in a project without .delivery/ EXCEPT the machine load guard (DL-77, DL-78): it is on in every project where the plugin is enabled, with or without .delivery/, and refuses new heavy work (tests, builds, installs, local agents) while memory is above 85% or CPU above 60% (limits configurable per machine and per project)",
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash|Agent|RemoteTrigger|AskUserQuestion|Write",
+        "matcher": "Bash|PowerShell|Agent|Workflow|RemoteTrigger|AskUserQuestion|Write",
         "hooks": [
           {
             "type": "command",

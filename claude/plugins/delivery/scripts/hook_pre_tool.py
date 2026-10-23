@@ -7,7 +7,7 @@ rule, with a one-line reason that names the DL id and the fix, as
 Reads the ledger and .delivery/config.json read-only. A project without .delivery/ is
 untouched; an error in the hook allows the call (fail open).
 
-Checks: DL-05 06 07 20 23 36 37 38 41 42 53 55 73 74 75, D4 (PC-bound), Q-3, Q-4.
+Checks: DL-77 (load guard, exit 2), DL-05 06 07 20 23 36 37 38 41 42 53 55 73 74 75, D4 (PC-bound), Q-3, Q-4.
 """
 import fnmatch
 import json
@@ -18,6 +18,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import hooklib as H  # noqa: E402
+import load_guard as G  # noqa: E402
 
 ATTRIBUTION_RE = re.compile(r'co-authored-by|generated with \[?claude|claude code|noreply@anthropic\.com|'
                             r'\U0001F916 generated|written by claude|\bclaude-session\b', re.I)
@@ -423,6 +424,16 @@ def main():
         return 0
     data = H.read_input()
     root = H.find_root(data)
+    # DL-77: the load guard protects the machine, so it runs in every project, with or without .delivery/
+    held = G.check_call(data, G.project_cfg(root))
+    if held:
+        if root and H.C.enforcement(H.load_config(root))['mode'] == 'warn':
+            print(json.dumps({'systemMessage': 'luismc-delivery (warn mode, call allowed): ' + held}))
+        else:
+            if root:
+                H.log_block(root, H.load_config(root), 'pre-tool', held)
+            print(held, file=sys.stderr)
+            return 2
     if not root:
         return 0
     cfg = H.load_config(root)
@@ -430,7 +441,7 @@ def main():
     at = H.now()
     tool = data.get('tool_name')
     try:
-        if tool == 'Bash':
+        if tool in ('Bash', 'PowerShell'):
             check_bash(root, cfg, ledger, data, at)
         elif tool == 'Write':
             check_write(root, cfg, data)
