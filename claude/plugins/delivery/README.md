@@ -1,6 +1,6 @@
 # luismc-delivery
 
-Delivery guard rails for a project that opts in with a `.delivery/` folder. Rules: `docs/specs/delivery/DELIVERYSPEC.md`. Without `.delivery/` the hooks do nothing.
+Delivery guard rails for a project that opts in with a `.delivery/` folder. Rules: `docs/specs/delivery/DELIVERYSPEC.md`. Without `.delivery/` the delivery hooks do nothing, **except the machine load guard (below), which is on in every project where the plugin is enabled**: it protects the machine, not the project.
 
 | Script | What it does |
 |---|---|
@@ -9,7 +9,33 @@ Delivery guard rails for a project that opts in with a `.delivery/` folder. Rule
 | `delivery_watch.py` | background watcher: pushes the next train, opens its PR, merges at green, tidies CI runs, keeps the runner guard running |
 | `rules/clarifying-questions.md` | the canonical question rules (Q-1..Q-5); SessionStart injects them every session |
 | `delivery_config.py validate` | checks `.delivery/config.json` against `references/config-schema.json` |
-| `delivery_doctor.py` | self-check: config valid, gh signed in, tz loads, hooks registered, ledger writable |
+| `delivery_doctor.py` | self-check: config valid, gh signed in, tz loads, hooks registered, ledger writable, runner load-gate hook set (DL-79) |
+| `load.py`, `load_guard.py` | machine memory/CPU measurement and the load guard (DL-77, DL-78) |
+| `runner_load_gate.py` (+ `.cmd`, `.ps1`, `.sh`) | self-hosted runner job-start hook (DL-79) |
+
+## Machine load guard (DL-77, DL-78, DL-79)
+
+Owner rule: **no memory above 85%, no CPU above 60%**; run as many jobs as fit inside that. The guard only holds NEW work. It never kills, suspends or lowers the priority of anything. It is on in every project where the plugin is enabled, **even without `.delivery/`**.
+
+- **Measure** (`load.py`, standard library only): Windows `GlobalMemoryStatusEx` + `GetSystemTimes`; Linux `/proc/meminfo` + `/proc/stat`; macOS `vm_stat` + `top -l 2` (load average fallback). CPU over ~1 s; the last sample is cached 10 s in the temp folder; CPU is the mean of the last up to 3 samples within 30 s, so one spike does not decide.
+- **Limits**, per key: project `.delivery/config.json` `load_limits` over the machine file `~/.claude/luismc-delivery-machine.json` over 85/60.
+
+  ```json
+  {"load_limits": {"memory_pct": 85, "cpu_pct": 60}}
+  ```
+- **PreToolUse** (`Bash|PowerShell|Agent|Workflow`): over a limit, a HEAVY call is refused with exit 2 and a message with the numbers, the limits, the top processes (names), and what to do. Heavy: test runners (vitest, jest, pytest, playwright, mocha, `python -m pytest|unittest`); `pnpm|npm|yarn|bun` `test`, `e2e`, `check*`, `build*` (also via `run`, `exec`, `dlx`); turbo/nx; `tsc -b`; next/vite/webpack builds; cargo, dotnet, go, mvn, gradle, msbuild; docker build and compose up/build; ffmpeg; installs (`install|add|ci`) **unless `--offline`** (an install unpacks thousands of files: the crash trigger); background jobs that are not plainly light; a local Agent launch; a Workflow; plus your `heavy_commands` regexes. Light and never refused: git, gh, ls, cat, grep, rtk-wrapped reads, python one-liners, lint. RemoteTrigger and `Agent` with `isolation` remote/cloud are never refused. If the machine cannot be measured the call is allowed with a warning on stderr.
+- **Stop / SessionStart**: when over a limit, one non-blocking notice per turn with the numbers (SessionStart also puts it in the model's context).
+- **Switches**: `checks_off: ["DL-77"]` / `["DL-78"]` per project; `enforcement.mode: "warn"` shows the refusal as a message; `CLAUDE_DELIVERY_HOOKS=off` disables all hooks.
+- **`python3 scripts/load.py`** prints the current numbers (exit 0 under, 1 over, 2 unmeasurable).
+
+### CI runner gate (DL-79)
+
+`scripts/runner_load_gate.py` waits (polls every 15 s, up to 30 min) until the machine is under the limits, logs what it waited for (stdout and `~/.claude/luismc-delivery-runner-gate.log`), then lets the job start. At the maximum it exits 1 so the job fails with a clear log line and can be re-run (`--on-timeout run` lets it go instead). Settings: flags, env `DELIVERY_GATE_MAX_WAIT_MIN`, `DELIVERY_GATE_POLL_SEC`, `DELIVERY_GATE_ON_TIMEOUT`, or `runner_gate` in the machine file. The plugin changes no runner configuration; you install the hook:
+
+- **Linux / macOS runner (systemd service)**: in the runner folder add to `.env`
+  `ACTIONS_RUNNER_HOOK_JOB_STARTED=/path/to/luismc-delivery/scripts/runner_load_gate.sh`, then `sudo ./svc.sh stop && sudo ./svc.sh start`. The runner in WSL/Hyper-V needs the plugin folder inside that VM.
+- **Windows runner (service)**: add the same line to the runner folder's `.env` with `...\scripts\runner_load_gate.ps1` (or `.cmd`; check your runner version accepts the extension), then restart the service (`Restart-Service "actions.runner.*"`). Python must be on the service account's PATH.
+- Check with `python3 scripts/delivery_doctor.py`: the `runner` line is ok with no runner on the machine, FAIL if a runner folder (`actions-runner*`, `DELIVERY_RUNNER_DIRS`, or `runner_dirs` in the machine file) lacks the hook.
 
 ## `.delivery/config.json`
 
@@ -33,6 +59,8 @@ New in 0.2.0:
 
 | Key | Default | Effect |
 |---|---|---|
+| `load_limits.memory_pct`, `load_limits.cpu_pct` | 85, 60 | project override of the machine load limits (DL-77) |
+| `heavy_commands` | `[]` | extra regexes (plain text also matches) that make a command heavy (DL-77) |
 | `enforcement.mode` | `block` | `warn` shows findings and denials as a message and blocks nothing |
 | `enforcement.block_ceiling` | 3 | the same findings block a session this many times, then the turn ends |
 | `stop_repeat_limit` | `block_ceiling` | the Stop hook stops blocking a finding after it blocked this many turn ends in a row with no change to the ledger fields it depends on; 0 = never limit |
@@ -76,3 +104,5 @@ python <plugin>/scripts/delivery_ledger.py cleaned --pr N
 python3 -I -m unittest discover -s claude/plugins/delivery/tests -t claude/plugins/delivery/tests
 python3 -I tools/test_delivery_hooks.py
 ```
+
+`tests/test_load.py` covers the load guard (parsers per OS, cache, limits precedence, heavy/light/cloud table, refusal, fail-open, notices, runner gate, doctor).
