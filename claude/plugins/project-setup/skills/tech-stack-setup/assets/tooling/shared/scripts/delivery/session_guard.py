@@ -13,7 +13,8 @@ convention). Two guards:
 
   Ready-PR guard. Refuses `gh pr create` without --draft, and `gh pr ready`, when the head
   branch (the current branch, or --head) is not a release branch: `release_branches`
-  of tools/change-notes.json, default `*-integration`.
+  of tools/change-notes.json, default `*-integration`. With `-R/--repo` the pull request
+  is looked up in the repository named.
 
 A command it cannot parse, or a repository without suites, is allowed. An internal error
 prints a warning and exits 1 (non-blocking). Also usable by hand:
@@ -168,12 +169,14 @@ def check_pr(root: Path, toks: list[str]) -> str | None:
         return None
     if "--undo" in args:
         return None  # gh pr ready --undo returns a PR to draft
+    repo = option(args, "--repo", "-R")
     head = option(args, "--head", "-H")
     if head is None and verb == "ready":
-        target = next((a for a in args if not a.startswith("-")), None)
+        target = next((a for a in args if not a.startswith("-") and a != repo), None)
         if target:
             try:
-                p = subprocess.run(["gh", "pr", "view", target, "--json", "headRefName", "-q", ".headRefName"],
+                where = ["-R", repo] if repo else []  # the pull request of the repository named, not this one
+                p = subprocess.run(["gh", "pr", "view", target, *where, "--json", "headRefName", "-q", ".headRefName"],
                                    cwd=root, capture_output=True, text=True, timeout=15)
                 head = p.stdout.strip() or None
             except (OSError, subprocess.TimeoutExpired):
