@@ -46,11 +46,15 @@ class Project:
         with open(os.path.join(self.dir, rel), 'w', encoding='utf-8') as f:
             f.write(value if isinstance(value, str) else json.dumps(value))
 
-    def stub_gh(self, view=None, merged=None):
+    def stub_gh(self, view=None, merged=None, runs=None):
+        """runs: {head sha: [{'status', 'conclusion'}]} for `gh run list --commit`; every call lands in gh_calls.log."""
         body = ("import sys, json\na = sys.argv[1:]\n"
-                "if a[:2] == ['pr', 'view']:\n    print(json.dumps(%r))\n"
+                "open(%r, 'a').write(' '.join(a) + '\\n')\n"
+                "if a[:2] == ['run', 'list']:\n    print(json.dumps(%r.get(a[a.index('--commit') + 1], [])))\n"
+                "elif a[:2] == ['pr', 'view']:\n    print(json.dumps(%r))\n"
                 "elif a[:2] == ['repo', 'view']:\n    print(json.dumps({'nameWithOwner': %r}))\n"
-                "elif a[:2] == ['pr', 'list']:\n    print(json.dumps(%r))\n" % (view or {}, self.repo, merged or []))
+                "elif a[:2] == ['pr', 'list']:\n    print(json.dumps(%r))\n"
+                % (os.path.join(self.dir, 'gh_calls.log'), runs or {}, view or {}, self.repo, merged or []))
         self.write('gh_stub.py', body)
         return os.path.join(self.dir, 'gh_stub.py')
 
@@ -228,9 +232,9 @@ def dl14_dl18_hold_suppresses_until_it_lapses():
 
 
 @test
-def dl06_cross_repo_pr_is_not_judged_by_the_current_repos_pr():
+def dl06_cross_repo_pr_is_not_judged_by_the_current_repos_ledger_train():
     p = Project(ledger(trains=[train(pr=426, ci={'head_sha': 'old', 'state': 'running'})]))
-    gh = p.stub_gh(view={'number': 426, 'headRefOid': 'other'})
+    gh = p.stub_gh(view={'number': 426, 'headRefOid': 'other'}, runs={'other': OK_RUNS})
     expect_pass(bash(p, 'gh pr merge 426 --repo luis-mc/other --squash', {'DELIVERY_GH': gh}))
     r = bash(p, 'gh pr merge 426 --squash', {'DELIVERY_GH': gh})
     assert denied(r) and 'DL-06' in why(r), r
@@ -473,6 +477,101 @@ def dl06_merge_needs_ledger_ci_success_for_head():
     p = Project(ledger())
     gh = p.stub_gh(view={'number': 7, 'headRefOid': 'abc'})
     assert denied(bash(p, 'gh pr merge 7', {'DELIVERY_GH': gh}))
+    p.close()
+
+
+def gh_calls(p):
+    try:
+        with open(os.path.join(p.dir, 'gh_calls.log'), encoding='utf-8') as f:
+            return f.read().splitlines()
+    except OSError:
+        return []
+
+
+OK_RUNS = [{'status': 'completed', 'conclusion': 'success'}] * 2
+MERGE_FORMS = ['gh pr merge 85 -R luis-mc/dev-standards --squash', 'gh pr merge 85 --repo luis-mc/dev-standards',
+               'gh pr merge 85 --repo=luis-mc/dev-standards', 'gh pr merge -R luis-mc/dev-standards 85',
+               'gh pr merge https://github.com/luis-mc/dev-standards/pull/85 --squash']
+
+
+@test
+def dl06_foreign_repo_is_judged_by_that_repos_ci_runs_in_every_form():
+    # the ledger tracks luis-mc/here (current folder); PR 85 of luis-mc/dev-standards is another project's
+    for cmd in MERGE_FORMS:
+        p = Project(ledger(trains=[train(pr=85, ci={'head_sha': 'x', 'state': 'running'})]))
+        gh = p.stub_gh(view={'number': 85, 'headRefOid': 'abc'}, runs={'abc': OK_RUNS})
+        expect_pass(bash(p, cmd, {'DELIVERY_GH': gh}))
+        calls = gh_calls(p)
+        assert any(c.startswith('pr view 85 --repo luis-mc/dev-standards') for c in calls), (cmd, calls)
+        assert any(c.startswith('run list --repo luis-mc/dev-standards --commit abc') for c in calls), (cmd, calls)
+        p.close()
+
+
+@test
+def dl06_foreign_repo_red_pending_or_missing_runs_deny():
+    cases = {'pending': OK_RUNS + [{'status': 'in_progress', 'conclusion': None}],
+             'failed': OK_RUNS + [{'status': 'completed', 'conclusion': 'failure'}],
+             'no runs': []}
+    for name, runs in cases.items():
+        for cmd in (MERGE_FORMS[0], MERGE_FORMS[4]):
+            p = Project(ledger(trains=[train(pr=85, ci={'head_sha': 'abc', 'state': 'success'})]))
+            gh = p.stub_gh(view={'number': 85, 'headRefOid': 'abc'}, runs={'abc': runs})
+            r = bash(p, cmd, {'DELIVERY_GH': gh})
+            assert denied(r) and 'DL-06' in why(r) and 'luis-mc/dev-standards' in why(r), (name, cmd, r)
+            p.close()
+    # runs of an older head do not count for the current head
+    p = Project(ledger())
+    gh = p.stub_gh(view={'number': 85, 'headRefOid': 'newer'}, runs={'abc': OK_RUNS})
+    assert denied(bash(p, MERGE_FORMS[0], {'DELIVERY_GH': gh}))
+    p.close()
+
+
+@test
+def dl06_own_repo_flag_keeps_the_ledger_decision():
+    p = Project(ledger(trains=[train(pr=85, ci={'head_sha': 'abc', 'state': 'success'})]))
+    gh = p.stub_gh(view={'number': 85, 'headRefOid': 'abc'})       # no runs at all: the ledger decides
+    for cmd in ('gh pr merge 85 -R luis-mc/here', 'gh pr merge https://github.com/luis-mc/here/pull/85'):
+        expect_pass(bash(p, cmd, {'DELIVERY_GH': gh}))
+    p.close()
+    p = Project(ledger(trains=[train(pr=85, ci={'head_sha': 'old', 'state': 'running'})]))
+    gh = p.stub_gh(view={'number': 85, 'headRefOid': 'abc'}, runs={'abc': OK_RUNS})
+    assert denied(bash(p, 'gh pr merge 85 -R luis-mc/here', {'DELIVERY_GH': gh}))
+    p.close()
+
+
+@test
+def gh_target_parser_forms():
+    sys.path.insert(0, SCRIPTS)
+    import hooklib
+    t = hooklib.gh_target
+    want = {'repo': 'a/b', 'number': 7, 'selector': '7'}
+    for argv in (['gh', 'pr', 'merge', '7', '-R', 'a/b'], ['gh', 'pr', 'merge', '--repo', 'a/b', '7', '--squash'],
+                 ['gh', 'pr', 'merge', '7', '--repo=a/b'], ['gh', 'pr', 'merge', '7', '-Ra/b'],
+                 ['gh', 'pr', 'merge', '-b', 'text', '7', '-R', 'a/b']):
+        assert t(argv) == want, (argv, t(argv))
+    u = t(['gh', 'pr', 'merge', 'https://github.com/a/b/pull/7?x=1'])
+    assert u['repo'] == 'a/b' and u['number'] == 7, u
+    assert t(['gh', 'pr', 'merge', '7']) == {'repo': None, 'number': 7, 'selector': '7'}
+    assert t(['gh', 'pr', 'merge', 'feature']) == {'repo': None, 'number': None, 'selector': 'feature'}
+
+
+@test
+def post_tool_merge_with_repo_flag_records_only_the_matching_train():
+    sys.path.insert(0, SCRIPTS)
+    import hook_post_tool as post
+    assert post.pr_number(['gh', 'pr', 'merge', '85', '-R', 'a/b']) == 85
+    assert post.pr_number(['gh', 'pr', 'merge', '-R', 'a/b', '85']) == 85
+    assert post.pr_number(['gh', 'pr', 'merge', 'https://github.com/a/b/pull/85']) == 85
+    p = Project(ledger(trains=[train(pr=85, repo='luis-mc/here', state='ci')]))
+    data = {'tool_name': 'Bash', 'tool_input': {'command': 'gh pr merge 85 -R luis-mc/dev-standards'},
+            'tool_response': {'stdout': 'ok'}}
+    p.run('hook_post_tool.py', data)
+    led = json.load(open(os.path.join(p.dir, '.delivery', 'ledger.json')))
+    assert led['trains'][0]['state'] == 'ci', led['trains'][0]['state']
+    data['tool_input']['command'] = 'gh pr merge 85 --repo luis-mc/here'
+    p.run('hook_post_tool.py', data)
+    led = json.load(open(os.path.join(p.dir, '.delivery', 'ledger.json')))
+    assert led['trains'][0]['state'] == 'merged', led['trains'][0]['state']
     p.close()
 
 
