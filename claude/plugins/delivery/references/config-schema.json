@@ -87,9 +87,10 @@
     "heavy_commands": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "format": "regex"
       },
-      "description": ""
+      "description": "DL-77: extra case-insensitive regexes; a Bash/PowerShell command matching one is heavy and is held while the machine is over its limits."
     },
     "outbound_deny": {
       "type": "array",
@@ -438,6 +439,20 @@
       "type": "string",
       "default": "Production smoke",
       "description": "Name of the workflow that `delivery_ledger.py smoke` looks for on the PR's merge commit."
+    },
+    "load_limits": {
+      "type": "object",
+      "description": "DL-77: machine load limits for this project; over the machine file ~/.claude/luismc-delivery-machine.json, over the defaults (memory 85, CPU 60). Values are percent, 1..100.",
+      "properties": {
+        "memory_pct": {
+          "type": "number",
+          "minimum": 1
+        },
+        "cpu_pct": {
+          "type": "number",
+          "minimum": 1
+        }
+      }
     }
   }
 }

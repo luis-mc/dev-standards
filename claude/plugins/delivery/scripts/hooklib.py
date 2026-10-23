@@ -54,6 +54,8 @@ DEFAULTS = {
     'install_stale_min': 90,                  # DL-55 an install older than this no longer blocks
     'pr_proven_jobs': [],                     # DL-76 job names (globs ok) that must not re-run on the default branch
     'checks_off': [],                         # ids switched off, e.g. ["DL-64"]
+    'load_limits': {},                        # DL-77 {"memory_pct": 85, "cpu_pct": 60}; over the machine file, over defaults
+    'heavy_commands': [],                     # DL-77 extra regexes (case-insensitive) that make a command heavy
 }
 TERMINAL_TRAIN = ('cleaned', 'abandoned')
 TERMINAL_AGENT = ('done', 'empty', 'failed', 'stopped')
@@ -70,7 +72,16 @@ def warn(message):
         pass
 
 
+LAST_INPUT = {}               # what read_input returned last (the load notice finds the project from its cwd)
+
+
 def read_input():
+    global LAST_INPUT
+    LAST_INPUT = _read_input()
+    return LAST_INPUT
+
+
+def _read_input():
     try:
         text = sys.stdin.buffer.read().decode('utf-8', 'replace')
         data = json.loads(text) if text.strip() else {}

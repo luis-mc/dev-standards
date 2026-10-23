@@ -118,7 +118,8 @@ def main():
 
 if __name__ == '__main__':
     try:
-        code = main()
+        import load_guard as G
+        code = G.with_notice(main, 'SessionStart')     # DL-78: tell the session to hold new heavy work
     except Exception as exc:   # fail open
         H.warn('session-start hook skipped (%s: %s)' % (type(exc).__name__, exc))
         code = 0
