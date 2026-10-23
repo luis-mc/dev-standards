@@ -29,6 +29,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import delivery_ledger as L  # noqa: E402
+import hooklib as H  # noqa: E402
 
 DEFAULT_TRAIN_RE = r"^release/\d+[a-z]?$"
 FENCE_RE = re.compile(r"```delivery[ \t]*\r?\n(.*?)```", re.S)
@@ -186,9 +187,10 @@ def current_branch(cwd: str | None) -> str | None:
 
 
 def pr_number(argv: list[str]) -> int | None:
+    t = H.gh_target(argv)
+    if t["number"] is not None:
+        return t["number"]
     for a in argv[3:]:
-        if a.isdigit():
-            return int(a)
         m = PR_URL_RE.search(a)
         if m:
             return int(m.group(1))
@@ -304,6 +306,9 @@ def _rec_gh_pr(led, cfg, argv, text, cwd, failed, now):
         t = L.find_train(led, pr=num) if num is not None else None
         if t is None:
             return
+        repo = H.gh_target(argv)["repo"]
+        if repo and t.get("repo") and str(t["repo"]).lower() != repo.lower():
+            return          # same number in another repo: not this train's PR
         if failed:
             L.add_event(led, "merge.failed", t["id"], "hook_post_tool", now)
             return

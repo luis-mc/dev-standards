@@ -40,43 +40,37 @@ def flag(tokens, *names):
 
 # --- Bash --------------------------------------------------------------------------------
 
-def pr_arg(tokens):
-    """The PR selector after `gh pr merge` (number, url or branch); None when absent."""
-    rest = H.strip_prefix(tokens)[3:]
-    skip = False
-    for t in rest:
-        if skip:
-            skip = False
-            continue
-        if t in ('--body', '-b', '--subject', '-t', '--match-head-commit', '--body-file', '-F', '--repo', '-R'):
-            skip = True
-            continue
-        if not t.startswith('-'):
-            return t
-    return None
-
-
-def repo_arg(tokens):
-    """OWNER/NAME after --repo / -R of a gh command; None when absent."""
-    rest = H.strip_prefix(tokens)
-    for i, t in enumerate(rest):
-        if t in ('--repo', '-R') and i + 1 < len(rest):
-            return rest[i + 1]
-        if t.startswith('--repo='):
-            return t[len('--repo='):]
-    return None
+def run_state(root, repo, head):
+    """'green' (every run for the head completed successfully), 'none' (no runs), 'pending', 'red';
+    None when gh cannot answer. Judges the runs of `repo` itself, not the ledger."""
+    r = H.gh(root, ['run', 'list', '--repo', repo, '--commit', head, '--limit', '100',
+                    '--json', 'status,conclusion'])
+    if not r or r[0] != 0:
+        return None
+    try:
+        runs = json.loads(r[1])
+    except ValueError:
+        return None
+    if not isinstance(runs, list):
+        return None
+    if not runs:
+        return 'none'
+    if any(x.get('status') != 'completed' for x in runs):
+        return 'pending'
+    return 'green' if all(x.get('conclusion') == 'success' for x in runs) else 'red'
 
 
 def check_merge(root, seg, ledger):
     if flag(seg, '--auto'):
         deny('DL-05 gh pr merge --auto is never used. Wait for ci_watch.py to pass for the current head, then run '
              'gh pr merge without --auto.')
-    arg = pr_arg(seg)
+    target = H.gh_target(seg)
+    arg, repo, number = target['selector'], target['repo'], target['number']
     ref = [arg] if arg else []
-    repo = repo_arg(seg)
+    foreign = False
     if repo:
-        # the PR lives in --repo: judge it by the train that carries that repo; a repo the ledger does not track
-        # (another project's) is not this ledger's to gate
+        # the PR lives in -R/--repo (or its URL): judge it by the train that carries that repo; a repo the ledger
+        # does not track (another project's) is judged by that repo's own CI runs for the PR head
         carried = [t for t in ledger['trains'] if str(t.get('repo') or '').lower() == repo.lower()]
         here = H.gh(root, ['repo', 'view', '--json', 'nameWithOwner'])
         current = None
@@ -85,26 +79,37 @@ def check_merge(root, seg, ledger):
                 current = json.loads(here[1]).get('nameWithOwner')
             except (ValueError, AttributeError):
                 pass
-        if not carried and current and current.lower() != repo.lower():
-            return
+        foreign = not carried and bool(current) and current.lower() != repo.lower()
+        ref = [str(number)] if number is not None else ref
         ref += ['--repo', repo]
     r = H.gh(root, ['pr', 'view'] + ref + ['--json', 'number,headRefOid'])
-    number, head = None, None
+    pr_no, head = None, None
     if r and r[0] == 0:
         try:
             j = json.loads(r[1])
-            number, head = j.get('number'), j.get('headRefOid')
+            pr_no, head = j.get('number'), j.get('headRefOid')
         except ValueError:
             pass
-    if number is None and arg and arg.isdigit():
-        number = int(arg)
-    trains = [t for t in ledger['trains'] if number is not None and t.get('pr') == number
+    if pr_no is None:
+        pr_no = number
+    if foreign:
+        if not head:
+            return                               # cannot tell what the PR head is: fail open
+        state = run_state(root, repo, head)
+        if state is None or state == 'green':
+            return
+        deny('DL-06 %s PR %s: %s. Wait until every workflow run of its current head (%s) has completed '
+             'successfully, then merge.' % (repo, pr_no if pr_no is not None else arg or 'N',
+                                            {'none': 'no workflow runs for the current head',
+                                             'pending': 'workflow runs for the current head are still pending',
+                                             'red': 'a workflow run for the current head failed'}[state], head[:8]))
+    trains = [t for t in ledger['trains'] if pr_no is not None and t.get('pr') == pr_no
               and (not repo or not t.get('repo') or str(t['repo']).lower() == repo.lower())]
     ok = [t for t in trains if (t.get('ci') or {}).get('state') == 'success'
           and (head is None or (t.get('ci') or {}).get('head_sha') == head)]
     if not ok:
         deny('DL-06 no ledger CI success for the current head of PR %s. Run ci_watch.py for the head commit '
-             '(delivery_ledger records it), then merge.' % (number if number is not None else arg or 'N'))
+             '(delivery_ledger records it), then merge.' % (pr_no if pr_no is not None else arg or 'N'))
 
 
 def check_unfrozen(seg, command, cfg):

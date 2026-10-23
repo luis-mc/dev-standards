@@ -257,6 +257,46 @@ def starts_with(tokens, words):
     return len(t) >= len(words) and [x.lower() for x in t[:len(words)]] == [w.lower() for w in words]
 
 
+PR_URL_FULL_RE = re.compile(r'^https?://[^/\s]+/([^/\s]+)/([^/\s]+)/pull/(\d+)(?:[/?#].*)?$', re.I)
+GH_VALUE_FLAGS = ('--body', '-b', '--subject', '-t', '--match-head-commit', '--body-file', '-F', '--repo', '-R',
+                  '--title', '--base', '-B', '--head', '-H', '--author-email', '-A', '--assignee', '--label')
+
+
+def gh_target(tokens):
+    """The PR a `gh pr <verb> ...` command names, the one parser every hook shares.
+
+    Returns {'repo': OWNER/NAME or None, 'number': int or None, 'selector': the PR argument or None}.
+    The repo comes from -R <r>, -R<r>, --repo <r>, --repo=<r>, or a full PR URL
+    (https://github.com/<owner>/<repo>/pull/<n>); the URL wins nothing over an explicit flag."""
+    rest = strip_prefix(tokens)[3:]
+    repo, selector, skip = None, None, False
+    for i, t in enumerate(rest):
+        if skip:
+            skip = False
+            continue
+        if t in ('--repo', '-R'):
+            if i + 1 < len(rest):
+                repo = rest[i + 1]
+            skip = True
+        elif t.startswith('--repo='):
+            repo = t[len('--repo='):]
+        elif t.startswith('-R') and len(t) > 2 and not t.startswith('--'):
+            repo = t[2:]
+        elif t in GH_VALUE_FLAGS:
+            skip = True
+        elif not t.startswith('-') and selector is None:
+            selector = t
+    number = None
+    if selector:
+        m = PR_URL_FULL_RE.match(selector)
+        if m:
+            number = int(m.group(3))
+            repo = repo or '%s/%s' % (m.group(1), m.group(2))
+        elif selector.isdigit():
+            number = int(selector)
+    return {'repo': repo.strip('\'"') if repo else None, 'number': number, 'selector': selector}
+
+
 def gh(root, args, timeout=20):
     """(rc, stdout) of gh (or DELIVERY_GH); None when it cannot run."""
     prog = os.environ.get('DELIVERY_GH')
