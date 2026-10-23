@@ -457,7 +457,8 @@ def main():
 
 if __name__ == '__main__':
     try:
-        code = main()
+        import load_guard as G
+        code = G.with_notice(main, 'Stop')     # DL-78: one non-blocking load notice per turn
     except Exception as exc:   # fail open: a broken hook must not trap the session
         H.warn('stop hook skipped (%s: %s)' % (type(exc).__name__, exc))
         code = 0

@@ -212,6 +212,57 @@ class GreenNeedsEveryRequiredWorkflowTests(unittest.TestCase):
         self.assertTrue(self.train(root)["green_at"])
 
 
+class RedRerunTests(unittest.TestCase):
+    def red_train(self, root):
+        seed(root, [{"branch": "release/29", "pr": 10, "state": "red",
+                     "ci": {"head_sha": SHA, "run_ids": [1], "state": "failure", "started_at": None}}])
+
+    def test_red_rerun_green_on_same_head_merges(self):
+        root = make_root()
+        self.red_train(root)
+        sh = FakeShell(routes_for_green())      # run 1 is now completed/success: the owner re-ran it
+        watcher(root, sh).run_once()
+        merges = [c for c in sh.calls if c[:3] == ["gh", "pr", "merge"]]
+        self.assertEqual(merges, [["gh", "pr", "merge", "10", "--merge", "--match-head-commit", SHA]])
+        self.assertFalse(any("--auto" in c for c in sh.calls))
+        t = L.load(root)["trains"][0]
+        self.assertEqual((t["state"], t["ci"]["state"]), ("merged", "success"))
+        self.assertIsNotNone(t["green_at"])
+
+    def test_red_rerun_green_with_hold_goes_green_without_merging(self):
+        root = make_root()
+        self.red_train(root)
+        L.update(root, lambda led: led["trains"][0].update(hold={"reason": "look", "by": "owner", "until": None}))
+        sh = FakeShell(routes_for_green())
+        watcher(root, sh).run_once()
+        self.assertEqual(sh.writes(), [])
+        self.assertEqual(L.load(root)["trains"][0]["state"], "green")
+
+    def test_red_stays_red_with_no_newer_run_and_costs_one_check(self):
+        root = make_root()
+        self.red_train(root)
+        r = routes_for_green()
+        r[("gh", "run", "list", "--commit")] = (0, runs((1, "completed", "failure", SHA, "release/29")))
+        sh = FakeShell(r)
+        before = L.load(root)["trains"][0]
+        watcher(root, sh).run_once()
+        self.assertEqual(sh.writes(), [])
+        self.assertEqual([c[:3] for c in sh.calls if c[:2] == ["gh", "pr"]], [])
+        self.assertEqual(len([c for c in sh.calls if c[:3] == ["gh", "run", "list"]]), 1)
+        t = L.load(root)["trains"][0]
+        self.assertEqual((t["state"], t["ci"]), ("red", before["ci"]))
+
+    def test_red_with_rerun_still_running_stays_red(self):
+        root = make_root()
+        self.red_train(root)
+        r = routes_for_green()
+        r[("gh", "run", "list", "--commit")] = (0, runs((1, "in_progress", None, SHA, "release/29")))
+        sh = FakeShell(r)
+        watcher(root, sh).run_once()
+        self.assertEqual(sh.writes(), [])
+        self.assertEqual(L.load(root)["trains"][0]["state"], "red")
+
+
 class NextTrainTests(unittest.TestCase):
     def test_merge_then_push_next_joined_train_and_open_ready_pr(self):
         root = make_root()

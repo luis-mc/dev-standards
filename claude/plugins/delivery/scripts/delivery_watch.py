@@ -234,7 +234,10 @@ class Watcher:
     def pass_trains(self) -> None:
         led = L.load(self.root)
         for train in led["trains"]:
-            if train.get("state") not in ("pushed", "ci", "green") or not train.get("pr"):
+            if train.get("state") not in ("pushed", "ci", "green", "red") or not train.get("pr"):
+                continue
+            if train.get("state") == "red":
+                self._recheck_red(train)
                 continue
             head, pr_state = self.current_head(train)
             if not head:
@@ -259,6 +262,28 @@ class Watcher:
                 self._set_train(train, None, ci=ci)
             if state == "success" and self.flags["merge_on_green"]:
                 self.maybe_merge(train, head)
+
+    def _recheck_red(self, train: dict) -> None:
+        """A red train stays red until the runs of its head commit conclude green for every required workflow
+        (the owner re-ran a failed run: same run id, newer attempt, or a new run). One cheap check per cycle:
+        the run list of the stored head; a still-failing, running or missing run writes nothing. Green moves the
+        train to green and takes the normal path (merge on green, never --auto)."""
+        stored = (train.get("ci") or {}).get("head_sha")
+        if not stored:
+            return
+        runs = self.runs_for_commit(stored)
+        if runs is None or ci_state_from_runs(runs, C.ci_workflows(self.cfg)) != "success":
+            return
+        head, pr_state = self.current_head(train)
+        if pr_state == "MERGED":
+            self._set_train(train, "merged", ci=None)
+            return
+        if head != stored:      # the PR moved on: the next ci/green pass reads the new head, not this one
+            return
+        ci = {"head_sha": head, "run_ids": [r["databaseId"] for r in runs], "state": "success"}
+        self._set_train(train, "green", ci=ci)
+        if self.flags["merge_on_green"]:
+            self.maybe_merge(train, head)
 
     def _revoke_green(self, train: dict, ci: dict) -> None:
         def fn(led):

@@ -14,6 +14,22 @@ import delivery_doctor as D
 import delivery_config as C
 
 
+_NO_RUNNERS = mock.patch.dict(os.environ, {"DELIVERY_RUNNER_DIRS": tempfile.mkdtemp(prefix="no-runners-"),
+                                            "ACTIONS_RUNNER_HOOK_JOB_STARTED": ""})
+_NO_REGISTRY = mock.patch.object(D, "_windows_env_hook", lambda: None)
+
+
+def setUpModule():
+    # The checks must not depend on the machine running them: no real runner folder, no registry value.
+    _NO_RUNNERS.start()
+    _NO_REGISTRY.start()
+
+
+def tearDownModule():
+    _NO_REGISTRY.stop()
+    _NO_RUNNERS.stop()
+
+
 def stub_gh(rc):
     d = Path(tempfile.mkdtemp(prefix="ghstub-"))
     (d / "gh.py").write_text("import sys\nsys.exit(%d)\n" % rc)
@@ -37,7 +53,7 @@ class DoctorTests(unittest.TestCase):
     def test_all_ok(self):
         res = run(enabled_root({"tz": "Europe/Lisbon"}))
         self.assertTrue(all(r["ok"] for r in res.values()), res)
-        self.assertEqual(set(res), {"config", "gh", "tz", "hooks", "ledger"})
+        self.assertEqual(set(res), {"config", "gh", "tz", "hooks", "ledger", "runner"})
 
     def test_invalid_config_fails(self):
         res = run(enabled_root({"enforcement": {"mode": "stop"}}))
