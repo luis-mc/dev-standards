@@ -1,6 +1,6 @@
 # CO427 report: Needs you vs Waiting for other work
 
-Branch `claude/CO427-needs-you-vs-waiting`.
+Branch `claude/CO427-needs-you-vs-waiting`. Draft PR #94.
 
 ## What changed
 - The only "Waiting or on hold" section is the At a glance group `waiting` (R5.34). It is now **Waiting for other work**; a Waiting or On hold task that waits on the owner moves into the **Needs you** group (`you`), after Needs you tasks and before Failed. Needs you count, the Needs you sentence (R5.7) and a feature's generated summary (R5.36) include them, so the glance count equals the section.
@@ -20,3 +20,5 @@ The brief says the two sections come "after the running work". Needs you stays f
 - `run_suite.py project-artifacts` named cases only (the suite is heavy, declared not to run in full locally): the two new cases `test_waits_on_is_stored_and_defaults_to_work`, `test_check_refuses_a_bad_waits_on` plus 36 neighbouring status, check, publish and pending cases, all passed. The full project-artifacts and hooks suites are left to CI.
 - `spec_check.py` on ARTIFACTSPEC: clean; `change_notes.py check`: ok.
 - No test weakened; the only existing-test edits are none (new expectations live in new cases).
+
+READY
