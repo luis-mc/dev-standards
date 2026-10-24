@@ -9,9 +9,18 @@ runs with `gh run list --commit SHA` and decides only when
   * at least one run of the named workflow exists for the commit, and
   * every run of that workflow for the commit is completed.
 
+Skipped runs (CO400): a run that executed no job (conclusion skipped, or a push run
+whose jobs were all skipped, "already tested on the pull request") is not a pass when
+the commit is the head of an open pull request: the watch then waits for a run that
+executed jobs (the pull_request run) and is green only when every run that executed
+succeeded and at least one did. A commit with no open pull request keeps the old rule
+(skipped counts as success). The open pull request is read with
+`gh api repos/{owner}/{repo}/commits/SHA/pulls`, never from a PR check list.
+
 Exit codes (shared by the delivery scripts): 0 every run succeeded or was
-skipped, 1 any other conclusion (the failed jobs are printed), 2 usage error or
-`gh` missing or unusable, 4 timed out. It never exits 0 when it could not decide.
+skipped (see above), 1 any other conclusion (the failed jobs are printed), 2 usage
+error or `gh` missing or unusable, 4 timed out ("no real run yet" when only skipped
+runs exist for a pull request head). It never exits 0 when it could not decide.
 
 Runner health (DL7, warnings only): while it waits, a job that has been queued for
 more than 10 minutes (--queue-warn-seconds) is reported once, when no online runner
@@ -84,6 +93,32 @@ def list_runs(sha: str, workflow: str, repo: str | None) -> list[dict]:
     return [r for r in data
             if isinstance(r, dict)
             and str(r.get("headSha", sha)).startswith(sha[:7])]
+
+
+def executed_jobs(run: dict, repo: str | None) -> bool:
+    """True when a completed, non-failed run ran at least one job.
+
+    A `skipped` conclusion ran nothing; a `success` push run may still have only skipped
+    jobs. Jobs are read only for push runs, the shape of the "already tested on the pull
+    request" skip; any other successful run counts as executed."""
+    if run.get("conclusion") == "skipped":
+        return False
+    if run.get("conclusion") != "success" or run.get("event") != "push":
+        return True
+    data = gh_json(["run", "view", str(run.get("databaseId")), "--json", "jobs", *repo_args(repo)])
+    jobs = data.get("jobs", []) if isinstance(data, dict) else []
+    return not jobs or any(j.get("conclusion") != "skipped" for j in jobs if isinstance(j, dict))
+
+
+def has_open_pr(sha: str, repo: str | None) -> bool:
+    """True when `sha` is the head commit of an open pull request."""
+    base = f"repos/{repo}" if repo else "repos/{owner}/{repo}"
+    data = gh_json(["api", f"{base}/commits/{sha}/pulls"])
+    if not isinstance(data, list):
+        raise GhError("gh api commits/SHA/pulls did not return a list")
+    return any(isinstance(p, dict) and p.get("state") == "open"
+               and str((p.get("head") or {}).get("sha", sha)).startswith(sha[:7])
+               for p in data)
 
 
 def queued_age(job: dict, now: float) -> float | None:
@@ -265,6 +300,7 @@ def main(argv: list[str] | None = None) -> int:
     warned: set = set()
     while True:
         state = ""
+        decided = False
         try:
             runs = list_runs(sha, args.workflow, args.repo)
             errors = 0
@@ -285,6 +321,23 @@ def main(argv: list[str] | None = None) -> int:
                 warn_queued_jobs(pending, args.repo, warned, args.queue_warn_seconds)
             else:
                 bad = [r for r in runs if r.get("conclusion") not in OK_CONCLUSIONS]
+                decided = True
+                try:
+                    idle = [r for r in runs if r not in bad and not executed_jobs(r, args.repo)]
+                    # Skipped runs only matter when the head belongs to an open PR.
+                    if idle and not bad and len(idle) == len(runs) and has_open_pr(sha, args.repo):
+                        state = (f"no real run yet for {sha[:10]}: only skipped {args.workflow} "
+                                 f"run(s) so far, waiting for the pull_request run")
+                        decided = False
+                except GhError as exc:
+                    errors += 1
+                    state = f"gh error ({errors}): {exc}"
+                    if errors >= MAX_CONSECUTIVE_GH_ERRORS:
+                        print(f"ci_watch: giving up, gh failed {errors} times in a row: {exc}",
+                              file=sys.stderr)
+                        return 2
+                    decided = False
+            if decided:
                 if not bad:
                     print(f"ci_watch: {len(runs)} {args.workflow} run(s) for {sha[:10]} "
                           "succeeded")

@@ -437,6 +437,12 @@ Waits until at least one run of the workflow exists for SHA and every run of it
 for SHA is completed. Exit 0 all `success` (or `skipped`), 1 any other
 conclusion (prints the failed jobs from `gh run view --json jobs`), 2 after 5
 consecutive `gh` failures, 4 timeout. It never reads a pull request's check list.
+A run that executed no job (conclusion `skipped`, or a push run whose jobs were all skipped, "already
+tested on the pull request") is not a pass when SHA is the head of an open pull request
+(`gh api repos/{owner}/{repo}/commits/SHA/pulls`, read only when such a run is the whole answer): it keeps
+waiting ("no real run yet", exit 4 on timeout) until a run that executed jobs, the pull_request run,
+has completed. Green needs every executed run to succeed and at least one to have executed; without an
+open pull request `skipped` still counts as success.
 While it waits (`--queue-warn-seconds`, default 600) it reads the jobs of each unfinished run
 (`gh api repos/{owner}/{repo}/actions/runs/ID/jobs`) and warns **once per job** that has been
 queued longer, when no online runner carries the job's labels, or, when the runners cannot

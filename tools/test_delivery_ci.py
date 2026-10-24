@@ -238,8 +238,97 @@ def watch_success():
 def watch_skipped_counts_as_success():
     sb = Sandbox()
     try:
-        rc, out, err = watch(sb, {"run_list": [[run_obj(1, "completed", "skipped")]]})
+        # No open pull request for the head (plain branch): skipped keeps counting as success.
+        rc, out, err = watch(sb, {"run_list": [[run_obj(1, "completed", "skipped")]],
+                                  "api": {PULLS_KEY: []}})
         expect_exit(rc, 0, out, err)
+    finally:
+        sb.close()
+
+
+PULLS_KEY = "repos/{owner}/{repo}/commits/" + SHA + "/pulls"
+OPEN_PR = [{"number": 5, "state": "open", "head": {"sha": SHA}}]
+
+
+def push_skipped(rid: int = 1) -> dict:
+    return {**run_obj(rid, "completed", "success"), "event": "push"}
+
+
+SKIPPED_JOBS = {"jobs": [{"name": "gate", "conclusion": "skipped", "steps": []},
+                         {"name": "tests", "conclusion": "skipped", "steps": []}]}
+
+
+@test
+def watch_pr_head_push_skipped_and_pr_queued_keeps_waiting():
+    sb = Sandbox()
+    try:
+        # A push run with every job skipped, the pull_request run not created, then queued:
+        # never green while no job has executed.
+        fx = {"run_list": [[push_skipped()], [push_skipped(), run_obj(2, "queued", "")],
+                           [push_skipped(), run_obj(2, "completed", "success")]],
+              "run_view": {"1": SKIPPED_JOBS}, "api": {PULLS_KEY: OPEN_PR}}
+        rc, out, err = watch(sb, fx)
+        expect_exit(rc, 0, out, err)
+        check("no real run yet" in out, f"did not say it was waiting for a real run: {out}")
+        check(len([c for c in sb.calls() if c[:2] == ["run", "list"]]) == 3,
+              "did not keep waiting through the skipped and queued polls")
+    finally:
+        sb.close()
+
+
+@test
+def watch_pr_head_only_skipped_runs_time_out_with_clear_message():
+    sb = Sandbox()
+    try:
+        fx = {"run_list": [[push_skipped()]], "run_view": {"1": SKIPPED_JOBS},
+              "api": {PULLS_KEY: OPEN_PR}}
+        rc, out, err = watch(sb, fx, ["--interval", "0.1", "--timeout", "1"])
+        expect_exit(rc, 4, out, err)
+        check("no real run yet" in err, f"timeout message unclear: {err}")
+        # Same run with no open PR (a plain branch): the old behaviour, green.
+        sb2 = Sandbox()
+        try:
+            fx["api"] = {PULLS_KEY: []}
+            rc2, out2, err2 = watch(sb2, fx)
+            expect_exit(rc2, 0, out2, err2)
+        finally:
+            sb2.close()
+    finally:
+        sb.close()
+
+
+@test
+def watch_pr_head_push_skipped_and_pr_success_is_green():
+    sb = Sandbox()
+    try:
+        fx = {"run_list": [[push_skipped(), run_obj(2, "completed", "success")]],
+              "run_view": {"1": SKIPPED_JOBS}, "api": {PULLS_KEY: OPEN_PR}}
+        rc, out, err = watch(sb, fx)
+        expect_exit(rc, 0, out, err)
+    finally:
+        sb.close()
+
+
+@test
+def watch_pr_head_pr_run_failure_is_red():
+    sb = Sandbox()
+    try:
+        fx = {"run_list": [[push_skipped(), run_obj(2, "completed", "failure")]],
+              "run_view": {"1": SKIPPED_JOBS, "2": {"jobs": []}}, "api": {PULLS_KEY: OPEN_PR}}
+        rc, out, err = watch(sb, fx)
+        expect_exit(rc, 1, out, err)
+    finally:
+        sb.close()
+
+
+@test
+def watch_push_run_that_executed_jobs_is_green_without_pr_lookup():
+    sb = Sandbox()
+    try:
+        ran = {"jobs": [{"name": "tests", "conclusion": "success", "steps": []}]}
+        rc, out, err = watch(sb, {"run_list": [[push_skipped()]], "run_view": {"1": ran}})
+        expect_exit(rc, 0, out, err)
+        check(not any(c[:1] == ["api"] for c in sb.calls()), "looked up PRs for a run that ran jobs")
     finally:
         sb.close()
 
