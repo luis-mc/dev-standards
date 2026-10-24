@@ -2028,6 +2028,84 @@ def at_a_glance_groups_and_order(fx):
 
 @test
 @with_fixture
+def glance_splits_owner_waits_from_work_waits(fx):
+    """R5.34, R5.34a: a Waiting task with waits_on owner is in Needs you, after Needs you and before Failed; the others
+    stay in Waiting for other work; each of their rows reads the dependency first, then the item, then Expected."""
+    registry = glance_registry()
+    by_id = {t['id']: t for t in registry['tasks']}
+    by_id['DS7']['waits_on'] = 'owner'
+    by_id['DS7']['expected_basis'] = 'your OK on the folder name'
+    by_id['DS10']['detail'] = 'Needs the cloud runner. More text.'
+    by_id['DS9']['expected_basis'] = 'your review'
+    out = fx.render('full-progress', registry=registry)
+    got = glance(out)
+    assert got['you'][0] == ['DS9', 'DS7', 'DS11'], got['you']
+    assert got['waiting'][0] == ['DS10'], got['waiting']
+    assert R.GLANCE_GROUPS[4 - 1] == ('waiting', 'Waiting for other work') and 'Waiting or on hold' not in out
+    row = out[out.index('data-glance-task="DS7"'):]
+    row = row[:row.index('</li>')]
+    assert row.index('glance-dep') < row.index('docs/ folder rule') < row.index('glance-expected'), row
+    assert '<span class="glance-dep">your OK on the folder name</span>' in row and 'glance-basis' not in row, row
+    row = out[out.index('data-glance-task="DS10"'):]
+    assert '<span class="glance-dep">Needs the cloud runner.</span>' in row[:row.index('</li>')], row
+    assert fx.check(out, 'full-progress', registry=registry) == []
+    # the work side with no basis and no detail sentence falls back to the release it rides
+    by_id['DS10']['detail'] = ''
+    by_id['DS10']['rides'] = 'DS6'
+    by_id['DS6']['release'] = True
+    assert R.glance_dependency(by_id['DS10'], by_id) == R.release_name(by_id['DS6'])
+
+
+@test
+@with_fixture
+def glance_default_waits_on_work_keeps_old_grouping(fx):
+    """R5.34a: without waits_on a Waiting or On hold task is waiting for other work, as before the split; Needs you
+    and its count do not change."""
+    out = fx.render('full-progress', registry=glance_registry())
+    got = glance(out)
+    assert got['you'][0] == ['DS9', 'DS11'] and got['waiting'][0] == ['DS7', 'DS10'], got
+    assert R.waits_on_owner({'status': 'Waiting', 'waits_on': 'work'}) is False
+    assert R.waits_on_owner({'status': 'Running', 'waits_on': 'owner'}) is False
+
+
+@test
+@with_fixture
+def glance_needs_you_count_matches_the_section(fx):
+    """R5.34a, R6.13: the Needs you count is the section: Needs you, owner waits, Failed and open decisions; the
+    summary line and the Needs you sentence agree."""
+    registry = glance_registry()
+    by_id = {t['id']: t for t in registry['tasks']}
+    by_id['DS7']['waits_on'] = 'owner'
+    by_id['DS10']['waits_on'] = 'owner'
+    out = fx.render('full-progress', registry=registry)
+    dom = R.parse_dom(out)
+    groups = {g.attrs['data-glance']: g for g in R.find_all(dom, 'details', 'glance-group')}
+    assert R.text_of(R.find(groups['you'], 'span', 'fold-count')) == '4 tasks'
+    assert 'waiting' not in groups                                                             # nothing else waits on work
+    assert glance(out)['you'][0] == ['DS9', 'DS7', 'DS10', 'DS11']
+    assert R.needs_you_sentence(registry['tasks']).startswith('Needs you: DS9 ')
+    assert 'DS7' in R.needs_you_sentence(registry['tasks'])
+    assert R.feature_summary([by_id['DS7']]) == '1 needs you' and R.feature_summary([by_id['DS6']]).startswith('1 running')
+    assert fx.check(out, 'full-progress', registry=registry) == []
+
+
+@test
+@with_fixture
+def check_finds_a_wrong_split_or_dependency(fx):
+    """R5.34a, R5.35: a task in the wrong one of the two groups, or a row without its dependency, is a finding."""
+    registry = glance_registry()
+    by_id = {t['id']: t for t in registry['tasks']}
+    by_id['DS7']['waits_on'] = 'owner'
+    by_id['DS7']['expected_basis'] = 'your OK'
+    out = fx.render('full-progress', registry=registry)
+    expect(fx, sub1(out, '<span class="glance-dep">your OK</span> ', ''), 'full-progress', ['R5.34a'], registry=registry)
+    expect(fx, drop_item(out, 'task', 'DS7'), 'full-progress', ['R5.7'], registry=registry)
+    by_id['DS7']['waits_on'] = 'work'
+    expect(fx, out, 'full-progress', ['R5.7', 'R5.9', 'R5.35', 'R6.13'], registry=registry)           # rendered with the old split
+
+
+@test
+@with_fixture
 def at_a_glance_is_deterministic_and_placed(fx):
     """R5.33: after the lede, before the tiles; same bytes each time (R7.4)."""
     out = fx.render('artifacts')

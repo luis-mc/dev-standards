@@ -197,6 +197,8 @@ details.glance-group > summary:hover { background: var(--surface-2); }
 .glance-group p { margin: 0; padding: .1em .9em .2em 2.2rem; color: var(--ink-muted); }
 .glance-expected { font-size: .85rem; color: var(--ink-muted); margin-left: .5em; }
 .glance-more { color: var(--ink-muted); font-size: .88rem; }
+.glance-dep { font-size: .85rem; color: var(--ink-muted); margin: 0 .5em; }
+.glance-dep::after { content: ' \2192'; }
 .glance-basis { display: block; font-size: .72rem; line-height: 1.3; color: var(--ink-muted); }
 .glance-you { border-left-color: var(--signal); }
 .glance-you .glance-label { color: var(--ink); }
