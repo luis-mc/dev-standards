@@ -32,7 +32,11 @@ MONTHS = {m: i + 1 for i, m in enumerate(
 CLOCK_RE = re.compile(r'\b(?:[01]?\d|2[0-3])[:h][0-5]\d\b')
 DEPENDENCY_RE = re.compile(r'\b(?:after|once|when|since|from|depends?|dependent|based on|because|following|'
                            r'starts? at|started|waiting (?:for|on)|ci|build|run|merge|deploy|install|train)\b', re.I)
-ETA_RE = re.compile(r'\bETAs?\b|\b(?:in|within|about|around|~)\s*~?\s*\d+(?:[.,]\d+)?\s*'
+# `ETA` alone is a ledger field name or a noun ("adds the ETA for X"); it is a promise only when a time, an
+# estimate or a vague "soon" follows it ("ETA 16:40", "ETA ~20 min", "the ETA is about 1 h", "ETA: soon")
+ETA_RE = re.compile(r'\bETAs?\b(?=\s*[:=~]|\s+(?:(?:is|are)\s+)?(?:~|about|around|soon|shortly|later|tomorrow|in\b|by\b|at\b|\d))'
+                    r'|\b(?:ready|done|finish(?:es|ed)?|due)\s+(?:soon|shortly)\b'
+                    r'|\b(?:in|within|about|around|~)\s*~?\s*\d+(?:[.,]\d+)?\s*'
                     r'(?:-\s*\d+\s*)?(?:min(?:ute)?s?|h(?:ours?|rs?)?)\b|\bexpected (?:at|by|in)\b', re.I)
 DURATION_RE = re.compile(r'\d+(?:[.,]\d+)?\s*(?:-\s*\d+\s*)?(?:min(?:ute)?s?|h(?:ours?|rs?)?)\b', re.I)
 # a sentence that reports a measured duration, a saving or a cost is not an estimate (DL-31)
@@ -41,6 +45,8 @@ MEASURED_RE = re.compile(r'\b(?:took|taken|spent|saved?|saves|saving|savings|cos
 TOMORROW_RE = re.compile(r"\btomorrow\b|\bnext round\b|\bin the morning\b|\bnext day\b|\bnext morning\b", re.I)
 PAST_MIDNIGHT_RE = re.compile(r'\b(?:past|after) midnight\b|\b0[0-5][:h][0-5]\d\b', re.I)
 FENCE_RE = re.compile(r'```.*?```', re.S)
+CODE_SPAN_RE = re.compile(r'(`+)(?!`)(.+?)(?<!`)\1(?!`)', re.S)
+TRAIN_WORD_RE = re.compile(r'^trains?\b', re.I)
 LIST_ITEM_RE = re.compile(r'^\s*(?:\d+[.)]|[-*•])\s+(.*\S)\s*$')
 
 
@@ -80,7 +86,14 @@ def last_assistant_text(data):
 
 
 def prose(text):
+    """The reply without fenced code blocks."""
     return FENCE_RE.sub(' ', text)
+
+
+def plain_prose(text):
+    """The reply without fenced code blocks and inline code spans: words in code (a JSON key `trains`, a field
+    `eta`) are names, not wording the owner reads."""
+    return CODE_SPAN_RE.sub(' ', prose(text))
 
 
 # --- text checks ---------------------------------------------------------------------------
@@ -98,7 +111,7 @@ def is_measured(sentence):
 def check_eta_text(text):
     """DL-31 / D9. Findings (key, message) for the reply text."""
     out = []
-    body = prose(text)
+    body = plain_prose(text)
     if TOMORROW_RE.search(body) and not (CLOCK_RE.search(body) and PAST_MIDNIGHT_RE.search(body)):
         m = TOMORROW_RE.search(body)
         out.append(('DL-31:tomorrow', 'DL-31 the reply defers with "%s". Give a computed clock time (past midnight if it '
@@ -122,12 +135,20 @@ def check_eta_text(text):
     return out
 
 
+def code_spans(body):
+    return [m.span() for m in CODE_SPAN_RE.finditer(body)]
+
+
 def check_label_text(text, cfg, ledger):
     """DL-64: train labels or branch names instead of RELEASE-n."""
     body = prose(text)
     hits = set()
     try:
+        # the word train(s) counts in plain prose only; any other label (T-id, release/n) and branch names count
+        # in inline code too, because DL-64 forbids showing them to the owner
         for m in re.finditer(cfg['train_label_re'], body):
+            if TRAIN_WORD_RE.match(m.group(0)) and any(a <= m.start() < b for a, b in code_spans(body)):
+                continue
             hits.add(m.group(0))
     except re.error:
         H.warn('train_label_re is not a valid regex')

@@ -325,6 +325,17 @@ def dl31_eta_needs_clock_time_and_dependency():
 
 
 @test
+def co396_stop_hook_false_alarms():
+    p = Project(ledger())
+    expect_pass(p.stop('| `trains` | the releases, with their PR and state |'))
+    expect_pass(p.stop('- **I** add the rows the hooks miss, like the ETA for CO395.'))
+    expect_block(p, 'DL-64', 'The trains are green.')
+    expect_block(p, 'DL-31', 'ETA ~20 min')
+    expect_block(p, 'DL-64', 'Pushed `release/29` for review.')
+    p.close()
+
+
+@test
 def dl64_train_labels_instead_of_release_n():
     p = Project(ledger(trains=[train(state='cleaned', merged_at=iso(9), cleaned_at=iso(8), smoke={'state': 'ok'})]))
     expect_block(p, 'DL-64', 'Pushed release/29 for review.')
