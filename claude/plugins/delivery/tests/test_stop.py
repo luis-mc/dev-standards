@@ -40,6 +40,38 @@ class EtaTests(unittest.TestCase):
         self.assertTrue([k for k, _ in S.check_eta_text("The rest lands tomorrow.")])
 
 
+FALSE_ALARM_TRAINS = "| `trains` | the releases, with their PR and state |"
+FALSE_ALARM_ETA = "- **I** add the rows the hooks miss, like the ETA for CO395."
+
+
+def label_keys(text, ledger=None):
+    return [k for k, _ in S.check_label_text(text, S.H.DEFAULTS, ledger or {"trains": []})]
+
+
+class FalseAlarmTests(unittest.TestCase):
+    def test_eta_as_a_field_name_is_not_a_promise(self):
+        for text in (FALSE_ALARM_ETA, "The ETA field holds it.", "It records its ETA and its state.",
+                     "`eta` is set by agent-eta.", "```\n\"eta\": 20 min\n```"):
+            self.assertEqual(keys(text), [], text)
+
+    def test_real_eta_promises_still_fail(self):
+        for text in ("ETA ~20 min", "ETA 16:40.", "The ETA is about 1 h.", "It will be ready soon.",
+                     "Should be done in 30 min.", "ETA: tomorrow"):
+            self.assertTrue(keys(text) or [k for k, _ in S.check_eta_text(text)], text)
+
+    def test_train_word_in_code_is_ignored_in_prose_is_flagged(self):
+        self.assertEqual(label_keys(FALSE_ALARM_TRAINS), [])
+        self.assertEqual(label_keys("The `trains` key.\n```\ntrains: []\n```"), [])
+        self.assertTrue(label_keys("The trains are green."))
+        self.assertTrue(label_keys("train 12 is green."))
+
+    def test_branch_names_are_flagged_even_in_code_spans(self):
+        ledger = {"trains": [{"id": "T-1", "branch": "claude/foo-bar"}]}
+        self.assertTrue(label_keys("Pushed `claude/foo-bar`.", ledger))
+        self.assertTrue(label_keys("Pushed claude/foo-bar.", ledger))
+        self.assertTrue(label_keys("Pushed `release/29`."))
+
+
 class OneCiPerReleaseTests(unittest.TestCase):
     def ledger(self, **kw):
         t = {"id": "T-1", "release_no": 41, "pr": 399, "merged_at": "2026-10-16T22:00:00Z", "state": "merged"}
