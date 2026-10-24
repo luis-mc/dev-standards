@@ -52,6 +52,9 @@ read the message, fix the cause and rerun.
      on and how long), for example `"agent slot ~01:30, ~1.5 h"`; at most 80
      characters; `""` clears it. Open statuses only: a row that goes Live,
      Built or Failed drops it.
+   - `--waits-on owner|work`: for a Waiting or On hold task, who it waits on. `owner`
+     lists it under Needs you in At a glance; `work` (the default) lists it under
+     Waiting for other work, with what it waits on (the basis) first. `""` clears it.
    - `--history`: one line for the feature artifact's History table, for a
      feature task whose change the owner should be able to look up later.
    The command renders every artifact that shows the task, and any other page
