@@ -247,7 +247,7 @@ class RedRerunTests(unittest.TestCase):
         before = L.load(root)["trains"][0]
         watcher(root, sh).run_once()
         self.assertEqual(sh.writes(), [])
-        self.assertEqual([c[:3] for c in sh.calls if c[:2] == ["gh", "pr"]], [])
+        self.assertEqual([c[:3] for c in sh.calls if c[:2] == ["gh", "pr"]], [["gh", "pr", "view"]])
         self.assertEqual(len([c for c in sh.calls if c[:3] == ["gh", "run", "list"]]), 1)
         t = L.load(root)["trains"][0]
         self.assertEqual((t["state"], t["ci"]), ("red", before["ci"]))
@@ -261,6 +261,48 @@ class RedRerunTests(unittest.TestCase):
         watcher(root, sh).run_once()
         self.assertEqual(sh.writes(), [])
         self.assertEqual(L.load(root)["trains"][0]["state"], "red")
+
+    def moved(self, new_runs, **cfg):
+        root = make_root()
+        self.red_train(root)
+        r = routes_for_green(head=OLD)
+        r[("gh", "run", "list", "--commit")] = (0, new_runs)
+        sh = FakeShell(r)
+        watcher(root, sh).run_once()
+        return sh, L.load(root)["trains"][0]
+
+    def test_red_old_head_new_head_green_goes_green_and_merges(self):
+        sh, t = self.moved(runs((7, "completed", "success", OLD, "release/29")))
+        self.assertEqual([c for c in sh.calls if c[:3] == ["gh", "pr", "merge"]],
+                         [["gh", "pr", "merge", "10", "--merge", "--match-head-commit", OLD]])
+        self.assertEqual((t["state"], t["ci"]["head_sha"], t["ci"]["run_ids"]), ("merged", OLD, [7]))
+
+    def test_red_old_head_new_head_running_becomes_running(self):
+        sh, t = self.moved(runs((7, "in_progress", None, OLD, "release/29")))
+        self.assertEqual(sh.writes(), [])
+        self.assertEqual((t["state"], t["ci"]["head_sha"], t["ci"]["state"]), ("ci", OLD, "running"))
+
+    def test_red_old_head_new_head_red_stays_red_on_new_head(self):
+        sh, t = self.moved(runs((7, "completed", "failure", OLD, "release/29")))
+        self.assertEqual(sh.writes(), [])
+        self.assertEqual((t["state"], t["ci"]["head_sha"], t["ci"]["run_ids"]), ("red", OLD, [7]))
+
+    def test_string_ci_does_not_crash_and_logs_once(self):
+        root = make_root()
+        seed(root, [{"branch": "release/29", "pr": 10, "state": "red", "ci": "failure"}])
+        msgs = []
+        sh = FakeShell(routes_for_green())
+        w = W.Watcher(root, sh=sh, now=lambda: NOW, out=msgs.append)
+        w.run_once()
+        w.run_once()
+        self.assertEqual(len([m for m in msgs if "not a dict" in m]), 1)
+        self.assertIsInstance(L.load(root)["trains"][0]["ci"], dict)
+
+    def test_string_ci_on_a_running_train_does_not_crash(self):
+        root = make_root()
+        seed(root, [{"branch": "release/29", "pr": 10, "state": "ci", "ci": "running"}])
+        watcher(root, FakeShell(routes_for_green())).run_once()
+        self.assertEqual(L.load(root)["trains"][0]["state"], "merged")
 
 
 class NextTrainTests(unittest.TestCase):
