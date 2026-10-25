@@ -105,6 +105,7 @@ class Watcher:
         self.rp = C.runner_plan_flags(self.cfg)
         self.runner_child = None
         self._guard_missing_logged = False
+        self._bad_ci_logged: set = set()
         self.repo = repo
         self.repo_args = ["--repo", repo] if repo else []
         self.actions: list[list[str]] = []
@@ -236,6 +237,7 @@ class Watcher:
         for train in led["trains"]:
             if train.get("state") not in ("pushed", "ci", "green", "red") or not train.get("pr"):
                 continue
+            self._train_ci(train)
             if train.get("state") == "red":
                 self._recheck_red(train)
                 continue
@@ -263,33 +265,54 @@ class Watcher:
             if state == "success" and self.flags["merge_on_green"]:
                 self.maybe_merge(train, head)
 
+    def _train_ci(self, train: dict) -> dict:
+        """The train's ci block as a dict. A ledger row whose ci is not a dict (a string was seen in the wild)
+        is treated as unknown, logged once per train, and read as empty; it never raises."""
+        ci = train.get("ci")
+        if isinstance(ci, dict):
+            return ci
+        if ci is not None and train.get("id") not in self._bad_ci_logged:
+            self._bad_ci_logged.add(train.get("id"))
+            self.out("train %s: ci is %s, not a dict; treated as unknown" % (train.get("id"), type(ci).__name__))
+        return {}
+
     def _recheck_red(self, train: dict) -> None:
-        """A red train stays red until the runs of its head commit conclude green for every required workflow
-        (the owner re-ran a failed run: same run id, newer attempt, or a new run). One cheap check per cycle:
-        the run list of the stored head; a still-failing, running or missing run writes nothing. Green moves the
-        train to green and takes the normal path (merge on green, never --auto)."""
-        stored = (train.get("ci") or {}).get("head_sha")
-        if not stored:
-            return
-        runs = self.runs_for_commit(stored)
-        if runs is None or ci_state_from_runs(runs, C.ci_workflows(self.cfg)) != "success":
-            return
+        """A red train leaves red when the runs of its head commit conclude green for every required workflow
+        (the owner re-ran a failed run: same run id, newer attempt, or a new run), or when the branch head moved
+        (a fix was pushed): the train is re-pointed to the new head and judged by that head's runs. One cheap
+        check per cycle; a still-failing or missing run on the same head writes nothing. Green takes the normal
+        path (merge on green, never --auto)."""
+        stored = self._train_ci(train).get("head_sha")
         head, pr_state = self.current_head(train)
         if pr_state == "MERGED":
             self._set_train(train, "merged", ci=None)
             return
-        if head != stored:      # the PR moved on: the next ci/green pass reads the new head, not this one
+        if not head:
             return
-        ci = {"head_sha": head, "run_ids": [r["databaseId"] for r in runs], "state": "success"}
-        self._set_train(train, "green", ci=ci)
-        if self.flags["merge_on_green"]:
-            self.maybe_merge(train, head)
+        moved = head != stored
+        runs = self.runs_for_commit(head)
+        if runs is None:
+            return
+        state = ci_state_from_runs(runs, C.ci_workflows(self.cfg))
+        if not moved and state != "success":
+            return
+        ci = {"head_sha": head, "run_ids": [r["databaseId"] for r in runs], "state": state}
+        if state == "success":
+            self._set_train(train, "green", ci=ci)
+            if self.flags["merge_on_green"]:
+                self.maybe_merge(train, head)
+        elif state == "failure":
+            self._set_train(train, None, ci=ci)         # red on the new head: stays red, now pointing at it
+        else:
+            self._set_train(train, "ci", ci=ci)         # the new head's runs are queued or running
 
     def _revoke_green(self, train: dict, ci: dict) -> None:
         def fn(led):
             t = L.find_train(led, train["id"])
             if t is None or t.get("merged_at"):
                 return
+            if not isinstance(t.get("ci"), dict):
+                t["ci"] = {}
             t["ci"].update(ci)
             t["state"], t["green_at"] = "ci", None
             L.add_event(led, "train.green_revoked", t["id"], "delivery_watch")
@@ -302,6 +325,8 @@ class Watcher:
             if t is None:
                 return
             if ci is not None:
+                if not isinstance(t.get("ci"), dict):
+                    t["ci"] = {}
                 prev = t["ci"].get("head_sha")
                 t["ci"].update(ci)
                 if prev != ci.get("head_sha") or not t["ci"].get("started_at"):
