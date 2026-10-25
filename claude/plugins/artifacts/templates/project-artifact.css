@@ -170,6 +170,7 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
 .status-count-tile.status-to-do { border-top-color: var(--rule-strong); }
 .status-count-tile.status-on-hold { border-top-color: var(--rule-strong); border-top-style: dashed; }
 .status-count-tile.status-failed { border-top-color: var(--failed); }
+.status-count-tile.status-dropped { border-top-color: var(--rule-strong); border-top-style: dotted; }
 
 /* At a glance (section 0): one labelled row per kind, items one per line */
 .at-a-glance {
@@ -231,6 +232,7 @@ details.glance-group > summary:hover { background: var(--surface-2); }
 .status-chip.status-waiting { background: var(--waiting-bg); }
 .status-chip.status-to-do { background: var(--surface-2); }
 .status-chip.status-on-hold { background: var(--surface-2); border-style: dashed; }
+.status-chip.status-dropped { background: var(--surface-2); color: var(--ink-muted); border-style: dotted; text-decoration: line-through; }
 .status-chip.status-failed { background: var(--failed); color: var(--on-failed); border-color: var(--failed); }
 
 /* Tables */
@@ -638,5 +640,5 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 a .release-name { color: var(--signal); }
 .release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
 .release-line .release-name { margin-right: 0; }
-.no-release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
+.dropped-line, .no-release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
 details.status-fold.release-group > summary { color: var(--ink); }

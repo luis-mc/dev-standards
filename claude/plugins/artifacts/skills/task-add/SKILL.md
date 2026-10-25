@@ -31,7 +31,7 @@ read the message, fix the cause and rerun.
    `feature-artifact-new` or `full-progress-artifact-new`.
 2. **Collect** the item (at most 80 characters), the detail (plain text, at
    most 600 characters), the status (default `To do`; one of Live, Built,
-   Running, Needs you, Waiting, To do, On hold, Failed), the expected date and,
+   Running, Needs you, Waiting, To do, On hold, Failed; Dropped needs `set-task-status --into/--reason`), the expected date and,
    for a project task, the app or service. Ask only for what is missing. Use `Running` for work that is running as you
    add it.
    `expected` is a real date from `date` in the project's zone (the manifest's

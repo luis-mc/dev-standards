@@ -950,7 +950,7 @@ def validate_structure(rec):
             f('R4.6', 'registry.json', '%s: owner "%s" is neither project nor a feature key' % (label, owner))
         st = t.get('status')
         if isinstance(st, str) and st not in statuses:
-            f('R4.7', 'registry.json', '%s: status "%s" is not one of the eight statuses' % (label, st))
+            f('R4.7', 'registry.json', '%s: status "%s" is not one of the nine statuses' % (label, st))
         if isinstance(t.get('changed'), str) and parse_iso(t['changed']) is None:
             f('R4.7', 'registry.json', '%s: changed is not an ISO time with offset' % label)
         if isinstance(t.get('item'), str) and len(t['item']) > 80:
@@ -970,11 +970,11 @@ def validate_structure(rec):
                 f('R5.34a', 'registry.json', '%s: waits_on must be one of %s' % (label, ', '.join(WAITS_ON)))
             elif isinstance(st, str) and st in statuses and st not in ('Waiting', 'On hold'):
                 f('R5.34a', 'registry.json', '%s: waits_on belongs on a Waiting or On hold row, not on a %s row' % (label, st))
-        for req, msg in release_problems(t, {x.get('id'): x for x in tasks if isinstance(x, dict)}):
+        for req, msg in release_problems(t, {x.get('id'): x for x in tasks if isinstance(x, dict)}) + started_problems(t):
             f(req, 'registry.json', '%s: %s' % (label, msg))
         ex = t.get('expected')
         if isinstance(ex, str) and isinstance(st, str) and st in statuses:
-            if st in ('Live', 'Built'):
+            if st in ('Live', 'Built', 'Dropped'):
                 if not EXPECTED_RE.match(ex):
                     f('R6.7', 'registry.json', '%s: Expected on a %s row must be the date it happened (DD Mon), got "%s"'
                       % (label, st, ex))
@@ -1061,6 +1061,8 @@ SYNONYMS = {
     'draft': 'To do',
     'paused': 'On hold', 'hold': 'On hold', 'deferred': 'On hold', 'postponed': 'On hold',
     'parked': 'On hold', 'onhold': 'On hold',
+    'dropped': 'Dropped', 'cancelled': 'Dropped', 'canceled': 'Dropped', 'abandoned': 'Dropped', 'folded': 'Dropped',
+    'merged into': 'Dropped', 'obsolete': 'Dropped', 'superseded': 'Dropped',
     'failing': 'Failed', 'failure': 'Failed', 'broken': 'Failed', 'error': 'Failed',
     'errored': 'Failed', 'red': 'Failed', 'rejected': 'Failed', 'fail': 'Failed',
 }
@@ -1463,22 +1465,23 @@ def cmd_feature_new(args):
     return 0
 
 
+DROPPED_REASON_MAX = 80      # R5.49: longest `dropped_reason`
 PHASE_NAMES = ('agents', 'join', 'ci', 'merge')       # R5.40
 RISK_LABEL_MAX = 40
 NO_RELEASE_MAX = 80          # R5.47a: longest `no_release` reason
 _POINT_RE = re.compile(r'^\s*(?:(\d{1,2}) (' + '|'.join(MONTHS) + r') )?([01]?\d|2[0-3]):([0-5]\d)\s*$')
 
 
-def _phase_point(text, now_dt, spec):
+def _phase_point(text, now_dt, spec, flag='--phase'):
     m = _POINT_RE.match(text)
     if not m:
-        raise Fail(1, '--phase "%s": "%s" is not HH:MM or DD Mon HH:MM' % (spec, text.strip()))
+        raise Fail(1, '%s "%s": "%s" is not HH:MM or DD Mon HH:MM' % (flag, spec, text.strip()))
     day = int(m.group(1)) if m.group(1) else now_dt.day
     month = MONTHS.index(m.group(2)) + 1 if m.group(2) else now_dt.month
     try:
         return datetime(now_dt.year, month, day, int(m.group(3)), int(m.group(4)), tzinfo=now_dt.tzinfo)
     except ValueError:
-        raise Fail(1, '--phase "%s": %s %s is not a date' % (spec, day, MONTHS[month - 1]))
+        raise Fail(1, '%s "%s": %s %s is not a date' % (flag, spec, day, MONTHS[month - 1]))
 
 
 def parse_phases(specs, now_dt):
@@ -1506,6 +1509,47 @@ def parse_phases(specs, now_dt):
     return sorted(out, key=lambda p: (p['start'], p['name']))
 
 
+def parse_started(text, now_dt):
+    """R5.48: `--started "DD Mon ~HH:MM"` or `HH:MM` (today), in the project's zone, stored as ISO with the offset;
+    `--started ""` clears it (returns None)."""
+    text = str(text).strip()
+    if not text:
+        return None
+    point = text.replace('~', '').strip()
+    return _phase_point(point, now_dt, text, '--started').isoformat(timespec='minutes')
+
+
+def started_problems(task):
+    """R5.48: [(requirement, message)] for the `started` of one task row."""
+    if 'started' not in task:
+        return []
+    st = parse_iso(task['started']) if isinstance(task['started'], str) else None
+    if st is None:
+        return [('R5.48', 'started must be an ISO time with offset')]
+    exp = R._expected_datetime(str(task.get('expected', '')), st) if R is not None else None
+    if task.get('status') in OPEN_STATUSES and exp is not None and st.replace(tzinfo=None) >= exp:
+        return [('R5.48', 'started %s is not before Expected "%s"' % (task['started'], task.get('expected')))]
+    return []
+
+
+def apply_started(task, args, now_dt, prev=None):
+    """R5.48: set or clear `started` from --started; a task that first moves to Running with none gets now."""
+    given = getattr(args, 'started', None)
+    if given is not None:
+        started = parse_started(given, now_dt)
+        if started:
+            task['started'] = started
+        else:
+            task.pop('started', None)
+    elif task.get('status') == 'Running' and prev != 'Running' and 'started' not in task:
+        exp = R._expected_datetime(str(task.get('expected', '')), now_dt) if R is not None else None
+        if exp is None or now_dt.replace(tzinfo=None) < exp:           # an overdue row has no honest start to record
+            task['started'] = now_dt.isoformat(timespec='minutes')
+    problems = started_problems(task)
+    if problems:
+        raise Fail(1, '%s: %s' % (task.get('id', 'new task'), '; '.join(m for _, m in problems)))
+
+
 def parse_risk(text):
     """R5.40: `--risk "LABEL=MINUTES"` -> {"label", "minutes"}; "" clears it (returns None)."""
     text = str(text).strip()
@@ -1518,6 +1562,29 @@ def parse_risk(text):
     if len(label) > RISK_LABEL_MAX:
         raise Fail(1, '--risk label is %d characters; at most %d' % (len(label), RISK_LABEL_MAX))
     return {'label': label, 'minutes': int(minutes)}
+
+
+def dropped_problems(task, by_id):
+    """R5.49: [(requirement, message)] for the dropped fields of one task row."""
+    out = []
+    into, reason = task.get('dropped_into'), task.get('dropped_reason')
+    if task.get('status') != 'Dropped':
+        if into is not None or reason is not None:
+            out.append(('R5.49', 'dropped_into and dropped_reason belong to a Dropped row'))
+        return out
+    if reason is not None and (not isinstance(reason, str) or not reason.strip() or len(reason) > DROPPED_REASON_MAX):
+        out.append(('R5.49', 'dropped_reason must be a non-empty text of at most %d characters' % DROPPED_REASON_MAX))
+    if into is not None:
+        target = by_id.get(into) if isinstance(into, str) else None
+        if target is None or target is task:
+            out.append(('R5.49', 'dropped_into names %r, which is not another task' % (into,)))
+        elif is_release(task) and not is_release(target):
+            out.append(('R5.49', 'a dropped release folds into another release; dropped_into names %s, which is not one' % into))
+    elif reason is None:
+        out.append(('R5.49', 'a Dropped row says why: dropped_into (the task that took the work) or dropped_reason'))
+    elif is_release(task):
+        out.append(('R5.49', 'a dropped release names the release that took its cargo: dropped_into'))
+    return out
 
 
 def release_problems(task, by_id):
@@ -1547,6 +1614,7 @@ def release_problems(task, by_id):
     elif task.get('status') in ('Running', 'Built') and not is_release(task) and not rides:
         out.append(('R5.47', 'a %s task rides a release; give it --rides RELEASE-n (or the release task ID), '
                     'or --no-release REASON when it ships nothing' % task['status']))
+    out.extend(dropped_problems(task, by_id))
     good = []
     if phases is not None:
         if not isinstance(phases, list) or not phases:
@@ -1575,6 +1643,8 @@ def release_problems(task, by_id):
             out.append(('R5.40', 'rides names %r, which is not a task' % (rides,)))
         elif target is task or not is_release(target):
             out.append(('R5.40', 'rides names %s, which is not a release task' % rides))
+        elif target.get('status') == 'Dropped' and task.get('status') not in ('Live', 'Built', 'Dropped'):
+            out.append(('R5.49', 'rides %s, a dropped release; move the task with --rides to the release that took the cargo' % rides))
     if good and task.get('status') in OPEN_STATUSES and isinstance(task.get('expected'), str):
         end = max(good)
         want = '%02d %s ~%02d:%02d' % (end.day, MONTHS[end.month - 1], end.hour, end.minute)
@@ -1593,7 +1663,31 @@ def resolve_rides(text, by_id):
     for t in by_id.values():
         if release_number(t) == int(m.group(1)):
             return str(t.get('id'))
-    raise Fail(1, '--rides %s: no release has that number' % text)
+    raise Fail(1, '%s: no release has that number' % text)
+
+
+def apply_dropped_fields(task, by_id, args):
+    """R5.49: set the dropped fields from --into/--reason when the task is Dropped, remove them otherwise."""
+    into, reason = getattr(args, 'into', None), getattr(args, 'reason', None)
+    if task.get('status') != 'Dropped':
+        if into is not None or reason is not None:
+            raise Fail(1, '--into and --reason say why a task is Dropped; they go with the status Dropped')
+        task.pop('dropped_into', None)
+        task.pop('dropped_reason', None)
+        return
+    if into is not None:
+        if into.strip():
+            task['dropped_into'] = resolve_rides(into.strip(), by_id)
+        else:
+            task.pop('dropped_into', None)
+    if reason is not None:
+        reason = ' '.join(reason.split())
+        if len(reason) > DROPPED_REASON_MAX:
+            raise Fail(1, '--reason is %d characters; at most %d' % (len(reason), DROPPED_REASON_MAX))
+        if reason:
+            task['dropped_reason'] = reason
+        else:
+            task.pop('dropped_reason', None)
 
 
 def apply_release_fields(task, by_id, args, now_dt):
@@ -1627,6 +1721,7 @@ def apply_release_fields(task, by_id, args, now_dt):
             task['rides'] = resolve_rides(args.rides.strip(), by_id)
         else:
             task.pop('rides', None)
+    apply_dropped_fields(task, by_id, args)
     problems = release_problems(task, by_id)
     if problems:
         raise Fail(1, '%s: %s' % (task.get('id', 'new task'), '; '.join(m for _, m in problems)))
@@ -1702,6 +1797,7 @@ def cmd_task_add(args):
         if waits_on:
             row['waits_on'] = waits_on
         apply_release_fields(row, {t.get('id'): t for t in rec.tasks()}, args, now.dt)
+        apply_started(row, args, now.dt)
         reg['tasks'].append(row)
         if owner != 'project':
             rec.render_keys[owner] = 'new'
@@ -1751,7 +1847,7 @@ def cmd_set_task_status(args):
             task['detail'] = args.detail
         if args.expected is not None:
             task['expected'] = args.expected
-        elif status in ('Live', 'Built'):
+        elif status in ('Live', 'Built', 'Dropped'):
             task['expected'] = now.date          # R6.8
         if status not in OPEN_STATUSES:
             task.pop('expected_basis', None)     # R6.10: only an open row has an estimate to base
@@ -1772,12 +1868,15 @@ def cmd_set_task_status(args):
             else:
                 task.pop('waits_on', None)
         apply_release_fields(task, {t.get('id'): t for t in rec.tasks()}, args, now.dt)
+        apply_started(task, args, now.dt, prev)
         owner = task['owner']
         if owner != 'project':
             rec.render_keys[owner] = 'new'
             changes = []
             if new_item is not None and new_item != old_item:
                 changes.append('%s item changed from "%s" to "%s"' % (args.id, old_item, new_item))
+            if status == 'Dropped' and prev != 'Dropped':
+                changes.append(R.dropped_line(task, {t.get('id'): t for t in rec.tasks()}))
             if args.history:
                 changes.append(args.history)
             if changes:
@@ -1981,7 +2080,8 @@ def cmd_render(args):
     return 0
 
 
-FINGERPRINT_TASK_FIELDS = ('id', 'owner', 'status', 'item', 'expected', 'release', 'rides', 'phases', 'risk', 'no_release', 'waits_on')
+FINGERPRINT_TASK_FIELDS = ('id', 'owner', 'status', 'item', 'expected', 'release', 'rides', 'phases', 'risk', 'no_release',
+                           'waits_on', 'started', 'dropped_into', 'dropped_reason')
 
 
 def publish_fingerprint(rec):
@@ -2532,6 +2632,7 @@ def build_parser():
     s.add_argument('--rides', metavar='ID', help='the release this task rides, its task ID or RELEASE-n (a Running or Built task needs one, R5.47); "" clears it')
     s.add_argument('--no-release', metavar='REASON', help='this task ships nothing (a publish, a study, a cleanup), at most 80 characters; it rides no release and is never Built (R5.47a); "" clears it')
     s.add_argument('--waits-on', metavar='owner|work', help='who a Waiting or On hold task waits on: owner (it shows under Needs you) or work (other work, the default); "" clears it (R5.34a)')
+    s.add_argument('--started', metavar='"DD Mon ~HH:MM"|HH:MM', help='when work on the task began, in the project time zone; it is where an open task\'s bar starts on the timeline and must be before Expected; "" clears it (R5.48)')
     s.set_defaults(func=cmd_task_add)
 
     s = sub.add_parser('set-task-status', parents=[w], help='change one task')
@@ -2549,6 +2650,9 @@ def build_parser():
     s.add_argument('--rides', metavar='ID', help='the release this task rides, its task ID or RELEASE-n (a Running or Built task needs one, R5.47); "" clears it')
     s.add_argument('--no-release', metavar='REASON', help='this task ships nothing (a publish, a study, a cleanup), at most 80 characters; it rides no release and is never Built (R5.47a); "" clears it')
     s.add_argument('--waits-on', metavar='owner|work', help='who a Waiting or On hold task waits on: owner (it shows under Needs you) or work (other work, the default); "" clears it (R5.34a)')
+    s.add_argument('--started', metavar='"DD Mon ~HH:MM"|HH:MM', help='when work on the task began, in the project time zone; it is where an open task\'s bar starts on the timeline and must be before Expected; "" clears it (R5.48)')
+    s.add_argument('--into', metavar='ID', help='with Dropped: the task that took the work, its task ID or RELEASE-n; required for a release (R5.49)')
+    s.add_argument('--reason', help='with Dropped: why, at most 80 characters; needed when --into is not given (R5.49)')
     s.set_defaults(func=cmd_set_task_status)
 
     s = sub.add_parser('export-content', parents=[j], help="copy an artifact's content files out of the record")

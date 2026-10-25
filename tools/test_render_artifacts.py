@@ -1292,7 +1292,7 @@ def artifact_file_names():
 
 @test
 def constants_follow_the_contract():
-    assert R.STATUSES == ('Live', 'Built', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed')
+    assert R.STATUSES == ('Live', 'Built', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed', 'Dropped')
     assert len(R.REQUIRED_TOKENS) == 22 and len(set(R.REQUIRED_TOKENS)) == 22
     design = open(os.path.join(PLUGIN, 'design', 'DESIGN.md'), encoding='utf-8').read()
     for token in R.REQUIRED_TOKENS:
@@ -2761,6 +2761,50 @@ def check_state_column(fx):
     out = fx.render('full-progress')
     bad = sub1(out, '1 Running</span><span class="status-chip status-built">2 Built', '3 Running</span><span class="status-chip status-built">2 Built')
     assert 'R5.44' in reqs(fx.check(bad, 'full-progress'))
+
+
+@test
+@with_fixture
+def other_work_bar_starts_at_started(fx):
+    """R5.48: an open no-release task's bar starts at its `started`, not at now (12:39); without one it starts at now,
+    and the bar is drawn wider (the axis begins at the start)."""
+    ref = R._parse_iso(STAMP_ISO)
+    widths = {}
+    for started in ('2026-10-10T09:00+01:00', None):
+        row = no_release_task('DS60', 'Catalogue check', '10 Oct ~16:00', status='Waiting', started=started)
+        facts = R._other_row(row, ref)
+        assert facts['start_min'] == (540 if started else 12 * 60 + 39), facts
+        registry = with_releases(fx, row)
+        out = fx.render('full-progress', registry=registry)
+        assert fx.check(out, 'full-progress', registry=registry) == []
+        bar = R.find_all(timeline_of(out), 'rect', 'rt-other')[0]
+        widths[started] = float(bar.attrs['width'])
+    assert widths['2026-10-10T09:00+01:00'] > widths[None], widths
+
+
+@test
+@with_fixture
+def dropped_release_is_closed_history(fx):
+    """R5.49: a Dropped release is not open: no bar on the timeline, not in open_releases, listed under Live or built
+    with `dropped: folded into RELEASE-2`, a ninth chip and tile; check is clean."""
+    kept = release('DS52', 'Kept release', '10 Oct ~18:00', [phase('agents', '17:30', '18:00')])
+    gone = release('DS51', 'Folded release', '10 Oct ~17:00', [phase('agents', '16:30', '17:00')], status='Dropped')
+    gone['dropped_into'] = 'DS52'
+    registry = with_releases(fx, gone, kept)
+    assert [t['id'] for t in R.open_releases(registry['tasks'])] == ['DS52']
+    out = fx.render('full-progress', registry=registry)
+    fig = timeline_of(out)
+    names = [R.text_of(n, skip=lambda x: x.tag == 'title') for n in R.find_all(fig, 'text', 'rt-name')]
+    assert names == ['RELEASE-2 · Kept release'], names
+    row = out[out.index('<tr data-task="DS51">'):]
+    row = row[:row.index('</tr>')]
+    assert '<span class="dropped-line">dropped: folded into RELEASE-2</span>' in row and 'status-dropped' in row, row
+    assert R.dropped_line(gone, {'DS52': kept}) == 'dropped: folded into RELEASE-2'
+    assert 'status-count-tile status-dropped' in out and 'status-chip status-dropped' in out
+    assert R.find(R.find_all(R.parse_dom(out), 'details', 'status-fold')[-1], 'tr') is not None
+    assert fx.check(out, 'full-progress', registry=registry) == []
+    bad = out.replace('dropped: folded into RELEASE-2', 'dropped: something else')
+    assert 'R5.49' in reqs(fx.check(bad, 'full-progress', registry=registry))
 
 
 def main() -> int:
