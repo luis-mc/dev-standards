@@ -58,6 +58,7 @@ except ImportError as _e:
 SPEC = 'ARTIFACTSPEC 1.0.0'
 FP_NAME = 'full-progress'
 RECORD_REL = 'docs/artifacts'
+WAITS_ON = ('owner', 'work')   # R5.34a: who a Waiting or On hold task waits on; absent means work
 BASIS_MAX = 80            # R6.10: longest Expected basis
 OPEN_STATUSES = ('Running', 'Waiting', 'To do', 'Needs you', 'On hold')     # R6.6
 MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -964,6 +965,11 @@ def validate_structure(rec):
                 f('R6.10', 'registry.json', '%s: expected_basis is longer than %d characters' % (label, BASIS_MAX))
             if isinstance(st, str) and st in statuses and st not in OPEN_STATUSES:
                 f('R6.10', 'registry.json', '%s: expected_basis belongs on an open row, not on a %s row' % (label, st))
+        if 'waits_on' in t:
+            if t['waits_on'] not in WAITS_ON:
+                f('R5.34a', 'registry.json', '%s: waits_on must be one of %s' % (label, ', '.join(WAITS_ON)))
+            elif isinstance(st, str) and st in statuses and st not in ('Waiting', 'On hold'):
+                f('R5.34a', 'registry.json', '%s: waits_on belongs on a Waiting or On hold row, not on a %s row' % (label, st))
         for req, msg in release_problems(t, {x.get('id'): x for x in tasks if isinstance(x, dict)}):
             f(req, 'registry.json', '%s: %s' % (label, msg))
         ex = t.get('expected')
@@ -1634,9 +1640,21 @@ def clean_basis(text):
     return text
 
 
+def clean_waits_on(text):
+    """R5.34a: `owner` or `work` ('' clears it); anything else is refused."""
+    text = str(text).strip().lower()
+    if text and text not in WAITS_ON:
+        raise Fail(1, '--waits-on is %r; use owner (a task blocked on the owner), work (waiting on other work) or "" to clear' % text)
+    return text
+
+
 def cmd_task_add(args):
     ctx = make_ctx(args)
     status = require_status(args.status)
+    waits_on = clean_waits_on(args.waits_on) if args.waits_on is not None else ''
+    if waits_on and status not in ('Waiting', 'On hold'):
+        warn('--waits-on ignored: only a Waiting or On hold row waits')
+        waits_on = ''
     basis = clean_basis(args.basis) if args.basis is not None else ''
     if basis and status not in OPEN_STATUSES:
         warn('--basis ignored: a %s row has no estimate to base' % status)
@@ -1681,6 +1699,8 @@ def cmd_task_add(args):
                'changed': now.iso}
         if basis:
             row['expected_basis'] = basis
+        if waits_on:
+            row['waits_on'] = waits_on
         apply_release_fields(row, {t.get('id'): t for t in rec.tasks()}, args, now.dt)
         reg['tasks'].append(row)
         if owner != 'project':
@@ -1713,6 +1733,7 @@ def cmd_set_task_status(args):
     status = require_status(args.status)
     new_item = clean_item(args.item) if args.item is not None else None
     basis = clean_basis(args.basis) if args.basis is not None else None
+    waits_on = clean_waits_on(args.waits_on) if args.waits_on is not None else None
     ctx = make_ctx(args)
 
     def apply(rec):
@@ -1741,6 +1762,15 @@ def cmd_set_task_status(args):
                 task['expected_basis'] = basis
             else:
                 task.pop('expected_basis', None)
+        if status not in ('Waiting', 'On hold'):
+            task.pop('waits_on', None)           # R5.34a: only a waiting row waits on someone
+            if waits_on:
+                warn('--waits-on ignored: a %s row does not wait' % status)
+        elif waits_on is not None:
+            if waits_on:
+                task['waits_on'] = waits_on
+            else:
+                task.pop('waits_on', None)
         apply_release_fields(task, {t.get('id'): t for t in rec.tasks()}, args, now.dt)
         owner = task['owner']
         if owner != 'project':
@@ -1951,7 +1981,7 @@ def cmd_render(args):
     return 0
 
 
-FINGERPRINT_TASK_FIELDS = ('id', 'owner', 'status', 'item', 'expected', 'release', 'rides', 'phases', 'risk', 'no_release')
+FINGERPRINT_TASK_FIELDS = ('id', 'owner', 'status', 'item', 'expected', 'release', 'rides', 'phases', 'risk', 'no_release', 'waits_on')
 
 
 def publish_fingerprint(rec):
@@ -2501,6 +2531,7 @@ def build_parser():
     s.add_argument('--risk', metavar='LABEL=MINUTES', help='the named risk of a release, for example "+1 fix round=10"; "" clears it')
     s.add_argument('--rides', metavar='ID', help='the release this task rides, its task ID or RELEASE-n (a Running or Built task needs one, R5.47); "" clears it')
     s.add_argument('--no-release', metavar='REASON', help='this task ships nothing (a publish, a study, a cleanup), at most 80 characters; it rides no release and is never Built (R5.47a); "" clears it')
+    s.add_argument('--waits-on', metavar='owner|work', help='who a Waiting or On hold task waits on: owner (it shows under Needs you) or work (other work, the default); "" clears it (R5.34a)')
     s.set_defaults(func=cmd_task_add)
 
     s = sub.add_parser('set-task-status', parents=[w], help='change one task')
@@ -2517,6 +2548,7 @@ def build_parser():
     s.add_argument('--risk', metavar='LABEL=MINUTES', help='the named risk of a release, for example "+1 fix round=10"; "" clears it')
     s.add_argument('--rides', metavar='ID', help='the release this task rides, its task ID or RELEASE-n (a Running or Built task needs one, R5.47); "" clears it')
     s.add_argument('--no-release', metavar='REASON', help='this task ships nothing (a publish, a study, a cleanup), at most 80 characters; it rides no release and is never Built (R5.47a); "" clears it')
+    s.add_argument('--waits-on', metavar='owner|work', help='who a Waiting or On hold task waits on: owner (it shows under Needs you) or work (other work, the default); "" clears it (R5.34a)')
     s.set_defaults(func=cmd_set_task_status)
 
     s = sub.add_parser('export-content', parents=[j], help="copy an artifact's content files out of the record")

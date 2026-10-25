@@ -99,7 +99,7 @@ sections are never renumbered to close a gap. Invariants are numbered
 
 **1.4.0 — 2026-10-11.**
 
-- Section 0 of every artifact gets a generated At a glance block (R5.33 to R5.35): Needs you, Running now, Built not released, Waiting or on hold, and Live in the last 24 hours, one task per line. The lede becomes an optional short note (R5.3, R5.7), a lede over 300 characters is a warning (R5.37), and Full Progress section 1 shows a generated summary for a feature with an empty lede (R5.36).
+- Section 0 of every artifact gets a generated At a glance block (R5.33 to R5.35): Needs you, Running now, Built not released, Waiting for other work, and Live in the last 24 hours, one task per line. The lede becomes an optional short note (R5.3, R5.7), a lede over 300 characters is a warning (R5.37), and Full Progress section 1 shows a generated summary for a feature with an empty lede (R5.36).
 - Full Progress section 1 becomes a table `Feature artifact | Last updated | Tasks | Where it stands` (R5.6): the new column shows the time each feature page last changed (its stamp, kept in the manifest entry as `updated`, R4.30), and the rows start newest first. The two headers `Feature artifact` and `Last updated` are buttons that sort the rows on the page and reverse on a second click, with an arrow and `aria-sort` (R5.39); the template's script does it and stores nothing. Each feature page shows `Full Progress published: DD Mon HH:MM (<label>)` right under its stamp, linking to Full Progress's URL (R5.38), from the new manifest field `published_at` that `mark-published` sets; recording a publish redraws the feature pages keeping their stamp, so Full Progress does not change and `pending` has nothing to list again. A command that renders features and Full Progress draws the features first (R7.5).
 - Writing commands commit the record but no longer push it; the record is pushed once, at the end of the turn, by `pending`, by a new `push` command and by a new before-command hook ahead of `gh pr create`, `gh pr ready` and `gh pr merge` (R4.28, R4.29, R7.6, R8.16, R8.17). This stops one secret-scan run per record commit.
 
@@ -400,7 +400,7 @@ docs/artifacts/
 - **R4.7** — `status` is one of the eight statuses of §6.1. `changed` is set by
   the script on every status change, never by hand.
 - **R4.8** — `expected` follows §6.4; an open row may also carry
-  `expected_basis` (R6.10); a release row may also carry `release`, `phases`,
+  `expected_basis` (R6.10); a Waiting or On hold row may also carry `waits_on` (R5.34a); a release row may also carry `release`, `phases`,
   `risk` and any row `rides` (R5.40, R5.45). `item` is at most 80 characters; `detail`
   is plain text, at most 600 characters.
 - **R4.9** — Tasks are stored in ID order (prefix, then number); rendering
@@ -592,7 +592,7 @@ an HTML fragment beginning with `<title>`, as the Artifact tool expects (no
 - **R5.7** — The lede is the content lede alone, in `<p class="lede">`: a short
   note (§4.4). When the content lede is empty the paragraph is omitted. The
   statuses are not in it: the At a glance block's Needs you group (R5.34) lists
-  every task in Needs you or Failed, then every open decision (R5.25), and reads
+  every task in Needs you, every Waiting or On hold task that waits on the owner (R5.34a), and every task in Failed, then every open decision (R5.25), and reads
   `Nothing needs you.` when none waits. `check` finds a Needs you group that
   differs from the generated set.
 The At a glance block itself is specified in §5.6 (R5.33 to R5.35).
@@ -789,13 +789,33 @@ double-click.
   tasks; decisions as in R5.25, which the full-progress artifact has none of),
   and is deterministic (R7.4).
 - **R5.34** — The groups, in this order, each omitted when empty except the
-  first: `you` *Needs you* (tasks in Needs you, then Failed, then open decisions
+  first: `you` *Needs you* (tasks in Needs you, then Waiting or On hold tasks
+  that wait on the owner, R5.34a, then Failed, then open decisions
   as in R5.25); `running` *Running now* (Running tasks, soonest Expected first);
-  `built` *Built, not released* (Built, newest first); `waiting` *Waiting or on
-  hold* (Waiting, then On hold); `live` *Live in the last 24 hours* (Live tasks
+  `built` *Built, not released* (Built, newest first); `waiting` *Waiting for
+  other work* (Waiting, then On hold, except those that wait on the owner); `live` *Live in the last 24 hours* (Live tasks
   whose `changed` is within 24 hours of the stamp, newest first, at most 8, then
   an item `and N more`). To do tasks are not listed. A group in a feature
   artifact never names a task of another owner.
+- **R5.34a** — Who a Waiting or On hold task waits on is its optional field
+  `waits_on`, `owner` or `work`; absent means `work`, so a record without the
+  field groups as before the split, except that the group is now named *Waiting
+  for other work*. `task-add` and `set-task-status` take `--waits-on owner|work`
+  (`--waits-on ""` clears it on `set-task-status`); the field belongs to a Waiting
+  or On hold row only: it is dropped when the status becomes any other and
+  ignored with a warning when given for one, and `check` reports a value other
+  than `owner` or `work` and the field on a row that does not wait. In the `you`
+  and `waiting` groups a row of a Waiting, On hold or Needs you task reads its
+  dependency first (`<span class="glance-dep">`), then the item, then the
+  Expected: the dependency is the task's `expected_basis`, else the name of the
+  release it `rides`, else the first sentence of its `detail`, cut to 80
+  characters; the basis is then not repeated under the Expected. The count of the
+  `you` group (R6.13) is the number of those tasks, Failed tasks and open
+  decisions; the Needs you sentence (R5.7) and a feature's generated summary
+  (R5.36) count the owner's waits as Needs you. Verified by
+  `glance_splits_owner_waits_from_work_waits`, `glance_default_waits_on_work_keeps_old_grouping`,
+  `glance_needs_you_count_matches_the_section`, `check_finds_a_wrong_split_or_dependency`,
+  `test_waits_on_is_stored_and_defaults_to_work` and `test_check_refuses_a_bad_waits_on`.
 - **R5.35** — `check` finds a group that does not list exactly the tasks (and
   decisions) of its statuses in the order of R5.34, a missing or extra group, a
   group out of order, or a wrong `and N more`.
@@ -1141,8 +1161,8 @@ they do nothing (R4.17).
 |---|---|
 | `init --project NAME [--timezone IANA] [--label L] [--windows-timezone ID] [--default-branch B]` | Creates the manifest, an empty registry and the full-progress artifact's content. Refuses if a manifest exists. Zone defaults to the machine's. |
 | `feature-new --key K --title NAME --prefix P --apps a,b [--hero TEXT] [init flags]` | Adds a feature artifact (content folder with `meta.json`, a section `01-what-and-why.html` stub and a first History row; its manifest entry has no `url`). Runs `init` first, with the same `init` flags, when there is no manifest; `--project` is then required. |
-| `task-add --owner K\|project --item TEXT --detail TEXT --expected TEXT [--basis TEXT] [--app A] [--status S] [--prefix P] [--release] [--phase NAME=HH:MM-HH:MM]... [--risk LABEL=MINUTES] [--rides ID]` | Adds a task with the next free number; prints its ID. For `--owner project`, `--prefix` picks one of `project_prefixes`, and a new prefix not used by any feature is registered. |
-| `set-task-status ID STATUS [--item TEXT] [--detail TEXT] [--expected TEXT] [--basis TEXT] [--history TEXT] [--release] [--phase NAME=HH:MM-HH:MM]... [--risk LABEL=MINUTES] [--rides ID]` | Changes one task; adds a History row to its feature artifact when `--history` is given. `--item TEXT` corrects the task's title (1 to 80 characters, as R4.8) and records `<ID> item changed from "<old>" to "<new>"` in the History of a feature task (a project task has no History; a warning says so). Verified by `test_set_task_status_item_corrects_title`. |
+| `task-add --owner K\|project --item TEXT --detail TEXT --expected TEXT [--basis TEXT] [--app A] [--status S] [--prefix P] [--release] [--phase NAME=HH:MM-HH:MM]... [--risk LABEL=MINUTES] [--rides ID] [--waits-on owner\|work]` | Adds a task with the next free number; prints its ID. For `--owner project`, `--prefix` picks one of `project_prefixes`, and a new prefix not used by any feature is registered. |
+| `set-task-status ID STATUS [--item TEXT] [--detail TEXT] [--expected TEXT] [--basis TEXT] [--history TEXT] [--release] [--phase NAME=HH:MM-HH:MM]... [--risk LABEL=MINUTES] [--rides ID] [--waits-on owner\|work]` | Changes one task; adds a History row to its feature artifact when `--history` is given. `--item TEXT` corrects the task's title (1 to 80 characters, as R4.8) and records `<ID> item changed from "<old>" to "<new>"` in the History of a feature task (a project task has no History; a warning says so). Verified by `test_set_task_status_item_corrects_title`. |
 | `export-content KEY --to DIR` | Copies the artifact's content files from the record to DIR for editing, `decisions.json` and its `assets/` folder included. |
 | `edit-content KEY --from DIR` | Replaces the artifact's content files in the record with those in DIR validates, renders and writes the files. It refuses an edit that removes a decision or changes the choice of a decided one (R5.15). |
 | `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design` and renders; `default` removes it. |
@@ -1383,7 +1403,7 @@ Reads the hook input; takes the task ID from the current branch name
   `test_pending_never_lists_a_feature_artifact`.
 - **R9.6** — Full Progress needs a publish only when what the owner sees
   changes: a task added, or a task's status, item, Expected, release (`release`,
-  `rides`, `phases`, `risk`, `no_release`), an open decision, or a feature row of
+  `rides`, `phases`, `risk`, `no_release`), `waits_on`, an open decision, or a feature row of
   section 1. A change to a detail, a basis, a content section or the stamp alone
   is committed and rendered but does not make `pending` list Full Progress; it
   rides the next publish. `mark-published` stores a fingerprint of those fields

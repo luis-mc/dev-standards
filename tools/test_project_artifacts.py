@@ -446,6 +446,39 @@ def test_basis_is_stored(env):
 
 
 @case
+def test_waits_on_is_stored_and_defaults_to_work(env):
+    p = env.baseline()
+    tid = p.ok('task-add', '--owner', 'artifacts', '--item', 'Sign-off', '--detail', 'Waits.', '--expected', '14 Oct',
+               '--status', 'Waiting', '--waits-on', 'Owner').out.strip()
+    assert p.task(tid)['waits_on'] == 'owner', p.task(tid)
+    assert 'waits_on' not in p.task('AR1'), 'no flag, no field: the old behaviour'
+    p.ok('set-task-status', tid, 'On hold')
+    assert p.task(tid)['waits_on'] == 'owner'                           # kept across waiting statuses
+    p.ok('set-task-status', tid, 'Waiting', '--waits-on', 'work')
+    assert p.task(tid)['waits_on'] == 'work'
+    p.ok('set-task-status', tid, 'Waiting', '--waits-on', '')
+    assert 'waits_on' not in p.task(tid)
+    p.ok('set-task-status', tid, 'Waiting', '--waits-on', 'owner')
+    p.ok('set-task-status', tid, 'Running')                             # no longer waiting: dropped
+    assert 'waits_on' not in p.task(tid)
+    assert p.run('set-task-status', tid, 'Waiting', '--waits-on', 'someone').code != 0
+    assert p.run('check').code == 0
+
+
+@case
+def test_check_refuses_a_bad_waits_on(env):
+    """R5.34a: waits_on is owner or work, and only on a Waiting or On hold row."""
+    p = env.baseline()
+    rec = p.record_copy('waits')
+    edit_json(rec / 'registry.json', lambda r: task(r, 'AR1').update(status='Waiting', waits_on='owner'))
+    assert not has_line(check_record(env, rec).out, 'R5.34a'), check_record(env, rec).out
+    edit_json(rec / 'registry.json', lambda r: task(r, 'AR1').update(waits_on='nobody'))
+    assert has_line(check_record(env, rec).out, 'R5.34a', 'registry.json')
+    edit_json(rec / 'registry.json', lambda r: task(r, 'AR1').update(status='Running', waits_on='owner'))
+    assert has_line(check_record(env, rec).out, 'R5.34a', 'registry.json')
+
+
+@case
 def test_set_task_status_item_corrects_title(env):
     p = env.baseline()
     old = p.task('AR1')['item']

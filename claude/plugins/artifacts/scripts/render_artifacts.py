@@ -904,9 +904,8 @@ def open_decisions(decisions) -> list:
 
 
 def needs_you_sentence(tasks: list, decisions=()) -> str:
-    """R5.7 and R5.25: tasks in Needs you or Failed, then open decisions."""
-    waiting = [t for t in sorted(tasks, key=lambda t: YOU_ORDER.index(t['status']) if t['status'] in YOU_ORDER else 9)
-               if t['status'] in ('Needs you', 'Failed')]
+    """R5.7, R5.25 and R5.34a: tasks in Needs you, waiting on the owner, or Failed, then open decisions."""
+    waiting = glance_you_tasks(tasks)
     parts = ['%s %s' % (t['id'], _norm(t['item'])) for t in waiting]
     parts += ['%s %s' % (d['id'], _norm(d['question'])) for d in open_decisions(decisions)]
     if not parts:
@@ -919,8 +918,33 @@ GLANCE_LIVE_MAX = 8         # R5.34
 LEDE_WARN_CHARS = 300       # R5.37
 GLANCE_GROUPS = (
     ('you', 'Needs you'), ('running', 'Running now'), ('built', 'Built, not released'),
-    ('waiting', 'Waiting or on hold'), ('live', 'Live in the last 24 hours'),
+    ('waiting', 'Waiting for other work'), ('live', 'Live in the last 24 hours'),
 )
+DEP_MAX = 80                # R5.34a: longest dependency text of a glance row
+
+
+def waits_on_owner(task: dict) -> bool:
+    """R5.34a: a Waiting or On hold task whose `waits_on` is `owner` waits on the owner, not on other work."""
+    return task.get('status') in ('Waiting', 'On hold') and task.get('waits_on') == 'owner'
+
+
+def glance_you_tasks(tasks: list) -> list:
+    """R5.34: the tasks of the Needs you group: Needs you, then Waiting or On hold on the owner, then Failed."""
+    def rank(t):
+        return 0 if t['status'] == 'Needs you' else (1 if waits_on_owner(t) else 2)
+    return sorted([t for t in tasks if t['status'] in ('Needs you', 'Failed') or waits_on_owner(t)], key=rank)
+
+
+def glance_dependency(task: dict, by_id=None) -> str:
+    """R5.34a: what the task waits on, from `expected_basis`, else the release it rides, else the first sentence
+    of `detail`; at most DEP_MAX characters."""
+    text = _norm(task.get('expected_basis') or '')
+    if not text and task.get('rides'):
+        rel = (by_id or {}).get(task['rides'])
+        text = release_name(rel) if rel is not None else task['rides']
+    if not text:
+        text = _norm(re.split(r'(?<=[.!?])\s', _norm(task.get('detail') or ''), maxsplit=1)[0])
+    return text if len(text) <= DEP_MAX else text[:DEP_MAX - 1].rstrip() + '\u2026'
 
 
 def glance_groups(tasks: list, decisions, ref: datetime) -> list:
@@ -939,8 +963,7 @@ def glance_groups(tasks: list, decisions, ref: datetime) -> list:
     for gkey, label in GLANCE_GROUPS:
         more = 0
         if gkey == 'you':
-            shown = sorted([t for t in tasks if t['status'] in ('Needs you', 'Failed')],
-                           key=lambda t: YOU_ORDER.index(t['status']))
+            shown = glance_you_tasks(tasks)
             found = open_decisions(decisions)
         else:
             found = []
@@ -949,7 +972,7 @@ def glance_groups(tasks: list, decisions, ref: datetime) -> list:
             elif gkey == 'built':
                 shown = newest([t for t in tasks if t['status'] == 'Built'])
             elif gkey == 'waiting':
-                shown = sorted([t for t in tasks if t['status'] in ('Waiting', 'On hold')],
+                shown = sorted([t for t in tasks if t['status'] in ('Waiting', 'On hold') and not waits_on_owner(t)],
                                key=lambda t: (t['status'] == 'On hold',) + soonest(t))
             else:
                 cutoff = ref - timedelta(hours=GLANCE_LIVE_HOURS)
@@ -961,14 +984,21 @@ def glance_groups(tasks: list, decisions, ref: datetime) -> list:
     return out
 
 
-def _glance_task(task: dict) -> str:
-    expected = ''
+def _glance_task(task: dict, gkey='', by_id=None) -> str:
+    """R5.33, R5.34a: ID, then (for a task that waits, in Needs you and Waiting for other work) the dependency
+    first, the item, the Expected."""
+    expected, dep = '', ''
+    waits = task['status'] in ('Waiting', 'On hold') or (gkey == 'you' and task['status'] == 'Needs you')
+    if gkey in ('you', 'waiting') and waits:
+        text = glance_dependency(task, by_id)
+        if text:
+            dep = '<span class="glance-dep">%s</span> ' % esc(text)
     if task['status'] in OPEN_STATUSES and task.get('expected'):
         expected = ' <span class="glance-expected">%s</span>' % esc(task['expected'])
-        if task.get('expected_basis'):
+        if task.get('expected_basis') and not dep:
             expected += '<span class="glance-basis">%s</span>' % esc(task['expected_basis'])
-    return '<li data-glance-task="%s"><span class="task-id">%s</span>%s%s%s</li>' % (
-        esc(task['id']), esc(task['id']), _release_span(task) if is_release(task) else '', esc(shown_item(task)), expected)
+    return '<li data-glance-task="%s"><span class="task-id">%s</span>%s%s%s%s</li>' % (
+        esc(task['id']), esc(task['id']), dep, _release_span(task) if is_release(task) else '', esc(shown_item(task)), expected)
 
 
 def glance_open(gkey: str) -> bool:
@@ -981,8 +1011,9 @@ def _at_a_glance(tasks: list, decisions, ref: datetime) -> str:
     """R5.33 and R6.13: the At a glance block of section 0, generated from the registry; each group is a
     `<details class="glance-group">` whose `<summary>` holds the label and the count."""
     groups = []
+    by_id = {t['id']: t for t in tasks}
     for gkey, label, shown, found, more in glance_groups(tasks, decisions, ref):
-        items = [_glance_task(t) for t in shown]
+        items = [_glance_task(t, gkey, by_id) for t in shown]
         items += ['<li data-glance-decision="%s"><span class="task-id">%s</span>%s</li>'
                   % (esc(d['id']), esc(d['id']), esc(_norm(d['question']))) for d in found]
         if more:
@@ -997,7 +1028,8 @@ def _at_a_glance(tasks: list, decisions, ref: datetime) -> str:
 
 def feature_summary(tasks: list, decisions=()) -> str:
     """R5.36: a one-line summary generated from the registry, e.g. `2 running, 3 built, nothing needs you`."""
-    counts = {s: sum(1 for t in tasks if t['status'] == s) for s in STATUSES}
+    counts = {s: sum(1 for t in tasks if t['status'] == s and not waits_on_owner(t)) for s in STATUSES}
+    counts['Needs you'] += sum(1 for t in tasks if waits_on_owner(t))        # R5.34a
     parts = ['%d %s' % (counts[s], s.lower()) for s in ('Running', 'Built', 'Waiting', 'To do', 'On hold', 'Live') if counts[s]]
     needs = counts['Needs you'] + counts['Failed'] + len(open_decisions(decisions))
     parts.append('nothing needs you' if not needs else '%d need%s you' % (needs, 's' if needs == 1 else ''))
@@ -2043,7 +2075,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
     if glance is not None:
         valid = [t for t in mine if t.get('status') in STATUSES]
         want_groups = glance_groups(valid, decisions, ref)
-        have, counts = [], {}
+        have, counts, have_deps = [], {}, {}
         for g in find_all(glance, 'details', 'glance-group'):
             kids = [n for n in g.children if getattr(n, 'tag', None)]
             summ = kids[0] if kids and kids[0].tag == 'summary' else None
@@ -2053,6 +2085,10 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
                 add('R6.13', 'glance group %r must render %s' % (g.attrs.get('data-glance', ''),
                     'open' if glance_open(g.attrs.get('data-glance', '')) else 'closed (done groups start closed)'))
             tasks_in = [li.attrs.get('data-glance-task') for li in find_all(g, 'li', pred=lambda n: 'data-glance-task' in n.attrs)]
+            for li in find_all(g, 'li', pred=lambda n: 'data-glance-task' in n.attrs):
+                dep_span = find(li, 'span', 'glance-dep')
+                have_deps.setdefault(li.attrs.get('data-glance-task'), {})[g.attrs.get('data-glance', '')] = (
+                    text_of(dep_span) if dep_span is not None else '')
             decs_in = [li.attrs.get('data-glance-decision') for li in find_all(g, 'li', pred=lambda n: 'data-glance-decision' in n.attrs)]
             more_li = find(g, 'li', 'glance-more')
             none_p = find(g, 'p', 'glance-none')
@@ -2072,6 +2108,13 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             total = len(ids) + len(dec_ids) + more
             if h[0] in counts and counts[h[0]] != '%d task%s' % (total, '' if total == 1 else 's'):
                 add('R6.13', 'glance group %r shows the count %r; it holds %d' % (gkey, counts[h[0]], total))
+            for li_id in [i for i in ids if i in h[1]]:
+                task = next(t for t in shown if t['id'] == li_id)
+                want_dep = _norm(glance_dependency(task, {t['id']: t for t in valid})) if (
+                    gkey in ('you', 'waiting') and task['status'] in ('Waiting', 'On hold', 'Needs you')) else ''
+                if want_dep and have_deps.get(li_id, {}).get(gkey) != want_dep:
+                    add('R5.34a', 'the %r group row %s must show its dependency %r first; it shows %r'
+                        % (gkey, li_id, want_dep, have_deps.get(li_id, {}).get(gkey, '')))
             if gkey == 'you':
                 empty_text = 'Nothing needs you.'
                 if (h[1], h[2]) != (ids, dec_ids) or (not ids and not dec_ids and h[4] != empty_text) or (ids or dec_ids) and h[4]:
