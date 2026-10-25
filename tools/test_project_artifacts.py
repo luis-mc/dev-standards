@@ -3101,6 +3101,108 @@ def test_publish_hourly_prints_what_the_cron_does_or_nothing(env):
     assert 'release task DS1 changed' in hourly('2026-10-12T10:41:00+01:00')
 
 
+AT = {'CLAUDE_ARTIFACTS_NOW': '2026-10-12T10:30:00+01:00'}
+
+
+@case
+def test_started_is_stored_validated_and_cleared(env):
+    """R5.48: --started takes "DD Mon ~HH:MM" or HH:MM in the project zone, is stored as ISO with the offset, must be
+    before Expected, and "" clears it; a bad value or a start after Expected writes nothing."""
+    p = env.baseline()
+    p.ok('set-task-status', 'SI1', 'Waiting', '--expected', '12 Oct ~18:00', '--started', '09:15',
+         '--no-release', 'a study', env=AT)
+    assert p.task('SI1')['started'] == '2026-10-12T09:15+01:00', p.task('SI1')
+    p.ok('set-task-status', 'SI1', 'Waiting', '--started', '11 Oct ~22:30', env=AT)
+    assert p.task('SI1')['started'] == '2026-10-11T22:30+01:00'
+    before = p.show('docs/artifacts/registry.json')
+    for bad, word in (('soon', 'HH:MM'), ('31 Feb 10:00', 'not a date'), ('12 Oct ~18:00', 'not before Expected'),
+                      ('13 Oct 09:00', 'not before Expected')):
+        r = p.run('set-task-status', 'SI1', 'Waiting', '--started', bad, env=AT)
+        assert r.code == 1 and word in r.err, (bad, r.all)
+    r = p.run('set-task-status', 'SI1', 'Waiting', '--expected', '11 Oct ~20:00', env=AT)       # moves Expected before started
+    assert r.code == 1 and 'not before Expected' in r.err, r.all
+    assert p.show('docs/artifacts/registry.json') == before
+    p.ok('set-task-status', 'SI1', 'Waiting', '--started', '', env=AT)
+    assert 'started' not in p.task('SI1')
+    # a hand-edited record with a start after Expected is reported by check
+    reg = json.loads(p.show('docs/artifacts/registry.json'))
+    for t in reg['tasks']:
+        if t['id'] == 'SI1':
+            t['started'] = '2026-10-13T09:00+01:00'
+    (p.clone / 'docs/artifacts/registry.json').write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
+    r = p.run('check', env=AT)
+    assert r.code != 0 and 'R5.48' in r.all, r.all
+
+
+@case
+def test_started_is_set_when_a_task_first_runs(env):
+    """R5.48: a task that moves to Running with no `started` gets now; a start already set is kept; a task already
+    Running keeps its start; the timeline bar of a waiting no-release task starts at `started`."""
+    p = env.baseline()
+    p.ok('set-task-status', 'SI1', 'Running', '--expected', '12 Oct ~18:00', '--no-release', 'a study', env=AT, rides=False)
+    assert p.task('SI1')['started'] == '2026-10-12T10:30+01:00', p.task('SI1')
+    p.ok('set-task-status', 'SI1', 'Waiting', env=AT)
+    p.ok('set-task-status', 'SI1', 'Running', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-12T12:00:00+01:00'}, rides=False)
+    assert p.task('SI1')['started'] == '2026-10-12T10:30+01:00', 'an earlier start is kept'
+    p.ok('task-add', '--owner', 'site', '--item', 'Checks', '--detail', 'd', '--expected', '12 Oct ~17:00', '--status', 'Running',
+         '--started', '08:00', '--no-release', 'a check', env=AT)
+    assert p.task('SI2')['started'] == '2026-10-12T08:00+01:00'
+    # an overdue Running row has no honest start to record
+    p.ok('task-add', '--owner', 'site', '--item', 'Late', '--detail', 'd', '--expected', '12 Oct ~09:00', '--status', 'To do',
+         '--no-release', 'late', env=AT)
+    p.ok('set-task-status', 'SI3', 'Running', env=AT, rides=False)
+    assert 'started' not in p.task('SI3')
+    p.ok('set-task-status', 'SI1', 'Needs you', env=AT)
+    page = p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
+    assert 'rt-other' in page and p.run('check', env=AT).code == 0, p.run('check', env=AT).all
+
+
+@case
+def test_dropped_release_is_closed_truthfully(env):
+    """R5.49: Dropped is a terminal status with --into (required for a release) or --reason; the row stores
+    dropped_into/dropped_reason, is not open, leaves the timeline and open lists, shows `dropped: folded into
+    RELEASE-n` in Full Progress and the feature History, and check is clean."""
+    p = env.baseline()
+    p.ok('task-add', '--owner', 'project', '--item', 'Second release', '--detail', 'Cargo.', '--expected', '14 Oct ~18:00',
+         '--release', '--phase', 'agents=14 Oct 17:30-14 Oct 18:00', env=AT)               # RELEASE-2
+    p.ok('task-add', '--owner', 'artifacts', '--item', 'Third release', '--detail', 'Cargo.', '--expected', '15 Oct ~18:00',
+         '--release', '--phase', 'agents=15 Oct 17:30-15 Oct 18:00', env=AT)               # RELEASE-3
+    rel_a, rel_b = 'DS2', 'AR3'
+    assert p.task(rel_a)['release'] == 2 and p.task(rel_b)['release'] == 3
+    r = p.run('set-task-status', rel_a, 'Dropped', env=AT)
+    assert r.code == 1 and 'dropped_into' in r.err, r.all
+    for argv, word in (([rel_a, 'Dropped', '--reason', 'folded'], 'dropped_into'),
+                       ([rel_a, 'Dropped', '--into', 'AR1'], 'not one'),
+                       ([rel_a, 'Dropped', '--into', rel_a], 'another task'),
+                       ([rel_a, 'Dropped', '--into', 'RELEASE-9'], 'no release has that number'),
+                       ([rel_a, 'Dropped', '--into', rel_b, '--reason', 'x' * 81], 'at most 80'),
+                       ([rel_a, 'Waiting', '--into', rel_b], 'go with the status Dropped')):
+        r = p.run('set-task-status', *argv, env=AT)
+        assert r.code == 1 and word in r.err, (argv, r.all)
+    assert p.task(rel_a)['status'] == 'To do'
+    p.ok('set-task-status', rel_a, 'Dropped', '--into', 'RELEASE-3', env=AT)
+    t = p.task(rel_a)
+    assert t['status'] == 'Dropped' and t['dropped_into'] == rel_b and t['expected'] == '12 Oct', t
+    page = p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
+    row = page[page.index('<tr data-task="%s">' % rel_a):]
+    assert 'dropped: folded into RELEASE-3' in row[:row.index('</tr>')]
+    fig = page[page.index('class="release-timeline"'):page.index('</figure>', page.index('class="release-timeline"'))]
+    assert 'RELEASE-2' not in fig and 'RELEASE-3' in fig, 'only the open release is drawn'
+    assert p.run('check', env=AT).code == 0, p.run('check', env=AT).all
+    # a task that is not a release may be dropped with a reason; the feature History records it
+    p.ok('set-task-status', 'SI1', 'Dropped', '--reason', 'no longer needed', env=AT)
+    assert p.task('SI1')['dropped_reason'] == 'no longer needed' and 'dropped_into' not in p.task('SI1')
+    hist = json.loads(p.show('docs/artifacts/content/site/history.json'))
+    assert 'dropped: no longer needed' in hist[0]['change'], hist[0]
+    # reopening drops the fields; a task riding a dropped release must move
+    p.ok('set-task-status', 'SI1', 'To do', env=AT)
+    assert 'dropped_reason' not in p.task('SI1')
+    r = p.run('set-task-status', 'SI1', 'Waiting', '--rides', rel_a, env=AT)
+    assert r.code == 1 and 'dropped release' in r.err, r.all
+    p.ok('set-task-status', 'SI1', 'Waiting', '--rides', 'RELEASE-3', env=AT)
+    assert p.run('check', env=AT).code == 0
+
+
 def main():
     global TMP
     TMP = Path(tempfile.mkdtemp(prefix='ptest-'))

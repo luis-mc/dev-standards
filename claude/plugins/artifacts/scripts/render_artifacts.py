@@ -30,7 +30,7 @@ from html.parser import HTMLParser
 SPEC = 'ARTIFACTSPEC 1.0.0'
 PLUGIN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-STATUSES = ('Live', 'Built', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed')
+STATUSES = ('Live', 'Built', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed', 'Dropped')
 OPEN_STATUSES = ('Running', 'Waiting', 'To do', 'Needs you', 'On hold')  # R6.6
 REQUIRED_TOKENS = (
     '--font-display', '--font-display-stretch', '--font-body', '--font-mono',
@@ -51,10 +51,10 @@ MONTHS = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 
 GROUPS = (
     ('now', 'Running now and next', ('Running', 'Waiting', 'To do')),
     ('you', 'Needs you, failed or on hold', ('Needs you', 'Failed', 'On hold')),
-    ('built', 'Live or built', ('Live', 'Built')),
+    ('built', 'Live or built', ('Live', 'Built', 'Dropped')),     # R5.49: a Dropped row is closed history
 )
 YOU_ORDER = ('Needs you', 'Failed', 'On hold')
-RIDER_ORDER = ('Running', 'Waiting', 'To do', 'Needs you', 'Failed', 'On hold', 'Built', 'Live')    # R5.46
+RIDER_ORDER = ('Running', 'Waiting', 'To do', 'Needs you', 'Failed', 'On hold', 'Built', 'Live', 'Dropped')    # R5.46
 NOT_IN_RELEASE = 'Not in a release yet'
 
 
@@ -860,7 +860,7 @@ def release_groups(tasks: list, ref: datetime) -> list:
     now = sorted([t for t in rest if t['status'] in ('Running', 'Waiting', 'To do')], key=lambda t: _soonest(t, ref))
     you = sorted([t for t in rest if t['status'] in YOU_ORDER], key=lambda t: YOU_ORDER.index(t['status']))
     floor = datetime.min.replace(tzinfo=timezone.utc)
-    done = sorted([t for t in rest if t['status'] in ('Live', 'Built')],
+    done = sorted([t for t in rest if t['status'] in ('Live', 'Built', 'Dropped')],
                   key=lambda t: _parse_iso(t.get('changed'), floor), reverse=True)
     cutoff = ref - timedelta(days=EARLIER_DAYS)
     folded = [t for t in done if t['status'] == 'Live' and (_parse_iso(t.get('changed')) or ref) < cutoff]
@@ -1108,6 +1108,23 @@ def _link(link, label: str) -> str:
 NO_RELEASE_LINE = 'ships nothing: %s'
 
 
+def dropped_line(task, by_id) -> str:
+    """R5.49: `dropped: folded into RELEASE-96` (or `into <task id>`), plus the reason when there is one; '' for a row
+    that is not Dropped."""
+    if not isinstance(task, dict) or task.get('status') != 'Dropped':
+        return ''
+    into = (by_id or {}).get(task.get('dropped_into')) if task.get('dropped_into') else None
+    text = ''
+    if into is not None:
+        text = 'folded into %s' % (release_name(into) if is_release(into) else into['id'])
+    elif task.get('dropped_into'):
+        text = 'folded into %s' % task['dropped_into']
+    reason = _norm(task.get('dropped_reason', ''))
+    if reason:
+        text = '%s: %s' % (text, reason) if text else reason
+    return 'dropped: %s' % text if text else 'dropped'
+
+
 def no_release_reason(task) -> str:
     """R5.47a: the reason a task ships nothing (`no_release`), '' when it has none."""
     reason = task.get('no_release') if isinstance(task, dict) else None
@@ -1131,6 +1148,8 @@ def _row(task: dict, kind: str, feature_links: dict, by_id=None, release_line: b
         item += '<span class="release-line">%s</span>' % _release_span(target)
     if no_release_reason(task):          # R5.47a: a task that ships nothing says so, in a muted line under the Item
         item += '<span class="no-release-line">%s</span>' % esc(NO_RELEASE_LINE % no_release_reason(task))
+    if task['status'] == 'Dropped':      # R5.49: why a dropped row was closed, in a muted line under the Item
+        item += '<span class="dropped-line">%s</span>' % esc(dropped_line(task, by_id))
     app = '<td>%s</td>' % ('<code>%s</code>' % esc(task['app']) if task.get('app') else '') if kind == 'full-progress' else ''
     expected = esc(task['expected'])
     if task.get('expected_basis') and task['status'] in OPEN_STATUSES:     # R6.10
@@ -2170,12 +2189,14 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             item_cell = cells[1] if len(cells) > 1 else None
             idnode = find(item_cell, 'span', 'task-id') if item_cell else None
             row['label'] = text_of(idnode) if idnode else ''
-            skipped = lambda n: has_class(n, 'task-id') or has_class(n, 'release-name') or has_class(n, 'release-line') or has_class(n, 'no-release-line')
+            skipped = lambda n: has_class(n, 'task-id') or has_class(n, 'release-name') or has_class(n, 'release-line') or has_class(n, 'no-release-line') or has_class(n, 'dropped-line')
             row['item'] = text_of(item_cell, skip=skipped) if item_cell else ''
             line = find(item_cell, 'span', 'release-line') if item_cell else None
             row['release_line'] = text_of(line) if line else ''
             nline = find(item_cell, 'span', 'no-release-line') if item_cell else None
             row['no_release_line'] = text_of(nline) if nline else ''
+            dline = find(item_cell, 'span', 'dropped-line') if item_cell else None
+            row['dropped_line'] = text_of(dline) if dline else ''
             leading = [n for n in find_all(item_cell, 'span', 'release-name')
                        if not has_ancestor(n, lambda a: has_class(a, 'release-line'))] if item_cell else []
             row['release_name'] = ' '.join(text_of(n) for n in leading)
@@ -2195,7 +2216,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
     # R6.1 statuses and chip classes
     for row in rows:
         if row['status'] not in STATUSES:
-            add('R6.1', 'task %s has status %r, which is not one of the eight' % (row['id'], row['status']))
+            add('R6.1', 'task %s has status %r, which is not one of the nine' % (row['id'], row['status']))
         elif row['chip_class'] != [status_class(row['status'])]:
             add('R6.1', 'task %s chip class %s does not match status %r' % (row['id'], row['chip_class'], row['status']))
 
@@ -2238,6 +2259,10 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         if row['no_release_line'] != want_nr:
             add('R5.47a', 'task %s must show the line %r under its Item; it shows %r'
                 % (row['id'], want_nr, row['no_release_line']))
+        want_dl = dropped_line(task, all_by_id)
+        if row['dropped_line'] != want_dl:
+            add('R5.49', 'task %s must show the line %r under its Item; it shows %r'
+                % (row['id'], want_dl, row['dropped_line']))
     details = find_all(root, 'details', 'earlier')
     folded_wanted = {t['id'] for _, _, _, old in expected_groups for t in old}
     folded_found = {r['id'] for r in rows if r['folded']}

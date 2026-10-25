@@ -36,12 +36,12 @@ read the message, fix the cause and rerun.
 1. **Find the task ID and the new status.** The ID is the one in the user's
    words, in a queued event (`queue list`), or the start of the current branch
    name (`AR5-artifactspec` is task `AR5`). The status is one of Live, Built,
-   Running, Needs you, Waiting, To do, On hold, Failed. A suggested status from
+   Running, Needs you, Waiting, To do, On hold, Failed, Dropped. A suggested status from
    a queued event is a suggestion: confirm it matches what happened. A word
-   outside the eight maps to the nearest (`Merged` is `Live`, or `Built` when the
+   outside the nine maps to the nearest (`Merged` is `Live`, or `Built` when the
    project's `merged_status` says so).
 2. **Change it:**
-   `set-task-status <ID> "<Status>" [--detail "TEXT"] [--expected "DD Mon"] [--item "TEXT"] [--basis "TEXT"] [--history "TEXT"] [--no-release "REASON"]`.
+   `set-task-status <ID> "<Status>" [--detail "TEXT"] [--expected "DD Mon"] [--item "TEXT"] [--basis "TEXT"] [--history "TEXT"] [--no-release "REASON"] [--started "DD Mon ~HH:MM"|HH:MM] [--into ID|RELEASE-n] [--reason "TEXT"]`.
    - `--detail`: plain text, at most 600 characters, when what the row says
      changed.
    - `--expected`: a real date from `date` in the project's zone, `DD Mon` or
@@ -55,6 +55,18 @@ read the message, fix the cause and rerun.
    - `--waits-on owner|work`: for a Waiting or On hold task, who it waits on. `owner`
      lists it under Needs you in At a glance; `work` (the default) lists it under
      Waiting for other work, with what it waits on (the basis) first. `""` clears it.
+   - `--started`: when the work began, `DD Mon ~HH:MM` or `HH:MM` (today) in the
+     project's zone, before Expected; `""` clears it. It is where a no-release
+     task's bar starts on the release timeline, so give it for work that began
+     earlier and is now Waiting or Needs you; a task that first moves to Running
+     gets the current time by itself (R5.48).
+   - `Dropped`: closes a task truthfully when its work was folded into another
+     task or is no longer wanted (not Live, not Failed, not On hold). Give
+     `--into <task ID or RELEASE-n>` (required for a release: the release that
+     took its cargo) and/or `--reason "TEXT"` (at most 80 characters). The row
+     leaves the open lists and the timeline and shows
+     `dropped: folded into RELEASE-n` under `Live or built` (R5.49). Move any
+     task that rides a dropped release with `--rides` first.
    - `--history`: one line for the feature artifact's History table, for a
      feature task whose change the owner should be able to look up later.
    The command renders every artifact that shows the task, and any other page

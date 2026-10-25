@@ -397,7 +397,7 @@ docs/artifacts/
   feature task's prefix is its feature's prefix; a project task's prefix is
   in `project_prefixes`. A task moved into a feature after it got its ID keeps
   its ID, so a feature task may also carry a prefix from `project_prefixes`.
-- **R4.7** — `status` is one of the eight statuses of §6.1. `changed` is set by
+- **R4.7** — `status` is one of the nine statuses of §6.1. `changed` is set by
   the script on every status change, never by hand.
 - **R4.8** — `expected` follows §6.4; an open row may also carry
   `expected_basis` (R6.10); a Waiting or On hold row may also carry `waits_on` (R5.34a); a release row may also carry `release`, `phases`,
@@ -915,7 +915,7 @@ double-click.
   an Expected today or tomorrow (an overdue one stays); a Built, Live, Failed or
   On hold task is not shown. Each row is labelled `<ID> · <item>` (cut like the
   release rows), and a task due within 24 hours is a bar from its start (the
-  task's optional `started` ISO time, else the stamp) to its Expected, coloured
+  task's optional `started` ISO time, R5.48, else the stamp) to its Expected, coloured
   by status with the status key's colours, with the Expected and its
   `expected_basis` as the label under it; a later or untimed Expected is an
   outline diamond in its day slot. A row past its Expected is outlined in the
@@ -1011,6 +1011,36 @@ double-click.
   the same (R5.47a). Verified by `test_no_release_tasks_may_run_without_a_release`,
   `test_no_release_refusals` and `no_release_line_in_full_progress`.
 
+- **R5.48** — A task row may carry `started`, an ISO time with offset: when work
+  on it began. `set-task-status` (and `task-add`) take `--started "DD Mon ~HH:MM"`
+  or `--started HH:MM` (today), read in the project's zone exactly as `--expected`
+  and `--phase` are, and store the ISO time with that zone's offset;
+  `--started ""` clears it. A start that does not parse, or that is not before
+  the Expected of an open row, is refused and nothing is written, and the same
+  holds when a later `--expected` would fall before it. A task that moves to
+  Running with no `started` gets the current time (unless its Expected has
+  already passed); a start already set is kept. The timeline's Other work strip
+  draws a bar from `started` (R5.42b); the fingerprint of Full Progress includes
+  it (R9.6). `check` reports an open row whose `started` is not before its
+  Expected (R5.48). Verified by `test_started_is_stored_validated_and_cleared`,
+  `test_started_is_set_when_a_task_first_runs` and `other_work_bar_starts_at_started`.
+- **R5.49** — `Dropped` closes a task whose work was folded into another task
+  (two releases merged into one) or is no longer wanted, without claiming it
+  shipped (Live), broke (Failed) or waits (On hold). It is terminal and not
+  open: its Expected is the date it was dropped, a dropped release is not in
+  `open_releases` and has no bar on the timeline, and no task rides it.
+  `set-task-status ID Dropped` needs `--into ID|RELEASE-n` (stored as
+  `dropped_into`, another task; for a release, another release) or `--reason TEXT`
+  (`dropped_reason`, at most 80 characters); a release needs `--into`. The fields
+  belong to a Dropped row and are removed when it is reopened. Full Progress
+  and feature artifacts list the row under `Live or built` with a muted line
+  `dropped: folded into RELEASE-n` (`dropped: <reason>` without `--into`), the
+  feature's History records the same line, and `check` reports a Dropped row
+  that lacks its reason, a release dropped without a target, a target that is
+  not a task (or not a release), a task that still rides a dropped release and a
+  line that differs (R5.49). Verified by `test_dropped_release_is_closed_truthfully`
+  and `dropped_release_is_closed_history`.
+
 ---
 
 ## 6. Statuses and the checklist
@@ -1027,8 +1057,9 @@ double-click.
 | To do | Planned, not started. |
 | On hold | Paused by decision. |
 | Failed | Broke; needs a fix or a decision. |
+| Dropped | Closed without shipping: folded into another task or no longer wanted (R5.49). |
 
-- **R6.1** — Only these eight statuses exist; each has a fixed chip class
+- **R6.1** — Only these nine statuses exist; each has a fixed chip class
   `status-<lowercase-hyphenated>` styled by the structure stylesheet.
 
 ### 6.2 Groups and order
@@ -1036,7 +1067,7 @@ double-click.
 - **R6.2** — Checklist rows are grouped, in this order: `Running now and next`
   (Running, Waiting, To do — earliest expected first), `Needs you, failed or
   on hold` (Needs you, Failed, On hold), `Live or built` (newest `changed`
-  first). An empty group is omitted. The full-progress artifact groups by
+  first; Dropped rows with them, R5.49). An empty group is omitted. The full-progress artifact groups by
   release instead (R5.46); these groups still order the rows inside it.
 - **R6.3** — In the full-progress artifact, `Live` rows whose `changed` is more
   than 14 days old fold into a closed `<details>` titled `Earlier`. `Built` rows
@@ -1550,7 +1581,7 @@ Reads the hook input; takes the task ID from the current branch name
 | Sections numbered 0..N without gaps; contents match | R5.2 |
 | Stamp format, `datetime` attribute and zone label | R5.5 |
 | Checklist columns per kind | R6.4 |
-| Only the eight statuses; each row in its group; only `Live` rows older than 14 days in Earlier | R6.1, R6.2, R6.3 |
+| Only the nine statuses; each row in its group; only `Live` rows older than 14 days in Earlier | R6.1, R6.2, R6.3 |
 | Every group a `<details class="status-fold">` with its heading in the `<summary>`; `Live or built` closed, the others open; `Earlier` inside `Live or built` | R6.12 |
 | Expected format on open rows | R6.6 |
 | Warning: open row whose Expected time has passed | R6.14 |
