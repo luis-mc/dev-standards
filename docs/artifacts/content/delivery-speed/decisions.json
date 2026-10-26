@@ -286,6 +286,146 @@
    "decided": "2026-10-11",
    "task": "DL10",
    "owner_words": "Yes, both hooks (Recommended)"
+  },
+  {
+   "id": "D14",
+   "question": "How should the runner load gate be reinstalled, now that PowerShell refuses unsigned scripts for the runner's account?",
+   "asked": "2026-10-26",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Runner account only",
+     "summary": "RemoteSigned for NETWORK SERVICE only; test as the runner runs it, then watch the first real job.",
+     "recommended": true
+    },
+    {
+     "label": "Whole PC",
+     "summary": "RemoteSigned for every account on the PC."
+    },
+    {
+     "label": "Leave it off",
+     "summary": "No gate; runner jobs start without a load check."
+    }
+   ],
+   "chosen": "Runner account only",
+   "decided": "2026-10-26",
+   "task": "DS83",
+   "owner_words": "Runner account only (Recommended)"
+  },
+  {
+   "id": "D15",
+   "question": "Stop train-cleanup creating a GitHub release on every merge to main?",
+   "asked": "2026-10-26",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Stop release per merge",
+     "summary": "Only a real train makes a release."
+    },
+    {
+     "label": "Leave it",
+     "summary": "Every merge keeps making a release (the Neither option)."
+    }
+   ],
+   "chosen": "Stop release per merge",
+   "decided": "2026-10-26",
+   "task": "DS86",
+   "owner_words": "Stop release per merge, Fix ci_watch.py (multi-select; Neither also offered)"
+  },
+  {
+   "id": "D16",
+   "question": "Fix ci_watch.py: right default workflow, repeated gh errors fail instead of green?",
+   "asked": "2026-10-26",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Fix ci_watch.py",
+     "summary": "Right default; errors exit non-zero."
+    },
+    {
+     "label": "Leave it",
+     "summary": "Keep current behaviour (the Neither option)."
+    }
+   ],
+   "chosen": "Fix ci_watch.py",
+   "decided": "2026-10-26",
+   "task": "DS87",
+   "owner_words": "Stop release per merge, Fix ci_watch.py (multi-select; Neither also offered)"
+  },
+  {
+   "id": "D17",
+   "question": "DELIVERYSPEC Source cells named after another project's memory notes: make generic or keep?",
+   "asked": "2026-10-26",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Make them generic",
+     "summary": "Neutral descriptions; dev-standards names no other project.",
+     "recommended": true
+    },
+    {
+     "label": "Keep them",
+     "summary": "Leave as they are."
+    }
+   ],
+   "chosen": "Make them generic",
+   "decided": "2026-10-26",
+   "task": "DS88",
+   "owner_words": "Make them generic (Recommended)"
+  },
+  {
+   "id": "D18",
+   "question": "Commit the uncommitted artifacts record and docs/drafts?",
+   "asked": "2026-10-26",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Commit record only",
+     "summary": "docs/artifacts/ through a PR; docs/drafts/ stays uncommitted.",
+     "recommended": true
+    },
+    {
+     "label": "Commit both",
+     "summary": "docs/artifacts/ and docs/drafts/ through a PR."
+    },
+    {
+     "label": "Not now",
+     "summary": "Leave everything uncommitted."
+    }
+   ],
+   "chosen": "Commit both",
+   "decided": "2026-10-26",
+   "task": "DS89",
+   "owner_words": "Commit both"
+  },
+  {
+   "id": "D19",
+   "question": "docs/drafts/delivery-inventory.md is an older copy of DELIVERYSPEC full of another project's paths and rules: what happens to it?",
+   "asked": "2026-10-26",
+   "status": "decided",
+   "options": [
+    {
+     "label": "Delete it",
+     "summary": "DELIVERYSPEC holds what it led to; commit only the record.",
+     "recommended": true
+    },
+    {
+     "label": "Keep it uncommitted",
+     "summary": "Leave it untracked on disk."
+    },
+    {
+     "label": "Scrub, then commit",
+     "summary": "Make ~30 places generic, then commit."
+    },
+    {
+     "label": "Commit as-is",
+     "summary": "Commit unchanged."
+    }
+   ],
+   "chosen": "Delete it",
+   "decided": "2026-10-26",
+   "task": "DS89",
+   "owner_words": "Delete it (Recommended)"
   }
  ]
 }

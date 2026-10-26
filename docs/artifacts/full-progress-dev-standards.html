@@ -704,6 +704,13 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 .release-timeline .rt-risk-label { font-size: 10.5px; fill: var(--ink-muted); }
 .release-timeline .rt-now { stroke: var(--failed); stroke-width: 2; }
 .release-timeline .rt-now-label { font-size: 11px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
+.release-timeline .rt-strip-title { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
+.release-timeline .rt-other-label { font-size: 11px; fill: var(--ink-muted); }
+.release-timeline .rt-other.status-running { fill: var(--running-mark); }
+.release-timeline .rt-other.status-waiting { fill: var(--rule-strong); }
+.release-timeline .rt-other.status-needs-you { fill: var(--signal); }
+.release-timeline .rt-other.status-to-do { fill: var(--ink-muted); }
+.release-timeline .rt-other.overdue, .release-timeline .rt-day.overdue { stroke: var(--failed); stroke-width: 2; }
 .timeline-legend { font-size: .85rem; color: var(--ink-muted); margin: .5rem 0 0; }
 .rt-swatch { display: inline-block; width: 10px; height: 10px; vertical-align: middle; margin: 0 4px 0 2px; }
 .rt-swatch.agents { background: var(--running-mark); }
@@ -723,7 +730,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-13T23:27+01:00",
+ "updated": "2026-10-26T21:17+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -2183,6 +2190,370 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "rides": "DS64"
   },
   {
+   "id": "DS66",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Delivery lessons inventory: every learning mapped to a rule ID + enforcement",
+   "detail": "Inventory done 22:07: 63 lessons (8 enforced, 1 warn, 17 partly, 37 not); ledger schema; 4 briefs. Committed as DELIVERYSPEC draft on DS67-delivery-integration.",
+   "expected": "14 Oct",
+   "changed": "2026-10-14T22:31+01:00",
+   "no_release": "study; feeds DELIVERYSPEC"
+  },
+  {
+   "id": "DS67",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Train: luismc-delivery plugin (ledger, hooks, watchers, runner plan, setup)",
+   "detail": "Owner 14 Oct: delivery learnings enforced by a new plugin, not memory. Contract DELIVERYSPEC on DS67-delivery-integration (7134b80). Cargo: ledger+watchers, hooks, runner plan + artifacts hourly, claude-setup wiring.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T16:15+00:00",
+   "release": 10,
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-10-14T22:40+01:00",
+     "end": "2026-10-14T23:25+01:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-10-14T23:25+01:00",
+     "end": "2026-10-14T23:35+01:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-10-14T23:35+01:00",
+     "end": "2026-10-14T23:50+01:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-10-14T23:50+01:00",
+     "end": "2026-10-14T23:55+01:00"
+    }
+   ],
+   "risk": {
+    "label": "a fix round",
+    "minutes": 15
+   }
+  },
+  {
+   "id": "DS68",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Delivery: ledger, PostToolUse recorder, background watcher (merge/push at green)",
+   "detail": "Brief (a) + D5/D6: delivery_ledger.py, hook_post_tool.py, delivery_watch.py (merge previous train at green, push+open next, cancel replaced runs, hold dependabot), schema, tests.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T16:15+00:00",
+   "rides": "DS67"
+  },
+  {
+   "id": "DS69",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Delivery: Stop, PreToolUse and SessionStart hooks",
+   "detail": "Brief (b) + D3/D4/D8/D9: blocking end-of-turn checks, tool denials (auto-merge, local agent without PC-bound reason, dialogs while actionable, plain-text questions), session catch-up + hourly instruction.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T16:15+00:00",
+   "rides": "DS67"
+  },
+  {
+   "id": "DS70",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Delivery: runner_plan + artifacts hourly / on-change publish",
+   "detail": "Brief (c): runner_plan.py heavy-job wrapper (yield to train CI, pause/resume runner, memory floor); artifacts hook blocks when Full Progress is >60 min old or a release phase changed; fresh-copy check.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T16:15+00:00",
+   "rides": "DS67"
+  },
+  {
+   "id": "DS71",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Delivery: claude-setup wiring, rules, per-project config",
+   "detail": "Brief (d) + D7/D8: enable luismc-delivery, .delivery/config.json template, rules re-tagged to enforcers, clarifying-questions Q-2/Q-3, commit-msg no-attribution + conflict-marker hooks, marketplace + README, memory-to-rule map.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T16:15+00:00",
+   "rides": "DS67"
+  },
+  {
+   "id": "DS72",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Delivery Stop hook: stop looping; sanctioned smoke and cleaned recording",
+   "detail": "luismc-delivery 0.5.0 green; this project's merge gate cannot judge a dev-standards PR",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T16:16+00:00",
+   "no_release": "ships via its own DS integration train"
+  },
+  {
+   "id": "DS73",
+   "owner": "project",
+   "app": "delivery",
+   "status": "Live",
+   "item": "Enforce PC load limits: memory <=85%, CPU <=60% (hooks + CI runner gate)",
+   "detail": "Owner 23 Oct: the load rule must be truly enforced by the plugin for every project, not by memory notes: PreToolUse refuses heavy local commands and local agents while the PC is over the limits; CI runner job-start gate waits for room; Stop warns; limits configurable per machine.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T16:15+00:00"
+  },
+  {
+   "id": "DS74",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Remove merged branches and stale worktree",
+   "detail": "Deleted 5 remote branches, 22 local branches and 1 merged worktree; only main remains. Train tags/releases kept (delivery logs).",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T16:19+00:00",
+   "no_release": "repo cleanup, ships nothing"
+  },
+  {
+   "id": "DS75",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Delete all train tags and releases",
+   "detail": "Deleted all 41 train releases and their tags on GitHub, and the local tags. The train-cleanup workflow makes a new one on each merge.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T16:22+00:00",
+   "no_release": "repo cleanup, ships nothing"
+  },
+  {
+   "id": "DS76",
+   "owner": "project",
+   "app": "",
+   "status": "Failed",
+   "item": "CI runner load gate on this PC",
+   "detail": "Reverted 17:38: the hook blocked every Windows CI job on this PC from 16:44 (PowerShell execution policy refused runner_load_gate.ps1 under the service account, so it never reached its fail-open path). My test had used -ExecutionPolicy Bypass. .env removed, runner restarted while idle; the copied scripts stay in ProgramData, unused.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T17:37+00:00",
+   "no_release": "machine setup, ships nothing"
+  },
+  {
+   "id": "DS77",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "dev-standards enables luismc-delivery",
+   "detail": "PR #100 merged (b1d314e) on green secret-scan (spec-lint does not run for .claude/ changes; the affected session-guard case passed locally). luismc-delivery is enabled for dev-standards from the next session. Branches and worktree removed; its Train #100 release deleted.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T16:38+00:00",
+   "release": 11,
+   "phases": [
+    {
+     "name": "join",
+     "start": "2026-10-26T16:35+00:00",
+     "end": "2026-10-26T16:40+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-10-26T16:40+00:00",
+     "end": "2026-10-26T16:50+00:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-10-26T16:50+00:00",
+     "end": "2026-10-26T16:55+00:00"
+    }
+   ],
+   "risk": {
+    "label": "+1 fix round",
+    "minutes": 15
+   }
+  },
+  {
+   "id": "DS78",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Release every plugin: no other projects named",
+   "detail": "PR #101 merged at 17:30 (241ed69) on green spec-lint and secret-scan: luismc-agents 1.1.1, artifacts 1.14.0, audits 1.2.1, delivery 0.7.0, project-setup 14.6.0, specs 1.2.1, transcript-folds 1.1.1. Branches and worktrees removed; installed here at user and project scope.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T17:31+00:00",
+   "release": 12,
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-10-26T16:50+00:00",
+     "end": "2026-10-26T17:45+00:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-10-26T17:45+00:00",
+     "end": "2026-10-26T17:55+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-10-26T17:55+00:00",
+     "end": "2026-10-26T18:10+00:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-10-26T18:10+00:00",
+     "end": "2026-10-26T18:15+00:00"
+    }
+   ],
+   "risk": {
+    "label": "+1 fix round",
+    "minutes": 15
+   }
+  },
+  {
+   "id": "DS79",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Remove other projects' names from tracked files",
+   "detail": "19 files made generic on DS79-no-project-names (d26c2fe): delivery README, schema, hooklib docstring, three tests, claude-setup SKILL.md, runner_plan.py, test_delivery_hooks, DELIVERYSPEC, six reports; delivery tests 218 OK; no other project named in the tree.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T17:31+00:00",
+   "rides": "DS78"
+  },
+  {
+   "id": "DS80",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Remove other projects' names from PR descriptions and local notes",
+   "detail": "6 merged PR descriptions edited (#66, #70, #74, #75, #84, #99); no PR title or body names another project. Untracked delivery-inventory draft and two memory notes made generic.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T17:02+00:00",
+   "no_release": "GitHub text and local files, ships nothing"
+  },
+  {
+   "id": "DS81",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Rename CO task IDs; drop PC names and other projects' content",
+   "detail": "Joined into the release (d69d336): CO ids renamed DV (8 report files renamed), computer names and a personal path generic, project-only DELIVERYSPEC rules removed (IDs kept) or generic, neutral fixtures; delivery tests 218 OK, test_delivery_hooks 52 passed; tree scan clean.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T17:31+00:00",
+   "rides": "DS78"
+  },
+  {
+   "id": "DS82",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Rename CO task IDs on GitHub",
+   "detail": "CO<n> renamed DV<n> in 18 PR titles and 4 PR descriptions (3 report links point at the renamed files) and in the notes of Train #98 and #99; no PR or release mentions a CO id, this PC or another project. Local draft: PC name removed.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T17:19+00:00",
+   "no_release": "GitHub text, ships nothing"
+  },
+  {
+   "id": "DS83",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Reinstall the CI runner load gate",
+   "detail": "Owner chose A: RemoteSigned for NETWORK SERVICE only (machine policy unchanged). Runner's exact command as NETWORK SERVICE: exit 1 before, exit 0 after. .env set, runner restarted idle 20:46; first real job 20:49 passed the gate and succeeded.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T21:17+00:00",
+   "no_release": "machine setup, ships nothing"
+  },
+  {
+   "id": "DS84",
+   "owner": "project",
+   "app": "",
+   "status": "Built",
+   "item": "luismc-delivery: runner gate docs and doctor cover execution policy",
+   "detail": "README covers the account's execution policy, Python access and testing as the runner; doctor FAILs a .ps1 hook whose service account cannot run scripts. 8 new tests pass; real reads checked on this PC.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T21:17+00:00",
+   "rides": "DS85"
+  },
+  {
+   "id": "DS85",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Release: gate docs, ci_watch fix, one release per train, spec sources",
+   "detail": "Joining DS84, DS86-DS89 on DS85-integration, folding change notes.",
+   "expected": "26 Oct ~22:25",
+   "changed": "2026-10-26T21:17+00:00",
+   "expected_basis": "agents ~50 min, join + CI ~35 min",
+   "release": 13,
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-10-26T20:50+00:00",
+     "end": "2026-10-26T21:40+00:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-10-26T21:40+00:00",
+     "end": "2026-10-26T21:55+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-10-26T21:55+00:00",
+     "end": "2026-10-26T22:15+00:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-10-26T22:15+00:00",
+     "end": "2026-10-26T22:25+00:00"
+    }
+   ],
+   "risk": {
+    "label": "+1 fix round",
+    "minutes": 15
+   }
+  },
+  {
+   "id": "DS86",
+   "owner": "project",
+   "app": "",
+   "status": "Built",
+   "item": "Stop the train-cleanup workflow creating a release per merge",
+   "detail": "train-cleanup passes --no-delivery-log: no release per merge.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T21:17+00:00",
+   "rides": "DS85"
+  },
+  {
+   "id": "DS87",
+   "owner": "project",
+   "app": "",
+   "status": "Built",
+   "item": "ci_watch.py: a missing workflow fails at once, naming the repo's workflows",
+   "detail": "A missing workflow exits 2 at once and lists the repo's workflows; other gh errors still retry. 3 new tests; watch tests 32/32 locally, full suite in CI.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T21:17+00:00",
+   "rides": "DS85"
+  },
+  {
+   "id": "DS88",
+   "owner": "project",
+   "app": "",
+   "status": "Built",
+   "item": "DELIVERYSPEC Source cells: generic, no other project's memory names",
+   "detail": "46 Source cells now say owner lesson/rules/CLAUDE.md/owner rule; legend added; claude-setup maps notes by rule text.",
+   "expected": "26 Oct",
+   "changed": "2026-10-26T21:17+00:00",
+   "rides": "DS85"
+  },
+  {
+   "id": "DS89",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Commit the artifacts record; delete docs/drafts",
+   "detail": "Owner then chose to delete the draft (another project's paths throughout; DELIVERYSPEC supersedes it). Deleted; the record is committed at the join.",
+   "expected": "26 Oct ~21:55",
+   "changed": "2026-10-26T21:17+00:00",
+   "expected_basis": "rides the DS85 join",
+   "rides": "DS85"
+  },
+  {
    "id": "MP1",
    "owner": "models",
    "app": "luismc-project-setup",
@@ -2427,29 +2798,95 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-13T23:27+01:00">13 Oct 23:27</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-26T21:17+00:00">26 Oct 21:17</time> (Lisbon)</p>
 <div class="at-a-glance">
-<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
-<p class="glance-none">Nothing needs you.</p>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">9 tasks</span></summary>
+<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="TF5"><span class="task-id">TF5</span>Install on this machine; hide-diffs removal</li>
-<li data-glance-task="DS63"><span class="task-id">DS63</span><span class="release-name">RELEASE-8</span>claude-setup ships the clarifying-questions rule</li>
-<li data-glance-task="DS64"><span class="task-id">DS64</span><span class="release-name">RELEASE-9</span>Train: DS63 + transcript-folds + marketplace rename</li>
-<li data-glance-task="DS65"><span class="task-id">DS65</span>Marketplace renamed to dev-standards</li>
-<li data-glance-task="TF1"><span class="task-id">TF1</span>Contract: plugin layout, behaviour, test approach</li>
-<li data-glance-task="TF2"><span class="task-id">TF2</span>luismc-transcript-folds plugin, from scratch</li>
-<li data-glance-task="TF3"><span class="task-id">TF3</span>claude-setup enables the plugin and writes the two chords</li>
-<li data-glance-task="TF4"><span class="task-id">TF4</span>Smoke test in a real terminal session</li>
-<li class="glance-more">and 1 more</li>
+<li data-glance-task="DS76"><span class="task-id">DS76</span>CI runner load gate on this PC</li>
+</ul>
+</details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
+<ul>
+<li data-glance-task="DS89"><span class="task-id">DS89</span>Commit the artifacts record; delete docs/drafts <span class="glance-expected">26 Oct ~21:55</span><span class="glance-basis">rides the DS85 join</span></li>
+<li data-glance-task="DS85"><span class="task-id">DS85</span><span class="release-name">RELEASE-13</span>Release: gate docs, ci_watch fix, one release per train, spec sources <span class="glance-expected">26 Oct ~22:25</span><span class="glance-basis">agents ~50 min, join + CI ~35 min</span></li>
+</ul>
+</details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">4 tasks</span></summary>
+<ul>
+<li data-glance-task="DS84"><span class="task-id">DS84</span>luismc-delivery: runner gate docs and doctor cover execution policy</li>
+<li data-glance-task="DS86"><span class="task-id">DS86</span>Stop the train-cleanup workflow creating a release per merge</li>
+<li data-glance-task="DS87"><span class="task-id">DS87</span>ci_watch.py: a missing workflow fails at once, naming the repo&#x27;s workflows</li>
+<li data-glance-task="DS88"><span class="task-id">DS88</span>DELIVERYSPEC Source cells: generic, no other project&#x27;s memory names</li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">16 tasks</span></summary>
+<ul>
+<li data-glance-task="DS83"><span class="task-id">DS83</span>Reinstall the CI runner load gate</li>
+<li data-glance-task="DS78"><span class="task-id">DS78</span><span class="release-name">RELEASE-12</span>Release every plugin: no other projects named</li>
+<li data-glance-task="DS79"><span class="task-id">DS79</span>Remove other projects&#x27; names from tracked files</li>
+<li data-glance-task="DS81"><span class="task-id">DS81</span>Rename CO task IDs; drop PC names and other projects&#x27; content</li>
+<li data-glance-task="DS82"><span class="task-id">DS82</span>Rename CO task IDs on GitHub</li>
+<li data-glance-task="DS80"><span class="task-id">DS80</span>Remove other projects&#x27; names from PR descriptions and local notes</li>
+<li data-glance-task="DS77"><span class="task-id">DS77</span><span class="release-name">RELEASE-11</span>dev-standards enables luismc-delivery</li>
+<li data-glance-task="DS75"><span class="task-id">DS75</span>Delete all train tags and releases</li>
+<li class="glance-more">and 8 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">149</div><div class="label">tasks live</div></div></div>
-<p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">149 tasks</span></summary>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">166</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">4</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-failed"><div class="count">1</div><div class="label">task failed</div></div></div>
+<p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<figure class="release-timeline">
+<figcaption>Next releases (Lisbon)</figcaption>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS85 (Release: gate docs, ci_watch fix, one release per train, spec sources) expected live about 22:25, worst case 22:40." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">20:30</text><line class="rt-grid" x1="304" y1="36" x2="304" y2="140"/><text x="304" y="28">21:00</text><line class="rt-grid" x1="408" y1="36" x2="408" y2="140"/><text x="408" y="28">21:30</text><line class="rt-grid" x1="512" y1="36" x2="512" y2="140"/><text x="512" y="28">22:00</text><line class="rt-grid" x1="616" y1="36" x2="616" y2="140"/><text x="616" y="28">22:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">23:00</text></g>
+<text class="rt-name" x="0" y="60"><title>RELEASE-13 · Release: gate docs, ci_watch fix, one release per train, spec sources</title>RELEASE-13 · Release: gat…</text>
+<text class="rt-sub" x="0" y="77"><title>DS84, DS86, DS87, DS88, DS89</title>DS84, DS86, DS87, DS88, DS89</text>
+<rect class="rt-bar agents" x="269.3" y="52" width="173.3" height="22"><title>agents 20:50-21:40</title></rect>
+<rect class="rt-bar join" x="442.7" y="52" width="52" height="22"><title>join 21:40-21:55</title></rect>
+<rect class="rt-bar ci" x="494.7" y="52" width="69.3" height="22"><title>PR CI 21:55-22:15</title></rect>
+<rect class="rt-bar merge" x="564" y="52" width="34.7" height="22"><title>merge + cleanup 22:15-22:25</title></rect>
+<rect class="rt-risk" x="598.7" y="58" width="52" height="10"><title>+1 fix round</title></rect>
+<polygon class="rt-worst" points="650.7,51 657.7,63 650.7,75 643.7,63"/>
+<text class="rt-risk-label" x="661.7" y="67">+1 fix round → worst ~22:40</text>
+<polygon class="rt-expected" points="598.7,50 606.7,63 598.7,76 590.7,63"/>
+<text class="rt-live-label" x="598.7" y="92">live ~22:25</text>
+<line class="rt-now" x1="362.9" y1="36" x2="362.9" y2="148"/><text class="rt-now-label" x="362.9" y="161">now 21:17</text>
+</svg></div>
+<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
+</figure>
+<details class="status-fold release-group" data-group="release-13" open><summary><strong>RELEASE-13 · live ~22:25 · worst ~22:40</strong><span class="fold-count">6 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS85"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS85</span><span class="release-name">RELEASE-13</span>Release: gate docs, ci_watch fix, one release per train, spec sources</td><td></td><td>Joining DS84, DS86-DS89 on DS85-integration, folding change notes.</td><td>26 Oct ~22:25<span class="expected-basis">agents ~50 min, join + CI ~35 min</span></td></tr>
+<tr data-task="DS89"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS89</span>Commit the artifacts record; delete docs/drafts</td><td></td><td>Owner then chose to delete the draft (another project&#x27;s paths throughout; DELIVERYSPEC supersedes it). Deleted; the record is committed at the join.</td><td>26 Oct ~21:55<span class="expected-basis">rides the DS85 join</span></td></tr>
+<tr data-task="DS84"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DS84</span>luismc-delivery: runner gate docs and doctor cover execution policy</td><td></td><td>README covers the account&#x27;s execution policy, Python access and testing as the runner; doctor FAILs a .ps1 hook whose service account cannot run scripts. 8 new tests pass; real reads checked on this PC.</td><td>26 Oct</td></tr>
+<tr data-task="DS86"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DS86</span>Stop the train-cleanup workflow creating a release per merge</td><td></td><td>train-cleanup passes --no-delivery-log: no release per merge.</td><td>26 Oct</td></tr>
+<tr data-task="DS87"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DS87</span>ci_watch.py: a missing workflow fails at once, naming the repo&#x27;s workflows</td><td></td><td>A missing workflow exits 2 at once and lists the repo&#x27;s workflows; other gh errors still retry. 3 new tests; watch tests 32/32 locally, full suite in CI.</td><td>26 Oct</td></tr>
+<tr data-task="DS88"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DS88</span>DELIVERYSPEC Source cells: generic, no other project&#x27;s memory names</td><td></td><td>46 Source cells now say owner lesson/rules/CLAUDE.md/owner rule; legend added; claude-setup maps notes by rule text.</td><td>26 Oct</td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold" data-group="you" open><summary><strong>Needs you, failed or on hold</strong><span class="fold-count">1 task</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS76"><td><span class="status-chip status-failed">Failed</span></td><td><span class="task-id">DS76</span>CI runner load gate on this PC<span class="no-release-line">ships nothing: machine setup, ships nothing</span></td><td></td><td>Reverted 17:38: the hook blocked every Windows CI job on this PC from 16:44 (PowerShell execution policy refused runner_load_gate.ps1 under the service account, so it never reached its fail-open path). My test had used -ExecutionPolicy Bypass. .env removed, runner restarted while idle; the copied scripts stay in ProgramData, unused.</td><td>26 Oct</td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">166 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS83"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS83</span>Reinstall the CI runner load gate<span class="no-release-line">ships nothing: machine setup, ships nothing</span></td><td></td><td>Owner chose A: RemoteSigned for NETWORK SERVICE only (machine policy unchanged). Runner&#x27;s exact command as NETWORK SERVICE: exit 1 before, exit 0 after. .env set, runner restarted idle 20:46; first real job 20:49 passed the gate and succeeded.</td><td>26 Oct</td></tr>
+<tr data-task="DS78"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS78</span><span class="release-name">RELEASE-12</span>Release every plugin: no other projects named</td><td></td><td>PR #101 merged at 17:30 (241ed69) on green spec-lint and secret-scan: luismc-agents 1.1.1, artifacts 1.14.0, audits 1.2.1, delivery 0.7.0, project-setup 14.6.0, specs 1.2.1, transcript-folds 1.1.1. Branches and worktrees removed; installed here at user and project scope.</td><td>26 Oct</td></tr>
+<tr data-task="DS79"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS79</span>Remove other projects&#x27; names from tracked files<span class="release-line"><span class="release-name">RELEASE-12</span></span></td><td></td><td>19 files made generic on DS79-no-project-names (d26c2fe): delivery README, schema, hooklib docstring, three tests, claude-setup SKILL.md, runner_plan.py, test_delivery_hooks, DELIVERYSPEC, six reports; delivery tests 218 OK; no other project named in the tree.</td><td>26 Oct</td></tr>
+<tr data-task="DS81"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS81</span>Rename CO task IDs; drop PC names and other projects&#x27; content<span class="release-line"><span class="release-name">RELEASE-12</span></span></td><td></td><td>Joined into the release (d69d336): CO ids renamed DV (8 report files renamed), computer names and a personal path generic, project-only DELIVERYSPEC rules removed (IDs kept) or generic, neutral fixtures; delivery tests 218 OK, test_delivery_hooks 52 passed; tree scan clean.</td><td>26 Oct</td></tr>
+<tr data-task="DS82"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS82</span>Rename CO task IDs on GitHub<span class="no-release-line">ships nothing: GitHub text, ships nothing</span></td><td></td><td>CO&lt;n&gt; renamed DV&lt;n&gt; in 18 PR titles and 4 PR descriptions (3 report links point at the renamed files) and in the notes of Train #98 and #99; no PR or release mentions a CO id, this PC or another project. Local draft: PC name removed.</td><td>26 Oct</td></tr>
+<tr data-task="DS80"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS80</span>Remove other projects&#x27; names from PR descriptions and local notes<span class="no-release-line">ships nothing: GitHub text and local files, ships nothing</span></td><td></td><td>6 merged PR descriptions edited (#66, #70, #74, #75, #84, #99); no PR title or body names another project. Untracked delivery-inventory draft and two memory notes made generic.</td><td>26 Oct</td></tr>
+<tr data-task="DS77"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS77</span><span class="release-name">RELEASE-11</span>dev-standards enables luismc-delivery</td><td></td><td>PR #100 merged (b1d314e) on green secret-scan (spec-lint does not run for .claude/ changes; the affected session-guard case passed locally). luismc-delivery is enabled for dev-standards from the next session. Branches and worktree removed; its Train #100 release deleted.</td><td>26 Oct</td></tr>
+<tr data-task="DS75"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS75</span>Delete all train tags and releases<span class="no-release-line">ships nothing: repo cleanup, ships nothing</span></td><td></td><td>Deleted all 41 train releases and their tags on GitHub, and the local tags. The train-cleanup workflow makes a new one on each merge.</td><td>26 Oct</td></tr>
+<tr data-task="DS74"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS74</span>Remove merged branches and stale worktree<span class="no-release-line">ships nothing: repo cleanup, ships nothing</span></td><td></td><td>Deleted 5 remote branches, 22 local branches and 1 merged worktree; only main remains. Train tags/releases kept (delivery logs).</td><td>26 Oct</td></tr>
+<tr data-task="DS72"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS72</span>Delivery Stop hook: stop looping; sanctioned smoke and cleaned recording<span class="no-release-line">ships nothing: ships via its own DS integration train</span></td><td></td><td>luismc-delivery 0.5.0 green; this project&#x27;s merge gate cannot judge a dev-standards PR</td><td>26 Oct</td></tr>
+<tr data-task="DS67"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS67</span><span class="release-name">RELEASE-10</span>Train: luismc-delivery plugin (ledger, hooks, watchers, runner plan, setup)</td><td></td><td>Owner 14 Oct: delivery learnings enforced by a new plugin, not memory. Contract DELIVERYSPEC on DS67-delivery-integration (7134b80). Cargo: ledger+watchers, hooks, runner plan + artifacts hourly, claude-setup wiring.</td><td>26 Oct</td></tr>
+<tr data-task="DS68"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS68</span>Delivery: ledger, PostToolUse recorder, background watcher (merge/push at green)<span class="release-line"><span class="release-name">RELEASE-10</span></span></td><td></td><td>Brief (a) + D5/D6: delivery_ledger.py, hook_post_tool.py, delivery_watch.py (merge previous train at green, push+open next, cancel replaced runs, hold dependabot), schema, tests.</td><td>26 Oct</td></tr>
+<tr data-task="DS69"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS69</span>Delivery: Stop, PreToolUse and SessionStart hooks<span class="release-line"><span class="release-name">RELEASE-10</span></span></td><td></td><td>Brief (b) + D3/D4/D8/D9: blocking end-of-turn checks, tool denials (auto-merge, local agent without PC-bound reason, dialogs while actionable, plain-text questions), session catch-up + hourly instruction.</td><td>26 Oct</td></tr>
+<tr data-task="DS70"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS70</span>Delivery: runner_plan + artifacts hourly / on-change publish<span class="release-line"><span class="release-name">RELEASE-10</span></span></td><td></td><td>Brief (c): runner_plan.py heavy-job wrapper (yield to train CI, pause/resume runner, memory floor); artifacts hook blocks when Full Progress is &gt;60 min old or a release phase changed; fresh-copy check.</td><td>26 Oct</td></tr>
+<tr data-task="DS71"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS71</span>Delivery: claude-setup wiring, rules, per-project config<span class="release-line"><span class="release-name">RELEASE-10</span></span></td><td></td><td>Brief (d) + D7/D8: enable luismc-delivery, .delivery/config.json template, rules re-tagged to enforcers, clarifying-questions Q-2/Q-3, commit-msg no-attribution + conflict-marker hooks, marketplace + README, memory-to-rule map.</td><td>26 Oct</td></tr>
+<tr data-task="DS73"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS73</span>Enforce PC load limits: memory &lt;=85%, CPU &lt;=60% (hooks + CI runner gate)</td><td><code>delivery</code></td><td>Owner 23 Oct: the load rule must be truly enforced by the plugin for every project, not by memory notes: PreToolUse refuses heavy local commands and local agents while the PC is over the limits; CI runner job-start gate waits for room; Stop warns; limits configurable per machine.</td><td>26 Oct</td></tr>
+<tr data-task="DS66"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS66</span>Delivery lessons inventory: every learning mapped to a rule ID + enforcement<span class="no-release-line">ships nothing: study; feeds DELIVERYSPEC</span></td><td></td><td>Inventory done 22:07: 63 lessons (8 enforced, 1 warn, 17 partly, 37 not); ledger schema; 4 briefs. Committed as DELIVERYSPEC draft on DS67-delivery-integration.</td><td>14 Oct</td></tr>
 <tr data-task="TF5"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-transcript-folds.html"><span class="task-id">TF5</span>Install on this machine; hide-diffs removal</a><span class="no-release-line">ships nothing: machine setup, ships nothing</span></td><td></td><td>luismc-transcript-folds installed (user scope), luismc-project-setup updated to 14.3.0, plugins reloaded. hide-diffs is installed with local scope in another project; the owner removes it there (claude plugin uninstall hide-diffs@gixxy22-plugins --scope local).</td><td>13 Oct</td></tr>
 <tr data-task="DS63"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS63</span><span class="release-name">RELEASE-8</span>claude-setup ships the clarifying-questions rule<span class="release-line"><span class="release-name">RELEASE-9</span></span></td><td></td><td>New plugin-owned rule file rules/clarifying-questions.md in claude-setup assets, written to every target and overwritten unconditionally like agents-and-integration.md, so it reaches projects whose CLAUDE.md already exists. Text is the owner&#x27;s, verbatim. luismc-project-setup 14.2.1 -&gt; 14.3.0.</td><td>13 Oct</td></tr>
 <tr data-task="DS64"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS64</span><span class="release-name">RELEASE-9</span>Train: DS63 + transcript-folds + marketplace rename</td><td></td><td>PR #60 merged (d49413f): luismc-transcript-folds 1.0.0, luismc-project-setup 14.3.0, marketplace renamed dev-standards. CI green, owner smoke test passed, branches and agent worktrees removed, marketplace update verified.</td><td>13 Oct</td></tr>
@@ -2461,6 +2898,9 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DS62"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS62</span>Sync local main and remove old artifacts-record worktree<span class="no-release-line">ships nothing: local cleanup, ships nothing</span></td><td></td><td>Local main fast-forwarded to origin/main (8416760); the copied record was identical to it, so nothing to commit. Old artifacts-record worktree removed; 37 line-ending-only files re-checked out.</td><td>12 Oct</td></tr>
 <tr data-task="AR50"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR50</span>Plugin never pushes the record</a><span class="release-line"><span class="release-name">RELEASE-7</span></span></td><td><code>luismc-artifacts</code></td><td>Merged in #56 (25889b3): luismc-artifacts 1.8.0, ARTIFACTSPEC 1.8.0; the plugin writes docs/artifacts/ only, never commits or pushes.</td><td>12 Oct</td></tr>
 <tr data-task="DS61"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS61</span><span class="release-name">RELEASE-7</span>AR50 train: never-push fix, PR CI, merge, cleanup</td><td></td><td>#56 merged 23:25 on green (spec-lint 2m57s); 1.8.0 on main; cleanup removed every AR50 branch and agent worktree, delivery log in train-2026-10-12-56.</td><td>12 Oct</td></tr>
+</tbody></table></div>
+<details class="earlier"><summary>Earlier</summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="AR49"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR49</span>Version labels say ARTIFACTSPEC 1.7.0</a><span class="release-line"><span class="release-name">RELEASE-6</span></span></td><td><code>luismc-artifacts</code></td><td>Pushed to main as 0b9c8ef: luismc-artifacts 1.7.1; no CI (owner&#x27;s call)</td><td>12 Oct</td></tr>
 <tr data-task="DS60"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS60</span><span class="release-name">RELEASE-6</span>luismc-artifacts 1.7.1 straight to main, no CI (owner&#x27;s call)</td><td></td><td>0b9c8ef pushed straight to main, no CI (owner&#x27;s call); change note folded on a local DS60-integration branch, deleted after</td><td>12 Oct</td></tr>
 <tr data-task="AR47"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR47</span>End-of-turn hook knows the daily publish limit</a><span class="release-line"><span class="release-name">RELEASE-5</span></span></td><td><code>luismc-artifacts</code></td><td>Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0</td><td>12 Oct</td></tr>
@@ -2598,22 +3038,24 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DS3"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS3</span>tech-stack-setup 11.2.0</td><td><code>luismc-project-setup</code></td><td>Fewer CI minutes without dropping the STACKSPEC §13.1 gates. Plugin: luismc-project-setup.</td><td>02 Oct</td></tr>
 <tr data-task="DS4"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS4</span>tech-stack-setup 11.2.1</td><td><code>luismc-project-setup</code></td><td>Required checks named by job name, not job id. Plugin: luismc-project-setup.</td><td>02 Oct</td></tr>
 <tr data-task="DS2"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-model-and-effort-profiles.html"><span class="task-id">DS2</span>Opus plans, Sonnet codes</a></td><td><code>luismc-project-setup</code></td><td>claude-setup writes model opus and CLAUDE_CODE_SUBAGENT_MODEL sonnet, plus the delegation rule.</td><td>01 Oct</td></tr>
-</tbody></table></div>
-<details class="earlier"><summary>Earlier</summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS1"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS1</span>AUTHSPEC 3.1.0</td><td><code>luismc-project-setup</code></td><td>Synced passkeys allowed on the admin plane. Plugin: luismc-project-setup.</td><td>27 Sep</td></tr>
 </tbody></table></div>
 </details>
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
+<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (0)</strong><span class="fold-count">0 feature artifacts</span></summary>
+<p class="feature-none">No feature artifacts in progress.</p>
+</details>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (5)</strong><span class="fold-count">5 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-value="feature: transcript folds"><a href="feature-transcript-folds.html">Feature: Transcript folds</a></td><td data-value="29865507"><time datetime="2026-10-13T23:27+01:00">13 Oct 23:27</time></td><td>TF1 to TF5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Live since 13 Oct (PR #60): luismc-transcript-folds 1.0.0, installed by claude-setup 14.3.0.</td></tr>
-<tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29865455"><time datetime="2026-10-13T22:35+01:00">13 Oct 22:35</time></td><td>DL1 to DL13</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
-<tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29865455"><time datetime="2026-10-13T22:35+01:00">13 Oct 22:35</time></td><td>MP1 to MP7, DS2 to DS5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
-<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29865455"><time datetime="2026-10-13T22:35+01:00">13 Oct 22:35</time></td><td>AR2 to AR50</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
-<tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29865455"><time datetime="2026-10-13T22:35+01:00">13 Oct 22:35</time></td><td>TC1 to TC11</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
+<tr><td data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-value="29884157"><time datetime="2026-10-26T21:17+00:00">26 Oct 21:17</time></td><td>DL1 to DL13</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-value="29883855"><time datetime="2026-10-26T16:15+00:00">26 Oct 16:15</time></td><td>MP1 to MP7, DS2 to DS5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
+<tr><td data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-value="29883855"><time datetime="2026-10-26T16:15+00:00">26 Oct 16:15</time></td><td>AR2 to AR50</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
+<tr><td data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-value="29883855"><time datetime="2026-10-26T16:15+00:00">26 Oct 16:15</time></td><td>TC1 to TC11</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
+<tr><td data-value="feature: transcript folds"><a href="feature-transcript-folds.html">Feature: Transcript folds</a></td><td data-value="29883855"><time datetime="2026-10-26T16:15+00:00">26 Oct 16:15</time></td><td>TF1 to TF5</td><td data-col="state"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td>Live since 13 Oct (PR #60): luismc-transcript-folds 1.0.0, installed by claude-setup 14.3.0.</td></tr>
 </tbody></table></div>
+</details>
 </section>
 <section id="s2"><h2><span class="section-number">&sect; 2</span>How it stays current</h2>
 <p class="lede">This artifact is generated by <code>luismc-artifacts</code> from the record in <code>docs/artifacts/</code>; nothing here is typed by hand.</p>
@@ -2684,9 +3126,9 @@ details.status-fold.release-group > summary { color: var(--ink); }
       });
     });
     // Section 1: click "Feature artifact" or "Last updated" to sort the rows, click again to reverse (R5.39).
-    // The page is rendered in the default order (Last updated, newest first); nothing is stored.
-    var featureTable = document.querySelector('table.feature-list');
-    if (featureTable && featureTable.tBodies.length) {
+    // The page is rendered in the default order (Last updated, newest first); nothing is stored. Each of the two tables sorts on its own.
+    Array.prototype.slice.call(document.querySelectorAll('table.feature-list')).forEach(function (featureTable) {
+    if (featureTable.tBodies.length) {
       var sortButtons = Array.prototype.slice.call(featureTable.querySelectorAll('button.sort-header'));
       var sortBody = featureTable.tBodies[0];
       var sortCell = { name: 0, updated: 1 };
@@ -2727,6 +3169,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
         });
       });
     }
+    });
     window.addEventListener('scroll', markCurrent, { passive: true });
     window.addEventListener('resize', markCurrent);
     markCurrent();

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-13T23:27+01:00",
+  "updated": "2026-10-26T21:17+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1458,6 +1458,370 @@
       "expected": "13 Oct",
       "changed": "2026-10-13T23:25+01:00",
       "rides": "DS64"
+    },
+    {
+      "id": "DS66",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Delivery lessons inventory: every learning mapped to a rule ID + enforcement",
+      "detail": "Inventory done 22:07: 63 lessons (8 enforced, 1 warn, 17 partly, 37 not); ledger schema; 4 briefs. Committed as DELIVERYSPEC draft on DS67-delivery-integration.",
+      "expected": "14 Oct",
+      "changed": "2026-10-14T22:31+01:00",
+      "no_release": "study; feeds DELIVERYSPEC"
+    },
+    {
+      "id": "DS67",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Train: luismc-delivery plugin (ledger, hooks, watchers, runner plan, setup)",
+      "detail": "Owner 14 Oct: delivery learnings enforced by a new plugin, not memory. Contract DELIVERYSPEC on DS67-delivery-integration (7134b80). Cargo: ledger+watchers, hooks, runner plan + artifacts hourly, claude-setup wiring.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T16:15+00:00",
+      "release": 10,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-10-14T22:40+01:00",
+          "end": "2026-10-14T23:25+01:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-10-14T23:25+01:00",
+          "end": "2026-10-14T23:35+01:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-10-14T23:35+01:00",
+          "end": "2026-10-14T23:50+01:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-10-14T23:50+01:00",
+          "end": "2026-10-14T23:55+01:00"
+        }
+      ],
+      "risk": {
+        "label": "a fix round",
+        "minutes": 15
+      }
+    },
+    {
+      "id": "DS68",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Delivery: ledger, PostToolUse recorder, background watcher (merge/push at green)",
+      "detail": "Brief (a) + D5/D6: delivery_ledger.py, hook_post_tool.py, delivery_watch.py (merge previous train at green, push+open next, cancel replaced runs, hold dependabot), schema, tests.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T16:15+00:00",
+      "rides": "DS67"
+    },
+    {
+      "id": "DS69",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Delivery: Stop, PreToolUse and SessionStart hooks",
+      "detail": "Brief (b) + D3/D4/D8/D9: blocking end-of-turn checks, tool denials (auto-merge, local agent without PC-bound reason, dialogs while actionable, plain-text questions), session catch-up + hourly instruction.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T16:15+00:00",
+      "rides": "DS67"
+    },
+    {
+      "id": "DS70",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Delivery: runner_plan + artifacts hourly / on-change publish",
+      "detail": "Brief (c): runner_plan.py heavy-job wrapper (yield to train CI, pause/resume runner, memory floor); artifacts hook blocks when Full Progress is >60 min old or a release phase changed; fresh-copy check.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T16:15+00:00",
+      "rides": "DS67"
+    },
+    {
+      "id": "DS71",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Delivery: claude-setup wiring, rules, per-project config",
+      "detail": "Brief (d) + D7/D8: enable luismc-delivery, .delivery/config.json template, rules re-tagged to enforcers, clarifying-questions Q-2/Q-3, commit-msg no-attribution + conflict-marker hooks, marketplace + README, memory-to-rule map.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T16:15+00:00",
+      "rides": "DS67"
+    },
+    {
+      "id": "DS72",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Delivery Stop hook: stop looping; sanctioned smoke and cleaned recording",
+      "detail": "luismc-delivery 0.5.0 green; this project's merge gate cannot judge a dev-standards PR",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T16:16+00:00",
+      "no_release": "ships via its own DS integration train"
+    },
+    {
+      "id": "DS73",
+      "owner": "project",
+      "app": "delivery",
+      "status": "Live",
+      "item": "Enforce PC load limits: memory <=85%, CPU <=60% (hooks + CI runner gate)",
+      "detail": "Owner 23 Oct: the load rule must be truly enforced by the plugin for every project, not by memory notes: PreToolUse refuses heavy local commands and local agents while the PC is over the limits; CI runner job-start gate waits for room; Stop warns; limits configurable per machine.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T16:15+00:00"
+    },
+    {
+      "id": "DS74",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Remove merged branches and stale worktree",
+      "detail": "Deleted 5 remote branches, 22 local branches and 1 merged worktree; only main remains. Train tags/releases kept (delivery logs).",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T16:19+00:00",
+      "no_release": "repo cleanup, ships nothing"
+    },
+    {
+      "id": "DS75",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Delete all train tags and releases",
+      "detail": "Deleted all 41 train releases and their tags on GitHub, and the local tags. The train-cleanup workflow makes a new one on each merge.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T16:22+00:00",
+      "no_release": "repo cleanup, ships nothing"
+    },
+    {
+      "id": "DS76",
+      "owner": "project",
+      "app": "",
+      "status": "Failed",
+      "item": "CI runner load gate on this PC",
+      "detail": "Reverted 17:38: the hook blocked every Windows CI job on this PC from 16:44 (PowerShell execution policy refused runner_load_gate.ps1 under the service account, so it never reached its fail-open path). My test had used -ExecutionPolicy Bypass. .env removed, runner restarted while idle; the copied scripts stay in ProgramData, unused.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T17:37+00:00",
+      "no_release": "machine setup, ships nothing"
+    },
+    {
+      "id": "DS77",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "dev-standards enables luismc-delivery",
+      "detail": "PR #100 merged (b1d314e) on green secret-scan (spec-lint does not run for .claude/ changes; the affected session-guard case passed locally). luismc-delivery is enabled for dev-standards from the next session. Branches and worktree removed; its Train #100 release deleted.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T16:38+00:00",
+      "release": 11,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-10-26T16:35+00:00",
+          "end": "2026-10-26T16:40+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-10-26T16:40+00:00",
+          "end": "2026-10-26T16:50+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-10-26T16:50+00:00",
+          "end": "2026-10-26T16:55+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 15
+      }
+    },
+    {
+      "id": "DS78",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Release every plugin: no other projects named",
+      "detail": "PR #101 merged at 17:30 (241ed69) on green spec-lint and secret-scan: luismc-agents 1.1.1, artifacts 1.14.0, audits 1.2.1, delivery 0.7.0, project-setup 14.6.0, specs 1.2.1, transcript-folds 1.1.1. Branches and worktrees removed; installed here at user and project scope.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T17:31+00:00",
+      "release": 12,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-10-26T16:50+00:00",
+          "end": "2026-10-26T17:45+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-10-26T17:45+00:00",
+          "end": "2026-10-26T17:55+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-10-26T17:55+00:00",
+          "end": "2026-10-26T18:10+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-10-26T18:10+00:00",
+          "end": "2026-10-26T18:15+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 15
+      }
+    },
+    {
+      "id": "DS79",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Remove other projects' names from tracked files",
+      "detail": "19 files made generic on DS79-no-project-names (d26c2fe): delivery README, schema, hooklib docstring, three tests, claude-setup SKILL.md, runner_plan.py, test_delivery_hooks, DELIVERYSPEC, six reports; delivery tests 218 OK; no other project named in the tree.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T17:31+00:00",
+      "rides": "DS78"
+    },
+    {
+      "id": "DS80",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Remove other projects' names from PR descriptions and local notes",
+      "detail": "6 merged PR descriptions edited (#66, #70, #74, #75, #84, #99); no PR title or body names another project. Untracked delivery-inventory draft and two memory notes made generic.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T17:02+00:00",
+      "no_release": "GitHub text and local files, ships nothing"
+    },
+    {
+      "id": "DS81",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Rename CO task IDs; drop PC names and other projects' content",
+      "detail": "Joined into the release (d69d336): CO ids renamed DV (8 report files renamed), computer names and a personal path generic, project-only DELIVERYSPEC rules removed (IDs kept) or generic, neutral fixtures; delivery tests 218 OK, test_delivery_hooks 52 passed; tree scan clean.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T17:31+00:00",
+      "rides": "DS78"
+    },
+    {
+      "id": "DS82",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Rename CO task IDs on GitHub",
+      "detail": "CO<n> renamed DV<n> in 18 PR titles and 4 PR descriptions (3 report links point at the renamed files) and in the notes of Train #98 and #99; no PR or release mentions a CO id, this PC or another project. Local draft: PC name removed.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T17:19+00:00",
+      "no_release": "GitHub text, ships nothing"
+    },
+    {
+      "id": "DS83",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Reinstall the CI runner load gate",
+      "detail": "Owner chose A: RemoteSigned for NETWORK SERVICE only (machine policy unchanged). Runner's exact command as NETWORK SERVICE: exit 1 before, exit 0 after. .env set, runner restarted idle 20:46; first real job 20:49 passed the gate and succeeded.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T21:17+00:00",
+      "no_release": "machine setup, ships nothing"
+    },
+    {
+      "id": "DS84",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "luismc-delivery: runner gate docs and doctor cover execution policy",
+      "detail": "README covers the account's execution policy, Python access and testing as the runner; doctor FAILs a .ps1 hook whose service account cannot run scripts. 8 new tests pass; real reads checked on this PC.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T21:17+00:00",
+      "rides": "DS85"
+    },
+    {
+      "id": "DS85",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Release: gate docs, ci_watch fix, one release per train, spec sources",
+      "detail": "Joining DS84, DS86-DS89 on DS85-integration, folding change notes.",
+      "expected": "26 Oct ~22:25",
+      "changed": "2026-10-26T21:17+00:00",
+      "expected_basis": "agents ~50 min, join + CI ~35 min",
+      "release": 13,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-10-26T20:50+00:00",
+          "end": "2026-10-26T21:40+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-10-26T21:40+00:00",
+          "end": "2026-10-26T21:55+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-10-26T21:55+00:00",
+          "end": "2026-10-26T22:15+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-10-26T22:15+00:00",
+          "end": "2026-10-26T22:25+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 15
+      }
+    },
+    {
+      "id": "DS86",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Stop the train-cleanup workflow creating a release per merge",
+      "detail": "train-cleanup passes --no-delivery-log: no release per merge.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T21:17+00:00",
+      "rides": "DS85"
+    },
+    {
+      "id": "DS87",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "ci_watch.py: a missing workflow fails at once, naming the repo's workflows",
+      "detail": "A missing workflow exits 2 at once and lists the repo's workflows; other gh errors still retry. 3 new tests; watch tests 32/32 locally, full suite in CI.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T21:17+00:00",
+      "rides": "DS85"
+    },
+    {
+      "id": "DS88",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "DELIVERYSPEC Source cells: generic, no other project's memory names",
+      "detail": "46 Source cells now say owner lesson/rules/CLAUDE.md/owner rule; legend added; claude-setup maps notes by rule text.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T21:17+00:00",
+      "rides": "DS85"
+    },
+    {
+      "id": "DS89",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Commit the artifacts record; delete docs/drafts",
+      "detail": "Owner then chose to delete the draft (another project's paths throughout; DELIVERYSPEC supersedes it). Deleted; the record is committed at the join.",
+      "expected": "26 Oct ~21:55",
+      "changed": "2026-10-26T21:17+00:00",
+      "expected_basis": "rides the DS85 join",
+      "rides": "DS85"
     },
     {
       "id": "MP1",

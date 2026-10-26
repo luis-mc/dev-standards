@@ -709,6 +709,13 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 .release-timeline .rt-risk-label { font-size: 10.5px; fill: var(--ink-muted); }
 .release-timeline .rt-now { stroke: var(--failed); stroke-width: 2; }
 .release-timeline .rt-now-label { font-size: 11px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
+.release-timeline .rt-strip-title { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
+.release-timeline .rt-other-label { font-size: 11px; fill: var(--ink-muted); }
+.release-timeline .rt-other.status-running { fill: var(--running-mark); }
+.release-timeline .rt-other.status-waiting { fill: var(--rule-strong); }
+.release-timeline .rt-other.status-needs-you { fill: var(--signal); }
+.release-timeline .rt-other.status-to-do { fill: var(--ink-muted); }
+.release-timeline .rt-other.overdue, .release-timeline .rt-day.overdue { stroke: var(--failed); stroke-width: 2; }
 .timeline-legend { font-size: .85rem; color: var(--ink-muted); margin: .5rem 0 0; }
 .rt-swatch { display: inline-block; width: 10px; height: 10px; vertical-align: middle; margin: 0 4px 0 2px; }
 .rt-swatch.agents { background: var(--running-mark); }
@@ -731,8 +738,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-13T22:35+01:00">13 Oct 22:35</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">13 Oct 23:27</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-26T21:17+00:00">26 Oct 21:17</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">26 Oct 20:39</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
@@ -740,7 +747,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </div>
 <div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">13</div><div class="label">tasks live</div></div></div>
-<p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">13 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL13"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL13</span>Save the STACKSPEC 8.0.0 upgrade prompt</td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>
@@ -791,6 +798,112 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D19">
+<h3 class="decision-head"><span class="decision-id">D19</span> <span class="decision-question">docs/drafts/delivery-inventory.md is an older copy of DELIVERYSPEC full of another project&#x27;s paths and rules: what happens to it?</span></h3>
+<p class="decision-meta">Asked 26 Oct · Decided 26 Oct · Task DS89</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Delete it</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 26 Oct</span></div>
+<p class="decision-summary">DELIVERYSPEC holds what it led to; commit only the record.</p>
+<blockquote class="decision-words">&ldquo;Delete it (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep it uncommitted</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave it untracked on disk.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Scrub, then commit</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Make ~30 places generic, then commit.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Commit as-is</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Commit unchanged.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D18">
+<h3 class="decision-head"><span class="decision-id">D18</span> <span class="decision-question">Commit the uncommitted artifacts record and docs/drafts?</span></h3>
+<p class="decision-meta">Asked 26 Oct · Decided 26 Oct · Task DS89</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Commit record only</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">docs/artifacts/ through a PR; docs/drafts/ stays uncommitted.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Commit both</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 26 Oct</span></div>
+<p class="decision-summary">docs/artifacts/ and docs/drafts/ through a PR.</p>
+<blockquote class="decision-words">&ldquo;Commit both&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Not now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave everything uncommitted.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D17">
+<h3 class="decision-head"><span class="decision-id">D17</span> <span class="decision-question">DELIVERYSPEC Source cells named after another project&#x27;s memory notes: make generic or keep?</span></h3>
+<p class="decision-meta">Asked 26 Oct · Decided 26 Oct · Task DS88</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Make them generic</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 26 Oct</span></div>
+<p class="decision-summary">Neutral descriptions; dev-standards names no other project.</p>
+<blockquote class="decision-words">&ldquo;Make them generic (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep them</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave as they are.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D16">
+<h3 class="decision-head"><span class="decision-id">D16</span> <span class="decision-question">Fix ci_watch.py: right default workflow, repeated gh errors fail instead of green?</span></h3>
+<p class="decision-meta">Asked 26 Oct · Decided 26 Oct · Task DS87</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Fix ci_watch.py</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 26 Oct</span></div>
+<p class="decision-summary">Right default; errors exit non-zero.</p>
+<blockquote class="decision-words">&ldquo;Stop release per merge, Fix ci_watch.py (multi-select; Neither also offered)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep current behaviour (the Neither option).</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D15">
+<h3 class="decision-head"><span class="decision-id">D15</span> <span class="decision-question">Stop train-cleanup creating a GitHub release on every merge to main?</span></h3>
+<p class="decision-meta">Asked 26 Oct · Decided 26 Oct · Task DS86</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Stop release per merge</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 26 Oct</span></div>
+<p class="decision-summary">Only a real train makes a release.</p>
+<blockquote class="decision-words">&ldquo;Stop release per merge, Fix ci_watch.py (multi-select; Neither also offered)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Every merge keeps making a release (the Neither option).</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D14">
+<h3 class="decision-head"><span class="decision-id">D14</span> <span class="decision-question">How should the runner load gate be reinstalled, now that PowerShell refuses unsigned scripts for the runner&#x27;s account?</span></h3>
+<p class="decision-meta">Asked 26 Oct · Decided 26 Oct · Task DS83</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Runner account only</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 26 Oct</span></div>
+<p class="decision-summary">RemoteSigned for NETWORK SERVICE only; test as the runner runs it, then watch the first real job.</p>
+<blockquote class="decision-words">&ldquo;Runner account only (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Whole PC</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">RemoteSigned for every account on the PC.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave it off</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No gate; runner jobs start without a load check.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D13">
 <h3 class="decision-head"><span class="decision-id">D13</span> <span class="decision-question">Turn hooks on here (core.hooksPath .githooks), which also activates the pre-commit secret check?</span></h3>
 <p class="decision-meta">Asked 11 Oct · Decided 11 Oct · Task DL10</p>

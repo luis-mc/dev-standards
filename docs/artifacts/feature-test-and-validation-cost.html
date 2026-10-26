@@ -709,6 +709,13 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 .release-timeline .rt-risk-label { font-size: 10.5px; fill: var(--ink-muted); }
 .release-timeline .rt-now { stroke: var(--failed); stroke-width: 2; }
 .release-timeline .rt-now-label { font-size: 11px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
+.release-timeline .rt-strip-title { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
+.release-timeline .rt-other-label { font-size: 11px; fill: var(--ink-muted); }
+.release-timeline .rt-other.status-running { fill: var(--running-mark); }
+.release-timeline .rt-other.status-waiting { fill: var(--rule-strong); }
+.release-timeline .rt-other.status-needs-you { fill: var(--signal); }
+.release-timeline .rt-other.status-to-do { fill: var(--ink-muted); }
+.release-timeline .rt-other.overdue, .release-timeline .rt-day.overdue { stroke: var(--failed); stroke-width: 2; }
 .timeline-legend { font-size: .85rem; color: var(--ink-muted); margin: .5rem 0 0; }
 .rt-swatch { display: inline-block; width: 10px; height: 10px; vertical-align: middle; margin: 0 4px 0 2px; }
 .rt-swatch.agents { background: var(--running-mark); }
@@ -731,8 +738,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>The question</a><a href="#s2"><b>2</b>How it was measured</a><a href="#s3"><b>3</b>Hypotheses and verdicts</a><a href="#s4"><b>4</b>Where the time goes</a><a href="#s5"><b>5</b>The mutation pass</a><a href="#s6"><b>6</b>Repeats and noise</a><a href="#s7"><b>7</b>What is wrong</a><a href="#s8"><b>8</b>Solutions, ranked</a><a href="#s9"><b>9</b>Decisions</a><a href="#s10"><b>10</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Test and validation cost</h1><p>What our tests and checks cost, where they repeat, and what to cut</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-13T22:35+01:00">13 Oct 22:35</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">13 Oct 23:27</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-26T16:15+00:00">26 Oct 16:15</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">26 Oct 20:39</a> (Lisbon)</p>
 <p class="lede">All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
@@ -740,7 +747,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </div>
 <div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">11</div><div class="label">tasks live</div></div></div>
-<p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">11 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="TC9"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TC9</span>Light or heavy from measured suite times, not the session&#x27;s guess<span class="release-line"><span class="release-name">RELEASE-3</span></span></td><td>Released in #53 (fe3af00, 00:00): STACKSPEC 8.2.0, luismc-project-setup 14.2.0, luismc-artifacts 1.6.1</td><td>12 Oct</td></tr>
