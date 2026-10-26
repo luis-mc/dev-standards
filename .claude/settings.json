@@ -1,6 +1,7 @@
 {
   "enabledPlugins": {
-    "luismc-artifacts@dev-standards": true
+    "luismc-artifacts@dev-standards": true,
+    "luismc-delivery@dev-standards": true
   },
   "hooks": {
     "PreToolUse": [
