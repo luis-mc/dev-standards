@@ -578,12 +578,12 @@ an HTML fragment beginning with `<title>`, as the Artifact tool expects (no
 - **R5.5** — The stamp reads `Last update: DD Mon HH:MM (<timezone_label>)` in
   a `<time>` element whose `datetime` attribute is the ISO time with offset.
 - **R5.6** — The full-progress artifact's section 1 lists every feature
-  artifact in a table `Feature artifact | Last updated | Tasks | State | Where it stands`:
+  artifact, split in two folds (R5.50), each holding a table `Feature artifact | Last updated | Tasks | State | Where it stands`:
   its link to the feature's file (R5.30, R5.31), the time its page was last
   updated (its stamp, `DD Mon HH:MM` in a `<time>` element, from the manifest
   entry's `updated`, R4.30), its task ID range, its State (R5.44) and one line on where it stands
   (taken from its `meta.json` lede's first sentence, or its generated summary
-  when the lede is empty, R5.36). The committed rows are in the default order
+  when the lede is empty, R5.36). The committed rows of each table are in the default order
   (R5.39): Last updated, newest first, ties by title. Section 1 is generated, so the full-progress artifact's
   content files `01-*.html` onward render as sections 2 and up.
 
@@ -1040,6 +1040,23 @@ double-click.
   not a task (or not a release), a task that still rides a dropped release and a
   line that differs (R5.49). Verified by `test_dropped_release_is_closed_truthfully`
   and `dropped_release_is_closed_history`.
+
+- **R5.50** — Section 1 of Full Progress is two collapsible folds, each the
+  page's own `<details class="status-fold feature-group">` with its title in a
+  `<summary><strong>` and a count: `Feature artifacts in progress (n)` first
+  (`data-group="features-progress"`, rendered open) holding the features whose
+  State is not `Complete` (R5.44), then `Complete feature artifacts (n)`
+  (`data-group="features-complete"`, rendered closed) holding the features whose
+  State is `Complete`. Each fold holds the R5.6 table with its sort buttons
+  (R5.39) and links, sorting on its own; a fold with no feature holds no table
+  and one line, `No feature artifacts in progress.` or `No feature artifacts are
+  complete yet.` (`<p class="feature-none">`). The folds are not checklist
+  groups (R6.12). `check` reports folds that are missing, out of order, open or
+  closed against this rule, a title whose count differs from its rows, a
+  feature in the wrong fold, and an empty fold with a table or without its
+  line. Verified by `feature_artifacts_split_mixed_states`,
+  `feature_artifacts_split_all_complete`, `feature_artifacts_split_none_complete`
+  and `feature_artifacts_split_checker_finds_faults`.
 
 ---
 
@@ -1588,7 +1605,7 @@ Reads the hook input; takes the task ID from the current branch name
 | `expected_basis`: a string of 1 to 80 characters, on open rows only | R6.10 |
 | Checklists and tiles equal the registry | INV-1, R5.8 |
 | Every feature task on the full-progress artifact, linked to the feature file by a relative link | R6.5, R5.30 |
-| Section 1 of Full Progress: the five columns, a Last updated time and a State per feature, sort buttons, rows in the default order | R5.6, R5.39, R5.44 |
+| Section 1 of Full Progress: the in-progress and complete folds, their open state and counts; the five columns, a Last updated time and a State per feature, sort buttons, rows in the default order | R5.6, R5.39, R5.44, R5.50 |
 | Release fields: `release`, `phases`, `risk`, `rides`; Expected is the end of the last phase | R5.40, R5.41 |
 | Release numbers: positive, unique, none left `true`; `RELEASE-<n>` on every release row | R5.45 |
 | Full Progress grouped by release; release line on rows that rode one | R5.46 |
