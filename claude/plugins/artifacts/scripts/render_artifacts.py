@@ -1591,6 +1591,11 @@ def _sort_header(label: str, name: str, order: str) -> str:
             % (' aria-sort="%s"' % order if order else '', name, esc(label), arrow))
 
 
+COMPLETE_CHIPS = [('status-live', 'Complete')]
+FEATURE_GROUPS = (('progress', 'Feature artifacts in progress', 'No feature artifacts in progress.'),
+                  ('complete', 'Complete feature artifacts', 'No feature artifacts are complete yet.'))
+
+
 def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list, feature_links: dict,
                      record_dir: str = '') -> str:
     rows = []
@@ -1607,17 +1612,28 @@ def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list
             stands = stands[0].upper() + stands[1:]
         iso = feature_updated(entry, record_dir)
         when = ('<time datetime="%s">%s</time>' % (esc(iso), esc(_fmt_stamp(datetime.fromisoformat(iso)))) if iso else '')
+        done = state_chips([t for t in tasks if t.get('owner') == entry['key']], content.get('decisions')) == COMPLETE_CHIPS
         rows.append((not iso, -_utc_minutes(iso) if iso else 0, str(entry['title']).lower(),
                      '<tr><td data-value="%s">%s</td><td data-value="%d">%s</td><td>%s</td>%s<td>%s</td></tr>' % (
                          esc(str(entry['title']).lower()), link, _utc_minutes(iso) if iso else 0, when,
                          esc(_id_ranges(entry['key'], entry.get('prefix', ''), tasks)),
                          _state_cell([t for t in tasks if t.get('owner') == entry['key']], content.get('decisions')),
-                         esc(stands + _decisions_open_line(content.get('decisions'))))))
+                         esc(stands + _decisions_open_line(content.get('decisions')))), done))
     rows.sort(key=lambda r: r[:3])      # newest first, no stamp last, ties by title
-    return ('<div class="table-scroll"><table class="feature-list"><thead><tr>%s%s<th>Tasks</th>'
-            '<th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>\n%s\n</tbody></table></div>\n'
-            % (_sort_header('Feature artifact', 'name', ''), _sort_header('Last updated', 'updated', 'descending'),
-               '\n'.join(r[3] for r in rows)))
+    out = []
+    for gkey, title, none_line in FEATURE_GROUPS:
+        mine = [r[3] for r in rows if r[4] == (gkey == 'complete')]
+        if mine:
+            body = ('<div class="table-scroll"><table class="feature-list"><thead><tr>%s%s<th>Tasks</th>'
+                    '<th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>\n%s\n</tbody></table></div>'
+                    % (_sort_header('Feature artifact', 'name', ''), _sort_header('Last updated', 'updated', 'descending'),
+                       '\n'.join(mine)))
+        else:
+            body = '<p class="feature-none">%s</p>' % none_line
+        out.append('<details class="status-fold feature-group" data-group="features-%s"%s><summary><strong>%s (%d)</strong>'
+                   '<span class="fold-count">%d feature artifact%s</span></summary>\n%s\n</details>'
+                   % (gkey, '' if gkey == 'complete' else ' open', title, len(mine), len(mine), '' if len(mine) == 1 else 's', body))
+    return '\n'.join(out) + '\n'
 
 
 def _published_line(manifest: dict, label: str) -> str:
@@ -1821,11 +1837,29 @@ def _check_decisions(node, decisions, add) -> None:
 
 
 def _check_feature_table(s1, manifest: dict, record_dir: str, add, tasks=(), plugin_dir: str = PLUGIN_DIR) -> None:
-    """R5.6, R5.39, R5.44: the columns, the sort buttons, a Last updated time and a State per feature and the default order."""
-    table = find(s1, 'table', 'feature-list')
-    if table is None:
-        add('R5.6', 'section 1 must be a table of the feature artifacts')
+    """R5.6, R5.39, R5.44, R5.50: two folds, in progress (open) then complete (closed), each titled with its count and
+    holding the feature table (columns, sort buttons, Last updated, State, default order) or a one-line none note."""
+    folds = find_all(s1, 'details', 'feature-group')
+    if [f.attrs.get('data-group') for f in folds] != ['features-' + g[0] for g in FEATURE_GROUPS]:
+        add('R5.50', 'section 1 must hold two folds, Feature artifacts in progress then Complete feature artifacts')
         return
+    entries = {e.get('title'): e for e in manifest.get('feature_artifacts') or []}
+    for fold, (gkey, title, none_line) in zip(folds, FEATURE_GROUPS):
+        if ('open' in fold.attrs) != (gkey == 'progress'):
+            add('R5.50', 'the %s fold must render %s' % (title, 'open' if gkey == 'progress' else 'closed'))
+        table = find(fold, 'table', 'feature-list')
+        count = len(find_all(table, 'tr', pred=lambda n: has_ancestor(n, lambda a: a.tag == 'tbody'))) if table is not None else 0
+        summary = find(fold, 'summary')
+        if summary is None or text_of(find(summary, 'strong')) != '%s (%d)' % (title, count):
+            add('R5.50', 'the %s fold must be titled "%s (%d)"' % (title, title, count))
+        if table is None:
+            if [text_of(p) for p in find_all(fold, 'p', 'feature-none')] != [none_line]:
+                add('R5.50', 'the empty %s fold must say "%s" and hold no table' % (title, none_line))
+            continue
+        _check_feature_rows(table, fold, entries, record_dir, add, tasks, plugin_dir, gkey == 'complete')
+
+
+def _check_feature_rows(table, fold, entries: dict, record_dir: str, add, tasks, plugin_dir: str, complete: bool) -> None:
     heads = find_all(table, 'th')
     if [text_of(th).rstrip(' ↑↓') for th in heads] != ['Feature artifact', 'Last updated', 'Tasks', 'State', 'Where it stands']:
         add('R5.6', 'section 1 must have the columns Feature artifact, Last updated, Tasks, State, Where it stands')
@@ -1838,7 +1872,6 @@ def _check_feature_table(s1, manifest: dict, record_dir: str, add, tasks=(), plu
             return
     if heads[1].attrs.get('aria-sort') != 'descending' or heads[0].attrs.get('aria-sort'):
         add('R5.39', 'the committed table is sorted by Last updated, newest first: that header carries aria-sort="descending"')
-    entries = {e.get('title'): e for e in manifest.get('feature_artifacts') or []}
     keys = []
     for row in find_all(table, 'tr'):
         cells = [c for c in row.children if getattr(c, 'tag', None) == 'td']
@@ -1863,6 +1896,8 @@ def _check_feature_table(s1, manifest: dict, record_dir: str, add, tasks=(), plu
             except (ContentError, OSError):
                 dec = []
             want_chips = state_chips([t for t in tasks if t.get('owner') == entry['key']], dec)
+            if (want_chips == COMPLETE_CHIPS) != complete:
+                add('R5.50', '%r belongs in the %s fold' % (title, 'Complete feature artifacts' if want_chips == COMPLETE_CHIPS else 'Feature artifacts in progress'))
             have_chips = [([c for c in n.attrs.get('class', '').split() if c.startswith('status-') and c != 'status-chip'], text_of(n))
                           for n in find_all(cells[3], 'span', 'status-chip')]
             if have_chips != [([c], t) for c, t in want_chips]:
@@ -2153,6 +2188,8 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
     group_marks = []  # (group key, title) of each group fold, in page order
     table_group = {}  # id(table) -> group key of the fold that holds it
     for fold in find_all(root, 'details', 'status-fold'):
+        if has_class(fold, 'feature-group'):      # the feature artifacts folds of section 1 (R5.50), not checklist groups
+            continue
         gkey = fold.attrs.get('data-group', '')
         kids = [n for n in fold.children if getattr(n, 'tag', None)]
         summary = kids[0] if kids and kids[0].tag == 'summary' else None

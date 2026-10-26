@@ -408,7 +408,7 @@ def table_rows(html, which=0):
         in_earlier = R.has_ancestor(node, lambda n: n.tag == 'details' and R.has_class(n, 'earlier'))
         if in_earlier != bool(which):
             continue
-        if node.tag == 'details' and R.has_class(node, 'status-fold'):
+        if node.tag == 'details' and R.has_class(node, 'status-fold') and not R.has_class(node, 'feature-group'):
             out.append(('group', node.attrs['data-group'], R.text_of(R.find(R.find(node, 'summary'), 'strong'))))
         elif node.tag == 'tr' and 'data-task' in node.attrs:
             out.append(('task', node.attrs['data-task']))
@@ -2208,6 +2208,85 @@ def _s1_rows(out):
     return [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1, 'tr', pred=lambda n: R.find(n, 'td'))]
 
 
+def _feature_fold(out, gkey):
+    return [f for f in R.find_all(R.parse_dom(out), 'details', 'feature-group') if f.attrs['data-group'] == 'features-' + gkey][0]
+
+
+def _fold_titles(out):
+    return [R.text_of(R.find(f, 'strong')) for f in R.find_all(R.parse_dom(out), 'details', 'feature-group')]
+
+
+def _set_models(fx, status):
+    reg = copy.deepcopy(fx.registry)
+    for t in reg['tasks']:
+        if t['owner'] == 'models':
+            t['status'], t['expected'] = status, '09 Oct'
+    return reg
+
+
+@test
+@with_fixture
+def feature_artifacts_split_mixed_states(fx):
+    """R5.50: not complete features in an open fold, complete ones in a closed fold, counts in the titles, one table each."""
+    reg = _set_models(fx, 'Live')
+    out = fx.render('full-progress', registry=reg)
+    assert _fold_titles(out) == ['Feature artifacts in progress (1)', 'Complete feature artifacts (1)']
+    progress, complete = _feature_fold(out, 'progress'), _feature_fold(out, 'complete')
+    assert 'open' in progress.attrs and 'open' not in complete.attrs                  # open by default / closed by default
+    assert R.has_class(progress, 'status-fold') and R.has_class(complete, 'status-fold')   # the page's own collapsible element
+    assert [R.text_of(a) for a in R.find_all(progress, 'a')] == ['Feature: Project artifacts standard']
+    assert [R.text_of(a) for a in R.find_all(complete, 'a')] == ['Feature: Model and effort profiles']
+    for fold in (progress, complete):
+        assert len(R.find_all(fold, 'table', 'feature-list')) == 1 and len(R.find_all(fold, 'button', 'sort-header')) == 2
+    assert fx.check(out, 'full-progress', registry=reg) == []
+    assert len(R.find_all(R.parse_dom(out), 'section')) >= 2 and R.text_of(R.find_all(R.parse_dom(out), 'h2')[1]).endswith('Feature artifacts')
+
+
+@test
+@with_fixture
+def feature_artifacts_split_all_complete(fx):
+    """R5.50: with every feature complete the in-progress fold says so in one line and holds no table."""
+    reg = copy.deepcopy(fx.registry)
+    keys = {e['key'] for e in fx.manifest['feature_artifacts']}
+    for t in reg['tasks']:
+        if t['owner'] in keys:
+            t['status'], t['expected'] = 'Live', '09 Oct'
+    out = fx.render('full-progress', registry=reg)
+    titles = _fold_titles(out)
+    assert titles[0] == 'Feature artifacts in progress (0)', titles
+    progress = _feature_fold(out, 'progress')
+    assert R.find(progress, 'table') is None
+    assert [R.text_of(p) for p in R.find_all(progress, 'p', 'feature-none')] == ['No feature artifacts in progress.']
+    assert titles[1] == 'Complete feature artifacts (2)' and 'open' not in _feature_fold(out, 'complete').attrs
+    assert fx.check(out, 'full-progress', registry=reg) == []
+
+
+@test
+@with_fixture
+def feature_artifacts_split_none_complete(fx):
+    """R5.50: with no complete feature the complete fold is closed, says so in one line and holds no table."""
+    out = fx.render('full-progress')
+    assert _fold_titles(out) == ['Feature artifacts in progress (2)', 'Complete feature artifacts (0)']
+    complete = _feature_fold(out, 'complete')
+    assert 'open' not in complete.attrs and R.find(complete, 'table') is None
+    assert [R.text_of(p) for p in R.find_all(complete, 'p', 'feature-none')] == ['No feature artifacts are complete yet.']
+    assert R.text_of(R.find(complete, 'span', 'fold-count')) == '0 feature artifacts'
+    assert fx.check(out, 'full-progress') == []
+
+
+@test
+@with_fixture
+def feature_artifacts_split_checker_finds_faults(fx):
+    """R5.50: the checker refuses a wrong default state, a wrong count and a feature in the wrong fold."""
+    reg = _set_models(fx, 'Live')
+    out = fx.render('full-progress', registry=reg)
+    closed = out.replace('data-group="features-progress" open', 'data-group="features-progress"', 1)
+    assert 'R5.50' in reqs(fx.check(closed, 'full-progress', registry=reg))
+    wrong = out.replace('Complete feature artifacts (1)', 'Complete feature artifacts (5)', 1)
+    assert 'R5.50' in reqs(fx.check(wrong, 'full-progress', registry=reg))
+    assert 'R5.50' in reqs(fx.check(out, 'full-progress'))          # the registry says models is not complete
+
+
 @test
 @with_fixture
 def section_one_orders_by_last_updated_newest_first(fx):
@@ -2313,7 +2392,7 @@ var heads = [el({}), el({'aria-sort': 'descending'})];
 var buttons = [el({'data-sort': 'name'}), el({'data-sort': 'updated'})];
 buttons.forEach(function (b, i) { b.parentNode = heads[i]; b.arrow = el({}); });
 var table = {tBodies: [body], querySelectorAll: function () { return buttons; }};
-var document = {querySelector: function () { return table; }};
+var document = {querySelectorAll: function () { return [table]; }};
 function order() { return rows.map(function (r) { return r.name; }).join(''); }
 function click(i) { buttons[i].listeners.click(); }
 var out = [];
@@ -2746,7 +2825,7 @@ def state_column_counts(fx):
             t['status'], t['expected'] = 'Live', '09 Oct'
     out = fx.render('full-progress', registry=done)
     assert _s1_rows(out)[1][3] == 'Complete'
-    assert R.find(R.find(R.parse_dom(out), 'table', 'feature-list'), 'span', 'status-live') is not None
+    assert R.find(_feature_fold(out, 'complete'), 'span', 'status-live') is not None
     assert fx.check(out, 'full-progress', registry=done) == []
     assert R.state_chips([task('X1', 'k', 'Needs you', 'i', '10 Oct'), task('X2', 'k', 'Failed', 'i', ''), task('X3', 'k', 'On hold', 'i', '10 Oct'),
                           task('X4', 'k', 'Waiting', 'i', '10 Oct')], [{'id': 'D1', 'status': 'open'}, {'id': 'D2', 'status': 'open'}]) == [
@@ -2801,7 +2880,7 @@ def dropped_release_is_closed_history(fx):
     assert '<span class="dropped-line">dropped: folded into RELEASE-2</span>' in row and 'status-dropped' in row, row
     assert R.dropped_line(gone, {'DS52': kept}) == 'dropped: folded into RELEASE-2'
     assert 'status-count-tile status-dropped' in out and 'status-chip status-dropped' in out
-    assert R.find(R.find_all(R.parse_dom(out), 'details', 'status-fold')[-1], 'tr') is not None
+    assert R.find([f for f in R.find_all(R.parse_dom(out), 'details', 'status-fold') if not R.has_class(f, 'feature-group')][-1], 'tr') is not None
     assert fx.check(out, 'full-progress', registry=registry) == []
     bad = out.replace('dropped: folded into RELEASE-2', 'dropped: something else')
     assert 'R5.49' in reqs(fx.check(bad, 'full-progress', registry=registry))
@@ -2809,7 +2888,10 @@ def dropped_release_is_closed_history(fx):
 
 def main() -> int:
     passed, failed = 0, 0
+    names = sys.argv[1:]            # named cases: run the tests whose name contains one of them
     for fn in TESTS:
+        if names and not any(n in fn.__name__ for n in names):
+            continue
         try:
             fn()
         except Exception:  # noqa: BLE001

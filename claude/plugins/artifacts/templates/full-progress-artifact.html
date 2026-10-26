@@ -74,9 +74,9 @@
       });
     });
     // Section 1: click "Feature artifact" or "Last updated" to sort the rows, click again to reverse (R5.39).
-    // The page is rendered in the default order (Last updated, newest first); nothing is stored.
-    var featureTable = document.querySelector('table.feature-list');
-    if (featureTable && featureTable.tBodies.length) {
+    // The page is rendered in the default order (Last updated, newest first); nothing is stored. Each of the two tables sorts on its own.
+    Array.prototype.slice.call(document.querySelectorAll('table.feature-list')).forEach(function (featureTable) {
+    if (featureTable.tBodies.length) {
       var sortButtons = Array.prototype.slice.call(featureTable.querySelectorAll('button.sort-header'));
       var sortBody = featureTable.tBodies[0];
       var sortCell = { name: 0, updated: 1 };
@@ -117,6 +117,7 @@
         });
       });
     }
+    });
     window.addEventListener('scroll', markCurrent, { passive: true });
     window.addEventListener('resize', markCurrent);
     markCurrent();
