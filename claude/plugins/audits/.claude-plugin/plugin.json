@@ -1,7 +1,7 @@
 {
   "name": "luismc-audits",
   "description": "Security, performance, and compliance audit skills — systematic review checklists producing structured, severity-ranked findings for any repo.",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "author": {
     "name": "Luis Carvalho"
   }

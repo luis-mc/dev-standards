@@ -186,7 +186,7 @@ the Full Progress renderer (DL-65: the one truth for shown state).
 | `merged_at`, `state=merged` | POST hook on `gh pr merge` exit 0; session-start catch-up via `gh pr list --state merged` |
 | `live_at`, `smoke` | deploy smoke step / `delivery_log.py live` mirrored; POST on smoke command |
 | `cleaned_at` | `cleanup.py --pr N` |
-| `measure` | project measure script (e.g. a project script) via `delivery_ledger.py measure` |
+| `measure` | the project's measure script via `delivery_ledger.py measure` |
 | `phases.actual` | derived by the ledger module from the timestamps above (never typed) |
 | `hold` | `delivery_ledger.py hold` (orchestrator; owner reason required) |
 | `agents[]` create (id, where, model, effort, started, eta, owns) | POST hook on `Agent` / `RemoteTrigger create|run` (parses tool input and result; eta/owns from a fenced `delivery:` block in the brief) |
