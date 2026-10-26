@@ -153,10 +153,10 @@ class LedgerGapTests(unittest.TestCase):
         return L.load(self.root)
 
     def test_pr_create_with_repo_and_body_file_creates_the_train(self):
-        cmd = ("gh pr create --repo luis-mc/comics-organizer --base master --head release/40 "
-               "--title \"R40\" --body-file C:/ComicsWork/briefs/r44-pr.md")
+        cmd = ("gh pr create --repo example/app --base master --head release/40 "
+               "--title \"R40\" --body-file C:/Work/briefs/r44-pr.md")
         with mock.patch.object(H, "rev_parse", return_value="a" * 40):
-            H.handle(bash(cmd, "https://github.com/luis-mc/comics-organizer/pull/418\n"), self.root)
+            H.handle(bash(cmd, "https://github.com/example/app/pull/418\n"), self.root)
         trains = self.led()["trains"]
         self.assertEqual(len(trains), 1)
         t = trains[0]

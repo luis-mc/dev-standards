@@ -1,10 +1,8 @@
 # DS66: delivery learnings inventory and ledger schema (draft)
 
-Status: read-only study, 14 Oct 2026. Not committed. Inputs: the comics-organizer memory
-(`~/.claude/projects/C--GitHub-comics-organizer/memory/*.md`), the user and project CLAUDE.md
+Status: read-only study, 14 Oct 2026. Not committed. Inputs: a real project's session memory, the user and project CLAUDE.md
 files and rules, `~/.claude/hooks/no-tomorrow.mjs`, the dev-standards plugins (artifacts hooks,
-claude-setup assets, tech-stack-setup `scripts/delivery/*`), and comics-organizer `origin/master`
-(`scripts/delivery/*`, `scripts/heavy-job*.ts`, `scripts/runners-*.ts`, `.github/workflows/ci.yml`).
+claude-setup assets, tech-stack-setup `scripts/delivery/*`), and that project's repository (its delivery scripts and CI workflow).
 
 Goal: every delivery and orchestration learning becomes a mechanical check (hook, script or
 ledger field) in the plugins, not a memory note the orchestrator must remember.
@@ -29,7 +27,7 @@ Legend
 | DL-05 | Never `gh pr merge --auto`. | never-gh-auto-merge, rules | G | PRE | command tokens | N (rules text; `session_guard.py` does not cover it) |
 | DL-06 | Merge only after `ci_watch.py` passed for the PR's current head SHA. | never-gh-auto-merge, rules | G | PRE `gh pr merge` | `trains[].ci.head_sha == gh pr view headRefOid` and `ci.state=success` | ~ `ci_watch.py` exists; merge not gated |
 | DL-07 | Watch CI by the workflow runs of the head commit, never by the PR check list. | rules | G | PRE (deny `gh pr checks --watch`) | command tokens | ~ `ci_watch.py`; nothing stops the other way |
-| DL-08 | Open a ready PR only from a release/integration branch; every other PR is a draft. | CLAUDE.md, rules | G | PRE | branch name vs `release_branches` | Y `session_guard.py` ready-PR guard (wired in comics-organizer master settings) |
+| DL-08 | Open a ready PR only from a release/integration branch; every other PR is a draft. | CLAUDE.md, rules | G | PRE | branch name vs `release_branches` | Y `session_guard.py` ready-PR guard (wired in a real project's settings) |
 | DL-09 | Check runners are online for every label CI needs before opening a ready PR. | delivery-speed-process (S7) | G | PRE `gh pr create`/`ready` + WATCH | `runners[]` (`gh api .../actions/runners`), `runs-on` labels | W `runner_health.py` (join, ci_watch), `runners-check.ts` (P) |
 | DL-10 | A ready PR from `release/*` runs `release:prepare` (fold spec notes) before CI. | away-2026-10-13-late-night 03:40 | G (change_notes) | PRE `gh pr create`/`ready` | `change_notes.py --check-folded` exit | ~ CI fails late (`--check-folded`) |
 | DL-11 | A join is light: merge, resolve conflicts, fold spec notes, typecheck + lint of the touched packages, the fast guards (pre-push), then push and open the ready PR at once; never the branch gate or a full suite on the joined head, no wait for a sandbox gate before the ready PR, no full gate re-run after a join fix. The ready PR's CI is the one full run. | join-quick-check-not-full-suite, check-long-jobs-logs | G (+P steps) | PRE (test guard) |`gate.json` join steps (`"join"` flag, `join_guards`), `.delivery/join-result.json`| Y `join.py` light check + `session_guard.py`; `hook_pre_tool.py` PreToolUse deny (branch gate on a release/integration branch, join brief naming it) |
@@ -55,7 +53,7 @@ Legend
 | ID | Rule (imperative) | Source | Scope | Kind | The check reads | Today |
 |---|---|---|---|---|---|---|
 | DL-30 | Size each agent ETA from scope: setup + work by files touched + affected checks; state the breakdown; never pad. | agent-eta-by-scope | G | POST (on launch) + STOP | `agents[].eta.breakdown` present; total vs `eta_table` (small fix 15-25, UI 25-35, multi-list 40-60) | N (the registry has `expected_basis`, R6.10, but nothing ties it to a launch) |
-| DL-31 | Every ETA is a clock time from the run's real start + typical duration, naming the dependency; no "tomorrow" unless computed past midnight. | no-next-day-deferral | G | STOP | last assistant text; `agents[].started`, `trains[].ci.started` | ~ `~/.claude/hooks/no-tomorrow.mjs`, registered only in comics-organizer `settings.local.json` (not a plugin) |
+| DL-31 | Every ETA is a clock time from the run's real start + typical duration, naming the dependency; no "tomorrow" unless computed past midnight. | no-next-day-deferral | G | STOP | last assistant text; `agents[].started`, `trains[].ci.started` | ~ `~/.claude/hooks/no-tomorrow.mjs`, registered only in a project's `settings.local.json` (not a plugin) |
 | DL-32 | Check each critical-path job's own log every ~30 min; a log older than its step's typical time = investigate now. | check-long-jobs-logs | G | WATCH + STOP | `agents[].log_path` mtime, `agents[].last_checked`, `jobs[].log_path` | N |
 | DL-33 | Never end a turn with work in flight without a background watcher that wakes within 20 min. | delivery-speed-practices 10-06/10-07 | G | STOP | in-flight set (agents running, trains in CI, installs) vs `watchers[].heartbeat_at` | ~ artifacts Stop hook only asks for a Running task (R8.10) |
 | DL-34 | After a routine reports succeeded, verify its branch moved before counting it done. | delivery-speed-practices 10-06 | G | WATCH | `git ls-remote` sha vs `agents[].base_sha` | N |
@@ -75,10 +73,10 @@ Legend
 
 | ID | Rule (imperative) | Source | Scope | Kind | The check reads | Today |
 |---|---|---|---|---|---|---|
-| DL-50 | One heavy local job at a time; heavy jobs yield to train CI and pause the local runner for their duration, always resuming it. | ci-runners-on-this-pc, owner-answers-2026-10-14-morning, delivery-speed-practices | G (runner_plan) / P (heavy-job.ts) | PRE (heavy command not via wrapper) + WATCH | `runners[].busy/paused_by`, `jobs[state=running, heavy]` | ~ comics `scripts/heavy-job.ts`/`.ps1`; nothing forces the wrapper |
+| DL-50 | One heavy local job at a time; heavy jobs yield to train CI and pause the local runner for their duration, always resuming it. | ci-runners-on-this-pc, owner-answers-2026-10-14-morning, delivery-speed-practices | G (runner_plan) / P (heavy-job.ts) | PRE (heavy command not via wrapper) + WATCH | `runners[].busy/paused_by`, `jobs[state=running, heavy]` | ~ a project's own heavy-job script; nothing forces the wrapper |
 | DL-51 | Never add CI runners on this PC; weigh memory before heavy local work. | ci-runners-on-this-pc | P | TEXT + WATCH (memory) | free memory | N |
 | DL-52 | Start every local operator/node:sqlite job pinned off cores 10/11 at BelowNormal. | ci-core-mask | P | PRE (wrapper) | command via wrapper | ~ CI mask task; local jobs by hand |
-| DL-53 | Worktrees and scratch only under the work root (`C:\ComicsWork\...`), never under the projects folder or `.claude/worktrees`; remove when done. | work-folders | G (root in config) | PRE `git worktree add`, `EnterWorktree` | path vs `config.work_root` | N |
+| DL-53 | Worktrees and scratch only under the work root (`C:\Work\...`), never under the projects folder or `.claude/worktrees`; remove when done. | work-folders | G (root in config) | PRE `git worktree add`, `EnterWorktree` | path vs `config.work_root` | N |
 | DL-54 | Installers are built and published only by the pipeline; local builds only to test. | local-installer-releases | P | PRE (deny local publish command) | command tokens | N |
 | DL-55 | Installs run through the SYSTEM update tasks (no UAC), one at a time; a second install waits. | update-feedback, away-2026-10-13-late-night | P | PRE (`msiexec`, `schtasks /run ...UpdateNow`) + POST | `installs[state=installing]` | N |
 | DL-56 | Build and install operator/home MSIs on this PC and verify before pushing such changes. | install-locally-before-push (superseded in part by pipeline auto-update) | P | TEXT | `installs[]` for the product at the train's version | N |
@@ -106,7 +104,7 @@ Legend
 | DL-71 | Never write explanations before a dialog in the same turn; put context inside the question or ask in plain chat. | explain-before-question-tool | G | PRE `AskUserQuestion` | transcript: assistant text since last user message > ~300 chars | N |
 | DL-72 | A rejected dialog with no owner words is not a stop: keep working, re-ask in plain chat. | question-tool-rejection | G | POST-failure `AskUserQuestion` (context) | tool error text | N |
 | DL-73 | Never send email, messages, posts, issues or comments in the owner's name; drafts as files. | never-send-as-owner, user CLAUDE.md | G | PRE (outbound: `gh issue/pr comment`, `gh issue create`, mail/Slack MCP send) | tool name, command | ~ auto-mode classifier only |
-| DL-74 | No Co-Authored-By or Claude attribution in commits or PR bodies (owner choice). | no-attribution | G (owner opt) | GIT commit-msg + PRE `git commit`/`gh pr create` | message/body text | N; violated by comics `scripts/ci/auto-fix.ts` line ~100 |
+| DL-74 | No Co-Authored-By or Claude attribution in commits or PR bodies (owner choice). | no-attribution | G (owner opt) | GIT commit-msg + PRE `git commit`/`gh pr create` | message/body text | N; violated by a project CI auto-fix script |
 | DL-75 | Create every doc under `docs/`. | rules | G | PRE `Write` of `*.md` | path | N |
 | DL-76 | A release runs CI once: nothing after the merge re-runs what the release PR proved on the same tree; only publish, deploy and production smoke run on the default branch. | one-ci-per-release | P | STOP | PR merge commit tree vs PR head tree; default-branch runs of that commit and their jobs vs `pr_proven_jobs` | N |
 
@@ -166,7 +164,7 @@ the Full Progress renderer (DL-65: the one truth for shown state).
   "publishes": [{"artifact": "full-progress", "url": "https://claude.ai/artifact/…",
                  "last_at": ISO, "last_version": 512, "last_state_hash": "sha256 of the publish copy",
                  "copy_written_at": ISO}],
-  "runners": [{"name": "GameRoomPC-linux", "labels": ["self-hosted","Linux","comics-linux","comics-linux-big"],
+  "runners": [{"name": "GameRoomPC-linux", "labels": ["self-hosted","Linux","project-linux","project-linux-big"],
                "online": true, "busy": false, "local": true,
                "paused_by": null,                  // job id while heavy-job pauses it
                "checked_at": ISO}],
@@ -188,7 +186,7 @@ the Full Progress renderer (DL-65: the one truth for shown state).
 | `merged_at`, `state=merged` | POST hook on `gh pr merge` exit 0; session-start catch-up via `gh pr list --state merged` |
 | `live_at`, `smoke` | deploy smoke step / `delivery_log.py live` mirrored; POST on smoke command |
 | `cleaned_at` | `cleanup.py --pr N` |
-| `measure` | project measure script (comics: `rematch-from-scratch.ts`) via `delivery_ledger.py measure` |
+| `measure` | project measure script (e.g. a project script) via `delivery_ledger.py measure` |
 | `phases.actual` | derived by the ledger module from the timestamps above (never typed) |
 | `hold` | `delivery_ledger.py hold` (orchestrator; owner reason required) |
 | `agents[]` create (id, where, model, effort, started, eta, owns) | POST hook on `Agent` / `RemoteTrigger create|run` (parses tool input and result; eta/owns from a fenced `delivery:` block in the brief) |
@@ -246,7 +244,7 @@ measure_globs, eta_table, heavy_commands, outbound_deny). Proposed home: a new p
 - reads the ledger only through (a)'s module; uses fixtures until (a) lands
 
 **(c) runner_plan + artifacts publish-on-change / hourly**
-- `tech-stack-setup/.../scripts/delivery/runner_plan.py` (generic heavy-job wrapper: wait for train CI, pause/resume the local runner, one heavy job at a time, memory floor, optional affinity/priority; records `jobs[]`, `runners[].paused_by`; `runners` subcommand = D6a: report offline runners, repair via `runners[].repair` every `retry_seconds` (300), re-run the cancelled train CI, ledger events `runner.offline|repair|retry|online|rerun|giveup`) + its test; comics `scripts/heavy-job.ts` becomes a thin caller later (project branch, not here)
+- `tech-stack-setup/.../scripts/delivery/runner_plan.py` (generic heavy-job wrapper: wait for train CI, pause/resume the local runner, one heavy job at a time, memory floor, optional affinity/priority; records `jobs[]`, `runners[].paused_by`; `runners` subcommand = D6a: report offline runners, repair via `runners[].repair` every `retry_seconds` (300), re-run the cancelled train CI, ledger events `runner.offline|repair|retry|online|rerun|giveup`) + its test; a project's heavy-job script becomes a thin caller later (project branch, not here)
 - `claude/plugins/artifacts/scripts/hook_end_of_turn.py` (hourly fail-safe: block when `publishes[full-progress].last_at` > 60 min; fresh-copy check DL-62)
 - `claude/plugins/artifacts/scripts/project_artifacts.py` (`pending --json` records copy hash/time; `mark-published` refuses when no publish of the current copy is recorded; expired-Expected check DL-63)
 - `claude/plugins/artifacts/scripts/publish_hourly.py` (new: what the hourly cron/watcher calls)
@@ -256,15 +254,15 @@ measure_globs, eta_table, heavy_commands, outbound_deny). Proposed home: a new p
 - `project-setup/skills/claude-setup/SKILL.md` (enable `luismc-delivery`, write `.delivery/config.json`, retire `~/.claude/hooks/no-tomorrow.mjs` and its `settings.local.json` entry once (b) ships)
 - `project-setup/skills/claude-setup/assets/.claude/settings.json` (enabledPlugins, PreToolUse entries)
 - `project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md` and `clarifying-questions.md` (re-tag each line `<!-- check: … -->` to its new enforcer; add the DL rules that stay text)
-- `project-setup/skills/claude-setup/assets/delivery-config.json` (template; comics values: caps 8/3/5, work_root `C:\ComicsWork`, tz Europe/Lisbon, `release/\d+[a-z]` label regex, measure globs)
+- `project-setup/skills/claude-setup/assets/delivery-config.json` (template; example values: caps 8/3/5, work_root `C:\Work`, tz Europe/Lisbon, `release/\d+[a-z]` label regex, measure globs)
 - `project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/commit-msg` (DL-74, opt-in by config) and `pre-commit` conflict-marker check (DL-24)
 - `.claude-plugin/marketplace.json`, `README.md` section for the new plugin, `docs/specs/` DELIVERYSPEC draft
 - model-profiles / rule-tag tests that check every `<!-- check: -->` path exists
 
 Order: contract commit, then (a)-(d) in parallel; (b) and (c) code against the schema and
-fixtures; the join runs (a) first. Project follow-ups (comics-organizer, own branch): wire the
-plugin, add `.delivery/config.json`, drop the `Co-Authored-By` line in `scripts/ci/auto-fix.ts`,
-make `heavy-job.ts` call `runner_plan.py`.
+fixtures; the join runs (a) first. Project follow-ups (in that project, own branch): wire the
+plugin, add `.delivery/config.json`, drop the `Co-Authored-By` line in its CI auto-fix script,
+make its heavy-job script call `runner_plan.py`.
 
 ## 5. Owner decisions (14 Oct 2026, 22:3x Lisbon) — binding, they override sections 1-4 where they differ
 
@@ -287,7 +285,7 @@ make `heavy-job.ts` call `runner_plan.py`.
 
 ## 6. Project config: `.delivery/config.json` (plugin 0.2.0)
 
-The config is described by `claude/plugins/delivery/references/config-schema.json` and checked by `delivery_config.py validate [--root DIR | --config FILE] [--json] [--strict]` (exit 0 valid, 1 errors, 2 unreadable JSON). Every key is optional and a 0.1.0 config stays valid. A key the schema does not list is a warning, never an error (so a typo shows); keys starting with `_` are comments. A wrong type, an out-of-range number, an invalid regular expression, a `tz` that zoneinfo cannot load, or `--auto` in a merge flag is an error. The aligned reference is the comics-organizer config (PR #351).
+The config is described by `claude/plugins/delivery/references/config-schema.json` and checked by `delivery_config.py validate [--root DIR | --config FILE] [--json] [--strict]` (exit 0 valid, 1 errors, 2 unreadable JSON). Every key is optional and a 0.1.0 config stays valid. A key the schema does not list is a warning, never an error (so a typo shows); keys starting with `_` are comments. A wrong type, an out-of-range number, an invalid regular expression, a `tz` that zoneinfo cannot load, or `--auto` in a merge flag is an error. The aligned reference is a real project's config.
 
 - `enforcement` (Stop and PreToolUse hooks; D3). `mode`: `block` (default) or `warn` (findings and denials are shown as a `systemMessage`, nothing blocks). `block_ceiling` (integer >= 1, default 3): the same findings block this many times per session, then the turn ends (replaces the fixed 3 of artifacts R8.4). `log_every_block` (default false): append every block to `.delivery/blocks.log` as `time<TAB>hook<TAB>rule id<TAB>message` (hook is `stop` or `pre-tool`), for the owner's review.
 - `watcher` (D5, D6a). `push_trains`, `open_prs`, `merge_on_green`, `manage_runners`: booleans, all default true (= 0.1.0). `merge_on_green` merges with `gh pr merge N --merge`, never `--auto`, and only when the PR head is the commit whose CI run was green: the watcher re-reads the head right before the merge and passes `--match-head-commit SHA`; a moved head records `merge.head_moved` and waits for the next pass. `merge_method: "merge"` and `merge_flag: "--merge"` are accepted spellings of the only method; `never_auto_merge` documents D5 and cannot be false. `manage_runners`: the watcher launches `runner_plan.py runners` itself (found at `runner_plan.script`, else `scripts/delivery/runner_plan.py`) and relaunches it when it exits (D6a), instead of the project starting it.
@@ -295,6 +293,6 @@ The config is described by `claude/plugins/delivery/references/config-schema.jso
 - `stop_repeat_limit` (integer >= 0, default 3), `cleanup_command`, `smoke_command`, `smoke_workflow` (DS72). The Stop hook keeps in `.delivery/hook-state.json`, per session, a fingerprint of each finding and of the ledger fields it depends on (the train row for DL-02, DL-03, DL-14, DL-18 and DL-76, the agent row for DL-30 and DL-32). When the same findings block `stop_repeat_limit` consecutive turn ends with no change to those fields, later turn ends are not blocked for them: one non-blocking notice per session says they are still open and names the recording command, until the fields change or a new finding appears (it blocks normally again). 0 never limits. DL-14 and DL-18 name the project's `cleanup_command` / `smoke_command` (`{pr}` = PR number) and then the recording command: `delivery_ledger.py smoke --pr N [--run ID|URL]` (newest `smoke_workflow`, default `Production smoke`, run on the PR's merge commit; success records `smoke {state: pass, at, run}` and `live_at` on every row with that pr, a failed run records `fail` and exits 1, a missing or unfinished run records nothing and exits 1) and `delivery_ledger.py cleaned --pr N` (the train's branch and cargo branches are gone from `origin` and no worktree holds them, else it lists what is left and records nothing; success records `cleaned_at` and state `cleaned` on every row with that pr). Both write through the ledger lock, touch only those fields, add an event, and never touch CI fields.
 - `pr_proven_jobs` (0.3.0, DL-76): job names (case-insensitive, globs allowed) the release PR proves. Rule: "A release runs CI once: nothing after the merge re-runs what the release PR proved on the same tree; only publish, deploy and production smoke run on the default branch." After a train merges and until it is cleaned, the Stop hook reads the merge commit of the PR and, only when its tree equals the PR head tree, lists the default-branch runs of that commit and flags each non-skipped job named here. Default `[]`: the check is off and makes no network call. Any `gh` failure leaves the check silent.
 - `load_limits` (DL-77, DL-78): `{"memory_pct": 85, "cpu_pct": 60}`, each 1..100. Precedence per key: `.delivery/config.json`, then the machine file `~/.claude/luismc-delivery-machine.json` (`{"load_limits": {...}}`, optionally `runner_gate` {`max_wait_min`, `poll_sec`, `on_timeout` fail|run} and `runner_dirs` for the doctor), then the defaults 85 and 60. `heavy_commands` (regexes, case-insensitive; plain text also matches) adds commands to the heavy list. The load guard is not opt-in: it runs in every project where the plugin is enabled, with or without `.delivery/`, because it protects the machine. `checks_off: ["DL-77"]` (or `["DL-78"]`) switches a project off; `enforcement.mode: warn` turns the refusal into a message. Heavy: test runners; `pnpm|npm|yarn|bun` scripts `test`, `e2e`, `check*`, `build*` (also via `run`/`exec`/`dlx`); turbo, nx, `tsc -b`, next/vite/webpack builds; cargo, dotnet, go, mvn, gradle, msbuild builds and tests; docker build and compose up/build; ffmpeg; installs (`install|add|ci`) unless `--offline`; background jobs that are not plainly light (git, gh, ls, cat, grep and similar); a local Agent launch (no `isolation` remote/cloud) and any Workflow. Light and never refused: git, gh, ls, cat, grep, rtk-wrapped reads, python one-liners, lint. RemoteTrigger and Agent with remote/cloud isolation are never refused. Over a limit, PRE exits 2 with the numbers, the limits, the top processes by CPU and memory (names only) and what to do (wait or finish a running job). CPU is the mean of the samples of the last 30 s (at most 3), so one spike does not decide.
-- `runner_plan` (D6, D6a). `cancel_replaced_runs` (watcher cancels CI runs of a branch whose head has moved on), `hold_dependabot_during_train` (watcher cancels and later re-runs non-train CI runs while a train's CI runs), `heavy_jobs_yield` (`runner_plan.py run` waits for train CI; `heavy_local_jobs_yield` is the same key as comics-organizer spells it): booleans, default true. `retry_seconds`, `runner_max_retries`, `report_command` as in D6a. Without `runner_plan.train_branch_regex`, the top-level `train_branch_re` is used.
+- `runner_plan` (D6, D6a). `cancel_replaced_runs` (watcher cancels CI runs of a branch whose head has moved on), `hold_dependabot_during_train` (watcher cancels and later re-runs non-train CI runs while a train's CI runs), `heavy_jobs_yield` (`runner_plan.py run` waits for train CI; `heavy_local_jobs_yield` is the same key as a real project spells it): booleans, default true. `retry_seconds`, `runner_max_retries`, `report_command` as in D6a. Without `runner_plan.train_branch_regex`, the top-level `train_branch_re` is used.
 - `tz`. An IANA name. If zoneinfo cannot load it (no tzdata, typically Windows) the validator and `delivery_doctor.py` fail, and any hook that still has to format a time prints a warning once before using UTC; it is never silent. SessionStart adds the same warning to its context.
 - `delivery_doctor.py [self-check] [--root DIR] [--json]` runs five checks: config valid, gh signed in, tz loads, hooks registered (hooks.json names the hook scripts, and `luismc-delivery` is enabled in project or user settings), ledger writable. Exit 0 all ok, 1 a FAIL, 2 no `.delivery/`.

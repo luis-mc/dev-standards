@@ -10,9 +10,9 @@ from _helpers import L, make_root
 from test_watch import FakeShell, NOW, SHA, OLD, routes_for_green, runs, seed, watcher
 import delivery_config as C
 
-# the config of comics-organizer PR #351 (CO159-delivery-setup), trimmed to the keys under test
-COMICS = {
-    "caps": {"cloud": 8, "local": 3, "total": 5}, "work_root": "C:/ComicsWork", "tz": "Europe/Lisbon",
+# a real project's config, trimmed to the keys under test
+SAMPLE_PROJECT = {
+    "caps": {"cloud": 8, "local": 3, "total": 5}, "work_root": "C:/Work", "tz": "Europe/Lisbon",
     "base": "master", "train_label_re": r"\b(?:T-\d{4}-\d{2}-\d{2}-\d+|release/\d+[a-z]?)\b",
     "release_branch_re": "^(release|claude)/", "train_branch_re": "^(release|claude)/",
     "brief_markers": ["BRIEF.md"], "checks_off": [], "no_attribution": True, "watch_interval": 600,
@@ -45,8 +45,8 @@ class SpawnShell(FakeShell):
 
 
 class ValidateTests(unittest.TestCase):
-    def test_real_comics_config_and_template_are_valid(self):
-        self.assertEqual(C.validate_config(COMICS), ([], []))
+    def test_sample_project_config_and_template_are_valid(self):
+        self.assertEqual(C.validate_config(SAMPLE_PROJECT), ([], []))
         tpl = Path(__file__).resolve().parents[2] / "project-setup/skills/claude-setup/assets/delivery-config.json"
         self.assertEqual(C.validate_config(json.loads(tpl.read_text(encoding="utf-8"))), ([], []))
 

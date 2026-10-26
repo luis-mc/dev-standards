@@ -627,11 +627,11 @@ def dl42_kill_by_name_and_stop_all():
 
 @test
 def dl53_worktree_outside_work_root():
-    p = Project(ledger(), {'work_root': 'C:\\ComicsWork'})
+    p = Project(ledger(), {'work_root': 'C:\\Work'})
     assert 'DL-53' in why(bash(p, 'git worktree add ../wt-x -b x'))
     assert 'DL-53' in why(bash(p, 'git worktree add C:\\Other\\wt'))
-    expect_pass(bash(p, 'git worktree add C:\\ComicsWork\\wt-x -b x'))
-    expect_pass(bash(p, 'git worktree add C:/ComicsWork/wt-y'))
+    expect_pass(bash(p, 'git worktree add C:\\Work\\wt-x -b x'))
+    expect_pass(bash(p, 'git worktree add C:/Work/wt-y'))
     p.close()
     p = Project(ledger())                                      # no work_root: not checked
     expect_pass(bash(p, 'git worktree add ../wt-x'))

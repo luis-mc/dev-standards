@@ -65,7 +65,7 @@ class JoinGateCommandTests(unittest.TestCase):
         self.assertIn("DL-11", bash(self.root, GATE, "v2-integration", cfg))
 
     def test_wide_train_patterns_leave_agent_branches_alone(self):
-        # comics-organizer sets both to ^(release|claude)/ for the watcher; an agent's own gate stays allowed
+        # a project may set both to ^(release|claude)/ for the watcher; an agent's own gate stays allowed
         cfg = H.load_config(str(self.root))
         cfg["train_branch_re"] = cfg["release_branch_re"] = r"^(release|claude)/"
         self.assertIsNone(bash(self.root, GATE, "claude/CO1-x", cfg))

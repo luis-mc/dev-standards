@@ -594,7 +594,7 @@ def load_config(root: str, path: str = "") -> dict:
         if isinstance(section, dict):
             cfg.update({k: v for k, v in section.items() if k in DEFAULTS})
             if "heavy_jobs_yield" not in section and isinstance(section.get("heavy_local_jobs_yield"), bool):
-                cfg["heavy_jobs_yield"] = section["heavy_local_jobs_yield"]       # comics-organizer's spelling
+                cfg["heavy_jobs_yield"] = section["heavy_local_jobs_yield"]       # older spelling
         if isinstance(data, dict) and "train_branch_regex" not in (section or {}) \
                 and isinstance(data.get("train_branch_re"), str) and data["train_branch_re"]:
             cfg["train_branch_regex"] = data["train_branch_re"]       # the project-wide train pattern

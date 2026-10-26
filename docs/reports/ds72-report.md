@@ -37,7 +37,7 @@ separate sessions; end-to-end `main()`).
 - Secret scan: gitleaks 8.30.1 (pinned sha) over the branch commits: no leaks.
 - No Docker, no full suite.
 
-## Back-fill for comics-organizer (after the update is installed)
+## Back-fill for an existing project (after the update is installed)
 From the repo root, with `gh` signed in and the three branches/worktrees removed:
 ```
 python <plugin>/scripts/delivery_ledger.py cleaned --pr 482

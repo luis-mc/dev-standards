@@ -271,7 +271,7 @@
             "--merge"
           ],
           "default": "--merge",
-          "description": "Alias of merge_method kept as written in comics-organizer."
+          "description": "Alias of merge_method kept as an alternative spelling."
         },
         "never_auto_merge": {
           "type": "boolean",
@@ -374,7 +374,7 @@
         "heavy_local_jobs_yield": {
           "type": "boolean",
           "default": true,
-          "description": "Alias of heavy_jobs_yield (comics-organizer name)."
+          "description": "Alias of heavy_jobs_yield (alternative name)."
         },
         "min_free_mb": {
           "type": "integer",

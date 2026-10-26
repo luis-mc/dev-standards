@@ -435,7 +435,7 @@ when the plugin is not enabled in the target being applied.
 After a lesson is enforced under a DL or Q id, its memory note is redundant. This
 skill only reports; it never edits or deletes a memory file. Read the target
 project's memory folder, `~/.claude/projects/<project>/memory/*.md` (`<project>` is
-the repo path with separators replaced by `-`, e.g. `C--GitHub-comics-organizer`),
+the repo path with separators replaced by `-`, e.g. `C--GitHub-my-app`),
 and for each file name the DL/Q ids from DELIVERYSPEC section 1 and decision D8
 whose rule it states, judging by the note's content and its name against the
 "Source" column of the spec's tables. Show a table in the step 3 summary:
