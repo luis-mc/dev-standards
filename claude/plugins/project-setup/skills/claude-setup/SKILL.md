@@ -437,12 +437,13 @@ skill only reports; it never edits or deletes a memory file. Read the target
 project's memory folder, `~/.claude/projects/<project>/memory/*.md` (`<project>` is
 the repo path with separators replaced by `-`, e.g. `C--GitHub-my-app`),
 and for each file name the DL/Q ids from DELIVERYSPEC section 1 and decision D8
-whose rule it states, judging by the note's content and its name against the
-"Source" column of the spec's tables. Show a table in the step 3 summary:
+whose rule it states, judging by the note's content against each rule's text (the
+spec's "Source" column only says "owner lesson", never a note's name). Show a table
+in the step 3 summary:
 
 | Memory file | Enforced by (DL / Q ids) | Delete? |
 |---|---|---|
-| `never-gh-auto-merge.md` | DL-05, DL-06 | yes, after the plugin release |
+| `no-auto-merge.md` | DL-05, DL-06 | yes, after the plugin release |
 | `some-other-note.md` | none | no, keep |
 
 A file maps only when every rule in it has an id; a partly covered note is listed

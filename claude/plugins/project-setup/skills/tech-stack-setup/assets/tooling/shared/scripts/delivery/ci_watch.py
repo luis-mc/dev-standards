@@ -21,6 +21,10 @@ Exit codes (shared by the delivery scripts): 0 every run succeeded or was
 skipped (see above), 1 any other conclusion (the failed jobs are printed), 2 usage
 error or `gh` missing or unusable, 4 timed out ("no real run yet" when only skipped
 runs exist for a pull request head). It never exits 0 when it could not decide.
+A workflow that does not exist in the repository (HTTP 404, "workflow ... not found") is a
+usage error, not a transient one: it exits 2 at once, without retrying, and lists the
+repository's workflows so the caller can pass the right --workflow. Any other gh error is
+retried and gives up with exit 2 after five in a row.
 
 Runner health (DL7, warnings only): while it waits, a job that has been queued for
 more than 10 minutes (--queue-warn-seconds) is reported once, when no online runner
@@ -60,6 +64,15 @@ class GhError(Exception):
     pass
 
 
+class WorkflowNotFound(GhError):
+    """`gh run list --workflow W` failed because workflow W does not exist."""
+
+
+def is_missing_workflow(message: str) -> bool:
+    low = message.lower()
+    return "http 404" in low and "workflow" in low and "not found" in low
+
+
 def gh_json(args: list[str]) -> object:
     """Run `gh` with an argument list and parse its JSON output."""
     # The resolved path, so Windows finds gh whatever its extension.
@@ -85,14 +98,34 @@ def repo_args(repo: str | None) -> list[str]:
 
 
 def list_runs(sha: str, workflow: str, repo: str | None) -> list[dict]:
-    data = gh_json(["run", "list", "--commit", sha, "--workflow", workflow,
-                    "--limit", "100", "--json", LIST_FIELDS, *repo_args(repo)])
+    try:
+        data = gh_json(["run", "list", "--commit", sha, "--workflow", workflow,
+                        "--limit", "100", "--json", LIST_FIELDS, *repo_args(repo)])
+    except GhError as exc:
+        if is_missing_workflow(str(exc)):
+            raise WorkflowNotFound(str(exc)) from exc
+        raise
     if not isinstance(data, list):
         raise GhError("gh run list did not return a list")
     # `--commit` already filters; this guards against a stale or wrong answer.
     return [r for r in data
             if isinstance(r, dict)
             and str(r.get("headSha", sha)).startswith(sha[:7])]
+
+
+def missing_workflow_message(workflow: str, repo: str | None, cause: str) -> str:
+    """The exit-2 message: names the workflow and lists the repository's (best effort)."""
+    head = f"ci_watch: workflow {workflow!r} does not exist in the repository ({cause})"
+    try:
+        data = gh_json(["workflow", "list", "--all", "--json", "name,path", *repo_args(repo)])
+        rows = [w for w in data if isinstance(w, dict)] if isinstance(data, list) else []
+        if not rows:
+            return head + "\nci_watch: the repository lists no workflows; pass --workflow"
+        lines = [f"  {w.get('path') or w.get('name')} ({w.get('name')})" for w in rows]
+        return (head + "\nci_watch: workflows in the repository:\n" + "\n".join(lines)
+                + "\nci_watch: pass one of them with --workflow")
+    except GhError as exc:
+        return head + f"\nci_watch: could not list the workflows ({exc}); pass the right --workflow"
 
 
 def executed_jobs(run: dict, repo: str | None) -> bool:
@@ -270,7 +303,8 @@ def main(argv: list[str] | None = None) -> int:
         description="Wait for the CI workflow runs of a commit (never reads PR checks).")
     ap.add_argument("sha", help="commit sha whose runs to watch")
     ap.add_argument("--workflow", default="ci.yml",
-                    help="workflow file name or name (default ci.yml)")
+                    help="workflow file name or name (default ci.yml); a workflow that "
+                         "does not exist exits 2 at once and lists the repository's workflows")
     ap.add_argument("--timeout", type=float, default=3600,
                     help="seconds to wait before giving up with exit 4 (default 3600)")
     ap.add_argument("--interval", type=float, default=30,
@@ -304,6 +338,9 @@ def main(argv: list[str] | None = None) -> int:
         try:
             runs = list_runs(sha, args.workflow, args.repo)
             errors = 0
+        except WorkflowNotFound as exc:
+            print(missing_workflow_message(args.workflow, args.repo, str(exc)), file=sys.stderr)
+            return 2
         except GhError as exc:
             errors += 1
             state = f"gh error ({errors}): {exc}"

@@ -709,6 +709,13 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 .release-timeline .rt-risk-label { font-size: 10.5px; fill: var(--ink-muted); }
 .release-timeline .rt-now { stroke: var(--failed); stroke-width: 2; }
 .release-timeline .rt-now-label { font-size: 11px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
+.release-timeline .rt-strip-title { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
+.release-timeline .rt-other-label { font-size: 11px; fill: var(--ink-muted); }
+.release-timeline .rt-other.status-running { fill: var(--running-mark); }
+.release-timeline .rt-other.status-waiting { fill: var(--rule-strong); }
+.release-timeline .rt-other.status-needs-you { fill: var(--signal); }
+.release-timeline .rt-other.status-to-do { fill: var(--ink-muted); }
+.release-timeline .rt-other.overdue, .release-timeline .rt-day.overdue { stroke: var(--failed); stroke-width: 2; }
 .timeline-legend { font-size: .85rem; color: var(--ink-muted); margin: .5rem 0 0; }
 .rt-swatch { display: inline-block; width: 10px; height: 10px; vertical-align: middle; margin: 0 4px 0 2px; }
 .rt-swatch.agents { background: var(--running-mark); }
@@ -731,25 +738,16 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Decisions</a><a href="#s3"><b>3</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Transcript folds</h1><p>Long diffs and finished shell commands fold to one line in the transcript, toggled with ctrl+x d and ctrl+x f; claude-setup installs it on every machine.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-13T23:27+01:00">13 Oct 23:27</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">13 Oct 23:27</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-26T16:15+00:00">26 Oct 16:15</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">26 Oct 20:39</a> (Lisbon)</p>
 <p class="lede">Live since 13 Oct (PR #60): luismc-transcript-folds 1.0.0, installed by claude-setup 14.3.0.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">5 tasks</span></summary>
-<ul>
-<li data-glance-task="TF5"><span class="task-id">TF5</span>Install on this machine; hide-diffs removal</li>
-<li data-glance-task="TF1"><span class="task-id">TF1</span>Contract: plugin layout, behaviour, test approach</li>
-<li data-glance-task="TF2"><span class="task-id">TF2</span>luismc-transcript-folds plugin, from scratch</li>
-<li data-glance-task="TF3"><span class="task-id">TF3</span>claude-setup enables the plugin and writes the two chords</li>
-<li data-glance-task="TF4"><span class="task-id">TF4</span>Smoke test in a real terminal session</li>
-</ul>
-</details>
 </div>
 <div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">5</div><div class="label">tasks live</div></div></div>
-<p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">5 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="TF5"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TF5</span>Install on this machine; hide-diffs removal<span class="no-release-line">ships nothing: machine setup, ships nothing</span></td><td>luismc-transcript-folds installed (user scope), luismc-project-setup updated to 14.3.0, plugins reloaded. hide-diffs is installed with local scope in another project; the owner removes it there (claude plugin uninstall hide-diffs@gixxy22-plugins --scope local).</td><td>13 Oct</td></tr>

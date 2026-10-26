@@ -6,6 +6,8 @@ name: Train cleanup
 # scripts/delivery/ of its own, so this runs the plugin's copy of cleanup.py.
 # A draft into an integration branch also closes as merged when it is joined;
 # the condition below waits for the merge into main.
+# --no-delivery-log: this repository keeps no GitHub release per merge (the
+# delivery log would otherwise create one, "Train #<pr>", on every merge).
 
 on:
   pull_request:
@@ -36,4 +38,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: >
           python3 claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/cleanup.py
-          --remote-only --pr ${{ github.event.pull_request.number }}
+          --remote-only --no-delivery-log --pr ${{ github.event.pull_request.number }}

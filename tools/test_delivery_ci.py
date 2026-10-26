@@ -94,12 +94,19 @@ def bump():
 if argv[:2] == ["run", "list"]:
     if fx.get("run_list_error"):
         fail("HTTP 502: bad gateway")
+    if fx.get("run_list_missing_workflow"):
+        fail("HTTP 404: workflow ci.yml not found on the default branch "
+             "(https://api.github.com/repos/OWNER/REPO/actions/workflows/ci.yml)")
     seq = fx["run_list"]
     resp = seq[min(bump(), len(seq) - 1)]
     wf = argv[argv.index("--workflow") + 1] if "--workflow" in argv else None
     out = [{k: v for k, v in r.items() if k != "_workflow"}
            for r in resp if wf is None or r.get("_workflow", wf) == wf]
     print(json.dumps(out))
+elif argv[:2] == ["workflow", "list"]:
+    if "workflow_list" not in fx:
+        fail("HTTP 500: could not list workflows")
+    print(json.dumps(fx["workflow_list"]))
 elif argv[:2] == ["run", "view"]:
     print(json.dumps(fx["run_view"][argv[2]]))
 elif argv[:1] == ["api"]:
@@ -463,6 +470,52 @@ def watch_gh_errors_give_up_with_exit_2():
         rc, out, err = watch(sb, {"run_list_error": True})
         expect_exit(rc, 2, out, err)
         check("502" in err, f"gh error not reported: {err}")
+    finally:
+        sb.close()
+
+
+def count_calls(sb, *prefix):
+    return sum(1 for c in sb.calls() if c[:len(prefix)] == list(prefix))
+
+
+@test
+def watch_missing_workflow_exits_2_at_once_and_lists_workflows():
+    sb = Sandbox()
+    try:
+        rc, out, err = watch(sb, {
+            "run_list_missing_workflow": True,
+            "workflow_list": [{"name": "Build", "path": ".github/workflows/build.yml"}]},
+            ["--interval", "0.1"])
+        expect_exit(rc, 2, out, err)
+        check(count_calls(sb, "run", "list") == 1, f"retried: {sb.calls()}")
+        check("ci.yml" in err and "build.yml" in err and "--workflow" in err,
+              f"workflow not named or listed: {err}")
+        check("giving up" not in err and "waiting" not in out, f"treated as transient: {out} {err}")
+    finally:
+        sb.close()
+
+
+@test
+def watch_missing_workflow_without_workflow_list_still_exits_2_at_once():
+    sb = Sandbox()
+    try:
+        rc, out, err = watch(sb, {"run_list_missing_workflow": True}, ["--interval", "0.1"])
+        expect_exit(rc, 2, out, err)
+        check(count_calls(sb, "run", "list") == 1, f"retried: {sb.calls()}")
+        check("ci.yml" in err and "could not list the workflows" in err and "--workflow" in err,
+              f"message wrong: {err}")
+    finally:
+        sb.close()
+
+
+@test
+def watch_transient_gh_error_is_retried_five_times():
+    sb = Sandbox()
+    try:
+        rc, out, err = watch(sb, {"run_list_error": True}, ["--interval", "0.05"])
+        expect_exit(rc, 2, out, err)
+        check(count_calls(sb, "run", "list") == 5, f"expected 5 tries: {sb.calls()}")
+        check(count_calls(sb, "workflow", "list") == 0, "workflows listed for a transient error")
     finally:
         sb.close()
 

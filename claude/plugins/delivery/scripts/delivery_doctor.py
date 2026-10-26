@@ -14,6 +14,9 @@ Six checks, each `ok` or `FAIL` with the fix:
            environment, in the Windows user/machine environment, or in the .env of a runner folder
            (DELIVERY_RUNNER_DIRS, `runner_dirs` in the machine file, or actions-runner* next to home, drive root and /opt).
            FAIL only when a runner folder exists without the hook; a machine with no runner is ok.
+           On Windows, for a runner service whose hook is a .ps1, it also reads the PowerShell execution policy that
+           applies to the service's account and FAILS when it is Restricted, AllSigned or undefined (the script would not
+           start and every job would fail); an unreadable policy is reported as "cannot check", not a failure.
 Exit 0 all ok, 1 at least one FAIL, 2 no .delivery/ folder. Standard library only.
 """
 from __future__ import annotations
@@ -129,8 +132,12 @@ def _hook_value(text):
     return None
 
 
+def _is_windows():
+    return sys.platform.startswith("win")
+
+
 def _windows_env_hook():
-    if not sys.platform.startswith("win"):
+    if not _is_windows():
         return None
     import subprocess
     for key in ("HKCU\\Environment", "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"):
@@ -143,8 +150,119 @@ def _windows_env_hook():
                 return line.split(None, 2)[-1].strip()
     return None
 
+WELL_KNOWN_SIDS = {"networkservice": "S-1-5-20", "localservice": "S-1-5-19", "localsystem": "S-1-5-18", "system": "S-1-5-18"}
+PS_SHELL_PATH = chr(92).join(("SOFTWARE", "Microsoft", "PowerShell", "1", "ShellIds", "Microsoft.PowerShell"))
+PS_POLICY_PATH = chr(92).join(("SOFTWARE", "Policies", "Microsoft", "Windows", "PowerShell"))
+FIX = ("Set RemoteSigned for that account only, from an elevated shell: registry value ExecutionPolicy (string) under "
+       "HKEY_USERS\\%s\\" + PS_SHELL_PATH + ". See the README, 'CI runner gate'.")
+
+
+def _service_account(runner_dir):
+    """(service name, StartName) of the runner service of this folder, or None when there is none to read."""
+    try:
+        with open(os.path.join(runner_dir, ".service"), encoding="utf-8", errors="replace") as f:
+            name = f.read().strip()
+    except OSError:
+        return None
+    if not name:
+        return None
+    import subprocess
+    try:
+        out = subprocess.run(["sc", "qc", name], capture_output=True, text=True, timeout=15).stdout
+    except (OSError, subprocess.SubprocessError):
+        return name, None
+    for line in out.splitlines():
+        if "SERVICE_START_NAME" in line:
+            return name, line.split(":", 1)[1].strip()
+    return name, None
+
+
+def _account_sid(account):
+    key = account.lower().replace(" ", "")
+    key = key.split("\\")[-1]
+    if key in WELL_KNOWN_SIDS:
+        return WELL_KNOWN_SIDS[key]
+    import subprocess
+    ps = "([System.Security.Principal.NTAccount]'%s').Translate([System.Security.Principal.SecurityIdentifier]).Value" % account.replace("'", "''")
+    try:
+        out = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True, timeout=30).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return out if out.startswith("S-1-") else None
+
+
+def _reg_value(hive, path, name):
+    """The value, or None when the key or value is absent. Raises OSError (PermissionError) when it cannot be read."""
+    import winreg
+    try:
+        with winreg.OpenKey(hive, path) as k:
+            return winreg.QueryValueEx(k, name)[0]
+    except FileNotFoundError:
+        return None
+
+
+def _effective_policy(sid):
+    """(policy, scope) the way PowerShell resolves it for the account with this SID. Raises OSError when unreadable."""
+    import winreg
+    u, m = winreg.HKEY_USERS, winreg.HKEY_LOCAL_MACHINE
+    for scope, hive, root in (("MachinePolicy", m, ""), ("UserPolicy", u, sid + "\\")):
+        base = root + PS_POLICY_PATH
+        if _reg_value(hive, base, "ExecutionPolicy") is None and _reg_value(hive, base, "EnableScripts") is None:
+            continue
+        if _reg_value(hive, base, "EnableScripts") == 0:
+            return "Restricted", scope
+        val = _reg_value(hive, base, "ExecutionPolicy")
+        if val:
+            return val, scope
+    with winreg.OpenKey(u, sid):  # the account's hive must be loaded to say anything about it
+        pass
+    for scope, hive, path in (("CurrentUser", u, sid + "\\" + PS_SHELL_PATH), ("LocalMachine", m, PS_SHELL_PATH)):
+        val = _reg_value(hive, path, "ExecutionPolicy")
+        if val:
+            return val, scope
+    return "Undefined", "nowhere (Restricted on client Windows)"
+
+
+def _execution_policy_problem(runner_dir):
+    """None when the runner service account may run the .ps1 hook; else (is_failure, message)."""
+    acct = _service_account(runner_dir)
+    if acct is None:
+        return None
+    name, account = acct
+    if not account:
+        return False, "cannot check the PowerShell execution policy: the account of service %s is unreadable" % name
+    sid = _account_sid(account)
+    if not sid:
+        return False, "cannot check the PowerShell execution policy of %s (SID not resolved)" % account
+    try:
+        policy, scope = _effective_policy(sid)
+    except OSError as exc:
+        return False, "cannot check the PowerShell execution policy of %s (%s)" % (account, exc)
+    if policy.lower() in ("remotesigned", "unrestricted", "bypass"):
+        return None
+    return True, ("the PowerShell execution policy for %s is %s (%s): the runner starts the .ps1 hook with Windows PowerShell "
+                  "and it would refuse the script, so every job would fail. " % (account, policy, scope) + FIX % sid)
+
 
 def check_runner(root, cfg):
+    ok, detail = _check_runner_hook(root, cfg)
+    if ok and _is_windows():
+        for d in _runner_dirs():
+            try:
+                with open(os.path.join(d, ".env"), encoding="utf-8", errors="replace") as f:
+                    v = _hook_value(f.read())
+            except OSError:
+                continue
+            if v and "runner_load_gate" in v and v.strip("\"'").lower().endswith(".ps1"):
+                problem = _execution_policy_problem(d)
+                if problem and problem[0]:
+                    return False, problem[1]
+                if problem:
+                    detail += "; " + problem[1]
+    return ok, detail
+
+
+def _check_runner_hook(root, cfg):
     env = os.environ.get(HOOK_VAR) or _windows_env_hook()
     dirs = _runner_dirs()
     hooked, bare = [], []
