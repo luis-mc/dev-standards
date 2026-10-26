@@ -1,6 +1,6 @@
 # DS72: luismc-delivery 0.2.0 (config schema, watcher obeys config, block log, doctor)
 
-Task CO176. Branch `DS72-delivery-config` from `main`. Contract: `docs/specs/delivery/DELIVERYSPEC.md` (D1-D9, D6a).
+Task DV176. Branch `DS72-delivery-config` from `main`. Contract: `docs/specs/delivery/DELIVERYSPEC.md` (D1-D9, D6a).
 
 ## Plan
 1. Report (this file).

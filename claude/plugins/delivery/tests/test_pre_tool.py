@@ -42,7 +42,7 @@ class JoinGateCommandTests(unittest.TestCase):
             self.assertIn("DL-11", bash(self.root, cmd, "release/101b"), cmd)
 
     def test_gate_on_agent_branch_allowed(self):
-        self.assertIsNone(bash(self.root, GATE, "claude/CO1-x"))
+        self.assertIsNone(bash(self.root, GATE, "claude/DV1-x"))
 
     def test_gate_on_master_allowed(self):
         self.assertIsNone(bash(self.root, "pnpm check:branch", "master"))
@@ -53,7 +53,7 @@ class JoinGateCommandTests(unittest.TestCase):
 
     def test_checkout_earlier_in_command_decides(self):
         self.assertIn("DL-11", bash(self.root, "git checkout release/101 && " + GATE, "master"))
-        self.assertIsNone(bash(self.root, "git checkout claude/CO1-x && " + GATE, "release/101"))
+        self.assertIsNone(bash(self.root, "git checkout claude/DV1-x && " + GATE, "release/101"))
 
     def test_head_flag_decides(self):
         self.assertIn("DL-11", bash(self.root, "python branch_gate.py --head release/7", "master"))
@@ -68,9 +68,9 @@ class JoinGateCommandTests(unittest.TestCase):
         # a project may set both to ^(release|claude)/ for the watcher; an agent's own gate stays allowed
         cfg = H.load_config(str(self.root))
         cfg["train_branch_re"] = cfg["release_branch_re"] = r"^(release|claude)/"
-        self.assertIsNone(bash(self.root, GATE, "claude/CO1-x", cfg))
+        self.assertIsNone(bash(self.root, GATE, "claude/DV1-x", cfg))
         self.assertIn("DL-11", bash(self.root, GATE, "release/101", cfg))
-        r = run(self.root, "Agent", {"prompt": "```delivery\nbranch: claude/CO9-x\n```\nFix bug, run " + GATE}, cfg=cfg)
+        r = run(self.root, "Agent", {"prompt": "```delivery\nbranch: claude/DV9-x\n```\nFix bug, run " + GATE}, cfg=cfg)
         self.assertFalse(r and "DL-11" in r)
 
     def test_switched_off_allows(self):
@@ -81,7 +81,7 @@ class JoinGateCommandTests(unittest.TestCase):
     def test_mutant_release_test_dropped(self):
         # without the release-branch test the agent-branch case would be denied; with it always false, release passes
         with mock.patch.object(H, "is_release_branch", return_value=True):
-            self.assertIn("DL-11", bash(self.root, GATE, "claude/CO1-x"))
+            self.assertIn("DL-11", bash(self.root, GATE, "claude/DV1-x"))
         with mock.patch.object(H, "is_release_branch", return_value=False):
             self.assertIsNone(bash(self.root, GATE, "release/101"))
 
@@ -108,7 +108,7 @@ class JoinBriefTests(unittest.TestCase):
         self.assertFalse(r and "DL-11" in r)
 
     def test_non_join_brief_with_gate_allowed_by_dl11(self):
-        r = run(self.root, "Agent", {"prompt": "```delivery\nbranch: claude/CO9-x\n```\nFix bug, run " + GATE})
+        r = run(self.root, "Agent", {"prompt": "```delivery\nbranch: claude/DV9-x\n```\nFix bug, run " + GATE})
         self.assertFalse(r and "DL-11" in r)
 
     def test_switched_off_allows(self):

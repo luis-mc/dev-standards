@@ -130,7 +130,7 @@ the Full Progress renderer (DL-65: the one truth for shown state).
     "pr": 412,
     "state": "planned|joining|joined|pushed|ci|green|red|merged|live|cleaned|abandoned",
     "hold": null,                                  // {"reason": "...", "by": "owner|rule", "until": ISO}
-    "cargo": [{"task": "CO148", "branch": "CO148-fix", "pr": 409, "sha": "…",
+    "cargo": [{"task": "DV148", "branch": "DV148-fix", "pr": 409, "sha": "…",
                "gate": "pass|fail|none", "joined_sha": "…", "paths": ["apps/web/**"]}],
     "phases": {
       "planned": [{"name": "join|ci|merge|deploy|smoke|install", "start": ISO, "end": ISO, "basis": "…"}],
@@ -143,11 +143,11 @@ the Full Progress renderer (DL-65: the one truth for shown state).
     "live_at": ISO, "cleaned_at": ISO
   }],
   "agents": [{
-    "task": "CO152",                               // task id(s); "tasks": [...] when bundled
+    "task": "DV152",                               // task id(s); "tasks": [...] when bundled
     "where": "local|cloud",
     "id": "trig_… | agent id",                     // RemoteTrigger id or Agent task id
     "session": "cse_…",                            // cloud session when known
-    "branch": "CO152-scripts", "base_sha": "…", "head_sha": "…",
+    "branch": "DV152-scripts", "base_sha": "…", "head_sha": "…",
     "owns": ["scripts/delivery/**"],              // file ownership (DL-41)
     "model": "sonnet", "effort": "medium",
     "started": ISO,
@@ -164,7 +164,7 @@ the Full Progress renderer (DL-65: the one truth for shown state).
   "publishes": [{"artifact": "full-progress", "url": "https://claude.ai/artifact/…",
                  "last_at": ISO, "last_version": 512, "last_state_hash": "sha256 of the publish copy",
                  "copy_written_at": ISO}],
-  "runners": [{"name": "GameRoomPC-linux", "labels": ["self-hosted","Linux","project-linux","project-linux-big"],
+  "runners": [{"name": "build-pc-linux", "labels": ["self-hosted","Linux","project-linux","project-linux-big"],
                "online": true, "busy": false, "local": true,
                "paused_by": null,                  // job id while heavy-job pauses it
                "checked_at": ISO}],

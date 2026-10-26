@@ -1,6 +1,6 @@
-# CO350 — watcher re-checks red trains
+# DV350 — watcher re-checks red trains
 
-Branch: `claude/CO350-watcher-red-rerun` (from `main`). Plugin: `luismc-delivery` 0.5.0 -> 0.5.1 (no changelog file exists; change notes are folded at release).
+Branch: `claude/DV350-watcher-red-rerun` (from `main`). Plugin: `luismc-delivery` 0.5.0 -> 0.5.1 (no changelog file exists; change notes are folded at release).
 Head SHA: 1d20667 (first commit). PR: #83 (draft).
 
 ## Bug

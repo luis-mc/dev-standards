@@ -52,7 +52,7 @@ class BashTests(unittest.TestCase):
         self.assertEqual(self.led()["trains"][0]["state"], "pushed")
 
     def test_git_push_of_other_branch_ignored(self):
-        H.handle(bash("git push origin CO148-fix"), self.root)
+        H.handle(bash("git push origin DV148-fix"), self.root)
         self.assertEqual(self.led()["trains"][0]["state"], "joined")
 
     def test_failed_push_records_event_only(self):
@@ -171,7 +171,7 @@ class LedgerGapTests(unittest.TestCase):
         self.assertEqual((t["pr"], t["state"], t["ci"]["head_sha"]), (9, "ci", "b" * 40))
 
     def test_pr_create_of_a_non_release_branch_creates_no_train(self):
-        H.handle(bash("gh pr create --repo o/r --head CO1-x --body-file x.md", "https://github.com/o/r/pull/5"), self.root)
+        H.handle(bash("gh pr create --repo o/r --head DV1-x --body-file x.md", "https://github.com/o/r/pull/5"), self.root)
         self.assertEqual(self.led()["trains"], [])
 
     def test_pr_create_failed_creates_no_train(self):
@@ -216,8 +216,8 @@ class LedgerGapTests(unittest.TestCase):
 BLOCK = """Do the work.
 
 ```delivery
-task: CO152
-branch: CO152-scripts
+task: DV152
+branch: DV152-scripts
 owns: scripts/delivery/**, docs/specs/x.md
 setup: 5
 work: 12
@@ -232,7 +232,7 @@ effort: medium
 class AgentTests(unittest.TestCase):
     def test_parse_block(self):
         b = H.parse_delivery_block(BLOCK)
-        self.assertEqual(b["task"], "CO152")
+        self.assertEqual(b["task"], "DV152")
         self.assertEqual(b["owns"], ["scripts/delivery/**", "docs/specs/x.md"])
         self.assertEqual(b["breakdown"], {"setup": 5.0, "work": 12.0, "checks": 8.0})
         self.assertEqual(b["total_min"], 25.0)
@@ -244,7 +244,7 @@ class AgentTests(unittest.TestCase):
                   "tool_input": {"prompt": BLOCK, "run_in_background": True, "model": "sonnet"},
                   "tool_response": {"agentId": "ag_1"}}, root)
         a = L.load(root)["agents"][0]
-        self.assertEqual((a["task"], a["where"], a["id"], a["state"]), ("CO152", "local", "ag_1", "running"))
+        self.assertEqual((a["task"], a["where"], a["id"], a["state"]), ("DV152", "local", "ag_1", "running"))
         self.assertEqual(a["eta"]["total_min"], 25.0)
         self.assertEqual(a["eta"]["breakdown"]["work"], 12.0)
         self.assertTrue(a["eta"]["due"])
@@ -267,7 +267,7 @@ class AgentTests(unittest.TestCase):
                   "tool_input": {"action": "list"}, "tool_response": "[]"}, root)
         agents = L.load(root)["agents"]
         self.assertEqual(len(agents), 1)
-        self.assertEqual((agents[0]["where"], agents[0]["id"], agents[0]["task"]), ("cloud", "trig_abc", "CO152"))
+        self.assertEqual((agents[0]["where"], agents[0]["id"], agents[0]["task"]), ("cloud", "trig_abc", "DV152"))
 
 
 class OtherToolTests(unittest.TestCase):

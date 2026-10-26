@@ -14,7 +14,7 @@ MERGE = "m" * 40
 def train(tid="T-1", pr=482, **kw):
     t = {"id": tid, "release_no": 41, "branch": "release/41", "pr": pr, "state": "merged",
          "merged_at": "2026-10-20T01:00:00Z", "cleaned_at": None, "live_at": None, "smoke": {"state": None, "at": None},
-         "cargo": [{"task": "CO1", "branch": "CO1-fix"}], "ci": {"state": "success", "head_sha": "abc"}}
+         "cargo": [{"task": "DV1", "branch": "DV1-fix"}], "ci": {"state": "success", "head_sha": "abc"}}
     t.update(kw)
     return t
 
@@ -111,7 +111,7 @@ class CleanedTests(unittest.TestCase):
         return {t["id"]: t for t in L.load(self.root)["trains"]}
 
     def test_present_branches_and_worktrees_are_listed_and_nothing_recorded(self):
-        for kw in ({"remote": ["CO1-fix"]}, {"worktrees": ["release/41"]}):
+        for kw in ({"remote": ["DV1-fix"]}, {"worktrees": ["release/41"]}):
             self.assertEqual(L._cmd_cleaned(self.root, Args(pr=482), run=git_stub(**kw)), 1)
             self.assertIsNone(self.rows()["T-1"]["cleaned_at"])
         self.assertEqual(L.load(self.root)["events"], [])

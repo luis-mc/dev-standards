@@ -41,7 +41,7 @@ class EtaTests(unittest.TestCase):
 
 
 FALSE_ALARM_TRAINS = "| `trains` | the releases, with their PR and state |"
-FALSE_ALARM_ETA = "- **I** add the rows the hooks miss, like the ETA for CO395."
+FALSE_ALARM_ETA = "- **I** add the rows the hooks miss, like the ETA for DV395."
 
 
 def label_keys(text, ledger=None):
