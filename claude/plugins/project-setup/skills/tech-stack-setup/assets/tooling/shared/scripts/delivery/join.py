@@ -9,15 +9,16 @@ requires a trusted, passing gate result (a base older than INTEGRATION's head is
 fine), then merges it with `git merge --no-ff -m "Join BRANCH"`. A conflict that
 touches only a lockfile is resolved by taking INTEGRATION's version and re-running
 gate.json's `setup`; any other conflict aborts that merge, writes
-.delivery/join-result.json and exits 3. After the last merge a quick check runs on the
+.delivery/join-result.json and exits 3. After the last merge a light check runs on the
 joined head (unless --no-gate; or unless the joined tree equals the tree of a joined
 branch head whose gate result is trusted for that head and for the base the gate would use,
 in which case it is skipped and the output says so): setup (install from the lockfile), then
-the build, typecheck and test steps of gate.json for the union of the joined branches'
-affected packages plus their dependents, computed with the gate's own logic. It is not a
-full gate: the ready pull request's CI is the one full suite, so no result is published.
-Each step's time is printed and written to join-result.json ("quick_check"). Last, runner
-health (runner_health.py) warns when no online runner carries a label CI needs; it never
+the typecheck and lint steps of gate.json for the packages the merges touched, then the fast
+guards (the pre_push steps of fast_guards.py). It is never a branch gate and never runs the
+tests: the ready pull request's CI is the one full suite, so no result is published and a
+fix made after a failed check is not re-gated. gate.json picks the steps ("join": true or
+false on a step) and may turn the guards off ("join_guards": false). Each step's time is
+printed and written to join-result.json ("quick_check"). Last, runner health (runner_health.py) warns when no online runner carries a label CI needs; it never
 blocks. --push then pushes INTEGRATION.
 
 Exit: 0 joined, 1 a result is not trusted or the gate/push failed, 2 usage or
@@ -37,8 +38,8 @@ import delivery_common as dc
 import gate_verify
 import runner_health
 
-# The steps of gate.json the quick check runs, by name; a step's own "join": true/false wins.
-QUICK_STEPS = ("build", "typecheck", "unit", "test")
+# The steps of gate.json the light check runs, by name; a step's own "join": true/false wins.
+QUICK_STEPS = ("typecheck", "lint")
 
 
 def write_join_result(root: Path, joined: list[str], stopped_at: str | None, conflicts: list[str],
@@ -100,45 +101,54 @@ def trusted_same_tree(root: Path, remote: str, base_ref: str, joined: list[str])
 
 
 def quick_steps(cfg: dict) -> list[dict]:
-    """The gate.json steps the quick check runs. A test command that takes
-    {changed_dirs} takes {affected_dirs} here: the union of the branches' packages plus
-    their dependents (D6), so an interaction between branches shows before the ready PR."""
-    chosen = []
-    for step in cfg["steps"]:
-        flag = step.get("join")
-        if flag is True or (flag is None and step["name"] in QUICK_STEPS):
-            copy = dict(step)
-            for key in ("run", "run_full"):
-                if isinstance(copy.get(key), str):
-                    copy[key] = copy[key].replace("{changed_dirs}", "{affected_dirs}")
-            chosen.append(copy)
-    return chosen
+    """The gate.json steps the light check runs: typecheck and lint by default, any step with
+    "join": true, never one with "join": false. A step keeps its own scope, so it sees the packages
+    the merges touched ({changed_dirs}); no test step runs here."""
+    return [dict(step) for step in cfg["steps"]
+            if step.get("join") is True or (step.get("join") is None and step["name"] in QUICK_STEPS)]
+
+
+def fast_guards_check(root: Path, base_ref: str) -> tuple[int, float]:
+    """The pre_push steps on the joined head, through fast_guards.py. Returns (exit code, seconds)."""
+    print("\njoin: fast guards of the joined head", flush=True)
+    t0 = time.monotonic()
+    code = subprocess.run(
+        [sys.executable, str(Path(__file__).resolve().parent / "fast_guards.py"), "--base-ref", base_ref],
+        cwd=root).returncode
+    return code, round(time.monotonic() - t0, 1)
 
 
 def quick_check(root: Path, cfg: dict, base_ref: str) -> tuple[int, dict]:
-    """Setup and the quick steps on the joined head. Returns (exit code, report)."""
+    """Setup, typecheck/lint of the touched packages and the fast guards on the joined head.
+    Returns (exit code, report)."""
     ctx = dc.build_context(root, cfg, base_ref)
     steps = quick_steps(cfg)
     minutes = cfg["timeout_minutes"]
-    print("\njoin: quick check of the joined head (setup, then %s)" % (", ".join(s["name"] for s in steps) or "no step"))
-    print("      packages: %s" % (", ".join(ctx.affected_dirs) or "(none)")
+    guards = cfg.get("join_guards", True) and any(s["pre_push"] for s in cfg["steps"])
+    print("\njoin: light check of the joined head (setup, then %s%s)" % (
+        ", ".join(s["name"] for s in steps) or "no step", ", fast guards" if guards else ""))
+    print("      packages: %s" % (", ".join(ctx.changed_dirs) or "(none)")
           + ("  (widened: %s)" % ", ".join(ctx.widen_reasons[:3]) if ctx.widened else ""), flush=True)
     t0 = time.monotonic()
     entries, timed_out = dc.execute_steps(
         steps, ctx, setup_cmds=cfg["setup"], limit_seconds=minutes * 60, log_dir=dc.LOG_DIR + "/join")
-    total = round(time.monotonic() - t0, 1)
-    # No package changed is a pass here (nothing to test); overall_pass would call it "nothing ran".
+    # No package changed is a pass here (nothing to check); overall_pass would call it "nothing ran".
     ok = not timed_out and not any(e["outcome"] == "fail" for e in entries)
     print("\n" + dc.summary_table(entries))
     dc.print_failures(entries, root)
-    print("join: quick check %s in %.1fs (%s)" % (
+    steps_report = [{"name": e["name"], "outcome": e["outcome"], "seconds": e["seconds"]} for e in entries]
+    if ok and guards:
+        gcode, gsec = fast_guards_check(root, base_ref)
+        ok = gcode == 0
+        steps_report.append({"name": "fast-guards", "outcome": "pass" if ok else "fail", "seconds": gsec})
+    total = round(time.monotonic() - t0, 1)
+    print("join: light check %s in %.1fs (%s)" % (
         "passed" if ok else "FAILED", total,
-        ", ".join("%s %.1fs" % (e["name"], e["seconds"]) for e in entries if e["outcome"] != "skip") or "nothing ran"))
+        ", ".join("%s %.1fs" % (e["name"], e["seconds"]) for e in steps_report if e["outcome"] != "skip") or "nothing ran"))
     report = {
         "base_ref": ctx.base_ref, "head": ctx.head, "widened": ctx.widened,
         "changed_dirs": ctx.changed_dirs, "affected_dirs": ctx.affected_dirs,
-        "pass": ok, "timed_out": timed_out, "seconds": total,
-        "steps": [{"name": e["name"], "outcome": e["outcome"], "seconds": e["seconds"]} for e in entries],
+        "pass": ok, "timed_out": timed_out, "seconds": total, "steps": steps_report,
     }
     code = dc.EXIT_OK if ok else dc.EXIT_TIMEOUT if timed_out else dc.EXIT_FAIL
     return code, report
@@ -148,7 +158,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="join.py", description=__doc__.split("\n\n")[0])
     ap.add_argument("--into", required=True, metavar="INTEGRATION", help="integration branch")
     ap.add_argument("branches", nargs="+", metavar="BRANCH", help="branches to join, in order")
-    ap.add_argument("--no-gate", action="store_true", help="skip the branch gate on the joined head")
+    ap.add_argument("--no-gate", action="store_true", help="skip the light check on the joined head")
     ap.add_argument("--push", action="store_true", help="push INTEGRATION (and its gate result) when done")
     ap.add_argument("--remote", default="origin")
     args = ap.parse_args(argv)
@@ -258,7 +268,7 @@ def main(argv: list[str] | None = None) -> int:
         extra["quick_check"] = qc
         write_join_result(root, joined, None, [], extra=extra)
         if code != 0:
-            dc.eprint("join: the quick check on the joined head did not pass (exit %d); nothing pushed" % code)
+            dc.eprint("join: the light check on the joined head did not pass (exit %d); nothing pushed" % code)
             return code if code in (dc.EXIT_FAIL, dc.EXIT_USAGE, dc.EXIT_TIMEOUT) else dc.EXIT_FAIL
 
     # Runner health (DL7): warnings only, never a reason to stop.
