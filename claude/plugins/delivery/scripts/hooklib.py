@@ -14,6 +14,7 @@ Seams for tests: DELIVERY_NOW (ISO time), DELIVERY_GH (gh replacement), DELIVERY
 Disable: CLAUDE_DELIVERY_HOOKS=off. Standard library only.
 """
 import copy
+import fnmatch
 import hashlib
 import json
 import os
@@ -127,6 +128,25 @@ def load_config(root):
 
 def check_on(cfg, check_id):
     return check_id not in (cfg.get('checks_off') or [])
+
+
+DEFAULT_TRAIN_RE = r'^release/\d+[a-z]?$'      # same default as hook_post_tool.py
+
+
+def is_release_branch(cfg, branch):
+    """True for a release/integration branch: config train_branch_re (default release/<n>), any `release_branches`
+    globs of the config, or a name ending -integration."""
+    if not branch or not isinstance(branch, str):
+        return False
+    try:
+        if re.search(cfg.get('train_branch_re') or DEFAULT_TRAIN_RE, branch):
+            return True
+    except re.error:
+        pass
+    globs = cfg.get('release_branches')
+    if isinstance(globs, list) and any(isinstance(g, str) and fnmatch.fnmatch(branch, g) for g in globs):
+        return True
+    return branch.endswith('-integration')
 
 
 # --- ledger adapter (read-only; schema 1) -------------------------------------------------
