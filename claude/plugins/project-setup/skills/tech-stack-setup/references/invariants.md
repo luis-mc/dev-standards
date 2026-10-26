@@ -1480,10 +1480,13 @@ gate runs the scanner CI runs.
 - Shared contracts (types, schemas, interfaces that several branches build on)
   are committed to the integration branch before parallel work starts.
 - Branches join the integration branch through a merge script. It merges each
-  branch in turn, stops at a conflict it cannot resolve, and runs a quick check
-  on the joined head: the install from the lockfile, the build, the type check and
-  the tests of every package any joined branch changed plus its dependents. No
-  full suite runs at the join. The script can skip that check when the joined tree
+  branch in turn, stops at a conflict it cannot resolve, and runs a light check
+  on the joined head: the install from the lockfile, the type check and lint of
+  every package any joined branch changed, and the fast guards of the pre-push
+  hook. The join runs no test and no branch gate, waits for no sandbox gate before
+  the ready pull request, and does not re-run a gate after a join fix; the ready
+  pull request's CI is the one full run. A project picks the steps in `gate.json`
+  (`"join"` on a step, `join_guards`). The script can skip that check when the joined tree
   equals the tree of a joined branch head whose gate result is trusted for that
   head and the same base. It records the time of each step.
 - When the last join is pushed, one ready pull request goes from the integration

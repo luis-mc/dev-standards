@@ -438,7 +438,7 @@ check, performed by reading.
    form and exercise every worker it starts (`smoke.json` plus a `package.yml`
    job). List it as an upgrade item only for such a product; a product that
    ships none conforms to 8.0.0 as it stands. Offer the 8.0.0 improvements as
-   suggestions: `inert_paths` and `lockfile_scope` in `gate.json`, the quick join
+   suggestions: `inert_paths` and `lockfile_scope` in `gate.json`, the light join
    check, the train freeze in pre-push, runner-health warnings, path-filtered
    build-artifact workflows and the delivery log in release notes.
 
