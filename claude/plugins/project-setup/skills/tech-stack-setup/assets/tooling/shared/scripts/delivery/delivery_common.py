@@ -287,6 +287,8 @@ def load_gate(root: Path) -> dict:
     cfg.setdefault("changelog_heading", "What changed")
     if not isinstance(cfg["changelog_heading"], str) or not cfg["changelog_heading"].strip():
         raise DeliveryError("%s: 'changelog_heading' must be a non-empty string" % where)
+    if not isinstance(cfg.setdefault("join_guards", True), bool):
+        raise DeliveryError("%s: 'join_guards' must be true or false" % where)
     minutes = cfg.setdefault("timeout_minutes", DEFAULT_TIMEOUT_MINUTES)
     if isinstance(minutes, bool) or not isinstance(minutes, int) or minutes < 1:
         raise DeliveryError("%s: 'timeout_minutes' must be an integer >= 1" % where)

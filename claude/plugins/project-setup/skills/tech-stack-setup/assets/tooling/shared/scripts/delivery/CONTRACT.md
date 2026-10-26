@@ -158,6 +158,9 @@ timed out. A script never exits 0 when it could not decide.
   commits the regenerated lockfile.
 - `timeout_minutes` (optional, integer >= 1, default 30): the wall-clock limit
   for one `branch_gate.py` run, setup included.
+- `join_guards` (optional, boolean, default `true`): whether `join.py`'s light check also runs
+  the `pre_push` steps (`fast_guards.py`). A step's optional `"join": true|false` adds it to,
+  or drops it from, that check (default: `typecheck` and `lint` are in, the rest out).
 - .NET has one `typecheck` step (build with warnings as errors, analyzers
   included) and no separate `lint` step.
 - Lockfiles `join.py` recognises: `pnpm-lock.yaml`, `package-lock.json`,
@@ -216,7 +219,7 @@ One ref per branch, so parallel agents never contend.
 **Trust rule** (`gate_verify.py`): a result is trusted when `head` equals the
 branch's current head on the remote, `base` equals the current head of the branch
 it joins, `pass` is true and `partial` is not. `--allow-older-base` relaxes the second condition
-to "`base` is an ancestor of the current head" (used by `join.py`, which runs its quick check
+to "`base` is an ancestor of the current head" (used by `join.py`, which runs its light check
 on the joined head unless its tree equals a trusted joined branch's tree).
 
 **Inert moves of the base.** Without `--allow-older-base`, a `base` that is not the
@@ -329,23 +332,24 @@ lockfile is resolved by taking INTEGRATION's version and re-running `setup`; if
 join exits 3 (the conflict goes to one agent). `.delivery/join-result.json`
 (`{"joined": [...], "stopped_at": BRANCH|null, "conflicts": [paths]}`, plus a
 `reason` when a branch is refused or a step fails) is written on success and on
-failure. After the last merge it runs a **quick check** on the joined head (unless `--no-gate`): the
-`setup` commands, then the steps of `gate.json` named `build`, `typecheck`, `unit` and `test`
-(a step's own `"join": true` or `false` overrides the name), with the gate's own affected
-set against `origin/<default_branch>` (`delivery_common.build_context`): every package any
-joined branch changed **plus their dependents** (D6), so an interaction between branches
-shows before the ready pull request; a `{changed_dirs}` in such a step is filled with that
-set, and a widened join runs the `run_full` commands. It is not the full gate: no `lint`,
-`guards`, scan or end-to-end step, no result is written to `refs/gate-results/`, and the
-ready pull request's CI is the one full suite. Each step's time is printed and written to
-`join-result.json` as `quick_check` (`pass`, `seconds`, `affected_dirs`, and `steps` with
-`name`, `outcome`, `seconds`); a package-less join (only docs changed) passes after the
-install. A failed check exits 1 (4 on timeout) and pushes nothing. `--push` pushes
-INTEGRATION. **The quick check is skipped, and the output says so,
+failure. After the last merge it runs a **light check** on the joined head (unless `--no-gate`): the
+`setup` commands, then the steps of `gate.json` named `typecheck` and `lint` (a step's own
+`"join": true` or `false` overrides the name, so a project may add or drop one), each with its own
+scope against `origin/<default_branch>` (`delivery_common.build_context`), so `{changed_dirs}` is the
+set of packages the merges touched (a widened join runs the `run_full` commands); then the fast
+guards (`fast_guards.py`, the `pre_push` steps), unless `gate.json` sets `"join_guards": false`
+(default `true`). It is never the branch gate: no test, build, scan beyond the guards or
+end-to-end step, no result is written to `refs/gate-results/`, no sandbox gate is awaited before
+the ready pull request, and a fix made after a failed check is not re-gated. The ready pull
+request's CI is the one full suite. Each step's time is printed and written to
+`join-result.json` as `quick_check` (`pass`, `seconds`, `changed_dirs`, `affected_dirs`, and `steps` with
+`name`, `outcome`, `seconds`, the guards as `fast-guards`); a package-less join (only docs changed)
+passes after the install and the guards. A failed check exits 1 (4 on timeout) and pushes nothing.
+`--push` pushes INTEGRATION. **The check is skipped, and the output says so,
 when the joined tree equals the tree of a joined branch's head whose gate result
-`gate_verify.py` trusts for that head and for the same base the join gate would use
+`gate_verify.py` trusts for that head and for the same base the join would use
 (`origin/<default_branch>`, without `--allow-older-base`)**: those files were
-already gated against that base. Otherwise it runs as above. Neither publishes a result for INTEGRATION.
+already gated against that base. Neither publishes a result for INTEGRATION.
 Last, before the join says it is done, **runner health** (`runner_health.py`, D5) prints a
 warning for every job whose `runs-on` labels no online runner carries, and never stops the
 join; it is recorded as `runner_health` in `join-result.json` (`status` `ok`, `warn` or
@@ -543,7 +547,7 @@ then runs `gate.json`'s `setup` commands. Idempotent.
 
 ## Tests (in `tools/` of this repository)
 
-- `tools/test_delivery_gate.py` — branch_gate, gate_verify, fast_guards, join (quick check,
+- `tools/test_delivery_gate.py` — branch_gate, gate_verify, fast_guards, join (light check,
   train freeze, runner health)
   against throwaway git repositories with a local bare remote and a `gate.json`
   whose steps are small Python commands. Every trust-rule branch and every exit

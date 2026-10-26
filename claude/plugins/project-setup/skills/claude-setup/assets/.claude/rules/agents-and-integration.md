@@ -18,8 +18,8 @@
 
 ## Integrate once, deploy once
 - Each change: own branch named `<task-id>-<slug>`, draft PR, branch gate in the agent sandbox (no Actions). <!-- check: DL-08 -->
-- Trust a gate only via `gate-result.json` matching the current head and base (`scripts/delivery/gate_verify.py`). <!-- check: DL-13 -->
-- Join with `scripts/delivery/join.py`; it runs the branch gate on the joined head, unless that tree equals a branch head whose gate result it already trusts. <!-- check: DL-11 -->
+- Trust an agent branch's gate only via `gate-result.json` matching the current head and base (`scripts/delivery/gate_verify.py`); the join checks it per branch, and no gate result is needed for the joined head or the ready PR. <!-- check: DL-13 -->
+- A join is light: `scripts/delivery/join.py` merges the branches, resolves conflicts, folds spec notes, then checks typecheck and lint of what the merges touched and the fast guards; push and open the ready PR at once. Never run the branch gate or a full suite on the joined head, wait for a sandbox gate before the ready PR, or re-gate after a join fix. <!-- check: DL-11 -->
 - Open one ready PR when the join is pushed; its CI is the only full suite. Merge on green, never auto-merge. <!-- check: DL-05, DL-06, DL-08 -->
 - Watch CI by the workflow runs for the head commit (`scripts/delivery/ci_watch.py`), never by the PR check list. <!-- check: DL-07 -->
 - A train leaves when its cargo is green; late branches ride the next train. <!-- check: DL-01, DL-16 -->

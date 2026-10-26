@@ -7,7 +7,7 @@ Fetches the branch, the base ref and refs/gate-results/BRANCH, then applies the
 trust rule from CONTRACT.md: the result's head is the branch's current head on
 the remote, its base is the current head of the branch it joins, and it passed.
 --allow-older-base relaxes the base condition to "base is an ancestor of the
-current head of the branch it joins" (join.py re-gates the joined head anyway).
+current head of the branch it joins" (join.py does not gate the joined head; the ready PR's CI does).
 A result whose base is an ancestor of the current base stays valid when every
 commit in between touches only inert paths (gate.json "inert_paths", default
 docs/**): the ready pull request's CI still tests the real merge. --strict-base
@@ -115,7 +115,7 @@ def verify(
             )
         if r_base != base_head:
             if allow_older_base and dc.is_ancestor(r_base, base_head, root):
-                pass  # an older base is acceptable when join.py re-gates the joined head
+                pass  # an older base is acceptable: the joined head is covered by the ready PR's CI
             elif allow_older_base:
                 reasons.append(
                     "base %s is not an ancestor of %s (%s)" % (r_base[:10], base_ref, base_head[:10])

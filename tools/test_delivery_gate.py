@@ -1982,8 +1982,8 @@ def sc_join_clean(t: T, shared: Path) -> None:
     box.gated("feat/a", {"apps/web/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
     box.gated("feat/b", {"apps/api/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
     before = box.g("rev-parse", "origin/integ")
-    r = join(box, "--into", "integ", "feat/a", "feat/b", "--push", env={"GATE_TEST_FAIL": "unit"})
-    t.eq("a failing quick check on the joined head: exit 1", r.code, 1)
+    r = join(box, "--into", "integ", "feat/a", "feat/b", "--push", env={"GATE_TEST_FAIL": "typecheck"})
+    t.eq("a failing light check on the joined head: exit 1", r.code, 1)
     t.eq("... and nothing is pushed", box.g("rev-parse", "origin/integ"), before)
 
     # preconditions
@@ -2845,7 +2845,7 @@ class GhStub:
         return env
 
 
-def ws_box(shared: Path) -> Box:
+def ws_box(shared: Path, gate_json: dict | None = None) -> Box:
     """An integration box whose packages depend on each other: web -> ui -> core, api -> core."""
 
     class WsBox(Box):
@@ -2857,78 +2857,98 @@ def ws_box(shared: Path) -> Box:
             "apps/api/package.json": '{"name": "@x/api"}\n',
         }
 
-    box = WsBox(shared)
+    box = WsBox(shared, gate_json=gate_json)
     box.g("checkout", "-q", "-B", "integ", "main")
     box.push("integ")
     return box
 
 
 def sc_join_quick(t: T, shared: Path) -> None:
-    """DL2: the join runs setup, build/typecheck/unit for the union of the branches' affected
-    packages plus their dependents, not the full gate; it records the time of each step."""
+    """CO493: the join is light: setup, typecheck and lint of the packages the merges touched, then the
+    fast guards; never a test step, never a full gate; it records the time of each step."""
     box = ws_box(shared)
     box.gated("feat/core", {"packages/core/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
     box.gated("feat/api", {"apps/api/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
     box.clear_log()
     r = join(box, "--into", "integ", "feat/core", "feat/api", "--push")
     t.eq("two branches joined: exit 0", r.code, 0)
-    t.eq("the quick check runs the install, then typecheck and unit only (no lint, guards, scan, e2e)",
-         [x[0] for x in box.ran(True)], ["setup", "typecheck", "unit"])
-    union = ["apps/api", "apps/web", "packages/core", "packages/ui"]
-    t.eq("typecheck gets the union of the branches' packages plus their dependents (D6)",
-         [x for x in box.ran() if x[0] == "typecheck"], [["typecheck"] + union])
-    t.eq("... unit too", [x for x in box.ran() if x[0] == "unit"], [["unit"] + union])
+    t.eq("the light check runs the install, typecheck, lint and the fast guards (no unit, e2e)",
+         [x[0] for x in box.ran(True)], ["setup", "typecheck", "lint", "guards", "secret-scan"])
+    touched = ["apps/api", "packages/core"]
+    t.eq("typecheck gets the packages the merges touched", [x for x in box.ran() if x[0] == "typecheck"],
+         [["typecheck"] + touched])
+    t.eq("... lint too", [x for x in box.ran() if x[0] == "lint"], [["lint"] + touched])
+    t.eq("no test step ran", [x for x in box.ran() if x[0] == "unit"], [])
     jr = join_result(box)
     qc = jr.get("quick_check", {})
-    t.eq("join-result.json records the quick check", (qc.get("pass"), qc.get("affected_dirs")), (True, union))
+    t.eq("join-result.json records the check", (qc.get("pass"), qc.get("changed_dirs")), (True, touched))
     t.eq("... with a time per step", [(s["name"], isinstance(s["seconds"], float)) for s in qc.get("steps", [])],
-         [("setup", True), ("typecheck", True), ("unit", True)])
+         [("setup", True), ("typecheck", True), ("lint", True), ("fast-guards", True)])
     t.check("... and a total", isinstance(qc.get("seconds"), float))
     t.has("stdout lists the time of each step", r.out, "typecheck ")
-    t.has("... and the total", r.out, "quick check passed in")
+    t.has("... and the total", r.out, "light check passed in")
     t.eq("it is not a gate: no result is published for the integration branch",
          box.remote_ref("refs/gate-results/integ"), None)
     t.eq("... and the integration branch was pushed", box.g("rev-parse", "origin/integ"), box.g("rev-parse", "HEAD"))
 
-    # a failing test in the union stops the join before the push
+    # a failing typecheck, lint or guard stops the join before the push; a failing test is CI's
+    for failing in ("typecheck", "lint", "guards"):
+        box = ws_box(shared)
+        box.gated("feat/core", {"packages/core/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
+        box.gated("feat/api", {"apps/api/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
+        before = box.g("rev-parse", "origin/integ")
+        r = join(box, "--into", "integ", "feat/core", "feat/api", "--push", env={"GATE_TEST_FAIL": failing})
+        t.eq("a failing %s: exit 1" % failing, r.code, 1)
+        t.eq("... nothing pushed", box.g("rev-parse", "origin/integ"), before)
+        t.eq("... and the failure is recorded", join_result(box).get("quick_check", {}).get("pass"), False)
+
     box = ws_box(shared)
     box.gated("feat/core", {"packages/core/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
     box.gated("feat/api", {"apps/api/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
-    before = box.g("rev-parse", "origin/integ")
-    r = join(box, "--into", "integ", "feat/core", "feat/api", "--push", env={"GATE_TEST_FAIL": "unit"})
-    t.eq("a failing unit step: exit 1", r.code, 1)
-    t.eq("... nothing pushed", box.g("rev-parse", "origin/integ"), before)
-    t.eq("... and the failure is recorded", join_result(box).get("quick_check", {}).get("pass"), False)
+    r = join(box, "--into", "integ", "feat/core", "feat/api", env={"GATE_TEST_FAIL": "unit,e2e"})
+    t.eq("unit and e2e are not part of the light check", r.code, 0)
 
-    # a failing step that the quick check does not run is left to the ready PR's CI
-    box = ws_box(shared)
+    # per project: join_guards false drops the guards; "join": true on a step adds it
+    cfg = Box.gate_json()
+    cfg["join_guards"] = False
+    for st in cfg["steps"]:
+        if st["name"] == "lint":
+            st["join"] = False
+        if st["name"] == "unit":
+            st["join"] = True
+    box = ws_box(shared, gate_json=cfg)
     box.gated("feat/core", {"packages/core/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
     box.gated("feat/api", {"apps/api/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
-    r = join(box, "--into", "integ", "feat/core", "feat/api", env={"GATE_TEST_FAIL": "lint,e2e"})
-    t.eq("lint is not part of the quick check", r.code, 0)
+    box.clear_log()
+    r = join(box, "--into", "integ", "feat/core", "feat/api")
+    t.eq("configured: no guards, no lint, unit added", (r.code, [x[0] for x in box.ran(True)]),
+         (0, ["setup", "typecheck", "unit"]))
 
-    # nothing but docs changed: install only, and it passes
+    # nothing but docs changed: install and the guards only, and it passes
     box = ws_box(shared)
     box.gated("feat/docs", {"docs/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
     box.gated("feat/docs2", {"docs/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
     box.clear_log()
     r = join(box, "--into", "integ", "feat/docs", "feat/docs2")
-    t.eq("no package changed: exit 0, only the install ran", (r.code, [x[0] for x in box.ran(True)]), (0, ["setup"]))
+    t.eq("no package changed: exit 0, the install and the guards ran",
+         (r.code, [x[0] for x in box.ran(True)]), (0, ["setup", "guards", "secret-scan"]))
 
-    # a widening file (the lockfile) runs the full commands
+    # a widening file (the lockfile) runs the full commands of the light steps, still no tests
     box = ws_box(shared)
     box.gated("feat/lock", {"pnpm-lock.yaml": "lock\nl1\nchanged\n"}, frm="integ", base_ref="origin/integ")
     box.gated("feat/api", {"apps/api/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
     box.clear_log()
     r = join(box, "--into", "integ", "feat/lock", "feat/api")
-    t.eq("a widened join runs the full commands", [x for x in box.ran() if x[0] == "unit"], [["unit", "FULL"]])
+    t.eq("a widened join runs the full typecheck, and no tests",
+         ([x for x in box.ran() if x[0] == "typecheck"], [x for x in box.ran() if x[0] == "unit"]),
+         ([["typecheck", "FULL"]], []))
 
     # --no-gate and the trusted-tree skip stay
     box = ws_box(shared)
     box.gated("feat/api", {"apps/api/b.txt": "b\n"}, frm="integ", base_ref="origin/integ")
     box.clear_log()
     r = join(box, "--into", "integ", "feat/api", "--no-gate")
-    t.eq("--no-gate: no quick check", (r.code, box.ran(True), "quick_check" in join_result(box)), (0, [], False))
+    t.eq("--no-gate: no check", (r.code, box.ran(True), "quick_check" in join_result(box)), (0, [], False))
     box = ws_box(shared)
     box.gated("feat/api", {"apps/api/b.txt": "b\n"}, base_ref="origin/main", frm="integ")
     box.clear_log()
@@ -3326,16 +3346,18 @@ MUTANTS = [
      'if not any(own.get(d) for d in users):', 'if False:', 'e2e_graph'),
     ('a ui file outside any package is ignored', 'scripts/delivery/delivery_common.py',
      'if pkg is None or not is_ui_dir(pkg, ui_paths):\n                return []', 'if pkg is None:\n                continue', 'e2e_graph'),
-    ("the quick check runs every step", "scripts/delivery/join.py",
-     'QUICK_STEPS = ("build", "typecheck", "unit", "test")', 'QUICK_STEPS = ("build", "typecheck", "unit", "test", "lint", "guards")', "join_quick"),
-    ("the quick check leaves out the dependents", "scripts/delivery/join.py",
-     'copy[key].replace("{changed_dirs}", "{affected_dirs}")', 'copy[key]', "join_quick"),
+    ("the light check runs the tests", "scripts/delivery/join.py",
+     'QUICK_STEPS = ("typecheck", "lint")', 'QUICK_STEPS = ("typecheck", "lint", "unit", "test", "e2e")', "join_quick"),
+    ("the light check skips the fast guards", "scripts/delivery/join.py",
+     "    if ok and guards:", "    if False:", "join_quick"),
+    ("the light check ignores join_guards", "scripts/delivery/join.py",
+     'guards = cfg.get("join_guards", True) and', "guards =", "join_quick"),
     ("a failed quick check still passes", "scripts/delivery/join.py",
      'ok = not timed_out and not any(e["outcome"] == "fail" for e in entries)', "ok = True", "join_quick"),
     ("a failed quick check does not stop the join", "scripts/delivery/join.py",
-     '        if code != 0:\n            dc.eprint("join: the quick check', '        if False:\n            dc.eprint("join: the quick check', "join_quick"),
+     '        if code != 0:\n            dc.eprint("join: the light check', '        if False:\n            dc.eprint("join: the light check', "join_quick"),
     ("the quick check records no step times", "scripts/delivery/join.py",
-     '"steps": [{"name": e["name"], "outcome": e["outcome"], "seconds": e["seconds"]} for e in entries],', '"steps": [],', "join_quick"),
+     '"seconds": total, "steps": steps_report,', '"seconds": total, "steps": [],', "join_quick"),
     ("--no-gate still runs the quick check", "scripts/delivery/join.py",
      "    elif not args.no_gate:\n        code, qc", "    else:\n        code, qc", "join_quick"),
     ("a push to a frozen branch is allowed", "scripts/delivery/train_freeze.py",
