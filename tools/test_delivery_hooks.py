@@ -640,16 +640,16 @@ def dl53_worktree_outside_work_root():
 
 @test
 def dl55_second_install_waits():
-    inst = [{'product': 'home', 'state': 'installing', 'started': iso(10)}]
+    inst = [{'product': 'app', 'state': 'installing', 'started': iso(10)}]
     p = Project(ledger(installs=inst))
-    assert 'DL-55' in why(bash(p, 'schtasks /run /tn "HomeUpdateNow"'))
-    assert 'DL-55' in why(bash(p, 'msiexec /i operator.msi'))
+    assert 'DL-55' in why(bash(p, 'schtasks /run /tn "AppUpdateNow"'))
+    assert 'DL-55' in why(bash(p, 'msiexec /i app.msi'))
     p.close()
     p = Project(ledger(installs=[dict(inst[0], state='done')]))
-    expect_pass(bash(p, 'msiexec /i operator.msi'))
+    expect_pass(bash(p, 'msiexec /i app.msi'))
     p.close()
     p = Project(ledger(installs=[dict(inst[0], started=iso(300))]))      # stale
-    expect_pass(bash(p, 'msiexec /i operator.msi'))
+    expect_pass(bash(p, 'msiexec /i app.msi'))
     p.close()
 
 
@@ -828,14 +828,14 @@ def pre_hook_fails_open_on_bad_input():
 @test
 def session_start_summary_catchup_and_watcher_prompt():
     lg = ledger(trains=[train(state='ci', pr=412)], agents=[agent(last_checked=iso(60))], watchers=[],
-                installs=[{'product': 'home', 'state': 'installing', 'started': iso(3)}],
+                installs=[{'product': 'app', 'state': 'installing', 'started': iso(3)}],
                 publishes=[{'artifact': 'full-progress', 'last_at': iso(75)}])
     p = Project(lg)
     gh = p.stub_gh(merged=[{'number': 412, 'mergedAt': iso(4)}])
     r = p.run('hook_session_start.py', {}, {'DELIVERY_GH': gh})
     ctx = r[1]['hookSpecificOutput']['additionalContext']
     assert r[1]['hookSpecificOutput']['hookEventName'] == 'SessionStart'
-    for needle in ('RELEASE-29', '1 running', 'DV1', 'home installing', 'published 75 min ago',
+    for needle in ('RELEASE-29', '1 running', 'DV1', 'app installing', 'published 75 min ago',
                    'merged at', 'cleanup.py --pr 412', 'hourly check-in', 'delivery_watch.py'):
         assert needle in ctx, (needle, ctx)
     p.close()

@@ -466,7 +466,7 @@ class RunnersInstallsHeartbeatTests(unittest.TestCase):
         state = tempfile.mktemp(suffix=".json")
         with open(state, "w") as fh:
             json.dump({"version": "0.1.6212", "state": "done", "ended": "2026-10-14T11:00:00Z"}, fh)
-        root = make_root({"install_state_files": [{"product": "home", "path": state}], "local_runners": ["build-pc-linux"]})
+        root = make_root({"install_state_files": [{"product": "app", "path": state}], "local_runners": ["build-pc-linux"]})
         seed(root, runners=[{"name": "build-pc-linux", "paused_by": "B14-build"}])
         payload = {"runners": [{"name": "build-pc-linux", "status": "online", "busy": True,
                                 "labels": [{"name": "self-hosted"}, {"name": "Linux"}]}]}
@@ -479,7 +479,7 @@ class RunnersInstallsHeartbeatTests(unittest.TestCase):
         self.assertEqual((r["online"], r["busy"], r["local"], r["paused_by"]), (True, True, True, "B14-build"))
         self.assertEqual(r["labels"], ["self-hosted", "Linux"])
         self.assertEqual((led["installs"][0]["product"], led["installs"][0]["version"], led["installs"][0]["state"]),
-                         ("home", "0.1.6212", "done"))
+                         ("app", "0.1.6212", "done"))
         hb = led["watchers"][0]
         self.assertEqual((hb["pid"], hb["kind"], hb["heartbeat_at"]), (os.getpid(), "delivery_watch", "2026-10-14T12:00:00Z"))
         watcher(root, sh).run_once("2026-10-14T11:00:00Z")

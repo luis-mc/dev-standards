@@ -40,13 +40,13 @@ Legend
 | DL-18 | One deploy per merge; smoke-test production after it; fix forward on a new branch; ask before a rollback when the owner is awake. | CLAUDE.md, delivery-speed-practices 10-07 | G | STOP | `trains[].merged_at` set, `smoke.state` null; the message names the project's `smoke_command`, then `delivery_ledger.py smoke --pr N`, which reads the newest `smoke_workflow` run on the merge commit and records `smoke` and `live_at` on every row with that pr | ~ deploy-job smoke (CI); `smoke_packaged.py` for packaged apps |
 | DL-19 | Vercel deploys only from the default branch; no preview deploys for agent branches; never merge mid-round to see it deployed. | CLAUDE.md | G | PRE (`vercel deploy` without `--prod`, on non-default branch) | git branch, command | ~ `git.deploymentEnabled` config |
 | DL-20 | Never `vercel env rm` to narrow targets; after an env change re-list Production. | vercel-env-rm | G | PRE (deny `vercel env rm`) + POST (queue a re-list) | command tokens | N |
-| DL-21 | CI and installer jobs run only on self-hosted runners; never a GitHub-hosted `runs-on`. | CLAUDE.md | P (G as option) | CI | workflow YAML | Y `packages/windows-installer/src/ci-workflows.test.ts` |
+| DL-21 | CI jobs run only on self-hosted runners; never a GitHub-hosted `runs-on`. | CLAUDE.md | P (G as option) | CI | workflow YAML | N |
 | DL-22 | Build artifacts: keep only the newest of each stable name. | rules | G | CI | artifacts list | Y `artifact-prune.yml` / `artifact_prune.py` |
 | DL-23 | A gate that fails at `setup` = stale lockfile: regenerate and commit, never install unfrozen. | rules | G | PRE (deny `--no-frozen-lockfile`, `npm install` in gate context) | command tokens | N |
 | DL-24 | Spec change notes are folded only by the release PR; never commit with conflict markers. | delivery-speed-practices 10-05 | G | GIT pre-commit | staged diff for `^<<<<<<<` | ~ `change_notes.py`; marker check not confirmed |
-| DL-25 | Put catalogue/matching cargo (the long pole) in the earliest train. | delivery-speed-practices 10-05 | P | TEXT (proxy: runner_plan order) | `trains[].cargo[].paths` vs long-pole globs | N |
-| DL-26 | Merge+deploy and catalogue publish need no click when the full suite is green and the owner library measures zero regressions. | standing-release-mandate | P | STOP (via DL-03) + PRE merge | `trains[].measure.state` when cargo touches matching paths | N |
-| DL-27 | Measure every matching/catalogue change on copies of the owner library inside the agent loop, never first at the release gate. | speed-without-compromise | P | PRE `gh pr merge` | `trains[].measure`, cargo paths | N |
+| DL-25 | removed: project-specific, not part of the plugins |
+| DL-26 | removed: project-specific, not part of the plugins |
+| DL-27 | removed: project-specific, not part of the plugins |
 
 ### 1b. Agents
 
@@ -75,11 +75,11 @@ Legend
 |---|---|---|---|---|---|---|
 | DL-50 | One heavy local job at a time; heavy jobs yield to train CI and pause the local runner for their duration, always resuming it. | ci-runners-on-this-pc, owner-answers-2026-10-14-morning, delivery-speed-practices | G (runner_plan) / P (heavy-job.ts) | PRE (heavy command not via wrapper) + WATCH | `runners[].busy/paused_by`, `jobs[state=running, heavy]` | ~ a project's own heavy-job script; nothing forces the wrapper |
 | DL-51 | Never add CI runners on this PC; weigh memory before heavy local work. | ci-runners-on-this-pc | P | TEXT + WATCH (memory) | free memory | N |
-| DL-52 | Start every local operator/node:sqlite job pinned off cores 10/11 at BelowNormal. | ci-core-mask | P | PRE (wrapper) | command via wrapper | ~ CI mask task; local jobs by hand |
+| DL-52 | removed: project-specific, not part of the plugins |
 | DL-53 | Worktrees and scratch only under the work root (`C:\Work\...`), never under the projects folder or `.claude/worktrees`; remove when done. | work-folders | G (root in config) | PRE `git worktree add`, `EnterWorktree` | path vs `config.work_root` | N |
-| DL-54 | Installers are built and published only by the pipeline; local builds only to test. | local-installer-releases | P | PRE (deny local publish command) | command tokens | N |
-| DL-55 | Installs run through the SYSTEM update tasks (no UAC), one at a time; a second install waits. | update-feedback, away-2026-10-13-late-night | P | PRE (`msiexec`, `schtasks /run ...UpdateNow`) + POST | `installs[state=installing]` | N |
-| DL-56 | Build and install operator/home MSIs on this PC and verify before pushing such changes. | install-locally-before-push (superseded in part by pipeline auto-update) | P | TEXT | `installs[]` for the product at the train's version | N |
+| DL-54 | removed: project-specific, not part of the plugins |
+| DL-55 | Installs run one at a time; a second install waits. | install-serialisation | P | PRE (`msiexec`, `schtasks /run ...UpdateNow`) + POST | `installs[state=installing]` | N |
+| DL-56 | removed: project-specific, not part of the plugins |
 | DL-77 | No memory above 85% and no CPU above 60% on the machine: while either is over its limit, start no new heavy work (test runners, builds, installs, docker, ffmpeg, background jobs, local agents, workflows). Cloud launches are never held. Never kill or slow anything running. | owner rule 23 Oct 2026 (two crashes under file-load peaks) | G | PRE `Bash`, `PowerShell`, `Agent`, `Workflow` (exit 2) | total memory % and CPU % (load.py, ~1 s CPU window, 10 s cache); limits: project `load_limits` over `~/.claude/luismc-delivery-machine.json` over 85/60; heavy list in the plugin README and `heavy_commands` | Y (on in every project where the plugin is enabled, with or without `.delivery/`; fails open with a warning when the machine cannot be measured) |
 | DL-78 | When the machine is over a limit, say so once per turn (numbers and limits) so the session holds new work. | owner rule 23 Oct 2026 | G | STOP + SS (non-blocking `systemMessage`; SessionStart also `additionalContext`) | same sample as DL-77 | Y |
 | DL-79 | A self-hosted runner starts a job only when the machine is under the DL-77 limits: `runner_load_gate.py` is the runner's `ACTIONS_RUNNER_HOOK_JOB_STARTED` hook, polls every 15 s for up to 30 min (then fails the job with a log line), and the doctor reports whether the hook is set. | owner rule 23 Oct 2026 | G | WATCH (runner hook) + doctor `runner` check | same sample; `ACTIONS_RUNNER_HOOK_JOB_STARTED` in the environment or a runner folder's `.env` | Y when installed (the plugin changes no runner configuration) |
@@ -159,7 +159,7 @@ the Full Progress renderer (DL-65: the one truth for shown state).
   }],
   "jobs": [{"id": "B14-build", "cmd": "…", "heavy": true, "pid": 1234, "log_path": "…",
             "started": ISO, "typical_step_min": 20, "last_checked": ISO, "state": "running|done|failed|waiting-ci"}],
-  "installs": [{"product": "home|operator", "version": "0.1.6212", "via": "HomeUpdateNow",
+  "installs": [{"product": "app|svc", "version": "0.1.6212", "via": "AppUpdateNow",
                 "state": "queued|installing|done|failed", "started": ISO, "ended": ISO, "log": "…"}],
   "publishes": [{"artifact": "full-progress", "url": "https://claude.ai/artifact/…",
                  "last_at": ISO, "last_version": 512, "last_state_hash": "sha256 of the publish copy",
@@ -206,11 +206,8 @@ the Full Progress renderer (DL-65: the one truth for shown state).
 |---|---|---|
 | DL-40 bundle related tasks into one agent | "same area" and "large" are judgment | PRE on launch injects the open To do/Waiting tasks with the same app/owner and the running agents' `owns[]` overlap as additionalContext; deny only when a running agent owns the same paths (DL-41) |
 | DL-30 ETA sizing honesty | true scope unknown to a hook | require the breakdown block; warn when total > 2x the `eta_table` row for the declared size; record actual vs ETA in `events` and show the ratio on Full Progress so padding is visible |
-| DL-25 long pole first | needs knowing which cargo gates a later step | config `long_pole_globs`; Stop warns when a later train carries them while an earlier one does not |
-| DL-27 measure on the real library in the agent loop | the agent sandbox may not reach the library | PRE `gh pr merge` deny when cargo touches `measure_globs` and `trains[].measure.state != clean` |
 | DL-44 report first, push after every step | inside the agent's own session | brief marker (DL-36) + watcher marks `stalled` when the branch has not moved for `2x eta.breakdown.work` |
 | DL-50/51 memory weighing | memory is machine state, thresholds vary | `runner_plan.py` reads free memory and running heavy jobs; PRE on known heavy commands outside the wrapper |
-| DL-56 install locally before push | partly superseded by pipeline auto-update | `installs[]` record for the train version; Stop warns after `live_at` when no install row |
 | DL-70 "all questions" | whether every open decision is listed is judgment | `owner_questions[]`: PRE on a dialog adds the list of unanswered ledger questions not in this call; STOP warns when a later turn asks new questions while older ones stay unasked |
 | DL-71 no text before a dialog | text length is a crude signal | PRE deny once when > ~300 chars of assistant text precede the dialog in the turn; reason says "end the turn with the text, ask in plain chat" |
 | DL-72 rejected dialog is not a stop | needs reading intent | POST-failure context line only |

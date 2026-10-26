@@ -11,7 +11,7 @@ import hooklib as H
 MERGE = "m" * 40
 
 
-def train(tid="T-1", pr=482, **kw):
+def train(tid="T-1", pr=42, **kw):
     t = {"id": tid, "release_no": 41, "branch": "release/41", "pr": pr, "state": "merged",
          "merged_at": "2026-10-20T01:00:00Z", "cleaned_at": None, "live_at": None, "smoke": {"state": None, "at": None},
          "cargo": [{"task": "DV1", "branch": "DV1-fix"}], "ci": {"state": "success", "head_sha": "abc"}}
@@ -57,7 +57,7 @@ class SmokeTests(unittest.TestCase):
 
     def test_success_records_every_row_with_the_pr(self):
         before = json.dumps(self.rows()["T-1"]["ci"])
-        code = L._cmd_smoke(self.root, Args(pr=482), run=stub_gh([srun(1, "failure", at="2026-10-20T01:00:00Z"), srun(2)]))
+        code = L._cmd_smoke(self.root, Args(pr=42), run=stub_gh([srun(1, "failure", at="2026-10-20T01:00:00Z"), srun(2)]))
         self.assertEqual(code, 0)
         rows = self.rows()
         for tid in ("T-1", "T-2"):
@@ -71,21 +71,21 @@ class SmokeTests(unittest.TestCase):
         self.assertIn("smoke.pass", [e["kind"] for e in L.load(self.root)["events"]])
 
     def test_failure_records_fail_and_exits_1(self):
-        self.assertEqual(L._cmd_smoke(self.root, Args(pr=482), run=stub_gh([srun(3, "failure")])), 1)
+        self.assertEqual(L._cmd_smoke(self.root, Args(pr=42), run=stub_gh([srun(3, "failure")])), 1)
         self.assertEqual(self.rows()["T-1"]["smoke"]["state"], "fail")
 
     def test_missing_or_unfinished_records_nothing(self):
         for runs, merge in (([], MERGE), ([srun(4, None, "in_progress")], MERGE), ([], None)):
-            self.assertEqual(L._cmd_smoke(self.root, Args(pr=482), run=stub_gh(runs, merge)), 1)
+            self.assertEqual(L._cmd_smoke(self.root, Args(pr=42), run=stub_gh(runs, merge)), 1)
             self.assertIsNone(self.rows()["T-1"]["smoke"]["state"])
             self.assertEqual(L.load(self.root)["events"], [])
 
     def test_explicit_run_and_configured_workflow(self):
-        self.assertEqual(L._cmd_smoke(self.root, Args(pr=482, run="https://github.com/o/r/actions/runs/9"),
+        self.assertEqual(L._cmd_smoke(self.root, Args(pr=42, run="https://github.com/o/r/actions/runs/9"),
                                       run=stub_gh([srun(9)])), 0)
         root = make_root({"smoke_workflow": "Prod check"})
         seed(root, train())
-        self.assertEqual(L._cmd_smoke(root, Args(pr=482), run=stub_gh([srun(5)], view="Prod check")), 0)
+        self.assertEqual(L._cmd_smoke(root, Args(pr=42), run=stub_gh([srun(5)], view="Prod check")), 0)
 
     def test_unknown_pr(self):
         with self.assertRaises(L.LedgerError):
@@ -112,12 +112,12 @@ class CleanedTests(unittest.TestCase):
 
     def test_present_branches_and_worktrees_are_listed_and_nothing_recorded(self):
         for kw in ({"remote": ["DV1-fix"]}, {"worktrees": ["release/41"]}):
-            self.assertEqual(L._cmd_cleaned(self.root, Args(pr=482), run=git_stub(**kw)), 1)
+            self.assertEqual(L._cmd_cleaned(self.root, Args(pr=42), run=git_stub(**kw)), 1)
             self.assertIsNone(self.rows()["T-1"]["cleaned_at"])
         self.assertEqual(L.load(self.root)["events"], [])
 
     def test_gone_records_every_row_and_an_event(self):
-        self.assertEqual(L._cmd_cleaned(self.root, Args(pr=482), run=git_stub()), 0)
+        self.assertEqual(L._cmd_cleaned(self.root, Args(pr=42), run=git_stub()), 0)
         for t in self.rows().values():
             self.assertTrue(t["cleaned_at"])
             self.assertEqual(t["state"], "cleaned")
@@ -125,7 +125,7 @@ class CleanedTests(unittest.TestCase):
 
     def test_git_failure_records_nothing(self):
         with self.assertRaises(L.LedgerError):
-            L._cmd_cleaned(self.root, Args(pr=482), run=lambda a, r, timeout=60: (1, ""))
+            L._cmd_cleaned(self.root, Args(pr=42), run=lambda a, r, timeout=60: (1, ""))
         self.assertIsNone(self.rows()["T-1"]["cleaned_at"])
 
 
@@ -137,16 +137,16 @@ class MessageTests(unittest.TestCase):
         cfg.update({"cleanup_command": "python scripts/delivery/cleanup.py --pr {pr}", "smoke_command": "scripts/smoke.sh {pr}"})
         msgs = dict(S.check_trains(dict(led, agents=[]), cfg, H.now()))
         m14, m18 = msgs["DL-14:T-1"], msgs["DL-18:T-1"]
-        self.assertIn("`python scripts/delivery/cleanup.py --pr 482`", m14)
-        self.assertIn("delivery_ledger.py cleaned --pr 482", m14)
-        self.assertIn("`scripts/smoke.sh 482`", m18)
-        self.assertIn("delivery_ledger.py smoke --pr 482", m18)
+        self.assertIn("`python scripts/delivery/cleanup.py --pr 42`", m14)
+        self.assertIn("delivery_ledger.py cleaned --pr 42", m14)
+        self.assertIn("`scripts/smoke.sh 42`", m18)
+        self.assertIn("delivery_ledger.py smoke --pr 42", m18)
         self.assertTrue(os.path.isabs(m14.split("`python ")[-1].split(" ")[0]))
 
     def test_defaults_without_config(self):
         msgs = dict(S.check_trains({"trains": [train()], "agents": []}, H.load_config(make_root()), H.now()))
-        self.assertIn("Run cleanup.py --pr 482", msgs["DL-14:T-1"])
-        self.assertIn("delivery_ledger.py smoke --pr 482", msgs["DL-18:T-1"])
+        self.assertIn("Run cleanup.py --pr 42", msgs["DL-14:T-1"])
+        self.assertIn("delivery_ledger.py smoke --pr 42", msgs["DL-18:T-1"])
 
 
 class LoopLimitTests(unittest.TestCase):

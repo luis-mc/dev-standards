@@ -1,6 +1,6 @@
 # DV438 report: start time and dropped releases
 
-**Cause.** (1) `render_artifacts.py` `_other_row` drew an open no-release task's bar from `task['started']`, else "now", but nothing in `project_artifacts.py` could set `started`, so every waiting or needs-you bar began at "now" and looked like it was running now. (2) No status closed a release truthfully: Live and Failed are false for work folded into another release, and On hold stays in `open_releases` with a bar on the "Next releases" chart (RELEASE-95 and RELEASE-96 merged).
+**Cause.** (1) `render_artifacts.py` `_other_row` drew an open no-release task's bar from `task['started']`, else "now", but nothing in `project_artifacts.py` could set `started`, so every waiting or needs-you bar began at "now" and looked like it was running now. (2) No status closed a release truthfully: Live and Failed are false for work folded into another release, and On hold stays in `open_releases` with a bar on the "Next releases" chart.
 
 **Change.**
 - `--started "DD Mon ~HH:MM"|HH:MM` on `set-task-status` and `task-add`: same parsing and project zone as `--phase`, stored as ISO with offset, refused unless before Expected (also when a later `--expected` would pass it), `""` clears it, `check` reports a bad one. A task that first moves to Running with none gets now, unless its Expected has already passed. `started` is in the publish fingerprint. ARTIFACTSPEC R5.48; task-status skill.

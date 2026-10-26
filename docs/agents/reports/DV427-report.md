@@ -1,6 +1,6 @@
 # DV427 report: Needs you vs Waiting for other work
 
-Branch `claude/DV427-needs-you-vs-waiting`. Draft PR #94.
+Branch `claude/DV427-needs-you-vs-waiting`.
 
 ## What changed
 - The only "Waiting or on hold" section is the At a glance group `waiting` (R5.34). It is now **Waiting for other work**; a Waiting or On hold task that waits on the owner moves into the **Needs you** group (`you`), after Needs you tasks and before Failed. Needs you count, the Needs you sentence (R5.7) and a feature's generated summary (R5.36) include them, so the glance count equals the section.

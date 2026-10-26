@@ -1,7 +1,7 @@
 # DV350 — watcher re-checks red trains
 
 Branch: `claude/DV350-watcher-red-rerun` (from `main`). Plugin: `luismc-delivery` 0.5.0 -> 0.5.1 (no changelog file exists; change notes are folded at release).
-Head SHA: 1d20667 (first commit). PR: #83 (draft).
+Head SHA: 1d20667 (first commit).
 
 ## Bug
 `delivery_watch.py` skipped trains with ledger state `red`. A failed CI workflow re-run by the owner for the same head commit and turning green was never noticed, so no green was recorded and no merge happened.

@@ -88,12 +88,12 @@ class BashTests(unittest.TestCase):
         self.assertEqual(self.led()["trains"][2]["state"], "green")
 
     def test_msiexec_and_schtasks(self):
-        H.handle(bash('msiexec /i "C:\\build\\Home-0.1.6212.msi" /qn'), self.root)
-        H.handle(bash("schtasks /run /tn HomeUpdateNow"), self.root)
+        H.handle(bash('msiexec /i "C:\\build\\App-0.1.6212.msi" /qn'), self.root)
+        H.handle(bash("schtasks /run /tn AppUpdateNow"), self.root)
         ins = self.led()["installs"]
         self.assertEqual(ins[0]["via"], "msiexec")
         self.assertEqual(ins[0]["state"], "done")
-        self.assertEqual((ins[1]["product"], ins[1]["state"]), ("home", "installing"))
+        self.assertEqual((ins[1]["product"], ins[1]["state"]), ("app", "installing"))
 
     def test_msiexec_failure_marks_failed(self):
         H.handle(bash("msiexec /i x.msi /qn", "Exit code 1603", event="PostToolUseFailure"), self.root)
