@@ -134,12 +134,13 @@ DEFAULT_TRAIN_RE = r'^release/\d+[a-z]?$'      # same default as hook_post_tool.
 
 
 def is_release_branch(cfg, branch):
-    """True for a release/integration branch: config train_branch_re (default release/<n>), any `release_branches`
-    globs of the config, or a name ending -integration."""
+    """True for a release/integration branch (DL-11): config join_branch_re (default release/<n>), any
+    `release_branches` globs of the config, or a name ending -integration. Never train_branch_re or
+    release_branch_re: projects widen those to agent branches (comics-organizer: ^(release|claude)/)."""
     if not branch or not isinstance(branch, str):
         return False
     try:
-        if re.search(cfg.get('train_branch_re') or DEFAULT_TRAIN_RE, branch):
+        if re.search(cfg.get('join_branch_re') or DEFAULT_TRAIN_RE, branch):
             return True
     except re.error:
         pass

@@ -45,6 +45,11 @@
       "type": "string",
       "format": "regex"
     },
+    "join_branch_re": {
+      "type": "string",
+      "format": "regex",
+      "description": "Release/integration branches where the branch gate is refused (DL-11); default release/<n>."
+    },
     "train_branch_re": {
       "type": "string",
       "format": "regex",
