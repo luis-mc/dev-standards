@@ -7,12 +7,13 @@ rule, with a one-line reason that names the DL id and the fix, as
 Reads the ledger and .delivery/config.json read-only. A project without .delivery/ is
 untouched; an error in the hook allows the call (fail open).
 
-Checks: DL-77 (load guard, exit 2), DL-05 06 07 20 23 36 37 38 41 42 53 55 73 74 75, D4 (PC-bound), Q-3, Q-4.
+Checks: DL-77 (load guard, exit 2), DL-11 (no branch gate on a join), DL-05 06 07 20 23 36 37 38 41 42 53 55 73 74 75, D4 (PC-bound), Q-3, Q-4.
 """
 import fnmatch
 import json
 import os
 import re
+import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -23,6 +24,9 @@ import load_guard as G  # noqa: E402
 ATTRIBUTION_RE = re.compile(r'co-authored-by|generated with \[?claude|claude code|noreply@anthropic\.com|'
                             r'\U0001F916 generated|written by claude|\bclaude-session\b', re.I)
 LOCKFILE_OK = ('--frozen-lockfile', '--immutable', 'ci')
+GATE_NAMES = ('check:branch', 'branch_gate.py')
+BRIEF_GATE_RE = re.compile(r'check:branch|branch_gate\.py|--full\b|--keep-going\b|--time-limit\b', re.I)
+JOIN_LINE_RE = re.compile(r'^\s*join\b|\bjoin\.py\b|\bjoin\s+RELEASE-', re.M | re.I)
 PC_BOUND_RE = re.compile(r'^\s*PC-bound:\s*\S', re.M | re.I)
 
 
@@ -208,10 +212,52 @@ def check_attribution(seg, command, cfg):
              'Remove those lines from the message or body.')
 
 
+def current_branch(cwd):
+    try:
+        r = subprocess.run(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], cwd=cwd, capture_output=True, text=True,
+                           timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return r.stdout.strip() if r.returncode == 0 else None
+
+
+def runs_branch_gate(seg):
+    """True when the simple command runs the branch gate: pnpm/npm/yarn run check:branch, branch_gate.py, or
+    run_suite.py --full."""
+    t = H.strip_prefix(seg)
+    low = [x.lower() for x in t]
+    if any(os.path.basename(x.replace('\\', '/')) == 'branch_gate.py' for x in low):
+        return True
+    if low and low[0] in ('npm', 'pnpm', 'yarn', 'bun', 'npx') and 'check:branch' in low[1:]:
+        return True
+    return any(os.path.basename(x.replace('\\', '/')) == 'run_suite.py' for x in low) and '--full' in low
+
+
+def check_join_gate(seg, cfg, branch):
+    """DL-11: the branch gate never runs on a release/integration branch (`branch` is the one in force)."""
+    if not runs_branch_gate(seg):
+        return
+    t = H.strip_prefix(seg)
+    for i, x in enumerate(t[:-1]):
+        if x == '--head':
+            branch = t[i + 1]
+    if H.is_release_branch(cfg, branch):
+        deny('DL-11 a join is light: typecheck + lint of touched packages and the fast guards (fast_guards.py), then '
+             'push and open the ready PR; the ready PR CI is the one full run. Do not run the branch gate on %s.'
+             % branch)
+
+
 def check_bash(root, cfg, ledger, data, at):
     command = (data.get('tool_input') or {}).get('command') or ''
     cwd = data.get('cwd') if isinstance(data.get('cwd'), str) else root
+    branch = None            # None: ask git lazily; a `git checkout/switch <ref>` earlier in the command overrides
     for seg in H.segments(command):
+        if H.starts_with(seg, ['git', 'checkout']) or H.starts_with(seg, ['git', 'switch']):
+            refs = [a for a in H.strip_prefix(seg)[2:] if not a.startswith('-')]
+            if refs:
+                branch = refs[-1]
+        if H.check_on(cfg, 'DL-11') and runs_branch_gate(seg):
+            check_join_gate(seg, cfg, branch if branch is not None else current_branch(cwd))
         if H.starts_with(seg, ['gh', 'pr', 'merge']) and H.check_on(cfg, 'DL-05'):
             check_merge(root, seg, ledger)
         if H.starts_with(seg, ['gh', 'pr', 'checks']) and flag(seg, '--watch') and H.check_on(cfg, 'DL-07'):
@@ -328,6 +374,17 @@ def free_gb():
     return None
 
 
+def check_join_brief(cfg, text, block):
+    """DL-11: a join brief never names the branch gate. A join brief is one whose delivery block branch is a
+    release/integration branch, or whose text mentions join.py, has a line starting 'Join', or says 'join RELEASE-'."""
+    is_join = H.is_release_branch(cfg, (block.get('branch') or '').strip()) or bool(JOIN_LINE_RE.search(text))
+    named = BRIEF_GATE_RE.search(text) if is_join else None
+    if named:
+        deny('DL-11 a join is light, so this join brief must not name the branch gate (found "%s"). Brief the light '
+             'steps instead: merge, resolve conflicts, fold spec notes, typecheck + lint of touched packages, fast '
+             'guards (fast_guards.py), push, open the ready PR; its CI is the one full run.' % named.group(0))
+
+
 def check_launch(cfg, ledger, data, where):
     ti = data.get('tool_input') or {}
     if where == 'cloud':
@@ -336,6 +393,8 @@ def check_launch(cfg, ledger, data, where):
             return
     text = brief_text(ti)
     block = delivery_block(text)
+    if H.check_on(cfg, 'DL-11'):
+        check_join_brief(cfg, text, block)
     cloud_running = len(H.running_agents(ledger, 'cloud'))
     local_running = len(H.running_agents(ledger, 'local'))
     cap_cloud, cap_local = int(cfg['caps'].get('cloud', 8)), int(cfg['caps'].get('local', 3))
