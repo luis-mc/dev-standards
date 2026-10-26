@@ -10,18 +10,18 @@ from _helpers import L, make_root
 from test_watch import FakeShell, NOW, SHA, OLD, routes_for_green, runs, seed, watcher
 import delivery_config as C
 
-# the config of comics-organizer PR #351 (CO159-delivery-setup), trimmed to the keys under test
-COMICS = {
-    "caps": {"cloud": 8, "local": 3, "total": 5}, "work_root": "C:/ComicsWork", "tz": "Europe/Lisbon",
+# a real project's config, trimmed to the keys under test
+SAMPLE_PROJECT = {
+    "caps": {"cloud": 8, "local": 3, "total": 5}, "work_root": "C:/Work", "tz": "Europe/Lisbon",
     "base": "master", "train_label_re": r"\b(?:T-\d{4}-\d{2}-\d{2}-\d+|release/\d+[a-z]?)\b",
     "release_branch_re": "^(release|claude)/", "train_branch_re": "^(release|claude)/",
     "brief_markers": ["BRIEF.md"], "checks_off": [], "no_attribution": True, "watch_interval": 600,
     "enforcement": {"mode": "block", "block_ceiling": 3, "log_every_block": True},
     "watcher": {"push_trains": True, "open_prs": True, "merge_on_green": True, "merge_flag": "--merge",
                 "never_auto_merge": True},
-    "local_runners": ["GameRoomPC"],
-    "runners": [{"name": "GameRoomPC", "os": "Windows", "repair": ["powershell -Command x"]},
-                {"name": "GameRoomPC-linux", "os": "Linux", "repair": [["docker", "restart", "c"]]},
+    "local_runners": ["build-pc"],
+    "runners": [{"name": "build-pc", "os": "Windows", "repair": ["powershell -Command x"]},
+                {"name": "build-pc-linux", "os": "Linux", "repair": [["docker", "restart", "c"]]},
                 {"name": "NUC8-linux", "os": "Linux", "repair": []}],
     "runner_plan": {"retry_seconds": 300, "runner_max_retries": 0, "cancel_replaced_runs": True,
                     "hold_dependabot_during_train": True, "heavy_local_jobs_yield": True, "report_command": "x"},
@@ -45,8 +45,8 @@ class SpawnShell(FakeShell):
 
 
 class ValidateTests(unittest.TestCase):
-    def test_real_comics_config_and_template_are_valid(self):
-        self.assertEqual(C.validate_config(COMICS), ([], []))
+    def test_sample_project_config_and_template_are_valid(self):
+        self.assertEqual(C.validate_config(SAMPLE_PROJECT), ([], []))
         tpl = Path(__file__).resolve().parents[2] / "project-setup/skills/claude-setup/assets/delivery-config.json"
         self.assertEqual(C.validate_config(json.loads(tpl.read_text(encoding="utf-8"))), ([], []))
 

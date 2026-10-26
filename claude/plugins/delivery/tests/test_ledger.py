@@ -130,7 +130,7 @@ class CliTests(unittest.TestCase):
 
     def test_plan_hold_measure_show(self):
         root = make_root({"tz": "Europe/Lisbon"})
-        p = self.run_cli(root, "plan", "--branch", "release/29", "--release-no", "29", "--cargo", "CO148:CO148-fix:409")
+        p = self.run_cli(root, "plan", "--branch", "release/29", "--release-no", "29", "--cargo", "DV148:DV148-fix:409")
         self.assertEqual(p.returncode, 0, p.stderr)
         tid = p.stdout.strip()
         self.assertTrue(tid.startswith("T-"))

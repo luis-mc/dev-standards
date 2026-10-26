@@ -2864,7 +2864,7 @@ def ws_box(shared: Path, gate_json: dict | None = None) -> Box:
 
 
 def sc_join_quick(t: T, shared: Path) -> None:
-    """CO493: the join is light: setup, typecheck and lint of the packages the merges touched, then the
+    """DV493: the join is light: setup, typecheck and lint of the packages the merges touched, then the
     fast guards; never a test step, never a full gate; it records the time of each step."""
     box = ws_box(shared)
     box.gated("feat/core", {"packages/core/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")

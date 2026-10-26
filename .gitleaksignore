@@ -27,7 +27,7 @@ c11c82c19c798cde397c31bbac44a9283aca3a8e:tools/test_artifact_prune.py:project-na
 # DS72 test_doctor.py: a test variable named plugin_key (renamed in fd62734), not a secret.
 f2b683e3acc216cdc03c9cb5c4825c703e91da18:claude/plugins/delivery/tests/test_doctor.py:project-named-secret:23
 f2b683e3acc216cdc03c9cb5c4825c703e91da18:claude/plugins/delivery/tests/test_doctor.py:project-named-secret:26
-# CO411 test_delivery_ci.py: a test constant named PULLS_KEY (an API route, renamed PULLS_ROUTE), not a secret.
+# DV411 test_delivery_ci.py: a test constant named PULLS_KEY (an API route, renamed PULLS_ROUTE), not a secret.
 a7af3a0e4fc222f1c8a47d835b9ea7fae99050ef:tools/test_delivery_ci.py:project-named-secret:243
 a7af3a0e4fc222f1c8a47d835b9ea7fae99050ef:tools/test_delivery_ci.py:project-named-secret:249
 a7af3a0e4fc222f1c8a47d835b9ea7fae99050ef:tools/test_delivery_ci.py:project-named-secret:269

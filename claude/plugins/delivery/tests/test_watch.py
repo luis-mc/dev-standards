@@ -309,7 +309,7 @@ class NextTrainTests(unittest.TestCase):
     def test_merge_then_push_next_joined_train_and_open_ready_pr(self):
         root = make_root()
         seed(root, [{"branch": "release/29", "pr": 10, "state": "ci"},
-                    {"branch": "release/30", "state": "joined", "release_no": 30, "cargo": [{"task": "CO1"}]}])
+                    {"branch": "release/30", "state": "joined", "release_no": 30, "cargo": [{"task": "DV1"}]}])
         r = routes_for_green()
         r[("git", "push")] = (0, "")
         r[("gh", "pr", "list", "--head")] = (0, "[]")
@@ -409,7 +409,7 @@ class RunTidyTests(unittest.TestCase):
 
 class AgentTests(unittest.TestCase):
     def agent(self, **kw):
-        a = {"task": "CO152", "where": "local", "id": "ag1", "branch": "CO152-x", "head_sha": SHA,
+        a = {"task": "DV152", "where": "local", "id": "ag1", "branch": "DV152-x", "head_sha": SHA,
              "started": "2026-10-14T10:00:00Z", "last_activity": "2026-10-14T11:50:00Z",
              "eta": {"total_min": 25, "breakdown": {"setup": 5, "work": 12, "checks": 8}}, "state": "running"}
         a.update(kw)
@@ -423,21 +423,21 @@ class AgentTests(unittest.TestCase):
         return L.load(root)["agents"][0], sh
 
     def test_branch_moved_updates_head_and_activity(self):
-        a, sh = self.run_agent(self.agent(), "%s\trefs/heads/CO152-x\n" % OLD)
+        a, sh = self.run_agent(self.agent(), "%s\trefs/heads/DV152-x\n" % OLD)
         self.assertEqual((a["head_sha"], a["state"], a["last_activity"]), (OLD, "pushed", "2026-10-14T12:00:00Z"))
-        self.assertEqual(sh.calls[0], ["git", "ls-remote", "origin", "refs/heads/CO152-x"])
+        self.assertEqual(sh.calls[0], ["git", "ls-remote", "origin", "refs/heads/DV152-x"])
 
     def test_stalled_when_idle_over_twice_work_estimate(self):
         old = self.agent(last_activity="2026-10-14T11:30:00Z")  # 30 min idle > 2 * 12
-        a, _ = self.run_agent(old, "%s\trefs/heads/CO152-x\n" % SHA)
+        a, _ = self.run_agent(old, "%s\trefs/heads/DV152-x\n" % SHA)
         self.assertEqual(a["state"], "stalled")
 
     def test_not_stalled_just_inside_the_limit(self):
-        a, _ = self.run_agent(self.agent(last_activity="2026-10-14T11:37:00Z"), "%s\trefs/heads/CO152-x\n" % SHA)
+        a, _ = self.run_agent(self.agent(last_activity="2026-10-14T11:37:00Z"), "%s\trefs/heads/DV152-x\n" % SHA)
         self.assertEqual(a["state"], "running")  # 23 min idle <= 24
 
     def test_stalled_agent_recovers_on_new_push(self):
-        a, _ = self.run_agent(self.agent(state="stalled", last_activity="2026-10-14T09:00:00Z"), "%s\trefs/heads/CO152-x\n" % OLD)
+        a, _ = self.run_agent(self.agent(state="stalled", last_activity="2026-10-14T09:00:00Z"), "%s\trefs/heads/DV152-x\n" % OLD)
         self.assertEqual(a["state"], "pushed")
 
     def test_log_mtime_counts_as_activity(self):
@@ -445,7 +445,7 @@ class AgentTests(unittest.TestCase):
         fd, path = tempfile.mkstemp()
         os.close(fd)
         os.utime(path, (NOW.timestamp(), NOW.timestamp()))
-        a, _ = self.run_agent(self.agent(log_path=path, last_activity="2026-10-14T09:00:00Z"), "%s\trefs/heads/CO152-x\n" % SHA)
+        a, _ = self.run_agent(self.agent(log_path=path, last_activity="2026-10-14T09:00:00Z"), "%s\trefs/heads/DV152-x\n" % SHA)
         self.assertEqual(a["state"], "running")
         self.assertEqual(a["last_activity"], "2026-10-14T12:00:00Z")
 
@@ -466,9 +466,9 @@ class RunnersInstallsHeartbeatTests(unittest.TestCase):
         state = tempfile.mktemp(suffix=".json")
         with open(state, "w") as fh:
             json.dump({"version": "0.1.6212", "state": "done", "ended": "2026-10-14T11:00:00Z"}, fh)
-        root = make_root({"install_state_files": [{"product": "home", "path": state}], "local_runners": ["GameRoomPC-linux"]})
-        seed(root, runners=[{"name": "GameRoomPC-linux", "paused_by": "B14-build"}])
-        payload = {"runners": [{"name": "GameRoomPC-linux", "status": "online", "busy": True,
+        root = make_root({"install_state_files": [{"product": "app", "path": state}], "local_runners": ["build-pc-linux"]})
+        seed(root, runners=[{"name": "build-pc-linux", "paused_by": "B14-build"}])
+        payload = {"runners": [{"name": "build-pc-linux", "status": "online", "busy": True,
                                 "labels": [{"name": "self-hosted"}, {"name": "Linux"}]}]}
         sh = FakeShell({("gh", "api"): (0, json.dumps(payload))})
         watcher(root, sh).run_once("2026-10-14T11:00:00Z")
@@ -479,7 +479,7 @@ class RunnersInstallsHeartbeatTests(unittest.TestCase):
         self.assertEqual((r["online"], r["busy"], r["local"], r["paused_by"]), (True, True, True, "B14-build"))
         self.assertEqual(r["labels"], ["self-hosted", "Linux"])
         self.assertEqual((led["installs"][0]["product"], led["installs"][0]["version"], led["installs"][0]["state"]),
-                         ("home", "0.1.6212", "done"))
+                         ("app", "0.1.6212", "done"))
         hb = led["watchers"][0]
         self.assertEqual((hb["pid"], hb["kind"], hb["heartbeat_at"]), (os.getpid(), "delivery_watch", "2026-10-14T12:00:00Z"))
         watcher(root, sh).run_once("2026-10-14T11:00:00Z")

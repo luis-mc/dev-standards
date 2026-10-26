@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.13.0
+**Version:** 1.14.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,12 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.14.0 — 2026-10-26.**
+
+- The At a glance group "Waiting or on hold" is now "Waiting for other work", and a Waiting or On hold task that waits on the owner moves to Needs you, set with the new optional `waits_on` field (`--waits-on owner|work` on `task-add` and `set-task-status`, default `work`, R5.34a); the rows of both groups read what they wait on first, then the item, then Expected, and the Needs you count, sentence and feature summary include the owner's waits.
+- `set-task-status ID STATUS --started "DD Mon ~HH:MM"|HH:MM` sets when a task began, so the bar of a waiting or needs-you no-release task on the timeline starts there and not at "now"; a task that first moves to Running gets it automatically (R5.48). A ninth status, `Dropped`, closes a task folded into another or no longer wanted without claiming it shipped: not open, off the timeline, listed under `Live or built` as `dropped: folded into RELEASE-n`, with `--into ID` (required for a release) or `--reason TEXT` (R5.49, R6.1).
+- Full Progress section 1 splits the feature artifacts into two collapsible folds, the page's own `status-fold` element: `Feature artifacts in progress (n)`, open by default, and `Complete feature artifacts (n)`, closed by default, each with the same sortable table or a one-line note when empty; `check` verifies the folds, their open state, counts and membership (R5.50).
 
 **1.13.0 — 2026-10-18.**
 

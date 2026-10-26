@@ -9,7 +9,7 @@ Module use (best effort for callers, see `record`):
     import delivery_ledger as L
     L.update(root, lambda led: ...)
 CLI:
-    delivery_ledger.py plan --branch release/29 --release-no 29 --cargo CO148:CO148-fix:409
+    delivery_ledger.py plan --branch release/29 --release-no 29 --cargo DV148:DV148-fix:409
     delivery_ledger.py hold --train T-... --reason "owner asked" [--until ISO] [--release]
     delivery_ledger.py measure --train T-... --state clean|regressions|none [--report path]
     delivery_ledger.py show [--json]

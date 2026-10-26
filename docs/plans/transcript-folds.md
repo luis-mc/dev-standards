@@ -40,7 +40,7 @@ third-party hide-diffs plugin borrows, so the two can be installed together.
 this contract and the API types only. Names, layout and code are our own.
 
 **API reference.** Claude Code 2.1.296's mod API is declared in
-`C:/Users/Luis/AppData/Local/Temp/claude/bundled-skills/2.1.296/6d5fd78ed4d2101a011b9188bb836b5f/plugin-authoring/types/claude-code.d.ts`
+the plugin-authoring skill's `types/claude-code.d.ts`
 (about 14,000 lines; grep it for `'tool.call'`, `'ui.render'`, `AbovePrompt`,
 `ToolUse`, `ToolResult`, `ToolGroup`, `Button`, `command.register`,
 `'command.run'`, `atom`, `$.store`) and described in `reference.md` and the

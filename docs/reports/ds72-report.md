@@ -37,15 +37,15 @@ separate sessions; end-to-end `main()`).
 - Secret scan: gitleaks 8.30.1 (pinned sha) over the branch commits: no leaks.
 - No Docker, no full suite.
 
-## Back-fill for comics-organizer (after the update is installed)
+## Back-fill for an existing project (after the update is installed)
 From the repo root, with `gh` signed in and the three branches/worktrees removed:
 ```
-python <plugin>/scripts/delivery_ledger.py cleaned --pr 482
-python <plugin>/scripts/delivery_ledger.py smoke --pr 482
-python <plugin>/scripts/delivery_ledger.py cleaned --pr 486
-python <plugin>/scripts/delivery_ledger.py smoke --pr 486
-python <plugin>/scripts/delivery_ledger.py cleaned --pr 489
-python <plugin>/scripts/delivery_ledger.py smoke --pr 489
+python <plugin>/scripts/delivery_ledger.py cleaned --pr 42
+python <plugin>/scripts/delivery_ledger.py smoke --pr 42
+python <plugin>/scripts/delivery_ledger.py cleaned --pr 43
+python <plugin>/scripts/delivery_ledger.py smoke --pr 43
+python <plugin>/scripts/delivery_ledger.py cleaned --pr 44
+python <plugin>/scripts/delivery_ledger.py smoke --pr 44
 ```
 `<plugin>` is the installed luismc-delivery folder (the hook message prints the absolute path). If `smoke` finds no run on a merge
 commit, pass the run: `smoke --pr N --run <id|url>`. If `cleaned` lists leftovers, delete them first (cleanup.py --pr N).

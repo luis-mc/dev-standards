@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 8.3.0
+**Version:** 8.4.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -23,6 +23,10 @@ recorded in the product's Stack Profile (§18). This document does not name
 vendors and does not rank them.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+
+**8.4.0 — 2026-10-26.**
+
+- A release join is light: `join.py` merges, resolves conflicts, then runs typecheck and lint of the touched packages and the fast guards (`gate.json`: `"join"` on a step, `join_guards`), never the tests or a branch gate on the joined head; the ready PR's CI is the one full run, with no sandbox gate awaited and no re-gate after a join fix (DL-11, DL-13, §13.6). The agents-and-integration rule says so.
 
 **8.3.0 — 2026-10-17.**
 

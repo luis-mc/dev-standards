@@ -9,7 +9,7 @@ runs with `gh run list --commit SHA` and decides only when
   * at least one run of the named workflow exists for the commit, and
   * every run of that workflow for the commit is completed.
 
-Skipped runs (CO400): a run that executed no job (conclusion skipped, or a push run
+Skipped runs (DV400): a run that executed no job (conclusion skipped, or a push run
 whose jobs were all skipped, "already tested on the pull request") is not a pass when
 the commit is the head of an open pull request: the watch then waits for a run that
 executed jobs (the pull_request run) and is green only when every run that executed

@@ -1,6 +1,6 @@
-# CO414: delivery watcher re-reads a red release on its new head
+# DV414: delivery watcher re-reads a red release on its new head
 
-Branch `claude/CO414-watch-red-new-head` (from `origin/main`). File: `claude/plugins/delivery/scripts/delivery_watch.py`.
+Branch `claude/DV414-watch-red-new-head` (from `origin/main`). File: `claude/plugins/delivery/scripts/delivery_watch.py`.
 
 ## What changes
 - `_recheck_red` now reads the PR's current head first. When it differs from `ci.head_sha` (a fix was pushed), the train is re-pointed to the new head (`head_sha`, `run_ids` from that head's runs, `state`) and judged by that head's runs: success -> green (and merge on green as before), failure -> stays red on the new head, queued/running -> train state `ci`. On the same head the old rule holds: only a green re-run moves the train.

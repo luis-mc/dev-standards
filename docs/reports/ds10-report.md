@@ -1,6 +1,6 @@
 # DS10 report: luismc-delivery hook fixes
 
-Seen in comics-organizer on 17 Oct (20:40-22:50). Three fixes in `claude/plugins/delivery/scripts`, each with a test.
+Seen in a real project on 17 Oct (20:40-22:50). Three fixes in `claude/plugins/delivery/scripts`, each with a test.
 
 1. **DL-14 / DL-18 and holds** (`hook_stop.py`): a merged train with an active hold (`delivery_ledger.py hold --by rule --until ISO`) no longer triggers either rule; once `until` passes they apply again. Test: `dl14_dl18_hold_suppresses_until_it_lapses`.
 2. **ci_watch recorder** (`hook_post_tool.py`): a `run_in_background` start records nothing; a foreground exit 0 records only with the "succeeded" output. Test: `test_ci_watch_started_in_background_records_nothing`.

@@ -1,13 +1,13 @@
-# CO427 report: Needs you vs Waiting for other work
+# DV427 report: Needs you vs Waiting for other work
 
-Branch `claude/CO427-needs-you-vs-waiting`. Draft PR #94.
+Branch `claude/DV427-needs-you-vs-waiting`.
 
 ## What changed
 - The only "Waiting or on hold" section is the At a glance group `waiting` (R5.34). It is now **Waiting for other work**; a Waiting or On hold task that waits on the owner moves into the **Needs you** group (`you`), after Needs you tasks and before Failed. Needs you count, the Needs you sentence (R5.7) and a feature's generated summary (R5.36) include them, so the glance count equals the section.
 - The record had no clean owner-vs-work signal (no Blocked status; `expected_basis` and `detail` are free text), so one optional field was added: `waits_on` = `owner|work` on a Waiting or On hold task. Absent means `work` (old grouping). Set with `--waits-on owner|work` on `task-add` and `set-task-status` (`""` clears it); dropped when the task stops waiting; `check` refuses other values and the field on a non-waiting row. It is in the publish fingerprint (R9.6).
 - Rows of both groups (and Needs you tasks) read the dependency first (`span.glance-dep`: `expected_basis`, else the release it rides, else the first sentence of `detail`, 80 chars), then the item, then Expected; `check` verifies it.
 - Files: `scripts/render_artifacts.py`, `scripts/project_artifacts.py`, `templates/project-artifact.css`, `references/artifactspec.md`, `skills/task-status-update/SKILL.md`, tests in `tools/test_render_artifacts.py` and `tools/test_project_artifacts.py`.
-- Version: change note `docs/specs/changes/CO427-needs-you-vs-waiting.md` (plugin minor, ARTIFACTSPEC minor). This repo forbids version edits off integration branches; the release folds it.
+- Version: change note `docs/specs/changes/DV427-needs-you-vs-waiting.md` (plugin minor, ARTIFACTSPEC minor). This repo forbids version edits off integration branches; the release folds it.
 
 ## Spec IDs
 New R5.34a. Edited R5.7, R5.33 text via the Changes line, R5.34, R4.8, R9.6, the `task-add` / `set-task-status` usage rows. Numbering unchanged (spec_check: 0 errors, the one existing gap warning).
