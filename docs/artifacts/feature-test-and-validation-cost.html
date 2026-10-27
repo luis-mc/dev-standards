@@ -263,6 +263,7 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
 .status-count-tile.status-to-do { border-top-color: var(--rule-strong); }
 .status-count-tile.status-on-hold { border-top-color: var(--rule-strong); border-top-style: dashed; }
 .status-count-tile.status-failed { border-top-color: var(--failed); }
+.status-count-tile.status-dropped { border-top-color: var(--rule-strong); border-top-style: dotted; }
 
 /* At a glance (section 0): one labelled row per kind, items one per line */
 .at-a-glance {
@@ -290,6 +291,8 @@ details.glance-group > summary:hover { background: var(--surface-2); }
 .glance-group p { margin: 0; padding: .1em .9em .2em 2.2rem; color: var(--ink-muted); }
 .glance-expected { font-size: .85rem; color: var(--ink-muted); margin-left: .5em; }
 .glance-more { color: var(--ink-muted); font-size: .88rem; }
+.glance-dep { font-size: .85rem; color: var(--ink-muted); margin: 0 .5em; }
+.glance-dep::after { content: ' \2192'; }
 .glance-basis { display: block; font-size: .72rem; line-height: 1.3; color: var(--ink-muted); }
 .glance-you { border-left-color: var(--signal); }
 .glance-you .glance-label { color: var(--ink); }
@@ -322,6 +325,7 @@ details.glance-group > summary:hover { background: var(--surface-2); }
 .status-chip.status-waiting { background: var(--waiting-bg); }
 .status-chip.status-to-do { background: var(--surface-2); }
 .status-chip.status-on-hold { background: var(--surface-2); border-style: dashed; }
+.status-chip.status-dropped { background: var(--surface-2); color: var(--ink-muted); border-style: dotted; text-decoration: line-through; }
 .status-chip.status-failed { background: var(--failed); color: var(--on-failed); border-color: var(--failed); }
 
 /* Tables */
@@ -729,7 +733,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 a .release-name { color: var(--signal); }
 .release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
 .release-line .release-name { margin-right: 0; }
-.no-release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
+.dropped-line, .no-release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
 details.status-fold.release-group > summary { color: var(--ink); }
 </style>
 <style id="extra-css">.tc-figure{margin:1rem 0 1.5rem;overflow-x:auto}.tc-chart{display:block;width:100%;max-width:640px;height:auto}.tc-chart text{font-family:var(--font-mono);font-size:12px;fill:var(--ink)}.tc-chart .tc-muted{fill:var(--ink-muted);font-size:11px}.tc-chart .tc-on{fill:var(--on-signal);font-weight:600}.tc-a{fill:var(--signal)}.tc-b{fill:var(--rule-strong)}.tc-c{fill:var(--running-mark)}.tc-axis{stroke:var(--rule-strong);stroke-width:1}.tc-figure figcaption{font-size:.85rem;color:var(--ink-muted);margin-top:.4rem;max-width:65ch}</style>
@@ -738,8 +742,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>The question</a><a href="#s2"><b>2</b>How it was measured</a><a href="#s3"><b>3</b>Hypotheses and verdicts</a><a href="#s4"><b>4</b>Where the time goes</a><a href="#s5"><b>5</b>The mutation pass</a><a href="#s6"><b>6</b>Repeats and noise</a><a href="#s7"><b>7</b>What is wrong</a><a href="#s8"><b>8</b>Solutions, ranked</a><a href="#s9"><b>9</b>Decisions</a><a href="#s10"><b>10</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Test and validation cost</h1><p>What our tests and checks cost, where they repeat, and what to cut</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-26T16:15+00:00">26 Oct 16:15</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">26 Oct 20:39</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-27T08:30+00:00">27 Oct 08:30</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">26 Oct 21:55</a> (Lisbon)</p>
 <p class="lede">All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>

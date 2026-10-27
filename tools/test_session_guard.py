@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -317,6 +318,13 @@ def this_repo_registers_the_hook_and_declares_suites():
     cfg = json.loads((ROOT / ".claude/settings.json").read_text(encoding="utf-8"))
     cmd = cfg["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
     assert "tooling/shared/scripts/delivery/session_guard.py" in cmd
+    # DS91: every $CLAUDE_PROJECT_DIR path the hook runs exists, and every enabled
+    # plugin is one this repository's marketplace ships.
+    for rel in set(re.findall(r'\$CLAUDE_PROJECT_DIR/([^"\\\s]+)', cmd)):
+        assert (ROOT / rel).is_file(), rel
+    market = json.loads((ROOT / ".claude-plugin/marketplace.json").read_text(encoding="utf-8"))
+    shipped = {"%s@dev-standards" % p["name"] for p in market["plugins"]}
+    assert set(cfg.get("enabledPlugins", {})) <= shipped, set(cfg["enabledPlugins"]) - shipped
     suites = rs.load_suites(ROOT)
     on_disk = {p.stem for p in (ROOT / "tools").glob("test_*.py")}
     declared = {Path(s["full"].split()[1]).stem for s in suites.values()}

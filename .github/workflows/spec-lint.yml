@@ -35,6 +35,7 @@ on:
       - 'claude/plugins/transcript-folds/**'
       - 'claude/plugins/project-setup/skills/claude-setup/assets/**'
       - 'docs/specs/changes/**'
+      - '.claude/**'   # DS91: this repository's settings and suites (test_session_guard.py)
       - '.github/workflows/spec-lint.yml'
   workflow_dispatch:
     inputs:
