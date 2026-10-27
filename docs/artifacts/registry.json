@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-26T21:17+00:00",
+  "updated": "2026-10-27T08:30+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1598,11 +1598,11 @@
       "id": "DS76",
       "owner": "project",
       "app": "",
-      "status": "Failed",
+      "status": "Live",
       "item": "CI runner load gate on this PC",
-      "detail": "Reverted 17:38: the hook blocked every Windows CI job on this PC from 16:44 (PowerShell execution policy refused runner_load_gate.ps1 under the service account, so it never reached its fail-open path). My test had used -ExecutionPolicy Bypass. .env removed, runner restarted while idle; the copied scripts stay in ProgramData, unused.",
+      "detail": "Superseded by DS83. First install (16:44) broke Windows CI jobs: PowerShell refused the .ps1 under the service account; reverted 17:38. Reinstalled in DS83 with RemoteSigned for that account only; in use since 20:46.",
       "expected": "26 Oct",
-      "changed": "2026-10-26T17:37+00:00",
+      "changed": "2026-10-26T21:52+00:00",
       "no_release": "machine setup, ships nothing"
     },
     {
@@ -1733,44 +1733,43 @@
       "id": "DS84",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "luismc-delivery: runner gate docs and doctor cover execution policy",
       "detail": "README covers the account's execution policy, Python access and testing as the runner; doctor FAILs a .ps1 hook whose service account cannot run scripts. 8 new tests pass; real reads checked on this PC.",
       "expected": "26 Oct",
-      "changed": "2026-10-26T21:17+00:00",
+      "changed": "2026-10-26T21:23+00:00",
       "rides": "DS85"
     },
     {
       "id": "DS85",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release: gate docs, ci_watch fix, one release per train, spec sources",
-      "detail": "Joining DS84, DS86-DS89 on DS85-integration, folding change notes.",
-      "expected": "26 Oct ~22:25",
-      "changed": "2026-10-26T21:17+00:00",
-      "expected_basis": "agents ~50 min, join + CI ~35 min",
+      "detail": "PR #102 merged 21:21 (ee35f35) on green spec-lint and secret-scan: luismc-delivery 0.8.0, luismc-project-setup 14.6.1. No release made (DS86 working). Branches and worktrees removed; plugins updated at user scope.",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T21:23+00:00",
       "release": 13,
       "phases": [
         {
           "name": "agents",
           "start": "2026-10-26T20:50+00:00",
-          "end": "2026-10-26T21:40+00:00"
+          "end": "2026-10-26T21:00+00:00"
         },
         {
           "name": "join",
-          "start": "2026-10-26T21:40+00:00",
-          "end": "2026-10-26T21:55+00:00"
+          "start": "2026-10-26T21:00+00:00",
+          "end": "2026-10-26T21:15+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-10-26T21:55+00:00",
-          "end": "2026-10-26T22:15+00:00"
+          "start": "2026-10-26T21:15+00:00",
+          "end": "2026-10-26T21:40+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-10-26T22:15+00:00",
-          "end": "2026-10-26T22:25+00:00"
+          "start": "2026-10-26T21:40+00:00",
+          "end": "2026-10-26T21:50+00:00"
         }
       ],
       "risk": {
@@ -1782,46 +1781,110 @@
       "id": "DS86",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Stop the train-cleanup workflow creating a release per merge",
       "detail": "train-cleanup passes --no-delivery-log: no release per merge.",
       "expected": "26 Oct",
-      "changed": "2026-10-26T21:17+00:00",
+      "changed": "2026-10-26T21:23+00:00",
       "rides": "DS85"
     },
     {
       "id": "DS87",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "ci_watch.py: a missing workflow fails at once, naming the repo's workflows",
       "detail": "A missing workflow exits 2 at once and lists the repo's workflows; other gh errors still retry. 3 new tests; watch tests 32/32 locally, full suite in CI.",
       "expected": "26 Oct",
-      "changed": "2026-10-26T21:17+00:00",
+      "changed": "2026-10-26T21:23+00:00",
       "rides": "DS85"
     },
     {
       "id": "DS88",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "DELIVERYSPEC Source cells: generic, no other project's memory names",
       "detail": "46 Source cells now say owner lesson/rules/CLAUDE.md/owner rule; legend added; claude-setup maps notes by rule text.",
       "expected": "26 Oct",
-      "changed": "2026-10-26T21:17+00:00",
+      "changed": "2026-10-26T21:23+00:00",
       "rides": "DS85"
     },
     {
       "id": "DS89",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Commit the artifacts record; delete docs/drafts",
-      "detail": "Owner then chose to delete the draft (another project's paths throughout; DELIVERYSPEC supersedes it). Deleted; the record is committed at the join.",
-      "expected": "26 Oct ~21:55",
-      "changed": "2026-10-26T21:17+00:00",
-      "expected_basis": "rides the DS85 join",
+      "detail": "Record committed on DS85-integration; the draft was deleted (owner's choice).",
+      "expected": "26 Oct",
+      "changed": "2026-10-26T21:23+00:00",
       "rides": "DS85"
+    },
+    {
+      "id": "DS90",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Release: CI covers .claude/ changes; commit the record",
+      "detail": "Joins DS91 and DS92 on DS90-integration; one ready PR, merge on green, then cleanup.",
+      "expected": "27 Oct ~09:35",
+      "changed": "2026-10-27T08:30+00:00",
+      "expected_basis": "agent ~25 min, join + CI ~20 min",
+      "release": 14,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-10-27T08:40+00:00",
+          "end": "2026-10-27T09:05+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-10-27T09:05+00:00",
+          "end": "2026-10-27T09:10+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-10-27T09:10+00:00",
+          "end": "2026-10-27T09:25+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-10-27T09:25+00:00",
+          "end": "2026-10-27T09:35+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 15
+      },
+      "started": "2026-10-27T08:30+00:00"
+    },
+    {
+      "id": "DS91",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "spec-lint runs on .claude/ changes and checks them",
+      "detail": "PRs touching only .claude/ ran no spec-lint (how PR #100 merged unchecked). Add .claude/** to its paths, map settings/suites to the delivery area, guard test that the repo's own files parse and name existing scripts.",
+      "expected": "27 Oct ~09:05",
+      "changed": "2026-10-27T08:30+00:00",
+      "expected_basis": "agent ~25 min",
+      "rides": "DS90",
+      "started": "2026-10-27T08:30+00:00"
+    },
+    {
+      "id": "DS92",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Commit the artifacts record",
+      "detail": "Status changes since PR #102 (DS76 close-out, DS84-DS89 Live, publishes).",
+      "expected": "27 Oct ~09:10",
+      "changed": "2026-10-27T08:30+00:00",
+      "expected_basis": "rides the DS90 join",
+      "rides": "DS90",
+      "started": "2026-10-27T08:30+00:00"
     },
     {
       "id": "MP1",

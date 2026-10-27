@@ -263,6 +263,7 @@ p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
 .status-count-tile.status-to-do { border-top-color: var(--rule-strong); }
 .status-count-tile.status-on-hold { border-top-color: var(--rule-strong); border-top-style: dashed; }
 .status-count-tile.status-failed { border-top-color: var(--failed); }
+.status-count-tile.status-dropped { border-top-color: var(--rule-strong); border-top-style: dotted; }
 
 /* At a glance (section 0): one labelled row per kind, items one per line */
 .at-a-glance {
@@ -290,6 +291,8 @@ details.glance-group > summary:hover { background: var(--surface-2); }
 .glance-group p { margin: 0; padding: .1em .9em .2em 2.2rem; color: var(--ink-muted); }
 .glance-expected { font-size: .85rem; color: var(--ink-muted); margin-left: .5em; }
 .glance-more { color: var(--ink-muted); font-size: .88rem; }
+.glance-dep { font-size: .85rem; color: var(--ink-muted); margin: 0 .5em; }
+.glance-dep::after { content: ' \2192'; }
 .glance-basis { display: block; font-size: .72rem; line-height: 1.3; color: var(--ink-muted); }
 .glance-you { border-left-color: var(--signal); }
 .glance-you .glance-label { color: var(--ink); }
@@ -322,6 +325,7 @@ details.glance-group > summary:hover { background: var(--surface-2); }
 .status-chip.status-waiting { background: var(--waiting-bg); }
 .status-chip.status-to-do { background: var(--surface-2); }
 .status-chip.status-on-hold { background: var(--surface-2); border-style: dashed; }
+.status-chip.status-dropped { background: var(--surface-2); color: var(--ink-muted); border-style: dotted; text-decoration: line-through; }
 .status-chip.status-failed { background: var(--failed); color: var(--on-failed); border-color: var(--failed); }
 
 /* Tables */
@@ -729,7 +733,7 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
 a .release-name { color: var(--signal); }
 .release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
 .release-line .release-name { margin-right: 0; }
-.no-release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
+.dropped-line, .no-release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
 details.status-fold.release-group > summary { color: var(--ink); }
 </style>
 <style id="extra-css">
@@ -757,8 +761,8 @@ figure.diagram figcaption b{color:var(--ink)}
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Today</a><a href="#s3"><b>3</b>Where model and effort come from</a><a href="#s4"><b>4</b>Consequences</a><a href="#s5"><b>5</b>The profiles</a><a href="#s6"><b>6</b>Requirements and tests</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Model and effort profiles</h1><p>Which model and which effort every kind of agent and every skill uses, where each setting lives, and what follows from it. Built into <code>claude-setup</code> in luismc-project-setup.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-26T16:15+00:00">26 Oct 16:15</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">26 Oct 20:39</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-27T08:30+00:00">27 Oct 08:30</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">26 Oct 21:55</a> (Lisbon)</p>
 <p class="lede">The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
