@@ -791,6 +791,12 @@ def basis_style_uses_tokens_and_wraps():
     assert not re.search(r'#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(', block), block      # tokens only
 
 
+def checklist_folds(dom):
+    """The R6.12 checklist groups: every status-fold except Full Progress's two feature folds (R5.50)."""
+    return [f for f in R.find_all(dom, 'details', 'status-fold')
+            if 'feature-group' not in f.attrs.get('class', '').split()]
+
+
 @test
 @with_fixture
 def groups_are_collapsible_details(fx):
@@ -798,7 +804,7 @@ def groups_are_collapsible_details(fx):
     for kind, name in (('full-progress', 'full-progress'), ('artifacts', 'artifacts')):
         out = fx.render(name)
         dom = R.parse_dom(out)
-        folds = R.find_all(dom, 'details', 'status-fold')
+        folds = checklist_folds(dom)
         assert folds and not R.find_all(dom, 'tr', 'status-group'), kind
         for fold in folds:
             kids = [n for n in fold.children if n.tag != '#text']
@@ -816,7 +822,7 @@ def live_or_built_starts_closed(fx):
     """R6.12: Live or built is always closed, every other group open; the closed heading still counts Built rows."""
     for name in ('full-progress', 'artifacts'):
         dom = R.parse_dom(fx.render(name))
-        for fold in R.find_all(dom, 'details', 'status-fold'):
+        for fold in checklist_folds(dom):
             assert ('open' in fold.attrs) == (fold.attrs['data-group'] != 'built'), (name, fold.attrs)
     fp = R.parse_dom(fx.render('full-progress'))
     built = [f for f in R.find_all(fp, 'details', 'status-fold') if f.attrs['data-group'] == 'built'][0]
