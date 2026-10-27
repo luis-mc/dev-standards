@@ -127,6 +127,8 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"tools/(spec_check|authspec_check|test_spec_check|test_authspec_check)\.py",
      frozenset({"specs"})),
     (r"tools/route-ratelimit-map\.json", frozenset({"specs"})),
+    # this repository's .claude/ settings and suites: test_session_guard.py (specs) reads them (DS91)
+    (r"\.claude/(settings|suites)\.json", frozenset({"specs"})),
     # rule files shipped to projects: tools/test_rule_tags.py (specs) checks their tags
     (r"tools/test_rule_tags\.py", frozenset({"specs"})),
     (r"claude/plugins/artifacts/rules/.*", frozenset({"specs", "artifacts"})),

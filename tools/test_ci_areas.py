@@ -47,6 +47,8 @@ for path, want in [
     ("tools/authspec_check.py", {"specs"}),
     ("tools/test_spec_check.py", {"specs"}),
     ("tools/route-ratelimit-map.json", {"specs"}),
+    (".claude/settings.json", {"specs"}),
+    (".claude/suites.json", {"specs"}),
     (f"{TS}/assets/preflight.py", {"delivery"}),
     (f"{TS}/assets/tooling/shared/scripts/delivery/join.py", {"delivery"}),
     (f"{TS}/assets/tooling/ts/.github/workflows/ci.yml", {"delivery"}),
