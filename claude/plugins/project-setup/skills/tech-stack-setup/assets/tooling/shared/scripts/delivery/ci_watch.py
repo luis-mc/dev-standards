@@ -4,7 +4,8 @@
 STACKSPEC 13.6: CI is watched through the workflow runs for the head commit,
 never through a pull request's check list, which can be read before the new run
 is listed (an empty or stale list then looks like a pass). This script lists
-runs with `gh run list --commit SHA` and decides only when
+runs with `gh run list --commit SHA` (an abbreviated SHA is first resolved to the full
+one, by git or the GitHub API, or the watch exits 2) and decides only when
 
   * at least one run of the named workflow exists for the commit, and
   * every run of that workflow for the commit is completed.
@@ -141,6 +142,29 @@ def executed_jobs(run: dict, repo: str | None) -> bool:
     data = gh_json(["run", "view", str(run.get("databaseId")), "--json", "jobs", *repo_args(repo)])
     jobs = data.get("jobs", []) if isinstance(data, dict) else []
     return not jobs or any(j.get("conclusion") != "skipped" for j in jobs if isinstance(j, dict))
+
+
+def resolve_sha(sha: str, repo: str | None) -> str | None:
+    """The full 40-character sha for an abbreviated one: `gh run list --commit` matches
+    full shas only, so a short one would wait for runs it can never see (DS94). Local git
+    first, then the GitHub API; None when neither resolves it."""
+    if re.fullmatch(r"[0-9a-f]{40}", sha):
+        return sha
+    try:
+        proc = subprocess.run(["git", "rev-parse", "--verify", "--quiet", sha + "^{commit}"],
+                              capture_output=True, text=True, timeout=30)
+        full = proc.stdout.strip().lower()
+        if proc.returncode == 0 and re.fullmatch(r"[0-9a-f]{40}", full):
+            return full
+    except (OSError, subprocess.SubprocessError):
+        pass
+    base = f"repos/{repo}" if repo else "repos/{owner}/{repo}"
+    try:
+        data = gh_json(["api", f"{base}/commits/{sha}"])
+    except GhError:
+        return None
+    full = str(data.get("sha", "")).lower() if isinstance(data, dict) else ""
+    return full if re.fullmatch(r"[0-9a-f]{40}", full) and full.startswith(sha) else None
 
 
 def has_open_pr(sha: str, repo: str | None) -> bool:
@@ -327,7 +351,12 @@ def main(argv: list[str] | None = None) -> int:
               file=sys.stderr)
         return 2
 
-    sha = args.sha.lower()
+    sha = resolve_sha(args.sha.lower(), args.repo)
+    if sha is None:
+        print(f"ci_watch: could not resolve {args.sha} to a full commit sha "
+              "(`gh run list --commit` matches full shas only); pass all 40 characters",
+              file=sys.stderr)
+        return 2
     deadline = time.monotonic() + args.timeout
     errors = 0
     last_state = ""

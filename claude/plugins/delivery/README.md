@@ -6,7 +6,7 @@ Delivery guard rails for a project that opts in with a `.delivery/` folder. Rule
 |---|---|
 | `hook_*.py` | Stop, PreToolUse, PostToolUse, SessionStart hooks (registered by `hooks/hooks.json`) |
 | `delivery_ledger.py` | the ledger `.delivery/ledger.json` |
-| `delivery_watch.py` | background watcher: pushes the next train, opens its PR, merges at green, tidies CI runs, keeps the runner guard running |
+| `delivery_watch.py` | background watcher: pushes the next train, opens its PR (or adopts the one open PR of a train pushed by hand), merges at green, tidies CI runs, keeps the runner guard running |
 | `rules/clarifying-questions.md` | the canonical question rules (Q-1..Q-5); SessionStart injects them every session |
 | `delivery_config.py validate` | checks `.delivery/config.json` against `references/config-schema.json` |
 | `delivery_doctor.py` | self-check: config valid, gh signed in, tz loads, hooks registered, ledger writable, runner load-gate hook set (DL-79) |

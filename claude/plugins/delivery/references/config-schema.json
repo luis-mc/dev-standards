@@ -53,7 +53,7 @@
     "train_branch_re": {
       "type": "string",
       "format": "regex",
-      "description": "Head branches that are trains (runner_plan.train_branch_regex falls back to it)."
+      "description": "Head branches that are trains (runner_plan.train_branch_regex falls back to it); default release/<n> or a name ending -integration."
     },
     "brief_markers": {
       "type": "array",

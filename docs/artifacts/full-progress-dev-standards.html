@@ -734,7 +734,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-27T08:30+00:00",
+ "updated": "2026-10-28T20:33+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -2559,12 +2559,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS90",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "Release: CI covers .claude/ changes; commit the record",
-   "detail": "Joins DS91 and DS92 on DS90-integration; one ready PR, merge on green, then cleanup.",
-   "expected": "27 Oct ~09:35",
-   "changed": "2026-10-27T08:30+00:00",
-   "expected_basis": "agent ~25 min, join + CI ~20 min",
+   "detail": "PR #103 merged by the owner 23:19 (6bb905c) on green spec-lint and secret-scan at ff6b01b; no release made. Branches and worktrees removed; ledger train held with the reason (plugin never recorded the PR, DS95).",
+   "expected": "27 Oct",
+   "changed": "2026-10-27T23:20+00:00",
    "release": 14,
    "phases": [
     {
@@ -2580,12 +2579,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
     {
      "name": "ci",
      "start": "2026-10-27T09:10+00:00",
-     "end": "2026-10-27T09:25+00:00"
+     "end": "2026-10-27T09:35+00:00"
     },
     {
      "name": "merge",
-     "start": "2026-10-27T09:25+00:00",
-     "end": "2026-10-27T09:35+00:00"
+     "start": "2026-10-27T09:35+00:00",
+     "end": "2026-10-27T23:30+00:00"
     }
    ],
    "risk": {
@@ -2598,12 +2597,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS91",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "spec-lint runs on .claude/ changes and checks them",
-   "detail": "PRs touching only .claude/ ran no spec-lint (how PR #100 merged unchecked). Add .claude/** to its paths, map settings/suites to the delivery area, guard test that the repo's own files parse and name existing scripts.",
-   "expected": "27 Oct ~09:05",
-   "changed": "2026-10-27T08:30+00:00",
-   "expected_basis": "agent ~25 min",
+   "detail": "Path filter has .claude/**; settings/suites map to specs; repo case checks hook script exists and plugins are shipped (fails on both broken copies). test_ci_areas passes; full session-guard suite in CI.",
+   "expected": "27 Oct",
+   "changed": "2026-10-27T23:20+00:00",
    "rides": "DS90",
    "started": "2026-10-27T08:30+00:00"
   },
@@ -2611,14 +2609,88 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS92",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "Commit the artifacts record",
-   "detail": "Status changes since PR #102 (DS76 close-out, DS84-DS89 Live, publishes).",
-   "expected": "27 Oct ~09:10",
-   "changed": "2026-10-27T08:30+00:00",
-   "expected_basis": "rides the DS90 join",
+   "detail": "Record committed on DS90-integration (229cacb).",
+   "expected": "27 Oct",
+   "changed": "2026-10-27T23:20+00:00",
    "rides": "DS90",
    "started": "2026-10-27T08:30+00:00"
+  },
+  {
+   "id": "DS93",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Renderer tests: feature folds are not checklist groups (R5.50)",
+   "detail": "Tests skip feature-group folds; 4 related cases pass locally; full renderer suite in CI.",
+   "expected": "27 Oct",
+   "changed": "2026-10-27T23:20+00:00",
+   "rides": "DS90",
+   "started": "2026-10-27T09:19+00:00"
+  },
+  {
+   "id": "DS94",
+   "owner": "project",
+   "app": "",
+   "status": "Built",
+   "item": "ci_watch.py: a short commit hash finds no runs and times out",
+   "detail": "ci_watch resolves a short sha (git, then the GitHub API) before listing runs; unresolvable exits 2. 2 new tests; all 33 ci_watch tests pass locally.",
+   "expected": "28 Oct",
+   "changed": "2026-10-28T20:33+00:00",
+   "rides": "DS96",
+   "started": "2026-10-28T20:28+00:00"
+  },
+  {
+   "id": "DS95",
+   "owner": "project",
+   "app": "",
+   "status": "Built",
+   "item": "luismc-delivery: recognise <id>-integration trains by default",
+   "detail": "-integration branches are trains by default; the watcher adopts the one open PR of a train pushed by hand (not when held or ambiguous). 4 new tests; post_tool, watch, pre_tool suites pass; hooks harness in CI.",
+   "expected": "28 Oct",
+   "changed": "2026-10-28T20:33+00:00",
+   "rides": "DS96",
+   "started": "2026-10-28T20:28+00:00"
+  },
+  {
+   "id": "DS96",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Release: ci_watch short hash; delivery adopts -integration releases",
+   "detail": "Joined on DS96-integration (c4065bc + record); ready PR next.",
+   "expected": "28 Oct ~21:25",
+   "changed": "2026-10-28T20:33+00:00",
+   "expected_basis": "work ~35 min, join + CI ~20 min",
+   "release": 15,
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-10-28T20:30+00:00",
+     "end": "2026-10-28T21:05+00:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-10-28T21:05+00:00",
+     "end": "2026-10-28T21:10+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-10-28T21:10+00:00",
+     "end": "2026-10-28T21:20+00:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-10-28T21:20+00:00",
+     "end": "2026-10-28T21:25+00:00"
+    }
+   ],
+   "risk": {
+    "label": "+1 fix round",
+    "minutes": 15
+   },
+   "started": "2026-10-28T20:28+00:00"
   },
   {
    "id": "MP1",
@@ -2865,61 +2937,64 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-27T08:30+00:00">27 Oct 08:30</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-28T20:33+00:00">28 Oct 20:33</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DS91"><span class="task-id">DS91</span>spec-lint runs on .claude/ changes and checks them <span class="glance-expected">27 Oct ~09:05</span><span class="glance-basis">agent ~25 min</span></li>
-<li data-glance-task="DS92"><span class="task-id">DS92</span>Commit the artifacts record <span class="glance-expected">27 Oct ~09:10</span><span class="glance-basis">rides the DS90 join</span></li>
-<li data-glance-task="DS90"><span class="task-id">DS90</span><span class="release-name">RELEASE-14</span>Release: CI covers .claude/ changes; commit the record <span class="glance-expected">27 Oct ~09:35</span><span class="glance-basis">agent ~25 min, join + CI ~20 min</span></li>
+<li data-glance-task="DS96"><span class="task-id">DS96</span><span class="release-name">RELEASE-15</span>Release: ci_watch short hash; delivery adopts -integration releases <span class="glance-expected">28 Oct ~21:25</span><span class="glance-basis">work ~35 min, join + CI ~20 min</span></li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">23 tasks</span></summary>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">2 tasks</span></summary>
 <ul>
-<li data-glance-task="DS76"><span class="task-id">DS76</span>CI runner load gate on this PC</li>
-<li data-glance-task="DS84"><span class="task-id">DS84</span>luismc-delivery: runner gate docs and doctor cover execution policy</li>
-<li data-glance-task="DS85"><span class="task-id">DS85</span><span class="release-name">RELEASE-13</span>Release: gate docs, ci_watch fix, one release per train, spec sources</li>
-<li data-glance-task="DS86"><span class="task-id">DS86</span>Stop the train-cleanup workflow creating a release per merge</li>
-<li data-glance-task="DS87"><span class="task-id">DS87</span>ci_watch.py: a missing workflow fails at once, naming the repo&#x27;s workflows</li>
-<li data-glance-task="DS88"><span class="task-id">DS88</span>DELIVERYSPEC Source cells: generic, no other project&#x27;s memory names</li>
-<li data-glance-task="DS89"><span class="task-id">DS89</span>Commit the artifacts record; delete docs/drafts</li>
-<li data-glance-task="DS83"><span class="task-id">DS83</span>Reinstall the CI runner load gate</li>
-<li class="glance-more">and 15 more</li>
+<li data-glance-task="DS94"><span class="task-id">DS94</span>ci_watch.py: a short commit hash finds no runs and times out</li>
+<li data-glance-task="DS95"><span class="task-id">DS95</span>luismc-delivery: recognise &lt;id&gt;-integration trains by default</li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">4 tasks</span></summary>
+<ul>
+<li data-glance-task="DS90"><span class="task-id">DS90</span><span class="release-name">RELEASE-14</span>Release: CI covers .claude/ changes; commit the record</li>
+<li data-glance-task="DS91"><span class="task-id">DS91</span>spec-lint runs on .claude/ changes and checks them</li>
+<li data-glance-task="DS92"><span class="task-id">DS92</span>Commit the artifacts record</li>
+<li data-glance-task="DS93"><span class="task-id">DS93</span>Renderer tests: feature folds are not checklist groups (R5.50)</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">173</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">177</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">2</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS90 (Release: CI covers .claude/ changes; commit the record) expected live about 09:35, worst case 09:50." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">08:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">09:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">09:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">10:00</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-14 · Release: CI covers .claude/ changes; commit the record</title>RELEASE-14 · Release: CI…</text>
-<text class="rt-sub" x="0" y="77"><title>DS91, DS92</title>DS91, DS92</text>
-<rect class="rt-bar agents" x="257.8" y="52" width="144.4" height="22"><title>agents 08:40-09:05</title></rect>
-<rect class="rt-bar join" x="402.2" y="52" width="28.9" height="22"><title>join 09:05-09:10</title></rect>
-<rect class="rt-bar ci" x="431.1" y="52" width="86.7" height="22"><title>PR CI 09:10-09:25</title></rect>
-<rect class="rt-bar merge" x="517.8" y="52" width="57.8" height="22"><title>merge + cleanup 09:25-09:35</title></rect>
-<rect class="rt-risk" x="575.6" y="58" width="86.7" height="10"><title>+1 fix round</title></rect>
-<polygon class="rt-worst" points="662.2,51 669.2,63 662.2,75 655.2,63"/>
-<text class="rt-risk-label" x="673.2" y="67">+1 fix round → worst ~09:50</text>
-<polygon class="rt-expected" points="575.6,50 583.6,63 575.6,76 567.6,63"/>
-<text class="rt-live-label" x="575.6" y="92">live ~09:35</text>
-<line class="rt-now" x1="200" y1="36" x2="200" y2="148"/><text class="rt-now-label" x="200" y="161">now 08:30</text>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS96 (Release: ci_watch short hash; delivery adopts -integration releases) expected live about 21:25, worst case 21:40." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">20:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">21:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">21:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">22:00</text></g>
+<text class="rt-name" x="0" y="60"><title>RELEASE-15 · Release: ci_watch short hash; delivery adopts -integration releases</title>RELEASE-15 · Release: ci_…</text>
+<text class="rt-sub" x="0" y="77"><title>DS94, DS95</title>DS94, DS95</text>
+<rect class="rt-bar agents" x="200" y="52" width="202.2" height="22"><title>agents 20:30-21:05</title></rect>
+<rect class="rt-bar join" x="402.2" y="52" width="28.9" height="22"><title>join 21:05-21:10</title></rect>
+<rect class="rt-bar ci" x="431.1" y="52" width="57.8" height="22"><title>PR CI 21:10-21:20</title></rect>
+<rect class="rt-bar merge" x="488.9" y="52" width="28.9" height="22"><title>merge + cleanup 21:20-21:25</title></rect>
+<rect class="rt-risk" x="517.8" y="58" width="86.7" height="10"><title>+1 fix round</title></rect>
+<polygon class="rt-worst" points="604.4,51 611.4,63 604.4,75 597.4,63"/>
+<text class="rt-risk-label" x="615.4" y="67">+1 fix round → worst ~21:40</text>
+<polygon class="rt-expected" points="517.8,50 525.8,63 517.8,76 509.8,63"/>
+<text class="rt-live-label" x="517.8" y="92">live ~21:25</text>
+<line class="rt-now" x1="217.3" y1="36" x2="217.3" y2="148"/><text class="rt-now-label" x="217.3" y="161">now 20:33</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-14" open><summary><strong>RELEASE-14 · live ~09:35 · worst ~09:50</strong><span class="fold-count">3 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-15" open><summary><strong>RELEASE-15 · live ~21:25 · worst ~21:40</strong><span class="fold-count">3 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS90"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS90</span><span class="release-name">RELEASE-14</span>Release: CI covers .claude/ changes; commit the record</td><td></td><td>Joins DS91 and DS92 on DS90-integration; one ready PR, merge on green, then cleanup.</td><td>27 Oct ~09:35<span class="expected-basis">agent ~25 min, join + CI ~20 min</span></td></tr>
-<tr data-task="DS91"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS91</span>spec-lint runs on .claude/ changes and checks them</td><td></td><td>PRs touching only .claude/ ran no spec-lint (how PR #100 merged unchecked). Add .claude/** to its paths, map settings/suites to the delivery area, guard test that the repo&#x27;s own files parse and name existing scripts.</td><td>27 Oct ~09:05<span class="expected-basis">agent ~25 min</span></td></tr>
-<tr data-task="DS92"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS92</span>Commit the artifacts record</td><td></td><td>Status changes since PR #102 (DS76 close-out, DS84-DS89 Live, publishes).</td><td>27 Oct ~09:10<span class="expected-basis">rides the DS90 join</span></td></tr>
+<tr data-task="DS96"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DS96</span><span class="release-name">RELEASE-15</span>Release: ci_watch short hash; delivery adopts -integration releases</td><td></td><td>Joined on DS96-integration (c4065bc + record); ready PR next.</td><td>28 Oct ~21:25<span class="expected-basis">work ~35 min, join + CI ~20 min</span></td></tr>
+<tr data-task="DS94"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DS94</span>ci_watch.py: a short commit hash finds no runs and times out</td><td></td><td>ci_watch resolves a short sha (git, then the GitHub API) before listing runs; unresolvable exits 2. 2 new tests; all 33 ci_watch tests pass locally.</td><td>28 Oct</td></tr>
+<tr data-task="DS95"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DS95</span>luismc-delivery: recognise &lt;id&gt;-integration trains by default</td><td></td><td>-integration branches are trains by default; the watcher adopts the one open PR of a train pushed by hand (not when held or ambiguous). 4 new tests; post_tool, watch, pre_tool suites pass; hooks harness in CI.</td><td>28 Oct</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">173 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">177 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS90"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS90</span><span class="release-name">RELEASE-14</span>Release: CI covers .claude/ changes; commit the record</td><td></td><td>PR #103 merged by the owner 23:19 (6bb905c) on green spec-lint and secret-scan at ff6b01b; no release made. Branches and worktrees removed; ledger train held with the reason (plugin never recorded the PR, DS95).</td><td>27 Oct</td></tr>
+<tr data-task="DS91"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS91</span>spec-lint runs on .claude/ changes and checks them<span class="release-line"><span class="release-name">RELEASE-14</span></span></td><td></td><td>Path filter has .claude/**; settings/suites map to specs; repo case checks hook script exists and plugins are shipped (fails on both broken copies). test_ci_areas passes; full session-guard suite in CI.</td><td>27 Oct</td></tr>
+<tr data-task="DS92"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS92</span>Commit the artifacts record<span class="release-line"><span class="release-name">RELEASE-14</span></span></td><td></td><td>Record committed on DS90-integration (229cacb).</td><td>27 Oct</td></tr>
+<tr data-task="DS93"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS93</span>Renderer tests: feature folds are not checklist groups (R5.50)<span class="release-line"><span class="release-name">RELEASE-14</span></span></td><td></td><td>Tests skip feature-group folds; 4 related cases pass locally; full renderer suite in CI.</td><td>27 Oct</td></tr>
 <tr data-task="DS76"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS76</span>CI runner load gate on this PC<span class="no-release-line">ships nothing: machine setup, ships nothing</span></td><td></td><td>Superseded by DS83. First install (16:44) broke Windows CI jobs: PowerShell refused the .ps1 under the service account; reverted 17:38. Reinstalled in DS83 with RemoteSigned for that account only; in use since 20:46.</td><td>26 Oct</td></tr>
 <tr data-task="DS84"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS84</span>luismc-delivery: runner gate docs and doctor cover execution policy<span class="release-line"><span class="release-name">RELEASE-13</span></span></td><td></td><td>README covers the account&#x27;s execution policy, Python access and testing as the runner; doctor FAILs a .ps1 hook whose service account cannot run scripts. 8 new tests pass; real reads checked on this PC.</td><td>26 Oct</td></tr>
 <tr data-task="DS85"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS85</span><span class="release-name">RELEASE-13</span>Release: gate docs, ci_watch fix, one release per train, spec sources</td><td></td><td>PR #102 merged 21:21 (ee35f35) on green spec-lint and secret-scan: luismc-delivery 0.8.0, luismc-project-setup 14.6.1. No release made (DS86 working). Branches and worktrees removed; plugins updated at user scope.</td><td>26 Oct</td></tr>
@@ -2944,6 +3019,9 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DS71"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS71</span>Delivery: claude-setup wiring, rules, per-project config<span class="release-line"><span class="release-name">RELEASE-10</span></span></td><td></td><td>Brief (d) + D7/D8: enable luismc-delivery, .delivery/config.json template, rules re-tagged to enforcers, clarifying-questions Q-2/Q-3, commit-msg no-attribution + conflict-marker hooks, marketplace + README, memory-to-rule map.</td><td>26 Oct</td></tr>
 <tr data-task="DS73"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS73</span>Enforce PC load limits: memory &lt;=85%, CPU &lt;=60% (hooks + CI runner gate)</td><td><code>delivery</code></td><td>Owner 23 Oct: the load rule must be truly enforced by the plugin for every project, not by memory notes: PreToolUse refuses heavy local commands and local agents while the PC is over the limits; CI runner job-start gate waits for room; Stop warns; limits configurable per machine.</td><td>26 Oct</td></tr>
 <tr data-task="DS66"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS66</span>Delivery lessons inventory: every learning mapped to a rule ID + enforcement<span class="no-release-line">ships nothing: study; feeds DELIVERYSPEC</span></td><td></td><td>Inventory done 22:07: 63 lessons (8 enforced, 1 warn, 17 partly, 37 not); ledger schema; 4 briefs. Committed as DELIVERYSPEC draft on DS67-delivery-integration.</td><td>14 Oct</td></tr>
+</tbody></table></div>
+<details class="earlier"><summary>Earlier</summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="TF5"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-transcript-folds.html"><span class="task-id">TF5</span>Install on this machine; hide-diffs removal</a><span class="no-release-line">ships nothing: machine setup, ships nothing</span></td><td></td><td>luismc-transcript-folds installed (user scope), luismc-project-setup updated to 14.3.0, plugins reloaded. hide-diffs is installed with local scope in another project; the owner removes it there (claude plugin uninstall hide-diffs@gixxy22-plugins --scope local).</td><td>13 Oct</td></tr>
 <tr data-task="DS63"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS63</span><span class="release-name">RELEASE-8</span>claude-setup ships the clarifying-questions rule<span class="release-line"><span class="release-name">RELEASE-9</span></span></td><td></td><td>New plugin-owned rule file rules/clarifying-questions.md in claude-setup assets, written to every target and overwritten unconditionally like agents-and-integration.md, so it reaches projects whose CLAUDE.md already exists. Text is the owner&#x27;s, verbatim. luismc-project-setup 14.2.1 -&gt; 14.3.0.</td><td>13 Oct</td></tr>
 <tr data-task="DS64"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS64</span><span class="release-name">RELEASE-9</span>Train: DS63 + transcript-folds + marketplace rename</td><td></td><td>PR #60 merged (d49413f): luismc-transcript-folds 1.0.0, luismc-project-setup 14.3.0, marketplace renamed dev-standards. CI green, owner smoke test passed, branches and agent worktrees removed, marketplace update verified.</td><td>13 Oct</td></tr>
@@ -2952,9 +3030,6 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="TF2"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-transcript-folds.html"><span class="task-id">TF2</span>luismc-transcript-folds plugin, from scratch</a><span class="release-line"><span class="release-name">RELEASE-9</span></span></td><td></td><td>Manifest, hooks module and pure-logic files under claude/plugins/transcript-folds, node --test suites, claude plugin validate, CI wiring.</td><td>13 Oct</td></tr>
 <tr data-task="TF3"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-transcript-folds.html"><span class="task-id">TF3</span>claude-setup enables the plugin and writes the two chords</a><span class="release-line"><span class="release-name">RELEASE-9</span></span></td><td></td><td>User target, always: enabledPlugins entry and ~/.claude/keybindings.json chords ctrl+x d and ctrl+x f merged field by field, conflict asked. SKILL.md, README, tests.</td><td>13 Oct</td></tr>
 <tr data-task="TF4"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-transcript-folds.html"><span class="task-id">TF4</span>Smoke test in a real terminal session</a><span class="release-line"><span class="release-name">RELEASE-9</span></span></td><td></td><td>Owner ran it in a real terminal with --plugin-dir and the two chords bound: &#x27;looks good&#x27;.</td><td>13 Oct</td></tr>
-</tbody></table></div>
-<details class="earlier"><summary>Earlier</summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS62"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS62</span>Sync local main and remove old artifacts-record worktree<span class="no-release-line">ships nothing: local cleanup, ships nothing</span></td><td></td><td>Local main fast-forwarded to origin/main (8416760); the copied record was identical to it, so nothing to commit. Old artifacts-record worktree removed; 37 line-ending-only files re-checked out.</td><td>12 Oct</td></tr>
 <tr data-task="AR50"><td><span class="status-chip status-live">Live</span></td><td><a href="feature-project-artifacts-standard.html"><span class="task-id">AR50</span>Plugin never pushes the record</a><span class="release-line"><span class="release-name">RELEASE-7</span></span></td><td><code>luismc-artifacts</code></td><td>Merged in #56 (25889b3): luismc-artifacts 1.8.0, ARTIFACTSPEC 1.8.0; the plugin writes docs/artifacts/ only, never commits or pushes.</td><td>12 Oct</td></tr>
 <tr data-task="DS61"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS61</span><span class="release-name">RELEASE-7</span>AR50 train: never-push fix, PR CI, merge, cleanup</td><td></td><td>#56 merged 23:25 on green (spec-lint 2m57s); 1.8.0 on main; cleanup removed every AR50 branch and agent worktree, delivery log in train-2026-10-12-56.</td><td>12 Oct</td></tr>

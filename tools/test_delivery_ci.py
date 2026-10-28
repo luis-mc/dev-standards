@@ -543,6 +543,36 @@ def watch_bad_sha_is_exit_2():
         sb.close()
 
 
+@test
+def watch_short_sha_is_resolved_to_the_full_sha():
+    # DS94: `gh run list --commit` matches full shas only; a short one is resolved first.
+    sb = Sandbox()
+    try:
+        sb.write_fixture({"run_list": [[run_obj(1, "completed", "success")]],
+                          "api": {"repos/{owner}/{repo}/commits/" + SHA[:7]: {"sha": SHA}}})
+        rc, out, err = sb.run(CI_WATCH, [SHA[:7], *WATCH_FAST])
+        expect_exit(rc, 0, out, err)
+        lists = [c for c in sb.calls() if c[:2] == ["run", "list"]]
+        check(lists and all(c[c.index("--commit") + 1] == SHA for c in lists),
+              f"run list not called with the full sha: {lists}")
+    finally:
+        sb.close()
+
+
+@test
+def watch_unresolvable_short_sha_is_exit_2():
+    sb = Sandbox()
+    try:
+        sb.write_fixture({"run_list": [[]],
+                          "api": {"repos/{owner}/{repo}/commits/" + SHA[:7]: {"__error": "HTTP 422: No commit found"}}})
+        rc, out, err = sb.run(CI_WATCH, [SHA[:7], *WATCH_FAST])
+        expect_exit(rc, 2, out, err)
+        check("40 characters" in err, f"no hint to pass the full sha: {err}")
+        check(not [c for c in sb.calls() if c[:2] == ["run", "list"]], "listed runs for an unresolved sha")
+    finally:
+        sb.close()
+
+
 def timed_job(name: str, start: str, end: str, steps: list | None = None) -> dict:
     return {"name": name, "conclusion": "success", "startedAt": f"2026-10-11T10:{start}Z",
             "completedAt": f"2026-10-11T10:{end}Z", "steps": steps or []}

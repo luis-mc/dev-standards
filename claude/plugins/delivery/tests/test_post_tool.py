@@ -163,6 +163,14 @@ class LedgerGapTests(unittest.TestCase):
         self.assertEqual((t["branch"], t["pr"], t["state"]), ("release/40", 418, "ci"))
         self.assertEqual(t["ci"]["head_sha"], "a" * 40)
 
+    def test_pr_create_on_an_integration_branch_creates_the_train(self):
+        # DS95: <id>-integration branches are trains by default, as hooklib.is_release_branch says
+        with mock.patch.object(H, "rev_parse", return_value="a" * 40):
+            H.handle(bash("gh pr create --base main --head DS90-integration --body-file x.md",
+                          "https://github.com/example/app/pull/103\n"), self.root)
+        t = self.led()["trains"][0]
+        self.assertEqual((t["branch"], t["pr"], t["state"]), ("DS90-integration", 103, "ci"))
+
     def test_pr_create_of_a_known_train_gets_head_sha(self):
         seed(self.root, state="pushed")
         with mock.patch.object(H, "rev_parse", return_value="b" * 40):

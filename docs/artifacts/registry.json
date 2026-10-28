@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-27T08:30+00:00",
+  "updated": "2026-10-28T20:33+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1825,12 +1825,11 @@
       "id": "DS90",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release: CI covers .claude/ changes; commit the record",
-      "detail": "Joins DS91 and DS92 on DS90-integration; one ready PR, merge on green, then cleanup.",
-      "expected": "27 Oct ~09:35",
-      "changed": "2026-10-27T08:30+00:00",
-      "expected_basis": "agent ~25 min, join + CI ~20 min",
+      "detail": "PR #103 merged by the owner 23:19 (6bb905c) on green spec-lint and secret-scan at ff6b01b; no release made. Branches and worktrees removed; ledger train held with the reason (plugin never recorded the PR, DS95).",
+      "expected": "27 Oct",
+      "changed": "2026-10-27T23:20+00:00",
       "release": 14,
       "phases": [
         {
@@ -1846,12 +1845,12 @@
         {
           "name": "ci",
           "start": "2026-10-27T09:10+00:00",
-          "end": "2026-10-27T09:25+00:00"
+          "end": "2026-10-27T09:35+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-10-27T09:25+00:00",
-          "end": "2026-10-27T09:35+00:00"
+          "start": "2026-10-27T09:35+00:00",
+          "end": "2026-10-27T23:30+00:00"
         }
       ],
       "risk": {
@@ -1864,12 +1863,11 @@
       "id": "DS91",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "spec-lint runs on .claude/ changes and checks them",
-      "detail": "PRs touching only .claude/ ran no spec-lint (how PR #100 merged unchecked). Add .claude/** to its paths, map settings/suites to the delivery area, guard test that the repo's own files parse and name existing scripts.",
-      "expected": "27 Oct ~09:05",
-      "changed": "2026-10-27T08:30+00:00",
-      "expected_basis": "agent ~25 min",
+      "detail": "Path filter has .claude/**; settings/suites map to specs; repo case checks hook script exists and plugins are shipped (fails on both broken copies). test_ci_areas passes; full session-guard suite in CI.",
+      "expected": "27 Oct",
+      "changed": "2026-10-27T23:20+00:00",
       "rides": "DS90",
       "started": "2026-10-27T08:30+00:00"
     },
@@ -1877,14 +1875,88 @@
       "id": "DS92",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Commit the artifacts record",
-      "detail": "Status changes since PR #102 (DS76 close-out, DS84-DS89 Live, publishes).",
-      "expected": "27 Oct ~09:10",
-      "changed": "2026-10-27T08:30+00:00",
-      "expected_basis": "rides the DS90 join",
+      "detail": "Record committed on DS90-integration (229cacb).",
+      "expected": "27 Oct",
+      "changed": "2026-10-27T23:20+00:00",
       "rides": "DS90",
       "started": "2026-10-27T08:30+00:00"
+    },
+    {
+      "id": "DS93",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Renderer tests: feature folds are not checklist groups (R5.50)",
+      "detail": "Tests skip feature-group folds; 4 related cases pass locally; full renderer suite in CI.",
+      "expected": "27 Oct",
+      "changed": "2026-10-27T23:20+00:00",
+      "rides": "DS90",
+      "started": "2026-10-27T09:19+00:00"
+    },
+    {
+      "id": "DS94",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "ci_watch.py: a short commit hash finds no runs and times out",
+      "detail": "ci_watch resolves a short sha (git, then the GitHub API) before listing runs; unresolvable exits 2. 2 new tests; all 33 ci_watch tests pass locally.",
+      "expected": "28 Oct",
+      "changed": "2026-10-28T20:33+00:00",
+      "rides": "DS96",
+      "started": "2026-10-28T20:28+00:00"
+    },
+    {
+      "id": "DS95",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "luismc-delivery: recognise <id>-integration trains by default",
+      "detail": "-integration branches are trains by default; the watcher adopts the one open PR of a train pushed by hand (not when held or ambiguous). 4 new tests; post_tool, watch, pre_tool suites pass; hooks harness in CI.",
+      "expected": "28 Oct",
+      "changed": "2026-10-28T20:33+00:00",
+      "rides": "DS96",
+      "started": "2026-10-28T20:28+00:00"
+    },
+    {
+      "id": "DS96",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Release: ci_watch short hash; delivery adopts -integration releases",
+      "detail": "Joined on DS96-integration (c4065bc + record); ready PR next.",
+      "expected": "28 Oct ~21:25",
+      "changed": "2026-10-28T20:33+00:00",
+      "expected_basis": "work ~35 min, join + CI ~20 min",
+      "release": 15,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-10-28T20:30+00:00",
+          "end": "2026-10-28T21:05+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-10-28T21:05+00:00",
+          "end": "2026-10-28T21:10+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-10-28T21:10+00:00",
+          "end": "2026-10-28T21:20+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-10-28T21:20+00:00",
+          "end": "2026-10-28T21:25+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 15
+      },
+      "started": "2026-10-28T20:28+00:00"
     },
     {
       "id": "MP1",
