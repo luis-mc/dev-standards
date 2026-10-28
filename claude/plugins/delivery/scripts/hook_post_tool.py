@@ -31,7 +31,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import delivery_ledger as L  # noqa: E402
 import hooklib as H  # noqa: E402
 
-DEFAULT_TRAIN_RE = r"^release/\d+[a-z]?$"
+DEFAULT_TRAIN_RE = r"^(release/\d+[a-z]?|.+-integration)$"   # DS95: an <id>-integration branch is a train too (hooklib.is_release_branch)
 FENCE_RE = re.compile(r"```delivery[ \t]*\r?\n(.*?)```", re.S)
 PR_URL_RE = re.compile(r"/pull/(\d+)")
 ARTIFACT_URL_RE = re.compile(r"https://claude\.ai/(?:code/)?artifact/[\w-]+")

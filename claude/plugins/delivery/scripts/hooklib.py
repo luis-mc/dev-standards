@@ -130,7 +130,7 @@ def check_on(cfg, check_id):
     return check_id not in (cfg.get('checks_off') or [])
 
 
-DEFAULT_TRAIN_RE = r'^release/\d+[a-z]?$'      # same default as hook_post_tool.py
+DEFAULT_TRAIN_RE = r'^release/\d+[a-z]?$'      # the release/<n> half of hook_post_tool.py's default
 
 
 def is_release_branch(cfg, branch):

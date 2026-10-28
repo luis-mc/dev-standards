@@ -232,9 +232,34 @@ class Watcher:
             self.mut(lambda led: L.add_event(led, "ci.cancel_superseded", "%s %s" % (train["id"], done), "delivery_watch"))
         return done
 
+    def adopt_pr(self, train: dict) -> bool:
+        """DS95: a train pushed by hand whose pull request was opened (or made ready) before the
+        train was known has no PR number, so its CI is never read. Adopt the one open pull
+        request whose head is the train's branch; none or several: leave it."""
+        if L.hold_active(train, self.now()):
+            return False
+        found = self.gh_json(["pr", "list", "--head", train["branch"], "--state", "open",
+                              "--json", "number", *self.repo_args])
+        if not isinstance(found, list) or len(found) != 1 or not found[0].get("number"):
+            return False
+        pr = int(found[0]["number"])
+
+        def fn(led):
+            t = L.find_train(led, train["id"])
+            if t is not None and not t.get("pr"):
+                t["pr"] = pr
+                if t.get("state") == "pushed":
+                    L.set_train_state(t, "ci", L.iso(self.now()))
+                L.add_event(led, "train.pr_adopted", "%s #%s" % (t["id"], pr), "delivery_watch")
+        self.mut(fn)
+        train["pr"] = pr
+        return True
+
     def pass_trains(self) -> None:
         led = L.load(self.root)
         for train in led["trains"]:
+            if train.get("state") in ("pushed", "ci") and not train.get("pr"):
+                self.adopt_pr(train)
             if train.get("state") not in ("pushed", "ci", "green", "red") or not train.get("pr"):
                 continue
             self._train_ci(train)

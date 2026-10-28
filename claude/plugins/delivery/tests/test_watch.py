@@ -157,6 +157,44 @@ class MergeTests(unittest.TestCase):
         self.assertEqual(L.load(root)["trains"][0]["state"], "ci")  # nothing written
 
 
+class AdoptPrTests(unittest.TestCase):
+    """DS95: a train pushed by hand whose PR was already open gets that PR from `gh pr list --head`."""
+
+    def routes(self, prs):
+        r = routes_for_green(pr=103, branch="DS90-integration")
+        r[("gh", "pr", "list", "--head")] = (0, json.dumps([{"number": n} for n in prs]))
+        return r
+
+    def test_pushed_train_without_pr_adopts_the_open_pr_and_merges_at_green(self):
+        root = make_root()
+        seed(root, [{"branch": "DS90-integration", "state": "pushed"}])
+        sh = FakeShell(self.routes([103]))
+        watcher(root, sh).run_once()
+        led = L.load(root)
+        t = led["trains"][0]
+        self.assertEqual((t["pr"], t["state"]), (103, "merged"))
+        self.assertIn("train.pr_adopted", [e["kind"] for e in led["events"]])
+        self.assertIn(["gh", "pr", "merge", "103", "--merge", "--match-head-commit", SHA], sh.calls)
+
+    def test_two_open_prs_for_the_branch_adopt_nothing(self):
+        root = make_root()
+        seed(root, [{"branch": "DS90-integration", "state": "pushed"}])
+        sh = FakeShell(self.routes([103, 104]))
+        watcher(root, sh).run_once()
+        t = L.load(root)["trains"][0]
+        self.assertEqual((t["pr"], t["state"]), (None, "pushed"))
+        self.assertEqual(sh.writes(), [])
+
+    def test_held_train_is_not_adopted(self):
+        root = make_root()
+        seed(root, [{"branch": "DS90-integration", "state": "pushed",
+                     "hold": {"reason": "owner asked", "by": "owner", "until": None}}])
+        sh = FakeShell(self.routes([103]))
+        watcher(root, sh).run_once()
+        self.assertIsNone(L.load(root)["trains"][0]["pr"])
+        self.assertFalse(any(c[:3] == ["gh", "pr", "list"] for c in sh.calls))
+
+
 class GreenNeedsEveryRequiredWorkflowTests(unittest.TestCase):
     def run_with(self, cfg, per_workflow, state="ci", green_at=None):
         root = make_root(cfg)
