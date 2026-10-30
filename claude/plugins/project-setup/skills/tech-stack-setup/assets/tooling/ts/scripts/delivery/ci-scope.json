@@ -1,0 +1,24 @@
+{
+  "//": [
+    "The CI scope rules (scripts/delivery/ci_scope.py). Edit them for this repository; delete the file to opt out.",
+    "full: a release pull request, or a change to full_files. ci-smoke: a change only to ci_files (docs may ride along): the CI tests, the guard tests and the named smoke set. affected: everything else.",
+    "full_files: a leading ! is an exception. docs: changes here are not code. smoke: the fixed set a CI-only change runs."
+  ],
+  "default_branch": "main",
+  "release_pr": { "base": "main", "head_re": "^release/.+" },
+  "full_files": [
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "tsconfig.json",
+    "turbo.jsonc",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    ".nvmrc",
+    ".github",
+    "!.github/workflows"
+  ],
+  "ci_files": ["scripts/delivery", ".github/workflows"],
+  "docs": ["docs", "**/*.md", ".claude", ".vscode", ".editorconfig"],
+  "smoke": { "tests": ["guards/**/*.test.ts"], "e2e": [] }
+}
