@@ -19,6 +19,56 @@ class WorktreeSettingError(ValueError):
     """The record worktree setting is not an absolute, usable path."""
 
 
+SETTINGS_NAME = os.path.join('.claude', 'artifacts.json')       # committed, per project
+DEFAULT_RECORD_REL = 'docs/artifacts'
+
+
+class RecordDirError(ValueError):
+    """The record_dir setting is not a relative folder under docs/."""
+
+
+def check_record_rel(raw, source='record_dir'):
+    """The normalized record folder (forward slashes) for a candidate value; RecordDirError when it is not
+    a relative path strictly under docs/."""
+    if not isinstance(raw, str) or not raw.strip() or '\0' in raw:
+        raise RecordDirError('%s must be a relative folder under docs/' % source)
+    text = raw.strip().replace('\\', '/')
+    if text.startswith('/') or (len(text) > 1 and text[1] == ':'):
+        raise RecordDirError('%s must be relative, got "%s"' % (source, raw))
+    parts = [p for p in text.split('/') if p not in ('', '.')]
+    if '..' in parts:
+        raise RecordDirError('%s must not contain "..", got "%s"' % (source, raw))
+    if len(parts) < 2 or parts[0] != 'docs':
+        raise RecordDirError('%s must be a folder under docs/ (for example docs/work/artifacts), got "%s"' % (source, raw))
+    return '/'.join(parts)
+
+
+def record_rel(root):
+    """The record folder relative to the repository root: "record_dir" in <root>/.claude/artifacts.json,
+    else docs/artifacts. Raises RecordDirError when the setting is set and unusable."""
+    path = os.path.join(root, SETTINGS_NAME)
+    if not os.path.isfile(path):
+        return DEFAULT_RECORD_REL
+    try:
+        with open(path, encoding='utf-8') as fh:
+            data = json.load(fh)
+    except (OSError, ValueError) as e:
+        raise RecordDirError('%s cannot be read: %s' % (SETTINGS_NAME.replace(os.sep, '/'), e))
+    if not isinstance(data, dict):
+        raise RecordDirError('%s must hold a JSON object' % SETTINGS_NAME.replace(os.sep, '/'))
+    if 'record_dir' not in data:
+        return DEFAULT_RECORD_REL
+    return check_record_rel(data['record_dir'], '.claude/artifacts.json record_dir')
+
+
+def record_rel_safe(root):
+    """record_rel for the hooks: an unusable setting falls back to the default, never raises."""
+    try:
+        return record_rel(root)
+    except RecordDirError:
+        return DEFAULT_RECORD_REL
+
+
 def _same_path(a, b):
     return os.path.normcase(os.path.realpath(a)) == os.path.normcase(os.path.realpath(b))
 

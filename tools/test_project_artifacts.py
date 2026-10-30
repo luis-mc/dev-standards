@@ -3371,6 +3371,148 @@ def test_retire_leaves_git_alone_and_a_failed_retire_restores_the_files(env):
     assert q.files() == before
 
 
+# --------------------------------------------------------------------------
+# the record folder setting (DS32)
+# --------------------------------------------------------------------------
+
+NEW_REC = 'docs/work/artifacts'
+
+
+def write_setting(p, value):
+    f = p.clone / '.claude' / 'artifacts.json'
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text(json.dumps({'record_dir': value}), encoding='utf-8')
+
+
+def exercise_every_command(p, rec):
+    """Run the commands that read or write the record; each must work from `rec` and leave no docs/artifacts."""
+    rdir = p.clone / rec
+    assert p.run('check').code == 0, p.run('check').all
+    assert p.run('path').out.strip() == str(rdir)
+    assert p.run('worktree').out.strip() == str(rdir)
+    p.ok('feature-new', '--key', 'late', '--title', 'Late', '--prefix', 'LA', '--apps', 'web')
+    assert (rdir / 'feature-late.html').is_file()
+    p.ok('task-add', '--owner', 'late', '--item', 'One', '--detail', 'Do it.', '--expected', '14 Oct')
+    p.ok('set-task-status', 'LA1', 'Waiting')
+    tasks = json.loads((rdir / 'registry.json').read_text(encoding='utf-8'))['tasks']
+    assert [t['status'] for t in tasks if t['id'] == 'LA1'] == ['Waiting'], tasks
+    assert p.run('render', '--all').code == 0
+    r = p.run('pending', '--json')
+    assert r.code == 1 and [a['key'] for a in r.json()['artifacts']] == ['full-progress'], r.all
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ddd')
+    assert p.run('pending', '--json').code == 0
+    assert 'ddd' in (rdir / 'manifest.json').read_text(encoding='utf-8')
+    p.ok('set-task-status', 'LA1', 'Live', rides=False)
+    assert p.run('retire', 'late').code == 0 and p.run('retire', 'late', '--yes').code == 0
+    assert (rdir / 'retired').is_dir() or not (rdir / 'content' / 'late').exists()
+    assert p.run('check').code == 0, p.run('check').all
+    if rec != 'docs/artifacts':
+        assert not (p.clone / 'docs' / 'artifacts').exists(), 'a command wrote the default folder'
+
+
+@case
+def test_record_dir_setting_absent_is_the_old_path(env):
+    """DS32: no .claude/artifacts.json = docs/artifacts, as before; an object without record_dir too."""
+    p = env.baseline()
+    assert p.run('path').out.strip() == str(p.clone / 'docs' / 'artifacts')
+    (p.clone / '.claude').mkdir(exist_ok=True)
+    (p.clone / '.claude' / 'artifacts.json').write_text('{"other": 1}', encoding='utf-8')
+    assert p.run('path').out.strip() == str(p.clone / 'docs' / 'artifacts')
+    exercise_every_command(p, 'docs/artifacts')
+
+
+@case
+def test_record_dir_setting_is_used_by_every_command(env):
+    """DS32: init, feature-new, task-add, set-task-status, render, check, pending, mark-published, retire, path
+    and worktree all use the project's record_dir."""
+    p = env.project()
+    write_setting(p, NEW_REC)
+    p.init()
+    assert (p.clone / NEW_REC / 'manifest.json').is_file() and not (p.clone / 'docs' / 'artifacts').exists()
+    assert NEW_REC in p.run('path').out.replace('\\', '/')
+    r = subprocess.run([sys.executable, str(env.script), 'init', '--project', 'Demo'], cwd=str(p.clone),
+                       capture_output=True, text=True, env=base_env())
+    assert r.returncode != 0 and 'already exists' in r.stderr
+    exercise_every_command_after_init(p)
+
+
+def exercise_every_command_after_init(p):
+    p.ok('feature-new', '--key', 'artifacts', '--title', 'Artifacts', '--prefix', 'AR', '--apps', 'plugin')
+    p.ok('task-add', '--owner', 'project', '--prefix', 'DS', '--item', 'Std', '--detail', 'Keep.',
+         '--expected', '13 Oct', '--release')
+    exercise_every_command(p, NEW_REC)
+
+
+@case
+def test_record_dir_setting_outside_docs_is_refused(env):
+    """DS32: the setting and move-record accept only a relative folder strictly under docs/."""
+    p = env.baseline()
+    before = p.files()
+    for bad in ('src/artifacts', '../x', '/abs/docs/x', 'docs', 'docs/../src', 'artifacts', 'C:/docs/x', ''):
+        r = p.run('move-record', bad, '--yes')
+        assert r.code == 2, (bad, r.all)
+    assert p.files() == before and not (p.clone / '.claude' / 'artifacts.json').exists()
+    for bad in ('src/artifacts', '../x', 'docs'):
+        write_setting(p, bad)
+        r = p.run('check')
+        assert r.code == 2 and 'record_dir' in r.err, (bad, r.all)
+
+
+@case
+def test_move_record_dry_run_changes_nothing(env):
+    """DS32: without --yes it prints the plan and writes nothing."""
+    p = env.baseline()
+    before = p.files()
+    r = p.run('move-record', NEW_REC)
+    assert r.code == 0 and 'dry run' in r.out and NEW_REC in r.out, r.all
+    assert p.files() == before and not (p.clone / 'docs' / 'work').exists()
+    assert not (p.clone / '.claude' / 'artifacts.json').exists()
+    j = p.run('move-record', NEW_REC, '--json').json()
+    assert j['dry_run'] is True and j['moved'] is False and j['to'] == NEW_REC
+
+
+@case
+def test_move_record_moves_the_folder_and_writes_the_setting(env):
+    """DS32: a plain file move, the setting written, git left alone, and the way back removes the setting."""
+    p = env.baseline()
+    before = p.files()
+    state = p.git_state()
+    r = p.ok('move-record', NEW_REC, '--yes')
+    assert 'moved the record' in r.out, r.all
+    assert not (p.clone / 'docs' / 'artifacts').exists()
+    moved = {x.relative_to(p.clone / NEW_REC).as_posix(): x.read_bytes() for x in (p.clone / NEW_REC).rglob('*') if x.is_file()}
+    assert moved == before
+    assert json.loads((p.clone / '.claude' / 'artifacts.json').read_text(encoding='utf-8')) == {'record_dir': NEW_REC}
+    assert p.git_state() == state, 'move-record must not touch HEAD, the index or the refs'
+    exercise_every_command(p, NEW_REC)
+    assert p.run('move-record', NEW_REC, '--yes').out.count('nothing to do') == 1
+    # an occupied target is refused; moving back removes the setting
+    (p.clone / 'docs' / 'artifacts').mkdir(parents=True)
+    (p.clone / 'docs' / 'artifacts' / 'x.txt').write_text('x', encoding='utf-8')
+    assert p.run('move-record', 'docs/artifacts', '--yes').code == 1
+    (p.clone / 'docs' / 'artifacts' / 'x.txt').unlink()
+    p.ok('move-record', 'docs/artifacts', '--yes')
+    assert not (p.clone / '.claude' / 'artifacts.json').exists() and (p.clone / 'docs' / 'artifacts' / 'manifest.json').is_file()
+    assert not (p.clone / 'docs' / 'work').exists(), 'the emptied parent folder goes too'
+    assert p.run('move-record', 'docs/artifacts/inner', '--yes').code == 2
+
+
+@case
+def test_hooks_read_the_record_dir_setting(env):
+    """DS32: the hooks find the manifest and the registry in the project's record folder."""
+    p = env.baseline()
+    p.ok('move-record', NEW_REC, '--yes')
+    hooks = str(env.plugin / 'scripts')
+    code = ("import sys, json; sys.path.insert(0, %r); import hook_after_command as A, publish_hourly as P; "
+            "root = sys.argv[1]; m = A.load_manifest(root); "
+            "print(json.dumps([A.record_rel_of(root), bool(m and m.get('project')), A.record_dir_and_rev(root, m or {})[0]]))" % hooks)
+    r = subprocess.run([sys.executable, '-c', code, str(p.clone)], capture_output=True, text=True, env=base_env())
+    assert r.returncode == 0, r.stderr
+    rel, found, d = json.loads(r.stdout.strip().splitlines()[-1])
+    assert rel == NEW_REC and found and Path(d) == p.clone / NEW_REC, r.stdout
+
+
+
 def main():
     global TMP
     TMP = Path(tempfile.mkdtemp(prefix='ptest-'))

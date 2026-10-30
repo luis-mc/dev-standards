@@ -57,7 +57,7 @@ except ImportError as _e:
 
 SPEC = 'ARTIFACTSPEC 1.0.0'
 FP_NAME = 'full-progress'
-RECORD_REL = 'docs/artifacts'
+RECORD_REL = 'docs/artifacts'       # the default; the project's record_dir setting overrides it (current_rel)
 WAITS_ON = ('owner', 'work')   # R5.34a: who a Waiting or On hold task waits on; absent means work
 BASIS_MAX = 80            # R6.10: longest Expected basis
 OPEN_STATUSES = ('Running', 'Waiting', 'To do', 'Needs you', 'On hold')     # R6.6
@@ -310,11 +310,30 @@ def session_root(start=None):
     return top
 
 
+def record_rel_or_fail(root):
+    """The record folder of the project (record_dir in .claude/artifacts.json, else docs/artifacts)."""
+    if artifact_queue is None:
+        raise Fail(2, 'artifact_queue.py cannot be imported: %s' % _QUEUE_ERROR)
+    try:
+        return artifact_queue.record_rel(str(root))
+    except artifact_queue.RecordDirError as e:
+        raise Fail(2, str(e))
+
+
+def current_rel(root=None):
+    """The record folder for messages: never raises, falls back to the default."""
+    root = root or session_root()
+    if artifact_queue is None or not root:
+        return RECORD_REL
+    return artifact_queue.record_rel_safe(str(root))
+
+
 class Ctx:
     def __init__(self, root, branch):
         self.root = Path(root)
         self.branch = branch
-        self.record_dir = self.root / RECORD_REL
+        self.rel = record_rel_or_fail(self.root)
+        self.record_dir = self.root / self.rel
         self.wt = self.root          # the record lives in the working tree; the record worktree is retired (R4.24)
 
 
@@ -331,7 +350,7 @@ def detect_default_branch(root, given=None):
     return git_out(root, 'symbolic-ref', '--short', '-q', 'HEAD') or 'main'
 
 
-NO_COMMIT_MSG = 'the plugin no longer commits or pushes (ARTIFACTSPEC 1.8.0); commit docs/artifacts/ when you choose'
+NO_COMMIT_MSG = 'the plugin no longer commits or pushes (ARTIFACTSPEC 1.8.0); commit %s/ when you choose'
 
 
 def make_ctx(args, branch=None):
@@ -341,7 +360,7 @@ def make_ctx(args, branch=None):
     if not root:
         raise Fail(2, 'not inside a git repository')
     if getattr(args, 'push', False):
-        print('luismc-artifacts: ' + NO_COMMIT_MSG, file=sys.stderr)       # R4.28: --push does nothing
+        print('luismc-artifacts: ' + NO_COMMIT_MSG % current_rel(root), file=sys.stderr)       # R4.28: --push does nothing
     return Ctx(root, branch or detect_default_branch(root, getattr(args, 'default_branch', None)))
 
 
@@ -379,11 +398,11 @@ def locked(ctx):
 
 
 def no_record_fail(ctx):
-    return Fail(2, 'no record in this repository (no %s/manifest.json); run init' % RECORD_REL)
+    return Fail(2, 'no record in this repository (no %s/manifest.json); run init' % ctx.rel)
 
 
 def snapshot(ctx):
-    """{relative path: bytes} of every file under docs/artifacts/, to put back when a change fails."""
+    """{relative path: bytes} of every file under the record folder, to put back when a change fails."""
     out = {}
     d = ctx.record_dir
     if d.is_dir():
@@ -436,7 +455,7 @@ def migrate_record(ctx):
     """Copy the old record worktree's docs/artifacts/ into the working tree when its registry is newer.
     Returns the one-line note when it copied, else None. Idempotent; never runs a git write."""
     old = Path(old_record_worktree(ctx.root))
-    old_dir = old / RECORD_REL
+    old_dir = old / RECORD_REL      # the old worktree always held docs/artifacts
     if artifact_queue._same_path(str(old), str(ctx.root)) or not (old_dir / 'registry.json').is_file():
         return None
     theirs, mine = newest_stamp(old_dir), newest_stamp(ctx.record_dir)
@@ -447,8 +466,8 @@ def migrate_record(ctx):
             dest = ctx.record_dir / p.relative_to(old_dir)
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(str(p), str(dest))
-    return ('luismc-artifacts: the record now lives in docs/artifacts/ and is never committed or pushed by the '
-            'plugin; copied it from %s. You may remove that worktree with git worktree remove %s' % (old, old))
+    return ('luismc-artifacts: the record now lives in %s/ and is never committed or pushed by the '
+            'plugin; copied it from %s. You may remove that worktree with git worktree remove %s' % (ctx.rel, old, old))
 
 
 def migrate_quietly(ctx):
@@ -470,8 +489,9 @@ def setting_ignored_notes(root):
         pass
     if not used:
         return []
-    return ['%s and record_worktree in %s are ignored since ARTIFACTSPEC 1.8.0: the record lives in docs/artifacts/ '
-            'of the working tree' % (artifact_queue.WORKTREE_ENV, artifact_queue.LOCAL_NAME.replace(os.sep, '/'))]
+    return ['%s and record_worktree in %s are ignored since ARTIFACTSPEC 1.8.0: the record lives in %s/ '
+            'of the working tree' % (artifact_queue.WORKTREE_ENV, artifact_queue.LOCAL_NAME.replace(os.sep, '/'),
+                                     current_rel(root))]
 
 
 # --------------------------------------------------------------------------
@@ -816,7 +836,7 @@ def validate_structure(rec):
     if m.get('design') not in ('default', 'design.css'):
         f('R4.2', 'manifest.json', 'design must be "default" or "design.css"')
     elif m.get('design') == 'design.css' and not (rec.dir / 'design.css').is_file():
-        f('R5.10', 'manifest.json', 'design is "design.css" but docs/artifacts/design.css is missing')
+        f('R5.10', 'manifest.json', 'design is "design.css" but design.css is missing from the record folder')
     elif m.get('design') == 'design.css' and getattr(R, 'check_tokens', None):
         try:
             for prob in R.check_tokens(read_html(rec.dir / 'design.css') or ''):
@@ -1438,7 +1458,7 @@ def cmd_init(args):
         if rec.exists:
             raise Fail(1, 'a manifest already exists; init refuses to overwrite it')
         build_init(rec, args, project, ctx.root)
-        rec.message = 'docs/artifacts: init'
+        rec.message = ctx.rel + ': init'
         return {'command': 'init', 'project': project}
 
     res = run_change(ctx, apply, new_ok=True)
@@ -1450,7 +1470,7 @@ def cmd_init(args):
 
 
 def short(res):
-    return 'written to %s/' % RECORD_REL if res.get('changed') else 'unchanged'
+    return 'written to %s/' % current_rel() if res.get('changed') else 'unchanged'
 
 
 def cmd_feature_new(args):
@@ -1503,7 +1523,7 @@ def cmd_feature_new(args):
         write_text(d / 'history.json', dump_json([{'date': now.text, 'change': 'Feature artifact created.'}]))
         rec.render_keys[key] = 'new'
         rec.render_keys[FP_NAME] = 'new'
-        rec.message = 'docs/artifacts: add feature %s' % key
+        rec.message = ctx.rel + ': add feature %s' % key
         return {'command': 'feature-new', 'key': key, 'title': title, 'prefix': prefix,
                 'file': m['feature_artifacts'][-1]['file'], 'initialised': created}
 
@@ -1855,7 +1875,7 @@ def cmd_task_add(args):
         if owner != 'project':
             rec.render_keys[owner] = 'new'
         rec.render_keys[FP_NAME] = 'new'
-        rec.message = 'docs/artifacts: %s %s' % (tid, status)
+        rec.message = ctx.rel + ': %s %s' % (tid, status)
         return {'command': 'task-add', 'id': tid, 'status': status}
 
     res = run_change(ctx, apply)
@@ -1948,7 +1968,7 @@ def cmd_set_task_status(args):
         elif args.history or new_item is not None:
             warn('%s is a project task; project tasks have no History, nothing recorded there' % args.id)
         rec.render_keys[FP_NAME] = 'new'
-        rec.message = 'docs/artifacts: %s %s' % (args.id, status)
+        rec.message = ctx.rel + ': %s %s' % (args.id, status)
         return {'command': 'set-task-status', 'id': args.id, 'status': status, 'previous': prev,
                 'expected': task['expected'], 'expected_basis': task.get('expected_basis', '')}
 
@@ -2062,7 +2082,7 @@ def cmd_edit_content(args):
         rec.render_keys[key] = 'new'
         if key != FP_NAME:
             rec.render_keys[FP_NAME] = 'new'   # section 1 quotes each lede
-        rec.message = 'docs/artifacts: edit %s' % key
+        rec.message = ctx.rel + ': edit %s' % key
         return {'command': 'edit-content', 'key': key, 'files': sorted(src)}
 
     res = run_change(ctx, apply)
@@ -2103,7 +2123,7 @@ def cmd_design(args):
             rec.manifest['design'] = 'design.css'
         for key, _kind, _e in rec.artifacts():     # every artifact carries the token block
             rec.render_keys[key] = 'new'
-        rec.message = 'docs/artifacts: design %s' % ('default' if css is None else 'design.css')
+        rec.message = ctx.rel + ': design %s' % ('default' if css is None else 'design.css')
         return {'command': 'design', 'design': rec.manifest['design']}
 
     res = run_change(ctx, apply)
@@ -2127,7 +2147,7 @@ def cmd_render(args):
             st = existing_stamp(old)
             if st is None or render_one(rec, key, stamp_text_from_iso(st), st).replace('\r\n', '\n') != old:
                 rec.render_keys[key] = 'new'
-        rec.message = 'docs/artifacts: render'
+        rec.message = ctx.rel + ': render'
         rec.noop = not rec.render_keys
         return {'command': 'render'}
 
@@ -2195,7 +2215,7 @@ def cmd_mark_deferred(args):
             raise Fail(1, '%s is a feature artifact: feature artifacts are never published; only the full-progress '
                           'artifact is (R9.5)' % args.key)
         e['deferred_until'] = until.isoformat(timespec='minutes')
-        rec.message = 'docs/artifacts: %s publish deferred' % args.key
+        rec.message = ctx.rel + ': %s publish deferred' % args.key
         return {'command': 'mark-deferred', 'key': args.key, 'until': e['deferred_until']}
 
     res = run_change(ctx, apply)
@@ -2241,7 +2261,7 @@ def cmd_mark_published(args):
             fst = existing_stamp(fold)
             if fst is not None and render_one(rec, fkey, stamp_text_from_iso(fst), fst).replace('\r\n', '\n') != fold:
                 rec.render_keys[fkey] = 'keep'
-        rec.message = 'docs/artifacts: published %s' % key
+        rec.message = ctx.rel + ': published %s' % key
         return {'command': 'mark-published', 'key': key, 'url': url, 'sha256': e['published_sha256']}
 
     res = run_change(ctx, apply)
@@ -2266,7 +2286,7 @@ def cmd_mark_deleted(args):
             entry = AR.mark_deleted(rec.manifest, url, args.key, rec.now().iso, args.gone)
         except ValueError as ex:
             raise Fail(1, str(ex))
-        rec.message = 'docs/artifacts: deleted the old page of %s' % (entry['key'] or url)
+        rec.message = ctx.rel + ': deleted the old page of %s' % (entry['key'] or url)
         return {'command': 'mark-deleted', 'key': entry['key'], 'url': url, 'gone': bool(args.gone)}
 
     res = run_change(ctx, apply)
@@ -2352,7 +2372,7 @@ def cmd_retire(args):
         shutil.rmtree(str(rec.dir / 'content' / key), ignore_errors=True)
         rec.invalidate()
         rec.render_keys[FP_NAME] = 'new'
-        rec.message = 'docs/artifacts: retire feature %s' % key
+        rec.message = ctx.rel + ': retire feature %s' % key
         summary.update(plan)
         return {'command': 'retire', 'dry_run': False, 'key': key}
 
@@ -2383,7 +2403,7 @@ def cmd_retire(args):
 
 def cmd_commit(args):
     """Removed in 1.8.0 (R4.28): the plugin never commits or pushes."""
-    raise Fail(1, NO_COMMIT_MSG)
+    raise Fail(1, NO_COMMIT_MSG % current_rel())
 
 
 cmd_push = cmd_commit
@@ -2467,8 +2487,9 @@ def cmd_check(args):
         raise Fail(2, 'render_artifacts.py cannot be imported: %s' % _RENDER_ERROR)
     if args.record:
         d = Path(args.record)
-        if (d / RECORD_REL / 'manifest.json').is_file():
-            d = d / RECORD_REL
+        rel = current_rel(d) if (d / '.claude' / 'artifacts.json').is_file() else RECORD_REL
+        if (d / rel / 'manifest.json').is_file():
+            d = d / rel
         rec = Record.load(d)
     else:
         _ctx, rec = load_for_read(args)
@@ -2705,7 +2726,7 @@ def cmd_worktree(args):
     root = session_root()
     if not root:
         raise Fail(2, 'not inside a git repository')
-    path = str(Path(root) / RECORD_REL)
+    path = str(Path(root) / record_rel_or_fail(root))
     emit(args, {'worktree': path}, path)
     return 0
 
@@ -2733,6 +2754,74 @@ def cmd_queue(args):
             artifact_queue.remove_events(root, args.id)
         after = len(artifact_queue.read_queue(root))
         emit(args, {'removed': before - after}, 'removed %d queued event(s)' % (before - after))
+    return 0
+
+
+def cmd_move_record(args):
+    """Move the record folder to another folder under docs/ and write the record_dir setting (a plain file
+    move, no git). Without --yes it only says what it would do."""
+    if artifact_queue is None:
+        raise Fail(2, 'artifact_queue.py cannot be imported: %s' % _QUEUE_ERROR)
+    root = session_root()
+    if not root:
+        raise Fail(2, 'not inside a git repository')
+    root = Path(root)
+    old_rel = record_rel_or_fail(root)
+    try:
+        new_rel = artifact_queue.check_record_rel(args.new_dir, 'the new record folder')
+    except artifact_queue.RecordDirError as e:
+        raise Fail(2, str(e))
+    old_dir, new_dir = root / old_rel, root / new_rel
+    if new_rel == old_rel:
+        emit(args, {'moved': False, 'from': old_rel, 'to': new_rel}, 'the record is already in %s/; nothing to do' % old_rel)
+        return 0
+    if new_rel.startswith(old_rel + '/') or old_rel.startswith(new_rel + '/'):
+        raise Fail(2, 'the new folder %s and the current one %s must not contain each other' % (new_rel, old_rel))
+    has_old = old_dir.is_dir()
+    if new_dir.exists() and (not new_dir.is_dir() or any(new_dir.iterdir())):
+        raise Fail(1, '%s exists and is not an empty folder; move or remove it first' % new_rel)
+    settings = root / artifact_queue.SETTINGS_NAME
+    steps = ['move %s/ to %s/' % (old_rel, new_rel) if has_old else 'no record folder at %s/ to move' % old_rel,
+             '%s record_dir = %s' % (artifact_queue.SETTINGS_NAME.replace(os.sep, '/'), new_rel)
+             if new_rel != artifact_queue.DEFAULT_RECORD_REL else
+             'remove record_dir from %s (back to the default)' % artifact_queue.SETTINGS_NAME.replace(os.sep, '/')]
+    result = {'moved': False, 'from': old_rel, 'to': new_rel, 'dry_run': not args.yes, 'steps': steps}
+    if not args.yes:
+        emit(args, result, ['dry run (nothing changed); with --yes this would:'] + ['  ' + x for x in steps] +
+             ['the plugin does not commit: commit the moved folder and %s yourself' % artifact_queue.SETTINGS_NAME.replace(os.sep, '/')])
+        return 0
+    data = {}
+    if settings.is_file():
+        try:
+            data = json.loads(settings.read_text(encoding='utf-8'))
+        except (OSError, ValueError):
+            data = None
+        if not isinstance(data, dict):
+            raise Fail(2, '%s cannot be read as a JSON object' % artifact_queue.SETTINGS_NAME.replace(os.sep, '/'))
+    ctx = Ctx.__new__(Ctx)
+    ctx.root = root
+    with locked(ctx):
+        if has_old:
+            new_dir.parent.mkdir(parents=True, exist_ok=True)
+            if new_dir.is_dir():
+                new_dir.rmdir()
+            shutil.move(str(old_dir), str(new_dir))
+            parent = old_dir.parent
+            while parent != root / 'docs' and parent != root and parent.is_dir() and not any(parent.iterdir()):
+                parent.rmdir()
+                parent = parent.parent
+        if new_rel == artifact_queue.DEFAULT_RECORD_REL:
+            data.pop('record_dir', None)
+        else:
+            data['record_dir'] = new_rel
+        if data:
+            settings.parent.mkdir(parents=True, exist_ok=True)
+            settings.write_text(json.dumps(data, indent=2) + '\n', encoding='utf-8')
+        elif settings.is_file():
+            settings.unlink()
+    result['moved'] = has_old
+    emit(args, result, ['moved the record: %s/ -> %s/' % (old_rel, new_rel), 'commit the moved folder and %s when you choose (the plugin never commits)'
+                        % artifact_queue.SETTINGS_NAME.replace(os.sep, '/')])
     return 0
 
 
@@ -2839,7 +2928,7 @@ def build_parser():
     s.set_defaults(func=cmd_render)
 
     s = sub.add_parser('check', parents=[j], help='the conformance checks of section 14')
-    s.add_argument('--record', help='a docs/artifacts folder (or the repository containing it)')
+    s.add_argument('--record', help='the record folder (docs/artifacts by default; or the repository containing it)')
     s.set_defaults(func=cmd_check)
 
     s = sub.add_parser('pending', parents=[j], help='Full Progress to publish (with its publish copy) and queued events; exit 1 when any')
@@ -2868,7 +2957,7 @@ def build_parser():
     s.add_argument('--gone', action='store_true', help='the page no longer exists (404)')
     s.set_defaults(func=cmd_mark_deleted)
 
-    s = sub.add_parser('worktree', parents=[j], help='print the record folder, <root>/docs/artifacts (R4.24)')
+    s = sub.add_parser('worktree', parents=[j], help='print the record folder, <root>/<record_dir> (R4.24)')
     s.set_defaults(func=cmd_worktree)
 
     s = sub.add_parser('queue', parents=[j], help='show or clear queued events')
@@ -2876,7 +2965,7 @@ def build_parser():
     s.add_argument('--id')
     s.set_defaults(func=cmd_queue)
 
-    s = sub.add_parser('migrate', parents=[j], help='copy the old record worktree into docs/artifacts/ when newer (R4.24); idempotent')
+    s = sub.add_parser('migrate', parents=[j], help='copy the old record worktree into the record folder when newer (R4.24); idempotent')
     s.set_defaults(func=cmd_migrate)
 
     s = sub.add_parser('push', parents=[j], help='removed: exits 1 (R4.28)')
@@ -2888,7 +2977,12 @@ def build_parser():
     s.add_argument('--message')
     s.set_defaults(func=cmd_commit)
 
-    s = sub.add_parser('path', parents=[j], help='print the record folder, <root>/docs/artifacts')
+    s = sub.add_parser('move-record', parents=[j], help='move the record folder to another folder under docs/ and set record_dir; dry run without --yes')
+    s.add_argument('new_dir', help='the new record folder, relative to the repository, under docs/ (docs/artifacts is the default)')
+    s.add_argument('--yes', action='store_true', help='do it (without it, only print what would happen)')
+    s.set_defaults(func=cmd_move_record)
+
+    s = sub.add_parser('path', parents=[j], help='print the record folder, <root>/<record_dir>')
     s.set_defaults(func=cmd_path)
     return p
 
