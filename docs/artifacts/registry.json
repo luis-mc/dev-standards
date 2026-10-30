@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-30T17:17+00:00",
+  "updated": "2026-10-30T21:19+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2024,6 +2024,18 @@
       "expected": "30 Oct",
       "changed": "2026-10-30T17:00+00:00",
       "no_release": "pushed straight to main at the owner's request"
+    },
+    {
+      "id": "DS101",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Fold CO669, CO672, DS30 change notes on main; bump their plugins",
+      "detail": "On main, spec-lint + secret-scan green on c83feec: folds PRs #107-#109 (artifacts 1.15.0 + ARTIFACTSPEC 1.15.0, project-setup 14.8.0, delivery 0.10.2); the CO672, DS30, DS26 reports name no other project.",
+      "expected": "30 Oct",
+      "changed": "2026-10-30T21:19+00:00",
+      "no_release": "pushed straight to main at the owner's request",
+      "started": "2026-10-30T21:16+00:00"
     },
     {
       "id": "MP1",
