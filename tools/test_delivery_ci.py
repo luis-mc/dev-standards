@@ -1784,7 +1784,8 @@ def find_bash() -> str | None:
 
 
 def run_agent_setup(script_text: str, tools: dict | str, archive: bytes, bin_name: str,
-                    asset: str, with_checksums: str | None = None) -> dict:
+                    asset: str, with_checksums: str | None = None,
+                    preinstalled: str | None = None) -> dict:
     """Install from a fake release with `script_text` and a tools.json of `tools`.
 
     Returns exit code, stderr, whether the executable was installed, and which files
@@ -1806,6 +1807,11 @@ def run_agent_setup(script_text: str, tools: dict | str, archive: bytes, bin_nam
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         try:
             bin_dir = d / "bin"
+            if preinstalled is not None:  # a gitleaks already in the install folder
+                bin_dir.mkdir()
+                fake = bin_dir / bin_name
+                fake.write_text(f"#!/bin/sh\necho {preinstalled}\n", encoding="utf-8", newline="\n")
+                fake.chmod(0o755)
             env = {**os.environ, "DELIVERY_BIN": bin_dir.as_posix(),
                    "DELIVERY_GITLEAKS_BASE_URL": f"http://127.0.0.1:{srv.server_address[1]}",
                    "PATH": Path(sys.executable).parent.as_posix() + os.pathsep + os.environ.get("PATH", ""),
@@ -1875,6 +1881,27 @@ def agent_setup_problems(script_text: str) -> list[str]:
     if r["code"] != 2 or r["installed"]:
         problems.append("the old form must still refuse a checksums-file mismatch")
     return problems
+
+
+@test
+def agent_setup_skips_gitleaks_when_the_pinned_version_is_present():
+    plat = host_platform()
+    if plat is None or find_bash() is None or os.name == "nt":
+        print("SKIP  agent_setup skip-when-present: no bash, a Windows host or an unsupported platform")
+        return
+    key, exe = plat
+    asset = f"gitleaks_{VERSION}_{PLATFORM_ASSETS[key]}"
+    archive = fake_archive(asset, exe)
+    pins = {k: hashlib.sha256(archive).hexdigest() if k == key else "0" * 64 for k in PLATFORM_ASSETS}
+    script = AGENT_SETUP.read_text(encoding="utf-8").replace("\r\n", "\n")
+    tools = {"version": VERSION, "sha256": pins}
+    # the pinned version is already there: nothing is downloaded and the binary is left alone
+    r = run_agent_setup(script, tools, archive, exe, asset, preinstalled=VERSION)
+    check(r["code"] == 0 and "already installed" in r["err"], f"exit {r['code']}: {r['err'][-300:]}")
+    check(r["requests"] == [], f"a present gitleaks must not be downloaded again: {r['requests']}")
+    # another version is there: the pinned one is installed over it
+    r = run_agent_setup(script, tools, archive, exe, asset, preinstalled="0.0.1")
+    check(r["code"] == 0 and r["requests"], f"a different version must be replaced: {r}")
 
 
 @test
@@ -2035,6 +2062,145 @@ def watch_runner_health_mutants_are_detected():
                 check(caught, f"mutation '{label}' was not detected by any runner-health test")
             finally:
                 CI_WATCH = saved
+
+
+# ---------------------------------------------------------------------------
+# ci_watch post-run hooks (DS30)
+# ---------------------------------------------------------------------------
+
+HOOK_SCRIPT = (
+    "import os, sys\n"
+    "log, name, code = sys.argv[1], sys.argv[2], int(sys.argv[3])\n"
+    "open(log, 'a', encoding='utf-8').write(name + ' ' + ' '.join(sys.argv[4:]) + '\\n')\n"
+    "print('hook ' + name + ' output')\n"
+    "sys.exit(code)\n")
+
+
+def hook_sandbox(post_run: list, **extra) -> tuple[Sandbox, Path]:
+    """A sandbox whose .delivery/config.json lists `post_run`; each command is built with
+    hook_cmd(). Returns it and the log the hook script appends to."""
+    sb = Sandbox()
+    (sb.dir / "hook.py").write_text(HOOK_SCRIPT, encoding="utf-8")
+    (sb.dir / ".delivery").mkdir()
+    (sb.dir / ".delivery/config.json").write_text(
+        json.dumps({"ci_watch": {"post_run": post_run, **extra}}), encoding="utf-8")
+    return sb, sb.dir / "hook.log"
+
+
+def hook_cmd(sb: Sandbox, name: str, code: int, *words: str) -> str:
+    return " ".join([f'"{Path(sys.executable).as_posix()}"', f'"{(sb.dir / "hook.py").as_posix()}"',
+                     f'"{(sb.dir / "hook.log").as_posix()}"', name, str(code), *words])
+
+
+def hook_calls(log: Path) -> list[str]:
+    return log.read_text(encoding="utf-8").splitlines() if log.exists() else []
+
+
+@test
+def watch_post_run_hooks_run_in_order_with_placeholders():
+    sb, log = hook_sandbox([])
+    try:
+        cfg = {"ci_watch": {"post_run": [hook_cmd(sb, "first", 0, "{run_id}", "{head}"),
+                                         hook_cmd(sb, "second", 0, "{conclusion}", "{workflow}")]}}
+        (sb.dir / ".delivery/config.json").write_text(json.dumps(cfg), encoding="utf-8")
+        rc, out, err = watch(sb, {"run_list": [[run_obj(7, "completed", "success")]]})
+        expect_exit(rc, 0, out, err)
+        check(hook_calls(log) == [f"first 7 {SHA}", "second success CI"],
+              f"hooks must run in list order with the placeholders filled: {hook_calls(log)}")
+        check("hook first output" in out and "hook second output" in out,
+              f"hook output is passed through: {out}")
+    finally:
+        sb.close()
+
+
+@test
+def watch_post_run_hooks_run_once_per_run():
+    sb, log = hook_sandbox([])
+    try:
+        cfg = {"ci_watch": {"post_run": [hook_cmd(sb, "h", 0, "{run_id}")]}}
+        (sb.dir / ".delivery/config.json").write_text(json.dumps(cfg), encoding="utf-8")
+        rc, out, err = watch(sb, {"run_list": [[run_obj(1, "completed", "success"),
+                                                run_obj(2, "completed", "success")]]})
+        expect_exit(rc, 0, out, err)
+        check(hook_calls(log) == ["h 1", "h 2"], f"one call per run, in run order: {hook_calls(log)}")
+    finally:
+        sb.close()
+
+
+@test
+def watch_failing_post_run_hook_is_logged_and_does_not_change_the_verdict():
+    sb, log = hook_sandbox([])
+    try:
+        cfg = {"ci_watch": {"post_run": [hook_cmd(sb, "bad", 3), "no-such-tool-ds30 {run_id}",
+                                         hook_cmd(sb, "after", 0)]}}
+        (sb.dir / ".delivery/config.json").write_text(json.dumps(cfg), encoding="utf-8")
+        # a green run stays green ...
+        rc, out, err = watch(sb, {"run_list": [[run_obj(1, "completed", "success")]]})
+        expect_exit(rc, 0, out, err)
+        check("post_run hook failed (exit 3)" in err and "no-such-tool-ds30" in err,
+              f"both failures must be logged on stderr: {err}")
+        check(hook_calls(log) == ["bad ", "after "], f"the hooks after a failure still run: {hook_calls(log)}")
+        # ... and a red run stays red, with its failed jobs printed.
+        log.unlink()
+        rc, out, err = watch(sb, {"run_list": [[run_obj(1, "completed", "failure")]],
+                                  "run_view": {"1": {"jobs": []}}})
+        expect_exit(rc, 1, out, err)
+        check(hook_calls(log) == ["bad ", "after "], f"hooks run after a red verdict too: {hook_calls(log)}")
+    finally:
+        sb.close()
+
+
+@test
+def watch_post_run_hook_timeout_is_logged_and_does_not_change_the_verdict():
+    sb, log = hook_sandbox([], post_run_timeout_seconds=1)
+    try:
+        sleeper = f'"{Path(sys.executable).as_posix()}" -c "import time; time.sleep(30)"'
+        cfg = {"ci_watch": {"post_run": [sleeper, hook_cmd(sb, "after", 0)],
+                            "post_run_timeout_seconds": 1}}
+        (sb.dir / ".delivery/config.json").write_text(json.dumps(cfg), encoding="utf-8")
+        rc, out, err = watch(sb, {"run_list": [[run_obj(1, "completed", "success")]]})
+        expect_exit(rc, 0, out, err)
+        check("TimeoutExpired" in err, f"a timed-out hook must be logged: {err}")
+        check(hook_calls(log) == ["after "], f"the next hook still runs: {hook_calls(log)}")
+    finally:
+        sb.close()
+
+
+@test
+def watch_post_run_hooks_do_not_run_when_the_watch_cannot_decide():
+    sb, log = hook_sandbox([])
+    try:
+        cfg = {"ci_watch": {"post_run": [hook_cmd(sb, "h", 0)]}}
+        (sb.dir / ".delivery/config.json").write_text(json.dumps(cfg), encoding="utf-8")
+        rc, out, err = watch(sb, {"run_list": [[run_obj(1, "in_progress", "")]]},
+                             ["--interval", "0.05", "--timeout", "0.3"])
+        expect_exit(rc, 4, out, err)
+        check(hook_calls(log) == [], f"no hook after a timeout: {hook_calls(log)}")
+    finally:
+        sb.close()
+
+
+@test
+def watch_no_post_run_flag_and_bad_config_run_no_hooks():
+    sb, log = hook_sandbox([])
+    try:
+        cfg = {"ci_watch": {"post_run": [hook_cmd(sb, "h", 0)]}}
+        (sb.dir / ".delivery/config.json").write_text(json.dumps(cfg), encoding="utf-8")
+        fx = {"run_list": [[run_obj(1, "completed", "success")]]}
+        rc, out, err = watch(sb, fx, [*WATCH_FAST, "--no-post-run"])
+        expect_exit(rc, 0, out, err)
+        check(hook_calls(log) == [], f"--no-post-run runs nothing: {hook_calls(log)}")
+        for bad in ('{"ci_watch": {"post_run": "not a list"}}', "{not json"):
+            (sb.dir / ".delivery/config.json").write_text(bad, encoding="utf-8")
+            rc, out, err = watch(sb, fx)
+            expect_exit(rc, 0, out, err)
+            check(hook_calls(log) == [] and "post_run" in err, f"bad config is logged, nothing runs: {err}")
+        (sb.dir / ".delivery/config.json").unlink()  # no config at all: silent, exit unchanged
+        rc, out, err = watch(sb, fx)
+        expect_exit(rc, 0, out, err)
+        check("post_run" not in err, f"a missing config is not an error: {err}")
+    finally:
+        sb.close()
 
 
 # ---------------------------------------------------------------------------

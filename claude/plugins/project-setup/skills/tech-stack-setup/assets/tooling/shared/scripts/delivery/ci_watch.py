@@ -38,6 +38,17 @@ wall time (first job start to last job end), its slowest job with that job's sha
 run, and the job's two slowest steps, from `gh run view --json jobs`. It never changes the
 exit code and prints nothing extra when anything cannot be read.
 
+Post-run hooks (DS30): `.delivery/config.json` may list project commands under
+`ci_watch.post_run`, e.g. `{"ci_watch": {"post_run": ["python scripts/delivery/ci_watch_local.py
+{run_id} {head}"], "post_run_timeout_seconds": 900}}`. Once every watched run is complete and the
+verdict is decided (exit 0 or 1), each hook runs for each run, in list order, from the repository
+root. A command is split like a shell would (shlex, no shell is started) and then {run_id},
+{head} (the full commit sha), {conclusion} and {workflow} are replaced in each word. A hook that
+exits non-zero, times out, cannot start or is malformed is logged to stderr and the next one
+runs; hooks never change the exit code and a hook's output is passed through. A project keeps
+its machine-only extras (disk trims, extra reports) in its own hook script instead of a fork of
+this file. --no-post-run skips them; --config names another config file.
+
 Python 3.11+, standard library only; `gh` is the one external tool.
 """
 from __future__ import annotations
@@ -45,6 +56,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -58,6 +70,7 @@ import runner_health  # noqa: E402
 OK_CONCLUSIONS = {"success", "skipped"}
 LIST_FIELDS = "databaseId,workflowName,status,conclusion,event,headSha"
 MAX_CONSECUTIVE_GH_ERRORS = 5
+POST_RUN_TIMEOUT_SECONDS = 900
 QUEUE_WARN_SECONDS = 600
 
 
@@ -322,6 +335,100 @@ def ledger_ci(sha: str, state: str) -> None:
         return
 
 
+def config_root() -> Path:
+    """The folder hooks run from: the repository root, else the current folder."""
+    try:
+        proc = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True,
+                              text=True, timeout=30)
+        if proc.returncode == 0 and proc.stdout.strip():
+            return Path(proc.stdout.strip())
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return Path.cwd()
+
+
+def load_post_run(config: str | None, root: Path) -> tuple[list[str], float]:
+    """The `ci_watch.post_run` commands and their timeout from the project config.
+
+    A missing file or key means no hooks; a malformed one is logged and means no hooks."""
+    path = Path(config) if config else root / ".delivery" / "config.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return [], POST_RUN_TIMEOUT_SECONDS
+    except (OSError, ValueError) as exc:
+        print(f"ci_watch: post_run hooks not read: {path} is unreadable ({exc})", file=sys.stderr)
+        return [], POST_RUN_TIMEOUT_SECONDS
+    section = data.get("ci_watch") if isinstance(data, dict) else None
+    if not isinstance(section, dict) or "post_run" not in section:
+        return [], POST_RUN_TIMEOUT_SECONDS
+    hooks = section["post_run"]
+    if not isinstance(hooks, list) or not all(isinstance(h, str) and h.strip() for h in hooks):
+        print("ci_watch: post_run hooks not run: ci_watch.post_run must be a list of non-empty "
+              "strings", file=sys.stderr)
+        return [], POST_RUN_TIMEOUT_SECONDS
+    timeout = section.get("post_run_timeout_seconds", POST_RUN_TIMEOUT_SECONDS)
+    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or timeout <= 0:
+        timeout = POST_RUN_TIMEOUT_SECONDS
+    return list(hooks), float(timeout)
+
+
+def hook_argv(template: str, values: dict[str, str]) -> list[str]:
+    """Split the command first, then fill the placeholders word by word (no shell, no injection)."""
+    argv = shlex.split(template)
+    if not argv:
+        raise ValueError("empty command")
+    out = []
+    for word in argv:
+        for name, value in values.items():
+            word = word.replace("{" + name + "}", value)
+        out.append(word)
+    if out[0] in ("python", "python3") and shutil.which(out[0]) is None:
+        out[0] = sys.executable
+    return out
+
+
+def run_post_run_hooks(hooks: list[str], runs: list[dict], sha: str, root: Path,
+                       timeout: float = POST_RUN_TIMEOUT_SECONDS, run=subprocess.run) -> int:
+    """Run every hook for every run, in order; returns how many failed. Never raises."""
+    failed = 0
+    for item in runs:
+        values = {"run_id": str(item.get("databaseId", "")), "head": sha,
+                  "conclusion": str(item.get("conclusion") or ""),
+                  "workflow": str(item.get("workflowName") or "")}
+        for template in hooks:
+            try:
+                argv = hook_argv(template, values)
+                proc = run(argv, cwd=str(root), capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", timeout=timeout)
+                if proc.stdout:
+                    print(proc.stdout.rstrip("\n"), flush=True)
+                if proc.stderr:
+                    print(proc.stderr.rstrip("\n"), file=sys.stderr, flush=True)
+                if proc.returncode != 0:
+                    failed += 1
+                    print(f"ci_watch: post_run hook failed (exit {proc.returncode}): {template} "
+                          f"[run {values['run_id']}]", file=sys.stderr, flush=True)
+            except Exception as exc:  # noqa: BLE001 - a hook must never change the verdict
+                failed += 1
+                print(f"ci_watch: post_run hook failed ({type(exc).__name__}: {exc}): {template} "
+                      f"[run {values['run_id']}]", file=sys.stderr, flush=True)
+    return failed
+
+
+def finish(code: int, runs: list[dict], sha: str, args: argparse.Namespace) -> int:
+    """The exit path once the runs are complete: run the post-run hooks, keep the exit code."""
+    if not args.no_post_run:
+        try:
+            root = config_root()
+            hooks, timeout = load_post_run(args.config, root)
+            if hooks:
+                run_post_run_hooks(hooks, runs, sha, root, timeout)
+        except Exception as exc:  # noqa: BLE001
+            print(f"ci_watch: post_run hooks skipped ({type(exc).__name__}: {exc})", file=sys.stderr)
+    return code
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         description="Wait for the CI workflow runs of a commit (never reads PR checks).")
@@ -337,6 +444,10 @@ def main(argv: list[str] | None = None) -> int:
                     help="warn about a job queued this long with no runner for its labels "
                          "(default 600)")
     ap.add_argument("--repo", help="OWNER/NAME (default: the current repository)")
+    ap.add_argument("--config", help="project config with ci_watch.post_run "
+                                     "(default: .delivery/config.json in the repository root)")
+    ap.add_argument("--no-post-run", action="store_true",
+                    help="do not run the ci_watch.post_run hooks of the project config")
     args = ap.parse_args(argv)
 
     if not re.fullmatch(r"[0-9a-fA-F]{7,40}", args.sha):
@@ -409,14 +520,14 @@ def main(argv: list[str] | None = None) -> int:
                           "succeeded")
                     print_slowest_job_summary(runs, args.repo)
                     ledger_ci(sha, "success")
-                    return 0
+                    return finish(0, runs, sha, args)
                 print(f"ci_watch: {len(bad)} of {len(runs)} {args.workflow} run(s) for "
                       f"{sha[:10]} did not succeed")
                 for run in bad:
                     print_failed_jobs(run, args.repo)
                 print_slowest_job_summary(runs, args.repo)
                 ledger_ci(sha, "failure")
-                return 1
+                return finish(1, runs, sha, args)
         if state != last_state:
             print(f"ci_watch: waiting, {state}", flush=True)
             last_state = state

@@ -445,6 +445,13 @@ Waits until at least one run of the workflow exists for SHA and every run of it
 for SHA is completed. Exit 0 all `success` (or `skipped`), 1 any other
 conclusion (prints the failed jobs from `gh run view --json jobs`), 2 after 5
 consecutive `gh` failures, 4 timeout. It never reads a pull request's check list.
+Post-run hooks (DS30): when the verdict is decided (exit 0 or 1), the commands in
+`.delivery/config.json` `ci_watch.post_run` (list of strings; `ci_watch.post_run_timeout_seconds`,
+default 900) run for each run, in list order, from the repository root. A command is split with
+shlex (no shell), then `{run_id}`, `{head}` (full sha), `{conclusion}`, `{workflow}` are replaced
+in each word. A non-zero exit, a timeout, a command that cannot start or a malformed config is
+logged on stderr, the next hook still runs, and the exit code is never changed. `--no-post-run`
+skips them; `--config FILE` names another config. Nothing runs after exit 2 or 4.
 A run that executed no job (conclusion `skipped`, or a push run whose jobs were all skipped, "already
 tested on the pull request") is not a pass when SHA is the head of an open pull request
 (`gh api repos/{owner}/{repo}/commits/SHA/pulls`, read only when such a run is the whole answer): it keeps

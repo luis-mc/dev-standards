@@ -152,6 +152,9 @@ Copied to `scripts/delivery/` (see `shared/scripts/delivery/CONTRACT.md`):
   request's check list, which can be read before the new run is listed
   (`§13.6`). Use it after pushing the ready pull request's head. It warns once for a
   job queued over 10 minutes with no online runner for its labels (warnings only).
+  Project commands listed in `.delivery/config.json` `ci_watch.post_run` run after the
+  verdict, once per run (`{run_id}`, `{head}`, `{conclusion}`, `{workflow}`); a failing
+  hook is logged and never changes the exit code (`--no-post-run` skips them).
 - `train_freeze.py`: called by the `pre-push` hook. Refuses a push to a branch whose
   ready (non-draft) pull request has CI running; allows it when CI finished, the pull
   request closed, or GitHub is unreachable (a warning). `DELIVERY_FREEZE_OVERRIDE=1`
