@@ -410,7 +410,11 @@ def check_launch(cfg, ledger, data, where):
         deny('DL-37 set %s on this launch (medium for code agents).'
              % ('session_context.effort_level' if where == 'cloud'
                 else 'effort: an "effort: medium" line in the delivery block of the brief'))
-    missing = [m for m in cfg['brief_markers'] if m.lower() not in text.lower()]
+    # A marker is a string, or a list of strings of which any one satisfies it (DL-36: a project on the CI-gate
+    # path accepts "CI is the gate" where another says "one affected gate").
+    low = text.lower()
+    missing = [' / '.join(m) if isinstance(m, list) else m for m in cfg['brief_markers']
+               if not any(str(x).lower() in low for x in (m if isinstance(m, list) else [m]))]
     if missing and H.check_on(cfg, 'DL-36'):
         deny('DL-36 the brief lacks required markers: %s. Add them (config brief_markers), then launch.'
              % '; '.join(missing))
