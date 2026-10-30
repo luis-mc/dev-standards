@@ -209,6 +209,7 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 | D21 | Is the basis of an estimate part of Expected? | No: its own optional field `expected_basis`, not a `; note`. | Expected stays machine-readable (R6.6); the basis is shown apart and validated apart (R6.10). |
 | D22 | Where does the record worktree live? | Retired in 1.8.0: there is none; the record is `docs/artifacts/` of the working tree. | The old setting is ignored, and an old worktree's record is copied once when newer (R4.24). |
 | D23 | Does the plugin commit or push? | No: it writes files; the project commits and pushes. | A record change never triggers a deploy by itself (R4.13, R4.28). |
+| D24 | What happens to a finished feature artifact? | `retire` moves it to `retired_features`, keeps its decisions and tasks, deletes its file and content (owner, 30 Oct). | Finished features stop taking most of `docs/artifacts` without breaking INV-3 or R4.6 (R4.31 to R4.36). |
 
 ---
 
@@ -346,6 +347,7 @@ docs/artifacts/
   content/<key>/history.json     feature artifacts only
   content/<key>/decisions.json   feature artifacts only, optional (§5.4)
   content/<key>/assets/<file>    images of decision options, optional (§5.4)
+  retired/<key>.decisions.json   the decisions of a retired feature (§4.10), only after `retire`
   feature-<slug>.html            a feature artifact: a standalone HTML document (§5.1)
   full-progress-<slug>.html      the full-progress artifact: a fragment, relative links (§5.5)
   README.md                      how to recreate (generated)
@@ -369,6 +371,7 @@ docs/artifacts/
 | `merged_status` | string | Status a merge suggests: `"Live"` (default) or `"Built"`. |
 | `full_progress_artifact` | object | `{key:"full-progress", title, url, file, published_sha256, published_at}`; `published_at` is the ISO time (with offset) of the last `mark-published`, absent before the first publish (R4.30) |
 | `feature_artifacts` | array | `{key, title, file, prefix, apps:[...], updated}` each: no `url` and no `published_sha256`, because a feature artifact is never published; `updated` is the ISO time (with offset) of the stamp of the feature's page, written whenever the script writes that page with a new stamp, and absent in an older record (R4.30) |
+| `retired_features` | array | Optional. `[{key, title, prefix, retired, url, decisions}]`: features removed by `retire` (§4.10, R4.31); `retired` is the ISO time, `url` the last claude.ai page of the feature or empty, `decisions` the path of its archive or empty. Not to be confused with `retired`, which lists old claude.ai pages. |
 | `retired` | array | Optional. `[{key, title, url, retired}]`: claude.ai pages of feature artifacts still to delete (R4.19). |
 | `deleted` | array | Optional. `[{key, url, deleted}]`, plus `"gone": true` for a page that no longer existed: pages recorded as deleted (R4.19). |
 | `project_prefixes` | array | Task prefixes owned by the project, e.g. `["DS"]`. |
@@ -558,6 +561,46 @@ comment holding the section title: `<!-- title: The design -->`.
   pages show it (R5.38). Both are ISO times with an offset, or absent.
   `check` reports a malformed one.
   Verified by `test_feature_updated_and_published_line`.
+
+### 4.10 Retiring a finished feature
+
+A finished feature artifact (every task Live or Dropped) only costs space: a project can have dozens, and `check`
+fails when a manifest feature lacks its file or content (INV-3) or a content folder has no manifest entry (R4.1).
+`retire` removes one cleanly and keeps what history needs.
+
+- **R4.31** — `project_artifacts.py retire KEY --yes` moves the feature from `feature_artifacts` to the manifest's
+  `retired_features` list: `{key, title, prefix, retired, url, decisions}`, all strings. `check` reports a
+  malformed entry, a key that is also a live artifact key, and a prefix used twice across `feature_artifacts`,
+  `retired_features` and `project_prefixes` (R4.2). A retired feature is never rendered, so `render` and every
+  stale refresh (R7.5) leave it gone. Verified by `test_retire_moves_the_feature_and_check_stays_clean` and
+  `test_check_reports_a_damaged_retired_record`.
+- **R4.32** — `retire` keeps the feature's `decisions.json`, byte for byte, as
+  `docs/artifacts/retired/<key>.decisions.json` (the entry's `decisions` field names it; `-2`, `-3` are added to the
+  file name when a reused key is retired again); a feature with no decisions writes no archive and `decisions` is
+  empty. Images of decision options (`assets/`) are not kept. `check` reports an entry whose archive is missing.
+  The feature's `feature-<slug>.html` and its whole `content/<key>/` folder (sections, History, assets) are deleted.
+  Verified by `test_retire_moves_the_feature_and_check_stays_clean`, `test_retire_without_decisions_writes_no_archive`.
+- **R4.33** — `retire` refuses (exit 1, nothing written) unless every task owned by the feature is `Live` or
+  `Dropped` and the feature has no open decision (R5.23); a feature with no task qualifies. Every task keeps its
+  owner: R4.6 accepts a retired key as an owner, with the retired entry's prefix. The tasks stay in the registry
+  and on Full Progress, as text rows with no link. Verified by `test_retire_refuses_a_feature_with_an_open_task`.
+- **R4.34** — Full Progress section 1 lists the retired features in one closed `<details class="retired-features"
+  data-group="features-retired">` after the two feature folds, titled `Retired feature artifacts (n)`, one `<li>` line each: the title, the key,
+  `retired DD Mon` and, when kept, the decisions archive. The fold is absent when none is retired. It is drawn from
+  the manifest, so INV-3 covers it. Verified by `test_retire_moves_the_feature_and_check_stays_clean`.
+- **R4.35** — A retired key is not reused: `feature-new` refuses a key in `retired_features` and any prefix a retired
+  feature holds, unless `--force` is given for the key. `--force` removes the retired entry, so the key is a live
+  feature again and its old tasks belong to it (the new feature must keep the old prefix, else R4.6 refuses the
+  change); a prefix held by a retired feature under another key is refused even with `--force`. `task-add` and
+  `set-task-status` refuse a retired owner's tasks (R4.36). Verified by
+  `test_retired_tasks_are_history_and_the_key_is_not_reused_without_force`.
+- **R4.36** — Without `--yes`, `retire` is a dry run: it prints the tasks it keeps, each file it would delete with its
+  size, the total, and the archive it would write, and writes nothing (`--json`: `dry_run`, `files`, `bytes`, `tasks`,
+  `archive`, `archive_bytes`). With `--yes` it is a writing command like any other (R7.1): it writes files and stops
+  (R4.13), puts everything back when the result would be invalid, and renders Full Progress. It never deletes a
+  claude.ai page: a page of a retired feature stays on the `retired` list until the owner confirms its deletion
+  (R4.23). The tasks of a retired feature are history: `task-add --owner KEY` and `set-task-status` on them are refused.
+  Verified by `test_retire_dry_run_lists_files_and_changes_nothing`, `test_retire_leaves_git_alone_and_a_failed_retire_restores_the_files`.
 
 ---
 
@@ -1214,12 +1257,13 @@ they do nothing (R4.17).
 | Command | Does |
 |---|---|
 | `init --project NAME [--timezone IANA] [--label L] [--windows-timezone ID] [--default-branch B]` | Creates the manifest, an empty registry and the full-progress artifact's content. Refuses if a manifest exists. Zone defaults to the machine's. |
-| `feature-new --key K --title NAME --prefix P --apps a,b [--hero TEXT] [init flags]` | Adds a feature artifact (content folder with `meta.json`, a section `01-what-and-why.html` stub and a first History row; its manifest entry has no `url`). Runs `init` first, with the same `init` flags, when there is no manifest; `--project` is then required. |
+| `feature-new --key K --title NAME --prefix P --apps a,b [--hero TEXT] [--force] [init flags]` | Adds a feature artifact (content folder with `meta.json`, a section `01-what-and-why.html` stub and a first History row; its manifest entry has no `url`). Runs `init` first, with the same `init` flags, when there is no manifest; `--project` is then required. |
 | `task-add --owner K\|project --item TEXT --detail TEXT --expected TEXT [--basis TEXT] [--app A] [--status S] [--prefix P] [--release] [--phase NAME=HH:MM-HH:MM]... [--risk LABEL=MINUTES] [--rides ID] [--waits-on owner\|work]` | Adds a task with the next free number; prints its ID. For `--owner project`, `--prefix` picks one of `project_prefixes`, and a new prefix not used by any feature is registered. |
 | `set-task-status ID STATUS [--item TEXT] [--detail TEXT] [--expected TEXT] [--basis TEXT] [--history TEXT] [--release] [--phase NAME=HH:MM-HH:MM]... [--risk LABEL=MINUTES] [--rides ID] [--waits-on owner\|work]` | Changes one task; adds a History row to its feature artifact when `--history` is given. `--item TEXT` corrects the task's title (1 to 80 characters, as R4.8) and records `<ID> item changed from "<old>" to "<new>"` in the History of a feature task (a project task has no History; a warning says so). Verified by `test_set_task_status_item_corrects_title`. |
 | `export-content KEY --to DIR` | Copies the artifact's content files from the record to DIR for editing, `decisions.json` and its `assets/` folder included. |
 | `edit-content KEY --from DIR` | Replaces the artifact's content files in the record with those in DIR validates, renders and writes the files. It refuses an edit that removes a decision or changes the choice of a decided one (R5.15). |
 | `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design` and renders; `default` removes it. |
+| `retire KEY [--yes]` | Removes a finished feature artifact (R4.33) and its content, keeping its tasks, its decisions and a line in the manifest's `retired_features` (§4.10). Without `--yes` it lists what it would delete and writes nothing (R4.36). |
 | `render [--all]` | Renders every artifact whose output would change (committed renders, with relative links). It is the migration of an older record (R8.14). |
 | `check [--record PATH]` | The conformance checks of §14; lists findings with their requirement ID, then notes (including retired pages, R4.22) and any warnings (R5.26, R5.37), which do not change the exit code. |
 | `pending` | Lists the full-progress artifact when the hash of its committed render differs from `published_sha256` (a feature artifact is never listed, R9.5), and queued events. When it lists Full Progress it writes the publish copy (R5.31). Exit 1 when anything is listed. `--refresh` lists Full Progress even when unchanged (R9.8). `--json` prints `{"artifacts": [{"key", "kind", "title", "file", "path", "url", "reason", "copy_sha256", "copy_written_at"}], "queue": [events]}`; `path` is the absolute path of the publish copy to publish. It also lists the retired pages (R4.22): `--json` adds `"retired": [{"key", "title", "url", "retired"}]`, and they never change the exit code. |
@@ -1576,7 +1620,7 @@ Reads the hook input; takes the task ID from the current branch name
 - **R13.1** — `tools/test_project_artifacts.py` builds throwaway git repos with
   a local bare remote (to prove it is never touched) and proves each command, each check of §14 (one fixture per
   check that fails without it), INV-1 to INV-3, R4.13 to R4.29, R6.10, R6.11, R5.31, R5.32,
-  R5.33 to R5.39, R5.45 to R5.47, R5.8a, R4.30, R7.4 to R7.6, R9.5 and R10.6.
+  R5.33 to R5.39, R5.45 to R5.47, R5.8a, R4.30, R4.31 to R4.36, R7.4 to R7.6, R9.5 and R10.6.
 - **R13.2** — `tools/test_project_artifacts_hooks.py` feeds sample hook input
   to each hook and asserts the queue, the exit code and the output, including
   R8.4, R8.8 to R8.17 and INV-4, and that every hook does nothing without a
@@ -1633,6 +1677,7 @@ Reads the hook input; takes the task ID from the current branch name
 | `extra_css` redefines no structure selector | R4.11 |
 | Rendered HTML equals a fresh render | INV-3 |
 | `retired` and `deleted` are lists of well-formed entries | R4.19 |
+| `retired_features` entries well-formed, keys and prefixes unique, each decisions archive present, no content folder for a retired key | R4.31, R4.32, R4.1 |
 | Note, not a finding: retired pages still to delete; feature `url` fields still to move | R4.18, R4.22 |
 
 Exit 0 clean, 1 findings, 2 unreadable.

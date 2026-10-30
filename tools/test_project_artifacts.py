@@ -3203,6 +3203,174 @@ def test_dropped_release_is_closed_truthfully(env):
     assert p.run('check', env=AT).code == 0
 
 
+# --------------------------------------------------------------------------
+# retire (R4.31 to R4.36)
+# --------------------------------------------------------------------------
+
+def finished_artifacts_feature(p):
+    """The baseline's `artifacts` feature with every task Live and one decided decision (to be archived)."""
+    p.ok('set-task-status', 'AR1', 'Live', rides=False)
+    d = edit_decisions(p, [d_dec(1)], 'retire-dec')
+    p.ok('edit-content', 'artifacts', '--from', d)
+    assert p.run('check').code == 0, p.run('check').all
+
+
+@case
+def test_retire_refuses_a_feature_with_an_open_task(env):
+    """R4.33: every task of the feature must be Live or Dropped; nothing is written otherwise."""
+    p = env.baseline()                                     # AR1 is Running
+    before = p.files()
+    for extra in ((), ('--yes',)):
+        r = p.run('retire', 'artifacts', *extra)
+        assert r.code == 1 and 'AR1 Running' in r.err and 'not finished' in r.err, r.all
+    assert p.files() == before
+    r = p.run('retire', 'nosuch', '--yes')
+    assert r.code == 1 and 'unknown feature' in r.err, r.all
+    p.ok('set-task-status', 'AR1', 'Dropped', '--reason', 'not needed', rides=False)
+    assert p.run('retire', 'artifacts').code == 0                       # Dropped counts as finished
+    d = edit_decisions(p, [d_open(1, task='AR1')], 'retire-open')
+    p.ok('edit-content', 'artifacts', '--from', d)
+    r = p.run('retire', 'artifacts', '--yes')
+    assert r.code == 1 and 'open decisions' in r.err and 'D1' in r.err, r.all
+
+
+@case
+def test_retire_dry_run_lists_files_and_changes_nothing(env):
+    """R4.36: without --yes the command prints what it would delete, with sizes, and writes nothing."""
+    p = env.baseline()
+    finished_artifacts_feature(p)
+    before = p.files()
+    r = p.ok('retire', 'artifacts')
+    assert 'dry run' in r.out and 'would delete feature-artifacts.html' in r.out, r.out
+    assert 'would delete content/artifacts/meta.json' in r.out and 'content/artifacts/decisions.json' in r.out, r.out
+    assert 'would write retired/artifacts.decisions.json' in r.out and 'claude.ai page' in r.out, r.out
+    js = p.ok('retire', 'artifacts', '--json').json()
+    assert js['dry_run'] is True and js['tasks'] == ['AR1', 'AR2'] and js['bytes'] == sum(f['bytes'] for f in js['files']), js
+    assert js['archive'] == 'retired/artifacts.decisions.json', js
+    assert p.files() == before
+    assert 'artifacts' in [e['key'] for e in p.man()['feature_artifacts']]
+
+
+@case
+def test_retire_moves_the_feature_and_check_stays_clean(env):
+    """R4.31 to R4.34: the feature leaves feature_artifacts for retired_features, its files go, its decisions are
+    archived, its tasks keep their owner, Full Progress lists it in one collapsed line, and check passes."""
+    p = env.baseline()
+    finished_artifacts_feature(p)
+    decisions = p.show('docs/artifacts/content/artifacts/decisions.json')
+    r = p.ok('retire', 'artifacts', '--yes')
+    assert 'retire artifacts: done' in r.out and 'deleted feature-artifacts.html' in r.out, r.out
+    assert p.show('docs/artifacts/feature-artifacts.html') is None
+    assert not (p.rdir / 'content' / 'artifacts').exists()
+    assert p.show('docs/artifacts/retired/artifacts.decisions.json') == decisions
+    m = p.man()
+    assert [e['key'] for e in m['feature_artifacts']] == ['site'], m['feature_artifacts']
+    (e,) = m['retired_features']
+    assert e['key'] == 'artifacts' and e['title'] == 'Feature: Artifacts' and e['prefix'] == 'AR', e
+    assert e['decisions'] == 'retired/artifacts.decisions.json' and e['retired'].startswith('2026-10-10T') and e['url'] == '', e
+    assert [t['owner'] for t in p.reg()['tasks'] if t['id'] in ('AR1', 'AR2')] == ['artifacts', 'artifacts']
+    page = p.show('docs/artifacts/' + m['full_progress_artifact']['file'])
+    assert 'Retired feature artifacts (1)' in page and 'Feature: Artifacts' in page and 'retired/artifacts.decisions.json' in page
+    assert 'data-task="AR1"' in page, 'the retired feature\'s tasks stay on Full Progress'
+    r = p.run('check')
+    assert r.code == 0 and 'record is clean' in r.out, r.all
+    assert p.run('render', '--all').code == 0 and p.run('check').code == 0       # refresh_stale does not bring it back
+    assert p.show('docs/artifacts/feature-artifacts.html') is None
+    assert 'retire artifacts' in p.run('retire', 'artifacts').err or 'already retired' in p.run('retire', 'artifacts').err
+    # the other feature is untouched and still works
+    p.ok('set-task-status', 'SI1', 'Waiting')
+    assert p.run('check').code == 0
+
+
+@case
+def test_retire_without_decisions_writes_no_archive(env):
+    p = env.baseline()
+    p.ok('set-task-status', 'AR1', 'Live', rides=False)
+    p.ok('retire', 'artifacts', '--yes')
+    assert not (p.rdir / 'retired').exists()
+    assert p.man()['retired_features'][0]['decisions'] == ''
+    assert p.run('check').code == 0, p.run('check').all
+
+
+@case
+def test_retired_tasks_are_history_and_the_key_is_not_reused_without_force(env):
+    """R4.35, R4.36: no new task for a retired key and no status change; feature-new refuses the key without
+    --force, and a prefix of a retired feature is never reused for another key."""
+    p = env.baseline()
+    finished_artifacts_feature(p)
+    p.ok('retire', 'artifacts', '--yes')
+    r = p.run('task-add', '--owner', 'artifacts', '--item', 'More', '--detail', 'd', '--expected', '14 Oct')
+    assert r.code == 1 and 'retired' in r.err, r.all
+    r = p.run('set-task-status', 'AR1', 'Waiting')
+    assert r.code == 1 and 'retired feature' in r.err, r.all
+    assert p.task('AR1')['status'] == 'Live'
+    r = p.run('feature-new', '--key', 'artifacts', '--title', 'Artifacts again', '--prefix', 'AR', '--apps', 'plugin')
+    assert r.code == 1 and '--force' in r.err and 'retired' in r.err, r.all
+    r = p.run('feature-new', '--key', 'artifacts2', '--title', 'Other', '--prefix', 'AR', '--apps', 'plugin', '--force')
+    assert r.code == 1 and 'prefix AR is already registered' in r.err, r.all
+    assert [e['key'] for e in p.man()['retired_features']] == ['artifacts']
+    p.ok('feature-new', '--key', 'artifacts', '--title', 'Artifacts', '--prefix', 'AR', '--apps', 'plugin', '--force')
+    m = p.man()
+    assert 'retired_features' in m and m['retired_features'] == [] and 'artifacts' in [e['key'] for e in m['feature_artifacts']]
+    assert p.run('check').code == 0, p.run('check').all
+
+
+@case
+def test_check_reports_a_damaged_retired_record(env):
+    """R4.31, R4.32, R4.1, R4.6: a malformed entry, a missing archive, a leftover content folder and a task owner
+    that is neither project, a live key nor a retired key are findings."""
+    p = env.baseline()
+    finished_artifacts_feature(p)
+    p.ok('retire', 'artifacts', '--yes')
+    good = p.record_copy('retired-good')
+    assert check_record(env, good).code == 0
+    rec = p.record_copy('retired-a')
+    (rec / 'retired' / 'artifacts.decisions.json').unlink()
+    r = check_record(env, rec)
+    assert r.code == 1 and has_line(r.out, 'R4.32', 'manifest.json'), r.all
+    rec = p.record_copy('retired-b')
+    (rec / 'content' / 'artifacts').mkdir()
+    (rec / 'content' / 'artifacts' / 'meta.json').write_text('{}', encoding='utf-8')
+    assert has_line(check_record(env, rec).out, 'R4.1', 'content/artifacts')
+    rec = p.record_copy('retired-c')
+    mp = rec / 'manifest.json'
+    m = json.loads(mp.read_text(encoding='utf-8'))
+    m['retired_features'][0]['retired'] = 'yesterday'
+    m['retired_features'].append({'key': 'site', 'title': 'Feature: X', 'prefix': 'ZZ', 'retired': NOW, 'url': '', 'decisions': ''})
+    mp.write_text(json.dumps(m), encoding='utf-8')
+    out = check_record(env, rec).out
+    assert 'not an ISO time' in out and 'also a live artifact key' in out, out
+    rec = p.record_copy('retired-d')
+    m = json.loads((rec / 'manifest.json').read_text(encoding='utf-8'))
+    m['retired_features'] = []
+    (rec / 'manifest.json').write_text(json.dumps(m), encoding='utf-8')
+    assert has_line(check_record(env, rec).out, 'R4.6', 'registry.json')
+
+
+@case
+def test_retire_leaves_git_alone_and_a_failed_retire_restores_the_files(env):
+    """R4.36: like every writing command it writes files and stops; an invalid result puts everything back."""
+    p = env.baseline()
+    finished_artifacts_feature(p)
+    p.settle()
+    state = p.git_state()
+    p.ok('retire', 'artifacts', '--yes')
+    assert p.git_state() == state
+    # a change the validation refuses restores the deleted files
+    q = env.baseline()
+    finished_artifacts_feature(q)
+    q.settle()
+    reg = json.loads((q.rdir / 'registry.json').read_text(encoding='utf-8'))
+    for t in reg['tasks']:
+        if t['id'] == 'SI1':
+            t['owner'] = 'artifacts'                       # SI prefix is not AR: would be a finding either way
+    (q.rdir / 'registry.json').write_text(json.dumps(reg, indent=2), encoding='utf-8')
+    before = q.files()
+    r = q.run('retire', 'artifacts', '--yes')
+    assert r.code == 1 and 'not finished' in r.err, r.all        # SI1 is To do and now belongs to the feature
+    assert q.files() == before
+
+
 def main():
     global TMP
     TMP = Path(tempfile.mkdtemp(prefix='ptest-'))

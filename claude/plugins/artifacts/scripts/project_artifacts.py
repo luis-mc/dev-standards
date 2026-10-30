@@ -778,6 +778,20 @@ def render_one(rec, key, stamp_t, stamp_i, links=None):
 # validation (R7.1; the record-level checks of section 14)
 # --------------------------------------------------------------------------
 
+
+RETIRED_DIR = 'retired'      # docs/artifacts/retired/<key>.decisions.json: a retired feature's decisions (R4.32)
+
+
+def retired_features(manifest):
+    """The well-formed entries of the manifest's `retired_features` list (R4.31)."""
+    v = manifest.get('retired_features') if isinstance(manifest, dict) else None
+    return [e for e in v if isinstance(e, dict)] if isinstance(v, list) else []
+
+
+def retired_entry(manifest, key):
+    return next((e for e in retired_features(manifest) if e.get('key') == key), None)
+
+
 def validate_structure(rec):
     """Record-level checks. Returns sorted unique findings (req, file, message)."""
     F = []
@@ -837,6 +851,31 @@ def validate_structure(rec):
                     f('R4.19', 'manifest.json', '%s: field "%s" is missing or not a string' % (name, fld))
             if isinstance(x.get('url'), str) and not re.match(r'^https?://\S+$', x['url']):
                 f('R4.19', 'manifest.json', '%s: url is not an http(s) URL' % name)
+
+    rf = m.get('retired_features')
+    if rf is not None:
+        if not isinstance(rf, list) or not all(isinstance(x, dict) for x in rf):
+            f('R4.31', 'manifest.json', 'retired_features must be a list of objects')
+            rf = []
+        for x in rf:
+            label = x.get('key') if isinstance(x.get('key'), str) else '?'
+            for fld in ('key', 'title', 'prefix', 'retired', 'url', 'decisions'):
+                if not isinstance(x.get(fld), str):
+                    f('R4.31', 'manifest.json', 'retired_features %s: field "%s" is missing or not a string' % (label, fld))
+            if isinstance(x.get('key'), str) and (not KEY_RE.match(x['key']) or x['key'] == FP_NAME):
+                f('R4.31', 'manifest.json', 'retired_features: key %r is not a feature key' % x['key'])
+            if isinstance(x.get('prefix'), str) and not PREFIX_RE.match(x['prefix']):
+                f('R4.31', 'manifest.json', 'retired_features %s: prefix must be 2 to 5 capital letters' % label)
+            if isinstance(x.get('retired'), str) and parse_iso(x['retired']) is None:
+                f('R4.31', 'manifest.json', 'retired_features %s: retired is not an ISO time with offset' % label)
+            if isinstance(x.get('url'), str) and x['url'] and not re.match(r'^https?://\S+$', x['url']):
+                f('R4.31', 'manifest.json', 'retired_features %s: url is not an http(s) URL' % label)
+            dec = x.get('decisions')
+            if isinstance(dec, str) and dec and not (rec.dir / dec).is_file():
+                f('R4.32', 'manifest.json', 'retired_features %s: the decisions archive %s is missing' % (label, dec))
+    else:
+        rf = []
+    rf = [x for x in rf if isinstance(x, dict)]
 
     fp_ok = isinstance(fp, dict) and bool(fp)
     if not fp_ok:
@@ -906,9 +945,13 @@ def validate_structure(rec):
         check_entry(e, 'feature')
 
     keys = [e.get('key') for e in feats] + ([fp.get('key')] if fp_ok else [])
+    live_keys = list(keys)
+    for k in sorted({x.get('key') for x in rf if x.get('key') in keys}):
+        f('R4.31', 'manifest.json', 'retired feature "%s" is also a live artifact key' % k)
+    keys += [x.get('key') for x in rf]
     for k in sorted({x for x in keys if keys.count(x) > 1 and isinstance(x, str)}):
         f('R4.2', 'manifest.json', 'artifact key "%s" appears more than once' % k)
-    prefixes = [e.get('prefix') for e in feats] + list(pp)
+    prefixes = [e.get('prefix') for e in feats] + [x.get('prefix') for x in rf] + list(pp)
     for p in sorted({x for x in prefixes if prefixes.count(x) > 1 and isinstance(x, str)}):
         f('R4.2', 'manifest.json', 'prefix "%s" appears more than once across the manifest' % p)
 
@@ -922,6 +965,7 @@ def validate_structure(rec):
         f('R4.3', 'registry.json', 'tasks must be a list')
         tasks = []
     feat_by_name = {e.get('key'): e for e in feats}
+    feat_by_name.update({x.get('key'): x for x in rf if x.get('key') not in feat_by_name})    # R4.33: a retired key stays a valid owner
     seen = {}
     for t in tasks:
         if not isinstance(t, dict):
@@ -997,7 +1041,7 @@ def validate_structure(rec):
         for d in content.get('decisions') or []:
             if d.get('task') and d['task'] not in task_ids:
                 f('R5.18', 'content/%s' % ckey, '%s: task %s is not in the task registry' % (d.get('id'), d['task']))
-    known = {k for k in keys if isinstance(k, str)}
+    known = {k for k in live_keys if isinstance(k, str)}
     cdir = rec.dir / 'content'
     if cdir.is_dir():
         for p in sorted(cdir.iterdir()):
@@ -1433,7 +1477,14 @@ def cmd_feature_new(args):
         m = rec.manifest
         if any(e.get('key') == key for e in m['feature_artifacts']):
             raise Fail(1, 'feature artifact "%s" already exists' % key)
-        taken = [e.get('prefix') for e in m['feature_artifacts']] + list(m['project_prefixes'])
+        old = retired_entry(m, key)
+        if old is not None:                      # R4.35: a retired key is reused only on purpose
+            if not args.force:
+                raise Fail(1, 'feature "%s" was retired on %s; its tasks (prefix %s) still belong to that key. '
+                              'Use another key, or --force to bring the key back' % (key, old.get('retired', '')[:10], old.get('prefix')))
+            m['retired_features'] = [x for x in m['retired_features'] if x is not old]
+        taken = [e.get('prefix') for e in m['feature_artifacts']] + [x.get('prefix') for x in retired_features(m)] \
+            + list(m['project_prefixes'])
         if prefix in taken:
             raise Fail(1, 'prefix %s is already registered' % prefix)
         title = 'Feature: %s' % name
@@ -1777,6 +1828,8 @@ def cmd_task_add(args):
                     pp.sort()
             app = app or ''
         else:
+            if retired_entry(m, owner) is not None:
+                raise Fail(1, 'feature "%s" is retired (R4.36); add the task to a live feature or the project' % owner)
             if owner not in feats:
                 raise Fail(1, 'unknown owner "%s" (a feature key or project)' % owner)
             e = feats[owner]
@@ -1836,6 +1889,9 @@ def cmd_set_task_status(args):
         task = next((t for t in rec.tasks() if t.get('id') == args.id), None)
         if task is None:
             raise Fail(1, 'unknown task ID "%s"' % args.id)
+        if retired_entry(rec.manifest, task.get('owner')) is not None:
+            raise Fail(1, '%s belongs to retired feature "%s" (R4.36); its tasks are history and do not change'
+                       % (args.id, task.get('owner')))
         now = rec.now()
         prev = task['status']
         old_item = task['item']
@@ -2216,6 +2272,113 @@ def cmd_mark_deleted(args):
     res = run_change(ctx, apply)
     emit(args, res, 'recorded %s deleted (%s)' % (url, short(res)))
     return 0
+
+
+RETIRABLE_STATUSES = ('Live', 'Dropped')     # R4.33: a finished feature has only these
+
+
+def _size_text(n):
+    return '%.1f MB' % (n / 1048576.0) if n >= 1048576 else '%.1f KB' % (n / 1024.0)
+
+
+def retire_plan(rec, key):
+    """R4.33: what retiring `key` removes and keeps; a Fail when the feature is not finished."""
+    if retired_entry(rec.manifest, key) is not None:
+        raise Fail(1, 'feature "%s" is already retired' % key)
+    entry = rec.entry(key) if rec.kind(key) == 'feature' else None
+    if entry is None:
+        raise Fail(1, 'unknown feature "%s"' % key)
+    tasks = [t for t in rec.tasks() if t.get('owner') == key]
+    unfinished = [t for t in tasks if t.get('status') not in RETIRABLE_STATUSES]
+    if unfinished:
+        raise Fail(1, 'feature "%s" is not finished; refused: %s (every task must be %s)' % (
+            key, ', '.join('%s %s' % (t.get('id'), t.get('status')) for t in unfinished), ' or '.join(RETIRABLE_STATUSES)))
+    if key in rec.broken():
+        raise Fail(1, 'content/%s is invalid; fix it with edit-content before retiring it' % key, rec.broken()[key])
+    open_dec = R.open_decisions(rec.contents()[key].get('decisions') or [])
+    if open_dec:
+        raise Fail(1, 'feature "%s" has open decisions (%s); decide them first' % (
+            key, ', '.join(str(d.get('id')) for d in open_dec)))
+    files = []
+    page = rec.dir / entry['file']
+    if page.is_file():
+        files.append((entry['file'], page.stat().st_size))
+    cdir = rec.dir / 'content' / key
+    if cdir.is_dir():
+        files += [(p.relative_to(rec.dir).as_posix(), p.stat().st_size) for p in sorted(cdir.rglob('*')) if p.is_file()]
+    src = cdir / 'decisions.json'
+    archive = ''
+    if src.is_file():
+        archive = '%s/%s.decisions.json' % (RETIRED_DIR, key)
+        n = 2
+        while (rec.dir / archive).is_file():            # a reused key retired again keeps the earlier archive
+            archive = '%s/%s.decisions-%d.json' % (RETIRED_DIR, key, n)
+            n += 1
+    url = entry.get('url') or ''
+    if not url:
+        for name in ('retired', 'deleted'):
+            url = url or next((x.get('url', '') for x in (rec.manifest.get(name) or [])
+                               if isinstance(x, dict) and x.get('key') == key), '')
+    return {'entry': entry, 'tasks': tasks, 'files': files, 'bytes': sum(n for _f, n in files),
+            'archive': archive, 'archive_bytes': src.stat().st_size if archive else 0, 'url': url}
+
+
+def cmd_retire(args):
+    """R4.31 to R4.36: move a finished feature to `retired_features`, keep its decisions, delete its files."""
+    key = args.key
+    if not KEY_RE.match(key) or key == FP_NAME:
+        raise Fail(1, 'key must be a feature key')
+    summary = {}
+
+    def apply(rec):
+        plan = retire_plan(rec, key)
+        entry = plan['entry']
+        if not args.yes:
+            summary.update(plan)
+            rec.noop = True                      # a dry run writes nothing
+            return {'command': 'retire', 'dry_run': True}
+        m = rec.manifest
+        m['feature_artifacts'] = [e for e in m['feature_artifacts'] if e.get('key') != key]
+        m.setdefault('retired_features', []).append({
+            'key': key, 'title': entry['title'], 'prefix': entry['prefix'], 'retired': rec.now().iso,
+            'url': plan['url'], 'decisions': plan['archive']})
+        if plan['archive']:
+            dest = rec.dir / plan['archive']
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes((rec.dir / 'content' / key / 'decisions.json').read_bytes())
+        page = rec.dir / entry['file']
+        if page.is_file():
+            page.unlink()
+        shutil.rmtree(str(rec.dir / 'content' / key), ignore_errors=True)
+        rec.invalidate()
+        rec.render_keys[FP_NAME] = 'new'
+        rec.message = 'docs/artifacts: retire feature %s' % key
+        summary.update(plan)
+        return {'command': 'retire', 'dry_run': False, 'key': key}
+
+    ctx = make_ctx(args)
+    if args.yes:
+        res = run_change(ctx, apply)
+    else:
+        _ctx, rec = load_for_read(args)
+        rec.pre_findings = []
+        res = apply(rec)
+    plan = summary
+    res.update({'key': key, 'files': [{'path': f, 'bytes': n} for f, n in plan['files']], 'bytes': plan['bytes'],
+                'tasks': [t['id'] for t in plan['tasks']], 'archive': plan['archive'],
+                'archive_bytes': plan['archive_bytes'], 'url': plan['url']})
+    verb = 'deleted' if args.yes else 'would delete'
+    lines = ['retire %s: %s' % (key, 'done' if args.yes else 'dry run, nothing changed; add --yes to retire')]
+    lines.append('  tasks kept (owner stays "%s"): %s' % (key, ', '.join(res['tasks']) or 'none'))
+    for f, n in plan['files']:
+        lines.append('  %s %s (%s)' % (verb, f, _size_text(n)))
+    lines.append('  %s: %d files, %s' % (verb, len(plan['files']), _size_text(plan['bytes'])))
+    if plan['archive']:
+        lines.append('  %s %s (%s)' % ('wrote' if args.yes else 'would write', plan['archive'], _size_text(plan['archive_bytes'])))
+    lines.append('  the claude.ai page, if any, is never deleted here (R4.23)')
+    emit(args, res, lines)
+    return 0
+
 
 
 def cmd_commit(args):
@@ -2612,6 +2775,7 @@ def build_parser():
     s.add_argument('--prefix', required=True)
     s.add_argument('--apps', required=True)
     s.add_argument('--hero')
+    s.add_argument('--force', action='store_true', help='reuse the key of a retired feature (R4.35)')
     s.add_argument('--project', help='project name when init runs first (default: the repository name)')
     init_opts(s)
     s.set_defaults(func=cmd_feature_new)
@@ -2691,6 +2855,11 @@ def build_parser():
     s.add_argument('key')
     s.add_argument('--until', required=True, metavar='ISO', help='when the limit resets, an ISO time with an offset')
     s.set_defaults(func=cmd_mark_deferred)
+
+    s = sub.add_parser('retire', parents=[w], help='remove a finished feature artifact and its content, keeping its tasks and decisions (R4.31 to R4.36)')
+    s.add_argument('key', help='the feature key')
+    s.add_argument('--yes', action='store_true', help='do it; without it, list what would be deleted')
+    s.set_defaults(func=cmd_retire)
 
     s = sub.add_parser('mark-deleted', parents=[w],
                        help='record that the owner confirmed and the session deleted an old claude.ai page of a feature artifact')
