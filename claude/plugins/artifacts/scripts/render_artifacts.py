@@ -1150,11 +1150,11 @@ def _row(task: dict, kind: str, feature_links: dict, by_id=None, release_line: b
         item += '<span class="no-release-line">%s</span>' % esc(NO_RELEASE_LINE % no_release_reason(task))
     if task['status'] == 'Dropped':      # R5.49: why a dropped row was closed, in a muted line under the Item
         item += '<span class="dropped-line">%s</span>' % esc(dropped_line(task, by_id))
-    app = '<td>%s</td>' % ('<code>%s</code>' % esc(task['app']) if task.get('app') else '') if kind == 'full-progress' else ''
+    app = '<td data-label="App / service">%s</td>' % ('<code>%s</code>' % esc(task['app']) if task.get('app') else '') if kind == 'full-progress' else ''
     expected = esc(task['expected'])
     if task.get('expected_basis') and task['status'] in OPEN_STATUSES:     # R6.10
         expected += '<span class="expected-basis">%s</span>' % esc(task['expected_basis'])
-    return '<tr data-task="%s"><td>%s</td><td>%s</td>%s<td>%s</td><td>%s</td></tr>' % (
+    return '<tr data-task="%s"><td data-label="Status">%s</td><td data-label="Item">%s</td>%s<td data-label="Detail">%s</td><td data-label="Expected">%s</td></tr>' % (
         esc(task['id']), _chip(task['status']), item, app, esc(task['detail']), expected)
 
 
@@ -1454,7 +1454,7 @@ def state_chips(tasks: list, decisions=()) -> list:
 
 def _state_cell(tasks: list, decisions=()) -> str:
     chips = ''.join('<span class="status-chip %s">%s</span>' % (c, esc(t)) for c, t in state_chips(tasks, decisions))
-    return '<td data-col="state"><span class="state-chips">%s</span></td>' % chips
+    return '<td data-col="state" data-label="State"><span class="state-chips">%s</span></td>' % chips
 
 
 def tile_label(status: str, count: int) -> str:
@@ -1614,7 +1614,7 @@ def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list
         when = ('<time datetime="%s">%s</time>' % (esc(iso), esc(_fmt_stamp(datetime.fromisoformat(iso)))) if iso else '')
         done = state_chips([t for t in tasks if t.get('owner') == entry['key']], content.get('decisions')) == COMPLETE_CHIPS
         rows.append((not iso, -_utc_minutes(iso) if iso else 0, str(entry['title']).lower(),
-                     '<tr><td data-value="%s">%s</td><td data-value="%d">%s</td><td>%s</td>%s<td>%s</td></tr>' % (
+                     '<tr><td data-label="Feature artifact" data-value="%s">%s</td><td data-label="Last updated" data-value="%d">%s</td><td data-label="Tasks">%s</td>%s<td data-label="Where it stands">%s</td></tr>' % (
                          esc(str(entry['title']).lower()), link, _utc_minutes(iso) if iso else 0, when,
                          esc(_id_ranges(entry['key'], entry.get('prefix', ''), tasks)),
                          _state_cell([t for t in tasks if t.get('owner') == entry['key']], content.get('decisions')),

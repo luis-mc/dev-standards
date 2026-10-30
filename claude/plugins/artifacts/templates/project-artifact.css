@@ -562,33 +562,105 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
   .decision { padding: .8rem; }
 }
 @media (max-width: 56rem) {
-  .layout { display: block; padding-inline: 1rem; }
+  .layout, .layout[data-contents="collapsed"] { display: block; padding-inline: 1rem; }
   nav.contents {
-    position: sticky;
-    z-index: 20;
+    position: static;
     max-height: none;
     overflow: visible;
-    padding: 0;
-    margin-inline: -1rem;
-    background: var(--paper);
+    padding: .5rem 0;
+    margin-bottom: .5rem;
     border-bottom: 1px solid var(--rule);
   }
-  .contents-title, .theme-toggle { display: none; }
-  nav.contents .contents-links {
+  .contents-title, nav.contents .contents-toggle { display: none; }
+  nav.contents .contents-links, .layout[data-contents="collapsed"] nav.contents .contents-links {
     display: flex;
-    overflow-x: auto;
-    white-space: nowrap;
+    flex-wrap: wrap;
     gap: .4rem;
-    padding: .5rem 1rem;
   }
   nav.contents a {
     display: inline-block;
+    min-width: 0;
     border: 1px solid var(--rule);
     border-left-width: 1px;
-    flex: 0 0 auto;
   }
   nav.contents a.current { border-color: var(--signal); }
+  .theme-toggle, .layout[data-contents="collapsed"] .theme-toggle { display: inline-block; margin-top: .5rem; }
 }
+
+/* Contents rail toggle (wide screens): folds the rail to a thin strip and gives the page the full width */
+.contents-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .4em;
+  margin-bottom: .8rem;
+  min-height: 2rem;
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule-strong);
+  cursor: pointer;
+}
+.contents-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.contents-toggle-icon { font-size: 1.1rem; line-height: 1; }
+@media (min-width: 56.01rem) {
+  .layout[data-contents="collapsed"] { grid-template-columns: 2.75rem minmax(0, 1fr); gap: 0 1rem; max-width: none; }
+  .layout[data-contents="collapsed"] .contents-title,
+  .layout[data-contents="collapsed"] .contents-links,
+  .layout[data-contents="collapsed"] .theme-toggle { display: none; }
+  .layout[data-contents="collapsed"] .contents-toggle { padding-inline: .5em; }
+  .layout[data-contents="collapsed"] .contents-toggle-label {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+}
+
+/* Narrow boxes: a task row is a card. The box is measured, not the screen, so the open rail at 900 px stacks too. */
+.table-scroll { container-type: inline-size; }
+@container (max-width: 46rem) {
+  .table-scroll table { min-width: 0; display: block; }
+  table.status-checklist colgroup, table.status-checklist thead { display: none; }
+  table.status-checklist tbody, table.feature-list tbody { display: block; }
+  table.status-checklist tr, table.feature-list tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: .3rem .7rem;
+    padding: .7rem .8rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  table.status-checklist td, table.feature-list td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    grid-column: 1 / -1;
+  }
+  table.status-checklist td:empty, table.feature-list td:empty { display: none; }
+  table.status-checklist td:nth-child(1) { grid-column: 1; white-space: nowrap; }
+  table.status-checklist td:nth-child(2) { grid-column: 2; font-weight: 600; }
+  table.status-checklist td code { white-space: normal; overflow-wrap: anywhere; }
+  table.status-checklist td:nth-child(n+3)::before, table.feature-list td:nth-child(n+2)::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--font-mono);
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--ink-muted);
+  }
+  table.status-checklist .release-line::before { content: "Rides "; }
+  table.feature-list td:nth-child(1) { font-weight: 600; }
+  table.feature-list thead { display: block; background: var(--surface-2); border-bottom: 1px solid var(--rule); }
+  table.feature-list thead tr { display: flex; flex-wrap: wrap; gap: .2rem .8rem; padding: .3rem .8rem; border: 0; }
+  table.feature-list thead th { display: block; padding: 0; border: 0; }
+  table.feature-list thead th:nth-child(n+3) { display: none; }
+}
+/* Release header and the timeline never push the page sideways */
+details.status-fold > summary { min-width: 0; overflow-wrap: anywhere; }
+details.status-fold > summary strong { min-width: 0; }
+.release-timeline { max-width: 100%; }
+.timeline-scroll { max-width: 100%; }
 
 /* Release timeline (R5.40 to R5.43) and the State column (R5.44) */
 .release-timeline { margin: 0 0 1rem; padding: .75rem 1rem; background: var(--surface); border: 1px solid var(--rule); }

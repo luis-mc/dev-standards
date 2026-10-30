@@ -5,7 +5,7 @@
 <style id="structure-css">{{structure_css}}</style>
 <style id="extra-css">{{extra_css}}</style>
 {{registry}}
-<div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links">{{contents}}</div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
+<div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links">{{contents}}</div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">{{kind_label}} &middot; {{project}}</div><h1>{{title}}</h1><p>{{hero}}</p><div class="artifact-meta">{{project}} &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
 <p class="last-update">Last update: {{stamp}}</p>
@@ -26,6 +26,27 @@
         var dark = root.getAttribute('data-theme') === 'dark' ||
           (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
         root.setAttribute('data-theme', dark ? 'light' : 'dark');
+      });
+    }
+    // The contents rail folds to a thin rail on wide screens; the choice is kept per viewer and storage may be refused.
+    var layout = document.querySelector('.layout');
+    var railButton = document.getElementById('contents-toggle');
+    if (layout && railButton) {
+      var setRail = function (collapsed, save) {
+        if (collapsed) layout.setAttribute('data-contents', 'collapsed');
+        else layout.removeAttribute('data-contents');
+        railButton.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        railButton.querySelector('.contents-toggle-label').textContent = collapsed ? 'Show contents' : 'Hide contents';
+        railButton.querySelector('.contents-toggle-icon').innerHTML = collapsed ? '&rsaquo;' : '&lsaquo;';
+        if (save) {
+          try { window.localStorage.setItem('contents-rail', collapsed ? 'collapsed' : 'open'); } catch (error) {}
+        }
+      };
+      var remembered = null;
+      try { remembered = window.localStorage.getItem('contents-rail'); } catch (error) {}
+      if (remembered === 'collapsed') setRail(true, false);
+      railButton.addEventListener('click', function () {
+        setRail(railButton.getAttribute('aria-expanded') === 'true', true);
       });
     }
     var links = Array.prototype.slice.call(document.querySelectorAll('nav.contents a'));
