@@ -176,6 +176,16 @@ class AdoptPrTests(unittest.TestCase):
         self.assertIn("train.pr_adopted", [e["kind"] for e in led["events"]])
         self.assertIn(["gh", "pr", "merge", "103", "--merge", "--match-head-commit", SHA], sh.calls)
 
+    def test_adopted_pr_gives_the_train_its_head_sha(self):
+        # DS97: the adopted train's head is known, so a CI result matches it by sha
+        root = make_root()
+        seed(root, [{"branch": "DS90-integration", "state": "pushed"}])
+        r = self.routes([103])
+        r[("gh", "pr", "list", "--head")] = (0, json.dumps([{"number": 103, "headRefOid": SHA}]))
+        w = watcher(root, FakeShell(r))
+        w.adopt_pr(L.load(root)["trains"][0])
+        self.assertEqual(L.load(root)["trains"][0]["ci"]["head_sha"], SHA)
+
     def test_two_open_prs_for_the_branch_adopt_nothing(self):
         root = make_root()
         seed(root, [{"branch": "DS90-integration", "state": "pushed"}])

@@ -239,15 +239,18 @@ class Watcher:
         if L.hold_active(train, self.now()):
             return False
         found = self.gh_json(["pr", "list", "--head", train["branch"], "--state", "open",
-                              "--json", "number", *self.repo_args])
+                              "--json", "number,headRefOid", *self.repo_args])
         if not isinstance(found, list) or len(found) != 1 or not found[0].get("number"):
             return False
         pr = int(found[0]["number"])
+        head = found[0].get("headRefOid")
 
         def fn(led):
             t = L.find_train(led, train["id"])
             if t is not None and not t.get("pr"):
                 t["pr"] = pr
+                if head and not (t.get("ci") or {}).get("head_sha"):     # DS97: results match by head from now on
+                    t.setdefault("ci", {})["head_sha"] = head
                 if t.get("state") == "pushed":
                     L.set_train_state(t, "ci", L.iso(self.now()))
                 L.add_event(led, "train.pr_adopted", "%s #%s" % (t["id"], pr), "delivery_watch")

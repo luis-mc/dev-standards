@@ -115,6 +115,32 @@ class LedgerTests(unittest.TestCase):
         self.assertEqual((t["state"], t["ci"]["state"]), ("green", "success"))
         self.assertIsNotNone(t["green_at"])
 
+    def _ci_fallback(self, *trains):
+        root = make_root()
+
+        def fn(led):
+            for fields in trains:
+                L.new_train(led, fields.pop("branch")).update(fields)
+        L.update(root, fn)
+        L.record(root, "ci", sha="1234567", state="success")
+        return L.load(root)
+
+    def test_record_ci_unmatched_sha_never_marks_a_held_train(self):
+        # DS97: PR #104's result marked a held release green
+        led = self._ci_fallback({"branch": "release/1", "state": "pushed", "hold": {"reason": "r", "by": "owner"}})
+        self.assertEqual(led["trains"][0]["state"], "pushed")
+        self.assertIn("ci.unmatched", [e["kind"] for e in led["events"]])
+
+    def test_record_ci_unmatched_sha_with_two_candidates_marks_none(self):
+        led = self._ci_fallback({"branch": "release/1", "state": "pushed"}, {"branch": "release/2", "state": "ci"})
+        self.assertEqual([t["state"] for t in led["trains"]], ["pushed", "ci"])
+
+    def test_record_ci_unmatched_sha_skips_a_train_with_another_head(self):
+        led = self._ci_fallback({"branch": "release/1", "state": "ci",
+                                 "ci": {"head_sha": "abcdef1", "run_ids": [], "state": "running", "started_at": None}},
+                                {"branch": "release/2", "state": "pushed"})
+        self.assertEqual([t["state"] for t in led["trains"]], ["ci", "green"])
+
     def test_hold_active_respects_until(self):
         now = datetime(2026, 10, 14, 12, tzinfo=timezone.utc)
         self.assertFalse(L.hold_active({"hold": None}, now))

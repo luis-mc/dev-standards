@@ -178,6 +178,14 @@ class LedgerGapTests(unittest.TestCase):
         t = self.led()["trains"][0]
         self.assertEqual((t["pr"], t["state"], t["ci"]["head_sha"]), (9, "ci", "b" * 40))
 
+    def test_pr_create_falls_back_to_the_origin_branch_for_head_sha(self):
+        # DS97: a branch pushed from another worktree has no local ref here; head_sha stayed null
+        seed(self.root, state="pushed")
+        heads = {"origin/release/29": "c" * 40}
+        with mock.patch.object(H, "rev_parse", side_effect=lambda ref, cwd: heads.get(ref)):
+            H.handle(bash("gh pr create --head release/29 --body-file x.md", "https://github.com/o/r/pull/9"), self.root)
+        self.assertEqual(self.led()["trains"][0]["ci"]["head_sha"], "c" * 40)
+
     def test_pr_create_of_a_non_release_branch_creates_no_train(self):
         H.handle(bash("gh pr create --repo o/r --head DV1-x --body-file x.md", "https://github.com/o/r/pull/5"), self.root)
         self.assertEqual(self.led()["trains"], [])

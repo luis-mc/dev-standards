@@ -167,6 +167,11 @@ def rev_parse(ref: str, cwd: str | None) -> str | None:
         return None
 
 
+def branch_sha(branch: str, cwd: str | None) -> str | None:
+    """DS97: the head of a PR's branch: the local branch, else its origin copy (a branch pushed from a worktree)."""
+    return rev_parse(branch, cwd) or rev_parse("origin/%s" % branch, cwd)
+
+
 def opt_value(argv: list[str], *names: str) -> str | None:
     for i, a in enumerate(argv):
         for n in names:
@@ -284,7 +289,7 @@ def _rec_gh_pr(led, cfg, argv, text, cwd, failed, now):
             br = branch or current_branch(cwd)
             if br and re.search(cfg.get("train_branch_re") or DEFAULT_TRAIN_RE, br):
                 t = L.new_train(led, br, cfg=cfg)       # a release PR opened before any train was planned
-                sha = rev_parse(br, cwd)
+                sha = branch_sha(br, cwd)
                 if sha:
                     t["ci"]["head_sha"] = sha
         if t is None or failed:
@@ -294,7 +299,7 @@ def _rec_gh_pr(led, cfg, argv, text, cwd, failed, now):
         if num is not None:
             t["pr"] = num
         if verb == "create" and not (t.get("ci") or {}).get("head_sha"):
-            sha = rev_parse(t["branch"], cwd)
+            sha = branch_sha(t["branch"], cwd)
             if sha:
                 t.setdefault("ci", {})["head_sha"] = sha
         if verb == "ready" or "--draft" not in argv:

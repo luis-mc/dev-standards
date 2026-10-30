@@ -328,8 +328,13 @@ def record(root, op: str, **kw) -> bool:
             train = find_train(led, kw.get("train"), pr=kw.get("pr"), branch=kw.get("branch"))
             if train is None and op == "ci" and kw.get("sha"):
                 sha = str(kw["sha"])[:7]
-                train = next((t for t in led["trains"] if str((t.get("ci") or {}).get("head_sha") or "").startswith(sha)), None) \
-                    or next((t for t in led["trains"] if t.get("state") in ("pushed", "ci")), None)
+                train = next((t for t in led["trains"] if str((t.get("ci") or {}).get("head_sha") or "").startswith(sha)), None)
+                if train is None:
+                    # DS97: fall back only to the one unheld pushed/ci train whose head is not known yet;
+                    # a held train, or a train whose head is another commit, never takes a stray result
+                    cands = [t for t in led["trains"] if t.get("state") in ("pushed", "ci") and not hold_active(t)
+                             and not (t.get("ci") or {}).get("head_sha")]
+                    train = cands[0] if len(cands) == 1 else None
             if train is None:
                 add_event(led, "%s.unmatched" % op, str(kw.get("train") or kw.get("pr") or kw.get("branch")), by)
                 return
