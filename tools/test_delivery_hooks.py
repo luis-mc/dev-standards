@@ -746,6 +746,16 @@ def dl36_37_model_effort_and_brief_markers():
 
 
 @test
+def dl36_marker_lists_accept_the_ci_gate_path():
+    p = Project(ledger(), {'brief_markers': ['BRIEF.md', ['one affected gate', 'CI is the gate']]})
+    expect_pass(p.pre('RemoteTrigger', trigger({'prompt': BRIEF + 'BRIEF.md. One affected gate.'})))
+    expect_pass(p.pre('RemoteTrigger', trigger({'prompt': BRIEF + 'BRIEF.md. CI is the gate: write CODE DONE.'})))
+    r = p.pre('RemoteTrigger', trigger({'prompt': BRIEF + 'BRIEF.md only.'}))
+    assert denied(r) and 'DL-36' in why(r) and 'one affected gate / CI is the gate' in why(r), r
+    p.close()
+
+
+@test
 def dl38_caps():
     running = [agent(id='c%d' % i, owns=['x%d/' % i]) for i in range(3)]
     p = Project(ledger(agents=running), {'caps': {'cloud': 3, 'local': 3}})
@@ -760,6 +770,22 @@ def dl38_caps():
     p = Project(ledger())
     r = p.pre('Agent', local_agent(BRIEF + 'PC-bound: app\n'), {'DELIVERY_FREE_GB': '4'})
     assert 'DL-38' in why(r) and 'memory' in why(r), r
+    p.close()
+    sys.path.insert(0, SCRIPTS)
+    import hooklib as _hl
+    assert _hl.DEFAULTS['caps'] == {'cloud': 20, 'local': 3, 'total': 23}
+    p = Project(ledger(agents=[agent(id='c%d' % i, owns=['x%d/' % i]) for i in range(20)]))   # default cloud cap 20
+    r = p.pre('RemoteTrigger', trigger())
+    assert denied(r) and 'DL-38' in why(r) and 'cloud cap' in why(r), r
+    p.close()
+    p = Project(ledger(agents=[agent(id='c%d' % i, owns=['x%d/' % i]) for i in range(19)]))
+    expect_pass(p.pre('RemoteTrigger', trigger()))
+    p.close()
+    mixed = [agent(id='c%d' % i, owns=['x%d/' % i]) for i in range(2)] + \
+            [agent(id='l%d' % i, where='local', owns=['y%d/' % i]) for i in range(2)]
+    p = Project(ledger(agents=mixed), {'caps': {'cloud': 20, 'local': 3, 'total': 4}})      # total cap, config override
+    r = p.pre('RemoteTrigger', trigger())
+    assert denied(r) and 'DL-38' in why(r) and 'total cap' in why(r), r
     p.close()
 
 

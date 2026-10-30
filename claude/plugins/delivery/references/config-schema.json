@@ -58,9 +58,12 @@
     "brief_markers": {
       "type": "array",
       "items": {
-        "type": "string"
+        "oneOf": [
+          {"type": "string"},
+          {"type": "array", "minItems": 1, "items": {"type": "string"}}
+        ]
       },
-      "description": "DL-36: strings every cloud brief must contain."
+      "description": "DL-36: strings every cloud brief must contain. An entry that is a list of strings is satisfied by any one of them (e.g. [\"one affected gate\", \"CI is the gate\"])."
     },
     "min_question_chars": {
       "type": "integer",

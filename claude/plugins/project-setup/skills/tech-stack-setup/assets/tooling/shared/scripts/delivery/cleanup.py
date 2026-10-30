@@ -44,7 +44,8 @@ a warning, and the cleanup is unaffected.
 every branch whose pull request had that head as base, and every JOINED branch:
 a remote or local branch whose tip is an ancestor of the merged pull request's
 head commit, `headRefOid`, that is not an ancestor of <remote>/<default> and has
-no open pull request; commits outside that head keep a branch); N must be merged
+no open pull request; commits outside that head keep a branch; also the `ci/<task>` refs agent_ci.py pushed
+for them); N must be merged
 into the default branch, or the script exits 2. Without it, every branch on the remote
 (and every local branch). --local treats local branches and worktrees only.
 Without a working `gh` (not installed, or failing) it deletes nothing: a local
@@ -73,6 +74,11 @@ sys.dont_write_bytecode = True  # keep scripts/delivery/ free of __pycache__ (a 
 import delivery_common as dc
 import delivery_log as dlog  # the delivery log in the train's release notes
 import fast_guards as fg  # the push-check folder naming and link removal
+
+try:  # the manual CI runs on ci/<task>, removed with their train; absent in a project without agent_ci.py
+    import agent_ci
+except ImportError:
+    agent_ci = None
 
 PR_FIELDS = "number,state,baseRefName,headRefOid,mergedAt"
 MAX_PRS = "200"
@@ -565,11 +571,16 @@ def main(argv: list[str] | None = None) -> int:
     joined: set[str] = set()
     log_info = None
     pr_head = pr_branch = ""
+    ci_refs: set[str] = set()
     if args.pr is not None:
         candidates, pr_head = train_of(ctx, args.pr)
         pr_branch = candidates[0] if candidates else "pr-%d" % args.pr
         joined = set(joined_of(ctx, pr_head, candidates, local_branches, do_remote, do_local))
         candidates += sorted(joined)
+        # the manual CI runs of agent_ci.py: <ci_prefix><task> for every <branch_prefix><task>-... branch
+        acfg = agent_ci.settings() if agent_ci else None
+        ci_refs = {agent_ci.ci_branch(c, acfg) for c in candidates if c.startswith(acfg["branch_prefix"])} if acfg else set()
+        candidates += sorted(r for r in ci_refs if r in heads and r not in candidates)
     else:
         names = set()
         if do_remote:
@@ -603,7 +614,9 @@ def main(argv: list[str] | None = None) -> int:
         local_here = do_local and (branch in local_branches or any(w.branch == branch for w in trees))
         remote_here = do_remote and (branch in heads or branch in ctx.result_refs)
         # a branch only a local-mode run can see may be classified without gh
-        if branch in joined:
+        if branch in ci_refs:
+            v = Verdict(True, "manual CI run ref", safe=[heads[branch]])
+        elif branch in joined:
             v = assess_joined(ctx, branch, args.pr, pr_head)
         else:
             v = assess_local(ctx, branch) if (args.local or (local_here and not remote_here)) else assess(ctx, branch)

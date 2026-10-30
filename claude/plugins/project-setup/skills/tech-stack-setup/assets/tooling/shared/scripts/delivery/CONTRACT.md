@@ -26,6 +26,10 @@ are built against; change it first, then the code.
 | `scripts/delivery/artifact_prune.py` | same | ci |
 | `scripts/delivery/shard_balance.py` | same (balanced test shards from a timings file; `update` refreshes it from a runner's JSON report; DS9) | ci |
 | `scripts/delivery/area_select.py` | same (changed paths + the project's area map -> the jobs and test areas a change needs; DS9) | ci |
+| `scripts/delivery/ci_scope.py` | same (changed paths + the project's scope rules -> `full`, `ci-smoke` or `affected` and the named smoke set; a manual run plans `origin/<default>...HEAD`; DELIVERYSPEC DL-80, DS26) | ci |
+| `scripts/delivery/ci-scope.json` | `tooling/ts/scripts/delivery/` (release PR pattern, `full_files`, `ci_files`, `docs`, `smoke`, `agent_ci`; the project edits it; deleting it opts out) | ci |
+| `scripts/delivery/agent_ci.py` | same (starts one `workflow_dispatch` CI run per agent branch head when its report has a `CODE DONE` line; that run is the agent's gate; DL-81, DS26) | ci |
+| `scripts/delivery/ci_run_times.py` | same (the last CI job: wall time and per-job queue/run times as a job summary and the artifact `ci-run-times`; report only; DL-82, DS26) | ci |
 | `scripts/delivery/ci-areas.json`, `scripts/delivery/ci-timings.json` | `tooling/ts/scripts/delivery/` (the area map and the shard timings; the project edits them) | ci |
 | `.github/workflows/nightly-full.yml` (ts only) | `tooling/ts/.github/workflows/nightly-full.yml` | ci |
 | `scripts/delivery/delivery_log.py` | same | cleanup |
