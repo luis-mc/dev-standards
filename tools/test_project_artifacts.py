@@ -757,14 +757,14 @@ def test_state_column_counts_in_the_record(env):
     fp = p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
     assert fp is not None
     import re
-    rows = re.findall(r'<tr><td data-value="[^"]*">.*?</tr>', fp, re.S)
-    cell = lambda row: re.search(r'<td data-col="state">(.*?)</td>', row, re.S).group(1)
+    rows = re.findall(r'<tr><td data-label="Feature artifact" data-value="[^"]*">.*?</tr>', fp, re.S)
+    cell = lambda row: re.search(r'<td data-col="state" data-label="State">(.*?)</td>', row, re.S).group(1)
     states = [re.sub(r'<[^>]+>', ' ', cell(r)).split() for r in rows]
     by_title = {re.search(r'Feature: ([^<]+)<', r).group(1): s for r, s in zip(rows, states)}
     assert by_title['Artifacts'] == ['1', 'Running'], by_title
     p.ok('set-task-status', 'SI1', 'Live')
     fp = p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
-    rows = re.findall(r'<tr><td data-value="[^"]*">.*?</tr>', fp, re.S)
+    rows = re.findall(r'<tr><td data-label="Feature artifact" data-value="[^"]*">.*?</tr>', fp, re.S)
     site = next(r for r in rows if 'The site' in r)
     assert 'Complete' in cell(site) and 'status-live' in cell(site)
     assert p.run('check').code == 0
@@ -1179,7 +1179,7 @@ def _stamp_of(text):
 
 def _fp_row_time(fp_html, title):
     """The ISO time Full Progress section 1 shows for a feature."""
-    m = re.search(r'<td data-value="[^"]*"><a href="[^"]*">%s</a></td><td data-value="\d+"><time datetime="([^"]+)"' % re.escape(title), fp_html)
+    m = re.search(r'<td data-label="Feature artifact" data-value="[^"]*"><a href="[^"]*">%s</a></td><td data-label="Last updated" data-value="\d+"><time datetime="([^"]+)"' % re.escape(title), fp_html)
     return m.group(1) if m else None
 
 
