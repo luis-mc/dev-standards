@@ -448,6 +448,24 @@
       "default": "Production smoke",
       "description": "Name of the workflow that `delivery_ledger.py smoke` looks for on the PR's merge commit."
     },
+    "ci_watch": {
+      "type": "object",
+      "description": "ci_watch.py settings (DS30). post_run: project commands run after every watched run finishes, in order, from the repository root; {run_id}, {head}, {conclusion} and {workflow} are filled in. A failing hook is logged and never changes the verdict.",
+      "properties": {
+        "post_run": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "\\S"
+          }
+        },
+        "post_run_timeout_seconds": {
+          "type": "number",
+          "minimum": 1,
+          "default": 900
+        }
+      }
+    },
     "load_limits": {
       "type": "object",
       "description": "DL-77: machine load limits for this project; over the machine file ~/.claude/luismc-delivery-machine.json, over the defaults (memory 85, CPU 60). Values are percent, 1..100.",
