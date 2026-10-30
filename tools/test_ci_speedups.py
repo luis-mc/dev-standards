@@ -8,6 +8,10 @@
     `--base` against a throwaway git repository, `$GITHUB_OUTPUT`, the starter map shipped for ts.
   * nightly-full.yml: structure (schedule + dispatch, runner variables, jobs gated on the first one)
     and the compare step itself, run with bash against a stub `gh`.
+  * ci_scope.py: release PR -> full, CI files only -> ci-smoke (even on a release PR), root config -> full,
+    everything else affected, no diff -> full, the manual-run base, the starter config for ts (DS26).
+  * agent_ci.py: starts one run per head at CODE DONE, against a stub git and gh (DS26).
+  * ci_run_times.py: the summary, the markdown, and that a missing token never fails the run (DS26).
   * mutants: copies of the scripts with one rule broken must each fail at least one scenario.
 
 Run:  python3 tools/test_ci_speedups.py
@@ -493,6 +497,181 @@ def ts_ci_plan_job_is_in_the_template():
     check("area_select.py --base" in plan and "area_select.py --all" in plan,
           "the plan job runs area_select.py for pull requests and --all otherwise")
     check("|| echo" in plan, "a failed plan step must not fail the job (every job then runs)")
+
+
+# --------------------------------------------------------------------------- DS26: scope rules, agent CI, run times
+
+SCOPE = DELIVERY / "ci_scope.py"
+AGENT_CI = DELIVERY / "agent_ci.py"
+RUN_TIMES = DELIVERY / "ci_run_times.py"
+TS_SCOPE = TOOLING / "ts/scripts/delivery/ci-scope.json"
+REL = ["--event", "pull_request", "--head-ref", "release/7", "--base-ref", "main"]
+AGENT = ["--event", "pull_request", "--head-ref", "claude/x-1", "--base-ref", "main"]
+
+
+def scope_of(args: list[str], *paths: str, script: Path = SCOPE, config: Path = TS_SCOPE) -> dict[str, str]:
+    rc, out, err = run(script, ["--config", str(config), *args, *paths])
+    check(rc == 0, f"ci_scope exited {rc}: {err}")
+    return kv(out)
+
+
+@test
+def scope_rules_decide():
+    check(scope_of(REL, "apps/web/a.ts")["scope"] == "full", "a release PR is full")
+    check(scope_of(AGENT, "apps/web/a.ts")["scope"] == "affected", "an agent branch is affected-only")
+    check(scope_of(AGENT, "apps/web/a.ts", "docs/x.md")["scope"] == "affected", "docs ride along")
+    ci = scope_of(AGENT, "scripts/delivery/a.py", ".github/workflows/ci.yml", "docs/x.md")
+    check(ci["scope"] == "ci-smoke" and ci["ci_changed"] == "true", f"CI files only -> ci-smoke: {ci}")
+    check(ci["smoke_tests"] != "", "the smoke set is named")
+    check(scope_of(REL, "scripts/delivery/a.py")["scope"] == "ci-smoke", "CI files only is ci-smoke even on a release PR")
+    mixed = scope_of(REL, "scripts/delivery/a.py", "apps/web/a.ts")
+    check(mixed["scope"] == "full" and mixed["ci_changed"] == "true", f"CI + product on a release PR is full: {mixed}")
+    for root in ("pnpm-lock.yaml", "package.json", ".github/dependabot.yml"):
+        check(scope_of(AGENT, root, "scripts/delivery/a.py")["scope"] == "full", f"{root} is full")
+    check(scope_of(AGENT, ".github/workflows/ci.yml")["scope"] == "ci-smoke", "!exception: a workflow is a CI file")
+    check(scope_of(AGENT)["scope"] == "full", "no diff is full")
+    check(scope_of(["--event", "push", "--head-ref", "", "--base-ref", ""], "apps/a.ts")["scope"] == "affected",
+          "a push is affected-only")
+
+
+@test
+def scope_rules_are_configurable_and_never_name_a_project():
+    with tempfile.TemporaryDirectory() as d:
+        cfg = Path(d) / "c.json"
+        cfg.write_text(json.dumps({"release_pr": {"base": "trunk", "head_re": "^ship/"}, "full_files": ["Cargo.lock"],
+                                   "ci_files": ["ci/"], "docs": ["*.txt"], "smoke": {"tests": ["t1"], "e2e": ["e1"]}}))
+        ev = ["--event", "pull_request", "--base-ref", "trunk"]
+        check(scope_of(ev + ["--head-ref", "ship/1"], "src/a.rs", config=cfg)["scope"] == "full", "custom release pattern")
+        check(scope_of(ev + ["--head-ref", "release/1"], "src/a.rs", config=cfg)["scope"] == "affected",
+              "the default pattern is not applied when configured")
+        r = scope_of(ev + ["--head-ref", "x"], "ci/run.sh", "notes.txt", config=cfg)
+        check(r["scope"] == "ci-smoke" and r["smoke_tests"] == "t1" and r["smoke_e2e"] == "e1", f"{r}")
+        check(scope_of(ev + ["--head-ref", "x"], "Cargo.lock", config=cfg)["scope"] == "full", "custom full file")
+        rc, _, err = run(SCOPE, ["--config", str(Path(d) / "missing.json"), "a"])
+        check(rc == 2, "a missing config exits 2 (the workflow then runs everything)")
+    text = SCOPE.read_text(encoding="utf-8") + TS_SCOPE.read_text(encoding="utf-8")
+    check("comics" not in text.lower(), "no project names in the generic scope rules")
+
+
+@test
+def scope_manual_run_diffs_against_the_default_branch():
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+
+        def git(*a):
+            subprocess.run(["git", "-C", str(d), *a], check=True, capture_output=True)
+        git("init", "-q", "-b", "main")
+        git("config", "user.email", "t@t"); git("config", "user.name", "t")
+        (d / "a.txt").write_text("1"); git("add", "."); git("commit", "-qm", "base")
+        git("update-ref", "refs/remotes/origin/main", "HEAD")
+        git("checkout", "-qb", "feat")
+        for i in range(3):  # several commits: HEAD~1 alone would miss the first two
+            (d / f"scripts_{i}.txt").write_text("x"); git("add", "."); git("commit", "-qm", f"c{i}")
+        (d / "cfg.json").write_text(json.dumps({"default_branch": "main", "docs": ["*.txt"], "ci_files": ["nothing"]}))
+        rc, out, err = run(SCOPE, ["--config", "cfg.json", "--event", "workflow_dispatch", "--json"], cwd=d)
+        check(rc == 0, err)
+        check(json.loads(out)["scope"] == "affected", f"{out}")
+        git("checkout", "-q", "main")  # on the default branch the diff is empty: full
+        rc, out, err = run(SCOPE, ["--config", "cfg.json", "--event", "workflow_dispatch", "--json"], cwd=d)
+        check(json.loads(out)["scope"] == "full", f"{out}")
+
+
+STUB_GIT = r"""#!/usr/bin/env python3
+import os, sys
+a = sys.argv[1:]
+if a[0] == "fetch": sys.exit(0)
+if a[0] == "for-each-ref": print("origin/claude/T1-done\norigin/claude/T2-working\norigin/other/x"); sys.exit(0)
+if a[0] == "rev-parse": print("sha_" + a[1].split("/")[-1]); sys.exit(0)
+if a[0] == "show":
+    ref, path = a[1].split(":", 1)
+    if ref.endswith("T1-done"): print("# T1\nCODE DONE\n")
+    elif ref.endswith("T2-working"): print("# T2\nin progress\n")
+    sys.exit(0)
+"""
+STUB_GH = r"""#!/usr/bin/env python3
+import os, sys
+log = os.environ["STUB_LOG"]
+a = sys.argv[1:]
+if a[:2] == ["run", "list"]:
+    print(os.environ.get("STUB_RUNS", "[]")); sys.exit(0)
+if a[:2] == ["workflow", "run"]:
+    open(log, "a").write(" ".join(a) + "\n"); sys.exit(0)
+sys.exit(1)
+"""
+
+
+def agent_ci_run(runs: str, *args: str) -> tuple[int, str, str, str]:
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        (d / "bin").mkdir()
+        for name, src in (("git", STUB_GIT), ("gh", STUB_GH)):
+            f = d / "bin" / name
+            f.write_text(src, encoding="utf-8")
+            f.chmod(f.stat().st_mode | stat.S_IEXEC)
+        log = d / "gh.log"
+        env = {"PATH": f"{d / 'bin'}{os.pathsep}{os.environ['PATH']}", "STUB_LOG": str(log), "STUB_RUNS": runs}
+        rc, out, err = run(AGENT_CI, ["--config", str(d / "none.json"), *args], cwd=d, env=env)
+        return rc, out, err, log.read_text() if log.exists() else ""
+
+
+@test
+def agent_ci_starts_one_run_per_head_at_code_done():
+    rc, out, err, log = agent_ci_run("[]")
+    check(rc == 0, err)
+    check(log.strip() == "workflow run ci.yml --ref claude/T1-done", f"only the CODE DONE branch starts: {log!r}")
+    check("T2-working" not in out, "a branch without CODE DONE is left alone")
+    rc, out, err, log = agent_ci_run('[{"headSha": "sha_T1-done"}]')
+    check(log == "", f"a head that already has a dispatch run starts no second one: {log!r}")
+    rc, out, err, log = agent_ci_run("not json")
+    check(log == "", "unsure (gh output unreadable): nothing starts")
+    rc, out, err, log = agent_ci_run("[]", "--dry-run")
+    check(log == "" and "would start CI on claude/T1-done" in out, "--dry-run starts nothing")
+    rc, out, err, log = agent_ci_run("[]", "--workflow", "build.yml")
+    check(log.strip() == "workflow run build.yml --ref claude/T1-done", "the workflow is configurable")
+
+
+@test
+def run_times_summary_and_report_only():
+    import importlib.util
+    from datetime import datetime, timezone
+    spec = importlib.util.spec_from_file_location("ci_run_times", RUN_TIMES)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    run_ = {"event": "pull_request", "head_sha": "abcdef1234567890", "run_started_at": "2026-10-30T10:00:00Z"}
+    jobs = [
+        {"name": "fast", "conclusion": "success", "created_at": "2026-10-30T10:00:00Z",
+         "started_at": "2026-10-30T10:00:10Z", "completed_at": "2026-10-30T10:01:10Z"},
+        {"name": "slow", "conclusion": "success", "created_at": "2026-10-30T10:00:00Z",
+         "started_at": "2026-10-30T10:00:05Z", "completed_at": "2026-10-30T10:20:05Z"},
+        {"name": "skipped", "conclusion": "skipped", "created_at": None, "started_at": None, "completed_at": None},
+    ]
+    t = m.summarize(run_, jobs, datetime(2026, 10, 30, 10, 21, 0, tzinfo=timezone.utc), "affected")
+    check([j["name"] for j in t["jobs"]] == ["slow", "fast"], f"longest first, skipped left out: {t['jobs']}")
+    check(t["wallSeconds"] == 1260 and t["overTarget"] is True, f"{t}")
+    check(t["jobs"][1]["queuedSeconds"] == 10, "queue time")
+    md = m.to_markdown(t)
+    check("21:00 (over the 15:00 target, report only)" in md and "| slow | success | 0:05 | 20:00 |" in md, md)
+    check(m.ARTIFACT_NAME == "ci-run-times", "stable artifact name")
+    with tempfile.TemporaryDirectory() as d:
+        rc, out, err = run(RUN_TIMES, ["--out", str(Path(d) / "o.json")], env={"GITHUB_TOKEN": "", "GITHUB_REPOSITORY": ""})
+        check(rc == 0 and "not written" in out, f"never fails the run: {rc} {out}")
+
+
+@test
+def ts_ci_runs_by_hand_and_reports_times():
+    text = (TOOLING / "ts/.github/workflows/ci.yml").read_text(encoding="utf-8").replace("\r\n", "\n")
+    check("workflow_dispatch:" in text, "ci.yml can be started by hand")
+    plan = jobs_of(text)["plan"]
+    check('area_select.py --base "origin/$DEFAULT_BRANCH"' in plan, "a manual run on a branch plans origin/<default>...HEAD")
+    check("ci_scope.py" in plan and "ci-scope.json" in plan, "the scope step is optional on the config file")
+    rt = jobs_of(text)["run-times"]
+    check("CI_RUN_TIMES" in rt and "ci-run-times" in rt, "run times are opt-in and use the stable artifact name")
+
+
+@test
+def join_accepts_ci_gate_branches():
+    text = (DELIVERY / "join.py").read_text(encoding="utf-8")
+    check("--ci-gate" in text and 'cfg.get("ci_gate")' in text, "join.py has the ci_gate path")
 
 
 # --------------------------------------------------------------------------- main

@@ -461,7 +461,7 @@ jobs:
   run-times:
     name: run times (report only)
     needs: [decide, plan, verify, integration, e2e]
-    if: ${{ always() && vars.CI_RUN_TIMES == 'true' }}
+    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && vars.CI_RUN_TIMES == 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     permissions:
       contents: read

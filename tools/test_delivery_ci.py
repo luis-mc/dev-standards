@@ -1277,11 +1277,13 @@ IF_COND = ("${{ !cancelled() && needs.decide.outputs.skip != 'true' && "
 
 # The ts runner plan (DS9) adds one clause to the jobs it can skip: a planned skip is an explicit 'false'.
 PLAN_CLAUSE = re.compile(r" && needs\.plan\.outputs\.(integration|e2e) != 'false'")
+# The opt-in run-times job (DS26, DL-82) adds the repository-variable clause.
+RUN_TIMES_CLAUSE = re.compile(r" && vars\.CI_RUN_TIMES == 'true'")
 
 
 def if_cond_ok(block: str) -> bool:
     for m in re.finditer(r"^    if: (.*)$", block, re.M):
-        if m.group(1) == IF_COND or PLAN_CLAUSE.sub("", m.group(1)) == IF_COND:
+        if m.group(1) == IF_COND or RUN_TIMES_CLAUSE.sub("", PLAN_CLAUSE.sub("", m.group(1))) == IF_COND:
             return True
     return False
 
@@ -1594,7 +1596,7 @@ def workflow_checker_detects_each_defect():
         ("ts", ts, "must fail unless every shard succeeded",
          lambda t: mutate(t, '[ "$SHARDS" = "success" ]', "true")),
         ("ts", ts, "runner plan job is missing", lambda t: mutate(t, "  plan:\n", "  planx:\n")),
-        ("ts", ts, "must run area_select.py", lambda t: mutate(t, "python3 scripts/delivery/area_select.py --base", "echo --base")),
+        ("ts", ts, "must run area_select.py", lambda t: mutate(t, "python3 scripts/delivery/area_select.py --base", "echo --base", 2)),
         ("ts", ts, "integration must skip only on an explicit",
          lambda t: mutate(t, "needs.plan.outputs.integration != 'false'", "needs.plan.outputs.integration == 'true'")),
         ("ts", ts, "e2e-shard must skip only on an explicit",

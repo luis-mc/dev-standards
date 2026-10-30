@@ -98,6 +98,16 @@ python <plugin>/scripts/delivery_ledger.py cleaned --pr N
 - **DL-03** a train is green only when every workflow in `watcher.ci_workflows` (default `["ci.yml"]`) completed with `success` on the PR head commit. `ci_watch.py` passing no longer sets green; the watcher does, and revokes green when a required run is running again.
 - **DL-76** one CI per release. `pr_proven_jobs` in `.delivery/config.json` lists the job names the release PR proves (globs ok), e.g. `["Windows tests", "test-*"]`. After the merge the Stop hook finds the PR's merge commit, and when its tree equals the PR head tree it flags every such job that ran on the default branch. Rule: "A release runs CI once: nothing after the merge re-runs what the release PR proved on the same tree; only publish, deploy and production smoke run on the default branch." Off while `pr_proven_jobs` is empty.
 
+## CI-gate path (opt-in, DL-80..83)
+
+For a project whose agents are gated by CI on their branch instead of a full local gate. Nothing changes for a project that does not opt in. The scripts live in `luismc-project-setup` (`tooling/shared/scripts/delivery/`) and the project's patterns in `scripts/delivery/ci-scope.json`; this plugin carries the rules, the spec and the brief:
+
+- **Agents** run the tests of what they touch and the fast guards, push, and write a `CODE DONE` line in their report. `agent_ci.py` starts one `workflow_dispatch` CI run per branch head; that run is the gate. The manual run plans `origin/<default>...HEAD`.
+- **Orchestrator** joins urgent work at code push (`join.py --ci-gate`) and sizes ETAs from coding time plus the branch CI run. A CI plan script that a helper imports has no top-level `await`.
+- **CI scope** (`ci_scope.py`): release PR full; CI files only, the CI tests and a named smoke set; root configuration full; else affected.
+- **Run times**: the last job writes the artifact `ci-run-times` (repository variable `CI_RUN_TIMES=true`).
+- **Brief**: `references/agent-brief-template.md`; `brief_markers` entries may be lists (`["one affected gate", "CI is the gate"]`).
+
 ## Tests
 
 ```

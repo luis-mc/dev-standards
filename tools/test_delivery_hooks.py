@@ -746,6 +746,16 @@ def dl36_37_model_effort_and_brief_markers():
 
 
 @test
+def dl36_marker_lists_accept_the_ci_gate_path():
+    p = Project(ledger(), {'brief_markers': ['BRIEF.md', ['one affected gate', 'CI is the gate']]})
+    expect_pass(p.pre('RemoteTrigger', trigger({'prompt': BRIEF + 'BRIEF.md. One affected gate.'})))
+    expect_pass(p.pre('RemoteTrigger', trigger({'prompt': BRIEF + 'BRIEF.md. CI is the gate: write CODE DONE.'})))
+    r = p.pre('RemoteTrigger', trigger({'prompt': BRIEF + 'BRIEF.md only.'}))
+    assert denied(r) and 'DL-36' in why(r) and 'one affected gate / CI is the gate' in why(r), r
+    p.close()
+
+
+@test
 def dl38_caps():
     running = [agent(id='c%d' % i, owns=['x%d/' % i]) for i in range(3)]
     p = Project(ledger(agents=running), {'caps': {'cloud': 3, 'local': 3}})
