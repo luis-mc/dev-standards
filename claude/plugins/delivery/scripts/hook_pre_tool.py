@@ -397,7 +397,9 @@ def check_launch(cfg, ledger, data, where):
         check_join_brief(cfg, text, block)
     cloud_running = len(H.running_agents(ledger, 'cloud'))
     local_running = len(H.running_agents(ledger, 'local'))
-    cap_cloud, cap_local = int(cfg['caps'].get('cloud', 8)), int(cfg['caps'].get('local', 3))
+    caps = cfg['caps']
+    cap_cloud, cap_local = int(caps.get('cloud', 20)), int(caps.get('local', 3))
+    cap_total = int(caps.get('total', cap_cloud + cap_local))
     if where == 'local' and H.check_on(cfg, 'D4') and cloud_running < cap_cloud and not PC_BOUND_RE.search(text):
         deny('D4 run non-PC-bound work in the cloud (cloud running %d of %d). Launch it with RemoteTrigger, or add a '
              '"PC-bound: <reason>" line to this brief.' % (cloud_running, cap_cloud))
@@ -419,6 +421,8 @@ def check_launch(cfg, ledger, data, where):
         deny('DL-36 the brief lacks required markers: %s. Add them (config brief_markers), then launch.'
              % '; '.join(missing))
     if H.check_on(cfg, 'DL-38'):
+        if cloud_running + local_running >= cap_total:
+            deny('DL-38 total cap reached (%d running of %d). Wait for one to finish.' % (cloud_running + local_running, cap_total))
         if where == 'cloud' and cloud_running >= cap_cloud:
             deny('DL-38 cloud cap reached (%d running of %d). Wait for one to finish or ask the owner to raise the cap '
                  'in .delivery/config.json.' % (cloud_running, cap_cloud))

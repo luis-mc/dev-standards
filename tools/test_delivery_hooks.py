@@ -771,6 +771,22 @@ def dl38_caps():
     r = p.pre('Agent', local_agent(BRIEF + 'PC-bound: app\n'), {'DELIVERY_FREE_GB': '4'})
     assert 'DL-38' in why(r) and 'memory' in why(r), r
     p.close()
+    sys.path.insert(0, SCRIPTS)
+    import hooklib as _hl
+    assert _hl.DEFAULTS['caps'] == {'cloud': 20, 'local': 3, 'total': 23}
+    p = Project(ledger(agents=[agent(id='c%d' % i, owns=['x%d/' % i]) for i in range(20)]))   # default cloud cap 20
+    r = p.pre('RemoteTrigger', trigger())
+    assert denied(r) and 'DL-38' in why(r) and 'cloud cap' in why(r), r
+    p.close()
+    p = Project(ledger(agents=[agent(id='c%d' % i, owns=['x%d/' % i]) for i in range(19)]))
+    expect_pass(p.pre('RemoteTrigger', trigger()))
+    p.close()
+    mixed = [agent(id='c%d' % i, owns=['x%d/' % i]) for i in range(2)] + \
+            [agent(id='l%d' % i, where='local', owns=['y%d/' % i]) for i in range(2)]
+    p = Project(ledger(agents=mixed), {'caps': {'cloud': 20, 'local': 3, 'total': 4}})      # total cap, config override
+    r = p.pre('RemoteTrigger', trigger())
+    assert denied(r) and 'DL-38' in why(r) and 'total cap' in why(r), r
+    p.close()
 
 
 @test

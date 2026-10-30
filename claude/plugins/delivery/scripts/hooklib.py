@@ -36,7 +36,7 @@ MAX_SESSIONS = 40
 DEFAULTS = {
     'tz': 'Europe/Lisbon',
     'work_root': None,                        # DL-53; unset = not checked
-    'caps': {'cloud': 8, 'local': 3},         # DL-38
+    'caps': {'cloud': 20, 'local': 3, 'total': 23},  # DL-38
     'min_free_gb': 8,                         # DL-38 local agents need more free memory than this
     'brief_markers': [],                      # DL-36 strings every cloud brief must contain
     'min_question_chars': 60,                 # D8 Q-3
