@@ -734,7 +734,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-30T17:00+00:00",
+ "updated": "2026-10-30T17:17+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -2695,12 +2695,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS97",
    "owner": "project",
    "app": "",
-   "status": "To do",
+   "status": "Live",
    "item": "delivery ledger: a CI result with no sha match goes to the wrong release",
-   "detail": "record(ci) falls back to the first pushed/ci train, even a held one: PR #104's result marked held RELEASE-14 (T-2026-10-27-01) green. Fall back only to a single unheld candidate; also set head_sha on gh pr create (it stayed null).",
-   "expected": "06 Nov",
-   "changed": "2026-10-30T16:54+00:00",
-   "expected_basis": "small plugin fix; not started, next plugin release"
+   "detail": "On main 3def48e, luismc-delivery 0.10.1 (spec-lint + secret-scan green): unmatched CI results go only to the single unheld release with no known head, else ci.unmatched; head_sha from origin/<branch> and from the watcher's PR adoption. 5 new tests, 235 pass.",
+   "expected": "30 Oct",
+   "changed": "2026-10-30T17:17+00:00",
+   "no_release": "pushed straight to main at the owner's request",
+   "started": "2026-10-30T17:11+00:00"
   },
   {
    "id": "DS98",
@@ -3003,28 +3004,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-30T17:00+00:00">30 Oct 17:00</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-30T17:17+00:00">30 Oct 17:17</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">3 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">4 tasks</span></summary>
 <ul>
+<li data-glance-task="DS97"><span class="task-id">DS97</span>delivery ledger: a CI result with no sha match goes to the wrong release</li>
 <li data-glance-task="DS100"><span class="task-id">DS100</span>Caps template aligned; record the PR #105 CI speed-ups work</li>
 <li data-glance-task="DS99"><span class="task-id">DS99</span><span class="release-name">RELEASE-16</span>Release: DS26 CI speed-ups folded; every plugin&#x27;s version bumped</li>
 <li data-glance-task="DS98"><span class="task-id">DS98</span>Delivery watcher running for this repo</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">183</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">184</div><div class="label">tasks live</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">184 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS97"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DS97</span>delivery ledger: a CI result with no sha match goes to the wrong release</td><td></td><td>record(ci) falls back to the first pushed/ci train, even a held one: PR #104&#x27;s result marked held RELEASE-14 (T-2026-10-27-01) green. Fall back only to a single unheld candidate; also set head_sha on gh pr create (it stayed null).</td><td>06 Nov<span class="expected-basis">small plugin fix; not started, next plugin release</span></td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">183 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS97"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS97</span>delivery ledger: a CI result with no sha match goes to the wrong release<span class="no-release-line">ships nothing: pushed straight to main at the owner&#x27;s request</span></td><td></td><td>On main 3def48e, luismc-delivery 0.10.1 (spec-lint + secret-scan green): unmatched CI results go only to the single unheld release with no known head, else ci.unmatched; head_sha from origin/&lt;branch&gt; and from the watcher&#x27;s PR adoption. 5 new tests, 235 pass.</td><td>30 Oct</td></tr>
 <tr data-task="DS100"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS100</span>Caps template aligned; record the PR #105 CI speed-ups work<span class="no-release-line">ships nothing: pushed straight to main at the owner&#x27;s request</span></td><td></td><td>On main (owner: all work on main, no branches): delivery-config.json template caps 20/3/23 to match DL-38; main is now a release branch for change notes; luismc-project-setup 14.7.1 (429bbcd, spec-lint + secret-scan green). Also records PR #105, whose branch reused the ID DS26 of an 11 Oct task.</td><td>30 Oct</td></tr>
 <tr data-task="DS99"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS99</span><span class="release-name">RELEASE-16</span>Release: DS26 CI speed-ups folded; every plugin&#x27;s version bumped</td><td></td><td>PR #106 merged 4cbff02 at green (spec-lint, secret-scan): agents 1.1.2, artifacts 1.14.1, audits 1.2.2, delivery 0.10.0, project-setup 14.7.0, specs 1.2.2, transcript-folds 1.1.2. Branches removed.</td><td>30 Oct</td></tr>
 <tr data-task="DS98"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DS98</span>Delivery watcher running for this repo<span class="no-release-line">ships nothing: background process, ships nothing</span></td><td></td><td>The 28 Oct watcher ended with that session.</td><td>30 Oct</td></tr>

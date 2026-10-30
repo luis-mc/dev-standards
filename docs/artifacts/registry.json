@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-30T17:00+00:00",
+  "updated": "2026-10-30T17:17+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1961,12 +1961,13 @@
       "id": "DS97",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Live",
       "item": "delivery ledger: a CI result with no sha match goes to the wrong release",
-      "detail": "record(ci) falls back to the first pushed/ci train, even a held one: PR #104's result marked held RELEASE-14 (T-2026-10-27-01) green. Fall back only to a single unheld candidate; also set head_sha on gh pr create (it stayed null).",
-      "expected": "06 Nov",
-      "changed": "2026-10-30T16:54+00:00",
-      "expected_basis": "small plugin fix; not started, next plugin release"
+      "detail": "On main 3def48e, luismc-delivery 0.10.1 (spec-lint + secret-scan green): unmatched CI results go only to the single unheld release with no known head, else ci.unmatched; head_sha from origin/<branch> and from the watcher's PR adoption. 5 new tests, 235 pass.",
+      "expected": "30 Oct",
+      "changed": "2026-10-30T17:17+00:00",
+      "no_release": "pushed straight to main at the owner's request",
+      "started": "2026-10-30T17:11+00:00"
     },
     {
       "id": "DS98",
