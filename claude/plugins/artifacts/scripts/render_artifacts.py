@@ -1596,6 +1596,22 @@ FEATURE_GROUPS = (('progress', 'Feature artifacts in progress', 'No feature arti
                   ('complete', 'Complete feature artifacts', 'No feature artifacts are complete yet.'))
 
 
+def _retired_fold(manifest: dict) -> str:
+    """R4.34: retired features, one line each in one closed fold under the two feature folds. No new CSS: plain markup, outside the status-fold groups the checks count."""
+    rows = sorted((e for e in manifest.get('retired_features') or [] if isinstance(e, dict)),
+                  key=lambda e: (str(e.get('retired', '')), str(e.get('key', ''))), reverse=True)
+    if not rows:
+        return ''
+    lines = []
+    for e in rows:
+        kept = ' &middot; decisions kept in <code>%s</code>' % esc(e['decisions']) if e.get('decisions') else ''
+        lines.append('<li>%s <code>%s</code> &middot; retired %s%s</li>' % (
+            esc(e.get('title', '')), esc(e.get('key', '')), esc(_fmt_day(str(e.get('retired', ''))[:10])), kept))
+    return ('<details class="retired-features" data-group="features-retired"><summary><strong>Retired feature artifacts (%d)'
+            '</strong><span class="fold-count">%d retired</span></summary>\n<ul class="retired-list">\n%s\n</ul>\n</details>\n'
+            % (len(rows), len(rows), '\n'.join(lines)))
+
+
 def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list, feature_links: dict,
                      record_dir: str = '') -> str:
     rows = []
@@ -1633,7 +1649,7 @@ def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list
         out.append('<details class="status-fold feature-group" data-group="features-%s"%s><summary><strong>%s (%d)</strong>'
                    '<span class="fold-count">%d feature artifact%s</span></summary>\n%s\n</details>'
                    % (gkey, '' if gkey == 'complete' else ' open', title, len(mine), len(mine), '' if len(mine) == 1 else 's', body))
-    return '\n'.join(out) + '\n'
+    return '\n'.join(out) + '\n' + _retired_fold(manifest)
 
 
 def _published_line(manifest: dict, label: str) -> str:
