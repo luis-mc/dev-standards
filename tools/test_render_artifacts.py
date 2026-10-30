@@ -643,9 +643,9 @@ def check_r64_columns(fx):
 @with_fixture
 def check_r61_statuses(fx):
     out = fx.render('artifacts')
-    expect(fx, sub1(out, '<tr data-task="AR6"><td><span class="status-chip status-running">', '<tr data-task="AR6"><td><span class="status-chip status-live">'),
+    expect(fx, sub1(out, '<tr data-task="AR6"><td data-label="Status"><span class="status-chip status-running">', '<tr data-task="AR6"><td data-label="Status"><span class="status-chip status-live">'),
            'artifacts', ['R6.1'])
-    got = fx.check(sub1(out, '<span class="status-chip status-running">Running</span></td><td><span class="task-id">AR6',
+    got = fx.check(sub1(out, '<span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">AR6',
                         '<span class="status-chip status-merged">Merged</span></td><td><span class="task-id">AR6'), 'artifacts')
     assert 'R6.1' in reqs(got), got
 
@@ -967,7 +967,7 @@ def check_r56_feature_list(fx):
     expect(fx, sub1(fp, '<a href="%s">Feature: Project artifacts standard</a>' % AR_FILE, 'Feature: Project artifacts standard'), 'full-progress', ['R5.6'])
     expect(fx, sub1(fp, '<a href="%s">Feature: Model and effort profiles</a>' % MP_FILE, '<a href="https://claude.ai/artifact/x">Feature: Model and effort profiles</a>'),
            'full-progress', ['R5.30'])
-    expect(fx, sub1(fp, '<td data-value="feature: model and effort profiles"><a href="%s">Feature: Model and effort profiles</a></td>' % MP_FILE, '<td>Feature: Model and effort</td>'), 'full-progress', ['R5.6'])
+    expect(fx, sub1(fp, '<td data-label="Feature artifact" data-value="feature: model and effort profiles"><a href="%s">Feature: Model and effort profiles</a></td>' % MP_FILE, '<td>Feature: Model and effort</td>'), 'full-progress', ['R5.6'])
 
 
 @test
@@ -2890,6 +2890,43 @@ def dropped_release_is_closed_history(fx):
     assert fx.check(out, 'full-progress', registry=registry) == []
     bad = out.replace('dropped: folded into RELEASE-2', 'dropped: something else')
     assert 'R5.49' in reqs(fx.check(bad, 'full-progress', registry=registry))
+
+
+@test
+@with_fixture
+def narrow_width_css_and_labels(fx):
+    """CO669: a task row stacks into a card in a narrow box, every cell carries its label, and the contents nav wraps."""
+    css = R.structure_css()
+    assert '@container (max-width: 46rem)' in css and '@media (max-width: 56rem)' in css
+    assert 'attr(data-label)' in css and 'content: "Rides "' in css
+    assert re.search(r'nav\.contents \.contents-links[^{]*\{[^}]*flex-wrap: wrap', css), 'the nav wraps'
+    assert 'overflow-wrap: anywhere' in css and 'min-width: 0' in css
+    assert '.timeline-scroll' in css and 'container-type: inline-size' in css
+    for kind in ('full-progress', 'artifacts'):
+        out = fx.render(kind)
+        for label in ('Status', 'Item', 'Detail', 'Expected'):
+            assert 'data-label="%s"' % label in out, (kind, label)
+    fp = fx.render('full-progress')
+    assert 'data-label="App / service"' in fp and 'data-label="State"' in fp
+    for label in ('Feature artifact', 'Last updated', 'Tasks', 'Where it stands'):
+        assert 'data-label="%s"' % label in fp, label
+
+
+@test
+@with_fixture
+def contents_rail_toggle(fx):
+    """CO669: both page kinds carry the Hide / Show contents button (aria-expanded) and a storage-safe script."""
+    for kind in ('full-progress', 'artifacts'):
+        out = fx.render(kind)
+        button = R.find(R.parse_dom(out), 'button', pred=lambda n: n.attrs.get('id') == 'contents-toggle')
+        assert button is not None, kind
+        assert button.attrs.get('aria-expanded') == 'true' and button.attrs.get('aria-controls') == 'contents-links'
+        assert 'Hide contents' in R.text_of(button) and 'Show contents' in out
+        assert "localStorage.setItem('contents-rail'" in out and "localStorage.getItem('contents-rail')" in out
+        assert re.search(r"try \{ remembered = window\.localStorage\.getItem[^}]*\} catch", out), 'reads are guarded'
+        assert 'data-contents' in out
+        assert R.find(R.parse_dom(out), 'div', pred=lambda n: n.attrs.get('id') == 'contents-links') is not None
+    assert '.layout[data-contents="collapsed"]' in R.structure_css()
 
 
 def main() -> int:
