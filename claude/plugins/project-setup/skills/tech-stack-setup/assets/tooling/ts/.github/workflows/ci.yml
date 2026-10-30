@@ -27,6 +27,10 @@ on:
       - 'apps/android/**'
       - '**/*.md'
       - 'docs/**'
+  # A run started by hand on an agent branch (scripts/delivery/agent_ci.py does it at CODE DONE, DL-81). Draft
+  # pull requests run no CI, so this run is the agent's gate. It plans what the branch brings since the default
+  # branch (the `plan` job below).
+  workflow_dispatch:
 
 concurrency:
   # Outdated PR runs are cancelled. Runs on main never are: every commit on main
@@ -94,6 +98,7 @@ jobs:
     outputs:
       integration: ${{ steps.areas.outputs.integration }}
       e2e: ${{ steps.areas.outputs.e2e }}
+      scope: ${{ steps.scope.outputs.scope }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -105,13 +110,36 @@ jobs:
         env:
           EVENT: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          REF_NAME: ${{ github.ref_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           if [ "$EVENT" = pull_request ]; then
             python3 scripts/delivery/area_select.py --base "$BASE_SHA" --github-output \
               || echo "::warning::runner plan failed; every job runs"
+          elif [ "$EVENT" = workflow_dispatch ] && [ "$REF_NAME" != "$DEFAULT_BRANCH" ]; then
+            # A manual run on a branch plans what the branch brings since the default branch: origin/<default>...HEAD,
+            # never the last commit (a branch holds many).
+            python3 scripts/delivery/area_select.py --base "origin/$DEFAULT_BRANCH" --github-output \
+              || echo "::warning::runner plan failed; every job runs"
           else
             python3 scripts/delivery/area_select.py --all --github-output \
               || echo "::warning::runner plan failed; every job runs"
+          fi
+
+      # Optional (scripts/delivery/ci-scope.json present): full / ci-smoke / affected (DL-80). Jobs that want the
+      # scope read `needs.plan.outputs.scope`; an empty output means full.
+      - name: Decide the scope
+        id: scope
+        if: ${{ hashFiles('scripts/delivery/ci-scope.json') != '' }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -n "$BASE_SHA" ]; then
+            python3 scripts/delivery/ci_scope.py --base "$BASE_SHA" --github-output \
+              || echo "::warning::scope rules failed; the run is full"
+          else
+            python3 scripts/delivery/ci_scope.py --github-output \
+              || echo "::warning::scope rules failed; the run is full"
           fi
 
   # ---------------------------------------------------------------------------
@@ -426,3 +454,28 @@ jobs:
             exit 0
           fi
           [ "$SHARDS" = "success" ]
+
+  # Opt in with the repository variable CI_RUN_TIMES=true (DL-82). The last job: how long the run took, as a job
+  # summary and the artifact `ci-run-times` (a stable name; artifact-prune.yml keeps the newest). Report only: it
+  # never fails the run.
+  run-times:
+    name: run times (report only)
+    needs: [decide, plan, verify, integration, e2e]
+    if: ${{ always() && vars.CI_RUN_TIMES == 'true' }}
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Write the run times
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CI_SCOPE: ${{ needs.plan.outputs.scope }}
+        run: python3 scripts/delivery/ci_run_times.py
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: ci-run-times
+          path: ci-run-times.json
+          if-no-files-found: ignore

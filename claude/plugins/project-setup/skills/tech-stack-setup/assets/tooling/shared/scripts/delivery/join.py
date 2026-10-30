@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Join gated branches into the integration branch (STACKSPEC 13.6).
 
-    join.py --into INTEGRATION BRANCH [BRANCH ...] [--no-gate] [--push] [--remote origin]
+    join.py --into INTEGRATION BRANCH [BRANCH ...] [--no-gate] [--ci-gate] [--push] [--remote origin]
 
 Runs `cleanup.py --local` (best effort), fetches, checks out INTEGRATION at its
 remote head, and for each BRANCH in order:
@@ -20,6 +20,10 @@ fix made after a failed check is not re-gated. gate.json picks the steps ("join"
 false on a step) and may turn the guards off ("join_guards": false). Each step's time is
 printed and written to join-result.json ("quick_check"). Last, runner health (runner_health.py) warns when no online runner carries a label CI needs; it never
 blocks. --push then pushes INTEGRATION.
+
+--ci-gate (or "ci_gate": true in gate.json; DELIVERYSPEC DL-81, DL-83) is the light join of urgent work at code
+push: a branch whose agent's gate is its branch CI run (agent_ci.py) needs no gate result, so it is joined as
+soon as its code is pushed; a branch that does have a gate result is still checked. Without the flag nothing changes.
 
 Exit: 0 joined, 1 a result is not trusted or the gate/push failed, 2 usage or
 configuration error (or no result), 3 stopped at a conflict.
@@ -159,6 +163,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--into", required=True, metavar="INTEGRATION", help="integration branch")
     ap.add_argument("branches", nargs="+", metavar="BRANCH", help="branches to join, in order")
     ap.add_argument("--no-gate", action="store_true", help="skip the light check on the joined head")
+    ap.add_argument("--ci-gate", action="store_true",
+                    help="join branches whose gate is their branch CI run: no gate result required (DL-83)")
     ap.add_argument("--push", action="store_true", help="push INTEGRATION (and its gate result) when done")
     ap.add_argument("--remote", default="origin")
     args = ap.parse_args(argv)
@@ -196,10 +202,14 @@ def main(argv: list[str] | None = None) -> int:
     dc.git(["checkout", "--quiet", "-B", into, integ_ref], cwd=root)
     print("join: %s at %s" % (into, dc.rev("HEAD", root)[:10]))
 
+    ci_gate = args.ci_gate or bool(cfg.get("ci_gate"))
     joined: list[str] = []
     for branch in args.branches:
         verdict = gate_verify.verify(branch, integ_ref, remote, allow_older_base=True, root=root) if gated else None
-        if verdict is not None and not verdict["trusted"]:
+        if verdict is not None and not verdict["trusted"] and ci_gate:
+            print("join: %s has no gate result; joined at code push, its branch CI run is its gate (ci_gate)" % branch,
+                  flush=True)
+        elif verdict is not None and not verdict["trusted"]:
             dc.eprint("join: %s has no trusted passing gate result:" % branch)
             for reason in verdict["reasons"]:
                 dc.eprint("  - " + reason)
