@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from hook_after_command import (STATE_NAME, command_for, hook_root, hooks_off,  # noqa: E402
                                 load_manifest, migration_reasons_now, origin_record_file,
-                                parse_json, read_input, read_state, run, script_path, warn,
+                                parse_json, read_input, read_state, record_rel_of, run, script_path, warn,
                                 worktree_dir, write_state)
 
 BLOCK_LIMIT = 3          # R8.4; the ceiling in section 12 is 5, it may only be lowered
@@ -88,7 +88,7 @@ def merge_queue(root, queue):
 def registry_tasks(root, manifest):
     """The task list from the freshest registry: the working tree, else origin/<branch>. None when none can be read."""
     branch = manifest.get('default_branch') if isinstance(manifest.get('default_branch'), str) else 'main'
-    rel = os.path.join('docs', 'artifacts', 'registry.json')
+    rel = os.path.join(*record_rel_of(root).split('/'), 'registry.json')
     sources = [os.path.join(worktree_dir(root), rel), 'origin',
                os.path.join(root, rel)]
     for source in sources:
@@ -209,7 +209,7 @@ def tell_deferred_once(root, sid, deferred):
 
 def build_reason(root, script, artifacts, queue):
     py = 'python "%s"' % script
-    record = os.path.join(worktree_dir(root), 'docs', 'artifacts')
+    record = os.path.join(worktree_dir(root), *record_rel_of(root).split('/'))
     out = ['Project artifacts are not up to date. Finish this in the same turn:']
     for e in queue:
         i = e.get('id')

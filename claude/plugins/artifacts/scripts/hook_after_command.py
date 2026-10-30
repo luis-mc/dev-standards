@@ -93,6 +93,13 @@ def git(root, *args, timeout=10):
     return run(['git'] + list(args), root, timeout)
 
 
+def record_rel_of(root):
+    """The record folder of the project, relative to its root (docs/artifacts unless .claude/artifacts.json says
+    otherwise); an unusable setting reads as the default here, project_artifacts.py check reports it."""
+    from artifact_queue import record_rel_safe
+    return record_rel_safe(root)
+
+
 def candidate_branches(root):
     """Possible default branch names, most likely first."""
     names = []
@@ -106,7 +113,7 @@ def candidate_branches(root):
 
 
 def origin_record_file(root, branch, rel):
-    r = git(root, 'show', 'origin/%s:docs/artifacts/%s' % (branch, rel))
+    r = git(root, 'show', 'origin/%s:%s/%s' % (branch, record_rel_of(root), rel))
     return r[1] if r and r[0] == 0 else None
 
 
@@ -121,7 +128,7 @@ def parse_json(text, what):
 
 def load_manifest(root):
     """The manifest in the current checkout, else on origin/<default branch>; None if neither."""
-    path = os.path.join(root, 'docs', 'artifacts', MANIFEST_REL)
+    path = os.path.join(root, *record_rel_of(root).split('/'), MANIFEST_REL)
     if os.path.isfile(path):
         try:
             with open(path, encoding='utf-8') as f:
@@ -132,7 +139,7 @@ def load_manifest(root):
     for branch in candidate_branches(root):
         text = origin_record_file(root, branch, MANIFEST_REL)
         if text is not None:
-            return parse_json(text, 'origin/%s:docs/artifacts/manifest.json' % branch)
+            return parse_json(text, 'origin/%s:%s/manifest.json' % (branch, record_rel_of(root)))
     return None
 
 
@@ -182,7 +189,7 @@ UPDATED_LINE = ('luismc-artifacts was updated; this rule replaces earlier instru
 
 
 def worktree_dir(root):
-    """Where the record lives: the working tree itself (<root>/docs/artifacts). The old record worktree is
+    """Where the record lives: the working tree itself (<root>/<record_dir>, docs/artifacts by default). The old record worktree is
     retired (AR50); the name stays for the callers."""
     return root
 
@@ -221,8 +228,9 @@ def rule_digest(text):
 def record_text(root, manifest, rel):
     """A record file as text: the working tree first, then origin/<branch> (read-only)."""
     branch = manifest.get('default_branch') if isinstance(manifest.get('default_branch'), str) else 'main'
-    paths = [os.path.join(worktree_dir(root), 'docs', 'artifacts', rel)]
-    for source in paths + ['origin', os.path.join(root, 'docs', 'artifacts', rel)]:
+    base = record_rel_of(root).split('/')
+    paths = [os.path.join(worktree_dir(root), *base, rel)]
+    for source in paths + ['origin', os.path.join(root, *base, rel)]:
         if source == 'origin':
             text = origin_record_file(root, branch, rel)
         else:
@@ -241,7 +249,8 @@ def record_dir_and_rev(root, manifest):
     branch = manifest.get('default_branch') if isinstance(manifest.get('default_branch'), str) else 'main'
     r = git(root, 'rev-parse', '--verify', '-q', 'refs/remotes/origin/' + branch)
     rev = 'origin/' + branch if r and r[0] == 0 else 'HEAD'
-    for d in (os.path.join(worktree_dir(root), 'docs', 'artifacts'), os.path.join(root, 'docs', 'artifacts')):
+    base = record_rel_of(root).split('/')
+    for d in (os.path.join(worktree_dir(root), *base), os.path.join(root, *base)):
         if os.path.isdir(d):
             return d, rev
     return None, None

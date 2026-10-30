@@ -6,7 +6,7 @@
 - Publish Full Progress once, at the end of the turn, never mid-turn; feature artifacts are files in the repo (`docs/artifacts/feature-<slug>.html`) and are never published. <!-- check: claude/plugins/artifacts/scripts/hook_end_of_turn.py#build_reason -->
 - Never type a status row by hand. <!-- advice -->
 - Put every doc under `docs/`. <!-- advice -->
-- The record is written to `docs/artifacts/` in the working tree; the plugin never commits or pushes it, the project commits when it chooses. <!-- advice -->
+- The record is written to `docs/artifacts/` (or the project's `record_dir` setting) in the working tree; the plugin never commits or pushes it, the project commits when it chooses. <!-- advice -->
 - Every activity is a task before it starts, whoever does it: work given to agents and the session's own (contracts, specs, reviews, joins, test runs, releases, deploys, cleanup). <!-- advice -->
 - A task is Running while any work for it runs; Waiting or Needs you when blocked on something or someone. <!-- advice -->
 - Built means the work is finished but not released; release work still to come (join, CI, release) is its own task, Running or To do. <!-- advice -->

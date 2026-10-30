@@ -606,6 +606,23 @@ fails when a manifest feature lacks its file or content (INV-3) or a content fol
   (R4.23). The tasks of a retired feature are history: `task-add --owner KEY` and `set-task-status` on them are refused.
   Verified by `test_retire_dry_run_lists_files_and_changes_nothing`, `test_retire_leaves_git_alone_and_a_failed_retire_restores_the_files`.
 
+### 4.11 The record folder
+
+- **R4.37** — The record folder is a per-project setting: `record_dir` in `.claude/artifacts.json` (committed with the
+  project), a folder relative to the repository root and strictly under `docs/` (for example `docs/work/artifacts`).
+  When the file or the key is absent the folder is `docs/artifacts`, so a project that sets nothing is unchanged. A
+  value that is absolute, contains `..`, is `docs` itself or lies outside `docs/` is refused: every command that needs
+  the record exits 2 naming the setting, and the hooks read the default. Every path this specification gives as
+  `docs/artifacts/` means this folder. Verified by `test_record_dir_setting_absent_is_the_old_path`,
+  `test_record_dir_setting_is_used_by_every_command`, `test_record_dir_setting_outside_docs_is_refused`,
+  `test_hooks_read_the_record_dir_setting`.
+- **R4.38** — `move-record NEW_DIR [--yes]` moves the record folder to NEW_DIR (same rules as R4.37) and writes the
+  setting; moving back to `docs/artifacts` removes the key. It is a plain file move: it does not run git, so the
+  project commits the moved folder and `.claude/artifacts.json` when it chooses (R4.28). Without `--yes` it is a
+  dry run that prints the plan and writes nothing. It refuses (exit 1) a NEW_DIR that exists and is not an empty
+  folder, and (exit 2) one that contains the current folder or lies inside it. Verified by
+  `test_move_record_dry_run_changes_nothing`, `test_move_record_moves_the_folder_and_writes_the_setting`.
+
 ---
 
 ## 5. Artifact structure and look
@@ -1267,6 +1284,7 @@ they do nothing (R4.17).
 | `export-content KEY --to DIR` | Copies the artifact's content files from the record to DIR for editing, `decisions.json` and its `assets/` folder included. |
 | `edit-content KEY --from DIR` | Replaces the artifact's content files in the record with those in DIR validates, renders and writes the files. It refuses an edit that removes a decision or changes the choice of a decided one (R5.15). |
 | `design set FILE\|default` | Validates FILE against the token contract (R5.11), copies it to `docs/artifacts/design.css`, sets manifest `design` and renders; `default` removes it. |
+| `move-record NEW_DIR [--yes]` | Moves the record folder under `docs/` and writes `record_dir` (R4.37, R4.38). Without `--yes` it prints the plan and writes nothing. |
 | `retire KEY [--yes]` | Removes a finished feature artifact (R4.33) and its content, keeping its tasks, its decisions and a line in the manifest's `retired_features` (§4.10). Without `--yes` it lists what it would delete and writes nothing (R4.36). |
 | `render [--all]` | Renders every artifact whose output would change (committed renders, with relative links). It is the migration of an older record (R8.14). |
 | `check [--record PATH]` | The conformance checks of §14; lists findings with their requirement ID, then notes (including retired pages, R4.22) and any warnings (R5.26, R5.37), which do not change the exit code. |
@@ -1616,6 +1634,7 @@ Reads the hook input; takes the task ID from the current branch name
 | Earlier fold age (`Live` rows only) | 14 days | 60 days | may only be lengthened | §6.2 |
 | End-of-turn blocks | 3 | 3 | fixed | §8.2 |
 | `CLAUDE_ARTIFACTS_HOOKS` | `on` | — | `off` disables all hooks | §8 |
+| `record_dir` in `.claude/artifacts.json` | `docs/artifacts` | under `docs/` | any folder under `docs/` | §4.11 |
 
 ---
 
@@ -1624,7 +1643,7 @@ Reads the hook input; takes the task ID from the current branch name
 - **R13.1** — `tools/test_project_artifacts.py` builds throwaway git repos with
   a local bare remote (to prove it is never touched) and proves each command, each check of §14 (one fixture per
   check that fails without it), INV-1 to INV-3, R4.13 to R4.29, R6.10, R6.11, R5.31, R5.32,
-  R5.33 to R5.39, R5.45 to R5.47, R5.8a, R4.30, R4.31 to R4.36, R7.4 to R7.6, R9.5 and R10.6.
+  R5.33 to R5.39, R5.45 to R5.47, R5.8a, R4.30, R4.31 to R4.38, R7.4 to R7.6, R9.5 and R10.6.
 - **R13.2** — `tools/test_project_artifacts_hooks.py` feeds sample hook input
   to each hook and asserts the queue, the exit code and the output, including
   R8.4, R8.8 to R8.17 and INV-4, and that every hook does nothing without a

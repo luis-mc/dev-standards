@@ -2492,7 +2492,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         add('R5.10', 'the artifact has no token block')
     else:
         if want_design is not None and have_design != want_design:
-            add('R5.10', 'the token block differs from %s' % ('docs/artifacts/design.css' if manifest.get('design') == 'design.css'
+            add('R5.10', 'the token block differs from %s' % ('design.css in the record folder' if manifest.get('design') == 'design.css'
                                                              else 'design/default-design.css'))
         for problem in check_tokens(have_design):
             add('R5.11', problem)

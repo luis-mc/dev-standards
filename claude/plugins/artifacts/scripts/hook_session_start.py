@@ -27,7 +27,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from hook_after_command import (RULE_HEADING, RULE_PATH, TASK_ID_RE, command_for, context_text,  # noqa: E402,F401
+from hook_after_command import (RULE_HEADING, RULE_PATH, TASK_ID_RE, command_for, context_text, record_rel_of,  # noqa: E402,F401
                                 hook_root, hooks_off, load_manifest, mark_delivered,
                                 merged_status_of, origin_record_file, parse_json, read_input,
                                 rule_text, run, script_path, warn)
@@ -43,7 +43,7 @@ def gh_command():
 
 def load_registry(root, branch):
     """The registry from the working tree (the record's home), else read-only from origin/<branch>."""
-    path = os.path.join(root, 'docs', 'artifacts', 'registry.json')
+    path = os.path.join(root, *record_rel_of(root).split('/'), 'registry.json')
     try:
         with open(path, encoding='utf-8') as f:
             text = f.read()

@@ -16,6 +16,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import artifact_hourly as H  # noqa: E402
+import artifact_queue  # noqa: E402
 
 
 def read_json(path):
@@ -51,7 +52,7 @@ def main(argv=None):
         root = repo_root(None)
     if not root:
         return 0
-    rec = os.path.join(root, 'docs', 'artifacts')
+    rec = os.path.join(root, *artifact_queue.record_rel_safe(root).split('/'))
     manifest = read_json(os.path.join(rec, 'manifest.json'))
     if manifest is None:
         return 0
