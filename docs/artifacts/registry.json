@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-30T16:51+00:00",
+  "updated": "2026-10-30T16:55+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1964,9 +1964,9 @@
       "status": "To do",
       "item": "delivery ledger: a CI result with no sha match goes to the wrong release",
       "detail": "record(ci) falls back to the first pushed/ci train, even a held one: PR #104's result marked held RELEASE-14 (T-2026-10-27-01) green. Fall back only to a single unheld candidate; also set head_sha on gh pr create (it stayed null).",
-      "expected": "29 Oct",
-      "changed": "2026-10-28T20:39+00:00",
-      "expected_basis": "small plugin fix, next release"
+      "expected": "06 Nov",
+      "changed": "2026-10-30T16:54+00:00",
+      "expected_basis": "small plugin fix; not started, next plugin release"
     },
     {
       "id": "DS98",
@@ -1984,12 +1984,11 @@
       "id": "DS99",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release: DS26 CI speed-ups folded; every plugin's version bumped",
-      "detail": "PR #105 (DS26) merged with its notes unfolded; fold them (delivery, project-setup minor) and patch the other five plugins on an integration branch, ready PR, merge at green.",
-      "expected": "30 Oct ~17:45",
-      "changed": "2026-10-30T16:51+00:00",
-      "expected_basis": "fold ~10 min, CI ~30 min, merge ~10 min",
+      "detail": "PR #106 merged 4cbff02 at green (spec-lint, secret-scan): agents 1.1.2, artifacts 1.14.1, audits 1.2.2, delivery 0.10.0, project-setup 14.7.0, specs 1.2.2, transcript-folds 1.1.2. Branches removed.",
+      "expected": "30 Oct",
+      "changed": "2026-10-30T16:54+00:00",
       "release": 16,
       "phases": [
         {
@@ -2013,6 +2012,17 @@
         "minutes": 25
       },
       "started": "2026-10-30T16:51+00:00"
+    },
+    {
+      "id": "DS100",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Caps template aligned; record the PR #105 CI speed-ups work",
+      "detail": "Pushed to main (owner's call): delivery-config.json template caps 20/3/23 to match DL-38 (luismc-project-setup 14.7.1). Also records PR #105 (CI-gate path, agent_ci, ci_scope, caps 20/3/23), whose branch reused the ID DS26 of the old 11 Oct cleanup task; it shipped in RELEASE-16.",
+      "expected": "30 Oct",
+      "changed": "2026-10-30T16:55+00:00",
+      "no_release": "pushed straight to main at the owner's request"
     },
     {
       "id": "MP1",
