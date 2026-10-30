@@ -10,7 +10,8 @@
     and the compare step itself, run with bash against a stub `gh`.
   * ci_scope.py: release PR -> full, CI files only -> ci-smoke (even on a release PR), root config -> full,
     everything else affected, no diff -> full, the manual-run base, the starter config for ts (DS26).
-  * agent_ci.py: starts one run per head at CODE DONE, against a stub git and gh (DS26).
+  * agent_ci.py: real git; merges each CODE DONE branch onto its base into ci/<task> (two parents), one run per head,
+    conflicts by file, --base, --dry-run; cleanup.py removes ci/<task> with the train (DS26).
   * ci_run_times.py: the summary, the markdown, and that a missing token never fails the run (DS26).
   * mutants: copies of the scripts with one rule broken must each fail at least one scenario.
 
@@ -576,58 +577,176 @@ def scope_manual_run_diffs_against_the_default_branch():
         check(json.loads(out)["scope"] == "full", f"{out}")
 
 
-STUB_GIT = r"""#!/usr/bin/env python3
-import os, sys
-a = sys.argv[1:]
-if a[0] == "fetch": sys.exit(0)
-if a[0] == "for-each-ref": print("origin/claude/T1-done\norigin/claude/T2-working\norigin/other/x"); sys.exit(0)
-if a[0] == "rev-parse": print("sha_" + a[1].split("/")[-1]); sys.exit(0)
-if a[0] == "show":
-    ref, path = a[1].split(":", 1)
-    if ref.endswith("T1-done"): print("# T1\nCODE DONE\n")
-    elif ref.endswith("T2-working"): print("# T2\nin progress\n")
-    sys.exit(0)
-"""
 STUB_GH = r"""#!/usr/bin/env python3
 import os, sys
-log = os.environ["STUB_LOG"]
 a = sys.argv[1:]
 if a[:2] == ["run", "list"]:
     print(os.environ.get("STUB_RUNS", "[]")); sys.exit(0)
 if a[:2] == ["workflow", "run"]:
-    open(log, "a").write(" ".join(a) + "\n"); sys.exit(0)
+    open(os.environ["STUB_LOG"], "a").write(" ".join(a) + "\n"); sys.exit(0)
 sys.exit(1)
 """
+GIT_ENV = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t",
+           "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_SYSTEM": os.devnull}
 
 
-def agent_ci_run(runs: str, *args: str) -> tuple[int, str, str, str]:
-    with tempfile.TemporaryDirectory() as d:
-        d = Path(d)
-        (d / "bin").mkdir()
-        for name, src in (("git", STUB_GIT), ("gh", STUB_GH)):
-            f = d / "bin" / name
-            f.write_text(src, encoding="utf-8")
-            f.chmod(f.stat().st_mode | stat.S_IEXEC)
-        log = d / "gh.log"
-        env = {"PATH": f"{d / 'bin'}{os.pathsep}{os.environ['PATH']}", "STUB_LOG": str(log), "STUB_RUNS": runs}
-        rc, out, err = run(AGENT_CI, ["--config", str(d / "none.json"), *args], cwd=d, env=env)
-        return rc, out, err, log.read_text() if log.exists() else ""
+class CiRepo:
+    """A bare origin with master, a work clone, and a stub `gh` on PATH that logs `workflow run` calls."""
+
+    def __init__(self, root: Path) -> None:
+        self.root, self.work, self.origin = root, root / "work", root / "origin.git"
+        (root / "bin").mkdir()
+        gh = root / "bin" / "gh"
+        gh.write_text(STUB_GH, encoding="utf-8")
+        gh.chmod(gh.stat().st_mode | stat.S_IEXEC)
+        self.log = root / "gh.log"
+        self.git(root, "init", "-q", "--bare", "-b", "master", str(self.origin))
+        self.git(root, "clone", "-q", str(self.origin), str(self.work))
+        (self.work / "a.txt").write_text("one\n")
+        (self.work / "b.txt").write_text("b\n")
+        self.git(self.work, "add", ".")
+        self.git(self.work, "commit", "-qm", "base")
+        self.git(self.work, "push", "-q", "origin", "HEAD:master")
+
+    def git(self, cwd: Path, *a: str) -> str:
+        env = {**os.environ, **GIT_ENV}
+        return subprocess.run(["git", *a], cwd=cwd, env=env, check=True, capture_output=True, text=True).stdout.strip()
+
+    def w(self, *a: str) -> str:
+        return self.git(self.work, *a)
+
+    def branch(self, name: str, file: str, text: str, report: str = "") -> str:
+        self.w("checkout", "-q", "-b", name, "origin/master")
+        (self.work / file).write_text(text)
+        task = name.split("/", 1)[1].split("-", 1)[0]
+        if report:
+            (self.work / "docs/agents/reports").mkdir(parents=True, exist_ok=True)
+            (self.work / f"docs/agents/reports/{task}.md").write_text(report)
+        self.w("add", ".")
+        self.w("commit", "-qm", name)
+        self.w("push", "-q", "origin", name)
+        self.w("checkout", "-q", "--detach", "origin/master")
+        return self.w("rev-parse", name)
+
+    def advance(self, file: str, text: str, branch: str = "master") -> None:
+        self.w("checkout", "-q", "--detach", f"origin/{branch}")
+        (self.work / file).write_text(text)
+        self.w("add", ".")
+        self.w("commit", "-qm", "moves")
+        self.w("push", "-q", "origin", f"HEAD:{branch}")
+
+    def ci(self, *args: str, runs: str = "[]", script: Path = AGENT_CI) -> tuple[int, str, str, str]:
+        self.log.write_text("") if not self.log.exists() else None
+        env = {**GIT_ENV, "PATH": f"{self.root / 'bin'}{os.pathsep}{os.environ['PATH']}", "STUB_LOG": str(self.log),
+               "STUB_RUNS": runs}
+        rc, out, err = run(script, ["--config", str(self.root / "none.json"), *args], cwd=self.work, env=env)
+        return rc, out, err, self.log.read_text()
+
+    def remote_ref(self, name: str) -> str:
+        out = self.git(self.root, "ls-remote", str(self.origin), f"refs/heads/{name}")
+        return out.split()[0] if out else ""
 
 
-@test
-def agent_ci_starts_one_run_per_head_at_code_done():
-    rc, out, err, log = agent_ci_run("[]")
+DONE = "# T\nCODE DONE\n"
+
+
+def with_repo(fn):
+    def inner():
+        with tempfile.TemporaryDirectory() as d:
+            fn(CiRepo(Path(d)))
+    inner.__name__ = fn.__name__
+    return test(inner)
+
+
+@with_repo
+def agent_ci_merges_onto_the_base_and_starts_one_run(r):
+    head = r.branch("claude/T1-done", "c.txt", "c\n", DONE)
+    r.branch("claude/T2-working", "d.txt", "d\n", "# T2\nin progress\n")
+    r.advance("b.txt", "b2\n")
+    rc, out, err, log = r.ci()
     check(rc == 0, err)
-    check(log.strip() == "workflow run ci.yml --ref claude/T1-done", f"only the CODE DONE branch starts: {log!r}")
-    check("T2-working" not in out, "a branch without CODE DONE is left alone")
-    rc, out, err, log = agent_ci_run('[{"headSha": "sha_T1-done"}]')
-    check(log == "", f"a head that already has a dispatch run starts no second one: {log!r}")
-    rc, out, err, log = agent_ci_run("not json")
-    check(log == "", "unsure (gh output unreadable): nothing starts")
-    rc, out, err, log = agent_ci_run("[]", "--dry-run")
-    check(log == "" and "would start CI on claude/T1-done" in out, "--dry-run starts nothing")
-    rc, out, err, log = agent_ci_run("[]", "--workflow", "build.yml")
-    check(log.strip() == "workflow run build.yml --ref claude/T1-done", "the workflow is configurable")
+    check(log.strip() == "workflow run ci.yml --ref ci/T1", f"only the CODE DONE branch starts, on ci/T1: {log!r}")
+    check("T2-working" not in out and r.remote_ref("ci/T2") == "", "a branch without CODE DONE is left alone")
+    sha = r.remote_ref("ci/T1")
+    r.w("fetch", "-q", "origin")
+    parents = r.w("rev-list", "--parents", "-n1", sha).split()[1:]
+    check(parents == [head, r.w("rev-parse", "origin/master")], f"two parents, branch head first: {parents}")
+    check(r.w("show", f"{sha}:b.txt") == "b2" and r.w("show", f"{sha}:c.txt") == "c", "the branch meets the new base code")
+
+
+@with_repo
+def agent_ci_second_pass_on_the_same_head_starts_nothing(r):
+    r.branch("claude/T3-y", "c.txt", "c\n", DONE)
+    rc, out, err, log = r.ci()
+    check(log.count("workflow run") == 1, log)
+    r.w("fetch", "-q", "origin")
+    runs = json.dumps([{"headSha": r.remote_ref("ci/T3")}])
+    rc, out, err, log2 = r.ci(runs=runs)
+    check(log2 == log, f"a head that already has a run starts no second one: {log2!r}")
+    rc, out, err, log3 = r.ci(runs="not json")
+    check(log3 == log, "unsure (gh output unreadable): nothing starts")
+    r.w("checkout", "-q", "-B", "claude/T3-y", "origin/claude/T3-y")  # a new head starts a new run
+    (r.work / "e.txt").write_text("e\n"); r.w("add", "."); r.w("commit", "-qm", "more"); r.w("push", "-q", "origin", "claude/T3-y")
+    rc, out, err, log4 = r.ci(runs=runs)
+    check(log4.count("workflow run") == 2, f"a new head starts a new run: {log4!r}")
+
+
+@with_repo
+def agent_ci_conflict_is_reported_by_file_and_not_run(r):
+    r.branch("claude/T4-x", "a.txt", "mine\n", DONE)
+    r.advance("a.txt", "theirs\n")
+    rc, out, err, log = r.ci()
+    check(rc == 0 and log == "", f"a conflicting branch starts no run: {log!r}")
+    check("claude/T4-x conflicts with origin/master: a.txt" in out, out)
+    check(r.remote_ref("ci/T4") == "", "no ci ref for a conflict")
+
+
+@with_repo
+def agent_ci_base_flag_and_dry_run(r):
+    r.branch("claude/T5-z", "c.txt", "c\n", DONE)
+    r.w("push", "-q", "origin", "origin/master:refs/heads/release/9")
+    r.advance("rel.txt", "rel\n", branch="release/9")
+    rc, out, err, log = r.ci("--base", "origin/release/9", "--dry-run")
+    check(log == "" and r.remote_ref("ci/T5") == "", "--dry-run starts nothing and pushes nothing")
+    check("would start CI on ci/T5 = claude/T5-z" in out and "origin/release/9" in out, out)
+    rc, out, err, log = r.ci("--base", "origin/release/9")
+    sha = r.remote_ref("ci/T5")
+    r.w("fetch", "-q", "origin")
+    check(r.w("show", f"{sha}:rel.txt") == "rel", "merged onto the release branch")
+    check(log.strip() == "workflow run ci.yml --ref ci/T5", log)
+    rc, out, err, log = r.ci("--base", "origin/release/9", "--workflow", "build.yml", "--ci-prefix", "pr/", runs="[]")
+    check("workflow run build.yml --ref pr/T5" in log, f"workflow and ci prefix are configurable: {log!r}")
+
+
+@with_repo
+def cleanup_removes_the_ci_ref_with_the_train(r):
+    import importlib.util
+    r.branch("claude/T6-z", "c.txt", "c\n", DONE)
+    rc, out, err, log = r.ci()
+    check(r.remote_ref("ci/T6") != "", "the ci ref exists")
+    r.w("fetch", "-q", "origin")
+    head = r.w("rev-parse", "origin/claude/T6-z")
+    env = {**os.environ, **GIT_ENV, "PATH": f"{r.root / 'bin'}{os.pathsep}{os.environ['PATH']}"}
+    sys.path.insert(0, str(DELIVERY))
+    try:
+        spec = importlib.util.spec_from_file_location("cleanup_under_test", DELIVERY / "cleanup.py")
+        m = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = m  # dataclasses look the module up
+        spec.loader.exec_module(m)
+    finally:
+        sys.path.remove(str(DELIVERY))
+    v = lambda *a, **k: m.Verdict(True, "merged", safe=[head])  # noqa: E731
+    saved = (m.train_of, m.assess, m.assess_joined, m.joined_of, os.getcwd(), dict(os.environ))
+    m.train_of, m.assess, m.assess_joined, m.joined_of = (lambda ctx, n: (["claude/T6-z"], head)), v, v, lambda *a, **k: []
+    os.chdir(r.work)
+    os.environ.update(env)
+    try:
+        m.main(["--pr", "9", "--remote-only", "--no-delivery-log"])
+    finally:
+        os.chdir(saved[4])
+        m.train_of, m.assess, m.assess_joined, m.joined_of = saved[:4]
+    check(r.remote_ref("ci/T6") == "", "cleanup --pr removed ci/T6")
+    check(r.remote_ref("claude/T6-z") == "", "and the branch itself")
 
 
 @test
