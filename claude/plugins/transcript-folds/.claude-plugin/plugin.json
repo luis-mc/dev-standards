@@ -1,7 +1,7 @@
 {
   "name": "luismc-transcript-folds",
   "description": "Folds long diffs and finished shell commands to one line in the transcript. A diff over a set number of changed lines draws as one dim line with its path, first changed line and +added -removed counts; a finished Bash or PowerShell call draws as one row with its command and outcome, and the files it edited. A band above the prompt holds two buttons (diffs, commands) bound to the chords the person gives the engine actions theme:toggleSyntaxHighlighting (ctrl+x d) and theme:editCustom (ctrl+x f), and the session's tally of files and lines changed. /fold-diffs and /fold-commands flip the same switches. Three settings: foldAbove, marker, compactCounts. The mod writes no files and runs no commands.",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "author": {
     "name": "Luis Carvalho"
   },
