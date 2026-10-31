@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-31T23:57+00:00",
+  "updated": "2026-10-31T23:59+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2327,12 +2327,11 @@
       "id": "DS124",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Dogfood: run new claude-setup on dev-standards",
-      "detail": "all 8 plugins in .claude/settings.json + full config; commit on main",
-      "expected": "01 Nov ~00:20",
-      "changed": "2026-10-31T23:57+00:00",
-      "expected_basis": "settings commit + CI ~15 min",
+      "detail": "eaa2715 on main, CI green: all 8 plugins on in .claude/settings.json",
+      "expected": "31 Oct",
+      "changed": "2026-10-31T23:59+00:00",
       "no_release": "repo config only; ships no plugin",
       "started": "2026-10-31T23:58+00:00"
     },
