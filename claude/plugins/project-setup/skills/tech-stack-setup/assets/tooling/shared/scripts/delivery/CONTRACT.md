@@ -715,6 +715,9 @@ One or two sentences for the change log.
   `.claude-plugin/plugin.json`) changes and no note names that manifest; paths
   matching `plugin_note_exempt` globs (for example `plugins/*/tests/**`) need no
   note. Off by default.
+- `notes_dir` (`gate.json` or `--config`): the folder holding the notes, a
+  relative path inside the repository (default `docs/specs/changes`); `check`,
+  `pending` and `fold` read only that folder, and files in it are never specs.
 - `change_notes.py pending` (run on every push to the default branch): fails
   and names each note while any note waits to be folded, so a merged note can
   not leave a version unraised unnoticed; passes when there are none.

@@ -732,6 +732,24 @@ def sc_pending(t: T, s: Path) -> None:
     t.check("after a fold pending passes", cfg_run(b, "pending").code == 0)
 
 
+def sc_notes_dir(t: T, s: Path) -> None:
+    b = box_cfg(s, dict(CFG, notes_dir="docs/architecture/changes"))
+    b.note("DS19-old", "", "minor", "In the old folder.", plugin=PLUGIN)
+    b.write("docs/architecture/changes/DS19-a.md", "---\nplugin: %s\nchange: minor\n---\nMoved folder.\n" % PLUGIN)
+    b.commit("notes in both folders")
+    r = cfg_run(b, "pending")
+    t.check("notes_dir: pending reads the configured folder only",
+            r.code == 1 and "docs/architecture/changes/DS19-a.md" in r.out and "DS19-old" not in r.out, r.text)
+    r = cfg_run(b, "fold")
+    t.check("notes_dir: fold folds and deletes the configured note",
+            r.code == 0 and not (b.root / "docs/architecture/changes/DS19-a.md").exists()
+            and (b.root / "docs/specs/changes/DS19-old.md").exists(), r.text)
+    for bad in ("../out", "/abs", ""):
+        b.write("tools/cfg.json", json.dumps(dict(CFG, notes_dir=bad)))
+        r = cfg_run(b, "pending")
+        t.check("notes_dir %r is refused" % bad, r.code not in (0, 1) and "notes_dir" in r.out + r.text, r.text)
+
+
 SCENARIOS = [
     ("check-pass", sc_check_pass, "check passes with only a note"),
     ("staged", sc_staged, "check --staged"),
@@ -754,6 +772,7 @@ SCENARIOS = [
     ("plugins", sc_plugins, "plugin versions"),
     ("plugin-notes", sc_plugin_notes, "a changed plugin needs a note"),
     ("pending", sc_pending, "notes waiting to be folded"),
+    ("notes-dir", sc_notes_dir, "a configured notes folder"),
     ("track-gates", sc_track_gates, "track gate.json steps"),
 ]
 
@@ -763,7 +782,8 @@ MUTANTS = [
     ("change_notes.py", "if VERSION_RE.match(text) or text.startswith(\"**Version:**\"):", "if False:", ["check-version"]),
     ("change_notes.py", "elif rng and rng[0] <= no <= rng[1]:", "elif False:", ["check-changelog"]),
     ("change_notes.py", "if re.match(r\"(?i)^changelog\"", "if re.match(r\"^NEVER\"", ["check-changelog-file"]),
-    ("change_notes.py", "def is_spec(path: str, cfg: dict) -> bool:\n    if path.startswith(NOTES_DIR + \"/\"):\n        return False\n",
+    ("change_notes.py", "    folder = root / cfg[\"notes_dir\"]", "    folder = root / NOTES_DIR", ["notes-dir"]),
+    ("change_notes.py", "def is_spec(path: str, cfg: dict) -> bool:\n    if path.startswith(cfg[\"notes_dir\"] + \"/\"):\n        return False\n",
      "def is_spec(path: str, cfg: dict) -> bool:\n    return True\n", ["custom-specs"]),
     ("change_notes.py", "if old_lines is None or new_lines is None:", "if False:", ["custom-specs"]),
     ("change_notes.py", "key=KINDS.index)", "key=lambda k: -KINDS.index(k))", ["fold-kinds", "fold-several"]),

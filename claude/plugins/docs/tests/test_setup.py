@@ -140,6 +140,14 @@ class InitAndRecordTests(unittest.TestCase):
         cfg = json.loads(r(d, ".claude/artifacts.json"))
         self.assertEqual(cfg, {"record_dir": "docs/project", "x": 1})
 
+    def test_migrate_points_the_artifacts_plugin_at_the_moved_record(self):
+        d = make_repo({"docs/artifacts/manifest.json": "{}", "docs/artifacts/content/a/decisions.json": "{}",
+                       ".claude/artifacts.json": '{"x": 1}'})
+        S.main(["migrate", "--root", str(d), "--apply"])
+        self.assertTrue((d / "docs/project/content/a/decisions.json").is_file())
+        self.assertEqual(json.loads(r(d, ".claude/artifacts.json")), {"x": 1, "record_dir": "docs/project"})
+        self.assertFalse((d / "docs/artifacts").exists(), "the emptied record folder is removed")
+
 
 if __name__ == "__main__":
     unittest.main()

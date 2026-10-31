@@ -312,23 +312,28 @@ def move_record(root: Path, cfg: dict, apply: bool) -> dict:
         for m in ok:
             do_move(root, m)
         rewrite_links(root, ok)
-        af = root / ".claude" / "artifacts.json"
-        data = {}
-        if af.is_file():
-            try:
-                data = json.loads(D.read(af))
-            except ValueError:
-                data = {}
-        data["record_dir"] = target
-        af.parent.mkdir(parents=True, exist_ok=True)
-        af.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-        # drop the emptied source folder only when it holds no files (never deletes content)
-        for d, _dirs, _files in os.walk(root / src, topdown=False):
-            try:
-                os.rmdir(d)
-            except OSError:
-                pass
+        point_record(root, target, src)
     return out
+
+
+def point_record(root: Path, target: str, src: str) -> None:
+    """R2.4: the artifacts plugin's record_dir names the moved record; the emptied source folder goes."""
+    af = root / ".claude" / "artifacts.json"
+    data = {}
+    if af.is_file():
+        try:
+            data = json.loads(D.read(af))
+        except ValueError:
+            data = {}
+    data["record_dir"] = target
+    af.parent.mkdir(parents=True, exist_ok=True)
+    af.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    # drop the emptied source folder only when it holds no files (never deletes content)
+    for d, _dirs, _files in os.walk(root / src, topdown=False):
+        try:
+            os.rmdir(d)
+        except OSError:
+            pass
 
 
 # --------------------------------------------------------------------- CLI
@@ -405,6 +410,9 @@ def main(argv=None) -> int:
     for m in ok:
         do_move(root, m)
     touched = rewrite_links(root, ok)
+    for src in ("docs/work/artifacts", "docs/artifacts"):
+        if any(m["old"].startswith(src + "/") and m["new"].startswith(cfg["record_dir"] + "/") for m in ok):
+            point_record(root, cfg["record_dir"], src)
     stubs = front_matter_stubs(root, ok, cfg)
     created, kept = init_layout(root)
     print(f"moved {len(ok)} file(s); rewrote links in {len(touched)} file(s); front matter stubs: {len(stubs)}; created: {len(created)}")

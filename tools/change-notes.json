@@ -14,6 +14,7 @@
   "plugins": [
     "claude/plugins/*/.claude-plugin/plugin.json"
   ],
+  "notes_dir": "docs/architecture/changes",
   "release_branches": [
     "main",
     "*-integration"

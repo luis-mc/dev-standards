@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-31T22:40+00:00",
+  "updated": "2026-10-31T22:58+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -492,11 +492,11 @@
       "id": "AR51",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "retire: usage text in skills and README",
       "detail": "feature-artifact-new section, project-artifact-check hint, README line",
       "expected": "31 Oct",
-      "changed": "2026-10-31T22:40+00:00",
+      "changed": "2026-10-31T22:42+00:00",
       "rides": "DS111",
       "started": "2026-10-31T22:40+00:00"
     },
@@ -2131,13 +2131,14 @@
       "id": "DS109",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Release B: dev-standards adopts luismc-docs",
       "detail": "docs-setup: docs.json, README/overview, reports to docs/work/reports, docs-check in CI",
-      "expected": "01 Nov ~01:00",
-      "changed": "2026-10-31T22:39+00:00",
-      "expected_basis": "after A; one migrate + reference fixes ~1 h",
-      "release": 17
+      "expected": "01 Nov ~00:30",
+      "changed": "2026-10-31T22:58+00:00",
+      "expected_basis": "fold done; push + CI ~15 min",
+      "release": 17,
+      "started": "2026-10-31T23:00+00:00"
     },
     {
       "id": "DS110",
@@ -2159,12 +2160,11 @@
       "id": "DS111",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release A: retire skill text, record commit",
-      "detail": "Fold on main, push, CI green; luismc-artifacts 1.17.1",
-      "expected": "31 Oct ~23:30",
-      "changed": "2026-10-31T22:39+00:00",
-      "expected_basis": "one patch fold + CI ~10 min",
+      "detail": "af6eae1 on main, CI green; luismc-artifacts 1.17.1",
+      "expected": "31 Oct",
+      "changed": "2026-10-31T22:42+00:00",
       "release": 19,
       "phases": [
         {

@@ -119,6 +119,10 @@ def load_config(root: Path, config: str | None) -> dict:
         cfg = dc.load_gate(root)
         where = dc.GATE_JSON_PATH
     cfg["plugins"] = dc._str_list(cfg, "plugins", where)
+    notes_dir = cfg.setdefault("notes_dir", NOTES_DIR)
+    if not isinstance(notes_dir, str) or not notes_dir.strip("/") or notes_dir.startswith("/") or ".." in notes_dir.split("/"):
+        raise dc.DeliveryError("%s: 'notes_dir' must be a relative folder inside the repository" % where)
+    cfg["notes_dir"] = dc.posix(notes_dir).strip("/")
     heads = cfg.setdefault("changelog_headings", {})
     if not isinstance(heads, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in heads.items()):
         raise dc.DeliveryError("%s: 'changelog_headings' must be an object of spec path to heading" % where)
@@ -136,7 +140,7 @@ def is_plugin(path: str, cfg: dict) -> bool:
 
 
 def is_spec(path: str, cfg: dict) -> bool:
-    if path.startswith(NOTES_DIR + "/"):
+    if path.startswith(cfg["notes_dir"] + "/"):
         return False
     return any(glob_to_re(g).match(path) for g in cfg["specs"])
 
@@ -301,16 +305,16 @@ def parse_note(path: str, text: str) -> Note | str:
     return Note(path, dc.posix(spec) if spec else "", dc.posix(plugin) if plugin else "", kind, body)
 
 
-def read_notes(root: Path) -> tuple[list[Note], list[str]]:
+def read_notes(root: Path, cfg: dict) -> tuple[list[Note], list[str]]:
     notes: list[Note] = []
     problems: list[str] = []
-    folder = root / NOTES_DIR
+    folder = root / cfg["notes_dir"]
     if not folder.is_dir():
         return notes, problems
     for f in sorted(folder.glob("*.md")):
         if f.name.lower() == "readme.md":
             continue
-        rel = "%s/%s" % (NOTES_DIR, f.name)
+        rel = "%s/%s" % (cfg["notes_dir"], f.name)
         got = parse_note(rel, f.read_text(encoding="utf-8-sig"))
         (problems if isinstance(got, str) else notes).append(got)
     return notes, problems
@@ -335,7 +339,7 @@ def path_offences(root: Path, cfg: dict, base: str, new: str, path: str) -> list
 def cmd_check(args: argparse.Namespace) -> int:
     root = dc.repo_root()
     cfg = load_config(root, args.config)
-    notes, problems = read_notes(root)
+    notes, problems = read_notes(root, cfg)
     names = branch_names(root, args.branch)
     release = is_release_branch(names, cfg)
     if not release and args.staged:
@@ -362,7 +366,7 @@ def cmd_check(args: argparse.Namespace) -> int:
             print("  " + p)
         if not release:
             print("Do not edit a spec's or plugin's version, a spec's change log, or a CHANGELOG file, on a feature branch.")
-            print("Add a change note instead (and one for each changed plugin): %s/<task-id>-<slug>.md with 'spec:' (or 'plugin:') and 'change: patch|minor|major'." % NOTES_DIR)
+            print("Add a change note instead (and one for each changed plugin): %s/<task-id>-<slug>.md with 'spec:' (or 'plugin:') and 'change: patch|minor|major'." % cfg["notes_dir"])
             print("It is folded into the version and the change log on the release branch (change_notes.py fold).")
         return dc.EXIT_FAIL
     print("change-notes: ok (%s)" % ("release branch" if release else "no version, change-log or CHANGELOG edits"))
@@ -436,14 +440,14 @@ def plan_plugin(root: Path, plugin: str, notes: list[Note]) -> tuple[str, str, s
 def cmd_fold(args: argparse.Namespace) -> int:
     root = dc.repo_root()
     cfg = load_config(root, args.config)
-    notes, problems = read_notes(root)
+    notes, problems = read_notes(root, cfg)
     if problems:
         print("change-notes: cannot fold")
         for p in problems:
             print("  " + p)
         return dc.EXIT_FAIL
     if not notes:
-        print("change-notes: no notes in %s/; nothing to fold" % NOTES_DIR)
+        print("change-notes: no notes in %s/; nothing to fold" % cfg["notes_dir"])
         return dc.EXIT_OK
     date = args.date or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
     by_spec: dict[str, list[Note]] = {}
@@ -473,8 +477,8 @@ def cmd_fold(args: argparse.Namespace) -> int:
 
 def cmd_pending(args: argparse.Namespace) -> int:
     root = dc.repo_root()
-    load_config(root, args.config)  # a broken config is a usage error here too
-    notes, problems = read_notes(root)
+    cfg = load_config(root, args.config)  # a broken config is a usage error here too
+    notes, problems = read_notes(root, cfg)
     waiting = [n.path for n in notes] + problems
     if waiting:
         print("change-notes: %d note%s wait to be folded; the versions they name are not raised yet" % (

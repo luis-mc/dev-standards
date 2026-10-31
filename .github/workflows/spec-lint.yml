@@ -13,11 +13,11 @@ on:
   push:
     branches: [main]
     # DS44: the areas job asks ci_skip_check.py whether a push to main differs
-    # from the tested pull request head only under docs/artifacts/; that helper
+    # from the tested pull request head only under docs/project/; that helper
     # reads this list, so it names exactly those paths. Which areas a push runs
     # is decided by tools/ci_areas.py, not by a paths filter.
     paths-ignore:
-      - 'docs/artifacts/**'
+      - 'docs/project/**'
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
@@ -30,7 +30,9 @@ on:
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/preflight.py'
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/**'
       - 'claude/plugins/**'   # DS102: any plugin change needs its change note
-      - 'docs/specs/changes/**'
+      - 'docs/architecture/changes/**'
+      - 'docs/**'      # DS109: this repository's docs follow DOCSPEC (docs-check job)
+      - 'AGENTS.md'
       - '.claude/**'   # DS91: this repository's settings and suites (test_session_guard.py)
       - '.github/workflows/spec-lint.yml'
   workflow_dispatch:
@@ -99,7 +101,7 @@ jobs:
           python-version: '3.13'
 
       # DS44: a push to main whose content equals a pull request head that
-      # already passed this workflow, apart from docs/artifacts/, repeats
+      # already passed this workflow, apart from docs/project/, repeats
       # nothing. ci_skip_check.py decides; on any doubt it answers skip=false.
       - name: Can this push to main skip the suite
         id: skip
@@ -486,7 +488,7 @@ jobs:
           done
 
   # Not an area: the notes rule applies to every pull request, including one
-  # that touches only docs/specs/changes/, so it never waits for `areas`.
+  # that touches only docs/architecture/changes/, so it never waits for `areas`.
   change-notes:
     name: change notes
     if: github.event_name == 'pull_request' && !github.event.pull_request.draft
@@ -499,7 +501,7 @@ jobs:
           python-version: '3.13'
 
       # dev-standards keeps its own versions the way STACKSPEC 7.1.0 §13.6 asks
-      # of products: a branch adds a note under docs/specs/changes/ and never
+      # of products: a branch adds a note under docs/architecture/changes/ and never
       # edits a spec's or plugin's version or a spec's change log; the integration
       # branch folds. The checkout is shallow, so fetch the base and the history
       # the merge base needs; the head branch name is passed because the pull
@@ -533,6 +535,23 @@ jobs:
         run: |
           python3 claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/change_notes.py pending \
             --config tools/change-notes.json
+
+  # Not an area: this repository's own docs follow DOCSPEC (DS109). Runs on
+  # every push and pull request; the full history feeds the map check (M1).
+  docs-check:
+    name: docs check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Docs follow DOCSPEC (layout, links, sources, generated files)
+        run: python3 claude/plugins/docs/scripts/docs_check.py check
 
   profiles:
     name: model profiles

@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "docspec": "1.0.0",
+  "apps": [
+    "luismc-agents",
+    "luismc-artifacts",
+    "luismc-audits",
+    "luismc-delivery",
+    "luismc-docs",
+    "luismc-project-setup",
+    "luismc-specs",
+    "luismc-transcript-folds"
+  ],
+  "topics": [
+    "delivery",
+    "artifacts",
+    "docs",
+    "specs",
+    "stack",
+    "auth",
+    "models",
+    "testing",
+    "ci",
+    "hooks",
+    "transcripts",
+    "audits"
+  ],
+  "record_dir": "docs/project",
+  "default_branch": "main",
+  "stale_days": 90,
+  "code_roots": [
+    "claude/plugins",
+    "tools",
+    ".github/workflows"
+  ]
+}

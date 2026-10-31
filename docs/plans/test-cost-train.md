@@ -1,6 +1,6 @@
 # Test-cost train (TC6)
 
-Source: `docs/artifacts/feature-test-and-validation-cost.html` (decisions D1 to D8). One integration branch, `TC6-integration`; three agent branches cut from it, each owning its files. Nobody edits a file another branch owns.
+Source: `docs/project/feature-test-and-validation-cost.html` (decisions D1 to D8). One integration branch, `TC6-integration`; three agent branches cut from it, each owning its files. Nobody edits a file another branch owns.
 
 | Branch | Tasks | Owns |
 |---|---|---|
@@ -21,7 +21,7 @@ Shared rules:
 
 ## Delivery speed, folded into this train (DL1 to DL10)
 
-The plan is section 2 of `docs/artifacts/feature-delivery-speed.html`; its decisions D1 to D9 are settled. STACKSPEC becomes **8.0.0** (DL9 adds a MUST), luismc-project-setup **major**. Three branches, cut from `TC6-integration` after DS43, TC2 and TC5 were joined:
+The plan is section 2 of `docs/project/feature-delivery-speed.html`; its decisions D1 to D9 are settled. STACKSPEC becomes **8.0.0** (DL9 adds a MUST), luismc-project-setup **major**. Three branches, cut from `TC6-integration` after DS43, TC2 and TC5 were joined:
 
 | Branch | Tasks | Owns |
 |---|---|---|

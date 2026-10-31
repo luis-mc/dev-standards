@@ -11,3 +11,4 @@ __pycache__/
 
 .delivery/
 .claude/artifacts-record.lock
+docs/_site/
