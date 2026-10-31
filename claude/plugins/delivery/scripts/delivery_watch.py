@@ -105,6 +105,7 @@ class Watcher:
         self.rp = C.runner_plan_flags(self.cfg)
         self.runner_child = None
         self._guard_missing_logged = False
+        self._guard_start_logged = False
         self._bad_ci_logged: set = set()
         self.repo = repo
         self.repo_args = ["--repo", repo] if repo else []
@@ -239,30 +240,55 @@ class Watcher:
         if L.hold_active(train, self.now()):
             return False
         found = self.gh_json(["pr", "list", "--head", train["branch"], "--state", "open",
-                              "--json", "number,headRefOid", *self.repo_args])
+                              "--json", "number,headRefOid,isDraft", *self.repo_args])
         if not isinstance(found, list) or len(found) != 1 or not found[0].get("number"):
             return False
         pr = int(found[0]["number"])
-        head = found[0].get("headRefOid")
+        # DS97: results match by head from now on. CO688: a draft PR is adopted but does not start CI.
+        self.mut(lambda led: L.adopt_open_pr(led, train["id"], found[0], "delivery_watch"))
+        train["pr"] = pr
+        return True
+
+    def repoint_if_moved(self, train: dict) -> None:
+        """CO688: a train that has a PR but has not reached `pushed` (the push happened where the hook could not see
+        it, for example in a backgrounded command) is compared with the PR head; when they differ the train points
+        at the PR head with empty runs, as `_rec_push` does for a re-push. pushed/ci/green/red trains are re-pointed
+        by the rest of pass_trains."""
+        data = self.gh_json(["pr", "view", str(train["pr"]), "--json", "headRefOid,state,isDraft", *self.repo_args])
+        if not isinstance(data, dict) or not data.get("headRefOid") or data.get("state") == "MERGED":
+            return
+        head = data["headRefOid"]
+        if head == (self._train_ci(train).get("head_sha")):
+            return
 
         def fn(led):
             t = L.find_train(led, train["id"])
-            if t is not None and not t.get("pr"):
-                t["pr"] = pr
-                if head and not (t.get("ci") or {}).get("head_sha"):     # DS97: results match by head from now on
-                    t.setdefault("ci", {})["head_sha"] = head
-                if t.get("state") == "pushed":
-                    L.set_train_state(t, "ci", L.iso(self.now()))
-                L.add_event(led, "train.pr_adopted", "%s #%s" % (t["id"], pr), "delivery_watch")
+            if t is None or t.get("merged_at"):
+                return
+            if not isinstance(t.get("ci"), dict):
+                t["ci"] = {}
+            t["ci"].update({"head_sha": head, "run_ids": [], "state": "queued", "started_at": None})
+            t["green_at"] = None
+            if not data.get("isDraft") and t.get("state") in ("planned", "joining", "joined"):
+                t["pushed_at"] = t.get("pushed_at") or L.iso(self.now())
+                L.set_train_state(t, "ci", L.iso(self.now()))
+            L.add_event(led, "train.repushed", t["id"], "delivery_watch")
         self.mut(fn)
-        train["pr"] = pr
-        return True
 
     def pass_trains(self) -> None:
         led = L.load(self.root)
         for train in led["trains"]:
-            if train.get("state") in ("pushed", "ci") and not train.get("pr"):
-                self.adopt_pr(train)
+            # CO688: PR 847 sat in `planned` for ever because only pushed/ci trains were adopted
+            adopted = False
+            if train.get("state") in ("planned", "joining", "joined", "pushed", "ci", "red") and not train.get("pr"):
+                adopted = self.adopt_pr(train)
+                if adopted:
+                    fresh = L.find_train(L.load(self.root), train["id"])
+                    if fresh is not None:
+                        train.clear()
+                        train.update(fresh)
+            if train.get("pr") and not adopted and train.get("state") in ("planned", "joining", "joined"):
+                self.repoint_if_moved(train)
             if train.get("state") not in ("pushed", "ci", "green", "red") or not train.get("pr"):
                 continue
             self._train_ci(train)
@@ -529,7 +555,9 @@ class Watcher:
             self.out("dry-run: " + " ".join(argv))
             return
         self.runner_child = self.sh.spawn(argv, cwd=str(self.root))
-        self.mut(lambda led: L.add_event(led, "runner.guard_started", os.path.basename(script), "delivery_watch"))
+        if not self._guard_start_logged:         # CO688: it exits at once while the runners are online and is
+            self._guard_start_logged = True      # relaunched every pass: one event, not 239 of the 500 kept
+            self.mut(lambda led: L.add_event(led, "runner.guard_started", os.path.basename(script), "delivery_watch"))
 
     def heartbeat(self, started: str) -> None:
         pid, at = os.getpid(), L.iso(self.now())

@@ -365,5 +365,206 @@ class MainProcessTests(unittest.TestCase):
             self.assertIn("boom", err.getvalue())
 
 
+# --- CO688: the delivery hook missed PR and push records ------------------------------------------------------
+
+import shutil as _shutil  # noqa: E402
+import threading  # noqa: E402
+
+
+def _git(cwd, *a):
+    return subprocess.run(["git", "-C", str(cwd), "-c", "user.email=t@t", "-c", "user.name=t", *a],
+                          capture_output=True, text=True, check=True).stdout.strip()
+
+
+def make_git_repo(*branches):
+    """A temporary repository with one commit and the named branches at it."""
+    d = tempfile.mkdtemp(prefix="repo-")
+    _git(d, "init", "-q", "-b", "main")
+    open(os.path.join(d, "f"), "w").write("x")
+    _git(d, "add", "-A")
+    _git(d, "commit", "-q", "-m", "i")
+    for b in branches:
+        _git(d, "branch", b)
+    return d
+
+
+BACKGROUNDED = "Command did not complete within its 120s timeout and was moved to the background"
+CO688_A = ("cd {cwd} && git push -q -u origin release/132 2>&1 | tail -3; "
+           "git push -q origin CO682-nightly-no-gh:claude/CO682-nightly-no-gh 2>&1 | tail -1; "
+           "cat > {tmp}/pr132.md <<'EOF'\n## Release 132\nbody\nEOF\n"
+           "gh pr create --base master --head release/132 --title 'RELEASE-132' --body-file {tmp}/pr132.md 2>&1 | tail -1; "
+           "git rev-parse HEAD")
+
+
+class Co688Tests(unittest.TestCase):
+    def led(self, root):
+        return L.load(root)
+
+    def test_pr_create_in_backgrounded_bash_is_reconciled(self):
+        # (a) the hook's only PostToolUse for the call is the "moved to the background" answer
+        root = make_root()
+        repo = make_git_repo("release/132")
+        cmd = CO688_A.format(cwd=repo, tmp=repo)
+        self.assertTrue(H.handle(bash(cmd, BACKGROUNDED, cwd=repo), root))
+        led = self.led(root)
+        self.assertEqual(led["trains"], [], "nothing done is recorded for a backgrounded push or PR")
+        ev = [e for e in led["events"] if e["kind"] == "bash.backgrounded"]
+        self.assertEqual(len(ev), 1, led["events"])
+        self.assertIn("release/132", ev[0]["ref"])
+        self.assertIn("pr create", ev[0]["ref"])
+        self.assertIn("push", ev[0]["ref"])
+
+    def test_run_in_background_flag_also_counts(self):
+        root = make_root()
+        seed(root, state="joined")
+        d = bash("git push origin release/29", "started")
+        d["tool_input"]["run_in_background"] = True
+        H.handle(d, root)
+        led = self.led(root)
+        self.assertEqual(led["trains"][0]["state"], "joined")
+        kinds = [e["kind"] for e in led["events"]]
+        self.assertEqual(kinds.count("bash.backgrounded"), 1)
+        self.assertNotIn("train.pushed", kinds)
+
+    def test_other_backgrounded_commands_leave_no_event(self):
+        root = make_root()
+        H.handle(bash("npm test", BACKGROUNDED), root)
+        self.assertEqual(self.led(root)["events"], [])
+
+    def test_pr_create_after_heredoc_newline_records_pr(self):
+        # (b) PR #849: the "pr None" the orchestrator saw came from the python -c in the same call
+        repo = make_git_repo("release/134")
+        root = make_root()
+        seed(root, branch="release/134", state="joined")
+        cmd = ("cd {r} && cat > {r}/pr134.md <<'EOF'\nbody line\nEOF\n"
+               "gh pr create --base master --head release/134 --title 'RELEASE-134' --body-file {r}/pr134.md 2>&1 | tail -1; "
+               "python -c \"print('pr', None)\"; date +%H:%M").format(r=repo)
+        H.handle(bash(cmd, "https://github.com/luis-mc/comics-organizer/pull/849", cwd=str(root)), root)
+        t = self.led(root)["trains"][0]
+        self.assertEqual(t["pr"], 849)
+        self.assertEqual(t["ci"]["head_sha"], _git(repo, "rev-parse", "release/134"))
+        self.assertEqual(t["state"], "ci")
+
+    def test_repush_in_worktree_resets_ci(self):
+        # (c) a foreground re-push from a worktree to a train that has a PR and is red
+        repo = make_git_repo("release/134")
+        root = make_root()
+        old = "2d5594da6"
+        seed(root, branch="release/134", pr=849, state="red", green_at=None,
+             ci={"head_sha": old, "run_ids": [41181589467], "state": "failure", "started_at": None})
+        cmd = ("cat /tmp/task-output; cd {r} && git push -q origin release/134 2>&1 | tail -3; "
+               "git ls-remote origin release/134; date +%H:%M").format(r=repo)
+        H.handle(bash(cmd, "ok", cwd=str(root)), root)
+        led = self.led(root)
+        t = led["trains"][0]
+        self.assertEqual(t["ci"]["head_sha"], _git(repo, "rev-parse", "release/134"))
+        self.assertEqual(t["ci"]["run_ids"], [])
+        self.assertEqual((t["state"], t["ci"]["state"]), ("ci", "queued"))
+        self.assertIn("train.repushed", [e["kind"] for e in led["events"]])
+
+    def test_repush_lands_when_another_process_holds_the_lock_for_five_seconds(self):
+        repo = make_git_repo("release/134")
+        root = make_root()
+        seed(root, branch="release/134", pr=849, state="red",
+             ci={"head_sha": "old", "run_ids": [1], "state": "failure", "started_at": None})
+        lock = L.ledger_path(root).with_suffix(".json.lock")
+        lock.write_text("123")
+        threading.Timer(5.0, lambda: lock.unlink()).start()
+        t0 = time.monotonic()
+        try:
+            H.handle(bash("cd %s && git push -q origin release/134 2>&1 | tail -3" % repo, "ok", cwd=str(root)), root)
+        except Exception:  # noqa: BLE001 - a hook failure must at least be visible
+            pass
+        landed = L.load(root)["trains"][0]["ci"]["head_sha"] != "old"
+        logged = (root / ".delivery" / "blocks.log").exists()
+        self.assertTrue(landed or logged, "the record landed, or a blocks.log line says it did not")
+        self.assertTrue(landed, "the longer second wait lets the record land")
+        self.assertGreater(time.monotonic() - t0, 4.0)
+
+    def test_failed_hook_writes_a_blocks_log_line(self):
+        root = make_root()
+        seed(root, state="joined")
+        payload = json.dumps(bash("git push origin release/29  # " + "x" * 300, "ok", cwd=str(root)))
+        with mock.patch.object(L, "update", side_effect=L.LedgerError("ledger lock busy: x")), \
+                mock.patch.object(sys, "stdin", io.TextIOWrapper(io.BytesIO(payload.encode()))), \
+                mock.patch("sys.stderr", new_callable=io.StringIO):
+            self.assertEqual(H.main(), 0)
+        line = (root / ".delivery" / "blocks.log").read_text().strip().split("\n")[-1].split("\t")
+        self.assertEqual(line[1], "post-tool")
+        self.assertIn("git push origin release/29", line[3])
+        self.assertIn("ledger lock busy", line[3])
+        self.assertLess(len(line[3]), 120 + 80, "only the first 120 characters of the command")
+
+    def test_gh_pr_ready_after_cd_uses_worktree_branch(self):
+        # (d) the hook looks the branch up in the cd target, not in the session cwd
+        repo = make_git_repo()
+        wt = tempfile.mkdtemp(prefix="wt-")
+        _shutil.rmtree(wt)
+        _git(repo, "worktree", "add", "-q", "-b", "release/132", wt)
+        root = make_root()
+        seed(root, branch="release/132", state="pushed")
+        cmd = ("cd %s && git branch --show-current && gh pr ready 847 2>&1 | tail -1; "
+               "cd %s && python -c \"print('pr', None)\"" % (wt, repo))
+        H.handle(bash(cmd, "Pull request #847 is already ready for review", cwd=repo), root)
+        led = self.led(root)
+        self.assertEqual(led["trains"][0]["pr"], 847)
+        self.assertIn("pr.ready", [e["kind"] for e in led["events"]])
+
+    def test_gh_pr_ready_without_a_number_reads_the_worktree_branch(self):
+        repo = make_git_repo()
+        wt = tempfile.mkdtemp(prefix="wt-")
+        _shutil.rmtree(wt)
+        _git(repo, "worktree", "add", "-q", "-b", "release/132", wt)
+        root = make_root()
+        seed(root, branch="release/132", state="pushed")
+        H.handle(bash("cd %s && gh pr ready 2>&1 | tail -1" % wt, "https://github.com/o/r/pull/847", cwd=repo), root)
+        self.assertEqual(self.led(root)["trains"][0]["pr"], 847)
+
+    def test_quoted_semicolon_keeps_head_flag(self):
+        cmd = 'gh pr create --base master --title "RELEASE-9: a; b" --head release/9 --body "x"'
+        parts = H.split_commands(cmd)
+        self.assertEqual(len(parts), 1, parts)
+        self.assertEqual(H.opt_value(parts[0], "--head", "-H"), "release/9")
+        root = make_root()
+        H.handle(bash(cmd, "https://github.com/o/r/pull/9", cwd=str(root)), root)
+        t = self.led(root)["trains"][0]
+        self.assertEqual((t["branch"], t["pr"]), ("release/9", 9))
+
+    def test_quotes_with_operators_and_escapes(self):
+        self.assertEqual(len(H.split_commands("echo 'a && b' && echo \"c | d\"; echo e\\;f")), 3)
+        self.assertEqual(H.split_commands("git commit -m \"fix: a || b\"")[0][-1], "fix: a || b")
+
+    def test_heredoc_body_is_not_a_command(self):
+        root = make_root()
+        seed(root, branch="release/77", state="joined")
+        cmd = ("cat > pr.md <<'EOF'\nRelease notes\ngit push origin release/77\n"
+               "gh pr merge 5 --merge\nEOF\ngh pr create --draft --head release/77 --title x")
+        self.assertEqual([a[0] for a in H.split_commands(cmd)], ["cat", "gh"])
+        H.handle(bash("git status\n" + cmd, "https://github.com/o/r/pull/5"), root)
+        t = self.led(root)["trains"][0]
+        self.assertEqual(t["state"], "joined", "the body line did not record a push")
+        self.assertNotIn("train.pushed", [e["kind"] for e in self.led(root)["events"]])
+
+    def test_heredoc_variants(self):
+        for opener, close in (("<<EOF", "EOF"), ("<<'EOF'", "EOF"), ('<<"EOF"', "EOF"), ("<<-EOF", "\tEOF"), ("<< EOF", "EOF")):
+            cmd = "cat %s\ngit push origin release/77\n%s\necho done" % (opener, close)
+            self.assertEqual([a[0] for a in H.split_commands(cmd)], ["cat", "echo"], opener)
+        self.assertEqual([a[0] for a in H.split_commands("cat <<EOF | tail -1\nx; rm -rf y\nEOF\nls")], ["cat", "tail", "ls"])
+
+    def test_redirection_is_not_a_branch(self):
+        argv, _cwd = H.split_commands_cwd("git push -q origin release/134 2>&1", None)[0]
+        self.assertEqual(argv, ["git", "push", "-q", "origin", "release/134"])
+        for cmd, want in (("git push origin release/134 >out.log 2>&1", ["git", "push", "origin", "release/134"]),
+                          ("git push origin release/134 > /dev/null", ["git", "push", "origin", "release/134"]),
+                          ("git push origin release/134 &> all.log", ["git", "push", "origin", "release/134"]),
+                          ("cat < in.txt >> out.txt", ["cat"]),
+                          ("echo 'a > b' 2>&1", ["echo", "a > b"])):
+            self.assertEqual(H.split_commands(cmd)[0], want, cmd)
+
+    def test_cd_tracking_survives_the_tokenizer(self):
+        got = H.split_commands_cwd("cd /w/one && git push origin release/1; cd ../two\ngit push origin release/2", "/w/zero")
+        self.assertEqual([(a[-1], c) for a, c in got], [("release/1", "/w/one"), ("release/2", os.path.normpath("/w/two"))])
+
+
 if __name__ == "__main__":
     unittest.main()

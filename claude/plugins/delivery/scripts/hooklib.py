@@ -236,6 +236,114 @@ def running_agents(ledger, where=None):
 
 # --- commands -------------------------------------------------------------------------------
 
+# --- command lines (CO688) -------------------------------------------------------------------------------
+
+_HEREDOC_RE = re.compile(r"<<(-?)[ \t]*(?:'([^'\n]*)'|\"([^\"\n]*)\"|\\?([A-Za-z0-9_.\-]+))")
+
+
+def split_shell(command):
+    """The simple commands of a Bash command line, as text, each with its quoting kept.
+
+    Splits on unquoted && || ; & | and newlines; respects single quotes, double quotes and backslashes; skips
+    the body of a heredoc (<<EOF, <<'EOF', <<"EOF", <<-EOF, up to its terminator line); drops redirections
+    (2>&1, >file, >>file, <file, &>file). The old regex split inside quotes and returned heredoc lines as commands."""
+    text = command or ''
+    parts, cur = [], []
+    pending = []                    # heredocs opened on this line: (terminator, strip_tabs)
+    i, n = 0, len(text)
+    quote = ''
+
+    def flush():
+        seg = ''.join(cur).strip()
+        if seg:
+            parts.append(seg)
+        cur.clear()
+
+    def skip_word(j):
+        """Index after one shell word starting at j (quotes and escapes kept together)."""
+        q = ''
+        while j < n:
+            c = text[j]
+            if q:
+                if c == '\\' and q == '"' and j + 1 < n:
+                    j += 2
+                    continue
+                if c == q:
+                    q = ''
+            elif c in '\'"':
+                q = c
+            elif c == '\\' and j + 1 < n:
+                j += 2
+                continue
+            elif c.isspace() or c in ';&|<>':
+                break
+            j += 1
+        return j
+
+    while i < n:
+        c = text[i]
+        if quote:
+            cur.append(c)
+            if c == '\\' and quote == '"' and i + 1 < n:
+                cur.append(text[i + 1])
+                i += 2
+                continue
+            if c == quote:
+                quote = ''
+            i += 1
+            continue
+        if c == '\\' and i + 1 < n:
+            cur.append(text[i:i + 2])
+            i += 2
+            continue
+        if c in '\'"':
+            quote = c
+            cur.append(c)
+            i += 1
+            continue
+        if c == '\n':
+            flush()
+            i += 1
+            for term, strip in pending:             # the heredoc bodies start on the next line
+                while i < n:
+                    j = text.find('\n', i)
+                    line = text[i:] if j < 0 else text[i:j]
+                    i = n if j < 0 else j + 1
+                    if (line.lstrip('\t') if strip else line).rstrip('\r') == term:
+                        break
+            pending = []
+            continue
+        if c == '<' and text.startswith('<<', i) and not text.startswith('<<<', i):
+            m = _HEREDOC_RE.match(text, i)
+            if m:
+                term = m.group(2) if m.group(2) is not None else m.group(3) if m.group(3) is not None else m.group(4)
+                pending.append((term, m.group(1) == '-'))
+                i = m.end()
+                continue
+        if c in '<>' or (c == '&' and text.startswith('&>', i)):
+            # a redirection: drop a file-descriptor number just before it, the operator, and its target
+            tok = ''.join(cur)
+            m = re.search(r'(?:^|\s)(\d+)$', tok)
+            if m:
+                cur[:] = [tok[:m.start(1)]]
+            j = i
+            while j < n and text[j] in '<>&|':
+                j += 1
+            while j < n and text[j] in ' \t':
+                j += 1
+            i = skip_word(j)
+            cur.append(' ')
+            continue
+        if c == ';' or c == '|' or c == '&':
+            flush()
+            i += 2 if text.startswith(('&&', '||'), i) else 1
+            continue
+        cur.append(c)
+        i += 1
+    flush()
+    return parts
+
+
 def segments(command):
     """Token lists of the simple commands in a shell line (split on ; & | and newlines). Quoted text stays one
     token, so a commit message or an echo never matches a command pattern."""

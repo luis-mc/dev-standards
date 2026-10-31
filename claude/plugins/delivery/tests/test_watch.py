@@ -541,5 +541,85 @@ class RunnersInstallsHeartbeatTests(unittest.TestCase):
         self.assertEqual(len(L.load(root)["watchers"]), 1)
 
 
+# --- CO688: reconcile what the hook could not see ------------------------------------------------------------
+
+def pr_list_route(branch, number=847, head=SHA, draft=False):
+    return {("gh", "pr", "list", "--head", branch): (0, json.dumps([{"number": number, "headRefOid": head, "isDraft": draft}]))}
+
+
+class ReconcileTests(unittest.TestCase):
+    def test_watcher_adopts_pr_of_a_planned_train(self):
+        # PR 847 (release/132): the train was planned an hour after the push and the PR, so it sat in `planned`
+        # for ever; adopt_pr only looked at pushed/ci trains
+        root = make_root()
+        seed(root, [{"branch": "release/132", "state": "planned"}])
+        routes = {**routes_for_green(pr=847, head=SHA, branch="release/132"), **pr_list_route("release/132"),
+                  ("gh", "run", "list", "--commit"): (0, runs((1, "in_progress", None, SHA, "release/132")))}
+        watcher(root, FakeShell(routes)).run_once()
+        t = L.load(root)["trains"][0]
+        self.assertEqual(t["pr"], 847)
+        self.assertEqual(t["ci"]["head_sha"], SHA)
+        self.assertEqual(t["state"], "ci")
+        self.assertIn("train.pr_adopted", [e["kind"] for e in L.load(root)["events"]])
+
+    def test_a_draft_pr_is_adopted_but_does_not_start_ci(self):
+        root = make_root()
+        seed(root, [{"branch": "release/132", "state": "joined"}])
+        routes = {**routes_for_green(pr=847, head=SHA, branch="release/132"), **pr_list_route("release/132", draft=True)}
+        watcher(root, FakeShell(routes)).run_once()
+        t = L.load(root)["trains"][0]
+        self.assertEqual((t["pr"], t["state"]), (847, "joined"))
+
+    def test_no_open_pr_leaves_a_planned_train_alone(self):
+        root = make_root()
+        seed(root, [{"branch": "release/132", "state": "planned"}])
+        routes = {("gh", "pr", "list", "--head"): (0, "[]")}
+        watcher(root, FakeShell(routes)).run_once()
+        t = L.load(root)["trains"][0]
+        self.assertEqual((t["pr"], t["state"]), (None, "planned"))
+
+    def test_train_with_a_pr_and_a_moved_head_is_repointed(self):
+        root = make_root()
+        seed(root, [{"branch": "release/134", "state": "joined", "pr": 849,
+                     "ci": {"head_sha": OLD, "run_ids": [5], "state": "failure", "started_at": None}}])
+        routes = {("gh", "pr", "view", "849"): (0, json.dumps({"headRefOid": SHA, "state": "OPEN"})),
+                  ("gh", "run", "list", "--commit"): (0, "[]")}
+        watcher(root, FakeShell(routes)).run_once()
+        t = L.load(root)["trains"][0]
+        self.assertEqual(t["ci"]["head_sha"], SHA)
+        self.assertEqual(t["ci"]["run_ids"], [])
+        self.assertEqual(t["state"], "ci")
+        self.assertIn("train.repushed", [e["kind"] for e in L.load(root)["events"]])
+
+    def test_red_train_is_still_repointed(self):
+        root = make_root()
+        seed(root, [{"branch": "release/134", "state": "red", "pr": 849,
+                     "ci": {"head_sha": OLD, "run_ids": [5], "state": "failure", "started_at": None}}])
+        routes = {("gh", "pr", "view", "849"): (0, json.dumps({"headRefOid": SHA, "state": "OPEN"})),
+                  ("gh", "run", "list", "--commit"): (0, "[]")}
+        watcher(root, FakeShell(routes)).run_once()
+        self.assertEqual(L.load(root)["trains"][0]["ci"]["head_sha"], SHA)
+
+    def test_guard_started_is_logged_once_not_every_pass(self):
+        root = make_root({"runners": [{"name": "r1"}], "watcher": {"manage_runners": True}})
+        script = root / "scripts" / "delivery"
+        script.mkdir(parents=True)
+        (script / "runner_plan.py").write_text("")
+
+        class Child:
+            def poll(self):
+                return 0
+
+        class Shell(FakeShell):
+            def spawn(self, argv, cwd=None):
+                return Child()
+        w = watcher(root, Shell())
+        for _ in range(5):
+            w.pass_runner_guard()
+        kinds = [e["kind"] for e in L.load(root)["events"]]
+        self.assertEqual(kinds.count("runner.guard_started"), 1, kinds)
+        self.assertEqual(len([a for a in w.actions if "runners" in a]), 5, "it is still relaunched every pass")
+
+
 if __name__ == "__main__":
     unittest.main()

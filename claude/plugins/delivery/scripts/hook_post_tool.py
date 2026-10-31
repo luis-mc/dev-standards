@@ -3,12 +3,15 @@
 
 DELIVERYSPEC section 2 "Who writes each field". Reads the hook JSON from stdin and writes
 the ledger (.delivery/ledger.json) through delivery_ledger. It only records: it never blocks,
-prints nothing, exits 0 always (every error is one line on stderr), and is a no-op in a
+prints nothing, exits 0 always (every error is one line on stderr and one line in .delivery/blocks.log), and is a no-op in a
 repository without a .delivery/ folder. Standard library only.
 
 Recorded:
   Bash   git push of a train branch (pushed), gh pr create / ready (pr, ci), gh pr merge
-         (merged), msiexec / schtasks UpdateNow (installs), ci_watch.py (red on failure; green is set only by the watcher)
+         (merged), msiexec / schtasks UpdateNow (installs), ci_watch.py (red on failure; green is set only by the watcher).
+         A call moved to the background (or run_in_background) is not recorded as done: one bash.backgrounded event
+         names the branch and verb, and the watcher reconciles (adopts the PR, re-points the head). Command lines
+         are split by hooklib.split_shell (quotes, heredocs, redirections).
   Agent, RemoteTrigger create|run   an agents[] row; a fenced ```delivery block in the prompt
          gives task, branch, owns and the eta breakdown (setup, work, checks)
   Artifact publish   publishes[]
@@ -36,6 +39,7 @@ FENCE_RE = re.compile(r"```delivery[ \t]*\r?\n(.*?)```", re.S)
 PR_URL_RE = re.compile(r"/pull/(\d+)")
 ARTIFACT_URL_RE = re.compile(r"https://claude\.ai/(?:code/)?artifact/[\w-]+")
 TOOL_ERR_RE = re.compile(r"Exit code (\d+)")
+BACKGROUND_RE = re.compile(r"moved to the background|running in the background|started in the background", re.I)
 
 
 def warn(msg: str) -> None:
@@ -107,16 +111,21 @@ def response_text(data: dict) -> str:
 def split_commands(command: str) -> list[list[str]]:
     """Each simple command in a shell line as an argv list (best effort)."""
     out = []
-    for part in re.split(r"&&|\|\||;|\n|\|", command or ""):
-        try:
-            argv = shlex.split(part, posix=True)
-        except ValueError:
-            argv = part.split()
-        while argv and re.match(r"^\w+=", argv[0]):  # env prefix
-            argv.pop(0)
+    for part in H.split_shell(command):
+        argv = _argv(part)
         if argv:
             out.append(argv)
     return out
+
+
+def _argv(part: str) -> list[str]:
+    try:
+        argv = shlex.split(part, posix=True)
+    except ValueError:
+        argv = part.split()
+    while argv and re.match(r"^\w+=", argv[0]):  # env prefix
+        argv.pop(0)
+    return argv
 
 
 def _is_abs(d: str) -> bool:
@@ -140,12 +149,13 @@ def split_commands_cwd(command: str, cwd: str | None) -> list[tuple[list[str], s
     """Each simple command with the directory it runs in: `cd <dir> && ...` and `git -C <dir> ...` move it."""
     out = []
     cur = cwd
-    for part in re.split(r"&&|\|\||;|\n|\|", command or ""):
+    for part in H.split_shell(command):
         moved = _cd_target(part, cur)
         if moved is not None:
             cur = moved
             continue
-        for argv in split_commands(part):
+        argv = _argv(part)
+        if argv:
             where = cur
             if os.path.basename(argv[0]) in ("git", "git.exe") and "-C" in argv[1:3]:
                 i = argv.index("-C")
@@ -218,8 +228,15 @@ def rec_bash(led, data, cfg, failed: bool, now: str) -> None:
     text = response_text(data)
     code_m = TOOL_ERR_RE.search(text) if failed else None
     exit_code = int(code_m.group(1)) if code_m else (1 if failed else 0)
+    # CO688: a call that was moved to the background (or started with run_in_background) has not finished: its
+    # push or PR is not done yet and the only PostToolUse it gets is this answer. Record that, not the work.
+    backgrounded = bool(inp.get("run_in_background")) or bool(BACKGROUND_RE.search(text))
+    waiting = []
     for argv, cwd in split_commands_cwd(command, data.get("cwd")):
         prog = os.path.basename(argv[0])
+        if backgrounded and not failed and _is_git_or_pr_write(prog, argv):
+            waiting.append(_backgrounded_ref(argv, cwd))
+            continue
         if prog in ("git", "git.exe") and "push" in argv[:3]:
             _rec_push(led, cfg, argv, cwd, failed, now)
         elif prog in ("gh", "gh.exe") and argv[1:2] == ["pr"] and len(argv) > 2:
@@ -229,6 +246,27 @@ def rec_bash(led, data, cfg, failed: bool, now: str) -> None:
         elif any(os.path.basename(a) == "ci_watch.py" for a in argv[:3]):
             if not inp.get("run_in_background"):    # a backgrounded start has not finished: nothing to record
                 _rec_ci_watch(led, argv, exit_code, now, text)
+    if waiting:
+        L.add_event(led, "bash.backgrounded", "; ".join(waiting), "hook_post_tool", now)
+
+
+def _is_git_or_pr_write(prog, argv) -> bool:
+    if prog in ("git", "git.exe"):
+        return "push" in argv[:3]
+    return prog in ("gh", "gh.exe") and argv[1:2] == ["pr"] and argv[2:3] in (["create"], ["ready"], ["merge"])
+
+
+def _backgrounded_ref(argv, cwd) -> str:
+    """'<branch> <verb>' for the event: which branch is waiting on which push or PR step."""
+    if os.path.basename(argv[0]) in ("git", "git.exe"):
+        args = [a for a in argv[argv.index("push") + 1:] if not a.startswith("-")]
+        branches = [a.split(":")[-1].replace("refs/heads/", "").lstrip("+") for a in args[1:]]
+        return "%s push" % (", ".join(branches) or current_branch(cwd) or "?")
+    verb = "pr " + argv[2]
+    branch = opt_value(argv, "--head", "-H") if argv[2] == "create" else None
+    if branch and ":" in branch:
+        branch = branch.split(":", 1)[1]
+    return "%s %s" % (branch or current_branch(cwd) or (argv[3] if len(argv) > 3 and not argv[3].startswith("-") else "?"), verb)
 
 
 def _rec_push(led, cfg, argv, cwd, failed, now):
@@ -508,7 +546,12 @@ def handle(data: dict, root=None) -> bool:
 
     if tool not in ("Bash", "Agent", "Task", "RemoteTrigger", "Artifact", "AskUserQuestion"):
         return False
-    L.update(root, fn, wait=3)
+    try:
+        L.update(root, fn, wait=3)
+    except L.LedgerError:
+        # CO688: the watcher may hold the lock; a record lost here is lost for good. One more try, with the
+        # ledger's own longer wait (3 + 10 s stays inside the hook's 15 s timeout in hooks.json).
+        L.update(root, fn, wait=L.LOCK_WAIT_SECONDS)
     return True
 
 
@@ -519,10 +562,29 @@ def main() -> int:
         text = sys.stdin.buffer.read().decode("utf-8", "replace")
         data = json.loads(text) if text.strip() else {}
         if isinstance(data, dict):
-            handle(data)
+            try:
+                handle(data)
+            except Exception as exc:  # noqa: BLE001
+                _log_failure(data, exc)
+                raise
     except Exception as exc:  # noqa: BLE001 - a recorder never fails the tool call
         warn("recorder error: %s" % exc)
     return 0
+
+
+def _log_failure(data: dict, exc: Exception) -> None:
+    """CO688: nobody reads stderr, so a lost record is also one line in .delivery/blocks.log:
+    time, kind `post-tool`, the first 120 characters of the command, the error."""
+    try:
+        root = L.find_root(data.get("cwd"))
+        if root is None or not (Path(root) / L.DIR_NAME).is_dir():
+            return
+        command = " ".join(str((data.get("tool_input") or {}).get("command") or data.get("tool_name") or "").split())[:120]
+        line = "\t".join([L.iso(), "post-tool", "other", "%s : %s: %s" % (command, type(exc).__name__, exc)])
+        with open(os.path.join(str(root), H.BLOCK_LOG_REL), "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except Exception:  # noqa: BLE001
+        pass
 
 
 if __name__ == "__main__":

@@ -186,5 +186,41 @@ class SchemaTests(unittest.TestCase):
         self.assertEqual(set(schema["properties"]["trains"]["items"]["properties"]["state"]["enum"]), set(L.TRAIN_STATES))
 
 
+class PlanAdoptsOpenPrTests(unittest.TestCase):
+    def plan(self, root, run, branch="release/132"):
+        import argparse
+        args = argparse.Namespace(branch=branch, release_no=None, cargo=None, phase=None)
+        return L._cmd_plan(root, args, run=run)
+
+    def test_train_planned_after_pr_adopts_open_pr(self):
+        # CO688 (a): the PR for release/132 was opened an hour before the train was planned
+        root = make_root({"tz": "Europe/Lisbon"})
+        calls = []
+
+        def run(argv, root_, timeout=60):
+            calls.append(argv)
+            if argv[:4] == ["gh", "pr", "list", "--head"]:
+                return 0, json.dumps([{"number": 847, "headRefOid": "a" * 40, "isDraft": False}])
+            return 1, ""
+        self.assertEqual(self.plan(root, run), 0)
+        t = L.load(root)["trains"][0]
+        self.assertEqual((t["pr"], t["state"], t["ci"]["head_sha"]), (847, "ci", "a" * 40))
+        self.assertIn("train.pr_adopted", [e["kind"] for e in L.load(root)["events"]])
+        self.assertIn("release/132", calls[0])
+
+    def test_plan_without_a_pr_or_without_gh_still_plans(self):
+        for out in ((0, "[]"), (127, ""), (0, "not json"), (0, json.dumps([{"number": 1}, {"number": 2}]))):
+            root = make_root({"tz": "Europe/Lisbon"})
+            self.assertEqual(self.plan(root, lambda a, r, timeout=60, out=out: out), 0)
+            t = L.load(root)["trains"][0]
+            self.assertEqual((t["pr"], t["state"]), (None, "planned"), out)
+
+    def test_draft_pr_is_adopted_without_starting_ci(self):
+        root = make_root({"tz": "Europe/Lisbon"})
+        self.assertEqual(self.plan(root, lambda a, r, timeout=60: (0, json.dumps([{"number": 7, "headRefOid": "b" * 40, "isDraft": True}]))), 0)
+        t = L.load(root)["trains"][0]
+        self.assertEqual((t["pr"], t["state"]), (7, "planned"))
+
+
 if __name__ == "__main__":
     unittest.main()
