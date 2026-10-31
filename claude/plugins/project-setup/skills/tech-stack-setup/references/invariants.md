@@ -7,6 +7,43 @@
 
 ---
 
+## At a glance
+
+### In one paragraph
+
+STACKSPEC binds the architecture of every new product this organization builds to properties, not to products. It is for the people and Claude Code sessions who design, build and review a product. It sets the rules for the repository, the API contract, data, jobs, outbound integrations, clients, observability, testing, security and CI and release. It does not name a language, framework, database or host.
+
+### Why
+
+Teams that choose a stack first and write rules later get the same costly mistakes: business logic copied into each client, untyped API surfaces, hardcoded strings and undeclared data collection. These cannot be fixed cheaply afterwards, so the rules apply from day one.
+
+- **Goals:** one server that owns every business rule (§1); one machine-readable API contract; checks that CI can run on any stack; a recorded Stack Profile per product (§18).
+- **Non-goals:** picking vendors, microservices, bidirectional realtime channels, offline-first sync, and shared UI code across web and native (§17). A product may still need one of these, but only through a recorded deviation with its own design.
+
+### How it works
+
+```mermaid
+flowchart TD
+    C["Thin clients: web, admin, iOS, Android"] -->|"generated client"| A["API: owns all business logic"]
+    A --> D[("Data: the only path to the datastore")]
+    W["Worker: scheduled and queued jobs"] --> D
+    A -->|"enqueue with the write"| W
+    W --> O["Outbound integrations: mail, storage, push"]
+    CI["CI and release: gates, branch gate, promotion"] -.->|"checks and ships"| A
+    CI -.-> W
+    CI -.-> C
+```
+
+1. The API contract is written first. Clients, request validation and response types are generated from it.
+2. Clients render data, collect input and call the API. The API computes every rule and talks to the datastore.
+3. The worker shares the API's domain code. A job is enqueued atomically with the write that causes it (§7.2).
+4. External services sit behind adapters, one per SDK, so a vendor can change without touching the core.
+5. Requirement words show how strict each clause is: `MUST`, `SHOULD`, `MAY`, or `CHOICE` for a technology the product picks (§0.2).
+6. Each product records its choices, pinned versions and deviations in a Stack Profile (§18).
+7. CI enforces the rules with gates, and the conformance checklist (§19) shows how a product is graded.
+
+---
+
 ## 0. Purpose
 
 This document binds product architecture to **properties**, not to products.
@@ -16,11 +53,11 @@ Postgres, Go on Fly with MySQL, .NET on Azure with SQL Server, or Rust in a
 container with anything. If a clause below can only be satisfied by one named
 technology, that clause is defective and MUST be raised against this spec.
 
-**Technology selection lives elsewhere.** The concrete stack — language,
-frameworks, database engine, host, cache, storage, mail, error tracking — is
-chosen per product through the selection catalog that accompanies this spec, and
-recorded in the product's Stack Profile (§18). This document does not name
-vendors and does not rank them.
+**Technology selection lives elsewhere.** The selection catalog that accompanies
+this spec is where each product chooses its concrete stack: language, frameworks,
+database engine, host, cache, storage, mail and error tracking. The choice is
+recorded in the product's Stack Profile (§18). This document does not name or
+rank vendors.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
 
@@ -179,10 +216,9 @@ this document is now only those.
 | `MAY` | Optional. |
 | `CHOICE` | Resolved per product by the selection catalog and recorded in the Stack Profile. Never graded, never a deviation. |
 
-`CHOICE` is new in 5.0.0 and exists specifically so that "which database engine"
-and "which mail provider" have a defined, checkable status instead of no status.
-A conformance check reports a `CHOICE` as **recorded** or **unrecorded** — never
-as conforming or violating.
+`CHOICE` is new in 5.0.0. It gives "which database engine" and "which mail
+provider" a defined, checkable status. A conformance check reports a `CHOICE` as
+**recorded** or **unrecorded**, never as conforming or violating.
 
 ### 0.3 What a product is, structurally
 
@@ -199,15 +235,15 @@ surfaces:
 
 Mobile MAY be absent. Web MAY be server-rendered from the API deployable rather
 than deployed separately. Admin MAY be a route group inside web. The rules here
-apply from day one regardless of which surfaces ship, because the expensive
-mistakes — untyped API surfaces, business logic in clients, hardcoded strings,
-undeclared data collection — cannot be retrofitted cheaply.
+apply from day one whichever surfaces ship, because the expensive mistakes
+cannot be retrofitted cheaply: untyped API surfaces, business logic in clients,
+hardcoded strings and undeclared data collection.
 
 ### 0.4 Capability requirements, not product requirements
 
-Several clauses below require a *capability* of a chosen technology rather than
-a named technology. Where a product's `CHOICE` cannot supply the capability, the
-clause states the required compensating control. Two examples of the pattern:
+Several clauses below require a *capability* of a chosen technology, not a named
+technology. Where a product's `CHOICE` cannot supply the capability, the clause
+states the compensating control it needs. Two examples:
 
 - §7.2 requires enqueue to be atomic with the write that causes it. A datastore
   with multi-statement transactions satisfies this directly; one without MUST
@@ -217,8 +253,8 @@ clause states the required compensating control. Two examples of the pattern:
   a drill.
 
 The catalog records which technologies supply which capabilities. The wizard
-surfaces the compensating control at selection time, so the cost is visible
-before the choice is made rather than discovered during an incident.
+shows the compensating control at selection time, so the cost is visible before
+the choice is made, not discovered during an incident.
 
 ---
 
@@ -228,10 +264,10 @@ before the choice is made rather than discovered during an incident.
 in this document and everything else is downstream of it.
 
 A product with a browser client, an iOS client and an Android client implements
-any client-side rule three times, and those three implementations will diverge.
-Divergence in a calculation, an eligibility check, a validation threshold or a
-state transition is a correctness bug that appears on one platform only, months
-later, and is nearly impossible to reproduce.
+any client-side rule three times, and the three will diverge. Divergence in a
+calculation, an eligibility check, a validation threshold or a state transition
+is a correctness bug that shows on one platform only, months later, and is
+nearly impossible to reproduce.
 
 Therefore:
 
@@ -1690,7 +1726,7 @@ own ingestion endpoint is required work, not an optional extra.
 
 ## 17. Non-goals
 
-Explicitly outside the default architecture, so a product does not drift into one
+These are outside the default architecture, so a product does not drift into one
 without a decision. Each is a **deviation requiring its own design**, not a
 prohibition:
 
