@@ -1,7 +1,13 @@
 {
   "enabledPlugins": {
+    "luismc-agents@dev-standards": true,
     "luismc-artifacts@dev-standards": true,
-    "luismc-delivery@dev-standards": true
+    "luismc-audits@dev-standards": true,
+    "luismc-delivery@dev-standards": true,
+    "luismc-docs@dev-standards": true,
+    "luismc-project-setup@dev-standards": true,
+    "luismc-specs@dev-standards": true,
+    "luismc-transcript-folds@dev-standards": true
   },
   "hooks": {
     "PreToolUse": [

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-31T23:45+00:00",
+  "updated": "2026-10-31T23:57+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2291,12 +2291,11 @@
       "id": "DS121",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release: claude-setup installs and configures all 8 plugins",
-      "detail": "Fold, push, CI",
-      "expected": "01 Nov ~00:15",
-      "changed": "2026-10-31T23:45+00:00",
-      "expected_basis": "joined; CI ~15 min",
+      "detail": "47bc186 + 1be2866 on main, CI green; project-setup 14.13.0, delivery 0.10.6, DELIVERYSPEC 1.1.0; cloud cap 50/3/53",
+      "expected": "31 Oct",
+      "changed": "2026-10-31T23:57+00:00",
       "release": 20,
       "started": "2026-10-31T23:45+00:00"
     },
@@ -2304,11 +2303,11 @@
       "id": "DS122",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "claude-setup: install, enable and configure all 8 plugins",
       "detail": "project scope; install missing; docs init, record in docs/project, delivery caps 20/3/23",
       "expected": "31 Oct",
-      "changed": "2026-10-31T23:45+00:00",
+      "changed": "2026-10-31T23:57+00:00",
       "rides": "DS121",
       "started": "2026-10-31T23:16+00:00"
     },
@@ -2316,11 +2315,11 @@
       "id": "DS123",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "delivery: one-line eta in briefs parsed; agent-eta command",
       "detail": "parser reads 'eta: setup N + work N + checks N = T min'; delivery_ledger.py agent-eta exists",
       "expected": "31 Oct",
-      "changed": "2026-10-31T23:45+00:00",
+      "changed": "2026-10-31T23:57+00:00",
       "rides": "DS121",
       "started": "2026-10-31T23:25+00:00"
     },
@@ -2328,13 +2327,14 @@
       "id": "DS124",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Dogfood: run new claude-setup on dev-standards",
       "detail": "all 8 plugins in .claude/settings.json + full config; commit on main",
-      "expected": "01 Nov ~03:00",
-      "changed": "2026-10-31T23:23+00:00",
-      "expected_basis": "after RELEASE-20 is live (~02:30) + 30 min",
-      "no_release": "repo config only; ships no plugin"
+      "expected": "01 Nov ~00:20",
+      "changed": "2026-10-31T23:57+00:00",
+      "expected_basis": "settings commit + CI ~15 min",
+      "no_release": "repo config only; ships no plugin",
+      "started": "2026-10-31T23:58+00:00"
     },
     {
       "id": "DS125",

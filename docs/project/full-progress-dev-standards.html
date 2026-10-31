@@ -806,7 +806,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-31T23:45+00:00",
+ "updated": "2026-10-31T23:57+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -3097,12 +3097,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS121",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "Release: claude-setup installs and configures all 8 plugins",
-   "detail": "Fold, push, CI",
-   "expected": "01 Nov ~00:15",
-   "changed": "2026-10-31T23:45+00:00",
-   "expected_basis": "joined; CI ~15 min",
+   "detail": "47bc186 + 1be2866 on main, CI green; project-setup 14.13.0, delivery 0.10.6, DELIVERYSPEC 1.1.0; cloud cap 50/3/53",
+   "expected": "31 Oct",
+   "changed": "2026-10-31T23:57+00:00",
    "release": 20,
    "started": "2026-10-31T23:45+00:00"
   },
@@ -3110,11 +3109,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS122",
    "owner": "project",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "claude-setup: install, enable and configure all 8 plugins",
    "detail": "project scope; install missing; docs init, record in docs/project, delivery caps 20/3/23",
    "expected": "31 Oct",
-   "changed": "2026-10-31T23:45+00:00",
+   "changed": "2026-10-31T23:57+00:00",
    "rides": "DS121",
    "started": "2026-10-31T23:16+00:00"
   },
@@ -3122,11 +3121,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS123",
    "owner": "project",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "delivery: one-line eta in briefs parsed; agent-eta command",
    "detail": "parser reads 'eta: setup N + work N + checks N = T min'; delivery_ledger.py agent-eta exists",
    "expected": "31 Oct",
-   "changed": "2026-10-31T23:45+00:00",
+   "changed": "2026-10-31T23:57+00:00",
    "rides": "DS121",
    "started": "2026-10-31T23:25+00:00"
   },
@@ -3134,13 +3133,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS124",
    "owner": "project",
    "app": "",
-   "status": "To do",
+   "status": "Running",
    "item": "Dogfood: run new claude-setup on dev-standards",
    "detail": "all 8 plugins in .claude/settings.json + full config; commit on main",
-   "expected": "01 Nov ~03:00",
-   "changed": "2026-10-31T23:23+00:00",
-   "expected_basis": "after RELEASE-20 is live (~02:30) + 30 min",
-   "no_release": "repo config only; ships no plugin"
+   "expected": "01 Nov ~00:20",
+   "changed": "2026-10-31T23:57+00:00",
+   "expected_basis": "settings commit + CI ~15 min",
+   "no_release": "repo config only; ships no plugin",
+   "started": "2026-10-31T23:58+00:00"
   },
   {
    "id": "DS125",
@@ -3398,67 +3398,53 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-31T23:45+00:00">31 Oct 23:45</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-31T23:57+00:00">31 Oct 23:57</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
 <details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DS121"><span class="task-id">DS121</span><span class="release-name">RELEASE-20</span>Release: claude-setup installs and configures all 8 plugins <span class="glance-expected">01 Nov ~00:15</span><span class="glance-basis">joined; CI ~15 min</span></li>
+<li data-glance-task="DS124"><span class="task-id">DS124</span>Dogfood: run new claude-setup on dev-standards <span class="glance-expected">01 Nov ~00:20</span><span class="glance-basis">settings commit + CI ~15 min</span></li>
 </ul>
 </details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">2 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">24 tasks</span></summary>
 <ul>
+<li data-glance-task="DS121"><span class="task-id">DS121</span><span class="release-name">RELEASE-20</span>Release: claude-setup installs and configures all 8 plugins</li>
 <li data-glance-task="DS122"><span class="task-id">DS122</span>claude-setup: install, enable and configure all 8 plugins</li>
 <li data-glance-task="DS123"><span class="task-id">DS123</span>delivery: one-line eta in briefs parsed; agent-eta command</li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">21 tasks</span></summary>
-<ul>
 <li data-glance-task="DS110"><span class="task-id">DS110</span><span class="release-name">RELEASE-18</span>Release C: rewrite all docs and shipped specs</li>
 <li data-glance-task="DS112"><span class="task-id">DS112</span>C: ARTIFACTSPEC reader preamble and wording, IDs kept</li>
 <li data-glance-task="DS113"><span class="task-id">DS113</span>C: DOCSPEC reader preamble and wording, IDs kept</li>
 <li data-glance-task="DS114"><span class="task-id">DS114</span>C: STACKSPEC reader preamble and wording, IDs kept</li>
 <li data-glance-task="DS115"><span class="task-id">DS115</span>C: AUTHSPEC reader preamble and wording, IDs kept</li>
-<li data-glance-task="DS116"><span class="task-id">DS116</span>C: DELIVERYSPEC doc rewrite or archive</li>
-<li data-glance-task="DS117"><span class="task-id">DS117</span>C: feature specs artifacts, models, transcript-folds</li>
-<li data-glance-task="DS118"><span class="task-id">DS118</span>C: feature specs delivery, delivery-speed, test-cost</li>
-<li class="glance-more">and 13 more</li>
+<li class="glance-more">and 16 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">206</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">2</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">209</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
-<figcaption>Next releases (~03:00 · after RELEASE-20 is live (~02:30) + 30 min)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 260" role="img" aria-label="Next releases: DS121 (Release: claude-setup installs and configures all 8 plugins) expected live about 00:15. Other work (no release): DS124 (Dogfood: run new claude-setup on dev-standards) To do, expected about 03:00." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="236"/><text x="200" y="28">23:30</text><line class="rt-grid" x1="274.3" y1="36" x2="274.3" y2="236"/><text x="274.3" y="28">01 Nov 00:00</text><line class="rt-grid" x1="348.6" y1="36" x2="348.6" y2="236"/><text x="348.6" y="28">01 Nov 00:30</text><line class="rt-grid" x1="422.9" y1="36" x2="422.9" y2="236"/><text x="422.9" y="28">01:00</text><line class="rt-grid" x1="497.1" y1="36" x2="497.1" y2="236"/><text x="497.1" y="28">01:30</text><line class="rt-grid" x1="571.4" y1="36" x2="571.4" y2="236"/><text x="571.4" y="28">02:00</text><line class="rt-grid" x1="645.7" y1="36" x2="645.7" y2="236"/><text x="645.7" y="28">02:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="236"/><text x="720" y="28">03:00</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-20 · Release: claude-setup installs and configures all 8 plugins</title>RELEASE-20 · Release: cla…</text>
-<text class="rt-sub" x="0" y="77"><title>DS122, DS123</title>DS122, DS123</text>
-<polygon class="rt-expected" points="311.4,50 319.4,63 311.4,76 303.4,63"/>
-<text class="rt-live-label" x="311.4" y="92">live ~00:15</text>
-<text class="rt-strip-title" x="0" y="122">Other work (no release)</text>
-<text class="rt-name" x="0" y="156"><title>DS124 · Dogfood: run new claude-setup on dev-standards</title>DS124 · Dogfood: run new…</text>
-<rect class="rt-other status-to-do" x="237.1" y="151" width="482.9" height="16"><title>To do 23:45-03:00</title></rect>
-<text class="rt-other-label" x="237.1" y="184">~03:00 · after RELEASE-20 is live (~02:30) + 30 min</text>
-<line class="rt-now" x1="237.1" y1="36" x2="237.1" y2="244"/><text class="rt-now-label" x="237.1" y="257">now 23:45</text>
+<figcaption>Next releases (~00:20 · settings commit + CI ~15 min)</figcaption>
+<div class="timeline-scroll"><svg viewBox="0 0 960 198" role="img" aria-label="Other work (no release): DS124 (Dogfood: run new claude-setup on dev-standards) Running, expected about 00:20." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="174"/><text x="200" y="28">23:30</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="174"/><text x="460" y="28">01 Nov 00:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="174"/><text x="720" y="28">01 Nov 00:30</text></g>
+<text class="rt-strip-title" x="0" y="60">Other work (no release)</text>
+<text class="rt-name" x="0" y="94"><title>DS124 · Dogfood: run new claude-setup on dev-standards</title>DS124 · Dogfood: run new…</text>
+<rect class="rt-other status-running" x="442.7" y="89" width="190.7" height="16"><title>Running 23:58-00:20</title></rect>
+<text class="rt-other-label" x="442.7" y="122">~00:20 · settings commit + CI ~15 min</text>
+<line class="rt-now" x1="434" y1="36" x2="434" y2="182"/><text class="rt-now-label" x="434" y="195">now 23:57</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days. Under Other work (no release), a bar runs from the start to its Expected, coloured by status; a red outline means it is past its Expected.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-20" open><summary><strong>RELEASE-20 · live ~00:15</strong><span class="fold-count">3 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS121"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS121</span><span class="release-name">RELEASE-20</span>Release: claude-setup installs and configures all 8 plugins</td><td data-label="App / service"></td><td data-label="Detail">Fold, push, CI</td><td data-label="Expected">01 Nov ~00:15<span class="expected-basis">joined; CI ~15 min</span></td></tr>
-<tr data-task="DS122"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS122</span>claude-setup: install, enable and configure all 8 plugins</td><td data-label="App / service"></td><td data-label="Detail">project scope; install missing; docs init, record in docs/project, delivery caps 20/3/23</td><td data-label="Expected">31 Oct</td></tr>
-<tr data-task="DS123"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS123</span>delivery: one-line eta in briefs parsed; agent-eta command</td><td data-label="App / service"></td><td data-label="Detail">parser reads &#x27;eta: setup N + work N + checks N = T min&#x27;; delivery_ledger.py agent-eta exists</td><td data-label="Expected">31 Oct</td></tr>
-</tbody></table></div>
-</details>
 <details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS124"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS124</span>Dogfood: run new claude-setup on dev-standards<span class="no-release-line">ships nothing: repo config only; ships no plugin</span></td><td data-label="App / service"></td><td data-label="Detail">all 8 plugins in .claude/settings.json + full config; commit on main</td><td data-label="Expected">01 Nov ~03:00<span class="expected-basis">after RELEASE-20 is live (~02:30) + 30 min</span></td></tr>
+<tr data-task="DS124"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS124</span>Dogfood: run new claude-setup on dev-standards<span class="no-release-line">ships nothing: repo config only; ships no plugin</span></td><td data-label="App / service"></td><td data-label="Detail">all 8 plugins in .claude/settings.json + full config; commit on main</td><td data-label="Expected">01 Nov ~00:20<span class="expected-basis">settings commit + CI ~15 min</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">206 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">209 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS121"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS121</span><span class="release-name">RELEASE-20</span>Release: claude-setup installs and configures all 8 plugins</td><td data-label="App / service"></td><td data-label="Detail">47bc186 + 1be2866 on main, CI green; project-setup 14.13.0, delivery 0.10.6, DELIVERYSPEC 1.1.0; cloud cap 50/3/53</td><td data-label="Expected">31 Oct</td></tr>
+<tr data-task="DS122"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS122</span>claude-setup: install, enable and configure all 8 plugins<span class="release-line"><span class="release-name">RELEASE-20</span></span></td><td data-label="App / service"></td><td data-label="Detail">project scope; install missing; docs init, record in docs/project, delivery caps 20/3/23</td><td data-label="Expected">31 Oct</td></tr>
+<tr data-task="DS123"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS123</span>delivery: one-line eta in briefs parsed; agent-eta command<span class="release-line"><span class="release-name">RELEASE-20</span></span></td><td data-label="App / service"></td><td data-label="Detail">parser reads &#x27;eta: setup N + work N + checks N = T min&#x27;; delivery_ledger.py agent-eta exists</td><td data-label="Expected">31 Oct</td></tr>
 <tr data-task="DS110"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS110</span><span class="release-name">RELEASE-18</span>Release C: rewrite all docs and shipped specs</td><td data-label="App / service"></td><td data-label="Detail">f19d4b9 on main, CI green; artifacts 1.18.0, docs 0.2.0, project-setup 14.12.0, DELIVERYSPEC 1.0.0</td><td data-label="Expected">31 Oct</td></tr>
 <tr data-task="DS112"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS112</span>C: ARTIFACTSPEC reader preamble and wording, IDs kept<span class="release-line"><span class="release-name">RELEASE-18</span></span></td><td data-label="App / service"></td><td data-label="Detail">artifactspec.md; minor via note</td><td data-label="Expected">31 Oct</td></tr>
 <tr data-task="DS113"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS113</span>C: DOCSPEC reader preamble and wording, IDs kept<span class="release-line"><span class="release-name">RELEASE-18</span></span></td><td data-label="App / service"></td><td data-label="Detail">docspec.md; minor via note</td><td data-label="Expected">31 Oct</td></tr>
