@@ -9,11 +9,56 @@
 
 ---
 
+## At a glance
+
+### In one paragraph
+
+DOCSPEC says where a project's documents live and how they stay true to the code. Lasting docs sit in `docs/`, in folders split by reader question. Each feature has one spec with front matter. A script builds an offline site and a feature index from that front matter. Branches add change notes, and the release folds them into one version per doc. Checks and hooks warn when code changes without its doc. Briefs and reports stay on agent branches.
+
+### Why
+
+**Problem.** Docs scatter, go stale, and pile up as briefs and reports nobody reads again. Readers cannot tell which page is true.
+
+**Goals.**
+
+- Each kind of doc has one home, chosen by the reader's question.
+- Feature specs have one shape and drive a browsable index.
+- Versions and change history are kept without hand edits.
+- Checks keep a doc true to the code.
+- An existing repository can move to the standard.
+
+**Non-goals.** It does not define the content of a project's docs, the artifacts record (ARTIFACTSPEC), or how work is delivered (DELIVERYSPEC). It does not publish docs to a web host.
+
+### How it works
+
+```mermaid
+flowchart LR
+    DJ[docs.json settings] --> IDX[index build]
+    FS[feature specs] --> IDX
+    IDX --> SITE[docs/index.html and _site]
+    IDX --> GEN[feature index, decisions list, docs map, llms.txt]
+    FS --> CHK[docs_check.py]
+    GEN --> CHK
+    BR[branch change notes] --> FOLD[release fold]
+    FOLD --> FS
+    CHK --> GATE[gate on pull request]
+    HK[Stop and SessionStart hooks] --> CHK
+```
+
+1. Settings in `docs.json` name the apps, topics and code roots.
+2. Each feature spec carries front matter and a code list.
+3. `docs_index.py build` writes the site, the feature index and the other generated files.
+4. `docs_check.py` runs the checks: layout, front matter, links, sources, versions, freshness and the code-to-doc map.
+5. A branch that changes a binding doc adds a change note. `docs_fold.py fold` turns the notes into one version row per doc.
+6. The Stop hook warns when mapped code changed without its doc. The SessionStart hook adds the rule to the agent's context.
+
+---
+
 ## 0. How to use this document
 
 ### 0.1 What this document is
 
-A project's documents have to answer different questions for different readers: what is this, what does feature X do, what are the UX rules, how is it built, how do I run it, what exactly is the value. Without a standard they scatter, go stale, and pile up as agent briefs and reports nobody reads again. This specification defines where each kind of document lives, what a feature spec contains, how the docs are browsed offline, how versions and change history are kept, which checks keep a doc true to the code, and how an existing repository moves to the standard. An implementer can build `luismc-docs` from it; a reviewer can check a project against it with `docs_check.py`.
+A project's documents have to answer different questions for different readers: what is this, what does feature X do, what are the UX rules, how is it built, how do I run it, what is the value. Without a standard they scatter, go stale, and pile up as agent briefs and reports nobody reads again. This specification defines where each kind of document lives, what a feature spec contains, how the docs are browsed offline, how versions and change history are kept, which checks keep a doc true to the code, and how an existing repository moves to the standard. An implementer can build `luismc-docs` from it. A reviewer can check a project against it with `docs_check.py`.
 
 **What this document is not:** it does not define the content of a project's docs, the artifacts record (ARTIFACTSPEC), or how work is delivered (DELIVERYSPEC).
 
@@ -113,7 +158,7 @@ The content of a project's documents; publishing docs to a web host; spelling an
 - **R2.2** — Lasting docs MUST live in the folder that answers their reader's question (§2.1). A doc about one feature goes in that feature's folder; a rule that spans features goes in `architecture/`; a task a person performs goes in `guides/`.
 - **R2.3** — Every lasting page SHOULD carry the Diataxis type of the page (`tutorial`, `how-to`, `reference` or `explanation`) in its front matter `type`. Feature specs MUST (R4.2).
 - **R2.4** — The artifacts record MUST live in the folder named by `record_dir` in `docs/docs.json` (default `docs/project`), and the artifacts plugin's own `record_dir` setting MUST name the same folder. `docs_setup.py move-record` moves the record and sets both.
-- **R2.5** — Generated files are `docs/index.html`, `docs/llms.txt`, `docs/features/index.md`, `docs/architecture/decisions.md`, `docs/docs-map.json`, everything in `docs/reference/` that a `generated_reference` entry names, and `docs/_site/`. Nobody edits them by hand; `docs_check.py` fails a stale one (G1, G2).
+- **R2.5** — Generated files are `docs/index.html`, `docs/llms.txt`, `docs/features/index.md`, `docs/architecture/decisions.md`, `docs/docs-map.json`, everything in `docs/reference/` that a `generated_reference` entry names, and `docs/_site/`. Nobody edits them by hand. `docs_check.py` fails a stale one (G1, G2).
 - **R2.6** — `docs/_site/` MUST be git-ignored. `docs/index.html` is committed and links into `_site/`; when `_site/` is missing its search says to run `docs_index.py build`.
 - **R2.7** — `docs/archive/` holds superseded docs. A doc moved there keeps a link to what replaced it and is never cited as a rule.
 
@@ -121,7 +166,7 @@ The content of a project's documents; publishing docs to a web host; spelling an
 
 ## 3. Overview
 
-- **R3.1** — `docs/overview/` MUST hold exactly the pages `README.md` (mission, users, why, what it is not), `apps.md` (one section per app, linked to its features), `system.md` (a C4 context diagram and a container diagram in Mermaid, and the main data flows), `glossary.md` (one term, one meaning; the words users may see) and `quality.md` (quality goals, constraints, risks). A project MAY add pages; it MUST NOT drop these five.
+- **R3.1** — `docs/overview/` MUST hold exactly the pages `README.md` (mission, users, why, what it is not), `apps.md` (one section per app, linked to its features), `system.md` (a C4 context diagram and a container diagram in Mermaid, and the main data flows), `glossary.md` (one term, one meaning; the words users may see) and `quality.md` (quality goals, constraints, risks). A project MAY add pages. It MUST NOT drop these five.
 - **R3.2** — The app names in `apps.md` MUST be the values of `apps` in `docs/docs.json` (R4.4).
 - **R3.3** — The overview MUST NOT repeat a feature's content: it links to the feature spec.
 
@@ -160,7 +205,7 @@ The content of a project's documents; publishing docs to a web host; spelling an
 
 ### 6.1 The index script
 
-- **R6.1** — `docs_index.py build` MUST write `docs/index.html` and one HTML page per lasting doc in `docs/_site/` using only the Python standard library. The result MUST work when opened from `file://`: no server, no `fetch`, search data loaded by a script tag.
+- **R6.1** — `docs_index.py build` MUST write `docs/index.html` and one HTML page per lasting doc in `docs/_site/` using only the Python standard library. The result MUST work when opened from `file://`: no server, no `fetch`; search data is loaded by a script tag.
 - **R6.2** — The home page MUST offer search over title, path and text, a link to the overview, the feature index by app and by topic, the list of all pages and the gaps list (R6.4).
 - **R6.3** — `docs_index.py build` MUST also write `docs/features/index.md` (features by app, by topic and by status), `docs/architecture/decisions.md` (R11.1), `docs/docs-map.json` (code globs to docs) and `docs/llms.txt` (a map of the docs for agents). `docs_index.py check` exits 1 when a committed generated file differs from what a build would write.
 - **R6.4** — The gaps list MUST name: feature folders without `spec.md`, specs without front matter, apps, topics or an owner, specs without a diagram or image, apps no spec lists, and missing overview pages. A feature whose `last_verified` is older than `stale_days` (default 90) or missing shows as stale on the home page.
