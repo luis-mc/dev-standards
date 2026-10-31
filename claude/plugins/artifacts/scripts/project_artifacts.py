@@ -40,6 +40,11 @@ except ImportError as _e:  # pragma: no cover - broken install
     artifact_queue = None
     _QUEUE_ERROR = str(_e)
 try:
+    import artifact_promote as PROMOTE
+except ImportError as _e:  # pragma: no cover - broken install
+    PROMOTE = None
+    _PROMOTE_ERROR = str(_e)
+try:
     import artifact_retire as AR
 except ImportError as _e:  # pragma: no cover - broken install
     AR = None
@@ -2757,6 +2762,55 @@ def cmd_queue(args):
     return 0
 
 
+def cmd_promote_to_spec(args):
+    """DOCSPEC R4.10, R10.4: write a feature artifact's decided content to docs/features/<feature>/spec.md
+    (luismc-docs template). Dry run without --yes; never overwrites a spec; touches nothing in the record."""
+    if PROMOTE is None:
+        raise Fail(2, 'artifact_promote.py cannot be imported: %s' % _PROMOTE_ERROR)
+    key = args.key
+    if not KEY_RE.match(key) or key == FP_NAME:
+        raise Fail(1, 'key must be a feature artifact key (lowercase letters, digits and hyphens)')
+    fid = args.feature or key
+    if not KEY_RE.match(fid):
+        raise Fail(1, '--feature must be lowercase letters, digits and hyphens (the folder name, DOCSPEC R4.1)')
+    ctx, rec = load_for_read(args)
+    entry = rec.entry(key)
+    if entry is None:
+        raise Fail(1, 'unknown artifact key "%s"' % key)
+    src = rec.dir / 'content' / key
+    if not src.is_dir():
+        raise Fail(2, 'content/%s is missing from the record' % key)
+    files = content_files(src)
+    meta = json.loads(files['meta.json'].decode('utf-8')) if 'meta.json' in files else {}
+    title = entry.get('title', key)
+    title = title[len('Feature: '):] if title.startswith('Feature: ') else title
+    secs = PROMOTE.sections(files)
+    decs, open_decs = PROMOTE.decided(files)
+    dest = ctx.root / 'docs' / 'features' / fid / 'spec.md'
+    rel = dest.relative_to(ctx.root).as_posix()
+    if dest.exists():
+        raise Fail(1, '%s exists; a finding from the artifact is promoted into it by hand (DOCSPEC R4.10), or pass '
+                      '--feature with another folder name' % rel)
+    text = PROMOTE.build_spec(fid, title, entry.get('apps') or [], entry.get('file', ''), meta.get('lede', ''), secs, decs)
+    result = {'command': 'promote-to-spec', 'key': key, 'spec': rel, 'sections': [t for t, _ in secs],
+              'decisions_promoted': [d.get('id') for d in decs], 'decisions_open': [d.get('id') for d in open_decs],
+              'written': False, 'dry_run': not args.yes}
+    notes = []
+    if open_decs:
+        notes.append('open decisions are not promoted: %s' % ', '.join(result['decisions_open']))
+    if args.yes:
+        write_text(dest, text if text.endswith('\n') else text + '\n')
+        result['written'] = True
+        human = ['wrote %s (%d section(s), %d decision(s))' % (rel, len(secs), len(decs)),
+                 'review it against the feature-spec template, then commit it; the artifact stays as it is (nothing in the record changed)']
+    else:
+        human = ['dry run (nothing written); with --yes this would write %s from %d section(s) and %d decided decision(s)'
+                 % (rel, len(secs), len(decs))]
+    result['notes'] = notes
+    emit(args, result, human)
+    return 0
+
+
 def cmd_move_record(args):
     """Move the record folder to another folder under docs/ and write the record_dir setting (a plain file
     move, no git). Without --yes it only says what it would do."""
@@ -2981,6 +3035,12 @@ def build_parser():
     s.add_argument('new_dir', help='the new record folder, relative to the repository, under docs/ (docs/artifacts is the default)')
     s.add_argument('--yes', action='store_true', help='do it (without it, only print what would happen)')
     s.set_defaults(func=cmd_move_record)
+
+    s = sub.add_parser('promote-to-spec', parents=[j], help="write a feature artifact's decided content to docs/features/<feature>/spec.md (DOCSPEC R4.10); dry run without --yes")
+    s.add_argument('key', help='the feature artifact key')
+    s.add_argument('--feature', help='the feature folder name under docs/features/ (default: the key)')
+    s.add_argument('--yes', action='store_true', help='write the file (without it, only print the plan)')
+    s.set_defaults(func=cmd_promote_to_spec)
 
     s = sub.add_parser('path', parents=[j], help='print the record folder, <root>/<record_dir>')
     s.set_defaults(func=cmd_path)

@@ -1,6 +1,6 @@
 ---
 name: feature-artifact-new
-description: Create a feature artifact — the standalone HTML file `docs/artifacts/feature-<slug>.html` of one feature, titled `Feature: <name>`, with a status checklist, written content and a history. It opens by double-click in any browser and is never published. Use when the user starts a feature and wants it tracked, asks for a feature artifact or feature page, or says a feature needs its own status view. Creates the project's full-progress artifact first when it does not exist yet.
+description: Create a feature artifact — the standalone HTML file `docs/artifacts/feature-<slug>.html` of one feature, titled `Feature: <name>`, with a status checklist, written content and a history. It opens by double-click in any browser and is never published. Use when the user starts a feature and wants it tracked, asks for a feature artifact or feature page, or says a feature needs its own status view. Creates the project's full-progress artifact first when it does not exist yet. Also promotes a feature page's decided content into the feature's spec (`docs/features/<x>/spec.md`, DOCSPEC) when the user asks to promote, finish or document a feature.
 model: opus
 effort: medium
 ---
@@ -168,3 +168,26 @@ URL is kept in the manifest's `retired` list and `pending` lists it under
 `retired`. Ask the owner to confirm, delete each confirmed page with the
 Artifact tool (`action: "delete"`), then run `mark-deleted <key> --url <URL>`.
 This never blocks the feature work or the end of the turn.
+
+## Promote to a spec
+
+The artifact is for work and decisions in flight; the feature's spec is how it
+works now (DOCSPEC R4.10, `luismc-docs`). When a feature's content is decided,
+or before its branch joins (R10.4), promote it in the same branch:
+
+1. Dry run: `promote-to-spec KEY [--feature ID]`. It prints the target
+   `docs/features/<ID>/spec.md` (ID defaults to KEY; it is the folder name and
+   never changes, DOCSPEC R4.1), the sections it will carry and which decisions
+   are decided (promoted) or open (left in the artifact).
+2. `promote-to-spec KEY [--feature ID] --yes` writes the spec in the
+   `luismc-docs` feature-spec template: front matter (`status: proposed`,
+   `version: 0.1.0`, `artifact:` the page's file name), the lede as section 1,
+   the first content section as section 2, the others as section 3 and the
+   decided decisions as the section 10 table. It never overwrites a spec (if
+   one exists, move the new findings into it by hand), never changes the record
+   and never commits.
+3. Review the spec against the template: put the sections in the template's
+   order, add the testable requirements (R5.x, R6.x), the code map, a diagram
+   and `apps`/`topics` from `docs/docs.json`; delete what does not apply. Then
+   run the `luismc-docs` checks (`docs_check.py`) and commit the spec with the
+   branch. The version is written only by the release fold (R4.3).

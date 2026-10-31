@@ -3512,6 +3512,70 @@ def test_hooks_read_the_record_dir_setting(env):
     assert rel == NEW_REC and found and Path(d) == p.clone / NEW_REC, r.stdout
 
 
+# --------------------------------------------------------------------------
+# promote-to-spec (DOCSPEC R4.10, R10.4)
+# --------------------------------------------------------------------------
+
+def _promote_setup(p):
+    sections = {'01-what-and-why.html': b'<!-- title: What and why -->\n<p>Checkout takes <strong>one page</strong>.</p>\n<ul><li>fast</li><li>clear</li></ul>\n',
+                '02-how.html': b'<!-- title: How it works -->\n<h3>Steps</h3><p>See <a href="https://example.test/x">the doc</a> and <code>pay()</code>.</p>'
+                               b'<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td></tr></table>\n'}
+    d = edit_decisions(p, [d_dec(1), d_open(2)], 'promote', extra=sections)
+    p.ok('edit-content', 'artifacts', '--from', d)
+
+
+@case
+def test_promote_to_spec_dry_run_writes_nothing(env):
+    """R4.10: without --yes it prints the plan and writes nothing."""
+    p = env.baseline()
+    _promote_setup(p)
+    before = p.files()
+    r = p.run('promote-to-spec', 'artifacts', '--json')
+    j = r.json()
+    assert r.code == 0 and j['dry_run'] and not j['written'], r.all
+    assert j['spec'] == 'docs/features/artifacts/spec.md' and j['decisions_promoted'] == ['D1'] and j['decisions_open'] == ['D2'], j
+    assert p.files() == before and not (p.clone / 'docs' / 'features').exists()
+
+
+@case
+def test_promote_to_spec_writes_the_feature_spec(env):
+    """R4.10, R10.4: decided content becomes docs/features/<x>/spec.md in the DOCSPEC template; the record is untouched."""
+    p = env.baseline()
+    _promote_setup(p)
+    rec_before = {k: v for k, v in p.files().items() if k.startswith('docs/artifacts')} if isinstance(p.files(), dict) else None
+    r = p.run('promote-to-spec', 'artifacts', '--feature', 'artifact-pages', '--yes')
+    assert r.code == 0 and 'wrote docs/features/artifact-pages/spec.md' in r.out, r.all
+    assert 'open decisions are not promoted: D2' in r.out, r.all
+    text = (p.clone / 'docs/features/artifact-pages/spec.md').read_text(encoding='utf-8')
+    head, body = text.split('\n---\n', 1)
+    for k in ('id: artifact-pages', 'title: Artifacts', 'apps: [plugin]', 'topics: []', 'status: proposed', 'version: 0.1.0',
+              'owner: owner', 'type: explanation', 'code: []', 'artifact: feature-artifacts.html'):
+        assert k in head, (k, head)
+    assert '## 1. In one paragraph' in body and '## 2. Why' in body and '## 3. How it works' in body, body
+    assert 'Checkout takes **one page**.' in body and '- fast' in body, body
+    assert '[the doc](https://example.test/x)' in body and '`pay()`' in body and '| A | B |' in body and '| 1 | 2 |' in body, body
+    assert '| D1 | Which layout for the checkout page? | Single page | 2026-10-10 |' in body, body
+    assert 'D2' not in body.split('## 10. Decisions')[1], 'an open decision must not be promoted'
+    assert body.rstrip().endswith('## Versions')
+    assert p.run('check').code == 0, p.run('check').all
+    if rec_before is not None:
+        assert {k: v for k, v in p.files().items() if k.startswith('docs/artifacts')} == rec_before, 'the record changed'
+
+
+@case
+def test_promote_to_spec_refuses_to_overwrite_and_bad_keys(env):
+    """R4.10: an existing spec is never overwritten; full-progress and unknown keys are refused."""
+    p = env.baseline()
+    _promote_setup(p)
+    assert p.run('promote-to-spec', 'artifacts', '--yes').code == 0
+    spec = p.clone / 'docs/features/artifacts/spec.md'
+    spec.write_text('mine\n', encoding='utf-8')
+    r = p.run('promote-to-spec', 'artifacts', '--yes')
+    assert r.code == 1 and 'exists' in r.err and spec.read_text(encoding='utf-8') == 'mine\n', r.all
+    assert p.run('promote-to-spec', 'full-progress').code == 1
+    assert p.run('promote-to-spec', 'nope').code == 1
+    assert p.run('promote-to-spec', 'artifacts', '--feature', 'Bad Name').code == 1
+
 
 def main():
     global TMP
