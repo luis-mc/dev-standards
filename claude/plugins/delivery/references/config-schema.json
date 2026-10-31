@@ -359,6 +359,11 @@
           "type": "string",
           "description": "Gets the report text in $DELIVERY_REPORT."
         },
+        "rerun_cancelled": {
+          "type": "boolean",
+          "default": false,
+          "description": "The runner guard also re-runs CI runs that ended cancelled (usually cancelled on purpose); failed, timed-out and startup-failed runs on the branch's current head are always re-run."
+        },
         "cancel_replaced_runs": {
           "type": "boolean",
           "default": true,

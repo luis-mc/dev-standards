@@ -40,7 +40,7 @@ on:
         type: boolean
         default: false
       areas:
-        description: 'Areas to run, comma-separated (specs,delivery,artifacts,profiles,transcript-folds); empty = what this branch changed against origin/main'
+        description: 'Areas to run, comma-separated (specs,delivery,artifacts,profiles,transcript-folds,docs); empty = what this branch changed against origin/main'
         type: string
         default: ''
   # The nightly workflow (TC1) calls this one with mutants on.
@@ -51,7 +51,7 @@ on:
         type: boolean
         default: false
       areas:
-        description: 'Areas to run, comma-separated (specs,delivery,artifacts,profiles,transcript-folds); empty = what this branch changed against origin/main'
+        description: 'Areas to run, comma-separated (specs,delivery,artifacts,profiles,transcript-folds,docs); empty = what this branch changed against origin/main'
         type: string
         default: ''
 
@@ -84,6 +84,7 @@ jobs:
       artifacts: ${{ steps.areas.outputs.artifacts }}
       profiles: ${{ steps.areas.outputs.profiles }}
       transcript-folds: ${{ steps.areas.outputs.transcript-folds }}
+      docs: ${{ steps.areas.outputs.docs }}
       mutants: ${{ steps.areas.outputs.mutants }}
       mutants_gate: ${{ steps.areas.outputs.mutants_gate }}
       mutants_cleanup: ${{ steps.areas.outputs.mutants_cleanup }}
@@ -605,3 +606,23 @@ jobs:
       # because a directory argument is not accepted.
       - name: Prove the transcript folds logic still holds
         run: node --test "claude/plugins/transcript-folds/tests/*.test.ts"
+
+  docs:
+    name: docs plugin
+    needs: areas
+    if: needs.areas.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      # luismc-docs: the scripts are standard library only; the tests build
+      # small git repositories in temporary folders and need only git.
+      - name: Prove the docs scripts still hold
+        run: python3 -I -m unittest discover -s claude/plugins/docs/tests -t claude/plugins/docs/tests
+
+      - name: DOCSPEC numbering and references
+        run: python3 tools/spec_check.py claude/plugins/docs/references/docspec.md

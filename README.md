@@ -17,6 +17,7 @@ claude plugin install luismc-agents@dev-standards
 claude plugin install luismc-specs@dev-standards
 claude plugin install luismc-project-setup@dev-standards
 claude plugin install luismc-artifacts@dev-standards
+claude plugin install luismc-docs@dev-standards
 claude plugin install luismc-delivery@dev-standards
 claude plugin install luismc-transcript-folds@dev-standards
 ```
@@ -29,6 +30,14 @@ configure.
 Already have older versions of these plugins installed? Remove them first
 (`claude plugin uninstall <old-name>`), then reinstall from the list above —
 Claude Code tracks plugins by name, so renamed ones need a clean install.
+
+---
+
+## `luismc-docs` — one documentation standard for every project
+
+DOCSPEC (`claude/plugins/docs/references/docspec.md`) says where each document lives and how it is kept true: `docs/` laid out by reader question (overview, features, design-system, architecture, guides, reference, project), one folder per feature with a front-matter spec, a generated `docs/index.html` that opens offline with search and a feature index by app and topic, one version per release folded from one-line change notes, and agent briefs and reports that never reach the default branch.
+
+Skills: `docs-setup` (lay out a repo or move an existing one, dry run first), `feature-spec-new`, `docs-index`, `docs-check`, `docs-note`. Hooks remind the agent at session start and at the end of a turn when mapped code changed without docs; the docs gate blocks. Generic: nothing in it belongs to one project. See the plugin's `README.md`.
 
 ---
 

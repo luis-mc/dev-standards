@@ -367,7 +367,29 @@ def record(root, op: str, **kw) -> bool:
 
 # --- CLI ---------------------------------------------------------------------------------
 
-def _cmd_plan(root, args) -> int:
+def adopt_open_pr(led: dict, train_id: str, item: dict, by: str) -> bool:
+    """CO688: a train whose branch already has an open pull request takes it: `pr`, the PR head as `ci.head_sha`
+    when none is known, and state `ci` unless the PR is a draft. False when the train has a PR already."""
+    t = find_train(led, train_id)
+    if t is None or t.get("pr") or not isinstance(item, dict) or not item.get("number"):
+        return False
+    t["pr"] = int(item["number"])
+    head = item.get("headRefOid")
+    if head and not (t.get("ci") or {}).get("head_sha"):
+        t.setdefault("ci", {})["head_sha"] = head
+    if not item.get("isDraft") and t.get("state") in ("planned", "joining", "joined", "pushed"):
+        set_train_state(t, "ci", iso())
+    add_event(led, "train.pr_adopted", "%s #%s" % (t["id"], t["pr"]), by)
+    return True
+
+
+def open_prs_of(root, branch: str, run) -> list | None:
+    """The open pull requests whose head is `branch` ([{number, headRefOid, isDraft}]); None when gh cannot say."""
+    found = _gh_json(["pr", "list", "--head", branch, "--state", "open", "--json", "number,headRefOid,isDraft"], root, run)
+    return found if isinstance(found, list) else None
+
+
+def _cmd_plan(root, args, run=None) -> int:
     cfg = load_config(root)
     cargo = []
     for spec in args.cargo or []:
@@ -386,6 +408,12 @@ def _cmd_plan(root, args) -> int:
     def fn(led):
         out["train"] = new_train(led, args.branch, args.release_no, cargo, cfg, planned)
     update(root, fn)
+    # CO688: the branch may already have an open pull request (opened before the train was planned): adopt it at
+    # once, or the watcher never learns the number. One open PR only; none, several or no gh: leave it.
+    found = open_prs_of(root, args.branch, run or _run)
+    if found and len(found) == 1:
+        tid = out["train"]["id"]
+        update(root, lambda led: adopt_open_pr(led, tid, found[0], "delivery_ledger"))
     print(out["train"]["id"])
     return 0
 

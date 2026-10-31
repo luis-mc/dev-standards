@@ -20,11 +20,15 @@ Settings come from `.delivery/config.json` key `runner_plan` and are overridden 
   affinity (list of CPU numbers), priority ("low" | "below-normal" | "normal"),
   heavy_jobs_yield (bool, default true; false = do not wait for train CI; `heavy_local_jobs_yield` is accepted
   too). Without runner_plan.train_branch_regex the config's top-level `train_branch_re` is used.
+  rerun_cancelled (bool, default false): the runners guard also re-runs `cancelled` runs (see below).
 
 Every job is recorded in `jobs[]` and a paused runner in `runners[].paused_by` of `.delivery/ledger.json`
 by a best-effort call to the delivery plugin's ledger module (`delivery_ledger.py`, found through
 DELIVERY_LEDGER, a sibling file, or `claude/plugins/delivery/scripts/`): `record(kind, data, root=...)`
-with kind "job" (fields as ledger `jobs[]`) or "runner" (name, paused_by). Absent or failing: no-op.
+with kind "job" (fields as ledger `jobs[]`) or "runner" (name, paused_by). Absent or failing: no-op, said once on
+stderr. The module is also looked for in the installed plugin cache
+(`~/.claude/plugins/cache/*/luismc-delivery/<newest version>/scripts/`) and the marketplace checkout
+(`~/.claude/plugins/marketplaces/*/claude/plugins/delivery/scripts/`): a project repo does not carry it.
 
 Offline runners (DELIVERYSPEC D6a): `runner_plan.py runners [--once]` checks the CI runners the project lists in
 `.delivery/config.json` `runners[]` (`{"name": ..., "repair": [command, ...], "labels": [...]}`) against
@@ -33,7 +37,14 @@ runner row `online: false`, and the project's report channel: `runner_plan.repor
 in the env var DELIVERY_REPORT). Then every `retry_seconds` (300) it repairs first (each `repair` command of every
 offline runner, run in order; a string runs through the shell, a list is an argv; ledger event `runner.repair`),
 re-reads the runner status and, only when the runners are online again, re-runs the train CI runs the outage
-cancelled or failed (`gh run rerun`; ledger event `runner.rerun`). It never just waits. Exit 0 runners online, 5 gave up
+failed (`gh run rerun`; ledger event `runner.rerun`). It never just waits.
+
+A run is re-run only when ALL hold (CO688): its head SHA is the branch's current head; it is the newest run of its
+workflow for that head; no run of the branch is queued, in progress, waiting or pending (a re-run would join the
+branch's concurrency group and cancel the live run); its conclusion is failure, timed_out or startup_failure. A
+`cancelled` run was usually cancelled on purpose (by a person or the watcher), so it is re-run only when the config key
+`runner_plan.rerun_cancelled` is true (default false). Every re-run is one `runner.rerun` event, every skipped run one
+`runner.rerun_skipped` event with the reason, and both are also written to `.delivery/report.log`. Exit 0 runners online, 5 gave up
 (`runner_max_retries` > 0 only).
 
 Exit: the command's exit code; 2 usage error; 4 gave up waiting (`max_wait_minutes`); 130 interrupted.
@@ -45,6 +56,7 @@ import argparse
 import atexit
 import ctypes
 import datetime
+import glob
 import importlib.util
 import json
 import os
@@ -59,13 +71,14 @@ EXIT_USAGE = 2
 EXIT_TIMEOUT = 4
 EXIT_INTERRUPTED = 130
 EXIT_RUNNERS = 5
-RERUN_CONCLUSIONS = ("cancelled", "failure", "timed_out", "startup_failure")
+RERUN_CONCLUSIONS = ("failure", "timed_out", "startup_failure")      # + "cancelled" when rerun_cancelled
 LOCK_NAME = "runner-plan.lock"
 ACTIVE_RUN_STATUSES = ("queued", "in_progress", "waiting", "pending", "requested")
 DEFAULTS = {
     "min_free_mb": 0, "pause_service": "", "train_branch_regex": r"^release/", "poll_seconds": 60,
     "max_wait_minutes": 0, "repo": "", "affinity": [], "priority": "normal",
     "retry_seconds": 300, "runner_max_retries": 0, "report_command": "", "heavy_jobs_yield": True,
+    "rerun_cancelled": False,
 }
 GH_TIMEOUT = 30
 
@@ -178,9 +191,18 @@ def apply_limits(pid: int, affinity, priority: str) -> None:
 
 # ---------------------------------------------------------------- ledger (best effort)
 
-def find_ledger_module(root: str):
+def _version_key(name: str):
+    return tuple(int(x) if x.isdigit() else 0 for x in re.split(r"[.\-]", name))
+
+
+def ledger_module_path(root: str, search_here: bool = True):
+    """Path of delivery_ledger.py, or None. Order: DELIVERY_LEDGER, the sibling file, the plugin sources in a
+    parent folder of the project, CLAUDE_PLUGIN_ROOT, the user's installed plugin cache (newest version), the
+    user's marketplace checkout."""
     here = os.path.dirname(os.path.abspath(__file__))
-    cands = [os.environ.get("DELIVERY_LEDGER", ""), os.path.join(here, "delivery_ledger.py")]
+    cands = [os.environ.get("DELIVERY_LEDGER", "")]
+    if search_here:
+        cands.append(os.path.join(here, "delivery_ledger.py"))
     d = os.path.abspath(root)
     for _ in range(6):
         cands.append(os.path.join(d, "claude", "plugins", "delivery", "scripts", "delivery_ledger.py"))
@@ -190,8 +212,19 @@ def find_ledger_module(root: str):
         cands.append(os.path.join(plugin_root, "scripts", "delivery_ledger.py"))
     for c in cands:
         if c and os.path.isfile(c):
-            return find_ledger_module_at(c)
-    return None
+            return c
+    home = os.path.expanduser("~")
+    cache = glob.glob(os.path.join(home, ".claude", "plugins", "cache", "*", "luismc-delivery", "*", "scripts", "delivery_ledger.py"))
+    cache.sort(key=lambda p: _version_key(os.path.basename(os.path.dirname(os.path.dirname(p)))))
+    if cache:
+        return cache[-1]
+    market = glob.glob(os.path.join(home, ".claude", "plugins", "marketplaces", "*", "claude", "plugins", "delivery", "scripts", "delivery_ledger.py"))
+    return market[0] if market else None
+
+
+def find_ledger_module(root: str, search_here: bool = True):
+    path = ledger_module_path(root, search_here)
+    return find_ledger_module_at(path) if path else None
 
 
 def find_ledger_module_at(path: str):
@@ -208,9 +241,14 @@ class Ledger:
     def __init__(self, root: str, module="auto"):
         self.root = root
         self.module = find_ledger_module(root) if module == "auto" else module
+        self.said_missing = False
 
     def record(self, kind: str, data: dict) -> None:
         if self.module is None:
+            if not self.said_missing:
+                self.said_missing = True
+                log("ledger module not found (delivery_ledger.py): jobs, runners and events are not recorded; "
+                    "set DELIVERY_LEDGER to its path")
             return
         try:
             # delivery_ledger.record(root, op, **kw): "job" and "runner" upsert one row, "event" adds an event
@@ -526,24 +564,78 @@ class RunnerGuard:
                 shown = c if isinstance(c, str) else " ".join(c)
                 self.event("runner.repair", "%s: %s -> exit %s%s" % (r["name"], shown, code, (": " + out[:200]) if code else ""))
 
+    def report_log(self, text: str) -> None:
+        """One line in .delivery/report.log (best effort)."""
+        try:
+            d = os.path.join(self.root, ".delivery")
+            if os.path.isdir(d):
+                with open(os.path.join(d, "report.log"), "a", encoding="utf-8") as f:
+                    f.write("%s %s\n" % (datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"), text))
+        except OSError:
+            pass
+
+    def branch_head(self, branch: str):
+        """Current head SHA of a branch on the remote, or None."""
+        repo = self.cfg["repo"] or "{owner}/{repo}"
+        data = self.gh(["api", "repos/%s/branches/%s" % (repo, branch)])
+        commit = data.get("commit") if isinstance(data, dict) else None
+        sha = commit.get("sha") if isinstance(commit, dict) else None
+        return str(sha) if sha else None
+
+    def skip(self, run, why: str) -> None:
+        text = "skipped run %s on %s: %s" % (run.get("databaseId"), run.get("headBranch"), why)
+        self.event("runner.rerun_skipped", text)
+        self.report_log(text)
+        log(text)
+
     def rerun(self) -> int:
-        """Re-run the train CI runs the outage cancelled or failed. Queued runs start by themselves."""
-        args = ["run", "list", "--limit", "50", "--json", "databaseId,status,conclusion,headBranch,createdAt"]
+        """Re-run the train CI runs the outage failed, and only those that are still wanted (CO688): the run's head
+        is the branch's current head, it is the newest run of its workflow for that head, nothing of the branch is
+        queued or running, and it did not end `cancelled` (unless runner_plan.rerun_cancelled)."""
+        args = ["run", "list", "--limit", "50", "--json",
+                "databaseId,status,conclusion,headBranch,headSha,workflowName,createdAt"]
         if self.cfg["repo"]:
             args += ["--repo", self.cfg["repo"]]
         runs = self.gh(args)
         if not isinstance(runs, list):
             return 0
+        runs = [r for r in runs if isinstance(r, dict)]
         pattern = re.compile(self.cfg["train_branch_regex"])
+        conclusions = RERUN_CONCLUSIONS + (("cancelled",) if self.cfg.get("rerun_cancelled") else ())
+        busy = {str(r.get("headBranch")) for r in runs if r.get("status") in ACTIVE_RUN_STATUSES}
+        heads: dict = {}
         n = 0
         for r in runs:
-            if not isinstance(r, dict) or r.get("status") != "completed" or r.get("conclusion") not in RERUN_CONCLUSIONS:
+            if r.get("status") != "completed" or not pattern.search(str(r.get("headBranch", ""))) \
+                    or str(r.get("createdAt", "")) < (self.offline_since or ""):
                 continue
-            if not pattern.search(str(r.get("headBranch", ""))) or str(r.get("createdAt", "")) < (self.offline_since or ""):
+            if r.get("conclusion") == "cancelled" and "cancelled" not in conclusions:
+                self.skip(r, "cancelled (usually on purpose; set runner_plan.rerun_cancelled to re-run it)")
+                continue
+            if r.get("conclusion") not in conclusions:
+                continue
+            branch, sha = str(r.get("headBranch")), r.get("headSha")
+            if branch not in heads:
+                heads[branch] = self.branch_head(branch)
+            if heads[branch] is None:
+                self.skip(r, "the head of %s cannot be read" % branch)
+                continue
+            if not sha or not (heads[branch].startswith(str(sha)) or str(sha).startswith(heads[branch])):
+                self.skip(r, "old head %s, the branch is at %s" % (str(sha)[:9], heads[branch][:9]))
+                continue
+            if any(o is not r and o.get("headSha") == sha and o.get("workflowName") == r.get("workflowName")
+                   and int(o.get("databaseId") or 0) > int(r.get("databaseId") or 0) for o in runs):
+                self.skip(r, "a newer run of %s exists for this head" % r.get("workflowName"))
+                continue
+            if branch in busy:
+                self.skip(r, "a run of %s is queued or in progress; a re-run would cancel it" % branch)
                 continue
             argv = ["gh", "run", "rerun", str(r["databaseId"])] + (["--repo", self.cfg["repo"]] if self.cfg["repo"] else [])
             code, _ = self.run_cmd(argv, 60)
             self.event("runner.rerun", "%s %s exit %s" % (r["databaseId"], r.get("headBranch"), code))
+            self.report_log("re-ran run %s on %s (exit %s)" % (r["databaseId"], r.get("headBranch"), code))
+            if code == 0:
+                busy.add(branch)          # it is running now; never re-run a second run of the branch
             n += code == 0
         return n
 

@@ -2,12 +2,14 @@
   "specs": [
     "claude/plugins/project-setup/skills/tech-stack-setup/references/invariants.md",
     "claude/plugins/artifacts/references/artifactspec.md",
-    "claude/plugins/project-setup/skills/auth-setup/references/authentication.md"
+    "claude/plugins/project-setup/skills/auth-setup/references/authentication.md",
+    "claude/plugins/docs/references/docspec.md"
   ],
   "changelog_headings": {
     "claude/plugins/project-setup/skills/tech-stack-setup/references/invariants.md": "0.1 What changed",
     "claude/plugins/artifacts/references/artifactspec.md": "0.4 What changed",
-    "claude/plugins/project-setup/skills/auth-setup/references/authentication.md": ""
+    "claude/plugins/project-setup/skills/auth-setup/references/authentication.md": "",
+    "claude/plugins/docs/references/docspec.md": ""
   },
   "plugins": [
     "claude/plugins/*/.claude-plugin/plugin.json"
