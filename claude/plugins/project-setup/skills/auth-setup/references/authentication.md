@@ -60,7 +60,7 @@ In words:
 
 ## 0. How to use this document
 
-This specification defines a **single, reusable authentication and authorization framework**. It is the source of truth for:
+This specification defines one reusable **authentication and authorization framework**. It is the source of truth for:
 
 - the Auth API surface (consumed by any number of visual interfaces),
 - the persistence schema required to back it,
@@ -68,7 +68,7 @@ This specification defines a **single, reusable authentication and authorization
 - the client-side contract every consuming web/mobile app must implement,
 - the tests and audits that prove conformance.
 
-**This document is deliberately technology-neutral.** It names no language, framework, runtime, database engine, ORM, cache product, or cloud provider. Every requirement is expressed as behaviour, structure, and constraint. Section 2 defines how an implementer binds these requirements to the concrete stack of the project it is generating into.
+**This document is deliberately technology-neutral.** It names no language, framework, runtime, database engine, ORM, cache product, or cloud provider. Every requirement is stated as behaviour, structure, or constraint. Section 2 defines how an implementer binds these requirements to the stack of the project being generated.
 
 ### 0.1 Conformance language
 
@@ -111,7 +111,7 @@ This specification defines a **single, reusable authentication and authorization
 
 ### 1.3 Deferred extension points
 
-These are intentionally not built now. The implementation **MUST** leave the named seam so they can be added without a schema migration or breaking API change.
+These are not built now. The implementation **MUST** leave the named seam, so each can be added without a schema migration or a breaking API change.
 
 | Extension | Required seam |
 |---|---|
