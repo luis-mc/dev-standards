@@ -19,21 +19,6 @@
   "ui_paths": [],
   "steps": [
     {
-      "name": "typecheck",
-      "scope": "changed+dependents",
-      "run": "cargo check --locked --workspace --all-targets"
-    },
-    {
-      "name": "lint",
-      "scope": "changed+dependents",
-      "run": "cargo clippy --locked --workspace --all-targets -- -D warnings"
-    },
-    {
-      "name": "unit",
-      "scope": "changed",
-      "run": "cargo test --locked --workspace --lib"
-    },
-    {
       "name": "guards",
       "scope": "always",
       "pre_push": true,
@@ -50,6 +35,23 @@
       "scope": "always",
       "pre_push": true,
       "run": "gitleaks git --log-opts={base}..HEAD --redact --no-banner"
+    },
+    {
+      "name": "typecheck",
+      "scope": "changed+dependents",
+      "pre_push": true,
+      "run": "cargo check --locked --workspace --all-targets"
+    },
+    {
+      "name": "lint",
+      "scope": "changed+dependents",
+      "pre_push": true,
+      "run": "cargo clippy --locked --workspace --all-targets -- -D warnings"
+    },
+    {
+      "name": "unit",
+      "scope": "changed",
+      "run": "cargo test --locked --workspace --lib"
     }
   ]
 }

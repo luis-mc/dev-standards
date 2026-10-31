@@ -397,7 +397,7 @@ def sc_scopes(t: T, shared: Path) -> None:
     res = box.result()
     t.eq("result: contract keys present",
          sorted(res), sorted(["schema", "kind", "branch", "head", "base", "base_ref", "base_fetched", "widened",
-                              "changed_dirs", "steps", "pass", "timed_out", "partial", "started_at",
+                              "changed_dirs", "steps", "required_steps", "pass", "timed_out", "partial", "started_at",
                               "finished_at", "tool"]))
     t.eq("result: branch", res["branch"], "feat/web")
     t.eq("result: head", res["head"], box.g("rev-parse", "HEAD"))
@@ -899,7 +899,7 @@ def sc_logs(t: T, shared: Path) -> None:
 
     # a step name that is not a safe file name
     cfg = Box.gate_json()
-    cfg["steps"][0]["name"] = "type check/ts"
+    cfg["steps"][2]["name"] = "type check/ts"  # "unit": typecheck and lint are required steps now (DL-84/DL-85)
     box2 = Box(shared, gate_json=cfg)
     box2.branch("feat/names", {"apps/web/a.txt": "a\n"})
     r = box2.gate("--no-publish")
@@ -948,6 +948,23 @@ def sc_timeout(t: T, shared: Path) -> None:
     box.push("feat/slow")
     v = verify(box, "feat/slow")
     t.eq("gate_verify does not trust a timed-out result", v.code, 1)
+
+    # the grace: with the limit already used up, required steps (lint, types) still run
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        ctx = dc.Context(root=Path(tmp), cfg={}, base_ref="origin/main", base="b", head="h", files=[],
+                         packages=[], changed_dirs=[], affected_dirs=[], widened=False)
+        ok = '"%s" -c "print(1)"' % PY
+        steps = [{"name": n, "scope": "always", "run": ok} for n in ("typecheck", "lint", "unit")]
+        ents, hit = dc.execute_steps(steps, ctx, limit_seconds=1e-9, required_steps=["typecheck", "lint"])
+        got = {e["name"]: (e["outcome"], e["reason"]) for e in ents}
+        t.eq("grace: required steps still run after the limit is used up",
+             (got["typecheck"], got["lint"]), (("pass", None), ("pass", None)))
+        t.eq("grace: ... other steps are skipped 'gate timed out'", got["unit"], ("skip", "gate timed out"))
+        t.eq("grace: ... and the run is marked timed out", hit, True)
+        ents, hit = dc.execute_steps(steps, ctx, limit_seconds=1e-9)
+        t.eq("grace: without required steps, everything is skipped",
+             sorted({e["outcome"] for e in ents}), ["skip"])
 
     # a short limit set in gate.json and the flag that overrides it
     box = Box(shared)
@@ -1105,6 +1122,86 @@ def sc_fast_guards(t: T, shared: Path) -> None:
     gate_path.write_text(json.dumps(cfg), encoding="utf-8")
     r = box.script("fast_guards.py", "--base-ref", "origin/main")
     t.eq("no pre_push step configured: exit 2", r.code, 2)
+
+
+def sc_required_steps(t: T, shared: Path) -> None:
+    """Lint and types come before the test steps and cannot be skipped (DL-84)."""
+    box = Box(shared)
+    head = box.branch("feat/req", {"apps/web/a.txt": "a\n"})
+    gate_path = box.work / "scripts/delivery/gate.json"
+    good = gate_path.read_text(encoding="utf-8")
+    cfg = json.loads(good)
+    r = box.gate("--no-publish")
+    t.eq("default gate passes", r.code, 0)
+    t.eq("... and records the default required steps",
+         box.result()["required_steps"], ["typecheck", "lint"])
+
+    bad = json.loads(good)
+    names = [s["name"] for s in bad["steps"]]
+    bad["steps"].insert(names.index("lint"), bad["steps"].pop(names.index("unit")))
+    box.commit({"scripts/delivery/gate.json": json.dumps(bad)}, "cfg")
+    r = box.gate("--no-publish")
+    t.eq("a test step before lint: exit 2", r.code, 2)
+    t.has("... says which step and why", r.err, "unit")
+    t.has("... names the required steps", r.err, "required step")
+
+    bad = json.loads(good)
+    bad["required_steps"] = ["nope"]
+    box.commit({"scripts/delivery/gate.json": json.dumps(bad)}, "cfg")
+    t.eq("an unknown required step: exit 2", box.gate("--no-publish").code, 2)
+
+    bad = json.loads(good)
+    bad["required_steps"] = []
+    bad["steps"].insert(0, bad["steps"].pop([s["name"] for s in bad["steps"]].index("unit")))
+    box.commit({"scripts/delivery/gate.json": json.dumps(bad)}, "cfg")
+    t.eq("required_steps [] turns the order check off", box.gate("--no-publish").code, 0)
+
+    # gate_verify refuses a result where lint or types did not run
+    box = Box(shared)
+    box.gated("feat/ok", {"apps/web/ok.txt": "ok\n"})
+    good_res = json.loads(box.origin_git("show", "refs/gate-results/feat/ok:gate-result.json"))
+    t.eq("a normal result is trusted", verify(box, "feat/ok").code, 0)
+    cases = {
+        "lint-notsel": ("lint", {"outcome": "skip", "reason": "not selected", "command": None}),
+        "types-timeout": ("typecheck", {"outcome": "skip", "reason": "gate timed out", "command": None}),
+        "lint-nopkg": ("lint", {"outcome": "skip", "reason": "no package changed", "command": None}),
+    }
+    for branch, (step, change) in cases.items():
+        box.g("checkout", "-q", "-B", "feat/" + branch, "feat/ok")
+        box.push("feat/" + branch)
+        steps = [{**x, **change} if x["name"] == step else x for x in good_res["steps"]]
+        box.publish_raw("feat/" + branch, json.dumps({**good_res, "branch": "feat/" + branch, "steps": steps}))
+    box.g("checkout", "-q", "-B", "feat/lint-gone", "feat/ok")
+    box.push("feat/lint-gone")
+    box.publish_raw("feat/lint-gone", json.dumps({**good_res, "branch": "feat/lint-gone",
+                    "steps": [x for x in good_res["steps"] if x["name"] != "lint"]}))
+    box.g("checkout", "-q", "-B", "feat/old", "feat/ok")
+    box.push("feat/old")
+    old = {k: v for k, v in good_res.items() if k != "required_steps"}
+    box.publish_raw("feat/old", json.dumps({**old, "branch": "feat/old",
+                    "steps": [x for x in good_res["steps"] if x["name"] != "typecheck"]}))
+    r = verify(box, "feat/lint-notsel")
+    t.eq("lint skipped as 'not selected': refused", r.code, 1)
+    t.has("... says the required step did not run", r.out, "required step 'lint' did not run")
+    t.eq("typecheck skipped for the time limit: refused", verify(box, "feat/types-timeout").code, 1)
+    t.eq("lint skipped because no package changed: trusted", verify(box, "feat/lint-nopkg").code, 0)
+    r = verify(box, "feat/lint-gone")
+    t.eq("lint missing from the result: refused", r.code, 1)
+    t.has("... says it is not in the result", r.out, "not in the result")
+    t.eq("an older result without required_steps: a missing typecheck is not required of it",
+         verify(box, "feat/old").code, 0)
+
+    # the shipped gate.json of every track: order, and lint/types in the pre-push hook
+    tooling = shared.parent
+    for track in ("ts", "go", "rust", "dotnet"):
+        c = dc.load_gate(tooling / track)
+        order = [x["name"] for x in c["steps"]]
+        last_req = max(order.index(n) for n in c["required_steps"])
+        t.check("%s: typecheck is a required step" % track, "typecheck" in c["required_steps"])
+        t.check("%s: guards come before typecheck" % track, order.index("guards") < order.index("typecheck"))
+        t.check("%s: unit comes after the required steps" % track, order.index("unit") > last_req)
+        t.check("%s: required steps also run in pre-push" % track,
+                all(x["pre_push"] for x in c["steps"] if x["name"] in c["required_steps"]))
 
 
 def e2e_gate_json(with_map: bool = True, placeholder: bool = True) -> dict:
@@ -3141,6 +3238,13 @@ def sc_runner_health(t: T, shared: Path) -> None:
 
 # (id, file relative to shared/, text to replace, replacement, scenario that must notice)
 MUTANTS = [
+    ("verify accepts a skipped required step", "scripts/delivery/gate_verify.py",
+     'elif entry.get("outcome") == "skip" and not str(entry.get("reason") or "").startswith("no "):',
+     "elif False:", "required_steps"),
+    ("verify accepts a result without a required step", "scripts/delivery/gate_verify.py",
+     "if entry is None:", "if False:", "required_steps"),
+    ("gate.json may order tests before lint", "scripts/delivery/delivery_common.py",
+     "    if req:\n        last = max(", "    if False:\n        last = max(", "required_steps"),
     ("verify ignores a stale head", "scripts/delivery/gate_verify.py",
      'if r_head != verdict["branch_head"]:', "if False:", "verify"),
     ("verify ignores a stale base", "scripts/delivery/gate_verify.py",
@@ -3443,6 +3547,7 @@ SCENARIOS = {
     "publish": sc_publish,
     "verify": sc_verify,
     "fast_guards": sc_fast_guards,
+    "required_steps": sc_required_steps,
     "push_check": sc_push_check,
     "fast_report": sc_fast_report,
     "parallel": sc_parallel,

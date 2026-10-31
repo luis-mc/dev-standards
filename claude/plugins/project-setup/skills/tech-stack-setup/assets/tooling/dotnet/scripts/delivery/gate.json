@@ -21,16 +21,6 @@
   "ui_paths": [],
   "steps": [
     {
-      "name": "typecheck",
-      "scope": "changed+dependents",
-      "run": "dotnet build --no-restore --configuration Release -warnaserror"
-    },
-    {
-      "name": "unit",
-      "scope": "changed",
-      "run": "dotnet test --configuration Release --filter \"Category=Unit\""
-    },
-    {
       "name": "guards",
       "scope": "always",
       "pre_push": true,
@@ -47,6 +37,17 @@
       "scope": "always",
       "pre_push": true,
       "run": "gitleaks git --log-opts={base}..HEAD --redact --no-banner"
+    },
+    {
+      "name": "typecheck",
+      "scope": "changed+dependents",
+      "pre_push": true,
+      "run": "dotnet build --no-restore --configuration Release -warnaserror"
+    },
+    {
+      "name": "unit",
+      "scope": "changed",
+      "run": "dotnet test --configuration Release --filter \"Category=Unit\""
     }
   ]
 }

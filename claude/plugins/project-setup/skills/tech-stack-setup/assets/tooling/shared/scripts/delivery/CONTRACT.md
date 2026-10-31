@@ -97,6 +97,18 @@ timed out. A script never exits 0 when it could not decide.
 }
 ```
 
+- `required_steps` (optional, default `["typecheck", "lint"]` limited to the steps
+  the file defines): steps a trusted result must have run. Order is enforced when
+  gate.json loads: every step that is not `always`-scoped and not required comes
+  after the last required step, so the order is always-on guards, then
+  typecheck + lint, then unit / integration / e2e (STACKSPEC 13.5, DL-84). A
+  required step is never skipped because the time limit is used up (one that starts
+  with the limit spent gets 10 minutes), and `gate-result.json` records `required_steps`. `gate_verify.py`
+  refuses a result in which a required step is absent or was skipped for a reason
+  that does not start with `no ` (`no package changed`, `no ui_paths change`).
+  Steps with `"pre_push": true` also run in the pre-push hook: the template marks
+  `typecheck` and `lint` that way, and they skip themselves (`no package changed`)
+  on a documentation-only push.
 - `scope`: `always` runs every time; `changed` and `changed+dependents` run
   `run` with placeholders filled, or `run_full` when the gate is widened (or
   `--full`), and are skipped (outcome `skip`) when no package changed;
@@ -197,6 +209,7 @@ gate and CI run the same scanner.
     {"name": "typecheck", "outcome": "pass", "seconds": 41.2, "command": "pnpm turbo ...",
      "reason": null, "exit_code": 0, "log": ".delivery/logs/typecheck.log"}
   ],
+  "required_steps": ["typecheck", "lint"],
   "pass": true,
   "timed_out": false,
   "started_at": "2026-10-10T10:12:03Z",

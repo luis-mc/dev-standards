@@ -3,8 +3,8 @@
 
     fast_guards.py [--base-ref REF] [--commit SHA] [--timeout-minutes N]
 
-Runs the gate.json steps marked "pre_push": true (the guard tests and the secret
-scan), continuing past a failure so one run reports everything. Each step has a
+Runs the gate.json steps marked "pre_push": true (the guard tests, the secret
+scan, and typecheck + lint of the touched packages, which skip when no package changed), continuing past a failure so one run reports everything. Each step has a
 time limit (5 minutes); one over it is killed with everything it started and
 fails. A failed step is reported the way the branch gate reports one: the
 "FAIL <step>: <reason> (exit N, Ns) - log: <path>" line and the last 40 lines of

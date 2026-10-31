@@ -20,25 +20,6 @@
   "ui_paths": ["apps/web/", "apps/admin/", "packages/ui/"],
   "steps": [
     {
-      "name": "typecheck",
-      "scope": "changed+dependents",
-      "run": "pnpm turbo run typecheck --continue \"--filter=...[{base}]\"",
-      "run_full": "pnpm turbo run typecheck --continue"
-    },
-    {
-      "name": "lint",
-      "scope": "changed+dependents",
-      "run": "pnpm turbo run lint --continue \"--filter=...[{base}]\"",
-      "run_full": "pnpm turbo run lint --continue"
-    },
-    {
-      "name": "unit",
-      "scope": "changed+dependents",
-      "run": "pnpm vitest run --project unit --passWithNoTests {affected_dirs}",
-      "run_full": "pnpm vitest run --project unit",
-      "env": {"CI": "true"}
-    },
-    {
       "name": "guards",
       "scope": "always",
       "pre_push": true,
@@ -56,6 +37,27 @@
       "scope": "always",
       "pre_push": true,
       "run": "gitleaks git --log-opts={base}..HEAD --redact --no-banner"
+    },
+    {
+      "name": "typecheck",
+      "scope": "changed+dependents",
+      "pre_push": true,
+      "run": "pnpm turbo run typecheck --continue \"--filter=...[{base}]\"",
+      "run_full": "pnpm turbo run typecheck --continue"
+    },
+    {
+      "name": "lint",
+      "scope": "changed+dependents",
+      "pre_push": true,
+      "run": "pnpm turbo run lint --continue \"--filter=...[{base}]\"",
+      "run_full": "pnpm turbo run lint --continue"
+    },
+    {
+      "name": "unit",
+      "scope": "changed+dependents",
+      "run": "pnpm vitest run --project unit --passWithNoTests {affected_dirs}",
+      "run_full": "pnpm vitest run --project unit",
+      "env": {"CI": "true"}
     },
     {
       "name": "e2e",

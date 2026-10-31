@@ -13,6 +13,9 @@ commit in between touches only inert paths (gate.json "inert_paths", default
 docs/**): the ready pull request's CI still tests the real merge. --strict-base
 turns that off, so any move of the base makes the result stale.
 
+A result is also refused when a required step (gate.json "required_steps", default typecheck and
+lint) is missing or was skipped for any reason other than "nothing in its scope changed".
+
 Exit: 0 trusted and passing, 1 not trusted, 2 no result (or branch not found).
 """
 from __future__ import annotations
@@ -143,6 +146,19 @@ def verify(
     steps = result.get("steps") if isinstance(result.get("steps"), list) else []
     if any(isinstance(s, dict) and s.get("name") == dc.SETUP_STEP and s.get("outcome") != "pass" for s in steps):
         reasons.append("setup did not pass (a stale lockfile is the usual cause)")
+    required = result.get("required_steps")
+    if not isinstance(required, list):  # a result written before required_steps: lint and types, where it has them
+        required = [n for n in dc.DEFAULT_REQUIRED_STEPS]
+        have = {s.get("name") for s in steps if isinstance(s, dict)}
+        required = [n for n in required if n in have]
+    by_name = {s.get("name"): s for s in steps if isinstance(s, dict)}
+    for name in required:
+        entry = by_name.get(name)
+        if entry is None:
+            reasons.append("required step '%s' is not in the result" % name)
+        elif entry.get("outcome") == "skip" and not str(entry.get("reason") or "").startswith("no "):
+            # "no package changed" / "no ui_paths change" mean nothing to check; any other skip means it never ran
+            reasons.append("required step '%s' did not run (%s)" % (name, entry.get("reason") or "skipped"))
     if result.get("pass") is not True:
         failed = [s.get("name") for s in steps if isinstance(s, dict) and s.get("outcome") == "fail"]
         reasons.append("result is failing" + (" (failed: %s)" % ", ".join(failed) if failed else ""))

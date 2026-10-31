@@ -17,21 +17,6 @@
   "ui_paths": [],
   "steps": [
     {
-      "name": "typecheck",
-      "scope": "changed+dependents",
-      "run": "go vet ./..."
-    },
-    {
-      "name": "lint",
-      "scope": "changed+dependents",
-      "run": "golangci-lint run --timeout=5m ./..."
-    },
-    {
-      "name": "unit",
-      "scope": "changed",
-      "run": "go test -short ./..."
-    },
-    {
       "name": "guards",
       "scope": "always",
       "pre_push": true,
@@ -48,6 +33,23 @@
       "scope": "always",
       "pre_push": true,
       "run": "gitleaks git --log-opts={base}..HEAD --redact --no-banner"
+    },
+    {
+      "name": "typecheck",
+      "scope": "changed+dependents",
+      "pre_push": true,
+      "run": "go vet ./..."
+    },
+    {
+      "name": "lint",
+      "scope": "changed+dependents",
+      "pre_push": true,
+      "run": "golangci-lint run --timeout=5m ./..."
+    },
+    {
+      "name": "unit",
+      "scope": "changed",
+      "run": "go test -short ./..."
     }
   ]
 }
