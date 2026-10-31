@@ -98,6 +98,10 @@ python <plugin>/scripts/delivery_ledger.py cleaned --pr N
 - **DL-03** a train is green only when every workflow in `watcher.ci_workflows` (default `["ci.yml"]`) completed with `success` on the PR head commit. `ci_watch.py` passing no longer sets green; the watcher does, and revokes green when a required run is running again.
 - **DL-76** one CI per release. `pr_proven_jobs` in `.delivery/config.json` lists the job names the release PR proves (globs ok), e.g. `["Windows tests", "test-*"]`. After the merge the Stop hook finds the PR's merge commit, and when its tree equals the PR head tree it flags every such job that ran on the default branch. Rule: "A release runs CI once: nothing after the merge re-runs what the release PR proved on the same tree; only publish, deploy and production smoke run on the default branch." Off while `pr_proven_jobs` is empty.
 
+## Branch gate order (DL-84) and runner split (DL-85)
+
+The branch gate runs the always-on guards, then typecheck + lint of the touched packages and their dependents, then the test steps; a time limit never skips lint or types, `gate_verify.py` refuses a result where they did not run, and the generated pre-push hook runs them too. On one shared Linux runner, OS-neutral CI jobs (lint, types, boundaries, portable contract/unit tests) should run on another available runner in parallel.
+
 ## CI-gate path (opt-in, DL-80..83)
 
 For a project whose agents are gated by CI on their branch instead of a full local gate. Nothing changes for a project that does not opt in. The scripts live in `luismc-project-setup` (`tooling/shared/scripts/delivery/`) and the project's patterns in `scripts/delivery/ci-scope.json`; this plugin carries the rules, the spec and the brief:

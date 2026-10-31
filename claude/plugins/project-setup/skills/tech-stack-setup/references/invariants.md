@@ -1422,15 +1422,16 @@ Every repository MUST ship a branch gate: one command that an agent or a person
 runs on a branch before it is joined. Against the merge base with the branch it
 will join, it runs:
 
-1. Type check of the changed packages and every package that depends on them.
-2. Lint of the same set, continuing past a failing package so that one run
-   reports every error.
-3. Unit tests of the changed packages.
-4. Every guard test, whatever changed. A guard test scans the source or the
+1. Every guard test, whatever changed. A guard test scans the source or the
    specs as a whole (retired vocabulary, design rules, duplication ratchets,
    spec-note rules); scoping it by package lets a change elsewhere break it
    unseen.
-5. The secret scan over the branch's new commits.
+2. The secret scan over the branch's new commits.
+3. Type check of the changed packages and every package that depends on them.
+4. Lint of the same set, continuing past a failing package so that one run
+   reports every error.
+5. Unit tests of the changed packages, then integration tests where the
+   repository has them.
 6. End-to-end tests, only when a user-facing app, or a package it renders,
    changed. The gate SHOULD run only the specs the change affects, through a
    committed map from specs to source paths or, when there is no map, the specs
@@ -1438,6 +1439,15 @@ will join, it runs:
    graph); a change the map does not cover, or one to shared configuration or
    the API contract, runs them all. The
    ready pull request's CI always runs every spec.
+
+The order is binding: the checks that take seconds or minutes and
+fail most often (guards, type check, lint) come before the slow test steps, so a
+time-limited gate always reaches them. Type check and lint are required steps
+(the repository's gate configuration may name others): the gate MUST NOT skip
+them because the time limit is used up, and the result's verifier MUST refuse a
+result in which a required step is missing or was skipped for any reason other
+than "nothing in its scope changed". A gate that spends its limit on tests before
+lint lets a lint error reach pull-request CI, where one run costs a full suite.
 
 Because a result is trusted only against the current head of the branch it
 joins, the gate fetches that branch before computing the merge base; only when
@@ -1475,7 +1485,10 @@ check reports why it accepted the result, and a strict mode keeps the exact-base
 rule.
 
 The guard tests and the secret scan MUST also run as a pre-push hook. They take
-seconds and catch the failures that otherwise reach pull-request CI. For a
+seconds and catch the failures that otherwise reach pull-request CI. The hook
+SHOULD also run type check and lint of the touched packages and their dependents;
+the task runner's cache makes a repeat cheap, and a push that changes
+no package (documentation only) skips them. For a
 branch pushed for the first time, the hook compares with the branch it forks
 from (the nearest one), not with the default branch, so it checks only what the
 push adds. Every
@@ -1518,6 +1531,13 @@ gate runs the scanner CI runs.
 - Branches SHOULD NOT edit a spec's version or change log. Each adds a change
   note naming the spec and the kind of change; the release folds the notes
   into the versions and change logs, so parallel branches do not conflict.
+- When ready pull requests' CI runs on one shared Linux runner, the jobs that need
+  no Linux (lint, types, boundary checks, and contract or unit tests that run on
+  any OS) SHOULD run in parallel on another available runner, a second
+  self-hosted runner with its own label or a hosted one, so they do not wait
+  behind the Linux-only jobs (integration, end-to-end, packaging). Each workflow
+  reads its runner labels from a setting (§13.1), so the split is a setting, not
+  a rewrite.
 - On shared or self-hosted runners, ready pull requests' CI SHOULD run one at a
   time; the next train waits for the run, not for a merge. A required runner label
   carried by one runner only is a single point of failure: setup warns against it

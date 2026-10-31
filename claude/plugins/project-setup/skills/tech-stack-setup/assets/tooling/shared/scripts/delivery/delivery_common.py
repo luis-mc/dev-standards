@@ -43,6 +43,11 @@ DEFAULT_TIMEOUT_MINUTES = 30  # one branch_gate.py run, setup included
 FAST_STEP_TIMEOUT_MINUTES = 5  # one fast_guards.py step
 TAIL_LINES = 40  # lines of a failed step printed after the summary
 SETUP_STEP = "setup"  # reserved step name: the gate.json "setup" commands
+# Steps a trusted result must have run (STACKSPEC 13.5): gate.json "required_steps",
+# default these two (those of them that the gate defines). They run before any test
+# step, and a time limit never skips them.
+DEFAULT_REQUIRED_STEPS = ("typecheck", "lint")
+REQUIRED_STEP_FLOOR_SECONDS = 600  # a required step still gets this long after the gate's limit is used up
 
 SCOPES = ("always", "changed", "changed+dependents", "ui-changed")
 PACKAGE_KINDS = ("pnpm-workspace", "go-modules", "cargo-workspace", "dotnet-sln")
@@ -328,6 +333,24 @@ def load_gate(root: Path) -> dict:
         ):
             raise DeliveryError("%s ('%s'): 'env' must map names to string values" % (label, name))
         step["env"] = env
+    names = [st["name"] for st in steps]
+    if "required_steps" in cfg:
+        req = _str_list(cfg, "required_steps", where)
+        unknown = [n for n in req if n not in names]
+        if unknown:
+            raise DeliveryError("%s: 'required_steps' names unknown step(s): %s" % (where, ", ".join(unknown)))
+    else:
+        req = [n for n in DEFAULT_REQUIRED_STEPS if n in names]
+    cfg["required_steps"] = req
+    if req:
+        last = max(names.index(n) for n in req)
+        late = [st["name"] for st in steps[:last] if st["name"] not in req and st["scope"] != "always"]
+        if late:
+            raise DeliveryError(
+                "%s: step(s) %s run before the required step(s) %s; order the steps: always-on guards, "
+                "then %s, then unit / integration / e2e (STACKSPEC 13.5)"
+                % (where, ", ".join(late), ", ".join(req), " + ".join(req))
+            )
     return cfg
 
 
@@ -971,6 +994,7 @@ def execute_steps(
     per_step: bool = False,
     log_dir: str = LOG_DIR,
     log_root: Path | None = None,
+    required_steps: list[str] | None = None,
 ) -> tuple[list[dict], bool]:
     """Run `setup_cmds` as the step "setup", then `steps` in order. Returns the
     result's step entries and whether the time limit stopped the run.
@@ -980,7 +1004,8 @@ def execute_steps(
     each step with `per_step` (a step over it fails and the run goes on). Each step's
     output goes to <log_dir>/<step>.log under `log_root` (default: the context's
     root; fast_guards.py checking a pushed commit in a temporary worktree keeps the
-    logs in the main checkout, which outlives it). Commands run in ctx.root."""
+    logs in the main checkout, which outlives it). Commands run in ctx.root.
+    `required_steps` (lint and types) are still run when the time limit is used up."""
     cwd = ctx.root
     root = log_root or ctx.root
     entries: list[dict] = []
@@ -992,6 +1017,8 @@ def execute_steps(
         if limit_seconds is None:
             return None
         return limit_seconds if per_step else limit_seconds - (time.monotonic() - t0)
+
+    required = set(required_steps or ())
 
     def run(name: str, commands: list[str], why: str, env: dict[str, str] | None) -> dict:
         nonlocal timed_out
@@ -1016,6 +1043,8 @@ def execute_steps(
             for cmd in commands:
                 print("    $ %s" % cmd, flush=True)
                 left = budget()
+                if left is not None and left <= 0 and name in required:
+                    left = REQUIRED_STEP_FLOOR_SECONDS  # limit used up before it began: lint and types still run
                 code, secs, hit = run_logged(
                     cmd, cwd, env, log, None if left is None else max(left, 0.01)
                 )
@@ -1054,7 +1083,7 @@ def execute_steps(
             go, cmd, why = plan_step(step, ctx)
             if not go:
                 reason = why
-            elif not per_step and limit_seconds is not None and budget() <= 0:
+            elif not per_step and limit_seconds is not None and budget() <= 0 and name not in required:
                 timed_out = True
                 halt = reason = "gate timed out"
         if reason is not None:

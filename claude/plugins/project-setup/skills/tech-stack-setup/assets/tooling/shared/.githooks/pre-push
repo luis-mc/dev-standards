@@ -1,6 +1,7 @@
 #!/bin/sh
-# Runs the branch gate's seconds-long checks (the guard tests and the secret
-# scan) before a push, so the failures that would otherwise reach pull-request CI
+# Runs the branch gate's fast checks (the guard tests, the secret scan, and type
+# check + lint of the touched packages; the last two skip on a docs-only push and
+# are cached by the task runner) before a push, so the failures that would otherwise reach pull-request CI
 # stop here. STACKSPEC 13.5.
 #
 # git passes one line per pushed ref on stdin:

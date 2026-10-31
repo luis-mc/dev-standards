@@ -119,6 +119,7 @@ def main(argv: list[str] | None = None) -> int:
         setup_cmds=cfg["setup"],
         no_setup=args.no_setup,
         limit_seconds=minutes * 60,
+        required_steps=cfg["required_steps"],
     )
     finished = dc.utc_now()
 
@@ -134,6 +135,7 @@ def main(argv: list[str] | None = None) -> int:
         "widened": ctx.widened,
         "changed_dirs": ctx.changed_dirs,
         "steps": entries,
+        "required_steps": cfg["required_steps"],
         "pass": ok,
         "timed_out": timed_out,
         "partial": partial,
