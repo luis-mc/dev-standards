@@ -21,6 +21,11 @@
       "description": "Security, performance, and compliance audit skills (security-audit, performance-audit, compliance-audit) \u2014 systematic checklists producing severity-ranked findings, no auto-fix."
     },
     {
+      "name": "luismc-docs",
+      "source": "./claude/plugins/docs",
+      "description": "The documentation standard for every project, to DOCSPEC: docs layout by reader question, feature-spec template, a generated offline docs/index.html with search and a feature index, one version per release folded from change notes, checks that keep docs true to the code, a scripted move for existing repos, and a guard that keeps agent briefs and reports off the default branch."
+    },
+    {
       "name": "luismc-delivery",
       "source": "./claude/plugins/delivery",
       "description": "Enforces delivery discipline from a ledger: Stop, PreToolUse, PostToolUse and SessionStart hooks plus a watcher for trains, CI, agent ETAs, concurrency caps, owner questions and attribution, to DELIVERYSPEC."

@@ -76,6 +76,12 @@ for path, want in [
     ("claude/plugins/transcript-folds/hooks/hooks.json", {"transcript-folds"}),
     ("claude/plugins/transcript-folds/tests/width.test.ts", {"transcript-folds"}),
     ("claude/plugins/transcript-folds/types/state.d.ts", {"transcript-folds"}),
+    ("claude/plugins/docs/scripts/docs_check.py", {"docs"}),
+    ("claude/plugins/docs/tests/test_check.py", {"docs"}),
+    ("claude/plugins/docs/hooks/hooks.json", {"docs"}),
+    ("claude/plugins/docs/templates/feature-spec.md", {"docs"}),
+    ("claude/plugins/docs/references/docspec.md", {"specs", "docs"}),
+    ("claude/plugins/docs/skills/docs-check/SKILL.md", {"profiles"}),
 ]:
     check(f"area of {path}", hit([path]), want)
 
@@ -95,6 +101,7 @@ for path in ["docs/artifacts/feature-x.html", "docs/plans/test-cost-train.md",
              ".github/workflows/nightly.yml", ".github/workflows/template-build.yml",
              "claude/plugins/artifacts/.claude-plugin/plugin.json",
              "claude/plugins/transcript-folds/.claude-plugin/plugin.json",
+             "claude/plugins/docs/.claude-plugin/plugin.json",
              f"{TS}/assets/catalog/tech/data.yaml", f"{TS}/assets/check_stack.py",
              "tools/template_build_check.py"]:
     check(f"none {path}", hit([path]), set())
@@ -184,7 +191,7 @@ check("advice heavy lists touched areas",
 check("advice shared path is every area, heavy",
       ca.advice(["tools/ci_areas.py"], "b"),
       "heavy: delivery,artifacts -> run `gh workflow run spec-lint.yml --ref b "
-      "-f areas=specs,delivery,artifacts,profiles,transcript-folds`")
+      "-f areas=specs,delivery,artifacts,profiles,transcript-folds,docs`")
 check("parse_areas order and trim", ca.parse_areas(" profiles,specs "), ["specs", "profiles"])
 check("parse_areas empty", ca.parse_areas(""), [])
 try:
@@ -229,10 +236,10 @@ with tempfile.TemporaryDirectory() as tmp:
     prof = commit(tmp, "tools/test_model_profiles.py")
     dgate = commit(tmp, "tools/test_delivery_gate.py")
     none = {"specs": "false", "delivery": "false", "artifacts": "false", "profiles": "false",
-            "transcript-folds": "false", "mutants": "false", "mutants_gate": "false", "mutants_cleanup": "false",
+            "transcript-folds": "false", "docs": "false", "mutants": "false", "mutants_gate": "false", "mutants_cleanup": "false",
             "mutants_notes": "false"}
     every = {**none, "specs": "true", "delivery": "true", "artifacts": "true",
-             "profiles": "true", "transcript-folds": "true"}
+             "profiles": "true", "transcript-folds": "true", "docs": "true"}
     allmut = {"mutants": "true", "mutants_gate": "true", "mutants_cleanup": "true",
               "mutants_notes": "true"}
     gatemut = {"mutants": "true", "mutants_gate": "true", "mutants_cleanup": "true"}
