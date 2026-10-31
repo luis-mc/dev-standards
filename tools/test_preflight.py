@@ -34,9 +34,10 @@ def build(kind: str) -> pathlib.Path:
     subprocess.run(["git", "init", "-q", str(d)], check=True)
     if kind == "empty-repo":
         return d
-    if kind in ("stack-only", "stack-and-auth"):
-        (d / "docs/specs").mkdir(parents=True)
-        (d / "docs/specs/stack-profile.md").write_text("# Stack Profile\n")
+    if kind in ("stack-only", "stack-and-auth", "stack-old-path"):
+        sub = "docs/specs" if kind == "stack-old-path" else "docs/architecture"
+        (d / sub).mkdir(parents=True)
+        (d / sub / "stack-profile.md").write_text("# Stack Profile\n")
         (d / "pnpm-workspace.yaml").write_text("packages:\n  - 'packages/*'\n")
         (d / "packages").mkdir()
     if kind == "stack-and-auth":
@@ -61,13 +62,19 @@ CASES = [
     ("empty repo blocks auth-setup", "empty-repo",
      ["--require", "stack", "--for-skill", "auth-setup"], 1, "tech-stack-setup"),
     ("empty repo names the missing profile", "empty-repo",
-     ["--require", "stack"], 1, "docs/specs/stack-profile.md is missing"),
+     ["--require", "stack"], 1, "docs/architecture/stack-profile.md is missing"),
     ("not a git repo blocks", "not-a-repo",
      ["--require", "stack"], 1, "not a git repository"),
     ("workspace without a profile still blocks", "half-built",
      ["--require", "stack"], 1, "stack-profile.md is missing"),
     ("a set-up repo passes", "stack-only",
      ["--require", "stack"], 0, "preflight OK"),
+    ("a repo not yet moved (profile in docs/specs) still passes", "stack-old-path",
+     ["--require", "stack"], 0, "preflight OK"),
+    ("the old path is named so it can be moved", "stack-old-path",
+     ["--require", "stack"], 0, "old path docs/specs/stack-profile.md"),
+    ("the missing-profile message names the old path too", "empty-repo",
+     ["--require", "stack"], 1, "docs/specs/stack-profile.md"),
     ("missing packages/auth blocks a downstream skill", "stack-only",
      ["--require", "stack", "--require", "auth"], 1, "Run the `auth-setup`"),
     ("stack + auth passes", "stack-and-auth",

@@ -68,7 +68,7 @@ New in 0.2.0:
 | `smoke_workflow` | `Production smoke` | the workflow `delivery_ledger.py smoke` looks for |
 | `enforcement.log_every_block` | false | append every block to `.delivery/blocks.log`: time, hook (`stop`/`pre-tool`), rule id, message (tab separated) |
 | `watcher.push_trains` | true | push the next joined train |
-| `watcher.open_prs` | true | open its ready PR |
+| `watcher.open_prs` | true | open its ready PR; the body carries `.delivery/docs-summaries.md` (written by `join.py`) when present |
 | `watcher.merge_on_green` | true | `gh pr merge N --merge --match-head-commit SHA`, never `--auto`, only when the head is unchanged since the green run |
 | `watcher.manage_runners` | true | launch `runner_plan.py runners` on the loop (needs `runners[]`; D6a) |
 | `runner_plan.cancel_replaced_runs` | true | cancel CI runs of a head a newer push replaced |

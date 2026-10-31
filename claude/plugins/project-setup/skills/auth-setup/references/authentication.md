@@ -80,7 +80,7 @@ The implementation's concrete technology **MUST** be resolved by this exact proc
 
 ### 2.1 Resolution order
 
-1. **Declared stack document.** Look for a tech-stack specification in the project, in this order: `docs/specs/stack-profile.md`, `docs/specs/tech-stack.md`, `specs/tech-stack.md`, `specs/tech_stack.md`, `docs/tech-stack.md`, `TECH-STACK.md`, or a `tech_stack` section in `CLAUDE.md`. If found, it is authoritative and overrides everything below.
+1. **Declared stack document.** Look for a tech-stack specification in the project, in this order: `docs/architecture/stack-profile.md`, `docs/specs/stack-profile.md`, `docs/specs/tech-stack.md`, `specs/tech-stack.md`, `specs/tech_stack.md`, `docs/tech-stack.md`, `TECH-STACK.md`, or a `tech_stack` section in `CLAUDE.md`. If found, it is authoritative and overrides everything below.
 2. **Inference from the repository.** If no declared document exists, infer from, in order of authority: dependency/package manifests; existing migration or schema directories; existing source under the project's conventional source root; build, container, and deployment configuration; lint/format configuration (for naming and style conventions).
 3. **Ask.** If neither step yields an unambiguous answer for any dimension in §2.2, **stop and ask the user**. Do not guess, and do not proceed with a placeholder.
 

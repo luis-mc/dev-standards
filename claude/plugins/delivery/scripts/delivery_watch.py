@@ -91,6 +91,9 @@ def ci_state_from_runs(runs: list[dict], required: list[str] | None = None) -> s
     return "success"
 
 
+DOCS_SUMMARIES = ".delivery/docs-summaries.md"
+
+
 class Watcher:
     def __init__(self, root, sh=None, dry_run=False, now=None, routine_fetcher=None,
                  out=print, repo=None):
@@ -414,6 +417,16 @@ class Watcher:
         self.push_next(exclude=train["id"])
         return True
 
+    def pr_body(self, train) -> str:
+        """The ready PR body: the train line, then .delivery/docs-summaries.md when join.py wrote it (DOCSPEC R10.3,
+        the summaries of the agent reports it stripped). A missing or unreadable file adds nothing."""
+        body = "Train %s: %s" % (train["id"], ", ".join(c.get("task", "") for c in train.get("cargo", [])))
+        try:
+            extra = (self.root / DOCS_SUMMARIES).read_text(encoding="utf-8").strip()
+        except OSError:
+            extra = ""
+        return body + ("\n\n" + extra if extra else "")
+
     def push_next(self, exclude=None) -> None:
         """Push the next joined train and open its ready PR (not while another train's CI runs)."""
         if not self.flags["push_trains"]:
@@ -437,7 +450,7 @@ class Watcher:
             pr = found[0]["number"] if isinstance(found, list) and found else None
         if not pr and self.flags["open_prs"]:
             title = "Release %s" % (nxt.get("release_no") or b)
-            body = "Train %s: %s" % (nxt["id"], ", ".join(c.get("task", "") for c in nxt.get("cargo", [])))
+            body = self.pr_body(nxt)
             rc, out, _ = self.act(["gh", "pr", "create", "--base", self.cfg.get("base", "main"), "--head", b,
                                    "--title", title, "--body", body, *self.repo_args])
             m = re.search(r"/pull/(\d+)", out or "")

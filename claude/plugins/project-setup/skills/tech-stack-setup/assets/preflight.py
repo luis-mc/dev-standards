@@ -46,7 +46,13 @@ class Requirement:
     paths: list[str] = field(default_factory=list)
     # At least one of these must exist. Empty means no such constraint.
     any_paths: list[str] = field(default_factory=list)
+    # Groups of paths: each group needs at least one existing path. This lets
+    # a file move without breaking repos that have not moved it yet.
+    one_of: list[list[str]] = field(default_factory=list)
 
+
+STACK_PROFILE_PATHS = ["docs/architecture/stack-profile.md",
+                       "docs/specs/stack-profile.md"]
 
 REQUIREMENTS: dict[str, Requirement] = {
     "stack": Requirement(
@@ -57,7 +63,10 @@ REQUIREMENTS: dict[str, Requirement] = {
         # mandatory, AUTHSPEC §2.1 resolves the stack through it, and it is the
         # last thing tech-stack-setup writes. Its presence means that skill ran
         # to completion rather than partway.
-        paths=["docs/specs/stack-profile.md", "pnpm-workspace.yaml"],
+        # STACKSPEC §18 puts it at docs/architecture/stack-profile.md; a repo
+        # not yet moved keeps it at docs/specs/stack-profile.md, still accepted.
+        paths=["pnpm-workspace.yaml"],
+        one_of=[STACK_PROFILE_PATHS],
         any_paths=["packages", "apps"],
     ),
     "auth": Requirement(
@@ -84,6 +93,10 @@ def check(req: Requirement, root: Path) -> list[str]:
     """Every unmet condition in `req`, as human-readable strings."""
     missing = [p for p in req.paths if not (root / p).exists()]
     out = [f"{p} is missing" for p in missing]
+    for group in req.one_of:
+        if not any((root / p).exists() for p in group):
+            out.append(f"{group[0]} is missing (an older repo may still have "
+                       f"{', '.join(group[1:])})")
     if req.any_paths and not any((root / p).exists() for p in req.any_paths):
         out.append("none of " + ", ".join(req.any_paths) + " exists")
     return out
@@ -124,6 +137,11 @@ def main() -> int:
     if not failures:
         checked = ", ".join(args.require)
         print(f"preflight OK — {checked} satisfied in {root}")
+        if ("stack" in args.require
+                and not (root / STACK_PROFILE_PATHS[0]).exists()):
+            print(f"note: the Stack Profile is at the old path "
+                  f"{STACK_PROFILE_PATHS[1]}; STACKSPEC §18 now puts it at "
+                  f"{STACK_PROFILE_PATHS[0]}. Move it when you move the docs.")
         return 0
 
     print(f"BLOCKED: {args.for_skill} cannot run in {root}\n")

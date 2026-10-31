@@ -375,6 +375,33 @@ class NextTrainTests(unittest.TestCase):
         self.assertEqual((t2["state"], t2["pr"]), ("ci", 11))
         self.assertIsNotNone(t2["pushed_at"])
 
+    def _create_body(self, summaries):
+        root = make_root()
+        seed(root, [{"branch": "release/29", "pr": 10, "state": "ci"},
+                    {"branch": "release/30", "state": "joined", "release_no": 30, "cargo": [{"task": "DV1"}]}])
+        if summaries is not None:
+            os.makedirs(os.path.join(str(root), ".delivery"), exist_ok=True)
+            with open(os.path.join(str(root), ".delivery", "docs-summaries.md"), "w", encoding="utf-8") as f:
+                f.write(summaries)
+        r = routes_for_green()
+        r[("git", "push")] = (0, "")
+        r[("gh", "pr", "list", "--head")] = (0, "[]")
+        r[("gh", "pr", "create")] = (0, "https://github.com/o/r/pull/11\n")
+        sh = FakeShell(r)
+        watcher(root, sh, repo="o/r").run_once()
+        create = [c for c in sh.calls if c[:3] == ["gh", "pr", "create"]][0]
+        return create[create.index("--body") + 1]
+
+    def test_ready_pr_body_carries_docs_summaries_when_present(self):
+        body = self._create_body("## Docs\n- DV1: moved the guide\n")
+        self.assertTrue(body.startswith("Train "))
+        self.assertIn("DV1", body.splitlines()[0])
+        self.assertTrue(body.endswith("## Docs\n- DV1: moved the guide"), body)
+
+    def test_ready_pr_body_without_or_with_empty_summaries_is_the_train_line(self):
+        self.assertEqual(self._create_body(None).count("\n"), 0)
+        self.assertEqual(self._create_body("  \n").count("\n"), 0)
+
     def test_next_train_not_pushed_while_another_train_ci_runs_or_when_held(self):
         root = make_root()
         seed(root, [{"branch": "release/29", "pr": 10, "state": "ci"},
