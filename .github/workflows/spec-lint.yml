@@ -573,6 +573,11 @@ jobs:
       - name: Prove every skill's model and effort match the profile table
         run: python3 tools/test_model_profiles.py
 
+      # DS122: claude-setup turns on every marketplace plugin; a plugin added
+      # to the marketplace but missing from its settings template or table fails.
+      - name: Prove claude-setup names every marketplace plugin
+        run: python3 tools/test_claude_setup_plugins.py
+
   artifacts:
     name: artifact renderer, commands and hooks
     needs: areas

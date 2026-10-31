@@ -141,6 +141,8 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (re.escape(PS) + r"/claude-setup/assets/.*", frozenset({"profiles"})),
     (r"claude/plugins/agents/agents/.*", frozenset({"profiles"})),
     (r"tools/test_model_profiles\.py", frozenset({"profiles"})),
+    (r"tools/test_claude_setup_plugins\.py", frozenset({"profiles"})),
+    (r"\.claude-plugin/marketplace\.json", frozenset({"profiles"})),
     # transcript-folds (its .claude-plugin/ manifest is matched above: nothing heavy)
     (r"claude/plugins/transcript-folds/.*", frozenset({"transcript-folds"})),
     # docs (SKILL.md and the manifest are matched above)
