@@ -51,10 +51,18 @@ def warn(msg: str) -> None:
 
 # --- parsing helpers ---------------------------------------------------------------------
 
+# One-line form: `eta: setup 5 + work 60 + checks 10 = 75 min` (the "= total" and the unit are optional).
+ETA_LINE_RE = re.compile(
+    r"^\s*setup\s+(?P<setup>\d+(?:\.\d+)?)\s*(?:min|m)?\s*\+\s*work\s+(?P<work>\d+(?:\.\d+)?)\s*(?:min|m)?\s*\+\s*"
+    r"checks\s+(?P<checks>\d+(?:\.\d+)?)\s*(?:min|m)?\s*(?:=\s*(?P<total>\d+(?:\.\d+)?)\s*(?:min|m)?)?\s*$",
+    re.I)
+
+
 def parse_delivery_block(text: str) -> dict:
     """The first fenced ```delivery block as a dict. Lines are `key: value`:
     task, branch, where, model, effort, basis, owns (comma list), setup/work/checks (minutes),
-    total (minutes, default setup+work+checks)."""
+    total (minutes, default setup+work+checks).
+    `eta: setup 5 + work 60 + checks 10 = 75 min` is the one-line form; separate lines win when both exist."""
     m = FENCE_RE.search(text or "")
     if not m:
         return {}
@@ -68,18 +76,24 @@ def parse_delivery_block(text: str) -> dict:
         if raw.get(k):
             out[k] = raw[k]
     if raw.get("owns"):
-        out["owns"] = [g.strip() for g in re.split(r"[,\s]+", raw["owns"]) if g.strip()]
+        out["owns"] = [g.strip() for g in raw["owns"].split(",") if g.strip()]
+    one = ETA_LINE_RE.match(raw.get("eta", "")) if raw.get("eta") else None
     br = {}
     for k in ("setup", "work", "checks"):
         try:
-            br[k] = float(raw[k]) if k in raw else None
+            br[k] = float(raw[k]) if k in raw else (float(one.group(k)) if one else None)
         except ValueError:
             br[k] = None
     br = {k: v for k, v in br.items() if v is not None}
     if br:
         out["breakdown"] = br
         try:
-            out["total_min"] = float(raw["total"]) if "total" in raw else sum(br.values())
+            if "total" in raw:
+                out["total_min"] = float(raw["total"])
+            elif one and one.group("total") and not any(k in raw for k in ("setup", "work", "checks")):
+                out["total_min"] = float(one.group("total"))
+            else:
+                out["total_min"] = sum(br.values())
         except ValueError:
             out["total_min"] = sum(br.values())
     return out

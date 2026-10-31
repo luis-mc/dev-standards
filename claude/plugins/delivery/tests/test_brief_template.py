@@ -33,5 +33,15 @@ class BriefTemplateTests(unittest.TestCase):
         self.assertEqual(self.block["effort"], "medium")
 
 
+class TemplateEtaTests(unittest.TestCase):
+    def test_example_block_parses_to_a_breakdown_when_filled(self):
+        import hook_post_tool as H
+        text = TEMPLATE.read_text(encoding="utf-8")
+        filled = text.replace("<m>", "10").replace("<total>", "30")
+        b = H.parse_delivery_block(filled)
+        self.assertEqual(b["breakdown"], {"setup": 10.0, "work": 10.0, "checks": 10.0})
+        self.assertEqual(b["total_min"], 30.0)
+
+
 if __name__ == "__main__":
     unittest.main()

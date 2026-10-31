@@ -222,5 +222,43 @@ class PlanAdoptsOpenPrTests(unittest.TestCase):
         self.assertEqual((t["pr"], t["state"]), (7, "planned"))
 
 
+class AgentEtaTests(unittest.TestCase):
+    def seed(self):
+        root = make_root()
+        start = L.iso(datetime.now(timezone.utc) - timedelta(minutes=5))
+        L.update(root, lambda led: led["agents"].extend([
+            {"id": "ag1", "task": "T1", "state": "running", "started": start, "eta": None},
+            {"id": "ag2", "task": "T2", "state": "done", "started": start, "eta": None}]))
+        return root, start
+
+    def run_cli(self, root, *args):
+        return subprocess.run([sys.executable, "-I", str(SCRIPTS / "delivery_ledger.py"), "--root", str(root), *args],
+                              capture_output=True, text=True)
+
+    def test_sets_eta_by_id(self):
+        root, start = self.seed()
+        r = self.run_cli(root, "agent-eta", "ag1", "--setup", "5", "--work", "40", "--checks", "15", "--basis", "two files")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        eta = L.load(root)["agents"][0]["eta"]
+        self.assertEqual(eta["total_min"], 60)
+        self.assertEqual(eta["breakdown"], {"setup": 5, "work": 40, "checks": 15})
+        self.assertEqual(eta["basis"], "two files")
+        self.assertEqual(L.parse_iso(eta["due"]), L.parse_iso(start) + timedelta(minutes=60))
+        self.assertIn('"total_min": 60', r.stdout)
+
+    def test_matches_by_task(self):
+        root, _ = self.seed()
+        r = self.run_cli(root, "agent-eta", "T1", "--setup", "1", "--work", "2", "--checks", "3")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(L.load(root)["agents"][0]["eta"]["total_min"], 6)
+
+    def test_no_running_match_exits_1_and_changes_nothing(self):
+        root, _ = self.seed()
+        for key in ("ag2", "nope"):
+            r = self.run_cli(root, "agent-eta", key, "--setup", "1", "--work", "2", "--checks", "3")
+            self.assertEqual(r.returncode, 1)
+        self.assertIsNone(L.load(root)["agents"][1]["eta"])
+
+
 if __name__ == "__main__":
     unittest.main()
