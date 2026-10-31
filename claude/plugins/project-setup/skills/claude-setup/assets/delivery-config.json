@@ -1,6 +1,6 @@
 {
   "_doc": "Per-project config for the luismc-delivery plugin, written to .delivery/config.json by claude-setup (never overwritten once present). Keys starting with _ are ignored. A `brief_markers` entry that is a list is satisfied by any one string in it. `runners[]` lists the CI runners the project uses: `name` (as GitHub shows it) and `repair` (commands run in order when the runner is offline: a string runs through the shell, a list is an argv; D6a). `runner_plan.report_command` is the project's report channel (gets the text in $DELIVERY_REPORT). Validate with delivery_config.py validate (unknown keys warn). enforcement, watcher and runner_plan flags are described in DELIVERYSPEC section 6. Neutral defaults; _example_windows_monorepo shows values for a Windows monorepo.",
-  "caps": { "cloud": 20, "local": 3, "total": 23 },
+  "caps": { "cloud": 50, "local": 3, "total": 53 },
   "work_root": "",
   "tz": "UTC",
   "train_label_re": "^release/\\d+[a-z]?$",
@@ -37,7 +37,7 @@
     "cancel_replaced_runs": true, "hold_dependabot_during_train": true, "heavy_jobs_yield": true
   },
   "_example_windows_monorepo": {
-    "caps": { "cloud": 20, "local": 3, "total": 23 },
+    "caps": { "cloud": 50, "local": 3, "total": 53 },
     "work_root": "C:\\Work",
     "tz": "Europe/Lisbon",
     "release_branch_re": "^release/\\d+[a-z]?$",

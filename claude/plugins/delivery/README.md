@@ -109,7 +109,7 @@ The branch gate runs the always-on guards, then typecheck + lint of the touched 
 For a project whose agents are gated by CI on their branch instead of a full local gate. Nothing changes for a project that does not opt in. The scripts live in `luismc-project-setup` (`tooling/shared/scripts/delivery/`) and the project's patterns in `scripts/delivery/ci-scope.json`; this plugin carries the rules, the spec and the brief:
 
 - **Agents** run the tests of what they touch and the fast guards, push, and write a `CODE DONE` line in their report. `agent_ci.py` merges the branch onto its base (`--base`, default `origin/master`; a release branch while a train is open) into a two-parent commit on `ci/<task>` and starts one `workflow_dispatch` CI run per branch head; that run is the gate. A conflict is reported by file and starts nothing; `cleanup.py --pr N` removes the `ci/<task>` refs. The manual run plans `origin/<default>...HEAD`.
-- **Caps** (DL-38): defaults cloud 20, local 3, total 23; a project's `.delivery/config.json` `caps` overrides them.
+- **Caps** (DL-38): defaults cloud 50, local 3, total 53; a project's `.delivery/config.json` `caps` overrides them.
 - **Orchestrator** joins urgent work at code push (`join.py --ci-gate`) and sizes ETAs from coding time plus the branch CI run. A CI plan script that a helper imports has no top-level `await`.
 - **CI scope** (`ci_scope.py`): release PR full; CI files only, the CI tests and a named smoke set; root configuration full; else affected.
 - **Run times**: the last job writes the artifact `ci-run-times` (repository variable `CI_RUN_TIMES=true`).

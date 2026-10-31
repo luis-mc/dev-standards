@@ -305,7 +305,7 @@ Each skips when the plugin is not installed yet; print the command instead.
   change an existing `.claude/artifacts.json`; if its `record_dir` differs from
   `docs/docs.json`, report it.
 - **luismc-delivery.** Write `.delivery/config.json` from
-  `assets/delivery-config.json` when absent (caps cloud 20, local 3, total 23,
+  `assets/delivery-config.json` when absent (caps cloud 50, local 3, total 53,
   and `watcher.ci_workflows` `["ci.yml"]`), as in the `.delivery/config.json`
   section below. When the file is present, leave every key alone except `caps`:
   when an old `caps` value is lower than the template's (for example `total` 5),
@@ -441,7 +441,7 @@ with `_` (the template's `_doc` and `_example_windows_monorepo`) when writing.
 
 Ask once in step 1 whether to fill the project's values; for a Windows monorepo
 the documented example is `work_root` `C:\\Work`, `tz` `Europe/Lisbon`, `caps`
-8/3/5 (cloud/local/total; an existing smaller cap is raised to 20/3/23 on the next run, which the owner can decline), and `no_attribution` `true`, which makes the
+50/3/53 (cloud/local/total; an existing smaller cap is raised to 50/3/53 on the next run, which the owner can decline), and `no_attribution` `true`, which makes the
 `commit-msg` hook that `tech-stack-setup` installs refuse `Co-Authored-By` and AI
 attribution trailers (DL-74). Without the answer, write the neutral defaults.
 
@@ -561,7 +561,7 @@ Apply what was confirmed, then check the result rather than assuming it worked:
   its failure is reported.
 - `.claude/artifacts.json` parses and names `record_dir` `docs/project` (or the
   owner's existing value), and `docs/docs.json`, when present, names the same.
-- `.delivery/config.json` has `caps` at least cloud 20, local 3, total 23.
+- `.delivery/config.json` has `caps` at least cloud 50, local 3, total 53.
 - `~/.claude/settings.json` holds `enabledPlugins."luismc-transcript-folds@<marketplace>"`
   (`true`, or the owner's existing value), next to every entry that was there
   before, and still parses as JSON.

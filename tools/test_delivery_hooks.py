@@ -773,8 +773,8 @@ def dl38_caps():
     p.close()
     sys.path.insert(0, SCRIPTS)
     import hooklib as _hl
-    assert _hl.DEFAULTS['caps'] == {'cloud': 20, 'local': 3, 'total': 23}
-    p = Project(ledger(agents=[agent(id='c%d' % i, owns=['x%d/' % i]) for i in range(20)]))   # default cloud cap 20
+    assert _hl.DEFAULTS['caps'] == {'cloud': 50, 'local': 3, 'total': 53}
+    p = Project(ledger(agents=[agent(id='c%d' % i, owns=['x%d/' % i]) for i in range(50)]))   # default cloud cap 50
     r = p.pre('RemoteTrigger', trigger())
     assert denied(r) and 'DL-38' in why(r) and 'cloud cap' in why(r), r
     p.close()

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-31T23:40+00:00",
+  "updated": "2026-10-31T23:45+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2291,24 +2291,24 @@
       "id": "DS121",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Release: claude-setup installs and configures all 8 plugins",
       "detail": "Fold, push, CI",
-      "expected": "01 Nov ~03:30",
-      "changed": "2026-10-31T23:15+00:00",
-      "expected_basis": "after RELEASE-18 joins; agent ~2 h + fold/CI 30 min",
-      "release": 20
+      "expected": "01 Nov ~00:15",
+      "changed": "2026-10-31T23:45+00:00",
+      "expected_basis": "joined; CI ~15 min",
+      "release": 20,
+      "started": "2026-10-31T23:45+00:00"
     },
     {
       "id": "DS122",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "claude-setup: install, enable and configure all 8 plugins",
       "detail": "project scope; install missing; docs init, record in docs/project, delivery caps 20/3/23",
-      "expected": "01 Nov ~01:30",
-      "changed": "2026-10-31T23:15+00:00",
-      "expected_basis": "cloud agent ~2 h",
+      "expected": "31 Oct",
+      "changed": "2026-10-31T23:45+00:00",
       "rides": "DS121",
       "started": "2026-10-31T23:16+00:00"
     },
@@ -2316,12 +2316,11 @@
       "id": "DS123",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "delivery: one-line eta in briefs parsed; agent-eta command",
       "detail": "parser reads 'eta: setup N + work N + checks N = T min'; delivery_ledger.py agent-eta exists",
-      "expected": "01 Nov ~01:15",
-      "changed": "2026-10-31T23:20+00:00",
-      "expected_basis": "cloud agent ~60 min",
+      "expected": "31 Oct",
+      "changed": "2026-10-31T23:45+00:00",
       "rides": "DS121",
       "started": "2026-10-31T23:25+00:00"
     },

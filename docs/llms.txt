@@ -27,6 +27,7 @@
 - [Generic CI speed is a SHOULD in STACKSPEC 13.1](docs/architecture/decisions/0039-generic-ci-speed-for-products.md)
 - [Every shipped rule line is tagged, and a check that finds a break blocks](docs/architecture/decisions/0040-rule-tags-and-blocking-checks.md)
 - [Upgrade notes are how-to guides, the originals are archived](docs/architecture/decisions/0050-upgrade-notes-are-guides.md)
+- [claude-setup turns on and configures all plugins in the project](docs/architecture/decisions/0070-claude-setup-all-plugins.md)
 
 ## archive
 

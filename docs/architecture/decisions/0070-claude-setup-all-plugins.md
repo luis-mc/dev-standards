@@ -35,7 +35,7 @@ Configuration (all three chosen):
 
 1. luismc-docs: `docs_setup.py init --apply` in a repo without docs; in a repo with docs, show the `migrate` dry-run plan and never apply it without the owner.
 2. luismc-artifacts: create the record with `record_dir` `docs/project` when absent (DOCSPEC R2.4).
-3. luismc-delivery: write `.delivery/config.json` from the template when absent (caps 20/3/23, `ci.yml`); when present, raise caps that are lower and show `current -> new`.
+3. luismc-delivery: write `.delivery/config.json` from the template when absent (caps 50/3/53, raised from 20/3/23 by the owner on 31 Oct; `ci.yml`); when present, raise caps that are lower and show `current -> new`.
 
 ## Decision
 

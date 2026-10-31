@@ -398,7 +398,7 @@ def check_launch(cfg, ledger, data, where):
     cloud_running = len(H.running_agents(ledger, 'cloud'))
     local_running = len(H.running_agents(ledger, 'local'))
     caps = cfg['caps']
-    cap_cloud, cap_local = int(caps.get('cloud', 20)), int(caps.get('local', 3))
+    cap_cloud, cap_local = int(caps.get('cloud', 50)), int(caps.get('local', 3))
     cap_total = int(caps.get('total', cap_cloud + cap_local))
     if where == 'local' and H.check_on(cfg, 'D4') and cloud_running < cap_cloud and not PC_BOUND_RE.search(text):
         deny('D4 run non-PC-bound work in the cloud (cloud running %d of %d). Launch it with RemoteTrigger, or add a '

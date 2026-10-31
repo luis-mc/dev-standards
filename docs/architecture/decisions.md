@@ -27,6 +27,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | cross-cutting | 0039-generic-ci-speed-for-products | [Generic CI speed is a SHOULD in STACKSPEC 13.1](decisions/0039-generic-ci-speed-for-products.md) |  | accepted | 2026-10-11 |
 | cross-cutting | 0040-rule-tags-and-blocking-checks | [Every shipped rule line is tagged, and a check that finds a break blocks](decisions/0040-rule-tags-and-blocking-checks.md) |  | accepted | 2026-10-11 |
 | cross-cutting | 0050-upgrade-notes-are-guides | [Upgrade notes are how-to guides, the originals are archived](decisions/0050-upgrade-notes-are-guides.md) |  | accepted | 2026-11-01 |
+| cross-cutting | 0070-claude-setup-all-plugins | [claude-setup turns on and configures all plugins in the project](decisions/0070-claude-setup-all-plugins.md) |  | accepted | 2026-10-31 |
 | artifacts | D1 | How is a task’s status stored so both artifacts update automatically? | One registry | decided | 2026-10-10 |
 | artifacts | D10 | Full Progress: release timeline above the status table and a State column in the feature table (preview, Version 70); adopt for the plugin? | With the two changes | decided | 2026-10-11 |
 | artifacts | D11 | How does a release get its RELEASE-<n> number? | Number on the release task | decided | 2026-10-11 |
