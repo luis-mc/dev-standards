@@ -24,7 +24,7 @@ Status: READY
 ## Tests run (only what was touched; no full suite, no Docker)
 - `tools/test_delivery_gate.py --no-mutants -k join`: 99 checks, 0 failed (new scenario `join_docs_strip`: plugin present, absent, nothing to strip).
 - `claude/plugins/delivery/tests` (unittest discover): 263 OK (4 new in test_brief_template.py).
-- `tools/test_project_artifacts.py`: promote cases pass (3 new); full file result below.
+- `tools/test_project_artifacts.py`: 130 passed, 0 failed, 1 skipped (3 new promote cases).
 - `tools/test_project_artifacts_hooks.py`, `tools/test_delivery_hooks.py` (53 passed), `tools/test_ci_areas.py`, `tools/test_model_profiles.py`: pass.
 - `spec_check.py` on invariants.md (clean) and artifactspec.md (0 errors, 1 old numbering warning); `change_notes.py check --config tools/change-notes.json`: ok; `claude plugin validate` on the marketplace and on artifacts, delivery, specs, project-setup: pass.
 - Not run: GitHub CI, mutation passes.
