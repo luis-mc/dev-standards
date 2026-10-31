@@ -4,11 +4,38 @@
 
 ## architecture
 
-- [DS66: delivery learnings inventory and ledger schema (draft)](docs/architecture/DELIVERYSPEC.md)
+- [DELIVERYSPEC — Delivery rules](docs/architecture/DELIVERYSPEC.md)
 - [Rewrite every doc to DOCSPEC, requirement IDs kept](docs/architecture/decisions/0001-docs-rewrite.md)
+- [The artifacts plugin never commits or pushes](docs/architecture/decisions/0010-artifacts-never-commit-or-push.md)
+- [Only Full Progress is published to claude.ai](docs/architecture/decisions/0011-only-full-progress-is-published.md)
+- [Releases get a timeline, and Expected is the sum of the phases](docs/architecture/decisions/0012-release-timeline-and-state-column.md)
+- [Medium effort for both Opus and Sonnet by default](docs/architecture/decisions/0013-medium-effort-for-both-models.md)
+- [Leave Explore and Plan on Opus](docs/architecture/decisions/0014-leave-explore-and-plan-on-opus.md)
+- [Warn at session start when a saved effort stops applying](docs/architecture/decisions/0015-warn-when-saved-effort-stops-applying.md)
+- [Build transcript folds from scratch](docs/architecture/decisions/0016-build-transcript-folds-from-scratch.md)
+- [Test the fold logic with Node's own test runner](docs/architecture/decisions/0017-test-the-fold-logic-with-the-node-runner.md)
+- [The marketplace is named dev-standards](docs/architecture/decisions/0018-marketplace-is-named-dev-standards.md)
+- [Hooks enforce in sessions, a watcher acts on time](docs/architecture/decisions/0030-delivery-hooks-and-watcher.md)
+- [The load guard holds new work and never touches running work](docs/architecture/decisions/0031-machine-load-guard.md)
+- [Each delivery layer does its own share of testing](docs/architecture/decisions/0032-delivery-speed-plan.md)
+- [A packaged program must be smoke-tested in its packaged form](docs/architecture/decisions/0033-packaged-smoke-test-must.md)
+- [The delivery log lives in the train's release notes](docs/architecture/decisions/0034-delivery-log-in-release-notes.md)
+- [CI runs the areas a change touches; mutation passes run when their files change](docs/architecture/decisions/0035-ci-by-area-and-nightly-mutants.md)
+- [Retire the artifacts suite's fake-renderer test group](docs/architecture/decisions/0036-retire-fake-renderer-group.md)
+- [The artifacts record pushes once per turn](docs/architecture/decisions/0037-record-push-once-per-turn.md)
+- [Delivery suites run in parallel jobs with their own mutant flags and shards](docs/architecture/decisions/0038-parallel-delivery-suites-and-shards.md)
+- [Generic CI speed is a SHOULD in STACKSPEC 13.1](docs/architecture/decisions/0039-generic-ci-speed-for-products.md)
+- [Every shipped rule line is tagged, and a check that finds a break blocks](docs/architecture/decisions/0040-rule-tags-and-blocking-checks.md)
+- [Upgrade notes are how-to guides, the originals are archived](docs/architecture/decisions/0050-upgrade-notes-are-guides.md)
 
 ## archive
 
+- [AR50 contract: the plugin never commits or pushes (ARTIFACTSPEC 1.8.0, luismc-artifacts 1.8.0)](docs/archive/contracts/AR50-no-git-writes.md)
+- [AR43 train: release timeline and feature State column](docs/archive/plans/ar43-train.md)
+- [DL12 train](docs/archive/plans/dl12-train.md)
+- [TC8 train: generic CI speed for products](docs/archive/plans/tc8-train.md)
+- [Test-cost train (TC6)](docs/archive/plans/test-cost-train.md)
+- [DS64 train: transcript-folds, marketplace rename, DS63](docs/archive/plans/transcript-folds.md)
 - [CO669: Full Progress page at narrow widths, collapsible contents](docs/archive/reports/CO669.md)
 - [CO672 report:](docs/archive/reports/CO672.md)
 - [DOC2 report: luismc-docs plugin, DOCSPEC, two luismc-delivery fixes](docs/archive/reports/DOC2.md)
@@ -44,15 +71,30 @@
 - [DV350 — watcher re-checks red trains](docs/archive/reports/dv350-report.md)
 - [DV414: delivery watcher re-reads a red release on its new head](docs/archive/reports/dv414-report.md)
 - [DV438 report: start time and dropped releases](docs/archive/reports/dv438-report.md)
-
-## contracts
-
-- [AR50 contract: the plugin never commits or pushes (ARTIFACTSPEC 1.8.0, luismc-artifacts 1.8.0)](docs/contracts/AR50-no-git-writes.md)
+- [Upgrade to STACKSPEC 8.0.0](docs/archive/upgrades/stackspec-8.0.0.md)
 
 ## docs
 
 - [Documentation](docs/README.md)
 - [Testing in dev-standards](docs/testing.md)
+
+## features
+
+- [Architect agent (luismc-agents)](docs/features/agents/spec.md)
+- [Project artifacts](docs/features/artifacts/spec.md)
+- [Audit skills (luismc-audits)](docs/features/audits/spec.md)
+- [Delivery speed](docs/features/delivery-speed/spec.md)
+- [Delivery guard rails](docs/features/delivery/spec.md)
+- [Documentation standard plugin (luismc-docs)](docs/features/docs/spec.md)
+- [Model and effort profiles](docs/features/models/spec.md)
+- [Project setup (luismc-project-setup)](docs/features/project-setup/spec.md)
+- [Spec authoring and checking (luismc-specs)](docs/features/specs/spec.md)
+- [Test and validation cost](docs/features/test-cost/spec.md)
+- [Transcript folds](docs/features/transcript-folds/spec.md)
+
+## guides
+
+- [Upgrade a project to STACKSPEC 8](docs/guides/upgrade-stackspec-8.md)
 
 ## overview
 
@@ -62,18 +104,6 @@
 - [Quality goals and constraints](docs/overview/quality.md)
 - [How the parts fit](docs/overview/system.md)
 
-## plans
-
-- [AR43 train: release timeline and feature State column](docs/plans/ar43-train.md)
-- [DL12 train](docs/plans/dl12-train.md)
-- [TC8 train: generic CI speed for products](docs/plans/tc8-train.md)
-- [Test-cost train (TC6)](docs/plans/test-cost-train.md)
-- [DS64 train: transcript-folds, marketplace rename, DS63](docs/plans/transcript-folds.md)
-
 ## project
 
 - [Project artifacts](docs/project/README.md)
-
-## upgrades
-
-- [Upgrade to STACKSPEC 8.0.0](docs/upgrades/stackspec-8.0.0.md)

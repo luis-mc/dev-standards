@@ -6,6 +6,27 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | Scope | ID | Decision | Chosen | Status | Date |
 |---|---|---|---|---|---|
 | cross-cutting | 0001-docs-rewrite | [Rewrite every doc to DOCSPEC, requirement IDs kept](decisions/0001-docs-rewrite.md) |  | accepted | 2026-10-31 |
+| cross-cutting | 0010-artifacts-never-commit-or-push | [The artifacts plugin never commits or pushes](decisions/0010-artifacts-never-commit-or-push.md) |  | accepted | 2026-10-12 |
+| cross-cutting | 0011-only-full-progress-is-published | [Only Full Progress is published to claude.ai](decisions/0011-only-full-progress-is-published.md) |  | accepted | 2026-10-10 |
+| cross-cutting | 0012-release-timeline-and-state-column | [Releases get a timeline, and Expected is the sum of the phases](decisions/0012-release-timeline-and-state-column.md) |  | accepted | 2026-10-11 |
+| cross-cutting | 0013-medium-effort-for-both-models | [Medium effort for both Opus and Sonnet by default](decisions/0013-medium-effort-for-both-models.md) |  | accepted | 2026-10-11 |
+| cross-cutting | 0014-leave-explore-and-plan-on-opus | [Leave Explore and Plan on Opus](decisions/0014-leave-explore-and-plan-on-opus.md) |  | accepted | 2026-10-10 |
+| cross-cutting | 0015-warn-when-saved-effort-stops-applying | [Warn at session start when a saved effort stops applying](decisions/0015-warn-when-saved-effort-stops-applying.md) |  | accepted | 2026-10-10 |
+| cross-cutting | 0016-build-transcript-folds-from-scratch | [Build transcript folds from scratch](decisions/0016-build-transcript-folds-from-scratch.md) |  | accepted | 2026-10-13 |
+| cross-cutting | 0017-test-the-fold-logic-with-the-node-runner | [Test the fold logic with Node's own test runner](decisions/0017-test-the-fold-logic-with-the-node-runner.md) |  | accepted | 2026-10-13 |
+| cross-cutting | 0018-marketplace-is-named-dev-standards | [The marketplace is named dev-standards](decisions/0018-marketplace-is-named-dev-standards.md) |  | accepted | 2026-10-13 |
+| cross-cutting | 0030-delivery-hooks-and-watcher | [Hooks enforce in sessions, a watcher acts on time](decisions/0030-delivery-hooks-and-watcher.md) |  | accepted | 2026-10-14 |
+| cross-cutting | 0031-machine-load-guard | [The load guard holds new work and never touches running work](decisions/0031-machine-load-guard.md) |  | accepted | 2026-10-14 |
+| cross-cutting | 0032-delivery-speed-plan | [Each delivery layer does its own share of testing](decisions/0032-delivery-speed-plan.md) |  | accepted | 2026-10-11 |
+| cross-cutting | 0033-packaged-smoke-test-must | [A packaged program must be smoke-tested in its packaged form](decisions/0033-packaged-smoke-test-must.md) |  | accepted | 2026-10-11 |
+| cross-cutting | 0034-delivery-log-in-release-notes | [The delivery log lives in the train's release notes](decisions/0034-delivery-log-in-release-notes.md) |  | accepted | 2026-10-11 |
+| cross-cutting | 0035-ci-by-area-and-nightly-mutants | [CI runs the areas a change touches; mutation passes run when their files change](decisions/0035-ci-by-area-and-nightly-mutants.md) |  | accepted | 2026-10-11 |
+| cross-cutting | 0036-retire-fake-renderer-group | [Retire the artifacts suite's fake-renderer test group](decisions/0036-retire-fake-renderer-group.md) |  | accepted | 2026-10-11 |
+| cross-cutting | 0037-record-push-once-per-turn | [The artifacts record pushes once per turn](decisions/0037-record-push-once-per-turn.md) |  | accepted | 2026-10-11 |
+| cross-cutting | 0038-parallel-delivery-suites-and-shards | [Delivery suites run in parallel jobs with their own mutant flags and shards](decisions/0038-parallel-delivery-suites-and-shards.md) |  | accepted | 2026-10-11 |
+| cross-cutting | 0039-generic-ci-speed-for-products | [Generic CI speed is a SHOULD in STACKSPEC 13.1](decisions/0039-generic-ci-speed-for-products.md) |  | accepted | 2026-10-11 |
+| cross-cutting | 0040-rule-tags-and-blocking-checks | [Every shipped rule line is tagged, and a check that finds a break blocks](decisions/0040-rule-tags-and-blocking-checks.md) |  | accepted | 2026-10-11 |
+| cross-cutting | 0050-upgrade-notes-are-guides | [Upgrade notes are how-to guides, the originals are archived](decisions/0050-upgrade-notes-are-guides.md) |  | accepted | 2026-11-01 |
 | artifacts | D1 | How is a task’s status stored so both artifacts update automatically? | One registry | decided | 2026-10-10 |
 | artifacts | D10 | Full Progress: release timeline above the status table and a State column in the feature table (preview, Version 70); adopt for the plugin? | With the two changes | decided | 2026-10-11 |
 | artifacts | D11 | How does a release get its RELEASE-<n> number? | Number on the release task | decided | 2026-10-11 |
@@ -24,6 +45,11 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | artifacts | D7 | How does a project get the plugin? | Project-setup installs it, plus independent install | decided | 2026-10-10 |
 | artifacts | D8 | Which clock do Expected times use? | Owner's zone, per project | decided | 2026-10-10 |
 | artifacts | D9 | Does dev-standards move other projects onto the plugin? | Leave other projects alone | decided | 2026-10-10 |
+| delivery | D1 | [How are rules enforced?](../features/delivery/spec.md) | Hooks inside sessions, scripts for time-critical steps (MADR 0030) | decided | 2026-10-14 |
+| delivery | D2 | [When does the watcher merge?](../features/delivery/spec.md) | At green on the current head, never `--auto` | decided | 2026-10-14 |
+| delivery | D3 | [Do findings block or warn?](../features/delivery/spec.md) | Block, with a ceiling | decided | 2026-10-14 |
+| delivery | D4 | [Local or cloud agents?](../features/delivery/spec.md) | Cloud first | decided | 2026-10-14 |
+| delivery | D5 | [Machine limits?](../features/delivery/spec.md) | 85% memory, 60% CPU, hold new work only (MADR 0031) | decided | 2026-10-14 |
 | delivery-speed | D1 | Rewrite the pasted delivery prompt with the review’s fixes and queue it after TC6? | Rewrite and queue | decided | 2026-10-11 |
 | delivery-speed | D10 | dev-standards is public: create a public GitHub release per train for the delivery log? | Yes, public releases | decided | 2026-10-11 |
 | delivery-speed | D11 | Install the train freeze in this repo’s own git hooks? | Yes | decided | 2026-10-11 |

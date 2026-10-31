@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 8.6.0
+**Version:** 8.7.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -60,6 +60,10 @@ recorded in the product's Stack Profile (§18). This document does not name or
 rank vendors.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+
+**8.7.0 — 2026-10-31.**
+
+- Adds the reader preamble ("At a glance") before section 0 and a wording pass; every section number and requirement ID is unchanged.
 
 **8.6.0 — 2026-10-31.**
 
