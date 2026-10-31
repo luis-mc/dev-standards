@@ -209,6 +209,7 @@ gate and CI run the same scanner.
     {"name": "typecheck", "outcome": "pass", "seconds": 41.2, "command": "pnpm turbo ...",
      "reason": null, "exit_code": 0, "log": ".delivery/logs/typecheck.log"}
   ],
+  "required_steps": ["typecheck", "lint"],
   "pass": true,
   "timed_out": false,
   "started_at": "2026-10-10T10:12:03Z",
