@@ -1,3 +1,5 @@
+> Superseded by the [transcript-folds spec](../../features/transcript-folds/spec.md) and [decision 0016](../../architecture/decisions/0016-build-transcript-folds-from-scratch.md). History only, not binding.
+
 # DS64 train: transcript-folds, marketplace rename, DS63
 
 Integration branch `DS64-integration` (DS63 already merged into it). Two agent

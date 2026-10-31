@@ -1,3 +1,5 @@
+> Superseded by [decision 0012](../../architecture/decisions/0012-release-timeline-and-state-column.md) and the [artifacts spec](../../features/artifacts/spec.md). History only, not binding.
+
 # AR43 train: release timeline and feature State column
 
 Integration branch `AR43-integration`; one agent branch `AR43-release-timeline` (owns `claude/plugins/artifacts/**`, `tools/test_render_artifacts.py`, `tools/test_project_artifacts*.py`, one change note). The owner approved the design from a hand-made preview (Full Progress Version 71, decision D10 in `content/artifacts/decisions.json`). luismc-artifacts **minor**, ARTIFACTSPEC **minor**; the record format string stays valid (new fields are optional).

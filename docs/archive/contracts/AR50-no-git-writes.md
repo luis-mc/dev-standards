@@ -1,3 +1,5 @@
+> Superseded by [decision 0010](../../architecture/decisions/0010-artifacts-never-commit-or-push.md) and the [artifacts spec](../../features/artifacts/spec.md). History only, not binding.
+
 # AR50 contract: the plugin never commits or pushes (ARTIFACTSPEC 1.8.0, luismc-artifacts 1.8.0)
 
 Owner's decision (12 Oct): the plugin imposed commits and pushes to the default
