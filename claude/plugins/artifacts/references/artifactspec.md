@@ -12,16 +12,64 @@
 
 ---
 
+## At a glance
+
+### In one paragraph
+
+ARTIFACTSPEC defines how a project shows its work to its owner. A project keeps
+a record of files in `docs/artifacts/`: a manifest, a task registry and the
+content of each feature. Everything the owner reads is generated from that
+record: one HTML file per feature, and one full-progress artifact. It is for
+Claude Code sessions in projects that use `luismc-artifacts`, and for the
+people who build that plugin.
+
+### Why
+
+- **Problem.** The owner must see what is live, what is running and what needs
+  them, without reading code or chat. Status typed in two places drifted within
+  hours, and a note in CLAUDE.md asking to keep pages current failed (§15).
+- **Goals.** One place for each task's status (§3.2). Pages that cannot
+  disagree with the record. A record that survives the deletion of any
+  published page. A session that cannot end its turn with the pages stale.
+- **Non-goals.** Publishing by a script, cloud routines that run while no
+  session does, and document kinds other than these two (§1.2).
+
+### How it works
+
+```mermaid
+flowchart LR
+    E[Event or the owner's words] --> H[Hooks: queue a suggested change]
+    H --> C[Session runs a command]
+    E --> C
+    C --> R[(Record: manifest, registry, content)]
+    R --> G[Generated HTML in docs/artifacts]
+    G --> P[Session publishes Full Progress]
+    P --> S[End-of-turn hook lets the turn end]
+```
+
+1. An event happens: a command the session ran, a session start, or the
+   owner's words (§3.3).
+2. A hook queues a suggested status change, or the session acts directly (§8).
+3. The session runs a command of the script, the only writer of the record
+   (§7). The script updates the registry and renders every artifact that shows
+   the task. It commits nothing.
+4. Once, at the end of the turn, the session publishes Full Progress with the
+   Artifact tool (§9). Feature artifacts are files and are never published.
+5. The end-of-turn hook lets the turn end only when the queue is empty and
+   Full Progress is not pending (§8.2).
+
+---
+
 ## 0. How to use this document
 
 ### 0.1 What this document is
 
-A project builds many things at once, and its owner needs to see at any moment
+A project builds many things at once. Its owner needs to see at any moment
 what is live, what is running and what needs them, without reading code or
 chat. This specification defines the two kinds of project artifact that show
 it (feature artifacts and one full-progress artifact), the record in the
 project's repository they are generated from, and the commands and hooks that
-keep them current. An implementer can build `luismc-artifacts` from it; a
+keep them current. An implementer can build `luismc-artifacts` from it. A
 reviewer can check a project's artifacts against it with
 `project-artifact-check`.
 
@@ -37,7 +85,7 @@ project plans its work.
 4. §7 commands, §8 hooks, §9 publishing and recreation.
 5. §13 test gate and §14 conformance gate.
 
-No script is written before §4 and §7 are settled; the skills and hooks call
+No script is written before §4 and §7 are settled. The skills and hooks call
 the script and never edit the record themselves.
 
 ### 0.3 Requirement language
@@ -1723,7 +1771,7 @@ Exit 0 clean, 1 findings, 2 unreadable.
 earlier project. A single record with generated views cannot disagree with
 itself.
 
-**Why the repo is the record.** A claude.ai artifact can be deleted; a
+**Why the repo is the record.** A claude.ai artifact can be deleted. A
 project's repo is its durable memory. Rendering from the repo makes the
 artifacts disposable views.
 
@@ -1734,7 +1782,7 @@ change. From 1.8.0 the record is files in the working tree; the project, which
 knows its own branches and deploys, commits them when it chooses.
 
 **Why hooks block the turn.** A sentence in CLAUDE.md asking to keep pages
-current is what already failed. The end-of-turn hook makes "published" a
+current already failed. The end-of-turn hook makes "published" a
 condition of finishing, and the 3-block limit keeps it from trapping a session
 that cannot publish.
 
