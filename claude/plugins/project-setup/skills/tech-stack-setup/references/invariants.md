@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 8.5.0
+**Version:** 8.6.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -23,6 +23,10 @@ recorded in the product's Stack Profile (§18). This document does not name
 vendors and does not rank them.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+
+**8.6.0 — 2026-10-31.**
+
+- §13.5: the branch gate runs the always-on guards, then type check and lint of the touched packages and their dependents, then the test steps; a time limit never skips lint or types, the verifier refuses a result where a required step did not run, and the pre-push hook SHOULD also run lint and type check; §13.1 adds advice to run OS-neutral CI jobs on another runner in parallel when ready-PR CI shares one Linux runner.
 
 **8.5.0 — 2026-10-31.**
 
