@@ -1,3 +1,5 @@
+> Superseded by [delivery speed spec](../../features/delivery-speed/spec.md). History only, not binding.
+
 # DL12 train
 
 Integration branch `DL12-integration`; one agent branch cut from it.

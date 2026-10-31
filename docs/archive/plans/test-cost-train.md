@@ -1,3 +1,5 @@
+> Superseded by [test cost spec](../../features/test-cost/spec.md). History only, not binding.
+
 # Test-cost train (TC6)
 
 Source: `docs/project/feature-test-and-validation-cost.html` (decisions D1 to D8). One integration branch, `TC6-integration`; three agent branches cut from it, each owning its files. Nobody edits a file another branch owns.
