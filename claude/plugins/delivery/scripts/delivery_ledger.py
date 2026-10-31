@@ -11,6 +11,7 @@ Module use (best effort for callers, see `record`):
 CLI:
     delivery_ledger.py plan --branch release/29 --release-no 29 --cargo DV148:DV148-fix:409
     delivery_ledger.py hold --train T-... --reason "owner asked" [--until ISO] [--release]
+    delivery_ledger.py agent-eta <agent id or task> --setup N --work N --checks N [--basis TEXT]
     delivery_ledger.py measure --train T-... --state clean|regressions|none [--report path]
     delivery_ledger.py show [--json]
     delivery_ledger.py smoke --pr N [--run ID|URL]   record the production smoke of a merged train (needs gh)
@@ -446,6 +447,28 @@ def _cmd_measure(root, args) -> int:
     return 0
 
 
+def _cmd_agent_eta(root, args) -> int:
+    from datetime import timedelta
+    bd = {"setup": args.setup, "work": args.work, "checks": args.checks}
+    total = sum(bd.values())
+    box = {}
+
+    def fn(led):
+        key = str(args.agent)
+        rows = [a for a in led["agents"] if a.get("state") == "running"
+                and (str(a.get("id")) == key or a.get("task") == key)]
+        if not rows:
+            raise LedgerError("no running agent %s" % key)
+        a = rows[0]
+        start = parse_iso(a.get("started")) or utcnow()
+        a["eta"] = {"total_min": total, "breakdown": bd, "basis": args.basis, "due": iso(start + timedelta(minutes=total))}
+        add_event(led, "agent.eta", str(a.get("task") or a.get("id") or ""), "delivery_ledger")
+        box["eta"] = a["eta"]
+    update(root, fn)
+    print(json.dumps(box["eta"], indent=2))
+    return 0
+
+
 def _cmd_show(root, args) -> int:
     led = load(root)
     if args.json:
@@ -627,6 +650,11 @@ def main(argv=None) -> int:
     p.add_argument("--run", help="a run id or URL (default: the newest smoke run on the PR's merge commit)")
     p = sub.add_parser("cleaned")
     p.add_argument("--pr", required=True, type=int)
+    p = sub.add_parser("agent-eta")
+    p.add_argument("agent", help="the agent id or task of a running agent")
+    for k in ("setup", "work", "checks"):
+        p.add_argument("--" + k, required=True, type=float, metavar="MIN")
+    p.add_argument("--basis")
     p = sub.add_parser("show")
     p.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
@@ -636,7 +664,7 @@ def main(argv=None) -> int:
         return 2
     try:
         return {"plan": _cmd_plan, "hold": _cmd_hold, "measure": _cmd_measure, "show": _cmd_show,
-                "smoke": _cmd_smoke, "cleaned": _cmd_cleaned}[args.cmd](root, args)
+                "agent-eta": _cmd_agent_eta, "smoke": _cmd_smoke, "cleaned": _cmd_cleaned}[args.cmd](root, args)
     except LedgerError as exc:
         print("delivery_ledger: %s" % exc, file=sys.stderr)
         return 1

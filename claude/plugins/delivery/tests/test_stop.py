@@ -119,5 +119,14 @@ class OneCiPerReleaseTests(unittest.TestCase):
         self.assertEqual(S.check_one_ci_per_release("/x", self.ledger(), self.cfg("Publish"), gh=lambda a, r: None), [])
 
 
+class Dl30MessageTests(unittest.TestCase):
+    def test_message_shows_the_exact_command_with_the_agent_id(self):
+        led = L.empty_ledger()
+        led["agents"].append({"id": "ag9", "task": "T9", "state": "running", "started": L.iso(), "eta": None})
+        out = S.check_agents(led, {"check_min": 10_000}, L.utcnow())
+        msg = dict(out)["DL-30:ag9"]
+        self.assertIn("delivery_ledger.py agent-eta ag9 --setup N --work N --checks N", msg)
+
+
 if __name__ == "__main__":
     unittest.main()

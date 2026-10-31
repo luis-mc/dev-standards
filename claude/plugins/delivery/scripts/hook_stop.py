@@ -298,7 +298,8 @@ def check_agents(ledger, cfg, at):
         eta = a.get('eta') if isinstance(a.get('eta'), dict) else {}
         if not (isinstance(eta.get('breakdown'), dict) and eta['breakdown']):
             out.append(('DL-30:' + str(a.get('id')), 'DL-30 agent %s was launched without an ETA breakdown. Record it '
-                        '(delivery_ledger.py agent-eta): setup + work + checks minutes from the files touched, with the basis.' % name))
+                        'with: delivery_ledger.py agent-eta %s --setup N --work N --checks N --basis "<files touched>" '
+                        '(minutes from the files touched, with the basis).' % (name, a.get('id') or name)))
         if a.get('state') != 'running':
             continue
         since = a.get('last_checked') or a.get('started')

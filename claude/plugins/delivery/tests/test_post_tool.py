@@ -585,5 +585,39 @@ class Co688Tests(unittest.TestCase):
             self.assertEqual(cwd, where, cmd)
 
 
+def block(*lines):
+    return "```delivery\n" + "\n".join(lines) + "\n```"
+
+
+class ParseDeliveryBlockTests(unittest.TestCase):
+    def test_one_line_eta(self):
+        b = H.parse_delivery_block(block("task: T1", "eta: setup 5 + work 60 + checks 10 = 75 min"))
+        self.assertEqual(b["breakdown"], {"setup": 5.0, "work": 60.0, "checks": 10.0})
+        self.assertEqual(b["total_min"], 75.0)
+
+    def test_one_line_eta_tolerant(self):
+        for line in ("eta: setup 5 + work 60 + checks 10", "eta: setup 5m + work 60m + checks 10m = 75m",
+                     "eta: Setup 5 min + Work 60 min + Checks 10 min"):
+            b = H.parse_delivery_block(block(line))
+            self.assertEqual(b["breakdown"]["work"], 60.0, line)
+        self.assertEqual(H.parse_delivery_block(block("eta: setup 5 + work 60 + checks 10"))["total_min"], 75.0)
+
+    def test_unfilled_template_line_gives_no_eta(self):
+        b = H.parse_delivery_block(block("eta: setup <m> + work <m> + checks <m> = <total> min"))
+        self.assertNotIn("breakdown", b)
+
+    def test_separate_lines_win(self):
+        b = H.parse_delivery_block(block("eta: setup 1 + work 2 + checks 3 = 6 min", "setup: 5", "work: 40",
+                                         "checks: 15"))
+        self.assertEqual(b["breakdown"], {"setup": 5.0, "work": 40.0, "checks": 15.0})
+        self.assertEqual(b["total_min"], 60.0)
+
+    def test_owns_split_on_commas_only(self):
+        b = H.parse_delivery_block(block("owns: a.py, skills/x/ (SKILL.md, assets/) , docs/b c.md"))
+        self.assertEqual(b["owns"], ["a.py", "skills/x/ (SKILL.md", "assets/)", "docs/b c.md"])
+        b = H.parse_delivery_block(block("owns: skills/x/ (SKILL.md assets/), b.py"))
+        self.assertEqual(b["owns"], ["skills/x/ (SKILL.md assets/)", "b.py"])
+
+
 if __name__ == "__main__":
     unittest.main()
