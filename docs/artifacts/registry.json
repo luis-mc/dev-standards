@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-30T21:19+00:00",
+  "updated": "2026-10-31T07:17+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2036,6 +2036,18 @@
       "changed": "2026-10-30T21:19+00:00",
       "no_release": "pushed straight to main at the owner's request",
       "started": "2026-10-30T21:16+00:00"
+    },
+    {
+      "id": "DS102",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Release DS32 as luismc-artifacts 1.16.0; guard against unreleased plugin changes",
+      "detail": "On main, CI green: 9bd9281 luismc-artifacts 1.16.0 (ARTIFACTSPEC 1.16.0, DS32 folded); fd1bd7e guards: check needs a plugin's note when its files change, pending fails on main while notes wait (change notes folded job passes); luismc-project-setup 14.9.0.",
+      "expected": "31 Oct",
+      "changed": "2026-10-31T07:17+00:00",
+      "no_release": "pushed straight to main at the owner's request",
+      "started": "2026-10-31T07:09+00:00"
     },
     {
       "id": "MP1",
