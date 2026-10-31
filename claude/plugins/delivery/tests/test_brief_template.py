@@ -3,6 +3,7 @@ import re
 import unittest
 from pathlib import Path
 
+import _helpers  # noqa: F401  (puts scripts/ on the path)
 import hook_pre_tool as P
 
 TEMPLATE = Path(__file__).resolve().parent.parent / "references" / "agent-brief-template.md"
