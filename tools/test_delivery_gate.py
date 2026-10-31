@@ -2094,6 +2094,37 @@ def sc_join_untrusted(t: T, shared: Path) -> None:
     t.eq("nothing was pushed", box.g("rev-parse", "origin/integ"), before)
 
 
+def sc_join_docs_strip(t: T, shared: Path) -> None:
+    """DOCSPEC R10.3: join strips docs/work/ with luismc-docs' docs_work.py and keeps the summaries."""
+    plugin = str(REPO / "claude/plugins/docs/scripts/docs_work.py")
+    report = "# DOC9\n\nStatus: READY\n\nSummary: the thing works.\n"
+    box = integ_box(shared)
+    box.gated("feat/a", {"apps/web/a.txt": "a\n", "docs/work/reports/DOC9.md": report, "docs/work/briefs/DOC9.md": "brief\n"},
+              frm="integ", base_ref="origin/integ")
+    r = join(box, "--into", "integ", "feat/a", env={"LUISMC_DOCS_WORK": plugin})
+    t.eq("docs plugin present: exit 0", r.code, 0)
+    t.eq("... docs/work/ is gone from the joined head", (box.work / "docs/work").exists(), False)
+    t.check("... the work itself stays", (box.work / "apps/web/a.txt").exists())
+    t.eq("... removal is its own commit", box.g("log", "-1", "--format=%s"), "Strip temporary agent docs")
+    jr = join_result(box)
+    t.eq("... summaries recorded", jr["docs_summaries"], ["- DOC9: the thing works."])
+    t.eq("... stripped flag", jr["docs"]["stripped"], True)
+    t.has("... summaries file for the PR body", (box.work / ".delivery/docs-summaries.md").read_text(), "- DOC9: the thing works.")
+
+    box = integ_box(shared)
+    box.gated("feat/a", {"apps/web/a.txt": "a\n", "docs/work/reports/DOC9.md": report}, frm="integ", base_ref="origin/integ")
+    r = join(box, "--into", "integ", "feat/a", env={"LUISMC_DOCS_WORK": str(box.work / "no-such-docs-work.py")})
+    t.eq("docs plugin absent: join still succeeds", r.code, 0)
+    t.has("... says so", r.out, "luismc-docs is not installed")
+    t.eq("... and leaves docs/work/ alone", (box.work / "docs/work/reports/DOC9.md").exists(), True)
+    t.eq("... recorded as not stripped", join_result(box)["docs"]["stripped"], False)
+
+    box = integ_box(shared)
+    box.gated("feat/a", {"apps/web/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
+    r = join(box, "--into", "integ", "feat/a", env={"LUISMC_DOCS_WORK": plugin})
+    t.eq("plugin present, nothing under docs/work/: exit 0, no summaries", (r.code, join_result(box)["docs_summaries"]), (0, []))
+
+
 def sc_join_conflicts(t: T, shared: Path) -> None:
     box = integ_box(shared)
     box.gated("feat/a", {"apps/web/shared.txt": "A\ntwo\nthree\n"}, frm="integ", base_ref="origin/integ")
@@ -3427,6 +3458,7 @@ SCENARIOS = {
     "join_no_gate_config": sc_join_no_gate_config,
     "join_untrusted": sc_join_untrusted,
     "join_conflicts": sc_join_conflicts,
+    "join_docs_strip": sc_join_docs_strip,
     "agent_setup": sc_agent_setup,
     "assets": sc_assets,
     "packages": sc_packages,

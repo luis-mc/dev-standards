@@ -25,12 +25,21 @@ blocks. --push then pushes INTEGRATION.
 push: a branch whose agent's gate is its branch CI run (agent_ci.py) needs no gate result, so it is joined as
 soon as its code is pushed; a branch that does have a gate result is still checked. Without the flag nothing changes.
 
+DOCSPEC R10.3: after the last merge, when the luismc-docs plugin is present (found through $LUISMC_DOCS_WORK, the plugin
+cache `~/.claude/plugins/cache/*/luismc-docs/<newest>/scripts/`, or the marketplace checkout), join.py runs
+`docs_work.py strip --apply` on the joined head (briefs and reports under docs/work/ never reach the default branch),
+commits the removal as "Strip temporary agent docs", and saves each report's summary line to
+join-result.json ("docs_summaries") and to .delivery/docs-summaries.md for the ready pull request body. Without the
+plugin it says so and goes on.
+
 Exit: 0 joined, 1 a result is not trusted or the gate/push failed, 2 usage or
 configuration error (or no result), 3 stopped at a conflict.
 """
 from __future__ import annotations
 
 import argparse
+import glob
+import os
 import subprocess
 import sys
 import time
@@ -54,6 +63,46 @@ def write_join_result(root: Path, joined: list[str], stopped_at: str | None, con
     if extra:
         data.update(extra)
     dc.write_json(root / dc.JOIN_RESULT_PATH, data)
+
+
+DOCS_SUMMARIES_PATH = ".delivery/docs-summaries.md"
+
+
+def find_docs_work(home: str | None = None) -> Path | None:
+    """The luismc-docs `docs_work.py`: $LUISMC_DOCS_WORK, else the newest plugin cache copy, else the marketplace checkout."""
+    env = os.environ.get("LUISMC_DOCS_WORK")
+    if env:
+        return Path(env) if Path(env).is_file() else None
+    home = home or os.path.expanduser("~")
+    found = glob.glob(os.path.join(home, ".claude", "plugins", "cache", "*", "luismc-docs", "*", "scripts", "docs_work.py"))
+    found.sort(key=lambda f: [int(x) if x.isdigit() else 0 for x in f.split(os.sep)[-3].split(".")])
+    if found:
+        return Path(found[-1])
+    market = glob.glob(os.path.join(home, ".claude", "plugins", "marketplaces", "*", "claude", "plugins", "docs", "scripts", "docs_work.py"))
+    return Path(market[0]) if market else None
+
+
+def strip_temporary_docs(root: Path) -> dict:
+    """DOCSPEC R10.3: strip docs/work/ from the joined head and return {"stripped": bool, "summaries": [...]}.
+    Skips cleanly (stripped false, with a reason) when the docs plugin is absent or has nothing to strip."""
+    script = find_docs_work()
+    if script is None:
+        print("join: luismc-docs is not installed; temporary agent docs not stripped", flush=True)
+        return {"stripped": False, "reason": "luismc-docs not present", "summaries": []}
+    base = [sys.executable, str(script), "--root", str(root)]
+    got = subprocess.run(base + ["summaries"], capture_output=True, text=True, cwd=root)
+    summaries = [l for l in got.stdout.splitlines() if l.strip()] if got.returncode == 0 else []
+    had = (root / "docs" / "work").is_dir()
+    if not had:
+        return {"stripped": False, "reason": "no docs/work/", "summaries": summaries}
+    done = subprocess.run(base + ["strip", "--apply"], capture_output=True, text=True, cwd=root)
+    if done.returncode != 0:
+        dc.eprint("join: docs_work.py strip failed (exit %d); going on: %s" % (done.returncode, (done.stderr or done.stdout).strip()))
+        return {"stripped": False, "reason": "strip failed", "summaries": summaries}
+    if dc.run_git(["diff", "--cached", "--quiet"], cwd=root, check=False).returncode != 0:
+        dc.run_git(["commit", "-q", "-m", "Strip temporary agent docs"], cwd=root, check=False, env=dc.git_env())
+    print("join: stripped docs/work/ (%d report summaries kept for the PR body)" % len(summaries), flush=True)
+    return {"stripped": True, "summaries": summaries}
 
 
 def merge_in_progress(root: Path) -> bool:
@@ -262,9 +311,16 @@ def main(argv: list[str] | None = None) -> int:
 
     write_join_result(root, joined, None, [])
 
+    docs = strip_temporary_docs(root)
+    docs_extra: dict = {"docs": {k: v for k, v in docs.items() if k != "summaries"}, "docs_summaries": docs["summaries"]}
+    if docs["summaries"]:
+        out = root / DOCS_SUMMARIES_PATH
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text("\n".join(docs["summaries"]) + "\n", encoding="utf-8", newline="\n")
+
     base_ref = "%s/%s" % (remote, cfg["default_branch"])
     same = None if args.no_gate or not gated else trusted_same_tree(root, remote, base_ref, joined)
-    extra: dict = {}
+    extra: dict = dict(docs_extra)
     if not gated:
         extra["gate"] = "not configured"
         extra["quick_check"] = {"skipped": "gate not configured"}

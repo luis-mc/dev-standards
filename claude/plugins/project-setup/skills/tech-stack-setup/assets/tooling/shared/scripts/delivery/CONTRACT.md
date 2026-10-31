@@ -162,6 +162,7 @@ timed out. A script never exits 0 when it could not decide.
   commits the regenerated lockfile.
 - `timeout_minutes` (optional, integer >= 1, default 30): the wall-clock limit
   for one `branch_gate.py` run, setup included.
+- Temporary agent docs (DOCSPEC R10.3): after the last merge `join.py` runs the luismc-docs `docs_work.py strip --apply` when that plugin is present (`$LUISMC_DOCS_WORK`, the plugin cache, or the marketplace checkout), commits the removal, and records each report summary in `join-result.json` (`docs_summaries`, `docs`) and `.delivery/docs-summaries.md` for the ready pull request body; without the plugin it skips and says so.
 - `join_guards` (optional, boolean, default `true`): whether `join.py`'s light check also runs
   the `pre_push` steps (`fast_guards.py`). A step's optional `"join": true|false` adds it to,
   or drops it from, that check (default: `typecheck` and `lint` are in, the rest out).
