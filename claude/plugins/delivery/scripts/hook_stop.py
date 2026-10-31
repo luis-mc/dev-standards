@@ -305,10 +305,12 @@ def check_agents(ledger, cfg, at):
         age = H.minutes_since(since, at)
         due = H.parse_ts(eta.get('due'))
         overdue = due is not None and due <= at and (H.parse_ts(a.get('last_checked')) or due) <= due
-        if overdue or (age is not None and age > cfg['check_min']):
+        stalled = a.get('stalled') is True       # DS33: the watcher flags it when it checks
+        if overdue or stalled or (age is not None and age > cfg['check_min']):
             out.append(('DL-32:' + str(a.get('id')), 'DL-32 agent %s %s. Check its log, branch and run status now '
                         '(a log older than the step\'s typical time means investigate), then the check is recorded.'
                         % (name, 'is past its due time without a check' if overdue
+                           else 'is stalled (%s)' % (a.get('check_note') or 'no recent activity') if stalled
                            else 'was not checked for %d min' % age)))
     return out
 

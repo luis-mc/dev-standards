@@ -168,17 +168,36 @@ def locked(root, wait: float = LOCK_WAIT_SECONDS, stale: float = LOCK_STALE_SECO
             path.unlink()
 
 
+REPLACE_TRIES = 12
+REPLACE_PAUSE = 0.05
+
+
+def replace_retry(tmp, path, replace=None, sleep=None) -> None:
+    """os.replace that retries on Windows access denied (WinError 5 / EACCES, seen 31 Oct when a reader or
+    scanner briefly holds the target). Other errors, and the last denial, are raised."""
+    replace = replace or os.replace
+    sleep = sleep or time.sleep
+    for attempt in range(REPLACE_TRIES):
+        try:
+            replace(tmp, path)
+            return
+        except PermissionError as exc:
+            if attempt == REPLACE_TRIES - 1 or getattr(exc, "winerror", 5) not in (5, None):
+                raise
+            sleep(REPLACE_PAUSE * (attempt + 1))
+
+
 def write_atomic(root, data: dict) -> None:
     path = ledger_path(root)
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(prefix="ledger.", suffix=".tmp", dir=str(path.parent))
     try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as fh:
             json.dump(data, fh, indent=2, ensure_ascii=False)
             fh.write("\n")
             fh.flush()
             os.fsync(fh.fileno())
-        os.replace(tmp, path)
+        replace_retry(tmp, path)
     except BaseException:
         with contextlib.suppress(OSError):
             os.unlink(tmp)

@@ -1,6 +1,7 @@
 import json
 import os
 import unittest
+from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
 from _helpers import L, make_root
@@ -646,6 +647,143 @@ class ReconcileTests(unittest.TestCase):
         kinds = [e["kind"] for e in L.load(root)["events"]]
         self.assertEqual(kinds.count("runner.guard_started"), 1, kinds)
         self.assertEqual(len([a for a in w.actions if "runners" in a]), 5, "it is still relaunched every pass")
+
+
+def iso_ago(minutes):
+    return L.iso(NOW - timedelta(minutes=minutes))
+
+
+def agent_row(**kw):
+    a = {"task": "DS33", "id": "trig_01", "where": "cloud", "state": "running", "branch": "claude/DS33-x",
+         "started": iso_ago(120), "last_checked": iso_ago(40), "last_activity": iso_ago(60),
+         "eta": {"breakdown": {"setup": 5, "work": 20, "checks": 10}}}
+    a.update(kw)
+    return a
+
+
+def seed_agents(root, *rows):
+    L.update(root, lambda led: led["agents"].extend(rows))
+
+
+def pr_routes(commit_min_ago=5, draft=True, state="OPEN", runs_json="[]"):
+    pr = [{"number": 7, "headRefName": "claude/DS33-x", "headRefOid": SHA, "isDraft": draft, "state": state,
+           "updatedAt": iso_ago(1), "commits": [{"committedDate": iso_ago(commit_min_ago)}]}]
+    return {("gh", "pr", "list"): (0, json.dumps(pr)), ("gh", "run", "list", "--commit"): (0, runs_json)}
+
+
+class AgentCheckTests(unittest.TestCase):
+    def test_running_cloud_row_gets_last_checked_and_fields(self):
+        root = make_root()
+        seed_agents(root, agent_row())
+        sh = FakeShell(pr_routes(commit_min_ago=5))
+        watcher(root, sh).pass_checks()
+        a = L.load(root)["agents"][0]
+        self.assertEqual(a["last_checked"], L.iso(NOW))
+        self.assertEqual(a["head_sha"], SHA)
+        self.assertEqual(a["branch"], "claude/DS33-x")
+        self.assertEqual(a["last_activity"], iso_ago(5))
+        self.assertFalse(a["stalled"])
+        self.assertIn("PR #7 draft", a["check_note"])
+        self.assertEqual(a["state"], "running")
+        self.assertEqual(sh.writes(), [])
+
+    def test_task_prefix_search_when_no_branch(self):
+        root = make_root()
+        seed_agents(root, agent_row(branch=None))
+        sh = FakeShell(pr_routes())
+        watcher(root, sh).pass_checks()
+        self.assertTrue(any("head:claude/DS33-" in c for c in sh.calls if c[:3] == ["gh", "pr", "list"]))
+        self.assertEqual(L.load(root)["agents"][0]["last_checked"], L.iso(NOW))
+
+    def test_recent_check_is_skipped_and_interval_is_configurable(self):
+        root = make_root()
+        seed_agents(root, agent_row(last_checked=iso_ago(10)))
+        sh = FakeShell(pr_routes())
+        watcher(root, sh).pass_checks()
+        self.assertEqual(sh.calls, [])
+        root = make_root({"watcher": {"check_interval_min": 5}})
+        seed_agents(root, agent_row(last_checked=iso_ago(10)))
+        watcher(root, FakeShell(pr_routes())).pass_checks()
+        self.assertEqual(L.load(root)["agents"][0]["last_checked"], L.iso(NOW))
+
+    def test_stalled_flag_when_idle_beyond_work_plus_checks(self):
+        root = make_root()
+        seed_agents(root, agent_row(last_activity=iso_ago(200)))
+        watcher(root, FakeShell(pr_routes(commit_min_ago=45))).pass_checks()    # limit is 30 min
+        a = L.load(root)["agents"][0]
+        self.assertTrue(a["stalled"])
+        self.assertIn("STALLED", a["check_note"])
+        self.assertEqual(a["state"], "running")
+
+    def test_local_row_uses_log_mtime_and_branch_head(self):
+        root = make_root()
+        log = Path(root) / "agent.log"
+        log.write_text("x")
+        os.utime(log, (NOW.timestamp() - 120, NOW.timestamp() - 120))
+        seed_agents(root, agent_row(where="local", id="loc1", log_path=str(log), branch="DS33-x"))
+        sh = FakeShell({("git", "ls-remote"): (0, SHA + "\trefs/heads/DS33-x\n")})
+        watcher(root, sh).pass_checks()
+        a = L.load(root)["agents"][0]
+        self.assertEqual(a["head_sha"], SHA)
+        self.assertEqual(a["last_activity"], iso_ago(2))
+        self.assertFalse(a["stalled"])
+
+    def test_no_state_flip_by_guess(self):
+        # a merged PR with green runs and a long silence still leaves the row running
+        root = make_root()
+        seed_agents(root, agent_row(last_activity=iso_ago(500)))
+        done = runs((1, "completed", "success", SHA, "claude/DS33-x"))
+        watcher(root, FakeShell(pr_routes(commit_min_ago=400, draft=False, state="MERGED", runs_json=done))).pass_checks()
+        a = L.load(root)["agents"][0]
+        self.assertEqual(a["state"], "running")
+        self.assertTrue(a["stalled"])
+
+    def test_non_running_rows_are_not_checked(self):
+        root = make_root()
+        seed_agents(root, agent_row(state="done", last_checked=None))
+        sh = FakeShell(pr_routes())
+        watcher(root, sh).pass_checks()
+        self.assertEqual(sh.calls, [])
+        self.assertIsNone(L.load(root)["agents"][0]["last_checked"])
+
+
+class AtomicWriteRetryTests(unittest.TestCase):
+    def test_winerror5_is_retried_then_succeeds(self):
+        calls = []
+
+        def flaky(a, b):
+            calls.append(1)
+            if len(calls) < 4:
+                e = PermissionError(13, "Access is denied")
+                e.winerror = 5
+                raise e
+        slept = []
+        L.replace_retry("t", "p", replace=flaky, sleep=slept.append)
+        self.assertEqual(len(calls), 4)
+        self.assertEqual(len(slept), 3)
+
+    def test_persistent_denial_raises_and_other_errors_do_not_retry(self):
+        def always(a, b):
+            e = PermissionError(13, "Access is denied")
+            e.winerror = 5
+            raise e
+        with self.assertRaises(PermissionError):
+            L.replace_retry("t", "p", replace=always, sleep=lambda s: None)
+        n = []
+
+        def other(a, b):
+            n.append(1)
+            raise FileNotFoundError("x")
+        with self.assertRaises(FileNotFoundError):
+            L.replace_retry("t", "p", replace=other, sleep=lambda s: None)
+        self.assertEqual(len(n), 1)
+
+    def test_ledger_written_utf8_without_newline_translation(self):
+        root = make_root()
+        L.update(root, lambda led: led["agents"].append({"task": "café"}))
+        raw = L.ledger_path(root).read_bytes()
+        self.assertNotIn(b"\r\n", raw)
+        self.assertIn("café".encode("utf-8"), raw)
 
 
 if __name__ == "__main__":
