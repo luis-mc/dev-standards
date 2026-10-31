@@ -177,17 +177,22 @@ or before its branch joins (R10.4), promote it in the same branch:
 
 1. Dry run: `promote-to-spec KEY [--feature ID]`. It prints the target
    `docs/features/<ID>/spec.md` (ID defaults to KEY; it is the folder name and
-   never changes, DOCSPEC R4.1), the sections it will carry and which decisions
-   are decided (promoted) or open (left in the artifact).
-2. `promote-to-spec KEY [--feature ID] --yes` writes the spec in the
-   `luismc-docs` feature-spec template: front matter (`status: proposed`,
-   `version: 0.1.0`, `artifact:` the page's file name), the lede as section 1,
-   the first content section as section 2, the others as section 3 and the
-   decided decisions as the section 10 table. It never overwrites a spec (if
-   one exists, move the new findings into it by hand), never changes the record
-   and never commits.
-3. Review the spec against the template: put the sections in the template's
-   order, add the testable requirements (R5.x, R6.x), the code map, a diagram
+   never changes, DOCSPEC R4.1), where each page section goes (by heading:
+   why, what, how it works, functional and non-functional requirements,
+   screens, design, failure modes, tests, not built yet, code map; "for users"
+   goes to 3 and "for developers" to 7; a heading that matches none goes under
+   3 and is listed), the topics it found in `docs/docs.json`, and which
+   decisions are decided (promoted) or open (left in the artifact). When the
+   spec already exists it prints the diff of the merge.
+2. `promote-to-spec KEY [--feature ID] --apply` writes it. A new spec gets
+   front matter (`status: proposed`, `version: 0.1.0`, `artifact:` the page's
+   file name) and the sections in template order. An existing spec is merged
+   section by section: your text is kept, new parts are appended under a
+   `<!-- promoted from the feature page -->` comment, missing sections are
+   inserted in order, a template placeholder is replaced (the output says so)
+   and a decision already in the table keeps your row. It never changes the
+   record and never commits.
+3. Review the spec against the template: add the testable requirements (R5.x, R6.x), the code map, a diagram
    and `apps`/`topics` from `docs/docs.json`; delete what does not apply. Then
    run the `luismc-docs` checks (`docs_check.py`) and commit the spec with the
    branch. The version is written only by the release fold (R4.3).

@@ -2764,7 +2764,7 @@ def cmd_queue(args):
 
 def cmd_promote_to_spec(args):
     """DOCSPEC R4.10, R10.4: write a feature artifact's decided content to docs/features/<feature>/spec.md
-    (luismc-docs template). Dry run without --yes; never overwrites a spec; touches nothing in the record."""
+    (luismc-docs template). Dry run without --apply (diff when the spec exists); merges section by section, never deletes spec text; touches nothing in the record."""
     if PROMOTE is None:
         raise Fail(2, 'artifact_promote.py cannot be imported: %s' % _PROMOTE_ERROR)
     key = args.key
@@ -2788,24 +2788,49 @@ def cmd_promote_to_spec(args):
     decs, open_decs = PROMOTE.decided(files)
     dest = ctx.root / 'docs' / 'features' / fid / 'spec.md'
     rel = dest.relative_to(ctx.root).as_posix()
-    if dest.exists():
-        raise Fail(1, '%s exists; a finding from the artifact is promoted into it by hand (DOCSPEC R4.10), or pass '
-                      '--feature with another folder name' % rel)
-    text = PROMOTE.build_spec(fid, title, entry.get('apps') or [], entry.get('file', ''), meta.get('lede', ''), secs, decs)
+    apply = args.yes or args.apply
+    cfg = {}
+    try:
+        cfg = json.loads((ctx.root / 'docs' / 'docs.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        pass
+    topics = PROMOTE.topics_from(meta.get('lede', ''), secs, meta.get('topics'), cfg.get('topics') or [])
+    apps = entry.get('apps') or []
+    _, unmapped = PROMOTE.slots_for(meta.get('lede', ''), secs, decs)
     result = {'command': 'promote-to-spec', 'key': key, 'spec': rel, 'sections': [t for t, _ in secs],
+              'mapping': {t: PROMOTE.classify(t) for t, _ in secs}, 'unmapped': unmapped, 'topics': topics,
               'decisions_promoted': [d.get('id') for d in decs], 'decisions_open': [d.get('id') for d in open_decs],
-              'written': False, 'dry_run': not args.yes}
+              'written': False, 'dry_run': not apply, 'merge': dest.exists()}
     notes = []
     if open_decs:
         notes.append('open decisions are not promoted: %s' % ', '.join(result['decisions_open']))
-    if args.yes:
-        write_text(dest, text if text.endswith('\n') else text + '\n')
-        result['written'] = True
-        human = ['wrote %s (%d section(s), %d decision(s))' % (rel, len(secs), len(decs)),
-                 'review it against the feature-spec template, then commit it; the artifact stays as it is (nothing in the record changed)']
+    if unmapped:
+        notes.append('no template section matched these headings, so they sit under 3 How it works: %s' % ', '.join(unmapped))
+    if dest.exists():
+        old = dest.read_text(encoding='utf-8')
+        text, changes = PROMOTE.merge_spec(old, fid, title, apps, entry.get('file', ''), meta.get('lede', ''), secs, decs, topics)
+        text = text if text.endswith('\n') else text + '\n'
+        result['changes'] = changes
+        result['diff'] = PROMOTE.diff(old, text, rel)
+        removed = [l for l in result['diff'].splitlines() if l.startswith('-') and not l.startswith('---')]
+        result['removed_lines'] = len(removed)   # the merge appends and fills; a removal is a placeholder or a front matter blank
+        what = 'merge into the existing %s (%d change(s))' % (rel, len(changes))
     else:
-        human = ['dry run (nothing written); with --yes this would write %s from %d section(s) and %d decided decision(s)'
-                 % (rel, len(secs), len(decs))]
+        text = PROMOTE.build_spec(fid, title, apps, entry.get('file', ''), meta.get('lede', ''), secs, decs, topics)
+        changes, what = [], 'write %s from %d section(s) and %d decided decision(s)' % (rel, len(secs), len(decs))
+        result['changes'] = []
+    if apply:
+        if dest.exists() and text == old:
+            human = ['%s already holds everything the page says; nothing changed' % rel] + ['  ' + c for c in changes]
+        else:
+            write_text(dest, text if text.endswith('\n') else text + '\n')
+            result['written'] = True
+            human = ['%s %s' % ('merged into' if result['merge'] else 'wrote', rel)] + ['  ' + c for c in changes] + \
+                    ['review it against the feature-spec template, then commit it; the artifact stays as it is (nothing in the record changed)']
+    else:
+        human = ['dry run (nothing written); with --apply this would %s' % what] + ['  ' + c for c in changes]
+        if result.get('diff'):
+            human += ['', result['diff'].rstrip()]
     result['notes'] = notes
     emit(args, result, human)
     return 0
@@ -3036,10 +3061,11 @@ def build_parser():
     s.add_argument('--yes', action='store_true', help='do it (without it, only print what would happen)')
     s.set_defaults(func=cmd_move_record)
 
-    s = sub.add_parser('promote-to-spec', parents=[j], help="write a feature artifact's decided content to docs/features/<feature>/spec.md (DOCSPEC R4.10); dry run without --yes")
+    s = sub.add_parser('promote-to-spec', parents=[j], help="write a feature artifact's decided content to docs/features/<feature>/spec.md (DOCSPEC R4.10); dry run without --apply, merges into an existing spec")
     s.add_argument('key', help='the feature artifact key')
     s.add_argument('--feature', help='the feature folder name under docs/features/ (default: the key)')
-    s.add_argument('--yes', action='store_true', help='write the file (without it, only print the plan)')
+    s.add_argument('--apply', action='store_true', help='write (or merge into) the spec; without it only the plan and, for an existing spec, a diff are printed')
+    s.add_argument('--yes', action='store_true', help='same as --apply')
     s.set_defaults(func=cmd_promote_to_spec)
 
     s = sub.add_parser('path', parents=[j], help='print the record folder, <root>/<record_dir>')
