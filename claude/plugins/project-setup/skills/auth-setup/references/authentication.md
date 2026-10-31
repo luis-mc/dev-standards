@@ -7,9 +7,60 @@
 
 ---
 
+## At a glance
+
+### In one paragraph
+
+AUTHSPEC defines one reusable authentication and authorization framework for every web and mobile app in the organization. It is written for Claude Code, which uses it as a generation guide, and for the people who implement and review the result. It names no language, framework or database: each project binds it to its own stack (§2).
+
+### Why
+
+**Problem.** Each app that builds its own sign-in ends up with different sessions, different privacy handling and different gaps. This spec fixes one set of behaviours, schema and tests so that every app gets the same controls.
+
+**Goals.**
+
+- One API that any number of interfaces can use.
+- Server-side sessions, so a lock, logout or deletion takes effect at once.
+- Admin identity kept apart from user identity (INV-1 to INV-5).
+- Consent, data export, deletion and a tamper-evident audit trail built in.
+- A conformance gate (§27) that decides when generation is done.
+
+**Non-goals** (§1.2). No "log in as user" tooling. No multi-tenant organizations. No general OAuth authorization server. No billing or entitlement logic.
+
+### How it works
+
+```mermaid
+flowchart LR
+    UI["Web, mobile and admin UIs"] --> API["Auth API layer<br/>/v1/auth, /v1/me, /v1/admin, /v1/oauth/token"]
+    API --> Flows["Authentication flows<br/>and MFA / step-up"]
+    API --> Authz["Authorization<br/>(permissions)"]
+    API --> Privacy["Privacy and consent"]
+    Flows --> Sess["Session service"]
+    Authz --> Sess
+    Sess --> Cache["Cache tier"]
+    Sess --> DB[("Persistence")]
+    Flows --> Audit["Audit trail<br/>(append-only, hash-chained)"]
+    Authz --> Audit
+    Privacy --> Audit
+    Audit --> DB
+    DB <--> KMS["Crypto / KMS provider"]
+```
+
+In words:
+
+1. The implementer resolves the technology stack first (§2). No code is generated before that.
+2. A person signs in with a password, passkey, email code, social login or SAML. Admins use passkeys only.
+3. If the user has a second factor, the first step ends in a pending-MFA state. A full session is issued only after the factor is satisfied (§8).
+4. The server creates a session record. Web clients carry it in a cookie and native clients carry it as a bearer token (§6).
+5. Every later request runs the same ordered stages: rate limit, session check, principal-type check, consent, step-up, permission and ownership (§3.4).
+6. Every auditable action, success or failure, writes an audit event. No personal data goes into it (§16).
+7. The work is done only when the three audits pass and the tests and deliverables are in place (§26, §27).
+
+---
+
 ## 0. How to use this document
 
-This specification defines a **single, reusable authentication and authorization framework**. It is the source of truth for:
+This specification defines one reusable **authentication and authorization framework**. It is the source of truth for:
 
 - the Auth API surface (consumed by any number of visual interfaces),
 - the persistence schema required to back it,
@@ -17,7 +68,7 @@ This specification defines a **single, reusable authentication and authorization
 - the client-side contract every consuming web/mobile app must implement,
 - the tests and audits that prove conformance.
 
-**This document is deliberately technology-neutral.** It names no language, framework, runtime, database engine, ORM, cache product, or cloud provider. Every requirement is expressed as behaviour, structure, and constraint. Section 2 defines how an implementer binds these requirements to the concrete stack of the project it is generating into.
+**This document is deliberately technology-neutral.** It names no language, framework, runtime, database engine, ORM, cache product, or cloud provider. Every requirement is stated as behaviour, structure, or constraint. Section 2 defines how an implementer binds these requirements to the stack of the project being generated.
 
 ### 0.1 Conformance language
 
@@ -60,7 +111,7 @@ This specification defines a **single, reusable authentication and authorization
 
 ### 1.3 Deferred extension points
 
-These are intentionally not built now. The implementation **MUST** leave the named seam so they can be added without a schema migration or breaking API change.
+These are not built now. The implementation **MUST** leave the named seam, so each can be added without a schema migration or a breaking API change.
 
 | Extension | Required seam |
 |---|---|
