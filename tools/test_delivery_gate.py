@@ -899,7 +899,7 @@ def sc_logs(t: T, shared: Path) -> None:
 
     # a step name that is not a safe file name
     cfg = Box.gate_json()
-    cfg["steps"][0]["name"] = "type check/ts"
+    cfg["steps"][2]["name"] = "type check/ts"  # "unit": typecheck and lint are required steps now (DL-84/DL-85)
     box2 = Box(shared, gate_json=cfg)
     box2.branch("feat/names", {"apps/web/a.txt": "a\n"})
     r = box2.gate("--no-publish")
@@ -948,6 +948,23 @@ def sc_timeout(t: T, shared: Path) -> None:
     box.push("feat/slow")
     v = verify(box, "feat/slow")
     t.eq("gate_verify does not trust a timed-out result", v.code, 1)
+
+    # the grace: with the limit already used up, required steps (lint, types) still run
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        ctx = dc.Context(root=Path(tmp), cfg={}, base_ref="origin/main", base="b", head="h", files=[],
+                         packages=[], changed_dirs=[], affected_dirs=[], widened=False)
+        ok = '"%s" -c "print(1)"' % PY
+        steps = [{"name": n, "scope": "always", "run": ok} for n in ("typecheck", "lint", "unit")]
+        ents, hit = dc.execute_steps(steps, ctx, limit_seconds=1e-9, required_steps=["typecheck", "lint"])
+        got = {e["name"]: (e["outcome"], e["reason"]) for e in ents}
+        t.eq("grace: required steps still run after the limit is used up",
+             (got["typecheck"], got["lint"]), (("pass", None), ("pass", None)))
+        t.eq("grace: ... other steps are skipped 'gate timed out'", got["unit"], ("skip", "gate timed out"))
+        t.eq("grace: ... and the run is marked timed out", hit, True)
+        ents, hit = dc.execute_steps(steps, ctx, limit_seconds=1e-9)
+        t.eq("grace: without required steps, everything is skipped",
+             sorted({e["outcome"] for e in ents}), ["skip"])
 
     # a short limit set in gate.json and the flag that overrides it
     box = Box(shared)
