@@ -374,11 +374,15 @@ def end_to_end_sigterm_stops_the_child_and_restarts_the_service():
 
 class RunnerWorld:
     """Fake GitHub runner list + commands. `online_after` = number of repair commands run before it comes online."""
-    def __init__(self, online_after=1, runs=None):
+    def __init__(self, online_after=1, runs=None, heads=None):
         self.repairs, self.cmds, self.sleeps, self.online_after = 0, [], [], online_after
         self.runs = runs or []
+        self.heads = heads or {}          # branch -> current head sha
 
     def gh(self, args):
+        if args[0] == "api" and "/branches/" in args[1]:
+            sha = self.heads.get(args[1].split("/branches/", 1)[1])
+            return {"commit": {"sha": sha}} if sha else None
         if args[0] == "api":
             up = self.repairs >= self.online_after
             return {"runners": [{"name": "win-1", "status": "online" if up else "offline", "busy": False}]}
@@ -412,13 +416,22 @@ def runners_online_does_nothing():
     assert w.cmds == [] and "runner.offline" not in kinds(spy)
 
 
+def run(rid, branch, conclusion="failure", sha=None, status="completed", workflow="CI", created="2026-10-14T23:30:00Z"):
+    return {"databaseId": rid, "status": status, "conclusion": conclusion if status == "completed" else None,
+            "headBranch": branch, "headSha": sha or ("sha-" + branch), "workflowName": workflow, "createdAt": created}
+
+
+def reruns_of(w):
+    return [c for c in w.cmds if isinstance(c, list) and c[:3] == ["gh", "run", "rerun"]]
+
+
 @scenario
 def offline_runner_is_reported_at_once_then_repaired_before_rerun():
-    w = RunnerWorld(online_after=2, runs=[
-        {"databaseId": 5, "status": "completed", "conclusion": "cancelled", "headBranch": "release/30", "createdAt": "2026-10-14T23:30:00Z"},
-        {"databaseId": 6, "status": "completed", "conclusion": "cancelled", "headBranch": "release/29", "createdAt": "2026-10-14T20:00:00Z"},
-        {"databaseId": 7, "status": "completed", "conclusion": "success", "headBranch": "release/30", "createdAt": "2026-10-14T23:30:00Z"},
-        {"databaseId": 8, "status": "completed", "conclusion": "failure", "headBranch": "feature/x", "createdAt": "2026-10-14T23:30:00Z"}])
+    w = RunnerWorld(online_after=2, heads={"release/30": "sha-release/30", "release/29": "sha-release/29", "feature/x": "sha-feature/x"}, runs=[
+        run(5, "release/30", "failure"),
+        run(6, "release/29", "failure", created="2026-10-14T20:00:00Z"),
+        run(7, "release/30", "success", workflow="Lint"),
+        run(8, "feature/x", "failure")])
     spy = Spy()
     g = guard(w, spy, report_command="echo report")
     assert g.ensure() == 0
@@ -428,11 +441,165 @@ def offline_runner_is_reported_at_once_then_repaired_before_rerun():
     # repair commands ran (string through the shell, list as argv), before the one re-run, and only for run 5
     assert w.cmds[0] == "echo report" and w.cmds[1] == "restart-svc", w.cmds
     assert ["ssh", "h", "sudo", "systemctl", "restart", "x"] in w.cmds
-    reruns = [c for c in w.cmds if isinstance(c, list) and c[:3] == ["gh", "run", "rerun"]]
-    assert reruns == [["gh", "run", "rerun", "5"]], reruns
-    assert w.cmds.index(reruns[0]) > w.cmds.index("restart-svc")
+    assert reruns_of(w) == [["gh", "run", "rerun", "5"]], reruns_of(w)
+    assert w.cmds.index(reruns_of(w)[0]) > w.cmds.index("restart-svc")
     runner_rows = [d for k, d in spy.events if k == "runner"]
     assert runner_rows[0]["online"] is False and runner_rows[-1]["online"] is True, runner_rows
+
+
+def ensure_with(runs, heads, **kw):
+    w = RunnerWorld(online_after=1, runs=runs, heads=heads)
+    spy = Spy()
+    assert guard(w, spy, **kw).ensure() == 0
+    return w, spy
+
+
+def skipped(spy):
+    return [d["ref"] for k, d in spy.events if k == "event" and d["kind"] == "runner.rerun_skipped"]
+
+
+@scenario
+def rerun_skips_run_of_an_old_head():
+    # CO688: run 41165453174 was for the old head 807cdd307; the branch head is 398d9b19b
+    w, spy = ensure_with([run(41165453174, "release/131", "cancelled", sha="807cdd307")], {"release/131": "398d9b19b"},
+                         rerun_cancelled=True)
+    assert reruns_of(w) == [], w.cmds
+    assert any("41165453174" in r and "old head" in r for r in skipped(spy)), skipped(spy)
+    w2, spy2 = ensure_with([run(1, "release/131", "failure", sha="aaa")], {"release/131": "bbb"})
+    assert reruns_of(w2) == [] and len(skipped(spy2)) == 1
+
+
+@scenario
+def rerun_skips_when_a_run_is_in_progress_on_the_branch():
+    w, spy = ensure_with([run(9, "release/131", status="in_progress"), run(8, "release/131", "failure", sha="h1")],
+                         {"release/131": "h1"})
+    assert reruns_of(w) == [], w.cmds
+    assert any("in progress" in r or "running" in r for r in skipped(spy)), skipped(spy)
+    w2, _ = ensure_with([run(9, "release/131", status="queued"), run(8, "release/131", "failure", sha="h1")], {"release/131": "h1"})
+    assert reruns_of(w2) == []
+
+
+@scenario
+def rerun_skips_when_a_newer_run_exists_for_the_head():
+    w, spy = ensure_with([run(12, "release/131", "success", sha="h1"), run(10, "release/131", "failure", sha="h1")],
+                         {"release/131": "h1"})
+    assert reruns_of(w) == [], w.cmds
+    assert any("newer run" in r for r in skipped(spy)), skipped(spy)
+    # a different workflow with the same head does not hide it
+    w2, _ = ensure_with([run(12, "release/131", "success", sha="h1", workflow="Lint"), run(10, "release/131", "failure", sha="h1")],
+                        {"release/131": "h1"})
+    assert reruns_of(w2) == [["gh", "run", "rerun", "10"]]
+
+
+@scenario
+def rerun_skips_cancelled_by_default():
+    runs = [run(10, "release/131", "cancelled", sha="h1")]
+    w, spy = ensure_with(runs, {"release/131": "h1"})
+    assert reruns_of(w) == [] and any("cancelled" in r for r in skipped(spy)), (w.cmds, skipped(spy))
+    w2, _ = ensure_with(runs, {"release/131": "h1"}, rerun_cancelled=True)
+    assert reruns_of(w2) == [["gh", "run", "rerun", "10"]]
+
+
+@scenario
+def rerun_reruns_failed_run_on_current_head():
+    for concl in ("failure", "timed_out", "startup_failure"):
+        w, spy = ensure_with([run(10, "release/131", concl, sha="h1")], {"release/131": "h1"})
+        assert reruns_of(w) == [["gh", "run", "rerun", "10"]], (concl, w.cmds)
+        assert "runner.rerun" in kinds(spy) and skipped(spy) == []
+    # a branch head that cannot be read is not a reason to re-run
+    w3, spy3 = ensure_with([run(10, "release/131", "failure", sha="h1")], {})
+    assert reruns_of(w3) == [] and len(skipped(spy3)) == 1
+
+
+@scenario
+def rerun_decisions_are_written_to_report_log():
+    root = new_root()
+    Path(root, ".delivery").mkdir()
+    w = RunnerWorld(online_after=1, heads={"release/1": "h1", "release/2": "h2"},
+                    runs=[run(10, "release/1", "failure", sha="h1"), run(11, "release/2", "failure", sha="old")])
+    c = cfg(runners=[{"name": "win-1", "repair": ["fix"]}])
+    g = rp.RunnerGuard(root, c, ledger=rp.Ledger(root, Spy()), gh=w.gh, run_cmd=w.run_cmd, sleep=lambda s: None,
+                       clock=lambda: "2026-10-14T23:00:00+00:00")
+    assert g.ensure() == 0
+    text = Path(root, ".delivery", "report.log").read_text()
+    assert "re-ran run 10" in text and "skipped run 11" in text, text
+
+
+@scenario
+def runner_events_reach_the_ledger():
+    root = new_root()
+    Path(root, ".delivery").mkdir()
+    led = Path(__file__).resolve().parent.parent / "claude/plugins/delivery/scripts/delivery_ledger.py"
+    w = RunnerWorld(online_after=1, heads={"release/1": "h1", "release/2": "h2"},
+                    runs=[run(10, "release/1", "failure", sha="h1"), run(11, "release/2", "failure", sha="old")])
+    c = cfg(runners=[{"name": "win-1", "repair": ["fix"]}])
+    # the real lookup, from a project that has no plugin sources: DELIVERY_LEDGER names the module
+    old = os.environ.get("DELIVERY_LEDGER")
+    os.environ["DELIVERY_LEDGER"] = str(led)
+    try:
+        ledger = rp.Ledger(root)
+    finally:
+        if old is None:
+            os.environ.pop("DELIVERY_LEDGER")
+        else:
+            os.environ["DELIVERY_LEDGER"] = old
+    assert ledger.module is not None
+    g = rp.RunnerGuard(root, c, ledger=ledger, gh=w.gh, run_cmd=w.run_cmd, sleep=lambda s: None,
+                       clock=lambda: "2026-10-14T23:00:00+00:00")
+    assert g.ensure() == 0
+    got = [e["kind"] for e in json.loads(Path(root, ".delivery", "ledger.json").read_text())["events"]]
+    for want in ("runner.offline", "runner.online", "runner.rerun", "runner.rerun_skipped"):
+        assert want in got, (want, got)
+
+
+@scenario
+def ledger_module_is_found_in_the_installed_plugin_cache():
+    # CO688 side finding: a project repo has no claude/plugins/delivery/, the plugin sits in the user's cache
+    home = new_root()
+    src = Path(__file__).resolve().parent.parent / "claude/plugins/delivery/scripts/delivery_ledger.py"
+    for ver in ("0.10.2", "0.10.3"):
+        d = Path(home, ".claude", "plugins", "cache", "dev-standards", "luismc-delivery", ver, "scripts")
+        d.mkdir(parents=True)
+        shutil.copy(src, d / "delivery_ledger.py")
+    root = new_root()
+    old = {k: os.environ.get(k) for k in ("HOME", "USERPROFILE", "DELIVERY_LEDGER", "CLAUDE_PLUGIN_ROOT")}
+    os.environ.update({"HOME": home, "USERPROFILE": home})
+    os.environ.pop("DELIVERY_LEDGER", None)
+    os.environ.pop("CLAUDE_PLUGIN_ROOT", None)
+    try:
+        found = rp.ledger_module_path(root)
+        assert found and "0.10.3" in found.replace("\\", "/"), found       # newest version wins
+        assert rp.Ledger(root).module is not None
+    finally:
+        for k, v in old.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+
+@scenario
+def missing_ledger_module_is_said_once():
+    import io, contextlib
+    home, root = new_root(), new_root()
+    old = {k: os.environ.get(k) for k in ("HOME", "USERPROFILE", "DELIVERY_LEDGER", "CLAUDE_PLUGIN_ROOT")}
+    os.environ.update({"HOME": home, "USERPROFILE": home})
+    os.environ.pop("DELIVERY_LEDGER", None)
+    os.environ.pop("CLAUDE_PLUGIN_ROOT", None)
+    here = rp.__file__
+    try:
+        buf = io.StringIO()
+        with contextlib.redirect_stderr(buf):
+            L = rp.Ledger(root, rp.find_ledger_module(root, search_here=False))
+            L.record("event", {"kind": "x", "ref": "y"})
+            L.record("event", {"kind": "x", "ref": "y"})
+        assert buf.getvalue().count("ledger module not found") == 1, buf.getvalue()
+    finally:
+        for k, v in old.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
 
 
 @scenario
