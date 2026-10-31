@@ -12,6 +12,13 @@
   "plugins": [
     "claude/plugins/*/.claude-plugin/plugin.json"
   ],
-  "release_branches": ["main", "*-integration"],
-  "default_branch": "main"
+  "release_branches": [
+    "main",
+    "*-integration"
+  ],
+  "default_branch": "main",
+  "plugin_notes_required": true,
+  "plugin_note_exempt": [
+    "claude/plugins/*/tests/**"
+  ]
 }

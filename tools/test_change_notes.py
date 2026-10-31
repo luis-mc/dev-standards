@@ -442,7 +442,7 @@ CFG = {"specs": ["docs/specs/*.md"], "plugins": ["plugins/*/.claude-plugin/plugi
 
 
 def cfg_run(b: Box, cmd: str, *extra: str) -> R:
-    base = ["--base-ref", "main"] if cmd == "check" else ["--date", "2026-10-11"]
+    base = {"check": ["--base-ref", "main"], "fold": ["--date", "2026-10-11"]}.get(cmd, [])
     return run([PY, "scripts/delivery/change_notes.py", cmd, "--config", "tools/cfg.json", *base, *extra], b.root)
 
 
@@ -684,6 +684,54 @@ def sc_staged_hook(t: T, s: Path) -> None:
     t.check("hook: runs in under 2 s", time.time() - t0 < 2.0, "%.2f s" % (time.time() - t0))
 
 
+def sc_plugin_notes(t: T, s: Path) -> None:
+    req = dict(CFG, plugin_notes_required=True, plugin_note_exempt=["plugins/*/tests/**"])
+    b = box_cfg(s, req)
+    b.branch("DS17-feature")
+    b.write("plugins/p/scripts/run.py", "print(1)\n")
+    b.commit("script")
+    r = cfg_run(b, "check")
+    t.check("a plugin file changed with no note fails", r.code == 1 and "plugins/p:" in r.out and PLUGIN in r.out, r.text)
+    t.check("names the changed file", "plugins/p/scripts/run.py" in r.out, r.text)
+    b.note("DS17-a", "", "patch", "A script.", plugin=PLUGIN)
+    b.commit("note")
+    t.check("a note naming the plugin passes", cfg_run(b, "check").code == 0)
+    c = box_cfg(s, req)
+    c.branch("DS17-other")
+    c.write("plugins/p/scripts/run.py", "print(1)\n")
+    c.note("DS17-b", "docs/specs/alpha.md", "patch", "Spec only.")
+    c.commit("script and a spec note")
+    t.check("a note for something else does not count", cfg_run(c, "check").code == 1)
+    e = box_cfg(s, req)
+    e.branch("DS17-tests")
+    e.write("plugins/p/tests/test_run.py", "pass\n")
+    e.write("docs/other.md", "x\n")
+    e.commit("tests only")
+    t.check("an exempt path or a file outside plugins needs no note", cfg_run(e, "check").code == 0)
+    o = box_cfg(s, CFG)
+    o.branch("DS17-off")
+    o.write("plugins/p/scripts/run.py", "print(1)\n")
+    o.commit("script")
+    t.check("off by default", cfg_run(o, "check").code == 0)
+    i = box_cfg(s, req)
+    i.branch("DS17-integration")
+    i.write("plugins/p/scripts/run.py", "print(1)\n")
+    i.commit("script")
+    t.check("a release branch is not asked for a note", cfg_run(i, "check").code == 0)
+
+
+def sc_pending(t: T, s: Path) -> None:
+    b = box_cfg(s, CFG)
+    r = cfg_run(b, "pending")
+    t.check("no notes: pending passes", r.code == 0 and "nothing waits" in r.out, r.text)
+    b.note("DS18-a", "", "minor", "Waiting.", plugin=PLUGIN)
+    b.commit("note on main")
+    r = cfg_run(b, "pending")
+    t.check("a waiting note fails and is named", r.code == 1 and "DS18-a.md" in r.out and "fold" in r.out, r.text)
+    cfg_run(b, "fold")
+    t.check("after a fold pending passes", cfg_run(b, "pending").code == 0)
+
+
 SCENARIOS = [
     ("check-pass", sc_check_pass, "check passes with only a note"),
     ("staged", sc_staged, "check --staged"),
@@ -704,6 +752,8 @@ SCENARIOS = [
     ("config", sc_config, "--config instead of gate.json"),
     ("headings", sc_headings, "per-spec change-log headings"),
     ("plugins", sc_plugins, "plugin versions"),
+    ("plugin-notes", sc_plugin_notes, "a changed plugin needs a note"),
+    ("pending", sc_pending, "notes waiting to be folded"),
     ("track-gates", sc_track_gates, "track gate.json steps"),
 ]
 
@@ -732,6 +782,12 @@ MUTANTS = [
     ("change_notes.py", "if is_plugin(path, cfg):", "if False:", ["plugins", "staged"]),
     ("change_notes.py", "if n.plugin:\n            by_plugin", "if False:\n            by_plugin", ["plugins"]),
     ("change_notes.py", "if not spec and not plugin:", "if False:", ["plugins"]),
+    ("change_notes.py", "if touched and manifest not in noted:", "if False:", ["plugin-notes"]),
+    ("change_notes.py", "if touched and manifest not in noted:", "if touched:", ["plugin-notes"]),
+    ("change_notes.py", "not any(e.match(p) for e in exempt)", "True", ["plugin-notes"]),
+    ("change_notes.py", "    if not cfg.get(\"plugin_notes_required\"):\n        return []\n", "", ["plugin-notes"]),
+    ("change_notes.py", "        problems += missing_plugin_notes(root, cfg, paths, notes)\n", "", ["plugin-notes"]),
+    ("change_notes.py", "    if waiting:\n", "    if False:\n", ["pending"]),
     ("delivery_common.py", "or not cfg[\"changelog_heading\"].strip():", "or False:", ["gate-json"]),
     ("delivery_common.py", "    for key in (\"specs\", \"release_branches\"):\n        cfg[key] = _str_list(cfg, key, where)\n", "", ["gate-json"]),
 ]

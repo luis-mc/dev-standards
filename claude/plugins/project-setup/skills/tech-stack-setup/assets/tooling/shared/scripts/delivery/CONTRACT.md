@@ -709,6 +709,14 @@ One or two sentences for the change log.
   against HEAD), run by the pre-commit hook so the edit is refused at commit time
   (STACKSPEC §13.8); a repository with no commit yet or no change-note settings
   passes.
+- `plugin_notes_required: true` (with `plugins`): `check` on a branch diff (not
+  `--staged`) also fails when a file of a listed plugin (the folder holding its
+  `.claude-plugin/plugin.json`) changes and no note names that manifest; paths
+  matching `plugin_note_exempt` globs (for example `plugins/*/tests/**`) need no
+  note. Off by default.
+- `change_notes.py pending` (run on every push to the default branch): fails
+  and names each note while any note waits to be folded, so a merged note can
+  not leave a version unraised unnoticed; passes when there are none.
 - `change_notes.py fold` (run on a release branch before the ready PR): for
   each spec with notes, bumps `**Version:**` by the highest change kind, writes
   one change-log entry under the change-log heading (new version, date, one

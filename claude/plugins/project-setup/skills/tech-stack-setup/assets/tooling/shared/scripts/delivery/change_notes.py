@@ -3,6 +3,7 @@
 
     change_notes.py check [--config PATH] [--base-ref REF] [--branch NAME]
     change_notes.py fold  [--config PATH] [--dry-run] [--date YYYY-MM-DD]
+    change_notes.py pending [--config PATH]
 
 A change note is docs/specs/changes/<task-id>-<slug>.md:
 
@@ -18,7 +19,14 @@ release branch, fails when the diff against the base (the merge base with REF)
 changes a spec's **Version:** line or its change-log section, a plugin
 manifest's "version" line, or any CHANGELOG* file; each offence is named as file:line with the fix (add a change note
 instead). It also fails on a malformed note. On a release branch only the notes
-are checked.
+are checked. With "plugin_notes_required" set, it also fails (branch diff only, not
+--staged) when the diff changes a file of a plugin (the folder holding its
+.claude-plugin/plugin.json) and no note names that plugin's manifest; paths matching
+"plugin_note_exempt" globs (tests, say) need no note.
+
+pending (run on every push to the default branch): fails while any note waits to
+be folded, so a note merged without a fold cannot leave a plugin or spec at its
+old version unnoticed.
 
 fold (run on a release branch before the ready PR): for each spec with notes,
 bumps its **Version:** by the highest change kind, writes one change-log entry
@@ -35,7 +43,8 @@ starting with this text; default "What changed"), "changelog_headings" (an objec
 spec path -> heading overriding that for one spec; "" means the spec has no change
 log, so only its version is guarded and bumped), "plugins" (globs of plugin
 manifests whose "version" is guarded; default none), "release_branches" (globs;
-default *-integration and release/*), "default_branch" (default main).
+default *-integration and release/*), "default_branch" (default main),
+"plugin_notes_required" (default false), "plugin_note_exempt" (globs; default none).
 
 Python 3.11+, standard library only. Exit: 0 ok, 1 offences found, 2 usage or
 configuration error.
@@ -130,6 +139,31 @@ def is_spec(path: str, cfg: dict) -> bool:
     if path.startswith(NOTES_DIR + "/"):
         return False
     return any(glob_to_re(g).match(path) for g in cfg["specs"])
+
+
+def plugin_dir(manifest: str) -> str:
+    """The folder a plugin manifest belongs to, with a trailing slash: the parent of .claude-plugin/."""
+    parts = manifest.split("/")[:-1]
+    if parts and parts[-1] == ".claude-plugin":
+        parts = parts[:-1]
+    return "/".join(parts) + "/" if parts else ""
+
+
+def missing_plugin_notes(root: Path, cfg: dict, paths: list[str], notes: list["Note"]) -> list[str]:
+    """One offence per plugin whose files the change touches with no note naming its manifest."""
+    if not cfg.get("plugin_notes_required"):
+        return []
+    exempt = [glob_to_re(g) for g in cfg.get("plugin_note_exempt") or []]
+    noted = {n.plugin for n in notes}
+    manifests = sorted({p.relative_to(root).as_posix() for g in cfg["plugins"] for p in root.glob(g) if p.is_file()})
+    found = []
+    for manifest in manifests:
+        folder = plugin_dir(manifest)
+        touched = [p for p in paths if p.startswith(folder) and not any(e.match(p) for e in exempt)]
+        if touched and manifest not in noted:
+            found.append("%s: %d file%s changed (%s) and no change note names %s" % (
+                folder.rstrip("/"), len(touched), "" if len(touched) == 1 else "s", touched[0], manifest))
+    return found
 
 
 def is_release_branch(names: list[str], cfg: dict) -> bool:
@@ -301,7 +335,7 @@ def path_offences(root: Path, cfg: dict, base: str, new: str, path: str) -> list
 def cmd_check(args: argparse.Namespace) -> int:
     root = dc.repo_root()
     cfg = load_config(root, args.config)
-    problems = read_notes(root)[1]
+    notes, problems = read_notes(root)
     names = branch_names(root, args.branch)
     release = is_release_branch(names, cfg)
     if not release and args.staged:
@@ -318,15 +352,17 @@ def cmd_check(args: argparse.Namespace) -> int:
         if mb.returncode != 0 or not mb.stdout.strip():
             raise dc.DeliveryError("HEAD and '%s' have no common ancestor" % base_ref)
         base = mb.stdout.strip()
-        for path in dc.changed_files(base, root):
+        paths = list(dc.changed_files(base, root))
+        for path in paths:
             problems += path_offences(root, cfg, base, "HEAD", path)
+        problems += missing_plugin_notes(root, cfg, paths, notes)
     if problems:
         print("change-notes: FAIL")
         for p in problems:
             print("  " + p)
         if not release:
             print("Do not edit a spec's or plugin's version, a spec's change log, or a CHANGELOG file, on a feature branch.")
-            print("Add a change note instead: %s/<task-id>-<slug>.md with 'spec:' (or 'plugin:') and 'change: patch|minor|major'." % NOTES_DIR)
+            print("Add a change note instead (and one for each changed plugin): %s/<task-id>-<slug>.md with 'spec:' (or 'plugin:') and 'change: patch|minor|major'." % NOTES_DIR)
             print("It is folded into the version and the change log on the release branch (change_notes.py fold).")
         return dc.EXIT_FAIL
     print("change-notes: ok (%s)" % ("release branch" if release else "no version, change-log or CHANGELOG edits"))
@@ -435,6 +471,22 @@ def cmd_fold(args: argparse.Namespace) -> int:
     return dc.EXIT_OK
 
 
+def cmd_pending(args: argparse.Namespace) -> int:
+    root = dc.repo_root()
+    load_config(root, args.config)  # a broken config is a usage error here too
+    notes, problems = read_notes(root)
+    waiting = [n.path for n in notes] + problems
+    if waiting:
+        print("change-notes: %d note%s wait to be folded; the versions they name are not raised yet" % (
+            len(waiting), "" if len(waiting) == 1 else "s"))
+        for w in waiting:
+            print("  " + w)
+        print("Fold them: change_notes.py fold (on a release branch), then push.")
+        return dc.EXIT_FAIL
+    print("change-notes: nothing waits to be folded")
+    return dc.EXIT_OK
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Check and fold spec change notes.")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -449,6 +501,8 @@ def main() -> int:
     f.add_argument("--dry-run", action="store_true", help="print what would be done; write nothing")
     f.add_argument("--date", help="date of the entries (default: today, UTC)")
     f.set_defaults(fn=cmd_fold)
+    w = sub.add_parser("pending", parents=[conf], help="fail while any note waits to be folded")
+    w.set_defaults(fn=cmd_pending)
     args = ap.parse_args()
     return args.fn(args)
 

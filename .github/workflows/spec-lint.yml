@@ -29,11 +29,7 @@ on:
       - 'tools/**'
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/preflight.py'
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/**'
-      - 'claude/plugins/**/SKILL.md'
-      - 'claude/plugins/artifacts/**'
-      - 'claude/plugins/delivery/**'
-      - 'claude/plugins/transcript-folds/**'
-      - 'claude/plugins/project-setup/skills/claude-setup/assets/**'
+      - 'claude/plugins/**'   # DS102: any plugin change needs its change note
       - 'docs/specs/changes/**'
       - '.claude/**'   # DS91: this repository's settings and suites (test_session_guard.py)
       - '.github/workflows/spec-lint.yml'
@@ -518,6 +514,24 @@ jobs:
           git fetch --no-tags --quiet origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
           python3 claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/change_notes.py check \
             --config tools/change-notes.json --base-ref "origin/${BASE_REF}" --branch "${HEAD_REF}"
+
+  # DS102: a note merged without a fold left a plugin at its old version (DS32).
+  # On the default branch every note must be folded; this fails until it is.
+  change-notes-folded:
+    name: change notes folded
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: No change note waits to be folded
+        run: |
+          python3 claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/change_notes.py pending \
+            --config tools/change-notes.json
 
   profiles:
     name: model profiles
