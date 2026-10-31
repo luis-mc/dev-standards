@@ -118,9 +118,33 @@ def split_commands(command: str) -> list[list[str]]:
     return out
 
 
+def _keep_backslashes(part: str) -> str:
+    """Double an unquoted backslash that is not escaping a space, quote or backslash, so Windows paths keep their text."""
+    out, q, i = [], "", 0
+    while i < len(part):
+        c = part[i]
+        if q:
+            if c == q:
+                q = ""
+        elif c in "\"'":
+            q = c
+        elif c == "\\":
+            nxt = part[i + 1:i + 2]
+            if nxt and (nxt.isspace() or nxt in "\"'\\"):
+                out.append(part[i:i + 2])
+                i += 2
+                continue
+            out.append("\\\\")
+            i += 1
+            continue
+        out.append(c)
+        i += 1
+    return "".join(out)
+
+
 def _argv(part: str) -> list[str]:
     try:
-        argv = shlex.split(part, posix=True)
+        argv = shlex.split(_keep_backslashes(part), posix=True)
     except ValueError:
         argv = part.split()
     while argv and re.match(r"^\w+=", argv[0]):  # env prefix
@@ -135,9 +159,9 @@ def _is_abs(d: str) -> bool:
 def _cd_target(part: str, cwd: str | None) -> str | None:
     """The directory a `cd <dir>` part moves to, or None when the part is not a cd."""
     words = part.strip().split(None, 1)
-    if len(words) != 2 or words[0] != "cd":
+    if len(words) != 2 or words[0].lower() not in ("cd", "chdir", "set-location", "sl", "push-location", "pushd"):
         return None
-    d = words[1].strip().strip("\"'")
+    d = re.sub(r"^-(?:literal)?path\s+", "", words[1].strip(), flags=re.I).strip().strip("\"'")
     if d.startswith("/d "):
         d = d[3:].strip().strip("\"'")
     if not d or d == "-":

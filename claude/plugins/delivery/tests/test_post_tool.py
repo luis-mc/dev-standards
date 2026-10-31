@@ -565,6 +565,25 @@ class Co688Tests(unittest.TestCase):
         got = H.split_commands_cwd("cd /w/one && git push origin release/1; cd ../two\ngit push origin release/2", "/w/zero")
         self.assertEqual([(a[-1], c) for a, c in got], [("release/1", "/w/one"), ("release/2", os.path.normpath("/w/two"))])
 
+    def test_windows_command_shapes(self):
+        P = ["git", "push", "origin", "release/135"]
+        for cmd, argv_head, where in (
+            (r"cd C:/GitHub/comics-organizer && gh pr create --draft --head release/135", ["gh", "pr", "create"], "C:/GitHub/comics-organizer"),
+            (r'cd "C:\Users\Luis\x y" && git push origin release/135', P, r"C:\Users\Luis\x y"),
+            (r"cd C:\Users\tmp\new && git push origin release/135", P, r"C:\Users\tmp\new"),
+            (r"cd 'C:\Users\Luis\x y'; git push origin release/135", P, r"C:\Users\Luis\x y"),
+            (r"git -C C:\path\new push origin release/135", P, r"C:\path\new"),
+            (r'git -C "C:\Users\Luis\x y" push origin release/135', P, r"C:\Users\Luis\x y"),
+            (r"Set-Location C:\GitHub\x; git push origin release/135", P, r"C:\GitHub\x"),
+            (r'Set-Location -Path "C:\a b"; git push', ["git", "push"], r"C:\a b"),
+            (r'& "C:\Program Files\Git\bin\git.exe" push origin release/135', [r"C:\Program Files\Git\bin\git.exe", "push", "origin", "release/135"], "C:/start"),
+            (r'cd C:/ComicsWork/worktrees/rec134; gh pr create --draft --title "a; b"', ["gh", "pr", "create", "--draft", "--title", "a; b"], "C:/ComicsWork/worktrees/rec134"),
+            (r"cd C:\Users\Luis\n && git push origin release/135 &", P, r"C:\Users\Luis\n"),
+        ):
+            argv, cwd = H.split_commands_cwd(cmd, "C:/start")[-1]
+            self.assertEqual(argv[:len(argv_head)], argv_head, cmd)
+            self.assertEqual(cwd, where, cmd)
+
 
 if __name__ == "__main__":
     unittest.main()
