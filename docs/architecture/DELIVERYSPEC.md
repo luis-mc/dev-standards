@@ -1,25 +1,59 @@
-# DS66: delivery learnings inventory and ledger schema (draft)
+# DELIVERYSPEC — Delivery rules
 
-Status: read-only study, 14 Oct 2026. Not committed. Inputs: a real project's session memory, the user and project CLAUDE.md
-files and rules, `~/.claude/hooks/no-tomorrow.mjs`, the dev-standards plugins (artifacts hooks,
-claude-setup assets, tech-stack-setup `scripts/delivery/*`), and that project's repository (its delivery scripts and CI workflow).
+**Status:** Normative
+**Version:** 1.0.0
+**Applies to:** every project that delivers its work with the `luismc-delivery` plugin, and the plugin itself
+**Audience:** Claude Code sessions and people working in those projects, and the implementers of `luismc-delivery`
 
-Goal: every delivery and orchestration learning becomes a mechanical check (hook, script or
-ledger field) in the plugins, not a memory note the orchestrator must remember.
+---
 
-Legend
-- **Source**: where the rule came from: rules = the user's rules files; CLAUDE.md = the user's or the
-  project's CLAUDE.md; owner rule = a rule the owner set on that date; owner lesson = a lesson the owner gave
-  in a session and kept as a session memory note.
-- **Scope**: G = generic (belongs in a plugin), P = project-specific (per-project config or the
-  project's own scripts).
-- **Kind**: STOP = Stop-hook block; PRE = PreToolUse deny; POST = PostToolUse ledger write;
-  SS = SessionStart; WATCH = watcher script; CI = CI guard test; GIT = git hook; TEXT = rules text only.
-- **Today**: Y = enforced, W = warns only, ~ = partly, N = not enforced (memory or rules text only).
+## At a glance
 
-## 1. Learnings
+### In one paragraph
 
-### 1a. Trains, CI and merge
+This spec holds the delivery rules. Each rule has an ID (`DL-nn`, `Q-n`, `D-n`) that hooks, scripts and the shipped rule files cite. A rule says what must hold, which check enforces it, and whether that check is built. The checks read one ledger file, `.delivery/ledger.json`, and a project sets its limits in `.delivery/config.json`.
+
+### Why
+
+A delivery lesson kept as a memory note depends on the orchestrator remembering it. A lesson kept as a hook, a script or a ledger field cannot be forgotten. Numbering the rules lets a hook name the rule it enforces and lets a test prove that every cited ID exists.
+
+### How it works
+
+```mermaid
+flowchart LR
+  H[Hooks: Stop, PreToolUse, PostToolUse, SessionStart] -->|write through the ledger module| L[(Ledger)]
+  L -->|read| H
+  W[Watcher script] -->|reads and writes| L
+  W -->|push, open PR, merge on green| T[Trains and releases]
+  T -->|head SHA| C[CI watch]
+  C -->|green_at, state| L
+  T -->|merged| K[Cleanup and smoke]
+  K -->|cleaned_at, smoke| L
+```
+
+1. A hook sees a tool call or a turn end and records it in the ledger (section 2).
+2. A PreToolUse or Stop hook reads the ledger and the rules in section 1, then denies or blocks when a rule is broken (D3).
+3. The watcher runs between turns. It pushes the next train, opens its ready PR and merges the previous train when its CI is green for the current head (D5).
+4. The CI watch reads the workflow runs of the head commit and sets `green_at` (DL-06, DL-07).
+5. After the merge, cleanup removes the branches and worktrees, and the smoke test checks production (DL-14, DL-18).
+6. Each project tunes the limits in section 6.
+
+---
+
+## Reading the rules
+
+Every rule in section 1 has these columns.
+
+- **Source**: where the rule came from: rules = the user's rules files; CLAUDE.md = the user's or the project's CLAUDE.md; owner rule = a rule the owner set on that date; owner lesson = a lesson the owner gave and the rule now records.
+- **Scope**: G = generic (belongs in a plugin), P = project-specific (per-project config or the project's own scripts).
+- **Kind**: STOP = Stop-hook block; PRE = PreToolUse deny; POST = PostToolUse ledger write; SS = SessionStart; WATCH = watcher script; CI = CI guard test; GIT = git hook; TEXT = rules text only.
+- **Today**: Y = enforced, W = warns only, ~ = partly, N = not enforced (rules text only).
+
+Goal: every delivery and orchestration rule is a mechanical check (hook, script or ledger field) in the plugins, not a note the orchestrator must remember.
+
+## 1. Rules
+
+### Trains, CI and merge (1a)
 
 | ID | Rule (imperative) | Source | Scope | Kind | The check reads | Today |
 |---|---|---|---|---|---|---|
@@ -30,7 +64,7 @@ Legend
 | DL-05 | Never `gh pr merge --auto`. | owner lesson, rules | G | PRE | command tokens | N (rules text; `session_guard.py` does not cover it) |
 | DL-06 | Merge only after `ci_watch.py` passed for the PR's current head SHA. | owner lesson, rules | G | PRE `gh pr merge` | `trains[].ci.head_sha == gh pr view headRefOid` and `ci.state=success` | ~ `ci_watch.py` exists; merge not gated |
 | DL-07 | Watch CI by the workflow runs of the head commit, never by the PR check list. | rules | G | PRE (deny `gh pr checks --watch`) | command tokens | ~ `ci_watch.py`; nothing stops the other way |
-| DL-08 | Open a ready PR only from a release/integration branch; every other PR is a draft. | CLAUDE.md, rules | G | PRE | branch name vs `release_branches` | Y `session_guard.py` ready-PR guard (wired in a real project's settings) |
+| DL-08 | Open a ready PR only from a release/integration branch; every other PR is a draft. | CLAUDE.md, rules | G | PRE | branch name vs `release_branches` | Y `session_guard.py` ready-PR guard (wired in a project's settings) |
 | DL-09 | Check runners are online for every label CI needs before opening a ready PR. | owner lesson | G | PRE `gh pr create`/`ready` + WATCH | `runners[]` (`gh api .../actions/runners`), `runs-on` labels | W `runner_health.py` (join, ci_watch), `runners-check.ts` (P) |
 | DL-10 | A ready PR from `release/*` runs `release:prepare` (fold spec notes) before CI. | owner lesson | G (change_notes) | PRE `gh pr create`/`ready` | `change_notes.py --check-folded` exit | ~ CI fails late (`--check-folded`) |
 | DL-11 | A join is light: merge, resolve conflicts, fold spec notes, typecheck + lint of the touched packages, the fast guards (pre-push), then push and open the ready PR at once; never the branch gate or a full suite on the joined head, no wait for a sandbox gate before the ready PR, no full gate re-run after a join fix. The ready PR's CI is the one full run. | owner lesson | G (+P steps) | PRE (test guard) |`gate.json` join steps (`"join"` flag, `join_guards`), `.delivery/join-result.json`| Y `join.py` light check + `session_guard.py`; `hook_pre_tool.py` PreToolUse deny (branch gate on a release/integration branch, join brief naming it) |
@@ -51,7 +85,7 @@ Legend
 | DL-26 | removed: project-specific, not part of the plugins |
 | DL-27 | removed: project-specific, not part of the plugins |
 
-### 1b. Agents
+### Agents (1b)
 
 | ID | Rule (imperative) | Source | Scope | Kind | The check reads | Today |
 |---|---|---|---|---|---|---|
@@ -72,7 +106,7 @@ Legend
 | DL-44 | Agents write their report first and push after every step. | rules | G | TEXT (proxy DL-34) | branch activity | N |
 | DL-45 | Commit shared contracts to the integration branch before launching agents. | rules | G | PRE `RemoteTrigger` | brief names a contract path that is on `origin/<integration>` | N |
 
-### 1c. Local machine, runners, installs
+### Local machine, runners, installs (1c)
 
 | ID | Rule (imperative) | Source | Scope | Kind | The check reads | Today |
 |---|---|---|---|---|---|---|
@@ -93,7 +127,7 @@ Legend
 | DL-84 | The branch gate runs in this order: the always-on guards, then type check and lint of the touched packages and their dependents, then unit, integration and e2e tests. A time-limited run always covers lint and types (they are never skipped for the limit), `gate_verify.py` refuses a result in which a required step (`gate.json` `required_steps`, default `typecheck` and `lint`) is missing or was skipped for any reason but "nothing in its scope changed", and the pre-push hook runs lint and typecheck of the touched packages as well (cached by the task runner, skipped when no package changed). | owner lesson 31 Oct 2026 (a release needed 3 CI runs: 2 red on lint, 1 test crash the agents' gate never reached) | G | script | `gate-result.json` `steps[]`, `required_steps`; `gate.json` step order | Y `delivery_common.py` order check + time-limit floor, `branch_gate.py`, `gate_verify.py`, `fast_guards.py` (steps with `pre_push`) |
 | DL-85 | Runner planning for a release CI on one shared Linux runner: jobs that need no Linux (lint, types, boundary checks, contract and unit tests that run on any OS) run in parallel on another available runner (a second self-hosted runner with its own label, or a hosted one) instead of queueing behind the Linux-only jobs; the Linux-only jobs (integration, e2e, packaging) stay on the Linux runner. The split is advice for the project's `CI_RUNS_ON`-style runner variables, not a script. | owner request 31 Oct 2026 (3 release CI runs of 65-70 min on one runner) | G | TEXT | runner labels and the jobs' `runs-on` | N (advice; the runner plan in STACKSPEC 13.1) |
 
-### 1d. Progress page and reporting
+### Progress page and reporting (1d)
 
 | ID | Rule (imperative) | Source | Scope | Kind | The check reads | Today |
 |---|---|---|---|---|---|---|
@@ -105,7 +139,7 @@ Legend
 | DL-65 | Every status shown (page, chat) comes from one shared reading of the latest state. | owner lesson | G | design: renderers read the ledger | ledger only | N (applies to the ledger itself) |
 | DL-66 | Show times in the owner's zone, labelled (Lisbon); stamp from the real clock, never a guess. | owner lesson | G (tz in config) | POST stamps | clock | ~ artifacts script stamps |
 
-### 1e. Owner communication and attribution
+### Owner communication and attribution (1e)
 
 | ID | Rule (imperative) | Source | Scope | Kind | The check reads | Today |
 |---|---|---|---|---|---|---|
@@ -117,7 +151,7 @@ Legend
 | DL-75 | Create every doc under `docs/`. | rules | G | PRE `Write` of `*.md` | path | N |
 | DL-76 | A release runs CI once: nothing after the merge re-runs what the release PR proved on the same tree; only publish, deploy and production smoke run on the default branch. | owner lesson | P | STOP | PR merge commit tree vs PR head tree; default-branch runs of that commit and their jobs vs `pr_proven_jobs` | N |
 
-Counts: 66 learnings (DL-01..27, 30..45, 50..56, 60..66, 70..79). Enforced today: 8 Y,
+Counts: 66 rules (DL-01..27, 30..45, 50..56, 60..66, 70..79). Enforced today: 8 Y,
 1 warn-only (W), 17 partly (~), 37 not enforced (N).
 
 ## 2. Ledger schema: `.delivery/ledger.json`
@@ -209,7 +243,7 @@ the Full Progress renderer (DL-65: the one truth for shown state).
 | `owner_questions[]` | POST hook on `AskUserQuestion` (asked) and on the next user message (answered) via UserPromptSubmit |
 | `events[]` | every writer (append) |
 
-## 3. Gaps: not mechanically enforceable, and the best proxy
+## 3. Gaps: rules no check can fully enforce, and the best proxy
 
 | Rule | Why not mechanical | Best proxy |
 |---|---|---|
@@ -224,12 +258,12 @@ the Full Progress renderer (DL-65: the one truth for shown state).
 | speed-without-compromise, parallel-by-default | goals, not checks | STOP lists "startable now" items (To do tasks with deps met while slots are free; trains green and unpushed) once per turn |
 | DL-73 never send as owner | outbound tools are open-ended | deny list of known outbound commands/MCP tools in config; the classifier stays the backstop |
 
-## 4. Build split: four parallel briefs by file ownership
+## 4. Build split: four parts by file ownership
 
-Shared contract first (commit to the integration branch before launch): this file's section 2
+The shared contract is committed to the integration branch before any part is built: section 2 of this file
 as `claude/plugins/delivery/references/ledger-schema.json` (JSON Schema) and the config shape
 `.delivery/config.json` (caps, work_root, tz, brief_markers, train_label_re, long_pole_globs,
-measure_globs, eta_table, heavy_commands, outbound_deny). Proposed home: a new plugin
+measure_globs, eta_table, heavy_commands, outbound_deny). The home is the plugin
 `claude/plugins/delivery/` (`luismc-delivery`), so the artifacts plugin stays to ARTIFACTSPEC.
 
 **(a) Ledger + PostToolUse + watchers**
@@ -262,15 +296,15 @@ measure_globs, eta_table, heavy_commands, outbound_deny). Proposed home: a new p
 - `project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md` and `clarifying-questions.md` (re-tag each line `<!-- check: … -->` to its new enforcer; add the DL rules that stay text)
 - `project-setup/skills/claude-setup/assets/delivery-config.json` (template; example values: caps 8/3/5, work_root `C:\Work`, tz Europe/Lisbon, `release/\d+[a-z]` label regex, measure globs)
 - `project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/commit-msg` (DL-74, opt-in by config) and `pre-commit` conflict-marker check (DL-24)
-- `.claude-plugin/marketplace.json`, `README.md` section for the new plugin, `docs/specs/` DELIVERYSPEC draft
+- `.claude-plugin/marketplace.json`, `README.md` section for the new plugin, this spec
 - model-profiles / rule-tag tests that check every `<!-- check: -->` path exists
 
 Order: contract commit, then (a)-(d) in parallel; (b) and (c) code against the schema and
-fixtures; the join runs (a) first. Project follow-ups (in that project, own branch): wire the
-plugin, add `.delivery/config.json`, drop the `Co-Authored-By` line in its CI auto-fix script,
-make its heavy-job script call `runner_plan.py`.
+fixtures; the join runs (a) first. A project then wires the plugin, adds `.delivery/config.json`, drops any `Co-Authored-By` line from its CI auto-fix script, and makes its heavy-job script call `runner_plan.py`. Each is a change in that project, on its own branch.
 
-## 5. Owner decisions (14 Oct 2026, 22:3x Lisbon) — binding, they override sections 1-4 where they differ
+## 5. Owner decisions (14 Oct 2026, 22:3x Lisbon)
+
+These decisions are binding. They override sections 1-4 where they differ.
 
 - D1 Approach B+C: hooks enforce inside sessions; watcher scripts (no model) act on time-critical steps.
 - D2 Home: new plugin `claude/plugins/delivery/` named `luismc-delivery`; claude-setup installs, enables and configures it per project (`.delivery/config.json`). Full Progress publishing stays in `luismc-artifacts`; delivery only feeds it (publish-on-phase-change + hourly, brief (c)).
@@ -291,7 +325,7 @@ make its heavy-job script call `runner_plan.py`.
 
 ## 6. Project config: `.delivery/config.json` (plugin 0.2.0)
 
-The config is described by `claude/plugins/delivery/references/config-schema.json` and checked by `delivery_config.py validate [--root DIR | --config FILE] [--json] [--strict]` (exit 0 valid, 1 errors, 2 unreadable JSON). Every key is optional and a 0.1.0 config stays valid. A key the schema does not list is a warning, never an error (so a typo shows); keys starting with `_` are comments. A wrong type, an out-of-range number, an invalid regular expression, a `tz` that zoneinfo cannot load, or `--auto` in a merge flag is an error. The aligned reference is a real project's config.
+The config is described by `claude/plugins/delivery/references/config-schema.json` and checked by `delivery_config.py validate [--root DIR | --config FILE] [--json] [--strict]` (exit 0 valid, 1 errors, 2 unreadable JSON). Every key is optional and a 0.1.0 config stays valid. A key the schema does not list is a warning, never an error (so a typo shows); keys starting with `_` are comments. A wrong type, an out-of-range number, an invalid regular expression, a `tz` that zoneinfo cannot load, or `--auto` in a merge flag is an error. Each key has an example in the schema.
 
 - `enforcement` (Stop and PreToolUse hooks; D3). `mode`: `block` (default) or `warn` (findings and denials are shown as a `systemMessage`, nothing blocks). `block_ceiling` (integer >= 1, default 3): the same findings block this many times per session, then the turn ends (replaces the fixed 3 of artifacts R8.4). `log_every_block` (default false): append every block to `.delivery/blocks.log` as `time<TAB>hook<TAB>rule id<TAB>message` (hook is `stop` or `pre-tool`), for the owner's review.
 - `watcher` (D5, D6a). `push_trains`, `open_prs`, `merge_on_green`, `manage_runners`: booleans, all default true (= 0.1.0). `merge_on_green` merges with `gh pr merge N --merge`, never `--auto`, and only when the PR head is the commit whose CI run was green: the watcher re-reads the head right before the merge and passes `--match-head-commit SHA`; a moved head records `merge.head_moved` and waits for the next pass. `merge_method: "merge"` and `merge_flag: "--merge"` are accepted spellings of the only method; `never_auto_merge` documents D5 and cannot be false. `manage_runners`: the watcher launches `runner_plan.py runners` itself (found at `runner_plan.script`, else `scripts/delivery/runner_plan.py`) and relaunches it when it exits (D6a), instead of the project starting it.
@@ -300,6 +334,6 @@ The config is described by `claude/plugins/delivery/references/config-schema.jso
 - `pr_proven_jobs` (0.3.0, DL-76): job names (case-insensitive, globs allowed) the release PR proves. Rule: "A release runs CI once: nothing after the merge re-runs what the release PR proved on the same tree; only publish, deploy and production smoke run on the default branch." After a train merges and until it is cleaned, the Stop hook reads the merge commit of the PR and, only when its tree equals the PR head tree, lists the default-branch runs of that commit and flags each non-skipped job named here. Default `[]`: the check is off and makes no network call. Any `gh` failure leaves the check silent.
 - `brief_markers` (DL-36): each entry is a string the brief must contain, or a list of strings of which any one is enough (0.10.0), e.g. `["one affected gate", "CI is the gate"]`.
 - `load_limits` (DL-77, DL-78): `{"memory_pct": 85, "cpu_pct": 60}`, each 1..100. Precedence per key: `.delivery/config.json`, then the machine file `~/.claude/luismc-delivery-machine.json` (`{"load_limits": {...}}`, optionally `runner_gate` {`max_wait_min`, `poll_sec`, `on_timeout` fail|run} and `runner_dirs` for the doctor), then the defaults 85 and 60. `heavy_commands` (regexes, case-insensitive; plain text also matches) adds commands to the heavy list. The load guard is not opt-in: it runs in every project where the plugin is enabled, with or without `.delivery/`, because it protects the machine. `checks_off: ["DL-77"]` (or `["DL-78"]`) switches a project off; `enforcement.mode: warn` turns the refusal into a message. Heavy: test runners; `pnpm|npm|yarn|bun` scripts `test`, `e2e`, `check*`, `build*` (also via `run`/`exec`/`dlx`); turbo, nx, `tsc -b`, next/vite/webpack builds; cargo, dotnet, go, mvn, gradle, msbuild builds and tests; docker build and compose up/build; ffmpeg; installs (`install|add|ci`) unless `--offline`; background jobs that are not plainly light (git, gh, ls, cat, grep and similar); a local Agent launch (no `isolation` remote/cloud) and any Workflow. Light and never refused: git, gh, ls, cat, grep, rtk-wrapped reads, python one-liners, lint. RemoteTrigger and Agent with remote/cloud isolation are never refused. Over a limit, PRE exits 2 with the numbers, the limits, the top processes by CPU and memory (names only) and what to do (wait or finish a running job). CPU is the mean of the samples of the last 30 s (at most 3), so one spike does not decide.
-- `runner_plan` (D6, D6a). `cancel_replaced_runs` (watcher cancels CI runs of a branch whose head has moved on), `hold_dependabot_during_train` (watcher cancels and later re-runs non-train CI runs while a train's CI runs), `heavy_jobs_yield` (`runner_plan.py run` waits for train CI; `heavy_local_jobs_yield` is the same key as a real project spells it): booleans, default true. `retry_seconds`, `runner_max_retries`, `report_command` as in D6a. `rerun_cancelled` (boolean, default false): the runner guard also re-runs runs that ended `cancelled`; a cancelled run was usually cancelled on purpose. Without `runner_plan.train_branch_regex`, the top-level `train_branch_re` is used.
+- `runner_plan` (D6, D6a). `cancel_replaced_runs` (watcher cancels CI runs of a branch whose head has moved on), `hold_dependabot_during_train` (watcher cancels and later re-runs non-train CI runs while a train's CI runs), `heavy_jobs_yield` (`runner_plan.py run` waits for train CI; `heavy_local_jobs_yield` is the same key as some projects spell it): booleans, default true. `retry_seconds`, `runner_max_retries`, `report_command` as in D6a. `rerun_cancelled` (boolean, default false): the runner guard also re-runs runs that ended `cancelled`; a cancelled run was usually cancelled on purpose. Without `runner_plan.train_branch_regex`, the top-level `train_branch_re` is used.
 - `tz`. An IANA name. If zoneinfo cannot load it (no tzdata, typically Windows) the validator and `delivery_doctor.py` fail, and any hook that still has to format a time prints a warning once before using UTC; it is never silent. SessionStart adds the same warning to its context.
 - `delivery_doctor.py [self-check] [--root DIR] [--json]` runs five checks: config valid, gh signed in, tz loads, hooks registered (hooks.json names the hook scripts, and `luismc-delivery` is enabled in project or user settings), ledger writable. Exit 0 all ok, 1 a FAIL, 2 no `.delivery/`.
