@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.15.0
+**Version:** 1.16.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.16.0 — 2026-10-31.**
+
+- The record folder is a per-project setting, `record_dir` in `.claude/artifacts.json` (under `docs/`, default `docs/artifacts`, so projects that set nothing are unchanged), read by the script, the renderer paths and every hook; the new `move-record NEW_DIR [--yes]` command moves the folder without git and writes the setting (R4.37, R4.38).
 
 **1.15.0 — 2026-10-30.**
 
