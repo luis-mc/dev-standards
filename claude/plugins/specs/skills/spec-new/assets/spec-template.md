@@ -5,7 +5,7 @@
 
   HOW TO USE THIS FILE
 
-  1. Copy it to `specs/<feature-name>.md`.
+  1. Copy it to the path SKILL.md step 3 names (`docs/architecture/<name>.md` in a DOCSPEC repo, else `specs/<feature-name>.md`).
   2. Delete this comment block.
   3. Delete every section marked [CONDITIONAL] or [OPTIONAL] that does not
      apply. A spec padded with empty sections is worse than a short one —

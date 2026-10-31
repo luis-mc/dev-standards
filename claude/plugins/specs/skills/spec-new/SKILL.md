@@ -1,6 +1,6 @@
 ---
 name: spec-new
-description: Interview the user and write a normative specification to specs/ before any implementation begins. Use this whenever the user wants to plan, design, or spec out a feature, component, service, migration, or refactor — including phrasings like "I want to build X", "how should we approach Y", "let's design Z", "write a spec for", "plan out", or when they describe a non-trivial change without having written anything down yet. Also use it when an existing spec needs revising or extending. Prefer this over jumping straight to implementation for anything touching more than one file.
+description: Interview the user and write a normative specification (to docs/ in a repo that follows DOCSPEC, else specs/) before any implementation begins. Use this whenever the user wants to plan, design, or spec out a feature, component, service, migration, or refactor — including phrasings like "I want to build X", "how should we approach Y", "let's design Z", "write a spec for", "plan out", or when they describe a non-trivial change without having written anything down yet. Also use it when an existing spec needs revising or extending. Prefer this over jumping straight to implementation for anything touching more than one file.
 model: opus
 effort: medium
 ---
@@ -19,7 +19,12 @@ The template lives at `assets/spec-template.md`. **Read it before interviewing**
    informed by the actual codebase are worth ten generic ones. If there is no
    codebase yet, say so and interview on product shape instead.
 2. **Interview.** Use AskUserQuestion. Details below.
-3. **Write the spec** to `specs/<feature-name>.md` from the template.
+3. **Write the spec** from the template. Where it goes depends on the repo:
+   - A repo with `docs/docs.json` follows DOCSPEC (`luismc-docs`; its layout is not restated here). A spec of one
+     feature belongs in `docs/features/<feature>/spec.md`: use `luismc-docs:feature-spec-new`, and bring this
+     interview's answers to it. A binding rule that spans features goes to `docs/architecture/<name>.md`, with
+     front matter `type: reference`.
+   - Any other repo: `specs/<feature-name>.md`.
 4. **Stop.** Do not implement in the same session. Tell the user to review the
    spec, then start a fresh session to build it.
 
@@ -100,7 +105,7 @@ skipped — unregistered, `OTHERSPEC §4.2` falls through to internal resolution
 and silently matches your own §4.2 if you have one:
 
 ```bash
-python3 ../spec-check/assets/spec_check.py specs/mine.md \
+python3 ../spec-check/assets/spec_check.py <path-to-your-spec>.md \
   --external OTHERSPEC=path/to/other.md
 ```
 

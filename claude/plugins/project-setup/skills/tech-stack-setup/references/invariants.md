@@ -1634,19 +1634,28 @@ own ingestion endpoint is required work, not an optional extra.
 
 ## 16. Documentation
 
-- `docs/specs/` holds binding specifications for this product. Anything there is
-  authoritative for behaviour.
-- `docs/notes/` holds superseded specs, research and transcripts. Never
-  authoritative.
-- A superseded spec **moves** to `docs/notes/`; it is not deleted and not left in
-  `docs/specs/`.
-- Every product MUST carry: its Stack Profile (§18), an architecture overview, a
-  local-setup guide that works from a clean machine, and operational runbooks.
+- Where each document lives and how it is kept true is bound by **DOCSPEC**
+  (`luismc-docs`, `references/docspec.md`); this section does not restate it.
+  Every product MUST follow DOCSPEC's layout (`docs/` split by reader question,
+  one folder per feature with `spec.md`, `docs/docs.json`, a generated
+  `docs/index.html`) and run its checks (`docs_check.py`).
+- A spec of one feature is `docs/features/<feature>/spec.md`. A binding rule that
+  spans features lives in `docs/architecture/`. Anything under `docs/features/`,
+  `docs/architecture/` and `docs/design-system/` is authoritative for behaviour.
+- A superseded doc **moves** to `docs/archive/`; it is not deleted and not left in
+  place. The archive is never authoritative.
+- Agent briefs, reports and scratch notes are temporary: they live under
+  `docs/work/` on the agent's branch and never reach the default branch
+  (DOCSPEC §10).
+- Every product MUST carry: its Stack Profile (§18), the DOCSPEC overview pages
+  and an architecture overview, a local-setup guide (`docs/guides/`) that works
+  from a clean machine, and operational runbooks (`docs/guides/runbooks/`).
 - A product MUST NOT carry a copy of this specification (§2.1).
 - Every non-obvious decision MUST be recorded with its rationale and the
-  alternatives rejected. Comments MUST explain *why*, including known residual
-  limitations.
-- Agent-facing instructions live in `CLAUDE.md` / `AGENTS.md` at the root.
+  alternatives rejected (DOCSPEC §11.1). Comments MUST explain *why*, including
+  known residual limitations.
+- Agent-facing instructions live in `AGENTS.md` at the root, which `CLAUDE.md`
+  imports.
 
 ---
 
@@ -1885,6 +1894,6 @@ Every item is checkable regardless of stack.
 - Products record the `STACKSPEC` version they satisfy in their Stack Profile.
 - A conflict between a product's needs and this spec is resolved by a recorded
   deviation with a named approver — not by silent divergence.
-- Superseded versions move to `docs/notes/`.
+- Superseded versions move to `docs/archive/`.
 - This spec is the answer to "what makes a product of ours correct." When reality
   outgrows it, the spec changes; the codebase does not quietly drift ahead of it.

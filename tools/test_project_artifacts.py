@@ -3512,6 +3512,196 @@ def test_hooks_read_the_record_dir_setting(env):
     assert rel == NEW_REC and found and Path(d) == p.clone / NEW_REC, r.stdout
 
 
+# --------------------------------------------------------------------------
+# promote-to-spec (DOCSPEC R4.10, R10.4)
+# --------------------------------------------------------------------------
+
+def _promote_setup(p):
+    sections = {'01-what-and-why.html': b'<!-- title: What and why -->\n<p>Checkout takes <strong>one page</strong>.</p>\n<ul><li>fast</li><li>clear</li></ul>\n',
+                '02-how.html': b'<!-- title: How it works -->\n<h3>Steps</h3><p>See <a href="https://example.test/x">the doc</a> and <code>pay()</code>.</p>'
+                               b'<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td></tr></table>\n'}
+    d = edit_decisions(p, [d_dec(1), d_open(2)], 'promote', extra=sections)
+    p.ok('edit-content', 'artifacts', '--from', d)
+
+
+@case
+def test_promote_to_spec_dry_run_writes_nothing(env):
+    """R4.10: without --yes it prints the plan and writes nothing."""
+    p = env.baseline()
+    _promote_setup(p)
+    before = p.files()
+    r = p.run('promote-to-spec', 'artifacts', '--json')
+    j = r.json()
+    assert r.code == 0 and j['dry_run'] and not j['written'], r.all
+    assert j['spec'] == 'docs/features/artifacts/spec.md' and j['decisions_promoted'] == ['D1'] and j['decisions_open'] == ['D2'], j
+    assert p.files() == before and not (p.clone / 'docs' / 'features').exists()
+
+
+@case
+def test_promote_to_spec_writes_the_feature_spec(env):
+    """R4.10, R10.4: decided content becomes docs/features/<x>/spec.md in the DOCSPEC template; the record is untouched."""
+    p = env.baseline()
+    _promote_setup(p)
+    rec_before = {k: v for k, v in p.files().items() if k.startswith('docs/artifacts')} if isinstance(p.files(), dict) else None
+    r = p.run('promote-to-spec', 'artifacts', '--feature', 'artifact-pages', '--yes')
+    assert r.code == 0 and 'wrote docs/features/artifact-pages/spec.md' in r.out, r.all
+    assert 'open decisions are not promoted: D2' in r.out, r.all
+    text = (p.clone / 'docs/features/artifact-pages/spec.md').read_text(encoding='utf-8')
+    head, body = text.split('\n---\n', 1)
+    for k in ('id: artifact-pages', 'title: Artifacts', 'apps: [plugin]', 'topics: []', 'status: proposed', 'version: 0.1.0',
+              'owner: owner', 'type: explanation', 'code: []', 'artifact: feature-artifacts.html'):
+        assert k in head, (k, head)
+    assert '## 1. In one paragraph' in body and '## 2. Why' in body and '## 3. How it works' in body, body
+    assert 'Checkout takes **one page**.' in body and '- fast' in body, body
+    assert '[the doc](https://example.test/x)' in body and '`pay()`' in body and '| A | B |' in body and '| 1 | 2 |' in body, body
+    assert '| D1 | Which layout for the checkout page? | Single page | 2026-10-10 |' in body, body
+    assert 'D2' not in body.split('## 10. Decisions')[1], 'an open decision must not be promoted'
+    assert body.rstrip().endswith('## Versions')
+    assert p.run('check').code == 0, p.run('check').all
+    if rec_before is not None:
+        assert {k: v for k, v in p.files().items() if k.startswith('docs/artifacts')} == rec_before, 'the record changed'
+
+
+@case
+def test_promote_mapping_by_heading(env):
+    """R4.2: page sections go to the template slot their heading names (why / what / how / FR / NFR / visuals / users vs developers)."""
+    sys.path.insert(0, str(env.plugin / 'scripts'))
+    import artifact_promote as P
+    want = {'Why': 2, 'Problem and goals': 2, 'What it does': 1, 'Overview': 1, 'How it works': 3, 'Steps': 3, 'For users': 3,
+            'For developers': 7, 'Data model': 7, 'Functional requirements': 5, 'Requirements': 5,
+            'Non-functional requirements': 6, 'Performance': 6, 'Privacy': 6, 'Screens and states': 4, 'Mock-ups': 4,
+            'Failure modes': 8, 'Tests': 9, 'Not built yet': 11, 'Code map': 12, 'Decisions': 10, 'Zebra': None}
+    got = {t: P.classify(t) for t in want}
+    assert got == want, {t: (got[t], w) for t, w in want.items() if got[t] != w}
+    slots, unmapped = P.slots_for('<p>Lede.</p>', [('Zebra', 'z'), ('Why', 'because'), ('For developers', 'dev'),
+                                                   ('Non-functional requirements', 'fast'), ('Screens', 'pic')], [])
+    assert unmapped == ['Zebra'] and slots[2] == [(None, 'because')] and slots[6] == [(None, 'fast')], slots
+    assert slots[7] == [('For developers', 'dev')] and slots[4] == [('Screens', 'pic')] and slots[3] == [('Zebra', 'z')], slots
+    assert slots[1] == [(None, 'Lede.')], slots
+
+
+@case
+def test_promote_topics_from_the_page(env):
+    """R4.4: topics come from meta.json or the page's words, limited to docs.json topics."""
+    sys.path.insert(0, str(env.plugin / 'scripts'))
+    import artifact_promote as P
+    secs = [('Checkout flow', 'x'), ('Billing', 'y')]
+    assert P.topics_from('<p>Pay.</p>', secs, None, ['checkout', 'billing', 'search']) == ['checkout', 'billing']
+    assert P.topics_from('', secs, ['search', 'nope'], ['checkout', 'search']) == ['search', 'checkout']
+    assert P.topics_from('', secs, ['whatever'], []) == ['whatever']
+
+
+@case
+def test_promote_to_spec_places_sections_and_fills_topics(env):
+    """R4.10: a page with why / FR / NFR / visuals / users / developers sections lands in the template slots; topics are filled."""
+    p = env.baseline()
+    secs = {'01-what-and-why.html': b'<!-- title: Why -->\n<p>Because checkout is slow.</p>\n',
+            '02-fr.html': b'<!-- title: Functional requirements -->\n<ul><li>pay in one step</li></ul>\n',
+            '03-nfr.html': b'<!-- title: Performance -->\n<p>Under one second.</p>\n',
+            '04-vis.html': b'<!-- title: Screens -->\n<p>Empty state.</p>\n',
+            '05-dev.html': b'<!-- title: For developers -->\n<p>Queue plus worker.</p>\n',
+            '06-usr.html': b'<!-- title: For users -->\n<p>Press pay.</p>\n'}
+    d = edit_decisions(p, [d_dec(1)], 'promote', extra=secs)
+    p.ok('edit-content', 'artifacts', '--from', d)
+    (p.clone / 'docs').mkdir(exist_ok=True)
+    (p.clone / 'docs' / 'docs.json').write_text(json.dumps({'apps': ['plugin'], 'topics': ['checkout', 'search']}), encoding='utf-8')
+    r = p.run('promote-to-spec', 'artifacts', '--apply')
+    assert r.code == 0, r.all
+    text = (p.clone / 'docs/features/artifacts/spec.md').read_text(encoding='utf-8')
+    pos = [text.index(h) for h in ('## 2. Why', '## 3. How it works', '## 4. Screens and states', '## 5. Functional requirements',
+                                   '## 6. Non-functional requirements', '## 7. Design', '## 10. Decisions')]
+    assert pos == sorted(pos), text
+    sec = lambda h: text.split(h, 1)[1].split('\n## ', 1)[0]
+    assert 'Because checkout is slow.' in sec('## 2. Why') and 'pay in one step' in sec('## 5. Functional requirements')
+    assert 'Under one second.' in sec('## 6. Non-functional requirements') and 'Empty state.' in sec('## 4. Screens and states')
+    assert '### For developers' in sec('## 7. Design') and 'Queue plus worker.' in sec('## 7. Design')
+    assert 'Press pay.' in sec('## 3. How it works')
+    assert 'topics: [checkout]' in text.split('\n---\n', 1)[0] or 'topics: []' in text, text[:300]
+
+
+MERGE_SPEC = """---
+id: artifacts
+title: Artifacts
+apps: []
+topics: []
+status: building
+version: 1.2.0
+owner: owner
+type: reference
+code: []
+---
+# Artifacts
+
+## 1. In one paragraph
+
+What it does and for whom, in plain words.
+
+## 2. Why
+
+Our own reason, written by hand.
+
+## 5. Functional requirements
+
+**R5.1** - mine
+
+## 10. Decisions
+
+| ID | Question | Chosen | Date |
+|---|---|---|---|
+| D1 | Which layout for the checkout page? | Two pages | 2026-01-01 |
+
+## Versions
+
+- 1.2.0 old
+"""
+
+
+@case
+def test_promote_to_spec_merges_into_an_existing_spec(env):
+    """R4.10: an existing spec is merged section by section; a dry run shows the diff and writes nothing; --apply never deletes your text."""
+    p = env.baseline()
+    _promote_setup(p)
+    spec = p.clone / 'docs/features/artifacts/spec.md'
+    spec.parent.mkdir(parents=True, exist_ok=True)
+    spec.write_text(MERGE_SPEC, encoding='utf-8')
+    r = p.run('promote-to-spec', 'artifacts', '--json')
+    j = r.json()
+    assert r.code == 0 and j['dry_run'] and j['merge'] and not j['written'], r.all
+    assert spec.read_text(encoding='utf-8') == MERGE_SPEC, 'a dry run must not write'
+    assert j['diff'].startswith('--- a/docs/features/artifacts/spec.md') and '+' in j['diff'], j['diff']
+    assert any('kept your row for D1' in c for c in j['changes']), j['changes']
+    r = p.run('promote-to-spec', 'artifacts', '--apply')
+    assert r.code == 0 and 'merged into docs/features/artifacts/spec.md' in r.out, r.all
+    new = spec.read_text(encoding='utf-8')
+    for keep in ('Our own reason, written by hand.', '**R5.1** - mine', '| D1 | Which layout for the checkout page? | Two pages | 2026-01-01 |',
+                 '- 1.2.0 old', 'status: building', 'version: 1.2.0', 'type: reference'):
+        assert keep in new, keep
+    sec2 = new.split('## 2. Why')[1].split('## 3.')[0]
+    assert '<!-- promoted from the feature page -->' in sec2 and 'Checkout takes **one page**.' in sec2, new
+    assert 'Our own reason, written by hand.' in sec2 and 'Planned. Work has not started.' in new.split('## 2. Why')[0] and 'What it does and for whom, in plain words.' not in new, new[:700]
+    assert '## 3. How it works' in new and new.index('## 3. How it works') < new.index('## 5. Functional requirements')
+    assert new.index('## 10. Decisions') < new.index('## Versions')
+    assert 'artifact: feature-artifacts.html' in new and 'apps: [plugin]' in new.split('\n---\n', 1)[0], new[:300]
+    again = p.run('promote-to-spec', 'artifacts', '--apply')
+    assert again.code == 0 and 'nothing changed' in again.out and spec.read_text(encoding='utf-8') == new, again.all
+
+
+@case
+def test_promote_merge_adds_missing_decisions_and_bad_keys(env):
+    """R4.10: decisions missing from the table are added, existing rows stay; full-progress and unknown keys are refused."""
+    p = env.baseline()
+    _promote_setup(p)
+    spec = p.clone / 'docs/features/artifacts/spec.md'
+    spec.parent.mkdir(parents=True, exist_ok=True)
+    spec.write_text(MERGE_SPEC.replace('| D1 | Which layout for the checkout page? | Two pages | 2026-01-01 |', '| D9 | Other | x | 2026-01-01 |'), encoding='utf-8')
+    assert p.run('promote-to-spec', 'artifacts', '--apply').code == 0
+    new = spec.read_text(encoding='utf-8')
+    rows = [l for l in new.split('## 10. Decisions')[1].split('## Versions')[0].splitlines() if l.startswith('| D')]
+    assert [r.split('|')[1].strip() for r in rows] == ['D9', 'D1'], rows
+    assert p.run('promote-to-spec', 'full-progress').code == 1
+    assert p.run('promote-to-spec', 'nope').code == 1
+    assert p.run('promote-to-spec', 'artifacts', '--feature', 'Bad Name').code == 1
+
 
 def main():
     global TMP
