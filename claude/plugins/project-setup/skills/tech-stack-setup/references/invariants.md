@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 8.4.0
+**Version:** 8.5.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -23,6 +23,11 @@ recorded in the product's Stack Profile (§18). This document does not name
 vendors and does not rank them.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+
+**8.5.0 — 2026-10-31.**
+
+- Section 16 (Documentation) points to DOCSPEC for the layout, feature specs, temporary agent docs and checks instead of restating a `docs/specs/` and `docs/notes/` layout (DOCSPEC R12.2).
+- Section 18: the product Stack Profile lives at `docs/architecture/stack-profile.md` (a cross-feature normative document, DOCSPEC R12.2), not `docs/specs/stack-profile.md`.
 
 **8.4.0 — 2026-10-26.**
 
