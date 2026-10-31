@@ -3,7 +3,7 @@
 
   docs_index.py build [--root R] [--mermaid PATH]   write everything
   docs_index.py check [--root R]                    exit 1 when a committed generated file is stale
-  docs_index.py fetch-mermaid [--root R]            download the pinned mermaid.js into docs/_site/vendor/
+  docs_index.py fetch-mermaid [--root R]            download the pinned mermaid.js into docs/_site/vendor/ (override of the committed copy)
 
 Writes (never edit by hand):
   docs/features/index.md        features by app, by topic, by status, and gaps
@@ -15,8 +15,8 @@ Writes (never edit by hand):
 
 The renderer is a small Markdown subset (headings, paragraphs, lists, tables, fenced code,
 blockquotes, links, images, emphasis). Mermaid blocks are drawn when a mermaid.js is vendored
-(--mermaid PATH, env DOCS_MERMAID_JS, <docs>/_site/vendor/mermaid.min.js or the plugin's
-vendor/mermaid.min.js); without it they show as readable source. Standard library only.
+(by default the plugin's committed vendor/mermaid.min.js, Mermaid 11.4.1; overrides: --mermaid PATH, env
+DOCS_MERMAID_JS, fetch-mermaid); if no copy is found they show as readable source. Standard library only.
 """
 from __future__ import annotations
 
@@ -364,8 +364,11 @@ def page(title: str, body: str, home_href: str, extra_head: str = "", nav: str =
             f'<header class="top"><a href="{home_href}">Docs home</a>{nav}</header><main>{body}</main></body></html>')
 
 
+PLUGIN_MERMAID = PLUGIN / "vendor/mermaid.min.js"  # the committed copy (MIT, see vendor/README.md)
+
+
 def mermaid_js(root: Path, explicit: str | None) -> Path | None:
-    for cand in (explicit, os.environ.get("DOCS_MERMAID_JS"), str(root / "docs/_site/vendor/mermaid.min.js"), str(PLUGIN / "vendor/mermaid.min.js")):
+    for cand in (explicit, os.environ.get("DOCS_MERMAID_JS"), str(root / "docs/_site/vendor/mermaid.min.js"), str(PLUGIN_MERMAID)):
         if cand and Path(cand).is_file():
             return Path(cand)
     return None
@@ -376,10 +379,15 @@ def build_site(root: Path, cfg: dict, c: dict, mermaid: str | None) -> list[str]
     keep_vendor = None
     if (site / "vendor/mermaid.min.js").is_file():
         keep_vendor = (site / "vendor/mermaid.min.js").read_bytes()
+        # a copy identical to the plugin's is not an override: let a plugin upgrade replace it
+        if PLUGIN_MERMAID.is_file() and keep_vendor == PLUGIN_MERMAID.read_bytes():
+            keep_vendor = None
     if site.is_dir():
         shutil.rmtree(site)
     site.mkdir(parents=True)
     mj = mermaid_js(root, mermaid)
+    if keep_vendor is not None and not mermaid and not os.environ.get("DOCS_MERMAID_JS"):
+        mj = None  # a fetched or earlier override in the site wins over the plugin copy
     have_mermaid = False
     if keep_vendor is not None and mj is None:
         (site / "vendor").mkdir(exist_ok=True)

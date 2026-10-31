@@ -164,7 +164,7 @@ The content of a project's documents; publishing docs to a web host; spelling an
 - **R6.2** — The home page MUST offer search over title, path and text, a link to the overview, the feature index by app and by topic, the list of all pages and the gaps list (R6.4).
 - **R6.3** — `docs_index.py build` MUST also write `docs/features/index.md` (features by app, by topic and by status), `docs/architecture/decisions.md` (R11.1), `docs/docs-map.json` (code globs to docs) and `docs/llms.txt` (a map of the docs for agents). `docs_index.py check` exits 1 when a committed generated file differs from what a build would write.
 - **R6.4** — The gaps list MUST name: feature folders without `spec.md`, specs without front matter, apps, topics or an owner, specs without a diagram or image, apps no spec lists, and missing overview pages. A feature whose `last_verified` is older than `stale_days` (default 90) or missing shows as stale on the home page.
-- **R6.5** — Mermaid blocks render as diagrams when a `mermaid.min.js` is vendored into `docs/_site/vendor/` (`--mermaid PATH`, `DOCS_MERMAID_JS`, or `docs_index.py fetch-mermaid`, which downloads a pinned version). Without it a block shows as readable source with a note. Pages set the diagram theme from the reader's light or dark preference.
+- **R6.5** — Mermaid blocks render as diagrams offline. The plugin ships a committed copy of Mermaid 11.4.1 (`vendor/mermaid.min.js`, MIT, with `vendor/LICENSE-mermaid` and `vendor/README.md` naming version and source) and `docs_index.py build` uses it by default, copying it to `docs/_site/vendor/`. Overrides, in order: `--mermaid PATH`, `DOCS_MERMAID_JS`, a copy already in `docs/_site/vendor/` (for example from `docs_index.py fetch-mermaid`, which downloads the pinned version). If no copy is found a block shows as readable source with a note. Pages set the diagram theme from the reader's light or dark preference.
 - **R6.6** — Relative links between docs MUST work in the built site: a `.md` link becomes the page's `.html`, an asset is copied next to the page, and a link outside `docs/` is left as written.
 - **R6.7** — `docs/work/`, `docs/_site/` and change notes MUST NOT be indexed.
 
@@ -185,8 +185,8 @@ The content of a project's documents; publishing docs to a web host; spelling an
 
 ### 8.1 Checks
 
-- **R8.1** — `docs_check.py` MUST run these checks and exit 1 on any error: layout (L1); feature front matter (F1); every relative link and anchor resolves (K1) and every image has alt text (K2); every `Source:` path exists (S1) and every test path in a "How it is proven" table exists (S2); version table equals front matter (V1); generated files are fresh (G1) and generated reference equals the committed copy (G2); mapped code changed without a doc (M1); files added under `docs/work/` (W1); rule-like text in a screens section without a design-system citation (U1).
-- **R8.2** — `docs_check.py` MUST warn (T1, T2, D1) when a feature's `last_verified` is missing or older than `stale_days`, when the latest commit to the feature's `code` globs is newer than the doc's last commit or `last_verified`, and when a spec has no diagram. `--strict` turns warnings into failures.
+- **R8.1** — `docs_check.py` MUST run these checks and exit 1 on any error: layout (L1); feature front matter (F1); every relative link and anchor resolves (K1) and every image has alt text (K2); every `Source:` path exists (S1) and every test path in a "How it is proven" table exists (S2); version table equals front matter (V1); generated files are fresh (G1) and generated reference equals the committed copy (G2); mapped code changed without a doc (M1); files added under `docs/work/` (W1).
+- **R8.2** — `docs_check.py` MUST warn (T1, T2, D1, U1) when a feature's `last_verified` is missing or older than `stale_days`, when the latest commit to the feature's `code` globs is newer than the doc's last commit or `last_verified`, and when a spec has no diagram. `--strict` turns warnings into failures.
 - **R8.3** — A project SHOULD list every code folder it wants mapped in `code_roots`; M1 then warns about changed code under a root that no spec maps.
 - **R8.4** — The checks MUST be stack-neutral: they read Markdown, JSON, git and the paths named in the docs, and run the project's own commands only for `generated_reference`.
 
@@ -230,7 +230,7 @@ The content of a project's documents; publishing docs to a web host; spelling an
 
 ### 11.2 Design system
 
-- **R11.2** — UX rules, tokens, components and patterns MUST live only in `docs/design-system/`. A feature spec shows its screens and states and cites rules by ID without copying them. `docs_check.py` fails rule-like text (must, never, always, should next to a UI term) in a screens section unless the line cites a design-system ID or carries `<!-- ux-ok -->` (U1).
+- **R11.2** — UX rules, tokens, components and patterns MUST live only in `docs/design-system/`. A feature spec shows its screens and states and cites rules by ID without copying them. `docs_check.py` warns (U1) on rule-like text (must, never, always, should next to a UI term) in a screens section unless the line cites a design-system ID or carries `<!-- ux-ok -->` (U1). **U1 is a warning for now; it becomes an error later (owner decision, 31 Oct 2026).** Keep `<!-- ux-ok -->` on lines that are allowed.
 - **R11.3** — The words users see (labels, messages) live in the design system's content rules or in the glossary.
 
 ### 11.3 Diagrams

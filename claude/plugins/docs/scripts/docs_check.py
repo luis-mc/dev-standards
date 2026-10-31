@@ -17,7 +17,7 @@ Checks (each finding has a code):
   M1  code mapped to a doc changed on this branch but no doc, change note or `Docs: none` did
   W1  the branch adds files under docs/work/ (branch-only, D9)
   U1  rule-like text in a feature's screens section without a design-system citation (D10);
-      put <!-- ux-ok --> on the line to allow it
+      a WARNING for now, it becomes an error later (owner decision); put <!-- ux-ok --> on the line to allow it
   T1  last_verified missing or older than stale_days (warning); T2 code newer than doc (warning)
   D1  diagram: a feature spec with no Mermaid block and no image (warning)
 
@@ -116,7 +116,7 @@ def check_ux(rel: str, body: str) -> list[Finding]:
             if in_code or "ux-ok" in line or line.lstrip().startswith(("|", "!", "#")):
                 continue
             if UX_RULE.search(line) and UI_TERM.search(line) and not DS_CITE.search(line):
-                out.append(f(ERR, "U1", rel, f"rule-like UX text without a design-system citation: {line.strip()[:90]!r}"))
+                out.append(f(WARN, "U1", rel, f"rule-like UX text without a design-system citation: {line.strip()[:90]!r}"))
     return out
 
 

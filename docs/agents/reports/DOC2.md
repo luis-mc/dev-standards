@@ -59,3 +59,18 @@ Status: READY
 6. **CI wiring was added** (new `docs` area in `tools/ci_areas.py`, a `docs` job in `spec-lint.yml`, nightly list). Not run on GitHub yet.
 7. **Tokenizer on Windows paths** is tested with forward slashes and quoted arguments; backslash paths with `\U`-style sequences keep their raw text but were not exercised on Windows.
 8. Case (c) of the hook prompt (a lost write) is mitigated (longer second lock wait, blocks.log line) but its true cause is still unproven; the new blocks.log line will show it next time.
+
+## Owner answers 31 Oct
+
+Task DOC5. Status stays READY.
+
+1. **Mermaid committed.** `claude/plugins/docs/vendor/mermaid.min.js` is `dist/mermaid.min.js` of the npm package `mermaid@11.4.1` (`npm pack`, 2.5 MB), with `vendor/LICENSE-mermaid` (MIT) and `vendor/README.md` naming version and source. `docs_index.py build` uses it by default; override order: `--mermaid PATH`, `DOCS_MERMAID_JS`, a copy already in `docs/_site/vendor/` (what `fetch-mermaid` writes; a copy identical to the plugin's is not an override). DOCSPEC R6.5, skill `docs-index` and the plugin README updated. New tests: committed copy is the default (and README/LICENSE present), override beats the committed copy and survives a rebuild; the diagram-fallback test now patches `PLUGIN_MERMAID` to a missing file. Note for review: a 2.5 MB minified JS may trip gitleaks in CI; `.gitleaks.toml` and `.gitleaksignore` are outside my ownership, so I did not touch them.
+2. **join.py, briefs, STACKSPEC, promote step:** not touched (another agent, separate PR).
+3. **Version:** plugin stays 0.0.0 with the pending `minor` change note `DOC2-luismc-docs`; it folds to 0.1.0. Confirmed, no hand edit.
+4. **Migration guesses:** kept as built (dry run + `--map`).
+5. **U1 is now a WARNING.** `docs_check.py` emits `warning U1` (so `--strict` still fails it); `<!-- ux-ok -->` kept. DOCSPEC R11.2 and R8.2 say it is a warning for now and becomes an error later (owner decision); R8.1 no longer lists it among errors. Test asserts severity `warning`.
+6. **CI wiring:** kept.
+7. **Windows paths:** `claude/plugins/delivery` untouched; every push preceded by `git pull --rebase`.
+8. **Lost write:** kept as is.
+
+Checks run (only the affected gate): docs plugin tests 81 OK; `tools/spec_check.py` on docspec.md 0 errors 0 warnings; `claude plugin validate claude/plugins/docs` passed; `tools/test_change_notes.py --no-mutants` 131 checks passed; `tools/test_ci_areas.py` passed. No full suite, no Docker, no GitHub CI.

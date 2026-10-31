@@ -172,6 +172,7 @@ class CheckTests(unittest.TestCase):
         w(d, "docs/features/import/spec.md", spec(body=body))
         res = [x for x in C.check_features(d, D.load_config(d)) if x["code"] == "U1"]
         self.assertEqual(len(res), 1, res)
+        self.assertEqual(res[0]["severity"], "warning", "U1 starts as a warning (owner decision)")
         self.assertIn("save button must always", res[0]["message"])
 
     def test_freshness_warnings(self):

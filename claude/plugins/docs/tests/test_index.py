@@ -94,13 +94,38 @@ class BuildTests(unittest.TestCase):
 
     def test_site_page_links_and_diagram_fallback(self):
         d = proj()
-        I.build(d)
+        old = I.PLUGIN_MERMAID
+        I.PLUGIN_MERMAID = d / "no-such-copy.js"
+        try:
+            I.build(d)
+        finally:
+            I.PLUGIN_MERMAID = old
         h = r(d, "docs/_site/features/import/spec.html")
         self.assertIn('href="../../architecture/sec.html"', h)
         self.assertIn('src="images/a.png"', h)
         self.assertIn('class="mermaid"', h)
         self.assertIn("fetch-mermaid", h, "no vendored mermaid -> a note, source stays readable")
         self.assertIn("status: live", h)
+
+    def test_committed_mermaid_is_the_default(self):
+        self.assertTrue(I.PLUGIN_MERMAID.is_file(), "vendor/mermaid.min.js is committed")
+        self.assertGreater(I.PLUGIN_MERMAID.stat().st_size, 1_000_000)
+        self.assertIn(I.MERMAID_VERSION, (I.PLUGIN / "vendor/README.md").read_text())
+        self.assertIn("MIT License", (I.PLUGIN / "vendor/LICENSE-mermaid").read_text())
+        d = proj()
+        I.build(d)  # no --mermaid, no env
+        self.assertEqual((d / "docs/_site/vendor/mermaid.min.js").read_bytes(), I.PLUGIN_MERMAID.read_bytes())
+        h = r(d, "docs/_site/features/import/spec.html")
+        self.assertIn('src="../../vendor/mermaid.min.js"', h)
+        self.assertNotIn("fetch-mermaid", h)
+
+    def test_override_beats_committed_copy(self):
+        d = proj()
+        js = w(d, "mine.js", "window.mermaid={initialize(){}};")
+        I.build(d, mermaid=str(js))
+        self.assertEqual((d / "docs/_site/vendor/mermaid.min.js").read_text(), "window.mermaid={initialize(){}};")
+        I.build(d)  # a fetched/earlier override in the site is kept
+        self.assertEqual((d / "docs/_site/vendor/mermaid.min.js").read_text(), "window.mermaid={initialize(){}};")
 
     def test_mermaid_vendored(self):
         d = proj()
