@@ -1,3 +1,5 @@
+> Superseded by [decision 0039](../../architecture/decisions/0039-generic-ci-speed-for-products.md). History only, not binding.
+
 # TC8 train: generic CI speed for products
 
 Integration branch `TC8-integration`; one agent branch `TC8-ci-speed-generic`. Runs beside the AR43 train (which owns `claude/plugins/artifacts/**` and the artifacts tests); the two never touch the same file. Owner decisions: test-cost D12 ("Generic SHOULD, next train") and D13 ("Start now, in parallel").
