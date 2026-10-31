@@ -1,3 +1,5 @@
+> Superseded by [the upgrade guide](../../guides/upgrade-stackspec-8.md). History only, not binding.
+
 # Upgrade to STACKSPEC 8.0.0
 
 Released with luismc-project-setup 14.0.0 and luismc-artifacts 1.4.0. Paste the prompt below into Claude Code in the project to upgrade.
