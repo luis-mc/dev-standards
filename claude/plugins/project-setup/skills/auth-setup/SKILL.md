@@ -28,7 +28,7 @@ python3 ../tech-stack-setup/assets/preflight.py --require stack --for-skill auth
 
 **If it exits non-zero, stop and report its message verbatim. Write nothing.**
 
-It checks for `docs/specs/stack-profile.md`, `pnpm-workspace.yaml`, and a
+It checks for `docs/architecture/stack-profile.md` (or the old `docs/specs/stack-profile.md`), `pnpm-workspace.yaml`, and a
 `packages/` or `apps/` directory. Those are what `tech-stack-setup` produces,
 and the Stack Profile in particular is not optional bookkeeping: `AUTHSPEC §2.1`
 resolves the technology stack by reading it. Without it this skill does not know
@@ -50,7 +50,7 @@ one has no business defaulting.
 `AUTHSPEC` does not carry its own generation order the way `STACKSPEC §26`
 does, so use this one. Each step is a dependency of the next.
 
-1. **Resolve the stack.** Read `docs/specs/stack-profile.md` fully
+1. **Resolve the stack.** Read `docs/architecture/stack-profile.md` (else the old `docs/specs/stack-profile.md`) fully
    (`AUTHSPEC §2.1`). Note the database, runtime, package manager, and the
    `AUTHSPEC` version it claims. If it claims a version older than
    `references/`, say so before generating — the delta is a finding, and

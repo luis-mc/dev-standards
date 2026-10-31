@@ -42,7 +42,7 @@ allowlist entry and three of them going stale.
 
 **The tool names are this generator's choice, not the spec's.** `§13.1` requires
 the gates to run and fail the build; it names nothing. `§20` makes naming a
-vendor in the spec a defect. Record the tools in `docs/specs/stack-profile.md`
+vendor in the spec a defect. Record the tools in `docs/architecture/stack-profile.md`
 section 2, and treat a product satisfying the same gates with different tools as
 conforming.
 

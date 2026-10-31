@@ -8,7 +8,7 @@
 A change note is docs/specs/changes/<task-id>-<slug>.md:
 
     ---
-    spec: docs/specs/stack-profile.md
+    spec: docs/architecture/stack-profile.md
     plugin: plugins/tools/.claude-plugin/plugin.json   # optional; a note names a spec, a plugin, or both
     change: minor            # patch | minor | major
     ---

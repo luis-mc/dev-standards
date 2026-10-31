@@ -348,7 +348,7 @@ two binding, versioned specifications:
 
 Because they specify properties instead of products, your project doesn't
 vendor a copy of either spec. Instead, `tech-stack-setup` writes a **Stack
-Profile** (`docs/specs/stack-profile.md`) recording which spec versions your
+Profile** (`docs/architecture/stack-profile.md`) recording which spec versions your
 project conforms to, plus the vendors and settings you chose. That file is
 what later runs — including `auth-setup` — read to understand your project,
 and what makes "has this drifted from the standard?" an answerable question

@@ -9,7 +9,7 @@
  * lint rule cannot see.
  *
  * Every rule below cites the clause it enforces. If you relax one, §20 wants
- * the deviation recorded in docs/specs/stack-profile.md with a named approver —
+ * the deviation recorded in docs/architecture/stack-profile.md with a named approver —
  * an unrecorded divergence is a violation, a recorded one is not.
  *
  * Run: pnpm depcruise --config .dependency-cruiser.cjs apps packages

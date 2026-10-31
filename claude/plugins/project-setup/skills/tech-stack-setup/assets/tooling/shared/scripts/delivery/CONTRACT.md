@@ -692,7 +692,7 @@ on `windows-latest` as well as `ubuntu-latest`.
 A change note is `docs/specs/changes/<task-id>-<slug>.md`:
 ```markdown
 ---
-spec: docs/specs/stack-profile.md      # the spec file it changes
+spec: docs/architecture/stack-profile.md   # the spec file it changes
 change: minor                          # patch | minor | major
 ---
 One or two sentences for the change log.

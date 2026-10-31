@@ -1687,8 +1687,8 @@ stopped grading technology:
 
 ## 18. The product Stack Profile
 
-Every product MUST carry a Stack Profile at `docs/specs/stack-profile.md`
-recording:
+Every product MUST carry a Stack Profile at `docs/architecture/stack-profile.md`
+(a cross-feature normative document, DOCSPEC R12.2) recording:
 
 1. **`STACKSPEC` version** implemented.
 2. **Track and selections** — every `CHOICE` this spec defers: language and

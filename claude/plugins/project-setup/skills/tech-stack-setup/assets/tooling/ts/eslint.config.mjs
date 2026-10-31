@@ -5,7 +5,7 @@ import ts from 'typescript-eslint';
 /**
  * STACKSPEC does not name a linter — §13.1 requires that `lint` run and fail
  * the build, not which tool does it. ESLint is this generator's choice, and the
- * choice belongs in docs/specs/stack-profile.md, not in the spec: treating it
+ * choice belongs in docs/architecture/stack-profile.md, not in the spec: treating it
  * as a spec requirement would be a new MUST, which §20 makes a major version.
  *
  * §3.2's layer rules are NOT enforced here. They are graph properties —

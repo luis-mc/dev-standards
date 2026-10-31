@@ -49,7 +49,7 @@ user said "set up the whole thing" at the beginning.
 
 A product **MUST NOT** contain a copy of the spec (`§2.1`, `§16`). The spec lives
 here, versioned with this plugin. A product carries a **Stack Profile** instead:
-`assets/stack-profile.md`, deployed to `docs/specs/stack-profile.md`, naming the
+`assets/stack-profile.md`, deployed to `docs/architecture/stack-profile.md` (STACKSPEC `§18`; a repo that still has it at `docs/specs/stack-profile.md` is read there until it moves), naming the
 spec version it conforms to plus its selections, capability gaps and deviations.
 
 A vendored copy becomes a second, competing authority that no CI check can
@@ -237,7 +237,7 @@ Four rules for this phase:
    present credential fails at 2am instead of now.
 3. **Three tiers, so it is a matrix** (`§15`). Dev, staging, production, with
    separate credentials. A single list quietly encourages sharing one.
-4. **Resumable.** Write the ledger to `docs/specs/stack-profile.md` item 6 with
+4. **Resumable.** Write the ledger to the Stack Profile (`docs/architecture/stack-profile.md`, else the old `docs/specs/stack-profile.md`) item 6 with
    statuses only, never values, so a later run picks up the deferred rows.
 
 Generate `.env.example`, the config-validation schema (`§15`'s "one schema,
@@ -420,7 +420,7 @@ stop.
 `STACKSPEC §19` is the checklist. Until a script implements it, this mode is that
 check, performed by reading.
 
-1. **Find the declared standard.** Read `docs/specs/stack-profile.md`. Note the
+1. **Find the declared standard.** Read `docs/architecture/stack-profile.md`, or the old `docs/specs/stack-profile.md` when the repo has not moved it (say so in the audit: moving it is a finding). Note the
    `STACKSPEC` version it claims. If it is behind the version in `references/`,
    say so first — every finding is relative to the version the product claims,
    and the delta between versions is itself a finding.
@@ -660,7 +660,7 @@ absent check cannot masquerade as a passing one:
 no tool, and it must not start to — `§20` makes a new `MUST` a major version, and
 naming a vendor anywhere in the spec is defined there as a defect.
 
-So record the tools in `docs/specs/stack-profile.md`, not here. In Mode 2 that
+So record the tools in `docs/architecture/stack-profile.md`, not here. In Mode 2 that
 distinction is the difference between a finding and a false positive.
 
 ---
