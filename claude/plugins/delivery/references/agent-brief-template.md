@@ -22,7 +22,7 @@ Your gate (pick the path your project uses):
 
 A. Branch gate (default): run ONE affected gate at the end, one affected gate = `<the project's branch gate command>`; push only when it passes.
 
-B. CI gate (a project with `scripts/delivery/agent_ci.py`): CI is the gate. Run only the tests of what you touch and the fast guards (`scripts/delivery/fast_guards.py`), never the full local gate, no mutation pass, no Docker. Push, then write a line `CODE DONE` in your report (`docs/agents/reports/<task-id>.md`) and push it. The branch CI run that `agent_ci.py` starts for that head is your gate; the orchestrator reads its result.
+B. CI gate (a project with `scripts/delivery/agent_ci.py`): CI is the gate. Run only the tests of what you touch and the fast guards (`scripts/delivery/fast_guards.py`), never the full local gate, no mutation pass, no Docker. Push, then write a line `CODE DONE` in your report (`docs/work/reports/<task-id>.md`, DOCSPEC R10.1; `agent_ci.py` still reads the old `docs/work/agents/reports/` and `docs/agents/reports/` while a project migrates) and push it. The branch CI run that `agent_ci.py` starts for that head is your gate; the orchestrator reads its result.
 
 Report: what changed, what you ran, the branch head, last line READY or NOT READY: <why>.
 ````

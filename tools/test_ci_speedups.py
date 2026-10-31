@@ -615,13 +615,13 @@ class CiRepo:
     def w(self, *a: str) -> str:
         return self.git(self.work, *a)
 
-    def branch(self, name: str, file: str, text: str, report: str = "") -> str:
+    def branch(self, name: str, file: str, text: str, report: str = "", where: str = "docs/agents/reports") -> str:
         self.w("checkout", "-q", "-b", name, "origin/master")
         (self.work / file).write_text(text)
         task = name.split("/", 1)[1].split("-", 1)[0]
         if report:
-            (self.work / "docs/agents/reports").mkdir(parents=True, exist_ok=True)
-            (self.work / f"docs/agents/reports/{task}.md").write_text(report)
+            (self.work / where).mkdir(parents=True, exist_ok=True)
+            (self.work / f"{where}/{task}.md").write_text(report)
         self.w("add", ".")
         self.w("commit", "-qm", name)
         self.w("push", "-q", "origin", name)
@@ -689,6 +689,31 @@ def agent_ci_second_pass_on_the_same_head_starts_nothing(r):
     (r.work / "e.txt").write_text("e\n"); r.w("add", "."); r.w("commit", "-qm", "more"); r.w("push", "-q", "origin", "claude/T3-y")
     rc, out, err, log4 = r.ci(runs=runs)
     check(log4.count("workflow run") == 2, f"a new head starts a new run: {log4!r}")
+
+
+@with_repo
+def agent_ci_reads_the_report_in_docs_work_and_the_old_paths(r):
+    """DOCSPEC R10.1: docs/work/reports/ is the report path; the two old paths still count during migration."""
+    r.branch("claude/T7-new", "c.txt", "c\n", DONE, where="docs/work/reports")
+    r.branch("claude/T8-mid", "d.txt", "d\n", DONE, where="docs/work/agents/reports")
+    r.branch("claude/T9-old", "e.txt", "e\n", DONE, where="docs/agents/reports")
+    r.branch("claude/T10-none", "f.txt", "f\n", DONE, where="docs/elsewhere")
+    rc, out, err, log = r.ci()
+    check(rc == 0, err)
+    started = sorted(l for l in log.splitlines() if l)
+    check(started == ["workflow run ci.yml --ref ci/T7", "workflow run ci.yml --ref ci/T8", "workflow run ci.yml --ref ci/T9"],
+          f"new and both old report paths start a run, an unknown path does not: {started}")
+
+
+@with_repo
+def agent_ci_report_setting_string_and_old_default(r):
+    """A project that set report to the previous default string moves with the default; a custom string is exact."""
+    r.branch("claude/T11-new", "c.txt", "c\n", DONE, where="docs/work/reports")
+    rc, out, err, log = r.ci("--report", "docs/agents/reports/{task}.md")
+    check("ci/T11" in log, f"the previous default string also finds docs/work/reports: {log!r}")
+    r.branch("claude/T12-custom", "d.txt", "d\n", DONE, where="docs/agents/reports")
+    rc, out, err, log = r.ci("--report", "notes/{task}.md")
+    check("ci/T12" not in log, f"a custom path is read as given, with no fallbacks: {log!r}")
 
 
 @with_repo

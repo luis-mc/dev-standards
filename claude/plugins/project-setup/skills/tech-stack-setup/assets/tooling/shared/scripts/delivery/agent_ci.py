@@ -2,7 +2,8 @@
 """Start one CI run on each agent branch whose report says CODE DONE (DELIVERYSPEC DL-81; DS26).
 
 Agents keep draft pull requests, which run no CI. When an agent has pushed its code it writes a line `CODE DONE`
-in its report (default `docs/agents/reports/{task}.md`). This script merges that branch onto its base without a
+in its report (default `docs/work/reports/{task}.md`, DOCSPEC R10.1; the old `docs/work/agents/reports/` and
+`docs/agents/reports/` are still read while projects migrate). This script merges that branch onto its base without a
 checkout (`git merge-tree --write-tree`), pushes the result as a two-parent commit (the branch head first, the base
 second) to `ci/<task>`, and starts the CI workflow on that ref (`gh workflow run <workflow> --ref ci/<task>`, a
 `workflow_dispatch` run), once per branch head. So the run tests the agent's code on top of the code it will be
@@ -21,7 +22,8 @@ Settings (flags, or the `agent_ci` object of scripts/delivery/ci-scope.json):
     base           origin/master      ref each branch is merged onto
     branch_prefix  claude/            agent branches are origin/<prefix>*
     ci_prefix      ci/                the merged ref is <ci_prefix><task>
-    report         docs/agents/reports/{task}.md     {task} = the branch name after the prefix, up to the first '-'
+    report         docs/work/reports/{task}.md       {task} = the branch name after the prefix, up to the first '-'
+                   (a string, or a list tried in order; any one with the marker counts)
     marker         ^\\s*CODE DONE\\b   regex, matched per line
 
 A branch is skipped when its report is missing, lacks the marker, or a `workflow_dispatch` run already exists for
@@ -38,7 +40,8 @@ import time
 from pathlib import Path
 
 DEFAULTS = {"workflow": "ci.yml", "base": "origin/master", "branch_prefix": "claude/", "ci_prefix": "ci/",
-            "report": "docs/agents/reports/{task}.md", "marker": r"^\s*CODE DONE\b"}
+            "report": ["docs/work/reports/{task}.md", "docs/work/agents/reports/{task}.md", "docs/agents/reports/{task}.md"],
+            "marker": r"^\s*CODE DONE\b"}
 CONFIG = "scripts/delivery/ci-scope.json"
 
 
@@ -68,10 +71,26 @@ def ci_branch(branch: str, cfg: dict) -> str:
     return cfg["ci_prefix"] + task_of(branch, cfg["branch_prefix"])
 
 
+LEGACY_REPORTS = ["docs/work/agents/reports/{task}.md", "docs/agents/reports/{task}.md"]
+
+
+def report_paths(cfg: dict, task: str) -> list[str]:
+    """Where the report may be: the configured path(s), then the old locations (during migration to docs/work/reports/).
+    A project that set `report` to the previous default string moves with the default."""
+    conf = cfg["report"]
+    conf = [conf] if isinstance(conf, str) else list(conf)
+    if conf == ["docs/agents/reports/{task}.md"]:
+        conf = list(DEFAULTS["report"])
+    return [p.format(task=task) for p in dict.fromkeys(conf + (LEGACY_REPORTS if conf == DEFAULTS["report"] else []))]
+
+
 def report_says_done(branch: str, cfg: dict) -> bool:
-    path = cfg["report"].format(task=task_of(branch, cfg["branch_prefix"]))
-    text = git("show", f"origin/{branch}:{path}")
-    return re.search(cfg["marker"], text, re.MULTILINE) is not None
+    task = task_of(branch, cfg["branch_prefix"])
+    for path in report_paths(cfg, task):
+        text = git("show", f"origin/{branch}:{path}")
+        if re.search(cfg["marker"], text, re.MULTILINE) is not None:
+            return True
+    return False
 
 
 def ci_ref(branch: str, base: str, cfg: dict, push: bool = True) -> str | None:
