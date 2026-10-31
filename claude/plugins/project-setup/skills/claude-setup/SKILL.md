@@ -1,5 +1,5 @@
 ---
-description: Apply Claude Code configuration — statusline, settings.json (auto-compact window, output style, Opus-plans/Sonnet-codes model split with a medium-or-high effort level per model), output styles, rules, and CLAUDE.md — to this project and/or the user-level ~/.claude/, and always enables the luismc-transcript-folds plugin and binds its two chords at user level. Use when the user asks to set up Claude, configure the statusline, fix their Claude settings, add a CLAUDE.md, or apply their Claude config to a repo or a new machine, or invokes /luismc-project-setup:claude-setup. Not for repo or product tooling (hooks, gitleaks, CI, playwright) — that is /luismc-project-setup:tech-stack-setup.
+description: Apply Claude Code configuration — statusline, settings.json (auto-compact window, output style, Opus-plans/Sonnet-codes model split with a medium-or-high effort level per model), output styles, rules, and CLAUDE.md — to this project and/or the user-level ~/.claude/, turns on and configures all 8 plugins of the luismc marketplace in the project settings (installing missing ones after the owner confirms), and always enables luismc-transcript-folds and binds its two chords at user level. Use when the user asks to set up Claude, configure the statusline, fix their Claude settings, add a CLAUDE.md, or apply their Claude config to a repo or a new machine, or invokes /luismc-project-setup:claude-setup. Not for repo or product tooling (hooks, gitleaks, CI, playwright) — that is /luismc-project-setup:tech-stack-setup.
 model: sonnet
 effort: medium
 ---
@@ -178,8 +178,7 @@ to avoid. The keys, and what each is for:
 | `modelSettings.<Sonnet ID>.effortLevel` | the step 1 answer, `"medium"` or `"high"` | the Sonnet effort for the session itself (subagents: see the rule file below) |
 | `effortLevel` | `"medium"` | the effort for sessions whose model has no `modelSettings` entry, such as cloud agents, which run Opus; the per-model entries beat it |
 | `hooks.SessionStart` | the drift-hook entry, see path note below | runs `hooks/effort_drift.py` at session start |
-| `enabledPlugins."luismc-artifacts@<marketplace>"` | `true`, project target only; marketplace as found below | enables the project-artifacts plugin (ARTIFACTSPEC R10.1) |
-| `enabledPlugins."luismc-delivery@<marketplace>"` | `true`, project target only; marketplace as found below | enables the delivery plugin (DELIVERYSPEC D2); it supplies the hooks that enforce the rule tags |
+| `enabledPlugins."<plugin>@<marketplace>"` for each of the 8 plugins: `luismc-agents`, `luismc-artifacts`, `luismc-audits`, `luismc-delivery`, `luismc-docs`, `luismc-project-setup`, `luismc-specs`, `luismc-transcript-folds` | `true`, project target only; marketplace as found below; the plugin list is read from `.claude-plugin/marketplace.json` (see "All plugins") | turns on every plugin of the marketplace for the project (artifacts: ARTIFACTSPEC R10.1; delivery: DELIVERYSPEC D2, it supplies the hooks that enforce the rule tags) |
 | `enabledPlugins."luismc-transcript-folds@<marketplace>"` | `true`, user level on every run, in `~/.claude/settings.json` only; marketplace as found below | enables the transcript-folds plugin (see "The transcript-folds pieces") |
 
 **The effort keys are written from the user's answer, not queued as missing.**
@@ -222,39 +221,19 @@ write. Keep every other event and every other `SessionStart` hook exactly as it
 is, and never remove or reorder a hook. Create `hooks` and `hooks.SessionStart`
 when they are absent.
 
-**`enabledPlugins` merges, and writes one entry per file.** For a project target, add
-`"luismc-artifacts@<marketplace>": true` to `enabledPlugins` in the project's
-`.claude/settings.json`, so every project this skill sets up has the
-project-artifacts plugin (ARTIFACTSPEC R10.1). The settings template carries
-the placeholder `{{MARKETPLACE}}` in that key; it never reaches a target.
-`<marketplace>` is the name under which the owner registered this plugin's
-marketplace, found in this order:
-
-1. The suffix after `@` of the entry whose key starts with
-   `luismc-project-setup@` in the `enabledPlugins` of the user's
-   `~/.claude/settings.json`. This skill is part of that plugin, so the entry is
-   how the owner registered the marketplace on this machine.
-2. Only when there is no such entry, the `name` in the marketplace file this
-   plugin was installed from (`.claude-plugin/marketplace.json` at the
-   marketplace root).
-3. If neither can be read, ask the owner for the marketplace name.
-
-Create `enabledPlugins` when it is absent. When a key
-`luismc-artifacts@<marketplace>` is already there, with `true` or `false`,
-leave it exactly as it is: a `false` is the owner's decision. When the project
-already names `luismc-artifacts` under a different marketplace than the one
-found, queue it as a **conflict** (the entry would enable nothing on this
-machine) and let the owner choose in step 3. Keep every other entry, and never
-remove or reorder one. The only other `enabledPlugins` entry this skill writes
-is `luismc-delivery@<marketplace>` in a project's `.claude/settings.json`,
-with the same rules as the artifacts entry (an existing `true` or `false` stays; a
-different marketplace is a **conflict**), and `luismc-transcript-folds@<marketplace>`
-in the user's `~/.claude/settings.json` (below); it writes no entry for any other
-plugin, and none for luismc-artifacts or luismc-delivery to a user target. Which other plugins are enabled is
-the user's call, made through `/plugin` or their own settings. Enabling the plugin creates no file in
-the project; the plugin's own first `feature-new` or `init` does (its R10.2).
-Report, in step 5, the marketplace name used and where it came from, and that
-the plugin must be installed on the machine for the entry to take effect.
+**`enabledPlugins` merges, and writes one entry per plugin.** See "All plugins"
+below for the plugin list, the marketplace name, the install step and the full
+configuration. For a project target, add `"<plugin>@<marketplace>": true` for
+every plugin to `enabledPlugins` in the project's `.claude/settings.json`. The
+settings template carries the placeholder `{{MARKETPLACE}}` in those keys; it
+never reaches a target. Create `enabledPlugins` when it is absent. When a key
+for the plugin is already there, with `true` or `false`, leave it exactly as it
+is: a `false` is the owner's decision. When the project already names the plugin
+under a different marketplace than the one found, queue it as a **conflict**
+(the entry would enable nothing on this machine) and let the owner choose in
+step 3. Keep every other entry, and never remove or reorder one. A user target
+gets no project plugin entry; its only plugin entry is
+`luismc-transcript-folds@<marketplace>` in `~/.claude/settings.json` (below).
 
 **The `statusLine` command differs per target and the template only carries the
 project form.** Rewrite it for a user-level install:
@@ -281,6 +260,58 @@ The `|| python` fallback is for machines where `python3` is missing or is only
 a stub (common on Windows). The identical-command check above compares the
 rewritten string for the target.
 
+### All plugins — project target, every run
+
+**Which plugins.** Read `.claude-plugin/marketplace.json` at the marketplace
+root and take every name in `plugins[]`, so a plugin added later is not
+forgotten. If the file cannot be read, use the eight names in the table above
+and say so in the report. Today that is `luismc-agents`, `luismc-artifacts`,
+`luismc-audits`, `luismc-delivery`, `luismc-docs`, `luismc-project-setup`,
+`luismc-specs` and `luismc-transcript-folds`. Scope is the project: everything
+is turned on in the target's `.claude/settings.json`, not at user level. The one
+user-level exception stays `luismc-transcript-folds` plus its two chords (next
+section).
+
+**Marketplace name.** Looked up in this order:
+
+1. The suffix after `@` of the entry whose key starts with
+   `luismc-project-setup@` in the `enabledPlugins` of the user's
+   `~/.claude/settings.json`. This skill is part of that plugin, so the entry is
+   how the owner registered the marketplace on this machine.
+2. Only when there is no such entry, the `name` in the marketplace file this
+   plugin was installed from.
+3. If neither can be read, ask the owner for the marketplace name.
+
+**Install.** For each plugin that is not installed on the machine (check with
+`claude plugin list`), the change plan lists the command
+`claude plugin install <name>@<marketplace>`. Only after the owner confirms it in
+the step 3 summary, run it for each missing plugin. If the owner declines, turn
+the plugins on only and print the commands for the owner to run. When a command
+fails, report it and go on with the rest. Afterwards tell the owner to run
+`/reload-plugins` (or restart) so the plugins load. The skill never touches git.
+
+**Configure each plugin that needs a first-run setup.** Plan these in the
+change plan, show them in step 3, and run them only after the owner confirms.
+Each skips when the plugin is not installed yet; print the command instead.
+
+- **luismc-docs.** In a repo without `docs/docs.json`, run the docs plugin's
+  `docs_setup.py init --apply` (it is under `scripts/` in the installed docs
+  plugin). In a repo that already has docs, run `docs_setup.py migrate` without
+  `--apply` and show its dry-run plan in the summary. Never apply `migrate`
+  without the owner saying so.
+- **luismc-artifacts.** When `.claude/artifacts.json` is absent, create it with
+  `{"record_dir": "docs/project"}`. When `docs/docs.json` exists it names the
+  same `record_dir` (DOCSPEC R2.4: both files name the same folder). Do not
+  change an existing `.claude/artifacts.json`; if its `record_dir` differs from
+  `docs/docs.json`, report it.
+- **luismc-delivery.** Write `.delivery/config.json` from
+  `assets/delivery-config.json` when absent (caps cloud 20, local 3, total 23,
+  and `watcher.ci_workflows` `["ci.yml"]`), as in the `.delivery/config.json`
+  section below. When the file is present, leave every key alone except `caps`:
+  when an old `caps` value is lower than the template's (for example `total` 5),
+  raise it and show `caps.<key>: current → new` in the step 3 summary. Never
+  lower a cap.
+
 ### The transcript-folds pieces — user level, every run
 
 `luismc-transcript-folds` folds long diffs and finished shell commands in the
@@ -291,7 +322,7 @@ outside the repo and are shown in the step 3 confirmation; if the owner declines
 them there, they are skipped and reported as skipped.
 
 **1. `~/.claude/settings.json` `enabledPlugins."luismc-transcript-folds@<marketplace>": true`.**
-`<marketplace>` is found exactly as for luismc-artifacts above. Create the file
+`<marketplace>` is found exactly as in "All plugins" above. Create the file
 or the `enabledPlugins` block when absent. When the key is already there, with
 `true` or `false`, leave it exactly as it is: a `false` is the owner's decision.
 Keep every other entry. Nothing else in this file changes because of this piece.
@@ -398,7 +429,9 @@ spec does not define.
 Per-project settings for the `luismc-delivery` plugin, from
 `assets/delivery-config.json`. Written to `<repo>/.delivery/config.json` only when
 the file is absent; an existing file is the owner's and is left exactly as it is
-(report keys the template has that it lacks, and change nothing). Keys: `caps`
+(report keys the template has that it lacks, and change nothing) except
+`caps`: a value lower than the template's is raised, after the summary shows
+`current → new` (see "All plugins"). Keys: `caps`
 (`cloud`, `local`, `total`), `work_root`, `tz`, `train_label_re`,
 `release_branch_re`, `brief_markers`, `min_question_chars`, `eta_table`,
 `heavy_commands`, `outbound_deny`, `no_attribution`, `long_pole_globs`,
@@ -408,7 +441,7 @@ with `_` (the template's `_doc` and `_example_windows_monorepo`) when writing.
 
 Ask once in step 1 whether to fill the project's values; for a Windows monorepo
 the documented example is `work_root` `C:\\Work`, `tz` `Europe/Lisbon`, `caps`
-8/3/5 (cloud/local/total), and `no_attribution` `true`, which makes the
+8/3/5 (cloud/local/total; an existing smaller cap is raised to 20/3/23 on the next run, which the owner can decline), and `no_attribution` `true`, which makes the
 `commit-msg` hook that `tech-stack-setup` installs refuse `Co-Authored-By` and AI
 attribution trailers (DL-74). Without the answer, write the neutral defaults.
 
@@ -476,8 +509,7 @@ Group every queued change by target and by file: what is being added, what is
 being overwritten unconditionally, what is being removed (a target's old
 `rules/model-delegation.md`), and which individual settings keys are being
 added, including the `hooks.SessionStart` entry and, for a project target, the
-`enabledPlugins` entry for `luismc-artifacts@<marketplace>` (or that it is
-already there). For a project target also list: the `luismc-delivery@<marketplace>` entry, the new `.delivery/config.json` and `.gitignore` line, `rules/delivery-timing.md`, the proposed removal of a `no-tomorrow.mjs` Stop entry (which lives in the user's settings, so state it lands outside the repo), and the memory-to-rule table. Always list, under the user target, the two transcript-folds
+`enabledPlugins` entry for each of the 8 plugins (or that it is already there). For a project target also list: the plugins to install with `claude plugin install <name>@<marketplace>` (asking for confirmation), the docs setup (`init --apply`, or the `migrate` dry-run plan), the artifacts record (`record_dir` `docs/project`), the `caps` changes as `current → new`, the new `.delivery/config.json` and `.gitignore` line, `rules/delivery-timing.md`, the proposed removal of a `no-tomorrow.mjs` Stop entry (which lives in the user's settings, so state it lands outside the repo), and the memory-to-rule table. Always list, under the user target, the two transcript-folds
 pieces: the `luismc-transcript-folds@<marketplace>` entry (or that it is already
 there) and the chords to add to `~/.claude/keybindings.json` (or that they are
 already there, or that the file will be created). List each model-split
@@ -521,10 +553,15 @@ Apply what was confirmed, then check the result rather than assuming it worked:
   with `$CLAUDE_PROJECT_DIR`, user form with `$HOME`), once, next to any
   hooks that were already there.
 - A project target's `enabledPlugins` holds `luismc-delivery@<marketplace>`, `.delivery/config.json` parses as JSON with none of the `_` keys, `.gitignore` ignores `.delivery/`, every applied target has `rules/delivery-timing.md` identical to the template, and no `hooks.Stop` entry naming `no-tomorrow.mjs` remains unless the removal was declined.
-- A project target's `enabledPlugins` holds `luismc-artifacts@<marketplace>`,
-  with no `{{MARKETPLACE}}` left in the file,
-  (`true`, or the owner's existing value), next to every entry that was there
-  before, and the file still parses as JSON.
+- A project target's `enabledPlugins` holds an entry for every plugin in the
+  marketplace file (`true`, or the owner's existing value), next to every entry
+  that was there before, with no `{{MARKETPLACE}}` left in the file, and the
+  file still parses as JSON.
+- Each plugin that was confirmed for install shows in `claude plugin list`, or
+  its failure is reported.
+- `.claude/artifacts.json` parses and names `record_dir` `docs/project` (or the
+  owner's existing value), and `docs/docs.json`, when present, names the same.
+- `.delivery/config.json` has `caps` at least cloud 20, local 3, total 23.
 - `~/.claude/settings.json` holds `enabledPlugins."luismc-transcript-folds@<marketplace>"`
   (`true`, or the owner's existing value), next to every entry that was there
   before, and still parses as JSON.
@@ -546,15 +583,14 @@ conflict left in place. Whether the model split is now enforced for this
 project only or for all projects. The effort chosen for each model (Opus main
 session, Sonnet subagents) and where it was written, and the top-level
 `effortLevel` (added as `medium`, or the existing value left alone) that cloud
-agents fall back to. Whether `luismc-artifacts` was enabled for the project, and
-that the marketplace must be added on the machine for it to load. Whether the
+agents fall back to. Which of the 8 plugins were enabled for the project, which were installed, and which install commands the owner still has to run, with the marketplace name used and where it came from; tell the owner to run `/reload-plugins`. What was configured for docs (init applied, or the migrate plan shown and left unapplied), the artifacts record, and the delivery `caps` changes. Whether the
 `luismc-transcript-folds` entry and the two chords were added, already there or
 declined, the marketplace name used for it, and that the plugin must be installed
 (`claude plugin install luismc-transcript-folds@<marketplace>`) and that the
 chords and the plugin take effect after `/reload-plugins` or a restart. Anything
 removed (the old
 `model-delegation.md`), and whether the project has `scripts/delivery/`, which
-the rule file cites. Whether `luismc-delivery` was enabled (the plugin must be installed: `claude plugin install luismc-delivery@<marketplace>`), whether `.delivery/config.json` was written or already present, the `no-tomorrow.mjs` entry removed or declined, and the memory-to-rule table for the orchestrator. If both targets were
+the rule file cites. Whether `.delivery/config.json` was written or already present, the `no-tomorrow.mjs` entry removed or declined, and the memory-to-rule table for the orchestrator. If both targets were
 written, note which keys the project file now shadows.
 
 ## The alias-drift warning

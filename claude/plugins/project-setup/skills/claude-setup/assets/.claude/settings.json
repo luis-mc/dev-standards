@@ -7,8 +7,14 @@
     "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
   },
   "enabledPlugins": {
+    "luismc-agents@{{MARKETPLACE}}": true,
     "luismc-artifacts@{{MARKETPLACE}}": true,
-    "luismc-delivery@{{MARKETPLACE}}": true
+    "luismc-audits@{{MARKETPLACE}}": true,
+    "luismc-delivery@{{MARKETPLACE}}": true,
+    "luismc-docs@{{MARKETPLACE}}": true,
+    "luismc-project-setup@{{MARKETPLACE}}": true,
+    "luismc-specs@{{MARKETPLACE}}": true,
+    "luismc-transcript-folds@{{MARKETPLACE}}": true
   },
   "statusLine": {
     "type": "command",

@@ -31,7 +31,7 @@
   "watcher_interval_s": 600,
   "runners": [],
   "enforcement": { "mode": "block", "block_ceiling": 3, "log_every_block": false },
-  "watcher": { "push_trains": true, "open_prs": true, "merge_on_green": true, "manage_runners": true },
+  "watcher": { "push_trains": true, "open_prs": true, "merge_on_green": true, "manage_runners": true, "ci_workflows": ["ci.yml"] },
   "runner_plan": {
     "retry_seconds": 300, "runner_max_retries": 0, "report_command": "",
     "cancel_replaced_runs": true, "hold_dependabot_during_train": true, "heavy_jobs_yield": true
