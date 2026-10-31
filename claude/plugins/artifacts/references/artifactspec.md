@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.16.0
+**Version:** 1.17.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -52,6 +52,11 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.17.0 — 2026-10-31.**
+
+- Section 7 lists the `promote-to-spec` command (DOCSPEC R4.10, R10.4).
+- Section 7: `promote-to-spec` maps sections by heading, fills topics and merges into an existing spec (`--apply`, diff in the dry run).
 
 **1.16.0 — 2026-10-31.**
 
