@@ -655,33 +655,105 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
   .decision { padding: .8rem; }
 }
 @media (max-width: 56rem) {
-  .layout { display: block; padding-inline: 1rem; }
+  .layout, .layout[data-contents="collapsed"] { display: block; padding-inline: 1rem; }
   nav.contents {
-    position: sticky;
-    z-index: 20;
+    position: static;
     max-height: none;
     overflow: visible;
-    padding: 0;
-    margin-inline: -1rem;
-    background: var(--paper);
+    padding: .5rem 0;
+    margin-bottom: .5rem;
     border-bottom: 1px solid var(--rule);
   }
-  .contents-title, .theme-toggle { display: none; }
-  nav.contents .contents-links {
+  .contents-title, nav.contents .contents-toggle { display: none; }
+  nav.contents .contents-links, .layout[data-contents="collapsed"] nav.contents .contents-links {
     display: flex;
-    overflow-x: auto;
-    white-space: nowrap;
+    flex-wrap: wrap;
     gap: .4rem;
-    padding: .5rem 1rem;
   }
   nav.contents a {
     display: inline-block;
+    min-width: 0;
     border: 1px solid var(--rule);
     border-left-width: 1px;
-    flex: 0 0 auto;
   }
   nav.contents a.current { border-color: var(--signal); }
+  .theme-toggle, .layout[data-contents="collapsed"] .theme-toggle { display: inline-block; margin-top: .5rem; }
 }
+
+/* Contents rail toggle (wide screens): folds the rail to a thin strip and gives the page the full width */
+.contents-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .4em;
+  margin-bottom: .8rem;
+  min-height: 2rem;
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule-strong);
+  cursor: pointer;
+}
+.contents-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.contents-toggle-icon { font-size: 1.1rem; line-height: 1; }
+@media (min-width: 56.01rem) {
+  .layout[data-contents="collapsed"] { grid-template-columns: 2.75rem minmax(0, 1fr); gap: 0 1rem; max-width: none; }
+  .layout[data-contents="collapsed"] .contents-title,
+  .layout[data-contents="collapsed"] .contents-links,
+  .layout[data-contents="collapsed"] .theme-toggle { display: none; }
+  .layout[data-contents="collapsed"] .contents-toggle { padding-inline: .5em; }
+  .layout[data-contents="collapsed"] .contents-toggle-label {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+}
+
+/* Narrow boxes: a task row is a card. The box is measured, not the screen, so the open rail at 900 px stacks too. */
+.table-scroll { container-type: inline-size; }
+@container (max-width: 46rem) {
+  .table-scroll table { min-width: 0; display: block; }
+  table.status-checklist colgroup, table.status-checklist thead { display: none; }
+  table.status-checklist tbody, table.feature-list tbody { display: block; }
+  table.status-checklist tr, table.feature-list tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: .3rem .7rem;
+    padding: .7rem .8rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  table.status-checklist td, table.feature-list td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    grid-column: 1 / -1;
+  }
+  table.status-checklist td:empty, table.feature-list td:empty { display: none; }
+  table.status-checklist td:nth-child(1) { grid-column: 1; white-space: nowrap; }
+  table.status-checklist td:nth-child(2) { grid-column: 2; font-weight: 600; }
+  table.status-checklist td code { white-space: normal; overflow-wrap: anywhere; }
+  table.status-checklist td:nth-child(n+3)::before, table.feature-list td:nth-child(n+2)::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--font-mono);
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--ink-muted);
+  }
+  table.status-checklist .release-line::before { content: "Rides "; }
+  table.feature-list td:nth-child(1) { font-weight: 600; }
+  table.feature-list thead { display: block; background: var(--surface-2); border-bottom: 1px solid var(--rule); }
+  table.feature-list thead tr { display: flex; flex-wrap: wrap; gap: .2rem .8rem; padding: .3rem .8rem; border: 0; }
+  table.feature-list thead th { display: block; padding: 0; border: 0; }
+  table.feature-list thead th:nth-child(n+3) { display: none; }
+}
+/* Release header and the timeline never push the page sideways */
+details.status-fold > summary { min-width: 0; overflow-wrap: anywhere; }
+details.status-fold > summary strong { min-width: 0; }
+.release-timeline { max-width: 100%; }
+.timeline-scroll { max-width: 100%; }
 
 /* Release timeline (R5.40 to R5.43) and the State column (R5.44) */
 .release-timeline { margin: 0 0 1rem; padding: .75rem 1rem; background: var(--surface); border: 1px solid var(--rule); }
@@ -739,11 +811,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 </head>
 <body>
-<div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Decisions</a><a href="#s3"><b>3</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
+<div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Decisions</a><a href="#s3"><b>3</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Transcript folds</h1><p>Long diffs and finished shell commands fold to one line in the transcript, toggled with ctrl+x d and ctrl+x f; claude-setup installs it on every machine.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-27T08:30+00:00">27 Oct 08:30</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">31 Oct 07:13</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-31T22:38+00:00">31 Oct 22:38</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">31 Oct 17:04</a> (Lisbon)</p>
 <p class="lede">Live since 13 Oct (PR #60): luismc-transcript-folds 1.0.0, installed by claude-setup 14.3.0.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
@@ -754,11 +826,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">5 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="TF5"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TF5</span>Install on this machine; hide-diffs removal<span class="no-release-line">ships nothing: machine setup, ships nothing</span></td><td>luismc-transcript-folds installed (user scope), luismc-project-setup updated to 14.3.0, plugins reloaded. hide-diffs is installed with local scope in another project; the owner removes it there (claude plugin uninstall hide-diffs@gixxy22-plugins --scope local).</td><td>13 Oct</td></tr>
-<tr data-task="TF1"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TF1</span>Contract: plugin layout, behaviour, test approach<span class="release-line"><span class="release-name">RELEASE-9</span></span></td><td>docs/plans/transcript-folds.md: files and ownership, pure-logic API, hooks, settings, shortcuts and actions, test plan; committed to DS64-integration before agents start.</td><td>13 Oct</td></tr>
-<tr data-task="TF2"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TF2</span>luismc-transcript-folds plugin, from scratch<span class="release-line"><span class="release-name">RELEASE-9</span></span></td><td>Manifest, hooks module and pure-logic files under claude/plugins/transcript-folds, node --test suites, claude plugin validate, CI wiring.</td><td>13 Oct</td></tr>
-<tr data-task="TF3"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TF3</span>claude-setup enables the plugin and writes the two chords<span class="release-line"><span class="release-name">RELEASE-9</span></span></td><td>User target, always: enabledPlugins entry and ~/.claude/keybindings.json chords ctrl+x d and ctrl+x f merged field by field, conflict asked. SKILL.md, README, tests.</td><td>13 Oct</td></tr>
-<tr data-task="TF4"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">TF4</span>Smoke test in a real terminal session<span class="release-line"><span class="release-name">RELEASE-9</span></span></td><td>Owner ran it in a real terminal with --plugin-dir and the two chords bound: &#x27;looks good&#x27;.</td><td>13 Oct</td></tr>
+<tr data-task="TF5"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">TF5</span>Install on this machine; hide-diffs removal<span class="no-release-line">ships nothing: machine setup, ships nothing</span></td><td data-label="Detail">luismc-transcript-folds installed (user scope), luismc-project-setup updated to 14.3.0, plugins reloaded. hide-diffs is installed with local scope in another project; the owner removes it there (claude plugin uninstall hide-diffs@gixxy22-plugins --scope local).</td><td data-label="Expected">13 Oct</td></tr>
+<tr data-task="TF1"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">TF1</span>Contract: plugin layout, behaviour, test approach<span class="release-line"><span class="release-name">RELEASE-9</span></span></td><td data-label="Detail">docs/plans/transcript-folds.md: files and ownership, pure-logic API, hooks, settings, shortcuts and actions, test plan; committed to DS64-integration before agents start.</td><td data-label="Expected">13 Oct</td></tr>
+<tr data-task="TF2"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">TF2</span>luismc-transcript-folds plugin, from scratch<span class="release-line"><span class="release-name">RELEASE-9</span></span></td><td data-label="Detail">Manifest, hooks module and pure-logic files under claude/plugins/transcript-folds, node --test suites, claude plugin validate, CI wiring.</td><td data-label="Expected">13 Oct</td></tr>
+<tr data-task="TF3"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">TF3</span>claude-setup enables the plugin and writes the two chords<span class="release-line"><span class="release-name">RELEASE-9</span></span></td><td data-label="Detail">User target, always: enabledPlugins entry and ~/.claude/keybindings.json chords ctrl+x d and ctrl+x f merged field by field, conflict asked. SKILL.md, README, tests.</td><td data-label="Expected">13 Oct</td></tr>
+<tr data-task="TF4"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">TF4</span>Smoke test in a real terminal session<span class="release-line"><span class="release-name">RELEASE-9</span></span></td><td data-label="Detail">Owner ran it in a real terminal with --plugin-dir and the two chords bound: &#x27;looks good&#x27;.</td><td data-label="Expected">13 Oct</td></tr>
 </tbody></table></div>
 </details>
 </section>
@@ -953,6 +1025,27 @@ details.status-fold.release-group > summary { color: var(--ink); }
         var dark = root.getAttribute('data-theme') === 'dark' ||
           (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
         root.setAttribute('data-theme', dark ? 'light' : 'dark');
+      });
+    }
+    // The contents rail folds to a thin rail on wide screens; the choice is kept per viewer and storage may be refused.
+    var layout = document.querySelector('.layout');
+    var railButton = document.getElementById('contents-toggle');
+    if (layout && railButton) {
+      var setRail = function (collapsed, save) {
+        if (collapsed) layout.setAttribute('data-contents', 'collapsed');
+        else layout.removeAttribute('data-contents');
+        railButton.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        railButton.querySelector('.contents-toggle-label').textContent = collapsed ? 'Show contents' : 'Hide contents';
+        railButton.querySelector('.contents-toggle-icon').innerHTML = collapsed ? '&rsaquo;' : '&lsaquo;';
+        if (save) {
+          try { window.localStorage.setItem('contents-rail', collapsed ? 'collapsed' : 'open'); } catch (error) {}
+        }
+      };
+      var remembered = null;
+      try { remembered = window.localStorage.getItem('contents-rail'); } catch (error) {}
+      if (remembered === 'collapsed') setRail(true, false);
+      railButton.addEventListener('click', function () {
+        setRail(railButton.getAttribute('aria-expanded') === 'true', true);
       });
     }
     var links = Array.prototype.slice.call(document.querySelectorAll('nav.contents a'));

@@ -196,3 +196,23 @@ or before its branch joins (R10.4), promote it in the same branch:
    and `apps`/`topics` from `docs/docs.json`; delete what does not apply. Then
    run the `luismc-docs` checks (`docs_check.py`) and commit the spec with the
    branch. The version is written only by the release fold (R4.3).
+
+## Retire a finished feature
+
+When every task a feature owns is Live or Dropped and it has no open decision,
+its page and content only take space (ARTIFACTSPEC §4.10). Promote what lasts
+first (above), then retire it:
+
+1. Dry run: `retire KEY`. It lists the tasks it keeps, each file it would
+   delete with its size, and the decisions archive it would write. It refuses
+   (exit 1, nothing written) while a task is open or a decision is open
+   (R4.33); finish or drop those first.
+2. Show the owner the list and ask; deleting the page is the owner's call.
+3. `retire KEY --yes`: the feature moves to the manifest's `retired_features`,
+   `decisions.json` is kept as `retired/<key>.decisions.json`, the page and
+   `content/<key>/` are deleted and Full Progress lists it in one collapsed
+   line (R4.31, R4.32, R4.34). Its tasks keep their owner and become history:
+   `task-add` and `set-task-status` refuse them (R4.36).
+4. It never deletes a claude.ai page and never commits; commit the record with
+   the branch. A retired key or its prefix is not reused; `feature-new KEY
+   --force` brings the same key back with its old tasks (R4.35).

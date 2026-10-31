@@ -655,33 +655,105 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
   .decision { padding: .8rem; }
 }
 @media (max-width: 56rem) {
-  .layout { display: block; padding-inline: 1rem; }
+  .layout, .layout[data-contents="collapsed"] { display: block; padding-inline: 1rem; }
   nav.contents {
-    position: sticky;
-    z-index: 20;
+    position: static;
     max-height: none;
     overflow: visible;
-    padding: 0;
-    margin-inline: -1rem;
-    background: var(--paper);
+    padding: .5rem 0;
+    margin-bottom: .5rem;
     border-bottom: 1px solid var(--rule);
   }
-  .contents-title, .theme-toggle { display: none; }
-  nav.contents .contents-links {
+  .contents-title, nav.contents .contents-toggle { display: none; }
+  nav.contents .contents-links, .layout[data-contents="collapsed"] nav.contents .contents-links {
     display: flex;
-    overflow-x: auto;
-    white-space: nowrap;
+    flex-wrap: wrap;
     gap: .4rem;
-    padding: .5rem 1rem;
   }
   nav.contents a {
     display: inline-block;
+    min-width: 0;
     border: 1px solid var(--rule);
     border-left-width: 1px;
-    flex: 0 0 auto;
   }
   nav.contents a.current { border-color: var(--signal); }
+  .theme-toggle, .layout[data-contents="collapsed"] .theme-toggle { display: inline-block; margin-top: .5rem; }
 }
+
+/* Contents rail toggle (wide screens): folds the rail to a thin strip and gives the page the full width */
+.contents-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .4em;
+  margin-bottom: .8rem;
+  min-height: 2rem;
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule-strong);
+  cursor: pointer;
+}
+.contents-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.contents-toggle-icon { font-size: 1.1rem; line-height: 1; }
+@media (min-width: 56.01rem) {
+  .layout[data-contents="collapsed"] { grid-template-columns: 2.75rem minmax(0, 1fr); gap: 0 1rem; max-width: none; }
+  .layout[data-contents="collapsed"] .contents-title,
+  .layout[data-contents="collapsed"] .contents-links,
+  .layout[data-contents="collapsed"] .theme-toggle { display: none; }
+  .layout[data-contents="collapsed"] .contents-toggle { padding-inline: .5em; }
+  .layout[data-contents="collapsed"] .contents-toggle-label {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+}
+
+/* Narrow boxes: a task row is a card. The box is measured, not the screen, so the open rail at 900 px stacks too. */
+.table-scroll { container-type: inline-size; }
+@container (max-width: 46rem) {
+  .table-scroll table { min-width: 0; display: block; }
+  table.status-checklist colgroup, table.status-checklist thead { display: none; }
+  table.status-checklist tbody, table.feature-list tbody { display: block; }
+  table.status-checklist tr, table.feature-list tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: .3rem .7rem;
+    padding: .7rem .8rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  table.status-checklist td, table.feature-list td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    grid-column: 1 / -1;
+  }
+  table.status-checklist td:empty, table.feature-list td:empty { display: none; }
+  table.status-checklist td:nth-child(1) { grid-column: 1; white-space: nowrap; }
+  table.status-checklist td:nth-child(2) { grid-column: 2; font-weight: 600; }
+  table.status-checklist td code { white-space: normal; overflow-wrap: anywhere; }
+  table.status-checklist td:nth-child(n+3)::before, table.feature-list td:nth-child(n+2)::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--font-mono);
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--ink-muted);
+  }
+  table.status-checklist .release-line::before { content: "Rides "; }
+  table.feature-list td:nth-child(1) { font-weight: 600; }
+  table.feature-list thead { display: block; background: var(--surface-2); border-bottom: 1px solid var(--rule); }
+  table.feature-list thead tr { display: flex; flex-wrap: wrap; gap: .2rem .8rem; padding: .3rem .8rem; border: 0; }
+  table.feature-list thead th { display: block; padding: 0; border: 0; }
+  table.feature-list thead th:nth-child(n+3) { display: none; }
+}
+/* Release header and the timeline never push the page sideways */
+details.status-fold > summary { min-width: 0; overflow-wrap: anywhere; }
+details.status-fold > summary strong { min-width: 0; }
+.release-timeline { max-width: 100%; }
+.timeline-scroll { max-width: 100%; }
 
 /* Release timeline (R5.40 to R5.43) and the State column (R5.44) */
 .release-timeline { margin: 0 0 1rem; padding: .75rem 1rem; background: var(--surface); border: 1px solid var(--rule); }
@@ -739,69 +811,75 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 </head>
 <body>
-<div class="layout"><nav aria-label="Contents" class="contents"><div class="contents-title">Contents</div><div class="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
+<div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-27T08:30+00:00">27 Oct 08:30</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">31 Oct 07:13</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-10-31T22:40+00:00">31 Oct 22:40</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">31 Oct 17:04</a> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="AR51"><span class="task-id">AR51</span>retire: usage text in skills and README</li>
+</ul>
+</details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">48</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">48</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">48 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">1 built, 48 live</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="AR50"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR50</span>Plugin never pushes the record<span class="release-line"><span class="release-name">RELEASE-7</span></span></td><td>Merged in #56 (25889b3): luismc-artifacts 1.8.0, ARTIFACTSPEC 1.8.0; the plugin writes docs/artifacts/ only, never commits or pushes.</td><td>12 Oct</td></tr>
-<tr data-task="AR49"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR49</span>Version labels say ARTIFACTSPEC 1.7.0<span class="release-line"><span class="release-name">RELEASE-6</span></span></td><td>Pushed to main as 0b9c8ef: luismc-artifacts 1.7.1; no CI (owner&#x27;s call)</td><td>12 Oct</td></tr>
-<tr data-task="AR47"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR47</span>End-of-turn hook knows the daily publish limit<span class="release-line"><span class="release-name">RELEASE-5</span></span></td><td>Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0</td><td>12 Oct</td></tr>
-<tr data-task="AR48"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR48</span>Tasks that ship nothing: --no-release with a reason<span class="release-line"><span class="release-name">RELEASE-5</span></span></td><td>Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0</td><td>12 Oct</td></tr>
-<tr data-task="AR46"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars<span class="release-line"><span class="release-name">RELEASE-4</span></span></td><td>Released in #54 (eaeec1d, 00:22): ARTIFACTSPEC 1.6.1, luismc-artifacts 1.6.2</td><td>12 Oct</td></tr>
-<tr data-task="AR45"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release<span class="release-line"><span class="release-name">RELEASE-2</span></span></td><td>Released in #52 (c306304, 23:09): ARTIFACTSPEC 1.6.0, luismc-artifacts 1.6.0</td><td>11 Oct</td></tr>
-<tr data-task="AR43"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR43</span>Full Progress: release timeline above the status table</td><td>Released in #49 (051005d, 18:38): luismc-artifacts 1.5.0, ARTIFACTSPEC 1.5.0</td><td>11 Oct</td></tr>
-<tr data-task="AR44"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR44</span>Copy link opens the record&#x27;s current feature page</td><td>Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td>11 Oct</td></tr>
-<tr data-task="AR41"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</td><td>Five notes rewritten as one or two sentences (103 to 179 characters); check shows no warnings</td><td>11 Oct</td></tr>
-<tr data-task="AR40"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR40</span>At a glance block in section 0 instead of one prose paragraph</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
-<tr data-task="AR42"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR42</span>Feature table: Last updated column, newest first, sortable headers</td><td>Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td>11 Oct</td></tr>
-<tr data-task="AR35"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR35</span>Re-render every page when the templates change</td><td>Released in luismc-artifacts 1.3.1 (#46, 17d306a); installed here at user and project scope</td><td>11 Oct</td></tr>
-<tr data-task="AR37"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR37</span>Full Progress feature links that work from claude.ai</td><td>Released in luismc-artifacts 1.3.1 (#46, 17d306a); Full Progress shows Copy link buttons after the next render</td><td>11 Oct</td></tr>
-<tr data-task="AR39"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR39</span>Release luismc-artifacts 1.3.1 (AR35, AR37)</td><td>#46 merged on green at 11:04 (one CI run: spec-lint, secret-scan); branches and worktrees removed; plugin updated</td><td>11 Oct</td></tr>
-<tr data-task="AR38"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR38</span>Current Where it stands lines</td><td>Section 1 now says luismc-artifacts 1.3.0 is live and 1.3.1 is in progress; the models line (13.0.0 brought the medium default) was already right</td><td>11 Oct</td></tr>
-<tr data-task="AR36"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR36</span>Update the installed plugins to the 7.1.0 release</td><td>Done at 04:22 (backup first): luismc-artifacts 1.3.0 and luismc-project-setup 13.1.0 installed for your user; sessions pick them up on restart.</td><td>11 Oct</td></tr>
-<tr data-task="AR33"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR33</span>Expected says what sets the estimate</td><td>Released in STACKSPEC 7.1.0 / luismc-project-setup 13.1.0 / luismc-artifacts 1.3.0 (#45, 48205a9, 04:17). --basis on task-add/set-task-status, stored as expected_basis, shown under Expected on open rows (max 80 chars, dropped when a row is Live, Built or Failed). luismc-artifacts 1.3.0.</td><td>11 Oct</td></tr>
-<tr data-task="AR34"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR34</span>Record worktree location is a setting</td><td>Released in STACKSPEC 7.1.0 / luismc-project-setup 13.1.0 / luismc-artifacts 1.3.0 (#45, 48205a9, 04:17). the record worktree location comes from LUISMC_ARTIFACTS_WORKTREE or a git-ignored .claude/artifacts-local.json, else the default; moving it removes the old worktree unless it holds unpushed record commits.</td><td>11 Oct</td></tr>
-<tr data-task="AR32"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR32</span>Update the installed plugins to 1.2.0</td><td>Done at 03:08 (backups first): luismc-artifacts 1.2.0 and luismc-project-setup 13.0.1 installed for your user; the local-only luismc-artifacts setting removed (the repo&#x27;s project setting enables it). Each session picks the update up on restart; your other projects then upgrade by themselves on their next session.</td><td>11 Oct</td></tr>
-<tr data-task="AR30"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR30</span>Enable luismc-artifacts in dev-standards&#x27; project settings</td><td>Released in luismc-artifacts 1.2.0 / luismc-project-setup 13.0.1 (#42, 5babc30, 03:02). .claude/settings.json enables luismc-artifacts for every session of this repo.</td><td>11 Oct</td></tr>
-<tr data-task="AR31"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR31</span>Old claude.ai feature pages get deleted, with the owner&#x27;s confirmation</td><td>Released in luismc-artifacts 1.2.0 / luismc-project-setup 13.0.1 (#42, 5babc30, 03:02). A project upgrading needs no manual step: rule on the next command, migration on the first turn, old rule copy deleted when unedited, old claude.ai feature pages offered for deletion with your confirmation (URLs recovered from git history).</td><td>11 Oct</td></tr>
-<tr data-task="AR24"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR24</span>Integrate and release luismc-artifacts 1.1.0</td><td>Released: luismc-artifacts 1.1.0 (#33, 23:12) and 1.1.1 (#36, 00:05); this repo&#x27;s record migrated and clean; the two old claude.ai feature artifacts deleted with your confirmation; Full Progress published once after the 01:00 reset.</td><td>11 Oct</td></tr>
-<tr data-task="AR29"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR29</span>Bring both feature pages&#x27; text up to date</td><td>Done at 01:00: both feature pages describe tonight&#x27;s state. Project artifacts standard: luismc-artifacts 1.1.2, feature pages as local files, Built, decisions as option cards, every activity a task, the 1.1.1 repair rule. Model and effort profiles: Opus and Sonnet at medium everywhere (MP7). New history entries on both.</td><td>11 Oct</td></tr>
-<tr data-task="AR28"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR28</span>Update the installed plugins</td><td>Done at 00:52 (backups first): the dev-standards marketplace refreshed; luismc-project-setup 11.2.1 -&gt; 13.0.0, luismc-agents 1.0.0 -&gt; 1.1.0, luismc-audits 1.0.1 -&gt; 1.2.0, luismc-specs 1.0.0 -&gt; 1.2.0 (user scope). luismc-artifacts was not installed anywhere; it is now enabled for dev-standards on this machine (local scope, .claude/settings.local.json, nothing committed). Sessions pick the updates up when they restart. Other projects get luismc-artifacts when claude-setup runs there.</td><td>11 Oct</td></tr>
-<tr data-task="AR23"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR23</span>Convert dev-standards&#x27; decisions</td><td>Applied at 00:10: both feature pages show their decisions as option cards, every option offered, the recommendation, and your choice in your words (9 for Project artifacts standard, 5 for Model and effort profiles).</td><td>11 Oct</td></tr>
-<tr data-task="AR27"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR27</span>Repair a record one artifact at a time</td><td>Released in luismc-artifacts 1.1.1 (#36, 0a6264f, 00:05): a change may leave earlier findings but may not add new ones, so a record repairs one artifact at a time. This repo&#x27;s record migrated with it.</td><td>11 Oct</td></tr>
-<tr data-task="AR22"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR22</span>Decisions show every option and the owner&#x27;s choice</td><td>Released in luismc-artifacts 1.1.0 (#33, 23:12): decisions.json drawn as option cards with the owner&#x27;s choice, Not chosen, Recommended, open = Needs you.</td><td>10 Oct</td></tr>
-<tr data-task="AR25"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR25</span>Rename Done to Built</td><td>Released in luismc-artifacts 1.1.0 (#33, 23:12): Done is now Built (finished, not released).</td><td>10 Oct</td></tr>
-<tr data-task="AR26"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR26</span>Feature pages as repo files; fewer publishes</td><td>Released in luismc-artifacts 1.1.0 (#33, 23:12): Full Progress publishes once per turn; feature pages are standalone files linked as local paths.</td><td>10 Oct</td></tr>
-<tr data-task="AR21"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR21</span>Every activity is a task, in every project</td><td>Released in luismc-artifacts 1.1.0 (#33, 054eafb, 23:12): every activity is a task, the session&#x27;s own included; the rule reaches every project at session start; the end-of-turn hook blocks background work with no Running task.</td><td>10 Oct</td></tr>
-<tr data-task="AR4"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR4</span>Answer the open decisions</td><td>Answered: one task registry; branch names start with the task ID; catch-up at session start; each project&#x27;s own design, the plugin&#x27;s default when it has none; an App / service column on the full-progress artifact.</td><td>10 Oct</td></tr>
-<tr data-task="AR16"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR16</span>dev-standards record in docs/artifacts</td><td>Manifest, registry, HTML and the interim generator committed to main as docs-only commits.</td><td>10 Oct</td></tr>
-<tr data-task="AR2"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR2</span>Proposal reviewed</td><td>Twelve findings; each one and the change it led to is in section 7.</td><td>10 Oct</td></tr>
-<tr data-task="AR3"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR3</span>Moved to dev-standards and rewritten</td><td>This artifact now belongs to dev-standards and describes the agreed design; Full Progress: dev-standards created.</td><td>10 Oct</td></tr>
-<tr data-task="AR20"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR20</span>mark-published leaves the registry alone</td><td>mark-published, design set, edit-content, render and feature-new no longer bump the registry, so the full-progress artifact stays clean after publishing; three regression tests. dev-standards also got its rule file and gitignore entries. #21.</td><td>10 Oct</td></tr>
-<tr data-task="AR18"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR18</span>Script fixes from the real-repo test</td><td>Adopted URLs, no-op content edits, two-digit Expected days, a sparse record worktree with long paths, no worktree without a record. Released in #18.</td><td>10 Oct</td></tr>
-<tr data-task="AR19"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR19</span>Names the secret rule does not read as credentials</td><td>Main&#x27;s secret-scan failed after #18: the project-named-secret rule read FP_KEY-style identifiers and a test command as credentials. Renamed; fixed forward in #19.</td><td>10 Oct</td></tr>
-<tr data-task="AR5"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR5</span>ARTIFACTSPEC 1.0.0</td><td>ARTIFACTSPEC 1.0.0 (b8bd29b): the record, statuses and checklist, commands, hooks, publishing and recreation, test and conformance gates; spec_check clean. Plus the shared queue module (43150da). Released in #18.</td><td>10 Oct</td></tr>
-<tr data-task="AR6"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR6</span>Templates</td><td>render_artifacts.py and the two templates: deterministic rendering, the HTML checks, the Earlier fold; 57 tests. Released in #18.</td><td>10 Oct</td></tr>
-<tr data-task="AR7"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR7</span>project_artifacts.py</td><td>project_artifacts.py: the record worktree with push retries, every §7 command, pending and mark-published, the record checks; 97 tests with the fake and the real renderer. Released in #18.</td><td>10 Oct</td></tr>
-<tr data-task="AR8"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR8</span>Hooks</td><td>Three hooks and hooks/hooks.json (PostToolUse and PostToolUseFailure, Stop, SessionStart); 47 tests, mutation-checked. Released in #18.</td><td>10 Oct</td></tr>
-<tr data-task="AR9"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR9</span>Tests and CI</td><td>Script 105, renderer 57 and hook 47 tests, each check proven by a fixture; spec-lint runs them on main and ready PRs. Released in #18.</td><td>10 Oct</td></tr>
-<tr data-task="AR10"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR10</span>Skills and rule file</td><td>The five skills (feature-artifact-new on Opus high, the rest Sonnet medium) and the rule file. Released in #18.</td><td>10 Oct</td></tr>
-<tr data-task="AR11"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR11</span>Plugin wiring</td><td>plugin.json 1.0.0, marketplace entry, README; claude-setup enables the plugin under the marketplace name the owner registered (luismc-project-setup 12.1.0). Released in #18.</td><td>10 Oct</td></tr>
-<tr data-task="AR14"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR14</span>Default design</td><td>design/default-design.css, DESIGN.md and templates/project-artifact.css; applied to both dev-standards artifacts. Released in #18.</td><td>10 Oct</td></tr>
-<tr data-task="AR15"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR15</span>Repo record and recreate</td><td>The record in docs/artifacts and recreation without duplicates, built into project_artifacts.py. Released in #18.</td><td>10 Oct</td></tr>
-<tr data-task="AR17"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR17</span>dev-standards onto the plugin</td><td>This record converted to ARTIFACTSPEC 1.0.0 on a scratch clone and checked clean, a status change run end to end, nothing pushed; shipped in #18. These artifacts are now rendered by the plugin.</td><td>10 Oct</td></tr>
-<tr data-task="AR12"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">AR12</span>Integrate and release</td><td>Released as luismc-artifacts 1.0.0, ARTIFACTSPEC 1.0.0 and luismc-project-setup 12.1.0 in one ready PR (#18, 3a5ad29), merged on green after a Linux-only test fix.</td><td>10 Oct</td></tr>
+<tr data-task="AR51"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">AR51</span>retire: usage text in skills and README<span class="release-line"><span class="release-name">RELEASE-19</span></span></td><td data-label="Detail">feature-artifact-new section, project-artifact-check hint, README line</td><td data-label="Expected">31 Oct</td></tr>
+<tr data-task="AR50"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR50</span>Plugin never pushes the record<span class="release-line"><span class="release-name">RELEASE-7</span></span></td><td data-label="Detail">Merged in #56 (25889b3): luismc-artifacts 1.8.0, ARTIFACTSPEC 1.8.0; the plugin writes docs/artifacts/ only, never commits or pushes.</td><td data-label="Expected">12 Oct</td></tr>
+<tr data-task="AR49"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR49</span>Version labels say ARTIFACTSPEC 1.7.0<span class="release-line"><span class="release-name">RELEASE-6</span></span></td><td data-label="Detail">Pushed to main as 0b9c8ef: luismc-artifacts 1.7.1; no CI (owner&#x27;s call)</td><td data-label="Expected">12 Oct</td></tr>
+<tr data-task="AR47"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR47</span>End-of-turn hook knows the daily publish limit<span class="release-line"><span class="release-name">RELEASE-5</span></span></td><td data-label="Detail">Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0</td><td data-label="Expected">12 Oct</td></tr>
+<tr data-task="AR48"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR48</span>Tasks that ship nothing: --no-release with a reason<span class="release-line"><span class="release-name">RELEASE-5</span></span></td><td data-label="Detail">Released in #55 (4205a60, 01:29): ARTIFACTSPEC 1.7.0, luismc-artifacts 1.7.0</td><td data-label="Expected">12 Oct</td></tr>
+<tr data-task="AR46"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR46</span>Timeline: releases past midnight keep their phase bars<span class="release-line"><span class="release-name">RELEASE-4</span></span></td><td data-label="Detail">Released in #54 (eaeec1d, 00:22): ARTIFACTSPEC 1.6.1, luismc-artifacts 1.6.2</td><td data-label="Expected">12 Oct</td></tr>
+<tr data-task="AR45"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR45</span>RELEASE-n numbers; Full Progress groups items by release<span class="release-line"><span class="release-name">RELEASE-2</span></span></td><td data-label="Detail">Released in #52 (c306304, 23:09): ARTIFACTSPEC 1.6.0, luismc-artifacts 1.6.0</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR43"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR43</span>Full Progress: release timeline above the status table</td><td data-label="Detail">Released in #49 (051005d, 18:38): luismc-artifacts 1.5.0, ARTIFACTSPEC 1.5.0</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR44"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR44</span>Copy link opens the record&#x27;s current feature page</td><td data-label="Detail">Released in #48 (c4efd36, 17:52): luismc-project-setup 14.0.1, luismc-artifacts 1.4.1</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR41"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR41</span>Apply At a glance here: short notes instead of long ledes</td><td data-label="Detail">Five notes rewritten as one or two sentences (103 to 179 characters); check shows no warnings</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR40"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR40</span>At a glance block in section 0 instead of one prose paragraph</td><td data-label="Detail">Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR42"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR42</span>Feature table: Last updated column, newest first, sortable headers</td><td data-label="Detail">Released in #47 (4f3e0bc, 14:37): STACKSPEC 8.0.0, luismc-project-setup 14.0.0, luismc-artifacts 1.4.0</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR35"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR35</span>Re-render every page when the templates change</td><td data-label="Detail">Released in luismc-artifacts 1.3.1 (#46, 17d306a); installed here at user and project scope</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR37"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR37</span>Full Progress feature links that work from claude.ai</td><td data-label="Detail">Released in luismc-artifacts 1.3.1 (#46, 17d306a); Full Progress shows Copy link buttons after the next render</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR39"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR39</span>Release luismc-artifacts 1.3.1 (AR35, AR37)</td><td data-label="Detail">#46 merged on green at 11:04 (one CI run: spec-lint, secret-scan); branches and worktrees removed; plugin updated</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR38"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR38</span>Current Where it stands lines</td><td data-label="Detail">Section 1 now says luismc-artifacts 1.3.0 is live and 1.3.1 is in progress; the models line (13.0.0 brought the medium default) was already right</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR36"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR36</span>Update the installed plugins to the 7.1.0 release</td><td data-label="Detail">Done at 04:22 (backup first): luismc-artifacts 1.3.0 and luismc-project-setup 13.1.0 installed for your user; sessions pick them up on restart.</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR33"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR33</span>Expected says what sets the estimate</td><td data-label="Detail">Released in STACKSPEC 7.1.0 / luismc-project-setup 13.1.0 / luismc-artifacts 1.3.0 (#45, 48205a9, 04:17). --basis on task-add/set-task-status, stored as expected_basis, shown under Expected on open rows (max 80 chars, dropped when a row is Live, Built or Failed). luismc-artifacts 1.3.0.</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR34"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR34</span>Record worktree location is a setting</td><td data-label="Detail">Released in STACKSPEC 7.1.0 / luismc-project-setup 13.1.0 / luismc-artifacts 1.3.0 (#45, 48205a9, 04:17). the record worktree location comes from LUISMC_ARTIFACTS_WORKTREE or a git-ignored .claude/artifacts-local.json, else the default; moving it removes the old worktree unless it holds unpushed record commits.</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR32"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR32</span>Update the installed plugins to 1.2.0</td><td data-label="Detail">Done at 03:08 (backups first): luismc-artifacts 1.2.0 and luismc-project-setup 13.0.1 installed for your user; the local-only luismc-artifacts setting removed (the repo&#x27;s project setting enables it). Each session picks the update up on restart; your other projects then upgrade by themselves on their next session.</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR30"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR30</span>Enable luismc-artifacts in dev-standards&#x27; project settings</td><td data-label="Detail">Released in luismc-artifacts 1.2.0 / luismc-project-setup 13.0.1 (#42, 5babc30, 03:02). .claude/settings.json enables luismc-artifacts for every session of this repo.</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR31"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR31</span>Old claude.ai feature pages get deleted, with the owner&#x27;s confirmation</td><td data-label="Detail">Released in luismc-artifacts 1.2.0 / luismc-project-setup 13.0.1 (#42, 5babc30, 03:02). A project upgrading needs no manual step: rule on the next command, migration on the first turn, old rule copy deleted when unedited, old claude.ai feature pages offered for deletion with your confirmation (URLs recovered from git history).</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR24"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR24</span>Integrate and release luismc-artifacts 1.1.0</td><td data-label="Detail">Released: luismc-artifacts 1.1.0 (#33, 23:12) and 1.1.1 (#36, 00:05); this repo&#x27;s record migrated and clean; the two old claude.ai feature artifacts deleted with your confirmation; Full Progress published once after the 01:00 reset.</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR29"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR29</span>Bring both feature pages&#x27; text up to date</td><td data-label="Detail">Done at 01:00: both feature pages describe tonight&#x27;s state. Project artifacts standard: luismc-artifacts 1.1.2, feature pages as local files, Built, decisions as option cards, every activity a task, the 1.1.1 repair rule. Model and effort profiles: Opus and Sonnet at medium everywhere (MP7). New history entries on both.</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR28"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR28</span>Update the installed plugins</td><td data-label="Detail">Done at 00:52 (backups first): the dev-standards marketplace refreshed; luismc-project-setup 11.2.1 -&gt; 13.0.0, luismc-agents 1.0.0 -&gt; 1.1.0, luismc-audits 1.0.1 -&gt; 1.2.0, luismc-specs 1.0.0 -&gt; 1.2.0 (user scope). luismc-artifacts was not installed anywhere; it is now enabled for dev-standards on this machine (local scope, .claude/settings.local.json, nothing committed). Sessions pick the updates up when they restart. Other projects get luismc-artifacts when claude-setup runs there.</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR23"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR23</span>Convert dev-standards&#x27; decisions</td><td data-label="Detail">Applied at 00:10: both feature pages show their decisions as option cards, every option offered, the recommendation, and your choice in your words (9 for Project artifacts standard, 5 for Model and effort profiles).</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR27"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR27</span>Repair a record one artifact at a time</td><td data-label="Detail">Released in luismc-artifacts 1.1.1 (#36, 0a6264f, 00:05): a change may leave earlier findings but may not add new ones, so a record repairs one artifact at a time. This repo&#x27;s record migrated with it.</td><td data-label="Expected">11 Oct</td></tr>
+<tr data-task="AR22"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR22</span>Decisions show every option and the owner&#x27;s choice</td><td data-label="Detail">Released in luismc-artifacts 1.1.0 (#33, 23:12): decisions.json drawn as option cards with the owner&#x27;s choice, Not chosen, Recommended, open = Needs you.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR25"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR25</span>Rename Done to Built</td><td data-label="Detail">Released in luismc-artifacts 1.1.0 (#33, 23:12): Done is now Built (finished, not released).</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR26"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR26</span>Feature pages as repo files; fewer publishes</td><td data-label="Detail">Released in luismc-artifacts 1.1.0 (#33, 23:12): Full Progress publishes once per turn; feature pages are standalone files linked as local paths.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR21"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR21</span>Every activity is a task, in every project</td><td data-label="Detail">Released in luismc-artifacts 1.1.0 (#33, 054eafb, 23:12): every activity is a task, the session&#x27;s own included; the rule reaches every project at session start; the end-of-turn hook blocks background work with no Running task.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR4"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR4</span>Answer the open decisions</td><td data-label="Detail">Answered: one task registry; branch names start with the task ID; catch-up at session start; each project&#x27;s own design, the plugin&#x27;s default when it has none; an App / service column on the full-progress artifact.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR16"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR16</span>dev-standards record in docs/artifacts</td><td data-label="Detail">Manifest, registry, HTML and the interim generator committed to main as docs-only commits.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR2"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR2</span>Proposal reviewed</td><td data-label="Detail">Twelve findings; each one and the change it led to is in section 7.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR3"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR3</span>Moved to dev-standards and rewritten</td><td data-label="Detail">This artifact now belongs to dev-standards and describes the agreed design; Full Progress: dev-standards created.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR20"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR20</span>mark-published leaves the registry alone</td><td data-label="Detail">mark-published, design set, edit-content, render and feature-new no longer bump the registry, so the full-progress artifact stays clean after publishing; three regression tests. dev-standards also got its rule file and gitignore entries. #21.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR18"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR18</span>Script fixes from the real-repo test</td><td data-label="Detail">Adopted URLs, no-op content edits, two-digit Expected days, a sparse record worktree with long paths, no worktree without a record. Released in #18.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR19"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR19</span>Names the secret rule does not read as credentials</td><td data-label="Detail">Main&#x27;s secret-scan failed after #18: the project-named-secret rule read FP_KEY-style identifiers and a test command as credentials. Renamed; fixed forward in #19.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR5"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR5</span>ARTIFACTSPEC 1.0.0</td><td data-label="Detail">ARTIFACTSPEC 1.0.0 (b8bd29b): the record, statuses and checklist, commands, hooks, publishing and recreation, test and conformance gates; spec_check clean. Plus the shared queue module (43150da). Released in #18.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR6"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR6</span>Templates</td><td data-label="Detail">render_artifacts.py and the two templates: deterministic rendering, the HTML checks, the Earlier fold; 57 tests. Released in #18.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR7"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR7</span>project_artifacts.py</td><td data-label="Detail">project_artifacts.py: the record worktree with push retries, every §7 command, pending and mark-published, the record checks; 97 tests with the fake and the real renderer. Released in #18.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR8"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR8</span>Hooks</td><td data-label="Detail">Three hooks and hooks/hooks.json (PostToolUse and PostToolUseFailure, Stop, SessionStart); 47 tests, mutation-checked. Released in #18.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR9"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR9</span>Tests and CI</td><td data-label="Detail">Script 105, renderer 57 and hook 47 tests, each check proven by a fixture; spec-lint runs them on main and ready PRs. Released in #18.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR10"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR10</span>Skills and rule file</td><td data-label="Detail">The five skills (feature-artifact-new on Opus high, the rest Sonnet medium) and the rule file. Released in #18.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR11"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR11</span>Plugin wiring</td><td data-label="Detail">plugin.json 1.0.0, marketplace entry, README; claude-setup enables the plugin under the marketplace name the owner registered (luismc-project-setup 12.1.0). Released in #18.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR14"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR14</span>Default design</td><td data-label="Detail">design/default-design.css, DESIGN.md and templates/project-artifact.css; applied to both dev-standards artifacts. Released in #18.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR15"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR15</span>Repo record and recreate</td><td data-label="Detail">The record in docs/artifacts and recreation without duplicates, built into project_artifacts.py. Released in #18.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR17"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR17</span>dev-standards onto the plugin</td><td data-label="Detail">This record converted to ARTIFACTSPEC 1.0.0 on a scratch clone and checked clean, a status change run end to end, nothing pushed; shipped in #18. These artifacts are now rendered by the plugin.</td><td data-label="Expected">10 Oct</td></tr>
+<tr data-task="AR12"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR12</span>Integrate and release</td><td data-label="Detail">Released as luismc-artifacts 1.0.0, ARTIFACTSPEC 1.0.0 and luismc-project-setup 12.1.0 in one ready PR (#18, 3a5ad29), merged on green after a Linux-only test fix.</td><td data-label="Expected">10 Oct</td></tr>
 </tbody></table></div>
 </details>
 </section>
@@ -1320,6 +1398,27 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
         var dark = root.getAttribute('data-theme') === 'dark' ||
           (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
         root.setAttribute('data-theme', dark ? 'light' : 'dark');
+      });
+    }
+    // The contents rail folds to a thin rail on wide screens; the choice is kept per viewer and storage may be refused.
+    var layout = document.querySelector('.layout');
+    var railButton = document.getElementById('contents-toggle');
+    if (layout && railButton) {
+      var setRail = function (collapsed, save) {
+        if (collapsed) layout.setAttribute('data-contents', 'collapsed');
+        else layout.removeAttribute('data-contents');
+        railButton.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        railButton.querySelector('.contents-toggle-label').textContent = collapsed ? 'Show contents' : 'Hide contents';
+        railButton.querySelector('.contents-toggle-icon').innerHTML = collapsed ? '&rsaquo;' : '&lsaquo;';
+        if (save) {
+          try { window.localStorage.setItem('contents-rail', collapsed ? 'collapsed' : 'open'); } catch (error) {}
+        }
+      };
+      var remembered = null;
+      try { remembered = window.localStorage.getItem('contents-rail'); } catch (error) {}
+      if (remembered === 'collapsed') setRail(true, false);
+      railButton.addEventListener('click', function () {
+        setRail(railButton.getAttribute('aria-expanded') === 'true', true);
       });
     }
     var links = Array.prototype.slice.call(document.querySelectorAll('nav.contents a'));

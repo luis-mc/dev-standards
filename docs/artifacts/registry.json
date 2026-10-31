@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-31T07:17+00:00",
+  "updated": "2026-10-31T22:40+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -487,6 +487,18 @@
       "expected": "12 Oct",
       "changed": "2026-10-12T23:26+01:00",
       "rides": "DS61"
+    },
+    {
+      "id": "AR51",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Built",
+      "item": "retire: usage text in skills and README",
+      "detail": "feature-artifact-new section, project-artifact-check hint, README line",
+      "expected": "31 Oct",
+      "changed": "2026-10-31T22:40+00:00",
+      "rides": "DS111",
+      "started": "2026-10-31T22:40+00:00"
     },
     {
       "id": "DL1",
@@ -2048,6 +2060,125 @@
       "changed": "2026-10-31T07:17+00:00",
       "no_release": "pushed straight to main at the owner's request",
       "started": "2026-10-31T07:09+00:00"
+    },
+    {
+      "id": "DS103",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "DOC2: luismc-docs plugin (DOCSPEC 1.0.0)",
+      "detail": "PR #111: luismc-docs 0.1.0; delivery hook misses (0.10.3); runner re-run filter",
+      "expected": "31 Oct",
+      "changed": "2026-10-31T22:39+00:00",
+      "no_release": "recorded after the fact; released by DOC10 (PR #116)"
+    },
+    {
+      "id": "DS104",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "DOC6: docs follow-ups (promote-to-spec, docs line)",
+      "detail": "PR #115: artifacts promote-to-spec, join.py strips agent docs, brief docs line, STACKSPEC 16",
+      "expected": "31 Oct",
+      "changed": "2026-10-31T22:39+00:00",
+      "no_release": "recorded after the fact; released by DOC10 (PR #116)"
+    },
+    {
+      "id": "DS105",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "DOC7: delivery hook keeps Windows backslash paths",
+      "detail": "Set-Location/pushd tracking in the delivery hook; rode PR #115",
+      "expected": "31 Oct",
+      "changed": "2026-10-31T22:39+00:00",
+      "no_release": "recorded after the fact; released by DOC10 (PR #116)"
+    },
+    {
+      "id": "DS106",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "DOC8: docs paths (PR body, work reports, profile)",
+      "detail": "PR #113: PR body reads docs-summaries, reports in docs/work/reports, STACKSPEC 18",
+      "expected": "31 Oct",
+      "changed": "2026-10-31T22:39+00:00",
+      "no_release": "recorded after the fact; released by DOC10 (PR #116)"
+    },
+    {
+      "id": "DS107",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "DOC9: ignore mermaid.min.js scan false positives",
+      "detail": "PR #114: six reviewed secret-scan false positives in the vendored Mermaid",
+      "expected": "31 Oct",
+      "changed": "2026-10-31T22:39+00:00",
+      "no_release": "recorded after the fact; released by DOC10 (PR #116)"
+    },
+    {
+      "id": "DS108",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "DOC10: release - fold 17 change notes",
+      "detail": "PR #116: artifacts 1.17.0, delivery 0.10.3, docs 0.1.0, project-setup 14.9.1, specs 1.2.3",
+      "expected": "31 Oct",
+      "changed": "2026-10-31T22:39+00:00",
+      "no_release": "recorded after the fact; released by DOC10 (PR #116)"
+    },
+    {
+      "id": "DS109",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Release B: dev-standards adopts luismc-docs",
+      "detail": "docs-setup: docs.json, README/overview, reports to docs/work/reports, docs-check in CI",
+      "expected": "01 Nov ~01:00",
+      "changed": "2026-10-31T22:39+00:00",
+      "expected_basis": "after A; one migrate + reference fixes ~1 h",
+      "release": 17
+    },
+    {
+      "id": "DS110",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Release C: rewrite all docs and shipped specs",
+      "detail": "Feature specs, MADRs, specs relaid with IDs kept; ~8 cloud agents, Opus review",
+      "expected": "01 Nov ~05:00",
+      "changed": "2026-10-31T22:39+00:00",
+      "expected_basis": "after B; agents ~2 h, join+CI ~1 h",
+      "release": 18,
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 45
+      }
+    },
+    {
+      "id": "DS111",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Release A: retire skill text, record commit",
+      "detail": "Fold on main, push, CI green; luismc-artifacts 1.17.1",
+      "expected": "31 Oct ~23:30",
+      "changed": "2026-10-31T22:39+00:00",
+      "expected_basis": "one patch fold + CI ~10 min",
+      "release": 19,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-10-31T22:40+00:00",
+          "end": "2026-10-31T23:10+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-10-31T23:10+00:00",
+          "end": "2026-10-31T23:30+00:00"
+        }
+      ],
+      "started": "2026-10-31T22:40+00:00"
     },
     {
       "id": "MP1",

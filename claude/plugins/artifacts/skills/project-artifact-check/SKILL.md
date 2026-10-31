@@ -70,3 +70,12 @@ older record format; neither is a finding. Offer the owner to delete each
 retired page: after the owner confirms, delete it with the Artifact tool
 (`action: "delete"`), then run `mark-deleted <key> --url <URL>`. A record in the
 older format migrates with `render`.
+
+## Finished features
+
+A feature whose tasks are all Live or Dropped, with no open decision, can be
+retired to free `docs/artifacts` (ARTIFACTSPEC §4.10). Offer it to the owner;
+`retire KEY` is a dry run that lists what would go, and `retire KEY --yes`
+does it (see `feature-artifact-new`, "Retire a finished feature"). Damage to a
+retired record (a missing archive, an unknown owner) is reported as R4.31,
+R4.32 or R4.6.
