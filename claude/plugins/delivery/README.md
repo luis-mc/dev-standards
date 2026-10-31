@@ -1,6 +1,6 @@
 # luismc-delivery
 
-Delivery guard rails for a project that opts in with a `.delivery/` folder. Rules: `docs/specs/delivery/DELIVERYSPEC.md`. Without `.delivery/` the delivery hooks do nothing, **except the machine load guard (below), which is on in every project where the plugin is enabled**: it protects the machine, not the project.
+Delivery guard rails for a project that opts in with a `.delivery/` folder. Rules: `docs/architecture/DELIVERYSPEC.md`. Without `.delivery/` the delivery hooks do nothing, **except the machine load guard (below), which is on in every project where the plugin is enabled**: it protects the machine, not the project.
 
 | Script | What it does |
 |---|---|

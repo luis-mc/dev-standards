@@ -5,6 +5,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 
 | Scope | ID | Decision | Chosen | Status | Date |
 |---|---|---|---|---|---|
+| cross-cutting | 0001-docs-rewrite | [Rewrite every doc to DOCSPEC, requirement IDs kept](decisions/0001-docs-rewrite.md) |  | accepted | 2026-10-31 |
 | artifacts | D1 | How is a task’s status stored so both artifacts update automatically? | One registry | decided | 2026-10-10 |
 | artifacts | D10 | Full Progress: release timeline above the status table and a State column in the feature table (preview, Version 70); adopt for the plugin? | With the two changes | decided | 2026-10-11 |
 | artifacts | D11 | How does a release get its RELEASE-<n> number? | Number on the release task | decided | 2026-10-11 |

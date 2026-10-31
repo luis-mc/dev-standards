@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-31T22:58+00:00",
+  "updated": "2026-10-31T23:00+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2179,6 +2179,105 @@
         }
       ],
       "started": "2026-10-31T22:40+00:00"
+    },
+    {
+      "id": "DS112",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "C: ARTIFACTSPEC reader preamble and wording, IDs kept",
+      "detail": "artifactspec.md; minor via note",
+      "expected": "01 Nov ~02:30",
+      "changed": "2026-10-31T23:00+00:00",
+      "expected_basis": "agent ~90 min after release B is green"
+    },
+    {
+      "id": "DS113",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "C: DOCSPEC reader preamble and wording, IDs kept",
+      "detail": "docspec.md; minor via note",
+      "expected": "01 Nov ~02:30",
+      "changed": "2026-10-31T23:00+00:00",
+      "expected_basis": "agent ~90 min after release B is green"
+    },
+    {
+      "id": "DS114",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "C: STACKSPEC reader preamble and wording, IDs kept",
+      "detail": "invariants.md; minor via note",
+      "expected": "01 Nov ~02:30",
+      "changed": "2026-10-31T23:00+00:00",
+      "expected_basis": "agent ~90 min after release B is green"
+    },
+    {
+      "id": "DS115",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "C: AUTHSPEC reader preamble and wording, IDs kept",
+      "detail": "authentication.md; minor via note",
+      "expected": "01 Nov ~02:30",
+      "changed": "2026-10-31T23:00+00:00",
+      "expected_basis": "agent ~90 min after release B is green"
+    },
+    {
+      "id": "DS116",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "C: DELIVERYSPEC doc rewrite or archive",
+      "detail": "docs/architecture/DELIVERYSPEC.md vs the delivery plugin's rules",
+      "expected": "01 Nov ~02:30",
+      "changed": "2026-10-31T23:00+00:00",
+      "expected_basis": "agent ~90 min after release B is green"
+    },
+    {
+      "id": "DS117",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "C: feature specs artifacts, models, transcript-folds",
+      "detail": "promote-to-spec + plans ar43, transcript-folds, AR50 contract; MADR 0010-0029",
+      "expected": "01 Nov ~02:30",
+      "changed": "2026-10-31T23:00+00:00",
+      "expected_basis": "agent ~90 min after release B is green"
+    },
+    {
+      "id": "DS118",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "C: feature specs delivery, delivery-speed, test-cost",
+      "detail": "promote-to-spec + plans dl12, tc8, test-cost; MADR 0030-0049",
+      "expected": "01 Nov ~02:30",
+      "changed": "2026-10-31T23:00+00:00",
+      "expected_basis": "agent ~90 min after release B is green"
+    },
+    {
+      "id": "DS119",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "C: feature specs agents, audits, docs, project-setup, specs",
+      "detail": "new specs + STACKSPEC 8.0.0 upgrade note; MADR 0050-0069",
+      "expected": "01 Nov ~02:30",
+      "changed": "2026-10-31T23:00+00:00",
+      "expected_basis": "agent ~90 min after release B is green"
+    },
+    {
+      "id": "DS120",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "C: overview pages, docs README, AGENTS.md",
+      "detail": "five overview pages per DOCSPEC R3.1",
+      "expected": "01 Nov ~02:30",
+      "changed": "2026-10-31T23:00+00:00",
+      "expected_basis": "agent ~90 min after release B is green"
     },
     {
       "id": "MP1",

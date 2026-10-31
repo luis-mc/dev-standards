@@ -5,6 +5,7 @@
 ## architecture
 
 - [DS66: delivery learnings inventory and ledger schema (draft)](docs/architecture/DELIVERYSPEC.md)
+- [Rewrite every doc to DOCSPEC, requirement IDs kept](docs/architecture/decisions/0001-docs-rewrite.md)
 
 ## archive
 
