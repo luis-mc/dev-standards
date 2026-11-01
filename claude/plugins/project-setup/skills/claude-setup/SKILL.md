@@ -489,55 +489,68 @@ Instructions loaded into every session: `CLAUDE.md` at the repo root for a
 project target, `~/.claude/CLAUDE.md` for a user target.
 
 **If it exists, leave it alone entirely.** Do not overwrite it, do not merge into
-it, do not append. This file is hand-written prose whose whole value is that
-someone chose every line — a user-level `~/.claude/CLAUDE.md` in particular is
-usually well-developed and may `@`-include other files. Losing it is
-unrecoverable from this plugin's side. Report it as already present and move on.
+it, do not append. This file is hand-written prose, and its value is that
+someone chose every line. A user-level `~/.claude/CLAUDE.md` in particular is
+usually well-developed and may `@`-include other files. This plugin cannot
+recover a lost file. Report it as already present and move on.
 
 If the user explicitly asks to *add* the template's guidance to an existing
-`CLAUDE.md`, show them the template text and let them place it themselves rather
-than editing the file for them.
+`CLAUDE.md`, show them the template text and let them place it themselves. Do
+not edit the file for them.
 
 If the target repo has its own `AGENTS.md` and `CLAUDE.md` does not reference it,
-offer to add the `@AGENTS.md` line — that is a real convenience, but only when
-the file it points at actually exists.
+offer to add the `@AGENTS.md` line. This is a convenience, but only when the
+file it points at exists.
 
 ## Step 3 — Present one batch summary and confirm once
 
-Group every queued change by target and by file: what is being added, what is
-being overwritten unconditionally, what is being removed (a target's old
+Group every queued change by target and by file. List what is being added, what
+is being overwritten unconditionally, what is being removed (a target's old
 `rules/model-delegation.md`), and which individual settings keys are being
 added, including the `hooks.SessionStart` entry and, for a project target, the
-`enabledPlugins` entry for each of the 8 plugins (or that it is already there). For a project target also list: the plugins to install with `claude plugin install <name>@<marketplace>` (asking for confirmation), the docs setup (`init --apply`, or the `migrate` dry-run plan), the artifacts record (`record_dir` `docs/project`), the `caps` changes as `current → new`, the new `.delivery/config.json` and `.gitignore` line, `rules/delivery-timing.md`, the proposed removal of a `no-tomorrow.mjs` Stop entry (which lives in the user's settings, so state it lands outside the repo), and the memory-to-rule table. Always list, under the user target, the two transcript-folds
-pieces: the `luismc-transcript-folds@<marketplace>` entry (or that it is already
-there) and the chords to add to `~/.claude/keybindings.json` (or that they are
-already there, or that the file will be created). List each model-split
-conflict separately as `key: current → policy`, and each chord bound to another
-action as `chord: current action → wanted action`. List the two effort keys per
-target as `modelSettings.<ID>.effortLevel: current → chosen` (`none → chosen`
-when absent), and any
-`CLAUDE_CODE_EFFORT_LEVEL` conflict with where it is set. Ask for one
-confirmation: apply everything (conflicts included), apply a named subset, or
-cancel.
+`enabledPlugins` entry for each of the 8 plugins (or that it is already there).
+For a project target also list:
+
+- the plugins to install with `claude plugin install <name>@<marketplace>`
+  (asking for confirmation)
+- the docs setup (`init --apply`, or the `migrate` dry-run plan)
+- the artifacts record (`record_dir` `docs/project`)
+- the `caps` changes as `current → new`
+- the new `.delivery/config.json` and `.gitignore` line
+- `rules/delivery-timing.md`
+- the proposed removal of a `no-tomorrow.mjs` Stop entry (which lives in the
+  user's settings, so state that it lands outside the repo)
+- the memory-to-rule table
+
+Always list, under the user target, the two transcript-folds pieces: the
+`luismc-transcript-folds@<marketplace>` entry (or that it is already there) and
+the chords to add to `~/.claude/keybindings.json` (or that they are already
+there, or that the file will be created). List each model-split conflict
+separately as `key: current → policy`, and each chord bound to another action as
+`chord: current action → wanted action`. List the two effort keys per target as
+`modelSettings.<ID>.effortLevel: current → chosen` (`none → chosen` when
+absent), and any `CLAUDE_CODE_EFFORT_LEVEL` conflict with where it is set. Ask
+for one confirmation: apply everything (conflicts included), apply a named
+subset, or cancel.
 
 State plainly which writes land outside the repo. If the user declines part of
-it, leave those files untouched and report them as skipped — never quietly drop
-a piece because the rest succeeded.
+it, leave those files untouched and report them as skipped. Never quietly drop a
+piece because the rest succeeded.
 
 ## Step 4 — Apply, then verify
 
-Apply what was confirmed, then check the result rather than assuming it worked:
+Apply what was confirmed. Then check the result. Do not assume it worked:
 
 - `settings.json` parses as JSON after editing. A merge that produces invalid
-  JSON makes Claude Code ignore the whole file, which looks exactly like the
-  settings not having been applied.
+  JSON makes Claude Code ignore the whole file. That looks the same as settings
+  that were not applied.
 - `statusline.sh` is executable.
 - The path in `statusLine.command` resolves for the target you wrote.
 - Every target that got the model split has `model` resolving to Opus,
   `env.CLAUDE_CODE_SUBAGENT_MODEL` resolving to Sonnet, and
   `rules/agents-and-integration.md` present — or the conflicting key is
-  listed as declined. A project `model` key shadows the user one, so a project left on a
-  declined non-Opus value defeats a user-level enforcement; say so.
+  listed as declined. A project `model` key shadows the user one, so a project
+  left on a declined non-Opus value defeats a user-level enforcement. Say so.
 - Every target that got the split has both `modelSettings` entries, under the
   canonical IDs, with the value `medium` or `high`.
 - The target's settings contain a top-level `effortLevel` (unless an existing
@@ -569,35 +582,41 @@ Apply what was confirmed, then check the result rather than assuming it worked:
   `theme:editCustom` (or the conflicting chord is listed as declined), and every
   binding that was there before is unchanged.
 - No `CLAUDE_CODE_EFFORT_LEVEL` remains in the target's `env` block, unless the
-  user chose to keep it — then say it overrides the saved efforts.
-- The split takes effect from the next session; the current one keeps the
-  model it started with (`/model` switches it now).
+  user chose to keep it. In that case, say it overrides the saved efforts.
+- The split takes effect from the next session. The current one keeps the model
+  it started with (`/model` switches it now).
 
 ## Step 5 — Report
 
-What was applied, per target. What already had a value and was therefore left
-alone — that list matters, because "already set" and "just set by me" look
-identical afterwards. What the user declined, including any model-split
-conflict left in place. Whether the model split is now enforced for this
-project only or for all projects. The effort chosen for each model (Opus main
-session, Sonnet subagents) and where it was written, and the top-level
-`effortLevel` (added as `medium`, or the existing value left alone) that cloud
-agents fall back to. Which of the 8 plugins were enabled for the project, which were installed, and which install commands the owner still has to run, with the marketplace name used and where it came from; tell the owner to run `/reload-plugins`. What was configured for docs (init applied, or the migrate plan shown and left unapplied), the artifacts record, and the delivery `caps` changes. Whether the
-`luismc-transcript-folds` entry and the two chords were added, already there or
-declined, the marketplace name used for it, and that the plugin must be installed
-(`claude plugin install luismc-transcript-folds@<marketplace>`) and that the
-chords and the plugin take effect after `/reload-plugins` or a restart. Anything
-removed (the old
-`model-delegation.md`), and whether the project has `scripts/delivery/`, which
-the rule file cites. Whether `.delivery/config.json` was written or already present, the `no-tomorrow.mjs` entry removed or declined, and the memory-to-rule table for the orchestrator. If both targets were
-written, note which keys the project file now shadows.
+Report what was applied, per target. Report what already had a value and was
+therefore left alone. That list matters, because "already set" and "just set by
+me" look identical afterwards. Report what the user declined, including any
+model-split conflict left in place. Say whether the model split is now enforced
+for this project only or for all projects. Give the effort chosen for each model
+(Opus main session, Sonnet subagents) and where it was written, and the
+top-level `effortLevel` (added as `medium`, or the existing value left alone)
+that cloud agents fall back to. Say which of the 8 plugins were enabled for the
+project, which were installed, and which install commands the owner still has to
+run, with the marketplace name used and where it came from. Tell the owner to
+run `/reload-plugins`. Say what was configured for docs (init applied, or the
+migrate plan shown and left unapplied), the artifacts record, and the delivery
+`caps` changes. Say whether the `luismc-transcript-folds` entry and the two
+chords were added, already there or declined, and the marketplace name used for
+it. Say that the plugin must be installed
+(`claude plugin install luismc-transcript-folds@<marketplace>`), and that the
+chords and the plugin take effect after `/reload-plugins` or a restart. Report
+anything removed (the old `model-delegation.md`), and whether the project has
+`scripts/delivery/`, which the rule file cites. Say whether `.delivery/config.json`
+was written or already present, whether the `no-tomorrow.mjs` entry was removed
+or declined, and give the memory-to-rule table for the orchestrator. If both
+targets were written, note which keys the project file now shadows.
 
 ## The alias-drift warning
 
 Per-model effort is saved under the model's canonical ID. The `opus` and
-`sonnet` aliases move to new IDs over time, and then the new model has no
-saved effort and quietly runs at its default. `hooks/effort_drift.py` is a
-`SessionStart` hook that says so.
+`sonnet` aliases move to new IDs over time. The new model then has no saved
+effort and runs at its default without any notice. `hooks/effort_drift.py` is a
+`SessionStart` hook that warns about this.
 
 **What it reads.** Claude Code passes a SessionStart hook a JSON object on
 stdin with `source` and, optionally, `model`, the active model identifier
@@ -607,43 +626,43 @@ is no `$CLAUDE_MODEL` variable and that `$ANTHROPIC_MODEL` does not follow
 `/model`, so `model` from stdin is the only reliable source of the session's
 model.
 
-**What it checks.** The model is checked when its ID names Opus or Sonnet,
-the two models this skill saves an effort for. Other models never warn. The
-hook looks for `modelSettings.<ID>.effortLevel` in `~/.claude/settings.json`,
-the project's `.claude/settings.json` and `.claude/settings.local.json`; an
-entry in any of them counts. A `[1m]`-style suffix is ignored.
+**What it checks.** It checks the model when its ID names Opus or Sonnet, the
+two models this skill saves an effort for. Other models never warn. The hook
+looks for `modelSettings.<ID>.effortLevel` in `~/.claude/settings.json`, the
+project's `.claude/settings.json` and `.claude/settings.local.json`. An entry in
+any of them counts. A `[1m]`-style suffix is ignored.
 
 **Fallback.** When `model` is absent, it checks the IDs in the
 `ANTHROPIC_DEFAULT_OPUS_MODEL` and `ANTHROPIC_DEFAULT_SONNET_MODEL` variables,
-when they are set. With no `model` and no variables there is nothing to
+when they are set. With no `model` and no variables, there is nothing to
 compare, and the hook stays silent.
 
 **What it cannot detect.** A model switched with `/model` after the session
 started (it runs at session start only). An alias that moved when none of the
 inputs above carry the new ID. An effort overridden by
-`CLAUDE_CODE_EFFORT_LEVEL`, `--effort` or `/effort`; it only tests that an
+`CLAUDE_CODE_EFFORT_LEVEL`, `--effort` or `/effort`: it only tests that an
 entry exists, not that it applies. A saved entry that holds a value the user
 no longer wants.
 
 **Output.** It prints a `systemMessage` JSON object, which Claude Code shows
 to the user, and exits 0. Plain stdout would go to Claude's context instead,
-which is not wanted here. It never blocks and swallows its own errors. The
+which is not wanted here. It never blocks, and it swallows its own errors. The
 message tells the user to re-run `/luismc-project-setup:claude-setup`.
 
 **Disable.** Set `CLAUDE_SETUP_EFFORT_DRIFT` to `off` in the settings `env`
 block or the shell, or delete the `SessionStart` entry that runs it. Deleting
-only the entry is not durable: the next run of this skill adds it back. To
-keep it off, set the variable.
+only the entry does not last: the next run of this skill adds it back. To keep
+it off, set the variable.
 
 ## Per-skill model profiles
 
 `assets/model-profiles.json` is the single source of truth for which model and
-effort each skill in this marketplace runs at, in three groups: `judgment`
+effort each skill in this marketplace runs at. It has three groups: `judgment`
 (Opus, medium: specs, audits, stack setup, auth, writing a feature artifact),
 `mechanical` (Sonnet, medium: checks and task bookkeeping, the other artifacts
-skills) and `setup` (Sonnet, medium: this skill). Every profile is medium,
-the owner's default for both models. Every
-skill's `model:` and `effort:` frontmatter must match its group; this skill's
-own frontmatter does. `tools/test_model_profiles.py` enforces that, so change
-the JSON first and the skill files after. The file is not copied to a target
-and nothing here applies it to a user's settings.
+skills) and `setup` (Sonnet, medium: this skill). Every profile is medium, the
+owner's default for both models. Every skill's `model:` and `effort:`
+frontmatter must match its group. This skill's own frontmatter does.
+`tools/test_model_profiles.py` enforces that, so change the JSON first and the
+skill files after. The file is not copied to a target, and nothing here applies
+it to a user's settings.
