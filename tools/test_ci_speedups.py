@@ -666,7 +666,8 @@ def agent_ci_merges_onto_the_base_and_starts_one_run(r):
     rc, out, err, log = r.ci()
     check(rc == 0, err)
     check(log.strip() == "workflow run ci.yml --ref ci/T1", f"only the CODE DONE branch starts, on ci/T1: {log!r}")
-    check("T2-working" not in out and r.remote_ref("ci/T2") == "", "a branch without CODE DONE is left alone")
+    check("ci/T2" not in out and r.remote_ref("ci/T2") == "", "a branch without CODE DONE is left alone")
+    check("claude/T2-working: skipped" in out, "and says it is skipped")
     sha = r.remote_ref("ci/T1")
     r.w("fetch", "-q", "origin")
     parents = r.w("rev-list", "--parents", "-n1", sha).split()[1:]
@@ -714,6 +715,49 @@ def agent_ci_report_setting_string_and_old_default(r):
     r.branch("claude/T12-custom", "d.txt", "d\n", DONE, where="docs/agents/reports")
     rc, out, err, log = r.ci("--report", "notes/{task}.md")
     check("ci/T12" not in log, f"a custom path is read as given, with no fallbacks: {log!r}")
+
+
+@with_repo
+def agent_ci_every_skip_reason_prints_a_line_for_its_branch(r):
+    """DS36: a skipped branch says why, one line each; --watch repeats a line only when it changes."""
+    r.branch("claude/T13-none", "c.txt", "c\n")
+    r.branch("claude/T14-open", "d.txt", "d\n", "# T14\nin progress\n", where="docs/work/reports")
+    r.branch("claude/T15-done", "e.txt", "e\n", DONE, where="docs/work/reports")
+    rc, out, err, log = r.ci()
+    check(log.strip() == "workflow run ci.yml --ref ci/T15", log)
+    check("claude/T13-none: skipped, no report docs/work/reports/T13.md on the branch" in out, out)
+    check("claude/T14-open: skipped, report docs/work/reports/T14.md has no CODE DONE line" in out, out)
+    r.w("fetch", "-q", "origin")
+    runs = json.dumps([{"headSha": r.remote_ref("ci/T15")}])
+    rc, out, err, log = r.ci(runs=runs)
+    check("claude/T15-done: skipped, CI already started for" in out and "on ci/T15" in out, out)
+    check(log.count("workflow run") == 1, "still one run")
+
+
+@with_repo
+def agent_ci_reports_a_branch_the_pre_push_guards_refuse(r):
+    """DS36: a refused push is a failing branch with the guard's own lines; the pass goes on with the next branch."""
+    r.branch("claude/T16-bad", "c.txt", "c\n", DONE, where="docs/work/reports")
+    r.branch("claude/T17-bad", "d.txt", "d\n", DONE, where="docs/work/reports")
+    hook = r.work / ".git" / "hooks" / "pre-push"
+    hook.parent.mkdir(exist_ok=True)
+    hook.write_text("#!/bin/sh\necho 'FAIL secret scan: 1 leak' >&2\necho 'pre-push: blocked by pre-push.local.' >&2\nexit 1\n",
+                    encoding="utf-8")
+    hook.chmod(0o755)
+    rc, out, err, log = r.ci()
+    check(rc == 0 and log == "", f"nothing starts, no crash: rc={rc} log={log!r}")
+    check("claude/T16-bad FAILS the pre-push guards on ci/T16" in out and "claude/T17-bad FAILS the pre-push guards on ci/T17" in out, out)
+    check("FAIL secret scan: 1 leak" in out, out)
+    check(r.remote_ref("ci/T16") == "", "no ci ref")
+
+
+@with_repo
+def agent_ci_delivery_config_overrides_the_report_path(r):
+    r.branch("claude/T18-x", "c.txt", "c\n", DONE, where="notes")
+    (r.work / ".delivery").mkdir()
+    (r.work / ".delivery/config.json").write_text(json.dumps({"agent_ci": {"report": "notes/{task}.md"}}), encoding="utf-8")
+    rc, out, err, log = r.ci()
+    check("ci/T18" in log, f".delivery/config.json agent_ci.report is read: {log!r}")
 
 
 @with_repo

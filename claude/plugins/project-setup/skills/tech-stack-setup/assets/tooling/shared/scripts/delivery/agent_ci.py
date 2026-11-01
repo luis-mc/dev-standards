@@ -17,7 +17,8 @@ not run. CI plans what the branch brings since the default branch (see ci_scope.
     agent_ci.py --base origin/release/12     # merge onto a release branch
     agent_ci.py --dry-run                    # list what would start (pushes nothing)
 
-Settings (flags, or the `agent_ci` object of scripts/delivery/ci-scope.json):
+Settings (flags, or the `agent_ci` object of scripts/delivery/ci-scope.json, then that of .delivery/config.json,
+which wins):
     workflow       ci.yml
     base           origin/master      ref each branch is merged onto
     branch_prefix  claude/            agent branches are origin/<prefix>*
@@ -27,7 +28,9 @@ Settings (flags, or the `agent_ci` object of scripts/delivery/ci-scope.json):
     marker         ^\\s*CODE DONE\\b   regex, matched per line
 
 A branch is skipped when its report is missing, lacks the marker, or a `workflow_dispatch` run already exists for
-its head (unsure: nothing is started). Exit 0; 2 for usage. Python 3.8+, standard library only.
+its head (unsure: nothing is started); each skip prints one line with its reason (with --watch a line is printed
+again only when it changes). A push the pre-push guards refuse is printed as `FAILS the pre-push guards` with the
+guard's own lines; the pass goes on with the next branch. Exit 0; 2 for usage. Python 3.8+, standard library only.
 """
 from __future__ import annotations
 
@@ -43,18 +46,23 @@ DEFAULTS = {"workflow": "ci.yml", "base": "origin/master", "branch_prefix": "cla
             "report": ["docs/work/reports/{task}.md", "docs/work/agents/reports/{task}.md", "docs/agents/reports/{task}.md"],
             "marker": r"^\s*CODE DONE\b"}
 CONFIG = "scripts/delivery/ci-scope.json"
+DELIVERY_CONFIG = ".delivery/config.json"
 
 
 def git(*args: str) -> str:
     return subprocess.run(["git", *args], capture_output=True, text=True, encoding="utf-8").stdout
 
 
-def settings(path: str = CONFIG) -> dict:
+def settings(path: str = CONFIG, delivery: str = DELIVERY_CONFIG) -> dict:
+    """DEFAULTS, then the `agent_ci` object of `path`, then that of the delivery config (it wins)."""
     out = dict(DEFAULTS)
-    try:
-        out.update((json.loads(Path(path).read_text(encoding="utf-8")).get("agent_ci") or {}))
-    except (OSError, ValueError):
-        pass
+    for source in (path, delivery):
+        try:
+            found = json.loads(Path(source).read_text(encoding="utf-8")).get("agent_ci")
+        except (OSError, ValueError, AttributeError):
+            continue
+        if isinstance(found, dict):
+            out.update(found)
     return out
 
 
@@ -84,13 +92,32 @@ def report_paths(cfg: dict, task: str) -> list[str]:
     return [p.format(task=task) for p in dict.fromkeys(conf + (LEGACY_REPORTS if conf == DEFAULTS["report"] else []))]
 
 
+def report_state(branch: str, cfg: dict) -> str:
+    """'done' (a report has the marker), 'open' (reports exist, none has it) or 'missing' (no report on the branch)."""
+    found = False
+    for path in report_paths(cfg, task_of(branch, cfg["branch_prefix"])):
+        shown = subprocess.run(["git", "show", f"origin/{branch}:{path}"], capture_output=True, text=True,
+                               encoding="utf-8")
+        if shown.returncode != 0:
+            continue
+        found = True
+        if re.search(cfg["marker"], shown.stdout, re.MULTILINE) is not None:
+            return "done"
+    return "open" if found else "missing"
+
+
 def report_says_done(branch: str, cfg: dict) -> bool:
-    task = task_of(branch, cfg["branch_prefix"])
-    for path in report_paths(cfg, task):
-        text = git("show", f"origin/{branch}:{path}")
-        if re.search(cfg["marker"], text, re.MULTILINE) is not None:
-            return True
-    return False
+    return report_state(branch, cfg) == "done"
+
+
+GUARD_LINE = re.compile(r"FAIL|blocked|Push blocked|error|leak|spec notes|prettier|duplicat", re.IGNORECASE)
+
+
+def guard_message(text: str, limit: int = 12) -> list[str]:
+    """The lines of a refused push that say why: the guard's own lines, not git's hints and remote chatter."""
+    lines = [l.rstrip() for l in text.splitlines() if l.strip() and not l.startswith(("hint:", "remote:"))]
+    picked = [l for l in lines if GUARD_LINE.search(l)] or lines
+    return picked[-limit:]
 
 
 def ci_ref(branch: str, base: str, cfg: dict, push: bool = True) -> str | None:
@@ -124,9 +151,14 @@ def ci_ref(branch: str, base: str, cfg: dict, push: bool = True) -> str | None:
     pushed = subprocess.run(["git", "push", "-q", "-f", "origin", f"{commit.stdout.strip()}:refs/heads/{name}"],
                             capture_output=True, text=True, encoding="utf-8")
     if pushed.returncode != 0:
-        tail = "\n".join((pushed.stderr or pushed.stdout).strip().splitlines()[-3:])
-        print(f"{stamp} push of {name} refused: {tail}", flush=True)
+        out = (pushed.stderr or "") + "\n" + (pushed.stdout or "")
+        guarded = "pre-push" in out
+        print(f"{stamp} {branch} FAILS the pre-push guards on {name} (merged onto {base}); nothing started:"
+              if guarded else f"{stamp} {branch}: push of {name} refused; nothing started:", flush=True)
+        for line in guard_message(out):
+            print(f"    {line}", flush=True)
         return None
+
     return name
 
 
@@ -145,17 +177,38 @@ def started_for_ci(branch: str, sha: str, cfg: dict) -> bool:
         return True  # unsure: never start a second run
 
 
-def one_pass(cfg: dict, dry_run: bool = False) -> list[str]:
+def one_pass(cfg: dict, dry_run: bool = False, said: dict | None = None) -> list[str]:
+    """One pass over the agent branches. `said` (kept across passes by --watch) holds the last skip line printed per
+    branch, so a watch loop does not repeat it."""
+    said = {} if said is None else said
+
+    def skip(branch: str, why: str) -> None:
+        line = f"{branch}: skipped, {why}"
+        if said.get(branch) != line:
+            said[branch] = line
+            print(f"{time.strftime('%H:%M')} {line}", flush=True)
+
     git("fetch", "-q", "--prune", "origin")
     base = cfg["base"]
     started = []
     for branch in branches(cfg["branch_prefix"]):
         sha = git("rev-parse", f"origin/{branch}").strip()
-        if not sha or not report_says_done(branch, cfg) or started_for_ci(branch, sha, cfg):
+        if not sha:
+            continue
+        state = report_state(branch, cfg)
+        if state != "done":
+            path = report_paths(cfg, task_of(branch, cfg["branch_prefix"]))[0]
+            skip(branch, f"no report {path} on the branch" if state == "missing"
+                 else f"report {path} has no CODE DONE line")
+            continue
+        if started_for_ci(branch, sha, cfg):
+            skip(branch, f"CI already started for {sha[:9]} on {ci_branch(branch, cfg)}")
             continue
         ref = ci_ref(branch, base, cfg, push=not dry_run)
         if ref is None:
+            said.pop(branch, None)
             continue
+        said.pop(branch, None)
         stamp = time.strftime("%H:%M")
         if dry_run:
             print(f"{stamp} would start CI on {ref} = {branch} ({sha[:9]}) + {base}", flush=True)
@@ -163,7 +216,7 @@ def one_pass(cfg: dict, dry_run: bool = False) -> list[str]:
             r = subprocess.run(["gh", "workflow", "run", cfg["workflow"], "--ref", ref],
                                capture_output=True, text=True)
             print(f"{stamp} CI started on {ref} = {branch} ({sha[:9]}) + {base}" if r.returncode == 0
-                  else f"{stamp} could not start CI on {ref}: {r.stderr.strip()}", flush=True)
+                  else f"{stamp} {branch}: could not start CI on {ref}: {r.stderr.strip()}", flush=True)
         started.append(branch)
     return started
 
@@ -178,8 +231,9 @@ def main(argv: list[str] | None = None) -> int:
     a = p.parse_args(argv)
     cfg = settings(a.config)
     cfg.update({k: getattr(a, k) for k in DEFAULTS if getattr(a, k)})
+    said: dict = {}
     while True:
-        one_pass(cfg, a.dry_run)
+        one_pass(cfg, a.dry_run, said)
         if a.watch <= 0:
             return 0
         time.sleep(a.watch)
