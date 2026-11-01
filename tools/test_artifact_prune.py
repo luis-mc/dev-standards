@@ -749,12 +749,13 @@ def workflow_problems(text: str) -> list[str]:
     if re.search(r"artifact_prune\.py[^\n]*--dry-run", body):
         p.append("the scheduled job must not be a dry run")
     uses = re.findall(r"^\s*-?\s*uses:\s*(\S+)", body, re.M)
-    if "actions/checkout@v4" not in uses:
+    # DS162: actions are pinned by full commit SHA, like the track ci.yml files.
+    if not any(re.fullmatch(r"actions/checkout@[0-9a-f]{40}", u) for u in uses):
         p.append("checkout must be pinned the way the track ci.yml files pin it "
-                 "(actions/checkout@v4)")
+                 "(actions/checkout@<commit SHA>)")
     for u in uses:
-        if not re.fullmatch(r"[\w.-]+/[\w./-]+@v\d+", u):
-            p.append(f"action {u!r} is not pinned like the track ci.yml files (@vN)")
+        if not re.fullmatch(r"[\w.-]+/[\w./-]+@[0-9a-f]{40}", u):
+            p.append(f"action {u!r} is not pinned like the track ci.yml files (@<commit SHA>)")
     need(r"^\s*timeout-minutes:\s*\d+", "the job needs a timeout-minutes")
     # The instruction to products: a comment above `on:` that names `workflows:`.
     head = text.split("\non:", 1)[0]
@@ -798,7 +799,7 @@ def workflow_checker_catches_each_defect():
         ("python3 scripts/delivery/artifact_prune.py", "python3 scripts/delivery/artifact_prune.py "
          "--dry-run", "dry run"),
         ("python3 scripts/delivery/artifact_prune.py", "python3 scripts/other.py", "must run"),
-        ("actions/checkout@v4", "actions/checkout@main", "pinned"),
+        ("actions/checkout@11d5960a326750d5838078e36cf38b85af677262", "actions/checkout@main", "pinned"),
         ("    timeout-minutes: 10\n", "", "timeout-minutes"),
         ("# PRODUCT: `workflows:` below must list", "# `below` must list", "must tell a product"),
         ("# Artifact names must be stable", "# Artifact names must be", "stable per kind"),

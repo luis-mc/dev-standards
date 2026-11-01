@@ -4,7 +4,12 @@ import unittest
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
-from _helpers import L, make_root
+from _helpers import L, make_root as _make_root
+
+
+def make_root(cfg=None):
+    """These tests run on a fixed past clock (NOW), so ledger expiry (DS156, real time) is off here."""
+    return _make_root({"ledger_retention_days": 0, **(cfg or {})})
 import delivery_watch as W
 
 NOW = datetime(2026, 10, 14, 12, 0, tzinfo=timezone.utc)
