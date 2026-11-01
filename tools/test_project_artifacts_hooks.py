@@ -455,6 +455,27 @@ def after_raw(work, tool_input):
 
 
 @test
+def after_watch_only_commands_do_not_mark_the_session():
+    """R8.8: a background watcher is a monitor, not work."""
+    work = make_repo()
+    for cmd in ('python3 .claude/plugins/delivery/scripts/delivery_watch.py --root . --interval 120',
+                'python ci_watch.py abc1234 --workflow x.yml', 'py -3 C:\\\\tools\\\\ci_watch.py abc'):
+        rc = background(work, 'Bash', command=cmd, run_in_background=True)[0]
+        assert rc == 0 and marker(work) is None, (cmd, stop_state(work))
+
+
+@test
+def after_chained_watch_commands_and_agents_still_mark_the_session():
+    for tool, args in (('Bash', {'command': 'python3 delivery_watch.py && pytest'}),
+                       ('Bash', {'command': 'python3 delivery_watch.py; sleep 9'}),
+                       ('Bash', {'command': 'pytest delivery_watch.py'}),
+                       ('Agent', {'prompt': 'python3 delivery_watch.py'})):
+        work = make_repo()
+        assert background(work, tool, run_in_background=True, **args)[0] == 0
+        assert marker(work), (tool, args)
+
+
+@test
 def after_background_marker_needs_a_manifest():
     work = make_repo(manifest=False)
     assert background(work, 'Agent', prompt='x', run_in_background=True)[0] == 0
@@ -835,9 +856,9 @@ def stop_blocks_background_work_without_an_active_task():
     assert rc == 0 and res.get('decision') == 'block', (rc, out, err)
     r = res['reason']
     assert BG_REASON in r and 'no task is Running' in r and 'task-add' in r and 'set-task-status' in r, r
-    assert marker(work), 'the marker stays until a task is Running'
+    assert marker(work), 'the marker stays until the next stop'
+    assert marker(work).get('told') is True
     assert stop_state(work)['s1']['blocks'] == 1
-    assert parse_stop(stop(work, env)[1]).get('decision') == 'block'     # still no task: blocks again
 
 
 @test
@@ -876,17 +897,34 @@ def _running_registry(path):
 
 
 @test
-def stop_background_gives_up_after_three_blocks():
+def stop_background_fires_once_per_marker():
+    """R8.10: a told marker with no active task is dropped at the next stop; a new launch arms it again."""
     work = make_repo(statuses=NO_ACTIVE)
     env = set_pending(work)
     bg_started(work)
-    for n in (1, 2, 3):
+    assert parse_stop(stop(work, env)[1]).get('decision') == 'block'
+    rc, out, err, _ = stop(work, env)
+    assert rc == 0 and out.strip() == '', (rc, out, err)
+    assert marker(work) is None
+    assert stop(work, env)[1].strip() == ''
+    bg_started(work)
+    assert not marker(work).get('told')
+    assert parse_stop(stop(work, env)[1]).get('decision') == 'block'
+
+
+@test
+def stop_background_block_limit_removes_the_marker():
+    """R8.10: a turn let through after the block limit leaves no marker; the old three-block give-up
+    for background work alone is now the once-per-marker rule, so it is driven with pending artifacts."""
+    work = make_repo(statuses=NO_ACTIVE)
+    env = set_pending(work, artifacts=[art('demo')])
+    bg_started(work)
+    for n in range(1, 8):
         res = parse_stop(stop(work, env)[1])
-        assert res.get('decision') == 'block', (n, res)
-        assert stop_state(work)['s1']['blocks'] == n, stop_state(work)
-    rc, out, _e, _ = stop(work, env)
-    res = parse_stop(out)
-    assert rc == 0 and 'decision' not in res and BG_REASON in res['systemMessage'], res
+        if 'decision' not in res:
+            break
+    assert 'decision' not in res and 'systemMessage' in res, res
+    assert marker(work) is None, stop_state(work)
 
 
 @test
@@ -896,14 +934,17 @@ def stop_background_shares_the_give_up_rule_with_pending_artifacts():
     bg_started(work)
     res = parse_stop(stop(work, env)[1])
     assert res['decision'] == 'block' and 'Full Progress: Demo' in res['reason'] and BG_REASON in res['reason'], res
-    stop(work, env)
-    stop(work, env)
-    res = parse_stop(stop(work, env)[1])
-    assert 'decision' not in res and 'Full Progress: Demo' in res['systemMessage'] and BG_REASON in res['systemMessage'], res
-    # the artifact gets published: what is pending changed, so the count restarts
+    # the background reason is given once (R8.10); the artifact keeps R8.4's three blocks
+    for _ in range(8):
+        res = parse_stop(stop(work, env)[1])
+        if 'decision' not in res:
+            break
+        assert BG_REASON not in res['reason'], res
+    assert 'decision' not in res and 'Full Progress: Demo' in res['systemMessage'], res
+    assert marker(work) is None
+    # the artifact gets published: nothing is pending and the marker is gone
     env = set_pending(work)
-    assert parse_stop(stop(work, env)[1]).get('decision') == 'block'
-    assert stop_state(work)['s1']['blocks'] == 1
+    assert stop(work, env)[1].strip() == ''
 
 
 @test

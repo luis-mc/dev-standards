@@ -1509,8 +1509,15 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   session ID. It writes that file only, never the record (INV-4), needs no task
   ID in the branch name, and does nothing in a project without a manifest. A
   foreground call of any of the three tools, or a call that failed, records
-  nothing. Verified by `after_background_agent_and_bash_mark_the_session` and
-  `after_foreground_calls_do_not_mark_the_session`.
+  nothing. A `Bash` call whose command only runs a watch script (`delivery_watch.py`
+  or `ci_watch.py`, any path before it, `python`, `python3` or `py` in front,
+  arguments after) is a monitor, not work, and records nothing. A command that
+  chains other work (with `&&`, `;`, `|` or a second command) still records.
+  `Agent` and `Task` calls are never exempt. Verified by
+  `after_background_agent_and_bash_mark_the_session`,
+  `after_foreground_calls_do_not_mark_the_session`,
+  `after_watch_only_commands_do_not_mark_the_session` and
+  `after_chained_watch_commands_and_agents_still_mark_the_session`.
 - **R8.9** — In any repository that has a record manifest, the session-start
   hook prints the plugin's `rules/project-artifacts.md` text as
   `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext":
@@ -1525,12 +1532,18 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   registry has no task in Running, Waiting or Needs you; the reason says that
   work was started in the background with no Running task and to record it with
   `task-add` or `set-task-status`, then publish. Once such a task exists the
-  marker is cleared. The check shares R8.4's give-up rule: after 3 consecutive
+  marker is cleared. The check fires once per marker: the block that gives the
+  reason marks the marker as told, and the next stop removes a told marker
+  without blocking on it. The marker is also removed when a turn is let through
+  after the block limit. A new background call (R8.8) writes a fresh marker and
+  arms the check again. The check shares R8.4's give-up rule: after 3 consecutive
   blocks with no change it lets the turn end with a `systemMessage`. Without a
   manifest it does nothing. Verified by
   `stop_blocks_background_work_without_an_active_task`,
   `stop_allows_background_work_with_an_active_task_and_clears_the_marker` and
-  `stop_background_gives_up_after_three_blocks`.
+  `stop_background_gives_up_after_three_blocks`,
+  `stop_background_fires_once_per_marker` and
+  `stop_background_block_limit_removes_the_marker`.
 - **R8.11** — The end-of-turn hook acts on Full Progress only. An entry of
   `pending` for a feature artifact (from a script older than R9.5) is ignored:
   it neither blocks the stop nor counts towards R8.4's give-up. Verified by

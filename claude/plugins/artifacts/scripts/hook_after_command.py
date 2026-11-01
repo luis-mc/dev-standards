@@ -10,7 +10,8 @@ writes the record (INV-4, R8.1), finishes fast and never fails the tool call
 It also notes background work (R8.8): an `Agent`, `Task` or `Bash` call whose
 `tool_input.run_in_background` is true stamps the session's entry in
 <repo>/.claude/artifacts-stop-state.json so the end-of-turn hook can ask for a
-Running task. A foreground call finishes within the turn and records nothing.
+Running task. A foreground call finishes within the turn and records nothing. A Bash command that
+only runs `delivery_watch.py` or `ci_watch.py` is a monitor, not work, and records nothing.
 That file is session state, not the record.
 
 Claude Code sends a successful Bash call as PostToolUse and a failed one (exit
@@ -45,6 +46,8 @@ MANIFEST_REL = 'manifest.json'
 STATE_NAME = os.path.join('.claude', 'artifacts-stop-state.json')
 MAX_SESSIONS = 40       # stop-state entries (a session has up to two: its blocks and its delivered rule)
 BACKGROUND_TOOLS = ('Agent', 'Task')
+WATCH_ONLY_SCRIPTS = ('delivery_watch.py', 'ci_watch.py')   # monitors, not work (R8.8)
+WATCH_LAUNCHERS = ('python', 'python3', 'py')
 
 
 # --- shared helpers (also imported by hook_end_of_turn and hook_session_start) --------
@@ -463,6 +466,23 @@ def current_task_id(root):
     return m.group(1) if m else None
 
 
+def is_watch_only(command):
+    """True for a Bash command that only runs a watch script (R8.8): any path before the
+    script name, a python launcher in front, arguments after. Chained work is not exempt."""
+    if not isinstance(command, str) or re.search(r'[&;|\n`<>]|\$\(', command):
+        return False
+    try:
+        words = shlex.split(command)
+    except ValueError:
+        return False
+    base = lambda w: posixpath.basename(w.replace('\\', '/'))
+    if words and re.sub(r'\.exe$', '', base(words[0]).lower()) in WATCH_LAUNCHERS:
+        words = words[1:]
+        while words and words[0].startswith('-'):
+            words = words[1:]
+    return bool(words) and base(words[0]) in WATCH_ONLY_SCRIPTS
+
+
 def starts_background_work(data):
     """True for a successful Agent, Task or Bash call run in the background (R8.8): only
     `tool_input.run_in_background` true arms the end-of-turn check."""
@@ -470,8 +490,10 @@ def starts_background_work(data):
         return False   # nothing was started
     tool = data.get('tool_name', 'Bash')
     tool_input = data.get('tool_input')
-    return (tool in BACKGROUND_TOOLS + ('Bash',) and isinstance(tool_input, dict)
-            and tool_input.get('run_in_background') is True)
+    if not (tool in BACKGROUND_TOOLS + ('Bash',) and isinstance(tool_input, dict)
+            and tool_input.get('run_in_background') is True):
+        return False
+    return not (tool == 'Bash' and is_watch_only(tool_input.get('command')))
 
 
 def note_background_work(data):

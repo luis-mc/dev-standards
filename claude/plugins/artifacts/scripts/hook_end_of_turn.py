@@ -7,7 +7,10 @@ ARTIFACTSPEC 1.10.0 section 8.2. Lets the turn end only when the queue is empty 
 (R8.3). It acts on Full Progress only, the one published artifact: a pending entry
 for a feature artifact is ignored (R8.11). It also blocks when this session started background work (marked by
 hook_after_command, R8.8) and the registry has no task in Running, Waiting or
-Needs you (R8.10); once such a task exists the marker is cleared. After 3
+Needs you (R8.10); once such a task exists the marker is cleared. The check fires
+once per marker: the block that gives the background reason sets "told" on the marker,
+and the next stop drops a told marker without blocking again; a turn let through after
+the block limit also removes it. A new background call writes a fresh marker. After 3
 consecutive blocks in one session with no change in what is pending it lets the
 turn end and prints a systemMessage instead (R8.4), so a session that cannot
 publish never loops. It never commits or pushes (AR50): it only reads the record (INV-4).
@@ -324,6 +327,15 @@ def main():
             else:
                 state[sid] = entry
             write_state(state_path, state)
+        elif marker.get('told'):
+            # R8.10: the check fires once per marker. It was told at an earlier stop, so drop it now.
+            marker = None
+            entry.pop('background', None)
+            if not entry:
+                state.pop(sid, None)
+            else:
+                state[sid] = entry
+            write_state(state_path, state)
         else:
             background = True
     try:
@@ -351,6 +363,10 @@ def main():
     if not isinstance(blocks, int):
         blocks = 0
     if blocks >= BLOCK_LIMIT:
+        if 'background' in entry:      # R8.10: a turn let through removes the marker
+            entry.pop('background', None)
+            state[sid] = entry
+            write_state(state_path, state)
         print(json.dumps({'systemMessage': '\n'.join(filter(None, [(
             'luismc-artifacts: letting the turn end after %d blocks with no change. Still unpublished, '
             'unapplied, unrecorded or unmigrated: %s. Run `pending` in the next session.'
@@ -359,7 +375,7 @@ def main():
     state.pop(sid, None)   # keeps the most recently used session last
     new = {'blocks': blocks + 1, 'last': digest}
     if background:
-        new['background'] = marker
+        new['background'] = dict(marker, told=True)   # R8.10: told once
     state[sid] = new
     write_state(state_path, state)
     parts = []
