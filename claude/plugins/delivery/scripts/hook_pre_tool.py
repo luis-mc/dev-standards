@@ -389,7 +389,7 @@ def check_launch(cfg, ledger, data, where):
     ti = data.get('tool_input') or {}
     if where == 'cloud':
         action = str(ti.get('action') or '').lower()
-        if action not in ('create', 'run', 'update') or not isinstance(ti.get('body') or ti.get('prompt'), (dict, str)):
+        if action not in ('create', 'run'):      # update, list, get, list_runs, get_run_log are not launches
             return
     text = brief_text(ti)
     block = delivery_block(text)
