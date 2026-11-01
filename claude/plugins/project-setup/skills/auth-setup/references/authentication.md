@@ -915,40 +915,40 @@ Every short-lived, single-use credential in this specification is a `one_time_cr
 
 | Principal | Requirement |
 |---|---|
-| `admin` | **Mandatory.** Passkey with user verification is both the primary and the sole factor. There is no password to which a second factor is added |
+| `admin` | **Mandatory.** A passkey with user verification is the primary factor and the only factor. There is no password to add a second factor to |
 | `user` | **Optional.** TOTP and/or passkeys may be enrolled voluntarily |
 
 ### 8.2 User-plane MFA
 
-- **R8.1** — When a user has any confirmed second factor, password authentication **MUST** transition to the pending-MFA state (R6.31) and **MUST NOT** issue a full session until a factor is satisfied.
-- **R8.2** — A passkey authentication with user verification satisfies both factors in one step; a second factor **MUST NOT** additionally be demanded.
-- **R8.3** — The user **MUST** be able to enroll multiple factors and, where more than one exists, choose among them at the challenge.
+- **R8.1** — When a user has any confirmed second factor, password authentication **MUST** move to the pending-MFA state (R6.31). It **MUST NOT** issue a full session until a factor is satisfied.
+- **R8.2** — A passkey authentication with user verification satisfies both factors in one step. A second factor **MUST NOT** be demanded as well.
+- **R8.3** — The user **MUST** be able to enroll multiple factors. If more than one exists, the user can choose among them at the challenge.
 - **R8.4** — Removing the last second factor requires step-up and emits a notification.
 
 ### 8.3 Admin-plane MFA
 
-- **R8.5** — Every admin authentication is a WebAuthn assertion with UV. No fallback exists.
+- **R8.5** — Every admin authentication is a WebAuthn assertion with UV. There is no fallback.
 - **R8.6** — TOTP **MUST NOT** be registrable for an admin (enforced by the §4.6 storage constraint).
 
 ### 8.4 Recovery codes
 
-- **R8.7** — 10 single-use codes, ≥128 bits of entropy each, issued when a user enrolls their first second factor, displayed exactly once, stored hashed with the password KDF (see §4.10: they are lower-entropy than random tokens and warrant KDF protection).
-- **R8.8** — Regeneration invalidates every prior generation atomically.
-- **R8.9** — Consuming a recovery code emits a security event, notifies the user, and **MUST** prompt for re-enrollment of a factor.
+- **R8.7** — 10 single-use codes, ≥128 bits of entropy each, issued when a user enrolls their first second factor, shown once, and stored hashed with the password KDF. (See §4.10: they have less entropy than random tokens, so they need KDF protection.)
+- **R8.8** — Regeneration invalidates every earlier generation atomically.
+- **R8.9** — Consuming a recovery code emits a security event and notifies the user. It **MUST** also prompt the user to enroll a factor again.
 - **R8.10** — Recovery-code attempts are rate-limited on their own counter (§17.3).
 
 ### 8.5 Step-up authentication
 
-Sensitive operations require a **fresh** authentication, not merely a valid session.
+Sensitive operations need a **fresh** authentication. A valid session is not enough.
 
 - **R8.11** — Freshness window: **15 minutes** (user), **5 minutes** (admin), measured from `session.stepped_up_at`.
-- **R8.12** — Operations requiring step-up (permission rows carry `is_sensitive = true`):
+- **R8.12** — These operations require step-up (their permission rows carry `is_sensitive = true`):
 
 | Operation | Plane |
 |---|---|
 | Change password | user |
 | Change email address | user |
-| Enroll or remove any second factor / passkey | both |
+| Enroll or remove any second factor or passkey | both |
 | Regenerate recovery codes | user |
 | Link or unlink a federated provider | user |
 | Request data export | user |
@@ -957,62 +957,68 @@ Sensitive operations require a **fresh** authentication, not merely a valid sess
 | **Any** admin-plane mutation | admin |
 | View another principal's personal data | admin |
 | Activate break-glass | admin |
-| Create, rotate, or revoke a service credential | admin |
+| Create, rotate or revoke a service credential | admin |
 
-- **R8.13** — Step-up **MUST** re-verify a real authentication factor. Re-entering the current password satisfies it only where the user has no stronger factor enrolled; where a passkey or TOTP exists, the stronger factor **MUST** be used.
-- **R8.14** — Step-up **MUST** be enforced server-side at the route. A client that merely displays a confirmation dialog satisfies nothing.
-- **R8.15** — Successful step-up updates `stepped_up_at` and rotates the CSRF token; it does **not** extend `absolute_expires_at`.
+- **R8.13** — Step-up **MUST** re-verify a real authentication factor. Re-entering the current password satisfies it only if the user has no stronger factor enrolled. If a passkey or TOTP exists, the stronger factor **MUST** be used.
+- **R8.14** — Step-up **MUST** be enforced server-side at the route. A confirmation dialog in the client satisfies nothing.
+- **R8.15** — A successful step-up updates `stepped_up_at` and rotates the CSRF token. It does **not** extend `absolute_expires_at`.
 
 ### 8.6 Assurance levels
 
 | `acr` | Meaning |
 |---|---|
-| `aal1` | Single factor: password, email OTP, or federated without a verified strong factor |
+| `aal1` | Single factor: password, email OTP or federated without a verified strong factor |
 | `aal2` | Multi-factor, or a single phishing-resistant factor with user verification (passkey + UV), including a synced passkey |
 | `aal3` | A device-bound passkey (`BE = false`) with user verification (R7.12b) |
 
 - **R8.16** — Admin sessions **MUST** be `aal2` or `aal3`. An admin session recorded at `aal1` is a defect.
-- **R8.17** — `acr` and `amr` **MUST** be recorded on the session and propagated into access assertions so downstream services can enforce their own assurance requirements.
+- **R8.17** — `acr` and `amr` **MUST** be recorded on the session and copied into access assertions, so downstream services can enforce their own assurance requirements.
 
 ---
 
 ## 9. Account recovery
 
-Recovery is the documented bypass of every factor above. It is specified with matching rigor.
+Recovery is the documented bypass of every factor above. It is specified with equal rigor.
 
 ### 9.1 User password reset
 
-1. Request accepted for any submitted address; response is uniform and timing-comparable (R7.3), whether or not the account exists.
+1. Accept the request for any submitted address. The response is uniform and comparable in timing (R7.3), whether or not the account exists.
 2. If the account exists, issue a `password_reset` one-time credential: ≥256 bits, TTL ≤15 minutes, single-use, stored hashed.
-3. On redemption, the new password is validated per R5.12.
+3. On redemption, validate the new password per R5.12.
 4. **If the account has any confirmed second factor, that factor MUST be satisfied before the reset completes** (R9.1).
-5. All sessions are revoked; a security event is emitted; the user is notified at the previous address.
+5. Revoke all sessions, emit a security event and notify the user at the previous address.
 
-- **R9.1** — A password reset **MUST NOT** bypass enrolled MFA. Email possession alone resetting a fully-protected account reduces the entire security posture to the strength of the user's mail provider, and is an explicit MFA-bypass finding.
-- **R9.2** — A reset **MUST NOT** remove, disable, or reset any second factor. Password recovery and factor recovery are separate problems with separate paths (§9.2).
+- **R9.1** — A password reset **MUST NOT** bypass enrolled MFA. If email possession alone could reset a fully protected account, the whole security posture would be only as strong as the user's mail provider. That is an explicit MFA-bypass finding.
+- **R9.2** — A reset **MUST NOT** remove, disable or reset any second factor. Password recovery and factor recovery are separate problems with separate paths (§9.2).
 - **R9.3** — Redeeming a reset credential **MUST NOT** by itself establish a session. The user re-authenticates.
-- **R9.4** — Outstanding reset credentials for a principal **MUST** be invalidated when any one is consumed, and when the password changes by any other route.
+- **R9.4** — Outstanding reset credentials for a principal **MUST** be invalidated when any one is consumed. They are also invalidated when the password changes by any other route.
 
 ### 9.2 User factor recovery (lost second factor)
 
-- **R9.5** — Priority order: (a) another enrolled factor; (b) a recovery code; (c) if neither, **no self-service path exists** — the request goes to the administrative exception path (§15.6) with identity verification, full audit, and user notification.
+- **R9.5** — Priority order: (a) another enrolled factor; (b) a recovery code; (c) if neither exists, **there is no self-service path**. The request goes to the administrative exception path (§15.6), with identity verification, full audit and user notification.
 - **R9.6** — Factor recovery **MUST NOT** be achievable by email possession alone.
 
 ### 9.3 Cooling-off and notification
 
 - **R9.7** — Every recovery action **MUST** notify the principal at all verified contact points, including one it cannot itself invalidate where possible (§18.2).
-- **R9.8** — Recovery-code consumption and administrative factor reset **MUST** additionally emit a `recovery_used` security event visible in the user's own security-events list.
+- **R9.8** — Recovery-code consumption and administrative factor reset **MUST** also emit a `recovery_used` security event, visible in the user's own security-events list.
 
 ### 9.4 Admin recovery (no password exists)
 
-The scenario: an admin has lost every registered authenticator.
+The scenario is an admin who has lost every registered authenticator.
 
-- **R9.9** — **Prevention first:** enrollment is incomplete until ≥2 authenticators are registered (R7.13), and admins **SHOULD** be periodically prompted to verify that a second authenticator is still in their possession.
-- **R9.10** — **No self-service recovery path exists for the admin plane.** No email reset, no recovery codes, no support-initiated reset.
-- **R9.11** — Total loss follows this path: (1) the admin submits an out-of-band request through a documented, identity-verified channel; (2) an `admin_recovery_request` is created; (3) **a different privileged operator** holding `admin.recovery.approve` verifies identity out-of-band and approves — self-approval **MUST** be structurally impossible; (4) approval opens a single-use, ≤15-minute enrollment window permitting **only** registration of new authenticators and nothing else; (5) both actors, the justification, and the outcome are audited; (6) all existing sessions and credentials for that admin are revoked.
-- **R9.11a** — `admin_recovery_request.status` follows that path: `pending` on creation, then `approved` when a second operator authorizes it, then `completed` once the window is used. It terminates at `rejected` (identity not established) or `expired` (approved but unused before `enrollment_deadline`). `expired` **MUST NOT** be reopened — a new request is required, so that a stale approval cannot be redeemed later.
+- **R9.9** — **Prevention first:** enrollment is incomplete until ≥2 authenticators are registered (R7.13). Admins **SHOULD** be prompted from time to time to verify that they still hold a second authenticator.
+- **R9.10** — **No self-service recovery path exists for the admin plane.** There is no email reset, no recovery code and no support-initiated reset.
+- **R9.11** — Total loss follows this path:
+  1. The admin submits an out-of-band request through a documented, identity-verified channel.
+  2. An `admin_recovery_request` is created.
+  3. **A different privileged operator** holding `admin.recovery.approve` verifies identity out-of-band and approves. Self-approval **MUST** be structurally impossible.
+  4. Approval opens a single-use, ≤15-minute enrollment window that permits **only** registration of new authenticators.
+  5. Both actors, the justification and the outcome are audited.
+  6. All existing sessions and credentials for that admin are revoked.
+- **R9.11a** — `admin_recovery_request.status` follows that path: `pending` on creation, then `approved` when a second operator authorizes it, then `completed` once the window is used. It terminates at `rejected` (identity not established) or `expired` (approved but unused before `enrollment_deadline`). `expired` **MUST NOT** be reopened. A new request is required, so a stale approval cannot be redeemed later.
 - **R9.12** — The enrollment window **MUST NOT** grant any permission other than authenticator registration. It is not a session.
-- **R9.13** — Where organizational structure cannot guarantee a second available approver, the break-glass path (§12.5) is the designated fallback, with all of its alerting and mandatory post-use review. This dependency **MUST** be documented in the operational runbook (§26.4).
+- **R9.13** — If the organization cannot guarantee a second available approver, the break-glass path (§12.5) is the designated fallback, with all its alerting and mandatory post-use review. This dependency **MUST** be documented in the operational runbook (§26.4).
 
 ---
 
@@ -1026,18 +1032,18 @@ The scenario: an admin has lost every registered authenticator.
 | `pending_deletion` | User request or admin action | No | **Revoked** | Cancel → `active`; grace elapses → `erased` |
 | `erased` | Erasure job | No | None | **Terminal** |
 
-The admin plane has its own states — `admin.status` is a different enum from `user.status`, because an admin is enrolled rather than registered and is offboarded rather than erased:
+The admin plane has its own states. `admin.status` is a different enum from `user.status`, because an admin is enrolled, not registered, and is offboarded, not erased:
 
 | `admin.status` | Entered by | Can authenticate | Exit |
 |---|---|---|---|
-| `pending_enrollment` | Admin created by another admin | **No** — and holds no permissions (R4.10) | ≥2 authenticators registered (§9.4) → `active` |
+| `pending_enrollment` | Admin created by another admin | **No**, and holds no permissions (R4.10) | ≥2 authenticators registered (§9.4) → `active` |
 | `active` | Enrollment completed | Yes | Suspension or offboarding |
-| `suspended` | Admin action — a reversible hold, e.g. during an investigation | **No** | Reinstated → `active`, or → `offboarded` |
+| `suspended` | Admin action: a reversible hold, for example during an investigation | **No** | Reinstated → `active`, or → `offboarded` |
 | `offboarded` | Admin action, when the person leaves | **No** | **Terminal.** Credentials revoked and service accounts repointed (R15.15b) |
 
-- **R10.0a** — `suspended` and `offboarded` are distinct on purpose. Reusing one for the other either leaves a departed administrator reinstatable or destroys the ability to hold an account pending review. Neither state deletes the `admin` row; erasure of an admin as a data subject is R15.15b.
-- **R10.1** — Every transition **MUST** emit an audit event and, where the principal is a user, a security event.
-- **R10.2** — Automatic lockout **MUST** be time-bounded and self-releasing (§17.3). Indefinite automatic lockout converts a rate-limit control into a denial-of-service vector against legitimate users.
+- **R10.0a** — `suspended` and `offboarded` are distinct on purpose. If one were used for the other, either a departed administrator could be reinstated or an account could not be held pending review. Neither state deletes the `admin` row. Erasure of an admin as a data subject is R15.15b.
+- **R10.1** — Every transition **MUST** emit an audit event. If the principal is a user, it also emits a security event.
+- **R10.2** — Automatic lockout **MUST** be time-bounded and self-releasing (§17.3). Indefinite automatic lockout turns a rate-limit control into a denial-of-service vector against legitimate users.
 - **R10.3** — The `erased` state is terminal and irreversible. No code path may transition out of it.
 
 ---
