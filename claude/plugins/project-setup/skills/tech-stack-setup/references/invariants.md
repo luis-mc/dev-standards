@@ -1552,112 +1552,116 @@ scanner CI runs.
 - Shared contracts (types, schemas, interfaces that several branches build on)
   are committed to the integration branch before parallel work starts.
 - Branches join the integration branch through a merge script. It merges each
-  branch in turn, stops at a conflict it cannot resolve, and runs a light check
-  on the joined head: the install from the lockfile, the type check and lint of
-  every package any joined branch changed, and the fast guards of the pre-push
-  hook. The join runs no test and no branch gate, waits for no sandbox gate before
-  the ready pull request, and does not re-run a gate after a join fix; the ready
-  pull request's CI is the one full run. A project picks the steps in `gate.json`
-  (`"join"` on a step, `join_guards`). The script can skip that check when the joined tree
-  equals the tree of a joined branch head whose gate result is trusted for that
-  head and the same base. It records the time of each step.
+  branch in turn and stops at a conflict it cannot resolve. It then runs a light
+  check on the joined head: the install from the lockfile, the type check and
+  lint of every package any joined branch changed, and the fast guards of the
+  pre-push hook. The join runs no test and no branch gate. It waits for no
+  sandbox gate before the ready pull request and does not re-run a gate after a
+  join fix. The ready pull request's CI is the one full run. A project picks the
+  steps in `gate.json` (`"join"` on a step, `join_guards`). The script can skip
+  that check when the joined tree equals the tree of a joined branch head whose
+  gate result is trusted for that head and the same base. It records the time of
+  each step.
 - When the last join is pushed, one ready pull request goes from the integration
   branch to the default branch. Its CI is the only full suite, end-to-end tests
   included (§11.2). It merges when that run is green, never by auto-merge.
-- While that run is going the train is frozen: a push to the branch the ready pull
-  request comes from is refused until its CI has finished, passed or failed (so a
-  fix goes forward), or the ready pull request is closed unmerged. When GitHub
-  cannot be reached the push is allowed with a warning; an explicit override allows
-  it and the running CI restarts. A branch that is late rides the next train.
+- While that run is going, the train is frozen. A push to the branch the ready
+  pull request comes from is refused until its CI has finished, passed or failed
+  (so a fix goes forward), or the ready pull request is closed unmerged. When
+  GitHub cannot be reached, the push is allowed with a warning. An explicit
+  override allows the push and the running CI restarts. A branch that is late
+  rides the next train.
 - A branch that is not green when the ready pull request opens waits for the
   next one.
 - Before the ready pull request opens, the merge script SHOULD warn when no online
   runner carries a label the workflows' jobs need (GitHub-hosted labels count as
-  available), and the CI watcher SHOULD warn about a job queued over ten minutes with
-  no online runner for its labels. Both only warn: listing self-hosted runners needs
-  administrator rights, and without them the check says it was skipped.
+  available). The CI watcher SHOULD warn about a job queued over ten minutes with
+  no online runner for its labels. Both only warn: listing self-hosted runners
+  needs administrator rights, and without them the check says it was skipped.
 - CI is watched through the workflow runs for the head commit, never through a
   pull request's check list, which can be read before the new run is listed.
 - Branches SHOULD NOT edit a spec's version or change log. Each adds a change
-  note naming the spec and the kind of change; the release folds the notes
-  into the versions and change logs, so parallel branches do not conflict.
+  note naming the spec and the kind of change. The release folds the notes into
+  the versions and change logs, so parallel branches do not conflict.
 - When ready pull requests' CI runs on one shared Linux runner, the jobs that need
   no Linux (lint, types, boundary checks, and contract or unit tests that run on
-  any OS) SHOULD run in parallel on another available runner, a second
-  self-hosted runner with its own label or a hosted one, so they do not wait
-  behind the Linux-only jobs (integration, end-to-end, packaging). Each workflow
-  reads its runner labels from a setting (§13.1), so the split is a setting, not
-  a rewrite.
+  any OS) SHOULD run in parallel on another available runner. That runner can be
+  a second self-hosted runner with its own label, or a hosted one. This way the
+  jobs do not wait behind the Linux-only jobs (integration, end-to-end,
+  packaging). Each workflow reads its runner labels from a setting (§13.1), so
+  the split is a setting, not a rewrite.
 - On shared or self-hosted runners, ready pull requests' CI SHOULD run one at a
-  time; the next train waits for the run, not for a merge. A required runner label
-  carried by one runner only is a single point of failure: setup warns against it
+  time. The next train waits for the run, not for a merge. A required runner label
+  carried by one runner only is a single point of failure. Setup warns against it
   unless a fallback job exists.
-- Once the ready pull request merges, the train is removed automatically: on the
-  remote, the integration branch, every branch joined into it and their
-  gate-result refs; locally, their branches and the worktrees they were built
-  in. A branch with an open pull request, a branch not merged, and a worktree
-  holding uncommitted work are never removed; they are listed instead.
+- Once the ready pull request merges, the train is removed automatically. On the
+  remote, this removes the integration branch, every branch joined into it and
+  their gate-result refs. Locally, it removes their branches and the worktrees
+  they were built in. A branch with an open pull request, a branch not merged,
+  and a worktree holding uncommitted work are never removed. They are listed
+  instead.
 - Delivery log (SHOULD). Before the train is removed, the time each change
   finished, joined, started and ended CI and merged is collected from its
-  branch; the deploy adds when it went live. A table of the time to live of
+  branch. The deploy adds when it went live. A table of the time to live of
   each change, split into waiting, testing and queueing, is appended to the
-  train's release notes. It is never committed to the default branch, a time
-  that cannot be found is shown as unknown, and a log that cannot be written
+  train's release notes. It is never committed to the default branch. A time
+  that cannot be found is shown as unknown. A log that cannot be written
   (offline, no permission) never stops the cleanup or the deploy.
 
 ### 13.7 Packaged-program smoke test
 
 A product that ships a packaged program (a single executable, an installer, an
 app bundle or a container image) MUST have CI start the packaged form, not the
-development server, and exercise every child process or worker it starts: CI
+development server, and exercise every child process or worker it starts. CI
 waits for a readiness signal (a log line or a health probe) from the program and
-from each of those processes, and MUST fail the build when one does not come up
-within a stated time. The list of signals is declared in the repository, so adding
-a worker means adding its signal; the process tree is stopped when the check ends,
-whether it passed or not. A program that starts but whose worker never does is
-the failure this check exists for: it passes every unit test and breaks only when
+from each of those processes. CI MUST fail the build when one does not come up
+within a stated time. The repository declares the list of signals, so adding a
+worker means adding its signal. The process tree is stopped when the check ends,
+whether it passed or not. This check exists for a program that starts but whose
+worker never does. Such a program passes every unit test and breaks only when
 packaged, where paths, bundled files and process launching differ from
 development.
 
-A product that ships no packaged program declares none and the check has nothing
-to start.
+A product that ships no packaged program declares none, and the check has
+nothing to start.
 
 ### 13.8 Guards for agent sessions
 
-Rules a session only reads are rules it can forget or misjudge. These guards
-refuse the action instead; each says why and what to do instead.
+A session can forget or misjudge a rule it only reads. These guards refuse the
+action instead. Each says why and what to do instead.
 
 - **Suite times.** The repository declares its test suites in
-  `scripts/delivery/suites.json`: for each, a name, the command of a full run, and
-  how to run named cases only. `scripts/delivery/run_suite.py` runs a suite
-  (all of it, or named cases) and records how long it took, per machine, in a
-  git-ignored file. A suite is **heavy** when its last full local run took over
+  `scripts/delivery/suites.json`. Each entry has a name, the command of a full
+  run, and how to run named cases only. `scripts/delivery/run_suite.py` runs a
+  suite (all of it, or named cases) and records how long it took, per machine, in
+  a git-ignored file. A suite is **heavy** when its last full local run took over
   3 minutes, or when it has no local measurement yet. CI runs record their times
   the same way from the job's step times, kept apart from local ones.
 - **Test guard.** A hook that runs before each shell command of an agent session
   MUST refuse (1) a full local run of a heavy suite, pointing to a run of named
   cases and to CI for the full run; and (2) a full local run of a suite whose
   last full run, local or in CI, passed on the same tree. A suite with no local
-  measurement can be measured once with `run_suite.py --measure NAME`; the guard
+  measurement can be measured once with `run_suite.py --measure NAME`. The guard
   refuses `--measure` when a measurement under 30 days old exists. The guard
   recognises the suites by the commands declared in `suites.json`, whether they
   are typed directly or through `run_suite.py`.
 - **Change notes at commit.** The pre-commit hook runs the change-note check
-  (§13.6) on staged changes, so a version or change-log edit off a release branch
-  is refused at commit time, not in CI. It takes under 2 seconds and does nothing
-  in a repository with no change-note settings.
+  (§13.6) on staged changes. A version or change-log edit off a release branch
+  is refused at commit time, not in CI. The check takes under 2 seconds and does
+  nothing in a repository with no change-note settings.
 - **Ready pull requests.** A hook before `gh pr create` and `gh pr ready` MUST
   refuse a ready (non-draft) pull request whose head branch is not a release
-  branch (by default `*-integration`). Draft pull requests from task branches stay
-  allowed.
+  branch (by default `*-integration`). Draft pull requests from task branches
+  stay allowed.
 - **Join without a gate config.** The merge script of §13.6 MUST work in a
-  repository with no branch-gate configuration: it joins, says the gate is not
+  repository with no branch-gate configuration. It joins, says the gate is not
   configured, and records that no gate ran, instead of stopping.
 - **Rules name their check.** Every rule line in a rule file shipped to projects
   ends with a tag: `<!-- check: <path> -->` naming the file (and, after `#`, the
   function or step) that enforces it, or `<!-- advice -->` when no machine can
   check it. A test fails on an untagged line and on a check path that does not
-  exist, so a new rule ships with its check or says plainly that it is advice.
+  exist. A new rule therefore ships with its check or says plainly that it is
+  advice.
 
 ---
 
