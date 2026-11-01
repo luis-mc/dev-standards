@@ -120,22 +120,30 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 | Term | Meaning |
 |---|---|
 | lasting doc | A Markdown file under `docs/` outside `docs/work/`. It lives on the default branch. |
-| temporary doc | An agent brief, report, prompt or scratch note under `docs/work/`. It lives on an agent branch only. |
-| binding doc | A doc whose statements the code must meet: feature specs, architecture specs, design-system version files. Only binding docs carry a version. |
+| temporary doc | An agent brief, report, prompt or scratch note under `docs/work/`. It lives only on an agent branch. |
+| binding doc | A doc the code must meet: feature specs, architecture specs, design-system version files. Only binding docs carry a version. |
 | feature | A user-visible capability with its own folder `docs/features/<feature>/`. |
-| change note | A one-line file recording one change to one binding doc, written on a branch and folded at release. |
+| change note | A one-line file that records one change to one binding doc. A branch writes it; the release folds it. |
 | fold | The release step that turns change notes into one version row per doc. |
-| generated file | A file written by a `luismc-docs` script and never edited by hand (R2.5). |
-| docs map | `docs/docs-map.json`: code globs to the docs that describe them. |
+| generated file | A file a `luismc-docs` script writes. Nobody edits it by hand (R2.5). |
+| docs map | `docs/docs-map.json`: code globs mapped to the docs that describe them. |
 | the scripts | The Python scripts in the plugin's `scripts/` folder. |
 
 ### 1.2 In scope
 
-The layout of `docs/`; the feature spec template and front matter; the browsable index; versions and change notes; the checks and hooks; moving an existing repository; the rule for temporary documents.
+- the layout of `docs/`;
+- the feature spec template and front matter;
+- the browsable index;
+- versions and change notes;
+- the checks and hooks;
+- moving an existing repository;
+- the rule for temporary documents.
 
 ### 1.3 Out of scope
 
-The content of a project's documents; publishing docs to a web host; spelling and style checks (a project MAY add its own).
+- the content of a project's documents;
+- publishing docs to a web host;
+- spelling and style checks (a project MAY add its own).
 
 ---
 
