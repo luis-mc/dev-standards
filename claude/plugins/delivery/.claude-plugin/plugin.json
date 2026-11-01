@@ -1,7 +1,7 @@
 {
   "name": "luismc-delivery",
   "description": "Delivery guard rails and ledger for a project that opts in with a .delivery/ folder: a ledger of trains, agents, installs, publishes, runners and owner questions (.delivery/ledger.json); a PostToolUse recorder that fills it; Stop/PreToolUse/SessionStart hooks that keep trains merged, cleaned and smoke-tested, agents checked and ETAs real; and a background watcher that merges a train at green CI on its current head, pushes the next train, keeps CI runs tidy and repairs offline runners. Without .delivery/ the hooks do nothing.",
-  "version": "0.10.6",
+  "version": "0.11.0",
   "author": {
     "name": "Luis Carvalho"
   }
