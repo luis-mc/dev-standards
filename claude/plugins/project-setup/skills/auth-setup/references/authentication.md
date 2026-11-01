@@ -1427,19 +1427,19 @@ Every one of these **MUST** emit an audit event, on both success and failure. `o
 
 ### 17.1 Placement
 
-- **R17.1** — Rate-limit admission runs at stage 2 of §3.4, **before** any persistence access and before any KDF invocation. Limiting after the expensive work has already happened prevents nothing.
+- **R17.1** — Rate-limit admission runs at stage 2 of §3.4, **before** any persistence access and before any KDF invocation. Limiting after the expensive work is done prevents nothing.
 
 ### 17.2 State
 
-- **R17.2** — Counters **MUST** live in shared state (the cache tier, or `rate_limit_counter` if no cache exists). **Per-process in-memory counters are ineffective** the moment more than one instance runs, and are a defect in any horizontally-scaled or serverless deployment.
+- **R17.2** — Counters **MUST** live in shared state (the cache tier, or `rate_limit_counter` if no cache exists). **Per-process in-memory counters are ineffective** as soon as more than one instance runs. They are a defect in any horizontally scaled or serverless deployment.
 - **R17.3** — Counters **MUST** be keyed on a hashed identifier, never a raw address or email (§5.6).
-- **R17.4** — On counter-store unavailability, auth endpoints **MUST fail closed** (reject) rather than open. An unlimited authentication endpoint is strictly worse than a briefly unavailable one.
+- **R17.4** — When the counter store is unavailable, auth endpoints **MUST fail closed** (reject), not open. An unlimited authentication endpoint is worse than a briefly unavailable one.
 
 ### 17.3 Limits
 
-- **R17.4a** — Every authentication attempt **MUST** write an `auth_attempt` row, whether it succeeded or not, with `outcome` of `success` or `failure` and `method` naming how it was attempted: `password`, `passkey`, `otp` (email OTP or magic link), `totp`, `recovery_code`, `federated`, or `service_credential`. Every counter below is derived from those rows, so an authentication path that does not write one is invisible to rate limiting and to lockout — the control silently does not cover it.
+- **R17.4a** — Every authentication attempt **MUST** write an `auth_attempt` row, whether it succeeded or not, with `outcome` of `success` or `failure` and `method` naming how it was attempted: `password`, `passkey`, `otp` (email OTP or magic link), `totp`, `recovery_code`, `federated` or `service_credential`. Every counter below is derived from those rows. An authentication path that does not write one is invisible to rate limiting and to lockout, so the control silently does not cover it.
 
-Independent counters. Exceeding any one triggers its own response.
+The counters are independent. Exceeding any one triggers its own response.
 
 | Endpoint / action | Per identifier | Per source | On exceed |
 |---|---|---|---|
@@ -1457,31 +1457,31 @@ Independent counters. Exceeding any one triggers its own response.
 | Service token issuance | 60 / min per client | — | Reject |
 | Session validation (authenticated) | 1000 / min | — | Reject |
 
-- **R17.5** — Progressive lockout escalates: 1 min → 5 min → 15 min → 60 min, and it **MUST** self-release (R10.2).
-- **R17.6** — Both identifier-scoped and source-scoped counters are required. Identifier-only limits do not stop password spraying across many accounts; source-only limits do not stop distributed attacks on one account.
-- **R17.7** — Rate-limited responses use the generic envelope with `Retry-After`. They **MUST NOT** reveal which limit was hit, the remaining budget, or whether the account exists.
+- **R17.5** — Progressive lockout escalates: 1 min → 5 min → 15 min → 60 min. It **MUST** self-release (R10.2).
+- **R17.6** — Both identifier-scoped and source-scoped counters are required. Identifier-only limits do not stop password spraying across many accounts. Source-only limits do not stop distributed attacks on one account.
+- **R17.7** — Rate-limited responses use the generic envelope with `Retry-After`. They **MUST NOT** reveal which limit was hit, the remaining budget or whether the account exists.
 
 ### 17.4 Breached-credential checking
 
 - **R17.8** — Passwords **MUST** be checked against a known-breach corpus at set and change time.
-- **R17.9** — The check **MUST** use a k-anonymity range protocol: send only a short hash prefix and match candidates locally. The full hash or the password itself **MUST NEVER** leave the system. This is also the §25.6 third-party data-flow entry.
-- **R17.10** — On provider unavailability, the check fails **open** (permit) with a logged security event and a metric. A password-set path that hard-fails on a third-party outage is a self-inflicted denial of service. This is the one deliberate fail-open in the specification, and the asymmetry is intentional: §17.4 protects against a probabilistic quality issue, while §17.2 protects against active attack.
-- **R17.11** — Passwords **MUST** additionally be rejected if they contain the account identifier or the service name.
+- **R17.9** — The check **MUST** use a k-anonymity range protocol: send only a short hash prefix and match candidates locally. The full hash and the password itself **MUST NEVER** leave the system. This is also the §25.6 third-party data-flow entry.
+- **R17.10** — When the provider is unavailable, the check fails **open** (permit), with a logged security event and a metric. A password-set path that hard-fails on a third-party outage is a self-inflicted denial of service. This is the one deliberate fail-open in the specification. The asymmetry is intentional: §17.4 protects against a probabilistic quality issue, while §17.2 protects against active attack.
+- **R17.11** — Passwords **MUST** also be rejected if they contain the account identifier or the service name.
 
 ### 17.5 Outbound send caps
 
-- **R17.12** — Hard caps on outbound messages per address and per account (§17.3). Without them, the auth system is an open relay for spam and a cost-amplification target.
-- **R17.13** — A global outbound rate ceiling **MUST** exist as a circuit breaker; exceeding it raises an operational alert and throttles rather than continuing to send.
+- **R17.12** — Set hard caps on outbound messages per address and per account (§17.3). Without them, the auth system is an open relay for spam and a target for cost amplification.
+- **R17.13** — A global outbound rate ceiling **MUST** exist as a circuit breaker. Exceeding it raises an operational alert and throttles sending instead of continuing to send.
 - **R17.14** — Repeated sends to an address that never verifies **MUST** be suppressed after the daily cap and flagged.
 
 ### 17.6 Challenge seam (deferred)
 
-- **R17.15** — A `challenge` verification port **MUST** exist in the abuse pipeline for registration, password reset, and repeated failed logins, with a no-op default implementation. Adding a provider later is a configuration change, not a refactor.
-- **R17.16** — Any challenge provider adopted becomes a third-party data flow requiring registration in §25.6.
+- **R17.15** — A `challenge` verification port **MUST** exist in the abuse pipeline for registration, password reset and repeated failed logins, with a no-op default implementation. Adding a provider later is a configuration change, not a refactor.
+- **R17.16** — Any challenge provider you adopt becomes a third-party data flow and needs registration in §25.6.
 
 ### 17.7 Risk signal seam (deferred)
 
-- **R17.17** — A `risk_signal` evaluation hook **MUST** be invoked before session issuance, with a default implementation returning "no signal". Any future signals stored become personal data requiring a documented lawful basis and retention period.
+- **R17.17** — A `risk_signal` evaluation hook **MUST** be invoked before session issuance, with a default implementation that returns "no signal". Any signals stored in future become personal data and need a documented lawful basis and retention period.
 
 ---
 
@@ -1489,20 +1489,20 @@ Independent counters. Exceeding any one triggers its own response.
 
 ### 18.1 Rules
 
-- **R18.1** — Notifications **MUST NOT** contain credentials, tokens, session identifiers, or personal data beyond what the recipient already holds about themselves.
+- **R18.1** — Notifications **MUST NOT** contain credentials, tokens, session identifiers or personal data beyond what the recipient already holds about themselves.
 - **R18.2** — Delivery **MUST** be asynchronous. A failed or slow mail transport **MUST NOT** fail or delay the security action itself.
-- **R18.3** — Every notification is derived from a `security_event` row, so what was sent is reconstructable and duplicate sends are preventable.
+- **R18.3** — Every notification is derived from a `security_event` row, so what was sent can be reconstructed and duplicate sends can be prevented.
 
 ### 18.2 User security notifications
 
-Every user-facing notification is derived from a `security_event` row (R18.3), so this table is also the closed set of `security_event.kind`. A kind with no row here is a value nothing sends; a row with no kind is a notification nothing can record. Both are defects, and R18.8 makes that binding.
+Every user-facing notification is derived from a `security_event` row (R18.3), so this table is also the closed set of `security_event.kind`. A kind with no row here is a value nothing sends. A row with no kind is a notification nothing can record. Both are defects, and R18.8 makes that binding.
 
 | `kind` | Sent when |
 |---|---|
 | `new_device_login` | A session is established from a device not previously seen (§6.7) |
 | `password_changed` | The password credential is replaced (§9.1) |
 | `password_reset_triggered` | An administrator triggers a reset (§12.4). The credential itself reaches only the user's own verified address (R12.9) |
-| `email_changed` | The address changes (§7.8). Sent to **both** the old and the new address — see R18.5 |
+| `email_changed` | The address changes (§7.8). Sent to **both** the old and the new address; see R18.5 |
 | `mfa_enrolled` | A second factor is registered (§8) |
 | `mfa_removed` | A second factor is revoked, including by administrative reset (§12.4) |
 | `passkey_added` | A passkey is registered (§7.3) |
@@ -1516,20 +1516,32 @@ Every user-facing notification is derived from a `security_event` row (R18.3), s
 | `deletion_requested` | Erasure is requested (§15.4). **MUST** state the exact date of irreversible erasure |
 | `deletion_cancelled` | Erasure is cancelled inside the grace window |
 
-- **R18.4** — Each **MUST** include a "this wasn't me" action leading to a documented flow: revoke all sessions, force credential reset, and lock the account pending verification.
-- **R18.5** — For email changes, the notice to the **old** address **MUST** include a cancellation action, because that address is the one an attacker is trying to sever.
-- **R18.6** — Notifications **MUST NOT** be suppressible by the user. They are security-critical, not marketing, and are therefore outside the marketing-consent regime.
-- **R18.6a** — The table above **MUST** cover every `security_event.kind` §4 declares, in both directions. It is checked (`authspec_check.py --only enum-values`), and it is the reason four kinds exist: §12.4 requires notifying the user of every administrative action (R12.10) and federated link/unlink was listed as a notification, but `password_reset_triggered`, `account_unlocked`, `federated_linked` and `federated_unlinked` had no value to record against. A mandated notification with no `kind` contradicts R18.3.
+- **R18.4** — Each **MUST** include a "this wasn't me" action that leads to a documented flow: revoke all sessions, force a credential reset and lock the account pending verification.
+- **R18.5** — For email changes, the notice to the **old** address **MUST** include a cancellation action, because an attacker is trying to cut that address off.
+- **R18.6** — Notifications **MUST NOT** be suppressible by the user. They are security-critical, not marketing, so they are outside the marketing-consent regime.
+- **R18.6a** — The table above **MUST** cover every `security_event.kind` §4 declares, in both directions. It is checked (`authspec_check.py --only enum-values`). It is the reason four kinds exist. §12.4 requires notifying the user of every administrative action (R12.10), and federated link and unlink were listed as notifications. But `password_reset_triggered`, `account_unlocked`, `federated_linked` and `federated_unlinked` had no value to record against. A mandated notification with no `kind` contradicts R18.3.
 
 ### 18.3 Staff alerts
 
-Immediate alerts, on a channel outside the application (R12.14), for: break-glass activation; admin login from a new device; registration of a synced passkey on an admin account (R7.12a); admin login failures exceeding the threshold; any admin role grant or revocation; administrative MFA reset; admin recovery request and approval; audit chain verification failure (**critical**); service credential creation or rotation; rate-limit counter store unavailability; and detection of an active development key provider in a deployed environment.
+Staff alerts are immediate and go through a channel outside the application (R12.14). They fire for:
 
-- **R18.7** — Alert delivery **MUST** be independent of the application's own database and mail path where possible; an alert that depends on the compromised system is not an alert.
+- break-glass activation;
+- admin login from a new device;
+- registration of a synced passkey on an admin account (R7.12a);
+- admin login failures above the threshold;
+- any admin role grant or revocation;
+- administrative MFA reset;
+- admin recovery request and approval;
+- audit chain verification failure (**critical**);
+- service credential creation or rotation;
+- rate-limit counter store unavailability;
+- an active development key provider detected in a deployed environment.
+
+- **R18.7** — Alert delivery **MUST** be independent of the application's own database and mail path where possible. An alert that depends on the compromised system is not an alert.
 
 ### 18.4 Outbound event seam (deferred)
 
-- **R18.8** — A stable event vocabulary (`user.created`, `user.erased`, `session.revoked`, `credential.changed`, `consent.recorded`) **MUST** be defined and emitted through an outbound port with a no-op default. Note that `user.erased` is not optional in practice — R15.14 requires downstream purge notification by some documented mechanism.
+- **R18.8** — A stable event vocabulary (`user.created`, `user.erased`, `session.revoked`, `credential.changed`, `consent.recorded`) **MUST** be defined and emitted through an outbound port with a no-op default. `user.erased` is not optional in practice: R15.14 requires downstream purge notification by some documented mechanism.
 
 ---
 
@@ -1537,8 +1549,8 @@ Immediate alerts, on a channel outside the application (R12.14), for: break-glas
 
 ### 19.1 Form
 
-- **R19.1** — Resource-oriented HTTP with a versioned path prefix (`/v1/`). Conventional method semantics; conventional status codes.
-- **R19.2** — The contract is normative **in this document** (§19.4) **and** the implementation **MUST** emit a machine-readable interface description that CI verifies against the running routes (§19.9). Drift between the two fails the build.
+- **R19.1** — Use resource-oriented HTTP with a versioned path prefix (`/v1/`). Use conventional method semantics and conventional status codes.
+- **R19.2** — The contract is normative **in this document** (§19.4) **and** the implementation **MUST** emit a machine-readable interface description that CI verifies against the running routes (§19.9). If the two drift apart, the build fails.
 
 ### 19.2 Planes
 
@@ -1552,10 +1564,10 @@ Immediate alerts, on a channel outside the application (R12.14), for: break-glas
 
 ### 19.3 Conventions
 
-- **R19.3** — Request and response bodies are JSON. Every request body is validated against a strict schema; unknown fields are **rejected**, not ignored — silently ignoring unknown fields lets a client believe a security-relevant parameter was honored when it was dropped.
-- **R19.4** — Timestamps are RFC 3339 UTC. Identifiers are opaque strings; clients **MUST NOT** parse them.
+- **R19.3** — Request and response bodies are JSON. Every request body is validated against a strict schema; unknown fields are **rejected**, not ignored. Silently ignoring an unknown field lets a client believe a security-relevant parameter was honored when it was dropped.
+- **R19.4** — Timestamps are RFC 3339 UTC. Identifiers are opaque strings. Clients **MUST NOT** parse them.
 - **R19.5** — Every mutating request **MUST** accept an idempotency key and **MUST** return the original response for a repeated key within a bounded window (§22.9).
-- **R19.6** — Every list endpoint is **cursor-paginated**: default page size 25, maximum 100. Offset pagination **MUST NOT** be used (it degrades and produces inconsistent pages under concurrent writes). An unbounded list endpoint is a P0 defect.
+- **R19.6** — Every list endpoint is **cursor-paginated**: default page size 25, maximum 100. Offset pagination **MUST NOT** be used: it slows down and gives inconsistent pages under concurrent writes. An unbounded list endpoint is a P0 defect.
 
 ### 19.4 Endpoints
 
