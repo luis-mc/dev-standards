@@ -1885,19 +1885,19 @@ Normative for **every** visual interface built against this API. The compliance 
 | Any write operation | ≤250 ms | Write SLA |
 | Admin list (100 rows) | ≤200 ms | Cursor-paginated |
 
-- **R22.1** — Any endpoint exceeding its budget **MUST** be either optimized, cached, or moved to a background job. Export (§15.2) is background by design for exactly this reason.
+- **R22.1** — Any endpoint that exceeds its budget **MUST** be optimized, cached or moved to a background job. Export (§15.2) is a background job by design for this reason.
 
 ### 22.2 Round-trip budget
 
-- **R22.2** — **Maximum 3 persistence round-trips per request** on any hot path. Login is the documented exception at ≤5.
-- **R22.3** — Independent reads **MUST** execute concurrently, never as sequential awaits. N sequential queries × network latency is avoidable time-to-first-byte with no N+1 pattern present.
-- **R22.4** — No query inside a loop. Permission resolution, role expansion, and credential listing **MUST** be single set-based queries. Fetching a principal's roles then querying permissions per role is the canonical N+1 in an auth system.
-- **R22.5** — Within a request, an identical query **MUST NOT** execute twice. Memoize per request context.
+- **R22.2** — **Maximum 3 persistence round-trips per request** on any hot path. Login is the documented exception, at ≤5.
+- **R22.3** — Independent reads **MUST** run concurrently, never as sequential awaits. N sequential queries × network latency is avoidable time-to-first-byte, even with no N+1 pattern.
+- **R22.4** — No query inside a loop. Permission resolution, role expansion and credential listing **MUST** be single set-based queries. Fetching a principal's roles and then querying permissions per role is the classic N+1 in an auth system.
+- **R22.5** — Within a request, an identical query **MUST NOT** run twice. Memoize it per request context.
 
 ### 22.3 Query discipline
 
-- **R22.6** — Project only the attributes used (R4.7). Never select encrypted blobs that will not be decrypted — they are the largest columns in the schema.
-- **R22.7** — Every filter, sort, and join attribute named in §4 **MUST** have a supporting index. Required index inventory:
+- **R22.6** — Project only the attributes used (R4.7). Never select encrypted blobs that will not be decrypted. They are the largest columns in the schema.
+- **R22.7** — Every filter, sort and join attribute named in §4 **MUST** have a supporting index. Required index inventory:
 
 | Table | Index | Serves |
 |---|---|---|
@@ -1919,53 +1919,53 @@ Normative for **every** visual interface built against this API. The compliance 
 | `principal_role` | (`principal_type`, `principal_id`) partial on active | Permission resolution |
 | `service_credential` | unique(`client_id`) | Token issuance |
 
-- **R22.8** — Counting, filtering, sorting, and aggregation **MUST** execute in the persistence engine, never by loading rows into application memory.
+- **R22.8** — Counting, filtering, sorting and aggregation **MUST** run in the persistence engine, never by loading rows into application memory.
 - **R22.9** — Every list endpoint is cursor-paginated (R19.6).
 
 ### 22.4 Compute
 
-- **R22.10** — KDF operations **MUST NOT** block the main execution thread and **MUST** be bounded by a concurrency limiter (R5.11). This is both the primary CPU-exhaustion vector and the primary event-loop stall in an auth service.
+- **R22.10** — KDF operations **MUST NOT** block the main execution thread and **MUST** be bounded by a concurrency limiter (R5.11). This is the main CPU-exhaustion vector and the main event-loop stall in an auth service.
 - **R22.11** — Signature verification (WebAuthn, SAML, JWS) **MUST** likewise be offloaded or bounded where the runtime is single-threaded.
-- **R22.12** — No synchronous filesystem, DNS, or blocking socket operation inside a request handler.
+- **R22.12** — No synchronous filesystem, DNS or blocking socket operation inside a request handler.
 - **R22.13** — Permission resolution **MUST** be O(roles + permissions), never nested iteration over the catalog.
-- **R22.14** — Public verification keys (JWKS) **MUST** be cached in-process with a bounded TTL. Fetching keys per verification is an avoidable network round-trip on a hot path.
+- **R22.14** — Public verification keys (JWKS) **MUST** be cached in-process with a bounded TTL. Fetching keys for every verification adds an avoidable network round-trip on a hot path.
 
 ### 22.5 Connections
 
-- **R22.15** — **Serverless/edge deployments MUST route through an external connection pooler.** Opening a direct persistence connection per invocation exhausts the engine's connection limit under load and is a P0 cascading-failure vector.
-- **R22.16** — Long-lived processes **MUST** bound pool size below `max_connections ÷ instance_count`, with headroom for maintenance.
-- **R22.17** — Every pool **MUST** define an acquisition timeout (default 2 s). Without it, a saturated pool queues requests until memory is exhausted.
-- **R22.18** — **Every query path MUST enforce a statement/query timeout** (default 3 s for request paths, 30 s for background jobs). One slow query without a timeout pins a connection, drains the pool, and stalls every unrelated request queued behind it.
-- **R22.19** — Transactions **MUST NOT** remain open across network I/O — no KMS call, no email send, no breach-list lookup inside a transaction. Encrypt before opening; send after committing.
+- **R22.15** — **Serverless/edge deployments MUST route through an external connection pooler.** Opening a direct persistence connection per invocation exhausts the engine's connection limit under load. That is a P0 cascading-failure vector.
+- **R22.16** — Long-lived processes **MUST** bound pool size below `max_connections ÷ instance_count`, and leave headroom for maintenance.
+- **R22.17** — Every pool **MUST** define an acquisition timeout (default 2 s). Without it, a saturated pool queues requests until memory runs out.
+- **R22.18** — **Every query path MUST enforce a statement/query timeout** (default 3 s for request paths, 30 s for background jobs). One slow query without a timeout pins a connection, drains the pool and stalls every unrelated request queued behind it.
+- **R22.19** — Transactions **MUST NOT** stay open across network I/O. Do no KMS call, email send or breach-list lookup inside a transaction. Encrypt before opening it. Send after committing.
 - **R22.20** — Transactions **MUST** be short and **MUST NOT** hold locks across multiple statements on high-write tables.
 
 ### 22.6 Retries and failure isolation
 
-- **R22.21** — Every outbound call (KMS, email, breach list, alerting, IdP) **MUST** have an explicit timeout, exponential backoff **with full jitter**, a hard retry cap (default 3), and a circuit breaker. Uncapped retries against a degraded dependency multiply load precisely when the system can least absorb it.
-- **R22.22** — Circuit-breaker open state **MUST** fail fast. Queuing behind a degraded dependency exhausts memory and sockets.
-- **R22.23** — KMS unwrap results **MAY** be cached in a bounded, short-TTL, LRU-evicted structure. The cache **MUST** be bounded — an unbounded key cache is both a memory leak and a widening of the key exposure window.
+- **R22.21** — Every outbound call (KMS, email, breach list, alerting, IdP) **MUST** have an explicit timeout, exponential backoff **with full jitter**, a hard retry cap (default 3), and a circuit breaker. Uncapped retries against a degraded dependency multiply load just when the system can least absorb it.
+- **R22.22** — An open circuit breaker **MUST** fail fast. Queuing behind a degraded dependency exhausts memory and sockets.
+- **R22.23** — KMS unwrap results **MAY** be cached in a bounded, short-TTL, LRU-evicted structure. The cache **MUST** be bounded. An unbounded key cache is a memory leak and also widens the key exposure window.
 
 ### 22.7 Caching
 
 - **R22.24** — Session cache TTL = min(60 s, remaining idle window), with mandatory invalidation on revocation (R6.22).
-- **R22.25** — Permission sets **MAY** be cached per session with the same TTL and **MUST** be invalidated on any role change.
+- **R22.25** — Permission sets **MAY** be cached per session with the same TTL. They **MUST** be invalidated on any role change.
 - **R22.26** — `/.well-known/*` are the **only** publicly cacheable endpoints: `Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=60`.
-- **R22.27** — Every other auth response is `no-store` (R19.21). An intermediary caching an authenticated response is a cross-user data-disclosure vector.
+- **R22.27** — Every other auth response is `no-store` (R19.21). If an intermediary caches an authenticated response, it can disclose one user's data to another.
 - **R22.28** — All cache reads are schema-validated before use (§6.6.1).
 
 ### 22.8 Memory
 
-- **R22.29** — Every in-process cache (sessions, permissions, JWKS, DEKs, rate-limit buckets) **MUST** enforce a maximum size **and** an eviction policy. An unbounded map in a long-lived process is a guaranteed memory leak.
+- **R22.29** — Every in-process cache (sessions, permissions, JWKS, DEKs, rate-limit buckets) **MUST** enforce a maximum size **and** an eviction policy. An unbounded map in a long-lived process always leaks memory.
 - **R22.30** — Exports and any bulk operation **MUST** stream (R15.5).
-- **R22.31** — Every timer, listener, subscription, and background loop **MUST** have a cleanup path and **MUST** be released on shutdown.
-- **R22.32** — Logging **MUST NOT** deep-clone or fully serialize large object graphs per request on hot paths.
+- **R22.31** — Every timer, listener, subscription and background loop **MUST** have a cleanup path and **MUST** be released on shutdown.
+- **R22.32** — On hot paths, logging **MUST NOT** deep-clone or fully serialize large object graphs for every request.
 
 ### 22.9 Concurrency safety
 
-- **R22.33** — Idempotency keys (R19.5) are stored with their response for a bounded window (default 24 h) so a retried mutation returns the original result rather than executing twice.
+- **R22.33** — Idempotency keys (R19.5) are stored with their response for a bounded window (default 24 h). A retried mutation then returns the original result instead of running twice.
 - **R22.34** — One-time credential consumption is atomic (R4.12).
 - **R22.35** — Audit sequence assignment is serialized (R16.8), with `chain_id` partitioning (R16.9) available to relieve contention.
-- **R22.36** — Rate-limit counter increments **MUST** be atomic operations, never read-modify-write, which under concurrency lets an attacker exceed the limit by a wide margin.
+- **R22.36** — Rate-limit counter increments **MUST** be atomic operations, never read-modify-write. Under concurrency, read-modify-write lets an attacker exceed the limit by a wide margin.
 - **R22.37** — There **MUST** be no `SELECT ... FOR UPDATE` or serializable transaction on any hot authentication path.
 
 ### 22.10 Payloads
@@ -1980,7 +1980,7 @@ Normative for **every** visual interface built against this API. The compliance 
 
 ### 23.1 Principle
 
-- **R23.1** — Every table with unbounded growth or a legal retention limit **MUST** have an automated job enforcing it. A documented policy with no job is not a control.
+- **R23.1** — Every table with unbounded growth or a legal retention limit **MUST** have an automated job that enforces it. A documented policy with no job is not a control.
 
 ### 23.2 Schedule
 
@@ -1998,7 +1998,7 @@ Normative for **every** visual interface built against this API. The compliance 
 | `device` | 90 days after last session | |
 | Backups | Per runbook; erasure applies via §15.5 | |
 
-- **R23.2** — Where a deployment is not HIPAA-subject, audit retention **MAY** be shortened by configuration — but **MUST NOT** be silently lengthened past a legal maximum. Over-retention is itself a finding.
+- **R23.2** — If a deployment is not subject to HIPAA, configuration **MAY** shorten audit retention. Configuration **MUST NOT** lengthen it past a legal maximum without notice. Over-retention is itself a finding.
 
 ### 23.3 Required jobs
 
