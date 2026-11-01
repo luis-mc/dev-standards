@@ -62,28 +62,28 @@ In words:
 
 This specification defines one reusable **authentication and authorization framework**. It is the source of truth for:
 
-- the Auth API surface (consumed by any number of visual interfaces),
-- the persistence schema required to back it,
-- the security, privacy, and performance controls the implementation must satisfy,
-- the client-side contract every consuming web/mobile app must implement,
+- the Auth API surface, used by any number of interfaces,
+- the persistence schema behind it,
+- the security, privacy and performance controls the implementation must meet,
+- the client contract every web or mobile app must follow,
 - the tests and audits that prove conformance.
 
-**This document is deliberately technology-neutral.** It names no language, framework, runtime, database engine, ORM, cache product, or cloud provider. Every requirement is stated as behaviour, structure, or constraint. Section 2 defines how an implementer binds these requirements to the stack of the project being generated.
+**This document is deliberately technology-neutral.** It names no language, framework, runtime, database engine, ORM, cache product or cloud provider. Every requirement states a behaviour, a structure or a constraint. Section 2 says how an implementer binds these requirements to the project's stack.
 
 ### 0.1 Conformance language
 
 - **MUST** / **MUST NOT** — absolute requirement. A violation is a defect.
-- **SHOULD** / **SHOULD NOT** — strong recommendation; deviation requires a written, reviewed justification recorded in the project's configuration reference (§24).
-- **MAY** — genuinely optional.
+- **SHOULD** / **SHOULD NOT** — strong recommendation. A deviation needs a written, reviewed justification in the project's configuration reference (§24).
+- **MAY** — optional.
 
 ### 0.2 Reading order for a generator
 
-1. §2 — resolve the concrete technology stack. **Do not generate any code before this step completes.**
-2. §3 — internalize the architecture and the principal model.
-3. §4–§6 — generate the persistence schema, crypto/key management, and session layer.
-4. §7–§16 — generate flows, authorization, admin plane, privacy machinery, audit trail.
-5. §17–§21 — generate abuse controls, notifications, API surface, client SDK contract, UI requirements.
-6. §22–§26 — apply performance budgets, retention jobs, configuration, tests, deliverables.
+1. §2 — resolve the technology stack. **Do not generate any code before this step completes.**
+2. §3 — learn the architecture and the principal model.
+3. §4–§6 — generate the persistence schema, crypto and key management, and the session layer.
+4. §7–§16 — generate flows, authorization, the admin plane, privacy machinery and the audit trail.
+5. §17–§21 — generate abuse controls, notifications, the API surface, the client SDK contract and the UI requirements.
+6. §22–§26 — apply performance budgets, retention jobs, configuration, tests and deliverables.
 7. §27 — run the conformance gate. Generation is not complete until it passes.
 
 ---
@@ -94,20 +94,20 @@ This specification defines one reusable **authentication and authorization frame
 
 | Area | Summary |
 |---|---|
-| Identity | A single global user space; separate, isolated administrative identity plane; service accounts as first-class non-human principals |
+| Identity | One global user space; a separate, isolated admin identity plane; service accounts as first-class non-human principals |
 | Authentication | Email + password, passkeys/WebAuthn, magic link / email OTP, social OIDC, enterprise SAML, TOTP second factor |
-| Sessions | Authoritative server-side sessions; cookie transport for web, opaque bearer transport for mobile/native; cache-accelerated validation |
-| Authorization | Roles that expand to fine-grained named permissions, enforced statelessly at every endpoint |
-| Privacy | Versioned consent, self-service data export, rectification, grace-period deletion followed by cryptographic erasure |
-| Assurance | Hash-chained append-only audit trail, tiered retention, security notifications, privileged-access alerting |
-| Delivery | Server implementation + persistence schema/migrations, client SDK contract, test suite, operational runbooks |
+| Sessions | Server-side sessions are authoritative; cookies for web, opaque bearer tokens for mobile and native; cache-accelerated validation |
+| Authorization | Roles expand to fine-grained named permissions, enforced statelessly at every endpoint |
+| Privacy | Versioned consent, self-service data export, rectification, and deletion after a grace period, then cryptographic erasure |
+| Assurance | Hash-chained, append-only audit trail; tiered retention; security notifications; privileged-access alerts |
+| Delivery | Server implementation, persistence schema and migrations, client SDK contract, test suite, operational runbooks |
 
 ### 1.2 Out of scope (explicit non-goals)
 
-- **User impersonation / "log in as user" support tooling.** Deliberately excluded. Implementations **MUST NOT** provide any mechanism by which an administrative principal acquires a user-plane session. See §12.6.
-- Multi-tenant organization membership. The identity model is a single global user space (§3.2). §4.14 documents the forward-compatibility rule that keeps this option open.
+- **User impersonation / "log in as user" support tooling.** Excluded on purpose. Implementations **MUST NOT** provide any mechanism by which an administrative principal acquires a user-plane session. See §12.6.
+- Multi-tenant organization membership. The identity model is one global user space (§3.2). §4.14 gives the forward-compatibility rule that keeps this option open.
 - Acting as a general-purpose third-party OAuth authorization server. Only the token *shape* and verification metadata are OIDC-compatible (§6.4).
-- Billing, subscription, or entitlement logic. Permissions are the boundary; commercial entitlement mapping belongs to the consuming application.
+- Billing, subscription or entitlement logic. Permissions are the boundary. The consuming application maps commercial entitlements to them.
 
 ### 1.3 Deferred extension points
 
@@ -127,37 +127,49 @@ These are not built now. The implementation **MUST** leave the named seam, so ea
 
 ## 2. Technology binding (mandatory first step)
 
-The implementation's concrete technology **MUST** be resolved by this exact procedure, in order. The generator **MUST NOT** silently assume a stack.
+The implementation's technology **MUST** be resolved by this procedure, in this order. The generator **MUST NOT** silently assume a stack.
 
 ### 2.1 Resolution order
 
-1. **Declared stack document.** Look for a tech-stack specification in the project, in this order: `docs/architecture/stack-profile.md`, `docs/specs/stack-profile.md`, `docs/specs/tech-stack.md`, `specs/tech-stack.md`, `specs/tech_stack.md`, `docs/tech-stack.md`, `TECH-STACK.md`, or a `tech_stack` section in `CLAUDE.md`. If found, it is authoritative and overrides everything below.
-2. **Inference from the repository.** If no declared document exists, infer from, in order of authority: dependency/package manifests; existing migration or schema directories; existing source under the project's conventional source root; build, container, and deployment configuration; lint/format configuration (for naming and style conventions).
-3. **Ask.** If neither step yields an unambiguous answer for any dimension in §2.2, **stop and ask the user**. Do not guess, and do not proceed with a placeholder.
+1. **Declared stack document.** Look for a tech-stack specification in the project. Check these locations in order: `docs/architecture/stack-profile.md`, `docs/specs/stack-profile.md`, `docs/specs/tech-stack.md`, `specs/tech-stack.md`, `specs/tech_stack.md`, `docs/tech-stack.md`, `TECH-STACK.md`, or a `tech_stack` section in `CLAUDE.md`. If you find one, it is authoritative and overrides everything below.
+2. **Inference from the repository.** If no declared document exists, infer the stack from these sources, in order of authority:
+   - dependency and package manifests;
+   - existing migration or schema directories;
+   - existing source under the project's conventional source root;
+   - build, container and deployment configuration;
+   - lint and format configuration (for naming and style conventions).
+3. **Ask.** If neither step gives an unambiguous answer for a dimension in §2.2, **stop and ask the user**. Do not guess. Do not proceed with a placeholder.
 
 ### 2.2 Dimensions that MUST be resolved before generation
 
 | Dimension | Why it is required |
 |---|---|
-| Implementation language and runtime | Determines concurrency model, crypto library availability, KDF offloading strategy (§22.4) |
-| Deployment topology: long-lived process vs. serverless/edge | Determines connection pooling strategy (§22.5) — this is a P0 performance concern |
-| Primary persistence engine and its paradigm (relational / document / other) | Determines schema realization (§4.2) |
-| Schema/migration tooling | Determines the deliverable format for §4 |
-| Data access layer (query builder / ORM / driver) | Determines how ownership scoping is enforced and audited (§11.4) |
-| Cache/volatile store availability | Determines session validation path (§6.6). If none is available, §6.6.3 fallback applies |
-| Key management service availability | Determines §5. If no KMS exists, generation **MUST** stop and ask — §5 has no unmanaged-key fallback for deployed environments |
-| Outbound email transport | Required for verification, OTP, recovery, and security notifications (§18) |
+| Implementation language and runtime | Sets the concurrency model, crypto library availability and KDF offloading strategy (§22.4) |
+| Deployment topology: long-lived process vs. serverless/edge | Sets the connection pooling strategy (§22.5). This is a P0 performance concern |
+| Primary persistence engine and its paradigm (relational / document / other) | Sets how the schema is realized (§4.2) |
+| Schema/migration tooling | Sets the deliverable format for §4 |
+| Data access layer (query builder / ORM / driver) | Sets how ownership scoping is enforced and audited (§11.4) |
+| Cache/volatile store availability | Sets the session validation path (§6.6). If none exists, the §6.6.3 fallback applies |
+| Key management service availability | Sets §5. If no KMS exists, generation **MUST** stop and ask. §5 has no unmanaged-key fallback for deployed environments |
+| Outbound email transport | Required for verification, OTP, recovery and security notifications (§18) |
 | Scheduled job / worker mechanism | Required for retention and deletion jobs (§23) |
 | Test framework and CI runner | Required for the conformance gate (§27) |
-| HTTP/API layer conventions | Determines routing, middleware, and error-envelope realization (§19) |
+| HTTP/API layer conventions | Sets routing, middleware and error-envelope realization (§19) |
 
 ### 2.3 Binding rules
 
-- **R2.1** — Generated code **MUST** match the surrounding project's existing conventions for naming, file layout, module boundaries, error handling, logging, and dependency injection. Where this specification and the project's conventions conflict on *style*, the project wins. Where they conflict on a **MUST** requirement of *behaviour or security*, this specification wins, and the conflict **MUST** be recorded in the configuration reference.
-- **R2.2** — Prefer the project's already-adopted libraries over introducing new ones. New dependencies are permitted only for capabilities that cannot be responsibly hand-rolled: password hashing (KDF), WebAuthn attestation/assertion verification, SAML XML signature verification, JWT/JWS signing and verification, and constant-time comparison. Hand-rolling any of these is a defect.
-- **R2.3** — Every abstract type in §4 **MUST** be mapped to the engine's most precise native equivalent (see §4.3). Do not degrade to a generic string type when a precise type exists.
-- **R2.4** — Generation **MUST** be idempotent and deterministic: re-running against an unchanged project produces no diff. Ordering of generated declarations, routes, migrations, and catalog entries **MUST** be stable and explicitly sorted, never dependent on hash-map iteration order.
-- **R2.5** — The framework **MUST** be generated as a **self-contained module** with an explicit public interface. Consuming application code depends only on that interface. Internals (schema, session records, credential material, KDF invocation) **MUST NOT** be reachable from application code.
+- **R2.1** — Generated code **MUST** match the project's existing conventions for naming, file layout, module boundaries, error handling, logging and dependency injection. If this specification and the project's conventions conflict on *style*, the project wins. If they conflict on a **MUST** requirement of *behaviour or security*, this specification wins, and the conflict **MUST** be recorded in the configuration reference.
+- **R2.2** — Prefer the project's existing libraries over new ones. A new dependency is permitted only for a capability that cannot be responsibly hand-rolled:
+  - password hashing (KDF);
+  - WebAuthn attestation and assertion verification;
+  - SAML XML signature verification;
+  - JWT/JWS signing and verification;
+  - constant-time comparison.
+
+  Hand-rolling any of these is a defect.
+- **R2.3** — Every abstract type in §4 **MUST** be mapped to the engine's most precise native equivalent (see §4.3). Do not fall back to a generic string type when a precise type exists.
+- **R2.4** — Generation **MUST** be idempotent and deterministic: re-running it on an unchanged project produces no diff. The order of generated declarations, routes, migrations and catalog entries **MUST** be stable and explicitly sorted. It never depends on hash-map iteration order.
+- **R2.5** — The framework **MUST** be generated as a **self-contained module** with an explicit public interface. Application code depends only on that interface. Internals (schema, session records, credential material, KDF invocation) **MUST NOT** be reachable from application code.
 
 ---
 
@@ -165,7 +177,7 @@ The implementation's concrete technology **MUST** be resolved by this exact proc
 
 ### 3.1 Principal model
 
-A **principal** is any entity that can authenticate and be authorized. Three principal types exist, and they are **structurally disjoint**.
+A **principal** is any entity that can authenticate and be authorized. There are three principal types. They are **structurally disjoint**.
 
 | Principal type | Identity store | Credential types | Session type | Purpose |
 |---|---|---|---|---|
@@ -175,19 +187,19 @@ A **principal** is any entity that can authenticate and be authorized. Three pri
 
 **Hard invariants — each is a P0 defect if violated:**
 
-- **INV-1** — A user session **MUST NEVER** confer any admin-plane permission, under any role, flag, or configuration.
-- **INV-2** — An admin session **MUST NEVER** be accepted by a user-plane endpoint, and vice versa. Session records carry an immutable `principal_type` that is verified on every validation, not merely at issuance.
-- **INV-3** — A user record and an admin record **MUST** be separate rows in separate stores with separate credentials, even when they describe the same human being. There is no linkage, elevation, or promotion path between them.
-- **INV-4** — There is no code path that mints a session for a principal other than the one that authenticated. (This is what forbids impersonation; see §12.6.)
-- **INV-5** — Authorization **MUST** be computed server-side on every request from authoritative state. No decision may rely on a client-supplied role, permission, principal type, or identifier.
+- **INV-1** — A user session **MUST NEVER** confer any admin-plane permission, under any role, flag or configuration.
+- **INV-2** — An admin session **MUST NEVER** be accepted by a user-plane endpoint, and vice versa. Session records carry an immutable `principal_type`. It is verified on every validation, not only at issuance.
+- **INV-3** — A user record and an admin record **MUST** be separate rows in separate stores with separate credentials, even when they describe the same person. There is no linkage, elevation or promotion path between them.
+- **INV-4** — No code path mints a session for a principal other than the one that authenticated. (This forbids impersonation; see §12.6.)
+- **INV-5** — Authorization **MUST** be computed server-side on every request from authoritative state. No decision may rely on a client-supplied role, permission, principal type or identifier.
 
 ### 3.2 Identity space
 
-A **single global user space**: a user is identified by a globally unique account, not scoped to any organization or tenant. Consequently, the isolation boundary that all authorization enforcement protects is **the individual account** (§11.4), not a tenant.
+There is a **single global user space**. A user is identified by a globally unique account, not scoped to any organization or tenant. So the isolation boundary that all authorization enforcement protects is **the individual account** (§11.4), not a tenant.
 
 ### 3.3 Component decomposition
 
-The implementation **MUST** be structured as these logical components with these dependency directions. Names are illustrative; the project's naming conventions govern.
+The implementation **MUST** be structured as these logical components, with these dependency directions. The names are illustrative. The project's naming conventions govern.
 
 ```
                       ┌──────────────────────────────┐
@@ -222,20 +234,20 @@ The implementation **MUST** be structured as these logical components with these
 **Dependency rules:**
 
 - **R3.1** — The Auth API layer **MUST NOT** access persistence directly. All access passes through a service component.
-- **R3.2** — The crypto/KMS provider **MUST** be a single module with a narrow interface. No other component may invoke a cryptographic primitive directly, with the sole exception of constant-time comparison helpers.
-- **R3.3** — The audit trail service **MUST** be write-only from the perspective of every other component. No component may expose an update or delete path to audit records (§16.3).
-- **R3.4** — Every component **MUST** be independently testable with the persistence, cache, KMS, and email ports substituted.
+- **R3.2** — The crypto/KMS provider **MUST** be a single module with a narrow interface. No other component may call a cryptographic primitive directly. The only exception is constant-time comparison helpers.
+- **R3.3** — The audit trail service **MUST** be write-only for every other component. No component may expose an update or delete path to audit records (§16.3).
+- **R3.4** — Every component **MUST** be independently testable with the persistence, cache, KMS and email ports substituted.
 
 ### 3.4 Request lifecycle for an authenticated request
 
-Every authenticated request **MUST** pass through these stages in this order. Skipping or reordering a stage is a defect.
+Every authenticated request **MUST** pass through these stages, in this order. Skipping or reordering a stage is a defect.
 
 1. **Transport validation** — TLS enforced; security headers applied (§19.8).
 2. **Rate limit admission** — before any persistence access (§17).
 3. **Credential extraction** — cookie (web) or `Authorization: Bearer` (native). Exactly one source per request; presenting both is rejected (§6.5.3).
 4. **CSRF validation** — for cookie-borne, state-changing requests only (§6.5.4).
-5. **Session resolution** — cache-first, schema-validated, with authoritative fallback (§6.6).
-6. **Principal-type assertion** — the resolved `principal_type` must match the plane of the route (INV-2).
+5. **Session resolution** — cache first, schema-validated, with an authoritative fallback (§6.6).
+6. **Principal-type assertion** — the resolved `principal_type` must match the route's plane (INV-2).
 7. **Session state assertion** — not revoked, not expired (idle and absolute), principal not locked or pending deletion.
 8. **Consent gate** — required legal document versions accepted (§14.4).
 9. **Step-up assertion** — for routes declaring a step-up requirement (§8.5).
