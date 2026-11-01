@@ -806,7 +806,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-01T17:46+00:00",
+ "updated": "2026-11-01T17:55+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -3861,12 +3861,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS173",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "Release: design-system starter brought up to the latest reference",
    "detail": "ST3",
-   "expected": "01 Nov ~18:55",
-   "changed": "2026-11-01T17:46+00:00",
-   "expected_basis": "local agent 17:50-18:35, join to 18:45, CI ~10 min",
+   "expected": "01 Nov ~17:55",
+   "changed": "2026-11-01T17:55+00:00",
    "release": 29,
    "phases": [
     {
@@ -4031,12 +4030,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "ST3",
    "owner": "design-starter",
    "app": "luismc-docs",
-   "status": "Running",
+   "status": "Live",
    "item": "Bring the reference's newer and generic parts into the starter",
    "detail": "Wizard end (Review, the work, Done), retired Check, generic versions of components left out in ST2",
-   "expected": "01 Nov ~18:35",
-   "changed": "2026-11-01T17:46+00:00",
-   "expected_basis": "one local agent, reads ~2,400 lines, writes ~15 parts",
+   "expected": "01 Nov ~17:55",
+   "changed": "2026-11-01T17:55+00:00",
    "rides": "DS173",
    "started": "2026-11-01T17:47+00:00"
   },
@@ -4215,55 +4213,31 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-01T17:54+00:00">01 Nov 17:54</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-01T17:55+00:00">01 Nov 17:55</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">79 tasks</span></summary>
 <ul>
-<li data-glance-task="ST3"><span class="task-id">ST3</span>Bring the reference&#x27;s newer and generic parts into the starter <span class="glance-expected">01 Nov ~18:35</span><span class="glance-basis">one local agent, reads ~2,400 lines, writes ~15 parts</span></li>
-<li data-glance-task="DS173"><span class="task-id">DS173</span><span class="release-name">RELEASE-29</span>Release: design-system starter brought up to the latest reference <span class="glance-expected">01 Nov ~18:55</span><span class="glance-basis">local agent 17:50-18:35, join to 18:45, CI ~10 min</span></li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">77 tasks</span></summary>
-<ul>
+<li data-glance-task="DS173"><span class="task-id">DS173</span><span class="release-name">RELEASE-29</span>Release: design-system starter brought up to the latest reference</li>
+<li data-glance-task="ST3"><span class="task-id">ST3</span>Bring the reference&#x27;s newer and generic parts into the starter</li>
 <li data-glance-task="DS172"><span class="task-id">DS172</span><span class="release-name">RELEASE-28</span>Release: dev-standards installs at project level by default</li>
 <li data-glance-task="SO4"><span class="task-id">SO4</span>Project level by default for every dev-standards install (D6-D8)</li>
 <li data-glance-task="DS159"><span class="task-id">DS159</span>DL-06 newest run per workflow, skipped runs pass (PR #120, open)</li>
 <li data-glance-task="DS166"><span class="task-id">DS166</span>DELIVERYSPEC names the 14-day ledger expiry</li>
 <li data-glance-task="DS167"><span class="task-id">DS167</span>Performance F3: cache the DL-76 check per merge commit</li>
 <li data-glance-task="DS168"><span class="task-id">DS168</span>Performance F4+F5: lighter artifacts Stop and SessionStart hooks</li>
-<li data-glance-task="DS169"><span class="task-id">DS169</span>Performance F6: fewer git processes in the docs Stop hook</li>
-<li data-glance-task="DS170"><span class="task-id">DS170</span><span class="release-name">RELEASE-27</span>Release: DELIVERYSPEC ledger expiry, lighter turn-end and session-start hooks</li>
-<li class="glance-more">and 69 more</li>
+<li class="glance-more">and 71 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">263</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">265</div><div class="label">tasks live</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<figure class="release-timeline">
-<figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS173 (Release: design-system starter brought up to the latest reference) expected live about 18:55." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">17:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">18:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">18:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">19:00</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-29 · Release: design-system starter brought up to the latest reference</title>RELEASE-29 · Release: des…</text>
-<text class="rt-sub" x="0" y="77"><title>ST3</title>ST3</text>
-<rect class="rt-bar agents" x="315.6" y="52" width="260" height="22"><title>agents 17:50-18:35</title></rect>
-<rect class="rt-bar join" x="575.6" y="52" width="57.8" height="22"><title>join 18:35-18:45</title></rect>
-<rect class="rt-bar ci" x="633.3" y="52" width="57.8" height="22"><title>PR CI 18:45-18:55</title></rect>
-<polygon class="rt-expected" points="691.1,50 699.1,63 691.1,76 683.1,63"/>
-<text class="rt-live-label" x="691.1" y="92">live ~18:55</text>
-<line class="rt-now" x1="338.7" y1="36" x2="338.7" y2="148"/><text class="rt-now-label" x="338.7" y="161">now 17:54</text>
-</svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
-</figure>
-<details class="status-fold release-group" data-group="release-29" open><summary><strong>RELEASE-29 · live ~18:55</strong><span class="fold-count">2 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">265 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS173"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS173</span><span class="release-name">RELEASE-29</span>Release: design-system starter brought up to the latest reference</td><td data-label="App / service"></td><td data-label="Detail">ST3</td><td data-label="Expected">01 Nov ~18:55<span class="expected-basis">local agent 17:50-18:35, join to 18:45, CI ~10 min</span></td></tr>
-<tr data-task="ST3"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-design-system-starter.html"><span class="task-id">ST3</span>Bring the reference&#x27;s newer and generic parts into the starter</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Wizard end (Review, the work, Done), retired Check, generic versions of components left out in ST2</td><td data-label="Expected">01 Nov ~18:35<span class="expected-basis">one local agent, reads ~2,400 lines, writes ~15 parts</span></td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">263 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS173"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS173</span><span class="release-name">RELEASE-29</span>Release: design-system starter brought up to the latest reference</td><td data-label="App / service"></td><td data-label="Detail">ST3</td><td data-label="Expected">01 Nov ~17:55</td></tr>
+<tr data-task="ST3"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-design-system-starter.html"><span class="task-id">ST3</span>Bring the reference&#x27;s newer and generic parts into the starter</a><span class="release-line"><span class="release-name">RELEASE-29</span></span></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Wizard end (Review, the work, Done), retired Check, generic versions of components left out in ST2</td><td data-label="Expected">01 Nov ~17:55</td></tr>
 <tr data-task="DS172"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS172</span><span class="release-name">RELEASE-28</span>Release: dev-standards installs at project level by default</td><td data-label="App / service"></td><td data-label="Detail">SO4</td><td data-label="Expected">01 Nov ~17:00</td></tr>
 <tr data-task="SO4"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO4</span>Project level by default for every dev-standards install (D6-D8)</a><span class="release-line"><span class="release-name">RELEASE-28</span></span></td><td data-label="App / service"></td><td data-label="Detail">README and claude-setup install with --scope project; transcript-folds per project; config files to project .claude/ by default; marketplace registered per project</td><td data-label="Expected">01 Nov ~17:00</td></tr>
 <tr data-task="DS159"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS159</span>DL-06 newest run per workflow, skipped runs pass (PR #120, open)<span class="no-release-line">ships nothing: release handled by another terminal</span></td><td data-label="App / service"></td><td data-label="Detail">PR #120 merged by the other terminal; shipped in RELEASE-27</td><td data-label="Expected">01 Nov ~11:33</td></tr>
@@ -4535,13 +4509,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
-<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
-<div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29892594"><time datetime="2026-11-01T17:54+00:00">01 Nov 17:54</time></td><td data-label="Tasks">ST1 to ST3</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
-</tbody></table></div>
+<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (0)</strong><span class="fold-count">0 feature artifacts</span></summary>
+<p class="feature-none">No feature artifacts in progress.</p>
 </details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (6)</strong><span class="fold-count">6 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
+<tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29892595"><time datetime="2026-11-01T17:55+00:00">01 Nov 17:55</time></td><td data-label="Tasks">ST1 to ST3</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29892539"><time datetime="2026-11-01T16:59+00:00">01 Nov 16:59</time></td><td data-label="Tasks">SO1 to SO4</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">On 01 Nov the owner ran claude-setup in an existing project and could not tell whether the docs, design-system and delivery plugins were enforced.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29891442"><time datetime="2026-10-31T22:42+00:00">31 Oct 22:42</time></td><td data-label="Tasks">AR2 to AR51</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29884830"><time datetime="2026-10-27T08:30+00:00">27 Oct 08:30</time></td><td data-label="Tasks">DL1 to DL13</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
