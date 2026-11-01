@@ -285,6 +285,33 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(len(agents), 1)
         self.assertEqual((agents[0]["where"], agents[0]["id"], agents[0]["task"]), ("cloud", "trig_abc", "DV152"))
 
+    def test_refused_cloud_create_records_event_not_row(self):
+        root = make_root()
+        body = {"action": "create", "body": {"events": [{"data": {"message": {"content": BLOCK}}}]}}
+        H.handle({"hook_event_name": "PostToolUse", "tool_name": "RemoteTrigger", "tool_input": body,
+                  "tool_response": "HTTP 429: rate limit exceeded"}, root)
+        led = L.load(root)
+        self.assertEqual(led["agents"], [])
+        ev = [e for e in led["events"] if e["kind"] == "agent.launch_refused"]
+        self.assertEqual(len(ev), 1)
+        self.assertIn("DV152", str(ev[0]))
+
+    def test_cloud_create_with_trigger_id_still_running(self):
+        root = make_root()
+        body = {"action": "create", "body": {"events": [{"data": {"message": {"content": BLOCK}}}]}}
+        H.handle({"hook_event_name": "PostToolUse", "tool_name": "RemoteTrigger", "tool_input": body,
+                  "tool_response": "created trig_xyz9"}, root)
+        led = L.load(root)
+        self.assertEqual((led["agents"][0]["id"], led["agents"][0]["state"]), ("trig_xyz9", "running"))
+        self.assertNotIn("agent.launch_refused", [e["kind"] for e in led["events"]])
+
+    def test_cloud_run_uses_input_trigger_id_when_no_error(self):
+        root = make_root()
+        H.handle({"hook_event_name": "PostToolUse", "tool_name": "RemoteTrigger",
+                  "tool_input": {"action": "run", "trigger_id": "trig_stored", "prompt": BLOCK},
+                  "tool_response": "started"}, root)
+        self.assertEqual(L.load(root)["agents"][0]["id"], "trig_stored")
+
 
 class OtherToolTests(unittest.TestCase):
     def test_artifact_publish(self):
