@@ -315,8 +315,8 @@ Each skips when the plugin is not installed yet; print the command instead.
 transcript into one line each, with a band above the prompt and two toggle
 chords. It is part of the standard setup, so on **every run, whatever target was
 picked**, the change plan includes these two pieces at user level. Both land
-outside the repo and are shown in the step 3 confirmation; if the owner declines
-them there, they are skipped and reported as skipped.
+outside the repo and appear in the step 3 confirmation. If the owner declines
+them there, skip them and report them as skipped.
 
 **1. `~/.claude/settings.json` `enabledPlugins."luismc-transcript-folds@<marketplace>": true`.**
 `<marketplace>` is found exactly as in "All plugins" above. Create the file
@@ -344,9 +344,9 @@ outside it the chords reach the plugin's buttons. Merge rules:
   one binding.
 - Never change or remove any other binding, in `Global` or in any other context,
   and never reorder. Keep unknown top-level keys (`$schema` and anything else).
-- The file must parse as JSON after the write. A merge that cannot be written
-  safely, for example a file that does not parse now, is reported and left
-  untouched, never overwritten.
+- The file must parse as JSON after the write. Report a merge that cannot be
+  written safely, for example a file that does not parse now, and leave the file
+  untouched. Never overwrite it.
 
 The plugin itself is installed with `claude plugin install
 luismc-transcript-folds@<marketplace>`. This skill does not run that; it tells
@@ -355,13 +355,14 @@ the owner in step 5. The entry and the chords take effect after
 
 ### `output-styles/caveman.md` — add if missing
 
-Copy alongside the `outputStyle` setting; the setting names a style that must
-exist as a file or Claude falls back to the default with no error.
+Copy it alongside the `outputStyle` setting. The setting names a style that
+must exist as a file. If it does not, Claude falls back to the default with no
+error.
 
 ### `hooks/effort_drift.py` — overwrite unconditionally
 
 `.claude/hooks/effort_drift.py` (project) or `~/.claude/hooks/effort_drift.py`
-(user). Plugin-owned like the statusline: replaced without asking, and a local
+(user). Plugin-owned like the statusline: replace it without asking. A local
 edit is drift. Python 3, standard library only. Create the `hooks/` directory
 when absent. No `chmod` is needed, because the registered command runs it
 through `python3`. See "The alias-drift warning" below for what it does.
@@ -370,19 +371,19 @@ through `python3`. See "The alias-drift warning" below for what it does.
 
 `.claude/rules/agents-and-integration.md` (project) or
 `~/.claude/rules/agents-and-integration.md` (user). Claude Code loads every
-`.md` under `rules/` as instructions alongside `CLAUDE.md`, which is why the
-agent and integration behaviour lives here and not in `CLAUDE.md`: it reaches
-projects whose `CLAUDE.md` already exists and must not be touched. Like the
-statusline, this file is plugin-owned policy, so it is replaced without asking
-— a local edit to it is drift, and the fix belongs in the template.
+`.md` under `rules/` as instructions alongside `CLAUDE.md`. The agent and
+integration behaviour lives here, not in `CLAUDE.md`, because a rule file
+reaches projects whose `CLAUDE.md` already exists and must not be touched. Like
+the statusline, this file is plugin-owned policy, so replace it without asking.
+A local edit to it is drift, and the fix belongs in the template.
 
 The template contains the placeholder `{{SUBAGENT_EFFORT}}`. When writing the
 file, substitute the Sonnet effort chosen in step 1 (`medium` or `high`) for
-every occurrence; the placeholder never reaches a target. The file tells the
+every occurrence. The placeholder never reaches a target. The file tells the
 main loop to pass `effort` on each Agent call that launches an implementation
-subagent. That is needed on top of the settings entry because the docs do not
-say a `modelSettings` entry applies to subagents, while the Agent call's
-`effort` parameter is the documented route.
+subagent. This is needed on top of the settings entry. The docs do not say a
+`modelSettings` entry applies to subagents, but they do document the Agent
+call's `effort` parameter.
 
 **Remove the old file.** Earlier versions of this skill wrote
 `rules/model-delegation.md`. When a target holds that file, delete it, so the
@@ -393,41 +394,42 @@ file name is removed, and only from a target being applied.
 **The `scripts/delivery/*` paths.** The rule cites
 `scripts/delivery/reach_check.py`, `gate_verify.py`, `join.py` and
 `ci_watch.py`. Those scripts exist only in repos generated or repaired by
-`tech-stack-setup` 12 or later. This skill does not install them; in a repo without them, the cited lines are guidance for
-tooling that has not been generated yet. Say so in the step 5 report when the
+`tech-stack-setup` 12 or later. This skill does not install them. In a repo
+without them, the cited lines are guidance for tooling that has not been
+generated yet. Say so in the step 5 report when the
 project target has no `scripts/delivery/` directory.
 
 ### `rules/clarifying-questions.md` — overwrite unconditionally
 
 `.claude/rules/clarifying-questions.md` (project) or
-`~/.claude/rules/clarifying-questions.md` (user). Part of the standard setup:
-written to every target this skill applies, new or existing, on every install
+`~/.claude/rules/clarifying-questions.md` (user). Part of the standard setup.
+Write it to every target this skill applies, new or existing, on every install
 and every re-run, with no question asked. It tells Claude to gather every
 clarifying question it needs and ask them all at once, in the questions
 interface, instead of guessing or asking a few per turn. Plugin-owned like
-`agents-and-integration.md`, and for the same reason a rule file rather than
-`CLAUDE.md` text: it reaches projects whose `CLAUDE.md` already exists. A
-local edit is drift; the fix belongs in the template. No placeholders.
+`agents-and-integration.md`. It is a rule file, not `CLAUDE.md` text, for the
+same reason: it reaches projects whose `CLAUDE.md` already exists. A local edit
+is drift, and the fix belongs in the template. No placeholders.
 
 ### `rules/delivery-timing.md` — overwrite unconditionally
 
 `.claude/rules/delivery-timing.md` (project) or `~/.claude/rules/delivery-timing.md`
-(user). Plugin-owned like the two rule files above and written on every run, no
-question asked, no placeholders. It carries the ETA and train-timing rules (ETA =
+(user). Plugin-owned like the two rule files above. Write it on every run, with
+no question asked and no placeholders. It carries the ETA and train-timing rules (ETA =
 real start + typical duration with the dependency named; the next train is joined
 during CI and pushed at green; waits are gaps; trains leave when green at any
 hour; agent ETAs are setup + work + checks). Every rule line in the three rule
 files ends with `<!-- check: <DL id or Q id> -->` naming the DELIVERYSPEC id that
-enforces it, or `<!-- advice -->`; `tools/test_rule_tags.py` fails on an id the
+enforces it, or `<!-- advice -->`. `tools/test_rule_tags.py` fails on an id the
 spec does not define.
 
 ### `.delivery/config.json` — project target, add if missing, NEVER overwrite
 
 Per-project settings for the `luismc-delivery` plugin, from
-`assets/delivery-config.json`. Written to `<repo>/.delivery/config.json` only when
-the file is absent; an existing file is the owner's and is left exactly as it is
-(report keys the template has that it lacks, and change nothing) except
-`caps`: a value lower than the template's is raised, after the summary shows
+`assets/delivery-config.json`. Write it to `<repo>/.delivery/config.json` only when
+the file is absent. An existing file is the owner's. Leave it exactly as it is
+(report keys the template has that it lacks, and change nothing), except
+`caps`: raise a value that is lower than the template's, after the summary shows
 `current → new` (see "All plugins"). Keys: `caps`
 (`cloud`, `local`, `total`), `work_root`, `tz`, `train_label_re`,
 `release_branch_re`, `brief_markers`, `min_question_chars`, `eta_table`,
@@ -436,7 +438,7 @@ the file is absent; an existing file is the owner's and is left exactly as it is
 neutral (no work root, UTC, no attribution rule). Strip every key that starts
 with `_` (the template's `_doc` and `_example_windows_monorepo`) when writing.
 
-Ask once in step 1 whether to fill the project's values; for a Windows monorepo
+Ask once in step 1 whether to fill the project's values. For a Windows monorepo,
 the documented example is `work_root` `C:\\Work`, `tz` `Europe/Lisbon`, `caps`
 50/3/53 (cloud/local/total; an existing smaller cap is raised to 50/3/53 on the next run, which the owner can decline), and `no_attribution` `true`, which makes the
 `commit-msg` hook that `tech-stack-setup` installs refuse `Co-Authored-By` and AI
