@@ -7,23 +7,23 @@ last_verified: 2026-10-31
 ---
 # The apps
 
-Each app is one plugin in the `dev-standards` marketplace. The app names here are the values of `apps` in `docs/docs.json` and in each feature spec's front matter. This page does not repeat what a feature does; the feature specs do.
+Each app is one plugin in the `dev-standards` marketplace. The app names here are the values of `apps` in `docs/docs.json` and in each feature spec's front matter. This page does not repeat what a feature does. The feature specs do that.
 
 ## luismc-agents
 
-Ships shared custom agents, today the `architect` subagent. It gives a direct recommendation on a hard design call or on audit findings, and flags decisions that belong to the owner.
+Ships shared custom agents. Today that is the `architect` subagent. It gives a direct recommendation on a hard design call or on audit findings. It flags decisions that belong to the owner.
 
 Features: [agents](../features/agents/spec.md).
 
 ## luismc-artifacts
 
-Keeps project status in front of the owner. It generates one feature artifact per feature (a standalone HTML file) and one Full Progress artifact per project from a record in the repository. Hooks keep the record current and block the end of a turn until Full Progress is published.
+Keeps project status in front of the owner. From a record in the repository, it generates one feature artifact per feature (a standalone HTML file) and one Full Progress artifact per project. Hooks keep the record current. They block the end of a turn until Full Progress is published.
 
 Features: [artifacts](../features/artifacts/spec.md).
 
 ## luismc-audits
 
-Three review skills: security, performance and compliance. Each reads the code, verifies each finding and hands back a severity-ranked report. It never changes code.
+Three review skills: security, performance and compliance. Each skill reads the code, verifies each finding and hands back a report ranked by severity. It never changes code.
 
 Features: [audits](../features/audits/spec.md).
 
@@ -35,13 +35,13 @@ Features: [delivery](../features/delivery/spec.md), [delivery-speed](../features
 
 ## luismc-docs
 
-The documentation standard (DOCSPEC) as a plugin. It lays out `docs/` by reader question, builds an offline index, folds change notes into versions, and checks that docs stay true to the code.
+The documentation standard (DOCSPEC) as a plugin. It lays out `docs/` by reader question and builds an offline index. It folds change notes into versions. It checks that docs stay true to the code.
 
 Features: [docs](../features/docs/spec.md).
 
 ## luismc-project-setup
 
-Takes a repository from empty to production-ready, in three skills: `tech-stack-setup` (stack and delivery tooling, to STACKSPEC), `auth-setup` (authentication, to AUTHSPEC) and `claude-setup` (Claude Code configuration and the model split). It also audits an existing repo against the same specs.
+Takes a repository from empty to production-ready with three skills: `tech-stack-setup` (stack and delivery tooling, to STACKSPEC), `auth-setup` (authentication, to AUTHSPEC) and `claude-setup` (Claude Code configuration and the model split). It also audits an existing repo against the same specs.
 
 Features: [project-setup](../features/project-setup/spec.md), [models](../features/models/spec.md).
 
