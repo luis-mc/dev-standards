@@ -468,8 +468,12 @@ def current_task_id(root):
 
 def is_watch_only(command):
     """True for a Bash command that only runs a watch script (R8.8): any path before the
-    script name, a python launcher in front, arguments after. Chained work is not exempt."""
-    if not isinstance(command, str) or re.search(r'[&;|\n`<>]|\$\(', command):
+    script name, a python launcher in front, arguments after. One leading `cd <dir> &&` is allowed,
+    as the session often starts it that way. Other chained work is not exempt."""
+    if not isinstance(command, str):
+        return False
+    command = re.sub(r'''^\s*cd\s+("[^"]*"|'[^']*'|[^\s&;|]+)\s*&&\s*''', '', command)
+    if re.search(r'[&;|\n`<>]|\$\(', command):
         return False
     try:
         words = shlex.split(command)

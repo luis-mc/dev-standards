@@ -459,7 +459,9 @@ def after_watch_only_commands_do_not_mark_the_session():
     """R8.8: a background watcher is a monitor, not work."""
     work = make_repo()
     for cmd in ('python3 .claude/plugins/delivery/scripts/delivery_watch.py --root . --interval 120',
-                'python ci_watch.py abc1234 --workflow x.yml', 'py -3 C:\\\\tools\\\\ci_watch.py abc'):
+                'python ci_watch.py abc1234 --workflow x.yml', 'py -3 C:\\\\tools\\\\ci_watch.py abc',
+                'cd /c/repo && python3 claude/plugins/delivery/scripts/delivery_watch.py --root . --interval 120',
+                'cd "C:/my repo" && python ci_watch.py abc --workflow x.yml'):
         rc = background(work, 'Bash', command=cmd, run_in_background=True)[0]
         assert rc == 0 and marker(work) is None, (cmd, stop_state(work))
 
@@ -469,6 +471,8 @@ def after_chained_watch_commands_and_agents_still_mark_the_session():
     for tool, args in (('Bash', {'command': 'python3 delivery_watch.py && pytest'}),
                        ('Bash', {'command': 'python3 delivery_watch.py; sleep 9'}),
                        ('Bash', {'command': 'pytest delivery_watch.py'}),
+                       ('Bash', {'command': 'cd x && python3 delivery_watch.py && pytest'}),
+                       ('Bash', {'command': 'cd x && pytest'}),
                        ('Agent', {'prompt': 'python3 delivery_watch.py'})):
         work = make_repo()
         assert background(work, tool, run_in_background=True, **args)[0] == 0

@@ -1511,8 +1511,9 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   foreground call of any of the three tools, or a call that failed, records
   nothing. A `Bash` call whose command only runs a watch script (`delivery_watch.py`
   or `ci_watch.py`, any path before it, `python`, `python3` or `py` in front,
-  arguments after) is a monitor, not work, and records nothing. A command that
-  chains other work (with `&&`, `;`, `|` or a second command) still records.
+  arguments after, one leading `cd <dir> &&` allowed) is a monitor, not work, and
+  records nothing. A command that chains other work (with `&&`, `;`, `|` or a
+  second command) still records.
   `Agent` and `Task` calls are never exempt. Verified by
   `after_background_agent_and_bash_mark_the_session`,
   `after_foreground_calls_do_not_mark_the_session`,
@@ -1536,13 +1537,12 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   reason marks the marker as told, and the next stop removes a told marker
   without blocking on it. The marker is also removed when a turn is let through
   after the block limit. A new background call (R8.8) writes a fresh marker and
-  arms the check again. The check shares R8.4's give-up rule: after 3 consecutive
-  blocks with no change it lets the turn end with a `systemMessage`. Without a
-  manifest it does nothing. Verified by
+  arms the check again. When other items are pending too, R8.4's give-up rule
+  still applies to them. Without a manifest it does nothing. Verified by
   `stop_blocks_background_work_without_an_active_task`,
-  `stop_allows_background_work_with_an_active_task_and_clears_the_marker` and
-  `stop_background_gives_up_after_three_blocks`,
-  `stop_background_fires_once_per_marker` and
+  `stop_allows_background_work_with_an_active_task_and_clears_the_marker`,
+  `stop_background_fires_once_per_marker`,
+  `stop_background_shares_the_give_up_rule_with_pending_artifacts` and
   `stop_background_block_limit_removes_the_marker`.
 - **R8.11** — The end-of-turn hook acts on Full Progress only. An entry of
   `pending` for a feature artifact (from a script older than R9.5) is ignored:
