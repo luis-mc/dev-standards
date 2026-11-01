@@ -17,15 +17,15 @@ last_verified: 2026-11-01
 
 ## 1. In one paragraph
 
-`luismc-specs` has two skills. `spec-new` interviews the user and writes a numbered spec with testable requirements before any code. `spec-check` reads a spec and reports numbering errors and references that point nowhere. One writes to a discipline; the other proves it held.
+`luismc-specs` has two skills. `spec-new` interviews the user and writes a numbered spec with testable requirements before any code. `spec-check` reads a spec and reports numbering errors and references that point nowhere. One skill writes to a discipline. The other proves that the discipline held.
 
 ## 2. Why
 
-Specs are cited by requirement ID from code, tests and other specs. Citations rot unseen when a number is duplicated, skipped or renumbered. A spec written after the code describes the code, not the intent.
+Code, tests and other specs cite specs by requirement ID. When a number is duplicated, skipped or renumbered, citations rot unseen. A spec written after the code describes the code, not the intent.
 
-Goals: IDs that stay stable, every requirement tied to a test, and a check a build can gate on.
+Goals: IDs that stay stable, every requirement tied to a test, and a check that a build can gate on.
 
-Non-goals: judging whether two requirements contradict (a human does), and content checks tied to one document.
+Non-goals: judging whether two requirements contradict (a human does that), and content checks tied to one document.
 
 ## 3. How it works
 
@@ -57,7 +57,7 @@ flowchart LR
 
 **R5.5** — Statutory citations (numbers of 100 and above) and lettered insertions (`R4.9a`) are not reported.
 
-**R5.6** — Exit status is 0 when clean, 1 with findings, 2 when a file cannot be parsed; it accepts several paths, `--only`, `--strict` and `--json`.
+**R5.6** — Exit status is 0 when clean, 1 with findings, and 2 when a file cannot be parsed. It accepts several paths, `--only`, `--strict` and `--json`.
 
 **R5.7** — `spec-new` writes IDed, testable requirements to a numbering discipline that `spec-check` accepts, and stops once the spec is written.
 
@@ -67,12 +67,12 @@ flowchart LR
 
 ## 7. Design
 
-`claude/plugins/specs/skills/spec-check/assets/spec_check.py` is the checker: it parses headings and definitions, then resolves references. `tools/spec_check.py` is a symlink to it, so the repository's tests and CI run the same file. The skills pin `opus` (spec-new) and `sonnet` (spec-check), both at medium effort.
+`claude/plugins/specs/skills/spec-check/assets/spec_check.py` is the checker. It parses headings and definitions, then resolves references. `tools/spec_check.py` is a symlink to it, so the repository's tests and CI run the same file. The skills pin `opus` (spec-new) and `sonnet` (spec-check), both at medium effort.
 
 ## 8. Failure modes
 
 - A file that cannot be parsed exits 2, never 0.
-- An unregistered external citation can match a local heading of the same number. That is why a document must register what it cites.
+- An unregistered external citation can match a local heading of the same number. So a document must register what it cites.
 - The checker fails closed in CI: findings exit 1.
 
 ## 9. How it is proven
