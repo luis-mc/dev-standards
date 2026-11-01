@@ -270,33 +270,33 @@ for you.
 
 ## `luismc-specs` — think it through before you build it
 
-Two skills that make "write the spec first" actually practical, for anything
-that touches more than one file.
+Two skills that make "write the spec first" practical for anything that touches
+more than one file.
 
 ### `/luismc-specs:spec-new`
 
-Interviews you about a feature, component, or migration — scope boundaries,
-what data must never be lost, how it should fail when a dependency goes down,
-what happens on retries and duplicate requests — then writes a precise,
-numbered specification to `specs/<feature-name>.md`.
+Interviews you about a feature, component, or migration. It asks about scope
+boundaries, what data must never be lost, how the feature should fail when a
+dependency goes down, and what happens on retries and duplicate requests. Then
+it writes a precise, numbered specification to `specs/<feature-name>.md`.
 
-Every requirement in the spec gets a citable ID and a named test that proves
-it. Nothing goes in that can't be verified. The skill deliberately stops once
-the spec is written — implementation happens in a fresh session, so the spec
-gets built against, not the discarded options from the interview.
+Every requirement in the spec gets a citable ID and a named test that proves it.
+Nothing goes in that cannot be verified. The skill stops once it has written the
+spec. Implementation happens in a fresh session, so you build against the spec
+and not against the options discarded in the interview.
 
 ### `/luismc-specs:spec-check`
 
-Validates the numbering and cross-references in any spec — this repo's own
-binding specs included. Catches duplicate or out-of-order section numbers,
-orphaned subsections, and references that point nowhere. Run it right after
-writing a spec, and again after every revision.
+Validates the numbering and cross-references in any spec, this repo's own
+binding specs included. It catches duplicate or out-of-order section numbers,
+orphaned subsections, and references that point nowhere. Run it right after you
+write a spec, and again after every revision.
 
 ---
 
 ## `luismc-delivery` — make the delivery rules mechanical
 
-Rules written in a memory note get forgotten; this plugin turns them into
+Rules written in a memory note get forgotten. This plugin turns them into
 checks. Hooks (Stop, PreToolUse, PostToolUse, SessionStart) and a watcher read
 a per-repository ledger, `.delivery/ledger.json`, and enforce trains and CI
 (merge on green, never `--auto`, one train in CI at a time), agent launches
@@ -329,11 +329,11 @@ DELIVERYSPEC section 6.
 
 ## `luismc-transcript-folds` — keep long diffs and commands from flooding the transcript
 
-Folds the transcript to one line per change. A diff of more than a few lines
-is drawn as `» path:line (+added −removed)`, and a finished shell command as a
-single row with its outcome. A band above the prompt shows the two switches and
-a tally of files and lines changed this session. `claude-setup` enables it and
-binds its chords for you.
+Folds the transcript to one line per change. It draws a diff of more than a few
+lines as `» path:line (+added −removed)`. It draws a finished shell command as a
+single row with its outcome. A band above the prompt shows the two switches and a
+tally of files and lines changed this session. `claude-setup` enables the plugin
+and binds its chords for you.
 
 - **Chords:** `ctrl+x d` toggles folded diffs, `ctrl+x f` toggles folded commands.
 - **Slash commands:** `/fold-diffs` and `/fold-commands` flip the same two switches.
@@ -343,34 +343,33 @@ binds its chords for you.
 
 ## The two standards behind `project-setup`
 
-`tech-stack-setup` and `auth-setup` aren't improvising — they build against
-two binding, versioned specifications:
+`tech-stack-setup` and `auth-setup` do not improvise. They build against two
+binding, versioned specifications:
 
 - **`STACKSPEC`** — the technology-neutral shape every generated repo must
   have: contract-first APIs, safe queueing, proper retention and erasure,
-  consent-gated analytics, and more. It names no vendor and no framework, only
-  properties, so it applies equally whether you're on TypeScript or Rust.
+  consent-gated analytics, and more. It names no vendor and no framework. It
+  names only properties, so it applies equally to TypeScript and Rust.
 - **`AUTHSPEC`** — the same idea, applied to authentication and authorization.
 
-Because they specify properties instead of products, your project doesn't
+Because they specify properties instead of products, your project does not
 vendor a copy of either spec. Instead, `tech-stack-setup` writes a **Stack
-Profile** (`docs/architecture/stack-profile.md`) recording which spec versions your
-project conforms to, plus the vendors and settings you chose. That file is
-what later runs — including `auth-setup` — read to understand your project,
-and what makes "has this drifted from the standard?" an answerable question
-instead of a guess.
+Profile** (`docs/architecture/stack-profile.md`). It records which spec versions
+your project conforms to, plus the vendors and settings you chose. Later runs,
+`auth-setup` included, read that file to understand your project. It also makes
+"has this drifted from the standard?" a question with an answer, not a guess.
 
 ---
 
 ## One-time setup for this repo itself
 
-This repository carries its own secret scanning, separate from anything it
-generates for other projects. After cloning, activate the pre-commit hook
+This repository has its own secret scanning, separate from anything it
+generates for other projects. After you clone it, activate the pre-commit hook
 once:
 
 ```bash
 git config core.hooksPath .githooks
 ```
 
-Without this step, secrets are still caught in CI — just after they've
-already been pushed, rather than before they're committed.
+Without this step, CI still catches secrets. It catches them after they are
+pushed, not before they are committed.
