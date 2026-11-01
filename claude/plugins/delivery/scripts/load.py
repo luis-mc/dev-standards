@@ -6,7 +6,9 @@
 Windows: ctypes GlobalMemoryStatusEx and GetSystemTimes. Linux: /proc/meminfo and /proc/stat. macOS: vm_stat with
 sysctl hw.memsize, `top -l 2` (loadavg fallback). Standard library only, never psutil.
 
-CPU is measured over a ~1 s window. The last samples are kept in a small cache file (TTL 10 s, so a burst of hooks
+CPU is the delta of the raw counters between this sample and the previous cached one (never a sleep: a hook must
+not wait); with no usable previous sample (none, or older than 10 min) it is the load average per core, and on
+Windows without one it is unknown and the guard decides on memory only. The last samples are kept in a small cache file (TTL 10 s, so a burst of hooks
 costs one sample); the CPU figure is the mean of the samples of the last 30 s (at most 3), so one spike does not decide.
 
 Limits (project over machine over default): defaults memory 85, CPU 60; the machine file is
@@ -28,7 +30,7 @@ DEFAULT_LIMITS = {'memory_pct': 85.0, 'cpu_pct': 60.0}
 CACHE_TTL = 10.0
 HISTORY_WINDOW = 30.0
 HISTORY_MAX = 3
-SAMPLE_SECONDS = 1.0
+RAW_MAX_AGE = 600.0
 
 
 # --- limits ----------------------------------------------------------------------------------
@@ -204,25 +206,40 @@ def _windows_memory():
     return float(s.dwMemoryLoad)
 
 
-def measure_now(seconds=SAMPLE_SECONDS):
-    """A fresh {'mem', 'cpu', 'at'} sample; raises when this platform cannot be measured."""
+def _loadavg_cpu():
+    """CPU use % from the 1-minute load average per core, or None where there is no getloadavg (Windows)."""
+    try:
+        return min(100.0, round(100.0 * os.getloadavg()[0] / (os.cpu_count() or 1), 1))
+    except (AttributeError, OSError):
+        return None
+
+
+def measure_now(prev=None):
+    """A fresh {'mem', 'cpu', 'at', 'raw'} sample without waiting. CPU is the delta between the raw (busy, total)
+    counters now and those of `prev` ({'raw': [busy, total], 'at': t}, the previous cached sample) when prev is at
+    most RAW_MAX_AGE old; else the load average per core; else None (unknown: the guard decides on memory only).
+    Raises when this platform cannot be measured."""
+    now = time.time()
+    raw = None
     if sys.platform.startswith('win'):
-        a = _windows_times()
-        time.sleep(seconds)
-        cpu = cpu_between(a, _windows_times())
+        raw = _windows_times()
         mem = _windows_memory()
     elif sys.platform == 'darwin':
         mem = parse_vm_stat(_run(['vm_stat']), int(_run(['sysctl', '-n', 'hw.memsize']).strip()))
-        try:
-            cpu = parse_top_cpu(_run(['top', '-l', '2', '-n', '0', '-s', '1'], timeout=15))
-        except (ValueError, OSError, subprocess.SubprocessError):
-            cpu = min(100.0, round(100.0 * os.getloadavg()[0] / (os.cpu_count() or 1), 1))
     else:
-        a = parse_proc_stat(_read_text('/proc/stat'))
-        time.sleep(seconds)
-        cpu = cpu_between(a, parse_proc_stat(_read_text('/proc/stat')))
+        raw = parse_proc_stat(_read_text('/proc/stat'))
         mem = parse_meminfo(_read_text('/proc/meminfo'))
-    return {'mem': mem, 'cpu': cpu, 'at': time.time()}
+    cpu = None
+    old = prev.get('raw') if isinstance(prev, dict) else None
+    if raw and isinstance(old, (list, tuple)) and len(old) == 2 and 0 <= now - prev.get('at', -1e9) <= RAW_MAX_AGE \
+            and raw[1] > old[1]:
+        cpu = cpu_between(tuple(old), raw)
+    if cpu is None:
+        cpu = _loadavg_cpu()
+    out = {'mem': mem, 'cpu': cpu, 'at': now}
+    if raw:
+        out['raw'] = list(raw)
+    return out
 
 
 def cache_file():
@@ -247,7 +264,8 @@ def sample(now=None, measure=None):
     hist = _history()
     if hist and 0 <= now - hist[-1]['at'] < CACHE_TTL:
         return dict(_smooth(hist, now), cached=True)
-    s = (measure or measure_now)()
+    prev = next((h for h in reversed(hist) if h.get('raw')), None)
+    s = (measure or (lambda: measure_now(prev)))()
     hist = [h for h in hist if 0 <= now - h['at'] <= HISTORY_WINDOW][-(HISTORY_MAX - 1):] + [dict(s, at=now)]
     try:
         tmp = cache_file() + '.%d.tmp' % os.getpid()
@@ -262,7 +280,8 @@ def sample(now=None, measure=None):
 def _smooth(hist, now):
     recent = [h for h in hist if 0 <= now - h['at'] <= HISTORY_WINDOW][-HISTORY_MAX:] or hist[-1:]
     last = recent[-1]
-    cpu = round(sum(h['cpu'] for h in recent) / len(recent), 1)
+    cpus = [h['cpu'] for h in recent if isinstance(h.get('cpu'), (int, float))]
+    cpu = round(sum(cpus) / len(cpus), 1) if cpus else 0.0      # unknown CPU counts as 0: memory decides
     return {'mem': last['mem'], 'cpu': cpu, 'at': last['at']}
 
 
