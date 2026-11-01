@@ -124,10 +124,29 @@ class RemoteTriggerActionTests(unittest.TestCase):
         self.root = make_root()
 
     def launch(self, action, model=True, cfg=None):
-        body = {"session_context": {"effort_level": "medium"}, "events": [{"data": {"message": {"content": "```delivery\ntask: X1\n```\nDo it"}}}]}
+        body = {"session_context": {"effort_level": "medium"}, "events": [{"data": {"message": {"content": "```delivery\ntask: X1\n```\nDo it (no UI change)"}}}]}
         if model:
             body["session_context"]["model"] = "sonnet"
         return run(self.root, "RemoteTrigger", {"action": action, "body": body}, cfg=cfg)
+
+    def brief(self, text, cfg=None):
+        body = {"session_context": {"effort_level": "medium", "model": "sonnet"},
+                "events": [{"data": {"message": {"content": "```delivery\ntask: X1\n```\n" + text}}}]}
+        return run(self.root, "RemoteTrigger", {"action": "create", "body": body}, cfg=cfg)
+
+    def test_brief_without_the_e2e_line_is_refused(self):
+        out = self.brief("Do it")
+        self.assertIn("DL-89", out or "")
+        self.assertIn("e2e specs", out)
+
+    def test_brief_with_the_e2e_line_or_no_ui_passes_the_check(self):
+        for text in ("Run the e2e specs of the screens you change.", "Docs only. No UI change."):
+            self.assertNotIn("DL-89", self.brief(text) or "", text)
+
+    def test_e2e_brief_check_can_be_switched_off(self):
+        cfg = H.load_config(str(self.root))
+        cfg["checks_off"] = ["DL-89"]
+        self.assertNotIn("DL-89", self.brief("Do it", cfg=cfg) or "")
 
     def test_update_disable_passes(self):
         self.assertIsNone(run(self.root, "RemoteTrigger", {"action": "update", "trigger_id": "t1", "body": {"enabled": False}}))

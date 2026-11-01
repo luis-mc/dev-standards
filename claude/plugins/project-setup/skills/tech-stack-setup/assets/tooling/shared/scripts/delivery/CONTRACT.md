@@ -12,6 +12,7 @@ are built against; change it first, then the code.
 |---|---|---|
 | `scripts/delivery/branch_gate.py` | `tooling/shared/scripts/delivery/` | gate |
 | `scripts/delivery/gate_verify.py` | same | gate |
+| `scripts/delivery/e2e_push_check.py` | same (called by the `pre-push` hook: refuses a push of changed e2e specs that were not run and passed; DL-88, DS35) | gate |
 | `scripts/delivery/fast_guards.py` | same | gate |
 | `scripts/delivery/join.py` | same | gate |
 | `scripts/delivery/agent_setup.sh` | same | gate |
@@ -212,6 +213,10 @@ gate and CI run the same scanner.
   "required_steps": ["typecheck", "lint"],
   "pass": true,
   "timed_out": false,
+  "ui_changed": true,
+  "e2e_only": false,
+  "e2e": {"required": true, "step": "e2e", "outcome": "pass", "selection": "affected",
+          "specs": ["e2e/checkout.spec.ts"], "changed_specs": []},
   "started_at": "2026-10-10T10:12:03Z",
   "finished_at": "2026-10-10T10:19:47Z",
   "tool": "branch_gate.py 1"
@@ -638,6 +643,15 @@ Playwright takes them as path filters), and the result records
 any changed ui package neither has a spec directory nor is imported by an affected
 ui package that has one, when a ui file is in no package, or for any other kind of
 workspace. A present `e2e_map` wins and is applied exactly as above.
+
+### U8 — agents run the e2e of the screens they change (DS35; DL-86..DL-89)
+
+- A changed e2e spec file (gate.json `e2e_spec_paths`, default `["e2e/*.spec.*", "*/e2e/*.spec.*"]`, `widen_on` match rules) counts as a UI change and is always among the specs the e2e step runs. A change of only spec files runs just those; a widened gate or a `full_on` hit still runs the whole suite.
+- `gate-result.json` adds `ui_changed`, `e2e_only` and `e2e`: `required` (the e2e step is planned to run), `step`, `outcome` (`pass`, `fail`, `skip`, `none`), `selection` (`affected`, `full`, `none`), `specs`, `changed_specs`.
+- `branch_gate.py --e2e-only` runs setup and the e2e step alone, writes a partial result and publishes it at `refs/gate-results/<branch>`; with no UI change or spec change it says so and exits 0. `gate_verify.py` still refuses a partial result as a whole; `gate_verify.e2e_gate_check()` judges only the e2e record for the branch head, and `agent_ci.py` calls it (`agent_ci.require_e2e`, default true) before it starts a CI run.
+- `gate_verify.py` refuses a result when the branch changed `ui_paths` or an e2e spec and the record is absent, or `required` with an outcome other than `pass`.
+- `e2e_push_check.py --commit SHA --base-ref REF` (the pre-push hook passes the same range as `fast_guards.py`): for the e2e spec files the push adds or changes it needs `.delivery/gate-result.json` with `head` equal to SHA and a passing `e2e` record that ran each spec (or `selection` `full`). Else exit 1, naming the specs and `branch_gate.py --e2e-only`.
+- Workers: a step that needs a cap sets it through its `env` (for example `E2E_WORKERS=2` read by `playwright.config`); on a PC at most 2.
 
 ### U2 — the gate fetches its base
 

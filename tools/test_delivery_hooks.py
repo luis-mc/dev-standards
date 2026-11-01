@@ -708,7 +708,7 @@ def dl75_md_outside_docs():
 
 # --- PreToolUse: launches ----------------------------------------------------------------------
 
-BRIEF = 'Do the work.\n```delivery\nsetup: 5\nwork: 10\nchecks: 5\neffort: medium\nowns:\n  - scripts/delivery/**\n```\n'
+BRIEF = 'Do the work. No UI change.\n```delivery\nsetup: 5\nwork: 10\nchecks: 5\neffort: medium\nowns:\n  - scripts/delivery/**\n```\n'
 
 
 def local_agent(prompt=BRIEF, **kw):

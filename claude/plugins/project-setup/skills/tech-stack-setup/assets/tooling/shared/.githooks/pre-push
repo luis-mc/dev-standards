@@ -14,6 +14,10 @@
 # the checked-out one, fast_guards.py checks it out in a temporary worktree and
 # removes that afterwards, so any branch can be pushed from anywhere.
 #
+# E2E specs (DELIVERYSPEC DL-88): scripts/delivery/e2e_push_check.py refuses a push that
+# adds or changes e2e spec files unless .delivery/gate-result.json, for the pushed commit,
+# shows those specs ran and passed (run `branch_gate.py --e2e-only`).
+#
 # Train freeze (STACKSPEC 13.6): scripts/delivery/train_freeze.py refuses a push to a
 # branch that is the head of an open ready (non-draft) pull request while a workflow run
 # of that pull request's head commit has not finished. A finished run (passed or failed),
@@ -109,6 +113,11 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   # shellcheck disable=SC2086
   if ! "$py" scripts/delivery/fast_guards.py --commit "$local_sha" $base_args </dev/null; then
     fail=1
+  fi
+  # A push that changes e2e spec files needs those specs run and passed for this commit (DL-88).
+  if [ -f scripts/delivery/e2e_push_check.py ]; then
+    # shellcheck disable=SC2086
+    "$py" scripts/delivery/e2e_push_check.py --commit "$local_sha" $base_args </dev/null || fail=1
   fi
 done < "$stdin_file"
 
