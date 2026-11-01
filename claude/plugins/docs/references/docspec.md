@@ -324,16 +324,40 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 
 ### 8.1 Checks
 
-- **R8.1** — `docs_check.py` MUST run these checks and exit 1 on any error: layout (L1); feature front matter (F1); every relative link and anchor resolves (K1) and every image has alt text (K2); every `Source:` path exists (S1) and every test path in a "How it is proven" table exists (S2); version table equals front matter (V1); generated files are fresh (G1) and generated reference equals the committed copy (G2); mapped code changed without a doc (M1); files added under `docs/work/` (W1).
-- **R8.2** — `docs_check.py` MUST warn (T1, T2, D1, U1) when a feature's `last_verified` is missing or older than `stale_days`, when the latest commit to the feature's `code` globs is newer than the doc's last commit or `last_verified`, and when a spec has no diagram. `--strict` turns warnings into failures.
+- **R8.1** — `docs_check.py` MUST run these checks and exit 1 on any error:
+
+  | Code | Check |
+  |---|---|
+  | L1 | layout |
+  | F1 | feature front matter |
+  | K1 | every relative link and anchor resolves |
+  | K2 | every image has alt text |
+  | S1 | every `Source:` path exists |
+  | S2 | every test path in a "How it is proven" table exists |
+  | V1 | version table equals front matter |
+  | G1 | generated files are fresh |
+  | G2 | generated reference equals the committed copy |
+  | M1 | mapped code changed without a doc |
+  | W1 | files added under `docs/work/` |
+- **R8.2** — `docs_check.py` MUST warn (T1, T2, D1, U1) in these cases:
+
+  - a feature's `last_verified` is missing or older than `stale_days`
+  - the latest commit to the feature's `code` globs is newer than the doc's last commit or `last_verified`
+  - a spec has no diagram
+
+  `--strict` turns warnings into failures.
 - **R8.3** — A project SHOULD list every code folder it wants mapped in `code_roots`; M1 then warns about changed code under a root that no spec maps.
-- **R8.4** — The checks MUST be stack-neutral: they read Markdown, JSON, git and the paths named in the docs, and run the project's own commands only for `generated_reference`.
+- **R8.4** — The checks MUST be stack-neutral. They read Markdown, JSON, git and the paths named in the docs. They run the project's own commands only for `generated_reference`.
 
 ### 8.2 People, agents and hooks
 
-- **R8.5** — The coding agent that changes behaviour writes the docs in the same branch. Every agent brief SHOULD carry a `docs:` line naming the docs the task updates.
-- **R8.6** — The map check (M1) MUST fail a branch whose changed files match a docs-map glob unless the branch also changes the mapped doc, adds a change note for it, or a commit message on the branch has a line `Docs: none, <reason>`.
-- **R8.7** — The plugin's Stop hook MUST run the map check at the end of a turn and, when it fails, print a warning (`systemMessage`) naming the docs. It MUST NOT block. The SessionStart hook MUST add the documentation rule to the agent's context. Both do nothing in a repository without `docs/docs.json` and fail open on any error.
+- **R8.5** — The coding agent that changes behaviour writes the docs in the same branch. Every agent brief SHOULD carry a `docs:` line that names the docs the task updates.
+- **R8.6** — The map check (M1) MUST fail a branch whose changed files match a docs-map glob. It passes the branch if any one of these holds:
+
+  - the branch also changes the mapped doc
+  - the branch adds a change note for the doc
+  - a commit message on the branch has a line `Docs: none, <reason>`
+- **R8.7** — The plugin's Stop hook MUST run the map check at the end of a turn. When the check fails, the hook MUST print a warning (`systemMessage`) that names the docs. It MUST NOT block. The SessionStart hook MUST add the documentation rule to the agent's context. Both hooks do nothing in a repository without `docs/docs.json`, and both fail open on any error.
 - **R8.8** — The owner reviews decisions and design-system versions, not every doc.
 
 ---
