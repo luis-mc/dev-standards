@@ -58,7 +58,18 @@ flowchart LR
 
 ### 0.1 What this document is
 
-A project's documents have to answer different questions for different readers: what is this, what does feature X do, what are the UX rules, how is it built, how do I run it, what is the value. Without a standard they scatter, go stale, and pile up as agent briefs and reports nobody reads again. This specification defines where each kind of document lives, what a feature spec contains, how the docs are browsed offline, how versions and change history are kept, which checks keep a doc true to the code, and how an existing repository moves to the standard. An implementer can build `luismc-docs` from it. A reviewer can check a project against it with `docs_check.py`.
+A project's documents answer different questions for different readers: what is this, what does feature X do, what are the UX rules, how is it built, how do I run it, what is the value. Without a standard, docs scatter, go stale, and pile up as agent briefs and reports nobody reads again.
+
+This specification defines:
+
+- where each kind of document lives;
+- what a feature spec contains;
+- how the docs are browsed offline;
+- how versions and change history are kept;
+- which checks keep a doc true to the code;
+- how an existing repository moves to the standard.
+
+An implementer can build `luismc-docs` from it. A reviewer can check a project against it with `docs_check.py`.
 
 **What this document is not:** it does not define the content of a project's docs, the artifacts record (ARTIFACTSPEC), or how work is delivered (DELIVERYSPEC).
 
@@ -72,15 +83,15 @@ A project's documents have to answer different questions for different readers: 
 
 ### 0.3 Requirement language
 
-**MUST** and **MUST NOT** are binding. **SHOULD** and **SHOULD NOT** may be deviated from only with a recorded reason. **MAY** is optional.
+**MUST** and **MUST NOT** are binding. **SHOULD** and **SHOULD NOT** may be broken only with a recorded reason. **MAY** is optional.
 
-Requirements are numbered `R<section>.<n>` and are individually citable. Numbering is append-only: a retired number is never reused, and sections are never renumbered to close a gap.
+Requirements are numbered `R<section>.<n>`. Each can be cited alone. Numbering is append-only: a retired number is never reused, and sections are never renumbered to close a gap.
 
 ---
 
 ## Decision record
 
-The owner's choices of 31 October 2026, from the documentation standard artifact (DOC1). Each names the requirements that carry it.
+These are the owner's choices of 31 October 2026, from the documentation standard artifact (DOC1). Each row names the sections or requirements that carry the choice.
 
 | # | Question | Resolution | Consequence |
 |---|---|---|---|
@@ -109,22 +120,30 @@ The owner's choices of 31 October 2026, from the documentation standard artifact
 | Term | Meaning |
 |---|---|
 | lasting doc | A Markdown file under `docs/` outside `docs/work/`. It lives on the default branch. |
-| temporary doc | An agent brief, report, prompt or scratch note under `docs/work/`. It lives on an agent branch only. |
-| binding doc | A doc whose statements the code must meet: feature specs, architecture specs, design-system version files. Only binding docs carry a version. |
+| temporary doc | An agent brief, report, prompt or scratch note under `docs/work/`. It lives only on an agent branch. |
+| binding doc | A doc the code must meet: feature specs, architecture specs, design-system version files. Only binding docs carry a version. |
 | feature | A user-visible capability with its own folder `docs/features/<feature>/`. |
-| change note | A one-line file recording one change to one binding doc, written on a branch and folded at release. |
+| change note | A one-line file that records one change to one binding doc. A branch writes it; the release folds it. |
 | fold | The release step that turns change notes into one version row per doc. |
-| generated file | A file written by a `luismc-docs` script and never edited by hand (R2.5). |
-| docs map | `docs/docs-map.json`: code globs to the docs that describe them. |
+| generated file | A file a `luismc-docs` script writes. Nobody edits it by hand (R2.5). |
+| docs map | `docs/docs-map.json`: code globs mapped to the docs that describe them. |
 | the scripts | The Python scripts in the plugin's `scripts/` folder. |
 
 ### 1.2 In scope
 
-The layout of `docs/`; the feature spec template and front matter; the browsable index; versions and change notes; the checks and hooks; moving an existing repository; the rule for temporary documents.
+- the layout of `docs/`;
+- the feature spec template and front matter;
+- the browsable index;
+- versions and change notes;
+- the checks and hooks;
+- moving an existing repository;
+- the rule for temporary documents.
 
 ### 1.3 Out of scope
 
-The content of a project's documents; publishing docs to a web host; spelling and style checks (a project MAY add its own).
+- the content of a project's documents;
+- publishing docs to a web host;
+- spelling and style checks (a project MAY add its own).
 
 ---
 
@@ -155,20 +174,37 @@ The content of a project's documents; publishing docs to a web host; spelling an
 ```
 
 - **R2.1** — A project that follows this standard MUST have `docs/docs.json`, `docs/README.md`, the five overview pages (R3.1) and `AGENTS.md`. `docs_check.py` reports each missing file (L1).
-- **R2.2** — Lasting docs MUST live in the folder that answers their reader's question (§2.1). A doc about one feature goes in that feature's folder; a rule that spans features goes in `architecture/`; a task a person performs goes in `guides/`.
-- **R2.3** — Every lasting page SHOULD carry the Diataxis type of the page (`tutorial`, `how-to`, `reference` or `explanation`) in its front matter `type`. Feature specs MUST (R4.2).
-- **R2.4** — The artifacts record MUST live in the folder named by `record_dir` in `docs/docs.json` (default `docs/project`), and the artifacts plugin's own `record_dir` setting MUST name the same folder. `docs_setup.py move-record` moves the record and sets both.
-- **R2.5** — Generated files are `docs/index.html`, `docs/llms.txt`, `docs/features/index.md`, `docs/architecture/decisions.md`, `docs/docs-map.json`, everything in `docs/reference/` that a `generated_reference` entry names, and `docs/_site/`. Nobody edits them by hand. `docs_check.py` fails a stale one (G1, G2).
-- **R2.6** — `docs/_site/` MUST be git-ignored. `docs/index.html` is committed and links into `_site/`; when `_site/` is missing its search says to run `docs_index.py build`.
-- **R2.7** — `docs/archive/` holds superseded docs. A doc moved there keeps a link to what replaced it and is never cited as a rule.
+- **R2.2** — Lasting docs MUST live in the folder that answers their reader's question (§2.1). A doc about one feature goes in that feature's folder. A rule that spans features goes in `architecture/`. A task a person performs goes in `guides/`.
+- **R2.3** — Every lasting page SHOULD carry its Diataxis type (`tutorial`, `how-to`, `reference` or `explanation`) in the front matter key `type`. Feature specs MUST (R4.2).
+- **R2.4** — The artifacts record MUST live in the folder named by `record_dir` in `docs/docs.json` (default `docs/project`), and the artifacts plugin's own `record_dir` setting MUST name the same folder. `docs_setup.py move-record` moves the record and sets both settings.
+- **R2.5** — The generated files are:
+  - `docs/index.html`
+  - `docs/llms.txt`
+  - `docs/features/index.md`
+  - `docs/architecture/decisions.md`
+  - `docs/docs-map.json`
+  - everything in `docs/reference/` that a `generated_reference` entry names
+  - `docs/_site/`
+
+  Nobody edits them by hand. `docs_check.py` fails a stale one (G1, G2).
+- **R2.6** — `docs/_site/` MUST be git-ignored. `docs/index.html` is committed and links into `_site/`. When `_site/` is missing, its search says to run `docs_index.py build`.
+- **R2.7** — `docs/archive/` holds superseded docs. A doc moved there keeps a link to its replacement. Nobody cites it as a rule.
 
 ---
 
 ## 3. Overview
 
-- **R3.1** — `docs/overview/` MUST hold exactly the pages `README.md` (mission, users, why, what it is not), `apps.md` (one section per app, linked to its features), `system.md` (a C4 context diagram and a container diagram in Mermaid, and the main data flows), `glossary.md` (one term, one meaning; the words users may see) and `quality.md` (quality goals, constraints, risks). A project MAY add pages. It MUST NOT drop these five.
+- **R3.1** — `docs/overview/` MUST hold exactly these pages. A project MAY add pages. It MUST NOT drop these five.
+
+  | Page | Content |
+  |---|---|
+  | `README.md` | mission, users, why, what it is not |
+  | `apps.md` | one section per app, linked to its features |
+  | `system.md` | a C4 context diagram and a container diagram in Mermaid, and the main data flows |
+  | `glossary.md` | one term, one meaning; the words users may see |
+  | `quality.md` | quality goals, constraints, risks |
 - **R3.2** — The app names in `apps.md` MUST be the values of `apps` in `docs/docs.json` (R4.4).
-- **R3.3** — The overview MUST NOT repeat a feature's content: it links to the feature spec.
+- **R3.3** — The overview MUST NOT repeat a feature's content. It links to the feature spec.
 
 ---
 
@@ -176,28 +212,55 @@ The content of a project's documents; publishing docs to a web host; spelling an
 
 ### 4.1 Folder and file
 
-- **R4.1** — Each feature MUST have the folder `docs/features/<feature>/` with `spec.md`; its images in `images/`, diagrams too big for Mermaid in `diagrams/` and its change notes in `changes/` (R7.1). The folder name is lower-case words joined by hyphens and never changes.
-- **R4.2** — `spec.md` MUST start with front matter holding these keys: `id` (equal to the folder name), `title`, `apps`, `topics`, `status` (`proposed`, `building`, `live` or `retired`), `version` (x.y.z), `owner` (`owner` or `agents`), `type` (a Diataxis type) and `code` (a list of globs; MAY be empty for a feature with no code yet). It SHOULD also carry `design_system` (rule IDs cited), `last_verified` (a date) and `artifact` (the feature artifact's file name). `docs_check.py` reports a missing or invalid key (F1).
-- **R4.3** — `version` MUST be written only by the release fold (R7.4). `status: live` means the code has shipped and the checks pass; `building` marks unfinished parts `NOT YET IMPLEMENTED`; `retired` moves the spec to `archive/` (R2.7).
-- **R4.4** — The values of `apps` and `topics` MUST come from the lists in `docs/docs.json` when those lists are not empty. A feature used by two apps lists both and appears under both in the index.
-- **R4.5** — `docs/features/index.md` MUST be generated from the front matter (R6.3), never written by hand.
+- **R4.1** — Each feature MUST have the folder `docs/features/<feature>/` with `spec.md`. Its images go in `images/`, diagrams too big for Mermaid in `diagrams/`, and its change notes in `changes/` (R7.1). The folder name is lower-case words joined by hyphens. It never changes.
+- **R4.2** — `spec.md` MUST start with front matter that holds these keys:
+
+  - `id` (equal to the folder name)
+  - `title`
+  - `apps`
+  - `topics`
+  - `status` (`proposed`, `building`, `live` or `retired`)
+  - `version` (x.y.z)
+  - `owner` (`owner` or `agents`)
+  - `type` (a Diataxis type)
+  - `code` (a list of globs; MAY be empty for a feature with no code yet)
+
+  It SHOULD also carry `design_system` (rule IDs cited), `last_verified` (a date) and `artifact` (the feature artifact's file name). `docs_check.py` reports a missing or invalid key (F1).
+- **R4.3** — `version` MUST be written only by the release fold (R7.4). `status: live` means the code has shipped and the checks pass. `building` marks unfinished parts `NOT YET IMPLEMENTED`. `retired` moves the spec to `archive/` (R2.7).
+- **R4.4** — The values of `apps` and `topics` MUST come from the lists in `docs/docs.json` when those lists are not empty. A feature that two apps use lists both, and the index shows it under both.
+- **R4.5** — `docs/features/index.md` MUST be generated from the front matter (R6.3). Nobody writes it by hand.
 
 ### 4.2 Template
 
-- **R4.6** — A spec follows `templates/feature-spec.md`: 1 in one paragraph; 2 why (problem, users, goals, non-goals); 3 how it works (a flow diagram and the steps in words); 4 screens and states; 5 functional requirements; 6 non-functional requirements; 7 design; 8 failure modes; 9 how it is proven; 10 decisions; 11 not built yet; 12 code map; then `## Versions`. Sections 1 to 4 are written for every reader (product, design, UX); sections 5 to 12 for engineers. A section that does not apply is deleted.
+- **R4.6** — A spec follows `templates/feature-spec.md`. Its sections are:
+
+  1. in one paragraph
+  2. why (problem, users, goals, non-goals)
+  3. how it works (a flow diagram and the steps in words)
+  4. screens and states
+  5. functional requirements
+  6. non-functional requirements
+  7. design
+  8. failure modes
+  9. how it is proven
+  10. decisions
+  11. not built yet
+  12. code map
+
+  Then comes `## Versions`. Sections 1 to 4 are for every reader (product, design, UX). Sections 5 to 12 are for engineers. Delete a section that does not apply.
 - **R4.7** — Every functional or non-functional requirement MUST carry an ID `R<section>.<n>` and be testable. Section 9 maps each ID to the test that proves it; `docs_check.py` reports a test path that does not exist (S2).
 - **R4.8** — Every spec SHOULD have at least one Mermaid diagram or image; `docs_check.py` warns when it has none (D1). Every image MUST have alt text (K2).
 - **R4.9** — Section 12 lists `Source: <path>` lines, one per file to keep in step. A `Source:` path that does not exist is an error (S1).
-- **R4.10** — A feature that has a feature artifact keeps the artifact for work and decisions in flight; the spec is how the feature works now. A finding from the artifact's work is promoted into the spec in the same branch.
+- **R4.10** — A feature that has a feature artifact keeps the artifact for work and decisions in flight. The spec says how the feature works now. A finding from the artifact's work is promoted into the spec in the same branch.
 
 ---
 
 ## 5. The other folders
 
-- **R5.1** — `architecture/` holds binding cross-cutting specs (data model, security, platform), each with front matter (`id`, `title`, `version`, `owner`, `code`) and a `## Versions` table written by the fold. Decision records live in `architecture/decisions/` (R11.1).
-- **R5.2** — `guides/` holds how-to pages and `runbooks/` (install, release, restore, incident). Guides are not versioned: git is their history.
-- **R5.3** — `reference/` holds facts that a tool can produce (API, CLI help, config keys, environment variables, schema). A page there MUST be generated by a command listed in `generated_reference` in `docs/docs.json`, and `docs_check.py` runs the command and fails when the output differs from the committed copy (G2).
-- **R5.4** — `design-system/` keeps the project's own version folders and approval rules unchanged; this standard only requires that it is the only home of UX rules (R11.2).
+- **R5.1** — `architecture/` holds binding cross-cutting specs (data model, security, platform). Each has front matter (`id`, `title`, `version`, `owner`, `code`) and a `## Versions` table that the fold writes. Decision records live in `architecture/decisions/` (R11.1).
+- **R5.2** — `guides/` holds how-to pages and `runbooks/` (install, release, restore, incident). Guides have no version. Git is their history.
+- **R5.3** — `reference/` holds facts that a tool can produce (API, CLI help, config keys, environment variables, schema). A page there MUST be generated by a command listed in `generated_reference` in `docs/docs.json`. `docs_check.py` runs the command and fails when the output differs from the committed copy (G2).
+- **R5.4** — `design-system/` keeps the project's own version folders and approval rules unchanged. This standard only requires that it is the only home of UX rules (R11.2).
 
 ---
 
@@ -205,12 +268,33 @@ The content of a project's documents; publishing docs to a web host; spelling an
 
 ### 6.1 The index script
 
-- **R6.1** — `docs_index.py build` MUST write `docs/index.html` and one HTML page per lasting doc in `docs/_site/` using only the Python standard library. The result MUST work when opened from `file://`: no server, no `fetch`; search data is loaded by a script tag.
-- **R6.2** — The home page MUST offer search over title, path and text, a link to the overview, the feature index by app and by topic, the list of all pages and the gaps list (R6.4).
-- **R6.3** — `docs_index.py build` MUST also write `docs/features/index.md` (features by app, by topic and by status), `docs/architecture/decisions.md` (R11.1), `docs/docs-map.json` (code globs to docs) and `docs/llms.txt` (a map of the docs for agents). `docs_index.py check` exits 1 when a committed generated file differs from what a build would write.
-- **R6.4** — The gaps list MUST name: feature folders without `spec.md`, specs without front matter, apps, topics or an owner, specs without a diagram or image, apps no spec lists, and missing overview pages. A feature whose `last_verified` is older than `stale_days` (default 90) or missing shows as stale on the home page.
-- **R6.5** — Mermaid blocks render as diagrams offline. The plugin ships a committed copy of Mermaid 11.4.1 (`vendor/mermaid.min.js`, MIT, with `vendor/LICENSE-mermaid` and `vendor/README.md` naming version and source) and `docs_index.py build` uses it by default, copying it to `docs/_site/vendor/`. Overrides, in order: `--mermaid PATH`, `DOCS_MERMAID_JS`, a copy already in `docs/_site/vendor/` (for example from `docs_index.py fetch-mermaid`, which downloads the pinned version). If no copy is found a block shows as readable source with a note. Pages set the diagram theme from the reader's light or dark preference.
-- **R6.6** — Relative links between docs MUST work in the built site: a `.md` link becomes the page's `.html`, an asset is copied next to the page, and a link outside `docs/` is left as written.
+- **R6.1** — `docs_index.py build` MUST write `docs/index.html` and one HTML page per lasting doc in `docs/_site/`, using only the Python standard library. The result MUST work when opened from `file://`: no server, no `fetch`. A script tag loads the search data.
+- **R6.2** — The home page MUST offer:
+
+  - search over title, path and text
+  - a link to the overview
+  - the feature index by app and by topic
+  - the list of all pages
+  - the gaps list (R6.4)
+- **R6.3** — `docs_index.py build` MUST also write these files:
+
+  - `docs/features/index.md` (features by app, by topic and by status)
+  - `docs/architecture/decisions.md` (R11.1)
+  - `docs/docs-map.json` (code globs mapped to docs)
+  - `docs/llms.txt` (a map of the docs for agents)
+
+  `docs_index.py check` exits 1 when a committed generated file differs from what a build would write.
+- **R6.4** — The gaps list MUST name:
+
+  - feature folders without `spec.md`
+  - specs without front matter, apps, topics or an owner
+  - specs without a diagram or image
+  - apps that no spec lists
+  - missing overview pages
+
+  The home page shows a feature as stale when its `last_verified` is missing or older than `stale_days` (default 90).
+- **R6.5** — Mermaid blocks render as diagrams offline. The plugin ships a committed copy of Mermaid 11.4.1 (`vendor/mermaid.min.js`, MIT, with `vendor/LICENSE-mermaid` and `vendor/README.md` naming version and source). `docs_index.py build` uses it by default and copies it to `docs/_site/vendor/`. Overrides, in order: `--mermaid PATH`, `DOCS_MERMAID_JS`, a copy already in `docs/_site/vendor/` (for example from `docs_index.py fetch-mermaid`, which downloads the pinned version). If no copy is found, a block shows as readable source with a note. Pages set the diagram theme from the reader's light or dark preference.
+- **R6.6** — Relative links between docs MUST work in the built site. A `.md` link becomes the page's `.html`. An asset is copied next to the page. A link outside `docs/` is left as written.
 - **R6.7** — `docs/work/`, `docs/_site/` and change notes MUST NOT be indexed.
 
 ---
@@ -218,11 +302,21 @@ The content of a project's documents; publishing docs to a web host; spelling an
 ## 7. Versions and change notes
 
 - **R7.1** — A branch that changes a binding doc MUST add one change note instead of editing the doc's version or version table. The note is `docs/features/<feature>/changes/<task>.md`, or `docs/<area>/changes/<doc>/<task>.md` for another binding doc. `docs_fold.py note` writes it.
-- **R7.2** — A note has front matter `change` (`patch`, `minor` or `major`), optional `breaking: true` (which means major), optional `section`, and `task`; its body is one line: what changed, in which section, and the decision or reason. There is one note per task per doc.
-- **R7.3** — The version rule is per release, and the highest note wins: major when a note is breaking, minor when any note adds or changes behaviour, patch for wording and fixes to the doc only.
-- **R7.4** — `docs_fold.py fold --release <name>` MUST, for each doc with notes: bump `version` in the front matter once, write one row at the top of the doc's `## Versions` table (version, date, release, the notes as lines, the task IDs), and delete the folded notes. `--dry-run` prints the plan and changes nothing. A note that names a doc that does not exist is an error and is kept.
-- **R7.5** — Only binding docs carry a version. Guides, runbooks and the overview do not; their history is git.
-- **R7.6** — `docs_check.py` fails a binding doc whose front matter version differs from the top row of its table (V1). `docs_fold.py pending` exits 1 while notes wait; the release gate on the default branch runs it.
+- **R7.2** — A note has front matter `change` (`patch`, `minor` or `major`), optional `breaking: true` (which means major), optional `section`, and `task`. Its body is one line: what changed, in which section, and the decision or reason. There is one note per task per doc.
+- **R7.3** — The version rule applies per release. The highest note wins:
+
+  - major when a note is breaking
+  - minor when any note adds or changes behaviour
+  - patch for wording and fixes to the doc only
+- **R7.4** — `docs_fold.py fold --release <name>` MUST do this for each doc with notes:
+
+  - bump `version` in the front matter once
+  - write one row at the top of the doc's `## Versions` table (version, date, release, the notes as lines, the task IDs)
+  - delete the folded notes
+
+  `--dry-run` prints the plan and changes nothing. A note that names a doc that does not exist is an error. The script keeps that note.
+- **R7.5** — Only binding docs carry a version. Guides, runbooks and the overview do not. Git is their history.
+- **R7.6** — `docs_check.py` fails a binding doc whose front matter version differs from the top row of its table (V1). `docs_fold.py pending` exits 1 while notes wait. The release gate on the default branch runs it.
 
 ---
 
@@ -230,40 +324,75 @@ The content of a project's documents; publishing docs to a web host; spelling an
 
 ### 8.1 Checks
 
-- **R8.1** — `docs_check.py` MUST run these checks and exit 1 on any error: layout (L1); feature front matter (F1); every relative link and anchor resolves (K1) and every image has alt text (K2); every `Source:` path exists (S1) and every test path in a "How it is proven" table exists (S2); version table equals front matter (V1); generated files are fresh (G1) and generated reference equals the committed copy (G2); mapped code changed without a doc (M1); files added under `docs/work/` (W1).
-- **R8.2** — `docs_check.py` MUST warn (T1, T2, D1, U1) when a feature's `last_verified` is missing or older than `stale_days`, when the latest commit to the feature's `code` globs is newer than the doc's last commit or `last_verified`, and when a spec has no diagram. `--strict` turns warnings into failures.
+- **R8.1** — `docs_check.py` MUST run these checks and exit 1 on any error:
+
+  | Code | Check |
+  |---|---|
+  | L1 | layout |
+  | F1 | feature front matter |
+  | K1 | every relative link and anchor resolves |
+  | K2 | every image has alt text |
+  | S1 | every `Source:` path exists |
+  | S2 | every test path in a "How it is proven" table exists |
+  | V1 | version table equals front matter |
+  | G1 | generated files are fresh |
+  | G2 | generated reference equals the committed copy |
+  | M1 | mapped code changed without a doc |
+  | W1 | files added under `docs/work/` |
+- **R8.2** — `docs_check.py` MUST warn (T1, T2, D1, U1) in these cases:
+
+  - a feature's `last_verified` is missing or older than `stale_days`
+  - the latest commit to the feature's `code` globs is newer than the doc's last commit or `last_verified`
+  - a spec has no diagram
+
+  `--strict` turns warnings into failures.
 - **R8.3** — A project SHOULD list every code folder it wants mapped in `code_roots`; M1 then warns about changed code under a root that no spec maps.
-- **R8.4** — The checks MUST be stack-neutral: they read Markdown, JSON, git and the paths named in the docs, and run the project's own commands only for `generated_reference`.
+- **R8.4** — The checks MUST be stack-neutral. They read Markdown, JSON, git and the paths named in the docs. They run the project's own commands only for `generated_reference`.
 
 ### 8.2 People, agents and hooks
 
-- **R8.5** — The coding agent that changes behaviour writes the docs in the same branch. Every agent brief SHOULD carry a `docs:` line naming the docs the task updates.
-- **R8.6** — The map check (M1) MUST fail a branch whose changed files match a docs-map glob unless the branch also changes the mapped doc, adds a change note for it, or a commit message on the branch has a line `Docs: none, <reason>`.
-- **R8.7** — The plugin's Stop hook MUST run the map check at the end of a turn and, when it fails, print a warning (`systemMessage`) naming the docs. It MUST NOT block. The SessionStart hook MUST add the documentation rule to the agent's context. Both do nothing in a repository without `docs/docs.json` and fail open on any error.
+- **R8.5** — The coding agent that changes behaviour writes the docs in the same branch. Every agent brief SHOULD carry a `docs:` line that names the docs the task updates.
+- **R8.6** — The map check (M1) MUST fail a branch whose changed files match a docs-map glob. It passes the branch if any one of these holds:
+
+  - the branch also changes the mapped doc
+  - the branch adds a change note for the doc
+  - a commit message on the branch has a line `Docs: none, <reason>`
+- **R8.7** — The plugin's Stop hook MUST run the map check at the end of a turn and, when it fails, print a warning (`systemMessage`) that names the docs. It MUST NOT block. The SessionStart hook MUST add the documentation rule to the agent's context. Both hooks do nothing in a repository without `docs/docs.json`, and both fail open on any error.
 - **R8.8** — The owner reviews decisions and design-system versions, not every doc.
 
 ---
 
 ## 9. Existing repositories
 
-- **R9.1** — `docs_setup.py migrate` MUST be a dry run by default: it prints the plan (old path, new path, why, and whether the target is a guess) and changes nothing. `--apply` makes the changes. `--map OLD=NEW` overrides one target.
-- **R9.2** — With `--apply`, the script MUST move files with `git mv` (keeping history; `os.rename` outside git), rewrite every relative link in the Markdown and HTML files under `docs/` and in the root `README.md`, `AGENTS.md` and `CLAUDE.md` so it still resolves, add front matter stubs to moved feature specs, and then create what the layout lacks (R2.1).
-- **R9.3** — The script MUST NOT delete a file. A move whose target exists is skipped, reported, and exits 2. A second run changes nothing.
-- **R9.4** — The script MUST NOT move `docs/work/`; it reports what is there. The artifacts record under `docs/work/artifacts` or `docs/artifacts` moves to `record_dir`; `docs/work/agents/BRIEF.md` moves to `AGENTS.md`.
-- **R9.5** — The move is mechanical. Content work (splitting app design specs into feature specs, writing the overview, promoting the lasting content of retired artifacts) follows as tasks over normal work, and the gaps list (R6.4) tracks it. A full rewrite of every doc to the templates is planned separately (D15).
-- **R9.6** — `docs_setup.py move-record` MUST move the record to `record_dir`, set `record_dir` in `.claude/artifacts.json`, never overwrite an existing file, and be a dry run unless `--apply`.
-- **R9.7** — `docs_setup.py init` MUST create the layout in a repository with none, never over an existing file, and ignore `docs/_site/`.
+- **R9.1** — `docs_setup.py migrate` MUST be a dry run by default. It prints the plan (old path, new path, why, and whether the target is a guess) and changes nothing. `--apply` makes the changes. `--map OLD=NEW` overrides one target.
+- **R9.2** — With `--apply`, the script MUST do these steps in order:
+
+  1. Move files with `git mv`, which keeps history (`os.rename` outside git).
+  2. Rewrite every relative link in the Markdown and HTML files under `docs/` and in the root `README.md`, `AGENTS.md` and `CLAUDE.md`, so each still resolves.
+  3. Add front matter stubs to moved feature specs.
+  4. Create what the layout lacks (R2.1).
+- **R9.3** — The script MUST NOT delete a file. It skips a move whose target exists, reports it, and exits 2. A second run changes nothing.
+- **R9.4** — The script MUST NOT move `docs/work/`. It reports what is there. The artifacts record under `docs/work/artifacts` or `docs/artifacts` moves to `record_dir`. `docs/work/agents/BRIEF.md` moves to `AGENTS.md`.
+- **R9.5** — The move is mechanical. Content work follows as tasks over normal work, and the gaps list (R6.4) tracks it. Content work includes:
+
+  - splitting app design specs into feature specs
+  - writing the overview
+  - promoting the lasting content of retired artifacts
+
+  A full rewrite of every doc to the templates is planned separately (D15).
+- **R9.6** — `docs_setup.py move-record` MUST move the record to `record_dir`, set `record_dir` in `.claude/artifacts.json`, never overwrite an existing file, and be a dry run unless `--apply` is given.
+- **R9.7** — `docs_setup.py init` MUST create the layout in a repository that has none, never over an existing file, and ignore `docs/_site/`.
 - **R9.8** — A migration SHOULD run between trains so no branch is in flight.
 
 ---
 
 ## 10. Temporary documents
 
-- **R10.1** — Agent briefs, reports, prompts and scratch notes MUST live under `docs/work/` on the agent's branch, for example `docs/work/reports/<task>.md`, and MUST NOT reach the default branch.
-- **R10.2** — `docs_work.py guard --base <ref>` MUST exit 1 when the branch adds a file under `docs/work/`; the gate runs it on a ready pull request to the default branch (W1).
+- **R10.1** — Agent briefs, reports, prompts and scratch notes MUST live under `docs/work/` on the agent's branch, for example `docs/work/reports/<task>.md`. They MUST NOT reach the default branch.
+- **R10.2** — `docs_work.py guard --base <ref>` MUST exit 1 when the branch adds a file under `docs/work/`. The gate runs it on a ready pull request to the default branch (W1).
 - **R10.3** — The join step MUST run `docs_work.py strip --apply` on the joined head and put each report's summary line (`docs_work.py summaries`) into the release pull request body.
 - **R10.4** — A finding or measurement worth keeping MUST be promoted into a lasting doc in the same branch before the join.
-- **R10.5** — Standing rules are not temporary: they live in `AGENTS.md`, which `CLAUDE.md` imports.
+- **R10.5** — Standing rules are not temporary. They live in `AGENTS.md`, which `CLAUDE.md` imports.
 
 ---
 
@@ -271,23 +400,28 @@ The content of a project's documents; publishing docs to a web host; spelling an
 
 ### 11.1 Decisions
 
-- **R11.1** — A decision about one feature is kept in that feature's `decisions.json` in the record and copied into the spec's Decisions table when decided. A choice that spans features is a MADR file `docs/architecture/decisions/NNNN-title.md` (`templates/madr.md`); a superseded one links to its replacement. `docs/architecture/decisions.md` is generated and lists both.
+- **R11.1** — A decision about one feature is kept in that feature's `decisions.json` in the record. It is copied into the spec's Decisions table when decided. A choice that spans features is a MADR file `docs/architecture/decisions/NNNN-title.md` (`templates/madr.md`). A superseded one links to its replacement. `docs/architecture/decisions.md` is generated and lists both.
 
 ### 11.2 Design system
 
-- **R11.2** — UX rules, tokens, components and patterns MUST live only in `docs/design-system/`. A feature spec shows its screens and states and cites rules by ID without copying them. `docs_check.py` warns (U1) on rule-like text (must, never, always, should next to a UI term) in a screens section unless the line cites a design-system ID or carries `<!-- ux-ok -->` (U1). **U1 is a warning for now; it becomes an error later (owner decision, 31 Oct 2026).** Keep `<!-- ux-ok -->` on lines that are allowed.
+- **R11.2** — UX rules, tokens, components and patterns MUST live only in `docs/design-system/`. A feature spec shows its screens and states. It cites rules by ID and does not copy them. `docs_check.py` warns (U1) on rule-like text (must, never, always, should next to a UI term) in a screens section, unless the line cites a design-system ID or carries `<!-- ux-ok -->` (U1). **U1 is a warning for now; it becomes an error later (owner decision, 31 Oct 2026).** Keep `<!-- ux-ok -->` on lines that are allowed.
 - **R11.3** — The words users see (labels, messages) live in the design system's content rules or in the glossary.
 
 ### 11.3 Diagrams
 
-- **R11.4** — Flows, sequences, states and C4-style diagrams are Mermaid code blocks in the Markdown. Screenshots and mocks are image files next to the spec, with alt text.
+- **R11.4** — Flows, sequences, states and C4-style diagrams are Mermaid code blocks in the Markdown. Screenshots and mocks are image files next to the spec. Each has alt text.
 
 ---
 
 ## 12. Packaging
 
-- **R12.1** — The standard ships as the plugin `luismc-docs`: this specification; the skills `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check` and `docs-note`; the scripts `docs_setup.py`, `docs_index.py`, `docs_fold.py`, `docs_check.py`, `docs_work.py` and the two hooks; the templates.
-- **R12.2** — The plugin MUST work in a project without the delivery or artifacts plugins. The other plugins point to it for docs rules and MUST NOT restate them.
+- **R12.1** — The standard ships as the plugin `luismc-docs`. It holds:
+
+  - this specification
+  - the skills `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check` and `docs-note`
+  - the scripts `docs_setup.py`, `docs_index.py`, `docs_fold.py`, `docs_check.py`, `docs_work.py` and the two hooks
+  - the templates
+- **R12.2** — The plugin MUST work in a project without the delivery or artifacts plugins. The other plugins point to it for docs rules. They MUST NOT restate those rules.
 - **R12.3** — `docs.json` keys: `apps`, `topics`, `record_dir`, `default_branch`, `stale_days`, `binding` (folders whose docs are binding), `code_roots` and `generated_reference` (a list of `{name, command, output}`).
 - **R12.4** — The scripts MUST use only the Python standard library and run on Python 3.9 or later.
 
@@ -295,13 +429,23 @@ The content of a project's documents; publishing docs to a web host; spelling an
 
 ## 13. Test gate
 
-- **R13.1** — Every script has tests in `tests/`: `test_lib.py`, `test_setup.py`, `test_index.py`, `test_fold.py`, `test_check.py`, `test_work.py`, `test_hooks.py`, run with `python3 -I -m unittest discover -s claude/plugins/docs/tests`.
-- **R13.2** — The tests cover each requirement that a script implements: R2.1, R2.5 and R6.3 (`test_index.py`, `test_check.py`), R4.2 (`test_check.py`), R6.1 to R6.7 (`test_index.py`), R7.1 to R7.6 (`test_fold.py`), R8.1 to R8.7 (`test_check.py`, `test_hooks.py`), R9.1 to R9.7 (`test_setup.py`), R10.2 and R10.3 (`test_work.py`).
+- **R13.1** — Every script has tests in `tests/`: `test_lib.py`, `test_setup.py`, `test_index.py`, `test_fold.py`, `test_check.py`, `test_work.py` and `test_hooks.py`. Run them with `python3 -I -m unittest discover -s claude/plugins/docs/tests`.
+- **R13.2** — The tests cover each requirement that a script implements:
+
+  | Requirements | Test files |
+  |---|---|
+  | R2.1, R2.5, R6.3 | `test_index.py`, `test_check.py` |
+  | R4.2 | `test_check.py` |
+  | R6.1 to R6.7 | `test_index.py` |
+  | R7.1 to R7.6 | `test_fold.py` |
+  | R8.1 to R8.7 | `test_check.py`, `test_hooks.py` |
+  | R9.1 to R9.7 | `test_setup.py` |
+  | R10.2, R10.3 | `test_work.py` |
 - **R13.3** — This specification MUST pass `python3 tools/spec_check.py claude/plugins/docs/references/docspec.md`.
 
 ---
 
 ## 14. Conformance gate
 
-- **R14.1** — A project conforms when `python3 <plugin>/scripts/docs_check.py --base <default branch>` exits 0 on its branch and `python3 <plugin>/scripts/docs_index.py check` exits 0.
-- **R14.2** — A project records the DOCSPEC version it follows in `docs/docs.json` as `docspec`.
+- **R14.1** — A project conforms when both commands exit 0 on its branch: `python3 <plugin>/scripts/docs_check.py --base <default branch>` and `python3 <plugin>/scripts/docs_index.py check`.
+- **R14.2** — A project records the DOCSPEC version it follows in `docs/docs.json`, under the key `docspec`.
