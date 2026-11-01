@@ -326,9 +326,10 @@ def changed_files(root: Path, base: str | None) -> list[str]:
     """Files changed on this branch since `base` (merge-base) plus uncommitted ones."""
     files: set[str] = set()
     if base:
-        mb = git(root, "merge-base", base, "HEAD")
-        ref = mb.stdout.strip() if mb.returncode == 0 and mb.stdout.strip() else base
-        r = git(root, "diff", "--name-only", "--diff-filter=ACMRD", ref, "HEAD")
+        # `base...HEAD` diffs against the merge-base in one call.
+        r = git(root, "diff", "--name-only", "--diff-filter=ACMRD", f"{base}...HEAD")
+        if r.returncode != 0:  # no merge-base: compare with base itself, as before
+            r = git(root, "diff", "--name-only", "--diff-filter=ACMRD", base, "HEAD")
         files.update(x for x in r.stdout.split("\n") if x)
     r = git(root, "status", "--porcelain")
     for line in r.stdout.split("\n"):

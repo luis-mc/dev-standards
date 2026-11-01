@@ -1,3 +1,4 @@
+import os
 import unittest
 
 from _helpers import L, make_root  # noqa: F401  (puts scripts/ on sys.path)
@@ -73,6 +74,9 @@ class FalseAlarmTests(unittest.TestCase):
 
 
 class OneCiPerReleaseTests(unittest.TestCase):
+    def setUp(self):
+        self.r = self.root()
+
     def ledger(self, **kw):
         t = {"id": "T-1", "release_no": 41, "pr": 399, "merged_at": "2026-10-16T22:00:00Z", "state": "merged"}
         t.update(kw)
@@ -85,7 +89,7 @@ class OneCiPerReleaseTests(unittest.TestCase):
             if argv[0] == "api":
                 return {"tree": trees[0] if argv[1].endswith(merge) else trees[1]}
             if argv[:2] == ["run", "list"]:
-                return [{"databaseId": 7, "workflowName": "main"}]
+                return [{"databaseId": 7, "workflowName": "main", "status": "completed"}]
             if argv[:2] == ["run", "view"]:
                 return {"jobs": [{"name": n, "conclusion": (conclusion or {}).get(n, "success")} for n in jobs]}
         return run
@@ -94,7 +98,7 @@ class OneCiPerReleaseTests(unittest.TestCase):
         return {"pr_proven_jobs": list(names)}
 
     def test_repeated_pr_proven_job_on_same_tree_is_flagged(self):
-        out = S.check_one_ci_per_release("/x", self.ledger(), self.cfg("Windows tests"), gh=self.gh())
+        out = S.check_one_ci_per_release(self.r, self.ledger(), self.cfg("Windows tests"), gh=self.gh())
         self.assertEqual(len(out), 1)
         self.assertIn("DL-76", out[0][1])
         self.assertIn("RELEASE-41", out[0][1])
@@ -104,19 +108,111 @@ class OneCiPerReleaseTests(unittest.TestCase):
     def test_nothing_configured_means_no_check_and_no_gh_call(self):
         def boom(argv, root):
             raise AssertionError("gh called")
-        self.assertEqual(S.check_one_ci_per_release("/x", self.ledger(), {}, gh=boom), [])
+        self.assertEqual(S.check_one_ci_per_release(self.r, self.ledger(), {}, gh=boom), [])
 
     def test_different_tree_skipped_job_and_unmerged_train_pass(self):
         c = self.cfg("Windows tests")
-        self.assertEqual(S.check_one_ci_per_release("/x", self.ledger(), c, gh=self.gh(trees=("t2", "t1"))), [])
-        self.assertEqual(S.check_one_ci_per_release("/x", self.ledger(), c,
+        self.assertEqual(S.check_one_ci_per_release(self.r, self.ledger(), c, gh=self.gh(trees=("t2", "t1"))), [])
+        self.assertEqual(S.check_one_ci_per_release(self.r, self.ledger(), c,
                                                     gh=self.gh(conclusion={"Windows tests": "skipped"})), [])
-        self.assertEqual(S.check_one_ci_per_release("/x", self.ledger(merged_at=None), c, gh=self.gh()), [])
-        self.assertEqual(S.check_one_ci_per_release("/x", self.ledger(state="cleaned"), c, gh=self.gh()), [])
+        self.assertEqual(S.check_one_ci_per_release(self.r, self.ledger(merged_at=None), c, gh=self.gh()), [])
+        self.assertEqual(S.check_one_ci_per_release(self.r, self.ledger(state="cleaned"), c, gh=self.gh()), [])
 
     def test_glob_and_gh_failure(self):
-        self.assertEqual(len(S.check_one_ci_per_release("/x", self.ledger(), self.cfg("windows *"), gh=self.gh())), 1)
-        self.assertEqual(S.check_one_ci_per_release("/x", self.ledger(), self.cfg("Publish"), gh=lambda a, r: None), [])
+        self.assertEqual(len(S.check_one_ci_per_release(self.r, self.ledger(), self.cfg("windows *"), gh=self.gh())), 1)
+        self.assertEqual(S.check_one_ci_per_release(self.root(), self.ledger(), self.cfg("Publish"), gh=lambda a, r: None), [])
+
+    # --- DS167: per-merge-commit cache -------------------------------------------------------
+
+    def counting(self, inner):
+        calls = []
+
+        def run(argv, root):
+            calls.append(argv)
+            return inner(argv, root)
+        run.calls = calls
+        return run
+
+    def root(self):
+        import tempfile
+        d = tempfile.mkdtemp()
+        self.addCleanup(__import__("shutil").rmtree, d, True)
+        return d
+
+    def test_second_turn_makes_no_gh_calls_for_cached_commit(self):
+        root, c = self.root(), self.cfg("Windows tests")
+        first = self.counting(self.gh(jobs=("Publish",)))
+        self.assertEqual(S.check_one_ci_per_release(root, self.ledger(), c, gh=first), [])
+        self.assertTrue(first.calls)
+        second = self.counting(self.gh())
+        self.assertEqual(S.check_one_ci_per_release(root, self.ledger(), c, gh=second), [])
+        self.assertEqual(second.calls, [])
+
+    def test_cached_finding_still_reported_without_gh(self):
+        root, c = self.root(), self.cfg("Windows tests")
+        first = S.check_one_ci_per_release(root, self.ledger(), c, gh=self.gh())
+        second = self.counting(self.gh())
+        again = S.check_one_ci_per_release(root, self.ledger(), c, gh=second)
+        self.assertEqual(again, first)
+        self.assertEqual(len(again), 1)
+        self.assertEqual(second.calls, [])
+
+    def test_cap_respected_newest_first_and_rest_wait(self):
+        root, c = self.root(), self.cfg("Windows tests")
+        trains = [{"id": "T-%d" % i, "release_no": i, "pr": 100 + i, "state": "merged",
+                   "merged_at": "2026-10-%02dT10:00:00Z" % (10 + i)} for i in range(1, 6)]
+        seen = []
+
+        def inner(argv, r):
+            if argv[:2] == ["pr", "view"]:
+                seen.append(argv[2])
+            return self.gh(jobs=("Publish",))(argv, r)
+        S.check_one_ci_per_release(root, {"trains": trains}, c, gh=inner)
+        self.assertEqual(seen, ["105", "104", "103"])
+        S.check_one_ci_per_release(root, {"trains": trains}, c, gh=inner)
+        self.assertEqual(seen[3:], ["102", "101"])
+
+    def test_corrupt_cache_is_ignored(self):
+        root, c = self.root(), self.cfg("Windows tests")
+        p = os.path.join(root, S.DL76_CACHE_REL)
+        os.makedirs(os.path.dirname(p))
+        for bad in ("{not json", "[1, 2]", '{"merge": 5, "verdicts": []}'):
+            with open(p, "w") as f:
+                f.write(bad)
+            self.assertEqual(len(S.check_one_ci_per_release(root, self.ledger(), c, gh=self.gh())), 1)
+
+    def test_gh_failure_is_not_cached(self):
+        root, c = self.root(), self.cfg("Windows tests")
+        self.assertEqual(S.check_one_ci_per_release(root, self.ledger(), c, gh=lambda a, r: None), [])
+        self.assertEqual(len(S.check_one_ci_per_release(root, self.ledger(), c, gh=self.gh())), 1)
+
+    def test_ok_is_not_cached_while_runs_are_open_or_missing(self):
+        root, c = self.root(), self.cfg("Windows tests")
+        for runs in ([], [{"databaseId": 7, "workflowName": "main", "status": "in_progress"}]):
+            def inner(argv, r, runs=runs):
+                if argv[:2] == ["run", "list"]:
+                    return runs
+                return self.gh(jobs=("Publish",))(argv, r)
+            self.assertEqual(S.check_one_ci_per_release(root, self.ledger(), c, gh=inner), [])
+            later = self.counting(self.gh(jobs=("Publish",)))
+            S.check_one_ci_per_release(root, self.ledger(), c, gh=later)
+            self.assertTrue(later.calls)
+            import shutil
+            shutil.rmtree(os.path.join(root, ".delivery"), True)
+
+    def test_skipped_runs_are_not_viewed(self):
+        root, c = self.root(), self.cfg("Windows tests")
+        viewed = []
+
+        def inner(argv, r):
+            if argv[:2] == ["run", "list"]:
+                return [{"databaseId": 1, "workflowName": "a", "status": "completed", "conclusion": "skipped"},
+                        {"databaseId": 2, "workflowName": "b", "status": "completed", "conclusion": "success"}]
+            if argv[:2] == ["run", "view"]:
+                viewed.append(argv[2])
+            return self.gh()(argv, r)
+        self.assertEqual(len(S.check_one_ci_per_release(root, self.ledger(), c, gh=inner)), 1)
+        self.assertEqual(viewed, ["2"])
 
 
 class Dl30MessageTests(unittest.TestCase):

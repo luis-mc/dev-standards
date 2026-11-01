@@ -1,3 +1,4 @@
+import json
 import unittest
 from unittest import mock
 
@@ -123,10 +124,29 @@ class RemoteTriggerActionTests(unittest.TestCase):
         self.root = make_root()
 
     def launch(self, action, model=True, cfg=None):
-        body = {"session_context": {"effort_level": "medium"}, "events": [{"data": {"message": {"content": "```delivery\ntask: X1\n```\nDo it"}}}]}
+        body = {"session_context": {"effort_level": "medium"}, "events": [{"data": {"message": {"content": "```delivery\ntask: X1\n```\nDo it (no UI change)"}}}]}
         if model:
             body["session_context"]["model"] = "sonnet"
         return run(self.root, "RemoteTrigger", {"action": action, "body": body}, cfg=cfg)
+
+    def brief(self, text, cfg=None):
+        body = {"session_context": {"effort_level": "medium", "model": "sonnet"},
+                "events": [{"data": {"message": {"content": "```delivery\ntask: X1\n```\n" + text}}}]}
+        return run(self.root, "RemoteTrigger", {"action": "create", "body": body}, cfg=cfg)
+
+    def test_brief_without_the_e2e_line_is_refused(self):
+        out = self.brief("Do it")
+        self.assertIn("DL-89", out or "")
+        self.assertIn("e2e specs", out)
+
+    def test_brief_with_the_e2e_line_or_no_ui_passes_the_check(self):
+        for text in ("Run the e2e specs of the screens you change.", "Docs only. No UI change."):
+            self.assertNotIn("DL-89", self.brief(text) or "", text)
+
+    def test_e2e_brief_check_can_be_switched_off(self):
+        cfg = H.load_config(str(self.root))
+        cfg["checks_off"] = ["DL-89"]
+        self.assertNotIn("DL-89", self.brief("Do it", cfg=cfg) or "")
 
     def test_update_disable_passes(self):
         self.assertIsNone(run(self.root, "RemoteTrigger", {"action": "update", "trigger_id": "t1", "body": {"enabled": False}}))
@@ -149,6 +169,40 @@ class RemoteTriggerActionTests(unittest.TestCase):
 
     def test_bare_run_of_stored_trigger_passes(self):
         self.assertIsNone(run(self.root, "RemoteTrigger", {"action": "run", "trigger_id": "t1"}))
+
+
+def _run(wf, concl, created, id_, status="completed"):
+    return {"workflowName": wf, "conclusion": concl, "status": status, "createdAt": created, "databaseId": id_}
+
+
+class RunStateTests(unittest.TestCase):
+    def state(self, runs):
+        with mock.patch.object(H, "gh", return_value=(0, json.dumps(runs))):
+            return P.run_state("root", "o/r", "abc")
+
+    def test_older_skipped_superseded_by_success(self):
+        runs = [_run("secret-scan", "skipped", "2026-11-01T00:00:00Z", 1),
+                _run("secret-scan", "success", "2026-11-01T01:00:00Z", 2)]
+        self.assertEqual(self.state(runs), "green")
+
+    def test_only_skipped_by_own_condition_passes(self):
+        self.assertEqual(self.state([_run("secret-scan", "skipped", "2026-11-01T00:00:00Z", 1)]), "green")
+
+    def test_failure_blocks(self):
+        for c in ("failure", "cancelled", "timed_out"):
+            self.assertEqual(self.state([_run("a", c, "2026-11-01T00:00:00Z", 1)]), "red", c)
+
+    def test_newest_failure_after_success_blocks(self):
+        runs = [_run("a", "success", "2026-11-01T00:00:00Z", 1), _run("a", "failure", "2026-11-01T01:00:00Z", 2)]
+        self.assertEqual(self.state(runs), "red")
+
+    def test_other_workflow_failure_still_blocks(self):
+        runs = [_run("a", "success", "2026-11-01T01:00:00Z", 2), _run("b", "failure", "2026-11-01T00:00:00Z", 1)]
+        self.assertEqual(self.state(runs), "red")
+
+    def test_pending_and_none(self):
+        self.assertEqual(self.state([_run("a", None, "2026-11-01T00:00:00Z", 1, "in_progress")]), "pending")
+        self.assertEqual(self.state([]), "none")
 
 
 if __name__ == "__main__":

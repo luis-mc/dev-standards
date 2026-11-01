@@ -70,11 +70,23 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D7 | Should dev-standards adopt the delivery log in its own releases? (asked as one multi-select question) | Yes | decided | 2026-10-11 |
 | delivery-speed | D8 | Should dev-standards adopt the train freeze? (same multi-select question) | Yes | decided | 2026-10-11 |
 | delivery-speed | D9 | Point 4: how is the train freeze overridden on purpose? | Env variable, logged | decided | 2026-10-11 |
+| design-starter | D1 | Which starter should the docs plugin ship? | C+E now | decided | 2026-11-01 |
+| design-starter | D2 | May DOCSPEC R15.6 be reworded to allow a starter set of generic rules? | Yes, reword | decided | 2026-11-01 |
+| design-starter | D3 | How big should the starter be? | As close to v4 as neutral allows | decided | 2026-11-01 |
+| design-starter | D4 | Which themes should the starter ship? | Light + dark | decided | 2026-11-01 |
+| design-starter | D5 | Which fonts should the starter use? | System font stacks | decided | 2026-11-01 |
+| design-starter | D6 | What should the skill do with the project's existing styles? | Show, ask, then fill | decided | 2026-11-01 |
+| design-starter | D7 | Where does the report of what was left out go? | Section on the feature page | decided | 2026-11-01 |
 | models | D1 | Effort for each model of the split? | Keep asking, high preselected | decided | 2026-10-10 |
 | models | D2 | Where do the role rules live? | Plugin-owned rule file | decided | 2026-10-10 |
 | models | D3 | Override Explore and Plan? | Leave both on Opus | decided | 2026-10-10 |
 | models | D4 | Per-skill profiles? | By kind of work | decided | 2026-10-10 |
 | models | D5 | Saved effort when an alias moves? | Warn at session start | decided | 2026-10-10 |
+| setup-offers | D1 | How should claude-setup ask about enforcing each plugin? | Grouped pages | decided | 2026-11-01 |
+| setup-offers | D2 | Which delivery mode should a project start in? | Ask, warn preselected | decided | 2026-11-01 |
+| setup-offers | D3 | Should claude-setup write a CI workflow for the docs, design-system and spec checks? | Yes, in claude-setup | decided | 2026-11-01 |
+| setup-offers | D4 | Should the docs Stop hook be able to block? | Warn only, block in CI | decided | 2026-11-01 |
+| setup-offers | D5 | Three paths can write a feature spec (specs spec-new, docs feature-spec-new, artifacts promote-to-spec). How should they split? | Split by kind | decided | 2026-11-01 |
 | test-cost | D1 | Make path-scoped CI jobs? (asked as one of four cuts in a single multi-select question) | Yes | decided | 2026-10-11 |
 | test-cost | D10 | Shorten the PR CI run (11 min, one serial delivery job with every suite's mutants on for any delivery change)? | Add to DL12 now | decided | 2026-10-11 |
 | test-cost | D11 | Which of the three CI cuts go into DL12 now? | 1+2+3 | decided | 2026-10-11 |

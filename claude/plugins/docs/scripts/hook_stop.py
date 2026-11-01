@@ -6,20 +6,23 @@ Opt-in: does nothing in a repository without docs/docs.json. Fails open: any err
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 
-def message(root) -> str:
+def message(root, base=None) -> str:
     import docs_lib as D
     import docs_check as C
     if not D.has_config(root):
         return ""
     cfg = D.load_config(root)
-    base = D.default_base(root, cfg)
+    base = base or D.default_base(root, cfg)
     found = C.check_map(root, cfg, base)
     errs = [x for x in found if x["severity"] == "error"]
     if not errs:
@@ -33,6 +36,70 @@ def message(root) -> str:
     return "\n".join(lines)
 
 
+def _state_path(root: Path) -> Path:
+    g = Path(root) / ".git"
+    if g.is_dir():
+        return g / "luismc-docs-stop.json"
+    h = hashlib.sha1(str(Path(root).resolve()).encode()).hexdigest()[:16]
+    return Path(tempfile.gettempdir()) / f"luismc-docs-stop-{h}.json"
+
+
+def _file_sig(root, rel) -> str:
+    try:
+        st = os.stat(Path(root) / rel)
+        return f"{st.st_mtime_ns}:{st.st_size}"
+    except OSError:
+        return "-"
+
+
+def _key(root, cfg):
+    """(base, key) from two git calls: rev-parse (base and HEAD) and status, plus the mtime and size of each changed
+    file. None on any doubt."""
+    import docs_lib as D
+    for cand in (f"origin/{cfg['default_branch']}", cfg["default_branch"]):
+        r = D.git(root, "rev-parse", "-q", cand, "HEAD")
+        if r.returncode == 0 and len(r.stdout.split()) == 2:
+            base_sha, head = r.stdout.split()
+            st = D.git(root, "status", "--porcelain", "-uall")
+            if st.returncode != 0:
+                return cand, None
+            # The status text does not change when an already changed file is edited again, so each listed
+            # file's mtime and size is in the key too. A quoted (unusual) path gives no key: no cache.
+            paths = [ln[3:].split(" -> ")[-1] for ln in st.stdout.split("\n") if ln]
+            if any(p.startswith('"') for p in paths):
+                return cand, None
+            files = sorted(set(paths) | {"docs/docs-map.json", "docs/docs.json"})
+            h = hashlib.sha256(st.stdout.encode()).hexdigest()
+            sig = "|".join(f"{p}={_file_sig(root, p)}" for p in files)
+            return cand, [head, base_sha, h, hashlib.sha256(sig.encode()).hexdigest()]
+    return None, None
+
+
+def cached_message(root) -> str:
+    import docs_lib as D
+    if not D.has_config(root):
+        return ""
+    cfg = D.load_config(root)
+    base, key = _key(root, cfg)
+    if base is None or key is None:
+        return message(root)
+    path = _state_path(root)
+    try:
+        st = json.loads(path.read_text(encoding="utf-8"))
+        if st.get("key") == key and isinstance(st.get("msg"), str):
+            return st["msg"]
+    except Exception:
+        pass
+    msg = message(root, base)
+    try:
+        tmp = path.with_name(path.name + f".{os.getpid()}.tmp")
+        tmp.write_text(json.dumps({"key": key, "msg": msg}), encoding="utf-8")
+        os.replace(tmp, path)
+    except Exception:
+        pass
+    return msg
+
+
 def main() -> int:
     try:
         try:
@@ -40,7 +107,7 @@ def main() -> int:
         except Exception:
             pass
         import docs_lib as D
-        msg = message(D.repo_root())
+        msg = cached_message(D.repo_root())
         if msg:
             print(json.dumps({"systemMessage": msg}))
     except Exception:

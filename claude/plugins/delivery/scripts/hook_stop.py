@@ -328,41 +328,104 @@ def gh_json(argv, root):
         return None
 
 
+DL76_CACHE_REL = os.path.join('.delivery', 'state', 'dl76-checked.json')
+DL76_MAX_TRAINS = 3         # trains that need `gh` calls per turn end, newest first; the rest wait for the next turn
+
+
+def _dl76_load(root):
+    c = H.read_json(os.path.join(root, DL76_CACHE_REL))
+    if not isinstance(c, dict):
+        return {'merge': {}, 'verdicts': {}}
+    return {k: c[k] if isinstance(c.get(k), dict) else {} for k in ('merge', 'verdicts')}
+
+
+def _dl76_save(root, cache):
+    """Own small file, not the ledger. Atomic; any failure is ignored (the cache is only a speed-up)."""
+    import tempfile
+    path = os.path.join(root, DL76_CACHE_REL)
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), suffix='.tmp')
+        with os.fdopen(fd, 'w', encoding='utf-8') as f:
+            json.dump(cache, f)
+        os.replace(tmp, path)
+    except OSError:
+        pass
+
+
 def check_one_ci_per_release(root, ledger, cfg, gh=gh_json):
     """DL-76. From each merged, not yet cleaned train's merge commit, list the default-branch workflow runs and flag
-    every job named in `pr_proven_jobs` that ran there on a tree the release PR already proved. `gh` is the seam."""
+    every job named in `pr_proven_jobs` that ran there on a tree the release PR already proved. `gh` is the seam.
+    The verdict for a merge commit never changes, so it is cached per merge SHA in .delivery/state/dl76-checked.json
+    (a cached finding still reports; only the `gh` calls are skipped). At most DL76_MAX_TRAINS trains cost `gh` calls
+    per turn end, newest first. A `gh` failure is never cached."""
     names = [n.lower() for n in H.C.pr_proven_jobs(cfg)]
     if not names:
         return []
+    cache = _dl76_load(root)
+    before = json.dumps(cache, sort_keys=True)
     out = []
-    for t in ledger['trains']:
-        if not t.get('merged_at') or not t.get('pr') or t.get('state') in H.TERMINAL_TRAIN:
-            continue
-        pr = gh(['pr', 'view', str(t['pr']), '--json', 'mergeCommit,baseRefName,headRefOid'], root)
-        merge = ((pr or {}).get('mergeCommit') or {}).get('oid')
-        if not merge or not pr.get('baseRefName'):
-            continue
-        trees = [((gh(['api', 'repos/{owner}/{repo}/git/commits/' + sha, '--jq', '{tree: .tree.sha}'], root) or {})
-                  .get('tree')) for sha in (merge, pr.get('headRefOid') or '')]
-        if not trees[0] or trees[0] != trees[1]:
-            continue        # the base moved: the merge commit is a new tree and may be tested once
-        runs = gh(['run', 'list', '--branch', pr['baseRefName'], '--commit', merge, '--limit', '50',
-                   '--json', 'databaseId,workflowName'], root) or []
-        repeated = []
-        for r in runs:
-            jobs = ((gh(['run', 'view', str(r.get('databaseId')), '--json', 'jobs'], root) or {}).get('jobs')) or []
-            for j in jobs:
-                n = str(j.get('name', ''))
-                if j.get('conclusion') != 'skipped' and any(fnmatch.fnmatchcase(n.lower(), g) for g in names):
-                    repeated.append('%s / %s' % (r.get('workflowName'), n))
-        if repeated:
-            out.append(('DL-76:' + str(t.get('id')), 'DL-76 %s merged and %s re-ran on %s on the same tree the PR proved: '
-                        '%s. A release runs CI once: nothing after the merge re-runs what the release PR proved on the '
-                        'same tree; only publish, deploy and production smoke run on the default branch. Remove those '
-                        'jobs from the default-branch triggers (or gate them with a tree check).'
-                        % (H.release_name(t), 'job' if len(repeated) == 1 else 'jobs', pr['baseRefName'],
-                           ', '.join(sorted(set(repeated))[:6]))))
+    trains = [t for t in ledger['trains']
+              if t.get('merged_at') and t.get('pr') and t.get('state') not in H.TERMINAL_TRAIN]
+    trains.sort(key=lambda t: str(t.get('merged_at')), reverse=True)
+    budget = DL76_MAX_TRAINS
+    for t in trains:
+        merge = cache['merge'].get(str(t['pr']))
+        verdict = cache['verdicts'].get(merge) if merge else None
+        if verdict is None:
+            if budget <= 0:
+                continue
+            budget -= 1
+            verdict = _dl76_verdict(root, t, names, gh, cache)
+        if verdict and verdict != 'ok':
+            out.append(('DL-76:' + str(t.get('id')), verdict))
+    if json.dumps(cache, sort_keys=True) != before:
+        _dl76_save(root, cache)
     return out
+
+
+def _dl76_verdict(root, t, names, gh, cache):
+    pr = gh(['pr', 'view', str(t['pr']), '--json', 'mergeCommit,baseRefName,headRefOid'], root)
+    merge = ((pr or {}).get('mergeCommit') or {}).get('oid')
+    if not merge or not pr.get('baseRefName'):
+        return None
+    cache['merge'][str(t['pr'])] = merge
+    trees = [((gh(['api', 'repos/{owner}/{repo}/git/commits/' + sha, '--jq', '{tree: .tree.sha}'], root) or {})
+              .get('tree')) for sha in (merge, pr.get('headRefOid') or '')]
+    if not trees[0] or trees[0] != trees[1]:
+        # the base moved: the merge commit is a new tree and may be tested once. Cache only a real answer.
+        if trees[0] and trees[1]:
+            cache['verdicts'][merge] = 'ok'
+        return None
+    runs = gh(['run', 'list', '--branch', pr['baseRefName'], '--commit', merge, '--limit', '50',
+               '--json', 'databaseId,workflowName,status,conclusion'], root)
+    if runs is None:
+        return None
+    # An 'ok' is cached only when runs exist and all have finished: a run still queued, or one not listed yet
+    # right after the merge, may still repeat a proved job.
+    repeated, complete = [], bool(runs) and all(r.get('status') == 'completed' for r in runs)
+    for r in runs:
+        if r.get('conclusion') == 'skipped':
+            continue        # a skipped run ran no job
+        view = gh(['run', 'view', str(r.get('databaseId')), '--json', 'jobs'], root)
+        if view is None:
+            complete = False
+            continue
+        for j in view.get('jobs') or []:
+            n = str(j.get('name', ''))
+            if j.get('conclusion') != 'skipped' and any(fnmatch.fnmatchcase(n.lower(), g) for g in names):
+                repeated.append('%s / %s' % (r.get('workflowName'), n))
+    verdict = None
+    if repeated:
+        verdict = ('DL-76 %s merged and %s re-ran on %s on the same tree the PR proved: '
+                   '%s. A release runs CI once: nothing after the merge re-runs what the release PR proved on the '
+                   'same tree; only publish, deploy and production smoke run on the default branch. Remove those '
+                   'jobs from the default-branch triggers (or gate them with a tree check).'
+                   % (H.release_name(t), 'job' if len(repeated) == 1 else 'jobs', pr['baseRefName'],
+                      ', '.join(sorted(set(repeated))[:6])))
+    if verdict or complete:
+        cache['verdicts'][merge] = verdict or 'ok'
+    return verdict
 
 
 def in_flight(ledger):

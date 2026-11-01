@@ -12,6 +12,7 @@ Runs `scripts/design_system.py` from the `luismc-docs` plugin (DOCSPEC section 1
 ```bash
 S="${CLAUDE_PLUGIN_ROOT}/scripts/design_system.py"
 python3 "$S" init --apply                  # docs/design-system/: README, approvals.json, next-version/ (never overwrites)
+python3 "$S" styles                        # read-only: style files and CSS custom properties the project already has
 python3 "$S" guards --apply                # guard tests into scripts/design/ (--stack typescript-vitest, --dest DIR)
 python3 "$S" visuals                       # rebuild next-version/review-visuals/index.html (offline gallery)
 python3 "$S" check                         # DS1-DS5 findings; docs_check.py runs the same
@@ -20,6 +21,15 @@ python3 "$S" promote --approved-by owner --approved-on 2026-11-02 --evidence "ch
 python3 "$S" approve-implementation v1 --approved-on 2026-11-20 --evidence "chat" --apply
 ```
 
+## Style reading (after init): show, ask, then fill
+
+`init` writes a project-neutral starter (every item is a starter item to keep, change or delete before v1 is approved). Then read the project's own styles:
+
+1. Run `design_system.py styles`. It lists design-token files, theme and Tailwind configuration, and CSS custom properties. It changes nothing.
+2. Show the owner the files and values found. Ask once: "Use these values in the starter tokens?"
+3. Only on yes: replace the matching token values in `next-version/tokens.md` (colours, fonts, spacing, radius). Keep the token names. Check WCAG 2.2 AA contrast of the new pairs. Add a `CHANGES.md` entry and rebuild the gallery.
+4. On no, or when nothing is found: keep the starter values.
+
 ## Rules to follow
 
 - Every design change, even a typo, goes into `next-version/`; write a `CHANGES.md` entry (`- C<n>: ...`) and rebuild the gallery.
@@ -27,7 +37,7 @@ python3 "$S" approve-implementation v1 --approved-on 2026-11-20 --evidence "chat
 - Only the owner approves. Never run `promote` or `approve-implementation` on your own judgment: you need the owner's approval date and where it was given (the chat, a comment) and you pass them as `--approved-on` and `--evidence`. Show the gallery to the owner first.
 - Apps follow the highest numbered version. UI work for a new version waits for the owner's approval of the version, an audit of the apps, and the owner's approval of the implementation.
 - Rules carry IDs (`UX-<n>`); feature specs and code cite the ID and never copy the rule. Words users see live in `content.md` (DOCSPEC R11.3).
-- Templates hold structure and a few example rules. Replace the examples with the project's own; never import another project's rules.
+- Templates hold structure and a starter set of generic, project-neutral rules. Keep, change or delete each one; never import another project's rules.
 
 ## Guard tests
 

@@ -4,3 +4,5 @@
 *.sh text eol=lf
 **/.githooks/* text eol=lf
 **/assets/tooling/**/scripts/delivery/* text eol=lf
+# Vendored files are checked by SHA-256 (DS161): keep their bytes exact on every OS.
+claude/plugins/docs/vendor/* -text

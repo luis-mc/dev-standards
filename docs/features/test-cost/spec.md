@@ -4,7 +4,7 @@ title: Test and validation cost
 apps: [luismc-project-setup, luismc-artifacts]
 topics: [ci, testing]
 status: live
-version: 0.1.1
+version: 0.2.0
 owner: agents
 type: explanation
 code:
@@ -233,4 +233,5 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.2.0 | 2026-11-01 | RELEASE-27 | Agents run the e2e specs of the screens they change: the gate records and verifies them, a pre-push check refuses an unrun e2e spec fix, and briefs say so (DELIVERYSPEC DL-86 to DL-89). | DS35 |
 | 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. | DS143 |

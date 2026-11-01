@@ -651,8 +651,13 @@ class Watcher:
         for c in (os.environ.get("DELIVERY_RUNNER_PLAN"), rp.get("script"), os.path.join("scripts", "delivery", "runner_plan.py")):
             if c:
                 path = c if os.path.isabs(c) else str(self.root / c)
-                if os.path.isfile(path):
-                    return path
+                if not os.path.isfile(path):
+                    continue
+                real, base = os.path.realpath(path), os.path.realpath(str(self.root))
+                if real != base and not real.startswith(base + os.sep):
+                    self.out(f"delivery_watch: refusing runner_plan script {c!r}: it resolves outside the repository root")
+                    continue
+                return path
         return None
 
     def pass_runner_guard(self) -> None:

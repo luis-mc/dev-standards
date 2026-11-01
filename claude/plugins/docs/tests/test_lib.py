@@ -82,6 +82,15 @@ class LibTests(unittest.TestCase):
         self.assertFalse(D.is_binding("docs/architecture/decisions.md", c))
         self.assertFalse(D.is_binding("docs/guides/setup.md", c))
 
+    def test_changed_files_uses_merge_base(self):
+        d = make_repo({"a.txt": "1"})
+        git(d, "checkout", "-q", "-b", "feat")
+        w(d, "b.txt", "2"); git(d, "add", "-A"); git(d, "commit", "-q", "-m", "b")
+        git(d, "checkout", "-q", "main")
+        w(d, "c.txt", "3"); git(d, "add", "-A"); git(d, "commit", "-q", "-m", "c")
+        git(d, "checkout", "-q", "feat")
+        self.assertEqual(D.changed_files(d, "main"), ["b.txt"])
+
 
 if __name__ == "__main__":
     unittest.main()

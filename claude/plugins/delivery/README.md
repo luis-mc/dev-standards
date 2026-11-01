@@ -113,6 +113,7 @@ For a project whose agents are gated by CI on their branch instead of a full loc
 - **Orchestrator** joins urgent work at code push (`join.py --ci-gate`) and sizes ETAs from coding time plus the branch CI run. A CI plan script that a helper imports has no top-level `await`.
 - **CI scope** (`ci_scope.py`): release PR full; CI files only, the CI tests and a named smoke set; root configuration full; else affected.
 - **Run times**: the last job writes the artifact `ci-run-times` (repository variable `CI_RUN_TIMES=true`).
+- **E2E (DL-86..DL-89)**: an agent that changes UI code runs the e2e specs of the screens it changed (`scripts/delivery/branch_gate.py --e2e-only`) before CODE DONE. The gate records them, `gate_verify.py` and `agent_ci.py` refuse a UI branch without the record, the pre-push hook refuses an unrun e2e fix, and the launch check needs the brief line "run the e2e specs of the screens you change" (or "no UI change").
 - **Brief**: `references/agent-brief-template.md`; `brief_markers` entries may be lists (`["one affected gate", "CI is the gate"]`).
 
 ## Tests
@@ -123,3 +124,7 @@ python3 -I tools/test_delivery_hooks.py
 ```
 
 `tests/test_load.py` covers the load guard (parsers per OS, cache, limits precedence, heavy/light/cloud table, refusal, fail-open, notices, runner gate, doctor).
+
+## Trust
+
+`.delivery/config.json`, `gate.json` and `smoke.json` are code: they choose scripts and shell commands that run with your rights. Trust them only after review. The watcher refuses a `runner_plan.script` that resolves outside the repository.

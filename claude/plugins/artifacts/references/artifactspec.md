@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.18.1
+**Version:** 1.18.2
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.18.2 — 2026-11-01.**
+
+- ARTIFACTSPEC section 8 now says three hooks are registered and marks the before-command hook retired (AR50); R8.16 keeps its ID and says the same.
 
 **1.18.1 — 2026-11-01.**
 
@@ -1433,11 +1437,15 @@ they do nothing (R4.17).
 
 ## 8. Hooks
 
-All four hooks are registered in the plugin's `hooks/hooks.json`:
+Three hooks are registered in the plugin's `hooks/hooks.json`:
 
 - the after-command hook for `Bash`, `Agent` and `Task`;
-- the before-command hook for `Bash` and `PowerShell`;
-- the end-of-turn hook and the session-start hook.
+- the end-of-turn hook;
+- the session-start hook.
+
+The before-command hook (`Bash` and `PowerShell`) is retired (AR50). It is not
+registered; `hook_before_command.py` stays as a silent script so an older
+`hooks.json` entry cannot fail.
 
 Each runs `python <plugin>/scripts/hook_*.py`. Each exits 0 and does nothing
 when the project has no `docs/artifacts/manifest.json` in the current checkout
@@ -1571,9 +1579,11 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 
 ### 8.6 No push by a hook
 
-- **R8.16** — The before-command hook does not push the record before
-  `gh pr create`, `gh pr ready` or `gh pr merge`. Where it has nothing else to
-  do it exits 0 and prints nothing. Verified by
+- **R8.16** — (Retired in AR50.) The before-command hook is not registered in
+  `hooks/hooks.json` and does not push the record before `gh pr create`,
+  `gh pr ready` or `gh pr merge`. The script stays and, if an older
+  `hooks.json` still calls it, exits 0 and prints nothing. Verified by
+  `hooks_json_registers_no_before_command_hook` and
   `before_command_is_silent_for_pr_commands_and_runs_nothing` in `tools/test_project_artifacts_hooks.py`.
 - **R8.17** — The end-of-turn hook does not push. The publish gate and the
   background-work checks (R8.4, R8.8 to R8.10) are unchanged. Verified by
