@@ -207,6 +207,16 @@ class DesignSystemTests(unittest.TestCase):
         retired = [ln.split("|")[1].strip() for ln in block.splitlines() if ln.startswith("|")][2:]
         vocab = [ln.split("|")[1].strip() for ln in content.split("## Retired words")[0].splitlines() if ln.startswith("|")][2:]
         self.assertFalse(set(retired) & set(vocab))
+        # Check is retired: no approved action word starts with it, and Review takes its place
+        self.assertFalse([w_ for w_ in vocab if w_.lower().startswith("check")])
+        self.assertIn("Check", retired)
+        self.assertIn("Review", vocab)
+        # the Wizard component carries the wizard-end rule
+        comps = (v / "components.md").read_text(encoding="utf-8")
+        wiz = comps.split("## 4. Wizard")[1].split("\n## 5.")[0]
+        for part in ("Review", "Done", "Nothing has changed yet.", "UX-30"):
+            self.assertIn(part, wiz)
+        self.assertIn("UX-30", (v / "ux-rules.md").read_text(encoding="utf-8"))
 
     def test_styles_lists_candidates_read_only(self):
         d = project()

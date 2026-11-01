@@ -143,9 +143,72 @@ CSS cannot read a custom property inside a media query. Write these values in th
 | `--ds-duration-fast` | `100ms` | hover, press |
 | `--ds-duration-base` | `200ms` | open and close |
 | `--ds-duration-slow` | `400ms` | sheets, page changes |
+| `--ds-duration-loop` | `1200ms` | one turn of a looping bar or spinner |
 | `--ds-ease` | `cubic-bezier(0.2, 0, 0, 1)` | all movement |
+| `--ds-ease-in-out` | `cubic-bezier(0.42, 0, 0.58, 1)` | movement that starts and ends at rest |
+
+Motion has a purpose: it shows where something came from or went to (UX-36).
 
 Under `prefers-reduced-motion: reduce` every duration is `0ms` and nothing animates, except a progress bar of unknown total, which shows a static striped fill (UX-17, UX-29).
+
+## Row heights
+
+Starter values. Change to fit.
+
+| Token | Value | Use |
+|---|---|---|
+| `--ds-row` | `56px` | a list row without a picture (UX-25) |
+| `--ds-row-picture` | `88px` | a list row with a picture |
+| `--ds-hairline` | `1px` | a thin quiet edge or rule between rows |
+| `--ds-icon-size` | `16px` | a small icon beside text |
+
+## Tone shapes
+
+A tone is also told by the shape of its edge, so it never rests on colour alone (UX-26). Starter values. Change to fit.
+
+| Tone | Edge |
+|---|---|
+| Done | `3px solid` |
+| Note | `2px solid` |
+| Needs you | `3px dashed` |
+| Problem | `6px double` |
+
+| Token | Value | Use |
+|---|---|---|
+| `--ds-tone-bar` | `12px` | the bar down the left of a message |
+
+## Focus
+
+| Token | Value | Use |
+|---|---|---|
+| `--ds-focus-width` | `3px` | width of the focus ring |
+| `--ds-focus-offset` | `2px` | gap between a control and its ring |
+
+- Every control shows the ring on `:focus-visible`, in `--ds-color-focus` (UX-17).
+- Under `forced-colors: active` the ring uses the system colour `Highlight`.
+
+## Z-order
+
+One scale. A screen never writes a raw `z-index` (UX-1).
+
+| Token | Value | Use |
+|---|---|---|
+| `--ds-z-base` | `0` | page content |
+| `--ds-z-sticky` | `100` | sticky bars and docked headers |
+| `--ds-z-menu` | `200` | menus and pop-overs |
+| `--ds-z-overlay` | `300` | the dimmed page behind a dialog |
+| `--ds-z-dialog` | `400` | dialogs and sheets |
+| `--ds-z-toast` | `500` | the one app-wide banner when it floats |
+
+## Density
+
+A project may offer a compact density. It changes only these tokens. The touch target stays `--ds-target-min` (UX-16).
+
+| Token | Comfortable | Compact | Use |
+|---|---|---|---|
+| `--ds-row` | `56px` | `44px` | list row height |
+| `--ds-space-3` | `12px` | `8px` | gap between related items |
+| `--ds-space-5` | `24px` | `16px` | gap between cards |
 
 ## Use your own font
 

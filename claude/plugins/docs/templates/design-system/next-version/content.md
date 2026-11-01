@@ -19,16 +19,16 @@ Each action has one word. The Never use column lists words that must not stand i
 | Clear | Empty a selection or a filter. | Reset, Deselect |
 | Select all N | Select every item in the list. N is the count. | Check all, Pick all |
 | Stop | End work that is running. | Cancel, Abort, Kill |
-| Try again | Repeat something that failed. | Retry, Redo |
+| Try again | Repeat something that failed. Also asks once more for a state. | Retry, Redo, Check again, Check now, Recheck |
 | Refresh | Load the shown data again. | Reload, Update |
-| Check again | Run a check once more. | Recheck, Re-check, Verify again |
+| Review | Open what waits for a decision, to look it over. Also the name of every looking-over step, and of the first of the last three steps of a wizard that changes something. | Check, Confirm, Summary |
 | Hide | Stop showing something. It is kept. | Dismiss, Close |
 | Show | Show something that was hidden. | Reveal, Unhide |
 | Open | Go to an item to see it. | View, Go to |
 | See all N | Go from a preview to the whole list. N is the count. | More, View all |
 | Back | Go to the step before. | Previous |
 | Next | Go to the step after, when it is not the last step. | Continue, Forward |
-| Done | Finish a flow. | Finish, OK |
+| Done | The last step of a wizard: what really happened, never the plan. Its one primary is the next action. | Finish, Finished, Complete, Result, OK |
 | Search | Look for text in a list. | Find, Look up |
 | Sort | Order a list by a column. | Order, Arrange |
 
@@ -47,9 +47,24 @@ A retired word is not drawn as a label, button or message. The guard scans the s
 | Reload | Refresh |
 | Abort | Stop |
 | Dismiss | Hide |
-| Recheck | Check again |
+| Check | Review (to look over, or to open what waits), or Try again (to ask once more for a state) |
+| Check again | Try again |
+| Check now | Try again |
+| Recheck | Try again |
 | Erase | Delete |
 <!-- retired-words:end -->
+
+## Wizard step names
+
+A wizard that changes something ends with three steps (UX-30).
+
+| Step | Name | Shows |
+|---|---|---|
+| First of the last three | Review | What will happen, in numbers and words. "Nothing has changed yet." |
+| Second | The work, in the "-ing" form | Live progress: "Moving 3 of 12". |
+| Third | Done | What really happened, what was left, and what failed. |
+
+A step that only reads before Review is named by what it reads ("Reading files", "Reading folders"). It changes nothing. It is never called "Checking".
 
 ## Message wording
 
@@ -60,7 +75,7 @@ A message is one or two short sentences in plain words. It names the thing, neve
 | Done | What was done, in the past tense. | Settings saved. |
 | Note | A fact the user may want to know. No action is needed. | 3 items are hidden by the filter. |
 | Needs you | What is waiting, and what the user can do. | The report needs a title. Add a title to go on. |
-| Problem | What failed, why, and what next. | Could not save. The connection was lost. Check the connection, then try again. |
+| Problem | What failed, why, and what next. | Could not save. The connection was lost. Reconnect, then try again. |
 
 - Start with the subject, not with "Error" or "Oops".
 - Say what happened first, then what to do.
@@ -84,6 +99,11 @@ A message is one or two short sentences in plain words. It names the thing, neve
 | Count | A number before the noun. The noun agrees with the count. | 1 item, 3 items |
 | Size | A number and a unit, with a space. | 4.2 MB |
 | Percent | A number and the percent sign, no space. | 45% |
+| Full stamp | Date and time with seconds. Only in logs and exact moments. | 2026-11-02 14:30:05 |
+| File stamp | Date and time for a file name, joined by dashes. | 2026-11-02_14-30-05 |
+| Past moment | The exact time first, then how long ago. | 2026-11-02 14:30 (5 h ago) |
+| Time left | Short words, never seconds. | about 2 min left |
+| Sentence | Minutes only, and the time zone is never named. | Published 2026-11-02 14:30. |
 
 ## Labels
 
