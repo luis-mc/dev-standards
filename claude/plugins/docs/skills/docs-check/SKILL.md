@@ -1,6 +1,6 @@
 ---
 name: docs-check
-description: Check a project's docs against the documentation standard and the code: layout, feature front matter, links and anchors, Source lines, test paths, version tables, generated files and reference, the code-to-doc map, files under docs/work, UX rules outside the design system, and freshness. Use before finishing a task that changed behaviour, before a pull request, or when asked whether the docs are true.
+description: Check a project's docs against the documentation standard and the code: layout, feature front matter, links and anchors, Source lines, test paths, version tables, generated files and reference, the code-to-doc map, files under docs/work, UX rules outside the design system, the design-system version layout (README order of work, edits to a numbered version, stale gallery), and freshness. Use before finishing a task that changed behaviour, before a pull request, or when asked whether the docs are true.
 model: sonnet
 effort: medium
 ---

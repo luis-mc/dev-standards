@@ -20,6 +20,8 @@ Checks (each finding has a code):
       a WARNING for now, it becomes an error later (owner decision); put <!-- ux-ok --> on the line to allow it
   T1  last_verified missing or older than stale_days (warning); T2 code newer than doc (warning)
   D1  diagram: a feature spec with no Mermaid block and no image (warning)
+  DS1-DS5  design system (R15.7, warnings): README without an order of work (DS1); a numbered version edited after
+      approval or without a recorded approval (DS2); layout and missing files (DS3); stale gallery (DS4); duplicate rule IDs (DS5)
 
 Exit 0 when no errors (warnings allowed unless --strict), 1 on errors, 2 on a usage problem.
 """
@@ -36,6 +38,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import docs_lib as D  # noqa: E402
 import docs_index as I  # noqa: E402
+import design_system as DS  # noqa: E402
 
 ERR, WARN = "error", "warning"
 UX_RULE = re.compile(r"\b(must|must not|never|always|should|shall)\b", re.I)
@@ -65,6 +68,10 @@ def check_layout(root: Path, cfg: dict) -> list[Finding]:
         if not (root / "docs/overview" / n).is_file():
             out.append(f(ERR, "L1", f"docs/overview/{n}", "missing overview page (D3)"))
     return out
+
+
+def check_design_system(root: Path, base: str | None) -> list[Finding]:
+    return [Finding(x) for x in DS.check(root, base)]
 
 
 def check_features(root: Path, cfg: dict) -> list[Finding]:
@@ -323,6 +330,7 @@ def run_checks(root: Path, base: str | None, reference: bool = True) -> list[Fin
     res += check_map(root, cfg, base)
     res += check_work_guard(root, base)
     res += check_freshness(root, cfg)
+    res += check_design_system(root, base)
     return res
 
 
