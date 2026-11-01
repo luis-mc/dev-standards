@@ -265,14 +265,14 @@ choice is made, not found during an incident.
 
 ## 1. The governing doctrine: thin clients
 
-**The server owns every business rule.** This is the single most important rule
-in this document and everything else is downstream of it.
+**The server owns every business rule.** This is the most important rule in this
+document. Every other rule follows from it.
 
 A product with a browser client, an iOS client and an Android client implements
-any client-side rule three times, and the three will diverge. Divergence in a
-calculation, an eligibility check, a validation threshold or a state transition
-is a correctness bug that shows on one platform only, months later, and is
-nearly impossible to reproduce.
+each client-side rule three times, and the three copies will diverge. A
+divergence in a calculation, an eligibility check, a validation threshold or a
+state transition is a correctness bug. It shows on one platform only, months
+later, and is nearly impossible to reproduce.
 
 Therefore:
 
@@ -289,7 +289,7 @@ Therefore:
   interpolation and layout are client concerns.
 
 **Consequence to accept:** more round trips and richer response payloads. Design
-endpoints around screens, not around tables — an endpoint SHOULD return
+endpoints around screens, not around tables. An endpoint SHOULD return
 everything one screen needs in one call.
 
 **Escape hatch:** if a genuine requirement cannot be met with a server round trip
@@ -299,9 +299,9 @@ that every implementation runs against in CI.
 
 **Server-rendered architectures.** A product whose web client is rendered by the
 server (server-side templates, hypermedia, or a server-interactive component
-model) satisfies this doctrine trivially for web, because there is no second
-implementation of anything. The doctrine still binds the moment a second client
-surface exists: if mobile ships, the business rules MUST be reachable through
+model) meets this doctrine for web with no extra work, because there is no second
+implementation of anything. The doctrine binds again as soon as a second client
+surface exists. If mobile ships, the business rules MUST be reachable through
 the API contract (§4) and MUST NOT exist only in the rendering path.
 
 ---
@@ -310,13 +310,13 @@ the API contract (§4) and MUST NOT exist only in the rendering path.
 
 ### 2.1 One repository per product
 
-A product is one repository containing every deployable and every shared module.
-Splitting a product across repositories before there is a measured reason is a
-defect: it converts a compile-time contract into a versioning problem.
+A product is one repository that holds every deployable and every shared module.
+Splitting a product across repositories without a measured reason is a
+defect: it turns a compile-time contract into a versioning problem.
 
 The layout below is the canonical shape. Directory names MAY differ where a
-track's ecosystem has a strong convention, but the **roles** MUST be present and
-separated:
+track's ecosystem has a strong convention. The **roles** MUST be present and
+separate:
 
 ```
 <product>/
@@ -329,18 +329,19 @@ separated:
 └── .github/workflows/
 ```
 
-- Not every product needs every module. A shared module MUST NOT be created
+- A product does not need every module. A shared module MUST NOT be created
   before it has a second consumer or a clear adapter role (§3.3).
-- Internal modules are linked by the ecosystem's workspace mechanism, not by
-  published version ranges, and are not published.
+- The ecosystem's workspace mechanism links internal modules. Published version
+  ranges do not, and internal modules are not published.
 - A product MUST NOT contain a copy of this specification. Its Stack Profile
-  (§18) names the version it conforms to; a vendored copy silently becomes a
+  (§18) names the version it conforms to. A vendored copy silently becomes a
   second, competing authority that no check can compare against the original.
 
 ### 2.2 Package management and build orchestration — `CHOICE`
 
-The package manager, workspace mechanism and task runner are resolved by track
-and recorded in the Stack Profile. The requirements on whatever is chosen:
+The track resolves the package manager, workspace mechanism and task runner, and
+the product records them in the Stack Profile. Whatever is chosen MUST meet these
+requirements:
 
 - The tool version MUST be pinned in the repository, not inherited from the
   developer's machine.
@@ -354,20 +355,20 @@ and recorded in the Stack Profile. The requirements on whatever is chosen:
   `build`.
 - One root command MUST produce every deployable artifact.
 - Where the task runner caches, every environment variable a build reads MUST be
-  declared in its task configuration, or the cache will serve artifacts built for
-  the wrong environment.
+  declared in its task configuration. Otherwise the cache serves artifacts built
+  for the wrong environment.
 
 ### 2.3 Polyglot and native projects
 
-Where a repository contains projects from more than one ecosystem — a native
-mobile project, a compiled server alongside a JavaScript web app, or any two
-tracks — each project MUST remain natively openable and buildable with its own
-toolchain. A developer MUST NOT be required to run another ecosystem's tooling
-for day-to-day work in their own project.
+A repository may hold projects from more than one ecosystem: a native mobile
+project, a compiled server beside a JavaScript web app, or any two tracks. Each
+project MUST stay natively openable and buildable with its own toolchain. A
+developer MUST NOT be required to run another ecosystem's tooling for
+day-to-day work in their own project.
 
-To keep one build entry point, each such project MUST expose a thin task shim
-that the repository's task runner invokes and that shells out to the native
-toolchain. Native dependencies use their own ecosystems.
+To keep one build entry point, each such project MUST expose a thin task shim.
+The repository's task runner invokes the shim, and the shim shells out to the
+native toolchain. Native dependencies use their own ecosystems.
 
 ---
 
@@ -399,22 +400,22 @@ layer. The UI component module depends only on `core`, `contract` and `tokens`.
 ### 3.2 Hard rules — CI-enforced
 
 - **`core` MUST NOT import** any framework, any I/O, any environment variable,
-  any clock, or any module outside `core`. It is pure functions and types. This
-  is what makes it testable, reusable by the worker and by seed scripts, and safe
-  to reason about.
+  any clock, or any module outside `core`. It is pure functions and types. That
+  makes it testable, reusable by the worker and by seed scripts, and easy to
+  reason about.
 - The **data module MUST be the only module** that imports the database driver,
   ORM or query builder.
 - **No shared module may import a web framework.** A framework request or header
-  API reached from inside a shared module is the first step of the erosion this
-  rule exists to prevent.
+  API used inside a shared module is the first step of the erosion this rule
+  exists to prevent.
 - **Client apps MUST NOT import** the data module, the auth module, `core`, or
   any service module. They reach the system exclusively through the generated
   API client. (`core` is tempting and forbidden — see §1.)
 - **Circular module dependencies MUST NOT exist.**
 
-These MUST be enforced by a dependency-graph check that fails the build, not by
-review. A documented convention without enforcement decays. The checking tool is
-a `CHOICE`; the enforcement is not.
+A dependency-graph check that fails the build MUST enforce these rules. Review
+alone is not enough. A convention without enforcement decays. The checking tool
+is a `CHOICE`; the enforcement is not.
 
 ### 3.3 The adapter rule — load-bearing
 
@@ -422,17 +423,17 @@ a `CHOICE`; the enforcement is not.
 nowhere else.** Mail, object storage, push transports, the cache client, the
 error tracker, and any future vendor each get one adapter module.
 
-This rule carries more weight in 5.0.0 than in any prior version, and the reason
-is structural: because every vendor is now a `CHOICE` rather than a `SHOULD`, the
-adapter boundary is the *only* thing that keeps a wrong choice cheap. It converts
-"we picked the wrong provider" from a refactor into one file.
+This rule carries more weight in 5.0.0 than in any earlier version. Every vendor
+is now a `CHOICE` rather than a `SHOULD`, so the adapter boundary is the *only*
+thing that keeps a wrong choice cheap. It turns "we picked the wrong provider"
+from a refactor into a change to one file.
 
-Consequences that follow, and MUST hold:
+These consequences MUST hold:
 
 - Swapping any vendor in a role MUST be a single adapter implementation plus a
   configuration change. If it is not, the boundary has already leaked.
 - No vendor type, error class, or identifier format may appear in a signature
-  outside its adapter. The adapter owns the translation to domain types.
+  outside its adapter. The adapter translates to domain types.
 - The adapter MUST define the role's degraded behaviour (§8.4), not its callers.
 
 ---
