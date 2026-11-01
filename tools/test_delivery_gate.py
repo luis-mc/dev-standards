@@ -53,7 +53,7 @@ import delivery_common as dc  # noqa: E402  (the module under test, for unit che
 
 SCRIPT_FILES = [
     "delivery_common.py", "branch_gate.py", "gate_verify.py", "fast_guards.py",
-    "join.py", "agent_setup.sh", "tools.json",
+    "join.py", "agent_setup.sh", "tools.json", "e2e_push_check.py",
 ]
 TRACKS = {
     "ts": "pnpm-workspace",
@@ -1292,6 +1292,107 @@ def sc_e2e_map(t: T, shared: Path) -> None:
         b = Box(shared, gate_json=cfg)
         b.branch("feat/e", {"apps/web/checkout/a.txt": "a\n"})
         t.eq("e2e_map %r is a configuration error" % (bad,), b.gate("--no-publish").code, 2)
+
+
+def sc_e2e_agent(t: T, shared: Path) -> None:
+    """DS35 (DL-86..DL-88): the result records the e2e specs; verify and the push hook hold a UI branch to them."""
+    box = Box(shared, gate_json=e2e_gate_json())
+
+    def rec() -> dict:
+        return box.result()["e2e"]
+
+    # 1. a mapped UI change: required, ran, passed, the specs named
+    box.branch("feat/ui", {"apps/web/checkout/a.txt": "a\n"})
+    box.clear_log()
+    r = box.gate()
+    t.eq("a UI change: the result has an e2e record",
+         (r.code, rec()["required"], rec()["outcome"], rec()["selection"], rec()["specs"]),
+         (0, True, "pass", "affected", ["e2e/checkout.spec.ts"]))
+    t.check("... and says ui_changed", box.result()["ui_changed"] is True)
+    box.push("feat/ui")
+    v = box.script("gate_verify.py", "feat/ui", "--json")
+    t.eq("verify trusts a UI branch with a passing e2e record", v.code, 0)
+
+    # 2. a record that is missing or failing refuses the branch
+    good = json.loads(box.origin_git("show", "refs/gate-results/feat/ui:gate-result.json"))
+    no_rec = {k: val for k, val in good.items() if k not in ("e2e", "ui_changed")}
+    box.publish_raw("feat/ui", json.dumps(no_rec))
+    v = box.script("gate_verify.py", "feat/ui")
+    t.eq("verify refuses a UI branch without the e2e record", v.code, 1)
+    t.has("... in plain words, with the command", v.out, "no e2e record")
+    t.has("... naming the command", v.out, "branch_gate.py --e2e-only")
+    box.publish_raw("feat/ui", json.dumps({**good, "e2e": {**good["e2e"], "outcome": "skip"}}))
+    v = box.script("gate_verify.py", "feat/ui")
+    t.eq("verify refuses a UI branch whose e2e did not pass", v.code, 1)
+    box.publish_raw("feat/ui", json.dumps(good))
+    t.eq("... the real record is trusted again", box.script("gate_verify.py", "feat/ui").code, 0)
+
+    # 3. a branch with no UI change needs no record
+    box.branch("feat/api", {"apps/api/a.txt": "a\n"})
+    box.gate()
+    t.eq("no UI change: e2e not required", (rec()["required"], rec()["outcome"]), (False, "skip"))
+    box.push("feat/api")
+    box.publish_raw("feat/api", json.dumps({k: val for k, val in box.result().items() if k not in ("e2e", "ui_changed")}))
+    t.eq("... and verify needs no record", box.script("gate_verify.py", "feat/api").code, 0)
+
+    # 4. --e2e-only: only the e2e step, partial, published; the CI-gate check accepts it
+    box.branch("feat/ci", {"apps/web/checkout/b.txt": "b\n"})
+    box.push("feat/ci")
+    box.clear_log()
+    r = box.gate("--e2e-only")
+    t.eq("--e2e-only runs only the e2e step", (r.code, [x[0] for x in box.ran()]), (0, ["e2e"]))
+    t.check("... the result is partial and e2e_only", box.result()["partial"] and box.result()["e2e_only"])
+    t.check("... and is published", box.remote_ref("refs/gate-results/feat/ci") is not None)
+    t.eq("verify still refuses a partial result", box.script("gate_verify.py", "feat/ci").code, 1)
+    check = (
+        "import sys; sys.path.insert(0, 'scripts/delivery'); import gate_verify as g; "
+        "print(g.e2e_gate_check('feat/ci', 'origin/main'))"
+    )
+    t.eq("the CI-gate check accepts the e2e-only record", run([PY, "-c", check], cwd=box.work).out.strip(), "[]")
+    box.branch("feat/ci2", {"apps/web/checkout/c.txt": "c\n"})
+    box.push("feat/ci2")
+    out = run([PY, "-c", check.replace("feat/ci", "feat/ci2")], cwd=box.work).out
+    t.has("the CI-gate check holds a UI branch with no record", out, "no e2e record published")
+    box.gate("--e2e-only", "--no-publish")
+    box.g("checkout", "-q", "feat/api")
+    box.clear_log()
+    r = box.gate("--e2e-only")
+    t.eq("--e2e-only with no UI change: nothing to run, exit 0", (r.code, box.ran()), (0, []))
+
+    # 5. a changed spec file is run, alone, and recorded
+    box.branch("feat/spec", {"e2e/checkout.spec.ts": "test\n"})
+    box.clear_log()
+    r = box.gate("--e2e-only", "--no-publish")
+    t.eq("a spec-only change runs that spec", (r.code, [x for x in box.ran() if x[0] == "e2e"]),
+         (0, [["e2e", "e2e/checkout.spec.ts"]]))
+    t.eq("... recorded with changed_specs", (rec()["specs"], rec()["changed_specs"]),
+         (["e2e/checkout.spec.ts"], ["e2e/checkout.spec.ts"]))
+
+    # 6. the push hook: changed specs need a run for exactly that head
+    def hook(sha: str, base: str = "origin/main") -> R:
+        return box.script("e2e_push_check.py", "--commit", sha, "--base-ref", base)
+
+    head = box.g("rev-parse", "HEAD")
+    t.eq("the push check allows a spec change that was run", hook(head).code, 0)
+    head2 = box.commit({"e2e/checkout.spec.ts": "test2\n"}, "blind e2e fix")
+    r = hook(head2)
+    t.eq("... and refuses the next, unrun fix", r.code, 1)
+    t.has("... naming the spec", r.err, "e2e/checkout.spec.ts")
+    t.has("... and the command", r.err, "branch_gate.py --e2e-only")
+    t.eq("a range with no spec change is not held", hook(head2, base=head2).code, 0)
+    box.g("checkout", "-q", "feat/ui")
+    t.eq("a UI-only commit is not held by the push check", hook(box.g("rev-parse", "HEAD")).code, 0)
+    box.g("checkout", "-q", "feat/spec")
+    box.gate("--e2e-only", "--no-publish", env={"GATE_TEST_FAIL": "e2e"})
+    t.eq("a failing e2e run does not allow the push", hook(box.g("rev-parse", "HEAD")).code, 1)
+    box.gate("--e2e-only", "--no-publish")
+    t.eq("... a passing one does", hook(box.g("rev-parse", "HEAD")).code, 0)
+    # the real hook runs the check
+    box.g("checkout", "-q", "feat/spec")
+    box.commit({"e2e/checkout.spec.ts": "test3\n"}, "blind again")
+    box.g("config", "core.hooksPath", ".githooks")
+    p = run(["git", "push", "origin", "feat/spec"], cwd=box.work)
+    t.check("the pre-push hook refuses an unrun e2e fix", p.code != 0 and "e2e-push: blocked" in p.err, p.text)
 
 
 def advanced_box(shared: Path, gate_json: dict | None = None) -> tuple[Box, str]:
@@ -3238,6 +3339,22 @@ def sc_runner_health(t: T, shared: Path) -> None:
 
 # (id, file relative to shared/, text to replace, replacement, scenario that must notice)
 MUTANTS = [
+    ("verify accepts a UI branch with no e2e record", "scripts/delivery/gate_verify.py",
+     '        if needs:\n            reasons.append("no e2e record', '        if False:\n            reasons.append("no e2e record', "e2e_agent"),
+    ("verify ignores a failed e2e record", "scripts/delivery/gate_verify.py",
+     'if rec.get("required") and rec.get("outcome") != "pass":', 'if False:', "e2e_agent"),
+    ("a changed spec file does not count as a UI change", "scripts/delivery/delivery_common.py",
+     '    return ui + changed_e2e_specs(ctx.files, ctx.cfg, ctx.root)', '    return ui', "e2e_agent"),
+    ("the push check allows any push", "scripts/delivery/e2e_push_check.py",
+     '    if not problems:\n        return dc.EXIT_OK', '    if True:\n        return dc.EXIT_OK', "e2e_agent"),
+    ("the push check ignores the head", "scripts/delivery/delivery_common.py",
+     '    if result.get("head") != head:', '    if False:', "e2e_agent"),
+    ("the push check ignores a failed run", "scripts/delivery/delivery_common.py",
+     '    if needed and rec.get("outcome") != "pass":', '    if False:', "e2e_agent"),
+    ("--e2e-only does not publish", "scripts/delivery/branch_gate.py",
+     'publish = not args.no_publish and (not partial or args.e2e_only)', 'publish = not args.no_publish and not partial', "e2e_agent"),
+    ("the pre-push hook skips the e2e check", ".githooks/pre-push",
+     '"$py" scripts/delivery/e2e_push_check.py --commit "$local_sha" $base_args </dev/null || fail=1', ':', "e2e_agent"),
     ("verify accepts a skipped required step", "scripts/delivery/gate_verify.py",
      'elif entry.get("outcome") == "skip" and not str(entry.get("reason") or "").startswith("no "):',
      "elif False:", "required_steps"),
@@ -3556,6 +3673,7 @@ SCENARIOS = {
     "hook_local": sc_hook_local,
     "hook_auto": sc_hook_auto,
     "e2e_map": sc_e2e_map,
+    "e2e_agent": sc_e2e_agent,
     "base_fetch": sc_base_fetch,
     "fork_point": sc_fork_point,
     "join_clean": sc_join_clean,

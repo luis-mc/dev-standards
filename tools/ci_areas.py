@@ -86,7 +86,7 @@ SUITE_MUTANTS: dict[str, frozenset[str]] = {
     "gate": frozenset({
         "tools/test_delivery_gate.py",
         DS + "agent_setup.sh", DS + "branch_gate.py", DS + "delivery_common.py",
-        DS + "fast_guards.py", DS + "gate_verify.py", DS + "join.py",
+        DS + "e2e_push_check.py", DS + "fast_guards.py", DS + "gate_verify.py", DS + "join.py",
         DS + "runner_health.py", DS + "tools.json", DS + "train_freeze.py",
         HOOKS,
     }),

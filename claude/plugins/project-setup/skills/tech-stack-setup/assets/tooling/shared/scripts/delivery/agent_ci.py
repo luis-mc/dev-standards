@@ -26,6 +26,11 @@ Settings (flags, or the `agent_ci` object of scripts/delivery/ci-scope.json):
                    (a string, or a list tried in order; any one with the marker counts)
     marker         ^\\s*CODE DONE\\b   regex, matched per line
 
+A branch that changes UI code or e2e specs also needs its e2e record (DELIVERYSPEC DL-87): the agent runs
+`scripts/delivery/branch_gate.py --e2e-only` in its sandbox, which publishes the result of the specs mapped to the
+screens it changed; without that record for the branch head, no CI is started and the line names the command
+(`require_e2e: false` in the `agent_ci` settings turns this off; a repository without gate.json is not held).
+
 A branch is skipped when its report is missing, lacks the marker, or a `workflow_dispatch` run already exists for
 its head (unsure: nothing is started). Exit 0; 2 for usage. Python 3.8+, standard library only.
 """
@@ -41,7 +46,7 @@ from pathlib import Path
 
 DEFAULTS = {"workflow": "ci.yml", "base": "origin/master", "branch_prefix": "claude/", "ci_prefix": "ci/",
             "report": ["docs/work/reports/{task}.md", "docs/work/agents/reports/{task}.md", "docs/agents/reports/{task}.md"],
-            "marker": r"^\s*CODE DONE\b"}
+            "marker": r"^\s*CODE DONE\b", "require_e2e": True}
 CONFIG = "scripts/delivery/ci-scope.json"
 
 
@@ -145,6 +150,17 @@ def started_for_ci(branch: str, sha: str, cfg: dict) -> bool:
         return True  # unsure: never start a second run
 
 
+def e2e_missing(branch: str, base: str) -> list[str]:
+    """Reasons the branch's e2e record is not good (gate_verify.e2e_gate_check); [] when none is needed."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    try:
+        import gate_verify
+        return gate_verify.e2e_gate_check(branch, base, base.split("/", 1)[0] if "/" in base else "origin")
+    except Exception as exc:  # unsure: do not hold a branch on a tool error
+        print(f"{time.strftime('%H:%M')} {branch}: e2e check unavailable ({exc}); not held", flush=True)
+        return []
+
+
 def one_pass(cfg: dict, dry_run: bool = False) -> list[str]:
     git("fetch", "-q", "--prune", "origin")
     base = cfg["base"]
@@ -153,6 +169,11 @@ def one_pass(cfg: dict, dry_run: bool = False) -> list[str]:
         sha = git("rev-parse", f"origin/{branch}").strip()
         if not sha or not report_says_done(branch, cfg) or started_for_ci(branch, sha, cfg):
             continue
+        if cfg.get("require_e2e", True):
+            missing = e2e_missing(branch, base)
+            if missing:
+                print(f"{time.strftime('%H:%M')} {branch} ({sha[:9]}) waits for its e2e specs: " + "; ".join(missing), flush=True)
+                continue
         ref = ci_ref(branch, base, cfg, push=not dry_run)
         if ref is None:
             continue
@@ -174,10 +195,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--config", default=CONFIG)
     for k in DEFAULTS:
-        p.add_argument(f"--{k.replace('_', '-')}")
+        if k != "require_e2e":
+            p.add_argument(f"--{k.replace('_', '-')}")
     a = p.parse_args(argv)
     cfg = settings(a.config)
-    cfg.update({k: getattr(a, k) for k in DEFAULTS if getattr(a, k)})
+    cfg.update({k: getattr(a, k) for k in DEFAULTS if k != "require_e2e" and getattr(a, k)})
     while True:
         one_pass(cfg, a.dry_run)
         if a.watch <= 0:
