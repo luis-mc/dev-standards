@@ -106,18 +106,18 @@ one. Each step is a dependency of the next.
 
 ## Mode 2 — Check an existing implementation
 
-1. **Preflight with `--require stack --require auth`.** Auditing auth that does
-   not exist is a different report: say it is absent and stop.
+1. **Preflight with `--require stack --require auth`.** If auth does not exist,
+   there is nothing to audit. Say it is absent and stop.
 
 2. **Work `§27.4`'s coverage map**, clause by clause. It is the spec's own
-   index of what must be demonstrable. For each: **conforms**, **violates**,
-   **absent**, or **not applicable** with the reason, and cite file and line for
-   every violation.
+   index of what must be demonstrable. Mark each clause **conforms**,
+   **violates**, **absent**, or **not applicable** with the reason. Cite file and
+   line for every violation.
 
-3. **Check the controls that fail silently when absent.** These are the ones
-   where nothing breaks visibly and the gap only shows up in an incident:
+3. **Check the controls that fail silently when absent.** When these are
+   missing, nothing visibly breaks. The gap shows up only in an incident:
    - every `§4` entity has a `§15.4.1` erasure disposition — an entity nobody
-     answered for is personal data surviving an erasure request
+     answered for is personal data that survives an erasure request
    - `§23.2` retention windows have a `§23.3` job actually pruning them
    - every `§19.4` route maps to a `§17.3` rate-limit bucket
    - audit records carry no personal data (`R16.4`) — the reason erasure and the
@@ -127,22 +127,22 @@ one. Each step is a dependency of the next.
      `§3.4` (`R4.8`, `R4.8a`)
 
 4. **Report severity-ranked findings grouped by spec section, and do not edit
-   while surveying.** A check that repairs as it goes cannot tell you what the
-   repo actually looked like.
+   while surveying.** A check that repairs as it goes cannot show you what the
+   repo looked like.
 
 5. **Then offer to fix, opt-in and never automatic.** Most auth findings are
-   not mechanical — a missing erasure disposition is a compliance decision, not
-   a template. Offer only what genuinely is mechanical, list it explicitly, and
-   re-run the check afterwards. A repair that was not re-verified is a claim.
+   not mechanical. A missing erasure disposition is a compliance decision, not
+   a template. Offer only what is mechanical, list it explicitly, and re-run the
+   check afterwards. A repair that was not re-verified is only a claim.
 
 ## What this skill does not do
 
 - **The tech stack.** That is `tech-stack-setup`, and it runs first.
 - **UX.** Login screens, account settings, admin consoles, and the flows that
-  wire them to these endpoints are deliberately out of scope. A future
-  `auth-ux-setup` skill covers them, and it will preflight with
-  `--require stack --require auth` — that is, on what this skill produces.
+  wire them to these endpoints are out of scope on purpose. A future
+  `auth-ux-setup` skill covers them. It will preflight with
+  `--require stack --require auth`, that is, on what this skill produces.
 - **Editing `AUTHSPEC`.** The spec is maintained in the `dev-standards`
   repository, which gates every edit. A product never carries a copy of it
-  (`STACKSPEC §23`); it carries a Stack Profile naming the version it conforms
-  to.
+  (`STACKSPEC §23`). It carries a Stack Profile that names the version it
+  conforms to.
