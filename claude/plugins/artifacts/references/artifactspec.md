@@ -64,14 +64,18 @@ flowchart LR
 
 ### 0.1 What this document is
 
-A project builds many things at once. Its owner needs to see at any moment
-what is live, what is running and what needs them, without reading code or
-chat. This specification defines the two kinds of project artifact that show
-it (feature artifacts and one full-progress artifact), the record in the
-project's repository they are generated from, and the commands and hooks that
-keep them current. An implementer can build `luismc-artifacts` from it. A
-reviewer can check a project's artifacts against it with
-`project-artifact-check`.
+A project builds many things at once. Its owner must see at any moment what
+is live, what is running and what needs them, without reading code or chat.
+
+This specification defines:
+
+- the two kinds of project artifact that show this: feature artifacts and one
+  full-progress artifact;
+- the record in the project's repository that they are generated from;
+- the commands and hooks that keep them current.
+
+An implementer can build `luismc-artifacts` from it. A reviewer can check a
+project's artifacts against it with `project-artifact-check`.
 
 **What this document is not:** it does not define the content of a feature
 (that is the feature's own business), the claude.ai Artifact service, or how a
@@ -85,8 +89,8 @@ project plans its work.
 4. §7 commands, §8 hooks, §9 publishing and recreation.
 5. §13 test gate and §14 conformance gate.
 
-No script is written before §4 and §7 are settled. The skills and hooks call
-the script and never edit the record themselves.
+Settle §4 and §7 before writing the script. Skills and hooks call the script.
+They never edit the record themselves.
 
 ### 0.3 Requirement language
 
@@ -293,10 +297,10 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 ### 1.2 Out of scope
 
 - **Publishing by a script.** Only a Claude session's Artifact tool can publish
-  an artifact; the plugin makes sure the session does it (§8.2). Not ever,
-  unless the Artifact service offers a non-session API.
+  an artifact. The plugin makes sure the session does it (§8.2). This stays out
+  of scope unless the Artifact service offers a non-session API.
 - **Cloud routines** that update artifacts while no session runs. Not in 1.0.
-- **Other document kinds** (decks, reports). Not this specification.
+- **Other document kinds** (decks, reports). This specification does not cover them.
 
 ### 1.3 Deferred extension points
 
@@ -365,8 +369,9 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 1. Event: a command the session ran, a session start, or the owner's words.
 2. Queue: a hook writes the suggested change to the queue (§8.1), or the
    session acts directly.
-3. Apply: the session runs `set-task-status`; the script updates the registry,
-   renders every artifact that shows the task, and writes the files in `docs/artifacts/`; it commits nothing (R4.13).
+3. Apply: the session runs `set-task-status`. The script updates the registry,
+   renders every artifact that shows the task, and writes the files in
+   `docs/artifacts/`. It commits nothing (R4.13).
 4. Publish, once, at the end of the turn: the session publishes the
    full-progress artifact's publish copy when `pending` lists it, and runs
    `mark-published`. A feature artifact is a file in the repository and is
@@ -376,10 +381,10 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
    has a Running task (R8.10).
 
 - **R3.1** — Steps 3 to 5 complete in the same turn as the event. Status
-  changes accumulate during the turn: the session publishes Full Progress once,
-  at the end of the turn, and never mid-turn, because claude.ai allows 200
-  artifact publishes per account per day and every republish counts. The
-  end-of-turn hook keeps blocking until it is published (R8.3). Verified by
+  changes accumulate during the turn. The session publishes Full Progress once,
+  at the end of the turn, and never mid-turn: claude.ai allows 200 artifact
+  publishes per account per day, and every republish counts. The end-of-turn
+  hook keeps blocking until it is published (R8.3). Verified by
   `stop_blocks_when_an_artifact_is_pending` and `test_session_sequence_ends_clean`.
 - **R3.2** — Every activity is a task before it starts, whoever does it: work
   given to agents and the session's own work (contracts, specs, reviews, joins,
@@ -482,28 +487,33 @@ docs/artifacts/
 
 ### 4.4 Content
 
-`meta.json`: `{title, hero, lede, extra_css}`. `lede` is a short note: one or
-two sentences of context the registry cannot show (an incident, a constraint, a
-plan). It never restates statuses: the generated At a glance block (§5.2) lists
-what is live, built, running, waiting and needs the owner. It may be empty, and
-a lede over 300 characters is a warning (R5.37). Each `NN-<slug>.html` is an HTML fragment whose first line is an HTML
-comment holding the section title: `<!-- title: The design -->`.
-`history.json`: `[{"date": "10 Oct 12:23", "change": "..."}]`, newest first.
-`decisions.json` is described in §5.4.
+`meta.json`: `{title, hero, lede, extra_css}`.
+
+- `lede` is a short note: one or two sentences of context the registry cannot
+  show (an incident, a constraint, a plan). It never restates statuses: the
+  generated At a glance block (§5.2) lists what is live, built, running,
+  waiting and needs the owner. It may be empty. A lede over 300 characters is a
+  warning (R5.37).
+- Each `NN-<slug>.html` is an HTML fragment. Its first line is an HTML comment
+  holding the section title: `<!-- title: The design -->`.
+- `history.json`: `[{"date": "10 Oct 12:23", "change": "..."}]`, newest first.
+- `decisions.json` is described in §5.4.
 
 - **R4.10** — Content fragments contain no `<script>`, no `<style>` (styles go
   in `extra_css`) and no section numbers; the renderer numbers sections.
 - **R4.11** — `extra_css` may add classes but **MUST NOT** redefine a selector
-  of the structure stylesheet — a redefined rule changes every artifact's
-  layout in a way the check cannot see per project.
+  of the structure stylesheet. A redefined rule changes every artifact's
+  layout, and the check cannot see this per project.
 
 ### 4.5 Time
 
 - **R4.12** — Every time the script writes comes from the real clock at the
-  moment of the change, converted to the manifest's zone: with `zoneinfo`; if
-  the zone data is missing (Windows without `tzdata`), with PowerShell
-  `TimeZoneInfo` and `windows_timezone`; if that fails, the machine's local
-  time with a warning on stderr.
+  moment of the change, converted to the manifest's zone. The conversion uses,
+  in order:
+  1. `zoneinfo`;
+  2. if the zone data is missing (Windows without `tzdata`), PowerShell
+     `TimeZoneInfo` and `windows_timezone`;
+  3. if that fails, the machine's local time, with a warning on stderr.
 
 ### 4.6 Writing the record
 
@@ -585,7 +595,7 @@ comment holding the section title: `<!-- title: The design -->`.
 - **R4.24** — The record worktree is retired. `project_artifacts.py worktree`
   prints the record directory, `<repo root>/docs/artifacts`.
   `LUISMC_ARTIFACTS_WORKTREE` and `record_worktree` in
-  `<repo>/.claude/artifacts-local.json` are ignored for writing and reading;
+  `<repo>/.claude/artifacts-local.json` are ignored for writing and reading.
   `check` says so once, as a note, not a finding. **Migration, once and by
   itself:** when the old record worktree exists (by default
   `<repo>/.claude/worktrees/artifacts-record`, or the path the old setting names)
@@ -629,9 +639,9 @@ comment holding the section title: `<!-- title: The design -->`.
 
 ### 4.10 Retiring a finished feature
 
-A finished feature artifact (every task Live or Dropped) only costs space: a project can have dozens, and `check`
-fails when a manifest feature lacks its file or content (INV-3) or a content folder has no manifest entry (R4.1).
-`retire` removes one cleanly and keeps what history needs.
+A finished feature artifact (every task Live or Dropped) only costs space, and a project can have dozens.
+`check` fails when a manifest feature lacks its file or content (INV-3), or when a content folder has no manifest
+entry (R4.1). `retire` removes a finished feature cleanly and keeps what history needs.
 
 - **R4.31** — `project_artifacts.py retire KEY --yes` moves the feature from `feature_artifacts` to the manifest's
   `retired_features` list: `{key, title, prefix, retired, url, decisions}`, all strings. `check` reports a
@@ -692,10 +702,14 @@ fails when a manifest feature lacks its file or content (INV-3) or a content fol
 
 The templates hold `{{placeholders}}`: `title`, `fonts_link`, `design_css`,
 `structure_css`, `extra_css`, `kind_label`, `project`, `hero`, `contents`,
-`sections`, `stamp`. A feature artifact is rendered as a complete HTML document
-that opens in any browser on its own; the full-progress artifact is rendered as
-an HTML fragment beginning with `<title>`, as the Artifact tool expects (no
-`<html>`, `<head>` or `<body>`). Both are described in §5.5.
+`sections`, `stamp`.
+
+- A feature artifact is rendered as a complete HTML document. It opens in any
+  browser on its own.
+- The full-progress artifact is rendered as an HTML fragment beginning with
+  `<title>`, as the Artifact tool expects (no `<html>`, `<head>` or `<body>`).
+
+§5.5 describes both.
 
 - **R5.1** — A feature artifact's title is `Feature: <name>`; the full-progress
   artifact's is `Full Progress: <project>`.
@@ -722,17 +736,23 @@ an HTML fragment beginning with `<title>`, as the Artifact tool expects (no
 
 - **R5.7** — The lede is the content lede alone, in `<p class="lede">`: a short
   note (§4.4). When the content lede is empty the paragraph is omitted. The
-  statuses are not in it: the At a glance block's Needs you group (R5.34) lists
-  every task in Needs you, every Waiting or On hold task that waits on the owner (R5.34a), and every task in Failed, then every open decision (R5.25), and reads
-  `Nothing needs you.` when none waits. `check` finds a Needs you group that
-  differs from the generated set.
-The At a glance block itself is specified in §5.6 (R5.33 to R5.35).
+  statuses are not in it. The At a glance block's Needs you group (R5.34) lists,
+  in this order:
+  1. every task in Needs you;
+  2. every Waiting or On hold task that waits on the owner (R5.34a);
+  3. every task in Failed;
+  4. every open decision (R5.25).
+
+  It reads `Nothing needs you.` when none waits. `check` finds a Needs you
+  group that differs from the generated set.
+
+§5.6 specifies the At a glance block itself (R5.33 to R5.35).
 
 - **R5.8** — Tiles show the count of each status that has at least one task,
   in the order of §6.1, computed from the registry.
 - **R5.8a** — A tile's label names what it counts: `tasks <status in lower
-  case>`, for example `123` over `tasks live`, `1 task running` in the singular
-  (the label reads `task running`). Verified by `tiles_say_tasks`.
+  case>`. For example, `123` over `tasks live`; in the singular, `1` over
+  `task running`. Verified by `tiles_say_tasks`.
 - **R5.9** — The full-progress artifact embeds the registry as
   `<script type="application/json" id="task-registry">`, the only JSON
   script it contains. The only other script allowed in any artifact is the
@@ -760,9 +780,10 @@ The At a glance block itself is specified in §5.6 (R5.33 to R5.35).
 ### 5.4 Decisions
 
 A feature artifact shows the owner's choices between options (designs,
-approaches, names) so that what the owner was offered, what was recommended and
-what was chosen stay visible. They are kept in `content/<key>/decisions.json`
-and drawn by the renderer; they are never written as a content section.
+approaches, names). It keeps visible what the owner was offered, what was
+recommended and what was chosen. The choices are kept in
+`content/<key>/decisions.json` and drawn by the renderer. They are never
+written as a content section.
 
 ```json
 {"decisions": [
@@ -804,7 +825,7 @@ and drawn by the renderer; they are never written as a content section.
   URL or external URL (`http:`, `https:` or `//`); an inline `style` attribute
   may not use `url()`, `@import` or fixed positions; a `data:` URL must be a
   base64 image. `image` is `assets/<file>` under the artifact's content folder:
-  the file exists, is a png, jpg, gif or webp, and is at most 300 KB; the
+  the file exists, is a png, jpg, gif or webp, and is at most 300 KB. The
   renderer embeds it as a `data:` URL. An option has a preview or an image, not
   both.
 - **R5.18** — `replaces` names an existing earlier decision of the same
@@ -847,11 +868,12 @@ and drawn by the renderer; they are never written as a content section.
 - **R5.26** — `check` warns, without failing, for an open, unreplaced decision
   whose `task` is not a task of that feature in Needs you, or, when it names no
   task, when the feature has no task in Needs you.
+
 ### 5.5 Standalone files, the publish copy and links
 
 claude.ai allows 200 artifact publishes per account per day, and every
-republish counts. Only the full-progress artifact is published; a feature
-artifact is a file in the repository that anyone with a checkout opens by
+republish counts. Only the full-progress artifact is published. A feature
+artifact is a file in the repository. Anyone with a checkout opens it by
 double-click.
 
 **The feature file**
@@ -920,14 +942,18 @@ double-click.
   tasks; decisions as in R5.25, which the full-progress artifact has none of),
   and is deterministic (R7.4).
 - **R5.34** — The groups, in this order, each omitted when empty except the
-  first: `you` *Needs you* (tasks in Needs you, then Waiting or On hold tasks
-  that wait on the owner, R5.34a, then Failed, then open decisions
-  as in R5.25); `running` *Running now* (Running tasks, soonest Expected first);
-  `built` *Built, not released* (Built, newest first); `waiting` *Waiting for
-  other work* (Waiting, then On hold, except those that wait on the owner); `live` *Live in the last 24 hours* (Live tasks
-  whose `changed` is within 24 hours of the stamp, newest first, at most 8, then
-  an item `and N more`). To do tasks are not listed. A group in a feature
-  artifact never names a task of another owner.
+  first:
+  1. `you` *Needs you*: tasks in Needs you, then Waiting or On hold tasks that
+     wait on the owner (R5.34a), then Failed, then open decisions as in R5.25.
+  2. `running` *Running now*: Running tasks, soonest Expected first.
+  3. `built` *Built, not released*: Built tasks, newest first.
+  4. `waiting` *Waiting for other work*: Waiting, then On hold, except those
+     that wait on the owner.
+  5. `live` *Live in the last 24 hours*: Live tasks whose `changed` is within 24
+     hours of the stamp, newest first, at most 8, then an item `and N more`.
+
+  To do tasks are not listed. A group in a feature artifact never names a task
+  of another owner.
 - **R5.34a** — Who a Waiting or On hold task waits on is its optional field
   `waits_on`, `owner` or `work`; absent means `work`, so a record without the
   field groups as before the split, except that the group is now named *Waiting
@@ -971,13 +997,13 @@ double-click.
   Progress, so its section 1 shows the stamps just written (R7.4, INV-3).
   Verified by `test_publish_does_not_loop` and `check_r538_published_line`.
 - **R5.39** — The headers `Feature artifact` and `Last updated` of section 1 are
-  buttons (`<button type="button" class="sort-header" data-sort="name|updated">`):
-  a click sorts the rows by that column, a second click reverses the order, an
+  buttons (`<button type="button" class="sort-header" data-sort="name|updated">`).
+  A click sorts the rows by that column. A second click reverses the order. An
   arrow and `aria-sort` on the header show the current order. The page starts
-  in Last updated, newest first (the committed order); sorting is done by the
-  template's own script on the page, stores nothing and calls nothing outside
-  the page, so it works in the publish copy, whose Copy link buttons (R5.31)
-  keep working in any order. Verified by `check_r539_sort_headers` and
+  in Last updated, newest first (the committed order). The template's own
+  script does the sorting on the page. It stores nothing and calls nothing
+  outside the page, so it works in the publish copy, whose Copy link buttons
+  (R5.31) keep working in any order. Verified by `check_r539_sort_headers` and
   `test_full_progress_sort_script`.
 
 ### 5.7 Releases, the release timeline and the State column
@@ -1010,8 +1036,8 @@ double-click.
   an open status has phases, its Expected (before any `; note`) must equal
   `DD Mon ~HH:MM`, the end of its last phase to the minute. A writing command
   that would leave a mismatch is refused, and `check` reports one (R5.41). There
-  is no silent padding: a margin for what may go wrong is named as the
-  release's `risk`, not added to Expected. Verified by `test_release_expected_is_the_end_of_the_last_phase`,
+  is no silent padding. A margin for what may go wrong is named as the
+  release's `risk` and is not added to Expected. Verified by `test_release_expected_is_the_end_of_the_last_phase`,
   `rule_file_carries_the_release_rule` and the R5.41 fixture of `test_check_fixtures`.
 - **R5.42** — Section 0 of the full-progress artifact holds, after the status key
   and before the checklist, the **release timeline** whenever at least one
@@ -1212,11 +1238,13 @@ double-click.
 
 ### 6.2 Groups and order
 
-- **R6.2** — Checklist rows are grouped, in this order: `Running now and next`
-  (Running, Waiting, To do — earliest expected first), `Needs you, failed or
-  on hold` (Needs you, Failed, On hold), `Live or built` (newest `changed`
-  first; Dropped rows with them, R5.49). An empty group is omitted. The full-progress artifact groups by
-  release instead (R5.46); these groups still order the rows inside it.
+- **R6.2** — Checklist rows are grouped, in this order:
+  1. `Running now and next`: Running, Waiting, To do, earliest expected first;
+  2. `Needs you, failed or on hold`: Needs you, Failed, On hold;
+  3. `Live or built`: newest `changed` first; Dropped rows with them (R5.49).
+
+  An empty group is omitted. The full-progress artifact groups by release
+  instead (R5.46); these groups still order the rows inside it.
 - **R6.3** — In the full-progress artifact, `Live` rows whose `changed` is more
   than 14 days old fold into a closed `<details>` titled `Earlier`. `Built` rows
   never fold, however old: unreleased work must not be hidden. Verified by
@@ -1236,7 +1264,7 @@ double-click.
 - **R6.6** — On a Running, Waiting, To do, Needs you or On hold row, Expected is
   `DD Mon` or `DD Mon ~HH:MM` (a time for work due within a day) in the
   owner's zone, optionally followed by `; ` and a short note. Words such as
-  `today`, `soon`, `tomorrow` or `next` alone fail — a relative word goes stale
+  `today`, `soon`, `tomorrow` or `next` alone fail: a relative word goes stale
   without anyone changing it.
 - **R6.7** — On a Live or Built row, Expected is the date it happened.
 - **R6.8** — `set-task-status` to Live or Built sets Expected to the current
@@ -1244,8 +1272,8 @@ double-click.
 
 ### 6.5 The retired status Done
 
-- **R6.9** — `Done`, a status of 1.0.0, is retired: it meant "finished" even
-  when merging, releasing or deploying was still to come, and `Built` and `Live`
+- **R6.9** — `Done`, a status of 1.0.0, is retired. It meant "finished" even
+  when merging, releasing or deploying was still to come. `Built` and `Live`
   say which. `set-task-status` and `task-add` accept `Done` as a deprecated
   alias, store `Built` and print a note. A record that still holds `Done` (a
   task status, or `merged_status`) is read as `Built`, the next writing command
@@ -1259,7 +1287,7 @@ double-click.
   hold) may carry `expected_basis`, a plain-text line of at most 80 characters
   saying what sets the estimate: what it waits on and how long (for example
   `agent slot ~01:30, ~1.5 h`). `task-add` and `set-task-status` take it as
-  `--basis TEXT`; `--basis ""` clears it on `set-task-status`; the field is
+  `--basis TEXT`; `--basis ""` clears it on `set-task-status`. The field is
   absent when there is none. A task whose status becomes Live, Built or Failed
   loses it, as Expected itself is replaced (R6.7, R6.8); `--basis` given for such
   a status is ignored with a warning. `check` reports an empty or longer
@@ -1320,7 +1348,7 @@ double-click.
   Expected time is in the past is flagged (DL-63). A date alone (`DD Mon`)
   ends at 23:59 of that day in the project's zone. `check` prints one warning
   per such row, in `--json` under `warnings`, naming the task and its
-  Expected; it is a warning and not a finding, so a writing command is never
+  Expected. It is a warning and not a finding, so a writing command is never
   refused for it. The end-of-turn hook blocks on it (R8.19). Verified by
   `test_check_flags_open_rows_past_their_expected_time`.
 
@@ -1329,11 +1357,15 @@ double-click.
 ## 7. Commands
 
 All commands run as `python <plugin>/scripts/project_artifacts.py <command>`
-from anywhere inside the project's repository, read `docs/artifacts/` from the
-the working tree (§4.6), and exit 0 on success, 1 on findings or a refused
-action, 2 on an unreadable record (exit codes 3 and 4 are no longer used).
+from anywhere inside the project's repository. They read `docs/artifacts/` from
+the working tree (§4.6). Exit codes:
+
+- 0: success;
+- 1: findings or a refused action;
+- 2: an unreadable record (exit codes 3 and 4 are no longer used).
+
 `--json` prints a machine-readable result. Every writing command writes files
-and stops (R4.13); it accepts `--no-push` and `--push` for compatibility, and
+and stops (R4.13). It accepts `--no-push` and `--push` for compatibility, and
 they do nothing (R4.17).
 
 | Command | Does |
@@ -1397,18 +1429,21 @@ they do nothing (R4.17).
 
 ## 8. Hooks
 
-All four hooks are registered in the plugin's `hooks/hooks.json` (the
-after-command hook for `Bash`, `Agent` and `Task`; the before-command hook for
-`Bash` and `PowerShell`), run
-`python <plugin>/scripts/hook_*.py`, and exit 0 doing nothing when the
-project has no `docs/artifacts/manifest.json` in the current checkout or on
-`origin/<default branch>`.
+All four hooks are registered in the plugin's `hooks/hooks.json`:
+
+- the after-command hook for `Bash`, `Agent` and `Task`;
+- the before-command hook for `Bash` and `PowerShell`;
+- the end-of-turn hook and the session-start hook.
+
+Each runs `python <plugin>/scripts/hook_*.py`. Each exits 0 and does nothing
+when the project has no `docs/artifacts/manifest.json` in the current checkout
+or on `origin/<default branch>`.
 
 ### 8.1 After-command hook (PostToolUse and PostToolUseFailure for Bash; PostToolUse for Agent and Task)
 
-Reads the hook input; takes the task ID from the current branch name
-(`^([A-Z]{2,5}[0-9]+)-`); on a matching command, appends an event to the queue
-`<repo>/.claude/artifacts-queue.json` (gitignored):
+The hook reads the hook input and takes the task ID from the current branch
+name (`^([A-Z]{2,5}[0-9]+)-`). On a matching command, it appends an event to
+the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 `{"id", "suggested_status", "event", "command", "time"}`.
 
 | Command (exit 0 unless noted) | Suggested status |
@@ -1437,7 +1472,7 @@ Reads the hook input; takes the task ID from the current branch name
   (R3.1).
 - **R8.4** — After 3 consecutive blocks in one session with no change in what
   is pending, the hook lets the turn end and prints a `systemMessage` naming
-  what is still unpublished — a session that cannot publish (no Artifact tool)
+  what is still unpublished. A session that cannot publish (no Artifact tool)
   must not loop forever.
 
 ### 8.3 Session-start hook (SessionStart)
@@ -1448,7 +1483,7 @@ Reads the hook input; takes the task ID from the current branch name
   branch `<ID>-*` was merged, and `On hold` for one whose only pull request
   was closed unmerged.
 - **R8.6** — When `gh` is missing or not signed in, the hook queues nothing and
-  prints one `systemMessage` saying the catch-up was skipped — the catch-up is
+  prints one `systemMessage` saying the catch-up was skipped. The catch-up is
   informational, so it fails open.
 - **R8.7** — The hook prints a `systemMessage` listing queued events, if any.
 
@@ -1552,8 +1587,8 @@ Reads the hook input; takes the task ID from the current branch name
   `stop_blocks_when_a_release_task_changed_since_the_publish` and
   `stop_hourly_and_overdue_checks_need_a_published_record_and_respect_the_ceiling`.
 - **R8.19** — The hook blocks while an open row is past its Expected time
-  (R6.14), naming each row and the `set-task-status ... --expected` command
-  that fixes it; the R8.4 ceiling applies. Verified by
+  (R6.14). It names each row and the `set-task-status ... --expected` command
+  that fixes it. The R8.4 ceiling applies. Verified by
   `stop_blocks_on_open_rows_past_their_expected_time`.
 
 ---
@@ -1561,21 +1596,21 @@ Reads the hook input; takes the task ID from the current branch name
 ## 9. Publishing and recreation
 
 - **R9.1** — The session publishes the full-progress artifact with the Artifact
-  tool once per turn, at the end of the turn, never mid-turn (R3.1): it
+  tool once per turn, at the end of the turn, never mid-turn (R3.1). It
   publishes the publish copy that `pending` names in `path` (R5.31), unedited,
   passing the manifest URL when there is one, then runs `mark-published`. No
   other artifact is published.
 - **R9.2** — When the manifest URL no longer opens (the publish is refused
   because the artifact does not exist), the session lists the owner's
-  artifacts; if one has the same title, it publishes to that one and runs
-  `mark-published` with its URL; only if none does, it publishes a new one.
+  artifacts. If one has the same title, it publishes to that one and runs
+  `mark-published` with its URL. Only if none does, it publishes a new one.
   At most one artifact per title is ever created.
 - **R9.3** — The full-progress artifact deleted on claude.ai is recreated from
   the record alone: `render`, then R9.1 and R9.2. A feature artifact cannot be
   lost that way: it is a file in the repository.
 - **R9.4** — A publish refused because the artifact changed elsewhere is
-  retried once after reading the live version; changes made by others to a
-  generated section are not kept (section 0 is always generated), changes to
+  retried once after reading the live version. Changes made by others to a
+  generated section are not kept (section 0 is always generated). Changes to
   content sections are copied into `content/` first.
 - **R9.5** — A feature artifact is never published and has no URL.
   `mark-published` refuses its key with a message saying that feature
@@ -1609,9 +1644,9 @@ Reads the hook input; takes the task ID from the current branch name
 - **R9.9** — A change to a release task's status or phase is published in the
   same turn, not left to the hour (R8.18).
 - **R9.10** — `scripts/publish_hourly.py` prints exactly what a session's
-  hourly cron does: nothing when Full Progress was published less than 60
-  minutes ago and no release task changed since; otherwise the one-line
-  reason and the three steps (`pending --json --refresh`, publish the copy
+  hourly cron does. It prints nothing when Full Progress was published less than
+  60 minutes ago and no release task changed since. Otherwise it prints the
+  one-line reason and the three steps (`pending --json --refresh`, publish the copy
   unedited, `mark-published`). It only reads the record and never publishes.
   Verified by `test_publish_hourly_prints_what_the_cron_does_or_nothing`.
 - **R9.11** — The fresh-copy check (DL-62). `pending --json` records, for the
@@ -1638,26 +1673,35 @@ Reads the hook input; takes the task ID from the current branch name
   `enabledPlugins`, else the marketplace file's own name. A project that names
   a marketplace the owner registered differently enables nothing.
 - **R10.2** — Installing creates no file in the project. The first
-  `feature-new` or `init` adds `.claude/artifacts-queue.json`,
-  `.claude/artifacts-stop-state.json`, `.claude/artifacts-publish/` (the
-  publish copy, R5.31), `.claude/artifacts-record.lock` (R4.17) and `.claude/worktrees/` to `.gitignore`.
+  `feature-new` or `init` adds these to `.gitignore`:
+  - `.claude/artifacts-queue.json`;
+  - `.claude/artifacts-stop-state.json`;
+  - `.claude/artifacts-publish/` (the publish copy, R5.31);
+  - `.claude/artifacts-record.lock` (R4.17);
+  - `.claude/worktrees/`.
+
   Since 1.1.0 it no longer copies the rule file (R10.4). Verified by
   `test_init_session_files`.
-- **R10.3** — The rule file holds one short imperative line per rule: record
-  work as a task before starting it; start branch names with the task ID;
-  change status only with `set-task-status`; publish Full Progress once, at
-  the end of the turn, never mid-turn, and never publish a feature artifact;
-  never type a status row by hand; put every doc under `docs/`;
-  record the options the owner chose between, and the choice, in the feature's
-  `decisions.json` in the same turn (§5.4); the four lines of R3.2 to R3.5;
-  and that old claude.ai pages of feature artifacts are deleted only with the
-  owner's confirmation (R4.23); and that an Expected time comes with its basis (R6.11).
+- **R10.3** — The rule file holds one short imperative line per rule:
+  - record work as a task before starting it;
+  - start branch names with the task ID;
+  - change status only with `set-task-status`;
+  - publish Full Progress once, at the end of the turn, never mid-turn, and
+    never publish a feature artifact;
+  - never type a status row by hand;
+  - put every doc under `docs/`;
+  - record the options the owner chose between, and the choice, in the
+    feature's `decisions.json` in the same turn (§5.4);
+  - the four lines of R3.2 to R3.5;
+  - old claude.ai pages of feature artifacts are deleted only with the owner's
+    confirmation (R4.23);
+  - an Expected time comes with its basis (R6.11).
 - **R10.4** — The plugin delivers the rule file itself: the session-start hook
   (R8.9) prints it in every project that has a record, every session, so a rule
   change reaches every project with the plugin and no copy can go stale.
 - **R10.5** — `check` reports a `.claude/rules/project-artifacts.md` that
   differs from the plugin's `rules/project-artifacts.md` as a note, not a
-  finding: it does not change the exit code, and it says that the plugin now
+  finding. It does not change the exit code. It says that the plugin now
   delivers the rule at session start and the copy can be deleted. Verified by
   `test_check_notes_a_differing_rule_copy`.
 - **R10.6** — The `.claude/rules/project-artifacts.md` that `init` of 1.0.0
@@ -1786,14 +1830,14 @@ change. From 1.8.0 the record is files in the working tree; the project, which
 knows its own branches and deploys, commits them when it chooses.
 
 **Why hooks block the turn.** A sentence in CLAUDE.md asking to keep pages
-current already failed. The end-of-turn hook makes "published" a
-condition of finishing, and the 3-block limit keeps it from trapping a session
-that cannot publish.
+current already failed. The end-of-turn hook makes "published" a condition of
+finishing. The 3-block limit keeps it from trapping a session that cannot
+publish.
 
 **Why only Full Progress is published, once per turn.** claude.ai allows 200
 artifact publishes per account per day and every republish counts. Publishing
-every artifact after every change used the whole day's budget in one day. The
-status the owner needs at a glance is Full Progress; the feature pages are
+every artifact after every change used the whole day's budget in one day. Full
+Progress is the status the owner needs at a glance. The feature pages are
 reference material, read from a checkout. Changes accumulate during the turn
 and cost one publish at its end.
 
