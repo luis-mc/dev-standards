@@ -194,9 +194,17 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 
 ## 3. Overview
 
-- **R3.1** — `docs/overview/` MUST hold exactly the pages `README.md` (mission, users, why, what it is not), `apps.md` (one section per app, linked to its features), `system.md` (a C4 context diagram and a container diagram in Mermaid, and the main data flows), `glossary.md` (one term, one meaning; the words users may see) and `quality.md` (quality goals, constraints, risks). A project MAY add pages. It MUST NOT drop these five.
+- **R3.1** — `docs/overview/` MUST hold exactly these pages. A project MAY add pages. It MUST NOT drop these five.
+
+  | Page | Content |
+  |---|---|
+  | `README.md` | mission, users, why, what it is not |
+  | `apps.md` | one section per app, linked to its features |
+  | `system.md` | a C4 context diagram and a container diagram in Mermaid, and the main data flows |
+  | `glossary.md` | one term, one meaning; the words users may see |
+  | `quality.md` | quality goals, constraints, risks |
 - **R3.2** — The app names in `apps.md` MUST be the values of `apps` in `docs/docs.json` (R4.4).
-- **R3.3** — The overview MUST NOT repeat a feature's content: it links to the feature spec.
+- **R3.3** — The overview MUST NOT repeat a feature's content. It links to the feature spec.
 
 ---
 
