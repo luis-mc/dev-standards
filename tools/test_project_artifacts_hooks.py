@@ -1002,7 +1002,7 @@ def start_queues_merged_closed_and_ignores_the_rest():
     for frag in ('AR5 -> Live', 'AR9 -> On hold'):
         assert frag in res['systemMessage'], res
     args = open(os.path.join(os.path.dirname(work), 'ghstub', 'gh.log')).read().split('\n')
-    assert 'pr list --state all --json headRefName,state,mergedAt --limit 20' in args, args
+    assert 'pr list --state all --json headRefName,state,mergedAt --limit 200' in args, args
 
 
 @test
@@ -1575,17 +1575,17 @@ def start_does_not_call_gh_when_no_task_is_open():
 
 
 @test
-def start_limits_gh_to_what_the_open_tasks_need():
-    for statuses, want in ((['Running'] * 3, 20), (['To do'] * 30, 60), (['Waiting'] * 150, 200),
-                           (['Running', 'Built', 'Live'], 20)):
+def start_asks_gh_for_200_pull_requests_whatever_the_open_count():
+    # A limit sized to the open tasks could miss an older merged pull request, so it stays 200.
+    for statuses in (['Running'] * 3, ['To do'] * 30, ['Running', 'Built', 'Live']):
         work = make_repo(branch='main', statuses=statuses)
         start(work, gh_env(work, prs=[]))
-        line = 'pr list --state all --json headRefName,state,mergedAt --limit %d' % want
-        assert line in gh_log(work).split('\n'), (statuses[:1], len(statuses), want, gh_log(work))
+        line = 'pr list --state all --json headRefName,state,mergedAt --limit 200'
+        assert line in gh_log(work).split('\n'), (statuses[:1], len(statuses), gh_log(work))
 
 
 @test
-def start_still_queues_a_merge_with_the_smaller_limit():
+def start_queues_a_merge_for_an_open_task_only():
     work = make_repo(branch='main', statuses=['Running', 'Built'])
     start(work, gh_env(work, prs=[{'headRefName': 'AR20-x', 'state': 'MERGED', 'mergedAt': '2026-10-09T10:00:00Z'},
                                    {'headRefName': 'AR21-x', 'state': 'MERGED', 'mergedAt': '2026-10-09T10:00:00Z'}]))

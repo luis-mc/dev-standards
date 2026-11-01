@@ -113,6 +113,16 @@ class HookTests(unittest.TestCase):
         self.assertEqual(m3, "")
         self.assertIn("diff", c3)
 
+    def test_stop_recomputes_when_a_changed_file_changes_again(self):
+        d = proj()
+        git(d, "checkout", "-q", "-b", "feat")
+        w(d, "docs/features/import/changes/T1.md", "x")
+        w(d, "src/import/a.py", "x=2")
+        self._counted(d)
+        w(d, "docs/features/import/changes/T1.md", "---\nchange: patch\n---\nx\n")  # status text unchanged
+        _, c2 = self._counted(d)
+        self.assertIn("diff", c2)
+
     def test_stop_corrupt_state_falls_back(self):
         d = proj()
         git(d, "checkout", "-q", "-b", "feat")

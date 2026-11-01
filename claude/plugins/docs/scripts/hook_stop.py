@@ -53,18 +53,25 @@ def _file_sig(root, rel) -> str:
 
 
 def _key(root, cfg):
-    """(base, key) from two git calls: rev-parse (base and HEAD) and status. None on any doubt."""
+    """(base, key) from two git calls: rev-parse (base and HEAD) and status, plus the mtime and size of each changed
+    file. None on any doubt."""
     import docs_lib as D
     for cand in (f"origin/{cfg['default_branch']}", cfg["default_branch"]):
         r = D.git(root, "rev-parse", "-q", cand, "HEAD")
         if r.returncode == 0 and len(r.stdout.split()) == 2:
             base_sha, head = r.stdout.split()
-            st = D.git(root, "status", "--porcelain")
+            st = D.git(root, "status", "--porcelain", "-uall")
             if st.returncode != 0:
                 return cand, None
+            # The status text does not change when an already changed file is edited again, so each listed
+            # file's mtime and size is in the key too. A quoted (unusual) path gives no key: no cache.
+            paths = [ln[3:].split(" -> ")[-1] for ln in st.stdout.split("\n") if ln]
+            if any(p.startswith('"') for p in paths):
+                return cand, None
+            files = sorted(set(paths) | {"docs/docs-map.json", "docs/docs.json"})
             h = hashlib.sha256(st.stdout.encode()).hexdigest()
-            sig = _file_sig(root, "docs/docs-map.json") + "|" + _file_sig(root, "docs/docs.json")
-            return cand, [head, base_sha, h, sig]
+            sig = "|".join(f"{p}={_file_sig(root, p)}" for p in files)
+            return cand, [head, base_sha, h, hashlib.sha256(sig.encode()).hexdigest()]
     return None, None
 
 

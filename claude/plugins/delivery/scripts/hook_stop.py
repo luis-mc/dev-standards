@@ -398,10 +398,12 @@ def _dl76_verdict(root, t, names, gh, cache):
             cache['verdicts'][merge] = 'ok'
         return None
     runs = gh(['run', 'list', '--branch', pr['baseRefName'], '--commit', merge, '--limit', '50',
-               '--json', 'databaseId,workflowName,conclusion'], root)
+               '--json', 'databaseId,workflowName,status,conclusion'], root)
     if runs is None:
         return None
-    repeated, complete = [], True
+    # An 'ok' is cached only when runs exist and all have finished: a run still queued, or one not listed yet
+    # right after the merge, may still repeat a proved job.
+    repeated, complete = [], bool(runs) and all(r.get('status') == 'completed' for r in runs)
     for r in runs:
         if r.get('conclusion') == 'skipped':
             continue        # a skipped run ran no job

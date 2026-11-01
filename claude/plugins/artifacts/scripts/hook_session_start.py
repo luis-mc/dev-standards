@@ -54,20 +54,10 @@ def load_registry(root, branch):
     return parse_json(text, 'registry.json')
 
 
-PR_LIMIT_MIN = 20
-PR_LIMIT_MAX = 200
-
-
-def pr_limit(open_count):
-    """How many pull requests to ask gh for: two per open task (a retry may add a second branch), kept
-    between PR_LIMIT_MIN and PR_LIMIT_MAX."""
-    return max(PR_LIMIT_MIN, min(PR_LIMIT_MAX, 2 * open_count))
-
-
-def list_pull_requests(root, limit=PR_LIMIT_MAX):
+def list_pull_requests(root):
     """(prs, None) or (None, reason it was skipped)."""
     r = run(gh_command() + ['pr', 'list', '--state', 'all', '--json',
-                            'headRefName,state,mergedAt', '--limit', str(limit)], root, GH_TIMEOUT)
+                            'headRefName,state,mergedAt', '--limit', '200'], root, GH_TIMEOUT)
     if r is None:
         return None, 'gh is not installed or did not answer'
     rc, out, _err = r
@@ -118,7 +108,7 @@ def catch_up(root, manifest):
     else:
         open_tasks = [t for t in tasks if isinstance(t, dict) and t.get('status') in OPEN_STATUSES]
         # No task in Running, Waiting or To do: a merge or a close changes nothing, so gh is not called.
-        prs, skipped = list_pull_requests(root, pr_limit(len(open_tasks))) if open_tasks else ([], None)
+        prs, skipped = list_pull_requests(root) if open_tasks else ([], None)
         if skipped:
             warn('gh pr list skipped: ' + skipped)
             messages.append('luismc-artifacts: the pull request catch-up was skipped (%s). '

@@ -89,7 +89,7 @@ class OneCiPerReleaseTests(unittest.TestCase):
             if argv[0] == "api":
                 return {"tree": trees[0] if argv[1].endswith(merge) else trees[1]}
             if argv[:2] == ["run", "list"]:
-                return [{"databaseId": 7, "workflowName": "main"}]
+                return [{"databaseId": 7, "workflowName": "main", "status": "completed"}]
             if argv[:2] == ["run", "view"]:
                 return {"jobs": [{"name": n, "conclusion": (conclusion or {}).get(n, "success")} for n in jobs]}
         return run
@@ -186,14 +186,28 @@ class OneCiPerReleaseTests(unittest.TestCase):
         self.assertEqual(S.check_one_ci_per_release(root, self.ledger(), c, gh=lambda a, r: None), [])
         self.assertEqual(len(S.check_one_ci_per_release(root, self.ledger(), c, gh=self.gh())), 1)
 
+    def test_ok_is_not_cached_while_runs_are_open_or_missing(self):
+        root, c = self.root(), self.cfg("Windows tests")
+        for runs in ([], [{"databaseId": 7, "workflowName": "main", "status": "in_progress"}]):
+            def inner(argv, r, runs=runs):
+                if argv[:2] == ["run", "list"]:
+                    return runs
+                return self.gh(jobs=("Publish",))(argv, r)
+            self.assertEqual(S.check_one_ci_per_release(root, self.ledger(), c, gh=inner), [])
+            later = self.counting(self.gh(jobs=("Publish",)))
+            S.check_one_ci_per_release(root, self.ledger(), c, gh=later)
+            self.assertTrue(later.calls)
+            import shutil
+            shutil.rmtree(os.path.join(root, ".delivery"), True)
+
     def test_skipped_runs_are_not_viewed(self):
         root, c = self.root(), self.cfg("Windows tests")
         viewed = []
 
         def inner(argv, r):
             if argv[:2] == ["run", "list"]:
-                return [{"databaseId": 1, "workflowName": "a", "conclusion": "skipped"},
-                        {"databaseId": 2, "workflowName": "b", "conclusion": "success"}]
+                return [{"databaseId": 1, "workflowName": "a", "status": "completed", "conclusion": "skipped"},
+                        {"databaseId": 2, "workflowName": "b", "status": "completed", "conclusion": "success"}]
             if argv[:2] == ["run", "view"]:
                 viewed.append(argv[2])
             return self.gh()(argv, r)
