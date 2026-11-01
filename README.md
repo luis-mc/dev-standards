@@ -8,21 +8,27 @@ project: scaffold a new product, write specs before you build, or audit what
 already exists. You no longer start from a blank repo and hope you remembered
 everything.
 
-## Install (once per machine)
+## Install (marketplace once per machine, plugins per project)
 
 ```bash
-claude plugin marketplace add luis-mc/dev-standards
-claude plugin install luismc-audits@dev-standards
-claude plugin install luismc-agents@dev-standards
-claude plugin install luismc-specs@dev-standards
-claude plugin install luismc-project-setup@dev-standards
-claude plugin install luismc-artifacts@dev-standards
-claude plugin install luismc-docs@dev-standards
-claude plugin install luismc-delivery@dev-standards
-claude plugin install luismc-transcript-folds@dev-standards
+claude plugin marketplace add luis-mc/dev-standards   # once per machine
+# then, inside each project:
+claude plugin install luismc-audits@dev-standards --scope project
+claude plugin install luismc-agents@dev-standards --scope project
+claude plugin install luismc-specs@dev-standards --scope project
+claude plugin install luismc-project-setup@dev-standards --scope project
+claude plugin install luismc-artifacts@dev-standards --scope project
+claude plugin install luismc-docs@dev-standards --scope project
+claude plugin install luismc-delivery@dev-standards --scope project
+claude plugin install luismc-transcript-folds@dev-standards --scope project
 ```
 
 A machine that registered the marketplace under another name uses that name after the `@`.
+
+Plugins install at project scope. Each project turns on only what it uses.
+Run the `claude plugin marketplace add` line once per machine. Run the install lines inside each project.
+
+Already have a plugin installed at user scope? Uninstall it with `claude plugin uninstall <name>@dev-standards --scope user`. Then install it with `--scope project` inside each project.
 
 The repo is private. The install uses your existing git/gh credentials. You
 configure nothing extra.
@@ -61,6 +67,7 @@ machine) behaves the same way.
 Sets up:
 - A `CLAUDE.md` with your working conventions
 - `.claude/settings.json` — auto-compact window, output style, model split
+  (project level by default; you can pick user level or both)
 - A status line showing model, context, and rate-limit info
 - The Caveman output style
 - `.claude/rules/agents-and-integration.md` — how agents are run and work is
@@ -76,12 +83,15 @@ Sets up:
   for removal; and a table mapping your memory notes to the rule ids that now
   enforce them (reported only, nothing deleted)
 - `.claude/hooks/effort_drift.py` — a SessionStart alias-drift warning
-- `enabledPlugins` — turns on `luismc-artifacts` for the project (project
-  target only; other entries are kept, and an entry you set to `false` stays)
-- On every run, at user level: `luismc-transcript-folds` in your
-  `enabledPlugins` and its two chords (`ctrl+x d`, `ctrl+x f`) merged into
-  `~/.claude/keybindings.json`; an existing entry or binding is never changed,
-  and a chord bound to something else is shown as a conflict for you to decide
+- `enabledPlugins` — turns on all eight plugins for the project, including
+  `luismc-transcript-folds` (project target only; other entries are kept, and an
+  entry you set to `false` stays)
+- `extraKnownMarketplaces.dev-standards` in the project's `.claude/settings.json`
+  when it is missing; an existing entry is never overwritten
+- On every run, at user level: the two transcript-folds chords (`ctrl+x d`,
+  `ctrl+x f`) merged into `~/.claude/keybindings.json`, because keybindings have
+  no project scope; an existing binding is never changed, and a chord bound to
+  something else is shown as a conflict for you to decide
 
 **Model split:** the main session runs on Opus and does the thinking and
 planning. Subagents run on Sonnet and write the code. Every project gets the
@@ -333,7 +343,7 @@ Folds the transcript to one line per change. It draws a diff of more than a few
 lines as `» path:line (+added −removed)`. It draws a finished shell command as a
 single row with its outcome. A band above the prompt shows the two switches and a
 tally of files and lines changed this session. `claude-setup` enables the plugin
-and binds its chords for you.
+in the project and binds its chords for you.
 
 - **Chords:** `ctrl+x d` toggles folded diffs, `ctrl+x f` toggles folded commands.
 - **Slash commands:** `/fold-diffs` and `/fold-commands` flip the same two switches.

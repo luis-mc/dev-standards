@@ -28,7 +28,7 @@ Goals: one line per long diff (an icon, the file and line, lines added and remov
 
 Non-goals: changing what Claude does, writing files, or running commands. The plugin is a display mod only.
 
-**Why its own plugin.** A change to how the transcript is drawn runs inside Claude Code as a mod. A mod runs only from an enabled plugin. As part of the standard setup, `claude-setup` enables the plugin and writes the two chords to `~/.claude/keybindings.json`.
+**Why its own plugin.** A change to how the transcript is drawn runs inside Claude Code as a mod. A mod runs only from an enabled plugin. As part of the standard setup, `claude-setup` enables the plugin in the project's `.claude/settings.json` and installs it with `--scope project`, like the other plugins. It writes the two chords to `~/.claude/keybindings.json`, because keybindings have no project scope.
 
 **Written from scratch.** The idea comes from a third-party plugin. The plugin uses none of its code, names or layout (see [decision 0016](../../architecture/decisions/0016-build-transcript-folds-from-scratch.md)).
 
@@ -97,7 +97,7 @@ flowchart TB
   tsx --> state[(session state atoms)]
   cfg[userConfig] --> tsx
   setup[claude-setup] --> kb[~/.claude/keybindings.json]
-  setup --> en[enabledPlugins]
+  setup --> en[project enabledPlugins]
 ```
 
 `transcript_folds.tsx` is glue. Each decision is a call into `hooks/fold/`, split by concern (`change`, `lines`, `shell`, `summary`, `tally`, `width`, `options`). Session state holds the two switches, the tally, the project root, and the counts and outcome of each finished call by `tool_use_id`. `claude-setup` merges the two chords into the `Global` context of the user's keybindings. A chord bound to another action is a conflict the owner decides. It never changes another binding.
