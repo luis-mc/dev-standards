@@ -1682,48 +1682,49 @@ action instead. Each says why and what to do instead.
 | Web initial bundle | Declared per app, enforced in CI |
 
 Budgets are **measured, not assumed**. Regressions fail the build where a gate
-exists and are triaged where they do not.
+exists. Where no gate exists, they are triaged.
 
 The web field-data budgets require **first-party collection**, because §10.3
-rules out any analytics pipeline that cannot be consent-gated. Reporting field vitals to the product's
-own ingestion endpoint is required work, not an optional extra.
+rules out any analytics pipeline that cannot be consent-gated. Reporting field
+vitals to the product's own ingestion endpoint is required work, not an optional
+extra.
 
 ---
 
 ## 15. Configuration and secrets
 
 - Every service declares its required configuration in **one schema** and
-  validates it at startup, failing loudly and immediately on anything missing,
+  validates it at startup. It fails loudly and immediately on anything missing,
   malformed or left at a placeholder value.
-- **Three tiers** — preview/dev, staging, production — with separate credentials
+- **Three tiers** (preview/dev, staging, production) have separate credentials
   for every external service. A single credential shared across tiers is a defect.
 - Secrets live in the platform's secret storage and are never committed. An
   example environment file documents every variable with a description and
-  whether it is required; it **MUST contain no real values**.
+  whether it is required. It **MUST contain no real values**.
 - Local development values MAY live in a git-ignored environment file. They MUST
   NOT be production credentials.
-- Mobile builds get a generated configuration file per scheme or flavour — API
-  base URL, environment name, feature toggles. **Mobile binaries MUST NOT contain
-  server secrets**; anything in an app bundle is public.
-- Every key is versioned, and rotation is zero-downtime with a documented
+- Mobile builds get a generated configuration file per scheme or flavour (API
+  base URL, environment name, feature toggles). **Mobile binaries MUST NOT contain
+  server secrets**. Anything in an app bundle is public.
+- Every key is versioned. Rotation is zero-downtime and has a documented
   runbook.
-- A dedicated secret manager MAY be adopted; it is not required.
+- A dedicated secret manager MAY be adopted. It is not required.
 
 ---
 
 ## 16. Documentation
 
-- Where each document lives and how it is kept true is bound by **DOCSPEC**
-  (`luismc-docs`, `references/docspec.md`); this section does not restate it.
-  Every product MUST follow DOCSPEC's layout (`docs/` split by reader question,
-  one folder per feature with `spec.md`, `docs/docs.json`, a generated
-  `docs/index.html`) and run its checks (`docs_check.py`).
+- **DOCSPEC** (`luismc-docs`, `references/docspec.md`) binds where each document
+  lives and how it is kept true. This section does not restate it. Every product
+  MUST follow DOCSPEC's layout (`docs/` split by reader question, one folder per
+  feature with `spec.md`, `docs/docs.json`, a generated `docs/index.html`) and run
+  its checks (`docs_check.py`).
 - A spec of one feature is `docs/features/<feature>/spec.md`. A binding rule that
   spans features lives in `docs/architecture/`. Anything under `docs/features/`,
   `docs/architecture/` and `docs/design-system/` is authoritative for behaviour.
-- A superseded doc **moves** to `docs/archive/`; it is not deleted and not left in
+- A superseded doc **moves** to `docs/archive/`. It is not deleted and not left in
   place. The archive is never authoritative.
-- Agent briefs, reports and scratch notes are temporary: they live under
+- Agent briefs, reports and scratch notes are temporary. They live under
   `docs/work/` on the agent's branch and never reach the default branch
   (DOCSPEC §10).
 - Every product MUST carry: its Stack Profile (§18), the DOCSPEC overview pages
@@ -1741,7 +1742,7 @@ own ingestion endpoint is required work, not an optional extra.
 ## 17. Non-goals
 
 These are outside the default architecture, so a product does not drift into one
-without a decision. Each is a **deviation requiring its own design**, not a
+without a decision. Each is a **deviation that needs its own design**, not a
 prohibition:
 
 - **Microservices.** One API, one worker, one datastore per product until there is
@@ -1755,10 +1756,10 @@ Two items that were non-goals in 4.x are **no longer** non-goals, because 5.0.0
 stopped grading technology:
 
 - **Self-hosted infrastructure** is now a `CHOICE`. The obligations that made it
-  costly — backups, PITR, restore drills, uptime checks that survive the host's
-  own outage — are stated as requirements in §5.5 and §10.1 and apply to managed
+  costly (backups, PITR, restore drills, uptime checks that survive the host's
+  own outage) are stated as requirements in §5.5 and §10.1. They apply to managed
   and self-hosted alike.
-- **Cross-platform UI frameworks** are now a `CHOICE`. A product adopting one
+- **Cross-platform UI frameworks** are now a `CHOICE`. A product that adopts one
   still owes §1's thin-client doctrine, §4.1's generated client, §9.6's
   localization and §9.8's mobile behaviour rules in full.
 
@@ -1804,7 +1805,7 @@ Every product MUST carry a Stack Profile at `docs/architecture/stack-profile.md`
 15. **Deviations** — every `SHOULD` not followed and every `MUST` waived, each
     with a reason and a named approver.
 
-A `CHOICE` recorded in item 2 is **never** a deviation. Item 15 is reserved for
+A `CHOICE` recorded in item 2 is **never** a deviation. Item 15 is only for
 graded clauses, which keeps the deviation register meaningful.
 
 ---
