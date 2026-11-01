@@ -16,11 +16,11 @@ last_verified: 2026-11-01
 
 ## 1. In one paragraph
 
-`luismc-audits` has three skills that review a repository and write a severity-ranked report: `security-audit`, `performance-audit` and `compliance-audit`. They find and report. They never change code, so a person triages the findings before any fix.
+`luismc-audits` has three skills that review a repository and write a severity-ranked report: `security-audit`, `performance-audit` and `compliance-audit`. They find and report. They never change code. A person triages the findings before any fix.
 
 ## 2. Why
 
-A review before a release, or of an inherited codebase, needs the same checklist each time and findings a person can rank. Fixing in the same pass hides what was wrong and skips triage.
+A review before a release, or of an inherited codebase, needs the same checklist each time. It needs findings a person can rank. Fixing in the same pass hides what was wrong and skips triage.
 
 Goals:
 
@@ -28,7 +28,7 @@ Goals:
 - Every finding backed by a real path, a measurement or a calculation.
 - Output a person (or the [architect agent](../agents/spec.md)) can rank.
 
-Non-goals: fixing findings, and legal advice. The compliance audit says it is an engineering review.
+Non-goals: fixing findings, and legal advice. The compliance audit states that it is an engineering review.
 
 ## 3. How it works
 
@@ -43,9 +43,9 @@ flowchart LR
 ```
 
 1. The user runs `/luismc-audits:security-audit`, `/luismc-audits:performance-audit` or `/luismc-audits:compliance-audit`.
-2. The skill follows its Process section: read the code, verify each candidate, drop what it cannot show.
+2. The skill follows its Process section. It reads the code, verifies each candidate and drops what it cannot show.
 3. It walks its checklist.
-4. It writes the report in its Output Formatting shape, ranked by its severity rubric.
+4. It writes the report in its Output Formatting shape. It ranks the findings by its severity rubric.
 5. A person triages. Fixing is a separate task.
 
 | Skill | Checklist covers | Frameworks named |
@@ -62,7 +62,7 @@ flowchart LR
 
 **R5.3** — Each skill has a Process section, a severity rubric, a checklist and an Output Formatting section.
 
-**R5.4** — Each skill runs on `opus` at `medium` effort, and its entry in the model-profile table matches its front matter.
+**R5.4** — Each skill runs on `opus` at `medium` effort. Its entry in the model-profile table matches its front matter.
 
 **R5.5** — The performance audit requires measured or calculated impact for each finding.
 
@@ -70,12 +70,12 @@ flowchart LR
 
 ## 7. Design
 
-Each skill is one `SKILL.md` and nothing else: no scripts, no hooks. The front matter holds `description`, `model` and `effort`. The model-profile table in `claude/plugins/project-setup/skills/claude-setup/assets/model-profiles.json` is the single source for those two values (see [models](../models/spec.md)).
+Each skill is one `SKILL.md` and nothing else: no scripts, no hooks. The front matter holds `description`, `model` and `effort`. The model-profile table in `claude/plugins/project-setup/skills/claude-setup/assets/model-profiles.json` is the single source for `model` and `effort` (see [models](../models/spec.md)).
 
 ## 8. Failure modes
 
-- An audit that is not run or is cut short fails open: an audit is advice, not a gate.
-- The performance audit separates proven regressions from theoretical bottlenecks when it cannot run a plan or trace. The security audit verifies each finding before it reports it.
+- An audit that is not run or is cut short fails open. An audit gives advice. It is not a gate.
+- When the performance audit cannot run a plan or trace, it separates proven regressions from theoretical bottlenecks. The security audit verifies each finding before it reports it.
 
 ## 9. How it is proven
 
