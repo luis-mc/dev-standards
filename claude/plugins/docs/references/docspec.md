@@ -1,7 +1,7 @@
 # DOCSPEC — Documentation Standard
 
 **Status:** Normative
-**Version:** 1.1.1
+**Version:** 1.2.0
 **Applies to:** every project that keeps its documentation with the `luismc-docs` plugin
 **Audience:** Claude Code sessions and people working in those projects, and the implementers of `luismc-docs`
 **Owner:** Luis Carvalho
