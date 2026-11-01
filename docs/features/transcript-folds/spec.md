@@ -100,7 +100,7 @@ flowchart TB
   setup --> en[enabledPlugins]
 ```
 
-`transcript_folds.tsx` is glue. Each decision is a call into `hooks/fold/`, split by concern (`change`, `lines`, `shell`, `summary`, `tally`, `width`, `options`). Session state holds the two switches, the tally, the project root, and the counts and outcome of each finished call by `tool_use_id`. `claude-setup` merges the two chords into the `Global` context of the user's keybindings. A chord that is bound to another action is a conflict, and the owner decides it. `claude-setup` never changes another binding.
+`transcript_folds.tsx` is glue. Each decision is a call into `hooks/fold/`, split by concern (`change`, `lines`, `shell`, `summary`, `tally`, `width`, `options`). Session state holds the two switches, the tally, the project root, and the counts and outcome of each finished call by `tool_use_id`. `claude-setup` merges the two chords into the `Global` context of the user's keybindings. A chord bound to another action is a conflict the owner decides. It never changes another binding.
 
 ## 8. Failure modes
 
