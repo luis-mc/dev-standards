@@ -1,6 +1,6 @@
 # luismc-delivery
 
-Delivery guard rails for a project that opts in with a `.delivery/` folder. Rules: `docs/architecture/DELIVERYSPEC.md`. Without `.delivery/` the delivery hooks do nothing, **except the machine load guard (below), which is on in every project where the plugin is enabled**: it protects the machine, not the project.
+Delivery guard rails for a project that opts in with a `.delivery/` folder. Rules: `docs/architecture/DELIVERYSPEC.md`. Without `.delivery/` the delivery hooks do nothing, **except the machine load guard (below), which is on in every project where the plugin is enabled**. It protects the machine, not the project.
 
 | Script | What it does |
 |---|---|
@@ -15,22 +15,22 @@ Delivery guard rails for a project that opts in with a `.delivery/` folder. Rule
 
 ## Machine load guard (DL-77, DL-78, DL-79)
 
-Owner rule: **no memory above 85%, no CPU above 60%**; run as many jobs as fit inside that. The guard only holds NEW work. It never kills, suspends or lowers the priority of anything. It is on in every project where the plugin is enabled, **even without `.delivery/`**.
+Owner rule: **no memory above 85%, no CPU above 60%**. Run as many jobs as fit inside that. The guard only holds NEW work. It never kills, suspends or lowers the priority of anything. It is on in every project where the plugin is enabled, **even without `.delivery/`**.
 
-- **Measure** (`load.py`, standard library only): Windows `GlobalMemoryStatusEx` + `GetSystemTimes`; Linux `/proc/meminfo` + `/proc/stat`; macOS `vm_stat` + `top -l 2` (load average fallback). CPU over ~1 s; the last sample is cached 10 s in the temp folder; CPU is the mean of the last up to 3 samples within 30 s, so one spike does not decide.
+- **Measure** (`load.py`, standard library only): Windows `GlobalMemoryStatusEx` + `GetSystemTimes`; Linux `/proc/meminfo` + `/proc/stat`; macOS `vm_stat` + `top -l 2` (load average fallback). CPU is measured over ~1 s. The last sample is cached 10 s in the temp folder. CPU is the mean of the last up to 3 samples within 30 s, so one spike does not decide.
 - **Limits**, per key: project `.delivery/config.json` `load_limits` over the machine file `~/.claude/luismc-delivery-machine.json` over 85/60.
 
   ```json
   {"load_limits": {"memory_pct": 85, "cpu_pct": 60}}
   ```
-- **PreToolUse** (`Bash|PowerShell|Agent|Workflow`): over a limit, a HEAVY call is refused with exit 2 and a message with the numbers, the limits, the top processes (names), and what to do. Heavy: test runners (vitest, jest, pytest, playwright, mocha, `python -m pytest|unittest`); `pnpm|npm|yarn|bun` `test`, `e2e`, `check*`, `build*` (also via `run`, `exec`, `dlx`); turbo/nx; `tsc -b`; next/vite/webpack builds; cargo, dotnet, go, mvn, gradle, msbuild; docker build and compose up/build; ffmpeg; installs (`install|add|ci`) **unless `--offline`** (an install unpacks thousands of files: the crash trigger); background jobs that are not plainly light; a local Agent launch; a Workflow; plus your `heavy_commands` regexes. Light and never refused: git, gh, ls, cat, grep, rtk-wrapped reads, python one-liners, lint. RemoteTrigger and `Agent` with `isolation` remote/cloud are never refused. If the machine cannot be measured the call is allowed with a warning on stderr.
-- **Stop / SessionStart**: when over a limit, one non-blocking notice per turn with the numbers (SessionStart also puts it in the model's context).
+- **PreToolUse** (`Bash|PowerShell|Agent|Workflow`): over a limit, a HEAVY call is refused with exit 2. The message gives the numbers, the limits, the top processes (names), and what to do. Heavy: test runners (vitest, jest, pytest, playwright, mocha, `python -m pytest|unittest`); `pnpm|npm|yarn|bun` `test`, `e2e`, `check*`, `build*` (also via `run`, `exec`, `dlx`); turbo/nx; `tsc -b`; next/vite/webpack builds; cargo, dotnet, go, mvn, gradle, msbuild; docker build and compose up/build; ffmpeg; installs (`install|add|ci`) **unless `--offline`** (an install unpacks thousands of files: the crash trigger); background jobs that are not plainly light; a local Agent launch; a Workflow; plus your `heavy_commands` regexes. Light and never refused: git, gh, ls, cat, grep, rtk-wrapped reads, python one-liners, lint. RemoteTrigger and `Agent` with `isolation` remote/cloud are never refused. If the machine cannot be measured the call is allowed with a warning on stderr.
+- **Stop / SessionStart**: when over a limit, the hook gives one non-blocking notice per turn with the numbers (SessionStart also puts it in the model's context).
 - **Switches**: `checks_off: ["DL-77"]` / `["DL-78"]` per project; `enforcement.mode: "warn"` shows the refusal as a message; `CLAUDE_DELIVERY_HOOKS=off` disables all hooks.
 - **`python3 scripts/load.py`** prints the current numbers (exit 0 under, 1 over, 2 unmeasurable).
 
 ### CI runner gate (DL-79)
 
-`scripts/runner_load_gate.py` waits (polls every 15 s, up to 30 min) until the machine is under the limits, logs what it waited for (stdout and `~/.claude/luismc-delivery-runner-gate.log`), then lets the job start. At the maximum it exits 1 so the job fails with a clear log line and can be re-run (`--on-timeout run` lets it go instead). Settings: flags, env `DELIVERY_GATE_MAX_WAIT_MIN`, `DELIVERY_GATE_POLL_SEC`, `DELIVERY_GATE_ON_TIMEOUT`, or `runner_gate` in the machine file. The plugin changes no runner configuration; you install the hook:
+`scripts/runner_load_gate.py` waits until the machine is under the limits. It polls every 15 s, up to 30 min. It logs what it waited for (stdout and `~/.claude/luismc-delivery-runner-gate.log`), then lets the job start. At the maximum it exits 1, so the job fails with a clear log line and can be re-run (`--on-timeout run` lets it go instead). Settings: flags, env `DELIVERY_GATE_MAX_WAIT_MIN`, `DELIVERY_GATE_POLL_SEC`, `DELIVERY_GATE_ON_TIMEOUT`, or `runner_gate` in the machine file. The plugin changes no runner configuration. You install the hook:
 
 - **Linux / macOS runner (systemd service)**: in the runner folder add to `.env`
   `ACTIONS_RUNNER_HOOK_JOB_STARTED=/path/to/luismc-delivery/scripts/runner_load_gate.sh`, then `sudo ./svc.sh stop && sudo ./svc.sh start`. The runner in WSL/Hyper-V needs the plugin folder inside that VM.
@@ -39,7 +39,7 @@ Owner rule: **no memory above 85%, no CPU above 60%**; run as many jobs as fit i
 
 ## `.delivery/config.json`
 
-Every key is optional; defaults reproduce 0.1.0. Unknown keys warn, `_` keys are comments. Check it with
+Every key is optional. Defaults reproduce 0.1.0. Unknown keys warn. `_` keys are comments. Check it with
 
 ```
 python3 scripts/delivery_config.py validate --root .      # exit 0 valid, 1 errors, 2 unreadable
@@ -77,22 +77,22 @@ New in 0.2.0:
 
 Accepted alternative spellings: `watcher.merge_method: "merge"` or `merge_flag: "--merge"` (plus `never_auto_merge: true`) and `heavy_local_jobs_yield`. The plugin's earlier names (`caps`, `runners[]`, `runner_plan.retry_seconds`, `watcher_interval_s`, ...) are unchanged.
 
-**Recording the smoke and the cleanup (DL-14, DL-18).** The Stop hook reads `cleaned_at` and `smoke.state` of the train row, which only the ledger writes. Project scripts (`cleanup.py`, `delivery_log.py live`) may not, so the plugin has its own commands; the DL-14 and DL-18 messages name the project's configured command, then these:
+**Recording the smoke and the cleanup (DL-14, DL-18).** The Stop hook reads `cleaned_at` and `smoke.state` of the train row, which only the ledger writes. Project scripts (`cleanup.py`, `delivery_log.py live`) may not write them, so the plugin has its own commands. The DL-14 and DL-18 messages name the project's configured command, then these:
 
 ```
 python <plugin>/scripts/delivery_ledger.py smoke --pr N [--run <id|url>]
 python <plugin>/scripts/delivery_ledger.py cleaned --pr N
 ```
 
-**Recording an agent's ETA (DL-30).** An agent launched without an ETA breakdown makes the Stop hook block. Record it with `python <plugin>/scripts/delivery_ledger.py agent-eta <agent id or task> --setup N --work N --checks N [--basis TEXT] [--root R]`. It sets the running agent's `eta` (total, breakdown, basis, due = started + total) under the ledger lock, prints it, and exits 1 when no running agent matches. The `delivery` block may also carry the one-line form `eta: setup 5 + work 60 + checks 10 = 75 min`; separate `setup:`, `work:`, `checks:` lines win when both exist.
+**Recording an agent's ETA (DL-30).** The Stop hook blocks when an agent was launched without an ETA breakdown. Record it with `python <plugin>/scripts/delivery_ledger.py agent-eta <agent id or task> --setup N --work N --checks N [--basis TEXT] [--root R]`. It sets the running agent's `eta` (total, breakdown, basis, due = started + total) under the ledger lock and prints it. It exits 1 when no running agent matches. The `delivery` block may also carry the one-line form `eta: setup 5 + work 60 + checks 10 = 75 min`. Separate `setup:`, `work:`, `checks:` lines win when both exist.
 
 `smoke` uses `gh` to find the newest `Production smoke` run (`smoke_workflow`) on the PR's merge commit (or the run you pass): success records `smoke {state: pass, at, run}` and `live_at` on every row with that `pr`; a failed run records `fail` and exits 1; a missing or unfinished run records nothing and exits 1. `cleaned` checks with `git ls-remote` that the train's branch and its cargo branches are gone from `origin` and with `git worktree list` that no worktree holds them, then records `cleaned_at` on every row with that `pr`; otherwise it lists what is left and records nothing. Both write through the ledger lock, touch only those fields and add an event. CI fields are never touched.
 
-**Loop limit (`stop_repeat_limit`).** `.delivery/hook-state.json` keeps, per session, each finding's key plus the ledger fields it depends on (the train's or agent's row). The same unchanged finding blocks that many turn ends (3), then the next turn ends are not blocked for it: one notice per session says it is still open and names the command. A change to those fields, or a new finding, starts again. It matters for findings that only the owner or an outside step can clear: DL-14, DL-18, DL-03, DL-02, DL-76 and DL-63. Findings you can clear by acting now (DL-33 watcher heartbeat, DL-30 and DL-32 agent checks, DL-31 and DL-64 wording, Q-2) are limited the same way, but each rewrite or fix changes the finding, so they keep blocking as before.
+**Loop limit (`stop_repeat_limit`).** `.delivery/hook-state.json` keeps, per session, each finding's key plus the ledger fields it depends on (the train's or agent's row). The same unchanged finding blocks that many turn ends (3). After that, later turn ends are not blocked for it. One notice per session says it is still open and names the command. A change to those fields, or a new finding, starts the count again. It matters for findings that only the owner or an outside step can clear: DL-14, DL-18, DL-03, DL-02, DL-76 and DL-63. Findings you can clear by acting now (DL-33 watcher heartbeat, DL-30 and DL-32 agent checks, DL-31 and DL-64 wording, Q-2) are limited the same way, but each rewrite or fix changes the finding, so they keep blocking as before.
 
 **Questions (Q-5).** `AskUserQuestion` is denied when this session's agents are still running and a question batch was already asked within `question_window_min` (default 60) since the owner's last prompt: park the question until the wave reports, then ask everything at once. Allowed when every running agent has `blocked_on: "owner"`, when the owner's latest prompt asked for questions ("ask me questions"), or for dialogs issued within `question_batch_sec` (default 90) of the previous one (several dialogs in one message, Q-1). `checks_off: ["Q-5"]` switches it off.
 
-`tz` must load through zoneinfo. Where tzdata is missing (Windows: `pip install tzdata`) the validator and the doctor fail, and the ledger warns on stderr instead of quietly using UTC.
+`tz` must load through zoneinfo. Where tzdata is missing (Windows: `pip install tzdata`), the validator and the doctor fail, and the ledger warns on stderr instead of quietly using UTC.
 
 ## 0.3.0 (folded on the release branch)
 
@@ -102,11 +102,11 @@ python <plugin>/scripts/delivery_ledger.py cleaned --pr N
 
 ## Branch gate order (DL-84) and runner split (DL-85)
 
-The branch gate runs the always-on guards, then typecheck + lint of the touched packages and their dependents, then the test steps; a time limit never skips lint or types, `gate_verify.py` refuses a result where they did not run, and the generated pre-push hook runs them too. On one shared Linux runner, OS-neutral CI jobs (lint, types, boundaries, portable contract/unit tests) should run on another available runner in parallel.
+The branch gate runs the always-on guards, then typecheck + lint of the touched packages and their dependents, then the test steps. A time limit never skips lint or types. `gate_verify.py` refuses a result where they did not run. The generated pre-push hook runs them too. On one shared Linux runner, OS-neutral CI jobs (lint, types, boundaries, portable contract/unit tests) should run on another available runner in parallel.
 
 ## CI-gate path (opt-in, DL-80..83)
 
-For a project whose agents are gated by CI on their branch instead of a full local gate. Nothing changes for a project that does not opt in. The scripts live in `luismc-project-setup` (`tooling/shared/scripts/delivery/`) and the project's patterns in `scripts/delivery/ci-scope.json`; this plugin carries the rules, the spec and the brief:
+For a project whose agents are gated by CI on their branch instead of a full local gate. Nothing changes for a project that does not opt in. The scripts live in `luismc-project-setup` (`tooling/shared/scripts/delivery/`). The project's patterns live in `scripts/delivery/ci-scope.json`. This plugin carries the rules, the spec and the brief:
 
 - **Agents** run the tests of what they touch and the fast guards, push, and write a `CODE DONE` line in their report. `agent_ci.py` merges the branch onto its base (`--base`, default `origin/master`; a release branch while a train is open) into a two-parent commit on `ci/<task>` and starts one `workflow_dispatch` CI run per branch head; that run is the gate. A conflict is reported by file and starts nothing; `cleanup.py --pr N` removes the `ci/<task>` refs. The manual run plans `origin/<default>...HEAD`.
 - **Caps** (DL-38): defaults cloud 50, local 3, total 53; a project's `.delivery/config.json` `caps` overrides them.
