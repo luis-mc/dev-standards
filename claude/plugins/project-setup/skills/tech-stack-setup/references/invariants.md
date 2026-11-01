@@ -340,8 +340,8 @@ separate:
 ### 2.2 Package management and build orchestration — `CHOICE`
 
 The track resolves the package manager, workspace mechanism and task runner, and
-the product records them in the Stack Profile. Whatever is chosen MUST meet these
-requirements:
+the product records them in the Stack Profile. These are the requirements on
+whatever is chosen:
 
 - The tool version MUST be pinned in the repository, not inherited from the
   developer's machine.
@@ -536,8 +536,8 @@ All endpoints live under an explicit version segment: `/v1/…`, `/v2/…`.
   An endpoint with no declared cacheability defaults to `no-store`.
 - **Conditional requests.** Endpoints that return large or slowly changing
   resources SHOULD support `ETag` + `If-None-Match`. Endpoints where concurrent
-  edits are possible MUST support `If-Match` optimistic concurrency. They MUST
-  return a conflict response and MUST NOT silently overwrite.
+  edits are possible MUST support `If-Match` optimistic concurrency and return a
+  conflict response rather than silently overwriting.
 - Public marketing and informational pages MUST be statically generated, not
   rendered per request.
 
@@ -632,8 +632,8 @@ the rule also states the compensating control for engines that lack it.
   order.
 - Every migration MUST be reversible, or explicitly marked irreversible with a
   recorded justification.
-- A **dedicated, reliable runner** MUST apply migrations. The deploy pipeline
-  invokes it. It MUST lock so concurrent deploys cannot race, and it MUST log
+- Migrations MUST be applied by a **dedicated, reliable runner**. The deploy
+  pipeline invokes it. It locks so concurrent deploys cannot race, and it logs
   clearly what ran. Ad-hoc migration scripts MUST NOT be used.
 - **Destructive changes MUST be split across sequenced deploys**: stop writing →
   deploy → stop reading → deploy → drop. Shipped mobile binaries make this
@@ -786,9 +786,9 @@ This is the invariant. It decides the substrate.
 - Where the datastore does not, or where an external queue is chosen for another
   reason, an **outbox MUST be used**: the business write and an outbox record
   commit together, and a relay publishes to the queue afterwards with
-  at-least-once semantics. Application code MUST NOT publish directly to an
-  external queue alongside an uncommitted or separately committed business
-  write. That is the dual-write bug and MUST NOT ship.
+  at-least-once semantics. Publishing directly to an external queue from
+  application code, alongside an uncommitted or separately committed business
+  write, is the dual-write bug and MUST NOT ship.
 
 The substrate is a `CHOICE`; atomicity is not.
 
@@ -986,8 +986,8 @@ previews, webhooks and avatar imports.
   polyfills MUST NOT be shipped to browsers that do not need them.
 - Styling MUST be delivered as pre-compiled CSS. Runtime style computation that
   blocks rendering MUST NOT be introduced.
-- Data-heavy routes SHOULD stream or defer non-critical sections. They SHOULD NOT
-  block first paint on the slowest query.
+- Data-heavy routes SHOULD stream or defer non-critical sections, so first paint
+  does not block on the slowest query.
 
 ### 9.3 Server state vs client state
 
