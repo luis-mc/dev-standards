@@ -1055,7 +1055,7 @@ The admin plane has its own states. `admin.status` is a different enum from `use
 **Roles expand to fine-grained named permissions.** Endpoints declare a required **permission**, never a role name.
 
 - **R11.1** — No authorization check anywhere in the codebase may test a role name. `role == "admin"` is a defect. Every check tests permission membership.
-- **R11.2** — The effective permission set is the union of permissions from all of the principal's non-revoked, non-expired role grants, computed **server-side from authoritative state** on every request.
+- **R11.2** — The effective permission set is the union of the permissions from all of the principal's non-revoked, non-expired role grants. It is computed **server-side from authoritative state** on every request.
 
 ### 11.2 Permission catalog
 
@@ -1070,7 +1070,7 @@ Permissions are named `resource.action` and declared in code (R4.13).
 | Permission | Sensitive | Grants |
 |---|---|---|
 | `admin.user.list` | no | List users (identifiers and status only, never full PII) |
-| `admin.user.read_pii` | **yes** | View a user's personal data — **audited on every read** (§16.2) |
+| `admin.user.read_pii` | **yes** | View a user's personal data. **Audited on every read** (§16.2) |
 | `admin.user.lock` | **yes** | Lock / unlock an account |
 | `admin.user.revoke_sessions` | **yes** | Force sign-out |
 | `admin.user.reset_mfa` | **yes** | Administrative factor reset (§9.2 exception path) |
@@ -1083,7 +1083,7 @@ Permissions are named `resource.action` and declared in code (R4.13).
 | `admin.break_glass.review` | **yes** | Close and review an activation |
 | `admin.role.grant` | **yes** | Grant / revoke admin roles |
 
-- **R11.3** — Note that `admin.user.read_pii` is **separate** from `admin.user.list`. Bundling them would mean routine operational listing grants bulk personal-data access, which is a minimum-necessary-access failure under HIPAA and a data-minimization failure under GDPR.
+- **R11.3** — `admin.user.read_pii` is **separate** from `admin.user.list`. If they were bundled, routine listing would grant bulk personal-data access. That is a minimum-necessary-access failure under HIPAA and a data-minimization failure under GDPR.
 
 ### 11.3 System roles
 
@@ -1096,24 +1096,24 @@ Permissions are named `resource.action` and declared in code (R4.13).
 | `security_admin` | admin | + `admin.service_account.manage`, `admin.recovery.approve`, `admin.break_glass.review`, `admin.role.grant` |
 | `break_glass` | admin | Time-boxed superset; **grantable only through §12.5** |
 
-- **R11.4** — `break_glass` **MUST NOT** be grantable through the ordinary role-grant path. It is issued exclusively by the break-glass activation flow with a mandatory `expires_at`.
+- **R11.4** — `break_glass` **MUST NOT** be grantable through the ordinary role-grant path. Only the break-glass activation flow issues it, and always with an `expires_at`.
 
 ### 11.4 Enforcement
 
-- **R11.5** — **Every** endpoint declares its required permission, including endpoints believed to be safe. An endpoint with no declaration **MUST** fail closed (deny) and **MUST** fail the build. Absence of a declaration is never interpreted as "public"; public endpoints declare themselves public explicitly.
-- **R11.6** — Permission checks execute **server-side, statelessly, per request**. UI-level hiding of controls is never an authorization control.
-- **R11.7** — **Ownership is a second, independent gate.** Any endpoint touching a specific resource **MUST** verify that the resource belongs to the requesting principal — in the same query that fetches it, as a predicate. Fetch-then-compare is a defect: it discloses existence, invites time-of-check/time-of-use races, and is the exact pattern that produces insecure-direct-object-reference findings.
-- **R11.8** — Every mutation **MUST** carry the ownership predicate in its `WHERE`/filter clause. An update or delete keyed solely on a resource identifier is a P0 cross-account mutation vector.
-- **R11.9** — Admin permissions grant access **across** accounts by design. Each such access **MUST** therefore emit an audit event naming actor, action, target, and timestamp (§16.2). This is the compensating control that makes the cross-boundary grant defensible.
+- **R11.5** — **Every** endpoint declares its required permission, including endpoints believed to be safe. An endpoint with no declaration **MUST** fail closed (deny) and **MUST** fail the build. A missing declaration never means "public". A public endpoint declares itself public explicitly.
+- **R11.6** — Permission checks run **server-side, statelessly, on every request**. Hiding controls in the UI is never an authorization control.
+- **R11.7** — **Ownership is a second, independent gate.** Any endpoint that touches a specific resource **MUST** verify that the resource belongs to the requesting principal. It does this as a predicate in the same query that fetches the resource. Fetch-then-compare is a defect. It reveals whether the resource exists, it invites time-of-check/time-of-use races, and it is the pattern behind insecure-direct-object-reference findings.
+- **R11.8** — Every mutation **MUST** carry the ownership predicate in its `WHERE` or filter clause. An update or delete keyed only on a resource identifier is a P0 cross-account mutation vector.
+- **R11.9** — Admin permissions grant access **across** accounts by design. So each such access **MUST** emit an audit event that names the actor, action, target and timestamp (§16.2). This compensating control makes the cross-boundary grant defensible.
 
 ### 11.5 Ownership predicate indirection
 
-- **R11.10** — All ownership checks **MUST** route through a single ownership-predicate helper that takes the principal context and the target entity and returns the storage-layer predicate. No query site constructs its own ownership condition. This makes the boundary auditable in one location and makes the future tenancy extension (§1.3) a single-site change.
+- **R11.10** — All ownership checks **MUST** route through a single ownership-predicate helper that takes the principal context and the target entity and returns the storage-layer predicate. No query site builds its own ownership condition. So the boundary can be audited in one place, and the future tenancy extension (§1.3) is a change in one place.
 
 ### 11.6 Denial semantics
 
-- **R11.11** — Authorization denial returns the generic error envelope. It **MUST NOT** distinguish "resource does not exist" from "you may not access it", because that distinction is an enumeration oracle across account boundaries.
-- **R11.12** — Every denial **MUST** be audited with `outcome = 'denied'`. Denials are the primary signal of both attack and misconfiguration.
+- **R11.11** — Authorization denial returns the generic error envelope. It **MUST NOT** distinguish "resource does not exist" from "you may not access it". That distinction is an enumeration oracle across account boundaries.
+- **R11.12** — Every denial **MUST** be audited with `outcome = 'denied'`. Denials are the main signal of both attack and misconfiguration.
 
 ---
 
@@ -1121,10 +1121,10 @@ Permissions are named `resource.action` and declared in code (R4.13).
 
 ### 12.1 Isolation
 
-- **R12.1** — The admin plane **MUST** be served on a separate route namespace (default `/v1/admin/*`) and **SHOULD** be served on a separate hostname so cookie scope is structurally disjoint (§6.5.1).
+- **R12.1** — The admin plane **MUST** be served on a separate route namespace (default `/v1/admin/*`) and **SHOULD** be served on a separate hostname, so cookie scope is structurally disjoint (§6.5.1).
 - **R12.2** — Admin endpoints **MUST** verify `principal_type == 'admin'` at stage 6 of §3.4, before any permission evaluation.
-- **R12.3** — Admin routes **SHOULD** additionally be network-restricted (allowlist or private ingress) where deployment permits. This is defense in depth, never a substitute for authentication.
-- **R12.4** — Admin sessions **MUST NOT** be cached for validation (§6.6.2) — always authoritative.
+- **R12.3** — Admin routes **SHOULD** also be network-restricted (allowlist or private ingress) where the deployment allows. This is defense in depth, never a substitute for authentication.
+- **R12.4** — Admin sessions **MUST NOT** be cached for validation (§6.6.2). Validation is always authoritative.
 
 ### 12.2 Session posture
 
@@ -1132,10 +1132,10 @@ Permissions are named `resource.action` and declared in code (R4.13).
 
 ### 12.3 Reading user personal data
 
-- **R12.5** — Every read of another principal's personal data **MUST** emit an audit event **before the data is returned**, and the emission failing **MUST** fail the request. Audit-then-serve, not serve-then-audit-best-effort: a lost audit write on a successful PII disclosure is precisely the non-repudiation failure the compliance framework prohibits.
+- **R12.5** — Every read of another principal's personal data **MUST** emit an audit event **before the data is returned**. If the emission fails, the request **MUST** fail. Audit first, then serve. Do not serve first and audit on a best-effort basis: a lost audit write after a successful PII disclosure is exactly the non-repudiation failure the compliance framework prohibits.
 - **R12.6** — Bulk listing (`admin.user.list`) **MUST** return only identifiers and status. It **MUST NOT** return decrypted personal data. Bulk PII retrieval **MUST NOT** be possible through any list endpoint.
 - **R12.7** — List endpoints **MUST** be cursor-paginated with a maximum page size of 100 (§22.3).
-- **R12.8** — Every list and search **MUST** be audited with the query parameters used, so a mass-enumeration pattern is reconstructable after the fact.
+- **R12.8** — Every list and search **MUST** be audited with the query parameters used, so a mass-enumeration pattern can be reconstructed later.
 
 ### 12.4 Account lifecycle actions
 
@@ -1148,25 +1148,36 @@ Permissions are named `resource.action` and declared in code (R4.13).
 | Trigger password reset | `admin.user.trigger_password_reset` | yes | Reset credential sent **to the user's verified address only** | yes |
 | Initiate deletion | `admin.user.delete` | yes | Enters `pending_deletion` (§15.4) | yes |
 
-- **R12.9** — An administrator **MUST NOT** be able to set a user's password, read a user's password, read a TOTP secret, or receive a reset credential. Reset credentials go only to the user's own verified address. Any path where an operator both triggers and receives a credential is an account-takeover path.
-- **R12.10** — Every one of these actions **MUST** notify the affected user (§18.2). Silent administrative action on an account is not defensible in a privacy audit.
-- **R12.11** — Administrative MFA reset is a high-risk operation and **MUST** additionally emit a staff alert (§18.3).
+- **R12.9** — An administrator **MUST NOT** be able to set a user's password, read a user's password, read a TOTP secret or receive a reset credential. Reset credentials go only to the user's own verified address. Any path where one operator both triggers and receives a credential is an account-takeover path.
+- **R12.10** — Every one of these actions **MUST** notify the affected user (§18.2). Silent administrative action on an account cannot be defended in a privacy audit.
+- **R12.11** — Administrative MFA reset is a high-risk operation. It **MUST** also emit a staff alert (§18.3).
 
 ### 12.5 Break-glass emergency access
 
-- **R12.12** — Activation requires: the `admin.break_glass.activate` permission; step-up authentication; and a free-text justification of at least 20 characters (constraint-enforced).
-- **R12.13** — Activation grants the `break_glass` role with a hard `expires_at` of **60 minutes** maximum. Expiry is enforced at permission resolution, not by a cleanup job — an expired grant **MUST** stop working immediately even if no job has run.
-- **R12.14** — Activation **MUST** immediately alert a second party through a channel outside the application (§18.3). Alert dispatch failure **MUST NOT** silently succeed: if the alert cannot be sent, the activation is recorded and flagged for review, and this behaviour **MUST** be documented in the runbook.
-- **R12.15** — Every action performed while a break-glass grant is active **MUST** be audited with the activation identifier attached, so the full blast radius is reconstructable.
-- **R12.16** — On expiry or closure, all sessions carrying the grant are revoked (R6.26).
-- **R12.16a** — Every activation **MUST** be reviewed after the fact. `review_status` starts at `pending_review` and a second party moves it to `reviewed` (the use was justified) or `flagged` (it was not, or could not be confirmed). `flagged` **MUST** raise a staff alert (§18.3). An activation that sits at `pending_review` indefinitely means the control exists on paper only — R12.14's alert is what makes the use visible, and this is what makes it answered.
+- **R12.12** — Activation requires:
+  - the `admin.break_glass.activate` permission;
+  - step-up authentication;
+  - a free-text justification of at least 20 characters (enforced by a constraint).
+- **R12.13** — Activation grants the `break_glass` role with a hard `expires_at` of **60 minutes** maximum. Expiry is enforced at permission resolution, not by a cleanup job. An expired grant **MUST** stop working immediately, even if no job has run.
+- **R12.14** — Activation **MUST** immediately alert a second party through a channel outside the application (§18.3). A failed alert dispatch **MUST NOT** pass silently. If the alert cannot be sent, the activation is recorded and flagged for review. This behaviour **MUST** be documented in the runbook.
+- **R12.15** — Every action performed while a break-glass grant is active **MUST** be audited with the activation identifier attached, so the full blast radius can be reconstructed.
+- **R12.16** — On expiry or closure, all sessions that carry the grant are revoked (R6.26).
+- **R12.16a** — Every activation **MUST** be reviewed after the fact. `review_status` starts at `pending_review` and a second party moves it to `reviewed` (the use was justified) or `flagged` (it was not, or could not be confirmed). `flagged` **MUST** raise a staff alert (§18.3). An activation that stays at `pending_review` forever means the control exists on paper only. R12.14's alert makes the use visible. This review makes someone answer for it.
 - **R12.17** — Every activation enters `review_status = 'pending_review'` and **MUST** be closed out by a different operator holding `admin.break_glass.review`. Unreviewed activations older than 7 days **MUST** be surfaced as an operational alert.
-- **R12.18** — Break-glass **MUST NOT** be usable as a routine workflow. Frequency **MUST** be reported in the operational runbook's review cadence.
+- **R12.18** — Break-glass **MUST NOT** be usable as a routine workflow. Its frequency **MUST** be reported in the operational runbook's review cadence.
 
 ### 12.6 Impersonation — prohibited
 
-- **R12.19** — The framework **MUST NOT** implement user impersonation, "log in as", "view as user", or any mechanism producing a user-plane session for an administrative actor. Support workflows are served by audited PII reads (§12.3) and lifecycle actions (§12.4).
-- **R12.20** — Should impersonation ever be required, it is a specification amendment, not an implementation detail. It would require at minimum: a distinct session type flagged as impersonated; a mandatory, non-dismissible UI indicator; a hard time limit; structural exclusion of credential, MFA, and export operations; dual-actor audit recording; and user notification. None of that is in scope here, and a partial implementation is worse than none.
+- **R12.19** — The framework **MUST NOT** implement user impersonation, "log in as", "view as user" or any mechanism that produces a user-plane session for an administrative actor. Support workflows are served by audited PII reads (§12.3) and lifecycle actions (§12.4).
+- **R12.20** — Should impersonation ever be required, it is a specification amendment, not an implementation detail. At a minimum it would need:
+  - a distinct session type flagged as impersonated;
+  - a mandatory, non-dismissible UI indicator;
+  - a hard time limit;
+  - structural exclusion of credential, MFA and export operations;
+  - dual-actor audit recording;
+  - user notification.
+
+  None of that is in scope here. A partial implementation is worse than none.
 
 ---
 
@@ -1174,14 +1185,14 @@ Permissions are named `resource.action` and declared in code (R4.13).
 
 ### 13.1 Model
 
-- **R13.1** — Non-human callers authenticate as `service` principals with their own scoped permissions. Running a job as a shared administrative user destroys attribution and grants far more authority than the job needs; it **MUST NOT** be done.
+- **R13.1** — Non-human callers authenticate as `service` principals with their own scoped permissions. Running a job as a shared administrative user loses attribution and grants far more authority than the job needs. It **MUST NOT** be done.
 
 ### 13.2 Credentials
 
-- **R13.2** — Either a high-entropy client secret (≥256 bits, stored only as a KDF digest) or an asymmetric key pair (public key stored; private key never transmitted to the server). Asymmetric is preferred.
+- **R13.2** — Use either a high-entropy client secret (≥256 bits, stored only as a KDF digest) or an asymmetric key pair (public key stored; private key never sent to the server). Asymmetric is preferred.
 - **R13.3** — Credentials **MUST** carry an `expires_at`, default 90 days, maximum 365. Non-expiring credentials are forbidden.
-- **R13.4** — Rotation **MUST** support an overlap period during which both the old and new credential are valid, so rotation never requires downtime. `rotated_from_id` records the lineage.
-- **R13.5** — Credential material is displayed **exactly once**, at creation. There is no retrieval endpoint.
+- **R13.4** — Rotation **MUST** support an overlap period in which both the old and the new credential are valid, so rotation never needs downtime. `rotated_from_id` records the lineage.
+- **R13.5** — Credential material is shown **once**, at creation. There is no retrieval endpoint.
 
 ### 13.3 Tokens
 
@@ -1190,18 +1201,18 @@ Permissions are named `resource.action` and declared in code (R4.13).
 
 ### 13.4 Authorization
 
-- **R13.8** — Service accounts use the same permission catalog. They **MUST** be granted the minimum permission set required and **MUST NOT** be granted any `is_sensitive` admin permission except by explicit, documented, reviewed exception.
-- **R13.9** — A service principal **MUST NOT** hold `admin.break_glass.activate` or `admin.recovery.approve`. These require a human actor.
+- **R13.8** — Service accounts use the same permission catalog. They **MUST** be granted the minimum permission set they need. They **MUST NOT** be granted any `is_sensitive` admin permission, except by an explicit, documented, reviewed exception.
+- **R13.9** — A service principal **MUST NOT** hold `admin.break_glass.activate` or `admin.recovery.approve`. These need a human actor.
 
 ### 13.5 Hygiene
 
 - **R13.10** — `last_used_at` is maintained (write-throttled per R6.21). Credentials unused for 90 days **MUST** be reported for review.
-- **R13.10a** — `service_account.status` is `active`, `suspended`, or `retired`. `suspended` is a reversible hold that **MUST** cause immediate token rejection, not merely block new issuance. `retired` is terminal: its credentials are revoked and the identifier **MUST NOT** be reused, because audit history already refers to it.
+- **R13.10a** — `service_account.status` is `active`, `suspended`, or `retired`. `suspended` is a reversible hold that **MUST** cause immediate token rejection, not only block new issuance. `retired` is terminal: its credentials are revoked, and the identifier **MUST NOT** be reused, because audit history already refers to it.
 - **R13.11** — Credentials approaching expiry (30/7/1 days) **MUST** raise operational alerts.
 
 ### 13.6 Extension seam
 
-- **R13.12** — User-issued personal API tokens, if later required, reuse this model with `owner_principal_type = 'user'` and a permission set that is a **subset** of the issuing user's own — never a superset. The `service_account` table carries the owner columns to make this a non-breaking addition.
+- **R13.12** — If user-issued personal API tokens are needed later, they reuse this model with `owner_principal_type = 'user'`. Their permission set is a **subset** of the issuing user's own, never a superset. The `service_account` table carries the owner columns, so adding this is not a breaking change.
 
 ---
 
