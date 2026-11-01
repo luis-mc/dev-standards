@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-01T09:36+00:00",
+  "updated": "2026-11-01T09:40+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2761,12 +2761,14 @@
       "id": "DS154",
       "owner": "project",
       "app": "",
-      "status": "To do",
-      "item": "Security F2 and P3 findings of the 2026-11-01 audit",
+      "status": "Running",
+      "item": "Security F2: repo files choose what runs (docs_check, watcher)",
       "detail": "Repo-chosen commands, Mermaid integrity, Actions pinned by commit, temp file name, Link host check, eval in a migration tool.",
-      "expected": "01 Nov ~12:00",
-      "changed": "2026-11-01T09:30+00:00",
-      "expected_basis": "cloud agent ~60 + join and diff read 20 + CI 15"
+      "expected": "01 Nov ~11:05",
+      "changed": "2026-11-01T09:38+00:00",
+      "expected_basis": "cloud run 09:55: setup 5 + work 35 + checks 10",
+      "rides": "DS160",
+      "started": "2026-11-01T09:50+00:00"
     },
     {
       "id": "DS155",
@@ -2776,7 +2778,7 @@
       "item": "Performance F1: no 1 s CPU sampling sleep in the load guard",
       "detail": "Reuse the cached sample or getloadavg on Stop and SessionStart (2026-11-01 performance audit F1).",
       "expected": "01 Nov ~11:05",
-      "changed": "2026-11-01T09:36+00:00",
+      "changed": "2026-11-01T09:39+00:00",
       "expected_basis": "cloud run 09:50: setup 5 + work 15-60 + checks 10",
       "rides": "DS160",
       "started": "2026-11-01T09:50+00:00"
@@ -2833,9 +2835,9 @@
       "app": "",
       "status": "Running",
       "item": "Release: setup offers, design starter, spec split, hook text, audit fixes",
-      "detail": "ST2 SO2 SO3 DS152 DS153 DS155 DS156",
+      "detail": "ST2 SO2 SO3 DS152 DS153 DS154 DS155 DS156 DS161 DS162 DS163",
       "expected": "01 Nov ~11:40",
-      "changed": "2026-11-01T09:36+00:00",
+      "changed": "2026-11-01T09:38+00:00",
       "expected_basis": "agents start 09:50 (~75 min), join 20, CI 15",
       "release": 25,
       "risk": {
@@ -2860,6 +2862,56 @@
           "end": "2026-11-01T11:40+00:00"
         }
       ]
+    },
+    {
+      "id": "DS161",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Security F3: Mermaid download checked against a SHA-256",
+      "detail": "docs_index.py fetch-mermaid refuses a file whose hash differs (audit F3).",
+      "expected": "01 Nov ~11:05",
+      "changed": "2026-11-01T09:38+00:00",
+      "expected_basis": "cloud run 09:50: setup 5 + work 20-45 + checks 10",
+      "rides": "DS160",
+      "started": "2026-11-01T09:50+00:00"
+    },
+    {
+      "id": "DS162",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Security F4+F5: gitleaks pin fails closed; actions pinned by commit",
+      "detail": "agent_setup.sh and ci.yml templates (audit F4, F5).",
+      "expected": "01 Nov ~11:05",
+      "changed": "2026-11-01T09:38+00:00",
+      "expected_basis": "cloud run 09:50: setup 5 + work 20-45 + checks 10",
+      "rides": "DS160",
+      "started": "2026-11-01T09:50+00:00"
+    },
+    {
+      "id": "DS163",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Security F7+F8: Link host check; no eval in the record converter",
+      "detail": "artifact_prune.py next-URL host check; ast.literal_eval in convert_interim_record.py (audit F7, F8).",
+      "expected": "01 Nov ~11:05",
+      "changed": "2026-11-01T09:38+00:00",
+      "expected_basis": "cloud run 09:50: setup 5 + work 20-45 + checks 10",
+      "rides": "DS160",
+      "started": "2026-11-01T09:50+00:00"
+    },
+    {
+      "id": "DS164",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Security F6: per-user load cache, unguessable temp file",
+      "detail": "load.py cache moves under ~/.claude/, mkstemp + os.replace (audit F6). Waits for DS155, same file.",
+      "expected": "01 Nov ~12:30",
+      "changed": "2026-11-01T09:40+00:00",
+      "expected_basis": "starts after RELEASE-25 is live ~11:40: agent 30 + join 10 + CI 15"
     },
     {
       "id": "MP1",
