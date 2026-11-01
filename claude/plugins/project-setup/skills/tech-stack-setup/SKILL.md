@@ -199,8 +199,8 @@ python3 assets/check_stack.py --selection <selections.yaml>
 
 It reports **errors** (combinations that cannot be built) and **warnings**
 (capability gaps that `STACKSPEC` requires to be recorded). Do not skip it
-because the reasoning "already checked" — a wizard that reasons its way to "Go on
-Vercel" in a long session is exactly the failure the script exists to make
+because the reasoning "already checked". A wizard that reasons its way to "Go on
+Vercel" in a long session is the failure the script exists to make
 impossible.
 
 For each warning, capture a one-line reason and the compensating control. These
@@ -233,11 +233,11 @@ Four rules for this phase:
 
 1. **Never write a production secret to the repo, and never echo one into the
    transcript.** `.env.example` gets key names and descriptions only (`§15`).
-2. **Verify, don't assume.** After each credential, smoke-test it — a trivial
+2. **Verify, don't assume.** After each credential, smoke-test it: a trivial
    query, a cache ping, an upload-then-delete, a send to a sink. A wrong-but-
    present credential fails at 2am instead of now.
 3. **Three tiers, so it is a matrix** (`§15`). Dev, staging, production, with
-   separate credentials. A single list quietly encourages sharing one.
+   separate credentials. A single list invites sharing one.
 4. **Resumable.** Write the ledger to the Stack Profile (`docs/architecture/stack-profile.md`, else the old `docs/specs/stack-profile.md`) item 6 with
    statuses only, never values, so a later run picks up the deferred rows.
 
@@ -291,9 +291,9 @@ branch, so the platform does its part of the `§13.6` cleanup:
 repository setting the user owns: ask before changing it on an existing
 repository.
 
-Any workflow the product adds that uploads a build artifact (an installer such
-as an MSI, a bundle, a report) gives each kind a stable name, with no version,
-run number or commit in it, and is added to `artifact-prune.yml`'s
+If the product adds a workflow that uploads a build artifact (an installer such
+as an MSI, a bundle, a report), give each kind a stable name, with no version,
+run number or commit in it. Add the workflow to `artifact-prune.yml`'s
 `workflows:` list (`§13.1`).
 
 **Runners (`§13.1`).** Ask whether CI runs on hosted or self-hosted runners.
@@ -307,23 +307,23 @@ owns: ask before changing them on an existing repository.
 Warn against requiring a label that only one runner carries (`gh api
 repos/{owner}/{repo}/actions/runners` lists them when the user has admin rights; else ask):
 if that runner is offline, every job waits. Suggest a second runner with the label, or a
-fallback job on hosted labels, and warn, never block. `join.py` and `ci_watch.py` warn at
+fallback job on hosted labels. Warn; never block. `join.py` and `ci_watch.py` warn at
 run time when no online runner carries a job's labels (`§13.6`).
 
 **Splitting the dominant CI job (`§13.1`, SHOULD).** The ts template already runs the
 browser suite as two Playwright shards behind the unchanged `web E2E (§11.2)` check (one
 `shard:` list sets the count). For any track, once CI has run, read the slowest-job summary
-`ci_watch.py` prints; if one job or test step takes most of the run, give it its own job
-or shards, and leave small steps together, since every job repeats setup.
+that `ci_watch.py` prints. If one job or test step takes most of the run, give it its own job
+or shards. Leave small steps together, because every job repeats setup.
 
 **End-to-end selection (`§13.5`).** When the product has more than a handful of
 end-to-end specs, add an `e2e_map` to `gate.json` (specs to source paths, plus
 `full_on` for shared configuration and the API contract), so a branch gate runs
 only the affected specs. Without a map the gate runs them all.
 
-**Change notes (`§13.6`).** Create `docs/specs/changes/` with a short README:
-branches add a note per spec change instead of editing a spec's version line
-or change log; `scripts/delivery/change_notes.py fold` applies them on the
+**Change notes (`§13.6`).** Create `docs/specs/changes/` with a short README.
+Branches add a note per spec change instead of editing a spec's version line
+or change log. `scripts/delivery/change_notes.py fold` applies them on the
 release branch. The `change-notes` gate step enforces it. If the product's
 specs number their change-log headings, set `changelog_headings` in
 `gate.json`.
@@ -337,20 +337,20 @@ Install the pre-push hook so a project's existing check survives:
 - If `core.hooksPath` is unset, copy into `.githooks/` and set it: `git config core.hooksPath .githooks`; say so in the repo's setup notes.
 
 Mark
-`agent_setup.sh` and the hooks (`pre-push`, `commit-msg`) executable (`git update-index --chmod=+x`), or a
+`agent_setup.sh` and the hooks (`pre-push`, `commit-msg`) executable (`git update-index --chmod=+x`). Otherwise a
 checkout on another machine cannot run them. Copy `.gitattributes` before the
-first commit, so those files are never stored with CRLF; if the repo already has
-one, append the four lines rather than replacing it.
+first commit, so those files are never stored with CRLF. If the repo already has
+one, append the four lines. Do not replace it.
 
 **`scripts/delivery/agent_setup.sh` is the first step for any cloud agent.** It
 installs Python 3.11+ if missing, the scanners pinned in `tools.json` (the version
 CI installs, so the gate runs the scanner CI runs) and `gate.json`'s `setup`
-commands, and it is idempotent. Put one line in the repo's agent instructions:
+commands. It is idempotent. Put one line in the repo's agent instructions:
 run it before the first gate.
 
-Do not write the delivery scripts yourself and do not edit them in the
-generated repo to fit a product; they are the plugin's, versioned with
-`STACKSPEC`. Product differences belong in `gate.json`.
+Do not write the delivery scripts yourself. Do not edit them in the
+generated repo to fit a product. They belong to the plugin and are versioned
+with `STACKSPEC`. Product differences belong in `gate.json`.
 
 **Hosting.** A change that touches only `docs/` has nothing to deploy, so
 configure the host to skip it, using whatever the host offers for deciding
@@ -375,11 +375,11 @@ the product ships no packaged program.
 
 - **Step 4 is entirely `auth-setup`'s.** Do not create the auth module, not even
   an empty one with a README. An empty auth package makes `auth-setup`'s
-  preflight see a satisfied requirement that is not.
+  preflight see a requirement as met when it is not.
 - **Step 5 splits.** Create the API app, its bootstrap, its health route, its
   error envelope and the `§11.1` route-coverage test **harness**. Leave the auth
-  endpoints out. The coverage test over zero auth routes is correct here and
-  starts failing usefully the moment `auth-setup` adds routes without
+  endpoints out. The coverage test over zero auth routes is correct here. It
+  starts to fail, usefully, as soon as `auth-setup` adds routes without
   declarations.
 - **Step 7's mail adapter is a dependency of auth**, not of it. Build it here;
   `auth-setup` wires notifications into it.
@@ -393,9 +393,9 @@ packages for a product with one app is a defect.
 ## Phase 8 — Verify and report
 
 Run Mode 2 against what you generated. A generation that has not been checked is
-not finished. Expect and ignore auth-shaped absences — they are the declared gap,
+not finished. Expect and ignore auth-shaped absences. They are the declared gap,
 not findings. Also run the branch gate once (`python3 scripts/delivery/branch_gate.py
---no-publish`) so the first result is a real one, and fix `gate.json` if a step
+--no-publish`) so the first result is a real one. Fix `gate.json` if a step
 cannot run.
 
 Report: what was generated · what was deferred and why · every profile field the
