@@ -118,9 +118,35 @@ class Cache(unittest.TestCase):
             self.assertEqual(L.sample(now=1)["cpu"], 0.0)
 
     def test_unwritable_cache_still_works(self):
-        with env(DELIVERY_LOAD_CACHE="/nonexistent-dir/x/c.json"):
+        blocker = Path(tempfile.mkdtemp(prefix="load-")) / "file"
+        blocker.write_text("x")                                    # a file where the folder should be
+        with env(DELIVERY_LOAD_CACHE=str(blocker / "x" / "c.json")):
             s = L.sample(now=5, measure=lambda: {"mem": 1.0, "cpu": 2.0, "at": 0})
             self.assertEqual((s["mem"], s["cpu"]), (1.0, 2.0))
+
+    def test_default_cache_is_per_user_not_shared_temp(self):
+        d = tempfile.mkdtemp(prefix="home-")
+        with mock.patch.dict(os.environ, {"HOME": d, "USERPROFILE": d}):
+            os.environ.pop("DELIVERY_LOAD_CACHE", None)
+            os.environ.pop("DELIVERY_MACHINE_CONFIG", None)
+            path = Path(L.cache_file())
+            self.assertEqual(path.parent, Path(os.path.expanduser("~")) / ".claude")
+            self.assertNotEqual(str(path.parent), tempfile.gettempdir())
+
+    def test_write_leaves_no_temp_file_and_makes_folder(self):
+        d = Path(tempfile.mkdtemp(prefix="load-")) / "new" / "dir"
+        with env(DELIVERY_LOAD_CACHE=str(d / "c.json")):
+            L.sample(now=100, measure=lambda: {"mem": 1.0, "cpu": 2.0, "at": 0})
+            L.sample(now=200, measure=lambda: {"mem": 1.0, "cpu": 2.0, "at": 0})
+        self.assertEqual([x.name for x in d.iterdir()], ["c.json"])
+
+    def test_corrupt_cache_is_ignored(self):
+        d = Path(tempfile.mkdtemp(prefix="load-"))
+        (d / "c.json").write_text("{not json")
+        with env(DELIVERY_LOAD_CACHE=str(d / "c.json")):
+            s = L.sample(now=5, measure=lambda: {"mem": 1.0, "cpu": 2.0, "at": 0})
+            self.assertFalse(s["cached"])
+            self.assertEqual(len(json.loads((d / "c.json").read_text())["samples"]), 1)
 
     def test_unmeasurable_raises(self):
         def boom():
