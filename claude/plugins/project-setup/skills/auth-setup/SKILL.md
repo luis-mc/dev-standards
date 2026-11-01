@@ -133,7 +133,7 @@ one. Each step is a dependency of the next.
 5. **Then offer to fix, opt-in and never automatic.** Most auth findings are
    not mechanical. A missing erasure disposition is a compliance decision, not
    a template. Offer only what is mechanical, list it explicitly, and re-run the
-   check afterwards. A repair that was not re-verified is only a claim.
+   check afterwards. A repair that was not re-verified is a claim.
 
 ## What this skill does not do
 
