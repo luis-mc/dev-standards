@@ -64,14 +64,18 @@ flowchart LR
 
 ### 0.1 What this document is
 
-A project builds many things at once. Its owner needs to see at any moment
-what is live, what is running and what needs them, without reading code or
-chat. This specification defines the two kinds of project artifact that show
-it (feature artifacts and one full-progress artifact), the record in the
-project's repository they are generated from, and the commands and hooks that
-keep them current. An implementer can build `luismc-artifacts` from it. A
-reviewer can check a project's artifacts against it with
-`project-artifact-check`.
+A project builds many things at once. Its owner must see at any moment what
+is live, what is running and what needs them, without reading code or chat.
+
+This specification defines:
+
+- the two kinds of project artifact that show this: feature artifacts and one
+  full-progress artifact;
+- the record in the project's repository that they are generated from;
+- the commands and hooks that keep them current.
+
+An implementer can build `luismc-artifacts` from it. A reviewer can check a
+project's artifacts against it with `project-artifact-check`.
 
 **What this document is not:** it does not define the content of a feature
 (that is the feature's own business), the claude.ai Artifact service, or how a
@@ -85,8 +89,8 @@ project plans its work.
 4. §7 commands, §8 hooks, §9 publishing and recreation.
 5. §13 test gate and §14 conformance gate.
 
-No script is written before §4 and §7 are settled. The skills and hooks call
-the script and never edit the record themselves.
+Settle §4 and §7 before writing the script. Skills and hooks call the script.
+They never edit the record themselves.
 
 ### 0.3 Requirement language
 
@@ -293,10 +297,10 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 ### 1.2 Out of scope
 
 - **Publishing by a script.** Only a Claude session's Artifact tool can publish
-  an artifact; the plugin makes sure the session does it (§8.2). Not ever,
-  unless the Artifact service offers a non-session API.
+  an artifact. The plugin makes sure the session does it (§8.2). This stays out
+  of scope unless the Artifact service offers a non-session API.
 - **Cloud routines** that update artifacts while no session runs. Not in 1.0.
-- **Other document kinds** (decks, reports). Not this specification.
+- **Other document kinds** (decks, reports). This specification does not cover them.
 
 ### 1.3 Deferred extension points
 
@@ -365,8 +369,9 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 1. Event: a command the session ran, a session start, or the owner's words.
 2. Queue: a hook writes the suggested change to the queue (§8.1), or the
    session acts directly.
-3. Apply: the session runs `set-task-status`; the script updates the registry,
-   renders every artifact that shows the task, and writes the files in `docs/artifacts/`; it commits nothing (R4.13).
+3. Apply: the session runs `set-task-status`. The script updates the registry,
+   renders every artifact that shows the task, and writes the files in
+   `docs/artifacts/`. It commits nothing (R4.13).
 4. Publish, once, at the end of the turn: the session publishes the
    full-progress artifact's publish copy when `pending` lists it, and runs
    `mark-published`. A feature artifact is a file in the repository and is
@@ -376,10 +381,10 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
    has a Running task (R8.10).
 
 - **R3.1** — Steps 3 to 5 complete in the same turn as the event. Status
-  changes accumulate during the turn: the session publishes Full Progress once,
-  at the end of the turn, and never mid-turn, because claude.ai allows 200
-  artifact publishes per account per day and every republish counts. The
-  end-of-turn hook keeps blocking until it is published (R8.3). Verified by
+  changes accumulate during the turn. The session publishes Full Progress once,
+  at the end of the turn, and never mid-turn: claude.ai allows 200 artifact
+  publishes per account per day, and every republish counts. The end-of-turn
+  hook keeps blocking until it is published (R8.3). Verified by
   `stop_blocks_when_an_artifact_is_pending` and `test_session_sequence_ends_clean`.
 - **R3.2** — Every activity is a task before it starts, whoever does it: work
   given to agents and the session's own work (contracts, specs, reviews, joins,
