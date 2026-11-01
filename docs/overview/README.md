@@ -20,7 +20,7 @@ Make good practice mechanical. A rule that lives in a memory note gets forgotten
 
 ## Why it exists
 
-A project that starts from a blank repo always forgets something: CI, secret scanning, a test rule, a docs layout. Rules told to an agent in chat fade after a few turns. This repository keeps each rule in one place. The rule is versioned and has an ID that hooks, tests and other projects can cite.
+A project that starts from a blank repo forgets something: CI, secret scanning, a test rule, a docs layout. Rules told to an agent in chat fade after a few turns. This repository keeps each rule in one place. The rule is versioned and has an ID that hooks, tests and other projects can cite.
 
 ## What it is not
 
