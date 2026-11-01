@@ -1,0 +1,6 @@
+{
+  "title": "Feature: Design-system starter",
+  "hero": "A neutral, full starter design system that design-system-setup writes on init, filled from the project's own styles when the owner agrees.",
+  "lede": "The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page. The owner chose a full, project-neutral starter written from scratch, close in scope to a mature design system the owner already uses, without its product rules.",
+  "extra_css": ""
+}

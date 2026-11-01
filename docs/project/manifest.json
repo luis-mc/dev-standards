@@ -12,9 +12,9 @@
     "title": "Full Progress: dev-standards",
     "url": "https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv",
     "file": "full-progress-dev-standards.html",
-    "published_sha256": "96815a340e91275a797c13c9b02b47176bd00bca22791efcbe10f2e83635376f",
-    "published_at": "2026-11-01T02:07+00:00",
-    "published_fingerprint": "ab909ed9f1fd8c77a0e78848971fed0111e7b000c029cd81ecb35a9a7c5e9e71"
+    "published_sha256": "1d051805fcde4af087cb446e6d17392058e7d33dee9b45b02aee552d118085ee",
+    "published_at": "2026-11-01T09:11+00:00",
+    "published_fingerprint": "c5fcae2e384def5ea0a57f5f62ee160b0351fc7605cf8633bf2c5fc7dd66eb60"
   },
   "feature_artifacts": [
     {
@@ -71,12 +71,35 @@
         "luismc-project-setup"
       ],
       "updated": "2026-10-27T08:30+00:00"
+    },
+    {
+      "key": "setup-offers",
+      "title": "Feature: claude-setup offers and enforcement",
+      "file": "feature-claude-setup-offers-and-enforcement.html",
+      "prefix": "SO",
+      "apps": [
+        "luismc-project-setup",
+        "luismc-docs",
+        "luismc-delivery",
+        "luismc-artifacts"
+      ],
+      "updated": "2026-11-01T09:33+00:00"
+    },
+    {
+      "key": "design-starter",
+      "title": "Feature: Design-system starter",
+      "file": "feature-design-system-starter.html",
+      "prefix": "ST",
+      "apps": [
+        "luismc-docs"
+      ],
+      "updated": "2026-11-01T09:33+00:00"
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-11-01T02:08+00:00",
+  "updated": "2026-11-01T09:33+00:00",
   "retired": [],
   "deleted": [
     {

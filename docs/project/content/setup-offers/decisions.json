@@ -1,0 +1,117 @@
+{
+ "decisions": [
+  {
+   "id": "D1",
+   "question": "How should claude-setup ask about enforcing each plugin?",
+   "asked": "2026-11-01",
+   "status": "decided",
+   "task": "SO1",
+   "options": [
+    {
+     "label": "Grouped pages",
+     "summary": "One AskUserQuestion call with 4 grouped questions (enforce, delivery mode, CI, other setups). Done offers are left out.",
+     "recommended": true
+    },
+    {
+     "label": "One question per plugin",
+     "summary": "A question for each of the 8 plugins and each other setup, over several pages."
+    }
+   ],
+   "chosen": "Grouped pages",
+   "decided": "2026-11-01",
+   "owner_words": "Grouped pages (Recommended)"
+  },
+  {
+   "id": "D2",
+   "question": "Which delivery mode should a project start in?",
+   "asked": "2026-11-01",
+   "status": "decided",
+   "task": "SO1",
+   "options": [
+    {
+     "label": "Ask, warn preselected",
+     "summary": "The owner picks. Warn is preselected, so a new project is not blocked on day one.",
+     "recommended": true
+    },
+    {
+     "label": "Ask, block preselected",
+     "summary": "The owner picks. Block is preselected."
+    },
+    {
+     "label": "Always block",
+     "summary": "No question. Block from the start."
+    }
+   ],
+   "chosen": "Ask, warn preselected",
+   "decided": "2026-11-01",
+   "owner_words": "Ask, warn preselected (Recommended)"
+  },
+  {
+   "id": "D3",
+   "question": "Should claude-setup write a CI workflow for the docs, design-system and spec checks?",
+   "asked": "2026-11-01",
+   "status": "decided",
+   "task": "SO1",
+   "options": [
+    {
+     "label": "Yes, in claude-setup",
+     "summary": "claude-setup writes .github/workflows/dev-standards.yml and prints the branch-protection command.",
+     "recommended": true
+    },
+    {
+     "label": "Hand to tech-stack-setup",
+     "summary": "claude-setup only offers tech-stack-setup, which owns CI files."
+    }
+   ],
+   "chosen": "Yes, in claude-setup",
+   "decided": "2026-11-01",
+   "owner_words": "Yes, claude-setup writes it (Recommended)"
+  },
+  {
+   "id": "D4",
+   "question": "Should the docs Stop hook be able to block?",
+   "asked": "2026-11-01",
+   "status": "decided",
+   "task": "SO1",
+   "options": [
+    {
+     "label": "Warn only, block in CI",
+     "summary": "Keep today's warning. The required CI check is the block.",
+     "recommended": true
+    },
+    {
+     "label": "Opt-in block",
+     "summary": "A docs.json setting turns the warning into a block, with a 3-block ceiling."
+    }
+   ],
+   "chosen": "Warn only, block in CI",
+   "decided": "2026-11-01",
+   "owner_words": "Warn only, block in CI (Recommended)"
+  },
+  {
+   "id": "D5",
+   "question": "Three paths can write a feature spec (specs spec-new, docs feature-spec-new, artifacts promote-to-spec). How should they split?",
+   "asked": "2026-11-01",
+   "status": "decided",
+   "task": "SO1",
+   "options": [
+    {
+     "label": "Split by kind",
+     "summary": "spec-new writes only specs that are not features (standards, migrations, services). luismc-docs feature-spec-new writes every feature spec. promote-to-spec stays the one link from a feature page to its spec. Only skill descriptions and the hand-off text change.",
+     "recommended": true
+    },
+    {
+     "label": "Keep as is",
+     "summary": "spec-new keeps handing feature specs to feature-spec-new in a DOCSPEC repo; nothing changes."
+    },
+    {
+     "label": "Merge spec-new into luismc-docs",
+     "summary": "Move spec-new into the docs plugin; luismc-specs keeps only spec-check."
+    }
+   ],
+   "chosen": "Split by kind",
+   "decided": "2026-11-01",
+   "owner_words": "Split by kind (Recommended)"
+  }
+ ]
+}

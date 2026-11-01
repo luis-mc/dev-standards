@@ -1,0 +1,41 @@
+{"decisions": [
+ {"id": "D1", "question": "Which starter should the docs plugin ship?", "asked": "2026-11-01", "status": "decided", "task": "ST1",
+  "options": [
+   {"label": "Neutral starter + size choice", "summary": "Written fresh; init --starter minimal|app (options C + D).", "recommended": true},
+   {"label": "Neutral starter only", "summary": "One fuller starter replaces the minimal template (C)."},
+   {"label": "C+E now", "summary": "One neutral starter, plus the skill reads the project's styles and fills token values after asking."},
+   {"label": "Keep minimal", "summary": "No change (A)."}
+  ], "chosen": "C+E now", "decided": "2026-11-01", "owner_words": "C+E now"},
+ {"id": "D2", "question": "May DOCSPEC R15.6 be reworded to allow a starter set of generic rules?", "asked": "2026-11-01", "status": "decided", "task": "ST1",
+  "options": [
+   {"label": "Yes, reword", "summary": "Templates hold structure and a starter set of generic, project-neutral rules, never one project's rules.", "recommended": true},
+   {"label": "No, keep R15.6", "summary": "The starter stays within a few example rules."}
+  ], "chosen": "Yes, reword", "decided": "2026-11-01", "owner_words": "Yes, reword (Recommended)"},
+ {"id": "D3", "question": "How big should the starter be?", "asked": "2026-11-01", "status": "decided", "task": "ST1",
+  "options": [
+   {"label": "About 12-15 of each", "summary": "Generic rules and components.", "recommended": true},
+   {"label": "About 6-8 of each", "summary": "A smaller core."},
+   {"label": "As close to v4 as neutral allows", "summary": "About 20 or more components and the full rule set, domain parts removed."}
+  ], "chosen": "As close to v4 as neutral allows", "decided": "2026-11-01", "owner_words": "option 3 and provide me a report of what did not make from v4 into the default design-system, why, and options to bring it into the default template"},
+ {"id": "D4", "question": "Which themes should the starter ship?", "asked": "2026-11-01", "status": "decided", "task": "ST1",
+  "options": [
+   {"label": "Light + dark", "summary": "Switched by prefers-color-scheme and data-theme.", "recommended": true},
+   {"label": "Light only", "summary": "Dark added later."},
+   {"label": "Light, dark + theme slots", "summary": "Plus a documented way to add named themes."}
+  ], "chosen": "Light + dark", "decided": "2026-11-01", "owner_words": "Light + dark (Recommended)"},
+ {"id": "D5", "question": "Which fonts should the starter use?", "asked": "2026-11-01", "status": "decided", "task": "ST1",
+  "options": [
+   {"label": "System font stacks", "summary": "Nothing bundled.", "recommended": true},
+   {"label": "One bundled open font", "summary": "One OFL font with its licence."}
+  ], "chosen": "System font stacks", "decided": "2026-11-01", "owner_words": "System font stacks (Recommended)"},
+ {"id": "D6", "question": "What should the skill do with the project's existing styles?", "asked": "2026-11-01", "status": "decided", "task": "ST1",
+  "options": [
+   {"label": "Show, ask, then fill", "summary": "List what it found, ask once, fill token values on yes.", "recommended": true},
+   {"label": "Fill automatically", "summary": "Fill, then report."}
+  ], "chosen": "Show, ask, then fill", "decided": "2026-11-01", "owner_words": "Show, ask, then fill (Recommended)"},
+ {"id": "D7", "question": "Where does the report of what was left out go?", "asked": "2026-11-01", "status": "decided", "task": "ST1",
+  "options": [
+   {"label": "Section on the feature page", "summary": "A Left out section on this page.", "recommended": true},
+   {"label": "docs/architecture report", "summary": "A Markdown report."}
+  ], "chosen": "Section on the feature page", "decided": "2026-11-01", "owner_words": "Section on the feature page (Recommended)"}
+]}

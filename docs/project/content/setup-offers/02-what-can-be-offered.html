@@ -1,0 +1,20 @@
+<!-- title: What claude-setup can offer -->
+<p>Each row is one offer. "Asked when" says when claude-setup shows it. An offer whose setup is already done is shown as done and not asked again.</p>
+<table>
+<thead><tr><th>Offer</th><th>Plugin or skill</th><th>What a yes does</th><th>Asked when</th></tr></thead>
+<tbody>
+<tr><td>Claude config</td><td>claude-setup (today)</td><td>Statusline, settings keys, model split, effort, output style, rule files, <code>effort_drift.py</code>, <code>CLAUDE.md</code></td><td>Every run (unchanged)</td></tr>
+<tr><td>Docs</td><td>luismc-docs</td><td><code>docs_setup.py init --apply</code> in a repo without docs. In a repo with docs, <code>migrate --apply</code> after the owner reads the dry run.</td><td><code>docs/docs.json</code> missing</td></tr>
+<tr><td>Design system</td><td>luismc-docs, <code>design-system-setup</code></td><td><code>design_system.py init --apply</code>, then <code>guards --apply</code> (TypeScript and Vitest only today), then shows the review gallery. v1 is promoted only with the owner's approval date and evidence.</td><td>The project has a UI and <code>docs/design-system/</code> is missing</td></tr>
+<tr><td>Delivery</td><td>luismc-delivery</td><td><code>.delivery/config.json</code> (never overwritten), <code>enforcement.mode</code> warn or block, then <code>delivery_doctor.py</code></td><td>Config missing, or the doctor reports a FAIL</td></tr>
+<tr><td>Project record</td><td>luismc-artifacts</td><td><code>.claude/artifacts.json</code>, the task record and Full Progress</td><td><code>.claude/artifacts.json</code> missing</td></tr>
+<tr><td>Specs</td><td>luismc-specs</td><td>Nothing to install. Offers <code>spec-check</code> in CI.</td><td>The repo has spec files</td></tr>
+<tr><td>CI checks</td><td>new</td><td>Writes one workflow file that runs <code>docs_check.py --strict</code>, the design guards and <code>spec-check</code></td><td>Docs, design system or specs said yes</td></tr>
+<tr><td>Branch protection</td><td>new</td><td>Prints the <code>gh api</code> command that makes the CI checks required on the default branch. The owner runs it; claude-setup never sends it.</td><td>CI checks said yes</td></tr>
+<tr><td>Repo structure and gates</td><td><code>tech-stack-setup</code></td><td>Runs its audit mode (report only) and offers its repair. <code>scripts/delivery/*</code>, git hooks and gitleaks come from here.</td><td><code>scripts/delivery/</code> or <code>.githooks/</code> missing</td></tr>
+<tr><td>Authentication</td><td><code>auth-setup</code></td><td>Hands over to <code>auth-setup</code>, which refuses a repo not set up by <code>tech-stack-setup</code></td><td>Only after repo structure is in place</td></tr>
+<tr><td>Audits</td><td>luismc-audits</td><td>Runs a security, performance or compliance audit once, as a report under <code>docs/architecture/audits/</code></td><td>Every run, as one optional question</td></tr>
+<tr><td>Transcript folds</td><td>luismc-transcript-folds</td><td>User-level entry and two key chords</td><td>Every run (unchanged, not a question)</td></tr>
+<tr><td>Architect agent</td><td>luismc-agents</td><td>Nothing to set up. It is available once the plugin is on.</td><td>Not asked; listed in the report</td></tr>
+</tbody>
+</table>

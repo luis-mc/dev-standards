@@ -1,0 +1,9 @@
+<!-- title: What and why -->
+<p>Today <code>claude-setup</code> turns on all 8 luismc plugins in <code>.claude/settings.json</code>. Turning a plugin on is not the same as enforcing it:</p>
+<ul>
+<li>The docs plugin does nothing until <code>docs/docs.json</code> exists. In a project that already has docs, claude-setup only shows a dry run of <code>migrate</code>.</li>
+<li>The design system has no step in claude-setup at all. It needs <code>design-system-setup</code>, guard tests in the test runner, and an approved v1.</li>
+<li>The delivery plugin's hooks block inside Claude sessions. Merges by people or other tools are stopped only by CI and branch protection, which claude-setup does not touch.</li>
+<li>At the end, claude-setup does not say which plugin is active, which only warns and which blocks.</li>
+</ul>
+<p>The change: claude-setup goes through every plugin and every other dev-standards setup, asks the owner which to start enforcing, does the setup for each yes, and ends with an enforcement report. Every write stays a file in the working tree. claude-setup never touches git.</p>
