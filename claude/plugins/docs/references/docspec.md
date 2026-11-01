@@ -388,11 +388,11 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 
 ## 10. Temporary documents
 
-- **R10.1** — Agent briefs, reports, prompts and scratch notes MUST live under `docs/work/` on the agent's branch, for example `docs/work/reports/<task>.md`, and MUST NOT reach the default branch.
-- **R10.2** — `docs_work.py guard --base <ref>` MUST exit 1 when the branch adds a file under `docs/work/`; the gate runs it on a ready pull request to the default branch (W1).
-- **R10.3** — The join step MUST run `docs_work.py strip --apply` on the joined head and put each report's summary line (`docs_work.py summaries`) into the release pull request body.
+- **R10.1** — Agent briefs, reports, prompts and scratch notes MUST live under `docs/work/` on the agent's branch, for example `docs/work/reports/<task>.md`. They MUST NOT reach the default branch.
+- **R10.2** — `docs_work.py guard --base <ref>` MUST exit 1 when the branch adds a file under `docs/work/`. The gate runs it on a ready pull request to the default branch (W1).
+- **R10.3** — The join step MUST run `docs_work.py strip --apply` on the joined head. It MUST put each report's summary line (`docs_work.py summaries`) into the release pull request body.
 - **R10.4** — A finding or measurement worth keeping MUST be promoted into a lasting doc in the same branch before the join.
-- **R10.5** — Standing rules are not temporary: they live in `AGENTS.md`, which `CLAUDE.md` imports.
+- **R10.5** — Standing rules are not temporary. They live in `AGENTS.md`, which `CLAUDE.md` imports.
 
 ---
 
