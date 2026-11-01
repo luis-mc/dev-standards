@@ -28,7 +28,7 @@ Classify findings strictly by this architectural impact schema:
 
 ### 1. Cryptographic Isolation & Data Sovereignty (DoD IL6 / FedRAMP High / NIST SP 800-53)
 - **Boundary Leakage:** Ensure clear logical separation between tenants, environments, or data classification zones. Verify that cross-boundary spillage is structurally impossible.
-- **Zero-Trust Access Control:** Validate that authorization checks (`AuthZ`) are computed statelessly at every single API, route, or server-side component endpoint. Never trust client-side state hiding.
+- **Zero-Trust Access Control:** Validate that authorization checks (`AuthZ`) are computed statelessly at every single API, route, or server-side component endpoint. Client-side state hiding must never be trusted.
 - **Session Mutation Hardening:** Ensure session tokens and JWTs enforce strong cryptographic signatures and strict expiration windows. Ensure they explicitly block algorithm confusion (e.g., rejecting `alg: none`).
 
 ### 2. Storage Security & Cryptographic Sanitation (ISO/IEC 27040 / NIST SP 800-53)

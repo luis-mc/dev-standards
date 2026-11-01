@@ -10,8 +10,8 @@ Run a deep architectural and empirical performance sweep across the codebase. Th
 
 ## Process
 
-1. **Architectural & Runtime Mapping:** Identify the host deployment topography (Serverless/Edge Functions vs. long-lived Node.js/Docker/Containerized instances). Map the rendering architecture (Server-Side Rendering, Static/Incremental Hydration, or Client-Side SPAs). Evaluate serverless environments for cold starts and resource connection hoarding. Audit long-lived processes for event-loop blocks and memory leaks.
-2. **Empirical Evidence First:** Anchor every finding in mechanical reality. If you cannot directly run an execution plan or bundle analyzer trace, evaluate the code mathematically (e.g., algorithmic complexity $O(N^2)$), compute precise database row processing scales, or calculate frontend payload bytes. Differentiate strictly between *proven regressions* and *theoretical bottlenecks*.
+1. **Architectural & Runtime Mapping:** Identify the host deployment topography (Serverless/Edge Functions vs. long-lived Node.js/Docker/Containerized instances). Map the rendering architecture (Server-Side Rendering, Static/Incremental Hydration, or Client-Side SPAs). You must evaluate serverless environments for cold starts and resource connection hoarding. You must audit long-lived processes for event-loop blocks and memory leaks.
+2. **Empirical Evidence First:** Every finding must be anchored in mechanical reality. If you cannot directly run an execution plan or bundle analyzer trace, evaluate the code mathematically (e.g., algorithmic complexity $O(N^2)$), compute precise database row processing scales, or calculate frontend payload bytes. Differentiate strictly between *proven regressions* and *theoretical bottlenecks*.
 3. **Token-Optimized Diagnostics:** Use Claude Code's native file-viewing tools to preserve your **Prompt Cache** and avoid duplicate, heavy file reads. Keep terminal output highly condensed.
 
 ## Severity & Algorithmic Rubric
@@ -28,7 +28,7 @@ Classify findings strictly by runtime impact, traffic scale, and compute complex
 ### 1. Persistence & Data Layer Hardening (Relational & NoSQL)
 - **Relational & Document N+1 Queries:** Audit ORM, query builders, or raw data access layouts. Flag loops or map iterations that issue one query per item instead of a batch, join, or native multi-key inclusion logic.
 - **Query Plan Degradation (Missing Indexes):** Scan fields in filtering clauses (`where`), sorting rules (`orderBy`), and join operations (`JOIN`) that lack matching indexes in the data schema (such as B-Tree, GIN, or Compound indexes).
-- **Unbounded Cursor Sinks:** Verify that all data listings implement explicit pagination controls (limit/offset, token-based, or cursor-based pagination). List endpoints must never run without limits. This stops a table from dumping raw records into server RAM.
+- **Unbounded Cursor Sinks:** Verify that all data listings implement explicit pagination controls (limit/offset, token-based, or cursor-based pagination). List endpoints must never run without limits, so a table cannot dump raw records into server RAM. This stops a table from dumping raw records into server RAM.
 - **Over-Fetching Rows:** Identify queries that pull down full records, wildcard columns (`SELECT *`), or massive object graphs when downstream code uses only a few specific column strings or primitive properties.
 - **Transaction Lifespan Leakage:** Ensure database transactions or atomic blocks do not stay open while they wait on non-database asynchronous I/O operations (e.g., third-party API calls, slow external system reads, or long-running computational loops).
 
@@ -40,17 +40,17 @@ Classify findings strictly by runtime impact, traffic scale, and compute complex
 - **Retry Storms & Load Amplification:** Flag retry logic that lacks exponential backoff, jitter, and hard retry caps. Uncapped retries against a degraded database multiply load precisely when the system can least absorb it. They turn a slowdown into a full outage.
 - **Database-as-Queue Polling:** Identify cron jobs, background workers, or client loops that poll database tables on tight intervals. Polling hot tables generates constant baseline query load and lock churn. Flag them for event-driven alternatives (LISTEN/NOTIFY, change streams, or a dedicated queue system).
 - **Lock Contention & Hot Rows:** Identify `SELECT ... FOR UPDATE`, serializable isolation transactions, or frequent concurrent writes that target shared counter/status/singleton rows. Flag transactions that hold row or table locks across multiple statements on high-write tables. These show up as latency explosions while database CPU appears healthy.
-- **Computation in the Wrong Tier:** Flag application code that fetches full row sets solely to count, sum, filter, sort, or deduplicate in application memory. Push aggregation, filtering, and ordering down into the database engine. The engine returns computed bytes instead of raw row graphs, which saves network transfer, server RAM, and CPU at once.
+- **Computation in the Wrong Tier:** Flag application code that fetches full row sets solely to count, sum, filter, sort, or deduplicate in application memory. Aggregation, filtering, and ordering must be pushed down into the database engine, which returns computed bytes instead of raw row graphs. This saves network transfer, server RAM, and CPU at once.
 
 ### 3. Advanced Caching Architecture & Tiering
 - **Stale-While-Revalidate (SWR) & Cache-Control:** Audit all network responses and API outputs. Static or slow-changing data must use strict HTTP cache headers (`Cache-Control: public, max-age=X, s-maxage=Y, stale-while-revalidate=Z`) to move traffic off your servers and onto the global CDN edge.
 - **Request Cascades & Deduplication:** Audit server-side data fetching. Ensure identical database queries or API lookups that run multiple times within a single user request lifecycle are cached or memoized (e.g., using React `cache()` or global request contexts). This prevents redundant inner-network traffic.
-- **Cache-Busting & Invalidation Strategy:** Ensure that when mutated data is written to the persistence layer, the application triggers explicit, targeted cache invalidation paths. It must not rely on arbitrary, long TTL timers or drop the entire cache registry wholesale.
+- **Cache-Busting & Invalidation Strategy:** Ensure that when mutated data is written to the persistence layer, the application triggers explicit, targeted cache invalidation paths. Do not rely on arbitrary, long TTL timers, and do not drop the entire cache registry wholesale.
 - **Framework Caching Architecture:** Identify opportunities to convert dynamic Server-Side Rendering (SSR) into Incremental Static Regeneration (ISR) or Static Site Generation (SSG). Ensure caching rules are applied to mostly static marketing or informational assets.
 - **Volatile Store Overheads:** Trace connection pools to key-value or caching microservices. Check whether the code awaits multiple sequential cache commands line by line instead of using batched pipelines, multi-gets, or concurrent execution arrays.
 
 ### 4. API Performance Requirements & SLA Hardening
-- **Time to First Byte (TTFB) & Latency Budgets:** Audit route handlers to ensure P95 latency targets are met. Core read APIs must return within <100ms. Write operations must return within <250ms. Flag any endpoint that exceeds these limits for background worker offloading or aggressive caching.
+- **Time to First Byte (TTFB) & Latency Budgets:** Audit route handlers to ensure P95 latency targets are met. Core read APIs must return within <100ms; write operations must return within <250ms. Any endpoint that exceeds these limits must be flagged for background worker offloading or aggressive caching.
 - **Over-Fetching & Payload Budgeting:** Restrict maximum raw JSON or data payloads to <50KB per request. Ensure API contracts omit unnecessary object graphs, metadata fields, or deeply nested relational data arrays that the client-side consumer does not immediately render.
 - **Network Chattiness Constraints:** Flag client-side interaction loops that trigger repetitive, sequential API requests where a single consolidated or batched query payload would cut network round-trip overhead.
 - **Compression and Serialization:** Ensure text responses larger than 1KB enforce server-side compression (`gzip`/`brotli`). Identify loops that block the main thread with massive data serialization operations that could be offloaded.
@@ -70,7 +70,7 @@ Classify findings strictly by runtime impact, traffic scale, and compute complex
 
 ### 7. Memory Allocation & Retention Hardening (Scale Safety)
 - **Unevicted Global Collections:** Scan the global application scope for long-lived caches, maps, arrays, or object registries. Every manual cache container **MUST** enforce an aggressive Least Recently Used (LRU) eviction strategy or Max-Age policy to prevent memory exhaustion over time.
-- **Buffered Storage Exhaustion:** Audit binary data, file-upload handlers, and data export endpoints. Process large files or collections as streaming chunks (`stream`). Do not load and buffer whole assets natively into server RAM.
+- **Buffered Storage Exhaustion:** Audit binary data, file-upload handlers, and data export endpoints. Large files or collections must be processed as streaming chunks (`stream`), not loaded and buffered whole into server RAM.
 - **Event-Listener Lifecycle Leaks:** Identify any web sockets, long-lived server event hooks, or background cron-job routines. Ensure every process implements clean cleanup hooks (`removeListener`, connection closers), so abandoned requests do not hold onto active memory contexts.
 
 ### 8. Frontend Bundling, Hydration, & Core Web Vitals

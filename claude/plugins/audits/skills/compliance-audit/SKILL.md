@@ -40,17 +40,17 @@ Use code with caution.
 
 ### 3. Non-Repudiation Audit Trails & Logging (SOC 2 Type II / NIS2 / NIST SP 800-53)
 - **Administrative Access Non-Repudiation:** Audit all privilege-heavy API controllers and admin panel interfaces. Ensure every high-value event (viewing cross-tenant PII/PHI, exporting user collections, mutating roles, or altering global settings) generates an immutable audit trail that captures the exact Actor, Action, Target, and Timestamp.
-- **Tamper-Resistant Infrastructure:** Verify that the system audit logging mechanism is structurally isolated or directed to append-only ingestion pipelines. Local application code must be incapable of modifying or purging audit logs that were already written.
+- **Tamper-Resistant Infrastructure:** Verify that the system audit logging mechanism is structurally isolated or directed to append-only ingestion pipelines. Local application code must be incapable of modifying or purging historically written audit logs.
 - **PII Leakage in Logging Systems:** Scan system exceptions, console log lines, and debug hooks. System loggers must programmatically strip, mask, or hash PII, tokens, session cookies, credit card numbers, or internal memory dumps before writing to persistent disk storage.
 
 ### 4. Session Architecture & Boundary Hardening (FedRAMP High / DoD IL6)
 - **Absolute & Idle Session Timeouts:** Audit session wrappers and authentication cookies. Ensure privileged interfaces (admin dashboards, billing views, security configurations) enforce strict, short idle timeouts and maximum absolute session lifespans.
-- **Role-Based Access Control (RBAC) Integrity:** Trace API endpoints and mutations. Access to data objects must be programmatically scoped using strict server-side RBAC or Attribute-Based Access Control (ABAC). A generic administrative role must not be able to bypass horizontal multi-tenant partition boundaries.
+- **Role-Based Access Control (RBAC) Integrity:** Trace API endpoints and mutations. Access to data objects must be programmatically scoped using strict server-side RBAC or Attribute-Based Access Control (ABAC), so that a generic administrative role cannot bypass horizontal multi-tenant partition boundaries.
 - **Data Residency & Localization:** Ensure cloud-regional storage routing logic is structurally sound. Code paths must strictly prevent cross-border data transfers when they handle data sets bounded by strict geographic localization laws (e.g., EU-only computing boundaries).
 
 ### 5. Minimization, Retention, & Downstream Privacy (NIS2 / HIPAA)
 - **Over-Collection (Data Minimization):** Flag database schemas that capture data vectors the application does not actively use for its core operational functions (violating GDPR Article 5 data minimization rules).
-- **Programmatic Retention Schedules:** Verify that the application has active, automated clean-up workers, cron processes, or database time-to-live (TTL) configurations. These must structurally drop or anonymize data once its legal or operational retention window closes.
+- **Programmatic Retention Schedules:** Verify that the application has active, automated clean-up workers, cron processes, or database time-to-live (TTL) configurations. The application structurally drops or anonymizes data once its legal or operational retention window closes.
 - **Vendor/Third-Party Data Flow Alignment:** Map all outgoing webhook vectors, API aggregators, and middleware pipelines. Cross-reference third-party data transmissions against the application's stated disclosure clauses. Ensure no undocumented leakage to unvetted processors occurs.
 
 ### 6. Accessibility & Structural Interface Compliance (WCAG 2.2 AAA / Section 508)
