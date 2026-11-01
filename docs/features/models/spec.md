@@ -139,7 +139,7 @@ There is no screen. `claude-setup` shows its change plan once. It asks for confi
 | R5.4 | `tools/test_model_profiles.py` check S1 |
 | R5.7 | `tools/test_model_profiles.py` check M1 and `m_rule_missing` |
 
-R5.5, R5.6, R6.1, R6.2 and R6.3 have no automated test. R5.5 and R6.1 were verified by hand when the hook shipped. Nobody settled whether a skill's effort reverts after its turn (see section 11).
+R5.5, R5.6, R6.1, R6.2 and R6.3 have no automated test. R5.5 and R6.1 were verified by hand when the hook shipped. Whether a skill's effort reverts after its turn was never settled (see section 11).
 
 ## 10. Decisions
 
