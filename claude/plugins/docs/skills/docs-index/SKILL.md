@@ -17,4 +17,4 @@ python3 "$I" fetch-mermaid            # override the committed Mermaid with a do
 python3 "$I" build --mermaid PATH     # override with a local mermaid.min.js
 ```
 
-Commit the generated files except `docs/_site/` (git-ignored). Never edit them by hand. After a build, read the Gaps list and report it. The plugin ships Mermaid 11.4.1 in `vendor/`, so diagrams draw offline by default.
+Commit the generated files, except `docs/_site/` (git-ignored). Never edit them by hand. After a build, read the Gaps list and report it. The plugin ships Mermaid 11.4.1 in `vendor/`, so diagrams draw offline by default.
