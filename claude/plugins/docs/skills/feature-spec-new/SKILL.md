@@ -1,6 +1,6 @@
 ---
 name: feature-spec-new
-description: Write a new feature spec to the documentation standard, or revise one. Use when the user wants to document, spec or describe a feature in docs/features, add a feature folder, or turn a feature artifact's decided work into a lasting spec. Creates docs/features/<feature>/spec.md from the template with front matter, requirement IDs, a Mermaid flow and the test table.
+description: Write a new feature spec to the documentation standard, or revise one. This is the one skill that writes every feature spec (docs/features/<feature>/spec.md); luismc-specs:spec-new covers specs that are not features and hands feature specs here. Use when the user wants to document, spec or describe a feature in docs/features, add a feature folder, or turn a feature artifact's decided work into a lasting spec. Creates docs/features/<feature>/spec.md from the template with front matter, requirement IDs, a Mermaid flow and the test table.
 model: opus
 effort: medium
 ---
@@ -8,6 +8,8 @@ effort: medium
 # Feature spec — new
 
 Produces `docs/features/<feature>/spec.md` from `templates/feature-spec.md` (DOCSPEC §4). Read the template and §4 before you write.
+
+This skill writes every feature spec. `luismc-specs:spec-new` writes only specs that are not features and hands feature specs here. `luismc-artifacts:feature-artifact-new` (promote-to-spec) writes this same file from a feature page and follows this template.
 
 ## Loop
 
