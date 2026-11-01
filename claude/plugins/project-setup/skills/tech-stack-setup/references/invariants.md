@@ -48,15 +48,15 @@ flowchart TD
 
 This document binds product architecture to **properties**, not to products.
 
-Every requirement here holds whether the product is TypeScript on Vercel with
-Postgres, Go on Fly with MySQL, .NET on Azure with SQL Server, or Rust in a
-container with anything. If a clause below can only be satisfied by one named
+Every requirement here holds for any stack. It holds for TypeScript on Vercel
+with Postgres, Go on Fly with MySQL, .NET on Azure with SQL Server, and Rust in a
+container with anything. If a clause below can only be met by one named
 technology, that clause is defective and MUST be raised against this spec.
 
-**Technology selection lives elsewhere.** The selection catalog that accompanies
+**Technology selection lives elsewhere.** The selection catalog that comes with
 this spec is where each product chooses its concrete stack: language, frameworks,
-database engine, host, cache, storage, mail and error tracking. The choice is
-recorded in the product's Stack Profile (§18). This document does not name or
+database engine, host, cache, storage, mail and error tracking. The product
+records the choice in its Stack Profile (§18). This document does not name or
 rank vendors.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
@@ -220,9 +220,10 @@ this document is now only those.
 | `MAY` | Optional. |
 | `CHOICE` | Resolved per product by the selection catalog and recorded in the Stack Profile. Never graded, never a deviation. |
 
-`CHOICE` is new in 5.0.0. It gives "which database engine" and "which mail
-provider" a defined, checkable status. A conformance check reports a `CHOICE` as
-**recorded** or **unrecorded**, never as conforming or violating.
+`CHOICE` is new in 5.0.0. It gives questions such as "which database engine" and
+"which mail provider" a defined, checkable status. A conformance check reports a
+`CHOICE` as **recorded** or **unrecorded**. It never reports one as conforming or
+violating.
 
 ### 0.3 What a product is, structurally
 
@@ -239,15 +240,15 @@ surfaces:
 
 Mobile MAY be absent. Web MAY be server-rendered from the API deployable rather
 than deployed separately. Admin MAY be a route group inside web. The rules here
-apply from day one whichever surfaces ship, because the expensive mistakes
-cannot be retrofitted cheaply: untyped API surfaces, business logic in clients,
-hardcoded strings and undeclared data collection.
+apply from day one, whichever surfaces ship. The expensive mistakes cannot be
+fixed cheaply later: untyped API surfaces, business logic in clients, hardcoded
+strings and undeclared data collection.
 
 ### 0.4 Capability requirements, not product requirements
 
 Several clauses below require a *capability* of a chosen technology, not a named
-technology. Where a product's `CHOICE` cannot supply the capability, the clause
-states the compensating control it needs. Two examples:
+technology. If a product's `CHOICE` cannot supply the capability, the clause
+states the compensating control the product needs. Two examples:
 
 - §7.2 requires enqueue to be atomic with the write that causes it. A datastore
   with multi-statement transactions satisfies this directly; one without MUST
@@ -257,21 +258,21 @@ states the compensating control it needs. Two examples:
   a drill.
 
 The catalog records which technologies supply which capabilities. The wizard
-shows the compensating control at selection time, so the cost is visible before
-the choice is made, not discovered during an incident.
+shows the compensating control at selection time. The cost is visible before the
+choice is made, not found during an incident.
 
 ---
 
 ## 1. The governing doctrine: thin clients
 
-**The server owns every business rule.** This is the single most important rule
-in this document and everything else is downstream of it.
+**The server owns every business rule.** This is the most important rule in this
+document. Every other rule follows from it.
 
 A product with a browser client, an iOS client and an Android client implements
-any client-side rule three times, and the three will diverge. Divergence in a
-calculation, an eligibility check, a validation threshold or a state transition
-is a correctness bug that shows on one platform only, months later, and is
-nearly impossible to reproduce.
+each client-side rule three times, and the three copies will diverge. A
+divergence in a calculation, an eligibility check, a validation threshold or a
+state transition is a correctness bug. It shows on one platform only, months
+later, and is nearly impossible to reproduce.
 
 Therefore:
 
@@ -288,7 +289,7 @@ Therefore:
   interpolation and layout are client concerns.
 
 **Consequence to accept:** more round trips and richer response payloads. Design
-endpoints around screens, not around tables — an endpoint SHOULD return
+endpoints around screens, not around tables. An endpoint SHOULD return
 everything one screen needs in one call.
 
 **Escape hatch:** if a genuine requirement cannot be met with a server round trip
@@ -298,9 +299,9 @@ that every implementation runs against in CI.
 
 **Server-rendered architectures.** A product whose web client is rendered by the
 server (server-side templates, hypermedia, or a server-interactive component
-model) satisfies this doctrine trivially for web, because there is no second
-implementation of anything. The doctrine still binds the moment a second client
-surface exists: if mobile ships, the business rules MUST be reachable through
+model) meets this doctrine for web with no extra work, because there is no second
+implementation of anything. The doctrine binds again as soon as a second client
+surface exists. If mobile ships, the business rules MUST be reachable through
 the API contract (§4) and MUST NOT exist only in the rendering path.
 
 ---
@@ -309,13 +310,13 @@ the API contract (§4) and MUST NOT exist only in the rendering path.
 
 ### 2.1 One repository per product
 
-A product is one repository containing every deployable and every shared module.
-Splitting a product across repositories before there is a measured reason is a
-defect: it converts a compile-time contract into a versioning problem.
+A product is one repository that holds every deployable and every shared module.
+Splitting a product across repositories without a measured reason is a
+defect: it turns a compile-time contract into a versioning problem.
 
 The layout below is the canonical shape. Directory names MAY differ where a
-track's ecosystem has a strong convention, but the **roles** MUST be present and
-separated:
+track's ecosystem has a strong convention. The **roles** MUST be present and
+separate:
 
 ```
 <product>/
@@ -328,18 +329,19 @@ separated:
 └── .github/workflows/
 ```
 
-- Not every product needs every module. A shared module MUST NOT be created
+- A product does not need every module. A shared module MUST NOT be created
   before it has a second consumer or a clear adapter role (§3.3).
-- Internal modules are linked by the ecosystem's workspace mechanism, not by
-  published version ranges, and are not published.
+- The ecosystem's workspace mechanism links internal modules. Published version
+  ranges do not, and internal modules are not published.
 - A product MUST NOT contain a copy of this specification. Its Stack Profile
-  (§18) names the version it conforms to; a vendored copy silently becomes a
+  (§18) names the version it conforms to. A vendored copy silently becomes a
   second, competing authority that no check can compare against the original.
 
 ### 2.2 Package management and build orchestration — `CHOICE`
 
-The package manager, workspace mechanism and task runner are resolved by track
-and recorded in the Stack Profile. The requirements on whatever is chosen:
+The track resolves the package manager, workspace mechanism and task runner, and
+the product records them in the Stack Profile. These are the requirements on
+whatever is chosen:
 
 - The tool version MUST be pinned in the repository, not inherited from the
   developer's machine.
@@ -353,20 +355,20 @@ and recorded in the Stack Profile. The requirements on whatever is chosen:
   `build`.
 - One root command MUST produce every deployable artifact.
 - Where the task runner caches, every environment variable a build reads MUST be
-  declared in its task configuration, or the cache will serve artifacts built for
-  the wrong environment.
+  declared in its task configuration. Otherwise the cache serves artifacts built
+  for the wrong environment.
 
 ### 2.3 Polyglot and native projects
 
-Where a repository contains projects from more than one ecosystem — a native
-mobile project, a compiled server alongside a JavaScript web app, or any two
-tracks — each project MUST remain natively openable and buildable with its own
-toolchain. A developer MUST NOT be required to run another ecosystem's tooling
-for day-to-day work in their own project.
+A repository may hold projects from more than one ecosystem: a native mobile
+project, a compiled server beside a JavaScript web app, or any two tracks. Each
+project MUST stay natively openable and buildable with its own toolchain. A
+developer MUST NOT be required to run another ecosystem's tooling for
+day-to-day work in their own project.
 
-To keep one build entry point, each such project MUST expose a thin task shim
-that the repository's task runner invokes and that shells out to the native
-toolchain. Native dependencies use their own ecosystems.
+To keep one build entry point, each such project MUST expose a thin task shim.
+The repository's task runner invokes the shim, and the shim shells out to the
+native toolchain. Native dependencies use their own ecosystems.
 
 ---
 
@@ -398,22 +400,22 @@ layer. The UI component module depends only on `core`, `contract` and `tokens`.
 ### 3.2 Hard rules — CI-enforced
 
 - **`core` MUST NOT import** any framework, any I/O, any environment variable,
-  any clock, or any module outside `core`. It is pure functions and types. This
-  is what makes it testable, reusable by the worker and by seed scripts, and safe
-  to reason about.
+  any clock, or any module outside `core`. It is pure functions and types. That
+  makes it testable, reusable by the worker and by seed scripts, and easy to
+  reason about.
 - The **data module MUST be the only module** that imports the database driver,
   ORM or query builder.
 - **No shared module may import a web framework.** A framework request or header
-  API reached from inside a shared module is the first step of the erosion this
-  rule exists to prevent.
+  API used inside a shared module is the first step of the erosion this rule
+  exists to prevent.
 - **Client apps MUST NOT import** the data module, the auth module, `core`, or
   any service module. They reach the system exclusively through the generated
   API client. (`core` is tempting and forbidden — see §1.)
 - **Circular module dependencies MUST NOT exist.**
 
-These MUST be enforced by a dependency-graph check that fails the build, not by
-review. A documented convention without enforcement decays. The checking tool is
-a `CHOICE`; the enforcement is not.
+A dependency-graph check that fails the build MUST enforce these rules. Review
+alone is not enough. A convention without enforcement decays. The checking tool
+is a `CHOICE`; the enforcement is not.
 
 ### 3.3 The adapter rule — load-bearing
 
@@ -421,17 +423,17 @@ a `CHOICE`; the enforcement is not.
 nowhere else.** Mail, object storage, push transports, the cache client, the
 error tracker, and any future vendor each get one adapter module.
 
-This rule carries more weight in 5.0.0 than in any prior version, and the reason
-is structural: because every vendor is now a `CHOICE` rather than a `SHOULD`, the
-adapter boundary is the *only* thing that keeps a wrong choice cheap. It converts
-"we picked the wrong provider" from a refactor into one file.
+This rule carries more weight in 5.0.0 than in any earlier version. Every vendor
+is now a `CHOICE` rather than a `SHOULD`, so the adapter boundary is the *only*
+thing that keeps a wrong choice cheap. It turns "we picked the wrong provider"
+from a refactor into a change to one file.
 
-Consequences that follow, and MUST hold:
+These consequences MUST hold:
 
 - Swapping any vendor in a role MUST be a single adapter implementation plus a
   configuration change. If it is not, the boundary has already leaked.
 - No vendor type, error class, or identifier format may appear in a signature
-  outside its adapter. The adapter owns the translation to domain types.
+  outside its adapter. The adapter translates to domain types.
 - The adapter MUST define the role's degraded behaviour (§8.4), not its callers.
 
 ---
@@ -441,8 +443,8 @@ Consequences that follow, and MUST hold:
 ### 4.1 Contract-first: one machine-readable contract is the source of truth
 
 The OpenAPI document is **authored and reviewed first**, and everything else
-derives from it. A change to the contract is a reviewable diff — that is the
-whole point, because every shipped client binary depends on it.
+derives from it. A change to the contract is a reviewable diff. That matters
+because every shipped client binary depends on the contract.
 
 Required pipeline:
 
@@ -465,19 +467,19 @@ by what the pipeline above demands of them:
 - The format MUST have a **committed, human-reviewable source document**, and
   MUST have **maintained client generators for every language this product ships
   a client in**. The requirement is not "some schema" but *one schema from which
-  clients in unrelated languages are generated* — a format with no generator for
-  the product's mobile languages makes step 3 unsatisfiable, and choosing it is
-  choosing to hand-write the clients that step 3 forbids.
+  clients in unrelated languages are generated*. A format with no generator for
+  the product's mobile languages makes step 3 impossible to meet. Choosing it
+  means hand-writing the clients that step 3 forbids.
 - Verify generator coverage against the actual client languages **before**
   selecting, not after. This is the check the clause exists for.
 
-OpenAPI is the usual answer because its generator coverage is the broadest; it
+OpenAPI is the usual answer because its generator coverage is the broadest. It
 is not the required one.
 
 ### 4.2 API shape
 
 - The API deployable serves route handlers and its generated reference page. It
-  carries no UI.
+  has no UI.
 - Every handler is thin: parse → authorize → call a service → shape response.
   Business logic lives in `core` and the service modules, never in a handler.
 - Every response MUST go through one response helper that applies the standard
@@ -490,28 +492,28 @@ is not the required one.
 
 All endpoints live under an explicit version segment: `/v1/…`, `/v2/…`.
 
-- Within a version, changes MUST be backward compatible: fields may be added,
-  never removed or retyped; enum values may be added only because clients are
-  required to tolerate unknown ones (§9.5); optional stays optional.
+- Within a version, changes MUST be backward compatible. Fields may be added,
+  never removed or retyped. Enum values may be added only because clients are
+  required to tolerate unknown ones (§9.5). Optional stays optional.
 - A breaking change means a new version path. Both versions run side by side.
 - Every version MUST have a declared **sunset date** at the moment its successor
   ships, published in the contract and returned in `Deprecation` / `Sunset`
   response headers.
 - The API MUST record the client version and platform, from a required client
-  header, on every request — so retirement is a data-driven decision rather than
-  a guess about who is still out there.
+  header, on every request. Retirement is then a decision based on data, not a
+  guess about who is still out there.
 - Before a version is retired, remaining traffic MUST be identifiable by client
   version, and those users MUST have been given an upgrade path.
-- The server MUST be able to refuse a client below a configured floor with a
-  distinct, machine-readable "upgrade required" response that every client
-  renders as a blocking screen. This is the emergency lever for a security fix;
-  it MUST exist even if never used.
+- The server MUST be able to refuse a client below a configured floor. It does so
+  with a distinct, machine-readable "upgrade required" response that every
+  client renders as a blocking screen. This is the emergency lever for a
+  security fix. It MUST exist even if never used.
 
 ### 4.4 Endpoint conventions
 
 - Resource-oriented paths, plural nouns, no verbs in paths.
-- Every list endpoint is paginated — cursor-based where the set can grow
-  unboundedly — with a hard maximum page size declared in the contract.
+- Every list endpoint is paginated, with a cursor where the set can grow
+  without bound. The contract declares a hard maximum page size.
 - One error envelope for the whole API, with stable machine-readable codes.
 - Every mutating endpoint accepts an idempotency key (§9.4).
 - Endpoints are designed per screen, not per table (§1).
@@ -522,7 +524,7 @@ All endpoints live under an explicit version segment: `/v1/…`, `/v2/…`.
   This MUST be verified, not assumed from platform defaults.
 - **Payload budget.** A single response SHOULD stay under 50 KB uncompressed. An
   endpoint that cannot MUST justify it in the contract and MUST be paginated or
-  split. Contract examples are the measurement point; CI SHOULD fail when an
+  split. Contract examples are the measurement point. CI SHOULD fail when an
   example exceeds the budget.
 - **Cacheability is declared per endpoint**, in the contract, as one of:
   - `no-store` — authenticated or principal-specific. **The default.**
@@ -532,7 +534,7 @@ All endpoints live under an explicit version segment: `/v1/…`, `/v2/…`.
     invocation.
 
   An endpoint with no declared cacheability defaults to `no-store`.
-- **Conditional requests.** Endpoints returning large or slowly-changing
+- **Conditional requests.** Endpoints that return large or slowly changing
   resources SHOULD support `ETag` + `If-None-Match`. Endpoints where concurrent
   edits are possible MUST support `If-Match` optimistic concurrency and return a
   conflict response rather than silently overwriting.
@@ -541,13 +543,13 @@ All endpoints live under an explicit version segment: `/v1/…`, `/v2/…`.
 
 ### 4.6 Rate limiting is universal
 
-Rate limiting is not an authentication concern; it is a property of every
+Rate limiting is not an authentication concern. It is a property of every
 endpoint.
 
 - Every endpoint MUST declare a rate-limit bucket in its contract entry, keyed by
   principal, device, IP or resource as appropriate.
-- An endpoint with no declared bucket MUST fail the route-coverage test (§11.1) —
-  the same structural gate that enforces authorization declarations.
+- An endpoint with no declared bucket MUST fail the route-coverage test (§11.1).
+  The same structural gate enforces authorization declarations.
 - Bucket failure mode is declared per bucket: credential and token-issuing
   buckets **fail closed**, everything else **fails open**.
 - Limits are configuration, tunable per environment without a code change.
@@ -560,8 +562,8 @@ endpoint.
 - Unhandled errors MUST be caught at a single boundary that logs full detail
   server-side with the `correlationId` and returns only a stable error code, a
   safe message, and that correlation id.
-- A test MUST assert that a deliberately-triggered internal error returns no
-  internal detail. This is verified, not trusted to framework defaults.
+- A test MUST assert that a deliberately triggered internal error returns no
+  internal detail. Verify this. Do not trust framework defaults.
 
 ---
 
@@ -569,19 +571,19 @@ endpoint.
 
 The engine, its host and the data-access library are a `CHOICE` (§0.2). Every
 rule below binds whatever is chosen. Where a rule requires an engine capability,
-the compensating control for engines lacking it is stated.
+the rule also states the compensating control for engines that lack it.
 
 ### 5.1 Access and connections
 
 - The data module is the only module that touches the datastore (§3.2).
 - The driver MUST support **real multi-statement transactions** where §5.3
-  requires them. A driver that cannot — some HTTP-only and edge-constrained
-  drivers — MUST NOT be used for write paths, because the resulting
-  read-then-write races are a known source of correctness bugs in credential and
-  one-time-token handling.
+  requires them. A driver that cannot (some HTTP-only and edge-constrained
+  drivers) MUST NOT be used for write paths. The resulting read-then-write races
+  are a known source of correctness bugs in credential and one-time-token
+  handling.
 - **Connection management MUST match the execution model.** Serverless and
   per-request execution models MUST use a pooler or a connection-reuse mechanism
-  appropriate to the engine; per-request connection establishment is a defect.
+  suited to the engine. Opening a connection per request is a defect.
   Long-lived processes MUST declare pool sizing.
 - Connection acquisition MUST have a timeout. A request MUST fail fast rather
   than queue indefinitely for a connection.
@@ -590,11 +592,12 @@ the compensating control for engines lacking it is stated.
 
 - The schema definition MUST be the single source of truth for structure, and
   migrations MUST be derived from or checked against it.
-- Every constraint that expresses a domain invariant — referential integrity,
-  uniqueness, permitted values — MUST be enforced by the datastore where the
+- Every constraint that expresses a domain invariant (referential integrity,
+  uniqueness, permitted values) MUST be enforced by the datastore where the
   engine supports it, not only in application code. Where the engine does not
   support a constraint class, the invariant MUST be enforced at a single
-  application chokepoint and that gap MUST be recorded in the Stack Profile.
+  application chokepoint, and the product MUST record that gap in the Stack
+  Profile.
 - Every field used as a query predicate, sort key or join key MUST be indexed.
   Partial or filtered indexes for soft-state predicates are required, not
   optional, where the engine supports them.
@@ -607,20 +610,20 @@ the compensating control for engines lacking it is stated.
   table MUST be atomic.
 - Read-modify-write sequences MUST use a transaction with appropriate locking, or
   a single conditional statement. "Read, decide in application code, write"
-  without either is a race and MUST NOT ship.
+  with neither is a race and MUST NOT ship.
 - Job enqueue MUST be atomic with the business write it accompanies (§7.2).
 - **No external I/O inside an open transaction.** A transaction MUST NOT remain
   open across an HTTP call, a mail or push send, an object-storage operation or
-  any other non-datastore await. This rule is load-bearing precisely because
-  atomic enqueue is mandatory: enqueue inside the transaction and perform the I/O
-  in the handler, never inline.
-- Transactions MUST be short. A transaction spanning a long computation holds
-  locks that manifest as unexplained latency elsewhere while datastore CPU looks
+  any other non-datastore await. This rule is load-bearing because atomic
+  enqueue is mandatory: enqueue inside the transaction and perform the I/O in
+  the handler, never inline.
+- Transactions MUST be short. A transaction that spans a long computation holds
+  locks. They show up as unexplained latency elsewhere while datastore CPU looks
   healthy.
 - Where the engine offers no multi-record atomicity, every operation that would
-  require it MUST be restructured so that a single-record write is the commit
-  point, with an outbox (§7.2) carrying the rest. This restructuring MUST be
-  recorded in the Stack Profile, because it changes how every write path is
+  need it MUST be restructured so that a single-record write is the commit
+  point, with an outbox (§7.2) carrying the rest. The product MUST record this
+  restructuring in the Stack Profile, because it changes how every write path is
   reviewed.
 
 ### 5.4 Migrations
@@ -629,13 +632,12 @@ the compensating control for engines lacking it is stated.
   order.
 - Every migration MUST be reversible, or explicitly marked irreversible with a
   recorded justification.
-- Migrations MUST be applied by a **dedicated, reliable runner** invoked in the
-  deploy pipeline, with locking so concurrent deploys cannot race, and clear
-  logging of what ran. Ad-hoc migration scripts MUST NOT be used.
+- Migrations MUST be applied by a **dedicated, reliable runner**. The deploy
+  pipeline invokes it. It locks so concurrent deploys cannot race, and it logs
+  clearly what ran. Ad-hoc migration scripts MUST NOT be used.
 - **Destructive changes MUST be split across sequenced deploys**: stop writing →
   deploy → stop reading → deploy → drop. Shipped mobile binaries make this
-  mandatory: a binary may still be reading a field weeks after the web app
-  stopped.
+  mandatory. A binary may still read a field weeks after the web app stopped.
 - Every migration MUST be tested against a non-empty dataset in CI.
 - Seed data MUST be idempotent and re-runnable.
 - Schema migrations MUST run under a role more privileged than the application's
@@ -643,12 +645,13 @@ the compensating control for engines lacking it is stated.
 
 ### 5.5 Environments, backups and recovery
 
-- Three persistent tiers — **preview/dev**, **staging**, **production** — with
-  separate datastores and separate credentials. Production data MUST NOT be
+- Three persistent tiers: **preview/dev**, **staging** and **production**. Each has
+  its own datastore and its own credentials. Production data MUST NOT be
   copied into lower tiers without irreversible anonymization.
 - CI integration tests MUST run against an **ephemeral real instance** of the
-  chosen engine, seeded through the migration chain. Not mocks, not an in-memory
-  substitute for a different engine, and not a shared long-lived test database.
+  chosen engine, seeded through the migration chain. Mocks, an in-memory
+  substitute for a different engine, and a shared long-lived test database do
+  not qualify.
 - **Point-in-time recovery MUST be enabled** with a declared retention window.
   Where the engine or host offers no PITR, the product MUST document its actual
   recovery position and prove it in the drill below.
@@ -657,33 +660,34 @@ the compensating control for engines lacking it is stated.
 - A **restore drill MUST be performed and recorded at least quarterly**, into an
   isolated environment. An untested backup is not a backup.
 - **RPO** and **RTO** MUST be declared in the Stack Profile.
-- The restore runbook MUST enforce the erasure **suppression list** — accounts
+- The restore runbook MUST enforce the erasure **suppression list**. Accounts
   erased since the backup was taken MUST NOT return to life on restore.
-- Backup retention MUST be bounded and stated, because it is the outer bound on
-  the erasure guarantee given to data subjects.
+- Backup retention MUST be bounded and stated. It is the outer bound on the
+  erasure guarantee given to data subjects.
 
 ### 5.6 Query discipline
 
-- **Statement timeouts are mandatory** where the engine supports them, set at the
-  role or connection level, with documented per-query overrides for the few
-  operations that legitimately need longer. Without one, a single slow query pins
-  a pooled connection and stalls every unrelated request behind it. Where the
-  engine has no equivalent, the data module MUST impose a client-side deadline.
+- **Statement timeouts are mandatory** where the engine supports them. Set them
+  at the role or connection level, with documented per-query overrides for the
+  few operations that legitimately need longer. Without a timeout, one slow query
+  pins a pooled connection and stalls every unrelated request behind it. Where
+  the engine has no equivalent, the data module MUST impose a client-side
+  deadline.
 - **Round-trip budget.** A hot-path request handler MUST NOT exceed three
-  datastore round trips. Exceeding it requires a recorded justification; each
-  extra trip multiplies under concurrency into connection, network and datastore
-  CPU pressure.
+  datastore round trips. Exceeding it requires a recorded justification. Under
+  concurrency, each extra trip adds connection, network and datastore CPU
+  pressure.
 - **No sequential waterfalls.** Independent queries in one handler MUST execute
   concurrently or be consolidated.
-- **No N+1.** One query per item of a collection is a defect; use a batch, a
+- **No N+1.** One query per item of a collection is a defect. Use a batch, a
   join, or a single multi-key query.
 - **Push computation down.** Counting, summing, filtering, sorting, grouping and
   deduplication MUST happen in the datastore, not by fetching records into
   application memory to reduce them.
 - **Select named fields.** Wildcard selects and full-object-graph fetches MUST
   NOT be used where a subset is consumed downstream.
-- Query performance MUST be verified against realistic record counts, not against
-  a development dataset with a hundred rows.
+- Query performance MUST be verified against realistic record counts. A
+  development dataset of a hundred rows does not count.
 
 ### 5.7 Classification, retention and minimization
 
@@ -702,7 +706,7 @@ Derived requirements:
 
 - **Encryption at rest** MUST be enabled for the datastore, object storage and
   backups. Fields classified `secret` MUST *additionally* be encrypted at the
-  application layer, so a datastore dump alone is not enough.
+  application layer, so a datastore dump alone does not expose them.
 - **Minimization.** Every field MUST map to a stated purpose in the
   data-collection inventory (§9.7). A field with no purpose MUST NOT be added,
   and an existing one whose purpose has lapsed MUST be dropped. CI MUST
@@ -714,11 +718,11 @@ Derived requirements:
 - **Export.** Every table containing `pii` or `phi` owned by a principal MUST be
   included in the data export, or explicitly excluded with a recorded reason. A
   test MUST fail when a new table matching that description is neither.
-- **Erasure.** The same set defines the erasure inventory. Classification is what
-  keeps export, erasure, retention and redaction from drifting apart as the
-  schema grows.
+- **Erasure.** The same set defines the erasure inventory. Classification keeps
+  export, erasure, retention and redaction from drifting apart as the schema
+  grows.
 - The application MUST connect with a role that has **no update or delete
-  privilege on audit records**. Append-only enforced by convention alone is not
+  privilege on audit records**. Append-only by convention alone is not
   append-only.
 - Production datastore credentials MUST NOT be usable from a developer machine
   without an explicit, logged access path.
@@ -733,19 +737,19 @@ The cache technology is a `CHOICE`. The rules bind whatever is chosen, including
 - The cache MUST be treated as **ephemeral and untrusted**: anything read back
   MUST be schema-validated before use, and **no data may exist only in the
   cache**.
-- Failure policy per use is explicit and declared: rate limiting on credential
-  endpoints fails closed; caches fail open.
+- Each use declares its failure policy explicitly. Rate limiting on credential
+  endpoints fails closed. Caches fail open.
 - Cache keys MUST be namespaced by product and environment.
 - Any cache holding user-derived data MUST be enumerable for erasure.
 - **Invalidation is explicit.** A write that changes cached data MUST invalidate
   the affected keys directly. TTL expiry is a backstop against missed
-  invalidation, never the primary mechanism, and flushing an entire namespace on
-  write is not an invalidation strategy.
+  invalidation, never the primary mechanism. Flushing a whole namespace on write
+  is not an invalidation strategy.
 - Every cache entry MUST have a TTL. An entry with no expiry is a leak.
 - Multiple cache operations in one request path MUST be pipelined or issued
   concurrently, not awaited one at a time.
-- **In-process caches** — module-level maps, memoization tables, any long-lived
-  collection in application memory — MUST declare a maximum size and an eviction
+- **In-process caches** (module-level maps, memoization tables, any long-lived
+  collection in application memory) MUST declare a maximum size and an eviction
   policy. An unbounded in-memory collection in a long-lived process is a memory
   leak with a delayed fuse.
 - Identical queries or lookups repeated within a single request lifecycle MUST be
@@ -762,43 +766,42 @@ The cache technology is a `CHOICE`. The rules bind whatever is chosen, including
   be a configuration change, never a rewrite of handlers.
 - Handlers MUST be registered with a typed payload schema validated on dequeue.
 - **At-least-once delivery MUST be assumed. Every handler MUST be idempotent.**
-  This is not advisory — every queue substrate double-delivers eventually.
+  This is not advice. Every queue substrate double-delivers eventually.
 - Claim MUST be a single atomic operation. Claim-then-update in two steps is a
   race.
 - Exponential backoff with jitter, a per-job attempt cap, then a dead-letter
   state that alerts.
 - Stuck-job recovery: a job claimed beyond a timeout MUST return to pending.
-- Every job MUST be individually invocable and observable — start, end, counts,
-  duration, failures — and MUST alert on failure.
+- Every job MUST be individually invocable and observable (start, end, counts,
+  duration, failures) and MUST alert on failure.
 
 ### 7.2 Enqueue MUST be atomic with the write that causes it
 
-This is the invariant, and it is the one that decides the substrate:
+This is the invariant. It decides the substrate.
 
 - Where the datastore supports multi-statement transactions, **the queue SHOULD
   live in the product's own datastore** and enqueue happens inside the same
-  transaction as the business write. This introduces no additional sub-processor,
-  keeps the queue inspectable with ordinary queries, and eliminates the
-  dual-write problem outright.
+  transaction as the business write. This adds no sub-processor, keeps the queue
+  inspectable with ordinary queries, and removes the dual-write problem.
 - Where the datastore does not, or where an external queue is chosen for another
   reason, an **outbox MUST be used**: the business write and an outbox record
   commit together, and a relay publishes to the queue afterwards with
-  at-least-once semantics. Publishing directly to an external queue from inside
-  application code, alongside an uncommitted or separately-committed business
+  at-least-once semantics. Publishing directly to an external queue from
+  application code, alongside an uncommitted or separately committed business
   write, is the dual-write bug and MUST NOT ship.
 
 The substrate is a `CHOICE`; atomicity is not.
 
 ### 7.3 Polling cost — where the queue is a polled table
 
-A datastore-backed queue drained on a schedule generates constant baseline query
-load and lock churn. That cost is accepted deliberately, and MUST be bounded:
+A datastore-backed queue drained on a schedule creates constant baseline query
+load and lock churn. The cost is accepted on purpose, and MUST be bounded:
 
 - A **partial or filtered index on the claim predicate is required**. Without it,
-  every drain is a full scan over a table that only grows.
+  every drain is a full scan of a table that only grows.
 - Each drain MUST process a bounded batch sized to complete within its execution
   limit, and MUST return rather than loop until empty.
-- A drain that finds nothing MUST back off, so an idle system does not pay full
+- A drain that finds nothing MUST back off. An idle system then does not pay full
   polling cost around the clock.
 - Completed and dead jobs MUST be pruned on a schedule. The queue MUST NOT
   accumulate terminal records indefinitely.
@@ -822,24 +825,24 @@ session.
 
 - Any fan-out over a collection of unknown or unbounded size MUST be throttled to
   a declared concurrency limit.
-- Unbounded parallel dispatch MUST NOT be used. It exhausts connection pools,
-  breaches downstream provider rate limits, and converts a routine batch into an
-  outage for everything sharing the runtime.
+- Unbounded parallel dispatch MUST NOT be used. It exhausts connection pools and
+  breaches downstream provider rate limits. It turns a routine batch into an
+  outage for everything that shares the runtime.
 - Long-lived listeners, timers and subscriptions MUST have explicit cleanup. Any
   process registering one MUST unregister it on shutdown or completion.
 
 ### 7.7 Live updates
 
 Server-pushed live data updates are outside the default architecture. Clients
-poll on foreground and at a declared interval; anything urgent is delivered as a
-push notification. Introducing a bidirectional realtime data channel is a
-deviation requiring its own design.
+poll on foreground and at a declared interval. Anything urgent is delivered as a
+push notification. A bidirectional realtime data channel is a deviation and
+needs its own design.
 
 Bounded, short-lived streams (a progress indicator, a streamed generation) MAY be
-used where the stream lifetime fits inside the execution limit. A persistent
-connection used as a **rendering transport** by a server-interactive UI model is
-not a realtime data channel for the purposes of this clause and does not require
-a deviation — but it does make the web client stateful, which §13.2 constrains.
+used where the stream lifetime fits inside the execution limit. A server-interactive
+UI model may use a persistent connection as a **rendering transport**. That is
+not a realtime data channel under this clause and does not need a deviation. It
+does make the web client stateful, which §13.2 constrains.
 
 ---
 
@@ -852,15 +855,15 @@ The provider and the transport are a `CHOICE`. What binds is the feedback loop:
 - **Bounce and complaint feedback MUST reach the product**, be
   signature-verified or otherwise authenticated, and MUST update a suppression
   list the adapter consults before every send. A transport that cannot deliver
-  that feedback cannot satisfy this clause — which in practice rules out bare
-  SMTP with no event channel, not by naming it but by consequence.
+  that feedback cannot satisfy this clause. In practice that rules out bare
+  SMTP with no event channel, by consequence and not by name.
 - The provider MUST sit behind the mail adapter module (§3.3).
 - All sends MUST be **enqueued as jobs**, never awaited inline in a request.
 - Webhooks MUST be signature-verified and MUST update a **suppression list** that
   the adapter consults before every send.
-- Delivery state — queued, sent, delivered, bounced, complained — MUST be
-  persisted and exposed through the API, so any interface can show honest status
-  and offer a rate-limited resend.
+- Delivery state (queued, sent, delivered, bounced, complained) MUST be
+  persisted and exposed through the API. Any interface can then show honest
+  status and offer a rate-limited resend.
 - Templates MUST live with the adapter, be plain-text-plus-HTML, and **MUST
   escape every interpolated value**. Display names are attacker-controlled.
 
@@ -878,14 +881,14 @@ The provider is a `CHOICE`. The rules:
 - Public and private objects MUST be separated by path convention, and privacy
   MUST be enforced by the adapter, not by obscurity of the URL.
 - **Streaming is mandatory for large payloads.** Uploads, downloads, media
-  processing and generated artifacts — notably data-subject exports, which grow
-  with account age — MUST be processed in chunks. Buffering a whole file or
-  export into memory is a defect that fails under exactly the conditions that
-  matter: the largest account, at the busiest moment.
-- **Deleting an object MUST also invalidate any CDN cache entry for it**, or the
-  erasure is cosmetic. Where the chosen storage and CDN do not do this
-  automatically, the adapter MUST issue the invalidation and the erasure path
-  MUST wait on it.
+  processing and generated artifacts MUST be processed in chunks. Data-subject
+  exports are the main case, because they grow with account age. Buffering a
+  whole file or export in memory is a defect. It fails when it matters most: the
+  largest account, at the busiest moment.
+- **Deleting an object MUST also invalidate any CDN cache entry for it.**
+  Otherwise the erasure is cosmetic. Where the chosen storage and CDN do not do
+  this automatically, the adapter MUST issue the invalidation and the erasure
+  path MUST wait on it.
 
 ### 8.3 Push notifications
 
@@ -896,7 +899,7 @@ The transport is a `CHOICE`. What binds is who holds the tokens:
   agreement, a declared processing region, and coverage by erasure and export.
   Delivering server-owned, directly to the platform transports, satisfies this
   with no additional processor and is the path of least resistance. A push
-  vendor is not forbidden — it is priced, exactly as the error tracker is.
+  vendor is not forbidden. It has a cost, as the error tracker does.
 - Push MUST be implemented in the notify adapter module and dispatched through
   the job queue with per-platform payload shaping.
 - Device tokens are stored against the authenticated principal and device record,
@@ -906,38 +909,38 @@ The transport is a `CHOICE`. What binds is who holds the tokens:
 - **Push payloads MUST NOT contain personal data, credentials or anything
   sensitive.** A notification says *that* something happened and carries an
   identifier the app uses to fetch details over the authenticated API.
-- Permission state MUST be tracked server-side — granted, denied, never asked —
-  so campaigns do not target devices that cannot receive them.
+- Permission state (granted, denied, never asked) MUST be tracked server-side.
+  Campaigns then do not target devices that cannot receive them.
 - Transport credentials are secrets under §15 and MUST be rotatable.
 
 ### 8.4 Outbound call resilience
 
-Applies to every call leaving the process — providers, third parties and internal
-services alike:
+This applies to every call that leaves the process: providers, third parties and
+internal services alike.
 
 - An explicit timeout is **mandatory**. A call with no timeout is a defect.
 - Retries MUST use exponential backoff with jitter and a hard attempt cap.
-  Uncapped retries against a degraded dependency multiply load precisely when the
-  system can least absorb it.
-- A **circuit breaker** MUST short-circuit a repeatedly-failing dependency, so one
-  slow provider cannot queue inbound requests until the runtime exhausts memory
-  or sockets.
+  Uncapped retries against a degraded dependency multiply load when the system
+  can least absorb it.
+- A **circuit breaker** MUST short-circuit a repeatedly failing dependency. One
+  slow provider then cannot queue inbound requests until the runtime exhausts
+  memory or sockets.
 - HTTP clients MUST reuse connections rather than performing a fresh handshake
   per call.
-- Every dependency MUST have a **declared, tested degraded behaviour** — fail
-  open, fail closed, or queue for later — chosen deliberately and recorded.
+- Every dependency MUST have a **declared, tested degraded behaviour** (fail
+  open, fail closed, or queue for later), chosen deliberately and recorded.
 
 ### 8.5 Outbound requests and SSRF
 
-Any request the server makes to a URL that is user-supplied, user-influenced or
-derived from user content is an SSRF vector. Common sources: embedded media URLs,
-link previews, webhooks, avatar imports.
+Any server request to a URL that is user-supplied, user-influenced or derived
+from user content is an SSRF vector. Common sources are embedded media URLs, link
+previews, webhooks and avatar imports.
 
 - The URL MUST be validated against an **allow-list** of schemes and hosts. A
   deny-list MUST NOT be used.
 - Resolved addresses MUST be checked against private, loopback, link-local and
-  cloud-metadata ranges — **after DNS resolution and again after any redirect**.
-  The rebinding attack is exactly the gap between those two checks.
+  cloud-metadata ranges, **after DNS resolution and again after any redirect**.
+  The rebinding attack lives in the gap between those two checks.
 - Redirects MUST NOT be followed automatically for user-supplied URLs.
 - Every such request MUST enforce a connect and read timeout, a response size cap
   and a content-type check.
@@ -959,8 +962,8 @@ link previews, webhooks, avatar imports.
   any app on any platform.** A lint rule SHOULD enforce this where the toolchain
   allows.
 - Products with runtime theming MUST express the runtime theme in the same token
-  vocabulary, so generated tokens are the baseline and the runtime payload is an
-  override — not a parallel system.
+  vocabulary. Generated tokens are the baseline and the runtime payload is an
+  override, not a parallel system.
 
 ### 9.2 Web clients
 
@@ -976,25 +979,26 @@ link previews, webhooks, avatar imports.
   above-the-fold usage, and served with `font-display: swap`.
 - Images MUST be served in modern formats at appropriate sizes, with explicit
   dimensions to prevent layout shift.
-- **Non-critical components MUST be code-split** and loaded lazily — modals,
-  charts, editors, pickers, anything below the fold or behind an interaction.
+- **Non-critical components MUST be code-split** and loaded lazily. This covers
+  modals, charts, editors, pickers, and anything below the fold or behind an
+  interaction.
 - The build MUST target modern browsers. Legacy transpilation output and
   polyfills MUST NOT be shipped to browsers that do not need them.
 - Styling MUST be delivered as pre-compiled CSS. Runtime style computation that
   blocks rendering MUST NOT be introduced.
-- Data-heavy routes SHOULD stream or defer non-critical sections rather than
-  blocking first paint on the slowest query.
+- Data-heavy routes SHOULD stream or defer non-critical sections, so first paint
+  does not block on the slowest query.
 
 ### 9.3 Server state vs client state
 
 This separation exists because thin clients poll. It binds any client that holds
-state locally — which is every rich client, and no purely server-rendered one.
+state locally. That is every rich client, and no purely server-rendered one.
 
-- **Server state** — anything that came from the API — MUST go through one
-  server-state layer. Caching, staleness, refetch-on-focus, retry with backoff,
-  request de-duplication and loading/error states are configured **once**, not
-  reinvented per component.
-- **Client state** — open dialogs, form drafts, view preferences — belongs in
+- **Server state** (anything that came from the API) MUST go through one
+  server-state layer. Configure caching, staleness, refetch-on-focus, retry with
+  backoff, request de-duplication and loading/error states **once**. Do not
+  reinvent them per component.
+- **Client state** (open dialogs, form drafts, view preferences) belongs in
   local UI state.
 - Server-derived values MUST NOT be copied into a client store, where they
   silently go stale.
@@ -1003,17 +1007,17 @@ state locally — which is every rich client, and no purely server-rendered one.
 - Polling intervals MUST be declared per query, pause when the view is hidden, and
   back off on repeated failure.
 
-A server-rendered or hypermedia client satisfies this section by construction:
-there is no client-side copy of server state to go stale. It MUST still declare
-its polling or refresh intervals and honour the backoff rule.
+A server-rendered or hypermedia client meets this section by construction,
+because it has no client-side copy of server state to go stale. It MUST still
+declare its polling or refresh intervals and honour the backoff rule.
 
 ### 9.4 Idempotency contract
 
 - Every mutating endpoint accepts a client-supplied idempotency key.
-- The server stores the key with its response for a documented window and returns
-  the original response on replay, rather than performing the action twice.
+- The server stores the key with its response for a documented window. On replay
+  it returns the original response and does not perform the action twice.
 - The key is generated **when the user takes the action**, not when the request is
-  sent — a retry after a timeout MUST carry the same key.
+  sent. A retry after a timeout MUST carry the same key.
 
 ### 9.5 Forward compatibility
 
@@ -1032,21 +1036,21 @@ Shipped binaries live for years. Every client MUST:
 - No user-facing string may be hardcoded in any client on any platform.
 - All copy lives in resource files with a **shared key namespace** across every
   client surface, so one translation set serves all of them.
-- Server-supplied user-facing text MUST be either already localized — the client
-  sends its locale — or accompanied by a key the client resolves.
+- Server-supplied user-facing text MUST be either already localized (the client
+  sends its locale) or accompanied by a key the client resolves.
 - Plurals, dates, numbers and currency use platform locale APIs, never string
   concatenation.
 - Layouts MUST tolerate string-length variation; RTL support MUST NOT be
   structurally precluded even if no RTL language ships initially.
 
-Mandatory now because retrofitting it means touching every screen on every
+It is mandatory now because adding it later means touching every screen on every
 platform.
 
 ### 9.7 Data-collection inventory as a build gate
 
-A single **declared data-collection inventory** lives in the repository: for
-every category of data the product collects — its purpose, whether it is linked
-to identity, whether it is used for tracking, and its retention.
+A single **declared data-collection inventory** lives in the repository. For
+every category of data the product collects, it records the purpose, whether the
+data is linked to identity, whether it is used for tracking, and its retention.
 
 From that one source, the product generates its store privacy declarations (where
 mobile ships) and its regulatory processing record.
@@ -1054,9 +1058,9 @@ mobile ships) and its regulatory processing record.
 CI MUST fail when code or a dependency collects a category absent from the
 inventory, or when generated artifacts differ from the committed ones.
 
-Third-party SDKs carrying their own privacy declarations MUST be reviewed against
-the inventory before adoption. This gate exists because a mismatch between
-declared and actual collection is simultaneously a store rejection and a
+Third-party SDKs that carry their own privacy declarations MUST be reviewed
+against the inventory before adoption. This gate exists because a mismatch
+between declared and actual collection is both a store rejection and a
 regulatory exposure.
 
 ### 9.8 Mobile behaviour
@@ -1080,21 +1084,21 @@ never general-purpose preference storage or a plain file, and MUST be excluded
 from unencrypted backups.
 
 **Deep links** MUST be cryptographically verified via association files served by
-the web app. Every link target MUST exact-match an allow-list — no wildcard, no
-open redirect. Every deep link MUST have a working web fallback. Auth-bearing
-links are single-use, short-TTL, and consumed by an immediate server-side
-redirect that strips the token.
+the web app. Every link target MUST exact-match an allow-list, with no wildcard
+and no open redirect. Every deep link MUST have a working web fallback.
+Auth-bearing links are single-use and short-TTL. An immediate server-side
+redirect consumes them and strips the token.
 
 **Sensitive screens** MUST be masked in the app switcher and excluded from
 screenshots and recents previews.
 
 **Lifecycle.** Navigation state MUST be restorable and process death MUST be
-handled without data loss, since the OS will terminate the app.
+handled without data loss, because the OS will terminate the app.
 
 **Transport hardening.** Cleartext HTTP MUST be disabled at the platform level,
 with no debug exception in a release build. **Certificate pinning is a declared
 decision, not a default**: each product MUST record whether it pins and, if not,
-why; if it does, it MUST document the backup-pin and rotation procedure —
+why. If it does, it MUST document the backup-pin and rotation procedure;
 unrotatable pins have bricked more apps than they have saved. The API base URL
 MUST come from build configuration (§15), never from a value the app can be
 persuaded to change at runtime.
@@ -1102,14 +1106,18 @@ persuaded to change at runtime.
 ### 9.9 Accessibility
 
 WCAG 2.2 AA is the standard for web, with platform parity for native. This is a
-`SHOULD` at release-gate strength rather than a hard CI gate, but semantic
-markup, keyboard and screen-reader operability, visible focus, labelled controls,
-font scaling, minimum touch targets, honoured reduce-motion settings and
-token-guaranteed contrast are expected as ordinary craft rather than as a later
-remediation project.
+`SHOULD` at release-gate strength, not a hard CI gate. Teams are still expected
+to build these in as ordinary craft, not as a later remediation project:
+
+- semantic markup
+- keyboard and screen-reader operability
+- visible focus and labelled controls
+- font scaling and minimum touch targets
+- honoured reduce-motion settings
+- token-guaranteed contrast
 
 Accessibility findings that block a user from completing an account, consent,
-payment or deletion flow are treated as defects, not as enhancements.
+payment or deletion flow are defects, not enhancements.
 
 ---
 
@@ -1133,25 +1141,25 @@ that dies with the provider it monitors is not an external check.
 
 **Why an external error tracker clears a bar that most analytics vendors do
 not.** §10.3 requires every non-essential event to be gated on server-side
-consent, yet §10.4 assumes the error tracker is an external processor. That is
-not an inconsistency; the two are on different lawful bases:
+consent, yet §10.4 assumes the error tracker is an external processor. These do
+not conflict, because the two rest on different lawful bases:
 
 - Product analytics is **non-essential** processing. Non-essential events MUST
   NOT be emitted or buffered before consent is recorded server-side, and that
-  MUST be enforced at the ingestion endpoint. A vendor SDK reporting directly to
-  a backend the product does not control cannot be gated on consent state that
-  backend never sees — so it is the *architecture* that fails §10.3, and any
-  vendor whose ingestion the product does control passes it.
+  MUST be enforced at the ingestion endpoint. A vendor SDK that reports directly
+  to a backend the product does not control cannot be gated on consent state that
+  backend never sees. The *architecture* fails §10.3, and any vendor whose
+  ingestion the product does control passes it.
 - Error and crash reporting is **strictly necessary** for service delivery and
   security, so it does not depend on consent to be lawful.
 
-The remaining costs of an external error tracker — an extra sub-processor, an SDK
-in the mobile binaries, retention outside your control — are not avoided. §10.4
-prices them instead, which is why it imposes a register entry, a signed
-agreement, explicit retention, and erasure and export coverage. The practical
-reason is buildability: a first-party event pipeline is an endpoint and a table,
-while a first-party crash reporter means symbolication, deminification, native
-crash capture on two mobile platforms, grouping and alerting.
+An external error tracker still has costs: an extra sub-processor, an SDK in the
+mobile binaries, and retention outside your control. §10.4 does not avoid them.
+It prices them, which is why it requires a register entry, a signed agreement,
+explicit retention, and erasure and export coverage. The practical reason is
+buildability. A first-party event pipeline is an endpoint and a table. A
+first-party crash reporter means symbolication, deminification, native crash
+capture on two mobile platforms, grouping and alerting.
 
 ### 10.2 Redaction
 
@@ -1164,20 +1172,20 @@ obey the same list.
 
 ### 10.3 First-party product analytics
 
-The analytics technology is a `CHOICE`, constrained by one property that most
-vendor SDKs cannot satisfy:
+The analytics technology is a `CHOICE`. One property constrains it, and most
+vendor SDKs cannot meet that property:
 
 - **Non-essential events MUST NOT leave the device before affirmative consent
   has been recorded server-side, and the classification MUST be enforced at the
   ingestion endpoint** — not merely in the client. Any pipeline able to honour
   that qualifies.
-- In practice this means first-party collection to the product's own API, and it
-  excludes an SDK reporting directly to a vendor backend, because such an SDK
-  cannot be gated on consent state the vendor does not hold. That is a
-  consequence of the property, not a ban on a named product: a vendor offering a
+- In practice this means first-party collection to the product's own API. It
+  excludes an SDK that reports directly to a vendor backend, because such an SDK
+  cannot be gated on consent state the vendor does not hold. That follows from
+  the property. It is not a ban on a named product: a vendor that offers a
   consent-gated ingestion proxy under your control satisfies the clause.
 - Where first-party collection is chosen, the accepted costs are no additional
-  sub-processor, no SDK in the mobile binaries, full control over retention —
+  sub-processor, no SDK in the mobile binaries, full control over retention,
   and dashboards you build yourself.
 - Events follow a **declared schema** in the contract; ad-hoc event names MUST NOT
   be emitted, and unknown events MUST be rejected.
@@ -1187,11 +1195,11 @@ vendor SDKs cannot satisfy:
 - Cost accepted: dashboards are yours to build.
 
 **Consent applies even though the analytics are first-party.** Being your own
-processor removes the sub-processor problem; it does not remove the lawful-basis
+processor removes the sub-processor problem. It does not remove the lawful-basis
 problem. Therefore:
 
 - Every event type MUST be classified in the contract as **strictly necessary**
-  (security, fraud, abuse prevention, service delivery — permitted without
+  (security, fraud, abuse prevention, service delivery; permitted without
   consent) or **non-essential** (product analytics, engagement measurement,
   experimentation).
 - Non-essential events MUST NOT be emitted, buffered or queued by any client
@@ -1199,14 +1207,14 @@ problem. Therefore:
 - Consent MUST be withdrawable, and withdrawal MUST stop collection immediately
   and be reflected in the client without requiring a restart.
 - The classification MUST be **enforced at the ingestion endpoint**, not merely in
-  the client: an event arriving without a valid consent state for its class MUST
-  be rejected, not silently stored.
+  the client. An event that arrives without a valid consent state for its class
+  MUST be rejected, not silently stored.
 - Consent state is recorded through the same mechanism as every other consent,
   with history retained.
 
-This is the clause that rules out platform-bundled analytics products regardless
-of how convenient their integration is. It is a consent-lawfulness rule, not a
-vendor preference, and it MUST NOT be recorded as a deviation.
+This clause rules out platform-bundled analytics products, however convenient
+their integration is. It is a consent-lawfulness rule, not a vendor preference,
+and it MUST NOT be recorded as a deviation.
 
 ### 10.4 Vendor and sub-processor register
 
@@ -1226,14 +1234,14 @@ appear in a maintained register committed to the repository:
   storage, mail provider, error tracker, push transports, and any CI service that
   touches production data.
 - **The error tracker is a data processor.** It will receive request context, user
-  identifiers and — despite redaction — occasional payload fragments. It MUST be
+  identifiers and, despite redaction, occasional payload fragments. It MUST be
   in the register with a signed agreement, retention configured explicitly, and
   its data covered by erasure and export.
 - Adding any new SDK, integration or outbound data flow REQUIRES a register entry
-  in the same change. A pull request introducing an outbound flow without one
+  in the same change. A pull request that introduces an outbound flow without one
   MUST be rejected.
-- Consolidating on a single cloud reduces the number of entries; it does not
-  remove the obligation for the ones that remain.
+- Consolidating on a single cloud reduces the number of entries. It does not
+  remove the obligation for the entries that remain.
 - Where a product's scope includes health data, no vendor may receive it without
   an executed BAA recorded here.
 
@@ -1244,9 +1252,9 @@ appear in a maintained register committed to the repository:
 ### 11.1 Mandatory
 
 **Contract tests.** Every client and the server verify against the same fixtures
-derived from the contract document. CI fails when any client drifts. With
-generated clients in unrelated languages and no shared runtime, this is the
-highest-value control in the entire repository.
+derived from the contract document. CI fails when any client drifts. Generated
+clients in unrelated languages share no runtime, so this is the highest-value
+control in the repository.
 
 Required coverage: every endpoint's success shape, every documented error code,
 pagination envelopes, unknown-field tolerance, unknown-enum tolerance, and the
@@ -1254,10 +1262,10 @@ pagination envelopes, unknown-field tolerance, unknown-enum tolerance, and the
 
 **Unit tests.** All of `core`, plus service-module logic. Pure, fast, no I/O.
 
-**Integration tests.** API routes exercised end to end against an ephemeral real
-instance of the chosen datastore, seeded through the migration chain. Not mocks.
-These catch the migration, index, transaction and constraint bugs that mocks
-hide.
+**Integration tests.** API routes run end to end against an ephemeral real
+instance of the chosen datastore, seeded through the migration chain. Mocks do
+not count. These tests catch the migration, index, transaction and constraint
+bugs that mocks hide.
 
 **Route-coverage tests.** A structural test MUST fail the build when any route
 ships without an explicit authorization declaration, and when any route ships
@@ -1273,37 +1281,37 @@ quarantined spec still runs and reports, but cannot fail the build. Branch gates
 (§13.5) run end-to-end tests only when a user-facing app changed.
 
 Mobile smoke journeys are `SHOULD`. Where they are not automated, the release
-checklist MUST name the manual journeys verified before each release — an
+checklist MUST name the manual journeys verified before each release. An
 untested release path is a decision, and it should be a visible one.
 
 ### 11.3 Discipline
 
 - Tests run on every pull request; the default branch is always releasable.
-- A test suite that finds no tests MUST fail, not pass. A mis-globbed suite
-  reporting green over zero tests is the failure mode this rule exists to catch.
+- A test suite that finds no tests MUST fail, not pass. This rule exists to catch
+  a mis-globbed suite that reports green over zero tests.
 - Flaky tests are quarantined and fixed, never re-run until green.
 - Every bug fixed gets a regression test.
-- No coverage-percentage target. Coverage of the security suite, the contract and
-  the domain rules is what matters.
+- There is no coverage-percentage target. What matters is coverage of the
+  security suite, the contract and the domain rules.
 
 ---
 
 ## 12. Security and compliance
 
-- **Secret scanning** as a pre-commit hook *and* a CI gate. The CI scan MUST
-  examine full history, not only the tip commit.
-- **Dependency scanning** in CI on every PR, failing on known-exploitable
+- **Secret scanning** runs as a pre-commit hook *and* as a CI gate. The CI scan
+  MUST examine full history, not only the tip commit.
+- **Dependency scanning** runs in CI on every PR. It fails on known-exploitable
   advisories in production dependencies.
-- **Security headers** on all browser-facing responses: HSTS with preload, a
+- **Security headers** go on all browser-facing responses: HSTS with preload, a
   restrictive CSP without inline script execution, content-type options,
   referrer policy and a permissions policy.
-- **CORS** with an explicit origin allow-list per environment. Reflecting an
+- **CORS** uses an explicit origin allow-list per environment. Reflecting an
   arbitrary origin MUST NOT be the default, even when credentials are excluded.
 - **TLS 1.2 minimum, 1.3 preferred**, enforced everywhere.
 - **Input validation** at every boundary against a generated schema (§4.1).
 - **All queries parameterized.** String-concatenated query construction is a hard
   failure.
-- **Startup validation**: every service declares its required configuration and
+- **Startup validation**: every service declares its required configuration. It
   refuses to boot when a security-relevant value is missing or is a known
   placeholder.
 
@@ -1316,10 +1324,10 @@ These MUST be implemented as features, not as manual operations:
   Where a field cannot be self-corrected, there MUST be a documented request path
   with a defined response window, and every operator-side correction MUST write an
   audit record with a reason.
-- **Export completeness** is enforced structurally by §5.7: a table holding
+- **Export completeness** is enforced structurally by §5.7. A table that holds
   principal-owned personal data is either in the export or explicitly excluded
   with a reason, and CI fails on a table that is neither.
-- **Erasure** MUST propagate to every store that holds the data — datastore,
+- **Erasure** MUST propagate to every store that holds the data: datastore,
   object storage, cache, analytics and any registered sub-processor.
 
 ### 12.2 Assurance cadence
@@ -1329,7 +1337,7 @@ These MUST be implemented as features, not as manual operations:
 - Dependency advisories MUST be triaged within the window declared in the Stack
   Profile.
 - An independent security review or penetration test SHOULD be performed before
-  first public release and at a declared cadence thereafter. Findings and their
+  first public release and at a declared cadence after that. Findings and their
   disposition are recorded.
 
 ---
@@ -1355,40 +1363,40 @@ MUST fail the build on:
 12. Layer-boundary check (§3.2)
 
 Workflows MUST be path-filtered so a change to one surface does not rebuild
-unrelated ones. Where a track's runners are materially more expensive — macOS
-runners for iOS builds — path filtering is mandatory rather than an optimization.
+unrelated ones. Where a track's runners cost much more (macOS runners for iOS
+builds), path filtering is mandatory, not an optimization.
 
-CI cost SHOULD be kept down without dropping a gate, because CI platforms bill
-per job, rounded up to a whole unit of time:
+CI cost SHOULD be kept down without dropping a gate. CI platforms bill per job,
+rounded up to a whole unit of time:
 
 - No job runs for much less than a minute when it could be a step in another job.
   A few-second check as its own job is billed as a full minute. This applies to
-  runners billed per job-minute; on self-hosted runners a separate short job
+  runners billed per job-minute. On self-hosted runners a separate short job
   costs nothing and needs no deviation.
-- A run superseded by a newer push to the same pull request is cancelled. A run on
-  the default branch is never cancelled — a merged commit should never be left
+- A newer push to the same pull request cancels the superseded run. A run on the
+  default branch is never cancelled, because a merged commit should never be left
   unverified.
 - Draft pull requests skip CI until they are marked ready for review.
-- Dependency installs are cached, and so are the task runner's results. The latter
-  is sound only because §2.2 requires every environment variable a task reads to
-  be declared in the runner's configuration; otherwise a cache hit can replay a
-  result computed under different inputs.
-- CI wall time is set by its slowest job, so a job or step that takes most of a
-  run SHOULD get its own job, and a test step that can be split SHOULD run as
+- Dependency installs are cached, and so are the task runner's results. Caching
+  results is sound only because §2.2 requires every environment variable a task
+  reads to be declared in the runner's configuration. Otherwise a cache hit can
+  replay a result computed under different inputs.
+- The slowest job sets CI wall time. A job or step that takes most of a run
+  SHOULD get its own job, and a test step that can be split SHOULD run as
   parallel shards. Small steps stay together, because every job repeats setup.
   A project finds the dominant job from the slowest-job summary `ci_watch`
   prints when its runs complete (§13.6).
 - A pull request SHOULD run only the expensive jobs (integration, browser) its
   change reaches. The project commits a map of areas to paths and jobs; a change
   under a shared path (the lockfile, root configuration, the CI itself), under a
-  path in no area, or on the default branch runs everything, and a
+  path in no area, or on the default branch runs everything. A
   documentation-only change runs none. A job the map leaves out is a planned skip
-  and MUST NOT count as a failure; a job that cannot read the plan runs. Because
-  a skipped area is only skipped, the full suite SHOULD still run on the default
-  branch on a schedule, and only when the default branch moved since the last
-  successful scheduled run.
+  and MUST NOT count as a failure. A job that cannot read the plan runs. A
+  skipped area is only skipped, not tested, so the full suite SHOULD still run on
+  the default branch on a schedule, and only when the default branch moved since
+  the last successful scheduled run.
 - Test shards SHOULD be balanced by measured seconds from a committed timings
-  file, longest file first, rather than by file count; a file with no measurement
+  file, longest file first, rather than by file count. A file with no measurement
   weighs the median. The ts template ships this (`shard_balance.py`,
   `area_select.py`, a `plan` job, `nightly-full.yml`).
 
@@ -1397,48 +1405,48 @@ each workflow, so a product can move between hosted and self-hosted runners
 without editing its workflows.
 
 A push run on the default branch MUST NOT repeat a suite that already passed.
-When the pushed commit's tree is identical to the tree of a pull-request head
+If the pushed commit's tree is identical to the tree of a pull-request head
 whose run of the same workflow passed, the default-branch run records that and
-skips its jobs; otherwise it runs in full. The comparison is by tree, except
+skips its jobs. Otherwise it runs in full. The comparison is by tree, except
 that paths the workflow itself ignores (documentation, Markdown, apps tested by
-their own workflows) may differ: a merge that differs from the tested head only
-there skips too. A merge that changed anything else runs the suite, and a
-failure to decide runs it too.
+their own workflows) may differ. A merge that differs from the tested head only
+there skips too. A merge that changed anything else runs the suite. So does a
+failure to decide.
 
 **Build artifacts.** The CI platform MUST keep only the newest build artifact of
 each name. A build artifact is any output a workflow uploads to the platform's
 artifact store: an installer (an MSI, an APK), a bundle, a test or coverage
 report. After every run of a workflow that uploads one, the older artifacts of
-the same name are deleted, and a scheduled sweep deletes any the per-run pruning
+the same name are deleted. A scheduled sweep deletes any the per-run pruning
 missed. So that pruning can tell kinds apart, an artifact's name MUST be stable
-for its kind — `windows-installer`, never `windows-installer-1.4.2-run-812`; the
+for its kind: `windows-installer`, never `windows-installer-1.4.2-run-812`. The
 version and commit go inside the artifact. A build that must outlive the next
 one (a release) is published as a release asset, not kept as an artifact.
 
 A workflow that builds a shipped artifact (an installer, a bundle, a package, an
-image) SHOULD be a workflow of its own that runs only when a path that feeds it
-changes, never for a documentation-only or record-only change, and that can
+image) SHOULD be a workflow of its own. It runs only when a path that feeds it
+changes, never for a documentation-only or record-only change, and it can
 always be started by hand. The path filter is the cost control: a merge that
 changed nothing the artifact is built from builds nothing.
 
 ### 13.2 Promotion
 
 **The three-tier promotion flow is not optional**, whichever host is chosen:
-preview per ready pull request, staging on merge to the default branch,
+preview per ready pull request, staging on merge to the default branch, and
 production on an explicit release action.
 
 - Draft pull requests MUST NOT deploy a preview; agent branches are verified by
   the branch gate (§13.5), and only the one ready pull request (§13.6) gets one.
 
 - Migrations run in the deploy pipeline **before** the new code is serving.
-- Every deploy is traceable to a commit, and rollback is a documented, rehearsed
-  procedure — not an improvisation.
+- Every deploy is traceable to a commit. Rollback is a documented, rehearsed
+  procedure, not an improvisation.
 - A deployment target that cannot provide an isolated per-PR preview MUST provide
   an equivalent pre-merge verification environment, and the substitution MUST be
   recorded in the Stack Profile.
 
-**Stateful web clients constrain the deployment target.** A web client holding a
-persistent server-side session per connection requires sticky routing and
+**Stateful web clients constrain the deployment target.** A web client that holds
+a persistent server-side session per connection requires sticky routing and
 graceful connection draining on deploy. Where a product chooses that model, its
 host MUST support both, and the release runbook MUST state what happens to
 in-flight sessions during a deploy.
@@ -1446,71 +1454,70 @@ in-flight sessions during a deploy.
 ### 13.3 Mobile release
 
 - Signing material MUST be stored reproducibly with a documented, **tested**
-  recovery path. Losing an Android upload key is unrecoverable.
+  recovery path. A lost Android upload key cannot be recovered.
 - PR builds compile and run tests; they do not sign or distribute.
 - Merges to the default branch produce an internal-track build automatically.
 - Store submission is an explicit, triggered action, never automatic.
-- Build numbers derive from CI run identifiers; marketing versions are set
+- Build numbers derive from CI run identifiers. Marketing versions are set
   deliberately. Both MUST be traceable to a commit.
 
 ### 13.4 Release coordination
 
-The API MUST be deployed before clients that depend on new endpoints. Because
-mobile release timing is controlled by store review, the sequence is always
+The API MUST be deployed before clients that depend on new endpoints. Store
+review controls mobile release timing, so the sequence is always
 **additive API → web/admin → mobile submission**. A mobile binary MUST NOT depend
 on an unreleased endpoint.
 
 ### 13.5 Branch gate
 
 Every repository MUST ship a branch gate: one command that an agent or a person
-runs on a branch before it is joined. Against the merge base with the branch it
-will join, it runs:
+runs on a branch before it is joined. The gate works against the merge base with
+the branch it will join. It runs these steps:
 
 1. Every guard test, whatever changed. A guard test scans the source or the
    specs as a whole (retired vocabulary, design rules, duplication ratchets,
-   spec-note rules); scoping it by package lets a change elsewhere break it
-   unseen.
+   spec-note rules). If a guard is scoped by package, a change elsewhere can
+   break it unseen.
 2. The secret scan over the branch's new commits.
 3. Type check of the changed packages and every package that depends on them.
-4. Lint of the same set, continuing past a failing package so that one run
+4. Lint of the same set. It continues past a failing package, so one run
    reports every error.
 5. Unit tests of the changed packages, then integration tests where the
    repository has them.
 6. End-to-end tests, only when a user-facing app, or a package it renders,
    changed. The gate SHOULD run only the specs the change affects, through a
-   committed map from specs to source paths or, when there is no map, the specs
-   of the apps that depend on the changed package (from the workspace dependency
-   graph); a change the map does not cover, or one to shared configuration or
-   the API contract, runs them all. The
-   ready pull request's CI always runs every spec.
+   committed map from specs to source paths. When there is no map, it runs the
+   specs of the apps that depend on the changed package (from the workspace
+   dependency graph). A change the map does not cover, or one to shared
+   configuration or the API contract, runs them all. The ready pull request's CI
+   always runs every spec.
 
-The order is binding: the checks that take seconds or minutes and
-fail most often (guards, type check, lint) come before the slow test steps, so a
+The order is binding. The checks that take seconds or minutes and fail most
+often (guards, type check, lint) come before the slow test steps, so a
 time-limited gate always reaches them. Type check and lint are required steps
-(the repository's gate configuration may name others): the gate MUST NOT skip
+(the repository's gate configuration may name others). The gate MUST NOT skip
 them because the time limit is used up, and the result's verifier MUST refuse a
 result in which a required step is missing or was skipped for any reason other
 than "nothing in its scope changed". A gate that spends its limit on tests before
 lint lets a lint error reach pull-request CI, where one run costs a full suite.
 
-Because a result is trusted only against the current head of the branch it
-joins, the gate fetches that branch before computing the merge base; only when
-the remote cannot be reached does it use the local copy, and its result then
-says so.
+A result is trusted only against the current head of the branch it joins. So the
+gate fetches that branch before it computes the merge base. Only when the remote
+cannot be reached does it use the local copy, and its result then says so.
 
-Before the first step the gate installs dependencies from the committed
-lockfile in frozen mode, so a lockfile that no longer matches the manifests
-fails the gate instead of a later run. The gate stops at the first failed step
-unless it is asked to go on, and it has a time limit (30 minutes by default):
-when the limit is reached, the running step is stopped with its child processes
+Before the first step, the gate installs dependencies from the committed
+lockfile in frozen mode. A lockfile that no longer matches the manifests then
+fails the gate, not a later run. The gate stops at the first failed step
+unless it is asked to go on. It has a time limit (30 minutes by default).
+When the limit is reached, the running step is stopped with its child processes
 and the result records a timeout. A gate that could not finish never passes.
 
 A change to the task runner's configuration or the CI workflows widens the gate
 to every package. A change to the lockfile widens it too, unless the lockfile
 format lets the gate see which packages' dependencies changed (a per-package
-lockfile, or a workspace lockfile with a section per package): then the gate
-SHOULD treat those packages as changed and widen only for a change it cannot
-attribute to a package, such as one to the root package or to a transitive
+lockfile, or a workspace lockfile with a section per package). In that case the
+gate SHOULD treat those packages as changed. It widens only for a change it
+cannot attribute to a package, such as one to the root package or to a transitive
 resolution. A lockfile whose format the gate does not read widens as before.
 
 The gate MUST write a machine-readable result: the head commit, the base commit,
@@ -1521,23 +1528,22 @@ result. Results travel with the repository, never in pull-request comments.
 
 A result gated against an older base SHOULD stay valid when that base is an
 ancestor of the branch's current base and every commit in between touches only
-inert paths (the repository declares them; the default is the documentation
-directory, which already covers the project record when the artifacts plugin is
-enabled), so a branch is not gated again because a note was merged. The ready
-pull request's CI still tests the real merge, which is why this is safe. The
-check reports why it accepted the result, and a strict mode keeps the exact-base
-rule.
+inert paths. The repository declares the inert paths. The default is the
+documentation directory, which already covers the project record when the
+artifacts plugin is enabled. This way a branch is not gated again because a note
+was merged. The ready pull request's CI still tests the real merge, which is why
+this is safe. The check reports why it accepted the result, and a strict mode
+keeps the exact-base rule.
 
 The guard tests and the secret scan MUST also run as a pre-push hook. They take
 seconds and catch the failures that otherwise reach pull-request CI. The hook
-SHOULD also run type check and lint of the touched packages and their dependents;
-the task runner's cache makes a repeat cheap, and a push that changes
-no package (documentation only) skips them. For a
-branch pushed for the first time, the hook compares with the branch it forks
-from (the nearest one), not with the default branch, so it checks only what the
-push adds. Every
-scanner CI uses MUST be installed by the repository's agent setup script, so the
-gate runs the scanner CI runs.
+SHOULD also run type check and lint of the touched packages and their dependents.
+The task runner's cache makes a repeat cheap, and a push that changes no package
+(documentation only) skips them. For a branch pushed for the first time, the
+hook compares with the branch it forks from (the nearest one), not with the
+default branch, so it checks only what the push adds. Every scanner CI uses MUST
+be installed by the repository's agent setup script, so the gate runs the
+scanner CI runs.
 
 ### 13.6 Integration flow
 
@@ -1546,112 +1552,116 @@ gate runs the scanner CI runs.
 - Shared contracts (types, schemas, interfaces that several branches build on)
   are committed to the integration branch before parallel work starts.
 - Branches join the integration branch through a merge script. It merges each
-  branch in turn, stops at a conflict it cannot resolve, and runs a light check
-  on the joined head: the install from the lockfile, the type check and lint of
-  every package any joined branch changed, and the fast guards of the pre-push
-  hook. The join runs no test and no branch gate, waits for no sandbox gate before
-  the ready pull request, and does not re-run a gate after a join fix; the ready
-  pull request's CI is the one full run. A project picks the steps in `gate.json`
-  (`"join"` on a step, `join_guards`). The script can skip that check when the joined tree
-  equals the tree of a joined branch head whose gate result is trusted for that
-  head and the same base. It records the time of each step.
+  branch in turn and stops at a conflict it cannot resolve. It then runs a light
+  check on the joined head: the install from the lockfile, the type check and
+  lint of every package any joined branch changed, and the fast guards of the
+  pre-push hook. The join runs no test and no branch gate. It waits for no
+  sandbox gate before the ready pull request and does not re-run a gate after a
+  join fix. The ready pull request's CI is the one full run. A project picks the
+  steps in `gate.json` (`"join"` on a step, `join_guards`). The script can skip
+  that check when the joined tree equals the tree of a joined branch head whose
+  gate result is trusted for that head and the same base. It records the time of
+  each step.
 - When the last join is pushed, one ready pull request goes from the integration
   branch to the default branch. Its CI is the only full suite, end-to-end tests
   included (§11.2). It merges when that run is green, never by auto-merge.
-- While that run is going the train is frozen: a push to the branch the ready pull
-  request comes from is refused until its CI has finished, passed or failed (so a
-  fix goes forward), or the ready pull request is closed unmerged. When GitHub
-  cannot be reached the push is allowed with a warning; an explicit override allows
-  it and the running CI restarts. A branch that is late rides the next train.
+- While that run is going, the train is frozen. A push to the branch the ready
+  pull request comes from is refused until its CI has finished, passed or failed
+  (so a fix goes forward), or the ready pull request is closed unmerged. When
+  GitHub cannot be reached, the push is allowed with a warning. An explicit
+  override allows the push and the running CI restarts. A branch that is late
+  rides the next train.
 - A branch that is not green when the ready pull request opens waits for the
   next one.
 - Before the ready pull request opens, the merge script SHOULD warn when no online
   runner carries a label the workflows' jobs need (GitHub-hosted labels count as
-  available), and the CI watcher SHOULD warn about a job queued over ten minutes with
-  no online runner for its labels. Both only warn: listing self-hosted runners needs
-  administrator rights, and without them the check says it was skipped.
+  available). The CI watcher SHOULD warn about a job queued over ten minutes with
+  no online runner for its labels. Both only warn: listing self-hosted runners
+  needs administrator rights, and without them the check says it was skipped.
 - CI is watched through the workflow runs for the head commit, never through a
   pull request's check list, which can be read before the new run is listed.
 - Branches SHOULD NOT edit a spec's version or change log. Each adds a change
-  note naming the spec and the kind of change; the release folds the notes
-  into the versions and change logs, so parallel branches do not conflict.
+  note naming the spec and the kind of change. The release folds the notes into
+  the versions and change logs, so parallel branches do not conflict.
 - When ready pull requests' CI runs on one shared Linux runner, the jobs that need
   no Linux (lint, types, boundary checks, and contract or unit tests that run on
-  any OS) SHOULD run in parallel on another available runner, a second
-  self-hosted runner with its own label or a hosted one, so they do not wait
-  behind the Linux-only jobs (integration, end-to-end, packaging). Each workflow
-  reads its runner labels from a setting (§13.1), so the split is a setting, not
-  a rewrite.
+  any OS) SHOULD run in parallel on another available runner. That runner can be
+  a second self-hosted runner with its own label, or a hosted one. This way the
+  jobs do not wait behind the Linux-only jobs (integration, end-to-end,
+  packaging). Each workflow reads its runner labels from a setting (§13.1), so
+  the split is a setting, not a rewrite.
 - On shared or self-hosted runners, ready pull requests' CI SHOULD run one at a
-  time; the next train waits for the run, not for a merge. A required runner label
-  carried by one runner only is a single point of failure: setup warns against it
+  time. The next train waits for the run, not for a merge. A required runner label
+  carried by one runner only is a single point of failure. Setup warns against it
   unless a fallback job exists.
-- Once the ready pull request merges, the train is removed automatically: on the
-  remote, the integration branch, every branch joined into it and their
-  gate-result refs; locally, their branches and the worktrees they were built
-  in. A branch with an open pull request, a branch not merged, and a worktree
-  holding uncommitted work are never removed; they are listed instead.
+- Once the ready pull request merges, the train is removed automatically. On the
+  remote, this removes the integration branch, every branch joined into it and
+  their gate-result refs. Locally, it removes their branches and the worktrees
+  they were built in. A branch with an open pull request, a branch not merged,
+  and a worktree holding uncommitted work are never removed. They are listed
+  instead.
 - Delivery log (SHOULD). Before the train is removed, the time each change
   finished, joined, started and ended CI and merged is collected from its
-  branch; the deploy adds when it went live. A table of the time to live of
+  branch. The deploy adds when it went live. A table of the time to live of
   each change, split into waiting, testing and queueing, is appended to the
-  train's release notes. It is never committed to the default branch, a time
-  that cannot be found is shown as unknown, and a log that cannot be written
+  train's release notes. It is never committed to the default branch. A time
+  that cannot be found is shown as unknown. A log that cannot be written
   (offline, no permission) never stops the cleanup or the deploy.
 
 ### 13.7 Packaged-program smoke test
 
 A product that ships a packaged program (a single executable, an installer, an
 app bundle or a container image) MUST have CI start the packaged form, not the
-development server, and exercise every child process or worker it starts: CI
+development server, and exercise every child process or worker it starts. CI
 waits for a readiness signal (a log line or a health probe) from the program and
-from each of those processes, and MUST fail the build when one does not come up
-within a stated time. The list of signals is declared in the repository, so adding
-a worker means adding its signal; the process tree is stopped when the check ends,
-whether it passed or not. A program that starts but whose worker never does is
-the failure this check exists for: it passes every unit test and breaks only when
+from each of those processes. CI MUST fail the build when one does not come up
+within a stated time. The repository declares the list of signals, so adding a
+worker means adding its signal. The process tree is stopped when the check ends,
+whether it passed or not. This check exists for a program that starts but whose
+worker never does. Such a program passes every unit test and breaks only when
 packaged, where paths, bundled files and process launching differ from
 development.
 
-A product that ships no packaged program declares none and the check has nothing
-to start.
+A product that ships no packaged program declares none, and the check has
+nothing to start.
 
 ### 13.8 Guards for agent sessions
 
-Rules a session only reads are rules it can forget or misjudge. These guards
-refuse the action instead; each says why and what to do instead.
+A session can forget or misjudge a rule it only reads. These guards refuse the
+action instead. Each says why and what to do instead.
 
 - **Suite times.** The repository declares its test suites in
-  `scripts/delivery/suites.json`: for each, a name, the command of a full run, and
-  how to run named cases only. `scripts/delivery/run_suite.py` runs a suite
-  (all of it, or named cases) and records how long it took, per machine, in a
-  git-ignored file. A suite is **heavy** when its last full local run took over
+  `scripts/delivery/suites.json`. Each entry has a name, the command of a full
+  run, and how to run named cases only. `scripts/delivery/run_suite.py` runs a
+  suite (all of it, or named cases) and records how long it took, per machine, in
+  a git-ignored file. A suite is **heavy** when its last full local run took over
   3 minutes, or when it has no local measurement yet. CI runs record their times
   the same way from the job's step times, kept apart from local ones.
 - **Test guard.** A hook that runs before each shell command of an agent session
   MUST refuse (1) a full local run of a heavy suite, pointing to a run of named
   cases and to CI for the full run; and (2) a full local run of a suite whose
   last full run, local or in CI, passed on the same tree. A suite with no local
-  measurement can be measured once with `run_suite.py --measure NAME`; the guard
+  measurement can be measured once with `run_suite.py --measure NAME`. The guard
   refuses `--measure` when a measurement under 30 days old exists. The guard
   recognises the suites by the commands declared in `suites.json`, whether they
   are typed directly or through `run_suite.py`.
 - **Change notes at commit.** The pre-commit hook runs the change-note check
-  (§13.6) on staged changes, so a version or change-log edit off a release branch
-  is refused at commit time, not in CI. It takes under 2 seconds and does nothing
-  in a repository with no change-note settings.
+  (§13.6) on staged changes. A version or change-log edit off a release branch
+  is refused at commit time, not in CI. The check takes under 2 seconds and does
+  nothing in a repository with no change-note settings.
 - **Ready pull requests.** A hook before `gh pr create` and `gh pr ready` MUST
   refuse a ready (non-draft) pull request whose head branch is not a release
-  branch (by default `*-integration`). Draft pull requests from task branches stay
-  allowed.
+  branch (by default `*-integration`). Draft pull requests from task branches
+  stay allowed.
 - **Join without a gate config.** The merge script of §13.6 MUST work in a
-  repository with no branch-gate configuration: it joins, says the gate is not
+  repository with no branch-gate configuration. It joins, says the gate is not
   configured, and records that no gate ran, instead of stopping.
 - **Rules name their check.** Every rule line in a rule file shipped to projects
   ends with a tag: `<!-- check: <path> -->` naming the file (and, after `#`, the
   function or step) that enforces it, or `<!-- advice -->` when no machine can
   check it. A test fails on an untagged line and on a check path that does not
-  exist, so a new rule ships with its check or says plainly that it is advice.
+  exist. A new rule therefore ships with its check or says plainly that it is
+  advice.
 
 ---
 
@@ -1672,48 +1682,49 @@ refuse the action instead; each says why and what to do instead.
 | Web initial bundle | Declared per app, enforced in CI |
 
 Budgets are **measured, not assumed**. Regressions fail the build where a gate
-exists and are triaged where they do not.
+exists. Where no gate exists, they are triaged.
 
 The web field-data budgets require **first-party collection**, because §10.3
-rules out any analytics pipeline that cannot be consent-gated. Reporting field vitals to the product's
-own ingestion endpoint is required work, not an optional extra.
+rules out any analytics pipeline that cannot be consent-gated. Reporting field
+vitals to the product's own ingestion endpoint is required work, not an optional
+extra.
 
 ---
 
 ## 15. Configuration and secrets
 
 - Every service declares its required configuration in **one schema** and
-  validates it at startup, failing loudly and immediately on anything missing,
+  validates it at startup. It fails loudly and immediately on anything missing,
   malformed or left at a placeholder value.
-- **Three tiers** — preview/dev, staging, production — with separate credentials
+- **Three tiers** (preview/dev, staging, production) have separate credentials
   for every external service. A single credential shared across tiers is a defect.
 - Secrets live in the platform's secret storage and are never committed. An
   example environment file documents every variable with a description and
-  whether it is required; it **MUST contain no real values**.
+  whether it is required. It **MUST contain no real values**.
 - Local development values MAY live in a git-ignored environment file. They MUST
   NOT be production credentials.
-- Mobile builds get a generated configuration file per scheme or flavour — API
-  base URL, environment name, feature toggles. **Mobile binaries MUST NOT contain
-  server secrets**; anything in an app bundle is public.
-- Every key is versioned, and rotation is zero-downtime with a documented
+- Mobile builds get a generated configuration file per scheme or flavour (API
+  base URL, environment name, feature toggles). **Mobile binaries MUST NOT contain
+  server secrets**. Anything in an app bundle is public.
+- Every key is versioned. Rotation is zero-downtime and has a documented
   runbook.
-- A dedicated secret manager MAY be adopted; it is not required.
+- A dedicated secret manager MAY be adopted. It is not required.
 
 ---
 
 ## 16. Documentation
 
-- Where each document lives and how it is kept true is bound by **DOCSPEC**
-  (`luismc-docs`, `references/docspec.md`); this section does not restate it.
-  Every product MUST follow DOCSPEC's layout (`docs/` split by reader question,
-  one folder per feature with `spec.md`, `docs/docs.json`, a generated
-  `docs/index.html`) and run its checks (`docs_check.py`).
+- **DOCSPEC** (`luismc-docs`, `references/docspec.md`) binds where each document
+  lives and how it is kept true. This section does not restate it. Every product
+  MUST follow DOCSPEC's layout (`docs/` split by reader question, one folder per
+  feature with `spec.md`, `docs/docs.json`, a generated `docs/index.html`) and run
+  its checks (`docs_check.py`).
 - A spec of one feature is `docs/features/<feature>/spec.md`. A binding rule that
   spans features lives in `docs/architecture/`. Anything under `docs/features/`,
   `docs/architecture/` and `docs/design-system/` is authoritative for behaviour.
-- A superseded doc **moves** to `docs/archive/`; it is not deleted and not left in
+- A superseded doc **moves** to `docs/archive/`. It is not deleted and not left in
   place. The archive is never authoritative.
-- Agent briefs, reports and scratch notes are temporary: they live under
+- Agent briefs, reports and scratch notes are temporary. They live under
   `docs/work/` on the agent's branch and never reach the default branch
   (DOCSPEC §10).
 - Every product MUST carry: its Stack Profile (§18), the DOCSPEC overview pages
@@ -1731,7 +1742,7 @@ own ingestion endpoint is required work, not an optional extra.
 ## 17. Non-goals
 
 These are outside the default architecture, so a product does not drift into one
-without a decision. Each is a **deviation requiring its own design**, not a
+without a decision. Each is a **deviation that needs its own design**, not a
 prohibition:
 
 - **Microservices.** One API, one worker, one datastore per product until there is
@@ -1745,10 +1756,10 @@ Two items that were non-goals in 4.x are **no longer** non-goals, because 5.0.0
 stopped grading technology:
 
 - **Self-hosted infrastructure** is now a `CHOICE`. The obligations that made it
-  costly — backups, PITR, restore drills, uptime checks that survive the host's
-  own outage — are stated as requirements in §5.5 and §10.1 and apply to managed
+  costly (backups, PITR, restore drills, uptime checks that survive the host's
+  own outage) are stated as requirements in §5.5 and §10.1. They apply to managed
   and self-hosted alike.
-- **Cross-platform UI frameworks** are now a `CHOICE`. A product adopting one
+- **Cross-platform UI frameworks** are now a `CHOICE`. A product that adopts one
   still owes §1's thin-client doctrine, §4.1's generated client, §9.6's
   localization and §9.8's mobile behaviour rules in full.
 
@@ -1794,7 +1805,7 @@ Every product MUST carry a Stack Profile at `docs/architecture/stack-profile.md`
 15. **Deviations** — every `SHOULD` not followed and every `MUST` waived, each
     with a reason and a named approver.
 
-A `CHOICE` recorded in item 2 is **never** a deviation. Item 15 is reserved for
+A `CHOICE` recorded in item 2 is **never** a deviation. Item 15 is only for
 graded clauses, which keeps the deviation register meaningful.
 
 ---
@@ -1962,7 +1973,8 @@ Every item is checkable regardless of stack.
   vendor anywhere in this document is a defect, not an edit.
 - Products record the `STACKSPEC` version they satisfy in their Stack Profile.
 - A conflict between a product's needs and this spec is resolved by a recorded
-  deviation with a named approver — not by silent divergence.
+  deviation with a named approver, not by silent divergence.
 - Superseded versions move to `docs/archive/`.
-- This spec is the answer to "what makes a product of ours correct." When reality
-  outgrows it, the spec changes; the codebase does not quietly drift ahead of it.
+- This spec answers the question "what makes a product of ours correct?" When
+  reality outgrows it, the spec changes. The codebase does not quietly drift
+  ahead of it.
