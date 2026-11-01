@@ -70,6 +70,56 @@ class HookTests(unittest.TestCase):
         rc, out = run_hook("hook_stop.py", d2)
         self.assertEqual(rc, 0)
 
+    def _counted(self, d):
+        import docs_lib as D
+        import hook_stop as H
+        calls = []
+        orig = D.git
+
+        def spy(root, *a, **k):
+            calls.append(a[0])
+            return orig(root, *a, **k)
+        D.git = spy
+        try:
+            msg = H.cached_message(d)
+        finally:
+            D.git = orig
+        return msg, calls
+
+    def test_stop_reuses_result_when_nothing_changed(self):
+        d = proj()
+        git(d, "checkout", "-q", "-b", "feat")
+        w(d, "src/import/a.py", "x=2")
+        m1, c1 = self._counted(d)
+        self.assertIn("docs/features/import/spec.md", m1)
+        self.assertIn("diff", c1)
+        m2, c2 = self._counted(d)
+        self.assertEqual(m2, m1)
+        self.assertEqual(sorted(c2), ["rev-parse", "status"])
+
+    def test_stop_recomputes_when_tree_changes(self):
+        d = proj()
+        git(d, "checkout", "-q", "-b", "feat")
+        w(d, "src/import/a.py", "x=2")
+        m1, _ = self._counted(d)
+        self.assertTrue(m1)
+        w(d, "docs/features/import/changes/T1.md", "---\nchange: patch\n---\nx\n")
+        m2, c2 = self._counted(d)
+        self.assertEqual(m2, "")
+        self.assertIn("diff", c2)
+        git(d, "add", "-A"); git(d, "commit", "-q", "-m", "more")
+        m3, c3 = self._counted(d)
+        self.assertEqual(m3, "")
+        self.assertIn("diff", c3)
+
+    def test_stop_corrupt_state_falls_back(self):
+        d = proj()
+        git(d, "checkout", "-q", "-b", "feat")
+        w(d, "src/import/a.py", "x=2")
+        (d / ".git" / "luismc-docs-stop.json").write_text("{nope")
+        rc, out = run_hook("hook_stop.py", d)
+        self.assertIn("systemMessage", out)
+
 
 if __name__ == "__main__":
     unittest.main()
