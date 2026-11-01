@@ -18,4 +18,4 @@ python3 "$C" --strict --json           # warnings fail; machine-readable
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/docs_work.py" guard --base origin/main
 ```
 
-A finding is `ERROR|WARNING <code> <path>: <message>`. Fix errors in the branch: update the doc, add a change note (`docs-note`), or put `Docs: none, <reason>` in a commit message when no doc is needed. Do not silence a check by emptying a doc or editing a generated file. Report warnings (stale, drift) to the owner as a list; do not mark `last_verified` without re-reading the spec against the code.
+A finding is `ERROR|WARNING <code> <path>: <message>`. Fix each error in the branch. Update the doc, add a change note (`docs-note`), or, when no doc is needed, put `Docs: none, <reason>` in a commit message. Do not silence a check by emptying a doc or editing a generated file. Report warnings (stale, drift) to the owner as a list. Do not mark `last_verified` before you re-read the spec against the code.
