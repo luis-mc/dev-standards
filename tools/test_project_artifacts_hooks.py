@@ -1002,7 +1002,7 @@ def start_queues_merged_closed_and_ignores_the_rest():
     for frag in ('AR5 -> Live', 'AR9 -> On hold'):
         assert frag in res['systemMessage'], res
     args = open(os.path.join(os.path.dirname(work), 'ghstub', 'gh.log')).read().split('\n')
-    assert 'pr list --state all --json headRefName,state,mergedAt --limit 200' in args, args
+    assert 'pr list --state all --json headRefName,state,mergedAt --limit 20' in args, args
 
 
 @test
@@ -1555,6 +1555,88 @@ def stop_hourly_and_overdue_checks_need_a_published_record_and_respect_the_ceili
     # hooks off
     off = dict(env, CLAUDE_ARTIFACTS_HOOKS='off')
     assert stop(work, off, session='other')[1].strip() == ''
+
+
+# --- DS168: lighter hooks ---------------------------------------------------------------
+
+def gh_log(work):
+    path = os.path.join(os.path.dirname(work), 'ghstub', 'gh.log')
+    return open(path).read() if os.path.exists(path) else ''
+
+
+@test
+def start_does_not_call_gh_when_no_task_is_open():
+    work = make_repo(branch='main', statuses=['Built', 'Live', 'On hold', 'Needs you'])
+    for env in (gh_env(work), {'CLAUDE_ARTIFACTS_GH': os.path.join(work, 'no-such-gh-binary')}):
+        rc, out, err, _ = start(work, env)
+        res = json.loads(out)
+        assert rc == 0 and queue_of(work) == [] and list(res) == ['hookSpecificOutput'], (rc, out, err)
+    assert gh_log(work) == '', gh_log(work)
+
+
+@test
+def start_limits_gh_to_what_the_open_tasks_need():
+    for statuses, want in ((['Running'] * 3, 20), (['To do'] * 30, 60), (['Waiting'] * 150, 200),
+                           (['Running', 'Built', 'Live'], 20)):
+        work = make_repo(branch='main', statuses=statuses)
+        start(work, gh_env(work, prs=[]))
+        line = 'pr list --state all --json headRefName,state,mergedAt --limit %d' % want
+        assert line in gh_log(work).split('\n'), (statuses[:1], len(statuses), want, gh_log(work))
+
+
+@test
+def start_still_queues_a_merge_with_the_smaller_limit():
+    work = make_repo(branch='main', statuses=['Running', 'Built'])
+    start(work, gh_env(work, prs=[{'headRefName': 'AR20-x', 'state': 'MERGED', 'mergedAt': '2026-10-09T10:00:00Z'},
+                                   {'headRefName': 'AR21-x', 'state': 'MERGED', 'mergedAt': '2026-10-09T10:00:00Z'}]))
+    assert statuses(work) == [('AR20', 'Live')], statuses(work)
+
+
+@test
+def stop_runs_pending_in_process_with_the_same_result_as_the_child_process():
+    """F4: the in-process call and `project_artifacts.py pending --json` give the same exit code and JSON."""
+    sys.path.insert(0, SCRIPTS)
+    import hook_end_of_turn as E
+    from hook_after_command import command_for, run
+    own = os.path.join(SCRIPTS, 'project_artifacts.py')
+    for queued in (False, True):
+        work = make_repo(branch='main')
+        if queued:
+            write(os.path.join(work, '.claude', 'artifacts-queue.json'), json.dumps({'events': [
+                {'id': 'AR5', 'suggested_status': 'Live', 'event': 'pull request merged', 'command': '', 'time': 't'}]}))
+        child = run(command_for(own) + ['pending', '--json'], work, 60)
+        mine = E.run_pending_in_process(work)
+        assert child is not None and mine is not None, (child, mine)
+        assert child[0] == mine[0] and json.loads(child[1]) == json.loads(mine[1]), (child, mine)
+        got = E.pending_items(work, own)
+        assert bool(got[1]) == queued, got
+
+
+@test
+def stop_with_the_real_script_blocks_on_a_queued_event_and_passes_when_empty():
+    work = make_repo(branch='main')
+    rc, out, err, _ = stop(work, {})
+    assert rc == 0 and out.strip() == '', (rc, out, err)
+    write(os.path.join(work, '.claude', 'artifacts-queue.json'), json.dumps({'events': [
+        {'id': 'AR5', 'suggested_status': 'Live', 'event': 'pull request merged', 'command': '', 'time': 't'}]}))
+    rc, out, err, _ = stop(work, {})
+    res = parse_stop(out)
+    assert rc == 0 and res.get('decision') == 'block' and 'AR5 -> Live' in res['reason'], (rc, out, err)
+
+
+@test
+def stop_falls_back_to_the_child_process_when_the_in_process_call_fails():
+    sys.path.insert(0, SCRIPTS)
+    import hook_end_of_turn as E
+    saved = E.run_pending_in_process
+    E.run_pending_in_process = lambda root: None
+    try:
+        work = make_repo(branch='main')
+        got = E.pending_items(work, os.path.join(SCRIPTS, 'project_artifacts.py'))
+        assert got == ([], [], [], []), got
+    finally:
+        E.run_pending_in_process = saved
+
 
 
 def main():

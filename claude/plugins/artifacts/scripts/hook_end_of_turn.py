@@ -19,7 +19,9 @@ Per-session state: <repo>/.claude/artifacts-stop-state.json, shaped
 Seam for tests: CLAUDE_ARTIFACTS_SCRIPT overrides the path of project_artifacts.py.
 Disable: CLAUDE_ARTIFACTS_HOOKS=off. Standard library only.
 """
+import contextlib
 import hashlib
+import io
 import json
 import os
 import sys
@@ -42,10 +44,34 @@ BACKGROUND_NOTE = 'work started in the background with no Running task'
 MIGRATION_NOTE = 'the artifact record needs migrating (run render)'
 
 
+def run_pending_in_process(root):
+    """(rc, stdout, stderr) of `project_artifacts.main(['pending', '--json'])` run in this process, from root, as the
+    child would run it (same function, same working folder); None when it cannot be done, so the caller starts the
+    child process instead. Used only for the plugin's own script, never for the test seam."""
+    old_cwd = os.getcwd()
+    try:
+        import project_artifacts as PA
+        out, err = io.StringIO(), io.StringIO()
+        os.chdir(root)
+        try:
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                rc = PA.main(['pending', '--json'])
+        finally:
+            os.chdir(old_cwd)
+        return (rc if isinstance(rc, int) else 0), out.getvalue(), err.getvalue()
+    except (Exception, SystemExit):
+        return None
+
+
 def pending_items(root, script):
     """(artifacts, queue, retired, deferred) from `pending --json`; None when it cannot be read. Retired pages never
     change pending's exit code, so they are read from its output at exit 0 as well (R8.13)."""
-    r = run(command_for(script) + ['pending', '--json'], root, PENDING_TIMEOUT)
+    own = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'project_artifacts.py')
+    r = None
+    if os.path.abspath(script) == own:       # F4: one interpreter start less than a child process
+        r = run_pending_in_process(root)
+    if r is None:
+        r = run(command_for(script) + ['pending', '--json'], root, PENDING_TIMEOUT)
     if r is None:
         warn('pending could not run (%s)' % script)
         return None
