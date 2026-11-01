@@ -756,10 +756,16 @@ If the project has no cache tier (§2.2), validation reads the authoritative sto
 
 ### 7.1 Universal requirements
 
-- **R7.1** — Every authentication attempt **MUST** be recorded in `auth_attempt` regardless of outcome, and **MUST** be admitted through rate limiting (§17) *before* any persistence access.
-- **R7.2** — Failure responses **MUST** be uniform and non-enumerating (§19.5). The response **MUST NOT** reveal whether the account exists, which factor failed, whether the account is locked, or how many attempts remain.
-- **R7.3** — Response timing **MUST** be substantially uniform between "no such account" and "wrong credential". Where a KDF would otherwise be skipped for a non-existent account, a dummy KDF of equal cost **MUST** be executed. Timing that discloses account existence is a user-enumeration oracle.
-- **R7.4** — Successful authentication **MUST**, in order: record the attempt; mint a fresh session (§6.9); register/associate the device; evaluate the consent gate (§14.4); emit the audit event; emit a security event if the device is new.
+- **R7.1** — Every authentication attempt **MUST** be recorded in `auth_attempt`, whatever the outcome. It **MUST** be admitted through rate limiting (§17) *before* any persistence access.
+- **R7.2** — Failure responses **MUST** be uniform and non-enumerating (§19.5). The response **MUST NOT** reveal whether the account exists, which factor failed, whether the account is locked or how many attempts remain.
+- **R7.3** — Response timing **MUST** be substantially uniform between "no such account" and "wrong credential". If a KDF would otherwise be skipped for a non-existent account, a dummy KDF of equal cost **MUST** be executed. Timing that reveals whether an account exists is a user-enumeration oracle.
+- **R7.4** — Successful authentication **MUST** do these steps, in order:
+  1. record the attempt;
+  2. mint a fresh session (§6.9);
+  3. register or associate the device;
+  4. evaluate the consent gate (§14.4);
+  5. emit the audit event;
+  6. emit a security event if the device is new.
 - **R7.5** — All authentication responses **MUST** carry `Cache-Control: no-store` (§19.8).
 
 ### 7.2 Method availability by plane
@@ -773,19 +779,19 @@ If the project has no cache tier (§2.2), validation reads the authoritative sto
 | Enterprise SAML | `federated` | yes | **never** |
 | TOTP | `totp` | as second factor | **never** (not phishing-resistant) |
 
-- **R7.6** — The admin plane accepts **exactly one** authentication method: WebAuthn assertion with user verification. Every other method **MUST** be absent from the admin routing table — not merely disabled by configuration. Any code path that could authenticate an admin by password, OTP, or TOTP is a P0 defect against the phishing-resistance mandate (NIST SP 800-63B / IA-2). The admin plane's floor is phishing-resistant AAL2; sessions established with a device-bound passkey reach AAL3 (§7.3.5, §8.6).
+- **R7.6** — The admin plane accepts **exactly one** authentication method: WebAuthn assertion with user verification. Every other method **MUST** be absent from the admin routing table, not only disabled by configuration. Any code path that could authenticate an admin by password, OTP or TOTP is a P0 defect against the phishing-resistance mandate (NIST SP 800-63B / IA-2). The admin plane's floor is phishing-resistant AAL2; sessions established with a device-bound passkey reach AAL3 (§7.3.5, §8.6).
 
 ### 7.3 Passkey / WebAuthn
 
 #### 7.3.1 Registration
 
-1. Authenticated principal requests registration options.
-2. Server generates a ≥16-byte random challenge, stores it server-side bound to the session with a ≤5-minute TTL, and returns options including RP ID, user handle, `excludeCredentials` (existing credentials, to prevent duplicate registration), and the required authenticator criteria.
-3. Client produces an attestation response.
-4. Server verifies: challenge matches and is unconsumed; `origin` is in the allowlist; RP ID hash matches; `type` is `webauthn.create`; user-present flag set; user-verified flag set where required; attestation statement verified per its format; the credential ID is not already registered.
-5. Server persists a `credential` row with `kind = 'passkey'`.
+1. The authenticated principal requests registration options.
+2. The server generates a ≥16-byte random challenge and stores it server-side, bound to the session, with a ≤5-minute TTL. It returns options that include the RP ID, the user handle, `excludeCredentials` (existing credentials, to prevent duplicate registration) and the required authenticator criteria.
+3. The client produces an attestation response.
+4. The server verifies: challenge matches and is unconsumed; `origin` is in the allowlist; RP ID hash matches; `type` is `webauthn.create`; user-present flag set; user-verified flag set where required; attestation statement verified per its format; the credential ID is not already registered.
+5. The server persists a `credential` row with `kind = 'passkey'`.
 
-- **R7.7** — The challenge **MUST** be server-generated, server-stored, single-use, and expiring. A client-supplied or stateless challenge defeats the entire protocol.
+- **R7.7** — The challenge **MUST** be server-generated, server-stored, single-use and expiring. A client-supplied or stateless challenge defeats the whole protocol.
 - **R7.8** — `origin` and RP ID **MUST** be validated against configuration, never derived from the request.
 
 #### 7.3.2 Authentication
@@ -799,24 +805,29 @@ Same verification with `type = 'webauthn.get'`, plus signature verification agai
 
 #### 7.3.4 Signature counter
 
-- **R7.11** — If the stored counter is non-zero and the presented counter is not greater, the assertion **MUST** be rejected and a security event emitted. This is the specified cloned-authenticator signal. Authenticators legitimately reporting 0 are exempt.
+- **R7.11** — If the stored counter is non-zero and the presented counter is not greater, the assertion **MUST** be rejected and a security event emitted. This is the specified cloned-authenticator signal. Authenticators that legitimately report 0 are exempt.
 
 #### 7.3.5 Backup eligibility — synced and device-bound passkeys
 
-A passkey is either **device-bound** (`BE = false`: the private key never leaves one authenticator) or **synced** (`BE = true`: the key is copied to every device signed into a passkey provider's account — iCloud Keychain, Google Password Manager, a password manager vault). Both are phishing-resistant. They differ in who else holds the key: a synced passkey extends the trust boundary into the provider account, its recovery flows, and every device enrolled in it.
+A passkey is either **device-bound** or **synced**.
+
+- **Device-bound** (`BE = false`): the private key never leaves one authenticator.
+- **Synced** (`BE = true`): the key is copied to every device signed into a passkey provider's account, such as iCloud Keychain, Google Password Manager or a password manager vault.
+
+Both are phishing-resistant. They differ in who else holds the key. A synced passkey extends the trust boundary into the provider account, its recovery flows and every device enrolled in it.
 
 - **R7.12** — Admin passkeys **MAY** be synced or device-bound. Acceptance of synced passkeys on the admin plane is governed by `admin.passkey.allow_synced` (§24.2, default `true`). When it is `false`, an admin registration presenting `BE = true` **MUST** be rejected. The BE flag **MUST** be read from the verified authenticator data at registration and persisted in `backup_eligible`; it **MUST NOT** be taken from any client-supplied field.
-- **R7.12a** — Registering a synced passkey (`BE = true`) on an admin account **MUST** raise a staff alert (§18.3), in addition to the `passkey_added` notification to the admin. The provider account is now part of the admin trust boundary, and a second person must see every expansion of it.
-- **R7.12b** — Every passkey assertion, on either plane, **MUST** record the credential's sync status on the session and in access assertions (R8.17): `amr` includes `hwk` for a device-bound credential and `swk` for a synced one, alongside `user` when UV was asserted. With UV, a device-bound credential yields `acr = aal3` and a synced one `acr = aal2` (§8.6). BE is authenticator-reported: under `none` attestation it is unverified, so a deployment that must evidence AAL3 to an auditor verifies the attestation statement (§7.3.1 step 4) against a trusted root.
+- **R7.12a** — Registering a synced passkey (`BE = true`) on an admin account **MUST** raise a staff alert (§18.3), in addition to the `passkey_added` notification to the admin. The provider account is now part of the admin trust boundary. A second person must see every expansion of it.
+- **R7.12b** — Every passkey assertion, on either plane, **MUST** record the credential's sync status on the session and in access assertions (R8.17): `amr` includes `hwk` for a device-bound credential and `swk` for a synced one, alongside `user` when UV was asserted. With UV, a device-bound credential yields `acr = aal3` and a synced one `acr = aal2` (§8.6). The authenticator reports BE. Under `none` attestation it is unverified. A deployment that must show AAL3 to an auditor verifies the attestation statement (§7.3.1 step 4) against a trusted root.
 - **R7.12c** — BE is fixed for the life of a credential. An assertion whose BE flag differs from the stored `backup_eligible` **MUST** be rejected and recorded as a failed `auth_attempt`.
 
 #### 7.3.6 Enrollment minimum
 
-- **R7.13** — An admin **MUST** register **at least two** (`2`) authenticators before `status` leaves `pending_enrollment`. This is the primary defense against the admin lockout scenario (§9.4). The authenticators **SHOULD** be independent: not two synced passkeys held by the same provider account, which fail together if that account is lost or compromised. A device-bound authenticator alongside a synced one, or synced passkeys from two different providers, satisfies this.
+- **R7.13** — An admin **MUST** register **at least two** (`2`) authenticators before `status` leaves `pending_enrollment`. This is the main defense against the admin lockout scenario (§9.4). The authenticators **SHOULD** be independent. Two synced passkeys held by the same provider account are not independent: they fail together if that account is lost or compromised. A device-bound authenticator with a synced one, or synced passkeys from two different providers, is independent.
 
 ### 7.4 Magic link and email OTP
 
-Every short-lived, single-use credential in this specification is a `one_time_credential` row, whatever flow issues it. `purpose` is the closed set of those flows:
+Every short-lived, single-use credential in this specification is a `one_time_credential` row, whichever flow issues it. `purpose` is the closed set of those flows:
 
 | `purpose` | Issued by | Redeemed for |
 |---|---|---|
@@ -828,21 +839,21 @@ Every short-lived, single-use credential in this specification is a `one_time_cr
 | `admin_recovery` | An approved admin recovery request (§9.4) | Re-enrolling authenticators |
 | `export_download` | A completed export (§15.2) | One artifact download |
 
-- **R7.13a** — A flow needing a single-use credential **MUST** add a `purpose` value rather than reuse an unrelated one. Sharing a purpose across flows means a credential minted for one can be redeemed by another, which is a privilege-escalation path — an `export_download` credential accepted as a `password_reset` hands over the account.
-- **R7.14** — Codes: ≥8 digits, or ≥256-bit tokens for links. Both stored only as `token_hash`.
-- **R7.15** — TTL ≤10 minutes (default 5 minutes). Single-use, consumed atomically (R4.12). Maximum 5 verification attempts, after which the credential is destroyed.
-- **R7.16** — **Cross-device binding:** the credential is bound to its originating request context via `context_hash`. Redeeming it from a different context **MUST** either be refused or require the user to confirm a displayed correlation value shown on both the requesting screen and in the email. Unbound magic links are directly phishable — an attacker induces the victim to request a code and relays it.
-- **R7.17** — Requesting a code for a non-existent address **MUST** return the identical response, in comparable time, as for an existing one, and **MUST NOT** send mail.
+- **R7.13a** — A flow that needs a single-use credential **MUST** add a `purpose` value instead of reusing an unrelated one. If flows share a purpose, a credential minted for one can be redeemed by another. That is a privilege-escalation path: an `export_download` credential accepted as a `password_reset` hands over the account.
+- **R7.14** — Codes: ≥8 digits, or ≥256-bit tokens for links. Both are stored only as `token_hash`.
+- **R7.15** — TTL ≤10 minutes (default 5 minutes). Single-use, consumed atomically (R4.12). Maximum 5 verification attempts. After that the credential is destroyed.
+- **R7.16** — **Cross-device binding:** the credential is bound to its originating request context via `context_hash`. Redeeming it from a different context **MUST** either be refused or require the user to confirm a displayed correlation value shown on both the requesting screen and in the email. Unbound magic links are directly phishable: an attacker induces the victim to request a code and relays it.
+- **R7.17** — Requesting a code for a non-existent address **MUST** return the identical response, in comparable time, as for an existing one. It **MUST NOT** send mail.
 - **R7.18** — Send-rate caps per §17.5 apply.
-- **R7.19** — The email **MUST** state the purpose, the expiry, and an explicit "if you did not request this, ignore it" instruction. It **MUST NOT** contain any other personal data.
+- **R7.19** — The email **MUST** state the purpose, the expiry and an explicit "if you did not request this, ignore it" instruction. It **MUST NOT** contain any other personal data.
 
 ### 7.5 TOTP (second factor, user plane only)
 
-- **R7.20** — RFC 6238; 6 digits; 30-second step; validation window of ±1 step (never wider — each extra step linearly increases guess surface).
-- **R7.21** — Secret: ≥160 bits, generated server-side, stored `[ENC]` under the principal's DEK. Displayed to the user exactly once at enrollment.
-- **R7.22** — Enrollment is confirmed only after the user successfully verifies a code. An unconfirmed TOTP credential **MUST NOT** be usable and **MUST NOT** count toward MFA satisfaction.
-- **R7.23** — **Replay prevention:** the accepted time-step counter is stored in `last_used_counter`; a counter less than or equal to it **MUST** be rejected. Without this, an intercepted code is reusable for up to 90 seconds.
-- **R7.24** — TOTP attempts are rate-limited independently of password attempts (§17.3). A 6-digit code is brute-forceable without a dedicated limit.
+- **R7.20** — RFC 6238; 6 digits; 30-second step; validation window of ±1 step (never wider: each extra step adds guess surface linearly).
+- **R7.21** — Secret: ≥160 bits, generated server-side, stored `[ENC]` under the principal's DEK. Shown to the user once, at enrollment.
+- **R7.22** — Enrollment is confirmed only after the user verifies a code successfully. An unconfirmed TOTP credential **MUST NOT** be usable and **MUST NOT** count toward MFA satisfaction.
+- **R7.23** — **Replay prevention:** the accepted time-step counter is stored in `last_used_counter`; a counter less than or equal to it **MUST** be rejected. Without this, an intercepted code can be reused for up to 90 seconds.
+- **R7.24** — TOTP attempts are rate-limited separately from password attempts (§17.3). A 6-digit code can be brute-forced without its own limit.
 - **R7.25** — Enrolling or removing TOTP requires step-up (§8.5) and emits a security event and notification.
 
 ### 7.6 Social OIDC and enterprise SAML
@@ -850,33 +861,33 @@ Every short-lived, single-use credential in this specification is a `one_time_cr
 #### 7.6.1 OIDC
 
 - **R7.26** — Authorization Code flow with **PKCE (S256) mandatory for every client type**, including confidential web clients.
-- **R7.27** — `state` **MUST** be cryptographically random, server-stored, single-use, and expiring, and validated on callback. `nonce` **MUST** be sent and validated against the ID token claim.
+- **R7.27** — `state` **MUST** be cryptographically random, server-stored, single-use and expiring, and validated on callback. `nonce` **MUST** be sent and validated against the ID token claim.
 - **R7.28** — ID token validation: signature against the provider's published keys (fetched over TLS, cached with a bounded TTL); `iss` exact match; `aud` contains this client; `exp`/`iat` within ≤60 s skew; `nonce` matches; `azp` where present.
-- **R7.29** — Redirect URIs **MUST** be exact-matched against a configured allowlist. Prefix, wildcard, or substring matching is an open-redirect and token-theft vector.
-- **R7.30** — Native clients **MUST** use verified platform deep links (Universal Links / App Links). Custom URL schemes **MUST NOT** be used for OAuth callbacks — any other installed app can claim the scheme and intercept the authorization code (§20.6).
+- **R7.29** — Redirect URIs **MUST** be exact-matched against a configured allowlist. Prefix, wildcard or substring matching is an open-redirect and token-theft vector.
+- **R7.30** — Native clients **MUST** use verified platform deep links (Universal Links / App Links). Custom URL schemes **MUST NOT** be used for OAuth callbacks. Any other installed app can claim the scheme and intercept the authorization code (§20.6).
 
 #### 7.6.2 SAML
 
 - **R7.31** — Assertion signatures **MUST** be verified against a pre-configured IdP certificate. Certificates **MUST NOT** be accepted from the assertion itself.
-- **R7.32** — The signature **MUST** cover the assertion; `SubjectConfirmationData` recipient, `Destination`, `Audience`, and `NotBefore`/`NotOnOrAfter` **MUST** all be validated; `InResponseTo` **MUST** match a stored, single-use request identifier; the assertion ID **MUST** be recorded to prevent replay.
-- **R7.33** — XML processing **MUST** disable external entity resolution and DTD processing (XXE), and **MUST** use a signature-verification implementation resistant to XML Signature Wrapping. This is the single most historically exploited area of SAML and **MUST NOT** be hand-implemented (R2.2).
+- **R7.32** — The signature **MUST** cover the assertion; `SubjectConfirmationData` recipient, `Destination`, `Audience` and `NotBefore`/`NotOnOrAfter` **MUST** all be validated; `InResponseTo` **MUST** match a stored, single-use request identifier; the assertion ID **MUST** be recorded to prevent replay.
+- **R7.33** — XML processing **MUST** disable external entity resolution and DTD processing (XXE). It **MUST** use a signature-verification implementation that resists XML Signature Wrapping. This is the area of SAML most often exploited in the past. It **MUST NOT** be hand-implemented (R2.2).
 
 #### 7.6.3 Identity linking
 
 - **R7.34** — On federated authentication where the asserted email matches an existing account:
-  - If the provider asserts the email is **verified**, and the provider is in the trusted-verifier configuration list → link automatically, record `credential.is_verified = true`, emit a security event, notify the user.
-  - Otherwise → **MUST NOT** link. Return a response directing the user to sign in with an existing method and add the provider explicitly from settings.
-- **R7.35** — Provider trust for email verification is **explicit configuration per connection**, not an assumption. An `email_verified` claim from an unvetted provider is attacker-controlled, and auto-linking on it is the classic pre-registration account takeover.
+  - If the provider asserts the email is **verified**, and the provider is in the trusted-verifier configuration list → link automatically, record `credential.is_verified = true`, emit a security event and notify the user.
+  - Otherwise → **MUST NOT** link. Return a response that tells the user to sign in with an existing method and add the provider from settings.
+- **R7.35** — Provider trust for email verification is **explicit configuration per connection**, never an assumption. An `email_verified` claim from an unvetted provider is attacker-controlled. Auto-linking on it is the classic pre-registration account takeover.
 - **R7.36** — Linking a new provider to an existing account from settings requires step-up (§8.5).
 - **R7.37** — Unlinking **MUST** be refused when it would leave the account with no usable authentication method.
 
 #### 7.6.4 Just-in-time provisioning
 
-- **R7.38** — Creating a new account from a federated login **MUST** run the full registration path including the consent gate (§14.2). A federated user who never accepted the terms is a compliance gap.
+- **R7.38** — Creating a new account from a federated login **MUST** run the full registration path, including the consent gate (§14.2). A federated user who never accepted the terms is a compliance gap.
 
 #### 7.6.5 Provider tokens
 
-- **R7.39** — Provider access and refresh tokens **MUST NOT** be persisted. They are consumed within the callback and discarded. Retaining them creates a high-value secret store with no authentication purpose (data minimization, §25.5).
+- **R7.39** — Provider access and refresh tokens **MUST NOT** be persisted. They are used within the callback and then discarded. Keeping them would create a high-value secret store with no authentication purpose (data minimization, §25.5).
 
 ### 7.7 Registration (user plane)
 
@@ -884,17 +895,17 @@ Every short-lived, single-use credential in this specification is a `one_time_cr
 2. Validate the address format; normalize (R5.18).
 3. Validate the password against R5.12 including the breach check (§17.4), where a password is being set.
 4. Verify acceptance of the currently required legal documents; **reject** if absent (§14.2).
-5. Create the DEK, then the `user` row, then the credential, then the consent records — in a single atomic transaction.
+5. Create the DEK, then the `user` row, then the credential, then the consent records, all in a single atomic transaction.
 6. Issue an `email_verify` one-time credential and send it.
 7. Return a **uniform** response.
 
-- **R7.40** — The registration response **MUST** be identical whether or not the address was already registered. A distinguishable response is a user-enumeration oracle. Where the address exists, send a "someone tried to register with your address" notice to the existing owner instead of a verification link.
+- **R7.40** — The registration response **MUST** be identical whether or not the address was already registered. A distinguishable response is a user-enumeration oracle. If the address already exists, send the existing owner a "someone tried to register with your address" notice instead of a verification link.
 - **R7.41** — An unverified account **MUST NOT** be able to authenticate beyond the verification flow itself.
 - **R7.42** — Unverified registrations **MUST** be purged after 7 days (§23.3).
 
 ### 7.8 Email change
 
-- **R7.43** — Requires step-up. Sends a confirmation credential to the **new** address and a notice to the **old** address with a cancellation link. The change applies only on confirmation from the new address. Revokes all other sessions on completion. Emits a security event.
+- **R7.43** — Requires step-up. Sends a confirmation credential to the **new** address and a notice with a cancellation link to the **old** address. The change applies only when the new address confirms it. Revokes all other sessions on completion. Emits a security event.
 
 ---
 
