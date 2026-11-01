@@ -263,24 +263,24 @@ Every authenticated request **MUST** pass through these stages, in this order. S
 
 ### 4.1 Purpose
 
-This section defines the **logical data model**. It is complete: an implementation needs no additional tables to satisfy this specification. Generate it into the project's native schema/migration tooling, resolved per §2.
+This section defines the **logical data model**. It is complete: an implementation needs no other tables to satisfy this specification. Generate it with the project's schema and migration tooling, resolved per §2.
 
 ### 4.2 Realization rules
 
-- **R4.1** — For a relational engine, each entity below becomes a table; each attribute a column; each stated index a real index; each stated constraint a real constraint (not application-level validation alone).
-- **R4.2** — For a document engine, each entity becomes a collection with an enforced schema/validator. Every stated uniqueness constraint **MUST** be realized as a unique index, and every stated foreign key as an application-enforced referential check **plus** a documented consistency job. Referential integrity that exists only in developer intention is a defect.
-- **R4.3** — Every attribute marked **`[ENC]`** **MUST** be stored encrypted per §5.4. Every attribute marked **`[HASH]`** stores only an irreversible digest — the plaintext is never persisted. Every attribute marked **`[BIDX]`** is a keyed blind index used solely for equality lookup (§5.5).
+- **R4.1** — For a relational engine, each entity below becomes a table, each attribute a column, each stated index a real index and each stated constraint a real constraint. Application-level validation alone is not enough.
+- **R4.2** — For a document engine, each entity becomes a collection with an enforced schema or validator. Every stated uniqueness constraint **MUST** be realized as a unique index. Every stated foreign key is realized as an application-enforced referential check **plus** a documented consistency job. Referential integrity that exists only in developer intention is a defect.
+- **R4.3** — Every attribute marked **`[ENC]`** **MUST** be stored encrypted per §5.4. Every attribute marked **`[HASH]`** stores only an irreversible digest. The plaintext is never persisted. Every attribute marked **`[BIDX]`** is a keyed blind index, used only for equality lookup (§5.5).
 - **R4.4** — Timestamps are UTC with at least microsecond precision. Never store local time or a naive timestamp.
-- **R4.5** — Identifiers **MUST** be unguessable and non-sequential (UUIDv4/UUIDv7 or equivalent ≥122 bits of entropy). Auto-incrementing integers **MUST NOT** be exposed in any API response or URL. Where the engine benefits from a monotonic internal key, it **MUST** remain internal and never appear in an API contract.
+- **R4.5** — Identifiers **MUST** be unguessable and non-sequential (UUIDv4/UUIDv7 or equivalent ≥122 bits of entropy). Auto-incrementing integers **MUST NOT** be exposed in any API response or URL. If the engine benefits from a monotonic internal key, that key **MUST** stay internal and never appear in an API contract.
 - **R4.6** — Every table with growth proportional to traffic (`session`, `audit_event`, `auth_attempt`, `security_event`, `one_time_credential`) **MUST** have a retention job (§23) and an index supporting that job's delete predicate.
-- **R4.7** — `SELECT *` / full-document fetches are forbidden on any hot path. Queries **MUST** project only the attributes consumed (§22.3).
+- **R4.7** — `SELECT *` and full-document fetches are forbidden on any hot path. Queries **MUST** project only the attributes they use (§22.3).
 
 ### 4.3 Abstract type vocabulary
 
 | Abstract type | Meaning | Mapping guidance |
 |---|---|---|
 | `id` | Opaque unique identifier | Native UUID type if available, else fixed-length 26–36 char string with a check constraint |
-| `text` | Unicode text | Native text/varchar; specify a maximum where one is stated |
+| `text` | Unicode text | Native text/varchar; set a maximum where one is stated |
 | `bytes` | Binary | Native binary/blob type; **not** base64 in a text column |
 | `bool` | Boolean | Native boolean; never an integer flag |
 | `timestamp` | UTC instant, ≥µs precision | Native timestamp-with-timezone |
@@ -317,12 +317,12 @@ The user-plane principal.
 |---|---|---|---|
 | `pending_verification` | **no — verification flow only** | none are issued | Entry state for a registration (§7.7). Purged after 7 days (R7.42) |
 | `active` | yes | yes | Normal |
-| `locked` | no | **no — existing sessions are rejected** | Lock **MUST** invalidate live sessions, not merely block new logins |
+| `locked` | no | **no — existing sessions are rejected** | A lock **MUST** invalidate live sessions, not only block new logins |
 | `pending_deletion` | no | no | All sessions revoked at request time (§15.4) |
 | `erased` | no | no | Tombstone only; all PII attributes are null and the DEK is destroyed |
 
 - **R4.8** — A locked or pending-deletion principal **MUST** fail session validation at stage 7 of §3.4. Blocking only the login path while live sessions continue is a P0 authorization defect.
-- **R4.8a** — `pending_verification` **MUST** be a `status` value rather than an inference from a null `email_verified_at`. R7.41 forbids an unverified account from authenticating beyond the verification flow, and R4.8's stage-7 check is where that is enforced; a state the status column cannot hold cannot be checked there, and the rule degrades into a per-endpoint convention. This state **MUST** fail stage 7 on the same terms as `locked`.
+- **R4.8a** — `pending_verification` **MUST** be a `status` value, not an inference from a null `email_verified_at`. R7.41 forbids an unverified account from authenticating beyond the verification flow. R4.8's stage-7 check enforces that. A state the status column cannot hold cannot be checked there, and the rule would shrink to a per-endpoint convention. This state **MUST** fail stage 7 on the same terms as `locked`.
 
 ### 4.5 Entity: `admin`
 
@@ -340,7 +340,7 @@ The admin-plane principal. Structurally separate from `user` (INV-3).
 | `last_authenticated_at` | `timestamp?` | Feeds dormancy review |
 | `created_at` / `updated_at` | `timestamp` | |
 
-- **R4.9** — An `admin` **MUST NOT** have a password attribute of any kind. No password column, no password credential row, no reset path (§7.2, §9.4).
+- **R4.9** — An `admin` **MUST NOT** have a password attribute of any kind: no password column, no password credential row and no reset path (§7.2, §9.4).
 - **R4.10** — An admin in `pending_enrollment` **MUST NOT** be able to establish a session or exercise any permission.
 
 ### 4.6 Entity: `credential`
@@ -427,7 +427,14 @@ Per-principal device registry, enabling "sign out this phone" (§6.7).
 
 ### 4.9 Entity: `one_time_credential`
 
-Email OTP codes, magic links, email-verification tokens, password-reset tokens, admin-recovery approval tokens, and export download tokens.
+This entity holds:
+
+- email OTP codes,
+- magic links,
+- email-verification tokens,
+- password-reset tokens,
+- admin-recovery approval tokens,
+- export download tokens.
 
 | Attribute | Type | Notes |
 |---|---|---|
@@ -445,7 +452,7 @@ Email OTP codes, magic links, email-verification tokens, password-reset tokens, 
 
 **Indexes:** unique on `token_hash`; on `expires_at` (retention job); on (`purpose`, `principal_id`) where `consumed_at IS NULL`.
 
-- **R4.12** — Consumption **MUST** be atomic: a single conditional write that sets `consumed_at` only where it is currently null. A read-then-write sequence permits a race that redeems one credential twice, which is a P1 defect.
+- **R4.12** — Consumption **MUST** be atomic: a single conditional write that sets `consumed_at` only where it is currently null. A read-then-write sequence allows a race that redeems one credential twice. That is a P1 defect.
 
 ### 4.10 Entity: `recovery_code`
 
@@ -453,7 +460,7 @@ Email OTP codes, magic links, email-verification tokens, password-reset tokens, 
 |---|---|---|
 | `id` | `id` | PK |
 | `principal_type` / `principal_id` | | |
-| `code_hash` | `bytes` **[HASH]** | Hashed with the password KDF, not a bare digest — these are low-entropy relative to a random token |
+| `code_hash` | `bytes` **[HASH]** | Hashed with the password KDF, not a bare digest. These codes have low entropy compared with a random token |
 | `consumed_at` | `timestamp?` | |
 | `generation` | `int` | Regeneration invalidates every prior generation atomically |
 | `created_at` | `timestamp` | |
@@ -472,7 +479,7 @@ The authorization catalog (§11).
 
 **Indexes:** on (`principal_type`, `principal_id`) where `revoked_at IS NULL`; on `expires_at` where not null (expiry job).
 
-- **R4.13** — The role↔permission catalog is **declared in code as the source of truth** and reconciled into the database by migration. It **MUST NOT** be editable through any runtime API. This makes the effective permission set reviewable in version control and diffable in an audit.
+- **R4.13** — The role↔permission catalog is **declared in code as the source of truth** and reconciled into the database by migration. It **MUST NOT** be editable through any runtime API. So the effective permission set can be reviewed in version control and diffed in an audit.
 
 ### 4.12 Entity: `audit_event`
 
@@ -500,7 +507,7 @@ Tamper-evident, append-only (§16).
 
 **Indexes:** unique on (`chain_id`, `seq`); on (`target_type`, `target_id`, `occurred_at`); on (`actor_type`, `actor_id`, `occurred_at`); on `occurred_at`.
 
-- **R4.14** — The application's database principal **MUST** hold `INSERT` and `SELECT` privileges on this table and **MUST NOT** hold `UPDATE`, `DELETE`, or `TRUNCATE`. This is enforced by a grant in the migration, not by application discipline. Retention pruning (§23.3) runs under a separate, restricted maintenance principal.
+- **R4.14** — The application's database principal **MUST** hold `INSERT` and `SELECT` privileges on this table and **MUST NOT** hold `UPDATE`, `DELETE` or `TRUNCATE`. A grant in the migration enforces this, not application discipline. Retention pruning (§23.3) runs under a separate, restricted maintenance principal.
 
 ### 4.13 Remaining entities
 
@@ -528,9 +535,9 @@ Tamper-evident, append-only (§16).
 
 ### 4.14 Forward compatibility
 
-- **R4.15** — Every table holding principal-owned data **MUST** carry `principal_type` alongside `principal_id`, even where only one type can currently appear. A bare `user_id` forecloses the admin plane and the future tenancy option.
-- **R4.16** — Ownership checks **MUST** be routed through a single ownership predicate helper (§11.5). If tenancy is introduced later, exactly one function changes rather than every query site.
-- **R4.17** — Every principal table **SHOULD** carry a `region` attribute defaulted to the single deployment region, so residency enforcement (§5.7) can be activated without a migration.
+- **R4.15** — Every table holding principal-owned data **MUST** carry `principal_type` alongside `principal_id`, even where only one type can appear today. A bare `user_id` rules out the admin plane and the future tenancy option.
+- **R4.16** — Ownership checks **MUST** go through a single ownership predicate helper (§11.5). If tenancy is added later, one function changes, not every query site.
+- **R4.17** — Every principal table **SHOULD** carry a `region` attribute defaulted to the single deployment region, so residency enforcement (§5.7) can be switched on without a migration.
 
 ---
 
@@ -538,9 +545,9 @@ Tamper-evident, append-only (§16).
 
 ### 5.1 Governing rules
 
-- **R5.1** — All cryptographic operations **MUST** go through the single crypto provider module (R3.2). No cryptographic primitive is invoked elsewhere.
-- **R5.2** — All randomness for tokens, secrets, salts, nonces, and identifiers **MUST** come from a cryptographically secure random source. A general-purpose PRNG used anywhere in the auth module is a P0 defect.
-- **R5.3** — All comparisons of secrets, digests, tokens, and signatures **MUST** be constant-time. A short-circuiting equality operator on any secret is a defect.
+- **R5.1** — All cryptographic operations **MUST** go through the single crypto provider module (R3.2). No cryptographic primitive is called anywhere else.
+- **R5.2** — All randomness for tokens, secrets, salts, nonces and identifiers **MUST** come from a cryptographically secure random source. A general-purpose PRNG anywhere in the auth module is a P0 defect.
+- **R5.3** — All comparisons of secrets, digests, tokens and signatures **MUST** be constant-time. A short-circuiting equality operator on any secret is a defect.
 - **R5.4** — Prohibited primitives: MD5, SHA-1 (except within the HIBP-style k-anonymity range protocol of §17.4, and TOTP's RFC-6238 HMAC-SHA-1 default), DES, 3DES, RC4, ECB mode, and any unauthenticated encryption mode. Encryption **MUST** be authenticated (AEAD).
 - **R5.5** — When the deployment is designated FIPS-constrained, every primitive **MUST** be sourced from a FIPS-validated module and the FIPS variants in §5.3 apply. The active mode **MUST** be recorded in the configuration reference and asserted at startup (§24.3).
 
