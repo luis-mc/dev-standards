@@ -487,28 +487,33 @@ docs/artifacts/
 
 ### 4.4 Content
 
-`meta.json`: `{title, hero, lede, extra_css}`. `lede` is a short note: one or
-two sentences of context the registry cannot show (an incident, a constraint, a
-plan). It never restates statuses: the generated At a glance block (§5.2) lists
-what is live, built, running, waiting and needs the owner. It may be empty, and
-a lede over 300 characters is a warning (R5.37). Each `NN-<slug>.html` is an HTML fragment whose first line is an HTML
-comment holding the section title: `<!-- title: The design -->`.
-`history.json`: `[{"date": "10 Oct 12:23", "change": "..."}]`, newest first.
-`decisions.json` is described in §5.4.
+`meta.json`: `{title, hero, lede, extra_css}`.
+
+- `lede` is a short note: one or two sentences of context the registry cannot
+  show (an incident, a constraint, a plan). It never restates statuses: the
+  generated At a glance block (§5.2) lists what is live, built, running,
+  waiting and needs the owner. It may be empty. A lede over 300 characters is a
+  warning (R5.37).
+- Each `NN-<slug>.html` is an HTML fragment. Its first line is an HTML comment
+  holding the section title: `<!-- title: The design -->`.
+- `history.json`: `[{"date": "10 Oct 12:23", "change": "..."}]`, newest first.
+- `decisions.json` is described in §5.4.
 
 - **R4.10** — Content fragments contain no `<script>`, no `<style>` (styles go
   in `extra_css`) and no section numbers; the renderer numbers sections.
 - **R4.11** — `extra_css` may add classes but **MUST NOT** redefine a selector
-  of the structure stylesheet — a redefined rule changes every artifact's
-  layout in a way the check cannot see per project.
+  of the structure stylesheet. A redefined rule changes every artifact's
+  layout, and the check cannot see this per project.
 
 ### 4.5 Time
 
 - **R4.12** — Every time the script writes comes from the real clock at the
-  moment of the change, converted to the manifest's zone: with `zoneinfo`; if
-  the zone data is missing (Windows without `tzdata`), with PowerShell
-  `TimeZoneInfo` and `windows_timezone`; if that fails, the machine's local
-  time with a warning on stderr.
+  moment of the change, converted to the manifest's zone. The conversion uses,
+  in order:
+  1. `zoneinfo`;
+  2. if the zone data is missing (Windows without `tzdata`), PowerShell
+     `TimeZoneInfo` and `windows_timezone`;
+  3. if that fails, the machine's local time, with a warning on stderr.
 
 ### 4.6 Writing the record
 
@@ -590,7 +595,7 @@ comment holding the section title: `<!-- title: The design -->`.
 - **R4.24** — The record worktree is retired. `project_artifacts.py worktree`
   prints the record directory, `<repo root>/docs/artifacts`.
   `LUISMC_ARTIFACTS_WORKTREE` and `record_worktree` in
-  `<repo>/.claude/artifacts-local.json` are ignored for writing and reading;
+  `<repo>/.claude/artifacts-local.json` are ignored for writing and reading.
   `check` says so once, as a note, not a finding. **Migration, once and by
   itself:** when the old record worktree exists (by default
   `<repo>/.claude/worktrees/artifacts-record`, or the path the old setting names)
@@ -634,9 +639,9 @@ comment holding the section title: `<!-- title: The design -->`.
 
 ### 4.10 Retiring a finished feature
 
-A finished feature artifact (every task Live or Dropped) only costs space: a project can have dozens, and `check`
-fails when a manifest feature lacks its file or content (INV-3) or a content folder has no manifest entry (R4.1).
-`retire` removes one cleanly and keeps what history needs.
+A finished feature artifact (every task Live or Dropped) only costs space, and a project can have dozens.
+`check` fails when a manifest feature lacks its file or content (INV-3), or when a content folder has no manifest
+entry (R4.1). `retire` removes a finished feature cleanly and keeps what history needs.
 
 - **R4.31** — `project_artifacts.py retire KEY --yes` moves the feature from `feature_artifacts` to the manifest's
   `retired_features` list: `{key, title, prefix, retired, url, decisions}`, all strings. `check` reports a
