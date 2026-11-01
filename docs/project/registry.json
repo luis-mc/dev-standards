@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-01T10:24+00:00",
+  "updated": "2026-11-01T10:25+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2898,12 +2898,14 @@
       "id": "DS164",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Security F6: per-user load cache, unguessable temp file",
       "detail": "load.py cache moves under ~/.claude/, mkstemp + os.replace (audit F6). Waits for DS155, same file.",
-      "expected": "01 Nov ~12:30",
-      "changed": "2026-11-01T09:40+00:00",
-      "expected_basis": "starts after RELEASE-25 is live ~11:40: agent 30 + join 10 + CI 15"
+      "expected": "01 Nov ~11:05",
+      "changed": "2026-11-01T10:25+00:00",
+      "expected_basis": "cloud run 10:28: setup 5 + work 20 + checks 5, join 10",
+      "rides": "DS160",
+      "started": "2026-11-01T10:28+00:00"
     },
     {
       "id": "MP1",
