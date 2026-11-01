@@ -50,7 +50,7 @@ jobs:
     outputs:
       skip: ${{ steps.check.outputs.skip }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           # The pull-request head commit must be present to compare trees.
           fetch-depth: 0
@@ -72,7 +72,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           # gitleaks scans history, not just the diff. At the default clone
           # depth it silently examines a single commit and reports clean —
@@ -91,18 +91,16 @@ jobs:
       # log options scans the whole history, which `fetch-depth: 0` provides.
       - name: Secret scan (gitleaks, full history)
         run: |
-          read -r version sha <<< "$(python3 -c "import json; g = json.load(open('scripts/delivery/tools.json'))['gitleaks']; print(g if isinstance(g, str) else g['version'] + ' ' + g['sha256']['linux_x64'])")"
+          read -r version sha <<< "$(python3 -c "import json; g = json.load(open('scripts/delivery/tools.json'))['gitleaks']; print(g if isinstance(g, str) else g['version'] + ' ' + g.get('sha256', {}).get('linux_x64', ''))")"
+          if [ -z "${sha:-}" ]; then
+            echo "::error::scripts/delivery/tools.json has no pinned SHA-256 for gitleaks ${version}. Run: python3 scripts/delivery/tools_pin.py gitleaks ${version}"
+            exit 1
+          fi
           archive="gitleaks_${version}_linux_x64.tar.gz"
           base="https://github.com/gitleaks/gitleaks/releases/download/v${version}"
           cd "$RUNNER_TEMP"
           curl -sSfL -O "${base}/${archive}"
-          if [ -n "${sha:-}" ]; then
-            echo "${sha}  ${archive}" | sha256sum -c -
-          else
-            echo "::warning::scripts/delivery/tools.json uses the old form; checking against the release's checksums file. Run scripts/delivery/tools_pin.py gitleaks ${version}."
-            curl -sSfL -O "${base}/gitleaks_${version}_checksums.txt"
-            grep " ${archive}\$" "gitleaks_${version}_checksums.txt" | sha256sum -c -
-          fi
+          echo "${sha}  ${archive}" | sha256sum -c -
           tar -xzf "${archive}" gitleaks
           cd "$GITHUB_WORKSPACE"
           "$RUNNER_TEMP/gitleaks" git --config .gitleaks.toml --redact --no-banner
@@ -110,7 +108,7 @@ jobs:
       # §2.2: the toolchain version is pinned in the repository, not inherited
       # from the machine. go.mod's `toolchain` directive is that pin, and
       # go-version-file reads it so there is no second place to update.
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: go.mod
           cache: true
@@ -160,7 +158,7 @@ jobs:
       # golangci-lint runs depguard, whose rules encode the layer graph. See
       # .golangci.yml — a documented convention without enforcement decays.
       - name: Lint + boundary check (§3.2)
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84 # v6
         with:
           args: --timeout=5m
 
@@ -223,9 +221,9 @@ jobs:
       # scan.
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: go.mod
           cache: true
