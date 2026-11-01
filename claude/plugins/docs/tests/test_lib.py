@@ -14,6 +14,30 @@ class LibTests(unittest.TestCase):
         self.assertEqual(fm["empty"], "")
         self.assertEqual(body, "body\n")
 
+    def test_front_matter_block_list(self):
+        t = ('---\nid: a\ncode:\n  - claude/plugins/x/scripts/*.py  # c\n'
+             '  - "tools/test_*.py"\n- plain\nnext: v\n---\nB\n')
+        fm = D.parse_front_matter(t)[0]
+        self.assertEqual(fm["code"], ["claude/plugins/x/scripts/*.py", "tools/test_*.py", "plain"])
+        self.assertEqual(fm["next"], "v")
+
+    def test_front_matter_flow_list_unchanged(self):
+        fm = D.parse_front_matter("---\ncode: [a/*.py, b]\nz: 1\n---\n")[0]
+        self.assertEqual(fm["code"], ["a/*.py", "b"])
+        self.assertEqual(fm["z"], "1")
+
+    def test_front_matter_empty_without_list(self):
+        fm = D.parse_front_matter("---\ncode:\nz: 1\n---\n")[0]
+        self.assertEqual(fm["code"], "")
+        self.assertEqual(fm["z"], "1")
+
+    def test_set_front_matter_keeps_block_list(self):
+        t = "---\nversion: 1.0.0\ncode:\n  - a/*.py\n  - b.py\nlast_verified: 2026-01-01\n---\nB\n"
+        out = D.set_front_matter(t, {"version": "1.1.0", "last_verified": "2026-02-02"})
+        self.assertIn("code:\n  - a/*.py\n  - b.py\n", out)
+        self.assertEqual(D.parse_front_matter(out)[0]["code"], ["a/*.py", "b.py"])
+        self.assertIn("version: 1.1.0", out)
+
     def test_front_matter_absent_or_unclosed(self):
         self.assertFalse(D.parse_front_matter("# x\n")[2])
         self.assertFalse(D.parse_front_matter("---\nid: a\n")[2])
