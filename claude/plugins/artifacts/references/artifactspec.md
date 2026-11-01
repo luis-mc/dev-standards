@@ -1596,21 +1596,21 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 ## 9. Publishing and recreation
 
 - **R9.1** — The session publishes the full-progress artifact with the Artifact
-  tool once per turn, at the end of the turn, never mid-turn (R3.1): it
+  tool once per turn, at the end of the turn, never mid-turn (R3.1). It
   publishes the publish copy that `pending` names in `path` (R5.31), unedited,
   passing the manifest URL when there is one, then runs `mark-published`. No
   other artifact is published.
 - **R9.2** — When the manifest URL no longer opens (the publish is refused
   because the artifact does not exist), the session lists the owner's
-  artifacts; if one has the same title, it publishes to that one and runs
-  `mark-published` with its URL; only if none does, it publishes a new one.
+  artifacts. If one has the same title, it publishes to that one and runs
+  `mark-published` with its URL. Only if none does, it publishes a new one.
   At most one artifact per title is ever created.
 - **R9.3** — The full-progress artifact deleted on claude.ai is recreated from
   the record alone: `render`, then R9.1 and R9.2. A feature artifact cannot be
   lost that way: it is a file in the repository.
 - **R9.4** — A publish refused because the artifact changed elsewhere is
-  retried once after reading the live version; changes made by others to a
-  generated section are not kept (section 0 is always generated), changes to
+  retried once after reading the live version. Changes made by others to a
+  generated section are not kept (section 0 is always generated). Changes to
   content sections are copied into `content/` first.
 - **R9.5** — A feature artifact is never published and has no URL.
   `mark-published` refuses its key with a message saying that feature
@@ -1644,9 +1644,9 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 - **R9.9** — A change to a release task's status or phase is published in the
   same turn, not left to the hour (R8.18).
 - **R9.10** — `scripts/publish_hourly.py` prints exactly what a session's
-  hourly cron does: nothing when Full Progress was published less than 60
-  minutes ago and no release task changed since; otherwise the one-line
-  reason and the three steps (`pending --json --refresh`, publish the copy
+  hourly cron does. It prints nothing when Full Progress was published less than
+  60 minutes ago and no release task changed since. Otherwise it prints the
+  one-line reason and the three steps (`pending --json --refresh`, publish the copy
   unedited, `mark-published`). It only reads the record and never publishes.
   Verified by `test_publish_hourly_prints_what_the_cron_does_or_nothing`.
 - **R9.11** — The fresh-copy check (DL-62). `pending --json` records, for the
@@ -1673,26 +1673,35 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   `enabledPlugins`, else the marketplace file's own name. A project that names
   a marketplace the owner registered differently enables nothing.
 - **R10.2** — Installing creates no file in the project. The first
-  `feature-new` or `init` adds `.claude/artifacts-queue.json`,
-  `.claude/artifacts-stop-state.json`, `.claude/artifacts-publish/` (the
-  publish copy, R5.31), `.claude/artifacts-record.lock` (R4.17) and `.claude/worktrees/` to `.gitignore`.
+  `feature-new` or `init` adds these to `.gitignore`:
+  - `.claude/artifacts-queue.json`;
+  - `.claude/artifacts-stop-state.json`;
+  - `.claude/artifacts-publish/` (the publish copy, R5.31);
+  - `.claude/artifacts-record.lock` (R4.17);
+  - `.claude/worktrees/`.
+
   Since 1.1.0 it no longer copies the rule file (R10.4). Verified by
   `test_init_session_files`.
-- **R10.3** — The rule file holds one short imperative line per rule: record
-  work as a task before starting it; start branch names with the task ID;
-  change status only with `set-task-status`; publish Full Progress once, at
-  the end of the turn, never mid-turn, and never publish a feature artifact;
-  never type a status row by hand; put every doc under `docs/`;
-  record the options the owner chose between, and the choice, in the feature's
-  `decisions.json` in the same turn (§5.4); the four lines of R3.2 to R3.5;
-  and that old claude.ai pages of feature artifacts are deleted only with the
-  owner's confirmation (R4.23); and that an Expected time comes with its basis (R6.11).
+- **R10.3** — The rule file holds one short imperative line per rule:
+  - record work as a task before starting it;
+  - start branch names with the task ID;
+  - change status only with `set-task-status`;
+  - publish Full Progress once, at the end of the turn, never mid-turn, and
+    never publish a feature artifact;
+  - never type a status row by hand;
+  - put every doc under `docs/`;
+  - record the options the owner chose between, and the choice, in the
+    feature's `decisions.json` in the same turn (§5.4);
+  - the four lines of R3.2 to R3.5;
+  - old claude.ai pages of feature artifacts are deleted only with the owner's
+    confirmation (R4.23);
+  - an Expected time comes with its basis (R6.11).
 - **R10.4** — The plugin delivers the rule file itself: the session-start hook
   (R8.9) prints it in every project that has a record, every session, so a rule
   change reaches every project with the plugin and no copy can go stale.
 - **R10.5** — `check` reports a `.claude/rules/project-artifacts.md` that
   differs from the plugin's `rules/project-artifacts.md` as a note, not a
-  finding: it does not change the exit code, and it says that the plugin now
+  finding. It does not change the exit code. It says that the plugin now
   delivers the rule at session start and the copy can be deleted. Verified by
   `test_check_notes_a_differing_rule_copy`.
 - **R10.6** — The `.claude/rules/project-artifacts.md` that `init` of 1.0.0
@@ -1821,14 +1830,14 @@ change. From 1.8.0 the record is files in the working tree; the project, which
 knows its own branches and deploys, commits them when it chooses.
 
 **Why hooks block the turn.** A sentence in CLAUDE.md asking to keep pages
-current already failed. The end-of-turn hook makes "published" a
-condition of finishing, and the 3-block limit keeps it from trapping a session
-that cannot publish.
+current already failed. The end-of-turn hook makes "published" a condition of
+finishing. The 3-block limit keeps it from trapping a session that cannot
+publish.
 
 **Why only Full Progress is published, once per turn.** claude.ai allows 200
 artifact publishes per account per day and every republish counts. Publishing
-every artifact after every change used the whole day's budget in one day. The
-status the owner needs at a glance is Full Progress; the feature pages are
+every artifact after every change used the whole day's budget in one day. Full
+Progress is the status the owner needs at a glance. The feature pages are
 reference material, read from a checkout. Changes accumulate during the turn
 and cost one publish at its end.
 
