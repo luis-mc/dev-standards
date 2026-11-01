@@ -46,6 +46,7 @@ import delivery_ledger as L  # noqa: E402
 import delivery_config as C  # noqa: E402
 
 DEFAULT_INTERVAL = 60
+DEFAULT_CHECK_MIN = 15
 WORKFLOW = "ci.yml"
 ACTIVE_CI_STATES = ("pushed", "ci")
 RUN_FIELDS = "databaseId,status,conclusion,headSha,headBranch,event,workflowName"
@@ -202,6 +203,118 @@ class Watcher:
         self.mut(fn)
         if self.dry:
             self.out("dry-run: agent %s -> %s" % (before.get("task"), changes))
+
+    # -- agent checks (DS33, DL-32) --
+    def check_interval_min(self) -> float:
+        w = self.cfg.get("watcher") if isinstance(self.cfg.get("watcher"), dict) else {}
+        try:
+            return float(w.get("check_interval_min") or self.cfg.get("check_interval_min") or DEFAULT_CHECK_MIN)
+        except (TypeError, ValueError):
+            return float(DEFAULT_CHECK_MIN)
+
+    def _cloud_pr(self, a: dict):
+        """The agent's newest PR: by its branch, else by the task id prefix claude/<task>-*. None when unknown."""
+        fields = "number,headRefName,headRefOid,isDraft,state,updatedAt,commits"
+        branch = a.get("branch")
+        found = None
+        if branch:
+            found = self.gh_json(["pr", "list", "--head", branch, "--state", "all", "--json", fields, *self.repo_args])
+        if not found and a.get("task"):
+            found = self.gh_json(["pr", "list", "--state", "all", "--search", "head:claude/%s-" % a["task"],
+                                  "--json", fields, *self.repo_args])
+        if not isinstance(found, list):
+            return None
+        found = [p for p in found if isinstance(p, dict)]
+        return max(found, key=lambda p: p.get("number") or 0) if found else None
+
+    def check_agent(self, a: dict) -> dict:
+        """Read one running agent's real signs of life. Returns the fields to record. It never returns a
+        state: only the routine fetcher in pass_agents may say an agent ended (no done by guess)."""
+        now = self.now()
+        ch: dict = {"last_checked": L.iso(now)}
+        newest = L.parse_iso(a.get("last_activity")) or L.parse_iso(a.get("started"))
+        notes = []
+
+        def see(dt):
+            nonlocal newest
+            if dt and (not newest or dt > newest):
+                newest = dt
+
+        if str(a.get("id", "")).startswith("trig_") or a.get("where") == "cloud":
+            pr = self._cloud_pr(a)
+            if pr is None:
+                notes.append("no PR yet")
+            else:
+                ch["head_sha"] = pr.get("headRefOid") or a.get("head_sha")
+                ch["branch"] = pr.get("headRefName") or a.get("branch")
+                ch["pr"] = pr.get("number")
+                commits = pr.get("commits") if isinstance(pr.get("commits"), list) else []
+                dates = [L.parse_iso(c.get("committedDate")) for c in commits if isinstance(c, dict)]
+                see(max([d for d in dates if d], default=None))
+                notes.append("PR #%s %s" % (pr.get("number"),
+                                            "draft" if pr.get("isDraft") else str(pr.get("state") or "").lower()))
+                if ch["head_sha"]:
+                    runs = self.gh_json(["run", "list", "--commit", ch["head_sha"], "--limit", "20", "--json",
+                                         "status,conclusion,workflowName,updatedAt,createdAt", *self.repo_args])
+                    if isinstance(runs, list) and runs:
+                        open_ = [r for r in runs if r.get("status") != "completed"]
+                        bad = [r for r in runs if r.get("status") == "completed"
+                               and r.get("conclusion") not in ("success", "skipped", "neutral")]
+                        notes.append("runs %d, %d open, %d failed" % (len(runs), len(open_), len(bad)))
+                        for r in runs:
+                            see(L.parse_iso(r.get("updatedAt")) or L.parse_iso(r.get("createdAt")))
+                        if open_:
+                            see(now)    # CI in progress for its head is activity
+        else:
+            lp = a.get("log_path")
+            if lp:
+                try:
+                    see(datetime.fromtimestamp(os.stat(lp).st_mtime, tz=now.tzinfo))
+                    notes.append("log updated")
+                except OSError:
+                    notes.append("log missing")
+            if a.get("branch"):
+                rc, out, _ = self.read(["git", "ls-remote", "origin", "refs/heads/%s" % a["branch"]])
+                if rc == 0 and out.strip():
+                    ch["head_sha"] = out.split()[0]
+                    notes.append("branch head %s" % ch["head_sha"][:7])
+        if newest:
+            ch["last_activity"] = L.iso(newest)
+        eta = (a.get("eta") or {}).get("breakdown") or {}
+        limit = float(eta.get("work") or 0) + float(eta.get("checks") or 0)
+        idle = (now - newest).total_seconds() / 60.0 if newest else None
+        ch["stalled"] = bool(limit and idle is not None and idle > limit)
+        if ch["stalled"]:
+            notes.append("STALLED: no activity for %d min (limit %d)" % (idle, limit))
+        ch["check_note"] = "; ".join(notes)[:300]
+        return ch
+
+    def pass_checks(self) -> None:
+        """Every check_interval_min (default 15) each `running` agent row is checked and last_checked recorded,
+        independent of the session (its cron only fires when the session is idle: DL-32)."""
+        led = L.load(self.root)
+        now = self.now()
+        every = self.check_interval_min()
+        for a in led["agents"]:
+            if a.get("state") != "running":
+                continue
+            last = L.parse_iso(a.get("last_checked"))
+            if last and (now - last).total_seconds() / 60.0 < every:
+                continue
+            ch = self.check_agent(a)
+            ident = (a.get("id"), a.get("branch"), a.get("task"))
+
+            def fn(led2, ident=ident, ch=ch):
+                row = next((x for x in led2["agents"]
+                            if (x.get("id"), x.get("branch"), x.get("task")) == ident), None)
+                if row is None or row.get("state") != "running":
+                    return
+                row.update(ch)
+                L.add_event(led2, "agent.checked", "%s %s" % (row.get("task") or row.get("id"), ch.get("check_note", "")),
+                            "delivery_watch")
+            self.mut(fn)
+            if self.dry:
+                self.out("dry-run: check %s -> %s" % (a.get("task") or a.get("id"), ch))
 
     # -- trains --
     def current_head(self, train: dict):
@@ -582,7 +695,7 @@ class Watcher:
 
     def run_once(self, started: str | None = None) -> list[list[str]]:
         self.actions = []
-        for step in (self.pass_agents, self.pass_trains, self.pass_other_runs, self.pass_installs, self.pass_runners,
+        for step in (self.pass_agents, self.pass_checks, self.pass_trains, self.pass_other_runs, self.pass_installs, self.pass_runners,
                      self.pass_runner_guard):
             try:
                 step()

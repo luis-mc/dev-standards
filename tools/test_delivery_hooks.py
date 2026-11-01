@@ -256,6 +256,17 @@ def dl30_agent_without_eta_breakdown():
 
 
 @test
+def dl32_watcher_recorded_check_counts_and_stalled_blocks():
+    # DS33: the watcher records last_checked itself; a fresh check passes, a stalled flag still blocks
+    p = Project(ledger(agents=[agent(last_checked=iso(2), started=iso(300), check_note='PR #7 draft')]))
+    expect_pass(p.stop(''))
+    p.close()
+    p = Project(ledger(agents=[agent(last_checked=iso(2), stalled=True, check_note='STALLED: no activity for 70 min')]))
+    expect_block(p, 'DL-32')
+    p.close()
+
+
+@test
 def dl32_unchecked_30_min_and_past_due():
     p = Project(ledger(agents=[agent(last_checked=iso(45))]))
     expect_block(p, 'DL-32')
