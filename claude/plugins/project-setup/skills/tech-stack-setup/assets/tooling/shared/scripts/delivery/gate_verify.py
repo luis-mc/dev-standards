@@ -13,6 +13,10 @@ commit in between touches only inert paths (gate.json "inert_paths", default
 docs/**): the ready pull request's CI still tests the real merge. --strict-base
 turns that off, so any move of the base makes the result stale.
 
+A result is also refused when the branch changes UI code (gate.json "ui_paths") or an e2e spec and the result has
+no e2e record showing the mapped specs ran and passed (DL-87). `e2e_gate_check` is the same test on the published
+result of a partial `branch_gate.py --e2e-only` run, for the CI-gate path (agent_ci.py).
+
 A result is also refused when a required step (gate.json "required_steps", default typecheck and
 lint) is missing or was skipped for any reason other than "nothing in its scope changed".
 
@@ -159,6 +163,19 @@ def verify(
         elif entry.get("outcome") == "skip" and not str(entry.get("reason") or "").startswith("no "):
             # "no package changed" / "no ui_paths change" mean nothing to check; any other skip means it never ran
             reasons.append("required step '%s' did not run (%s)" % (name, entry.get("reason") or "skipped"))
+    rec = result.get("e2e")
+    if isinstance(rec, dict):
+        if rec.get("required") and rec.get("outcome") != "pass":
+            reasons.append("the e2e specs of the changed screens did not pass (%s); run: %s" % (rec.get("outcome"), dc.E2E_COMMAND))
+    elif isinstance(r_head, str) and isinstance(r_base, str) and _SHA.match(r_head) and _SHA.match(r_base):
+        try:
+            gate = dc.load_gate(root)
+            changed = dc.run_git(["diff", "--name-only", r_base, r_head], cwd=root, check=False).stdout.split()
+            needs = any(f.startswith(p) for f in changed for p in gate["ui_paths"]) or dc.changed_e2e_specs(changed, gate)
+        except dc.DeliveryError:
+            needs = False
+        if needs:
+            reasons.append("no e2e record in the result for a branch that changes UI code; run: " + dc.E2E_COMMAND)
     if result.get("pass") is not True:
         failed = [s.get("name") for s in steps if isinstance(s, dict) and s.get("outcome") == "fail"]
         reasons.append("result is failing" + (" (failed: %s)" % ", ".join(failed) if failed else ""))
@@ -166,6 +183,41 @@ def verify(
     verdict["trusted"] = not reasons
     verdict["exit"] = dc.EXIT_OK if verdict["trusted"] else dc.EXIT_FAIL
     return verdict
+
+
+def e2e_gate_check(branch: str, base_ref: str, remote: str = "origin", root=None) -> list[str]:
+    """Reasons the published result of `branch` does not show its e2e specs ran and passed for the
+    branch's current head (DL-87); [] when the branch changes no UI code or e2e spec, or when it does
+    and the record is good. Works on a partial --e2e-only result."""
+    root = root or dc.repo_root()
+    tracking = "refs/remotes/%s/%s" % (remote, branch)
+    if not _fetch(remote, "refs/heads/" + branch, tracking, root):
+        return ["branch '%s' not found on remote '%s'" % (branch, remote)]
+    head = dc.rev(tracking, root)
+    try:
+        gate = dc.load_gate(root)
+    except dc.DeliveryError:
+        return []  # no gate.json: the project has no gate to hold
+    mb = dc.run_git(["merge-base", tracking, base_ref], cwd=root, check=False)
+    base = mb.stdout.strip() if mb.returncode == 0 else base_ref
+    changed = dc.run_git(["diff", "--name-only", base, tracking], cwd=root, check=False).stdout.split()
+    specs = dc.changed_e2e_specs(changed, gate)
+    if not (any(f.startswith(p) for f in changed for p in gate["ui_paths"]) or specs):
+        return []
+    fetched = dc.FETCHED_REF_PREFIX + "%s/%s" % (remote, branch)
+    if not _fetch(remote, dc.RESULT_REF_PREFIX + branch, fetched, root):
+        return ["no e2e record published for '%s'; run: %s" % (branch, dc.E2E_COMMAND)]
+    shown = dc.run_git(["show", "%s:%s" % (fetched, dc.RESULT_FILE_IN_REF)], cwd=root, check=False)
+    try:
+        result = json.loads(shown.stdout)
+    except ValueError:
+        return ["the published result is not valid JSON; run: " + dc.E2E_COMMAND]
+    if not isinstance(result, dict):
+        return ["the published result is not an object; run: " + dc.E2E_COMMAND]
+    rec = result.get("e2e")
+    if isinstance(rec, dict) and not rec.get("required") and not specs:
+        return []
+    return dc.e2e_problems(result, head, specs)
 
 
 def main(argv: list[str] | None = None) -> int:

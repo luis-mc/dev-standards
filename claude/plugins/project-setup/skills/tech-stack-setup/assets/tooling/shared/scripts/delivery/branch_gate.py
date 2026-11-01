@@ -68,6 +68,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--no-publish", action="store_true", help="write the result locally only")
     ap.add_argument("--keep-going", action="store_true", help="run every selected step even after one fails")
     ap.add_argument("--fail-fast", action="store_true", help="accepted and ignored: stopping at the first failure is the default")
+    ap.add_argument("--e2e-only", action="store_true",
+                    help="run only the e2e step (the specs of the screens this branch changes) and publish the "
+                         "record; for an agent on the CI-gate path (DL-86, DL-87)")
     ap.add_argument("--no-setup", action="store_true", help="skip the install from the lockfile; the run is partial")
     ap.add_argument("--timeout-minutes", type=float, metavar="N",
                     help="wall-clock limit for the whole run (default: gate.json timeout_minutes, 30)")
@@ -79,6 +82,13 @@ def main(argv: list[str] | None = None) -> int:
     cfg = dc.load_gate(root)
     steps = cfg["steps"]
     names = [s["name"] for s in steps]
+    if args.e2e_only:
+        e2e = dc.e2e_step(cfg)
+        if e2e is None:
+            raise dc.DeliveryError("--e2e-only: gate.json has no ui-changed (e2e) step")
+        if args.only:
+            raise dc.DeliveryError("--e2e-only cannot be combined with --only")
+        args.only = e2e["name"]
     only = parse_names(args.only, names, "--only")
     skip = parse_names(args.skip, names, "--skip") or set()
     partial = only is not None or bool(skip) or args.no_setup
@@ -92,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
         return dc.EXIT_USAGE
 
     branch = dc.current_branch(root)
-    publish = not args.no_publish and not partial
+    publish = not args.no_publish and (not partial or args.e2e_only)
     if publish and not branch:
         raise dc.DeliveryError("HEAD is detached; check out the branch, or pass --no-publish")
 
@@ -139,6 +149,9 @@ def main(argv: list[str] | None = None) -> int:
         "pass": ok,
         "timed_out": timed_out,
         "partial": partial,
+        "e2e_only": bool(args.e2e_only),
+        "ui_changed": bool(dc.ui_files(ctx)),
+        "e2e": dc.e2e_record(entries, ctx),
         "started_at": started,
         "finished_at": finished,
         "tool": "branch_gate.py %d" % dc.TOOL_VERSION,
@@ -156,9 +169,17 @@ def main(argv: list[str] | None = None) -> int:
     print("\nresult  : %s -> %s" % ("PASS" if ok else "FAIL", dc.GATE_RESULT_PATH))
 
     exit_code = dc.EXIT_OK if ok else dc.EXIT_TIMEOUT if timed_out else dc.EXIT_FAIL
-    if partial:
+    rec = result["e2e"]
+    if rec["required"]:
+        print("e2e     : %s (%s: %s)" % (rec["outcome"], rec["selection"], ", ".join(rec["specs"]) or "whole suite"))
+    if args.e2e_only and not rec["required"]:
+        print("e2e     : nothing to run, this branch changes no UI path or e2e spec")
+        return dc.EXIT_OK
+    if args.e2e_only and not args.no_publish:
+        print("note    : --e2e-only; the e2e record is published, the result is partial and the gate does not trust it")
+    elif partial:
         print("note    : --only/--skip/--no-setup used; this result is partial and is not published or trusted")
-    elif not args.no_publish:
+    if (not partial or args.e2e_only) and not args.no_publish:
         try:
             publish_result(root, remote, branch, result_file)
             print("publish : %s%s on %s" % (dc.RESULT_REF_PREFIX, branch, remote))

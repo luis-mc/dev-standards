@@ -57,6 +57,8 @@ PACKAGE_KINDS = ("pnpm-workspace", "go-modules", "cargo-workspace", "dotnet-sln"
 # packages.lock.json), which belongs to the package directory it sits in.
 LOCKFILE_SCOPES = ("widen", "pnpm-importers", "per-package")
 DEFAULT_INERT_PATHS = ["docs/**"]  # gate.json "inert_paths" when absent
+# Files that are end-to-end specs (DL-86): gate.json "e2e_spec_paths" when absent.
+DEFAULT_E2E_SPEC_PATHS = ["e2e/*.spec.*", "*/e2e/*.spec.*"]
 PNPM_LOCK = "pnpm-lock.yaml"
 
 DELIVERY_DIR = ".delivery"
@@ -299,6 +301,10 @@ def load_gate(root: Path) -> dict:
         raise DeliveryError("%s: 'timeout_minutes' must be an integer >= 1" % where)
     if "e2e_map" in cfg:
         cfg["e2e_map"] = _check_e2e_map(cfg["e2e_map"], where)
+    if "e2e_spec_paths" in cfg:
+        cfg["e2e_spec_paths"] = _str_list(cfg, "e2e_spec_paths", where)
+    else:
+        cfg["e2e_spec_paths"] = list(DEFAULT_E2E_SPEC_PATHS)
     pk = cfg.get("packages")
     if not isinstance(pk, dict) or pk.get("kind") not in PACKAGE_KINDS:
         raise DeliveryError(
@@ -801,11 +807,27 @@ def e2e_derived(ctx: Context) -> list[str]:
     return sorted({s for s in own.values() if s})
 
 
-def e2e_selection(ctx: Context) -> tuple[str, list[str]]:
-    """('affected', specs) when gate.json's "e2e_map" covers every changed UI file
-    and no changed file is in "full_on"; otherwise ('full', []) (CONTRACT.md, U1).
-    A widened gate is always 'full'. Without a map the specs come from the
-    workspace dependency graph (e2e_derived)."""
+def is_e2e_spec(path: str, cfg: dict) -> bool:
+    """A path that is an end-to-end spec file (gate.json "e2e_spec_paths", DL-86)."""
+    return any(widen_match(path, e) for e in cfg.get("e2e_spec_paths", DEFAULT_E2E_SPEC_PATHS))
+
+
+def changed_e2e_specs(files: list[str], cfg: dict, root: Path | None = None) -> list[str]:
+    """The e2e spec files among `files` (sorted). With `root`, only those still on disk:
+    a deleted spec cannot be run."""
+    out = sorted(f for f in files if is_e2e_spec(f, cfg))
+    return [f for f in out if (root / f).is_file()] if root is not None else out
+
+
+def ui_files(ctx: Context) -> list[str]:
+    """What makes the ui-changed step run: changed files under ui_paths, ui packages a lockfile
+    change touches, and changed e2e spec files (DL-86)."""
+    ui = [f for f in ctx.files if any(f.startswith(p) for p in ctx.cfg["ui_paths"])]
+    ui += [d for d in ctx.lock_dirs if is_ui_dir(d, ctx.cfg["ui_paths"])]
+    return ui + changed_e2e_specs(ctx.files, ctx.cfg, ctx.root)
+
+
+def _e2e_selection_ui(ctx: Context) -> tuple[str, list[str]]:
     emap = ctx.cfg.get("e2e_map")
     if not emap or ctx.widened:
         specs = e2e_derived(ctx) if not emap and not ctx.widened else []
@@ -814,11 +836,82 @@ def e2e_selection(ctx: Context) -> tuple[str, list[str]]:
         return "full", []
     specs: set[str] = set()
     for f in ctx.files:
+        if is_e2e_spec(f, ctx.cfg):
+            continue  # a changed spec runs itself (e2e_selection adds it)
         hits = [m["spec"] for m in emap["specs"] if any(widen_match(f, p) for p in m["paths"])]
         if not hits and any(f.startswith(p) for p in ctx.cfg["ui_paths"]):
             return "full", []  # a UI file no spec claims
         specs.update(hits)
     return ("affected", sorted(specs)) if specs else ("full", [])
+
+
+def e2e_selection(ctx: Context) -> tuple[str, list[str]]:
+    """('affected', specs) when gate.json's "e2e_map" covers every changed UI file
+    and no changed file is in "full_on"; otherwise ('full', []) (CONTRACT.md, U1).
+    A widened gate is always 'full'. Without a map the specs come from the
+    workspace dependency graph (e2e_derived). A changed e2e spec file is always in
+    the specs (a spec fix is run before it is pushed, DL-88); when nothing else
+    forces the whole suite, a change of only spec files runs just those."""
+    selection, specs = _e2e_selection_ui(ctx)
+    own = changed_e2e_specs(ctx.files, ctx.cfg, ctx.root)
+    if not own or ctx.widened:
+        return selection, specs
+    emap = ctx.cfg.get("e2e_map")
+    if emap and any(widen_match(f, e) for f in ctx.files for e in emap["full_on"]):
+        return "full", []
+    if selection == "full" and any(not is_e2e_spec(f, ctx.cfg) for f in ui_files(ctx)):
+        return "full", []  # a UI change that no spec claims: the whole suite
+    return "affected", sorted(set(specs) | set(own))
+
+
+def e2e_step(cfg: dict) -> dict | None:
+    """The gate step that runs the end-to-end specs: the first with scope ui-changed."""
+    return next((st for st in cfg["steps"] if st["scope"] == "ui-changed"), None)
+
+
+def e2e_record(entries: list[dict], ctx: Context) -> dict:
+    """The e2e record of gate-result.json (DL-87): whether this change needs the specs run,
+    whether they ran and passed, which, and which spec files the change itself touches."""
+    step = e2e_step(ctx.cfg)
+    required = bool(step) and plan_step(step, ctx)[0]
+    entry = next((e for e in entries if step and e["name"] == step["name"]), None)
+    outcome = entry["outcome"] if entry else "none"
+    selection, specs = ("none", [])
+    if entry and outcome in ("pass", "fail"):
+        selection, specs = entry.get("selection", "full"), list(entry.get("specs") or [])
+    return {
+        "required": required,
+        "step": step["name"] if step else None,
+        "outcome": outcome,
+        "selection": selection,
+        "specs": specs,
+        "changed_specs": changed_e2e_specs(ctx.files, ctx.cfg, ctx.root),
+    }
+
+
+E2E_COMMAND = "python3 scripts/delivery/branch_gate.py --e2e-only"
+
+
+def e2e_problems(result: dict, head: str, pushed_specs: list[str] | None = None) -> list[str]:
+    """Plain-words reasons a result does not show the e2e specs of a change ran and passed
+    for `head` (DL-87, DL-88). `pushed_specs`: e2e spec files a push changes, each of which
+    must have been among the specs run (or the whole suite)."""
+    if result.get("head") != head:
+        return ["the gate result is for %s, not for %s" % (str(result.get("head"))[:10], head[:10])]
+    rec = result.get("e2e")
+    if not isinstance(rec, dict):
+        return ["the gate result has no e2e record (it was written by an older gate); run: " + E2E_COMMAND]
+    out: list[str] = []
+    needed = bool(rec.get("required")) or bool(pushed_specs)
+    if needed and rec.get("outcome") != "pass":
+        what = {"fail": "failed", "skip": "was skipped", "none": "never ran"}.get(rec.get("outcome"), "did not pass")
+        out.append("the e2e specs %s; run: %s" % (what, E2E_COMMAND))
+    elif pushed_specs and rec.get("selection") != "full":
+        ran = set(rec.get("specs") or [])
+        missing = [f for f in pushed_specs if f not in ran]
+        if missing:
+            out.append("these changed e2e specs were not run for this head: %s; run: %s" % (", ".join(missing), E2E_COMMAND))
+    return out
 
 
 def e2e_info(step: dict, ctx: Context) -> dict:
@@ -844,8 +937,7 @@ def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
         else:
             cmd, why = step["run"], "package changed"
     else:  # ui-changed
-        ui = [f for f in ctx.files if any(f.startswith(p) for p in ctx.cfg["ui_paths"])]
-        ui += [d for d in ctx.lock_dirs if is_ui_dir(d, ctx.cfg["ui_paths"])]
+        ui = ui_files(ctx)
         if not wide and not ui:
             return False, None, "no ui_paths change"
         cmd = (step.get("run_full") if wide else None) or step["run"]
