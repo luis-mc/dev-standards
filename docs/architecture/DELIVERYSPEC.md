@@ -156,10 +156,7 @@ Counts: 66 rules (DL-01..27, 30..45, 50..56, 60..66, 70..79). Enforced today: 8 
 
 ## 2. Ledger schema: `.delivery/ledger.json`
 
-One file per repository (git-ignored with `.delivery/`), written only through
-`delivery_ledger.py` (atomic write via temp + rename, a lock file, `schema: 1`). Hooks never edit
-it by hand; every field below names its writer. Readers: the Stop/PreToolUse hooks, the watcher,
-the Full Progress renderer (DL-65: the one truth for shown state).
+One file per repository (git-ignored with `.delivery/`). Only `delivery_ledger.py` writes it: atomic write via temp + rename, a lock file, `schema: 1`. Hooks never edit it by hand. Every field below names its writer. Readers: the Stop/PreToolUse hooks, the watcher and the Full Progress renderer (DL-65: the one truth for shown state).
 
 ```jsonc
 {
@@ -225,7 +222,7 @@ the Full Progress renderer (DL-65: the one truth for shown state).
 | `cargo[].gate`, `cargo[].joined_sha`, `joined_at`, `state=joined` | `join.py` (calls the ledger module after each merge and after the light check) |
 | `pushed_at`, `state=pushed` | POST hook on `git push` of a train branch (and `join.py --push`) |
 | `pr`, `state=ci` | POST hook on `gh pr create` / `gh pr ready` (parses the PR URL) |
-| `ci.*`, `green_at`, `state=green/red` | `ci_watch.py` (on decide); the watcher between calls |
+| `ci.*`, `green_at`, `state=green/red` | `ci_watch.py` (on decide); the watcher between its calls |
 | `merged_at`, `state=merged` | POST hook on `gh pr merge` exit 0; session-start catch-up via `gh pr list --state merged` |
 | `live_at`, `smoke` | deploy smoke step / `delivery_log.py live` mirrored; POST on smoke command |
 | `cleaned_at` | `cleanup.py --pr N` |
