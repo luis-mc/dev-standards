@@ -246,6 +246,9 @@ def test(fn):
     return fn
 
 
+test.__test__ = False  # the decorator is not a pytest test
+
+
 def check(cond: bool, msg: str) -> None:
     if not cond:
         raise AssertionError(msg)
@@ -746,12 +749,13 @@ def workflow_problems(text: str) -> list[str]:
     if re.search(r"artifact_prune\.py[^\n]*--dry-run", body):
         p.append("the scheduled job must not be a dry run")
     uses = re.findall(r"^\s*-?\s*uses:\s*(\S+)", body, re.M)
-    if "actions/checkout@v4" not in uses:
+    # DS162: actions are pinned by full commit SHA, like the track ci.yml files.
+    if not any(re.fullmatch(r"actions/checkout@[0-9a-f]{40}", u) for u in uses):
         p.append("checkout must be pinned the way the track ci.yml files pin it "
-                 "(actions/checkout@v4)")
+                 "(actions/checkout@<commit SHA>)")
     for u in uses:
-        if not re.fullmatch(r"[\w.-]+/[\w./-]+@v\d+", u):
-            p.append(f"action {u!r} is not pinned like the track ci.yml files (@vN)")
+        if not re.fullmatch(r"[\w.-]+/[\w./-]+@[0-9a-f]{40}", u):
+            p.append(f"action {u!r} is not pinned like the track ci.yml files (@<commit SHA>)")
     need(r"^\s*timeout-minutes:\s*\d+", "the job needs a timeout-minutes")
     # The instruction to products: a comment above `on:` that names `workflows:`.
     head = text.split("\non:", 1)[0]
@@ -795,7 +799,7 @@ def workflow_checker_catches_each_defect():
         ("python3 scripts/delivery/artifact_prune.py", "python3 scripts/delivery/artifact_prune.py "
          "--dry-run", "dry run"),
         ("python3 scripts/delivery/artifact_prune.py", "python3 scripts/other.py", "must run"),
-        ("actions/checkout@v4", "actions/checkout@main", "pinned"),
+        ("actions/checkout@11d5960a326750d5838078e36cf38b85af677262", "actions/checkout@main", "pinned"),
         ("    timeout-minutes: 10\n", "", "timeout-minutes"),
         ("# PRODUCT: `workflows:` below must list", "# `below` must list", "must tell a product"),
         ("# Artifact names must be stable", "# Artifact names must be", "stable per kind"),
@@ -849,6 +853,85 @@ def script_is_stdlib_python_with_no_bytecode():
 
 
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# F7: the REST fallback never sends the token to a foreign host (DS163)
+# ---------------------------------------------------------------------------
+def load_script_module():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("artifact_prune_under_test", SCRIPT)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+class FakeResp:
+    def __init__(self, body: str, link: str = "") -> None:
+        self._body = body
+        self.headers = {"Link": link} if link else {}
+
+    def read(self) -> bytes:
+        return self._body.encode()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+def run_rest(next_url: str, env: dict | None = None):
+    """Page 1 links to `next_url`; returns (urls requested, result)."""
+    mod = load_script_module()
+    seen: list[tuple[str, str]] = []
+
+    def fake_urlopen(req, timeout=None):
+        seen.append((req.full_url, req.get_header("Authorization")))
+        if len(seen) == 1:
+            return FakeResp("[1]", f'<{next_url}>; rel="next"')
+        return FakeResp("[2]")
+
+    old_env = {k: os.environ.get(k) for k in ("GH_TOKEN", "GITHUB_API_URL")}
+    old_open = mod.urllib.request.urlopen
+    os.environ["GH_TOKEN"] = "secret-token"
+    os.environ.pop("GITHUB_API_URL", None)
+    os.environ.update(env or {})
+    mod.urllib.request.urlopen = fake_urlopen
+    try:
+        res = mod.rest_call(["api", "--paginate", "repos/a/b/actions/artifacts"], 5)
+    finally:
+        mod.urllib.request.urlopen = old_open
+        for k, v in old_env.items():
+            os.environ.pop(k, None)
+            if v is not None:
+                os.environ[k] = v
+    return seen, res
+
+
+@test
+def test_rest_fallback_refuses_a_foreign_next_host():
+    for bad in ("https://evil.example/x?page=2", "http://api.github.com/x?page=2",
+                "https://api.github.com.evil.example/x?page=2"):
+        seen, res = run_rest(bad)
+        check(len(seen) == 1, f"{bad}: a request was sent to the next URL: {seen}")
+        check(res.returncode == 0, f"{bad}: paging should stop quietly, not fail")
+
+
+@test
+def test_rest_fallback_follows_a_normal_next_page():
+    seen, res = run_rest("https://api.github.com/repos/a/b/actions/artifacts?page=2")
+    check(len(seen) == 2 and seen[1][0].endswith("page=2"), f"page 2 not followed: {seen}")
+    check(seen[1][1] == "Bearer secret-token", "page 2 sent without the token")
+
+
+@test
+def test_rest_fallback_allows_the_enterprise_host_from_github_api_url():
+    url = "https://ghe.example/api/v3/repos/a/b/actions/artifacts?page=2"
+    seen, _ = run_rest(url, {"GITHUB_API_URL": "https://ghe.example/api/v3"})
+    check(len(seen) == 2, f"enterprise next page not followed: {seen}")
+    seen, _ = run_rest("https://api.github.com/x?page=2", {"GITHUB_API_URL": "https://ghe.example/api/v3"})
+    check(len(seen) == 1, "api.github.com should not be allowed when GITHUB_API_URL names another host")
+
 
 def main() -> int:
     failed = 0

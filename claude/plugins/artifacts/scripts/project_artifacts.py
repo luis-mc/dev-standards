@@ -591,6 +591,25 @@ def migrate_releases(registry):
     return ids
 
 
+FILE_NAME_RE = re.compile(r'^[a-z0-9-]+\.html$')
+
+
+def check_file_names(manifest, d):
+    """Security (audit F1): every `file` in the manifest is a plain page name that stays inside the record folder."""
+    fp = manifest.get('full_progress_artifact')
+    feats = manifest.get('feature_artifacts')
+    entries = [fp] if isinstance(fp, dict) else []
+    entries += [e for e in feats if isinstance(e, dict)] if isinstance(feats, list) else []
+    root = Path(d).resolve()
+    for e in entries:
+        if 'file' not in e:
+            continue
+        name = e['file']
+        if not isinstance(name, str) or not FILE_NAME_RE.match(name) or (root / name).resolve().parent != root:
+            raise Fail(1, 'manifest.json: unsafe file name %r; a file must match [a-z0-9-]+.html and stay inside the '
+                          'record folder; nothing written' % (name,))
+
+
 class Record:
     def __init__(self, d, manifest=None, registry=None, exists=True):
         self.dir = Path(d)
@@ -630,6 +649,7 @@ class Record:
         registry = read_json(rp)
         if not isinstance(manifest, dict) or not isinstance(registry, dict):
             raise Fail(2, 'unreadable record: manifest.json and registry.json must be objects')
+        check_file_names(manifest, d)
         raw_tasks = copy.deepcopy(registry.get('tasks')) if isinstance(registry.get('tasks'), list) else None
         old_merged = manifest.get('merged_status') == 'Done'
         old_done, migrated = migrate_done(manifest, registry)

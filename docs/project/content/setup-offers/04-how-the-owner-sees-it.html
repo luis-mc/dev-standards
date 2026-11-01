@@ -1,0 +1,24 @@
+<!-- title: How the owner sees it -->
+<p>The flow keeps today's rule: ask first, plan everything, confirm once, then apply.</p>
+<ol>
+<li><b>Target question</b> (today): project, user or both, and the effort level.</li>
+<li><b>Status scan</b>, with no writes: each offer is done, missing or broken.</li>
+<li><b>One question page per group</b>, in a single AskUserQuestion call. Each question carries its own context.
+<ul><li>Enforce: docs, design system, delivery, project record (multi-select; done ones are left out).</li>
+<li>Delivery mode: warn first, or block now.</li>
+<li>CI: write the checks workflow, and print the branch-protection command.</li>
+<li>Other setups: <code>tech-stack-setup</code> audit, <code>auth-setup</code>, one audit run (multi-select, all off by default).</li></ul></li>
+<li><b>One change plan</b> listing every file and command, confirmed once (step 3 today).</li>
+<li><b>Apply and verify.</b></li>
+<li><b>Enforcement report</b>: one line per plugin, its level, and the next step when it does not block yet.</li>
+</ol>
+<p>The report, as the owner would see it:</p>
+<pre>Enforcement after claude-setup
+  delivery       blocks in session   merge not protected: run the printed gh command
+  docs           warns               make dev-standards.yml a required check
+  design system  warns               v1 not approved yet: review the gallery, then promote
+  project record active              Full Progress published at turn end
+  specs          not enforced        no spec files found
+  repo gates     missing             run /luismc-project-setup:tech-stack-setup (audit)
+  audits         on demand           -
+</pre>

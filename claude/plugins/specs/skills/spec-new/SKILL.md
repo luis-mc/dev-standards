@@ -1,6 +1,6 @@
 ---
 name: spec-new
-description: Interview the user and write a normative specification (to docs/ in a repo that follows DOCSPEC, else specs/) before any implementation begins. Use this whenever the user wants to plan, design, or spec out a feature, component, service, migration, or refactor — including phrasings like "I want to build X", "how should we approach Y", "let's design Z", "write a spec for", "plan out", or when they describe a non-trivial change without having written anything down yet. Also use it when an existing spec needs revising or extending. Prefer this over jumping straight to implementation for anything touching more than one file.
+description: Interview the user and write a normative specification before any implementation begins. It writes specs that are not features (standards, services, migrations, components); a feature spec in a DOCSPEC repo goes to luismc-docs:feature-spec-new, which this skill hands over to. Use this whenever the user wants to plan, design, or spec out a feature, component, service, migration, or refactor — including phrasings like "I want to build X", "how should we approach Y", "let's design Z", "write a spec for", "plan out", or when they describe a non-trivial change without having written anything down yet. Also use it when an existing spec needs revising or extending. Prefer this over jumping straight to implementation for anything touching more than one file.
 model: opus
 effort: medium
 ---
@@ -20,11 +20,13 @@ Its section tiers and authoring rules decide which questions matter.
    there is no codebase yet, say so and interview on product shape instead.
 2. **Interview.** Use AskUserQuestion. Details below.
 3. **Write the spec** from the template. Where it goes depends on the repo:
+   - This skill writes specs that are not features: standards (like DELIVERYSPEC), services, migrations,
+     components. A feature spec is written by `luismc-docs:feature-spec-new`, never here.
    - A repo with `docs/docs.json` follows DOCSPEC (`luismc-docs`; its layout is not restated here). A spec of one
-     feature belongs in `docs/features/<feature>/spec.md`: use `luismc-docs:feature-spec-new`, and bring this
-     interview's answers to it. A binding rule that spans features goes to `docs/architecture/<name>.md`, with
+     feature belongs in `docs/features/<feature>/spec.md`: say first that you are handing over to
+     `luismc-docs:feature-spec-new`, then use it, and bring this interview's answers to it. A binding rule that spans features goes to `docs/architecture/<name>.md`, with
      front matter `type: reference`.
-   - Any other repo: `specs/<feature-name>.md`.
+   - Any other repo (no DOCSPEC): `specs/<name>.md`, for any kind of spec, features included.
 4. **Stop.** Do not implement in the same session. Tell the user to review the
    spec, then start a fresh session to build it.
 

@@ -4,7 +4,12 @@ import unittest
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
-from _helpers import L, make_root
+from _helpers import L, make_root as _make_root
+
+
+def make_root(cfg=None):
+    """These tests run on a fixed past clock (NOW), so ledger expiry (DS156, real time) is off here."""
+    return _make_root({"ledger_retention_days": 0, **(cfg or {})})
 import delivery_watch as W
 
 NOW = datetime(2026, 10, 14, 12, 0, tzinfo=timezone.utc)
@@ -567,6 +572,27 @@ class RunnersInstallsHeartbeatTests(unittest.TestCase):
         w.pass_trains = lambda: 1 / 0
         w.run_once()
         self.assertEqual(len(L.load(root)["watchers"]), 1)
+
+
+class RunnerScriptPathTests(unittest.TestCase):
+    def test_inside_outside_and_absolute_outside(self):
+        import tempfile
+        msgs = []
+        inside = make_root({"runner_plan": {"script": "tools/rp.py"}})
+        (inside / "tools").mkdir()
+        (inside / "tools" / "rp.py").write_text("")
+        w = W.Watcher(inside, sh=FakeShell(), now=lambda: NOW, out=lambda *a: msgs.append(" ".join(map(str, a))))
+        self.assertEqual(w.runner_script(), str(inside / "tools" / "rp.py"))
+        self.assertEqual(msgs, [])
+        outside_dir = tempfile.mkdtemp(prefix="dl-out-")
+        script = os.path.join(outside_dir, "rp.py")
+        open(script, "w").close()
+        for value in (os.path.relpath(script, str(inside)), script):
+            msgs.clear()
+            root = make_root({"runner_plan": {"script": value}})
+            w = W.Watcher(root, sh=FakeShell(), now=lambda: NOW, out=lambda *a: msgs.append(" ".join(map(str, a))))
+            self.assertIsNone(w.runner_script())
+            self.assertIn("outside the repository root", msgs[0])
 
 
 # --- CO688: reconcile what the hook could not see ------------------------------------------------------------

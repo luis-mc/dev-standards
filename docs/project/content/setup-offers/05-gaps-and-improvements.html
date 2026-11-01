@@ -1,0 +1,15 @@
+<!-- title: Gaps, why they exist, and what would help -->
+<table>
+<thead><tr><th>Gap</th><th>Why it is like that</th><th>What would help developers</th></tr></thead>
+<tbody>
+<tr><td>Docs only warns at turn end</td><td>A turn end does not mean the work is finished. A block would interrupt half-done work and could loop. DOCSPEC puts the block in the gate (CI), not the hook.</td><td>Keep the warning. Offer the CI check and make it required, so the block lands once, at the pull request. Optionally, a <code>docs.json</code> setting that blocks at turn end with the same 3-block ceiling delivery uses.</td></tr>
+<tr><td>Design-system checks are warnings</td><td>DOCSPEC R15.7 makes DS1-DS5 warnings. A draft design system is normal work; only a numbered version is frozen.</td><td>Run <code>docs_check.py --strict</code> in CI once v1 is approved. The report says when that switch is due.</td></tr>
+<tr><td>Design guards exist only for TypeScript and Vitest</td><td>DOC17 shipped one stack first.</td><td>Make <code>design_system.py check</code> exit 1 when a frozen version was edited, so every stack gets the freeze check without a port. Port the follow check per stack later.</td></tr>
+<tr><td>No required CI check</td><td>Plugins write files only. Branch protection is a GitHub setting and is outward-facing.</td><td>Write the workflow file in the working tree. Print the <code>gh api</code> command for the owner to run.</td></tr>
+<tr><td>Delivery blocks only in Claude sessions</td><td>Hooks run only inside Claude Code.</td><td>Branch protection covers people and other tools. Offer warn mode first, so a new project is not blocked on day one.</td></tr>
+<tr><td>Delivery rules cite scripts the repo may lack</td><td><code>scripts/delivery/*</code> come from <code>tech-stack-setup</code> 12 or later.</td><td>The status scan finds them missing and offers the <code>tech-stack-setup</code> audit.</td></tr>
+<tr><td>Specs have no hooks</td><td>Specs change rarely. A hook on every turn costs time for no gain.</td><td>The CI check is enough. A Stop warning only when a spec file changed is possible, but not proposed.</td></tr>
+<tr><td>Audits, agents and transcript folds enforce nothing</td><td>They are tools run on demand, not rules.</td><td>Offer one audit run. A scheduled monthly audit is possible later.</td></tr>
+<tr><td>No way to see the state later</td><td>The report is printed once.</td><td>A <code>claude-setup status</code> mode that reruns only the scan and the report, and a one-line SessionStart notice when an enforced plugin is broken.</td></tr>
+</tbody>
+</table>

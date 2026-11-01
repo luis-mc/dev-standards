@@ -1,0 +1,5 @@
+<!-- title: What and why -->
+<p><code>design_system.py init</code> writes <code>docs/design-system/next-version/</code> from the docs plugin's template. Today that template holds 4 example rules, 2 components and 9 tokens. The owner has to write the whole system before the guard tests have anything to check.</p>
+<p>The starter replaces it with a full, neutral system: about 20 generic UX rules with rule IDs, about 20 shared components, a complete token set with light and dark themes and system fonts, and an action vocabulary in <code>content.md</code>. Every item is marked as a starter item to keep, change or delete. Nothing in it names a product, a domain or a past decision.</p>
+<p>When the project already has styles (theme files, Tailwind configuration, CSS custom properties), the skill lists what it found, asks once, and fills the token values on a yes. On a no, or when nothing is found, the starter values stay.</p>
+<p>Approval does not change: v1 still needs the owner's recorded approval after the review gallery, so a starter never becomes binding unread.</p>

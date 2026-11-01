@@ -1,0 +1,21 @@
+<!-- title: How each offer is enforced -->
+<p>There are four levels. The first two stop work. The last two only inform.</p>
+<ul>
+<li><b>Blocks in session:</b> a Claude hook denies a tool call or blocks the end of a turn. It works only in Claude sessions with the plugin on.</li>
+<li><b>Blocks merge:</b> a CI check that is required on the default branch. It works for everyone, people and tools.</li>
+<li><b>Warns:</b> a hook prints a message. Nothing stops.</li>
+<li><b>None:</b> run on demand.</li>
+</ul>
+<table>
+<thead><tr><th>Offer</th><th>Blocks in session</th><th>Blocks merge</th><th>Warns</th></tr></thead>
+<tbody>
+<tr><td>Delivery</td><td>Yes. The pre-tool hook denies auto-merge (DL-05), a merge before CI is green (DL-06), unfrozen installs (DL-23) and more. The Stop hook blocks on DL-02, DL-03, DL-14, DL-18, DL-30, DL-31 and others, at most 3 times per finding. <code>enforcement.mode</code> "warn" turns blocks into messages.</td><td>Only with branch protection</td><td>In warn mode</td></tr>
+<tr><td>Docs</td><td>No</td><td>Yes, once <code>docs_check.py</code> runs in a required CI check (exit 1 on errors)</td><td>The Stop hook warns when mapped code changed without its doc</td></tr>
+<tr><td>Design system</td><td>No</td><td>Yes, once the guard tests (freeze, follow, layout) or <code>docs_check.py --strict</code> run in CI</td><td>DS1-DS5 in <code>docs_check.py</code> are warnings</td></tr>
+<tr><td>Project record</td><td>The Stop hook asks to publish Full Progress</td><td>No</td><td><code>project-artifact-check</code> on demand</td></tr>
+<tr><td>Specs</td><td>No</td><td>Yes, once <code>spec-check</code> runs in CI</td><td>No hooks</td></tr>
+<tr><td>Repo gates</td><td>No</td><td>Its CI and git hooks block (pre-commit, pre-push, gitleaks)</td><td>-</td></tr>
+<tr><td>Claude config</td><td>No</td><td>No</td><td><code>effort_drift.py</code> warns when a model has no saved effort</td></tr>
+<tr><td>Audits, agents, transcript folds</td><td>No</td><td>No</td><td>No. They are tools, not rules.</td></tr>
+</tbody>
+</table>

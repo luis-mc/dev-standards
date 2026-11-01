@@ -260,5 +260,93 @@ class AgentEtaTests(unittest.TestCase):
         self.assertIsNone(L.load(root)["agents"][1]["eta"])
 
 
+class ExpiryTests(unittest.TestCase):
+    """DS156: finished rows older than the retention window are dropped when the ledger is written."""
+
+    def _ago(self, days):
+        return L.iso(L.utcnow() - timedelta(days=days))
+
+    def _seed(self, root):
+        old, new = self._ago(30), self._ago(1)
+
+        def fn(led):
+            led["trains"] += [
+                {"id": "T-old-closed", "state": "cleaned", "created_at": old, "cleaned_at": old},
+                {"id": "T-old-open", "state": "ci", "created_at": old},
+                {"id": "T-old-merged", "state": "merged", "created_at": old, "merged_at": old},
+                {"id": "T-new-closed", "state": "cleaned", "created_at": new, "cleaned_at": new},
+                {"id": "T-old-held", "state": "abandoned", "created_at": old, "hold": {"reason": "x", "until": None}},
+            ]
+            led["agents"] += [
+                {"id": "a-old-done", "state": "done", "started": old},
+                {"id": "a-old-run", "state": "running", "started": old},
+                {"id": "a-old-off", "state": "disabled", "started": old},
+                {"id": "a-new-done", "state": "done", "started": new},
+                {"id": "a-nostamp", "state": "done"},
+            ]
+            led["installs"] += [
+                {"product": "p1", "state": "done", "started": old, "ended": old},
+                {"product": "p2", "state": "installing", "started": old},
+                {"product": "p3", "state": "failed", "started": new, "ended": new},
+            ]
+            led["events"] += [{"at": old, "kind": "e", "ref": "", "by": "t"}, {"at": new, "kind": "e", "ref": "", "by": "t"}]
+        L.update(root, fn)
+
+    def _ids(self, root):
+        led = L.load(root)
+        return ([t["id"] for t in led["trains"]], [a["id"] for a in led["agents"]],
+                [i["product"] for i in led["installs"]], len(led["events"]))
+
+    def test_old_finished_rows_dropped_open_rows_kept(self):
+        root = make_root()
+        self._seed(root)
+        L.update(root, lambda led: None)
+        trains, agents, installs, events = self._ids(root)
+        self.assertEqual(trains, ["T-old-open", "T-old-merged", "T-new-closed", "T-old-held"])
+        self.assertEqual(agents, ["a-old-run", "a-new-done", "a-nostamp"])
+        self.assertEqual(installs, ["p2", "p3"])
+        self.assertEqual(events, 1 + 0)  # only the new seeded event; the old one expired
+
+    def test_retention_zero_keeps_all(self):
+        root = make_root({"ledger_retention_days": 0})
+        self._seed(root)
+        L.update(root, lambda led: None)
+        trains, agents, installs, events = self._ids(root)
+        self.assertEqual((len(trains), len(agents), len(installs)), (5, 5, 3))
+        self.assertGreaterEqual(events, 2)
+
+    def test_retention_window_comes_from_config(self):
+        root = make_root({"ledger_retention_days": 60})
+        self._seed(root)  # 30-day-old rows are inside a 60-day window
+        L.update(root, lambda led: None)
+        self.assertEqual(len(self._ids(root)[0]), 5)
+
+    def test_bad_value_falls_back_to_default(self):
+        for bad in (-1, "7", True, 2.5, None):
+            self.assertEqual(L.retention_days({"ledger_retention_days": bad}), L.DEFAULT_RETENTION_DAYS)
+        self.assertEqual(L.retention_days({}), 14)
+        self.assertEqual(L.retention_days({"ledger_retention_days": 0}), 0)
+
+    def test_pruning_write_stays_atomic(self):
+        root = make_root()
+        self._seed(root)
+        before = L.ledger_path(root).read_text()
+        real = L.replace_retry
+
+        def boom(tmp, path, **kw):
+            raise OSError("disk")
+        L.replace_retry = boom
+        try:
+            with self.assertRaises(OSError):
+                L.update(root, lambda led: None)
+        finally:
+            L.replace_retry = real
+        self.assertEqual(L.ledger_path(root).read_text(), before)  # old file intact, old rows still there
+        self.assertFalse(any(p.suffix in (".tmp", ".lock") for p in (root / ".delivery").iterdir()))
+        L.update(root, lambda led: None)
+        self.assertNotIn("T-old-closed", self._ids(root)[0])
+
+
+
 if __name__ == "__main__":
     unittest.main()

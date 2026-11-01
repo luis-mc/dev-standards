@@ -14,7 +14,7 @@ This folder is the **only home of the project's UX rules, tokens, components and
 
 - `README.md`: the status (draft, or approved with the approval line) and what the version is.
 - `CHANGES.md`: the change list from the version before, one entry per change (`- C1: what changed (file; source)`).
-- `ux-rules.md`: numbered rules with IDs (`UX-1` ...); each rule names the guard that proves it.
+- `ux-rules.md`: numbered rules with IDs (`UX-1` ...); each rule names the guard that proves it. `init` starts it with a generic, project-neutral starter set to keep, change or delete before v1 is approved.
 - `components.md`: numbered sections, one per shared component (export path, what it is for, guard).
 - `tokens.md`: colour, type and spacing tokens, the only place a value is given.
 - `content.md`: the words users see (labels, messages) and the retired words (DOCSPEC R11.3).
@@ -45,4 +45,4 @@ This folder is the **only home of the project's UX rules, tokens, components and
 
 ## Tooling
 
-`design_system.py` (the `luismc-docs` plugin) does `init`, `check`, `status`, `visuals`, `promote`, `approve-implementation` and `guards`. The guard tests for the stack sit in the project (`scripts/design/`) and read the enforced version through one helper.
+`design_system.py` (the `luismc-docs` plugin) does `init`, `check`, `status`, `styles` (read-only: lists the project's style files), `visuals`, `promote`, `approve-implementation` and `guards`. The guard tests for the stack sit in the project (`scripts/design/`) and read the enforced version through one helper.

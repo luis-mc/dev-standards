@@ -806,7 +806,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-01T02:08+00:00",
+ "updated": "2026-11-01T10:41+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -3538,6 +3538,209 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "started": "2026-11-01T01:58+00:00"
   },
   {
+   "id": "DS152",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "ARTIFACTSPEC section 8: three hooks, before-command retired",
+   "detail": "Owner chose fix the spec text: intro says three hooks, R8.16 keeps its ID marked retired, At a glance checked. See docs/architecture/hook-list-mismatch.md.",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T10:35+00:00",
+   "rides": "DS160",
+   "started": "2026-11-01T09:50+00:00"
+  },
+  {
+   "id": "DS153",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Security F1: validate artifacts manifest file names",
+   "detail": "Accept only ^[a-z0-9-]+\\.html$ and refuse a path outside the record folder in Record.load (2026-11-01 security audit F1).",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T10:36+00:00",
+   "rides": "DS160",
+   "started": "2026-11-01T09:50+00:00"
+  },
+  {
+   "id": "DS154",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Security F2: repo files choose what runs (docs_check, watcher)",
+   "detail": "Repo-chosen commands, Mermaid integrity, Actions pinned by commit, temp file name, Link host check, eval in a migration tool.",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T10:36+00:00",
+   "rides": "DS160",
+   "started": "2026-11-01T09:50+00:00"
+  },
+  {
+   "id": "DS155",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Performance F1: no 1 s CPU sampling sleep in the load guard",
+   "detail": "Reuse the cached sample or getloadavg on Stop and SessionStart (2026-11-01 performance audit F1).",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T10:36+00:00",
+   "rides": "DS160",
+   "started": "2026-11-01T09:50+00:00"
+  },
+  {
+   "id": "DS156",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Performance F2: expire old delivery ledger rows",
+   "detail": "Hooks read the whole ledger; drop rows past a retention window (2026-11-01 performance audit F2).",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T10:36+00:00",
+   "rides": "DS160",
+   "started": "2026-11-01T09:50+00:00"
+  },
+  {
+   "id": "DS157",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "DOC17: design-system-setup skill (PR #119, merged 06:57)",
+   "detail": "Built and merged by another terminal; folded in 3415c35 (docs 0.3.0, DOCSPEC 1.2.0, project-setup 14.13.3). Row added at the owner's request.",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T09:30+00:00"
+  },
+  {
+   "id": "DS158",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "DLV1: branch gate runs lint and types before tests (PR #117)",
+   "detail": "Built and merged 23:16 by another terminal. Row added at the owner's request.",
+   "expected": "31 Oct",
+   "changed": "2026-11-01T09:30+00:00"
+  },
+  {
+   "id": "DS159",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "DL-06 newest run per workflow, skipped runs pass (PR #120, open)",
+   "detail": "Branch DS34-dl06-skipped-runs reuses ID DS34, which already names a Live task. Left to the other terminal.",
+   "expected": "01 Nov; waits on the other terminal",
+   "changed": "2026-11-01T09:31+00:00",
+   "expected_basis": "PR #120 open; owned by another terminal",
+   "no_release": "release handled by another terminal",
+   "started": "2026-11-01T09:31+00:00"
+  },
+  {
+   "id": "DS160",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Release: setup offers, design starter, spec split, hook text, audit fixes",
+   "detail": "RELEASE-25 live: d86f5ab + fix-forward 8c09e99, spec-lint + secret-scan green 10:35.",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T10:36+00:00",
+   "release": 25,
+   "risk": {
+    "label": "first CI failed; fix-forward",
+    "minutes": 7
+   },
+   "started": "2026-11-01T09:50+00:00",
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-11-01T09:50+00:00",
+     "end": "2026-11-01T10:02+00:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-11-01T10:05+00:00",
+     "end": "2026-11-01T10:32+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-11-01T10:32+00:00",
+     "end": "2026-11-01T10:47+00:00"
+    }
+   ]
+  },
+  {
+   "id": "DS161",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Security F3: Mermaid download checked against a SHA-256",
+   "detail": "docs_index.py fetch-mermaid refuses a file whose hash differs (audit F3).",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T10:36+00:00",
+   "rides": "DS160",
+   "started": "2026-11-01T09:50+00:00"
+  },
+  {
+   "id": "DS162",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Security F4+F5: gitleaks pin fails closed; actions pinned by commit",
+   "detail": "agent_setup.sh and ci.yml templates (audit F4, F5).",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T10:36+00:00",
+   "rides": "DS160",
+   "started": "2026-11-01T09:50+00:00"
+  },
+  {
+   "id": "DS163",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Security F7+F8: Link host check; no eval in the record converter",
+   "detail": "artifact_prune.py next-URL host check; ast.literal_eval in convert_interim_record.py (audit F7, F8).",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T10:36+00:00",
+   "rides": "DS160",
+   "started": "2026-11-01T09:50+00:00"
+  },
+  {
+   "id": "DS164",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Security F6: per-user load cache, unguessable temp file",
+   "detail": "load.py cache moves under ~/.claude/, mkstemp + os.replace (audit F6). Waits for DS155, same file.",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T10:41+00:00",
+   "rides": "DS165",
+   "started": "2026-11-01T10:28+00:00"
+  },
+  {
+   "id": "DS165",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Release: per-user load cache (security F6)",
+   "detail": "RELEASE-26 live: d0f903a, spec-lint (after one rerun of a flaky smoke case) + secret-scan green 10:41.",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T10:41+00:00",
+   "release": 26,
+   "started": "2026-11-01T10:28+00:00",
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-11-01T10:28+00:00",
+     "end": "2026-11-01T10:30+00:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-11-01T10:30+00:00",
+     "end": "2026-11-01T10:37+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-11-01T10:37+00:00",
+     "end": "2026-11-01T10:52+00:00"
+    }
+   ]
+  },
+  {
    "id": "MP1",
    "owner": "models",
    "app": "luismc-project-setup",
@@ -3606,6 +3809,64 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "detail": "Released in STACKSPEC 7.0.0 (#27, 137e0d0, 00:31). Opus and Sonnet at medium effort everywhere: skill profiles, claude-setup's preselected answers, top-level effort, the architect agent and the rule's agent lines (specs 1.2.0, audits 1.2.0, agents 1.1.0, artifacts 1.1.2). Your ~/.claude already uses medium for both.",
    "expected": "11 Oct",
    "changed": "2026-10-11T00:34+01:00"
+  },
+  {
+   "id": "SO1",
+   "owner": "setup-offers",
+   "app": "",
+   "status": "Live",
+   "item": "Owner decides D1-D4 on the setup-offers page",
+   "detail": "Owner chose the recommended option for D1-D5 on 01 Nov.",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T09:30+00:00",
+   "no_release": "owner decisions only"
+  },
+  {
+   "id": "SO2",
+   "owner": "setup-offers",
+   "app": "",
+   "status": "Live",
+   "item": "claude-setup: scan, enforce questions, offers, enforcement report",
+   "detail": "Built after D1-D4 are decided",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T10:35+00:00",
+   "rides": "DS160",
+   "started": "2026-11-01T09:50+00:00"
+  },
+  {
+   "id": "SO3",
+   "owner": "setup-offers",
+   "app": "",
+   "status": "Live",
+   "item": "Split spec-writing skills by kind (after D5)",
+   "detail": "Wording of spec-new, feature-spec-new and promote-to-spec descriptions",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T10:35+00:00",
+   "rides": "DS160",
+   "started": "2026-11-01T09:50+00:00"
+  },
+  {
+   "id": "ST1",
+   "owner": "design-starter",
+   "app": "luismc-docs",
+   "status": "Live",
+   "item": "Owner decides D1-D7 of the design-system starter",
+   "detail": "Decided 01 Nov.",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T09:33+00:00",
+   "no_release": "owner decisions only"
+  },
+  {
+   "id": "ST2",
+   "owner": "design-starter",
+   "app": "luismc-docs",
+   "status": "Live",
+   "item": "Neutral starter template, style reading, DOCSPEC R15.6 note",
+   "detail": "Per D1-D7; replaces templates/design-system/next-version.",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T10:35+00:00",
+   "rides": "DS160",
+   "started": "2026-11-01T09:50+00:00"
   },
   {
    "id": "TC1",
@@ -3782,29 +4043,68 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-01T02:08+00:00">01 Nov 02:08</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-01T10:41+00:00">01 Nov 10:41</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">51 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DS150"><span class="task-id">DS150</span>docs: front-matter parser drops block lists, so the docs map is empty</li>
-<li data-glance-task="DS151"><span class="task-id">DS151</span><span class="release-name">RELEASE-24</span>Release: docs front-matter lists feed the docs map</li>
-<li data-glance-task="DS148"><span class="task-id">DS148</span>Delivery hook: a refused RemoteTrigger create is not a launch</li>
-<li data-glance-task="DS149"><span class="task-id">DS149</span><span class="release-name">RELEASE-23</span>Release: refused RemoteTrigger create is not a launch</li>
-<li data-glance-task="DS136"><span class="task-id">DS136</span>Deep wording pass: audits plugin SKILL.md files and README</li>
-<li data-glance-task="DS137"><span class="task-id">DS137</span>Deep wording pass: delivery plugin README and brief template</li>
-<li data-glance-task="DS138"><span class="task-id">DS138</span>Deep wording pass: docs plugin SKILL.md files and README</li>
-<li data-glance-task="DS139"><span class="task-id">DS139</span>Deep wording pass: project-setup plugin SKILL.md files and README</li>
-<li class="glance-more">and 43 more</li>
+<li data-glance-task="DS159"><span class="task-id">DS159</span>DL-06 newest run per workflow, skipped runs pass (PR #120, open) <span class="glance-expected">01 Nov; waits on the other terminal</span><span class="glance-basis">PR #120 open; owned by another terminal</span></li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">68 tasks</span></summary>
+<ul>
+<li data-glance-task="DS164"><span class="task-id">DS164</span>Security F6: per-user load cache, unguessable temp file</li>
+<li data-glance-task="DS165"><span class="task-id">DS165</span><span class="release-name">RELEASE-26</span>Release: per-user load cache (security F6)</li>
+<li data-glance-task="DS153"><span class="task-id">DS153</span>Security F1: validate artifacts manifest file names</li>
+<li data-glance-task="DS154"><span class="task-id">DS154</span>Security F2: repo files choose what runs (docs_check, watcher)</li>
+<li data-glance-task="DS155"><span class="task-id">DS155</span>Performance F1: no 1 s CPU sampling sleep in the load guard</li>
+<li data-glance-task="DS156"><span class="task-id">DS156</span>Performance F2: expire old delivery ledger rows</li>
+<li data-glance-task="DS160"><span class="task-id">DS160</span><span class="release-name">RELEASE-25</span>Release: setup offers, design starter, spec split, hook text, audit fixes</li>
+<li data-glance-task="DS161"><span class="task-id">DS161</span>Security F3: Mermaid download checked against a SHA-256</li>
+<li class="glance-more">and 60 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">236</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">254</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">236 tasks</span></summary>
+<figure class="release-timeline">
+<figcaption>Next releases (Lisbon)</figcaption>
+<div class="timeline-scroll"><svg viewBox="0 0 960 198" role="img" aria-label="Other work (no release): DS159 (DL-06 newest run per workflow, skipped runs pass (PR #120, open)) Running, expected 01 Nov." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="220" y1="36" x2="220" y2="174"/><text x="220" y="28">01 Nov</text></g>
+<text class="rt-strip-title" x="0" y="60">Other work (no release)</text>
+<text class="rt-name" x="0" y="94"><title>DS159 · DL-06 newest run per workflow, skipped runs pass (PR #120, open)</title>DS159 · DL-06 newest run…</text>
+<polygon class="rt-day" points="220,86 228,99 220,112 212,99"/><text class="rt-day-label" x="236" y="103">01 Nov</text>
+<text class="rt-other-label" x="212" y="126">PR #120 open; owned by another terminal</text>
+
+</svg></div>
+<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days. Under Other work (no release), a bar runs from the start to its Expected, coloured by status; a red outline means it is past its Expected.</p>
+</figure>
+<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS159"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS159</span>DL-06 newest run per workflow, skipped runs pass (PR #120, open)<span class="no-release-line">ships nothing: release handled by another terminal</span></td><td data-label="App / service"></td><td data-label="Detail">Branch DS34-dl06-skipped-runs reuses ID DS34, which already names a Live task. Left to the other terminal.</td><td data-label="Expected">01 Nov; waits on the other terminal<span class="expected-basis">PR #120 open; owned by another terminal</span></td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">254 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS164"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS164</span>Security F6: per-user load cache, unguessable temp file<span class="release-line"><span class="release-name">RELEASE-26</span></span></td><td data-label="App / service"></td><td data-label="Detail">load.py cache moves under ~/.claude/, mkstemp + os.replace (audit F6). Waits for DS155, same file.</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="DS165"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS165</span><span class="release-name">RELEASE-26</span>Release: per-user load cache (security F6)</td><td data-label="App / service"></td><td data-label="Detail">RELEASE-26 live: d0f903a, spec-lint (after one rerun of a flaky smoke case) + secret-scan green 10:41.</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="DS153"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS153</span>Security F1: validate artifacts manifest file names<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="App / service"></td><td data-label="Detail">Accept only ^[a-z0-9-]+\.html$ and refuse a path outside the record folder in Record.load (2026-11-01 security audit F1).</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="DS154"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS154</span>Security F2: repo files choose what runs (docs_check, watcher)<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="App / service"></td><td data-label="Detail">Repo-chosen commands, Mermaid integrity, Actions pinned by commit, temp file name, Link host check, eval in a migration tool.</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="DS155"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS155</span>Performance F1: no 1 s CPU sampling sleep in the load guard<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="App / service"></td><td data-label="Detail">Reuse the cached sample or getloadavg on Stop and SessionStart (2026-11-01 performance audit F1).</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="DS156"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS156</span>Performance F2: expire old delivery ledger rows<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="App / service"></td><td data-label="Detail">Hooks read the whole ledger; drop rows past a retention window (2026-11-01 performance audit F2).</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="DS160"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS160</span><span class="release-name">RELEASE-25</span>Release: setup offers, design starter, spec split, hook text, audit fixes</td><td data-label="App / service"></td><td data-label="Detail">RELEASE-25 live: d86f5ab + fix-forward 8c09e99, spec-lint + secret-scan green 10:35.</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="DS161"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS161</span>Security F3: Mermaid download checked against a SHA-256<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="App / service"></td><td data-label="Detail">docs_index.py fetch-mermaid refuses a file whose hash differs (audit F3).</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="DS162"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS162</span>Security F4+F5: gitleaks pin fails closed; actions pinned by commit<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="App / service"></td><td data-label="Detail">agent_setup.sh and ci.yml templates (audit F4, F5).</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="DS163"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS163</span>Security F7+F8: Link host check; no eval in the record converter<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="App / service"></td><td data-label="Detail">artifact_prune.py next-URL host check; ast.literal_eval in convert_interim_record.py (audit F7, F8).</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="DS152"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS152</span>ARTIFACTSPEC section 8: three hooks, before-command retired<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="App / service"></td><td data-label="Detail">Owner chose fix the spec text: intro says three hooks, R8.16 keeps its ID marked retired, At a glance checked. See docs/architecture/hook-list-mismatch.md.</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="SO2"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO2</span>claude-setup: scan, enforce questions, offers, enforcement report</a><span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="App / service"></td><td data-label="Detail">Built after D1-D4 are decided</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="SO3"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO3</span>Split spec-writing skills by kind (after D5)</a><span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="App / service"></td><td data-label="Detail">Wording of spec-new, feature-spec-new and promote-to-spec descriptions</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="ST2"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-design-system-starter.html"><span class="task-id">ST2</span>Neutral starter template, style reading, DOCSPEC R15.6 note</a><span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Per D1-D7; replaces templates/design-system/next-version.</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="ST1"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-design-system-starter.html"><span class="task-id">ST1</span>Owner decides D1-D7 of the design-system starter</a><span class="no-release-line">ships nothing: owner decisions only</span></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Decided 01 Nov.</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="DS157"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS157</span>DOC17: design-system-setup skill (PR #119, merged 06:57)</td><td data-label="App / service"></td><td data-label="Detail">Built and merged by another terminal; folded in 3415c35 (docs 0.3.0, DOCSPEC 1.2.0, project-setup 14.13.3). Row added at the owner&#x27;s request.</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="DS158"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS158</span>DLV1: branch gate runs lint and types before tests (PR #117)</td><td data-label="App / service"></td><td data-label="Detail">Built and merged 23:16 by another terminal. Row added at the owner&#x27;s request.</td><td data-label="Expected">31 Oct</td></tr>
+<tr data-task="SO1"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO1</span>Owner decides D1-D4 on the setup-offers page</a><span class="no-release-line">ships nothing: owner decisions only</span></td><td data-label="App / service"></td><td data-label="Detail">Owner chose the recommended option for D1-D5 on 01 Nov.</td><td data-label="Expected">01 Nov</td></tr>
 <tr data-task="DS150"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS150</span>docs: front-matter parser drops block lists, so the docs map is empty<span class="release-line"><span class="release-name">RELEASE-24</span></span></td><td data-label="App / service"></td><td data-label="Detail">Live in RELEASE-24 (0b766bd), CI green 02:08.</td><td data-label="Expected">01 Nov</td></tr>
 <tr data-task="DS151"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS151</span><span class="release-name">RELEASE-24</span>Release: docs front-matter lists feed the docs map</td><td data-label="App / service"></td><td data-label="Detail">RELEASE-24 live: 0b766bd, spec-lint + secret-scan green 02:08.</td><td data-label="Expected">01 Nov</td></tr>
 <tr data-task="DS148"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS148</span>Delivery hook: a refused RemoteTrigger create is not a launch<span class="release-line"><span class="release-name">RELEASE-23</span></span></td><td data-label="App / service"></td><td data-label="Detail">Live in RELEASE-23 (15955c0), CI green 01:55.</td><td data-label="Expected">01 Nov</td></tr>
@@ -4052,8 +4352,10 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (0)</strong><span class="fold-count">0 feature artifacts</span></summary>
 <p class="feature-none">No feature artifacts in progress.</p>
 </details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (5)</strong><span class="fold-count">5 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
+<tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29892155"><time datetime="2026-11-01T10:35+00:00">01 Nov 10:35</time></td><td data-label="Tasks">SO1 to SO3</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">On 01 Nov the owner ran claude-setup in an existing project and could not tell whether the docs, design-system and delivery plugins were enforced.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29892155"><time datetime="2026-11-01T10:35+00:00">01 Nov 10:35</time></td><td data-label="Tasks">ST1 to ST2</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29891442"><time datetime="2026-10-31T22:42+00:00">31 Oct 22:42</time></td><td data-label="Tasks">AR2 to AR51</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29884830"><time datetime="2026-10-27T08:30+00:00">27 Oct 08:30</time></td><td data-label="Tasks">DL1 to DL13</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-label="Last updated" data-value="29884830"><time datetime="2026-10-27T08:30+00:00">27 Oct 08:30</time></td><td data-label="Tasks">MP1 to MP7, DS2 to DS5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>

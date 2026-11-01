@@ -5,9 +5,9 @@
 #
 #   1. Python 3.11+            apt-get (root or sudo) or brew; else a message, exit 2
 #   2. gitleaks (tools.json)   release archive for this OS/arch, SHA-256 checked
-#                              against the value pinned in tools.json (the old
-#                              form, a bare version, warns and falls back to the
-#                              release's checksums file), installed into
+#                              against the value pinned in tools.json (no pin,
+#                              including the old bare-version form: refused),
+#                              installed into
 #                              $DELIVERY_BIN (default ~/.local/bin)
 #   3. git hooks               core.hooksPath -> .githooks, if unset
 #   4. gate.json "setup"       each command, from the repository root
@@ -82,7 +82,7 @@ say "python: $("$py" --version 2>&1)"
 
 # --- 2. gitleaks -----------------------------------------------------------
 # tools.json: {"gitleaks": {"version": "x.y.z", "sha256": {"linux_x64": "..."}}}, or the
-# old form {"gitleaks": "x.y.z"} (no pins).
+# the old form {"gitleaks": "x.y.z"} has no pin and is refused.
 gl_version=$("$py" -I -c '
 import json, sys
 g = json.load(open(sys.argv[1]))["gitleaks"]
@@ -114,23 +114,13 @@ import json, sys
 g = json.load(open(sys.argv[1]))["gitleaks"]
 print("" if isinstance(g, str) else g.get("sha256", {}).get(sys.argv[2], ""))
 ' "$here/tools.json" "${os}_${arch}") || die "tools.json is not valid"
-gl_form=pinned
 if [ -z "$gl_sha" ]; then
-  if "$py" -I -c 'import json, sys; sys.exit(0 if isinstance(json.load(open(sys.argv[1]))["gitleaks"], str) else 1)' "$here/tools.json"; then
-    gl_form=old
-    say "warning: tools.json uses the old form; the archive is checked against the release's checksums file. Run: python3 scripts/delivery/tools_pin.py gitleaks $gl_version"
-  else
-    die "tools.json has no pinned SHA-256 for ${os}_${arch}; add one with scripts/delivery/tools_pin.py or install gitleaks $gl_version manually"
-  fi
+  die "tools.json has no pinned SHA-256 for gitleaks $gl_version (${os}_${arch}); refusing to install. Write the pins with: python3 scripts/delivery/tools_pin.py gitleaks $gl_version"
 fi
 
 if [ -n "$dry_run" ]; then
   say "dry run: would download $base_url/$asset"
-  if [ "$gl_form" = pinned ]; then
-    say "dry run: would verify it against the SHA-256 pinned in tools.json for ${os}_${arch}"
-  else
-    say "dry run: would verify it against $base_url/$checksums"
-  fi
+  say "dry run: would verify it against the SHA-256 pinned in tools.json for ${os}_${arch}"
   say "dry run: would install $exe into $bin_dir"
   echo "$base_url/$asset"
   exit 0
@@ -158,14 +148,9 @@ def fetch(name):
         return r.read()
 
 archive = fetch(asset)
-want = pin.lower() or None
-if want is None:  # old tools.json form: no pin, use the release's checksums file
-    for line in fetch(sums).decode().splitlines():
-        parts = line.split()
-        if len(parts) == 2 and parts[1].lstrip("*") == asset:
-            want = parts[0].lower()
-    if want is None:
-        sys.exit("agent_setup: %s is not listed in %s" % (asset, sums))
+want = pin.lower()
+if not want:
+    sys.exit("agent_setup: no pinned SHA-256; nothing installed")
 got = hashlib.sha256(archive).hexdigest()
 if got != want:
     sys.exit("agent_setup: checksum mismatch for %s (expected %s, got %s); nothing installed" % (asset, want, got))
