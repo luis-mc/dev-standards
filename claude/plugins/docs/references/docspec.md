@@ -268,12 +268,33 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 
 ### 6.1 The index script
 
-- **R6.1** — `docs_index.py build` MUST write `docs/index.html` and one HTML page per lasting doc in `docs/_site/` using only the Python standard library. The result MUST work when opened from `file://`: no server, no `fetch`; search data is loaded by a script tag.
-- **R6.2** — The home page MUST offer search over title, path and text, a link to the overview, the feature index by app and by topic, the list of all pages and the gaps list (R6.4).
-- **R6.3** — `docs_index.py build` MUST also write `docs/features/index.md` (features by app, by topic and by status), `docs/architecture/decisions.md` (R11.1), `docs/docs-map.json` (code globs to docs) and `docs/llms.txt` (a map of the docs for agents). `docs_index.py check` exits 1 when a committed generated file differs from what a build would write.
-- **R6.4** — The gaps list MUST name: feature folders without `spec.md`, specs without front matter, apps, topics or an owner, specs without a diagram or image, apps no spec lists, and missing overview pages. A feature whose `last_verified` is older than `stale_days` (default 90) or missing shows as stale on the home page.
-- **R6.5** — Mermaid blocks render as diagrams offline. The plugin ships a committed copy of Mermaid 11.4.1 (`vendor/mermaid.min.js`, MIT, with `vendor/LICENSE-mermaid` and `vendor/README.md` naming version and source) and `docs_index.py build` uses it by default, copying it to `docs/_site/vendor/`. Overrides, in order: `--mermaid PATH`, `DOCS_MERMAID_JS`, a copy already in `docs/_site/vendor/` (for example from `docs_index.py fetch-mermaid`, which downloads the pinned version). If no copy is found a block shows as readable source with a note. Pages set the diagram theme from the reader's light or dark preference.
-- **R6.6** — Relative links between docs MUST work in the built site: a `.md` link becomes the page's `.html`, an asset is copied next to the page, and a link outside `docs/` is left as written.
+- **R6.1** — `docs_index.py build` MUST write `docs/index.html` and one HTML page per lasting doc in `docs/_site/`. It MUST use only the Python standard library. The result MUST work when opened from `file://`: no server, no `fetch`. A script tag loads the search data.
+- **R6.2** — The home page MUST offer:
+
+  - search over title, path and text
+  - a link to the overview
+  - the feature index by app and by topic
+  - the list of all pages
+  - the gaps list (R6.4)
+- **R6.3** — `docs_index.py build` MUST also write these files:
+
+  - `docs/features/index.md` (features by app, by topic and by status)
+  - `docs/architecture/decisions.md` (R11.1)
+  - `docs/docs-map.json` (code globs mapped to docs)
+  - `docs/llms.txt` (a map of the docs for agents)
+
+  `docs_index.py check` exits 1 when a committed generated file differs from what a build would write.
+- **R6.4** — The gaps list MUST name:
+
+  - feature folders without `spec.md`
+  - specs without front matter, apps, topics or an owner
+  - specs without a diagram or image
+  - apps that no spec lists
+  - missing overview pages
+
+  The home page shows a feature as stale when its `last_verified` is missing or older than `stale_days` (default 90).
+- **R6.5** — Mermaid blocks render as diagrams offline. The plugin ships a committed copy of Mermaid 11.4.1 (`vendor/mermaid.min.js`, MIT, with `vendor/LICENSE-mermaid` and `vendor/README.md` naming version and source). `docs_index.py build` uses it by default and copies it to `docs/_site/vendor/`. Overrides, in order: `--mermaid PATH`, `DOCS_MERMAID_JS`, a copy already in `docs/_site/vendor/` (for example from `docs_index.py fetch-mermaid`, which downloads the pinned version). If no copy is found, a block shows as readable source with a note. Pages set the diagram theme from the reader's light or dark preference.
+- **R6.6** — Relative links between docs MUST work in the built site. A `.md` link becomes the page's `.html`. An asset is copied next to the page. A link outside `docs/` is left as written.
 - **R6.7** — `docs/work/`, `docs/_site/` and change notes MUST NOT be indexed.
 
 ---
