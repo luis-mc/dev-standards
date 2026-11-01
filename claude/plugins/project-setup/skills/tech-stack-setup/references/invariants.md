@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 8.7.0
+**Version:** 8.7.1
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -60,6 +60,10 @@ records the choice in its Stack Profile (§18). This document does not name or
 rank vendors.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+
+**8.7.1 — 2026-11-01.**
+
+- Full wording pass of the stack spec in plain, short English; rules, strengths and IDs are unchanged.
 
 **8.7.0 — 2026-10-31.**
 

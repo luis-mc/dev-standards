@@ -806,7 +806,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-10-31T23:59+00:00",
+ "updated": "2026-11-01T00:49+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -3153,6 +3153,274 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "no_release": "ledger cleanup"
   },
   {
+   "id": "DS126",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Release: RemoteTrigger update fix + deep spec wording pass",
+   "detail": "join, fold, push, CI",
+   "expected": "01 Nov ~03:35",
+   "changed": "2026-11-01T00:42+00:00",
+   "expected_basis": "last agent ~02:45 + diff read 20 + join 10 + CI 15 + merge 5",
+   "release": 21,
+   "started": "2026-11-01T00:37+00:00",
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-11-01T00:37+00:00",
+     "end": "2026-11-01T02:45+00:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-11-01T02:45+00:00",
+     "end": "2026-11-01T03:15+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-11-01T03:15+00:00",
+     "end": "2026-11-01T03:30+00:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-11-01T03:30+00:00",
+     "end": "2026-11-01T03:35+00:00"
+    }
+   ]
+  },
+  {
+   "id": "DS127",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "delivery: RemoteTrigger update/list are not launches",
+   "detail": "only create/run count as launches (DL-30/37/38); tests",
+   "expected": "01 Nov ~01:20",
+   "changed": "2026-11-01T00:39+00:00",
+   "expected_basis": "cloud agent: setup 5 + hook fix 25 + checks 10",
+   "rides": "DS126",
+   "started": "2026-11-01T00:37+00:00"
+  },
+  {
+   "id": "DS128",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Deep wording pass: ARTIFACTSPEC",
+   "detail": "section by section, IDs kept",
+   "expected": "01 Nov ~02:20",
+   "changed": "2026-11-01T00:39+00:00",
+   "expected_basis": "cloud agent: setup 5 + full spec pass 80 + checks 15",
+   "rides": "DS126",
+   "started": "2026-11-01T00:37+00:00"
+  },
+  {
+   "id": "DS129",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Deep wording pass: DOCSPEC",
+   "detail": "section by section, IDs kept",
+   "expected": "01 Nov ~02:20",
+   "changed": "2026-11-01T00:39+00:00",
+   "expected_basis": "cloud agent: setup 5 + full spec pass 80 + checks 15",
+   "rides": "DS126",
+   "started": "2026-11-01T00:37+00:00"
+  },
+  {
+   "id": "DS130",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Deep wording pass: STACKSPEC",
+   "detail": "section by section, IDs kept",
+   "expected": "01 Nov ~02:40",
+   "changed": "2026-11-01T00:39+00:00",
+   "expected_basis": "cloud agent: setup 5 + full spec pass 100 + checks 10",
+   "rides": "DS126",
+   "started": "2026-11-01T00:41+00:00"
+  },
+  {
+   "id": "DS131",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Deep wording pass: AUTHSPEC",
+   "detail": "section by section, IDs kept",
+   "expected": "01 Nov ~02:45",
+   "changed": "2026-11-01T00:39+00:00",
+   "expected_basis": "cloud agent: setup 5 + full spec pass 100 + checks 15",
+   "rides": "DS126",
+   "started": "2026-11-01T00:42+00:00"
+  },
+  {
+   "id": "DS132",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Deep wording pass: DELIVERYSPEC",
+   "detail": "section by section, IDs kept",
+   "expected": "01 Nov ~01:50",
+   "changed": "2026-11-01T00:39+00:00",
+   "expected_basis": "cloud agent: setup 5 + spec pass 50 + checks 10",
+   "rides": "DS126",
+   "started": "2026-11-01T00:42+00:00"
+  },
+  {
+   "id": "DS133",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "Windows test_ledger timezone failure: check",
+   "detail": "test_train_id_uses_owner_timezone_day passes on Windows now (24/24 OK, Python 3.14.7). Nothing to fix.",
+   "expected": "01 Nov ~00:55",
+   "changed": "2026-11-01T00:41+00:00",
+   "no_release": "check only, no code change",
+   "started": "2026-11-01T00:50+00:00"
+  },
+  {
+   "id": "DS134",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Deep wording pass: agents plugin SKILL.md files and README",
+   "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the agents plugin.json.",
+   "expected": "01 Nov ~05:30",
+   "changed": "2026-11-01T00:49+00:00",
+   "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+  },
+  {
+   "id": "DS135",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Deep wording pass: artifacts plugin SKILL.md files and README",
+   "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the artifacts plugin.json.",
+   "expected": "01 Nov ~05:30",
+   "changed": "2026-11-01T00:49+00:00",
+   "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+  },
+  {
+   "id": "DS136",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Deep wording pass: audits plugin SKILL.md files and README",
+   "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the audits plugin.json.",
+   "expected": "01 Nov ~05:30",
+   "changed": "2026-11-01T00:49+00:00",
+   "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+  },
+  {
+   "id": "DS137",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Deep wording pass: delivery plugin SKILL.md files and README",
+   "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the delivery plugin.json.",
+   "expected": "01 Nov ~05:30",
+   "changed": "2026-11-01T00:49+00:00",
+   "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+  },
+  {
+   "id": "DS138",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Deep wording pass: docs plugin SKILL.md files and README",
+   "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the docs plugin.json.",
+   "expected": "01 Nov ~05:30",
+   "changed": "2026-11-01T00:49+00:00",
+   "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+  },
+  {
+   "id": "DS139",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Deep wording pass: project-setup plugin SKILL.md files and README",
+   "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the project-setup plugin.json.",
+   "expected": "01 Nov ~05:30",
+   "changed": "2026-11-01T00:49+00:00",
+   "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+  },
+  {
+   "id": "DS140",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Deep wording pass: specs plugin SKILL.md files and README",
+   "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the specs plugin.json.",
+   "expected": "01 Nov ~05:30",
+   "changed": "2026-11-01T00:49+00:00",
+   "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+  },
+  {
+   "id": "DS141",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Deep wording pass: transcript-folds plugin SKILL.md files and README",
+   "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the transcript-folds plugin.json.",
+   "expected": "01 Nov ~05:30",
+   "changed": "2026-11-01T00:49+00:00",
+   "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+  },
+  {
+   "id": "DS142",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Deep wording pass: feature specs 1-6",
+   "detail": "First six docs/features specs (sorted by name): plain short English; requirement IDs and screens unchanged; change notes per feature.",
+   "expected": "01 Nov ~05:30",
+   "changed": "2026-11-01T00:49+00:00",
+   "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+  },
+  {
+   "id": "DS143",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Deep wording pass: feature specs 7-11, overview and guides",
+   "detail": "Remaining docs/features specs plus docs/overview and docs/guides pages; IDs unchanged; change notes where a feature changes.",
+   "expected": "01 Nov ~05:30",
+   "changed": "2026-11-01T00:49+00:00",
+   "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+  },
+  {
+   "id": "DS144",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Fix every project-artifact-check and docs_check finding",
+   "detail": "Run both checks, fix each error and warning (incl. M1 on artifactspec.md) or record why it stays.",
+   "expected": "01 Nov ~05:30",
+   "changed": "2026-11-01T00:49+00:00",
+   "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+  },
+  {
+   "id": "DS145",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Security audit of plugin scripts (report only)",
+   "detail": "luismc-audits security-audit over claude/plugins/*/scripts and hooks; report under docs/, nothing fixed.",
+   "expected": "01 Nov ~05:30",
+   "changed": "2026-11-01T00:49+00:00",
+   "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+  },
+  {
+   "id": "DS146",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Performance audit of plugin scripts and hooks (report only)",
+   "detail": "luismc-audits performance-audit; hook latency and script cost; report under docs/, nothing fixed.",
+   "expected": "01 Nov ~05:30",
+   "changed": "2026-11-01T00:49+00:00",
+   "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+  },
+  {
    "id": "MP1",
    "owner": "models",
    "app": "luismc-project-setup",
@@ -3397,13 +3665,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-10-31T23:59+00:00">31 Oct 23:59</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-01T00:49+00:00">01 Nov 00:49</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">25 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">7 tasks</span></summary>
 <ul>
+<li data-glance-task="DS127"><span class="task-id">DS127</span>delivery: RemoteTrigger update/list are not launches <span class="glance-expected">01 Nov ~01:20</span><span class="glance-basis">cloud agent: setup 5 + hook fix 25 + checks 10</span></li>
+<li data-glance-task="DS132"><span class="task-id">DS132</span>Deep wording pass: DELIVERYSPEC <span class="glance-expected">01 Nov ~01:50</span><span class="glance-basis">cloud agent: setup 5 + spec pass 50 + checks 10</span></li>
+<li data-glance-task="DS128"><span class="task-id">DS128</span>Deep wording pass: ARTIFACTSPEC <span class="glance-expected">01 Nov ~02:20</span><span class="glance-basis">cloud agent: setup 5 + full spec pass 80 + checks 15</span></li>
+<li data-glance-task="DS129"><span class="task-id">DS129</span>Deep wording pass: DOCSPEC <span class="glance-expected">01 Nov ~02:20</span><span class="glance-basis">cloud agent: setup 5 + full spec pass 80 + checks 15</span></li>
+<li data-glance-task="DS130"><span class="task-id">DS130</span>Deep wording pass: STACKSPEC <span class="glance-expected">01 Nov ~02:40</span><span class="glance-basis">cloud agent: setup 5 + full spec pass 100 + checks 10</span></li>
+<li data-glance-task="DS131"><span class="task-id">DS131</span>Deep wording pass: AUTHSPEC <span class="glance-expected">01 Nov ~02:45</span><span class="glance-basis">cloud agent: setup 5 + full spec pass 100 + checks 15</span></li>
+<li data-glance-task="DS126"><span class="task-id">DS126</span><span class="release-name">RELEASE-21</span>Release: RemoteTrigger update fix + deep spec wording pass <span class="glance-expected">01 Nov ~03:35</span><span class="glance-basis">last agent ~02:45 + diff read 20 + join 10 + CI 15 + merge 5</span></li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">26 tasks</span></summary>
+<ul>
+<li data-glance-task="DS133"><span class="task-id">DS133</span>Windows test_ledger timezone failure: check</li>
 <li data-glance-task="DS124"><span class="task-id">DS124</span>Dogfood: run new claude-setup on dev-standards</li>
 <li data-glance-task="DS121"><span class="task-id">DS121</span><span class="release-name">RELEASE-20</span>Release: claude-setup installs and configures all 8 plugins</li>
 <li data-glance-task="DS122"><span class="task-id">DS122</span>claude-setup: install, enable and configure all 8 plugins</li>
@@ -3411,15 +3691,58 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DS110"><span class="task-id">DS110</span><span class="release-name">RELEASE-18</span>Release C: rewrite all docs and shipped specs</li>
 <li data-glance-task="DS112"><span class="task-id">DS112</span>C: ARTIFACTSPEC reader preamble and wording, IDs kept</li>
 <li data-glance-task="DS113"><span class="task-id">DS113</span>C: DOCSPEC reader preamble and wording, IDs kept</li>
-<li data-glance-task="DS114"><span class="task-id">DS114</span>C: STACKSPEC reader preamble and wording, IDs kept</li>
-<li class="glance-more">and 17 more</li>
+<li class="glance-more">and 18 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">210</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">211</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">7</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">13</div><div class="label">tasks to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">210 tasks</span></summary>
+<figure class="release-timeline">
+<figcaption>Next releases (Lisbon)</figcaption>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS126 (Release: RemoteTrigger update fix + deep spec wording pass) expected live about 03:35." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">01 Nov 00:30</text><line class="rt-grid" x1="274.3" y1="36" x2="274.3" y2="140"/><text x="274.3" y="28">01:00</text><line class="rt-grid" x1="348.6" y1="36" x2="348.6" y2="140"/><text x="348.6" y="28">01:30</text><line class="rt-grid" x1="422.9" y1="36" x2="422.9" y2="140"/><text x="422.9" y="28">02:00</text><line class="rt-grid" x1="497.1" y1="36" x2="497.1" y2="140"/><text x="497.1" y="28">02:30</text><line class="rt-grid" x1="571.4" y1="36" x2="571.4" y2="140"/><text x="571.4" y="28">03:00</text><line class="rt-grid" x1="645.7" y1="36" x2="645.7" y2="140"/><text x="645.7" y="28">03:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">04:00</text></g>
+<text class="rt-name" x="0" y="60"><title>RELEASE-21 · Release: RemoteTrigger update fix + deep spec wording pass</title>RELEASE-21 · Release: Rem…</text>
+<text class="rt-sub" x="0" y="77"><title>DS127, DS128, DS129, DS130, DS131, DS132</title>DS127, DS128, DS129, DS130, DS131…</text>
+<rect class="rt-bar agents" x="217.3" y="52" width="317" height="22"><title>agents 00:37-02:45</title></rect>
+<rect class="rt-bar join" x="534.3" y="52" width="74.3" height="22"><title>join 02:45-03:15</title></rect>
+<rect class="rt-bar ci" x="608.6" y="52" width="37.1" height="22"><title>PR CI 03:15-03:30</title></rect>
+<rect class="rt-bar merge" x="645.7" y="52" width="12.4" height="22"><title>merge + cleanup 03:30-03:35</title></rect>
+<polygon class="rt-expected" points="658.1,50 666.1,63 658.1,76 650.1,63"/>
+<text class="rt-live-label" x="658.1" y="92">live ~03:35</text>
+<line class="rt-now" x1="247" y1="36" x2="247" y2="148"/><text class="rt-now-label" x="247" y="161">now 00:49</text>
+</svg></div>
+<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
+</figure>
+<details class="status-fold release-group" data-group="release-21" open><summary><strong>RELEASE-21 · live ~03:35</strong><span class="fold-count">7 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS126"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS126</span><span class="release-name">RELEASE-21</span>Release: RemoteTrigger update fix + deep spec wording pass</td><td data-label="App / service"></td><td data-label="Detail">join, fold, push, CI</td><td data-label="Expected">01 Nov ~03:35<span class="expected-basis">last agent ~02:45 + diff read 20 + join 10 + CI 15 + merge 5</span></td></tr>
+<tr data-task="DS127"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS127</span>delivery: RemoteTrigger update/list are not launches</td><td data-label="App / service"></td><td data-label="Detail">only create/run count as launches (DL-30/37/38); tests</td><td data-label="Expected">01 Nov ~01:20<span class="expected-basis">cloud agent: setup 5 + hook fix 25 + checks 10</span></td></tr>
+<tr data-task="DS128"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS128</span>Deep wording pass: ARTIFACTSPEC</td><td data-label="App / service"></td><td data-label="Detail">section by section, IDs kept</td><td data-label="Expected">01 Nov ~02:20<span class="expected-basis">cloud agent: setup 5 + full spec pass 80 + checks 15</span></td></tr>
+<tr data-task="DS129"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS129</span>Deep wording pass: DOCSPEC</td><td data-label="App / service"></td><td data-label="Detail">section by section, IDs kept</td><td data-label="Expected">01 Nov ~02:20<span class="expected-basis">cloud agent: setup 5 + full spec pass 80 + checks 15</span></td></tr>
+<tr data-task="DS130"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS130</span>Deep wording pass: STACKSPEC</td><td data-label="App / service"></td><td data-label="Detail">section by section, IDs kept</td><td data-label="Expected">01 Nov ~02:40<span class="expected-basis">cloud agent: setup 5 + full spec pass 100 + checks 10</span></td></tr>
+<tr data-task="DS131"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS131</span>Deep wording pass: AUTHSPEC</td><td data-label="App / service"></td><td data-label="Detail">section by section, IDs kept</td><td data-label="Expected">01 Nov ~02:45<span class="expected-basis">cloud agent: setup 5 + full spec pass 100 + checks 15</span></td></tr>
+<tr data-task="DS132"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS132</span>Deep wording pass: DELIVERYSPEC</td><td data-label="App / service"></td><td data-label="Detail">section by section, IDs kept</td><td data-label="Expected">01 Nov ~01:50<span class="expected-basis">cloud agent: setup 5 + spec pass 50 + checks 10</span></td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">13 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS134"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS134</span>Deep wording pass: agents plugin SKILL.md files and README</td><td data-label="App / service"></td><td data-label="Detail">Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the agents plugin.json.</td><td data-label="Expected">01 Nov ~05:30<span class="expected-basis">starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15</span></td></tr>
+<tr data-task="DS135"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS135</span>Deep wording pass: artifacts plugin SKILL.md files and README</td><td data-label="App / service"></td><td data-label="Detail">Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the artifacts plugin.json.</td><td data-label="Expected">01 Nov ~05:30<span class="expected-basis">starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15</span></td></tr>
+<tr data-task="DS136"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS136</span>Deep wording pass: audits plugin SKILL.md files and README</td><td data-label="App / service"></td><td data-label="Detail">Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the audits plugin.json.</td><td data-label="Expected">01 Nov ~05:30<span class="expected-basis">starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15</span></td></tr>
+<tr data-task="DS137"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS137</span>Deep wording pass: delivery plugin SKILL.md files and README</td><td data-label="App / service"></td><td data-label="Detail">Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the delivery plugin.json.</td><td data-label="Expected">01 Nov ~05:30<span class="expected-basis">starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15</span></td></tr>
+<tr data-task="DS138"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS138</span>Deep wording pass: docs plugin SKILL.md files and README</td><td data-label="App / service"></td><td data-label="Detail">Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the docs plugin.json.</td><td data-label="Expected">01 Nov ~05:30<span class="expected-basis">starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15</span></td></tr>
+<tr data-task="DS139"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS139</span>Deep wording pass: project-setup plugin SKILL.md files and README</td><td data-label="App / service"></td><td data-label="Detail">Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the project-setup plugin.json.</td><td data-label="Expected">01 Nov ~05:30<span class="expected-basis">starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15</span></td></tr>
+<tr data-task="DS140"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS140</span>Deep wording pass: specs plugin SKILL.md files and README</td><td data-label="App / service"></td><td data-label="Detail">Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the specs plugin.json.</td><td data-label="Expected">01 Nov ~05:30<span class="expected-basis">starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15</span></td></tr>
+<tr data-task="DS141"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS141</span>Deep wording pass: transcript-folds plugin SKILL.md files and README</td><td data-label="App / service"></td><td data-label="Detail">Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the transcript-folds plugin.json.</td><td data-label="Expected">01 Nov ~05:30<span class="expected-basis">starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15</span></td></tr>
+<tr data-task="DS142"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS142</span>Deep wording pass: feature specs 1-6</td><td data-label="App / service"></td><td data-label="Detail">First six docs/features specs (sorted by name): plain short English; requirement IDs and screens unchanged; change notes per feature.</td><td data-label="Expected">01 Nov ~05:30<span class="expected-basis">starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15</span></td></tr>
+<tr data-task="DS143"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS143</span>Deep wording pass: feature specs 7-11, overview and guides</td><td data-label="App / service"></td><td data-label="Detail">Remaining docs/features specs plus docs/overview and docs/guides pages; IDs unchanged; change notes where a feature changes.</td><td data-label="Expected">01 Nov ~05:30<span class="expected-basis">starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15</span></td></tr>
+<tr data-task="DS144"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS144</span>Fix every project-artifact-check and docs_check finding</td><td data-label="App / service"></td><td data-label="Detail">Run both checks, fix each error and warning (incl. M1 on artifactspec.md) or record why it stays.</td><td data-label="Expected">01 Nov ~05:30<span class="expected-basis">starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15</span></td></tr>
+<tr data-task="DS145"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS145</span>Security audit of plugin scripts (report only)</td><td data-label="App / service"></td><td data-label="Detail">luismc-audits security-audit over claude/plugins/*/scripts and hooks; report under docs/, nothing fixed.</td><td data-label="Expected">01 Nov ~05:30<span class="expected-basis">starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15</span></td></tr>
+<tr data-task="DS146"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS146</span>Performance audit of plugin scripts and hooks (report only)</td><td data-label="App / service"></td><td data-label="Detail">luismc-audits performance-audit; hook latency and script cost; report under docs/, nothing fixed.</td><td data-label="Expected">01 Nov ~05:30<span class="expected-basis">starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15</span></td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">211 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS133"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS133</span>Windows test_ledger timezone failure: check<span class="no-release-line">ships nothing: check only, no code change</span></td><td data-label="App / service"></td><td data-label="Detail">test_train_id_uses_owner_timezone_day passes on Windows now (24/24 OK, Python 3.14.7). Nothing to fix.</td><td data-label="Expected">01 Nov ~00:55</td></tr>
 <tr data-task="DS124"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS124</span>Dogfood: run new claude-setup on dev-standards<span class="no-release-line">ships nothing: repo config only; ships no plugin</span></td><td data-label="App / service"></td><td data-label="Detail">eaa2715 on main, CI green: all 8 plugins on in .claude/settings.json</td><td data-label="Expected">31 Oct</td></tr>
 <tr data-task="DS121"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS121</span><span class="release-name">RELEASE-20</span>Release: claude-setup installs and configures all 8 plugins</td><td data-label="App / service"></td><td data-label="Detail">47bc186 + 1be2866 on main, CI green; project-setup 14.13.0, delivery 0.10.6, DELIVERYSPEC 1.1.0; cloud cap 50/3/53</td><td data-label="Expected">31 Oct</td></tr>
 <tr data-task="DS122"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS122</span>claude-setup: install, enable and configure all 8 plugins<span class="release-line"><span class="release-name">RELEASE-20</span></span></td><td data-label="App / service"></td><td data-label="Detail">project scope; install missing; docs init, record in docs/project, delivery caps 20/3/23</td><td data-label="Expected">31 Oct</td></tr>

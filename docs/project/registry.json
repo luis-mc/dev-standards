@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-10-31T23:59+00:00",
+  "updated": "2026-11-01T00:49+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2345,6 +2345,274 @@
       "expected": "31 Oct",
       "changed": "2026-10-31T23:34+00:00",
       "no_release": "ledger cleanup"
+    },
+    {
+      "id": "DS126",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Release: RemoteTrigger update fix + deep spec wording pass",
+      "detail": "join, fold, push, CI",
+      "expected": "01 Nov ~03:35",
+      "changed": "2026-11-01T00:42+00:00",
+      "expected_basis": "last agent ~02:45 + diff read 20 + join 10 + CI 15 + merge 5",
+      "release": 21,
+      "started": "2026-11-01T00:37+00:00",
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-01T00:37+00:00",
+          "end": "2026-11-01T02:45+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-01T02:45+00:00",
+          "end": "2026-11-01T03:15+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-01T03:15+00:00",
+          "end": "2026-11-01T03:30+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-01T03:30+00:00",
+          "end": "2026-11-01T03:35+00:00"
+        }
+      ]
+    },
+    {
+      "id": "DS127",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "delivery: RemoteTrigger update/list are not launches",
+      "detail": "only create/run count as launches (DL-30/37/38); tests",
+      "expected": "01 Nov ~01:20",
+      "changed": "2026-11-01T00:39+00:00",
+      "expected_basis": "cloud agent: setup 5 + hook fix 25 + checks 10",
+      "rides": "DS126",
+      "started": "2026-11-01T00:37+00:00"
+    },
+    {
+      "id": "DS128",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Deep wording pass: ARTIFACTSPEC",
+      "detail": "section by section, IDs kept",
+      "expected": "01 Nov ~02:20",
+      "changed": "2026-11-01T00:39+00:00",
+      "expected_basis": "cloud agent: setup 5 + full spec pass 80 + checks 15",
+      "rides": "DS126",
+      "started": "2026-11-01T00:37+00:00"
+    },
+    {
+      "id": "DS129",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Deep wording pass: DOCSPEC",
+      "detail": "section by section, IDs kept",
+      "expected": "01 Nov ~02:20",
+      "changed": "2026-11-01T00:39+00:00",
+      "expected_basis": "cloud agent: setup 5 + full spec pass 80 + checks 15",
+      "rides": "DS126",
+      "started": "2026-11-01T00:37+00:00"
+    },
+    {
+      "id": "DS130",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Deep wording pass: STACKSPEC",
+      "detail": "section by section, IDs kept",
+      "expected": "01 Nov ~02:40",
+      "changed": "2026-11-01T00:39+00:00",
+      "expected_basis": "cloud agent: setup 5 + full spec pass 100 + checks 10",
+      "rides": "DS126",
+      "started": "2026-11-01T00:41+00:00"
+    },
+    {
+      "id": "DS131",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Deep wording pass: AUTHSPEC",
+      "detail": "section by section, IDs kept",
+      "expected": "01 Nov ~02:45",
+      "changed": "2026-11-01T00:39+00:00",
+      "expected_basis": "cloud agent: setup 5 + full spec pass 100 + checks 15",
+      "rides": "DS126",
+      "started": "2026-11-01T00:42+00:00"
+    },
+    {
+      "id": "DS132",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Deep wording pass: DELIVERYSPEC",
+      "detail": "section by section, IDs kept",
+      "expected": "01 Nov ~01:50",
+      "changed": "2026-11-01T00:39+00:00",
+      "expected_basis": "cloud agent: setup 5 + spec pass 50 + checks 10",
+      "rides": "DS126",
+      "started": "2026-11-01T00:42+00:00"
+    },
+    {
+      "id": "DS133",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Windows test_ledger timezone failure: check",
+      "detail": "test_train_id_uses_owner_timezone_day passes on Windows now (24/24 OK, Python 3.14.7). Nothing to fix.",
+      "expected": "01 Nov ~00:55",
+      "changed": "2026-11-01T00:41+00:00",
+      "no_release": "check only, no code change",
+      "started": "2026-11-01T00:50+00:00"
+    },
+    {
+      "id": "DS134",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Deep wording pass: agents plugin SKILL.md files and README",
+      "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the agents plugin.json.",
+      "expected": "01 Nov ~05:30",
+      "changed": "2026-11-01T00:49+00:00",
+      "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+    },
+    {
+      "id": "DS135",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Deep wording pass: artifacts plugin SKILL.md files and README",
+      "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the artifacts plugin.json.",
+      "expected": "01 Nov ~05:30",
+      "changed": "2026-11-01T00:49+00:00",
+      "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+    },
+    {
+      "id": "DS136",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Deep wording pass: audits plugin SKILL.md files and README",
+      "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the audits plugin.json.",
+      "expected": "01 Nov ~05:30",
+      "changed": "2026-11-01T00:49+00:00",
+      "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+    },
+    {
+      "id": "DS137",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Deep wording pass: delivery plugin SKILL.md files and README",
+      "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the delivery plugin.json.",
+      "expected": "01 Nov ~05:30",
+      "changed": "2026-11-01T00:49+00:00",
+      "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+    },
+    {
+      "id": "DS138",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Deep wording pass: docs plugin SKILL.md files and README",
+      "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the docs plugin.json.",
+      "expected": "01 Nov ~05:30",
+      "changed": "2026-11-01T00:49+00:00",
+      "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+    },
+    {
+      "id": "DS139",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Deep wording pass: project-setup plugin SKILL.md files and README",
+      "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the project-setup plugin.json.",
+      "expected": "01 Nov ~05:30",
+      "changed": "2026-11-01T00:49+00:00",
+      "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+    },
+    {
+      "id": "DS140",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Deep wording pass: specs plugin SKILL.md files and README",
+      "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the specs plugin.json.",
+      "expected": "01 Nov ~05:30",
+      "changed": "2026-11-01T00:49+00:00",
+      "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+    },
+    {
+      "id": "DS141",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Deep wording pass: transcript-folds plugin SKILL.md files and README",
+      "detail": "Plain short English, one idea per sentence; behaviour, commands, IDs and triggers unchanged; patch change note for the transcript-folds plugin.json.",
+      "expected": "01 Nov ~05:30",
+      "changed": "2026-11-01T00:49+00:00",
+      "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+    },
+    {
+      "id": "DS142",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Deep wording pass: feature specs 1-6",
+      "detail": "First six docs/features specs (sorted by name): plain short English; requirement IDs and screens unchanged; change notes per feature.",
+      "expected": "01 Nov ~05:30",
+      "changed": "2026-11-01T00:49+00:00",
+      "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+    },
+    {
+      "id": "DS143",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Deep wording pass: feature specs 7-11, overview and guides",
+      "detail": "Remaining docs/features specs plus docs/overview and docs/guides pages; IDs unchanged; change notes where a feature changes.",
+      "expected": "01 Nov ~05:30",
+      "changed": "2026-11-01T00:49+00:00",
+      "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+    },
+    {
+      "id": "DS144",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Fix every project-artifact-check and docs_check finding",
+      "detail": "Run both checks, fix each error and warning (incl. M1 on artifactspec.md) or record why it stays.",
+      "expected": "01 Nov ~05:30",
+      "changed": "2026-11-01T00:49+00:00",
+      "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+    },
+    {
+      "id": "DS145",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Security audit of plugin scripts (report only)",
+      "detail": "luismc-audits security-audit over claude/plugins/*/scripts and hooks; report under docs/, nothing fixed.",
+      "expected": "01 Nov ~05:30",
+      "changed": "2026-11-01T00:49+00:00",
+      "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
+    },
+    {
+      "id": "DS146",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Performance audit of plugin scripts and hooks (report only)",
+      "detail": "luismc-audits performance-audit; hook latency and script cost; report under docs/, nothing fixed.",
+      "expected": "01 Nov ~05:30",
+      "changed": "2026-11-01T00:49+00:00",
+      "expected_basis": "starts after DS126 is live ~03:35: agent ~70 + join/diff read 20 + CI 15"
     },
     {
       "id": "MP1",

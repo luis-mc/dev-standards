@@ -1,7 +1,7 @@
 # Authentication & Authorization Framework Specification
 
 **Status:** Normative
-**Version:** 3.2.0
+**Version:** 3.2.1
 **Applies to:** every web and mobile application in this organization
 **Audience:** Claude Code (as a generation guide) and human implementers/reviewers
 
@@ -1464,7 +1464,7 @@ The counters are independent. Exceeding any one triggers its own response.
 ### 17.4 Breached-credential checking
 
 - **R17.8** — Passwords **MUST** be checked against a known-breach corpus at set and change time.
-- **R17.9** — The check **MUST** use a k-anonymity range protocol: send only a short hash prefix and match candidates locally. The full hash and the password itself **MUST NEVER** leave the system. This is also the §25.6 third-party data-flow entry.
+- **R17.9** — The check **MUST** use a k-anonymity range protocol: send only a short hash prefix and match candidates locally. The full hash or the password itself **MUST NEVER** leave the system. This is also the §25.6 third-party data-flow entry.
 - **R17.10** — When the provider is unavailable, the check fails **open** (permit), with a logged security event and a metric. A password-set path that hard-fails on a third-party outage is a self-inflicted denial of service. This is the one deliberate fail-open in the specification. The asymmetry is intentional: §17.4 protects against a probabilistic quality issue, while §17.2 protects against active attack.
 - **R17.11** — Passwords **MUST** also be rejected if they contain the account identifier or the service name.
 

@@ -1,7 +1,7 @@
 # DOCSPEC — Documentation Standard
 
 **Status:** Normative
-**Version:** 1.1.0
+**Version:** 1.1.1
 **Applies to:** every project that keeps its documentation with the `luismc-docs` plugin
 **Audience:** Claude Code sessions and people working in those projects, and the implementers of `luismc-docs`
 **Owner:** Luis Carvalho
@@ -365,7 +365,7 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 ## 9. Existing repositories
 
 - **R9.1** — `docs_setup.py migrate` MUST be a dry run by default. It prints the plan (old path, new path, why, and whether the target is a guess) and changes nothing. `--apply` makes the changes. `--map OLD=NEW` overrides one target.
-- **R9.2** — With `--apply`, the script MUST do these steps in order:
+- **R9.2** — With `--apply`, the script MUST do these steps:
 
   1. Move files with `git mv`, which keeps history (`os.rename` outside git).
   2. Rewrite every relative link in the Markdown and HTML files under `docs/` and in the root `README.md`, `AGENTS.md` and `CLAUDE.md`, so each still resolves.

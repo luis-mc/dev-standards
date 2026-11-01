@@ -147,6 +147,9 @@ class RemoteTriggerActionTests(unittest.TestCase):
             self.assertIn("DL-38", self.launch(a, cfg=cfg) or "", a)
         self.assertIsNone(run(self.root, "RemoteTrigger", {"action": "update", "body": {"enabled": False}}, cfg=cfg))
 
+    def test_bare_run_of_stored_trigger_passes(self):
+        self.assertIsNone(run(self.root, "RemoteTrigger", {"action": "run", "trigger_id": "t1"}))
+
 
 if __name__ == "__main__":
     unittest.main()
