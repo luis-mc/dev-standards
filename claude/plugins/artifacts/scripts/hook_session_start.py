@@ -54,10 +54,20 @@ def load_registry(root, branch):
     return parse_json(text, 'registry.json')
 
 
-def list_pull_requests(root):
+PR_LIMIT_MIN = 20
+PR_LIMIT_MAX = 200
+
+
+def pr_limit(open_count):
+    """How many pull requests to ask gh for: two per open task (a retry may add a second branch), kept
+    between PR_LIMIT_MIN and PR_LIMIT_MAX."""
+    return max(PR_LIMIT_MIN, min(PR_LIMIT_MAX, 2 * open_count))
+
+
+def list_pull_requests(root, limit=PR_LIMIT_MAX):
     """(prs, None) or (None, reason it was skipped)."""
     r = run(gh_command() + ['pr', 'list', '--state', 'all', '--json',
-                            'headRefName,state,mergedAt', '--limit', '200'], root, GH_TIMEOUT)
+                            'headRefName,state,mergedAt', '--limit', str(limit)], root, GH_TIMEOUT)
     if r is None:
         return None, 'gh is not installed or did not answer'
     rc, out, _err = r
@@ -101,21 +111,21 @@ def catch_up(root, manifest):
     merged_status = merged_status_of(manifest)
     messages = []
 
-    prs, skipped = list_pull_requests(root)
-    if skipped:
-        warn('gh pr list skipped: ' + skipped)
-        messages.append('luismc-artifacts: the pull request catch-up was skipped (%s). '
-                        'Statuses change only through commands this session runs.' % skipped)
+    registry = load_registry(root, branch)
+    tasks = registry.get('tasks') if isinstance(registry, dict) else None
+    if not isinstance(tasks, list):
+        warn('registry.json unreadable; catch-up skipped')
     else:
-        registry = load_registry(root, branch)
-        tasks = registry.get('tasks') if isinstance(registry, dict) else None
-        if not isinstance(tasks, list):
-            warn('registry.json unreadable; catch-up skipped')
+        open_tasks = [t for t in tasks if isinstance(t, dict) and t.get('status') in OPEN_STATUSES]
+        # No task in Running, Waiting or To do: a merge or a close changes nothing, so gh is not called.
+        prs, skipped = list_pull_requests(root, pr_limit(len(open_tasks))) if open_tasks else ([], None)
+        if skipped:
+            warn('gh pr list skipped: ' + skipped)
+            messages.append('luismc-artifacts: the pull request catch-up was skipped (%s). '
+                            'Statuses change only through commands this session runs.' % skipped)
         else:
             outcomes = outcomes_by_task(prs)
-            for task in tasks:
-                if not isinstance(task, dict) or task.get('status') not in OPEN_STATUSES:
-                    continue
+            for task in open_tasks:
                 kinds = outcomes.get(task.get('id'), set())
                 if 'merged' in kinds:
                     append_event(root, task['id'], merged_status, 'pull request merged')
