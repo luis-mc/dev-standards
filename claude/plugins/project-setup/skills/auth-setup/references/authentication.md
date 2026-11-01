@@ -2133,20 +2133,20 @@ Normative for **every** visual interface built against this API. The compliance 
 
 ## 26. Deliverables
 
-A conforming implementation produces all four.
+A conforming implementation produces all four deliverables below.
 
 ### 26.1 Server implementation and persistence schema
 
 - Component structure per §3.3, each independently testable.
-- Complete schema from §4 in the project's native migration tooling, including every index and constraint, plus the audit-table grant restriction (R4.14).
-- A reversible migration path where the tooling supports it; the audit grant change is documented as requiring privileged execution.
+- The complete §4 schema in the project's migration tooling, with every index and constraint, and the audit-table grant restriction (R4.14).
+- A reversible migration path where the tooling supports one. The documentation says the audit grant change needs privileged execution.
 - The permission and role catalog declared in code and reconciled by migration (R4.13).
 
 ### 26.2 Client SDK contract
 
 - The §20 interface for web and for each native platform in use.
 - Platform-appropriate secure storage (§20.2).
-- Single-flight re-authentication, jittered capped retry, complete error-code mapping.
+- Single-flight re-authentication, capped retry with jitter, and a complete error-code mapping.
 - Generated from or validated against the machine-readable description (R19.26).
 
 ### 26.3 Test suite
@@ -2157,15 +2157,15 @@ Per §27.2.
 
 | Document | Contents |
 |---|---|
-| Configuration reference | Every key from §24.2, its default, ceiling, effect, and every recorded deviation from a **SHOULD** |
+| Configuration reference | Every key from §24.2 with its default, ceiling and effect, and every recorded deviation from a **SHOULD** |
 | Data inventory | §25.1 |
 | Third-party register | §25.6 |
-| Key management runbook | Rotation for signing, pseudonym, and data keys; overlap windows; emergency rotation; KMS unavailability |
+| Key management runbook | Rotation of signing, pseudonym and data keys; overlap windows; emergency rotation; KMS unavailability |
 | Break-glass runbook | Activation criteria, alert recipients, review procedure, the R12.14 alert-failure behaviour, frequency review cadence |
 | Admin recovery runbook | Out-of-band identity verification, approver rotation, the R9.13 break-glass dependency |
 | Incident runbook | Credential compromise, audit-chain verification failure, session-store compromise, KMS compromise, mass-revocation procedure |
 | Erasure and backup runbook | Grace period, job monitoring, R15.17 restore interaction, downstream purge interfaces |
-| Retention operations | Every job from §23.3, its cadence, alerting, and failure handling |
+| Retention operations | Every job from §23.3, with its cadence, alerting and failure handling |
 
 ---
 
@@ -2183,9 +2183,9 @@ Run all three audits against the generated code:
 /audits:performance-audit
 ```
 
-- **R27.1** — All three **MUST** report zero findings — `[OK]`, `[COMPLIANCE OK]`, `[PERF OK]` respectively. Any finding at any severity blocks completion.
-- **R27.2** — If an audit reports a finding the implementer believes to be a false positive, the resolution is to make the code unambiguous — not to argue with the finding. The audits read execution paths; if a control is not traceable in the code, it is indistinguishable from an absent control.
-- **R27.3** — The audits **MUST** be re-run after any subsequent change to the auth module.
+- **R27.1** — All three **MUST** report zero findings: `[OK]`, `[COMPLIANCE OK]` and `[PERF OK]` respectively. Any finding at any severity blocks completion.
+- **R27.2** — If an audit reports a finding that the implementer believes is a false positive, make the code unambiguous. Do not argue with the finding. The audits read execution paths. A control that cannot be traced in the code looks the same as a missing control.
+- **R27.3** — The audits **MUST** be re-run after any later change to the auth module.
 
 ### 27.2 Test gate
 
@@ -2202,23 +2202,23 @@ All of these **MUST** exist and pass.
 - An expired break-glass grant stops working immediately without a job run (R12.13).
 
 **Session:**
-- A revoked session is rejected on the very next request, including with a warm cache (R6.22).
+- A revoked session is rejected on the next request, including with a warm cache (R6.22).
 - Absolute expiry is not extended by activity (R6.4).
 - Idle expiry is enforced.
 - A cookie session presented as a bearer token is rejected, and vice versa (R6.17).
 - Presenting both a cookie and a bearer header is rejected outright.
 - A state-changing cookie request without a valid CSRF token is rejected.
-- The pre-auth session identifier is not reused post-authentication (R6.30).
+- The pre-auth session identifier is not reused after authentication (R6.30).
 - The pending-MFA credential grants no permission at any endpoint (R6.31).
 - Locking an account invalidates live sessions (R4.8).
 
 **Authentication:**
-- Timing and response body are indistinguishable for unknown account vs. wrong password (R7.3, R19.10).
-- Registration response is identical for new vs. existing address (R7.40).
+- Timing and response body are indistinguishable for an unknown account and a wrong password (R7.3, R19.10).
+- The registration response is identical for a new address and an existing one (R7.40).
 - A one-time credential cannot be redeemed twice, including under concurrent redemption (R4.12).
 - A TOTP code cannot be replayed within its window (R7.23).
 - A WebAuthn assertion with a non-increasing sign counter is rejected (R7.11).
-- An admin authentication attempt via password, OTP, or TOTP has no reachable route (R7.6).
+- An admin authentication attempt by password, OTP or TOTP has no reachable route (R7.6).
 - With `admin.passkey.allow_synced = false`, an admin passkey with `backup_eligible = true` is rejected at enrollment; with `true`, it is accepted (R7.12).
 - Registering a synced passkey on an admin account raises a staff alert (R7.12a).
 - A passkey session records `hwk`/`swk` in `amr` and `aal3`/`aal2` in `acr` according to the credential's BE flag, and both reach the access assertion (R7.12b).
@@ -2248,15 +2248,15 @@ All of these **MUST** exist and pass.
 - Erasure leaves audit records intact and non-identifying (R15.13).
 - Erasure is idempotent and resumable (R15.15).
 - Export includes every category in R15.2.
-- Export streams rather than buffering (R15.5).
+- Export streams and does not buffer (R15.5).
 - The export download credential is single-use and expires.
-- The re-consent gate blocks ordinary access but never blocks export, deletion, or logout (R14.7).
+- The re-consent gate blocks ordinary access but never blocks export, deletion or logout (R14.7).
 - Registration without consent records is impossible, including via federated JIT provisioning (R14.4).
 - No audit record contains personal data (R16.4, R16.5).
 
 **Audit trail:**
 - The application principal cannot `UPDATE` or `DELETE` an audit record (R4.14).
-- Chain verification detects a modified record, a deleted record, and a resequenced record.
+- Chain verification detects a modified record, a deleted record and a resequenced record.
 - Checkpoint signature verification detects a wholesale chain rewrite (R16.10).
 - Sequence assignment produces no duplicates or gaps under concurrent insertion (R16.8).
 - Every administrative personal-data read produces an audit record before the response is sent (R12.5).
@@ -2283,13 +2283,13 @@ All of these **MUST** exist and pass.
 - **R27.6** — The machine-readable description matches the registered routes (R19.25).
 - **R27.7** — No route lacks a permission declaration.
 - **R27.8** — No prohibited primitive from R5.4 appears anywhere in the module.
-- **R27.9** — No non-constant-time comparison is applied to a secret, digest, or token.
-- **R27.10** — No log statement, at any level, emits a value from an `[ENC]`, `[HASH]`, or `[BIDX]` attribute, or a session secret, password, token, or raw IP address.
+- **R27.9** — No non-constant-time comparison is applied to a secret, digest or token.
+- **R27.10** — No log statement, at any level, emits a value from an `[ENC]`, `[HASH]` or `[BIDX]` attribute, or a session secret, password, token or raw IP address.
 - **R27.11** — **Retired identifier registry.** A requirement identifier that is withdrawn is recorded here and **MUST NOT** be cited or redefined anywhere in this document. Numbering is append-only: a retired number is never reused for new meaning, because a stale citation that resolves to the *wrong* requirement is worse than one that fails to resolve. Retired to date: *none*. `tools/authspec_check.py --only retired` reads this list, so an entry added here is enforced from the next run; an empty registry is the correct state for a document that has retired nothing, not a missing one.
 
 ### 27.4 Coverage map
 
-Each audit checklist section maps to the controls that satisfy it. Use this when triaging a finding.
+Each audit checklist section maps to the controls that satisfy it. Use the map when you triage a finding.
 
 **Security audit:**
 
@@ -2373,22 +2373,22 @@ Each audit checklist section maps to the controls that satisfy it. Use this when
 
 ## 28. Design rationale
 
-Decisions most likely to be questioned later, and why they were made.
+The decisions most likely to be questioned later, and why they were made.
 
 | Decision | Rationale |
 |---|---|
-| Server-side sessions over stateless tokens | Immediate, complete revocation. Lock, logout-all, credential-change invalidation, and deletion are all only as real as revocation is. The cache tier (§6.6) recovers the performance a stateless design would have given. |
-| Separate admin plane | INV-1 makes admin compromise structurally independent of user compromise. A role flag on a shared user table means one user-plane bug can reach admin scope. |
-| Passkey-only admins | FedRAMP High / NIST SP 800-63B require phishing-resistant MFA for privileged access. TOTP is not phishing-resistant — it is relayable in real time. Admitting TOTP for admins would be a knowing deviation. |
-| Synced admin passkeys permitted | A synced passkey is still phishing-resistant; what it adds is the provider account to the admin trust boundary. Requiring hardware keys for every admin was judged a larger operational cost than that risk. It is bounded instead: every synced admin registration alerts staff (R7.12a), every session states its sync status so downstream services can demand `aal3` (R7.12b), and `admin.passkey.allow_synced` restores the device-bound-only posture for deployments that need it. |
-| No impersonation | It is the single most dangerous feature in an auth system and was not requested. A partial implementation is worse than none (R12.20). |
-| Crypto-erasure after a grace period | The grace period prevents irreversible loss from a moment's frustration; crypto-erasure makes deletion real across backups, which soft-delete and row-delete both fail to do. |
-| No personal data in audit records | Audit records must survive erasure for 6 years. Personal data there would be unerasable, creating a direct and unresolvable conflict between two mandatory obligations (R15.13). |
-| Blind index on email | Encrypted email cannot be searched, but login requires exact-match lookup. A keyed HMAC gives lookup without a reversible plaintext copy — and is itself deleted on erasure. |
+| Server-side sessions over stateless tokens | Revocation is immediate and complete. Lock, logout-all, credential-change invalidation and deletion are only as real as revocation is. The cache tier (§6.6) recovers the performance that a stateless design would have given. |
+| Separate admin plane | INV-1 makes an admin compromise structurally independent of a user compromise. With a role flag on a shared user table, one user-plane bug can reach admin scope. |
+| Passkey-only admins | FedRAMP High and NIST SP 800-63B require phishing-resistant MFA for privileged access. TOTP is not phishing-resistant: an attacker can relay it in real time. Admitting TOTP for admins would be a knowing deviation. |
+| Synced admin passkeys permitted | A synced passkey is still phishing-resistant. What it adds is the provider account in the admin trust boundary. Requiring hardware keys for every admin was judged a larger operational cost than that risk. The risk is bounded instead. Every synced admin registration alerts staff (R7.12a). Every session states its sync status, so downstream services can demand `aal3` (R7.12b). `admin.passkey.allow_synced` restores the device-bound-only posture for deployments that need it. |
+| No impersonation | It is the most dangerous feature in an auth system, and nobody requested it. A partial implementation is worse than none (R12.20). |
+| Crypto-erasure after a grace period | The grace period prevents irreversible loss from a moment's frustration. Crypto-erasure makes deletion real across backups. Soft-delete and row-delete both fail to do that. |
+| No personal data in audit records | Audit records must survive erasure for 6 years. Personal data there could not be erased. That would set two mandatory obligations in direct conflict, with no way to resolve it (R15.13). |
+| Blind index on email | Encrypted email cannot be searched, but login requires an exact-match lookup. A keyed HMAC gives the lookup without a reversible plaintext copy. It is itself deleted on erasure. |
 | Auto-link only on verified email from a trusted provider | An unverified `email_verified` claim is attacker-controlled. Auto-linking on it is the classic pre-registration account takeover. |
-| Fail-closed rate limiting, fail-open breach check | Asymmetric on purpose: §17.2 defends against active attack, where an unlimited endpoint is worse than an unavailable one. §17.4 defends against a probabilistic quality issue, where a third-party outage should not break password changes. |
-| Bounded KDF concurrency | An unbounded memory-hard KDF is simultaneously the strongest password defense and the easiest CPU/memory exhaustion vector. Bounding it is what makes it safe to use. |
-| Cursor pagination only | Offset pagination degrades linearly and produces inconsistent pages under concurrent writes — both a performance and a correctness problem on exactly the admin list endpoints most likely to be enumerated. |
-| Strict request validation, tolerant response parsing | Rejecting unknown request fields prevents a client from believing a security parameter was honored when it was dropped. Tolerating unknown response fields lets the server add fields without breaking deployed clients. |
-| Ownership predicate indirection | Puts the account isolation boundary in exactly one reviewable place, and makes future tenancy a one-site change rather than an audit of every query. |
+| Fail-closed rate limiting, fail-open breach check | The asymmetry is on purpose. §17.2 defends against active attack, where an unlimited endpoint is worse than an unavailable one. §17.4 defends against a probabilistic quality issue, where a third-party outage should not break password changes. |
+| Bounded KDF concurrency | An unbounded memory-hard KDF is both the strongest password defense and the easiest CPU and memory exhaustion vector. Bounding it makes it safe to use. |
+| Cursor pagination only | Offset pagination slows down linearly and gives inconsistent pages under concurrent writes. That is both a performance problem and a correctness problem, on the admin list endpoints that are most likely to be enumerated. |
+| Strict request validation, tolerant response parsing | Rejecting unknown request fields stops a client from believing a security parameter was honored when it was dropped. Tolerating unknown response fields lets the server add fields without breaking deployed clients. |
+| Ownership predicate indirection | It puts the account isolation boundary in one reviewable place. Future tenancy then becomes a change in one place, not an audit of every query. |
 ```
