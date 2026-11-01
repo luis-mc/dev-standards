@@ -423,8 +423,8 @@ check, performed by reading.
 
 1. **Find the declared standard.** Read `docs/architecture/stack-profile.md`, or the old `docs/specs/stack-profile.md` when the repo has not moved it (say so in the audit: moving it is a finding). Note the
    `STACKSPEC` version it claims. If it is behind the version in `references/`,
-   say so first — every finding is relative to the version the product claims,
-   and the delta between versions is itself a finding.
+   say so first. Every finding is relative to the version the product claims.
+   The difference between versions is itself a finding.
 
    A profile claiming **5.x** (5.2.0 and earlier) predates `STACKSPEC` 6.0.0's
    four new `MUST`s, listed in the spec's `§0.1` 6.0.0 entry: the `§11.2` E2E
@@ -437,7 +437,7 @@ check, performed by reading.
    A profile claiming **7.x** predates `STACKSPEC` 8.0.0's one new `MUST`,
    `§13.7`: a product that ships a packaged program has CI start the packaged
    form and exercise every worker it starts (`smoke.json` plus a `package.yml`
-   job). List it as an upgrade item only for such a product; a product that
+   job). List it as an upgrade item only for such a product. A product that
    ships none conforms to 8.0.0 as it stands. Offer the 8.0.0 improvements as
    suggestions: `inert_paths` and `lockfile_scope` in `gate.json`, the light join
    check, the train freeze in pre-push, runner-health warnings, path-filtered
@@ -468,14 +468,14 @@ check, performed by reading.
 
 2. **If there is no profile, that is finding number one.** `§16` and `§18` make
    it mandatory. Without it there is no declared engine, no RPO/RTO, no pinning
-   decision, no capability-gap record and no deviation record — so most clauses
-   cannot even be evaluated. Report it and continue with what is checkable.
+   decision, no capability-gap record and no deviation record. So most clauses
+   cannot be evaluated. Report it and continue with what is checkable.
 
 3. **Work `§19`'s checklist**, section by section: Repository and layering ·
    Contract · Data · Jobs and integrations · Caching · Clients · Observability ·
    Testing and CI · Configuration and compliance. For each item resolve one of:
    **conforms**, **violates**, **absent**, **not applicable** (with the reason).
-   Cite file and line for every violation — a finding without a location is not
+   Cite file and line for every violation. A finding without a location is not
    actionable.
 
 4. **Check the structural gates specifically.** These fail silently when absent:
@@ -559,8 +559,8 @@ check, performed by reading.
    `go test` instead of Vitest, conforms perfectly.
 
 6. **Report severity-ranked findings, grouped by section. Edit nothing while
-   surveying** — a check that repairs as it goes cannot tell you what the repo
-   actually looked like.
+   surveying.** A check that repairs as it goes cannot show you what the repo
+   looked like.
 
 7. **Then offer to fix the mechanical findings — opt-in, never automatic.** Some
    violations are decisions (a missing RPO, a layering breach needing code
@@ -571,7 +571,7 @@ check, performed by reading.
    - CI workflow missing or short of `§13.1`'s twelve gates, or drifting from
      its CI-cost clause (the `SHOULD` findings from step 4)
    - boundary-check config missing → `§3.2` has no enforcement, so the layer
-     rules are decaying by default
+     rules decay by default
    - lint, format, test and task-runner configs missing
    - `scripts/delivery/`, `gate.json`, `tools.json` or `.githooks/pre-push`
      missing → `§13.5`; the `.delivery/` line missing from `.gitignore`;
@@ -589,8 +589,8 @@ check, performed by reading.
    Rules for the repair pass:
 
    - **Diff before replacing.** If the file exists but differs, show the diff and
-     ask. An existing CI workflow may carry project-specific jobs a blind
-     overwrite destroys — generation and repair MUST NOT touch those jobs, only
+     ask. An existing CI workflow may carry project-specific jobs that a blind
+     overwrite destroys. Generation and repair MUST NOT touch those jobs, only
      the gates and CI-cost settings the template owns. An existing
      `.gitleaks.toml` may carry allowlist entries added for real false positives.
    - **Never touch a conforming file**, even if it differs from the template. The
@@ -604,8 +604,8 @@ check, performed by reading.
 
 # The catalog
 
-`assets/catalog/` is the compatibility model. It is data, not requirements —
-nothing in it is graded.
+`assets/catalog/` is the compatibility model. It is data, not requirements.
+Nothing in it is graded.
 
 | File | Holds |
 |---|---|
@@ -621,31 +621,30 @@ Two habits when using it:
 
 - **`say_out_loud` blocks are not optional.** They exist because the consequence
   is invisible at selection time and expensive later. Read them to the user.
-- **Run `check_stack.py --catalog` after editing any of it.** It verifies the
-  files agree with each other — that framework tracks name real languages, hosts
+- **Run `check_stack.py --catalog` after editing any of it.** It verifies that the
+  files agree with each other: framework tracks name real languages, hosts
   name real engines, every engine answers every declared capability, and bundle
   selections reference technologies that exist.
 
 ## Keeping the catalog honest
 
-The catalog carries claims about the world — that Workers have no raw TCP, that
-D1 lacks interactive transactions, that PlanetScale discouraged foreign keys.
-These go stale. When a claim is load-bearing for a recommendation and you are not
-current on it, say so rather than asserting it, and verify before blocking a
-user's choice on it.
+The catalog carries claims about the world: Workers have no raw TCP, D1 lacks
+interactive transactions, PlanetScale discouraged foreign keys. These go stale.
+When a recommendation depends on a claim and you are not current on it, say so.
+Do not assert it. Verify it before blocking a user's choice on it.
 
 ## The tooling assets
 
 `assets/tooling/<track>/` holds working implementations of `§13.1`'s twelve
-gates, one set per track. Copy in Phase 7 step 1 — before any module exists, so
+gates, one set per track. Copy in Phase 7 step 1, before any module exists, so
 the first commit is already gated. `assets/tooling/shared/scripts/delivery/`
 holds the track-independent delivery scripts (branch gate, verifier, pre-push
 guards, merge script, CI watcher, default-branch skip check, agent setup), and
 its `CONTRACT.md` is the one place their paths, exit codes and file formats are
 defined.
 
-Three properties every track's templates must preserve, because they exist so an
-absent check cannot masquerade as a passing one:
+Three properties every track's templates must preserve. They exist so that an
+absent check cannot pass for a passing one:
 
 - **A suite that finds no tests fails** (`§11.3`). A mis-globbed suite must not
   report green over zero tests.
@@ -658,8 +657,8 @@ absent check cannot masquerade as a passing one:
 ### The tool names are this generator's choice, not the spec's
 
 `STACKSPEC §13.1` requires the twelve gates to run and fail the build. It names
-no tool, and it must not start to — `§20` makes a new `MUST` a major version, and
-naming a vendor anywhere in the spec is defined there as a defect.
+no tool, and it must not start to. `§20` makes a new `MUST` a major version, and
+defines naming a vendor anywhere in the spec as a defect.
 
 So record the tools in `docs/architecture/stack-profile.md`, not here. In Mode 2 that
 distinction is the difference between a finding and a false positive.
