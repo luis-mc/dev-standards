@@ -244,6 +244,8 @@ One file per repository (git-ignored with `.delivery/`). Only `delivery_ledger.p
 | `owner_questions[]` | POST hook on `AskUserQuestion` (asked) and on the next user message (answered) via UserPromptSubmit |
 | `events[]` | every writer (append) |
 
+Finished rows (closed trains, finished or disabled agents, finished installs, events) older than `ledger_retention_days` (default 14; 0 keeps all) are dropped when the ledger is written; open rows, rows with no readable timestamp and trains with an active hold are never dropped.
+
 ## 3. Gaps: rules no check can fully enforce, and the best proxy
 
 | Rule | Why not mechanical | Best proxy |
