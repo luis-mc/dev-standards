@@ -447,5 +447,5 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 
 ## 14. Conformance gate
 
-- **R14.1** — A project conforms when `python3 <plugin>/scripts/docs_check.py --base <default branch>` exits 0 on its branch and `python3 <plugin>/scripts/docs_index.py check` exits 0.
-- **R14.2** — A project records the DOCSPEC version it follows in `docs/docs.json` as `docspec`.
+- **R14.1** — A project conforms when both commands exit 0 on its branch: `python3 <plugin>/scripts/docs_check.py --base <default branch>` and `python3 <plugin>/scripts/docs_index.py check`.
+- **R14.2** — A project records the DOCSPEC version it follows in `docs/docs.json`, under the key `docspec`.
