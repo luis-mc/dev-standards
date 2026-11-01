@@ -118,5 +118,35 @@ class JoinBriefTests(unittest.TestCase):
         self.assertFalse(r and "DL-11" in r)
 
 
+class RemoteTriggerActionTests(unittest.TestCase):
+    def setUp(self):
+        self.root = make_root()
+
+    def launch(self, action, model=True, cfg=None):
+        body = {"session_context": {"effort_level": "medium"}, "events": [{"data": {"message": {"content": "```delivery\ntask: X1\n```\nDo it"}}}]}
+        if model:
+            body["session_context"]["model"] = "sonnet"
+        return run(self.root, "RemoteTrigger", {"action": action, "body": body}, cfg=cfg)
+
+    def test_update_disable_passes(self):
+        self.assertIsNone(run(self.root, "RemoteTrigger", {"action": "update", "trigger_id": "t1", "body": {"enabled": False}}))
+
+    def test_read_actions_pass(self):
+        for a in ("list", "get", "list_runs", "get_run_log"):
+            self.assertIsNone(run(self.root, "RemoteTrigger", {"action": a, "trigger_id": "t1"}), a)
+
+    def test_create_and_run_without_model_refused(self):
+        for a in ("create", "run"):
+            self.assertIn("DL-37", self.launch(a, model=False) or "", a)
+
+    def test_cap_counts_create_and_run(self):
+        cfg = H.load_config(str(self.root))
+        cfg["caps"] = {"cloud": 0, "local": 0, "total": 0}
+        cfg["brief_markers"] = []
+        for a in ("create", "run"):
+            self.assertIn("DL-38", self.launch(a, cfg=cfg) or "", a)
+        self.assertIsNone(run(self.root, "RemoteTrigger", {"action": "update", "body": {"enabled": False}}, cfg=cfg))
+
+
 if __name__ == "__main__":
     unittest.main()
