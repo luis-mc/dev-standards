@@ -87,6 +87,9 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | setup-offers | D3 | Should claude-setup write a CI workflow for the docs, design-system and spec checks? | Yes, in claude-setup | decided | 2026-11-01 |
 | setup-offers | D4 | Should the docs Stop hook be able to block? | Warn only, block in CI | decided | 2026-11-01 |
 | setup-offers | D5 | Three paths can write a feature spec (specs spec-new, docs feature-spec-new, artifacts promote-to-spec). How should they split? | Split by kind | decided | 2026-11-01 |
+| setup-offers | D6 | Where should transcript-folds be installed and turned on? | Project level | decided | 2026-11-01 |
+| setup-offers | D7 | Where should claude-setup write its config files (rules, CLAUDE.md, statusline, output style, effort hook, model split) by default? | Project by default | decided | 2026-11-01 |
+| setup-offers | D8 | Should claude-setup register the dev-standards marketplace in each project? | Add per project | decided | 2026-11-01 |
 | test-cost | D1 | Make path-scoped CI jobs? (asked as one of four cuts in a single multi-select question) | Yes | decided | 2026-10-11 |
 | test-cost | D10 | Shorten the PR CI run (11 min, one serial delivery job with every suite's mutants on for any delivery change)? | Add to DL12 now | decided | 2026-10-11 |
 | test-cost | D11 | Which of the three CI cuts go into DL12 now? | 1+2+3 | decided | 2026-10-11 |
