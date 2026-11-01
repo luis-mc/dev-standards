@@ -962,8 +962,8 @@ previews, webhooks and avatar imports.
   any app on any platform.** A lint rule SHOULD enforce this where the toolchain
   allows.
 - Products with runtime theming MUST express the runtime theme in the same token
-  vocabulary, so generated tokens are the baseline and the runtime payload is an
-  override — not a parallel system.
+  vocabulary. Generated tokens are the baseline and the runtime payload is an
+  override, not a parallel system.
 
 ### 9.2 Web clients
 
@@ -979,25 +979,26 @@ previews, webhooks and avatar imports.
   above-the-fold usage, and served with `font-display: swap`.
 - Images MUST be served in modern formats at appropriate sizes, with explicit
   dimensions to prevent layout shift.
-- **Non-critical components MUST be code-split** and loaded lazily — modals,
-  charts, editors, pickers, anything below the fold or behind an interaction.
+- **Non-critical components MUST be code-split** and loaded lazily. This covers
+  modals, charts, editors, pickers, and anything below the fold or behind an
+  interaction.
 - The build MUST target modern browsers. Legacy transpilation output and
   polyfills MUST NOT be shipped to browsers that do not need them.
 - Styling MUST be delivered as pre-compiled CSS. Runtime style computation that
   blocks rendering MUST NOT be introduced.
-- Data-heavy routes SHOULD stream or defer non-critical sections rather than
-  blocking first paint on the slowest query.
+- Data-heavy routes SHOULD stream or defer non-critical sections. They SHOULD NOT
+  block first paint on the slowest query.
 
 ### 9.3 Server state vs client state
 
 This separation exists because thin clients poll. It binds any client that holds
-state locally — which is every rich client, and no purely server-rendered one.
+state locally. That is every rich client, and no purely server-rendered one.
 
-- **Server state** — anything that came from the API — MUST go through one
-  server-state layer. Caching, staleness, refetch-on-focus, retry with backoff,
-  request de-duplication and loading/error states are configured **once**, not
-  reinvented per component.
-- **Client state** — open dialogs, form drafts, view preferences — belongs in
+- **Server state** (anything that came from the API) MUST go through one
+  server-state layer. Configure caching, staleness, refetch-on-focus, retry with
+  backoff, request de-duplication and loading/error states **once**. Do not
+  reinvent them per component.
+- **Client state** (open dialogs, form drafts, view preferences) belongs in
   local UI state.
 - Server-derived values MUST NOT be copied into a client store, where they
   silently go stale.
@@ -1006,17 +1007,17 @@ state locally — which is every rich client, and no purely server-rendered one.
 - Polling intervals MUST be declared per query, pause when the view is hidden, and
   back off on repeated failure.
 
-A server-rendered or hypermedia client satisfies this section by construction:
-there is no client-side copy of server state to go stale. It MUST still declare
-its polling or refresh intervals and honour the backoff rule.
+A server-rendered or hypermedia client meets this section by construction,
+because it has no client-side copy of server state to go stale. It MUST still
+declare its polling or refresh intervals and honour the backoff rule.
 
 ### 9.4 Idempotency contract
 
 - Every mutating endpoint accepts a client-supplied idempotency key.
-- The server stores the key with its response for a documented window and returns
-  the original response on replay, rather than performing the action twice.
+- The server stores the key with its response for a documented window. On replay
+  it returns the original response and does not perform the action twice.
 - The key is generated **when the user takes the action**, not when the request is
-  sent — a retry after a timeout MUST carry the same key.
+  sent. A retry after a timeout MUST carry the same key.
 
 ### 9.5 Forward compatibility
 
@@ -1035,21 +1036,21 @@ Shipped binaries live for years. Every client MUST:
 - No user-facing string may be hardcoded in any client on any platform.
 - All copy lives in resource files with a **shared key namespace** across every
   client surface, so one translation set serves all of them.
-- Server-supplied user-facing text MUST be either already localized — the client
-  sends its locale — or accompanied by a key the client resolves.
+- Server-supplied user-facing text MUST be either already localized (the client
+  sends its locale) or accompanied by a key the client resolves.
 - Plurals, dates, numbers and currency use platform locale APIs, never string
   concatenation.
 - Layouts MUST tolerate string-length variation; RTL support MUST NOT be
   structurally precluded even if no RTL language ships initially.
 
-Mandatory now because retrofitting it means touching every screen on every
+It is mandatory now because adding it later means touching every screen on every
 platform.
 
 ### 9.7 Data-collection inventory as a build gate
 
-A single **declared data-collection inventory** lives in the repository: for
-every category of data the product collects — its purpose, whether it is linked
-to identity, whether it is used for tracking, and its retention.
+A single **declared data-collection inventory** lives in the repository. For
+every category of data the product collects, it records the purpose, whether the
+data is linked to identity, whether it is used for tracking, and its retention.
 
 From that one source, the product generates its store privacy declarations (where
 mobile ships) and its regulatory processing record.
@@ -1057,9 +1058,9 @@ mobile ships) and its regulatory processing record.
 CI MUST fail when code or a dependency collects a category absent from the
 inventory, or when generated artifacts differ from the committed ones.
 
-Third-party SDKs carrying their own privacy declarations MUST be reviewed against
-the inventory before adoption. This gate exists because a mismatch between
-declared and actual collection is simultaneously a store rejection and a
+Third-party SDKs that carry their own privacy declarations MUST be reviewed
+against the inventory before adoption. This gate exists because a mismatch
+between declared and actual collection is both a store rejection and a
 regulatory exposure.
 
 ### 9.8 Mobile behaviour
@@ -1083,21 +1084,21 @@ never general-purpose preference storage or a plain file, and MUST be excluded
 from unencrypted backups.
 
 **Deep links** MUST be cryptographically verified via association files served by
-the web app. Every link target MUST exact-match an allow-list — no wildcard, no
-open redirect. Every deep link MUST have a working web fallback. Auth-bearing
-links are single-use, short-TTL, and consumed by an immediate server-side
-redirect that strips the token.
+the web app. Every link target MUST exact-match an allow-list, with no wildcard
+and no open redirect. Every deep link MUST have a working web fallback.
+Auth-bearing links are single-use and short-TTL. An immediate server-side
+redirect consumes them and strips the token.
 
 **Sensitive screens** MUST be masked in the app switcher and excluded from
 screenshots and recents previews.
 
 **Lifecycle.** Navigation state MUST be restorable and process death MUST be
-handled without data loss, since the OS will terminate the app.
+handled without data loss, because the OS will terminate the app.
 
 **Transport hardening.** Cleartext HTTP MUST be disabled at the platform level,
 with no debug exception in a release build. **Certificate pinning is a declared
 decision, not a default**: each product MUST record whether it pins and, if not,
-why; if it does, it MUST document the backup-pin and rotation procedure —
+why. If it does, it MUST document the backup-pin and rotation procedure;
 unrotatable pins have bricked more apps than they have saved. The API base URL
 MUST come from build configuration (§15), never from a value the app can be
 persuaded to change at runtime.
@@ -1105,14 +1106,18 @@ persuaded to change at runtime.
 ### 9.9 Accessibility
 
 WCAG 2.2 AA is the standard for web, with platform parity for native. This is a
-`SHOULD` at release-gate strength rather than a hard CI gate, but semantic
-markup, keyboard and screen-reader operability, visible focus, labelled controls,
-font scaling, minimum touch targets, honoured reduce-motion settings and
-token-guaranteed contrast are expected as ordinary craft rather than as a later
-remediation project.
+`SHOULD` at release-gate strength, not a hard CI gate. Teams are still expected
+to build these in as ordinary craft, not as a later remediation project:
+
+- semantic markup
+- keyboard and screen-reader operability
+- visible focus and labelled controls
+- font scaling and minimum touch targets
+- honoured reduce-motion settings
+- token-guaranteed contrast
 
 Accessibility findings that block a user from completing an account, consent,
-payment or deletion flow are treated as defects, not as enhancements.
+payment or deletion flow are defects, not enhancements.
 
 ---
 
@@ -1136,25 +1141,25 @@ that dies with the provider it monitors is not an external check.
 
 **Why an external error tracker clears a bar that most analytics vendors do
 not.** §10.3 requires every non-essential event to be gated on server-side
-consent, yet §10.4 assumes the error tracker is an external processor. That is
-not an inconsistency; the two are on different lawful bases:
+consent, yet §10.4 assumes the error tracker is an external processor. These do
+not conflict, because the two rest on different lawful bases:
 
 - Product analytics is **non-essential** processing. Non-essential events MUST
   NOT be emitted or buffered before consent is recorded server-side, and that
-  MUST be enforced at the ingestion endpoint. A vendor SDK reporting directly to
-  a backend the product does not control cannot be gated on consent state that
-  backend never sees — so it is the *architecture* that fails §10.3, and any
-  vendor whose ingestion the product does control passes it.
+  MUST be enforced at the ingestion endpoint. A vendor SDK that reports directly
+  to a backend the product does not control cannot be gated on consent state that
+  backend never sees. The *architecture* fails §10.3, and any vendor whose
+  ingestion the product does control passes it.
 - Error and crash reporting is **strictly necessary** for service delivery and
   security, so it does not depend on consent to be lawful.
 
-The remaining costs of an external error tracker — an extra sub-processor, an SDK
-in the mobile binaries, retention outside your control — are not avoided. §10.4
-prices them instead, which is why it imposes a register entry, a signed
-agreement, explicit retention, and erasure and export coverage. The practical
-reason is buildability: a first-party event pipeline is an endpoint and a table,
-while a first-party crash reporter means symbolication, deminification, native
-crash capture on two mobile platforms, grouping and alerting.
+An external error tracker still has costs: an extra sub-processor, an SDK in the
+mobile binaries, and retention outside your control. §10.4 does not avoid them.
+It prices them, which is why it requires a register entry, a signed agreement,
+explicit retention, and erasure and export coverage. The practical reason is
+buildability. A first-party event pipeline is an endpoint and a table. A
+first-party crash reporter means symbolication, deminification, native crash
+capture on two mobile platforms, grouping and alerting.
 
 ### 10.2 Redaction
 
@@ -1167,20 +1172,20 @@ obey the same list.
 
 ### 10.3 First-party product analytics
 
-The analytics technology is a `CHOICE`, constrained by one property that most
-vendor SDKs cannot satisfy:
+The analytics technology is a `CHOICE`. One property constrains it, and most
+vendor SDKs cannot meet that property:
 
 - **Non-essential events MUST NOT leave the device before affirmative consent
   has been recorded server-side, and the classification MUST be enforced at the
   ingestion endpoint** — not merely in the client. Any pipeline able to honour
   that qualifies.
-- In practice this means first-party collection to the product's own API, and it
-  excludes an SDK reporting directly to a vendor backend, because such an SDK
-  cannot be gated on consent state the vendor does not hold. That is a
-  consequence of the property, not a ban on a named product: a vendor offering a
+- In practice this means first-party collection to the product's own API. It
+  excludes an SDK that reports directly to a vendor backend, because such an SDK
+  cannot be gated on consent state the vendor does not hold. That follows from
+  the property. It is not a ban on a named product: a vendor that offers a
   consent-gated ingestion proxy under your control satisfies the clause.
 - Where first-party collection is chosen, the accepted costs are no additional
-  sub-processor, no SDK in the mobile binaries, full control over retention —
+  sub-processor, no SDK in the mobile binaries, full control over retention,
   and dashboards you build yourself.
 - Events follow a **declared schema** in the contract; ad-hoc event names MUST NOT
   be emitted, and unknown events MUST be rejected.
@@ -1190,11 +1195,11 @@ vendor SDKs cannot satisfy:
 - Cost accepted: dashboards are yours to build.
 
 **Consent applies even though the analytics are first-party.** Being your own
-processor removes the sub-processor problem; it does not remove the lawful-basis
+processor removes the sub-processor problem. It does not remove the lawful-basis
 problem. Therefore:
 
 - Every event type MUST be classified in the contract as **strictly necessary**
-  (security, fraud, abuse prevention, service delivery — permitted without
+  (security, fraud, abuse prevention, service delivery; permitted without
   consent) or **non-essential** (product analytics, engagement measurement,
   experimentation).
 - Non-essential events MUST NOT be emitted, buffered or queued by any client
@@ -1202,14 +1207,14 @@ problem. Therefore:
 - Consent MUST be withdrawable, and withdrawal MUST stop collection immediately
   and be reflected in the client without requiring a restart.
 - The classification MUST be **enforced at the ingestion endpoint**, not merely in
-  the client: an event arriving without a valid consent state for its class MUST
-  be rejected, not silently stored.
+  the client. An event that arrives without a valid consent state for its class
+  MUST be rejected, not silently stored.
 - Consent state is recorded through the same mechanism as every other consent,
   with history retained.
 
-This is the clause that rules out platform-bundled analytics products regardless
-of how convenient their integration is. It is a consent-lawfulness rule, not a
-vendor preference, and it MUST NOT be recorded as a deviation.
+This clause rules out platform-bundled analytics products, however convenient
+their integration is. It is a consent-lawfulness rule, not a vendor preference,
+and it MUST NOT be recorded as a deviation.
 
 ### 10.4 Vendor and sub-processor register
 
@@ -1229,14 +1234,14 @@ appear in a maintained register committed to the repository:
   storage, mail provider, error tracker, push transports, and any CI service that
   touches production data.
 - **The error tracker is a data processor.** It will receive request context, user
-  identifiers and — despite redaction — occasional payload fragments. It MUST be
+  identifiers and, despite redaction, occasional payload fragments. It MUST be
   in the register with a signed agreement, retention configured explicitly, and
   its data covered by erasure and export.
 - Adding any new SDK, integration or outbound data flow REQUIRES a register entry
-  in the same change. A pull request introducing an outbound flow without one
+  in the same change. A pull request that introduces an outbound flow without one
   MUST be rejected.
-- Consolidating on a single cloud reduces the number of entries; it does not
-  remove the obligation for the ones that remain.
+- Consolidating on a single cloud reduces the number of entries. It does not
+  remove the obligation for the entries that remain.
 - Where a product's scope includes health data, no vendor may receive it without
   an executed BAA recorded here.
 
