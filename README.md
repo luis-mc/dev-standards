@@ -184,19 +184,21 @@ the way `tech-stack-setup` audits the rest of the stack.
 
 ## `luismc-artifacts` — see what is live, running and waiting without reading code
 
-Keeps a project's status in front of you: one **feature artifact** per feature
-and one **full-progress artifact** for the whole project, each with a status
-checklist, written content and a stamp of the last update. A feature artifact is
-a standalone HTML file in the repository (`docs/artifacts/feature-<slug>.html`)
-that opens by double-click and is never published; the full-progress artifact is
-the project's one claude.ai artifact, published once at the end of each turn
-(claude.ai allows 200 publishes per account per day), and it links to the
-feature files as local files.
-They are generated from a record in the project's repository
-(`docs/artifacts/` in the working tree: a manifest, a task registry, content; the plugin writes these files and never commits or pushes them, the project commits when it chooses), to the binding
-`ARTIFACTSPEC`, so status is typed in one place and every view agrees. A
-deleted full-progress artifact is recreated from the record without duplicates. The artifacts
-use the project's own design, found and confirmed with you, or a default one.
+Keeps a project's status in front of you. It makes one **feature artifact** per
+feature and one **full-progress artifact** for the whole project. Each has a
+status checklist, written content and a stamp of the last update. A feature
+artifact is a standalone HTML file in the repository
+(`docs/artifacts/feature-<slug>.html`). It opens by double-click and is never
+published. The full-progress artifact is the project's one claude.ai artifact.
+It is published once at the end of each turn (claude.ai allows 200 publishes per
+account per day), and it links to the feature files as local files.
+The plugin generates them from a record in the project's repository
+(`docs/artifacts/` in the working tree: a manifest, a task registry, content),
+to the binding `ARTIFACTSPEC`. The plugin writes these files and never commits
+or pushes them. The project commits when it chooses. Status is typed in one
+place, so every view agrees. A deleted full-progress artifact is recreated from
+the record without duplicates. The artifacts use the project's own design, found
+and confirmed with you, or a default one.
 
 Five skills:
 
@@ -212,13 +214,13 @@ Five skills:
   the spec and explains each finding with its requirement ID.
 
 Hooks queue status changes when a pull request is opened, readied or merged,
-when CI finishes, and on a production deploy, and the end of a turn waits until
-those are applied and Full Progress is published; it also asks for a Running
-task when work was started in the background without one. Every activity is a task, the
-session's own included, and Built means finished but not yet released (Live
-means released). The plugin
-delivers that rule itself at every session start in any project with a record,
-so it is always current; installing creates nothing in a project.
+when CI finishes, and on a production deploy. The end of a turn waits until the
+plugin applies those changes and publishes Full Progress. The end of a turn also
+asks for a Running task when work started in the background without one. Every
+activity is a task, the session's own included. Built means finished but not yet
+released. Live means released. The plugin delivers that rule itself at every
+session start in any project with a record, so the rule is always current.
+Installing creates nothing in a project.
 `luismc-project-setup`'s `claude-setup` enables the plugin in every project it
 sets up.
 
@@ -226,33 +228,32 @@ sets up.
 
 ## `luismc-audits` — a rigorous second opinion on what you've already built
 
-Three focused review skills. Each one reads your code, finds and verifies
-real issues, and hands you a severity-ranked report — it never changes code
-for you. That's intentional: findings get triaged and prioritized by a human
-before anything is touched.
+Three focused review skills. Each one reads your code, finds and verifies real
+issues, and hands you a severity-ranked report. It never changes code for you.
+That is intentional: a human triages and prioritizes the findings before
+anything is touched.
 
 - **`/luismc-audits:security-audit`** — reviews authentication, authorization,
   cryptography, and data handling against major security frameworks (NIST,
-  FedRAMP, SOC 2, ISO 27001, NIS2). Traces real exploit paths rather than
-  flagging theoretical ones.
+  FedRAMP, SOC 2, ISO 27001, NIS2). It traces real exploit paths and does not
+  flag theoretical ones.
 - **`/luismc-audits:performance-audit`** — hunts down slow database queries,
-  N+1 patterns, memory leaks, and anything hurting Core Web Vitals. Every
-  finding is backed by measured or calculated impact, not a guess.
+  N+1 patterns, memory leaks, and anything hurting Core Web Vitals. Measured
+  or calculated impact backs every finding. None is a guess.
 - **`/luismc-audits:compliance-audit`** — maps how personal, health, and
   financial data moves through your app against GDPR, CCPA/CPRA, HIPAA, and
-  SOC 2. Verifies enforcement actually happens server-side, not just in the
+  SOC 2. It verifies that enforcement happens server-side, not just in the
   UI.
 
-Run any of these any time — on a brand-new project, an inherited codebase, or
+Run any of these at any time: on a brand-new project, an inherited codebase, or
 right before a release.
 
 ---
 
 ## `luismc-agents` — a second opinion when a call is genuinely hard
 
-Installs the **`architect`** subagent, available in any project once the
-plugin is installed. Bring it in for the decisions that don't have an
-obviously right answer:
+Installs the **`architect`** subagent. It is available in any project once you
+install the plugin. Use it for decisions that have no obviously right answer:
 
 - Weighing a real architectural or technology tradeoff
 - A second opinion before committing to a risky approach
@@ -260,10 +261,10 @@ obviously right answer:
   compliance audit — real severity and exploitability, not a tool's default
   rating
 
-It gives you a direct recommendation with its reasoning, not an exhaustive
-list of options — and it flags decisions that are really yours to make
-(anything that changes scope, is hard to reverse, or is a business tradeoff)
-rather than deciding them for you.
+It gives you a direct recommendation with its reasoning, not an exhaustive list
+of options. It flags decisions that are yours to make (anything that changes
+scope, is hard to reverse, or is a business tradeoff) and does not decide them
+for you.
 
 ---
 
