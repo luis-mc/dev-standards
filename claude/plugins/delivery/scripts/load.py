@@ -243,7 +243,9 @@ def measure_now(prev=None):
 
 
 def cache_file():
-    return os.environ.get('DELIVERY_LOAD_CACHE') or os.path.join(tempfile.gettempdir(), 'luismc-delivery-load.json')
+    """The cache path: per user, in the same ~/.claude directory as the machine file (never the shared temp dir)."""
+    return os.environ.get('DELIVERY_LOAD_CACHE') or os.path.join(os.path.dirname(machine_file()),
+                                                                 'luismc-delivery-load.json')
 
 
 def _history():
@@ -267,12 +269,22 @@ def sample(now=None, measure=None):
     prev = next((h for h in reversed(hist) if h.get('raw')), None)
     s = (measure or (lambda: measure_now(prev)))()
     hist = [h for h in hist if 0 <= now - h['at'] <= HISTORY_WINDOW][-(HISTORY_MAX - 1):] + [dict(s, at=now)]
+    tmp = None
     try:
-        tmp = cache_file() + '.%d.tmp' % os.getpid()
-        with open(tmp, 'w', encoding='utf-8') as f:
+        path = cache_file()
+        folder = os.path.dirname(path) or '.'
+        os.makedirs(folder, mode=0o700, exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=folder, prefix='luismc-delivery-load.', suffix='.tmp')
+        with os.fdopen(fd, 'w', encoding='utf-8') as f:
             json.dump({'samples': hist}, f)
-        os.replace(tmp, cache_file())
+        os.replace(tmp, path)
+        tmp = None
     except OSError:
+        if tmp:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
         pass                                   # a cache that cannot be written only costs the next hook a sample
     return dict(_smooth(hist, now), cached=False)
 
