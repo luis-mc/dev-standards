@@ -456,6 +456,15 @@ def rec_agent(led, data, cfg, now, where="local") -> None:
     if ident is None:
         m = re.search(r"\b(trig_\w+|agent[_-]?id[:= ]+\w+|cse_\w+)", text)
         ident = m.group(1) if m else None
+    if where == "cloud" and ident is None:
+        tid = inp.get("trigger_id")
+        refused = bool(re.search(r"\b(?:HTTP\s*)?[45]\d\d\b|error|rate.?limit|refused|denied|too many", text, re.I))
+        if str(inp.get("action") or "").lower() == "run" and isinstance(tid, str) and tid and not refused:
+            ident = tid
+        else:               # the call was refused: nothing started, so no running row (DL-41 would count it)
+            L.add_event(led, "agent.launch_refused", str(blk.get("task") or inp.get("description") or ""),
+                        "hook_post_tool", now)
+            return
     bd = blk.get("breakdown") or {}
     eta = None
     if bd:
