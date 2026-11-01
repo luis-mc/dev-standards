@@ -35,6 +35,7 @@ from pathlib import Path
 
 SCHEMA = 1
 EVENT_CAP = 500
+DEFAULT_RETENTION_DAYS = 14   # DS156: finished rows older than this are dropped on write; config ledger_retention_days
 DEFAULT_TZ = "Europe/Lisbon"
 LOCK_STALE_SECONDS = 30
 LOCK_WAIT_SECONDS = 10
@@ -205,11 +206,66 @@ def write_atomic(root, data: dict) -> None:
         raise
 
 
+def retention_days(cfg) -> int:
+    """ledger_retention_days: whole days finished rows are kept (default 14); 0 keeps everything.
+    A bad value (not a whole number, negative, a bool) falls back to the default."""
+    v = cfg.get("ledger_retention_days") if isinstance(cfg, dict) else None
+    if isinstance(v, int) and not isinstance(v, bool) and v >= 0:
+        return v
+    return DEFAULT_RETENTION_DAYS
+
+
+# Finished states: the same sets the hooks treat as closed (hooklib TERMINAL_TRAIN / TERMINAL_AGENT).
+_TRAIN_DONE = ("cleaned", "abandoned")
+_AGENT_DONE = ("done", "empty", "failed", "stopped", "disabled")
+_INSTALL_DONE = ("done", "failed")
+
+
+def _latest(row: dict, fields) -> datetime | None:
+    stamps = [t for t in (parse_iso(row.get(f)) for f in fields) if t]
+    return max(stamps) if stamps else None
+
+
+def prune(led: dict, days: int, now: datetime | None = None) -> int:
+    """DS156: drop finished rows older than `days` (0 = keep all). Returns how many rows went.
+    Never drops an open row, a row with no readable timestamp, or a train with an active hold.
+    Stop checks (DL-02/03/14/18/30/32/33/76) read only open trains, agents, installs and jobs,
+    so finished rows are not needed by them. Publishes, jobs, runners, watchers and owner
+    questions are left alone."""
+    if not days or days < 0:
+        return 0
+    from datetime import timedelta
+    now = now or utcnow()
+    cutoff = now - timedelta(days=days)
+
+    def old(row, fields):
+        t = _latest(row, fields)
+        return t is not None and t < cutoff
+
+    rules = (
+        ("trains", lambda t: t.get("state") in _TRAIN_DONE and not hold_active(t, now)
+         and old(t, ("created_at", "joined_at", "pushed_at", "green_at", "merged_at", "live_at", "cleaned_at"))),
+        ("agents", lambda a: a.get("state") in _AGENT_DONE and old(a, ("started", "last_checked", "last_activity"))),
+        ("installs", lambda i: i.get("state") in _INSTALL_DONE and old(i, ("started", "ended"))),
+        ("events", lambda e: old(e, ("at",))),
+    )
+    dropped = 0
+    for key, is_old in rules:
+        rows = led.get(key)
+        if not isinstance(rows, list):
+            continue
+        kept = [r for r in rows if not (isinstance(r, dict) and is_old(r))]
+        dropped += len(rows) - len(kept)
+        led[key] = kept
+    return dropped
+
+
 def update(root, fn, **lock_kw) -> dict:
-    """Lock, load, apply fn(ledger), derive phases, cap events, write. Returns the ledger."""
+    """Lock, load, apply fn(ledger), expire old finished rows, derive phases, cap events, write. Returns the ledger."""
     with locked(root, **lock_kw):
         led = load(root)
         fn(led)
+        prune(led, retention_days(load_config(root)))
         for train in led.get("trains", []):
             derive_phases(train)
         led["events"] = led.get("events", [])[-EVENT_CAP:]
