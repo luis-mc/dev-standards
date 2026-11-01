@@ -2019,10 +2019,10 @@ Normative for **every** visual interface built against this API. The compliance 
 | Break-glass review monitor | Daily | Alerts on activations unreviewed >7 days |
 | Dormant service account reporter | Weekly | Flags credentials unused >90 days |
 
-- **R23.3** — Jobs **MUST** be idempotent, resumable, and batched with bounded batch size. An erasure job that loads every pending account at once is a memory-exhaustion vector.
-- **R23.4** — Jobs **MUST NOT** poll hot tables on tight intervals. Use the stated cadences with indexed predicates; where the platform supports change notification, prefer it (constant polling produces baseline query load and lock churn).
-- **R23.5** — Every job run **MUST** emit an audit event with counts and outcome. A silent job is an unverifiable control.
-- **R23.6** — Job failures **MUST** raise operational alerts. A silently failing erasure worker is an ongoing, undetected compliance violation.
+- **R23.3** — Jobs **MUST** be idempotent, resumable and batched, with a bounded batch size. An erasure job that loads every pending account at once is a memory-exhaustion vector.
+- **R23.4** — Jobs **MUST NOT** poll hot tables on tight intervals. Use the stated cadences with indexed predicates. If the platform supports change notification, prefer it. Constant polling adds baseline query load and lock churn.
+- **R23.5** — Every job run **MUST** emit an audit event with counts and outcome. A job that leaves no trace is a control nobody can verify.
+- **R23.6** — Job failures **MUST** raise operational alerts. An erasure worker that fails silently is an ongoing compliance violation that nobody detects.
 
 ---
 
@@ -2031,8 +2031,8 @@ Normative for **every** visual interface built against this API. The compliance 
 ### 24.1 Rules
 
 - **R24.1** — Every security-relevant value is explicit configuration with a documented secure default. No security value is hardcoded at a call site.
-- **R24.2** — Configuration may **tighten** but never **loosen** past the ceilings in §6.3, §8.5, and §17.3. Ceilings are enforced in code, not by convention.
-- **R24.3** — Secrets are supplied by the environment or a secrets manager, never committed. The repository **MUST** carry secret-scanning in pre-commit and CI.
+- **R24.2** — Configuration may **tighten** but never **loosen** past the ceilings in §6.3, §8.5 and §17.3. Code enforces the ceilings, not convention.
+- **R24.3** — The environment or a secrets manager supplies secrets. They are never committed. The repository **MUST** carry secret-scanning in pre-commit and CI.
 
 ### 24.2 Reference
 
@@ -2070,8 +2070,17 @@ Normative for **every** visual interface built against this API. The compliance 
 
 ### 24.3 Startup validation
 
-- **R24.4** — The implementation **MUST** validate configuration at startup and **fail closed** — refusing to start — when any of these hold in a deployed environment: the development key provider is active; no KMS is reachable; any ceiling in §24.2 is exceeded; TLS enforcement is disabled; the CORS allowlist contains a wildcard while credentials are permitted; the audit table grants include `UPDATE` or `DELETE` for the application principal; any required signing key is absent; the rate-limit counter store is unreachable; or `SameSite`/`Secure`/`HttpOnly` cookie attributes are weakened.
-- **R24.5** — Failed validation **MUST** log which check failed (never the value) and exit non-zero. Starting in a degraded but running state is worse than not starting.
+- **R24.4** — The implementation **MUST** validate configuration at startup and **fail closed**, meaning it refuses to start, when any of these holds in a deployed environment:
+  - the development key provider is active;
+  - no KMS is reachable;
+  - any ceiling in §24.2 is exceeded;
+  - TLS enforcement is disabled;
+  - the CORS allowlist contains a wildcard while credentials are permitted;
+  - the audit table grants include `UPDATE` or `DELETE` for the application principal;
+  - any required signing key is absent;
+  - the rate-limit counter store is unreachable;
+  - `SameSite`, `Secure` or `HttpOnly` cookie attributes are weakened.
+- **R24.5** — Failed validation **MUST** log which check failed (never the value) and exit non-zero. Starting in a degraded state is worse than not starting.
 
 ---
 
@@ -2079,30 +2088,36 @@ Normative for **every** visual interface built against this API. The compliance 
 
 ### 25.1 Data inventory
 
-- **R25.1** — The implementation **MUST** ship a data inventory naming every stored attribute, its classification (identifier / authentication secret / behavioural / derived), its lawful basis, its retention period, and its protection (`[ENC]`, `[HASH]`, `[BIDX]`, plaintext). This is a deliverable (§26.4), and it is the first artifact any auditor asks for.
+- **R25.1** — The implementation **MUST** ship a data inventory naming every stored attribute with:
+  - its classification (identifier / authentication secret / behavioural / derived);
+  - its lawful basis;
+  - its retention period;
+  - its protection (`[ENC]`, `[HASH]`, `[BIDX]`, plaintext).
+
+  This is a deliverable (§26.4). It is the first artifact any auditor asks for.
 
 ### 25.2 Minimization
 
-- **R25.2** — No attribute may be collected without a stated operational purpose in the inventory. "It might be useful later" is not a purpose and is a documented violation.
-- **R25.3** — Specifically **MUST NOT** be collected by this framework: date of birth, gender, postal address, government identifiers, or any special-category data. None serves authentication.
-- **R25.4** — Optional profile attributes **MUST** be genuinely optional — no server-side requirement, no UI dark pattern implying obligation.
+- **R25.2** — No attribute may be collected without a stated operational purpose in the inventory. "It might be useful later" is not a purpose. It is a documented violation.
+- **R25.3** — This framework **MUST NOT** collect any of these: date of birth, gender, postal address, government identifiers or any special-category data. None of them serves authentication.
+- **R25.4** — Optional profile attributes **MUST** be genuinely optional: the server does not require them, and the UI does not use dark patterns that imply an obligation.
 
 ### 25.3 Purpose limitation
 
-- **R25.5** — Authentication data **MUST NOT** be repurposed for analytics, marketing, or profiling. Security telemetry serves security operations only.
+- **R25.5** — Authentication data **MUST NOT** be repurposed for analytics, marketing or profiling. Security telemetry serves security operations only.
 
 ### 25.4 Tracking
 
-- **R25.6** — No analytics, tag manager, session-replay, or behavioural SDK on any authentication screen (R21.29).
-- **R25.7** — Anywhere else in a consuming app, non-essential tracking **MUST** remain inert until server-recorded affirmative consent exists. A client-side consent flag with no server record satisfies nothing.
+- **R25.6** — No analytics, tag manager, session-replay or behavioural SDK on any authentication screen (R21.29).
+- **R25.7** — Anywhere else in an application, non-essential tracking **MUST** stay inert until the server has recorded affirmative consent. A client-side consent flag with no server record satisfies nothing.
 
 ### 25.5 Access minimization
 
-- **R25.8** — Administrative personal-data access is a separate, sensitive, audited permission (§11.3), never bundled with routine operational access. This is the "minimum necessary" control.
+- **R25.8** — Administrative personal-data access is a separate, sensitive, audited permission (§11.3). It is never bundled with routine operational access. This is the "minimum necessary" control.
 
 ### 25.6 Third-party data flow register
 
-- **R25.9** — Every outbound flow **MUST** be registered with recipient, data categories, purpose, lawful basis, processing location, and safeguards. At minimum this framework's flows are:
+- **R25.9** — Every outbound flow **MUST** be registered with its recipient, data categories, purpose, lawful basis, processing location and safeguards. At minimum, this framework's flows are:
 
 | Recipient | Data | Purpose | Notes |
 |---|---|---|---|
