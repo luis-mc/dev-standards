@@ -429,8 +429,18 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 
 ## 13. Test gate
 
-- **R13.1** — Every script has tests in `tests/`: `test_lib.py`, `test_setup.py`, `test_index.py`, `test_fold.py`, `test_check.py`, `test_work.py`, `test_hooks.py`, run with `python3 -I -m unittest discover -s claude/plugins/docs/tests`.
-- **R13.2** — The tests cover each requirement that a script implements: R2.1, R2.5 and R6.3 (`test_index.py`, `test_check.py`), R4.2 (`test_check.py`), R6.1 to R6.7 (`test_index.py`), R7.1 to R7.6 (`test_fold.py`), R8.1 to R8.7 (`test_check.py`, `test_hooks.py`), R9.1 to R9.7 (`test_setup.py`), R10.2 and R10.3 (`test_work.py`).
+- **R13.1** — Every script has tests in `tests/`: `test_lib.py`, `test_setup.py`, `test_index.py`, `test_fold.py`, `test_check.py`, `test_work.py` and `test_hooks.py`. Run them with `python3 -I -m unittest discover -s claude/plugins/docs/tests`.
+- **R13.2** — The tests cover each requirement that a script implements:
+
+  | Requirements | Test files |
+  |---|---|
+  | R2.1, R2.5, R6.3 | `test_index.py`, `test_check.py` |
+  | R4.2 | `test_check.py` |
+  | R6.1 to R6.7 | `test_index.py` |
+  | R7.1 to R7.6 | `test_fold.py` |
+  | R8.1 to R8.7 | `test_check.py`, `test_hooks.py` |
+  | R9.1 to R9.7 | `test_setup.py` |
+  | R10.2, R10.3 | `test_work.py` |
 - **R13.3** — This specification MUST pass `python3 tools/spec_check.py claude/plugins/docs/references/docspec.md`.
 
 ---
