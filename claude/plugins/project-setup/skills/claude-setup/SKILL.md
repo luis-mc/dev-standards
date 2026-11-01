@@ -94,29 +94,29 @@ structure and gates, `auth-setup` its authentication.
 
 ## Step 1 — Ask which target, before reading or writing anything
 
-Do not assume. Ask whether to apply **project**, **user**, or **both**. Two
-things make this a real question rather than a formality:
+Do not assume. Ask whether to apply **project**, **user**, or **both**. This is
+a real question, for two reasons:
 
-- Writing `~/.claude/settings.json` mutates a file outside the repo that affects
-  every other project on the machine. That needs explicit confirmation every
-  time, even if the user has run this skill before.
+- Writing `~/.claude/settings.json` changes a file outside the repo. That file
+  affects every other project on the machine. It needs explicit confirmation
+  every time, even if the user has run this skill before.
 - If a project `.claude/settings.json` and `~/.claude/settings.json` both set a
-  key, the project one wins. Applying to both can silently make the user-level
-  value dead for this repo. Say so if the user picks both.
+  key, the project one wins. Applying to both can make the user-level value dead
+  for this repo, with no warning. Say so if the user picks both.
 
 Then, **whatever target was picked**, ask a second question: should the model
 split also be enforced **for all projects** — i.e. written to
 `~/.claude/settings.json` (`model`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, the two
 effort entries, the drift-hook registration), `~/.claude/hooks/effort_drift.py`
 and `~/.claude/rules/agents-and-integration.md`? Ask it even when the user
-chose **project** only — the project target always gets the split; this
-question is whether every other repo on the machine does too. A "yes" adds just
-those pieces to the user target (not the statusline, output style or
+chose **project** only. The project target always gets the split. This
+question asks whether every other repo on the machine gets it too. A "yes" adds
+just those pieces to the user target (not the statusline, output style or
 CLAUDE.md, unless the user also picked **user** or **both**). A "no" leaves
-`~/.claude/` untouched, apart from the two transcript-folds pieces, which are
-always planned (see the intro) and which the owner can still decline in step 3.
+`~/.claude/` untouched, apart from the two transcript-folds pieces. Those are
+always planned (see the intro), and the owner can still decline them in step 3.
 Skip the question only when the user already picked **user** or **both**,
-since the split is then applied there anyway.
+because the split is then applied there anyway.
 
 Then ask the **effort question**, once for each model of the split:
 
@@ -126,14 +126,13 @@ Then ask the **effort question**, once for each model of the split:
   medium**: the owner's default is Sonnet at medium effort, so code agents run
   at medium unless the user picks high.
 
-Preselect medium for both models and say that this is the owner's default;
-high costs more tokens and time. If a
-target's settings already hold a `modelSettings.<model ID>.effortLevel` for
-that model (see step 2 for the IDs), show it as well, but still mark the
-recommended answer. **Ask both every run**, even when a value is already saved:
-effort is the user's per-run choice, and one answer covers every target that
-gets the split. If the targets disagree on a saved value, show each; the
-recommended answer stays preselected.
+Preselect medium for both models and say that this is the owner's default.
+High costs more tokens and time. If a target's settings already hold a
+`modelSettings.<model ID>.effortLevel` for that model (see step 2 for the IDs),
+show it too, and still mark the recommended answer. **Ask both every run**, even
+when a value is already saved. Effort is the user's per-run choice, and one
+answer covers every target that gets the split. If the targets disagree on a
+saved value, show each. The recommended answer stays preselected.
 
 For a project target that has no `.delivery/config.json`, ask a last question
 in the same message: the delivery values (`work_root`, `tz`, `caps`,
@@ -146,10 +145,10 @@ classify. Never write during this step.
 
 ### `statusline.sh` — overwrite unconditionally
 
-`.claude/statusline.sh` (project) or `~/.claude/statusline.sh` (user) is a pure
-display mechanism this plugin owns outright. It is not hand-edited by a project
-owner, so it is replaced without asking. It has no `jq` dependency by design —
-`jq` is not guaranteed on PATH — so it parses the statusline JSON with
+`.claude/statusline.sh` (project) or `~/.claude/statusline.sh` (user) is a
+display script that this plugin owns outright. A project owner does not
+hand-edit it, so replace it without asking. It has no `jq` dependency by design,
+because `jq` is not guaranteed on PATH. It parses the statusline JSON with
 `grep`/`sed`. Do not "simplify" that to `jq` when copying.
 
 Make it executable after copying: `chmod +x <target>/statusline.sh`.
@@ -162,9 +161,9 @@ project-artifacts plugin), then add the transcript-folds entry described in
 "The transcript-folds pieces".
 
 If it exists, queue only the keys that are **missing**. Never change a key that
-already has a value: an existing entry may have been deliberately tuned, and
-silently retuning someone's harness is the failure mode this whole step exists
-to avoid. The keys, and what each is for:
+already has a value. An existing entry may have been tuned on purpose, and
+retuning someone's harness silently is the failure this step exists to avoid.
+The keys, and what each is for:
 
 | Key | Value | Why |
 |---|---|---|
@@ -181,22 +180,21 @@ to avoid. The keys, and what each is for:
 | `enabledPlugins."luismc-transcript-folds@<marketplace>"` | `true`, user level on every run, in `~/.claude/settings.json` only; marketplace as found below | enables the transcript-folds plugin (see "The transcript-folds pieces") |
 
 **The effort keys are written from the user's answer, not queued as missing.**
-They are an explicit choice made this run, so they are written into every
-target that gets the model split (the same targets as `model` and
-`CLAUDE_CODE_SUBAGENT_MODEL`) even when a different value already exists —
-unlike tuning keys. Show the existing value in the summary as
-`current → chosen`; when it already equals the answer, there is nothing to
+They are an explicit choice made this run. Write them into every target that
+gets the model split (the same targets as `model` and
+`CLAUDE_CODE_SUBAGENT_MODEL`), even when a different value already exists.
+Tuning keys do not work this way. Show the existing value in the summary as
+`current → chosen`. When it already equals the answer, there is nothing to
 write. Merge into an existing `modelSettings` object and never drop its other
 entries.
 
-Key the entries by the model's **canonical ID**, not the alias: the docs do not
-document alias keys such as `"opus"` for this setting. Use the IDs the `opus`
-and `sonnet` aliases resolve to at the time of the run (today `claude-opus-5-5`
-and `claude-sonnet-5-5`); take them from the running session's model
-information or `/model`, rather than from memory. The consequence: when an alias
-later moves to a new model, the old entry stops applying and the new model
-falls back to its default effort. Re-running the skill adds the entry for the
-new ID.
+Key the entries by the model's **canonical ID**, not the alias. The docs do not
+document alias keys such as `"opus"` for this setting. Use the IDs that the
+`opus` and `sonnet` aliases resolve to at the time of the run (today
+`claude-opus-5-5` and `claude-sonnet-5-5`). Take them from the running session's
+model information or `/model`, not from memory. Consequence: when an alias later
+moves to a new model, the old entry stops applying and the new model falls back
+to its default effort. Re-running the skill adds the entry for the new ID.
 
 If `CLAUDE_CODE_EFFORT_LEVEL` is set in the target's `env` block or in the shell
 environment, it overrides both answers for every model. Queue it as a
@@ -206,9 +204,9 @@ environment, tell them where to unset it) or keep it.
 
 **`model` and `env.CLAUDE_CODE_SUBAGENT_MODEL` are the exception to "never
 change an existing value"** — they are policy, not tuning. If one already holds
-a conforming value, leave it: any Opus alias or ID (`opus`, `opus[1m]`,
-`claude-opus-…`) satisfies `model`, any Sonnet one satisfies the subagent key —
-do not rewrite `opus[1m]` to `opus` and lose the 1M context. If one holds a
+a conforming value, leave it. Any Opus alias or ID (`opus`, `opus[1m]`,
+`claude-opus-…`) satisfies `model`. Any Sonnet one satisfies the subagent key.
+Do not rewrite `opus[1m]` to `opus`, which loses the 1M context. If one holds a
 non-conforming value (e.g. `model: "sonnet"`), queue it as a **conflict**: show
 the current and policy values and let the user choose per key in step 3 whether
 to replace it. Never replace silently, never skip silently.
@@ -242,9 +240,9 @@ project → bash "$CLAUDE_PROJECT_DIR/.claude/statusline.sh"
 user    → bash "$HOME/.claude/statusline.sh"
 ```
 
-`$CLAUDE_PROJECT_DIR` is only set for a project-scoped config. Copying the
-project form into `~/.claude/settings.json` gives a statusline that silently
-prints nothing in any directory Claude does not treat as a project root.
+`$CLAUDE_PROJECT_DIR` is set only for a project-scoped config. The project form
+in `~/.claude/settings.json` gives a statusline that prints nothing, with no
+error, in any directory that Claude does not treat as a project root.
 
 **The drift hook's `command` differs per target the same way.** The template
 carries the project form; rewrite both occurrences of the path for a user-level
