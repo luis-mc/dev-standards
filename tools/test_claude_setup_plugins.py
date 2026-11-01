@@ -25,6 +25,20 @@ def main():
     for key in enabled:
         if key.split("@")[0] not in names:
             errors.append(f"settings template names {key}, not in the marketplace")
+    for offer in ("docs", "design system", "delivery", "project record", "specs",
+                  "CI checks workflow", "repo gates", "auth"):
+        if f"**{offer}**" not in skill:
+            errors.append(f"SKILL.md status scan does not name the {offer} offer")
+    for q in ("**Enforce**", "**Delivery mode**", "**CI**", "**Other setups**"):
+        if q not in skill:
+            errors.append(f"SKILL.md lacks the grouped question {q}")
+    if "claude-setup status" not in skill:
+        errors.append("SKILL.md lacks the status mode")
+    tpl = SKILL / "assets/ci/dev-standards.yml"
+    if not tpl.exists():
+        errors.append("workflow template assets/ci/dev-standards.yml is missing")
+    elif "docs_check.py\" --strict" not in tpl.read_text():
+        errors.append("workflow template does not run docs_check.py --strict")
     for e in errors:
         print("FAIL:", e)
     print(f"{len(names)} plugins checked, {len(errors)} problems")

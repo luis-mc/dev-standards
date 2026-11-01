@@ -1,0 +1,51 @@
+# dev-standards checks. Written by claude-setup. Make this check required on the
+# default branch (claude-setup prints the gh api command; the owner runs it).
+#
+# How the scripts are found in CI: a pinned checkout of the dev-standards
+# marketplace repo into .dev-standards-tools/. One pin, no vendored copies.
+# Fill the placeholders, then keep the pin up to date by hand.
+#   {{DEV_STANDARDS_REPO}}  the marketplace repository, as owner/name
+#   {{DEV_STANDARDS_REF}}   a tag or full commit SHA (not a branch)
+#   {{DOCS_SCRIPTS}}        path of the docs plugin scripts inside that checkout
+#   {{SPEC_CHECK}}          path of spec_check.py inside that checkout
+name: dev-standards
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    env:
+      TOOLS: .dev-standards-tools
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: {{DEV_STANDARDS_REPO}}
+          ref: {{DEV_STANDARDS_REF}}
+          path: .dev-standards-tools
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Docs check (strict)
+        if: hashFiles('docs/docs.json') != ''
+        run: python3 "$TOOLS/{{DOCS_SCRIPTS}}/docs_check.py" --strict
+      - name: Specs check
+        if: hashFiles('docs/specs/**/*.md') != ''
+        run: python3 "$TOOLS/{{SPEC_CHECK}}"
+      - uses: actions/setup-node@v4
+        if: hashFiles('scripts/design/*.test.ts') != ''
+        with:
+          node-version: '22'
+      - name: Design system guard tests
+        if: hashFiles('scripts/design/*.test.ts') != ''
+        env:
+          DESIGN_BASE: origin/${{ github.base_ref || 'main' }}
+        run: |
+          npm ci
+          npx vitest run scripts/design
