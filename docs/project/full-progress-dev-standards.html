@@ -806,7 +806,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-01T01:53+00:00",
+ "updated": "2026-11-01T01:56+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -3459,11 +3459,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS148",
    "owner": "project",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Delivery hook: a refused RemoteTrigger create is not a launch",
-   "detail": "READY dd290c1; merged into RELEASE-23, CI pending.",
+   "detail": "Live in RELEASE-23 (15955c0), CI green 01:55.",
    "expected": "01 Nov",
-   "changed": "2026-11-01T01:53+00:00",
+   "changed": "2026-11-01T01:56+00:00",
    "rides": "DS149",
    "started": "2026-11-01T01:41+00:00"
   },
@@ -3471,12 +3471,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS149",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "Release: refused RemoteTrigger create is not a launch",
-   "detail": "Rides DS148. Diff review before join; merge on green.",
-   "expected": "01 Nov ~02:35",
-   "changed": "2026-11-01T01:41+00:00",
-   "expected_basis": "agent ~30 from 01:45, join 10, CI 10",
+   "detail": "RELEASE-23 live: 15955c0, spec-lint + secret-scan green 01:55.",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T01:56+00:00",
    "release": 23,
    "phases": [
     {
@@ -3501,12 +3500,44 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS150",
    "owner": "project",
    "app": "",
-   "status": "To do",
+   "status": "Running",
    "item": "docs: front-matter parser drops block lists, so the docs map is empty",
-   "detail": "docs_lib.parse_front_matter returns '' for 'code:' block lists; docs-map.json map is {} and M1 never maps code. Fix the parser to read '- item' lists; add a test; rebuild the map.",
-   "expected": "01 Nov ~03:30",
-   "changed": "2026-11-01T01:53+00:00",
-   "expected_basis": "next release after RELEASE-23: agent ~30 + join/CI 20"
+   "detail": "Cloud agent trig_01659btkSFzbgrGKx6cm3aKV on DS150-docs-front-matter-lists.",
+   "expected": "01 Nov ~02:30",
+   "changed": "2026-11-01T01:56+00:00",
+   "expected_basis": "setup 5, fix+tests 15, checks 10, from 01:58",
+   "rides": "DS151",
+   "started": "2026-11-01T01:56+00:00"
+  },
+  {
+   "id": "DS151",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Release: docs front-matter lists feed the docs map",
+   "detail": "Rides DS150. Diff review before join; merge on green.",
+   "expected": "01 Nov ~02:50",
+   "changed": "2026-11-01T01:56+00:00",
+   "expected_basis": "agent ~30 from 01:58, join 10, CI 5",
+   "release": 24,
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-11-01T01:58+00:00",
+     "end": "2026-11-01T02:30+00:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-11-01T02:30+00:00",
+     "end": "2026-11-01T02:40+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-11-01T02:40+00:00",
+     "end": "2026-11-01T02:50+00:00"
+    }
+   ],
+   "started": "2026-11-01T01:58+00:00"
   },
   {
    "id": "MP1",
@@ -3753,64 +3784,57 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-01T01:53+00:00">01 Nov 01:53</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-01T01:56+00:00">01 Nov 01:56</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
 <ul>
-<li data-glance-task="DS149"><span class="task-id">DS149</span><span class="release-name">RELEASE-23</span>Release: refused RemoteTrigger create is not a launch <span class="glance-expected">01 Nov ~02:35</span><span class="glance-basis">agent ~30 from 01:45, join 10, CI 10</span></li>
+<li data-glance-task="DS150"><span class="task-id">DS150</span>docs: front-matter parser drops block lists, so the docs map is empty <span class="glance-expected">01 Nov ~02:30</span><span class="glance-basis">setup 5, fix+tests 15, checks 10, from 01:58</span></li>
+<li data-glance-task="DS151"><span class="task-id">DS151</span><span class="release-name">RELEASE-24</span>Release: docs front-matter lists feed the docs map <span class="glance-expected">01 Nov ~02:50</span><span class="glance-basis">agent ~30 from 01:58, join 10, CI 5</span></li>
 </ul>
 </details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">49 tasks</span></summary>
 <ul>
 <li data-glance-task="DS148"><span class="task-id">DS148</span>Delivery hook: a refused RemoteTrigger create is not a launch</li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">47 tasks</span></summary>
-<ul>
+<li data-glance-task="DS149"><span class="task-id">DS149</span><span class="release-name">RELEASE-23</span>Release: refused RemoteTrigger create is not a launch</li>
 <li data-glance-task="DS136"><span class="task-id">DS136</span>Deep wording pass: audits plugin SKILL.md files and README</li>
 <li data-glance-task="DS137"><span class="task-id">DS137</span>Deep wording pass: delivery plugin README and brief template</li>
 <li data-glance-task="DS138"><span class="task-id">DS138</span>Deep wording pass: docs plugin SKILL.md files and README</li>
 <li data-glance-task="DS139"><span class="task-id">DS139</span>Deep wording pass: project-setup plugin SKILL.md files and README</li>
 <li data-glance-task="DS140"><span class="task-id">DS140</span>Deep wording pass: specs plugin SKILL.md files and README</li>
 <li data-glance-task="DS141"><span class="task-id">DS141</span>Deep wording pass: root README.md (plugin catalog)</li>
-<li data-glance-task="DS142"><span class="task-id">DS142</span>Deep wording pass: feature specs 1-6</li>
-<li data-glance-task="DS143"><span class="task-id">DS143</span>Deep wording pass: feature specs 7-11, overview and guides</li>
-<li class="glance-more">and 39 more</li>
+<li class="glance-more">and 41 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">232</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">234</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS149 (Release: refused RemoteTrigger create is not a launch) expected live about 02:35." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">01:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">02:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">02:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">03:00</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-23 · Release: refused RemoteTrigger create is not a launch</title>RELEASE-23 · Release: ref…</text>
-<text class="rt-sub" x="0" y="77"><title>DS148</title>DS148</text>
-<rect class="rt-bar agents" x="286.7" y="52" width="173.3" height="22"><title>agents 01:45-02:15</title></rect>
-<rect class="rt-bar join" x="460" y="52" width="57.8" height="22"><title>join 02:15-02:25</title></rect>
-<rect class="rt-bar ci" x="517.8" y="52" width="57.8" height="22"><title>PR CI 02:25-02:35</title></rect>
-<polygon class="rt-expected" points="575.6,50 583.6,63 575.6,76 567.6,63"/>
-<text class="rt-live-label" x="575.6" y="92">live ~02:35</text>
-<line class="rt-now" x1="332.9" y1="36" x2="332.9" y2="148"/><text class="rt-now-label" x="332.9" y="161">now 01:53</text>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS151 (Release: docs front-matter lists feed the docs map) expected live about 02:50." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">01:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">02:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">02:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">03:00</text></g>
+<text class="rt-name" x="0" y="60"><title>RELEASE-24 · Release: docs front-matter lists feed the docs map</title>RELEASE-24 · Release: doc…</text>
+<text class="rt-sub" x="0" y="77"><title>DS150</title>DS150</text>
+<rect class="rt-bar agents" x="361.8" y="52" width="184.9" height="22"><title>agents 01:58-02:30</title></rect>
+<rect class="rt-bar join" x="546.7" y="52" width="57.8" height="22"><title>join 02:30-02:40</title></rect>
+<rect class="rt-bar ci" x="604.4" y="52" width="57.8" height="22"><title>PR CI 02:40-02:50</title></rect>
+<polygon class="rt-expected" points="662.2,50 670.2,63 662.2,76 654.2,63"/>
+<text class="rt-live-label" x="662.2" y="92">live ~02:50</text>
+<line class="rt-now" x1="350.2" y1="36" x2="350.2" y2="148"/><text class="rt-now-label" x="350.2" y="161">now 01:56</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-23" open><summary><strong>RELEASE-23 · live ~02:35</strong><span class="fold-count">2 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-24" open><summary><strong>RELEASE-24 · live ~02:50</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS149"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS149</span><span class="release-name">RELEASE-23</span>Release: refused RemoteTrigger create is not a launch</td><td data-label="App / service"></td><td data-label="Detail">Rides DS148. Diff review before join; merge on green.</td><td data-label="Expected">01 Nov ~02:35<span class="expected-basis">agent ~30 from 01:45, join 10, CI 10</span></td></tr>
-<tr data-task="DS148"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS148</span>Delivery hook: a refused RemoteTrigger create is not a launch</td><td data-label="App / service"></td><td data-label="Detail">READY dd290c1; merged into RELEASE-23, CI pending.</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="DS151"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS151</span><span class="release-name">RELEASE-24</span>Release: docs front-matter lists feed the docs map</td><td data-label="App / service"></td><td data-label="Detail">Rides DS150. Diff review before join; merge on green.</td><td data-label="Expected">01 Nov ~02:50<span class="expected-basis">agent ~30 from 01:58, join 10, CI 5</span></td></tr>
+<tr data-task="DS150"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS150</span>docs: front-matter parser drops block lists, so the docs map is empty</td><td data-label="App / service"></td><td data-label="Detail">Cloud agent trig_01659btkSFzbgrGKx6cm3aKV on DS150-docs-front-matter-lists.</td><td data-label="Expected">01 Nov ~02:30<span class="expected-basis">setup 5, fix+tests 15, checks 10, from 01:58</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">234 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS150"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS150</span>docs: front-matter parser drops block lists, so the docs map is empty</td><td data-label="App / service"></td><td data-label="Detail">docs_lib.parse_front_matter returns &#x27;&#x27; for &#x27;code:&#x27; block lists; docs-map.json map is {} and M1 never maps code. Fix the parser to read &#x27;- item&#x27; lists; add a test; rebuild the map.</td><td data-label="Expected">01 Nov ~03:30<span class="expected-basis">next release after RELEASE-23: agent ~30 + join/CI 20</span></td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">232 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS148"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS148</span>Delivery hook: a refused RemoteTrigger create is not a launch<span class="release-line"><span class="release-name">RELEASE-23</span></span></td><td data-label="App / service"></td><td data-label="Detail">Live in RELEASE-23 (15955c0), CI green 01:55.</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="DS149"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS149</span><span class="release-name">RELEASE-23</span>Release: refused RemoteTrigger create is not a launch</td><td data-label="App / service"></td><td data-label="Detail">RELEASE-23 live: 15955c0, spec-lint + secret-scan green 01:55.</td><td data-label="Expected">01 Nov</td></tr>
 <tr data-task="DS136"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS136</span>Deep wording pass: audits plugin SKILL.md files and README<span class="release-line"><span class="release-name">RELEASE-22</span></span></td><td data-label="App / service"></td><td data-label="Detail">Live in RELEASE-22 (56247fd), CI green 01:43.</td><td data-label="Expected">01 Nov</td></tr>
 <tr data-task="DS137"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS137</span>Deep wording pass: delivery plugin README and brief template<span class="release-line"><span class="release-name">RELEASE-22</span></span></td><td data-label="App / service"></td><td data-label="Detail">Live in RELEASE-22 (56247fd), CI green 01:43.</td><td data-label="Expected">01 Nov</td></tr>
 <tr data-task="DS138"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS138</span>Deep wording pass: docs plugin SKILL.md files and README<span class="release-line"><span class="release-name">RELEASE-22</span></span></td><td data-label="App / service"></td><td data-label="Detail">Live in RELEASE-22 (56247fd), CI green 01:43.</td><td data-label="Expected">01 Nov</td></tr>

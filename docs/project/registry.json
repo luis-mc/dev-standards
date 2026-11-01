@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-01T01:53+00:00",
+  "updated": "2026-11-01T01:56+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2653,11 +2653,11 @@
       "id": "DS148",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Delivery hook: a refused RemoteTrigger create is not a launch",
-      "detail": "READY dd290c1; merged into RELEASE-23, CI pending.",
+      "detail": "Live in RELEASE-23 (15955c0), CI green 01:55.",
       "expected": "01 Nov",
-      "changed": "2026-11-01T01:53+00:00",
+      "changed": "2026-11-01T01:56+00:00",
       "rides": "DS149",
       "started": "2026-11-01T01:41+00:00"
     },
@@ -2665,12 +2665,11 @@
       "id": "DS149",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release: refused RemoteTrigger create is not a launch",
-      "detail": "Rides DS148. Diff review before join; merge on green.",
-      "expected": "01 Nov ~02:35",
-      "changed": "2026-11-01T01:41+00:00",
-      "expected_basis": "agent ~30 from 01:45, join 10, CI 10",
+      "detail": "RELEASE-23 live: 15955c0, spec-lint + secret-scan green 01:55.",
+      "expected": "01 Nov",
+      "changed": "2026-11-01T01:56+00:00",
       "release": 23,
       "phases": [
         {
@@ -2695,12 +2694,44 @@
       "id": "DS150",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "docs: front-matter parser drops block lists, so the docs map is empty",
-      "detail": "docs_lib.parse_front_matter returns '' for 'code:' block lists; docs-map.json map is {} and M1 never maps code. Fix the parser to read '- item' lists; add a test; rebuild the map.",
-      "expected": "01 Nov ~03:30",
-      "changed": "2026-11-01T01:53+00:00",
-      "expected_basis": "next release after RELEASE-23: agent ~30 + join/CI 20"
+      "detail": "Cloud agent trig_01659btkSFzbgrGKx6cm3aKV on DS150-docs-front-matter-lists.",
+      "expected": "01 Nov ~02:30",
+      "changed": "2026-11-01T01:56+00:00",
+      "expected_basis": "setup 5, fix+tests 15, checks 10, from 01:58",
+      "rides": "DS151",
+      "started": "2026-11-01T01:56+00:00"
+    },
+    {
+      "id": "DS151",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Release: docs front-matter lists feed the docs map",
+      "detail": "Rides DS150. Diff review before join; merge on green.",
+      "expected": "01 Nov ~02:50",
+      "changed": "2026-11-01T01:56+00:00",
+      "expected_basis": "agent ~30 from 01:58, join 10, CI 5",
+      "release": 24,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-01T01:58+00:00",
+          "end": "2026-11-01T02:30+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-01T02:30+00:00",
+          "end": "2026-11-01T02:40+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-01T02:40+00:00",
+          "end": "2026-11-01T02:50+00:00"
+        }
+      ],
+      "started": "2026-11-01T01:58+00:00"
     },
     {
       "id": "MP1",
