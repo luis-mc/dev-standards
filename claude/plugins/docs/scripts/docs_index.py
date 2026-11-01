@@ -21,6 +21,7 @@ DOCS_MERMAID_JS, fetch-mermaid); if no copy is found they show as readable sourc
 from __future__ import annotations
 
 import argparse
+import hashlib
 import html
 import json
 import os
@@ -34,6 +35,8 @@ import docs_lib as D  # noqa: E402
 
 PLUGIN = Path(__file__).resolve().parent.parent
 MERMAID_VERSION = "11.4.1"
+# SHA-256 of dist/mermaid.min.js at MERMAID_VERSION; fetch-mermaid refuses any other bytes.
+MERMAID_SHA256 = "a43bc1afd446f9c4cc66ac5dd45d02e8d65e26fc5344ec0ef787f88d6ddb6f9e"
 MERMAID_URL = f"https://cdn.jsdelivr.net/npm/mermaid@{MERMAID_VERSION}/dist/mermaid.min.js"
 
 CSS = """
@@ -532,6 +535,26 @@ def stale_generated(root: Path) -> list[str]:
     return bad
 
 
+def _download(url):
+    import urllib.request
+    with urllib.request.urlopen(url, timeout=60) as r:
+        return r.read()
+
+
+def fetch_mermaid(root, fetch=None) -> int:
+    """Download the pinned mermaid; write it only if its SHA-256 matches MERMAID_SHA256."""
+    data = (fetch or _download)(MERMAID_URL)
+    got = hashlib.sha256(data).hexdigest()
+    if got != MERMAID_SHA256:
+        print(f"refusing mermaid {MERMAID_VERSION}: SHA-256 is {got}, expected {MERMAID_SHA256}; nothing written", file=sys.stderr)
+        return 1
+    dest = root / "docs/_site/vendor/mermaid.min.js"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(data)
+    print(f"vendored mermaid {MERMAID_VERSION} to {dest}")
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("command", choices=["build", "check", "fetch-mermaid"])
@@ -545,13 +568,7 @@ def main(argv=None) -> int:
             print(f"stale generated file: {b} (run docs_index.py build)")
         return 1 if bad else 0
     if a.command == "fetch-mermaid":
-        import urllib.request
-        dest = root / "docs/_site/vendor/mermaid.min.js"
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        with urllib.request.urlopen(MERMAID_URL, timeout=60) as r:
-            dest.write_bytes(r.read())
-        print(f"vendored mermaid {MERMAID_VERSION} to {dest}")
-        return 0
+        return fetch_mermaid(root)
     r = build(root, a.mermaid)
     print(f"built docs/index.html and {r['pages']} page(s) in docs/_site/; {r['features']} feature(s); {len(r['gaps'])} gap(s)")
     return 0

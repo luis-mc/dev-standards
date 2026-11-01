@@ -173,6 +173,21 @@ class BuildTests(unittest.TestCase):
         I.build(d)
         self.assertEqual(a, {p: r(d, p) for p in a})
 
+    def test_fetch_mermaid_matching_hash_writes(self):
+        d = proj()
+        data = (I.PLUGIN_MERMAID).read_bytes()
+        self.assertEqual(I.fetch_mermaid(d, fetch=lambda url: data), 0)
+        self.assertEqual((d / "docs/_site/vendor/mermaid.min.js").read_bytes(), data)
+
+    def test_fetch_mermaid_mismatch_refuses(self):
+        d = proj()
+        self.assertEqual(I.fetch_mermaid(d, fetch=lambda url: b"evil()"), 1)
+        self.assertFalse((d / "docs/_site/vendor/mermaid.min.js").exists())
+
+    def test_committed_mermaid_matches_pinned_hash(self):
+        import hashlib
+        self.assertEqual(hashlib.sha256(I.PLUGIN_MERMAID.read_bytes()).hexdigest(), I.MERMAID_SHA256)
+
 
 if __name__ == "__main__":
     unittest.main()
