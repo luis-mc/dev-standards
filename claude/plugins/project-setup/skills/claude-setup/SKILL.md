@@ -13,26 +13,26 @@ or both of:
   shared with anyone who clones it
 - **user** — `~/.claude/`, machine-wide, applies to every project
 
-These are genuinely different decisions and the skill covers both because the
-configuration splits across them unevenly: a statusline and an auto-compact
-window are machine preferences most people want once, globally; instructions and
-a pinned output style are usually per-project.
+These are different decisions. The skill covers both because the configuration
+splits across them unevenly. A statusline and an auto-compact window are machine
+preferences that most people want once, globally. Instructions and a pinned
+output style are usually per-project.
 
-Two user-level pieces are part of the standard setup and are planned on every
-run, whatever target was picked: the `luismc-transcript-folds` entry in
+Two user-level pieces are part of the standard setup. Every run plans them,
+whatever target was picked: the `luismc-transcript-folds` entry in
 `~/.claude/settings.json` and the two chords in `~/.claude/keybindings.json`
-(see "The transcript-folds pieces" in step 2). They are shown in the step 3
-confirmation like every other write outside the repo.
+(see "The transcript-folds pieces" in step 2). Step 3 shows them in the
+confirmation, like every other write outside the repo.
 
 ## The model split this skill enforces
 
-Every project this skill touches gets the same division of labour: the **main
-session runs on Opus** and does the thinking — understanding, planning,
-designing, reviewing — and **subagents run on Sonnet** and write the code. Each
+Every project this skill touches gets the same division of labour. The **main
+session runs on Opus** and does the thinking: understanding, planning,
+designing, reviewing. **Subagents run on Sonnet** and write the code. Each
 model also gets an **effort level**, **medium** or **high**, chosen by the user
-on every run. The owner's default is **medium for both**, Opus and Sonnet;
-it is what the question below preselects and what the shipped files carry.
-Six pieces carry it, and all are needed:
+on every run. The owner's default is **medium for both**, Opus and Sonnet. The
+question below preselects it, and the shipped files carry it. Six pieces carry
+the split, and all are needed:
 
 | Piece | Enforces |
 |---|---|
@@ -40,47 +40,46 @@ Six pieces carry it, and all are needed:
 | `settings.json` `env.CLAUDE_CODE_SUBAGENT_MODEL: "sonnet"` | the default model of every subagent that does not pin its own |
 | `settings.json` `modelSettings.<Opus ID>.effortLevel` | the main loop's effort |
 | `settings.json` `modelSettings.<Sonnet ID>.effortLevel` | the Sonnet effort for the session itself; subagent effort comes from the rule file, because the docs do not say this entry reaches subagents |
-| `.claude/rules/agents-and-integration.md` | the behaviour — the main loop actually hands implementation to subagents instead of writing it itself, and passes the chosen `effort` on each Agent call |
+| `.claude/rules/agents-and-integration.md` | the behaviour — the main loop hands implementation to subagents instead of writing it itself, and passes the chosen `effort` on each Agent call |
 | `.claude/hooks/effort_drift.py` | the warning when a model has no saved effort (see "The alias-drift warning") |
 
-Settings alone only pick models and effort; without the rule the Opus session
-would still write all the code itself and the Sonnet default would rarely be
-exercised. The rule alone is advice with nothing behind it. Agents whose
-definition pins a model (e.g. `luismc-agents:architect` → `opus`) keep it: a
-frontmatter `model` takes precedence over `CLAUDE_CODE_SUBAGENT_MODEL`, which
-is the intent —
+Settings alone pick only models and effort. Without the rule, the Opus session
+still writes all the code itself, and the Sonnet default is rarely used. The
+rule alone is advice with nothing behind it. An agent whose definition pins a
+model (e.g. `luismc-agents:architect` → `opus`) keeps it. A frontmatter `model`
+takes precedence over `CLAUDE_CODE_SUBAGENT_MODEL`. This is intended:
 judgment-call agents stay on Opus. Forked subagents always inherit the parent's
-model; that is acceptable, since a fork is for continuing the parent's
-reasoning, not for implementation.
+model. That is acceptable, because a fork continues the parent's reasoning and
+is not for implementation.
 
 The rule file does more than the split. `agents-and-integration.md` is the
-plugin's one rule file for how agents are run and how work is integrated:
+plugin's one rule file for how agents run and how work is integrated. It holds
 role lines for the orchestrator, code agents, scripts and log triage; the
 integrate-once, deploy-once workflow; and where docs live. Its workflow lines
 cite `scripts/delivery/*` by path. Those scripts exist only in repos generated
-or repaired by `tech-stack-setup` 12 or later; in any other repo the lines name
-tools that are not there, and `tech-stack-setup` is what puts them there. The
-file is the same for every target and is never edited per repo. It replaces
+or repaired by `tech-stack-setup` 12 or later. In any other repo, the lines name
+tools that are not there, and `tech-stack-setup` puts them there. The file is
+the same for every target and is never edited per repo. It replaces
 `model-delegation.md`, which earlier versions of this skill wrote.
 
 **Why effort is carried twice.** Claude Code saves per-model effort as
 `modelSettings.<model ID>.effortLevel`, and that entry beats a top-level
-`effortLevel`. The docs say nothing on whether it applies to subagents, though.
-What they do document for a non-fork subagent is the Agent call's `effort`
+`effortLevel`. The docs do not say whether it applies to subagents. For a
+non-fork subagent, they document this order: the Agent call's `effort`
 parameter, then the agent definition's `effort` frontmatter, then the session's
 effort. So the Opus entry and the Sonnet entry set the session, and the rule
 file tells the main loop to pass the subagent effort explicitly. Anything that
-overrides saved settings overrides the entries too: the env var
+overrides saved settings also overrides these entries: the env var
 `CLAUDE_CODE_EFFORT_LEVEL` (every model, every setting), and `--effort` or
-`/effort` for the session. The skill only offers **medium** (the default for
+`/effort` for the session. The skill offers only **medium** (the default for
 Opus 5.5 and Sonnet 5.5, and the owner's default for both) and **high** (more
-tokens and time); `effortLevel` also accepts `low` and `xhigh`, which are left
-to the user to set by hand.
+tokens and time). `effortLevel` also accepts `low` and `xhigh`; the user sets
+those by hand.
 
 The shipped settings also carry a top-level `"effortLevel": "medium"`. A
-per-model `modelSettings` entry beats it, so the main session still runs at the
-effort chosen for Opus; the top-level key is what applies to sessions whose
-model has no entry, such as cloud agents, which run Opus and so get the Opus
+per-model `modelSettings` entry beats it, so the main session runs at the
+effort chosen for Opus. The top-level key applies to sessions whose model has no
+entry, such as cloud agents. Cloud agents run Opus, so they get the Opus
 default, medium.
 
 ## Scope this plugin does NOT cover
@@ -88,10 +87,10 @@ default, medium.
 Repo and product tooling — `.githooks/pre-commit`, `.gitleaks.toml`,
 `.github/workflows/ci.yml`, `playwright.config.ts`, and the
 `package.json`/`core.hooksPath` activation — belongs to the sibling skill in
-this plugin, `tech-stack-setup`, which generates them from `STACKSPEC` rather
-than from a stack-neutral baseline. The split is the point: this skill sets up
-the agent working in the repo, the others set up the repo — `tech-stack-setup`
-its structure and gates, `auth-setup` its authentication.
+this plugin, `tech-stack-setup`, which generates them from `STACKSPEC`, not from
+a stack-neutral baseline. The split is deliberate. This skill sets up the agent
+that works in the repo. The other skills set up the repo: `tech-stack-setup` its
+structure and gates, `auth-setup` its authentication.
 
 ## Step 1 — Ask which target, before reading or writing anything
 
