@@ -814,35 +814,27 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>What claude-setup can offer</a><a href="#s3"><b>3</b>How each offer is enforced</a><a href="#s4"><b>4</b>How the owner sees it</a><a href="#s5"><b>5</b>Gaps, why they exist, and what would help</a><a href="#s6"><b>6</b>Decisions</a><a href="#s7"><b>7</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: claude-setup offers and enforcement</h1><p>claude-setup walks through every dev-standards plugin and setup, asks which to enforce, and reports what each one now enforces.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-01T16:21+00:00">01 Nov 16:21</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">01 Nov 16:23</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-01T16:59+00:00">01 Nov 16:59</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">01 Nov 17:00</a> (Lisbon)</p>
 <p class="lede">On 01 Nov the owner ran claude-setup in an existing project and could not tell whether the docs, design-system and delivery plugins were enforced. Today claude-setup turns plugins on, but most of them stay silent until a config file exists, and some only warn. This page lists what claude-setup can offer, how each offer is enforced, how it is shown to the owner, and the gaps. Nothing is built yet.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">4 tasks</span></summary>
 <ul>
-<li data-glance-task="SO4"><span class="task-id">SO4</span>Project level by default for every dev-standards install (D6-D8) <span class="glance-expected">01 Nov ~16:55</span><span class="glance-basis">one cloud agent, ~25 min</span></li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">3 tasks</span></summary>
-<ul>
+<li data-glance-task="SO4"><span class="task-id">SO4</span>Project level by default for every dev-standards install (D6-D8)</li>
 <li data-glance-task="SO2"><span class="task-id">SO2</span>claude-setup: scan, enforce questions, offers, enforcement report</li>
 <li data-glance-task="SO3"><span class="task-id">SO3</span>Split spec-writing skills by kind (after D5)</li>
 <li data-glance-task="SO1"><span class="task-id">SO1</span>Owner decides D1-D4 on the setup-offers page</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">3</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">4</div><div class="label">tasks live</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">4 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="SO4"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">SO4</span>Project level by default for every dev-standards install (D6-D8)<span class="release-line"><span class="release-name">RELEASE-28</span></span></td><td data-label="Detail">README and claude-setup install with --scope project; transcript-folds per project; config files to project .claude/ by default; marketplace registered per project</td><td data-label="Expected">01 Nov ~16:55<span class="expected-basis">one cloud agent, ~25 min</span></td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">3 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="SO4"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">SO4</span>Project level by default for every dev-standards install (D6-D8)<span class="release-line"><span class="release-name">RELEASE-28</span></span></td><td data-label="Detail">README and claude-setup install with --scope project; transcript-folds per project; config files to project .claude/ by default; marketplace registered per project</td><td data-label="Expected">01 Nov ~17:00</td></tr>
 <tr data-task="SO2"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">SO2</span>claude-setup: scan, enforce questions, offers, enforcement report<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="Detail">Built after D1-D4 are decided</td><td data-label="Expected">01 Nov</td></tr>
 <tr data-task="SO3"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">SO3</span>Split spec-writing skills by kind (after D5)<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="Detail">Wording of spec-new, feature-spec-new and promote-to-spec descriptions</td><td data-label="Expected">01 Nov</td></tr>
 <tr data-task="SO1"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">SO1</span>Owner decides D1-D4 on the setup-offers page<span class="no-release-line">ships nothing: owner decisions only</span></td><td data-label="Detail">Owner chose the recommended option for D1-D5 on 01 Nov.</td><td data-label="Expected">01 Nov</td></tr>
