@@ -1680,41 +1680,62 @@ Staff alerts are immediate and go through a channel outside the application (R12
 }
 ```
 
-- **R19.7** — Exactly one envelope shape for every error, on every endpoint.
-- **R19.8** — `message` is generic and safe to display. It **MUST NOT** contain personal data, internal identifiers, stack traces, query text, or file paths.
-- **R19.9** — `correlation_id` is always present and always logged server-side, so support can investigate without the client being told anything sensitive.
-- **R19.10** — **Non-enumerating codes.** These distinct internal conditions **MUST** all surface as `invalid_credentials` with an identical response and comparable timing: unknown account; wrong password; wrong TOTP; wrong recovery code; unverified account; locked account; pending-deletion account; failed passkey assertion.
-- **R19.11** — Field-level validation detail **MAY** be returned only for non-security input (profile fields, format errors), and **MUST NOT** be returned for any credential, identifier-existence, or authorization condition.
+- **R19.7** — Every error, on every endpoint, uses exactly one envelope shape.
+- **R19.8** — `message` is generic and safe to display. It **MUST NOT** contain personal data, internal identifiers, stack traces, query text or file paths.
+- **R19.9** — `correlation_id` is always present and always logged server-side. Support can then investigate without telling the client anything sensitive.
+- **R19.10** — **Non-enumerating codes.** These distinct internal conditions **MUST** all surface as `invalid_credentials`, with an identical response and comparable timing:
+  - unknown account;
+  - wrong password;
+  - wrong TOTP;
+  - wrong recovery code;
+  - unverified account;
+  - locked account;
+  - pending-deletion account;
+  - failed passkey assertion.
+- **R19.11** — Field-level validation detail **MAY** be returned only for non-security input (profile fields, format errors). It **MUST NOT** be returned for any credential, identifier-existence or authorization condition.
 
 **Permitted codes:** `invalid_request`, `invalid_credentials`, `mfa_required`, `step_up_required`, `consent_required`, `unauthorized`, `forbidden`, `not_found`, `conflict`, `rate_limited`, `unavailable`, `internal_error`.
 
 - **R19.12** — `not_found` and `forbidden` **MUST NOT** be distinguishable across an ownership boundary (R11.11).
-- **R19.13** — Production **MUST NOT** emit framework error pages, stack traces, or database errors. Unhandled exceptions surface as `internal_error` with a correlation identifier only.
+- **R19.13** — Production **MUST NOT** emit framework error pages, stack traces or database errors. Unhandled exceptions surface as `internal_error`, with a correlation identifier only.
 
 ### 19.6 Response bodies
 
-- **R19.14** — Responses return only what the consumer renders. Never return credential material, secrets, blind indexes, `token_hash` values, internal sequence numbers, or another principal's data.
-- **R19.15** — The session-establishment response returns: principal identifier, `principal_type`, `acr`, effective permissions, session expiry timestamps, the CSRF token (cookie transport), and — for bearer transport only — the session secret.
+- **R19.14** — Responses return only what the consumer renders. Never return credential material, secrets, blind indexes, `token_hash` values, internal sequence numbers or another principal's data.
+- **R19.15** — The session-establishment response returns:
+  - the principal identifier;
+  - `principal_type`;
+  - `acr`;
+  - the effective permissions;
+  - the session expiry timestamps;
+  - the CSRF token (cookie transport);
+  - the session secret (bearer transport only).
 
 ### 19.7 Versioning
 
-- **R19.16** — Breaking changes require a new path version. Within a version: no field removal, no type change, no semantic change, no new required request field, and no new mandatory error code a client cannot handle.
-- **R19.17** — Additive changes are permitted, which is why R19.3's strict request validation is paired with tolerant client-side response parsing (§20.7).
+- **R19.16** — Breaking changes require a new path version. Within a version, none of these is allowed: removing a field, changing a type, changing semantics, adding a required request field, or adding a mandatory error code that a client cannot handle.
+- **R19.17** — Additive changes are permitted. That is why R19.3's strict request validation is paired with tolerant client-side response parsing (§20.7).
 
 ### 19.8 Transport and headers
 
-- **R19.18** — TLS 1.2 minimum, 1.3 preferred. Plaintext HTTP **MUST** be redirected, never served.
+- **R19.18** — TLS 1.2 minimum, 1.3 preferred. Plaintext HTTP **MUST** be redirected and never served.
 - **R19.19** — `Strict-Transport-Security: max-age=31536000; includeSubDomains` (with `preload` once verified).
-- **R19.20** — Also required: `X-Content-Type-Options: nosniff`; `Referrer-Policy: strict-origin-when-cross-origin`; `Cross-Origin-Opener-Policy: same-origin`; `Cross-Origin-Resource-Policy: same-origin`; a restrictive `Content-Security-Policy` for any served HTML; `Permissions-Policy` denying unused features.
+- **R19.20** — These headers are also required:
+  - `X-Content-Type-Options: nosniff`;
+  - `Referrer-Policy: strict-origin-when-cross-origin`;
+  - `Cross-Origin-Opener-Policy: same-origin`;
+  - `Cross-Origin-Resource-Policy: same-origin`;
+  - a restrictive `Content-Security-Policy` for any served HTML;
+  - `Permissions-Policy` that denies unused features.
 - **R19.21** — `Cache-Control: no-store` on **every** authenticated response and every authentication response. Only `/.well-known/*` is publicly cacheable (§22.7).
-- **R19.22** — CORS: exact-match origin allowlist, credentials permitted only for allowlisted origins. `Access-Control-Allow-Origin: *` combined with credentials **MUST NOT** occur.
-- **R19.23** — Responses over 1 KB **MUST** be compressed. Compression **MUST NOT** be applied to any response whose body contains a secret alongside attacker-influenced content (BREACH mitigation); the session-establishment response therefore carries `Cache-Control: no-store` and **MUST NOT** be compressed.
+- **R19.22** — CORS: use an exact-match origin allowlist. Permit credentials only for allowlisted origins. `Access-Control-Allow-Origin: *` combined with credentials **MUST NOT** occur.
+- **R19.23** — Responses over 1 KB **MUST** be compressed. Compression **MUST NOT** be applied to any response whose body contains a secret alongside attacker-influenced content (BREACH mitigation). So the session-establishment response carries `Cache-Control: no-store` and **MUST NOT** be compressed.
 
 ### 19.9 Machine-readable description
 
-- **R19.24** — The implementation **MUST** emit a machine-readable interface description covering every route, request schema, response schema, error code, required permission, and step-up requirement.
+- **R19.24** — The implementation **MUST** emit a machine-readable interface description covering every route, request schema, response schema, error code, required permission and step-up requirement.
 - **R19.25** — CI **MUST** verify that the description matches the registered routes and that every route declares a permission (R11.5). Any drift fails the build.
-- **R19.26** — Client SDKs **SHOULD** be generated from or validated against this description so no consuming app hand-writes a request shape.
+- **R19.26** — Client SDKs **SHOULD** be generated from or validated against this description so no app hand-writes a request shape.
 
 ---
 
