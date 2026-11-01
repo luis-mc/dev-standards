@@ -1221,29 +1221,36 @@ Permissions are named `resource.action` and declared in code (R4.13).
 ### 14.1 Model
 
 - **R14.1** — Legal documents are versioned records (`legal_document`) with an immutable content hash. Consent is recorded per principal, per document kind, per version (`consent_record`).
-- **R14.1a** — `legal_document.kind` is `terms_of_service`, `privacy_policy`, or `dpa`. `consent_record.method` records **where** the consent was captured — `registration` (§14.2), `reconsent_gate` (§14.4), or `settings` (§14.5) — because a regulator asking how consent was obtained is asking for exactly this, and "the user accepted at some point" is not an answer.
+- **R14.1a** — `legal_document.kind` is `terms_of_service`, `privacy_policy` or `dpa`. `consent_record.method` records **where** the consent was captured: `registration` (§14.2), `reconsent_gate` (§14.4) or `settings` (§14.5). A regulator who asks how consent was obtained is asking for exactly this. "The user accepted at some point" is not an answer.
 
 ### 14.2 Registration gate
 
-- **R14.2** — Registration **MUST** verify acceptance of every currently-required document **server-side** before creating the account, and **MUST** persist a `consent_record` for each in the same transaction. A client-side checkbox with no server-side record is explicitly non-compliant.
-- **R14.3** — Acceptance records the exact version, the timestamp, the acceptance method, and hashed origin metadata (§5.6) — enough to demonstrate what was agreed to and when.
+- **R14.2** — Registration **MUST** verify acceptance of every currently required document **server-side** before it creates the account. It **MUST** persist a `consent_record` for each document in the same transaction. A client-side checkbox with no server-side record is explicitly non-compliant.
+- **R14.3** — Acceptance records the exact version, the timestamp, the acceptance method and hashed origin metadata (§5.6). That is enough to show what was agreed to and when.
 
 ### 14.3 Federated and native flows
 
-- **R14.4** — Just-in-time provisioning (§7.6.4) and any native registration path **MUST** apply the identical gate. A path that creates accounts without consent records is a compliance gap regardless of how the user arrived.
+- **R14.4** — Just-in-time provisioning (§7.6.4) and any native registration path **MUST** apply the identical gate. A path that creates accounts without consent records is a compliance gap, however the user arrived.
 
 ### 14.4 Re-consent gate
 
-- **R14.5** — When a document version with `requires_reconsent = true` becomes effective, middleware **MUST** block access at stage 8 of §3.4 for any principal lacking acceptance of that version.
-- **R14.6** — The gate returns a distinct, machine-readable response (`consent_required`) enumerating which documents are outstanding, so any UI can render the flow.
-- **R14.7** — The gate **MUST NOT** block: reading the outstanding documents; recording acceptance; data export; account deletion; or logout. **Withholding a data subject's rights until they accept new terms is itself a violation.**
-- **R14.8** — The gate is server-enforced. A client that merely displays a modal satisfies nothing.
+- **R14.5** — When a document version with `requires_reconsent = true` becomes effective, middleware **MUST** block access at stage 8 of §3.4 for any principal who has not accepted that version.
+- **R14.6** — The gate returns a distinct, machine-readable response (`consent_required`) that lists the outstanding documents, so any UI can render the flow.
+- **R14.7** — The gate **MUST NOT** block any of these:
+  - reading the outstanding documents;
+  - recording acceptance;
+  - data export;
+  - account deletion;
+  - logout.
+
+  **Withholding a data subject's rights until they accept new terms is itself a violation.**
+- **R14.8** — The server enforces the gate. A modal in the client satisfies nothing.
 
 ### 14.5 Withdrawal and granularity
 
-- **R14.9** — `consent_record.purpose` exists and is defaulted, so purpose-level consent (marketing, analytics, optional processing) can be added without migration.
-- **R14.10** — Where purpose-level consent is later enabled, withdrawal **MUST** be exactly as easy as granting — same number of steps, same surface.
-- **R14.11** — Consent to the terms required to operate the service cannot be withdrawn while retaining the account; the withdrawal path for those is account deletion (§15.4), and the UI **MUST** state this plainly.
+- **R14.9** — `consent_record.purpose` exists and has a default, so purpose-level consent (marketing, analytics, optional processing) can be added without a migration.
+- **R14.10** — When purpose-level consent is enabled later, withdrawal **MUST** be exactly as easy as granting: the same number of steps, on the same surface.
+- **R14.11** — Consent to the terms needed to operate the service cannot be withdrawn while the account is kept. The withdrawal path for those terms is account deletion (§15.4). The UI **MUST** state this plainly.
 
 ---
 
@@ -1251,24 +1258,35 @@ Permissions are named `resource.action` and declared in code (R4.13).
 
 ### 15.1 Principle
 
-- **R15.1** — Access, rectification, export, and erasure **MUST** be **self-service** for authenticated users, exercisable without human intervention. Architectures forcing administrative mediation for routine rights are a documented compliance deficit.
+- **R15.1** — Access, rectification, export and erasure **MUST** be **self-service** for authenticated users, with no human intervention. An architecture that forces administrative mediation for routine rights is a documented compliance deficit.
 
 ### 15.2 Right of access and portability (export)
 
-- **R15.2** — Export **MUST** be complete: profile data; all credentials as metadata (kind, label, created, last used — **never** secret material); sessions; devices; consent records; security events; authentication attempt history; audit events where the principal is the target; and every application-domain record linked to the principal. Exporting only the profile row is a documented deficit.
-- **R15.3** — Machine-readable, structured format with a documented schema.
-- **R15.4** — Export **MUST** run as an asynchronous background job. Building an export inline in a request handler blocks the runtime and risks timeout.
-- **R15.5** — The artifact **MUST** be produced by **streaming**, never by accumulating the full data set in memory. Buffering a full export is a memory-exhaustion vector proportional to the largest account.
-- **R15.5a** — `data_export.status` tracks one request through `pending` (accepted, queued), `running` (artifact being built), and then exactly one terminal state: `ready` (downloadable until `expires_at`), `expired` (artifact purged, row kept so the request stays auditable), or `failed` (with `error_code`). The row **MUST** outlive the artifact — deleting it on expiry loses the record that a subject exercised the right at all.
-- **R15.6** — Delivery is by a time-limited, single-use, unguessable download credential (≥256 bits) valid ≤7 days, requiring an authenticated session, and audited on every access.
-- **R15.7** — The artifact **MUST** be encrypted at rest and **MUST** be destroyed on expiry by the retention job (§23.3). An export is a concentrated copy of everything about a person and is the highest-value object in the system.
+- **R15.2** — Export **MUST** be complete. It includes:
+  - profile data;
+  - all credentials as metadata (kind, label, created, last used), **never** secret material;
+  - sessions;
+  - devices;
+  - consent records;
+  - security events;
+  - authentication attempt history;
+  - audit events where the principal is the target;
+  - every application-domain record linked to the principal.
+
+  Exporting only the profile row is a documented deficit.
+- **R15.3** — The format is machine-readable and structured, with a documented schema.
+- **R15.4** — Export **MUST** run as an asynchronous background job. Building an export inside a request handler blocks the runtime and risks a timeout.
+- **R15.5** — The artifact **MUST** be produced by **streaming**, never by collecting the full data set in memory. Buffering a full export is a memory-exhaustion vector that grows with the largest account.
+- **R15.5a** — `data_export.status` tracks one request through `pending` (accepted, queued), `running` (artifact being built) and then exactly one terminal state: `ready` (downloadable until `expires_at`), `expired` (artifact purged, row kept so the request stays auditable) or `failed` (with `error_code`). The row **MUST** outlive the artifact. Deleting it on expiry would lose the record that a subject exercised the right at all.
+- **R15.6** — Delivery uses a time-limited, single-use, unguessable download credential (≥256 bits), valid ≤7 days. Download requires an authenticated session. Every access is audited.
+- **R15.7** — The artifact **MUST** be encrypted at rest. It **MUST** be destroyed on expiry by the retention job (§23.3). An export is a concentrated copy of everything about a person. It is the highest-value object in the system.
 - **R15.8** — Export requests are rate-limited (default: 1 per 24 hours per principal).
 - **R15.9** — Requesting an export requires step-up (§8.5).
 
 ### 15.3 Right to rectification
 
 - **R15.10** — Users **MUST** be able to correct their own profile data through authenticated endpoints. Identifier changes (email) follow the verification flow of §7.8.
-- **R15.11** — Every rectification is audited with the field changed — **never the before/after values**, which would write the corrected personal data into an immutable 6-year store.
+- **R15.11** — Every rectification is audited with the name of the field changed, **never the before and after values**. Those values would write the corrected personal data into an immutable 6-year store.
 
 ### 15.4 Right to erasure — grace period then cryptographic erasure
 
@@ -1277,33 +1295,33 @@ Permissions are named `resource.action` and declared in code (R4.13).
 1. Requires step-up.
 2. `status = 'pending_deletion'`, `deletion_requested_at` set.
 3. **All sessions revoked immediately.**
-4. Login blocked, except a dedicated cancellation path.
-5. Security event emitted; confirmation notification sent, stating the exact date of irreversible erasure.
-6. Audit event emitted.
+4. Login is blocked, except through a dedicated cancellation path.
+5. A security event is emitted. A confirmation notification is sent, stating the exact date of irreversible erasure.
+6. An audit event is emitted.
 
 **Phase 2 — Grace window (default 30 days, configurable 0–30):**
 
-- The user may cancel by authenticating through the cancellation path. Cancellation restores `active`, emits a security event, and notifies.
-- No processing beyond retention occurs during the window.
+- The user may cancel by authenticating through the cancellation path. Cancellation restores `active`, emits a security event and notifies the user.
+- No processing beyond retention happens during the window.
 
 **Phase 3 — Erasure (automatic, at window end):**
 
-1. Destroy the principal's DEK: mark `destroyed_at` and remove the wrapped key material. **Every `[ENC]` attribute across every table becomes permanently undecryptable, including in every backup taken before this moment.** This is what makes erasure real rather than aspirational.
+1. Destroy the principal's DEK: mark `destroyed_at` and remove the wrapped key material. **Every `[ENC]` attribute in every table becomes permanently undecryptable, including in every backup taken before this moment.** This is what makes erasure real.
 2. Null all `[ENC]` columns, all `[BIDX]` values (R5.19), and all `[HASH]` values derived from personal data.
 3. Apply §15.4.1 to every table: delete every row it marks **delete**, and leave every row it marks **retain** in place with its principal reference rewritten to the tombstone.
-4. Retain the `user` row as a **tombstone**: `id`, `status = 'erased'`, `erased_at`. It holds no personal data and exists solely to keep audit references non-dangling.
-5. Rewrite `audit_event.actor_id`/`target_id` references — see R15.13.
+4. Retain the `user` row as a **tombstone**: `id`, `status = 'erased'`, `erased_at`. It holds no personal data. It exists only so audit references do not dangle.
+5. Rewrite `audit_event.actor_id` and `target_id` references (see R15.13).
 6. Emit a final `user.erased` audit event with the tombstone identifier only.
-7. Record completion so the erasure is demonstrable.
+7. Record completion, so the erasure can be demonstrated.
 
-- **R15.12** — A pure soft-delete (a flag or timestamp leaving plaintext personal data recoverable) **MUST NOT** be used as the erasure mechanism. It is a direct violation of the right to erasure.
-- **R15.13** — Audit records **MUST** survive erasure — they are required for 6 years (§23.2) and are the evidence that erasure occurred. Because they reference the tombstone identifier and contain **no personal data by construction** (R16.4), they become non-identifying automatically once the tombstone holds nothing. **This is the specific reason R16.4 forbids personal data in audit metadata**: any personal data written there would be unerasable, creating a direct and irreconcilable conflict between the retention obligation and the erasure obligation.
-- **R15.14** — Downstream systems holding copies **MUST** be notified. Absent the deferred event stream (§1.3), the erasure job **MUST** invoke a documented, synchronous purge interface for every such system, and failure **MUST** raise an operational alert rather than being swallowed.
-- **R15.15** — Erasure is idempotent and resumable. A partial failure **MUST** be retryable without corrupting a partially-erased record, and **MUST NOT** leave the account in a state where it is neither usable nor erased.
+- **R15.12** — A pure soft-delete (a flag or timestamp that leaves plaintext personal data recoverable) **MUST NOT** be used as the erasure mechanism. It directly violates the right to erasure.
+- **R15.13** — Audit records **MUST** survive erasure. They are required for 6 years (§23.2) and are the evidence that erasure occurred. They reference the tombstone identifier and contain **no personal data by construction** (R16.4). So they become non-identifying automatically once the tombstone holds nothing. **This is the reason R16.4 forbids personal data in audit metadata.** Any personal data written there could not be erased. The retention obligation and the erasure obligation would then conflict, with no way to resolve it.
+- **R15.14** — Downstream systems that hold copies **MUST** be notified. While the deferred event stream (§1.3) does not exist, the erasure job **MUST** call a documented, synchronous purge interface for every such system. A failure **MUST** raise an operational alert instead of being swallowed.
+- **R15.15** — Erasure is idempotent and resumable. A partial failure **MUST** be retryable without corrupting a partly erased record. It **MUST NOT** leave the account neither usable nor erased.
 
 #### 15.4.1 Erasure disposition — every §4 table
 
-Erasure is only real if it is exhaustive, and "delete the obvious tables" is how personal data survives an erasure job. This table answers the question once for every entity §4 declares. **not affected** is a positive finding — the table holds no personal data — not an omission.
+Erasure is real only if it is exhaustive. "Delete the obvious tables" is how personal data survives an erasure job. This table answers the question once for every entity §4 declares. **not affected** is a positive finding, not an omission: the table holds no personal data.
 
 | Table | Plane | Disposition | Reason |
 |---|---|---|---|
@@ -1331,18 +1349,23 @@ Erasure is only real if it is exhaustive, and "delete the obvious tables" is how
 | `service_credential` | service | **not affected** | No natural person |
 | `admin` | admin | **retain** — tombstone | Same shape as `user`; reached through R15.15b, not the user-plane path |
 
-- **R15.15a** — This table **MUST** name every entity declared in §4. An entity that appears in §4 and not here is an unanswered erasure question, and CI fails on it (`authspec_check.py --only erasure`). When §4 gains an entity, this table gains a row in the same change — that is the point of the check.
-- **R15.15b** — Admins are data subjects. An admin erasure **MUST** run the same phase 3 against the admin-plane rows of this table, with two additions: `service_account.owner_admin_id` **MUST** be repointed to a surviving admin **before** erasure (an ownerless service account is unrotatable), and any open `break_glass_activation` **MUST** be closed and reviewed first. There is no self-service admin erasure path; it is an operator procedure.
+- **R15.15a** — This table **MUST** name every entity declared in §4. An entity that appears in §4 and not here is an unanswered erasure question, and CI fails on it (`authspec_check.py --only erasure`). When §4 gains an entity, this table gains a row in the same change. That is the point of the check.
+- **R15.15b** — Admins are data subjects. An admin erasure **MUST** run the same phase 3 against the admin-plane rows of this table, with two additions. First, `service_account.owner_admin_id` **MUST** be repointed to a surviving admin **before** erasure, because an ownerless service account cannot be rotated. Second, any open `break_glass_activation` **MUST** be closed and reviewed first. There is no self-service admin erasure path. It is an operator procedure.
 
 ### 15.5 Backups
 
-- **R15.16** — Cryptographic erasure is the designated mechanism for backup coverage. Backups **MUST NOT** retain unwrapped DEKs, and DEK destruction **MUST** occur in the key store, not merely in the application database — otherwise a database restore resurrects the key and undoes the erasure.
-- **R15.17** — Backup retention and the restore procedure's interaction with erasure **MUST** be documented in the operational runbook (§26.4), including the requirement to re-apply pending erasures after any restore.
+- **R15.16** — Cryptographic erasure is the designated mechanism for backup coverage. Backups **MUST NOT** retain unwrapped DEKs. DEK destruction **MUST** happen in the key store, not only in the application database. Otherwise a database restore brings the key back and undoes the erasure.
+- **R15.17** — The operational runbook (§26.4) **MUST** document backup retention and how the restore procedure interacts with erasure. It includes the requirement to re-apply pending erasures after any restore.
 
 ### 15.6 Administrative exception path
 
-- **R15.18** — For a data subject locked out of their own account, an administrative path exists with: out-of-band identity verification; the `admin.user.delete` permission; step-up; full audit; and notification to the account's verified address.
-- **R15.19** — This path **MUST NOT** be the default route. Its usage rate is a review metric — high usage indicates the self-service path is failing.
+- **R15.18** — A data subject who is locked out of their own account has an administrative path. It uses:
+  - out-of-band identity verification;
+  - the `admin.user.delete` permission;
+  - step-up;
+  - full audit;
+  - notification to the account's verified address.
+- **R15.19** — This path **MUST NOT** be the default route. Its usage rate is a review metric. High usage means the self-service path is failing.
 
 ---
 
@@ -1350,13 +1373,13 @@ Erasure is only real if it is exhaustive, and "delete the obvious tables" is how
 
 ### 16.1 Requirements
 
-- **R16.1** — Append-only and tamper-evident: a hash-chained record set the application can insert into but cannot modify (R4.14).
+- **R16.1** — The trail is append-only and tamper-evident: a hash-chained record set that the application can insert into but cannot modify (R4.14).
 
 ### 16.2 Auditable actions
 
-Every one of these **MUST** emit an audit event, on both success and failure. `outcome` records which: `success` or `failure`. Emitting only the successes is the common shortcut and it removes exactly the evidence an investigation needs — a denied request and a failed step-up are findings, not noise.
+Every one of these **MUST** emit an audit event, on both success and failure. `outcome` records which: `success` or `failure`. Emitting only successes is a common shortcut. It removes the evidence an investigation needs. A denied request and a failed step-up are findings, not noise.
 
-`actor_type` names who acted — `user`, `admin` or `service` for a principal, and `system` for an action no principal initiated: the erasure job (§15.4), the retention pruners (§23.3), automatic lockout and its self-release (§17.3), and credential expiry. `system` exists so an automated write is never misattributed to whichever principal it happened to affect.
+`actor_type` names who acted: `user`, `admin` or `service` for a principal, and `system` for an action that no principal started. System actions are the erasure job (§15.4), the retention pruners (§23.3), automatic lockout and its self-release (§17.3), and credential expiry. `system` exists so an automated write is never blamed on the principal it happened to affect.
 
 **Authentication:** login success/failure (per method), logout, logout-all, session revocation, step-up success/failure, MFA challenge success/failure, recovery code consumption.
 
@@ -1364,9 +1387,9 @@ Every one of these **MUST** emit an audit event, on both success and failure. `o
 
 **Account:** created, email verified, email changed, profile rectified, locked, unlocked, deletion requested, deletion cancelled, erased.
 
-**Authorization:** every **denied** request; every role granted, revoked, or expired.
+**Authorization:** every **denied** request; every role granted, revoked or expired.
 
-**Administrative:** every admin login; **every read of another principal's personal data**; every list/search with its parameters; every lifecycle action; break-glass activation, use, expiry, closure, and review; every admin recovery request and approval.
+**Administrative:** every admin login; **every read of another principal's personal data**; every list or search, with its parameters; every lifecycle action; break-glass activation, use, expiry, closure and review; every admin recovery request and approval.
 
 **Service accounts:** created, credential issued, rotated, revoked, permission changed.
 
@@ -1377,26 +1400,26 @@ Every one of these **MUST** emit an audit event, on both success and failure. `o
 ### 16.3 Immutability
 
 - **R16.2** — The application's database principal holds `INSERT` and `SELECT` only (R4.14), granted in the migration.
-- **R16.3** — No API, service method, or administrative endpoint may expose update or delete on audit records. Retention pruning (§23.3) runs under a distinct maintenance principal, is itself audited, and prunes only by age.
+- **R16.3** — No API, service method or administrative endpoint may expose update or delete on audit records. Retention pruning (§23.3) runs under a distinct maintenance principal, is itself audited and prunes only by age.
 
 ### 16.4 Content rules
 
-- **R16.4** — Audit records **MUST NOT** contain personal data. Store identifiers, action codes, and outcome codes. Never an email address, name, password, token, secret, or raw IP. (See R15.13 for why this is structural, not stylistic.)
-- **R16.5** — `metadata` **MUST** pass a serializer that strips or rejects any value matching sensitive-field patterns, so a future careless call site cannot write personal data into an immutable store.
+- **R16.4** — Audit records **MUST NOT** contain personal data. Store identifiers, action codes and outcome codes. Never store an email address, name, password, token, secret or raw IP. (See R15.13 for why this is structural, not a style choice.)
+- **R16.5** — `metadata` **MUST** pass a serializer that strips or rejects any value that matches sensitive-field patterns. Then a careless call site added later cannot write personal data into an immutable store.
 - **R16.6** — Record `actor_ip_hash`, never a raw address (§5.6).
 
 ### 16.5 Hash chain
 
-- **R16.7** — `record_hash = SHA-256( canonical_serialization( seq ‖ chain_id ‖ occurred_at ‖ actor_type ‖ actor_id ‖ action ‖ target_type ‖ target_id ‖ outcome ‖ metadata ‖ prev_hash ) )`. The serialization **MUST** be canonical (deterministic key ordering, fixed encoding) or verification is not reproducible.
-- **R16.8** — `seq` is strictly monotonic and gap-free within a chain. Assignment **MUST** be serialized (a transactional sequence or an equivalent guarantee) — concurrent inserts producing duplicate or out-of-order sequence numbers break verification.
-- **R16.9** — `chain_id` partitions the chain (default: a single chain; optionally per-day) so sequence assignment does not become a global write bottleneck. Each partition is independently verifiable, and partition boundaries are linked by a checkpoint.
-- **R16.10** — A periodic checkpoint (default hourly) records the latest `seq` and `record_hash` and is **signed with a KMS key** (§5.8). This anchors the chain against an attacker who can rewrite records *and* recompute the whole chain — without a signed checkpoint, a full rewrite is undetectable.
-- **R16.11** — A verification job **MUST** run at least daily, re-walking the chain since the last verified checkpoint and raising a **critical** alert on any mismatch, gap, or checkpoint signature failure.
-- **R16.12** — Audit writes **MUST NOT** be silently droppable. For actions where the audit record is the compensating control for a cross-boundary grant (§12.3), a write failure **MUST** fail the request.
+- **R16.7** — `record_hash = SHA-256( canonical_serialization( seq ‖ chain_id ‖ occurred_at ‖ actor_type ‖ actor_id ‖ action ‖ target_type ‖ target_id ‖ outcome ‖ metadata ‖ prev_hash ) )`. The serialization **MUST** be canonical (deterministic key ordering, fixed encoding). Otherwise verification is not reproducible.
+- **R16.8** — `seq` is strictly monotonic and gap-free within a chain. Assignment **MUST** be serialized (a transactional sequence or an equivalent guarantee). Concurrent inserts that produce duplicate or out-of-order sequence numbers break verification.
+- **R16.9** — `chain_id` partitions the chain (default: a single chain; optionally per day), so sequence assignment does not become a global write bottleneck. Each partition can be verified independently. A checkpoint links the partition boundaries.
+- **R16.10** — A periodic checkpoint (default hourly) records the latest `seq` and `record_hash` and is **signed with a KMS key** (§5.8). This anchors the chain against an attacker who can rewrite records *and* recompute the whole chain. Without a signed checkpoint, a full rewrite cannot be detected.
+- **R16.11** — A verification job **MUST** run at least daily, re-walking the chain since the last verified checkpoint and raising a **critical** alert on any mismatch, gap or checkpoint signature failure.
+- **R16.12** — Audit writes **MUST NOT** be droppable without notice. For actions where the audit record is the compensating control for a cross-boundary grant (§12.3), a write failure **MUST** fail the request.
 
 ### 16.6 Action vocabulary
 
-- **R16.13** — Action names are stable, dotted, lowercase, and declared in a single catalog in code: `auth.login.success`, `auth.login.failure`, `auth.mfa.challenge.failure`, `admin.user.pii.read`, `admin.break_glass.activate`, `privacy.export.download`, `account.erased`, and so on. Ad-hoc string literals at call sites are forbidden — they make the trail unqueryable, which defeats its purpose.
+- **R16.13** — Action names are stable, dotted and lowercase, and are declared in a single catalog in code: `auth.login.success`, `auth.login.failure`, `auth.mfa.challenge.failure`, `admin.user.pii.read`, `admin.break_glass.activate`, `privacy.export.download`, `account.erased`, and so on. Ad-hoc string literals at call sites are forbidden. They make the trail impossible to query, which defeats its purpose.
 
 ---
 
