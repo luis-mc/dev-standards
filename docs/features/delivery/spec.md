@@ -18,21 +18,21 @@ last_verified: 2026-11-01
 ---
 # Delivery guard rails
 
-Related: [delivery speed](../delivery-speed/spec.md), [test cost](../test-cost/spec.md), [agents](../agents/spec.md), [artifacts](../artifacts/spec.md). The normative rules (DL-nn, Q-n) live in [DELIVERYSPEC](../../architecture/DELIVERYSPEC.md); this page does not copy them.
+Related: [delivery speed](../delivery-speed/spec.md), [test cost](../test-cost/spec.md), [agents](../agents/spec.md), [artifacts](../artifacts/spec.md). The normative rules (DL-nn, Q-n) live in [DELIVERYSPEC](../../architecture/DELIVERYSPEC.md). This page does not copy them.
 
 ## 1. In one paragraph
 
-`luismc-delivery` keeps a release train moving without the owner watching it. A ledger records trains, agents and questions. Hooks block a turn that leaves work half done. A background watcher pushes the next train, opens its pull request and merges it at green CI. A load guard keeps the machine under its memory and CPU limits. The shared delivery scripts that `luismc-project-setup` copies into a product do the gate, join, CI watch and cleanup.
+`luismc-delivery` keeps a release train moving without the owner watching it. A ledger records trains, agents and questions. Hooks block a turn that leaves work half done. A background watcher pushes the next train, opens its pull request and merges it at green CI. A load guard keeps the machine under its memory and CPU limits. The shared delivery scripts do the gate, join, CI watch and cleanup. `luismc-project-setup` copies them into a product.
 
 ## 2. Why
 
-Delivery lessons used to live in memory notes that an orchestrator had to remember. Notes are forgotten; hooks are not. Goals:
+Delivery lessons used to live in memory notes that an orchestrator had to remember. Notes are forgotten. Hooks are not. Goals:
 
 - Turn each lesson into a check: a hook, a script or a ledger field.
 - Never leave a green train unmerged, a merged branch uncleaned or a deploy unsmoked.
 - Never crash the machine with parallel installs and test runs.
 
-Non-goals: the plugin does not run the product's tests, and it never kills, suspends or re-prioritises a process.
+Non-goals: the plugin does not run the product's tests. It never kills, suspends or re-prioritises a process.
 
 ## 3. How it works
 
@@ -51,30 +51,30 @@ flowchart LR
   guard[Load guard] -. refuses heavy work .-> hooks
 ```
 
-1. Agents work on branches and each branch gets a gate result.
-2. `join.py` merges trusted branches into a train branch and runs a quick check.
-3. The watcher pushes the train, opens the ready PR and watches CI on the PR head.
-4. At green on the current head, the watcher merges with `--match-head-commit`. It never uses `--auto`.
+1. Agents work on branches. Each branch gets a gate result.
+2. `join.py` merges trusted branches into a train branch. It runs a quick check.
+3. The watcher pushes the train and opens the ready PR. It watches CI on the PR head.
+4. When the current head is green, the watcher merges with `--match-head-commit`. It never uses `--auto`.
 5. `cleanup.py` removes merged branches and worktrees. A smoke run on production closes the train.
-6. Hooks read the ledger. At turn end, the Stop hook blocks on open items (for example a green unmerged train). A project that has no `.delivery/` folder gets no delivery hooks.
+6. Hooks read the ledger. At turn end, the Stop hook blocks on open items (for example a green unmerged train). A project with no `.delivery/` folder gets no delivery hooks.
 
 ## 5. Functional requirements
 
 **R5.1** — With no `.delivery/` folder, every delivery hook does nothing except the machine load guard.
 
-**R5.2** — The ledger `.delivery/ledger.json` is written only through `delivery_ledger.py`, atomically, under a lock, with `schema: 1`. Hooks never edit it by hand.
+**R5.2** — The ledger `.delivery/ledger.json` is written only through `delivery_ledger.py`. The write is atomic, runs under a lock and carries `schema: 1`. Hooks never edit it by hand.
 
 **R5.3** — The PostToolUse recorder fills the ledger from tool calls (agents, installs, publishes, questions, the owner's prompt time).
 
-**R5.4** — The Stop hook blocks a turn end for each open finding. The same finding blocks at most `enforcement.block_ceiling` times (default 3) and `stop_repeat_limit` turns with no ledger change, then it prints one notice. In `warn` mode it blocks nothing.
+**R5.4** — The Stop hook blocks a turn end for each open finding. The same finding blocks at most `enforcement.block_ceiling` times (default 3), and at most `stop_repeat_limit` turns with no ledger change. After that, the hook prints one notice. In `warn` mode it blocks nothing.
 
 **R5.5** — The PreToolUse hook denies the calls that DELIVERYSPEC lists (for example a local `Agent` launch without a `PC-bound:` reason, or a question dialog while work is actionable).
 
-**R5.6** — SessionStart prints a short ledger summary, injects the question rules (Q-1 to Q-5) and says when no watcher has a fresh heartbeat.
+**R5.6** — SessionStart prints a short ledger summary and injects the question rules (Q-1 to Q-5). It says when no watcher has a fresh heartbeat.
 
 **R5.7** — The watcher pushes the next joined train, opens its ready PR (or adopts the one open PR of a train pushed by hand), and merges only when the PR head is the commit whose required workflows (`watcher.ci_workflows`) all succeeded. A `hold` stops it.
 
-**R5.8** — The watcher cancels CI runs that a newer push replaced and holds non-train CI runs while a train's CI runs, when `runner_plan` allows it.
+**R5.8** — When `runner_plan` allows it, the watcher cancels CI runs that a newer push replaced. It also holds non-train CI runs while a train's CI runs.
 
 **R5.9** — The load guard refuses a new heavy command with exit 2 while memory is above 85% or CPU above 60% (project file over machine file over defaults). It never touches a running process. If the machine cannot be measured, it allows the call with a warning.
 
@@ -82,13 +82,13 @@ flowchart LR
 
 **R5.11** — `delivery_ledger.py smoke` and `cleaned` are the only writers of `smoke`, `live_at` and `cleaned_at`. `cleaned` records nothing while a train or cargo branch or worktree is left.
 
-**R5.12** — `delivery_config.py validate` checks `.delivery/config.json` against `references/config-schema.json`; an unknown key is a warning, a wrong type is an error. `delivery_doctor.py` self-checks config, `gh`, time zone, hook registration, ledger and the runner hook.
+**R5.12** — `delivery_config.py validate` checks `.delivery/config.json` against `references/config-schema.json`. An unknown key is a warning. A wrong type is an error. `delivery_doctor.py` self-checks config, `gh`, time zone, hook registration, ledger and the runner hook.
 
 **R5.13** — Shared scripts (generated into a product): `branch_gate.py` runs the gate and writes `gate-result.json`; `gate_verify.py` trusts a result only for the same head and base; `join.py` merges trusted branches and runs the quick check; `ci_watch.py` watches the runs of one head; `cleanup.py` removes merged branches; `train_freeze.py` refuses pushes to a train in CI. Exit codes are shared: 0 pass, 1 failed or untrusted, 2 usage, 3 join conflict, 4 timed out.
 
 ## 6. Non-functional requirements
 
-**R6.1** — Every hook fails open on its own error: it prints a warning and exits 0, except a deliberate deny (exit 2).
+**R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).
 
 **R6.2** — `CLAUDE_DELIVERY_HOOKS=off` disables all hooks. `checks_off` switches one rule off per project.
 
@@ -96,7 +96,7 @@ flowchart LR
 
 **R6.4** — `.delivery/` is git-ignored. The ledger keeps events only as long as the project keeps the folder.
 
-**R6.5** — The load measurement is cached 10 seconds, and CPU is the mean of up to 3 samples in 30 seconds, so one spike decides nothing.
+**R6.5** — The load measurement is cached for 10 seconds. CPU is the mean of up to 3 samples in 30 seconds, so one spike decides nothing.
 
 ## 7. Design
 
@@ -123,18 +123,18 @@ flowchart TB
   cl --> led
 ```
 
-Hook events (`hooks/hooks.json`): PreToolUse (Bash, PowerShell, Agent, Workflow, RemoteTrigger, AskUserQuestion, Write), PostToolUse and PostToolUseFailure, UserPromptSubmit, Stop, SessionStart. Each runs `python3` and falls back to `python`.
+Hook events (`hooks/hooks.json`): PreToolUse (Bash, PowerShell, Agent, Workflow, RemoteTrigger, AskUserQuestion, Write), PostToolUse and PostToolUseFailure, UserPromptSubmit, Stop, SessionStart. Each hook runs `python3` and falls back to `python`.
 
 Ledger fields: `trains`, `agents`, `jobs`, `installs`, `publishes`, `runners`, `watchers`, `owner_questions`, `events` (`references/ledger-schema.json`). A train moves through `planned`, `joining`, `joined`, `pushed`, `ci`, `green`, `merged`, `live`, `cleaned` (or `red`, `abandoned`). Only the watcher sets `green_at`.
 
-The shared scripts, their paths in a product and their command lines are in the `CONTRACT.md` next to them. Change the contract first, then the code.
+`CONTRACT.md` lists the shared scripts, their paths in a product and their command lines. It sits next to the scripts. Change the contract first, then the code.
 
 ## 8. Failure modes
 
 | Dependency | Fails | Why |
 |---|---|---|
 | `gh` or the network (hooks) | open | A hook must not stop work for an outage. It warns. |
-| Machine measurement | open | The guard protects, it does not gate on a guess. |
+| Machine measurement | open | The guard protects. It does not gate on a guess. |
 | Ledger lock held too long | open, warns | A stale lock must not freeze a session. |
 | `gh` in `ci_watch.py` | closed after repeated errors | A watch must not report green it did not see. |
 | Gate result missing or stale | closed | An untrusted result is never a pass (exit 1). |
@@ -171,7 +171,7 @@ Decisions in MADR form: [0030](../../architecture/decisions/0030-delivery-hooks-
 
 ## 11. Not built yet
 
-Some DL rules are advice only today. DELIVERYSPEC section 1 marks which ones a mechanical check does not yet cover (for example DL-16, DL-17). A hook for them would go in `hook_stop.py` and `hook_pre_tool.py`.
+Some DL rules are advice only today. DELIVERYSPEC section 1 marks the ones that no mechanical check covers yet (for example DL-16, DL-17). A hook for them would go in `hook_stop.py` and `hook_pre_tool.py`.
 
 ## 12. Code map
 
