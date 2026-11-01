@@ -1,5 +1,13 @@
 [
   {
+    "date": "01 Nov 22:45",
+    "change": "RELEASE-30 live 22:44, CI green on 99ed7b3"
+  },
+  {
+    "date": "01 Nov 22:45",
+    "change": "RELEASE-30 live 22:44, CI green on 99ed7b3"
+  },
+  {
     "date": "11 Oct 01:10",
     "change": "Page brought up to date with luismc-artifacts 1.1.0 to 1.1.2 (#33, #36, #27): every activity is a task, Built replaces Done, the rule is delivered at session start, only Full Progress is published, and the plugin is enabled for dev-standards."
   },

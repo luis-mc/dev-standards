@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-01T22:27+00:00",
+  "updated": "2026-11-01T22:45+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -504,12 +504,11 @@
       "id": "AR52",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Background marker clears when the work ends",
       "detail": "hook_end_of_turn keeps the background marker until a task is Running, so a finished background job with no task blocks or warns on every later turn. Drop the marker once the stop is let through.",
-      "expected": "01 Nov ~22:55",
-      "changed": "2026-11-01T22:27+00:00",
-      "expected_basis": "cloud agent from 22:30: setup 5 + work 15 + checks 5",
+      "expected": "01 Nov",
+      "changed": "2026-11-01T22:45+00:00",
       "rides": "DS174",
       "started": "2026-11-01T22:27+00:00"
     },
@@ -517,12 +516,11 @@
       "id": "AR53",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Watcher start does not arm the background check",
       "detail": "Starting delivery_watch.py or ci_watch.py in the background (DL-33 asks for it) arms the no-Running-task block. Watch-only commands no longer arm it.",
-      "expected": "01 Nov ~22:55",
-      "changed": "2026-11-01T22:27+00:00",
-      "expected_basis": "same cloud agent as AR52, from 22:30",
+      "expected": "01 Nov",
+      "changed": "2026-11-01T22:45+00:00",
       "rides": "DS174",
       "started": "2026-11-01T22:27+00:00"
     },
@@ -3110,12 +3108,11 @@
       "id": "DS174",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Live",
       "item": "RELEASE-30: two artifacts hook fixes (AR52, AR53)",
-      "detail": "Join, CI and merge of AR52 and AR53.",
-      "expected": "01 Nov ~23:05",
-      "changed": "2026-11-01T22:27+00:00",
-      "expected_basis": "agent 22:30-22:55, join 22:55-23:00, CI 23:00-23:05",
+      "detail": "Joined AR52-background-marker, fold: artifacts 1.0.2, artifactspec 1.18.3, artifacts feature spec 0.1.4. CI green 22:44.",
+      "expected": "01 Nov",
+      "changed": "2026-11-01T22:45+00:00",
       "release": 30,
       "phases": [
         {
