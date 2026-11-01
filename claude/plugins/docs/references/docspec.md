@@ -174,12 +174,21 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 ```
 
 - **R2.1** — A project that follows this standard MUST have `docs/docs.json`, `docs/README.md`, the five overview pages (R3.1) and `AGENTS.md`. `docs_check.py` reports each missing file (L1).
-- **R2.2** — Lasting docs MUST live in the folder that answers their reader's question (§2.1). A doc about one feature goes in that feature's folder; a rule that spans features goes in `architecture/`; a task a person performs goes in `guides/`.
-- **R2.3** — Every lasting page SHOULD carry the Diataxis type of the page (`tutorial`, `how-to`, `reference` or `explanation`) in its front matter `type`. Feature specs MUST (R4.2).
-- **R2.4** — The artifacts record MUST live in the folder named by `record_dir` in `docs/docs.json` (default `docs/project`), and the artifacts plugin's own `record_dir` setting MUST name the same folder. `docs_setup.py move-record` moves the record and sets both.
-- **R2.5** — Generated files are `docs/index.html`, `docs/llms.txt`, `docs/features/index.md`, `docs/architecture/decisions.md`, `docs/docs-map.json`, everything in `docs/reference/` that a `generated_reference` entry names, and `docs/_site/`. Nobody edits them by hand. `docs_check.py` fails a stale one (G1, G2).
-- **R2.6** — `docs/_site/` MUST be git-ignored. `docs/index.html` is committed and links into `_site/`; when `_site/` is missing its search says to run `docs_index.py build`.
-- **R2.7** — `docs/archive/` holds superseded docs. A doc moved there keeps a link to what replaced it and is never cited as a rule.
+- **R2.2** — Lasting docs MUST live in the folder that answers their reader's question (§2.1). A doc about one feature goes in that feature's folder. A rule that spans features goes in `architecture/`. A task a person performs goes in `guides/`.
+- **R2.3** — Every lasting page SHOULD carry its Diataxis type (`tutorial`, `how-to`, `reference` or `explanation`) in the front matter key `type`. Feature specs MUST (R4.2).
+- **R2.4** — The artifacts record MUST live in the folder named by `record_dir` in `docs/docs.json` (default `docs/project`), and the artifacts plugin's own `record_dir` setting MUST name the same folder. `docs_setup.py move-record` moves the record and sets both settings.
+- **R2.5** — The generated files are:
+  - `docs/index.html`
+  - `docs/llms.txt`
+  - `docs/features/index.md`
+  - `docs/architecture/decisions.md`
+  - `docs/docs-map.json`
+  - everything in `docs/reference/` that a `generated_reference` entry names
+  - `docs/_site/`
+
+  Nobody edits them by hand. `docs_check.py` fails a stale one (G1, G2).
+- **R2.6** — `docs/_site/` MUST be git-ignored. `docs/index.html` is committed and links into `_site/`. When `_site/` is missing, its search says to run `docs_index.py build`.
+- **R2.7** — `docs/archive/` holds superseded docs. A doc moved there keeps a link to its replacement. Nobody cites it as a rule.
 
 ---
 
