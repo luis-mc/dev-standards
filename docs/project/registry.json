@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-01T10:44+00:00",
+  "updated": "2026-11-01T10:49+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3015,6 +3015,19 @@
         }
       ],
       "started": "2026-11-01T10:50+00:00"
+    },
+    {
+      "id": "DS171",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Reset all eight plugin versions to 1.0.0",
+      "detail": "Owner decision 1 Nov: one baseline for all plugins; folds bump from 1.0.0 on",
+      "expected": "01 Nov ~11:40",
+      "changed": "2026-11-01T10:49+00:00",
+      "expected_basis": "rides RELEASE-27 CI",
+      "rides": "DS170",
+      "started": "2026-11-01T10:49+00:00"
     },
     {
       "id": "MP1",
