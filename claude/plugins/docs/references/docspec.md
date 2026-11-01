@@ -91,7 +91,7 @@ Requirements are numbered `R<section>.<n>`. Each can be cited alone. Numbering i
 
 ## Decision record
 
-The owner's choices of 31 October 2026, from the documentation standard artifact (DOC1). Each names the requirements that carry it.
+These are the owner's choices of 31 October 2026, from the documentation standard artifact (DOC1). Each row names the sections or requirements that carry the choice.
 
 | # | Question | Resolution | Consequence |
 |---|---|---|---|
