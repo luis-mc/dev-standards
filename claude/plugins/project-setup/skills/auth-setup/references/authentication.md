@@ -548,8 +548,8 @@ Tamper-evident, append-only (§16).
 - **R5.1** — All cryptographic operations **MUST** go through the single crypto provider module (R3.2). No cryptographic primitive is called anywhere else.
 - **R5.2** — All randomness for tokens, secrets, salts, nonces and identifiers **MUST** come from a cryptographically secure random source. A general-purpose PRNG anywhere in the auth module is a P0 defect.
 - **R5.3** — All comparisons of secrets, digests, tokens and signatures **MUST** be constant-time. A short-circuiting equality operator on any secret is a defect.
-- **R5.4** — Prohibited primitives: MD5, SHA-1 (except within the HIBP-style k-anonymity range protocol of §17.4, and TOTP's RFC-6238 HMAC-SHA-1 default), DES, 3DES, RC4, ECB mode, and any unauthenticated encryption mode. Encryption **MUST** be authenticated (AEAD).
-- **R5.5** — When the deployment is designated FIPS-constrained, every primitive **MUST** be sourced from a FIPS-validated module and the FIPS variants in §5.3 apply. The active mode **MUST** be recorded in the configuration reference and asserted at startup (§24.3).
+- **R5.4** — Prohibited primitives: MD5, SHA-1, DES, 3DES, RC4, ECB mode and any unauthenticated encryption mode. SHA-1 is allowed only in the HIBP-style k-anonymity range protocol of §17.4 and in TOTP's RFC-6238 HMAC-SHA-1 default. Encryption **MUST** be authenticated (AEAD).
+- **R5.5** — When the deployment is designated FIPS-constrained, every primitive **MUST** come from a FIPS-validated module, and the FIPS variants in §5.3 apply. The active mode **MUST** be recorded in the configuration reference and asserted at startup (§24.3).
 
 ### 5.2 Key hierarchy
 
@@ -562,51 +562,60 @@ KMS/HSM root key (never leaves the KMS)
    └── Signing keys    → access assertions and audit checkpoints   (§5.8)
 ```
 
-- **R5.6** — Root keys **MUST** reside in an external KMS/HSM and **MUST NOT** be exportable. There is no unmanaged-key mode for any deployed environment.
-- **R5.7** — A local-development key provider **MAY** exist. It **MUST** be a distinct, clearly-named implementation; it **MUST** refuse to initialize when any indicator of a deployed environment is present; and startup validation (§24.3) **MUST** fail closed if it is active outside local development.
+- **R5.6** — Root keys **MUST** reside in an external KMS/HSM and **MUST NOT** be exportable. No deployed environment has an unmanaged-key mode.
+- **R5.7** — A local-development key provider **MAY** exist. It **MUST** be a distinct, clearly named implementation. It **MUST** refuse to initialize when any sign of a deployed environment is present. Startup validation (§24.3) **MUST** fail closed if it is active outside local development.
 
 ### 5.3 Password hashing
 
-- **R5.8** — Default: **Argon2id**, minimum parameters `m = 19456 KiB`, `t = 2`, `p = 1`, 128-bit random salt, 256-bit output. Parameters are calibrated per deployment to a target of 100–250 ms on production hardware and recorded in the configuration reference.
-- **R5.9** — FIPS-constrained deployments: **PBKDF2-HMAC-SHA-512**, minimum 600,000 iterations, 128-bit salt. Argon2id is not FIPS-validated; this substitution is the documented, required deviation.
-- **R5.10** — The algorithm, its parameters, and the salt **MUST** be stored alongside the digest so parameters can be raised later. On a successful authentication with an outdated parameter set, the digest **MUST** be transparently recomputed at current parameters.
-- **R5.11** — KDF invocation **MUST NOT** block the runtime's main execution thread, and concurrent KDF operations **MUST** be bounded by an explicit semaphore or worker pool. An unbounded memory-hard KDF is a trivial CPU/memory exhaustion vector — this is simultaneously a security and a P0 performance defect (§22.4).
-- **R5.12** — Password policy: minimum 12 characters (15 recommended); maximum **not below** 64; all Unicode including spaces accepted; NFKC normalization before hashing; **no** composition rules; **no** forced periodic rotation; rejection only for breach-list membership (§17.4) or containment of the account identifier. Paste **MUST NOT** be blocked (§21.4).
+- **R5.8** — Default: **Argon2id**, minimum parameters `m = 19456 KiB`, `t = 2`, `p = 1`, 128-bit random salt, 256-bit output. Calibrate the parameters per deployment to a target of 100–250 ms on production hardware. Record them in the configuration reference.
+- **R5.9** — FIPS-constrained deployments: **PBKDF2-HMAC-SHA-512**, minimum 600,000 iterations, 128-bit salt. Argon2id is not FIPS-validated, so this substitution is the documented, required deviation.
+- **R5.10** — The algorithm, its parameters and the salt **MUST** be stored with the digest, so the parameters can be raised later. After a successful authentication with an outdated parameter set, the digest **MUST** be recomputed at the current parameters, without the user noticing.
+- **R5.11** — KDF invocation **MUST NOT** block the runtime's main execution thread, and concurrent KDF operations **MUST** be bounded by an explicit semaphore or worker pool. An unbounded memory-hard KDF is a trivial CPU and memory exhaustion vector. It is both a security defect and a P0 performance defect (§22.4).
+- **R5.12** — Password policy:
+  - minimum 12 characters (15 recommended);
+  - maximum **not below** 64;
+  - all Unicode accepted, including spaces;
+  - NFKC normalization before hashing;
+  - **no** composition rules;
+  - **no** forced periodic rotation;
+  - reject a password only if it is on a breach list (§17.4) or contains the account identifier.
+
+  Paste **MUST NOT** be blocked (§21.4).
 
 ### 5.4 Field encryption and envelope scheme
 
 - **R5.13** — Every `[ENC]` attribute **MUST** be encrypted with **AES-256-GCM** (or an equivalently strong AEAD) using the owning principal's DEK.
-- **R5.14** — The DEK is generated per principal, wrapped by the KMS `data` KEK, and stored only in wrapped form in `data_encryption_key.wrapped_key`. The unwrapped DEK **MUST NOT** be persisted anywhere, and **MUST NOT** be held in a process-global cache without a bounded-size, short-TTL eviction policy (§22.8).
-- **R5.15** — Every encryption operation **MUST** bind additional authenticated data (AAD) composed of `entity_name || attribute_name || principal_id`. This makes a ciphertext structurally unusable if relocated to another row or column — without it, an attacker with write access can transplant one user's encrypted email onto another's record.
-- **R5.16** — The stored ciphertext envelope **MUST** carry a version marker, the `kek_id`, and the IV/nonce, so key rotation and algorithm migration are possible without ambiguity.
+- **R5.14** — The DEK is generated per principal, wrapped by the KMS `data` KEK, and stored only in wrapped form in `data_encryption_key.wrapped_key`. The unwrapped DEK **MUST NOT** be persisted anywhere. It **MUST NOT** be held in a process-global cache without a bounded-size, short-TTL eviction policy (§22.8).
+- **R5.15** — Every encryption operation **MUST** bind additional authenticated data (AAD) composed of `entity_name || attribute_name || principal_id`. This makes a ciphertext unusable if it is moved to another row or column. Without the AAD, an attacker with write access could copy one user's encrypted email onto another user's record.
+- **R5.16** — The stored ciphertext envelope **MUST** carry a version marker, the `kek_id` and the IV/nonce. Then key rotation and algorithm migration are unambiguous.
 - **R5.17** — Nonces **MUST** be unique per key. Never reuse a nonce with the same DEK.
 
 ### 5.5 Blind index for encrypted lookup
 
-Encrypted email cannot be searched, but login requires exact-match lookup.
+Encrypted email cannot be searched, but login needs an exact-match lookup.
 
-- **R5.18** — `email_index = HMAC-SHA-256(index_key, normalize(email))`, where `index_key` is derived from the KMS `index` KEK and is **distinct** from any DEK. `normalize` = trim, NFKC, lowercase the domain (and lowercase the local part, which **MUST** be applied consistently and documented as an intentional deviation from strict RFC 5321 local-part case sensitivity).
-- **R5.19** — The blind index is a pseudonymous identifier and is therefore personal data. It **MUST** be deleted during erasure (§15.5); leaving it behind leaves a durable, correlatable identifier for a user who asked to be forgotten.
-- **R5.20** — The blind index **MUST NOT** be used as a display value, returned in any API response, or written to any log.
+- **R5.18** — `email_index = HMAC-SHA-256(index_key, normalize(email))`, where `index_key` is derived from the KMS `index` KEK and is **distinct** from any DEK. `normalize` = trim, NFKC, lowercase the domain, and lowercase the local part. Lowercasing the local part **MUST** be applied consistently and documented as an intentional deviation from strict RFC 5321 local-part case sensitivity.
+- **R5.19** — The blind index is a pseudonymous identifier, so it is personal data. It **MUST** be deleted during erasure (§15.5). Keeping it would leave a durable, correlatable identifier for a user who asked to be forgotten.
+- **R5.20** — The blind index **MUST NOT** be used as a display value, returned in any API response or written to any log.
 
 ### 5.6 IP address and user-agent handling
 
-- **R5.21** — Raw IP addresses are personal data. They **MUST NOT** be stored in plaintext in any table in §4. Store `HMAC-SHA-256(pseudonym_key, ip)` truncated to 16 bytes.
-- **R5.22** — The pseudonym key **MUST** be rotated on a schedule (default: 90 days), which structurally caps how far back addresses can be correlated. Rotation is a deliberate privacy control, not an inconvenience.
-- **R5.23** — Raw addresses **MAY** exist transiently in memory for rate-limit evaluation within a single request. They **MUST NOT** be logged or persisted.
+- **R5.21** — Raw IP addresses are personal data. They **MUST NOT** be stored in plaintext in any table in §4. Store `HMAC-SHA-256(pseudonym_key, ip)`, truncated to 16 bytes.
+- **R5.22** — The pseudonym key **MUST** be rotated on a schedule (default: 90 days). This caps how far back addresses can be correlated. Rotation is a deliberate privacy control, not an inconvenience.
+- **R5.23** — Raw addresses **MAY** exist briefly in memory for rate-limit evaluation within a single request. They **MUST NOT** be logged or persisted.
 
 ### 5.7 Data residency
 
-- **R5.24** — Single deployment region. All persistence, cache, key management, backup, and log destinations **MUST** reside in that region.
-- **R5.25** — Every outbound integration (email transport, breach-list provider, KMS) **MUST** be recorded in the third-party data-flow register (§25.6) with the categories of data it receives and its processing location.
-- **R5.26** — The residency enforcement point **MUST** be a single documented location in the code, so activating multi-region is a change in one place, not an audit of every query.
+- **R5.24** — Use a single deployment region. All persistence, cache, key management, backup and log destinations **MUST** reside in that region.
+- **R5.25** — Every outbound integration (email transport, breach-list provider, KMS) **MUST** be recorded in the third-party data-flow register (§25.6) with the categories of data it receives and where it processes them.
+- **R5.26** — The residency enforcement point **MUST** be a single documented location in the code. Then turning on multi-region is a change in one place, not an audit of every query.
 
 ### 5.8 Signing keys and rotation
 
-- **R5.27** — Access assertions (§6.4) are signed with **EdDSA (Ed25519)** by default, or **ES256** in FIPS-constrained deployments. Symmetric signing (`HS*`) is forbidden for any assertion crossing a service boundary.
+- **R5.27** — Access assertions (§6.4) are signed with **EdDSA (Ed25519)** by default, or **ES256** in FIPS-constrained deployments. Symmetric signing (`HS*`) is forbidden for any assertion that crosses a service boundary.
 - **R5.28** — Verification **MUST** pin the expected algorithm from server configuration. The token header's `alg` **MUST NOT** select the verification algorithm. `alg: none` **MUST** be rejected unconditionally. Both are classic algorithm-confusion bypasses and are P0 defects.
-- **R5.29** — Verification **MUST** additionally assert `iss`, `aud`, `exp`, `nbf` (with ≤60 s clock skew), and `typ`. A signature check alone is insufficient.
-- **R5.30** — Signing keys rotate on a schedule (default 90 days) with an overlap window of at least the maximum assertion lifetime plus the JWKS cache TTL, so in-flight assertions never fail mid-rotation. Retired keys are removed from the published key set only after the overlap elapses.
+- **R5.29** — Verification **MUST** also assert `iss`, `aud`, `exp`, `nbf` (with ≤60 s clock skew) and `typ`. A signature check alone is not enough.
+- **R5.30** — Signing keys rotate on a schedule (default 90 days) with an overlap window of at least the maximum assertion lifetime plus the JWKS cache TTL, so in-flight assertions never fail during rotation. Remove a retired key from the published key set only after the overlap ends.
 - **R5.31** — Every key **MUST** carry a stable `kid`; assertions **MUST** include it; verifiers **MUST** select the key by `kid` and **MUST NOT** trust key material embedded in a token header (`jwk`, `jku`, `x5u` **MUST** be rejected).
 
 ---
@@ -615,13 +624,13 @@ Encrypted email cannot be searched, but login requires exact-match lookup.
 
 ### 6.1 Model
 
-Sessions are **authoritative server-side records** (§4.7). The credential the client holds is an opaque reference, never a self-describing bearer of authority. This yields immediate, complete revocation — which is what makes lock, logout-all, credential-change invalidation, and deletion actually effective.
+Sessions are **authoritative server-side records** (§4.7). The credential the client holds is an opaque reference. It never carries authority itself. So revocation is immediate and complete. That is what makes lock, logout-all, credential-change invalidation and deletion take effect.
 
 ### 6.2 Session secret
 
 - **R6.1** — The session secret **MUST** be ≥256 bits of CSPRNG output, encoded URL-safely.
-- **R6.2** — Only `SHA-256(secret)` is stored (`session.token_hash`). Lookup is by that digest. A database disclosure **MUST NOT** yield usable session credentials.
-- **R6.3** — The secret **MUST NOT** appear in any URL, query parameter, log line, error message, analytics payload, or crash report.
+- **R6.2** — Only `SHA-256(secret)` is stored (`session.token_hash`). Lookup is by that digest. A database leak **MUST NOT** yield usable session credentials.
+- **R6.3** — The secret **MUST NOT** appear in any URL, query parameter, log line, error message, analytics payload or crash report.
 
 ### 6.3 Lifetimes
 
@@ -632,41 +641,41 @@ Sessions are **authoritative server-side records** (§4.7). The credential the c
 | `service` | n/a | ≤15 minutes per token | Re-issued from client credentials (§13) |
 
 - **R6.4** — `absolute_expires_at` is set once at issuance and **MUST NEVER** be extended. Activity extends only `idle_expires_at`. An absolute cap that renews is not an absolute cap.
-- **R6.5** — Both timeouts **MUST** be enforced server-side on every validation. Client-side expiry handling is a UX affordance only.
-- **R6.6** — Values are configuration with these as **defaults and hard ceilings**. Configuration may shorten them; it **MUST NOT** lengthen them past these values (§24.2).
+- **R6.5** — Both timeouts **MUST** be enforced server-side on every validation. Client-side expiry handling is only a UX convenience.
+- **R6.6** — These values are configuration. They are the **defaults and hard ceilings**. Configuration may shorten them. It **MUST NOT** lengthen them past these values (§24.2).
 - **R6.7** — Step-up freshness (§8.5) is independent and much shorter: 15 minutes for users, 5 minutes for admins.
 
 ### 6.4 OIDC-compatible access assertions
 
-For internal service-to-service verification without a session-store round trip.
+For internal service-to-service verification, without a round trip to the session store.
 
 - **R6.8** — A short-lived signed assertion **MAY** be minted from a valid session, lifetime ≤5 minutes (default 120 s).
-- **R6.9** — Claims: `iss`, `sub` (principal id), `aud`, `exp`, `iat`, `jti`, `sid` (session id), `principal_type`, `amr`, `acr`, and `permissions`. Claim names follow standard OIDC semantics so conventional libraries verify them.
-- **R6.10** — Publish `/.well-known/openid-configuration` and `/.well-known/jwks.json` containing only public verification material. These are the **only** unauthenticated, publicly cacheable endpoints (§22.7).
-- **R6.11** — Assertions **MUST NOT** be accepted for step-up-requiring, admin-plane, or privileged operations. Those paths **MUST** read the authoritative session record (§6.6.2).
-- **R6.12** — Assertions **MUST NOT** be issued to browsers or native clients as their primary credential. They are an internal service-boundary mechanism.
+- **R6.9** — Claims: `iss`, `sub` (principal id), `aud`, `exp`, `iat`, `jti`, `sid` (session id), `principal_type`, `amr`, `acr`, and `permissions`. Claim names follow standard OIDC semantics, so ordinary libraries can verify them.
+- **R6.10** — Publish `/.well-known/openid-configuration` and `/.well-known/jwks.json`, containing only public verification material. These are the **only** unauthenticated, publicly cacheable endpoints (§22.7).
+- **R6.11** — Assertions **MUST NOT** be accepted for operations that need step-up, for admin-plane operations or for privileged operations. Those paths **MUST** read the authoritative session record (§6.6.2).
+- **R6.12** — Assertions **MUST NOT** be issued to browsers or native clients as their primary credential. They are only an internal service-boundary mechanism.
 
 ### 6.5 Transport
 
 #### 6.5.1 Web — `transport` is `cookie`
 
-- **R6.13** — Attributes: `HttpOnly`, `Secure`, `SameSite=Lax` for the user plane and `SameSite=Strict` for the admin plane, `Path=/`, and the `__Host-` name prefix (which forbids `Domain` and mandates `Path=/` and `Secure`).
+- **R6.13** — Attributes: `HttpOnly`, `Secure`, `SameSite=Lax` for the user plane and `SameSite=Strict` for the admin plane, `Path=/`, and the `__Host-` name prefix (which forbids `Domain` and requires `Path=/` and `Secure`).
 - **R6.14** — Cookies **MUST NOT** be scoped to a parent domain shared with untrusted subdomains.
 - **R6.15** — Session cookies **MUST** be non-persistent for the admin plane.
 
 #### 6.5.2 Native — `transport` is `bearer`
 
-- **R6.16** — `Authorization: Bearer <secret>`. Never a cookie, never a query parameter, never a custom header that intermediaries may log.
+- **R6.16** — `Authorization: Bearer <secret>`. Never use a cookie, a query parameter or a custom header that intermediaries may log.
 
 #### 6.5.3 Transport binding
 
-- **R6.17** — `session.transport` is fixed at issuance. A cookie-issued session presented as a bearer token (or vice versa) **MUST** be rejected. A request presenting both a session cookie and an `Authorization` header **MUST** be rejected outright rather than resolved by precedence — silent precedence is a session-fixation and CSRF-confusion vector.
+- **R6.17** — `session.transport` is fixed at issuance. A cookie-issued session presented as a bearer token (or vice versa) **MUST** be rejected. A request presenting both a session cookie and an `Authorization` header **MUST** be rejected outright, not resolved by precedence. Silent precedence is a session-fixation and CSRF-confusion vector.
 
 #### 6.5.4 CSRF
 
 - **R6.18** — Every state-changing request on the cookie transport **MUST** pass **both**: (a) `Origin`/`Sec-Fetch-Site` validation against an allowlist, and (b) a per-session CSRF token submitted in a header and compared constant-time against `session.csrf_token_hash`.
-- **R6.19** — The CSRF token is issued at session creation, rotated on privilege-relevant events (step-up, credential change), and **MUST NOT** be readable by JavaScript from an `HttpOnly` cookie — it is delivered in the session-establishment response body and held in client memory.
-- **R6.20** — Bearer-transport requests are exempt from CSRF token validation (they are not automatically attached by the browser) but **MUST** still validate `Origin` when one is present.
+- **R6.19** — The CSRF token is issued at session creation. It is rotated on privilege-relevant events (step-up, credential change). It **MUST NOT** be readable by JavaScript from an `HttpOnly` cookie. It is delivered in the session-establishment response body and held in client memory.
+- **R6.20** — Bearer-transport requests are exempt from CSRF token validation, because the browser does not attach them automatically. They **MUST** still validate `Origin` when one is present.
 
 ### 6.6 Validation path and performance
 
@@ -676,13 +685,20 @@ Target: **P95 ≤ 100 ms** for an authenticated read, **≤3 persistence round-t
 
 1. Compute `token_hash`.
 2. Read the cache under a namespaced key derived from that digest.
-3. **On hit:** deserialize and **validate against a strict schema before any value reaches the authentication context.** A cache value that fails validation **MUST** be treated as a miss, evicted, and recorded as a security event. Trusting unvalidated cache content in an auth context is an explicit audit finding.
+3. **On hit:** deserialize the value and **validate it against a strict schema before any value reaches the authentication context.** A cache value that fails validation **MUST** be treated as a miss, evicted and recorded as a security event. Trusting unvalidated cache content in an auth context is an explicit audit finding.
 4. **On miss:** read the authoritative record, re-validate, populate the cache with TTL = min(60 s, remaining idle window).
 5. Enforce all state assertions (§3.4 stages 6–8) against the resolved value.
 
 #### 6.6.2 Mandatory authoritative reads
 
-The cache **MUST** be bypassed and the authoritative record read for: any admin-plane request; any request requiring step-up; any permission or role mutation; any credential mutation; any deletion/erasure operation; and any break-glass-scoped action.
+The cache **MUST** be bypassed, and the authoritative record read, for:
+
+- any admin-plane request;
+- any request that needs step-up;
+- any permission or role mutation;
+- any credential mutation;
+- any deletion or erasure operation;
+- any break-glass-scoped action.
 
 #### 6.6.3 No-cache fallback
 
@@ -690,22 +706,22 @@ If the project has no cache tier (§2.2), validation reads the authoritative sto
 
 #### 6.6.4 Write amplification control
 
-- **R6.21** — `last_seen_at` **MUST NOT** be written on every request. Write only when it has advanced by more than a threshold (default 60 s). Unthrottled, this converts every read into a write and is a P0 database-load defect.
+- **R6.21** — `last_seen_at` **MUST NOT** be written on every request. Write only when it has advanced by more than a threshold (default 60 s). Without throttling, every read becomes a write. That is a P0 database-load defect.
 
 #### 6.6.5 Invalidation
 
-- **R6.22** — Every revocation path (§6.8) **MUST** invalidate the cache entry **before or atomically with** the authoritative write. A revocation that leaves a stale cache entry alive for up to 60 s is a real authorization bypass window.
+- **R6.22** — Every revocation path (§6.8) **MUST** invalidate the cache entry **before or atomically with** the authoritative write. A revocation that leaves a stale cache entry alive for up to 60 s opens a real authorization bypass window.
 
 ### 6.7 Device binding
 
 - **R6.23** — Native clients **MUST** be issued a **server-generated** device identifier on first authentication, stored in platform secure storage and presented on subsequent authentications. A client-asserted device identifier is advisory only and **MUST NOT** be trusted for authorization.
-- **R6.23a** — `device.platform` is one of `web`, `ios`, `android`, `other`. It is set from the authenticated client's own registration, never from a request header — `other` exists so an unrecognised client is recorded honestly rather than mislabelled as `web`.
+- **R6.23a** — `device.platform` is one of `web`, `ios`, `android`, `other`. It is set from the authenticated client's own registration, never from a request header. `other` exists so an unrecognised client is recorded as such, not mislabelled as `web`.
 - **R6.24** — Every native session **MUST** reference a `device` row. Users **MUST** be able to list their devices and revoke any one, which revokes all of that device's sessions.
 - **R6.25** — A first authentication from a previously unseen device **MUST** emit a `new_device_login` security event and notify the user (§18.2).
 
 ### 6.8 Revocation
 
-- **R6.26** — These events **MUST** revoke sessions, with the stated scope, synchronously:
+- **R6.26** — These events **MUST** revoke sessions synchronously, with the stated scope:
 
 | Event | `revoked_reason` | Scope |
 |---|---|---|
@@ -720,16 +736,19 @@ If the project has no cache tier (§2.2), validation reads the authoritative sto
 | Device revoked | `admin_revoke` if an administrator revoked the device, else `logout_all` | All sessions bound to that device |
 | Break-glass activation closed or expired | `break_glass_close` | All sessions carrying that grant |
 
-`rotation` is the tenth value and is deliberately absent from this table: §6.9 rotation supersedes a session rather than revoking it, so it is recorded on the superseded row without being one of the revocation events above.
+`rotation` is the tenth value. It is absent from this table on purpose. §6.9 rotation supersedes a session instead of revoking it. So `rotation` is recorded on the superseded row and is not one of the revocation events above.
 
 - **R6.27** — Revocation is a state transition on the authoritative record plus cache invalidation. It **MUST NOT** rely on token expiry.
-- **R6.28** — Any outstanding access assertions (§6.4) minted from a revoked session remain valid for at most their ≤5-minute lifetime. This residual window is the documented reason R6.11 forbids assertions on privileged paths.
+- **R6.28** — Any outstanding access assertions (§6.4) minted from a revoked session remain valid for at most their ≤5-minute lifetime. This leftover window is the documented reason R6.11 forbids assertions on privileged paths.
 
 ### 6.9 Session fixation and rotation
 
-- **R6.29** — A new session secret **MUST** be minted (old record revoked with reason `rotation`) on: completion of authentication; completion of step-up/MFA; and any change to the principal's permission set.
+- **R6.29** — A new session secret **MUST** be minted (old record revoked with reason `rotation`) on:
+  - completion of authentication;
+  - completion of step-up or MFA;
+  - any change to the principal's permission set.
 - **R6.30** — A pre-authentication session identifier **MUST NEVER** be carried into the authenticated session.
-- **R6.31** — The intermediate "authenticated with first factor, awaiting second factor" state **MUST** be represented by a distinct, short-lived (≤5 min), single-purpose credential that confers **no permissions whatsoever** and cannot be presented to any endpoint other than the MFA verification endpoints.
+- **R6.31** — The intermediate state "authenticated with first factor, awaiting second factor" **MUST** be represented by a distinct, short-lived (≤5 min), single-purpose credential. That credential confers **no permissions whatsoever**. It cannot be presented to any endpoint other than the MFA verification endpoints.
 
 ---
 
