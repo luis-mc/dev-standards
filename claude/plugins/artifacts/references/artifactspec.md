@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.18.2
+**Version:** 1.18.3
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.18.3 — 2026-11-01.**
+
+- R8.8 and R8.10: watch-only background commands do not arm the end-of-turn check, the check fires once per marker, and the marker is removed when a task is active or once the turn was let through after it was told.
 
 **1.18.2 — 2026-11-01.**
 
