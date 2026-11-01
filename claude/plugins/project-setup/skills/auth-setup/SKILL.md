@@ -12,13 +12,12 @@ specification at `references/authentication.md` alongside this file. Version
 step-up, account recovery, consent, data-subject rights, abuse prevention,
 notifications, audit, and retention.
 
-**Read the spec before acting on it.** It is ~3,800 lines and this file is not
-a summary of it. Read the sections a step actually needs, and never generate
-against a clause you have not read. `AUTHSPEC` contains requirements whose
-rationale is the whole point — `R15.12` forbids soft-delete as an erasure
-mechanism, `R16.4` forbids personal data in audit metadata *because* audit
-records must survive erasure — and code written from a paraphrase gets these
-subtly and dangerously wrong.
+**Read the spec before acting on it.** It has about 3,800 lines. This file does
+not summarize it. Read the sections a step needs. Never generate against a
+clause you have not read. Some `AUTHSPEC` requirements depend on their
+rationale. `R15.12` forbids soft-delete as an erasure mechanism. `R16.4` forbids
+personal data in audit metadata *because* audit records must survive erasure.
+Code written from a paraphrase gets these wrong.
 
 ## Step 0 — Preflight. Do this before anything else
 
@@ -29,36 +28,35 @@ python3 ../tech-stack-setup/assets/preflight.py --require stack --for-skill auth
 **If it exits non-zero, stop and report its message verbatim. Write nothing.**
 
 It checks for `docs/architecture/stack-profile.md` (or the old `docs/specs/stack-profile.md`), `pnpm-workspace.yaml`, and a
-`packages/` or `apps/` directory. Those are what `tech-stack-setup` produces,
-and the Stack Profile in particular is not optional bookkeeping: `AUTHSPEC §2.1`
-resolves the technology stack by reading it. Without it this skill does not know
-the database, the runtime, the package layout, or the language version it is
-generating for.
+`packages/` or `apps/` directory. `tech-stack-setup` produces these. The Stack
+Profile is required: `AUTHSPEC §2.1` resolves the technology stack by reading
+it. Without it, this skill does not know the database, the runtime, the package
+layout, or the language version.
 
-The failure mode this guard prevents is expensive and quiet. Run on an empty
-repository, an agent will happily invent a plausible structure — a `src/auth/`
-here, an Express app there — the user accepts it because it looks reasonable,
-and the repo now has two competing ideas of its own layout. Unpicking that costs
-far more than running the skills in order.
+This guard prevents a quiet, expensive failure. On an empty repository, an agent
+invents a plausible structure, such as a `src/auth/` here and an Express app
+there. The user accepts it because it looks reasonable. The repository then has
+two competing layouts. Undoing that costs far more than running the skills in
+order.
 
 **Do not offer to set the stack up yourself.** Tell the user to run
-`tech-stack-setup`, and stop. That skill interviews for a dozen decisions this
-one has no business defaulting.
+`tech-stack-setup`, and stop. That skill interviews for a dozen decisions. This
+skill must not default them.
 
 ## Mode 1 — Build the auth stack
 
-`AUTHSPEC` does not carry its own generation order the way `STACKSPEC §26`
-does, so use this one. Each step is a dependency of the next.
+`AUTHSPEC` has no generation order of its own, unlike `STACKSPEC §26`. Use this
+one. Each step is a dependency of the next.
 
 1. **Resolve the stack.** Read `docs/architecture/stack-profile.md` (else the old `docs/specs/stack-profile.md`) fully
    (`AUTHSPEC §2.1`). Note the database, runtime, package manager, and the
    `AUTHSPEC` version it claims. If it claims a version older than
-   `references/`, say so before generating — the delta is a finding, and
-   generating 3.1.0 code into a repo that declares 1.0.0 conformance silently
-   makes the profile wrong.
+   `references/`, say so before generating. The difference is a finding.
+   Generating 3.1.0 code into a repo that declares 1.0.0 conformance makes the
+   profile wrong without any warning.
 
-2. **Interview for the decisions the spec refuses to default.** Do not guess
-   any of these; `AUTHSPEC` states them as choices, not as defaults:
+2. **Interview for the decisions the spec does not default.** Do not guess any
+   of these. `AUTHSPEC` states them as choices, not as defaults:
    - which authentication methods the user plane offers (`§7.2` — password,
      passkey, magic link / email OTP, social OIDC, enterprise SAML)
    - whether an admin plane exists at all. If it does, `§4.5` and `§9.4` are
@@ -86,39 +84,40 @@ does, so use this one. Each step is a dependency of the next.
 
 4. **Do not weaken a `MUST` to make a step easier.** If a requirement cannot be
    met with the stack the profile declares, stop and say so. `§0.2` defines only
-   `MUST` / `MUST NOT`, `SHOULD`, and `MAY`; a `MUST` you cannot satisfy is a
-   conversation, not a judgement call you make silently.
+   `MUST` / `MUST NOT`, `SHOULD`, and `MAY`. A `MUST` you cannot satisfy is a
+   matter to raise with the user, not a judgement call to make silently.
 
-5. **Wire into what `tech-stack-setup` already built** rather than creating
-   parallel structures:
+5. **Wire into what `tech-stack-setup` already built.** Do not create parallel
+   structures:
    - notifications go through the existing `packages/mail` adapter
    - retention pruners join the existing `packages/jobs`
    - the route-authorization coverage test harness already exists in
-     `apps/api`; your new routes must satisfy it, and it should fail the moment
+     `apps/api`; your new routes must satisfy it, and it should fail as soon as
      a route ships without a declaration
 
 6. **Update the Stack Profile.** Record the `AUTHSPEC` version now implemented,
    plus every `SHOULD` not followed and every `MUST` waived, each with a named
    approver (`§27` item 13). A profile that still claims no auth after this
-   skill has run is stale.
+   skill has run is out of date.
 
-7. **Run Mode 2 against what you built** and report it. Then say what remains:
-   default UX pages for the user and admin apps are **not** part of this skill.
+7. **Run Mode 2 against what you built** and report the result. Then say what
+   remains: default UX pages for the user and admin apps are **not** part of
+   this skill.
 
 ## Mode 2 — Check an existing implementation
 
-1. **Preflight with `--require stack --require auth`.** Auditing auth that does
-   not exist is a different report: say it is absent and stop.
+1. **Preflight with `--require stack --require auth`.** If auth does not exist,
+   there is nothing to audit. Say it is absent and stop.
 
 2. **Work `§27.4`'s coverage map**, clause by clause. It is the spec's own
-   index of what must be demonstrable. For each: **conforms**, **violates**,
-   **absent**, or **not applicable** with the reason, and cite file and line for
-   every violation.
+   index of what must be demonstrable. Mark each clause **conforms**,
+   **violates**, **absent**, or **not applicable** with the reason. Cite file and
+   line for every violation.
 
-3. **Check the controls that fail silently when absent.** These are the ones
-   where nothing breaks visibly and the gap only shows up in an incident:
+3. **Check the controls that fail silently when absent.** When these are
+   missing, nothing visibly breaks. The gap shows up only in an incident:
    - every `§4` entity has a `§15.4.1` erasure disposition — an entity nobody
-     answered for is personal data surviving an erasure request
+     answered for is personal data that survives an erasure request
    - `§23.2` retention windows have a `§23.3` job actually pruning them
    - every `§19.4` route maps to a `§17.3` rate-limit bucket
    - audit records carry no personal data (`R16.4`) — the reason erasure and the
@@ -128,22 +127,22 @@ does, so use this one. Each step is a dependency of the next.
      `§3.4` (`R4.8`, `R4.8a`)
 
 4. **Report severity-ranked findings grouped by spec section, and do not edit
-   while surveying.** A check that repairs as it goes cannot tell you what the
-   repo actually looked like.
+   while surveying.** A check that repairs as it goes cannot show you what the
+   repo looked like.
 
 5. **Then offer to fix, opt-in and never automatic.** Most auth findings are
-   not mechanical — a missing erasure disposition is a compliance decision, not
-   a template. Offer only what genuinely is mechanical, list it explicitly, and
-   re-run the check afterwards. A repair that was not re-verified is a claim.
+   not mechanical. A missing erasure disposition is a compliance decision, not
+   a template. Offer only what is mechanical, list it explicitly, and re-run the
+   check afterwards. A repair that was not re-verified is a claim.
 
 ## What this skill does not do
 
 - **The tech stack.** That is `tech-stack-setup`, and it runs first.
 - **UX.** Login screens, account settings, admin consoles, and the flows that
-  wire them to these endpoints are deliberately out of scope. A future
-  `auth-ux-setup` skill covers them, and it will preflight with
-  `--require stack --require auth` — that is, on what this skill produces.
+  wire them to these endpoints are out of scope on purpose. A future
+  `auth-ux-setup` skill covers them. It will preflight with
+  `--require stack --require auth`, that is, on what this skill produces.
 - **Editing `AUTHSPEC`.** The spec is maintained in the `dev-standards`
   repository, which gates every edit. A product never carries a copy of it
-  (`STACKSPEC §23`); it carries a Stack Profile naming the version it conforms
-  to.
+  (`STACKSPEC §23`). It carries a Stack Profile that names the version it
+  conforms to.
