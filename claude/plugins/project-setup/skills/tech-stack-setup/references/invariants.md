@@ -1973,7 +1973,8 @@ Every item is checkable regardless of stack.
   vendor anywhere in this document is a defect, not an edit.
 - Products record the `STACKSPEC` version they satisfy in their Stack Profile.
 - A conflict between a product's needs and this spec is resolved by a recorded
-  deviation with a named approver — not by silent divergence.
+  deviation with a named approver, not by silent divergence.
 - Superseded versions move to `docs/archive/`.
-- This spec is the answer to "what makes a product of ours correct." When reality
-  outgrows it, the spec changes; the codebase does not quietly drift ahead of it.
+- This spec answers the question "what makes a product of ours correct?" When
+  reality outgrows it, the spec changes. The codebase does not quietly drift
+  ahead of it.
