@@ -301,12 +301,22 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 
 ## 7. Versions and change notes
 
-- **R7.1** — A branch that changes a binding doc MUST add one change note instead of editing the doc's version or version table. The note is `docs/features/<feature>/changes/<task>.md`, or `docs/<area>/changes/<doc>/<task>.md` for another binding doc. `docs_fold.py note` writes it.
-- **R7.2** — A note has front matter `change` (`patch`, `minor` or `major`), optional `breaking: true` (which means major), optional `section`, and `task`; its body is one line: what changed, in which section, and the decision or reason. There is one note per task per doc.
-- **R7.3** — The version rule is per release, and the highest note wins: major when a note is breaking, minor when any note adds or changes behaviour, patch for wording and fixes to the doc only.
-- **R7.4** — `docs_fold.py fold --release <name>` MUST, for each doc with notes: bump `version` in the front matter once, write one row at the top of the doc's `## Versions` table (version, date, release, the notes as lines, the task IDs), and delete the folded notes. `--dry-run` prints the plan and changes nothing. A note that names a doc that does not exist is an error and is kept.
-- **R7.5** — Only binding docs carry a version. Guides, runbooks and the overview do not; their history is git.
-- **R7.6** — `docs_check.py` fails a binding doc whose front matter version differs from the top row of its table (V1). `docs_fold.py pending` exits 1 while notes wait; the release gate on the default branch runs it.
+- **R7.1** — A branch that changes a binding doc MUST add one change note. It MUST NOT edit the doc's version or version table. The note is `docs/features/<feature>/changes/<task>.md`, or `docs/<area>/changes/<doc>/<task>.md` for another binding doc. `docs_fold.py note` writes it.
+- **R7.2** — A note has front matter `change` (`patch`, `minor` or `major`), optional `breaking: true` (which means major), optional `section`, and `task`. Its body is one line: what changed, in which section, and the decision or reason. There is one note per task per doc.
+- **R7.3** — The version rule applies per release. The highest note wins:
+
+  - major when a note is breaking
+  - minor when any note adds or changes behaviour
+  - patch for wording and fixes to the doc only
+- **R7.4** — `docs_fold.py fold --release <name>` MUST do this for each doc with notes:
+
+  - bump `version` in the front matter once
+  - write one row at the top of the doc's `## Versions` table (version, date, release, the notes as lines, the task IDs)
+  - delete the folded notes
+
+  `--dry-run` prints the plan and changes nothing. A note that names a doc that does not exist is an error. The script keeps that note.
+- **R7.5** — Only binding docs carry a version. Guides, runbooks and the overview do not. Git is their history.
+- **R7.6** — `docs_check.py` fails a binding doc whose front matter version differs from the top row of its table (V1). `docs_fold.py pending` exits 1 while notes wait. The release gate on the default branch runs it.
 
 ---
 
