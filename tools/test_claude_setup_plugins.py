@@ -25,6 +25,12 @@ def main():
     for key in enabled:
         if key.split("@")[0] not in names:
             errors.append(f"settings template names {key}, not in the marketplace")
+    if "--scope project" not in skill:
+        errors.append("SKILL.md does not install plugins with --scope project")
+    if "~/.claude/settings.json` `enabledPlugins.\"luismc-transcript-folds" in skill:
+        errors.append("SKILL.md still wires transcript-folds at user level")
+    if "extraKnownMarketplaces" not in skill:
+        errors.append("SKILL.md does not write extraKnownMarketplaces")
     for offer in ("docs", "design system", "delivery", "project record", "specs",
                   "CI checks workflow", "repo gates", "auth"):
         if f"**{offer}**" not in skill:

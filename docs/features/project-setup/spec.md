@@ -51,7 +51,7 @@ flowchart LR
 
 1. `tech-stack-setup` interviews the user. After each answer, it filters the options in `assets/catalog/` so that only compatible ones remain. It shows the consequences. Then it generates the repository and a Stack Profile. The profile records the spec versions claimed.
 2. `auth-setup` runs `preflight.py` first and refuses until the stack exists. It reads the Stack Profile and interviews the user for the decisions the spec will not default. Then it builds in dependency order. Its second mode audits an existing implementation.
-3. `claude-setup` asks for project, user level or both. It shows one batch plan and confirms once. Then it writes the settings, rules, hooks and status line. It never overwrites a hand-written `CLAUDE.md` or an existing settings key.
+3. `claude-setup` asks for project, user level or both. Project is preselected and marked (Recommended). Rules, `CLAUDE.md`, status line, output style, hook, model split and auto-compact env go to the project's `.claude/` by default. It turns on all eight plugins in the project's `enabledPlugins`, installs missing ones with `--scope project`, and adds `extraKnownMarketplaces` to the project's settings when the entry is missing. Only the transcript-folds chords stay in `~/.claude/keybindings.json`. It shows one batch plan and confirms once. Then it writes the settings, rules, hooks and status line. It never overwrites a hand-written `CLAUDE.md` or an existing settings key.
 
 ## 5. Functional requirements
 
