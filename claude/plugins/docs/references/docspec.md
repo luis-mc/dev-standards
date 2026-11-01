@@ -415,8 +415,13 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 
 ## 12. Packaging
 
-- **R12.1** — The standard ships as the plugin `luismc-docs`: this specification; the skills `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check` and `docs-note`; the scripts `docs_setup.py`, `docs_index.py`, `docs_fold.py`, `docs_check.py`, `docs_work.py` and the two hooks; the templates.
-- **R12.2** — The plugin MUST work in a project without the delivery or artifacts plugins. The other plugins point to it for docs rules and MUST NOT restate them.
+- **R12.1** — The standard ships as the plugin `luismc-docs`. It holds:
+
+  - this specification
+  - the skills `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check` and `docs-note`
+  - the scripts `docs_setup.py`, `docs_index.py`, `docs_fold.py`, `docs_check.py`, `docs_work.py` and the two hooks
+  - the templates
+- **R12.2** — The plugin MUST work in a project without the delivery or artifacts plugins. The other plugins point to it for docs rules. They MUST NOT restate those rules.
 - **R12.3** — `docs.json` keys: `apps`, `topics`, `record_dir`, `default_branch`, `stale_days`, `binding` (folders whose docs are binding), `code_roots` and `generated_reference` (a list of `{name, command, output}`).
 - **R12.4** — The scripts MUST use only the Python standard library and run on Python 3.9 or later.
 
