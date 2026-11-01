@@ -1,3 +1,4 @@
+import json
 import unittest
 from unittest import mock
 
@@ -149,6 +150,40 @@ class RemoteTriggerActionTests(unittest.TestCase):
 
     def test_bare_run_of_stored_trigger_passes(self):
         self.assertIsNone(run(self.root, "RemoteTrigger", {"action": "run", "trigger_id": "t1"}))
+
+
+def _run(wf, concl, created, id_, status="completed"):
+    return {"workflowName": wf, "conclusion": concl, "status": status, "createdAt": created, "databaseId": id_}
+
+
+class RunStateTests(unittest.TestCase):
+    def state(self, runs):
+        with mock.patch.object(H, "gh", return_value=(0, json.dumps(runs))):
+            return P.run_state("root", "o/r", "abc")
+
+    def test_older_skipped_superseded_by_success(self):
+        runs = [_run("secret-scan", "skipped", "2026-11-01T00:00:00Z", 1),
+                _run("secret-scan", "success", "2026-11-01T01:00:00Z", 2)]
+        self.assertEqual(self.state(runs), "green")
+
+    def test_only_skipped_by_own_condition_passes(self):
+        self.assertEqual(self.state([_run("secret-scan", "skipped", "2026-11-01T00:00:00Z", 1)]), "green")
+
+    def test_failure_blocks(self):
+        for c in ("failure", "cancelled", "timed_out"):
+            self.assertEqual(self.state([_run("a", c, "2026-11-01T00:00:00Z", 1)]), "red", c)
+
+    def test_newest_failure_after_success_blocks(self):
+        runs = [_run("a", "success", "2026-11-01T00:00:00Z", 1), _run("a", "failure", "2026-11-01T01:00:00Z", 2)]
+        self.assertEqual(self.state(runs), "red")
+
+    def test_other_workflow_failure_still_blocks(self):
+        runs = [_run("a", "success", "2026-11-01T01:00:00Z", 2), _run("b", "failure", "2026-11-01T00:00:00Z", 1)]
+        self.assertEqual(self.state(runs), "red")
+
+    def test_pending_and_none(self):
+        self.assertEqual(self.state([_run("a", None, "2026-11-01T00:00:00Z", 1, "in_progress")]), "pending")
+        self.assertEqual(self.state([]), "none")
 
 
 if __name__ == "__main__":
