@@ -6,20 +6,23 @@ Opt-in: does nothing in a repository without docs/docs.json. Fails open: any err
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 
-def message(root) -> str:
+def message(root, base=None) -> str:
     import docs_lib as D
     import docs_check as C
     if not D.has_config(root):
         return ""
     cfg = D.load_config(root)
-    base = D.default_base(root, cfg)
+    base = base or D.default_base(root, cfg)
     found = C.check_map(root, cfg, base)
     errs = [x for x in found if x["severity"] == "error"]
     if not errs:
@@ -33,6 +36,63 @@ def message(root) -> str:
     return "\n".join(lines)
 
 
+def _state_path(root: Path) -> Path:
+    g = Path(root) / ".git"
+    if g.is_dir():
+        return g / "luismc-docs-stop.json"
+    h = hashlib.sha1(str(Path(root).resolve()).encode()).hexdigest()[:16]
+    return Path(tempfile.gettempdir()) / f"luismc-docs-stop-{h}.json"
+
+
+def _file_sig(root, rel) -> str:
+    try:
+        st = os.stat(Path(root) / rel)
+        return f"{st.st_mtime_ns}:{st.st_size}"
+    except OSError:
+        return "-"
+
+
+def _key(root, cfg):
+    """(base, key) from two git calls: rev-parse (base and HEAD) and status. None on any doubt."""
+    import docs_lib as D
+    for cand in (f"origin/{cfg['default_branch']}", cfg["default_branch"]):
+        r = D.git(root, "rev-parse", "-q", cand, "HEAD")
+        if r.returncode == 0 and len(r.stdout.split()) == 2:
+            base_sha, head = r.stdout.split()
+            st = D.git(root, "status", "--porcelain")
+            if st.returncode != 0:
+                return cand, None
+            h = hashlib.sha256(st.stdout.encode()).hexdigest()
+            sig = _file_sig(root, "docs/docs-map.json") + "|" + _file_sig(root, "docs/docs.json")
+            return cand, [head, base_sha, h, sig]
+    return None, None
+
+
+def cached_message(root) -> str:
+    import docs_lib as D
+    if not D.has_config(root):
+        return ""
+    cfg = D.load_config(root)
+    base, key = _key(root, cfg)
+    if base is None or key is None:
+        return message(root)
+    path = _state_path(root)
+    try:
+        st = json.loads(path.read_text(encoding="utf-8"))
+        if st.get("key") == key and isinstance(st.get("msg"), str):
+            return st["msg"]
+    except Exception:
+        pass
+    msg = message(root, base)
+    try:
+        tmp = path.with_name(path.name + f".{os.getpid()}.tmp")
+        tmp.write_text(json.dumps({"key": key, "msg": msg}), encoding="utf-8")
+        os.replace(tmp, path)
+    except Exception:
+        pass
+    return msg
+
+
 def main() -> int:
     try:
         try:
@@ -40,7 +100,7 @@ def main() -> int:
         except Exception:
             pass
         import docs_lib as D
-        msg = message(D.repo_root())
+        msg = cached_message(D.repo_root())
         if msg:
             print(json.dumps({"systemMessage": msg}))
     except Exception:
