@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-01T16:59+00:00",
+  "updated": "2026-11-01T17:46+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3052,6 +3052,36 @@
       "started": "2026-11-01T16:20+00:00"
     },
     {
+      "id": "DS173",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Release: design-system starter brought up to the latest reference",
+      "detail": "ST3",
+      "expected": "01 Nov ~18:55",
+      "changed": "2026-11-01T17:46+00:00",
+      "expected_basis": "local agent 17:50-18:35, join to 18:45, CI ~10 min",
+      "release": 29,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-01T17:50+00:00",
+          "end": "2026-11-01T18:35+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-01T18:35+00:00",
+          "end": "2026-11-01T18:45+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-01T18:45+00:00",
+          "end": "2026-11-01T18:55+00:00"
+        }
+      ],
+      "started": "2026-11-01T17:47+00:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
@@ -3190,6 +3220,19 @@
       "changed": "2026-11-01T10:35+00:00",
       "rides": "DS160",
       "started": "2026-11-01T09:50+00:00"
+    },
+    {
+      "id": "ST3",
+      "owner": "design-starter",
+      "app": "luismc-docs",
+      "status": "Running",
+      "item": "Bring the reference's newer and generic parts into the starter",
+      "detail": "Wizard end (Review, the work, Done), retired Check, generic versions of components left out in ST2",
+      "expected": "01 Nov ~18:35",
+      "changed": "2026-11-01T17:46+00:00",
+      "expected_basis": "one local agent, reads ~2,400 lines, writes ~15 parts",
+      "rides": "DS173",
+      "started": "2026-11-01T17:47+00:00"
     },
     {
       "id": "TC1",
