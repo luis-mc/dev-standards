@@ -10,6 +10,7 @@
   design_system.py approve-implementation VERSION --approved-on DATE --evidence TEXT [--apply]
   design_system.py guards --stack typescript-vitest [--dest DIR] [--apply]
                                                       copy the guard-test templates for a stack
+  design_system.py styles [--json]                    read-only: list the project's style files and CSS custom properties
 
 Layout (R15.1): docs/design-system/{README.md, approvals.json, next-version/, v1/, v2/ ...}.
 Every command is a dry run until --apply. Standard library only, Python 3.9 or later.
@@ -293,6 +294,54 @@ def check(root: Path, base: str | None = None) -> list:
     return out
 
 
+# ------------------------------------------------------------------ styles
+STYLE_NAMES = re.compile(r"(^|[-_.])(tokens?|theme|themes|variables|colors?)\.(css|scss|less|json|js|ts|mjs|cjs)$|^tailwind\.config\.\w+$|^theme\.\w+$", re.I)
+SKIP_DIRS = {".git", "node_modules", "dist", "build", ".next", "coverage", "vendor", "docs", ".venv", "__pycache__"}
+CSS_VAR_RE = re.compile(r"(--[\w-]+)\s*:\s*([^;}\n]+)")
+MAX_STYLE_BYTES = 200_000
+
+
+def find_styles(root: Path, limit: int = 40) -> list:
+    """Candidate style files and the CSS custom properties in them. Read-only; the design-system folder is skipped."""
+    root = Path(root)
+    found = []
+    for dirpath, dirs, files in os.walk(root):
+        dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRS)
+        for f in sorted(files):
+            p = Path(dirpath) / f
+            is_css = f.endswith((".css", ".scss", ".less"))
+            if not (STYLE_NAMES.search(f) or is_css):
+                continue
+            try:
+                if p.stat().st_size > MAX_STYLE_BYTES:
+                    continue
+                text = p.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            props = [(n, v.strip()) for n, v in CSS_VAR_RE.findall(text)] if is_css else []
+            if STYLE_NAMES.search(f) or props:
+                found.append({"path": p.relative_to(root).as_posix(), "properties": [{"name": n, "value": v} for n, v in props[:60]]})
+            if len(found) >= limit:
+                return found
+    return found
+
+
+def cmd_styles(root: Path, as_json: bool) -> int:
+    res = find_styles(root)
+    if as_json:
+        print(json.dumps(res, indent=2))
+        return 0
+    if not res:
+        print("no style files found: keep the starter token values")
+        return 0
+    for f in res:
+        print(f["path"])
+        for p in f["properties"]:
+            print(f"    {p['name']}: {p['value']}")
+    print(f"styles: {len(res)} file(s); read-only, nothing was changed")
+    return 0
+
+
 # ------------------------------------------------------------------ commands
 def cmd_init(root: Path, apply: bool) -> int:
     created, skipped = [], []
@@ -444,7 +493,7 @@ def cmd_guards(root: Path, a) -> int:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", choices=["init", "status", "check", "visuals", "promote", "approve-implementation", "guards"])
+    ap.add_argument("command", choices=["init", "status", "check", "visuals", "promote", "approve-implementation", "guards", "styles"])
     ap.add_argument("version", nargs="?")
     ap.add_argument("--root", default=None)
     ap.add_argument("--apply", action="store_true")
@@ -461,6 +510,8 @@ def main(argv=None) -> int:
         return cmd_init(root, a.apply)
     if a.command == "status":
         return cmd_status(root)
+    if a.command == "styles":
+        return cmd_styles(root, a.json)
     if a.command == "check":
         res = check(root, a.base)
         if a.json:

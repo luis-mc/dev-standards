@@ -184,6 +184,45 @@ class DesignSystemTests(unittest.TestCase):
                 for bad in ("comic", "twin", "master", "operator"):
                     self.assertNotIn(bad, t, f"{p.name}: {bad}")
 
+    def test_starter_is_full_and_marked(self):  # R15.6
+        d = ds_repo()
+        v = d / "docs/design-system/next-version"
+        for n in ("ux-rules.md", "components.md", "tokens.md", "content.md", "README.md"):
+            self.assertIn("starter item", r(d, f"docs/design-system/next-version/{n}"), n)
+        ids = S.RULE_ID_RE.findall((v / "ux-rules.md").read_text(encoding="utf-8"))
+        self.assertGreaterEqual(len(ids), 20)
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertGreaterEqual((v / "components.md").read_text(encoding="utf-8").count("\n## "), 20)
+        tok = (v / "tokens.md").read_text(encoding="utf-8")
+        self.assertIn("[data-theme=dark]", tok)
+        self.assertIn("prefers-color-scheme: dark", tok)
+        self.assertIn("- C1: starter design system from luismc-docs", (v / "CHANGES.md").read_text(encoding="utf-8"))
+        # every UX id cited in components exists
+        import re
+        cited = set(re.findall(r"UX-\d+", (v / "components.md").read_text(encoding="utf-8")))
+        self.assertLessEqual(cited, set(ids))
+        # no approved action word is also retired
+        content = (v / "content.md").read_text(encoding="utf-8")
+        block = content.split("<!-- retired-words:start -->")[1].split("<!-- retired-words:end -->")[0]
+        retired = [ln.split("|")[1].strip() for ln in block.splitlines() if ln.startswith("|")][2:]
+        vocab = [ln.split("|")[1].strip() for ln in content.split("## Retired words")[0].splitlines() if ln.startswith("|")][2:]
+        self.assertFalse(set(retired) & set(vocab))
+
+    def test_styles_lists_candidates_read_only(self):
+        d = project()
+        w(d, "src/tokens.css", ":root { --brand: #123456; --gap: 8px; }\n")
+        w(d, "tailwind.config.js", "module.exports = {}\n")
+        w(d, "node_modules/x/theme.css", ":root{--no:1}\n")
+        res = S.find_styles(d)
+        paths = [f["path"] for f in res]
+        self.assertIn("src/tokens.css", paths)
+        self.assertIn("tailwind.config.js", paths)
+        self.assertFalse(any("node_modules" in p for p in paths))
+        props = next(f for f in res if f["path"] == "src/tokens.css")["properties"]
+        self.assertEqual(props[0], {"name": "--brand", "value": "#123456"})
+        self.assertEqual(S.main(["styles", "--root", str(d)]), 0)
+        self.assertEqual(r(d, "src/tokens.css"), ":root { --brand: #123456; --gap: 8px; }\n")
+
     def test_tree_digest_ignores_line_endings(self):
         d = ds_repo()
         folder = d / "docs/design-system/next-version"
