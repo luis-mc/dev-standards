@@ -18,19 +18,19 @@ artifact: feature-transcript-folds.html
 
 ## 1. In one paragraph
 
-`luismc-transcript-folds` draws each long diff as one line and each finished shell command as one line in the Claude Code transcript. Long diffs from Edit, Write, NotebookEdit and Bash no longer push the conversation off screen. Two chords and two slash commands show or hide the detail. A line above the prompt shows the switches and what changed this session.
+`luismc-transcript-folds` draws each long diff as one line and each finished shell command as one line in the Claude Code transcript. Long diffs from Edit, Write, NotebookEdit and Bash no longer push the conversation off screen. Two chords and two slash commands show or hide the detail. A line above the prompt shows the switches and the changes made in this session.
 
 ## 2. Why
 
-Long diffs and command output fill the terminal. The person wants the conversation, with the detail one keystroke away.
+Long diffs and command output fill the terminal. The person wants to see the conversation, with the detail one keystroke away.
 
 Goals: one line per long diff (an icon, the file and line, lines added and removed); one line per finished command (the command cut to fit, then its line count, its error, or the files it changed); nothing that depends on a keyboard shortcut alone.
 
 Non-goals: changing what Claude does, writing files, or running commands. The plugin is a display mod only.
 
-**Why its own plugin.** A change to how the transcript is drawn runs inside Claude Code as a mod, and a mod runs only from an enabled plugin. `claude-setup` enables the plugin and writes the two chords to `~/.claude/keybindings.json` as part of the standard setup.
+**Why its own plugin.** A change to how the transcript is drawn runs inside Claude Code as a mod. A mod runs only from an enabled plugin. As part of the standard setup, `claude-setup` enables the plugin and writes the two chords to `~/.claude/keybindings.json`.
 
-**Written from scratch.** The idea comes from a third-party plugin. None of its code, names or layout is used (see [decision 0016](../../architecture/decisions/0016-build-transcript-folds-from-scratch.md)).
+**Written from scratch.** The idea comes from a third-party plugin. The plugin uses none of its code, names or layout (see [decision 0016](../../architecture/decisions/0016-build-transcript-folds-from-scratch.md)).
 
 ## 3. How it works
 
@@ -63,7 +63,7 @@ Settings under `/config`:
 
 ## 4. Screens and states
 
-Both switches start folded in every session. A toggle lasts for that session only, so a stray chord never carries over (owner, 16 October 2026). With a switch off, the engine draws as usual, and runs of edits it groups into one row are drawn expanded so every diff shows. The band steps aside while a survey is shown.
+Both switches start folded in every session. A toggle lasts for that session only, so a stray chord never carries over (owner, 16 October 2026). With a switch off, the engine draws as usual. Runs of edits that it groups into one row are drawn expanded, so every diff shows. The band steps aside while a survey is shown.
 
 ## 5. Functional requirements
 
@@ -100,7 +100,7 @@ flowchart TB
   setup --> en[enabledPlugins]
 ```
 
-`transcript_folds.tsx` is glue: each decision is a call into `hooks/fold/`, split by concern (`change`, `lines`, `shell`, `summary`, `tally`, `width`, `options`). Session state holds the two switches, the tally, the project root, and the counts and outcome of each finished call by `tool_use_id`. `claude-setup` merges the two chords into the `Global` context of the user's keybindings. A chord bound to another action is a conflict the owner decides. It never changes another binding.
+`transcript_folds.tsx` is glue. Each decision is a call into `hooks/fold/`, split by concern (`change`, `lines`, `shell`, `summary`, `tally`, `width`, `options`). Session state holds the two switches, the tally, the project root, and the counts and outcome of each finished call by `tool_use_id`. `claude-setup` merges the two chords into the `Global` context of the user's keybindings. A chord bound to another action is a conflict the owner decides. It never changes another binding.
 
 ## 8. Failure modes
 

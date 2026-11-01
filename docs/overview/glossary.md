@@ -7,7 +7,7 @@ last_verified: 2026-10-31
 ---
 # Glossary
 
-One term, one meaning. Where a word was used for two things, it appears twice with a qualifier.
+One term, one meaning. Where a word was used for two things, it appears twice, each with a qualifier.
 
 | Term | Meaning | Where it is seen |
 |---|---|---|
@@ -16,7 +16,7 @@ One term, one meaning. Where a word was used for two things, it appears twice wi
 | requirement ID | The stable label of one rule in a spec, such as R4.24, U7 or DL-nn. Projects, hooks and tests cite it. It is never renumbered. | Specs, tests, rule files |
 | Stack Profile | The file a generated project keeps to record which spec versions it conforms to and which vendors it chose. | `docs/architecture/stack-profile.md` in a project |
 | feature spec | The one page that says what a feature does and how it is built. One folder per feature. | `docs/features/<id>/spec.md` |
-| change note | A one- or two-sentence file that a branch adds instead of editing a spec's version or a plugin's `version`. | `docs/architecture/changes/` |
+| change note | A file of one or two sentences. A branch adds it instead of editing a spec's version or a plugin's `version`. | `docs/architecture/changes/` |
 | fold (release) | The step that turns change notes into one version bump and one change-log entry per target, then deletes the notes. | `change_notes.py fold`, `docs_fold.py` |
 | fold (transcript) | Showing a long diff or a finished command as one line in the transcript. | `luismc-transcript-folds`, the band above the prompt |
 | release | One batch of task branches that are joined, tested by one ready pull request and merged together. The ledger still calls it a train. | Chat, pull request titles |
