@@ -16,11 +16,11 @@ last_verified: 2026-11-01
 
 ## 1. In one paragraph
 
-`luismc-agents` installs one read-only subagent, `architect`. A session hands it a hard design call or a set of audit findings. It reads the code and answers with one recommendation and the reasons. It does not change files.
+`luismc-agents` installs one read-only subagent, `architect`. A session gives it a hard design call or a set of audit findings. It reads the code. It answers with one recommendation and the reasons. It does not change files.
 
 ## 2. Why
 
-A routine coding agent is a poor judge of a hard tradeoff. It also tends to trust an audit tool's default severity. The architect gives a second, independent view on the decisions that need one.
+A routine coding agent judges a hard tradeoff poorly. It also tends to trust an audit tool's default severity. The architect gives a second, independent view on decisions that need one.
 
 Goals:
 
@@ -28,7 +28,7 @@ Goals:
 - Real severity for audit findings, with false positives named.
 - Decisions that belong to the owner are flagged, not made.
 
-Non-goals: routine implementation, mechanical coding, and work whose approach is already decided. Those stay on the default model.
+Non-goals: routine implementation, mechanical coding, and work with an approach already decided. Those stay on the default model.
 
 ## 3. How it works
 
@@ -44,9 +44,9 @@ flowchart LR
 
 1. The session starts the agent when the task matches its description: a design tradeoff, a second opinion on a risky approach, or a review of audit findings.
 2. The agent reads what it needs. It has not seen the codebase before.
-3. It weighs the tradeoffs and gives one recommendation.
-4. For audit findings it rates severity and exploitability itself, orders by risk and reversibility, and calls out false positives.
-5. Anything that changes scope, is hard to reverse, or is a business tradeoff is surfaced as the owner's decision.
+3. It weighs the tradeoffs. It gives one recommendation.
+4. For audit findings, it rates severity and exploitability itself. It orders them by risk and reversibility. It names false positives.
+5. It surfaces anything that changes scope, is hard to reverse, or is a business tradeoff as the owner's decision.
 
 ## 5. Functional requirements
 
@@ -64,13 +64,13 @@ flowchart LR
 
 ## 7. Design
 
-One Markdown file with front matter (`name`, `description`, `model`, `effort`, `disallowedTools`) and a short prompt. There is no code, hook or script. The plugin manifest is `claude/plugins/agents/.claude-plugin/plugin.json`. The model and effort follow the owner's default of medium for every model; the project-setup plugin's profile table holds the same default (see [models](../models/spec.md)).
+The agent is one Markdown file. It has front matter (`name`, `description`, `model`, `effort`, `disallowedTools`) and a short prompt. There is no code, hook or script. The plugin manifest is `claude/plugins/agents/.claude-plugin/plugin.json`. The model and effort follow the owner's default of medium for every model. The project-setup plugin's profile table holds the same default (see [models](../models/spec.md)).
 
 ## 8. Failure modes
 
-- The agent is not started: the session decides alone. This fails open. The agent is advice, not a gate.
-- The agent cannot read a file: it says so and recommends from what it saw.
-- The agent cannot edit by design, so a bad run cannot damage the repository.
+- The agent is not started: the session decides alone. This fails open. The agent gives advice. It is not a gate.
+- The agent cannot read a file: it says so. It recommends from what it saw.
+- The agent cannot edit, by design. A bad run cannot damage the repository.
 
 ## 9. How it is proven
 
