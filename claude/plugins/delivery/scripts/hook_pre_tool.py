@@ -44,11 +44,24 @@ def flag(tokens, *names):
 
 # --- Bash --------------------------------------------------------------------------------
 
+def newest_per_workflow(runs):
+    """Only the newest run of each workflow name counts (an older skipped or failed run is superseded)."""
+    newest = {}
+    for x in runs:
+        if not isinstance(x, dict):
+            continue
+        key = x.get('workflowName') or ''
+        rank = (str(x.get('createdAt') or ''), x.get('databaseId') or 0)
+        if key not in newest or rank >= newest[key][0]:
+            newest[key] = (rank, x)
+    return [v[1] for v in newest.values()]
+
+
 def run_state(root, repo, head):
     """'green' (every run for the head completed successfully), 'none' (no runs), 'pending', 'red';
     None when gh cannot answer. Judges the runs of `repo` itself, not the ledger."""
     r = H.gh(root, ['run', 'list', '--repo', repo, '--commit', head, '--limit', '100',
-                    '--json', 'status,conclusion'])
+                    '--json', 'status,conclusion,workflowName,createdAt,databaseId'])
     if not r or r[0] != 0:
         return None
     try:
@@ -59,9 +72,11 @@ def run_state(root, repo, head):
         return None
     if not runs:
         return 'none'
+    runs = newest_per_workflow(runs)
     if any(x.get('status') != 'completed' for x in runs):
         return 'pending'
-    return 'green' if all(x.get('conclusion') == 'success' for x in runs) else 'red'
+    # 'skipped' (e.g. a draft PR skipped the job) is not a failure; failure/cancelled/timed_out still block
+    return 'green' if all(x.get('conclusion') in ('success', 'skipped') for x in runs) else 'red'
 
 
 def check_merge(root, seg, ledger):
