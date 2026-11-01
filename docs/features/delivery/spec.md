@@ -10,6 +10,7 @@ type: reference
 code:
   - claude/plugins/delivery/scripts/*.py
   - claude/plugins/delivery/hooks/hooks.json
+  - claude/plugins/delivery/.claude-plugin/plugin.json
   - claude/plugins/delivery/references/*.json
   - claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/*.py
   - claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/CONTRACT.md
