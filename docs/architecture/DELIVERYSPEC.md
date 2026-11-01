@@ -11,11 +11,11 @@
 
 ### In one paragraph
 
-This spec holds the delivery rules. Each rule has an ID (`DL-nn`, `Q-n`, `D-n`) that hooks, scripts and the shipped rule files cite. A rule says what must hold, which check enforces it, and whether that check is built. The checks read one ledger file, `.delivery/ledger.json`, and a project sets its limits in `.delivery/config.json`.
+This spec holds the delivery rules. Each rule has an ID (`DL-nn`, `Q-n`, `D-n`) that hooks, scripts and the shipped rule files cite. A rule says what must hold, which check enforces it, and whether that check is built. The checks read one ledger file, `.delivery/ledger.json`. A project sets its limits in `.delivery/config.json`.
 
 ### Why
 
-A delivery lesson kept as a memory note depends on the orchestrator remembering it. A lesson kept as a hook, a script or a ledger field cannot be forgotten. Numbering the rules lets a hook name the rule it enforces and lets a test prove that every cited ID exists.
+A lesson kept as a memory note works only if the orchestrator remembers it. A lesson kept as a hook, a script or a ledger field cannot be forgotten. Rule IDs let a hook name the rule it enforces. They also let a test prove that every cited ID exists.
 
 ### How it works
 
@@ -35,8 +35,8 @@ flowchart LR
 2. A PreToolUse or Stop hook reads the ledger and the rules in section 1, then denies or blocks when a rule is broken (D3).
 3. The watcher runs between turns. It pushes the next train, opens its ready PR and merges the previous train when its CI is green for the current head (D5).
 4. The CI watch reads the workflow runs of the head commit and sets `green_at` (DL-06, DL-07).
-5. After the merge, cleanup removes the branches and worktrees, and the smoke test checks production (DL-14, DL-18).
-6. Each project tunes the limits in section 6.
+5. After the merge, cleanup removes the branches and worktrees. The smoke test checks production (DL-14, DL-18).
+6. Each project sets its limits in section 6.
 
 ---
 
@@ -44,12 +44,12 @@ flowchart LR
 
 Every rule in section 1 has these columns.
 
-- **Source**: where the rule came from: rules = the user's rules files; CLAUDE.md = the user's or the project's CLAUDE.md; owner rule = a rule the owner set on that date; owner lesson = a lesson the owner gave and the rule now records.
+- **Source**: where the rule came from. rules = the user's rules files. CLAUDE.md = the user's or the project's CLAUDE.md. owner rule = a rule the owner set on that date. owner lesson = a lesson the owner gave; the rule now records it.
 - **Scope**: G = generic (belongs in a plugin), P = project-specific (per-project config or the project's own scripts).
 - **Kind**: STOP = Stop-hook block; PRE = PreToolUse deny; POST = PostToolUse ledger write; SS = SessionStart; WATCH = watcher script; CI = CI guard test; GIT = git hook; TEXT = rules text only.
 - **Today**: Y = enforced, W = warns only, ~ = partly, N = not enforced (rules text only).
 
-Goal: every delivery and orchestration rule is a mechanical check (hook, script or ledger field) in the plugins, not a note the orchestrator must remember.
+Goal: each delivery and orchestration rule is a mechanical check in the plugins (hook, script or ledger field), not a note the orchestrator must remember.
 
 ## 1. Rules
 
