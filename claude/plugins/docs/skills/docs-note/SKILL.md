@@ -19,6 +19,6 @@ python3 "$F" pending                                  # exit 1 while notes wait
 python3 "$F" fold --release RELEASE-131 --dry-run     # release branch only; then without --dry-run
 ```
 
-`--change`: `minor` when behaviour is added or changed, `patch` for wording and doc fixes, `--breaking` (major) when something users or other apps relied on is gone. One line: what changed, the section, the reason. Then update the doc body in the same branch.
+`--change` takes `minor` when behaviour is added or changed, and `patch` for wording and doc fixes. Use `--breaking` (major) when something users or other apps relied on is gone. Write one line: what changed, the section, the reason. Then update the doc body in the same branch.
 
-Fold only on the release branch, once per release; it bumps each doc once and writes one row.
+Fold only on the release branch, once per release. The fold bumps each doc once and writes one row.
