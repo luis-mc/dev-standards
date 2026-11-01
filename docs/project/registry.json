@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-01T11:33+00:00",
+  "updated": "2026-11-01T13:00+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2815,12 +2815,11 @@
       "id": "DS159",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "DL-06 newest run per workflow, skipped runs pass (PR #120, open)",
-      "detail": "Branch DS34-dl06-skipped-runs reuses ID DS34, which already names a Live task. Left to the other terminal.",
-      "expected": "01 Nov; waits on the other terminal",
-      "changed": "2026-11-01T09:31+00:00",
-      "expected_basis": "PR #120 open; owned by another terminal",
+      "detail": "PR #120 merged by the other terminal; shipped in RELEASE-27",
+      "expected": "01 Nov ~11:33",
+      "changed": "2026-11-01T13:00+00:00",
       "no_release": "release handled by another terminal",
       "started": "2026-11-01T09:31+00:00"
     },
