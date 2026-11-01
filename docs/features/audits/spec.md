@@ -4,7 +4,7 @@ title: Audit skills (luismc-audits)
 apps: [luismc-audits]
 topics: [audits, models]
 status: live
-version: 0.1.0
+version: 0.1.1
 owner: agents
 type: reference
 code:
@@ -95,3 +95,11 @@ Source: claude/plugins/audits/skills/performance-audit/SKILL.md
 Source: claude/plugins/audits/skills/compliance-audit/SKILL.md
 Source: claude/plugins/audits/.claude-plugin/plugin.json
 Source: tools/test_model_profiles.py
+
+## Versions
+
+Written by the release fold. Do not edit by hand.
+
+| Version | Date | Release | What changed | Tasks |
+|---|---|---|---|---|
+| 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. | DS142 |

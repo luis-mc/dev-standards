@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.1.0
+version: 0.1.1
 owner: agents
 type: reference
 code:
@@ -179,3 +179,11 @@ Source: claude/plugins/delivery/scripts/
 Source: claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/
 
 The plugin holds hooks, ledger, watcher, load guard and doctor. The shared folder holds gate, join, CI watch, cleanup and `CONTRACT.md`.
+
+## Versions
+
+Written by the release fold. Do not edit by hand.
+
+| Version | Date | Release | What changed | Tasks |
+|---|---|---|---|---|
+| 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. | DS142 |

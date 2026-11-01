@@ -4,7 +4,7 @@ title: Spec authoring and checking (luismc-specs)
 apps: [luismc-specs]
 topics: [specs]
 status: live
-version: 0.1.0
+version: 0.1.1
 owner: agents
 type: reference
 code:
@@ -96,3 +96,11 @@ Source: claude/plugins/specs/skills/spec-check/SKILL.md
 Source: claude/plugins/specs/skills/spec-check/assets/spec_check.py
 Source: tools/spec_check.py
 Source: tools/test_spec_check.py
+
+## Versions
+
+Written by the release fold. Do not edit by hand.
+
+| Version | Date | Release | What changed | Tasks |
+|---|---|---|---|---|
+| 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. | DS143 |

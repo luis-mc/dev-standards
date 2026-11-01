@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-artifacts]
 topics: [artifacts]
 status: live
-version: 0.1.0
+version: 0.1.1
 owner: agents
 type: reference
 code:
@@ -211,3 +211,9 @@ Source: `claude/plugins/artifacts/`
 Tests: `tools/test_project_artifacts.py`, `tools/test_project_artifacts_hooks.py`, `tools/test_render_artifacts.py`, `tools/test_artifact_prune.py`.
 
 ## Versions
+
+Written by the release fold. Do not edit by hand.
+
+| Version | Date | Release | What changed | Tasks |
+|---|---|---|---|---|
+| 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. Added claude/plugins/artifacts/references/artifactspec.md to the code mapping. | DS142 |

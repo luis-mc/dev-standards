@@ -5,6 +5,8 @@
 ## architecture
 
 - [DELIVERYSPEC — Delivery rules](docs/architecture/DELIVERYSPEC.md)
+- [Performance audit of the plugin hooks and delivery scripts, 2026-11-01](docs/architecture/audits/2026-11-01-performance-audit.md)
+- [Security audit: dev-standards plugin scripts and hooks (2026-11-01)](docs/architecture/audits/2026-11-01-security-audit.md)
 - [Rewrite every doc to DOCSPEC, requirement IDs kept](docs/architecture/decisions/0001-docs-rewrite.md)
 - [The artifacts plugin never commits or pushes](docs/architecture/decisions/0010-artifacts-never-commit-or-push.md)
 - [Only Full Progress is published to claude.ai](docs/architecture/decisions/0011-only-full-progress-is-published.md)
@@ -28,6 +30,7 @@
 - [Every shipped rule line is tagged, and a check that finds a break blocks](docs/architecture/decisions/0040-rule-tags-and-blocking-checks.md)
 - [Upgrade notes are how-to guides, the originals are archived](docs/architecture/decisions/0050-upgrade-notes-are-guides.md)
 - [claude-setup turns on and configures all plugins in the project](docs/architecture/decisions/0070-claude-setup-all-plugins.md)
+- [Hook list mismatch: ARTIFACTSPEC section 8 vs hooks.json](docs/architecture/hook-list-mismatch.md)
 
 ## archive
 

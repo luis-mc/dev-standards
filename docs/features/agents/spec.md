@@ -4,7 +4,7 @@ title: Architect agent (luismc-agents)
 apps: [luismc-agents]
 topics: [audits, models]
 status: live
-version: 0.1.0
+version: 0.1.1
 owner: agents
 type: reference
 code:
@@ -88,3 +88,11 @@ NOT YET IMPLEMENTED: a test that reads `architect.md` and checks R5.1 and R5.3 t
 Source: claude/plugins/agents/agents/architect.md
 Source: claude/plugins/agents/.claude-plugin/plugin.json
 Source: tools/test_model_profiles.py
+
+## Versions
+
+Written by the release fold. Do not edit by hand.
+
+| Version | Date | Release | What changed | Tasks |
+|---|---|---|---|---|
+| 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. | DS142 |

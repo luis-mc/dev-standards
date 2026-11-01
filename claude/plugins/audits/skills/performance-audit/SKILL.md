@@ -28,7 +28,7 @@ Classify findings strictly by runtime impact, traffic scale, and compute complex
 ### 1. Persistence & Data Layer Hardening (Relational & NoSQL)
 - **Relational & Document N+1 Queries:** Audit ORM, query builders, or raw data access layouts. Flag loops or map iterations that issue one query per item instead of a batch, join, or native multi-key inclusion logic.
 - **Query Plan Degradation (Missing Indexes):** Scan fields in filtering clauses (`where`), sorting rules (`orderBy`), and join operations (`JOIN`) that lack matching indexes in the data schema (such as B-Tree, GIN, or Compound indexes).
-- **Unbounded Cursor Sinks:** Verify that all data listings implement explicit pagination controls (limit/offset, token-based, or cursor-based pagination). List endpoints must never run without limits, so a table cannot dump raw records into server RAM. This stops a table from dumping raw records into server RAM.
+- **Unbounded Cursor Sinks:** Verify that all data listings implement explicit pagination controls (limit/offset, token-based, or cursor-based pagination). List endpoints must never run without limits, so a table cannot dump raw records into server RAM.
 - **Over-Fetching Rows:** Identify queries that pull down full records, wildcard columns (`SELECT *`), or massive object graphs when downstream code uses only a few specific column strings or primitive properties.
 - **Transaction Lifespan Leakage:** Ensure database transactions or atomic blocks do not stay open while they wait on non-database asynchronous I/O operations (e.g., third-party API calls, slow external system reads, or long-running computational loops).
 

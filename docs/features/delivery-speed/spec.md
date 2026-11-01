@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.1.0
+version: 0.1.1
 owner: agents
 type: explanation
 code:
@@ -22,7 +22,7 @@ Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub relea
 
 ## 2. Why
 
-The owner brought a prompt measured in one product over seven days: 82 releases, 971 workflow runs, 3,039 CI jobs. Its diagnosis matches what dev-standards found about itself (see Feature: Test and validation cost). The problem is not the number of tests. Each delivery layer reruns the full suite instead of doing its own share. A finished change also waits for its whole train. Pushes to a train branch keep restarting CI.
+The owner brought a prompt measured in one product over seven days: 82 releases, 971 workflow runs, 3,039 CI jobs. Its diagnosis matches what dev-standards found about itself (see Feature: Test and validation cost). The problem is not the number of tests. It is that each delivery layer reruns the full suite instead of doing its own share. A finished change also waits for its whole train. Pushes to a train branch keep restarting CI.
 
 - Each change ran the full suite 4 to 6 times: 1 to 3 agent gates, the join gate, PR CI, and a default-branch run on the same tree.
 - 56% of CI job-minutes went to cancelled or failed runs, most of the cancels from pushes to a train branch while its CI ran.
@@ -147,3 +147,11 @@ Nothing from the plan is open. Late branches ride the next train by design.
 
 Source: claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/
 Source: claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/pre-push
+
+## Versions
+
+Written by the release fold. Do not edit by hand.
+
+| Version | Date | Release | What changed | Tasks |
+|---|---|---|---|---|
+| 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. | DS142 |

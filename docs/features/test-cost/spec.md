@@ -4,7 +4,7 @@ title: Test and validation cost
 apps: [luismc-project-setup, luismc-artifacts]
 topics: [ci, testing]
 status: live
-version: 0.1.0
+version: 0.1.1
 owner: agents
 type: explanation
 code:
@@ -24,7 +24,7 @@ All eight fixes shipped in #47: CI runs only the areas a change touches, mutatio
 
 ### What is wrong
 
-The owner was right about duplication. But the checks themselves are good, so they must not be cut. All 94 gate mutants are caught. The extra CI runs found three Linux-only bugs and one weak test. The problem is *how often* the checks run and that they run for every change. There are four causes:
+The owner was right about duplication, but wrong in one place: the checks themselves are good. All 94 gate mutants are caught. The extra CI runs found three Linux-only bugs and one weak test. The problem is *how often* the checks run and that they run for every change. There are four causes:
 
 1. **Everything runs for every change.** spec-lint is one job of 17 steps with no scoping, so a luismc-artifacts patch pays 13.7 minutes for delivery-script tests it cannot affect, including an 8.8-minute mutation pass.
 2. **The same commit is tested at three stages.** Agents ran the full workflow on their branches (half of all CI time). The ready PR ran it again on the joined result. Then `main` ran it a third time on a tree that differs only in record files.
@@ -226,3 +226,11 @@ Stopping every mutant at its first failed check is done for the gate suite; a si
 Source: tools/ci_areas.py
 Source: .github/workflows/spec-lint.yml
 Source: .github/workflows/nightly.yml
+
+## Versions
+
+Written by the release fold. Do not edit by hand.
+
+| Version | Date | Release | What changed | Tasks |
+|---|---|---|---|---|
+| 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. | DS143 |

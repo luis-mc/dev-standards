@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 0.1.0
+version: 0.1.1
 owner: agents
 type: reference
 code:
@@ -151,3 +151,11 @@ Source: claude/plugins/docs/scripts/hook_stop.py
 Source: claude/plugins/docs/scripts/hook_session_start.py
 Source: claude/plugins/docs/hooks/hooks.json
 Source: claude/plugins/docs/templates/feature-spec.md
+
+## Versions
+
+Written by the release fold. Do not edit by hand.
+
+| Version | Date | Release | What changed | Tasks |
+|---|---|---|---|---|
+| 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. | DS142 |
