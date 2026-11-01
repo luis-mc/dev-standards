@@ -261,11 +261,11 @@ def prune(led: dict, days: int, now: datetime | None = None) -> int:
 
 
 def update(root, fn, **lock_kw) -> dict:
-    """Lock, load, apply fn(ledger), expire old finished rows, derive phases, cap events, write. Returns the ledger."""
+    """Lock, load, expire old finished rows, apply fn(ledger), derive phases, cap events, write. Returns the ledger."""
     with locked(root, **lock_kw):
         led = load(root)
+        prune(led, retention_days(load_config(root)))   # before fn: a row fn adds or changes now is never pruned in this write
         fn(led)
-        prune(led, retention_days(load_config(root)))
         for train in led.get("trains", []):
             derive_phases(train)
         led["events"] = led.get("events", [])[-EVENT_CAP:]
