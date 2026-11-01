@@ -48,15 +48,15 @@ flowchart TD
 
 This document binds product architecture to **properties**, not to products.
 
-Every requirement here holds whether the product is TypeScript on Vercel with
-Postgres, Go on Fly with MySQL, .NET on Azure with SQL Server, or Rust in a
-container with anything. If a clause below can only be satisfied by one named
+Every requirement here holds for any stack. It holds for TypeScript on Vercel
+with Postgres, Go on Fly with MySQL, .NET on Azure with SQL Server, and Rust in a
+container with anything. If a clause below can only be met by one named
 technology, that clause is defective and MUST be raised against this spec.
 
-**Technology selection lives elsewhere.** The selection catalog that accompanies
+**Technology selection lives elsewhere.** The selection catalog that comes with
 this spec is where each product chooses its concrete stack: language, frameworks,
-database engine, host, cache, storage, mail and error tracking. The choice is
-recorded in the product's Stack Profile (§18). This document does not name or
+database engine, host, cache, storage, mail and error tracking. The product
+records the choice in its Stack Profile (§18). This document does not name or
 rank vendors.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
@@ -220,9 +220,10 @@ this document is now only those.
 | `MAY` | Optional. |
 | `CHOICE` | Resolved per product by the selection catalog and recorded in the Stack Profile. Never graded, never a deviation. |
 
-`CHOICE` is new in 5.0.0. It gives "which database engine" and "which mail
-provider" a defined, checkable status. A conformance check reports a `CHOICE` as
-**recorded** or **unrecorded**, never as conforming or violating.
+`CHOICE` is new in 5.0.0. It gives questions such as "which database engine" and
+"which mail provider" a defined, checkable status. A conformance check reports a
+`CHOICE` as **recorded** or **unrecorded**. It never reports one as conforming or
+violating.
 
 ### 0.3 What a product is, structurally
 
@@ -239,15 +240,15 @@ surfaces:
 
 Mobile MAY be absent. Web MAY be server-rendered from the API deployable rather
 than deployed separately. Admin MAY be a route group inside web. The rules here
-apply from day one whichever surfaces ship, because the expensive mistakes
-cannot be retrofitted cheaply: untyped API surfaces, business logic in clients,
-hardcoded strings and undeclared data collection.
+apply from day one, whichever surfaces ship. The expensive mistakes cannot be
+fixed cheaply later: untyped API surfaces, business logic in clients, hardcoded
+strings and undeclared data collection.
 
 ### 0.4 Capability requirements, not product requirements
 
 Several clauses below require a *capability* of a chosen technology, not a named
-technology. Where a product's `CHOICE` cannot supply the capability, the clause
-states the compensating control it needs. Two examples:
+technology. If a product's `CHOICE` cannot supply the capability, the clause
+states the compensating control the product needs. Two examples:
 
 - §7.2 requires enqueue to be atomic with the write that causes it. A datastore
   with multi-statement transactions satisfies this directly; one without MUST
@@ -257,8 +258,8 @@ states the compensating control it needs. Two examples:
   a drill.
 
 The catalog records which technologies supply which capabilities. The wizard
-shows the compensating control at selection time, so the cost is visible before
-the choice is made, not discovered during an incident.
+shows the compensating control at selection time. The cost is visible before the
+choice is made, not found during an incident.
 
 ---
 
