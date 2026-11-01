@@ -737,19 +737,19 @@ The cache technology is a `CHOICE`. The rules bind whatever is chosen, including
 - The cache MUST be treated as **ephemeral and untrusted**: anything read back
   MUST be schema-validated before use, and **no data may exist only in the
   cache**.
-- Failure policy per use is explicit and declared: rate limiting on credential
-  endpoints fails closed; caches fail open.
+- Each use declares its failure policy explicitly. Rate limiting on credential
+  endpoints fails closed. Caches fail open.
 - Cache keys MUST be namespaced by product and environment.
 - Any cache holding user-derived data MUST be enumerable for erasure.
 - **Invalidation is explicit.** A write that changes cached data MUST invalidate
   the affected keys directly. TTL expiry is a backstop against missed
-  invalidation, never the primary mechanism, and flushing an entire namespace on
-  write is not an invalidation strategy.
+  invalidation, never the primary mechanism. Flushing a whole namespace on write
+  is not an invalidation strategy.
 - Every cache entry MUST have a TTL. An entry with no expiry is a leak.
 - Multiple cache operations in one request path MUST be pipelined or issued
   concurrently, not awaited one at a time.
-- **In-process caches** — module-level maps, memoization tables, any long-lived
-  collection in application memory — MUST declare a maximum size and an eviction
+- **In-process caches** (module-level maps, memoization tables, any long-lived
+  collection in application memory) MUST declare a maximum size and an eviction
   policy. An unbounded in-memory collection in a long-lived process is a memory
   leak with a delayed fuse.
 - Identical queries or lookups repeated within a single request lifecycle MUST be
@@ -766,43 +766,42 @@ The cache technology is a `CHOICE`. The rules bind whatever is chosen, including
   be a configuration change, never a rewrite of handlers.
 - Handlers MUST be registered with a typed payload schema validated on dequeue.
 - **At-least-once delivery MUST be assumed. Every handler MUST be idempotent.**
-  This is not advisory — every queue substrate double-delivers eventually.
+  This is not advice. Every queue substrate double-delivers eventually.
 - Claim MUST be a single atomic operation. Claim-then-update in two steps is a
   race.
 - Exponential backoff with jitter, a per-job attempt cap, then a dead-letter
   state that alerts.
 - Stuck-job recovery: a job claimed beyond a timeout MUST return to pending.
-- Every job MUST be individually invocable and observable — start, end, counts,
-  duration, failures — and MUST alert on failure.
+- Every job MUST be individually invocable and observable (start, end, counts,
+  duration, failures) and MUST alert on failure.
 
 ### 7.2 Enqueue MUST be atomic with the write that causes it
 
-This is the invariant, and it is the one that decides the substrate:
+This is the invariant. It decides the substrate.
 
 - Where the datastore supports multi-statement transactions, **the queue SHOULD
   live in the product's own datastore** and enqueue happens inside the same
-  transaction as the business write. This introduces no additional sub-processor,
-  keeps the queue inspectable with ordinary queries, and eliminates the
-  dual-write problem outright.
+  transaction as the business write. This adds no sub-processor, keeps the queue
+  inspectable with ordinary queries, and removes the dual-write problem.
 - Where the datastore does not, or where an external queue is chosen for another
   reason, an **outbox MUST be used**: the business write and an outbox record
   commit together, and a relay publishes to the queue afterwards with
-  at-least-once semantics. Publishing directly to an external queue from inside
-  application code, alongside an uncommitted or separately-committed business
-  write, is the dual-write bug and MUST NOT ship.
+  at-least-once semantics. Application code MUST NOT publish directly to an
+  external queue alongside an uncommitted or separately committed business
+  write. That is the dual-write bug and MUST NOT ship.
 
 The substrate is a `CHOICE`; atomicity is not.
 
 ### 7.3 Polling cost — where the queue is a polled table
 
-A datastore-backed queue drained on a schedule generates constant baseline query
-load and lock churn. That cost is accepted deliberately, and MUST be bounded:
+A datastore-backed queue drained on a schedule creates constant baseline query
+load and lock churn. The cost is accepted on purpose, and MUST be bounded:
 
 - A **partial or filtered index on the claim predicate is required**. Without it,
-  every drain is a full scan over a table that only grows.
+  every drain is a full scan of a table that only grows.
 - Each drain MUST process a bounded batch sized to complete within its execution
   limit, and MUST return rather than loop until empty.
-- A drain that finds nothing MUST back off, so an idle system does not pay full
+- A drain that finds nothing MUST back off. An idle system then does not pay full
   polling cost around the clock.
 - Completed and dead jobs MUST be pruned on a schedule. The queue MUST NOT
   accumulate terminal records indefinitely.
@@ -826,24 +825,24 @@ session.
 
 - Any fan-out over a collection of unknown or unbounded size MUST be throttled to
   a declared concurrency limit.
-- Unbounded parallel dispatch MUST NOT be used. It exhausts connection pools,
-  breaches downstream provider rate limits, and converts a routine batch into an
-  outage for everything sharing the runtime.
+- Unbounded parallel dispatch MUST NOT be used. It exhausts connection pools and
+  breaches downstream provider rate limits. It turns a routine batch into an
+  outage for everything that shares the runtime.
 - Long-lived listeners, timers and subscriptions MUST have explicit cleanup. Any
   process registering one MUST unregister it on shutdown or completion.
 
 ### 7.7 Live updates
 
 Server-pushed live data updates are outside the default architecture. Clients
-poll on foreground and at a declared interval; anything urgent is delivered as a
-push notification. Introducing a bidirectional realtime data channel is a
-deviation requiring its own design.
+poll on foreground and at a declared interval. Anything urgent is delivered as a
+push notification. A bidirectional realtime data channel is a deviation and
+needs its own design.
 
 Bounded, short-lived streams (a progress indicator, a streamed generation) MAY be
-used where the stream lifetime fits inside the execution limit. A persistent
-connection used as a **rendering transport** by a server-interactive UI model is
-not a realtime data channel for the purposes of this clause and does not require
-a deviation — but it does make the web client stateful, which §13.2 constrains.
+used where the stream lifetime fits inside the execution limit. A server-interactive
+UI model may use a persistent connection as a **rendering transport**. That is
+not a realtime data channel under this clause and does not need a deviation. It
+does make the web client stateful, which §13.2 constrains.
 
 ---
 
@@ -856,15 +855,15 @@ The provider and the transport are a `CHOICE`. What binds is the feedback loop:
 - **Bounce and complaint feedback MUST reach the product**, be
   signature-verified or otherwise authenticated, and MUST update a suppression
   list the adapter consults before every send. A transport that cannot deliver
-  that feedback cannot satisfy this clause — which in practice rules out bare
-  SMTP with no event channel, not by naming it but by consequence.
+  that feedback cannot satisfy this clause. In practice that rules out bare
+  SMTP with no event channel, by consequence and not by name.
 - The provider MUST sit behind the mail adapter module (§3.3).
 - All sends MUST be **enqueued as jobs**, never awaited inline in a request.
 - Webhooks MUST be signature-verified and MUST update a **suppression list** that
   the adapter consults before every send.
-- Delivery state — queued, sent, delivered, bounced, complained — MUST be
-  persisted and exposed through the API, so any interface can show honest status
-  and offer a rate-limited resend.
+- Delivery state (queued, sent, delivered, bounced, complained) MUST be
+  persisted and exposed through the API. Any interface can then show honest
+  status and offer a rate-limited resend.
 - Templates MUST live with the adapter, be plain-text-plus-HTML, and **MUST
   escape every interpolated value**. Display names are attacker-controlled.
 
@@ -882,14 +881,14 @@ The provider is a `CHOICE`. The rules:
 - Public and private objects MUST be separated by path convention, and privacy
   MUST be enforced by the adapter, not by obscurity of the URL.
 - **Streaming is mandatory for large payloads.** Uploads, downloads, media
-  processing and generated artifacts — notably data-subject exports, which grow
-  with account age — MUST be processed in chunks. Buffering a whole file or
-  export into memory is a defect that fails under exactly the conditions that
-  matter: the largest account, at the busiest moment.
-- **Deleting an object MUST also invalidate any CDN cache entry for it**, or the
-  erasure is cosmetic. Where the chosen storage and CDN do not do this
-  automatically, the adapter MUST issue the invalidation and the erasure path
-  MUST wait on it.
+  processing and generated artifacts MUST be processed in chunks. Data-subject
+  exports are the main case, because they grow with account age. Buffering a
+  whole file or export in memory is a defect. It fails when it matters most: the
+  largest account, at the busiest moment.
+- **Deleting an object MUST also invalidate any CDN cache entry for it.**
+  Otherwise the erasure is cosmetic. Where the chosen storage and CDN do not do
+  this automatically, the adapter MUST issue the invalidation and the erasure
+  path MUST wait on it.
 
 ### 8.3 Push notifications
 
@@ -900,7 +899,7 @@ The transport is a `CHOICE`. What binds is who holds the tokens:
   agreement, a declared processing region, and coverage by erasure and export.
   Delivering server-owned, directly to the platform transports, satisfies this
   with no additional processor and is the path of least resistance. A push
-  vendor is not forbidden — it is priced, exactly as the error tracker is.
+  vendor is not forbidden. It has a cost, as the error tracker does.
 - Push MUST be implemented in the notify adapter module and dispatched through
   the job queue with per-platform payload shaping.
 - Device tokens are stored against the authenticated principal and device record,
@@ -910,38 +909,38 @@ The transport is a `CHOICE`. What binds is who holds the tokens:
 - **Push payloads MUST NOT contain personal data, credentials or anything
   sensitive.** A notification says *that* something happened and carries an
   identifier the app uses to fetch details over the authenticated API.
-- Permission state MUST be tracked server-side — granted, denied, never asked —
-  so campaigns do not target devices that cannot receive them.
+- Permission state (granted, denied, never asked) MUST be tracked server-side.
+  Campaigns then do not target devices that cannot receive them.
 - Transport credentials are secrets under §15 and MUST be rotatable.
 
 ### 8.4 Outbound call resilience
 
-Applies to every call leaving the process — providers, third parties and internal
-services alike:
+This applies to every call that leaves the process: providers, third parties and
+internal services alike.
 
 - An explicit timeout is **mandatory**. A call with no timeout is a defect.
 - Retries MUST use exponential backoff with jitter and a hard attempt cap.
-  Uncapped retries against a degraded dependency multiply load precisely when the
-  system can least absorb it.
-- A **circuit breaker** MUST short-circuit a repeatedly-failing dependency, so one
-  slow provider cannot queue inbound requests until the runtime exhausts memory
-  or sockets.
+  Uncapped retries against a degraded dependency multiply load when the system
+  can least absorb it.
+- A **circuit breaker** MUST short-circuit a repeatedly failing dependency. One
+  slow provider then cannot queue inbound requests until the runtime exhausts
+  memory or sockets.
 - HTTP clients MUST reuse connections rather than performing a fresh handshake
   per call.
-- Every dependency MUST have a **declared, tested degraded behaviour** — fail
-  open, fail closed, or queue for later — chosen deliberately and recorded.
+- Every dependency MUST have a **declared, tested degraded behaviour** (fail
+  open, fail closed, or queue for later), chosen deliberately and recorded.
 
 ### 8.5 Outbound requests and SSRF
 
-Any request the server makes to a URL that is user-supplied, user-influenced or
-derived from user content is an SSRF vector. Common sources: embedded media URLs,
-link previews, webhooks, avatar imports.
+Any server request to a URL that is user-supplied, user-influenced or derived
+from user content is an SSRF vector. Common sources are embedded media URLs, link
+previews, webhooks and avatar imports.
 
 - The URL MUST be validated against an **allow-list** of schemes and hosts. A
   deny-list MUST NOT be used.
 - Resolved addresses MUST be checked against private, loopback, link-local and
-  cloud-metadata ranges — **after DNS resolution and again after any redirect**.
-  The rebinding attack is exactly the gap between those two checks.
+  cloud-metadata ranges, **after DNS resolution and again after any redirect**.
+  The rebinding attack lives in the gap between those two checks.
 - Redirects MUST NOT be followed automatically for user-supplied URLs.
 - Every such request MUST enforce a connect and read timeout, a response size cap
   and a content-type check.
