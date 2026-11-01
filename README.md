@@ -1,12 +1,12 @@
 # dev-standards
 
-Your personal toolkit for building software the right way, every time.
+A toolkit of Claude Code plugins for building software to one set of standards.
 
-This repo publishes **`dev-standards`** — a private Claude Code plugin
-marketplace. Install it once per machine, then reach for its plugins from
-any project: to scaffold a new product on solid foundations, to write specs
-before you build, or to run a rigorous audit against what already exists.
-No more starting from a blank repo and hoping you remembered everything.
+This repo publishes **`dev-standards`**, a private Claude Code plugin
+marketplace. Install it once per machine. Then use its plugins from any
+project: scaffold a new product, write specs before you build, or audit what
+already exists. You no longer start from a blank repo and hope you remembered
+everything.
 
 ## Install (once per machine)
 
@@ -24,12 +24,12 @@ claude plugin install luismc-transcript-folds@dev-standards
 
 A machine that registered the marketplace under another name uses that name after the `@`.
 
-Private repo — this uses your existing git/gh credentials, nothing extra to
-configure.
+The repo is private. The install uses your existing git/gh credentials. You
+configure nothing extra.
 
-Already have older versions of these plugins installed? Remove them first
-(`claude plugin uninstall <old-name>`), then reinstall from the list above —
-Claude Code tracks plugins by name, so renamed ones need a clean install.
+Do you have older versions of these plugins installed? Remove them first
+(`claude plugin uninstall <old-name>`), then reinstall from the list above.
+Claude Code tracks plugins by name, so renamed plugins need a clean install.
 
 ---
 
