@@ -58,7 +58,18 @@ flowchart LR
 
 ### 0.1 What this document is
 
-A project's documents have to answer different questions for different readers: what is this, what does feature X do, what are the UX rules, how is it built, how do I run it, what is the value. Without a standard they scatter, go stale, and pile up as agent briefs and reports nobody reads again. This specification defines where each kind of document lives, what a feature spec contains, how the docs are browsed offline, how versions and change history are kept, which checks keep a doc true to the code, and how an existing repository moves to the standard. An implementer can build `luismc-docs` from it. A reviewer can check a project against it with `docs_check.py`.
+A project's documents answer different questions for different readers: what is this, what does feature X do, what are the UX rules, how is it built, how do I run it, what is the value. Without a standard, docs scatter, go stale, and pile up as agent briefs and reports nobody reads again.
+
+This specification defines:
+
+- where each kind of document lives;
+- what a feature spec contains;
+- how the docs are browsed offline;
+- how versions and change history are kept;
+- which checks keep a doc true to the code;
+- how an existing repository moves to the standard.
+
+An implementer can build `luismc-docs` from it. A reviewer can check a project against it with `docs_check.py`.
 
 **What this document is not:** it does not define the content of a project's docs, the artifacts record (ARTIFACTSPEC), or how work is delivered (DELIVERYSPEC).
 
@@ -72,9 +83,9 @@ A project's documents have to answer different questions for different readers: 
 
 ### 0.3 Requirement language
 
-**MUST** and **MUST NOT** are binding. **SHOULD** and **SHOULD NOT** may be deviated from only with a recorded reason. **MAY** is optional.
+**MUST** and **MUST NOT** are binding. **SHOULD** and **SHOULD NOT** may be broken only with a recorded reason. **MAY** is optional.
 
-Requirements are numbered `R<section>.<n>` and are individually citable. Numbering is append-only: a retired number is never reused, and sections are never renumbered to close a gap.
+Requirements are numbered `R<section>.<n>`. Each can be cited alone. Numbering is append-only: a retired number is never reused, and sections are never renumbered to close a gap.
 
 ---
 
