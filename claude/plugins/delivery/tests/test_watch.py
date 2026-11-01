@@ -569,6 +569,27 @@ class RunnersInstallsHeartbeatTests(unittest.TestCase):
         self.assertEqual(len(L.load(root)["watchers"]), 1)
 
 
+class RunnerScriptPathTests(unittest.TestCase):
+    def test_inside_outside_and_absolute_outside(self):
+        import tempfile
+        msgs = []
+        inside = make_root({"runner_plan": {"script": "tools/rp.py"}})
+        (inside / "tools").mkdir()
+        (inside / "tools" / "rp.py").write_text("")
+        w = W.Watcher(inside, sh=FakeShell(), now=lambda: NOW, out=lambda *a: msgs.append(" ".join(map(str, a))))
+        self.assertEqual(w.runner_script(), str(inside / "tools" / "rp.py"))
+        self.assertEqual(msgs, [])
+        outside_dir = tempfile.mkdtemp(prefix="dl-out-")
+        script = os.path.join(outside_dir, "rp.py")
+        open(script, "w").close()
+        for value in (os.path.relpath(script, str(inside)), script):
+            msgs.clear()
+            root = make_root({"runner_plan": {"script": value}})
+            w = W.Watcher(root, sh=FakeShell(), now=lambda: NOW, out=lambda *a: msgs.append(" ".join(map(str, a))))
+            self.assertIsNone(w.runner_script())
+            self.assertIn("outside the repository root", msgs[0])
+
+
 # --- CO688: reconcile what the hook could not see ------------------------------------------------------------
 
 def pr_list_route(branch, number=847, head=SHA, draft=False):

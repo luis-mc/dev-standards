@@ -230,6 +230,8 @@ def check_reference(root: Path, g: dict) -> list[Finding]:
     if not cmd or not outp:
         return [f(ERR, "G2", "docs/docs.json", f"generated_reference `{name}` needs command and output")]
     committed = root / outp
+    # docs/docs.json is code: say which command runs before it runs (stderr keeps --json clean).
+    print(f"docs_check: running generated_reference `{name}` from docs/docs.json: {cmd}", file=sys.stderr)
     try:
         r = subprocess.run(cmd, shell=True, cwd=str(root), capture_output=True, text=True, timeout=300)
     except subprocess.TimeoutExpired:
@@ -341,7 +343,7 @@ def main(argv=None) -> int:
     ap.add_argument("--base", default=None, help="git ref of the default branch (default: origin/<default_branch> if it exists)")
     ap.add_argument("--strict", action="store_true")
     ap.add_argument("--json", action="store_true")
-    ap.add_argument("--no-reference", action="store_true", help="skip generated_reference commands")
+    ap.add_argument("--no-reference", action="store_true", help="skip generated_reference commands (they run shell commands from docs/docs.json; review it first)")
     a = ap.parse_args(argv)
     root = D.repo_root(a.root)
     if not (root / "docs").is_dir():

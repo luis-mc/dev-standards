@@ -123,3 +123,7 @@ python3 -I tools/test_delivery_hooks.py
 ```
 
 `tests/test_load.py` covers the load guard (parsers per OS, cache, limits precedence, heavy/light/cloud table, refusal, fail-open, notices, runner gate, doctor).
+
+## Trust
+
+`.delivery/config.json`, `gate.json` and `smoke.json` are code: they choose scripts and shell commands that run with your rights. Trust them only after review. The watcher refuses a `runner_plan.script` that resolves outside the repository.
