@@ -212,19 +212,46 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 
 ### 4.1 Folder and file
 
-- **R4.1** — Each feature MUST have the folder `docs/features/<feature>/` with `spec.md`; its images in `images/`, diagrams too big for Mermaid in `diagrams/` and its change notes in `changes/` (R7.1). The folder name is lower-case words joined by hyphens and never changes.
-- **R4.2** — `spec.md` MUST start with front matter holding these keys: `id` (equal to the folder name), `title`, `apps`, `topics`, `status` (`proposed`, `building`, `live` or `retired`), `version` (x.y.z), `owner` (`owner` or `agents`), `type` (a Diataxis type) and `code` (a list of globs; MAY be empty for a feature with no code yet). It SHOULD also carry `design_system` (rule IDs cited), `last_verified` (a date) and `artifact` (the feature artifact's file name). `docs_check.py` reports a missing or invalid key (F1).
-- **R4.3** — `version` MUST be written only by the release fold (R7.4). `status: live` means the code has shipped and the checks pass; `building` marks unfinished parts `NOT YET IMPLEMENTED`; `retired` moves the spec to `archive/` (R2.7).
-- **R4.4** — The values of `apps` and `topics` MUST come from the lists in `docs/docs.json` when those lists are not empty. A feature used by two apps lists both and appears under both in the index.
-- **R4.5** — `docs/features/index.md` MUST be generated from the front matter (R6.3), never written by hand.
+- **R4.1** — Each feature MUST have the folder `docs/features/<feature>/` with `spec.md`. Its images go in `images/`, diagrams too big for Mermaid in `diagrams/`, and its change notes in `changes/` (R7.1). The folder name is lower-case words joined by hyphens. It never changes.
+- **R4.2** — `spec.md` MUST start with front matter that holds these keys:
+
+  - `id` (equal to the folder name)
+  - `title`
+  - `apps`
+  - `topics`
+  - `status` (`proposed`, `building`, `live` or `retired`)
+  - `version` (x.y.z)
+  - `owner` (`owner` or `agents`)
+  - `type` (a Diataxis type)
+  - `code` (a list of globs; MAY be empty for a feature with no code yet)
+
+  It SHOULD also carry `design_system` (rule IDs cited), `last_verified` (a date) and `artifact` (the feature artifact's file name). `docs_check.py` reports a missing or invalid key (F1).
+- **R4.3** — `version` MUST be written only by the release fold (R7.4). `status: live` means the code has shipped and the checks pass. `building` marks unfinished parts `NOT YET IMPLEMENTED`. `retired` moves the spec to `archive/` (R2.7).
+- **R4.4** — The values of `apps` and `topics` MUST come from the lists in `docs/docs.json` when those lists are not empty. A feature that two apps use lists both, and the index shows it under both.
+- **R4.5** — `docs/features/index.md` MUST be generated from the front matter (R6.3). Nobody writes it by hand.
 
 ### 4.2 Template
 
-- **R4.6** — A spec follows `templates/feature-spec.md`: 1 in one paragraph; 2 why (problem, users, goals, non-goals); 3 how it works (a flow diagram and the steps in words); 4 screens and states; 5 functional requirements; 6 non-functional requirements; 7 design; 8 failure modes; 9 how it is proven; 10 decisions; 11 not built yet; 12 code map; then `## Versions`. Sections 1 to 4 are written for every reader (product, design, UX); sections 5 to 12 for engineers. A section that does not apply is deleted.
+- **R4.6** — A spec follows `templates/feature-spec.md`. Its sections are:
+
+  1. in one paragraph
+  2. why (problem, users, goals, non-goals)
+  3. how it works (a flow diagram and the steps in words)
+  4. screens and states
+  5. functional requirements
+  6. non-functional requirements
+  7. design
+  8. failure modes
+  9. how it is proven
+  10. decisions
+  11. not built yet
+  12. code map
+
+  Then comes `## Versions`. Sections 1 to 4 are for every reader (product, design, UX). Sections 5 to 12 are for engineers. Delete a section that does not apply.
 - **R4.7** — Every functional or non-functional requirement MUST carry an ID `R<section>.<n>` and be testable. Section 9 maps each ID to the test that proves it; `docs_check.py` reports a test path that does not exist (S2).
 - **R4.8** — Every spec SHOULD have at least one Mermaid diagram or image; `docs_check.py` warns when it has none (D1). Every image MUST have alt text (K2).
 - **R4.9** — Section 12 lists `Source: <path>` lines, one per file to keep in step. A `Source:` path that does not exist is an error (S1).
-- **R4.10** — A feature that has a feature artifact keeps the artifact for work and decisions in flight; the spec is how the feature works now. A finding from the artifact's work is promoted into the spec in the same branch.
+- **R4.10** — A feature that has a feature artifact keeps the artifact for work and decisions in flight. The spec says how the feature works now. A finding from the artifact's work is promoted into the spec in the same branch.
 
 ---
 
