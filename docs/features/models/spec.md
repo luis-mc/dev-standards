@@ -21,21 +21,21 @@ artifact: feature-model-and-effort-profiles.html
 
 ## 1. In one paragraph
 
-Every project set up by `claude-setup` runs its main session on Opus and its code agents on Sonnet, both at medium effort. Each skill declares the model and effort of its kind of work. The default is set in one place, `model-profiles.json`, and a test keeps every skill in step with it.
+Every project set up by `claude-setup` runs its main session on Opus and its code agents on Sonnet, both at medium effort. Each skill declares the model and effort for its kind of work. `model-profiles.json` sets the default in one place. A test keeps every skill in step with it.
 
 ## 2. Why
 
-Which model runs which work is a design decision with a cost, so it is specified and tested like any other feature.
+Which model runs which work is a design decision, and it has a cost. So this feature is specified and tested like any other.
 
 Evidence from a real project's sessions (9 and 10 October 2026):
 
-- Merging, conflict resolution, lint fixes and running checks were mechanical. Only contracts, scope and judgment calls needed the strongest model.
-- 18 parallel cloud agents used up the 5-hour session limit in about 20 minutes. Five at a time finished the same work.
-- Effort was set by hand in one repository, not by the setup every project gets.
+- Merging, conflict resolution, lint fixes and running checks were mechanical work. Only contracts, scope and judgment calls needed the strongest model.
+- 18 parallel cloud agents used the 5-hour session limit in about 20 minutes. Five at a time finished the same work.
+- One repository set effort by hand. The setup that every project gets did not set it.
 
-Goals: a cheap default that is the same on every machine, a profile per skill, and a warning when a saved effort stops applying.
+Goals: a cheap default that is the same on every machine, a profile for each skill, and a warning when a saved effort stops applying.
 
-Non-goals: choosing the model of a user's own prompt, and overriding the built-in Explore and Plan agents (decided: leave both on Opus).
+Non-goals: choosing the model for a user's own prompt, and overriding the built-in Explore and Plan agents (decided: leave both on Opus).
 
 ## 3. How it works
 
@@ -51,13 +51,13 @@ flowchart TB
   rule --> main
 ```
 
-- `claude-setup` writes the main model, the effort for each model (`modelSettings`), a top-level `effortLevel`, and `CLAUDE_CODE_SUBAGENT_MODEL=sonnet`. It preselects medium and asks on every run.
+- `claude-setup` writes the main model, the effort for each model (`modelSettings`), a top-level `effortLevel`, and `CLAUDE_CODE_SUBAGENT_MODEL=sonnet`. It preselects medium. It asks on every run.
 - The agent rules tell the main session to pass `effort` on every implementation Agent call.
 - Each skill's `model` and `effort` are in its SKILL.md frontmatter, taken from `model-profiles.json`.
 
 ### Where a model and an effort come from
 
-The first source that is set wins, reading each list top down.
+Read each list from the top. The first source that is set wins.
 
 | For | Order |
 |---|---|
@@ -65,7 +65,7 @@ The first source that is set wins, reading each list top down.
 | A subagent's effort | `CLAUDE_CODE_EFFORT_LEVEL`, the Agent call, the agent file, the session's effort |
 | The main session's effort | `CLAUDE_CODE_EFFORT_LEVEL`, `--effort` or `/effort`, `modelSettings` for the model ID, the top-level `effortLevel`, the model's default |
 
-`modelSettings` is not documented to reach subagents. That is why the effort is also passed on each Agent call.
+The docs do not say that `modelSettings` reaches subagents. So the effort is also passed on each Agent call.
 
 ### The profiles
 
@@ -87,7 +87,7 @@ The first source that is set wins, reading each list top down.
 
 ## 4. Screens and states
 
-There is no screen. `claude-setup` shows its change plan once and asks for confirmation before it writes outside the repository. The drift warning is a one-line system message at session start.
+There is no screen. `claude-setup` shows its change plan once. It asks for confirmation before it writes outside the repository. The drift warning is a one-line system message at session start.
 
 ## 5. Functional requirements
 
@@ -116,8 +116,8 @@ There is no screen. `claude-setup` shows its change plan once and asks for confi
 ## 7. Design
 
 - `model-profiles.json` maps three kinds (judgment, mechanical, setup) to a model, an effort and a list of skills. It is the single table.
-- Effort is saved under the full model ID (`modelSettings.<model ID>.effortLevel`), while the model is chosen by alias. When an alias moves to a newer ID, nothing matches and the model runs at its default. With medium saved for both models the fallback is the same value, so a drift changes nothing until a higher effort is chosen.
-- `effort_drift.py` reads the SessionStart JSON. When `model` is absent (after `/clear`) it checks `ANTHROPIC_DEFAULT_OPUS_MODEL` and `ANTHROPIC_DEFAULT_SONNET_MODEL`.
+- Effort is saved under the full model ID (`modelSettings.<model ID>.effortLevel`), but the model is chosen by alias. When an alias moves to a newer ID, nothing matches, and the model runs at its default. Medium is saved for both models, so the fallback is the same value. A drift changes nothing until someone chooses a higher effort.
+- `effort_drift.py` reads the SessionStart JSON. When `model` is absent (after `/clear`), it checks `ANTHROPIC_DEFAULT_OPUS_MODEL` and `ANTHROPIC_DEFAULT_SONNET_MODEL`.
 
 ## 8. Failure modes
 
@@ -139,7 +139,7 @@ There is no screen. `claude-setup` shows its change plan once and asks for confi
 | R5.4 | `tools/test_model_profiles.py` check S1 |
 | R5.7 | `tools/test_model_profiles.py` check M1 and `m_rule_missing` |
 
-R5.5, R5.6, R6.1, R6.2 and R6.3 have no automated test. R5.5 and R6.1 were verified by hand when the hook shipped. Whether a skill's effort reverts after its turn was never settled (see section 11).
+R5.5, R5.6, R6.1, R6.2 and R6.3 have no automated test. R5.5 and R6.1 were verified by hand when the hook shipped. Nobody settled whether a skill's effort reverts after its turn (see section 11).
 
 ## 10. Decisions
 
@@ -153,7 +153,7 @@ R5.5, R5.6, R6.1, R6.2 and R6.3 have no automated test. R5.5 and R6.1 were verif
 
 ## 11. Not built yet
 
-- NOT YET IMPLEMENTED: a check that a skill's `effort` reverts after its turn. The behaviour is not documented. The seam is a manual run of a skill whose effort differs from the session's.
+- NOT YET IMPLEMENTED: a check that a skill's `effort` reverts after its turn. The docs do not describe this behaviour. The seam is a manual run of a skill whose effort differs from the session's.
 
 ## 12. Code map
 
