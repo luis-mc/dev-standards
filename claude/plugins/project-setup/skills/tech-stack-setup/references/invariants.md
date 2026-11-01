@@ -443,8 +443,8 @@ These consequences MUST hold:
 ### 4.1 Contract-first: one machine-readable contract is the source of truth
 
 The OpenAPI document is **authored and reviewed first**, and everything else
-derives from it. A change to the contract is a reviewable diff — that is the
-whole point, because every shipped client binary depends on it.
+derives from it. A change to the contract is a reviewable diff. That matters
+because every shipped client binary depends on the contract.
 
 Required pipeline:
 
@@ -467,19 +467,19 @@ by what the pipeline above demands of them:
 - The format MUST have a **committed, human-reviewable source document**, and
   MUST have **maintained client generators for every language this product ships
   a client in**. The requirement is not "some schema" but *one schema from which
-  clients in unrelated languages are generated* — a format with no generator for
-  the product's mobile languages makes step 3 unsatisfiable, and choosing it is
-  choosing to hand-write the clients that step 3 forbids.
+  clients in unrelated languages are generated*. A format with no generator for
+  the product's mobile languages makes step 3 impossible to meet. Choosing it
+  means hand-writing the clients that step 3 forbids.
 - Verify generator coverage against the actual client languages **before**
   selecting, not after. This is the check the clause exists for.
 
-OpenAPI is the usual answer because its generator coverage is the broadest; it
+OpenAPI is the usual answer because its generator coverage is the broadest. It
 is not the required one.
 
 ### 4.2 API shape
 
 - The API deployable serves route handlers and its generated reference page. It
-  carries no UI.
+  has no UI.
 - Every handler is thin: parse → authorize → call a service → shape response.
   Business logic lives in `core` and the service modules, never in a handler.
 - Every response MUST go through one response helper that applies the standard
@@ -492,28 +492,28 @@ is not the required one.
 
 All endpoints live under an explicit version segment: `/v1/…`, `/v2/…`.
 
-- Within a version, changes MUST be backward compatible: fields may be added,
-  never removed or retyped; enum values may be added only because clients are
-  required to tolerate unknown ones (§9.5); optional stays optional.
+- Within a version, changes MUST be backward compatible. Fields may be added,
+  never removed or retyped. Enum values may be added only because clients are
+  required to tolerate unknown ones (§9.5). Optional stays optional.
 - A breaking change means a new version path. Both versions run side by side.
 - Every version MUST have a declared **sunset date** at the moment its successor
   ships, published in the contract and returned in `Deprecation` / `Sunset`
   response headers.
 - The API MUST record the client version and platform, from a required client
-  header, on every request — so retirement is a data-driven decision rather than
-  a guess about who is still out there.
+  header, on every request. Retirement is then a decision based on data, not a
+  guess about who is still out there.
 - Before a version is retired, remaining traffic MUST be identifiable by client
   version, and those users MUST have been given an upgrade path.
-- The server MUST be able to refuse a client below a configured floor with a
-  distinct, machine-readable "upgrade required" response that every client
-  renders as a blocking screen. This is the emergency lever for a security fix;
-  it MUST exist even if never used.
+- The server MUST be able to refuse a client below a configured floor. It does so
+  with a distinct, machine-readable "upgrade required" response that every
+  client renders as a blocking screen. This is the emergency lever for a
+  security fix. It MUST exist even if never used.
 
 ### 4.4 Endpoint conventions
 
 - Resource-oriented paths, plural nouns, no verbs in paths.
-- Every list endpoint is paginated — cursor-based where the set can grow
-  unboundedly — with a hard maximum page size declared in the contract.
+- Every list endpoint is paginated, with a cursor where the set can grow
+  without bound. The contract declares a hard maximum page size.
 - One error envelope for the whole API, with stable machine-readable codes.
 - Every mutating endpoint accepts an idempotency key (§9.4).
 - Endpoints are designed per screen, not per table (§1).
@@ -524,7 +524,7 @@ All endpoints live under an explicit version segment: `/v1/…`, `/v2/…`.
   This MUST be verified, not assumed from platform defaults.
 - **Payload budget.** A single response SHOULD stay under 50 KB uncompressed. An
   endpoint that cannot MUST justify it in the contract and MUST be paginated or
-  split. Contract examples are the measurement point; CI SHOULD fail when an
+  split. Contract examples are the measurement point. CI SHOULD fail when an
   example exceeds the budget.
 - **Cacheability is declared per endpoint**, in the contract, as one of:
   - `no-store` — authenticated or principal-specific. **The default.**
@@ -534,22 +534,22 @@ All endpoints live under an explicit version segment: `/v1/…`, `/v2/…`.
     invocation.
 
   An endpoint with no declared cacheability defaults to `no-store`.
-- **Conditional requests.** Endpoints returning large or slowly-changing
+- **Conditional requests.** Endpoints that return large or slowly changing
   resources SHOULD support `ETag` + `If-None-Match`. Endpoints where concurrent
-  edits are possible MUST support `If-Match` optimistic concurrency and return a
-  conflict response rather than silently overwriting.
+  edits are possible MUST support `If-Match` optimistic concurrency. They MUST
+  return a conflict response and MUST NOT silently overwrite.
 - Public marketing and informational pages MUST be statically generated, not
   rendered per request.
 
 ### 4.6 Rate limiting is universal
 
-Rate limiting is not an authentication concern; it is a property of every
+Rate limiting is not an authentication concern. It is a property of every
 endpoint.
 
 - Every endpoint MUST declare a rate-limit bucket in its contract entry, keyed by
   principal, device, IP or resource as appropriate.
-- An endpoint with no declared bucket MUST fail the route-coverage test (§11.1) —
-  the same structural gate that enforces authorization declarations.
+- An endpoint with no declared bucket MUST fail the route-coverage test (§11.1).
+  The same structural gate enforces authorization declarations.
 - Bucket failure mode is declared per bucket: credential and token-issuing
   buckets **fail closed**, everything else **fails open**.
 - Limits are configuration, tunable per environment without a code change.
@@ -562,8 +562,8 @@ endpoint.
 - Unhandled errors MUST be caught at a single boundary that logs full detail
   server-side with the `correlationId` and returns only a stable error code, a
   safe message, and that correlation id.
-- A test MUST assert that a deliberately-triggered internal error returns no
-  internal detail. This is verified, not trusted to framework defaults.
+- A test MUST assert that a deliberately triggered internal error returns no
+  internal detail. Verify this. Do not trust framework defaults.
 
 ---
 
@@ -571,19 +571,19 @@ endpoint.
 
 The engine, its host and the data-access library are a `CHOICE` (§0.2). Every
 rule below binds whatever is chosen. Where a rule requires an engine capability,
-the compensating control for engines lacking it is stated.
+the rule also states the compensating control for engines that lack it.
 
 ### 5.1 Access and connections
 
 - The data module is the only module that touches the datastore (§3.2).
 - The driver MUST support **real multi-statement transactions** where §5.3
-  requires them. A driver that cannot — some HTTP-only and edge-constrained
-  drivers — MUST NOT be used for write paths, because the resulting
-  read-then-write races are a known source of correctness bugs in credential and
-  one-time-token handling.
+  requires them. A driver that cannot (some HTTP-only and edge-constrained
+  drivers) MUST NOT be used for write paths. The resulting read-then-write races
+  are a known source of correctness bugs in credential and one-time-token
+  handling.
 - **Connection management MUST match the execution model.** Serverless and
   per-request execution models MUST use a pooler or a connection-reuse mechanism
-  appropriate to the engine; per-request connection establishment is a defect.
+  suited to the engine. Opening a connection per request is a defect.
   Long-lived processes MUST declare pool sizing.
 - Connection acquisition MUST have a timeout. A request MUST fail fast rather
   than queue indefinitely for a connection.
@@ -592,11 +592,12 @@ the compensating control for engines lacking it is stated.
 
 - The schema definition MUST be the single source of truth for structure, and
   migrations MUST be derived from or checked against it.
-- Every constraint that expresses a domain invariant — referential integrity,
-  uniqueness, permitted values — MUST be enforced by the datastore where the
+- Every constraint that expresses a domain invariant (referential integrity,
+  uniqueness, permitted values) MUST be enforced by the datastore where the
   engine supports it, not only in application code. Where the engine does not
   support a constraint class, the invariant MUST be enforced at a single
-  application chokepoint and that gap MUST be recorded in the Stack Profile.
+  application chokepoint, and the product MUST record that gap in the Stack
+  Profile.
 - Every field used as a query predicate, sort key or join key MUST be indexed.
   Partial or filtered indexes for soft-state predicates are required, not
   optional, where the engine supports them.
@@ -609,20 +610,20 @@ the compensating control for engines lacking it is stated.
   table MUST be atomic.
 - Read-modify-write sequences MUST use a transaction with appropriate locking, or
   a single conditional statement. "Read, decide in application code, write"
-  without either is a race and MUST NOT ship.
+  with neither is a race and MUST NOT ship.
 - Job enqueue MUST be atomic with the business write it accompanies (§7.2).
 - **No external I/O inside an open transaction.** A transaction MUST NOT remain
   open across an HTTP call, a mail or push send, an object-storage operation or
-  any other non-datastore await. This rule is load-bearing precisely because
-  atomic enqueue is mandatory: enqueue inside the transaction and perform the I/O
-  in the handler, never inline.
-- Transactions MUST be short. A transaction spanning a long computation holds
-  locks that manifest as unexplained latency elsewhere while datastore CPU looks
+  any other non-datastore await. This rule is load-bearing because atomic
+  enqueue is mandatory: enqueue inside the transaction and perform the I/O in
+  the handler, never inline.
+- Transactions MUST be short. A transaction that spans a long computation holds
+  locks. They show up as unexplained latency elsewhere while datastore CPU looks
   healthy.
 - Where the engine offers no multi-record atomicity, every operation that would
-  require it MUST be restructured so that a single-record write is the commit
-  point, with an outbox (§7.2) carrying the rest. This restructuring MUST be
-  recorded in the Stack Profile, because it changes how every write path is
+  need it MUST be restructured so that a single-record write is the commit
+  point, with an outbox (§7.2) carrying the rest. The product MUST record this
+  restructuring in the Stack Profile, because it changes how every write path is
   reviewed.
 
 ### 5.4 Migrations
@@ -631,13 +632,12 @@ the compensating control for engines lacking it is stated.
   order.
 - Every migration MUST be reversible, or explicitly marked irreversible with a
   recorded justification.
-- Migrations MUST be applied by a **dedicated, reliable runner** invoked in the
-  deploy pipeline, with locking so concurrent deploys cannot race, and clear
-  logging of what ran. Ad-hoc migration scripts MUST NOT be used.
+- A **dedicated, reliable runner** MUST apply migrations. The deploy pipeline
+  invokes it. It MUST lock so concurrent deploys cannot race, and it MUST log
+  clearly what ran. Ad-hoc migration scripts MUST NOT be used.
 - **Destructive changes MUST be split across sequenced deploys**: stop writing →
   deploy → stop reading → deploy → drop. Shipped mobile binaries make this
-  mandatory: a binary may still be reading a field weeks after the web app
-  stopped.
+  mandatory. A binary may still read a field weeks after the web app stopped.
 - Every migration MUST be tested against a non-empty dataset in CI.
 - Seed data MUST be idempotent and re-runnable.
 - Schema migrations MUST run under a role more privileged than the application's
@@ -645,12 +645,13 @@ the compensating control for engines lacking it is stated.
 
 ### 5.5 Environments, backups and recovery
 
-- Three persistent tiers — **preview/dev**, **staging**, **production** — with
-  separate datastores and separate credentials. Production data MUST NOT be
+- Three persistent tiers: **preview/dev**, **staging** and **production**. Each has
+  its own datastore and its own credentials. Production data MUST NOT be
   copied into lower tiers without irreversible anonymization.
 - CI integration tests MUST run against an **ephemeral real instance** of the
-  chosen engine, seeded through the migration chain. Not mocks, not an in-memory
-  substitute for a different engine, and not a shared long-lived test database.
+  chosen engine, seeded through the migration chain. Mocks, an in-memory
+  substitute for a different engine, and a shared long-lived test database do
+  not qualify.
 - **Point-in-time recovery MUST be enabled** with a declared retention window.
   Where the engine or host offers no PITR, the product MUST document its actual
   recovery position and prove it in the drill below.
@@ -659,33 +660,34 @@ the compensating control for engines lacking it is stated.
 - A **restore drill MUST be performed and recorded at least quarterly**, into an
   isolated environment. An untested backup is not a backup.
 - **RPO** and **RTO** MUST be declared in the Stack Profile.
-- The restore runbook MUST enforce the erasure **suppression list** — accounts
+- The restore runbook MUST enforce the erasure **suppression list**. Accounts
   erased since the backup was taken MUST NOT return to life on restore.
-- Backup retention MUST be bounded and stated, because it is the outer bound on
-  the erasure guarantee given to data subjects.
+- Backup retention MUST be bounded and stated. It is the outer bound on the
+  erasure guarantee given to data subjects.
 
 ### 5.6 Query discipline
 
-- **Statement timeouts are mandatory** where the engine supports them, set at the
-  role or connection level, with documented per-query overrides for the few
-  operations that legitimately need longer. Without one, a single slow query pins
-  a pooled connection and stalls every unrelated request behind it. Where the
-  engine has no equivalent, the data module MUST impose a client-side deadline.
+- **Statement timeouts are mandatory** where the engine supports them. Set them
+  at the role or connection level, with documented per-query overrides for the
+  few operations that legitimately need longer. Without a timeout, one slow query
+  pins a pooled connection and stalls every unrelated request behind it. Where
+  the engine has no equivalent, the data module MUST impose a client-side
+  deadline.
 - **Round-trip budget.** A hot-path request handler MUST NOT exceed three
-  datastore round trips. Exceeding it requires a recorded justification; each
-  extra trip multiplies under concurrency into connection, network and datastore
-  CPU pressure.
+  datastore round trips. Exceeding it requires a recorded justification. Under
+  concurrency, each extra trip adds connection, network and datastore CPU
+  pressure.
 - **No sequential waterfalls.** Independent queries in one handler MUST execute
   concurrently or be consolidated.
-- **No N+1.** One query per item of a collection is a defect; use a batch, a
+- **No N+1.** One query per item of a collection is a defect. Use a batch, a
   join, or a single multi-key query.
 - **Push computation down.** Counting, summing, filtering, sorting, grouping and
   deduplication MUST happen in the datastore, not by fetching records into
   application memory to reduce them.
 - **Select named fields.** Wildcard selects and full-object-graph fetches MUST
   NOT be used where a subset is consumed downstream.
-- Query performance MUST be verified against realistic record counts, not against
-  a development dataset with a hundred rows.
+- Query performance MUST be verified against realistic record counts. A
+  development dataset of a hundred rows does not count.
 
 ### 5.7 Classification, retention and minimization
 
@@ -704,7 +706,7 @@ Derived requirements:
 
 - **Encryption at rest** MUST be enabled for the datastore, object storage and
   backups. Fields classified `secret` MUST *additionally* be encrypted at the
-  application layer, so a datastore dump alone is not enough.
+  application layer, so a datastore dump alone does not expose them.
 - **Minimization.** Every field MUST map to a stated purpose in the
   data-collection inventory (§9.7). A field with no purpose MUST NOT be added,
   and an existing one whose purpose has lapsed MUST be dropped. CI MUST
@@ -716,11 +718,11 @@ Derived requirements:
 - **Export.** Every table containing `pii` or `phi` owned by a principal MUST be
   included in the data export, or explicitly excluded with a recorded reason. A
   test MUST fail when a new table matching that description is neither.
-- **Erasure.** The same set defines the erasure inventory. Classification is what
-  keeps export, erasure, retention and redaction from drifting apart as the
-  schema grows.
+- **Erasure.** The same set defines the erasure inventory. Classification keeps
+  export, erasure, retention and redaction from drifting apart as the schema
+  grows.
 - The application MUST connect with a role that has **no update or delete
-  privilege on audit records**. Append-only enforced by convention alone is not
+  privilege on audit records**. Append-only by convention alone is not
   append-only.
 - Production datastore credentials MUST NOT be usable from a developer machine
   without an explicit, logged access path.
