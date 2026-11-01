@@ -107,35 +107,35 @@ leave or replace it silently.
 
 ### `/luismc-project-setup:tech-stack-setup`
 
-A guided wizard that helps you choose a technology stack, then generates a
-working repository around it — language, framework, database, hosting, and
-every third-party provider, all filtered so every option offered is
-compatible with what you've already picked.
+A guided wizard. It helps you choose a technology stack, then generates a
+working repository around it: language, framework, database, hosting, and
+every third-party provider. It filters the options, so each one it offers is
+compatible with what you already picked.
 
-What you get, once it's done generating:
+What you get when it finishes generating:
 
 - A monorepo, scaffolded and ready to run
 - CI on GitHub Actions — lint, typecheck, tests, and format all gating merges
 - Secret scanning, both as a pre-commit hook and in CI
 - A dependency-boundary check, so layers can't silently reach past each other
 - Contract-first API scaffolding with generated client code
-- A job queue with atomic enqueue — no dual-write bugs between your database
-  and your queue
+- A job queue with atomic enqueue, so there are no dual-write bugs between your
+  database and your queue
 - Consent-gated analytics wired to an endpoint you control, not a vendor's
 - Three-tier environment promotion (dev → staging → production)
 
 Since `STACKSPEC` 6.0.0 it also generates how work gets delivered. Every branch
-runs one gate command that writes a result you can verify against the branch's
-current head and base, a pre-push hook runs the fast guards, and a merge script
-joins branches and stops at a conflict it cannot resolve. The ready pull request
-runs the only full CI run, end-to-end tests included, and a CI watcher follows it
-by commit; the default-branch run that follows skips a tree CI has already
-tested.
+runs one gate command. The command writes a result you can verify against the
+branch's current head and base. A pre-push hook runs the fast guards. A merge
+script joins branches and stops at a conflict it cannot resolve. The ready pull
+request runs the only full CI run, end-to-end tests included, and a CI watcher
+follows it by commit. The default-branch run that follows skips a tree CI has
+already tested.
 
-Since 7.0.0 the gate installs from the lockfile before it checks anything, stops
-at the first failure and gives up after 30 minutes. A merged train's branches,
-gate results and worktrees are removed automatically, and only the newest build
-artifact of each name (an installer, a bundle, a report) is kept on GitHub.
+Since 7.0.0 the gate installs from the lockfile before it checks anything. It
+stops at the first failure and gives up after 30 minutes. A merged train's
+branches, gate results and worktrees are removed automatically. GitHub keeps only
+the newest build artifact of each name (an installer, a bundle, a report).
 
 Since 7.1.0 the gate fetches its base first and runs only the end-to-end specs a
 change affects, the pre-push hook compares with the branch a push forks from,
@@ -145,22 +145,22 @@ change notes instead of editing spec versions; the release folds them.
 
 Since 8.0.0 each delivery layer does only its share: a gate result stays valid while the base moves only by docs, lockfile changes widen only when they cannot be tied to a package, the join runs a quick check instead of a second full gate, a train branch is frozen while its ready PR's CI runs, runner problems are warned about, build-artifact workflows run only when their inputs change, each train's release notes carry its delivery log, and a product that ships a packaged program has CI start it and every worker it starts (the one new MUST).
 
-Supports four language tracks: **TypeScript, Go, Rust, and .NET**. Every
-vendor choice — Postgres or MySQL, Neon or RDS, Vercel or Fly — is yours;
-the wizard never tells you which one to pick, only which ones are compatible
-with each other.
+It supports four language tracks: **TypeScript, Go, Rust, and .NET**. Every
+vendor choice is yours: Postgres or MySQL, Neon or RDS, Vercel or Fly. The
+wizard never tells you which one to pick. It only tells you which ones are
+compatible with each other.
 
-It also runs in reverse: point it at an existing repo and it audits your
-current setup section by section, telling you exactly where it conforms,
-where it's drifted, and offers to repair what it safely can — always showing
-you the diff first, and never touching anything that already conforms.
+It also runs in reverse. Point it at an existing repo and it audits your
+current setup section by section. It tells you where the setup conforms and
+where it has drifted. It offers to repair what it safely can. It always shows
+you the diff first, and it never touches anything that already conforms.
 
-**It does not build authentication.** That's a deliberate, separate step —
-see below.
+**It does not build authentication.** That is a deliberate, separate step. See
+below.
 
 ### `/luismc-project-setup:auth-setup`
 
-Builds a complete authentication and authorization stack on top of a repo
+Builds a complete authentication and authorization stack on top of a repo that
 `tech-stack-setup` already generated.
 
 Sets up:
@@ -169,16 +169,16 @@ Sets up:
 - Passkeys and account recovery
 - Consent tracking and data-subject rights (access, export, erasure)
 - Abuse prevention and rate limiting
-- Full audit logging — designed to survive account erasure
-- The test suites that prove all of the above actually holds
+- Full audit logging, designed to survive account erasure
+- The test suites that prove all of the above holds
 
-This skill refuses to run until `tech-stack-setup` has been run first, and
-tells you exactly what's missing if it hasn't — a project's authentication
-choices depend entirely on the stack underneath it, so there's nothing
-reliable to build on otherwise.
+This skill refuses to run until you have run `tech-stack-setup`. If you have
+not, it tells you what is missing. A project's authentication choices depend
+entirely on the stack underneath it, so without that stack there is nothing
+reliable to build on.
 
 It can also audit an existing auth implementation against the same standard,
-the same way `tech-stack-setup` audits the rest of the stack.
+the way `tech-stack-setup` audits the rest of the stack.
 
 ---
 
