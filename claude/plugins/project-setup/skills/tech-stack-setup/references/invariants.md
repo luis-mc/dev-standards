@@ -1252,9 +1252,9 @@ appear in a maintained register committed to the repository:
 ### 11.1 Mandatory
 
 **Contract tests.** Every client and the server verify against the same fixtures
-derived from the contract document. CI fails when any client drifts. With
-generated clients in unrelated languages and no shared runtime, this is the
-highest-value control in the entire repository.
+derived from the contract document. CI fails when any client drifts. Generated
+clients in unrelated languages share no runtime, so this is the highest-value
+control in the repository.
 
 Required coverage: every endpoint's success shape, every documented error code,
 pagination envelopes, unknown-field tolerance, unknown-enum tolerance, and the
@@ -1262,10 +1262,10 @@ pagination envelopes, unknown-field tolerance, unknown-enum tolerance, and the
 
 **Unit tests.** All of `core`, plus service-module logic. Pure, fast, no I/O.
 
-**Integration tests.** API routes exercised end to end against an ephemeral real
-instance of the chosen datastore, seeded through the migration chain. Not mocks.
-These catch the migration, index, transaction and constraint bugs that mocks
-hide.
+**Integration tests.** API routes run end to end against an ephemeral real
+instance of the chosen datastore, seeded through the migration chain. Mocks do
+not count. These tests catch the migration, index, transaction and constraint
+bugs that mocks hide.
 
 **Route-coverage tests.** A structural test MUST fail the build when any route
 ships without an explicit authorization declaration, and when any route ships
@@ -1281,37 +1281,37 @@ quarantined spec still runs and reports, but cannot fail the build. Branch gates
 (§13.5) run end-to-end tests only when a user-facing app changed.
 
 Mobile smoke journeys are `SHOULD`. Where they are not automated, the release
-checklist MUST name the manual journeys verified before each release — an
+checklist MUST name the manual journeys verified before each release. An
 untested release path is a decision, and it should be a visible one.
 
 ### 11.3 Discipline
 
 - Tests run on every pull request; the default branch is always releasable.
-- A test suite that finds no tests MUST fail, not pass. A mis-globbed suite
-  reporting green over zero tests is the failure mode this rule exists to catch.
+- A test suite that finds no tests MUST fail, not pass. This rule exists to catch
+  a mis-globbed suite that reports green over zero tests.
 - Flaky tests are quarantined and fixed, never re-run until green.
 - Every bug fixed gets a regression test.
-- No coverage-percentage target. Coverage of the security suite, the contract and
-  the domain rules is what matters.
+- There is no coverage-percentage target. What matters is coverage of the
+  security suite, the contract and the domain rules.
 
 ---
 
 ## 12. Security and compliance
 
-- **Secret scanning** as a pre-commit hook *and* a CI gate. The CI scan MUST
-  examine full history, not only the tip commit.
-- **Dependency scanning** in CI on every PR, failing on known-exploitable
+- **Secret scanning** runs as a pre-commit hook *and* as a CI gate. The CI scan
+  MUST examine full history, not only the tip commit.
+- **Dependency scanning** runs in CI on every PR. It fails on known-exploitable
   advisories in production dependencies.
-- **Security headers** on all browser-facing responses: HSTS with preload, a
+- **Security headers** go on all browser-facing responses: HSTS with preload, a
   restrictive CSP without inline script execution, content-type options,
   referrer policy and a permissions policy.
-- **CORS** with an explicit origin allow-list per environment. Reflecting an
+- **CORS** uses an explicit origin allow-list per environment. Reflecting an
   arbitrary origin MUST NOT be the default, even when credentials are excluded.
 - **TLS 1.2 minimum, 1.3 preferred**, enforced everywhere.
 - **Input validation** at every boundary against a generated schema (§4.1).
 - **All queries parameterized.** String-concatenated query construction is a hard
   failure.
-- **Startup validation**: every service declares its required configuration and
+- **Startup validation**: every service declares its required configuration. It
   refuses to boot when a security-relevant value is missing or is a known
   placeholder.
 
@@ -1324,10 +1324,10 @@ These MUST be implemented as features, not as manual operations:
   Where a field cannot be self-corrected, there MUST be a documented request path
   with a defined response window, and every operator-side correction MUST write an
   audit record with a reason.
-- **Export completeness** is enforced structurally by §5.7: a table holding
+- **Export completeness** is enforced structurally by §5.7. A table that holds
   principal-owned personal data is either in the export or explicitly excluded
   with a reason, and CI fails on a table that is neither.
-- **Erasure** MUST propagate to every store that holds the data — datastore,
+- **Erasure** MUST propagate to every store that holds the data: datastore,
   object storage, cache, analytics and any registered sub-processor.
 
 ### 12.2 Assurance cadence
@@ -1337,7 +1337,7 @@ These MUST be implemented as features, not as manual operations:
 - Dependency advisories MUST be triaged within the window declared in the Stack
   Profile.
 - An independent security review or penetration test SHOULD be performed before
-  first public release and at a declared cadence thereafter. Findings and their
+  first public release and at a declared cadence after that. Findings and their
   disposition are recorded.
 
 ---
