@@ -111,7 +111,7 @@ The larger saving is in *when* the pass runs. The gate mutants guard six files u
 
 - **No cancel on spec-lint.** A new push to a ready PR starts a second full run while the first keeps going: on 11 October at 00:07, two 9 to 11 minute runs of the DS17 PR ran side by side.
 - **Not a repeat after all: the checksum tests.** The audit (DS46) flagged the installer's checksum check as tested twice. Reading both: `test_delivery_gate.py` tests the old checksums-file fallback (lines 2109 to 2188), and `test_delivery_ci.py` tests the pinned form (lines 1550 to 1584). These are two code paths, so both tests stay.
-- **On this PC, Windows is the slow part.** The same artifacts suite takes 3.1 min on Linux and 17.5 on Windows, because every case starts several Python and git processes. Only local runs pay this cost.
+- **On this PC, Windows is the slow part.** The same artifacts suite takes 3.1 min on Linux and 17.5 on Windows, because every case starts several Python and git processes. Local runs are the only runs that pay this cost.
 
 ### Solutions, ranked
 
