@@ -814,12 +814,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>What claude-setup can offer</a><a href="#s3"><b>3</b>How each offer is enforced</a><a href="#s4"><b>4</b>How the owner sees it</a><a href="#s5"><b>5</b>Gaps, why they exist, and what would help</a><a href="#s6"><b>6</b>Decisions</a><a href="#s7"><b>7</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: claude-setup offers and enforcement</h1><p>claude-setup walks through every dev-standards plugin and setup, asks which to enforce, and reports what each one now enforces.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-01T10:35+00:00">01 Nov 10:35</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-01T16:21+00:00">01 Nov 16:21</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">01 Nov 16:16</a> (Lisbon)</p>
 <p class="lede">On 01 Nov the owner ran claude-setup in an existing project and could not tell whether the docs, design-system and delivery plugins were enforced. Today claude-setup turns plugins on, but most of them stay silent until a config file exists, and some only warn. This page lists what claude-setup can offer, how each offer is enforced, how it is shown to the owner, and the gaps. Nothing is built yet.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
+</details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="SO4"><span class="task-id">SO4</span>Project level by default for every dev-standards install (D6-D8) <span class="glance-expected">01 Nov ~16:55</span><span class="glance-basis">one cloud agent, ~25 min</span></li>
+</ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">3 tasks</span></summary>
 <ul>
@@ -829,8 +834,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">3</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">3</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="SO4"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">SO4</span>Project level by default for every dev-standards install (D6-D8)<span class="release-line"><span class="release-name">RELEASE-28</span></span></td><td data-label="Detail">README and claude-setup install with --scope project; transcript-folds per project; config files to project .claude/ by default; marketplace registered per project</td><td data-label="Expected">01 Nov ~16:55<span class="expected-basis">one cloud agent, ~25 min</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">3 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="SO2"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">SO2</span>claude-setup: scan, enforce questions, offers, enforcement report<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="Detail">Built after D1-D4 are decided</td><td data-label="Expected">01 Nov</td></tr>
@@ -935,6 +945,55 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s6"><h2><span class="section-number">&sect; 6</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D8">
+<h3 class="decision-head"><span class="decision-id">D8</span> <span class="decision-question">Should claude-setup register the dev-standards marketplace in each project?</span></h3>
+<p class="decision-meta">Asked 01 Nov · Decided 01 Nov · Task SO4</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Add per project</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 01 Nov</span></div>
+<p class="decision-summary">Write extraKnownMarketplaces.dev-standards into each project&#x27;s settings; the user-level entry stays.</p>
+<blockquote class="decision-words">&ldquo;Add per project (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">User level only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Each new machine runs claude plugin marketplace add once.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D7">
+<h3 class="decision-head"><span class="decision-id">D7</span> <span class="decision-question">Where should claude-setup write its config files (rules, CLAUDE.md, statusline, output style, effort hook, model split) by default?</span></h3>
+<p class="decision-meta">Asked 01 Nov · Decided 01 Nov · Task SO4</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Project by default</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 01 Nov</span></div>
+<p class="decision-summary">Write them into the project&#x27;s .claude/ by default; user level only when picked. Existing ~/.claude copies stay.</p>
+<blockquote class="decision-words">&ldquo;Project by default&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Project, remove mine</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Same, and remove the copies in ~/.claude on this PC now.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep user level</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Change only where plugins are installed.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D6">
+<h3 class="decision-head"><span class="decision-id">D6</span> <span class="decision-question">Where should transcript-folds be installed and turned on?</span></h3>
+<p class="decision-meta">Asked 01 Nov · Decided 01 Nov · Task SO4</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Project level</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 01 Nov</span></div>
+<p class="decision-summary">Install and enable it per project like the other seven; only the two chords stay in ~/.claude/keybindings.json.</p>
+<blockquote class="decision-words">&ldquo;Project level (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep user level</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep the exception: on in every project.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D5">
 <h3 class="decision-head"><span class="decision-id">D5</span> <span class="decision-question">Three paths can write a feature spec (specs spec-new, docs feature-spec-new, artifacts promote-to-spec). How should they split?</span></h3>
 <p class="decision-meta">Asked 01 Nov · Decided 01 Nov · Task SO1</p>

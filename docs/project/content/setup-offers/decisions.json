@@ -112,6 +112,72 @@
    "chosen": "Split by kind",
    "decided": "2026-11-01",
    "owner_words": "Split by kind (Recommended)"
+  },
+  {
+   "id": "D6",
+   "question": "Where should transcript-folds be installed and turned on?",
+   "asked": "2026-11-01",
+   "status": "decided",
+   "task": "SO4",
+   "options": [
+    {
+     "label": "Project level",
+     "summary": "Install and enable it per project like the other seven; only the two chords stay in ~/.claude/keybindings.json.",
+     "recommended": true
+    },
+    {
+     "label": "Keep user level",
+     "summary": "Keep the exception: on in every project."
+    }
+   ],
+   "chosen": "Project level",
+   "decided": "2026-11-01",
+   "owner_words": "Project level (Recommended)"
+  },
+  {
+   "id": "D7",
+   "question": "Where should claude-setup write its config files (rules, CLAUDE.md, statusline, output style, effort hook, model split) by default?",
+   "asked": "2026-11-01",
+   "status": "decided",
+   "task": "SO4",
+   "options": [
+    {
+     "label": "Project by default",
+     "summary": "Write them into the project's .claude/ by default; user level only when picked. Existing ~/.claude copies stay."
+    },
+    {
+     "label": "Project, remove mine",
+     "summary": "Same, and remove the copies in ~/.claude on this PC now."
+    },
+    {
+     "label": "Keep user level",
+     "summary": "Change only where plugins are installed."
+    }
+   ],
+   "chosen": "Project by default",
+   "decided": "2026-11-01",
+   "owner_words": "Project by default"
+  },
+  {
+   "id": "D8",
+   "question": "Should claude-setup register the dev-standards marketplace in each project?",
+   "asked": "2026-11-01",
+   "status": "decided",
+   "task": "SO4",
+   "options": [
+    {
+     "label": "Add per project",
+     "summary": "Write extraKnownMarketplaces.dev-standards into each project's settings; the user-level entry stays.",
+     "recommended": true
+    },
+    {
+     "label": "User level only",
+     "summary": "Each new machine runs claude plugin marketplace add once."
+    }
+   ],
+   "chosen": "Add per project",
+   "decided": "2026-11-01",
+   "owner_words": "Add per project (Recommended)"
   }
  ]
 }

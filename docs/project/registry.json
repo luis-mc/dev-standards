@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-01T13:00+00:00",
+  "updated": "2026-11-01T16:21+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3023,6 +3023,36 @@
       "started": "2026-11-01T10:49+00:00"
     },
     {
+      "id": "DS172",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Release: dev-standards installs at project level by default",
+      "detail": "SO4",
+      "expected": "01 Nov ~17:15",
+      "changed": "2026-11-01T16:21+00:00",
+      "expected_basis": "agent 16:30-16:55, join to 17:05, CI ~10 min",
+      "release": 28,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-01T16:30+00:00",
+          "end": "2026-11-01T16:55+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-01T16:55+00:00",
+          "end": "2026-11-01T17:05+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-01T17:05+00:00",
+          "end": "2026-11-01T17:15+00:00"
+        }
+      ],
+      "started": "2026-11-01T16:20+00:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
@@ -3126,6 +3156,19 @@
       "changed": "2026-11-01T10:35+00:00",
       "rides": "DS160",
       "started": "2026-11-01T09:50+00:00"
+    },
+    {
+      "id": "SO4",
+      "owner": "setup-offers",
+      "app": "",
+      "status": "Running",
+      "item": "Project level by default for every dev-standards install (D6-D8)",
+      "detail": "README and claude-setup install with --scope project; transcript-folds per project; config files to project .claude/ by default; marketplace registered per project",
+      "expected": "01 Nov ~16:55",
+      "changed": "2026-11-01T16:21+00:00",
+      "expected_basis": "one cloud agent, ~25 min",
+      "rides": "DS172",
+      "started": "2026-11-01T16:20+00:00"
     },
     {
       "id": "ST1",
