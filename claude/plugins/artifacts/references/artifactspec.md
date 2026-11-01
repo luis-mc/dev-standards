@@ -1429,18 +1429,21 @@ they do nothing (R4.17).
 
 ## 8. Hooks
 
-All four hooks are registered in the plugin's `hooks/hooks.json` (the
-after-command hook for `Bash`, `Agent` and `Task`; the before-command hook for
-`Bash` and `PowerShell`), run
-`python <plugin>/scripts/hook_*.py`, and exit 0 doing nothing when the
-project has no `docs/artifacts/manifest.json` in the current checkout or on
-`origin/<default branch>`.
+All four hooks are registered in the plugin's `hooks/hooks.json`:
+
+- the after-command hook for `Bash`, `Agent` and `Task`;
+- the before-command hook for `Bash` and `PowerShell`;
+- the end-of-turn hook and the session-start hook.
+
+Each runs `python <plugin>/scripts/hook_*.py`. Each exits 0 and does nothing
+when the project has no `docs/artifacts/manifest.json` in the current checkout
+or on `origin/<default branch>`.
 
 ### 8.1 After-command hook (PostToolUse and PostToolUseFailure for Bash; PostToolUse for Agent and Task)
 
-Reads the hook input; takes the task ID from the current branch name
-(`^([A-Z]{2,5}[0-9]+)-`); on a matching command, appends an event to the queue
-`<repo>/.claude/artifacts-queue.json` (gitignored):
+The hook reads the hook input and takes the task ID from the current branch
+name (`^([A-Z]{2,5}[0-9]+)-`). On a matching command, it appends an event to
+the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 `{"id", "suggested_status", "event", "command", "time"}`.
 
 | Command (exit 0 unless noted) | Suggested status |
@@ -1469,7 +1472,7 @@ Reads the hook input; takes the task ID from the current branch name
   (R3.1).
 - **R8.4** — After 3 consecutive blocks in one session with no change in what
   is pending, the hook lets the turn end and prints a `systemMessage` naming
-  what is still unpublished — a session that cannot publish (no Artifact tool)
+  what is still unpublished. A session that cannot publish (no Artifact tool)
   must not loop forever.
 
 ### 8.3 Session-start hook (SessionStart)
@@ -1480,7 +1483,7 @@ Reads the hook input; takes the task ID from the current branch name
   branch `<ID>-*` was merged, and `On hold` for one whose only pull request
   was closed unmerged.
 - **R8.6** — When `gh` is missing or not signed in, the hook queues nothing and
-  prints one `systemMessage` saying the catch-up was skipped — the catch-up is
+  prints one `systemMessage` saying the catch-up was skipped. The catch-up is
   informational, so it fails open.
 - **R8.7** — The hook prints a `systemMessage` listing queued events, if any.
 
@@ -1584,8 +1587,8 @@ Reads the hook input; takes the task ID from the current branch name
   `stop_blocks_when_a_release_task_changed_since_the_publish` and
   `stop_hourly_and_overdue_checks_need_a_published_record_and_respect_the_ceiling`.
 - **R8.19** — The hook blocks while an open row is past its Expected time
-  (R6.14), naming each row and the `set-task-status ... --expected` command
-  that fixes it; the R8.4 ceiling applies. Verified by
+  (R6.14). It names each row and the `set-task-status ... --expected` command
+  that fixes it. The R8.4 ceiling applies. Verified by
   `stop_blocks_on_open_rows_past_their_expected_time`.
 
 ---
