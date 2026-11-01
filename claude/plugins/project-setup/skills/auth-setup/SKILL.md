@@ -12,13 +12,12 @@ specification at `references/authentication.md` alongside this file. Version
 step-up, account recovery, consent, data-subject rights, abuse prevention,
 notifications, audit, and retention.
 
-**Read the spec before acting on it.** It is ~3,800 lines and this file is not
-a summary of it. Read the sections a step actually needs, and never generate
-against a clause you have not read. `AUTHSPEC` contains requirements whose
-rationale is the whole point — `R15.12` forbids soft-delete as an erasure
-mechanism, `R16.4` forbids personal data in audit metadata *because* audit
-records must survive erasure — and code written from a paraphrase gets these
-subtly and dangerously wrong.
+**Read the spec before acting on it.** It has about 3,800 lines. This file does
+not summarize it. Read the sections a step needs. Never generate against a
+clause you have not read. Some `AUTHSPEC` requirements depend on their
+rationale. `R15.12` forbids soft-delete as an erasure mechanism. `R16.4` forbids
+personal data in audit metadata *because* audit records must survive erasure.
+Code written from a paraphrase gets these wrong.
 
 ## Step 0 — Preflight. Do this before anything else
 
@@ -29,21 +28,20 @@ python3 ../tech-stack-setup/assets/preflight.py --require stack --for-skill auth
 **If it exits non-zero, stop and report its message verbatim. Write nothing.**
 
 It checks for `docs/architecture/stack-profile.md` (or the old `docs/specs/stack-profile.md`), `pnpm-workspace.yaml`, and a
-`packages/` or `apps/` directory. Those are what `tech-stack-setup` produces,
-and the Stack Profile in particular is not optional bookkeeping: `AUTHSPEC §2.1`
-resolves the technology stack by reading it. Without it this skill does not know
-the database, the runtime, the package layout, or the language version it is
-generating for.
+`packages/` or `apps/` directory. `tech-stack-setup` produces these. The Stack
+Profile is required: `AUTHSPEC §2.1` resolves the technology stack by reading
+it. Without it, this skill does not know the database, the runtime, the package
+layout, or the language version.
 
-The failure mode this guard prevents is expensive and quiet. Run on an empty
-repository, an agent will happily invent a plausible structure — a `src/auth/`
-here, an Express app there — the user accepts it because it looks reasonable,
-and the repo now has two competing ideas of its own layout. Unpicking that costs
-far more than running the skills in order.
+This guard prevents a quiet, expensive failure. On an empty repository, an agent
+invents a plausible structure, such as a `src/auth/` here and an Express app
+there. The user accepts it because it looks reasonable. The repository then has
+two competing layouts. Undoing that costs far more than running the skills in
+order.
 
 **Do not offer to set the stack up yourself.** Tell the user to run
-`tech-stack-setup`, and stop. That skill interviews for a dozen decisions this
-one has no business defaulting.
+`tech-stack-setup`, and stop. That skill interviews for a dozen decisions. This
+skill must not default them.
 
 ## Mode 1 — Build the auth stack
 
