@@ -1,4 +1,123 @@
 {
   "schema": 1,
-  "map": {}
+  "map": {
+    ".github/workflows/nightly.yml": [
+      "docs/features/test-cost/spec.md"
+    ],
+    ".github/workflows/spec-lint.yml": [
+      "docs/features/test-cost/spec.md"
+    ],
+    "claude/plugins/agents/**": [
+      "docs/features/agents/spec.md"
+    ],
+    "claude/plugins/agents/agents/*.md": [
+      "docs/features/models/spec.md"
+    ],
+    "claude/plugins/artifacts/**": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/artifacts/references/artifactspec.md": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/audits/**": [
+      "docs/features/audits/spec.md"
+    ],
+    "claude/plugins/delivery/.claude-plugin/plugin.json": [
+      "docs/features/delivery/spec.md"
+    ],
+    "claude/plugins/delivery/hooks/hooks.json": [
+      "docs/features/delivery/spec.md"
+    ],
+    "claude/plugins/delivery/references/*.json": [
+      "docs/features/delivery/spec.md"
+    ],
+    "claude/plugins/delivery/scripts/*.py": [
+      "docs/features/delivery/spec.md"
+    ],
+    "claude/plugins/docs/**": [
+      "docs/features/docs/spec.md"
+    ],
+    "claude/plugins/project-setup/**": [
+      "docs/features/project-setup/spec.md"
+    ],
+    "claude/plugins/project-setup/skills/claude-setup/assets/.claude/hooks/effort_drift.py": [
+      "docs/features/models/spec.md"
+    ],
+    "claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md": [
+      "docs/features/models/spec.md"
+    ],
+    "claude/plugins/project-setup/skills/claude-setup/assets/.claude/settings.json": [
+      "docs/features/models/spec.md"
+    ],
+    "claude/plugins/project-setup/skills/claude-setup/assets/keybindings.json": [
+      "docs/features/transcript-folds/spec.md"
+    ],
+    "claude/plugins/project-setup/skills/claude-setup/assets/model-profiles.json": [
+      "docs/features/models/spec.md"
+    ],
+    "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/pre-push": [
+      "docs/features/delivery-speed/spec.md"
+    ],
+    "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/*.py": [
+      "docs/features/delivery-speed/spec.md",
+      "docs/features/delivery/spec.md"
+    ],
+    "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/CONTRACT.md": [
+      "docs/features/delivery/spec.md"
+    ],
+    "claude/plugins/specs/**": [
+      "docs/features/specs/spec.md"
+    ],
+    "claude/plugins/transcript-folds/**": [
+      "docs/features/transcript-folds/spec.md"
+    ],
+    "tools/ci_areas.py": [
+      "docs/features/test-cost/spec.md"
+    ],
+    "tools/spec_check.py": [
+      "docs/features/specs/spec.md"
+    ],
+    "tools/test_artifact_prune.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "tools/test_authspec_check.py": [
+      "docs/features/project-setup/spec.md"
+    ],
+    "tools/test_ci_areas.py": [
+      "docs/features/test-cost/spec.md"
+    ],
+    "tools/test_delivery_*.py": [
+      "docs/features/delivery-speed/spec.md",
+      "docs/features/delivery/spec.md"
+    ],
+    "tools/test_delivery_gate.py": [
+      "docs/features/test-cost/spec.md"
+    ],
+    "tools/test_model_profiles.py": [
+      "docs/features/agents/spec.md",
+      "docs/features/audits/spec.md",
+      "docs/features/models/spec.md",
+      "docs/features/project-setup/spec.md",
+      "docs/features/transcript-folds/spec.md"
+    ],
+    "tools/test_preflight.py": [
+      "docs/features/project-setup/spec.md"
+    ],
+    "tools/test_project_artifacts.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "tools/test_project_artifacts_hooks.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "tools/test_render_artifacts.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "tools/test_rule_tags.py": [
+      "docs/features/project-setup/spec.md"
+    ],
+    "tools/test_spec_check.py": [
+      "docs/features/project-setup/spec.md",
+      "docs/features/specs/spec.md"
+    ]
+  }
 }
