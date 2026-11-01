@@ -806,7 +806,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-01T10:41+00:00",
+ "updated": "2026-11-01T10:44+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -3741,6 +3741,88 @@ details.status-fold.release-group > summary { color: var(--ink); }
    ]
   },
   {
+   "id": "DS166",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "DELIVERYSPEC names the 14-day ledger expiry",
+   "detail": "Add the DS156 sentence (ledger_retention_days, default 14, 0 keeps all) to the ledger section.",
+   "expected": "01 Nov ~11:15",
+   "changed": "2026-11-01T10:44+00:00",
+   "expected_basis": "cloud run 10:50: setup 5 + work 10-20 + checks 5",
+   "rides": "DS170",
+   "started": "2026-11-01T10:50+00:00"
+  },
+  {
+   "id": "DS167",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Performance F3: cache the DL-76 check per merge commit",
+   "detail": "hook_stop.py check_one_ci_per_release: cache per merge commit, skip checked trains, cap per turn.",
+   "expected": "01 Nov ~11:15",
+   "changed": "2026-11-01T10:44+00:00",
+   "expected_basis": "cloud run 10:50: setup 5 + work 10-20 + checks 5",
+   "rides": "DS170",
+   "started": "2026-11-01T10:50+00:00"
+  },
+  {
+   "id": "DS168",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Performance F4+F5: lighter artifacts Stop and SessionStart hooks",
+   "detail": "Skip the pending child process when nothing can be pending; smaller gh pr list at session start.",
+   "expected": "01 Nov ~11:15",
+   "changed": "2026-11-01T10:44+00:00",
+   "expected_basis": "cloud run 10:50: setup 5 + work 10-20 + checks 5",
+   "rides": "DS170",
+   "started": "2026-11-01T10:50+00:00"
+  },
+  {
+   "id": "DS169",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Performance F6: fewer git processes in the docs Stop hook",
+   "detail": "Combine git calls; skip when the tree and HEAD match the last check.",
+   "expected": "01 Nov ~11:15",
+   "changed": "2026-11-01T10:44+00:00",
+   "expected_basis": "cloud run 10:50: setup 5 + work 10-20 + checks 5",
+   "rides": "DS170",
+   "started": "2026-11-01T10:50+00:00"
+  },
+  {
+   "id": "DS170",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Release: DELIVERYSPEC ledger expiry, lighter turn-end and session-start hooks",
+   "detail": "DS166 DS167 DS168 DS169",
+   "expected": "01 Nov ~11:40",
+   "changed": "2026-11-01T10:44+00:00",
+   "expected_basis": "agents 10:50-11:15, join 10, CI 15",
+   "release": 27,
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-11-01T10:50+00:00",
+     "end": "2026-11-01T11:15+00:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-11-01T11:15+00:00",
+     "end": "2026-11-01T11:25+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-11-01T11:25+00:00",
+     "end": "2026-11-01T11:40+00:00"
+    }
+   ],
+   "started": "2026-11-01T10:50+00:00"
+  },
+  {
    "id": "MP1",
    "owner": "models",
    "app": "luismc-project-setup",
@@ -4043,13 +4125,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-01T10:41+00:00">01 Nov 10:41</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-01T10:44+00:00">01 Nov 10:44</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">6 tasks</span></summary>
 <ul>
+<li data-glance-task="DS166"><span class="task-id">DS166</span>DELIVERYSPEC names the 14-day ledger expiry <span class="glance-expected">01 Nov ~11:15</span><span class="glance-basis">cloud run 10:50: setup 5 + work 10-20 + checks 5</span></li>
+<li data-glance-task="DS167"><span class="task-id">DS167</span>Performance F3: cache the DL-76 check per merge commit <span class="glance-expected">01 Nov ~11:15</span><span class="glance-basis">cloud run 10:50: setup 5 + work 10-20 + checks 5</span></li>
+<li data-glance-task="DS168"><span class="task-id">DS168</span>Performance F4+F5: lighter artifacts Stop and SessionStart hooks <span class="glance-expected">01 Nov ~11:15</span><span class="glance-basis">cloud run 10:50: setup 5 + work 10-20 + checks 5</span></li>
+<li data-glance-task="DS169"><span class="task-id">DS169</span>Performance F6: fewer git processes in the docs Stop hook <span class="glance-expected">01 Nov ~11:15</span><span class="glance-basis">cloud run 10:50: setup 5 + work 10-20 + checks 5</span></li>
+<li data-glance-task="DS170"><span class="task-id">DS170</span><span class="release-name">RELEASE-27</span>Release: DELIVERYSPEC ledger expiry, lighter turn-end and session-start hooks <span class="glance-expected">01 Nov ~11:40</span><span class="glance-basis">agents 10:50-11:15, join 10, CI 15</span></li>
 <li data-glance-task="DS159"><span class="task-id">DS159</span>DL-06 newest run per workflow, skipped runs pass (PR #120, open) <span class="glance-expected">01 Nov; waits on the other terminal</span><span class="glance-basis">PR #120 open; owned by another terminal</span></li>
 </ul>
 </details>
@@ -4067,19 +4154,35 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">254</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">254</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">6</div><div class="label">tasks running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 198" role="img" aria-label="Other work (no release): DS159 (DL-06 newest run per workflow, skipped runs pass (PR #120, open)) Running, expected 01 Nov." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="220" y1="36" x2="220" y2="174"/><text x="220" y="28">01 Nov</text></g>
-<text class="rt-strip-title" x="0" y="60">Other work (no release)</text>
-<text class="rt-name" x="0" y="94"><title>DS159 · DL-06 newest run per workflow, skipped runs pass (PR #120, open)</title>DS159 · DL-06 newest run…</text>
-<polygon class="rt-day" points="220,86 228,99 220,112 212,99"/><text class="rt-day-label" x="236" y="103">01 Nov</text>
-<text class="rt-other-label" x="212" y="126">PR #120 open; owned by another terminal</text>
-
+<div class="timeline-scroll"><svg viewBox="0 0 960 260" role="img" aria-label="Next releases: DS170 (Release: DELIVERYSPEC ledger expiry, lighter turn-end and session-start hooks) expected live about 11:40. Other work (no release): DS159 (DL-06 newest run per workflow, skipped runs pass (PR #120, open)) Running, expected 01 Nov." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="236"/><text x="200" y="28">10:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="236"/><text x="373.3" y="28">11:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="236"/><text x="546.7" y="28">11:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="236"/><text x="720" y="28">12:00</text><line class="rt-grid" x1="820" y1="36" x2="820" y2="236"/><text x="820" y="28">01 Nov</text><path class="rt-break" d="M738 30 l8 -8 M750 30 l8 -8"/></g>
+<text class="rt-name" x="0" y="60"><title>RELEASE-27 · Release: DELIVERYSPEC ledger expiry, lighter turn-end and session-start hooks</title>RELEASE-27 · Release: DEL…</text>
+<text class="rt-sub" x="0" y="77"><title>DS166, DS167, DS168, DS169</title>DS166, DS167, DS168, DS169</text>
+<rect class="rt-bar agents" x="315.6" y="52" width="144.4" height="22"><title>agents 10:50-11:15</title></rect>
+<rect class="rt-bar join" x="460" y="52" width="57.8" height="22"><title>join 11:15-11:25</title></rect>
+<rect class="rt-bar ci" x="517.8" y="52" width="86.7" height="22"><title>PR CI 11:25-11:40</title></rect>
+<polygon class="rt-expected" points="604.4,50 612.4,63 604.4,76 596.4,63"/>
+<text class="rt-live-label" x="604.4" y="92">live ~11:40</text>
+<text class="rt-strip-title" x="0" y="122">Other work (no release)</text>
+<text class="rt-name" x="0" y="156"><title>DS159 · DL-06 newest run per workflow, skipped runs pass (PR #120, open)</title>DS159 · DL-06 newest run…</text>
+<polygon class="rt-day" points="820,148 828,161 820,174 812,161"/><text class="rt-day-label" x="836" y="165">01 Nov</text>
+<text class="rt-other-label" x="812" y="188">PR #120 open; owned by another terminal</text>
+<line class="rt-now" x1="280.9" y1="36" x2="280.9" y2="244"/><text class="rt-now-label" x="280.9" y="257">now 10:44</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days. Under Other work (no release), a bar runs from the start to its Expected, coloured by status; a red outline means it is past its Expected.</p>
 </figure>
+<details class="status-fold release-group" data-group="release-27" open><summary><strong>RELEASE-27 · live ~11:40</strong><span class="fold-count">5 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS170"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS170</span><span class="release-name">RELEASE-27</span>Release: DELIVERYSPEC ledger expiry, lighter turn-end and session-start hooks</td><td data-label="App / service"></td><td data-label="Detail">DS166 DS167 DS168 DS169</td><td data-label="Expected">01 Nov ~11:40<span class="expected-basis">agents 10:50-11:15, join 10, CI 15</span></td></tr>
+<tr data-task="DS166"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS166</span>DELIVERYSPEC names the 14-day ledger expiry</td><td data-label="App / service"></td><td data-label="Detail">Add the DS156 sentence (ledger_retention_days, default 14, 0 keeps all) to the ledger section.</td><td data-label="Expected">01 Nov ~11:15<span class="expected-basis">cloud run 10:50: setup 5 + work 10-20 + checks 5</span></td></tr>
+<tr data-task="DS167"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS167</span>Performance F3: cache the DL-76 check per merge commit</td><td data-label="App / service"></td><td data-label="Detail">hook_stop.py check_one_ci_per_release: cache per merge commit, skip checked trains, cap per turn.</td><td data-label="Expected">01 Nov ~11:15<span class="expected-basis">cloud run 10:50: setup 5 + work 10-20 + checks 5</span></td></tr>
+<tr data-task="DS168"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS168</span>Performance F4+F5: lighter artifacts Stop and SessionStart hooks</td><td data-label="App / service"></td><td data-label="Detail">Skip the pending child process when nothing can be pending; smaller gh pr list at session start.</td><td data-label="Expected">01 Nov ~11:15<span class="expected-basis">cloud run 10:50: setup 5 + work 10-20 + checks 5</span></td></tr>
+<tr data-task="DS169"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS169</span>Performance F6: fewer git processes in the docs Stop hook</td><td data-label="App / service"></td><td data-label="Detail">Combine git calls; skip when the tree and HEAD match the last check.</td><td data-label="Expected">01 Nov ~11:15<span class="expected-basis">cloud run 10:50: setup 5 + work 10-20 + checks 5</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS159"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS159</span>DL-06 newest run per workflow, skipped runs pass (PR #120, open)<span class="no-release-line">ships nothing: release handled by another terminal</span></td><td data-label="App / service"></td><td data-label="Detail">Branch DS34-dl06-skipped-runs reuses ID DS34, which already names a Live task. Left to the other terminal.</td><td data-label="Expected">01 Nov; waits on the other terminal<span class="expected-basis">PR #120 open; owned by another terminal</span></td></tr>
