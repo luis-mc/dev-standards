@@ -37,6 +37,7 @@ import shutil
 import subprocess
 import urllib.request
 import urllib.error
+import urllib.parse
 from datetime import datetime, timezone
 
 REPO_RE = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
@@ -52,6 +53,23 @@ class GhResult:
         self.returncode = returncode
         self.stdout = stdout
         self.stderr = stderr
+
+
+def allowed_api_host() -> str:
+    """The one host the REST fallback may send the token to: api.github.com, or the host of
+    GITHUB_API_URL (GitHub Enterprise)."""
+    custom = os.environ.get("GITHUB_API_URL")
+    if custom:
+        host = urllib.parse.urlparse(custom).hostname
+        if host:
+            return host.lower()
+    return "api.github.com"
+
+
+def next_url_ok(url: str) -> bool:
+    """True when a `Link: next` URL is https and on the allowed API host."""
+    parts = urllib.parse.urlparse(url)
+    return parts.scheme == "https" and (parts.hostname or "").lower() == allowed_api_host()
 
 
 def rest_call(args: list[str], timeout: int) -> GhResult:
@@ -78,6 +96,10 @@ def rest_call(args: list[str], timeout: int) -> GhResult:
             return GhResult(1, "", f"could not call the GitHub API: {exc}")
         nxt = re.search(r'<([^>]+)>;\s*rel="next"', link)
         url = nxt.group(1) if nxt and "--paginate" in args else ""
+        if url and not next_url_ok(url):
+            print(f"warning: refused the next-page URL (not https on {allowed_api_host()}); "
+                  "stopped paging so the token is not sent there", file=sys.stderr)
+            url = ""
     return GhResult(0, chr(10).join(out), "")
 
 
