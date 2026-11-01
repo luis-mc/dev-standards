@@ -35,22 +35,28 @@ Claude Code tracks plugins by name, so renamed plugins need a clean install.
 
 ## `luismc-docs` — one documentation standard for every project
 
-DOCSPEC (`claude/plugins/docs/references/docspec.md`) says where each document lives and how it is kept true: `docs/` laid out by reader question (overview, features, design-system, architecture, guides, reference, project), one folder per feature with a front-matter spec, a generated `docs/index.html` that opens offline with search and a feature index by app and topic, one version per release folded from one-line change notes, and agent briefs and reports that never reach the default branch.
+DOCSPEC (`claude/plugins/docs/references/docspec.md`) says where each document lives and how it is kept true. It sets these rules:
 
-Skills: `docs-setup` (lay out a repo or move an existing one, dry run first), `feature-spec-new`, `docs-index`, `docs-check`, `docs-note`. Hooks remind the agent at session start and at the end of a turn when mapped code changed without docs; the docs gate blocks. Generic: nothing in it belongs to one project. See the plugin's `README.md`.
+- `docs/` is laid out by reader question (overview, features, design-system, architecture, guides, reference, project).
+- Each feature has one folder with a front-matter spec.
+- A generated `docs/index.html` opens offline. It has search and a feature index by app and topic.
+- Each release gets one version, folded from one-line change notes.
+- Agent briefs and reports never reach the default branch.
+
+Skills: `docs-setup` (lay out a repo or move an existing one, dry run first), `feature-spec-new`, `docs-index`, `docs-check`, `docs-note`. Hooks remind the agent at session start and at the end of a turn when mapped code changed without docs; the docs gate blocks. The plugin is generic: nothing in it belongs to one project. See the plugin's `README.md`.
 
 ---
 
 ## `luismc-project-setup` — take a repo from empty to production-ready
 
-The plugin you reach for first. Three skills, meant to be run in order, that
+Use this plugin first. It has three skills. Run them in order. Together they
 turn a blank folder into a repository with a coherent tech stack, working CI,
-authentication, and a properly configured coding agent.
+authentication, and a configured coding agent.
 
 ### `/luismc-project-setup:claude-setup`
 
-Configures Claude Code itself so every session in this repo (or on this
-machine) behaves consistently.
+Configures Claude Code itself, so every session in this repo (or on this
+machine) behaves the same way.
 
 Sets up:
 - A `CLAUDE.md` with your working conventions
@@ -78,27 +84,26 @@ Sets up:
   and a chord bound to something else is shown as a conflict for you to decide
 
 **Model split:** the main session runs on Opus and does the thinking and
-planning; subagents run on Sonnet and write the code. Every project gets it,
-and the skill asks whether to enforce it for all your projects too. Each run
-it also asks whether each model should run at medium or high effort, with
-medium preselected for both Opus and the code agents (Sonnet), and writes
-your answer to the settings and to the rule file. Cloud agents, which run Opus
-and have no per-model entry, default to medium through a top-level
-`effortLevel`.
+planning. Subagents run on Sonnet and write the code. Every project gets the
+split. The skill asks whether to enforce it for all your projects too. Each run
+it also asks whether each model should run at medium or high effort. Medium is
+preselected for both Opus and the code agents (Sonnet). The skill writes your
+answer to the settings and to the rule file. Cloud agents run Opus and have no
+per-model entry. They default to medium through a top-level `effortLevel`.
 
-The rule file also carries the integrate-once, deploy-once workflow and cites
-the `scripts/delivery/*` tools that `tech-stack-setup` 12+ generates. The
-alias-drift warning tells you at session start when the model an alias now
-resolves to has no saved effort, so you can re-run the skill. Every skill in
-the marketplace also pins its own model and effort in its frontmatter, from
-one table in `claude-setup/assets/model-profiles.json`.
+The rule file also carries the integrate-once, deploy-once workflow. It cites
+the `scripts/delivery/*` tools that `tech-stack-setup` 12+ generates. At session
+start, the alias-drift warning tells you when the model an alias now resolves to
+has no saved effort. You can then re-run the skill. Every skill in the
+marketplace also pins its own model and effort in its frontmatter, from one
+table in `claude-setup/assets/model-profiles.json`.
 
 You choose whether this applies to the current **project**, your **user-level**
-`~/.claude/` config, or both. It never overwrites a `CLAUDE.md` you've already
-written by hand, and never changes a settings key you've already set — your
-deliberate choices are always left alone. The one exception is the two
-model-split keys: if one holds a different model, it's shown to you as a
-conflict to resolve rather than left or replaced silently.
+`~/.claude/` config, or both. It never overwrites a `CLAUDE.md` you wrote by
+hand. It never changes a settings key you already set, so your deliberate
+choices stay. The one exception is the two model-split keys. If one holds a
+different model, the skill shows it to you as a conflict to resolve. It does not
+leave or replace it silently.
 
 ### `/luismc-project-setup:tech-stack-setup`
 
