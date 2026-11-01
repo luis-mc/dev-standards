@@ -16,6 +16,7 @@
     {"name": "change-notes", "full": "python tools/test_change_notes.py", "full_args": ["--no-mutants"], "cases": "python tools/test_change_notes.py --no-mutants -k {cases}"},
     {"name": "ci-areas", "full": "python tools/test_ci_areas.py", "cases": ""},
     {"name": "claude-setup-plugins", "full": "python tools/test_claude_setup_plugins.py", "cases": ""},
+    {"name": "convert-interim-record", "full": "python tools/test_convert_interim_record.py", "cases": ""},
     {"name": "model-profiles", "full": "python tools/test_model_profiles.py", "cases": ""},
     {"name": "preflight", "full": "python tools/test_preflight.py", "cases": ""},
     {"name": "rule-tags", "full": "python tools/test_rule_tags.py", "cases": ""},

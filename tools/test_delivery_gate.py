@@ -2312,26 +2312,21 @@ def sc_agent_setup(t: T, shared: Path) -> None:
     version = pin if isinstance(pin, str) else pin["version"]
     box = Box(shared)
     sh = box.work / "scripts/delivery/agent_setup.sh"
-    # This scenario drives the old tools.json form ({"gitleaks": "x.y.z"}): the archive is
-    # checked against the release's checksums file. The pinned form (SHA-256 in tools.json)
-    # is covered in test_delivery_ci.py.
-    (box.work / "scripts/delivery/tools.json").write_text(json.dumps({"gitleaks": version}) + "\n")
     path = Path(PY).parent.as_posix() + os.pathsep + os.environ.get("PATH", "")
     base_env = {"PATH": path}
+    tools = box.work / "scripts/delivery/tools.json"
 
-    dry = run([bash, sh.as_posix()], cwd=box.work, extra_env={**base_env, "DELIVERY_DRY_RUN": "1"})
-    t.eq("dry run: exit 0", dry.code, 0)
-    url = dry.out.strip().splitlines()[-1] if dry.out.strip() else ""
-    asset = url.rsplit("/", 1)[-1]
-    want = expected_asset(version)
-    t.check("dry run: the URL points at the pinned release on GitHub",
-            url.startswith("https://github.com/gitleaks/gitleaks/releases/download/v%s/" % version), url)
-    if want:
-        t.eq("dry run: asset name for this OS and CPU", asset, want)
+    # DS162: the old tools.json form ({"gitleaks": "x.y.z"}) has no pin and is refused.
+    tools.write_text(json.dumps({"gitleaks": version}) + "\n")
+    old = run([bash, sh.as_posix()], cwd=box.work, extra_env={**base_env, "DELIVERY_DRY_RUN": "1"})
+    t.check("old tools.json form (no pin): refused", old.code != 0, old.code)
+    t.has("... names tools_pin.py", old.err, "tools_pin.py")
 
-    # serve a fake release
-    srv_dir = box.root / "release"
-    srv_dir.mkdir()
+    # a fake release, pinned in tools.json for this platform
+    asset = expected_asset(version)
+    if not asset:
+        print("SKIP  agent_setup: no gitleaks asset for this OS and CPU")
+        return
     exe = "gitleaks.exe" if asset.endswith(".zip") else "gitleaks"
     payload = ("#!/bin/sh\necho %s\n" % version).encode()
     if asset.endswith(".zip"):
@@ -2346,9 +2341,23 @@ def sc_agent_setup(t: T, shared: Path) -> None:
             info.size, info.mode = len(payload), 0o755
             tf.addfile(info, io.BytesIO(payload))
         archive = buf.getvalue()
+    plat = asset[len("gitleaks_%s_" % version):].split(".", 1)[0]
+
+    def write_pin(sha):
+        tools.write_text(json.dumps({"gitleaks": {"version": version, "sha256": {plat: sha}}}) + "\n")
+    write_pin(hashlib.sha256(archive).hexdigest())
+
+    dry = run([bash, sh.as_posix()], cwd=box.work, extra_env={**base_env, "DELIVERY_DRY_RUN": "1"})
+    t.eq("dry run: exit 0", dry.code, 0)
+    url = dry.out.strip().splitlines()[-1] if dry.out.strip() else ""
+    t.check("dry run: the URL points at the pinned release on GitHub",
+            url.startswith("https://github.com/gitleaks/gitleaks/releases/download/v%s/" % version), url)
+    t.eq("dry run: asset name for this OS and CPU", url.rsplit("/", 1)[-1], asset)
+
+    # serve the fake release
+    srv_dir = box.root / "release"
+    srv_dir.mkdir()
     (srv_dir / asset).write_bytes(archive)
-    sums = "%s  %s\n%s  other_%s\n" % (hashlib.sha256(archive).hexdigest(), asset, "0" * 64, asset)
-    (srv_dir / ("gitleaks_%s_checksums.txt" % version)).write_text(sums)
 
     class Quiet(http.server.SimpleHTTPRequestHandler):
         def log_message(self, *a, **k):  # keep the test output readable
@@ -2363,7 +2372,6 @@ def sc_agent_setup(t: T, shared: Path) -> None:
         env = {**base_env, "DELIVERY_BIN": bin_dir.as_posix(), "DELIVERY_GITLEAKS_BASE_URL": base_url}
         r = run([bash, sh.as_posix()], cwd=box.work, extra_env=env)
         t.eq("install with a matching checksum: exit 0", r.code, 0)
-        t.has("... the old tools.json form warns", r.err, "old form")
         t.check("... gitleaks is in DELIVERY_BIN", (bin_dir / exe).exists(), r.text)
         t.eq("... gate.json setup ran", [x[0] for x in box.ran(True)], ["setup"])
         t.eq("... hooks path set", box.g("config", "--get", "core.hooksPath"), ".githooks")
@@ -2384,18 +2392,13 @@ def sc_agent_setup(t: T, shared: Path) -> None:
         t.eq("with cygpath: exit 0", r.code, 0)
         t.has("... the PATH hint uses cygpath -u", r.err, 'export PATH="/cyg%s:$PATH"' % cyg_bin.as_posix())
 
-        # a tampered archive must not be installed
-        (srv_dir / ("gitleaks_%s_checksums.txt" % version)).write_text("%s  %s\n" % ("1" * 64, asset))
+        # a tampered archive (it no longer matches the pin) must not be installed
+        write_pin("1" * 64)
         bad_bin = box.root / "bad-bin"
         r = run([bash, sh.as_posix()], cwd=box.work,
                 extra_env={**env, "DELIVERY_BIN": bad_bin.as_posix()})
         t.eq("checksum mismatch: exit 2", r.code, 2)
         t.has("... says mismatch", r.err, "checksum mismatch")
-        t.eq("... nothing installed", (bad_bin / exe).exists(), False)
-        (srv_dir / ("gitleaks_%s_checksums.txt" % version)).write_text("%s  other\n" % ("1" * 64))
-        r = run([bash, sh.as_posix()], cwd=box.work,
-                extra_env={**env, "DELIVERY_BIN": bad_bin.as_posix()})
-        t.eq("asset missing from the checksums file: exit 2", r.code, 2)
         t.eq("... nothing installed", (bad_bin / exe).exists(), False)
     finally:
         server.shutdown()

@@ -1114,11 +1114,12 @@ def check_workflow(text: str, ci_text: str) -> list[str]:
         bad.append("permissions are not contents: write, pull-requests: read, actions: read")
     if "fetch-depth: 0" not in text:
         bad.append("checkout without fetch-depth: 0")
+    # DS162: actions are pinned by full commit SHA with the major tag as a comment.
     for action in ("actions/checkout", "actions/setup-python"):
-        if not re.search(r"uses: %s@v\d+\s*$" % re.escape(action), text, re.M):
-            bad.append("%s is not pinned to a major version" % action)
-    pinned = re.search(r"uses: actions/checkout@(v\d+)", ci_text)
-    mine = re.search(r"uses: actions/checkout@(v\d+)", text)
+        if not re.search(r"uses: %s@[0-9a-f]{40} # v\d+\s*$" % re.escape(action), text, re.M):
+            bad.append("%s is not pinned to a commit SHA" % action)
+    pinned = re.search(r"uses: actions/checkout@([0-9a-f]{40})", ci_text)
+    mine = re.search(r"uses: actions/checkout@([0-9a-f]{40})", text)
     if not pinned or not mine or pinned.group(1) != mine.group(1):
         bad.append("actions/checkout is pinned differently from the track ci.yml")
     if "python3 scripts/delivery/cleanup.py --remote-only --pr ${{ github.event.pull_request.number }}" not in text:
@@ -1140,9 +1141,9 @@ def sc_workflow(t: T, shared: Path) -> None:
         "no base condition": text.replace(" && github.event.pull_request.base.ref == github.event.repository.default_branch", ""),
         "write-all permissions": text.replace("  pull-requests: read\n", "  pull-requests: write\n", 1),
         "shallow checkout": text.replace("fetch-depth: 0", "fetch-depth: 1"),
-        "unpinned checkout": text.replace("actions/checkout@v4", "actions/checkout@main"),
-        "unpinned python": text.replace("actions/setup-python@v5", "actions/setup-python"),
-        "checkout pin differs": text.replace("actions/checkout@v4", "actions/checkout@v3"),
+        "unpinned checkout": text.replace("actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4", "actions/checkout@main"),
+        "unpinned python": text.replace("actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5", "actions/setup-python"),
+        "checkout pin differs": text.replace("actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4", "actions/checkout@0000000000000000000000000000000000000000 # v4"),
         "wrong command": text.replace("--remote-only ", ""),
         "no pr number": text.replace(" --pr ${{ github.event.pull_request.number }}", ""),
         "no token": text.replace("GH_TOKEN: ${{ github.token }}", "GH_TOKEN: x"),  # secret-scan:ignore
