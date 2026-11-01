@@ -111,12 +111,23 @@ def parse_front_matter(text: str):
     if end is None:
         return {}, text, False
     data: dict = {}
+    last_empty = None  # key with an empty value that may start a block list
     for raw in lines[1:end]:
         line = _strip_comment(raw)
-        if not line.strip() or ":" not in line:
+        if not line.strip():
+            continue
+        item = line.strip()
+        if last_empty is not None and (item == "-" or item.startswith("- ")):
+            if data[last_empty] == "":
+                data[last_empty] = []
+            data[last_empty].append(_scalar(item[1:]))
+            continue
+        if ":" not in line:
             continue
         k, v = line.split(":", 1)
-        data[k.strip()] = _scalar(v)
+        k = k.strip()
+        data[k] = _scalar(v)
+        last_empty = k if data[k] == "" else None
     return data, "\n".join(lines[end + 1:]), True
 
 
