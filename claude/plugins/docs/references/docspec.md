@@ -268,7 +268,7 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 
 ### 6.1 The index script
 
-- **R6.1** — `docs_index.py build` MUST write `docs/index.html` and one HTML page per lasting doc in `docs/_site/`. It MUST use only the Python standard library. The result MUST work when opened from `file://`: no server, no `fetch`. A script tag loads the search data.
+- **R6.1** — `docs_index.py build` MUST write `docs/index.html` and one HTML page per lasting doc in `docs/_site/`, using only the Python standard library. The result MUST work when opened from `file://`: no server, no `fetch`. A script tag loads the search data.
 - **R6.2** — The home page MUST offer:
 
   - search over title, path and text
@@ -301,7 +301,7 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 
 ## 7. Versions and change notes
 
-- **R7.1** — A branch that changes a binding doc MUST add one change note. It MUST NOT edit the doc's version or version table. The note is `docs/features/<feature>/changes/<task>.md`, or `docs/<area>/changes/<doc>/<task>.md` for another binding doc. `docs_fold.py note` writes it.
+- **R7.1** — A branch that changes a binding doc MUST add one change note instead of editing the doc's version or version table. The note is `docs/features/<feature>/changes/<task>.md`, or `docs/<area>/changes/<doc>/<task>.md` for another binding doc. `docs_fold.py note` writes it.
 - **R7.2** — A note has front matter `change` (`patch`, `minor` or `major`), optional `breaking: true` (which means major), optional `section`, and `task`. Its body is one line: what changed, in which section, and the decision or reason. There is one note per task per doc.
 - **R7.3** — The version rule applies per release. The highest note wins:
 
@@ -357,7 +357,7 @@ These are the owner's choices of 31 October 2026, from the documentation standar
   - the branch also changes the mapped doc
   - the branch adds a change note for the doc
   - a commit message on the branch has a line `Docs: none, <reason>`
-- **R8.7** — The plugin's Stop hook MUST run the map check at the end of a turn. When the check fails, the hook MUST print a warning (`systemMessage`) that names the docs. It MUST NOT block. The SessionStart hook MUST add the documentation rule to the agent's context. Both hooks do nothing in a repository without `docs/docs.json`, and both fail open on any error.
+- **R8.7** — The plugin's Stop hook MUST run the map check at the end of a turn and, when it fails, print a warning (`systemMessage`) that names the docs. It MUST NOT block. The SessionStart hook MUST add the documentation rule to the agent's context. Both hooks do nothing in a repository without `docs/docs.json`, and both fail open on any error.
 - **R8.8** — The owner reviews decisions and design-system versions, not every doc.
 
 ---
@@ -380,8 +380,8 @@ These are the owner's choices of 31 October 2026, from the documentation standar
   - promoting the lasting content of retired artifacts
 
   A full rewrite of every doc to the templates is planned separately (D15).
-- **R9.6** — `docs_setup.py move-record` MUST move the record to `record_dir` and set `record_dir` in `.claude/artifacts.json`. It MUST NOT overwrite an existing file. It is a dry run unless `--apply` is given.
-- **R9.7** — `docs_setup.py init` MUST create the layout in a repository that has none. It MUST NOT write over an existing file. It MUST ignore `docs/_site/`.
+- **R9.6** — `docs_setup.py move-record` MUST move the record to `record_dir`, set `record_dir` in `.claude/artifacts.json`, never overwrite an existing file, and be a dry run unless `--apply` is given.
+- **R9.7** — `docs_setup.py init` MUST create the layout in a repository that has none, never over an existing file, and ignore `docs/_site/`.
 - **R9.8** — A migration SHOULD run between trains so no branch is in flight.
 
 ---
@@ -390,7 +390,7 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 
 - **R10.1** — Agent briefs, reports, prompts and scratch notes MUST live under `docs/work/` on the agent's branch, for example `docs/work/reports/<task>.md`. They MUST NOT reach the default branch.
 - **R10.2** — `docs_work.py guard --base <ref>` MUST exit 1 when the branch adds a file under `docs/work/`. The gate runs it on a ready pull request to the default branch (W1).
-- **R10.3** — The join step MUST run `docs_work.py strip --apply` on the joined head. It MUST put each report's summary line (`docs_work.py summaries`) into the release pull request body.
+- **R10.3** — The join step MUST run `docs_work.py strip --apply` on the joined head and put each report's summary line (`docs_work.py summaries`) into the release pull request body.
 - **R10.4** — A finding or measurement worth keeping MUST be promoted into a lasting doc in the same branch before the join.
 - **R10.5** — Standing rules are not temporary. They live in `AGENTS.md`, which `CLAUDE.md` imports.
 
