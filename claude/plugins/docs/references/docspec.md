@@ -364,13 +364,24 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 
 ## 9. Existing repositories
 
-- **R9.1** — `docs_setup.py migrate` MUST be a dry run by default: it prints the plan (old path, new path, why, and whether the target is a guess) and changes nothing. `--apply` makes the changes. `--map OLD=NEW` overrides one target.
-- **R9.2** — With `--apply`, the script MUST move files with `git mv` (keeping history; `os.rename` outside git), rewrite every relative link in the Markdown and HTML files under `docs/` and in the root `README.md`, `AGENTS.md` and `CLAUDE.md` so it still resolves, add front matter stubs to moved feature specs, and then create what the layout lacks (R2.1).
-- **R9.3** — The script MUST NOT delete a file. A move whose target exists is skipped, reported, and exits 2. A second run changes nothing.
-- **R9.4** — The script MUST NOT move `docs/work/`; it reports what is there. The artifacts record under `docs/work/artifacts` or `docs/artifacts` moves to `record_dir`; `docs/work/agents/BRIEF.md` moves to `AGENTS.md`.
-- **R9.5** — The move is mechanical. Content work (splitting app design specs into feature specs, writing the overview, promoting the lasting content of retired artifacts) follows as tasks over normal work, and the gaps list (R6.4) tracks it. A full rewrite of every doc to the templates is planned separately (D15).
-- **R9.6** — `docs_setup.py move-record` MUST move the record to `record_dir`, set `record_dir` in `.claude/artifacts.json`, never overwrite an existing file, and be a dry run unless `--apply`.
-- **R9.7** — `docs_setup.py init` MUST create the layout in a repository with none, never over an existing file, and ignore `docs/_site/`.
+- **R9.1** — `docs_setup.py migrate` MUST be a dry run by default. It prints the plan (old path, new path, why, and whether the target is a guess) and changes nothing. `--apply` makes the changes. `--map OLD=NEW` overrides one target.
+- **R9.2** — With `--apply`, the script MUST do these steps in order:
+
+  1. Move files with `git mv`, which keeps history (`os.rename` outside git).
+  2. Rewrite every relative link in the Markdown and HTML files under `docs/` and in the root `README.md`, `AGENTS.md` and `CLAUDE.md`, so each still resolves.
+  3. Add front matter stubs to moved feature specs.
+  4. Create what the layout lacks (R2.1).
+- **R9.3** — The script MUST NOT delete a file. It skips a move whose target exists, reports it, and exits 2. A second run changes nothing.
+- **R9.4** — The script MUST NOT move `docs/work/`. It reports what is there. The artifacts record under `docs/work/artifacts` or `docs/artifacts` moves to `record_dir`. `docs/work/agents/BRIEF.md` moves to `AGENTS.md`.
+- **R9.5** — The move is mechanical. Content work follows as tasks over normal work, and the gaps list (R6.4) tracks it. Content work includes:
+
+  - splitting app design specs into feature specs
+  - writing the overview
+  - promoting the lasting content of retired artifacts
+
+  A full rewrite of every doc to the templates is planned separately (D15).
+- **R9.6** — `docs_setup.py move-record` MUST move the record to `record_dir` and set `record_dir` in `.claude/artifacts.json`. It MUST NOT overwrite an existing file. It is a dry run unless `--apply` is given.
+- **R9.7** — `docs_setup.py init` MUST create the layout in a repository that has none. It MUST NOT write over an existing file. It MUST ignore `docs/_site/`.
 - **R9.8** — A migration SHOULD run between trains so no branch is in flight.
 
 ---
