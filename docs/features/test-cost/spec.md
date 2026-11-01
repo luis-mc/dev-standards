@@ -110,12 +110,12 @@ The larger saving is in *when* the pass runs. The gate mutants guard six files u
 ##### Other repeats found
 
 - **No cancel on spec-lint.** A new push to a ready PR starts a second full run while the first keeps going: on 11 October at 00:07, two 9 to 11 minute runs of the DS17 PR ran side by side.
-- **Not a repeat after all: the checksum tests.** The audit (DS46) flagged the installer's checksum check as tested twice. Reading both: `test_delivery_gate.py` tests the old checksums-file fallback (lines 2109 to 2188), `test_delivery_ci.py` the pinned form (lines 1550 to 1584). Two code paths, so both stay.
-- **On this PC, Windows is the slow part.** The same artifacts suite takes 3.1 min on Linux and 17.5 on Windows, because every case starts several Python and git processes. That cost is spent only by local runs.
+- **Not a repeat after all: the checksum tests.** The audit (DS46) flagged the installer's checksum check as tested twice. Reading both: `test_delivery_gate.py` tests the old checksums-file fallback (lines 2109 to 2188), and `test_delivery_ci.py` tests the pinned form (lines 1550 to 1584). These are two code paths, so both tests stay.
+- **On this PC, Windows is the slow part.** The same artifacts suite takes 3.1 min on Linux and 17.5 on Windows, because every case starts several Python and git processes. Only local runs pay this cost.
 
 ### Solutions, ranked
 
-Ranked by what they save the owner's wait, with what each could let slip. Savings are Linux CI minutes unless marked.
+The list is ranked by how much each change cuts the owner's wait. It also says what each change could let slip. Savings are Linux CI minutes unless marked.
 
 | # | Change | Saves | Risk, and how it is covered | Task |
 |---|---|---|---|---|
@@ -130,7 +130,7 @@ Ranked by what they save the owner's wait, with what each could let slip. Saving
 
 **Together**, for a release that changes only luismc-artifacts: S1, S5 and S6 take the wait from about 35 minutes (ready PR plus `main`) to about 2.5. For a release of the delivery scripts: S3 and S5 take it from about 35 to about 13. S4 removes the branch runs before either.
 
-**Not recommended.** Removing `template-build`'s Windows jobs: they exist for a path-separator bug that only Windows shows. Rewriting the artifacts suite to run in one process: it would cut the Windows time several-fold, but S4 and S6 already take most local runs away, so the rewrite is not worth its risk now.
+**Not recommended.** Removing `template-build`'s Windows jobs: they exist for a path-separator bug that only Windows shows. Rewriting the artifacts suite to run in one process: it would cut the Windows time several-fold, but S4 and S6 already remove most local runs, so the rewrite is not worth its risk now.
 
 Related: [delivery speed](../delivery-speed/spec.md), [delivery](../delivery/spec.md), [artifacts](../artifacts/spec.md). How to test here: `docs/testing.md`.
 
