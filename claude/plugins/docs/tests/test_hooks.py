@@ -95,7 +95,8 @@ class HookTests(unittest.TestCase):
         self.assertIn("diff", c1)
         m2, c2 = self._counted(d)
         self.assertEqual(m2, m1)
-        self.assertEqual(sorted(c2), ["rev-parse", "status"])
+        self.assertEqual(set(c2), {"rev-parse", "status"})
+        self.assertLessEqual(len(c2), 3)  # 2 with origin/<default>, 3 when only the local branch exists
 
     def test_stop_recomputes_when_tree_changes(self):
         d = proj()
