@@ -19,3 +19,7 @@ Scripts (`scripts/`, Python standard library only): `docs_setup.py`, `docs_index
 Install: `claude plugin install luismc-docs@dev-standards`. First use in a repo: `python3 <plugin>/scripts/docs_setup.py migrate` (plan), then `--apply`, set `apps` and `topics` in `docs/docs.json`, `docs_index.py build`, `docs_check.py`.
 
 Settings live in `docs/docs.json`: `apps`, `topics`, `record_dir` (default `docs/project`), `default_branch`, `stale_days` (90), `binding`, `code_roots`, `generated_reference`.
+
+## Trust
+
+`docs/docs.json` is code: its `generated_reference` commands run through a shell when `docs_check.py` runs (it prints each one first; `--no-reference` skips them). Trust that file only after review.
