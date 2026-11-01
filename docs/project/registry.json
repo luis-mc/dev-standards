@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-01T10:26+00:00",
+  "updated": "2026-11-01T10:34+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2831,13 +2831,13 @@
       "status": "Running",
       "item": "Release: setup offers, design starter, spec split, hook text, audit fixes",
       "detail": "ST2 SO2 SO3 DS152 DS153 DS154 DS155 DS156 DS161 DS162 DS163",
-      "expected": "01 Nov ~10:45",
-      "changed": "2026-11-01T10:24+00:00",
-      "expected_basis": "CI for RELEASE-25, pushed ~10:30, ~15 min",
+      "expected": "01 Nov ~10:47",
+      "changed": "2026-11-01T10:32+00:00",
+      "expected_basis": "fix-forward CI started 10:32, ~15 min",
       "release": 25,
       "risk": {
-        "label": "+1 fix round",
-        "minutes": 20
+        "label": "first CI failed; fix-forward",
+        "minutes": 7
       },
       "started": "2026-11-01T09:50+00:00",
       "phases": [
@@ -2849,12 +2849,12 @@
         {
           "name": "join",
           "start": "2026-11-01T10:05+00:00",
-          "end": "2026-11-01T10:30+00:00"
+          "end": "2026-11-01T10:32+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-01T10:30+00:00",
-          "end": "2026-11-01T10:45+00:00"
+          "start": "2026-11-01T10:32+00:00",
+          "end": "2026-11-01T10:47+00:00"
         }
       ]
     },
@@ -2898,12 +2898,11 @@
       "id": "DS164",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Security F6: per-user load cache, unguessable temp file",
       "detail": "load.py cache moves under ~/.claude/, mkstemp + os.replace (audit F6). Waits for DS155, same file.",
-      "expected": "01 Nov ~11:05",
-      "changed": "2026-11-01T10:26+00:00",
-      "expected_basis": "cloud run 10:28: setup 5 + work 20 + checks 5, join 10",
+      "expected": "01 Nov",
+      "changed": "2026-11-01T10:34+00:00",
       "rides": "DS165",
       "started": "2026-11-01T10:28+00:00"
     },

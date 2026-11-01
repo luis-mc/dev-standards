@@ -806,7 +806,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-01T10:26+00:00",
+ "updated": "2026-11-01T10:34+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -3637,13 +3637,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "status": "Running",
    "item": "Release: setup offers, design starter, spec split, hook text, audit fixes",
    "detail": "ST2 SO2 SO3 DS152 DS153 DS154 DS155 DS156 DS161 DS162 DS163",
-   "expected": "01 Nov ~10:45",
-   "changed": "2026-11-01T10:24+00:00",
-   "expected_basis": "CI for RELEASE-25, pushed ~10:30, ~15 min",
+   "expected": "01 Nov ~10:47",
+   "changed": "2026-11-01T10:32+00:00",
+   "expected_basis": "fix-forward CI started 10:32, ~15 min",
    "release": 25,
    "risk": {
-    "label": "+1 fix round",
-    "minutes": 20
+    "label": "first CI failed; fix-forward",
+    "minutes": 7
    },
    "started": "2026-11-01T09:50+00:00",
    "phases": [
@@ -3655,12 +3655,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
     {
      "name": "join",
      "start": "2026-11-01T10:05+00:00",
-     "end": "2026-11-01T10:30+00:00"
+     "end": "2026-11-01T10:32+00:00"
     },
     {
      "name": "ci",
-     "start": "2026-11-01T10:30+00:00",
-     "end": "2026-11-01T10:45+00:00"
+     "start": "2026-11-01T10:32+00:00",
+     "end": "2026-11-01T10:47+00:00"
     }
    ]
   },
@@ -3704,12 +3704,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS164",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Security F6: per-user load cache, unguessable temp file",
    "detail": "load.py cache moves under ~/.claude/, mkstemp + os.replace (audit F6). Waits for DS155, same file.",
-   "expected": "01 Nov ~11:05",
-   "changed": "2026-11-01T10:26+00:00",
-   "expected_basis": "cloud run 10:28: setup 5 + work 20 + checks 5, join 10",
+   "expected": "01 Nov",
+   "changed": "2026-11-01T10:34+00:00",
    "rides": "DS165",
    "started": "2026-11-01T10:28+00:00"
   },
@@ -4046,21 +4045,21 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-01T10:26+00:00">01 Nov 10:26</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-01T10:34+00:00">01 Nov 10:34</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">4 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
 <ul>
-<li data-glance-task="DS160"><span class="task-id">DS160</span><span class="release-name">RELEASE-25</span>Release: setup offers, design starter, spec split, hook text, audit fixes <span class="glance-expected">01 Nov ~10:45</span><span class="glance-basis">CI for RELEASE-25, pushed ~10:30, ~15 min</span></li>
-<li data-glance-task="DS164"><span class="task-id">DS164</span>Security F6: per-user load cache, unguessable temp file <span class="glance-expected">01 Nov ~11:05</span><span class="glance-basis">cloud run 10:28: setup 5 + work 20 + checks 5, join 10</span></li>
+<li data-glance-task="DS160"><span class="task-id">DS160</span><span class="release-name">RELEASE-25</span>Release: setup offers, design starter, spec split, hook text, audit fixes <span class="glance-expected">01 Nov ~10:47</span><span class="glance-basis">fix-forward CI started 10:32, ~15 min</span></li>
 <li data-glance-task="DS165"><span class="task-id">DS165</span><span class="release-name">RELEASE-26</span>Release: per-user load cache (security F6) <span class="glance-expected">01 Nov ~11:20</span><span class="glance-basis">agent 10:28-10:58, join 10, CI 15</span></li>
 <li data-glance-task="DS159"><span class="task-id">DS159</span>DL-06 newest run per workflow, skipped runs pass (PR #120, open) <span class="glance-expected">01 Nov; waits on the other terminal</span><span class="glance-basis">PR #120 open; owned by another terminal</span></li>
 </ul>
 </details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">11 tasks</span></summary>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">12 tasks</span></summary>
 <ul>
+<li data-glance-task="DS164"><span class="task-id">DS164</span>Security F6: per-user load cache, unguessable temp file</li>
 <li data-glance-task="DS152"><span class="task-id">DS152</span>ARTIFACTSPEC section 8: three hooks, before-command retired</li>
 <li data-glance-task="DS153"><span class="task-id">DS153</span>Security F1: validate artifacts manifest file names</li>
 <li data-glance-task="DS154"><span class="task-id">DS154</span>Security F2: repo files choose what runs (docs_check, watcher)</li>
@@ -4088,21 +4087,21 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">240</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">11</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">4</div><div class="label">tasks running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">240</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">12</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 322" role="img" aria-label="Next releases: DS160 (Release: setup offers, design starter, spec split, hook text, audit fixes) expected live about 10:45, worst case 11:05; DS165 (Release: per-user load cache (security F6)) expected live about 11:20. Other work (no release): DS159 (DL-06 newest run per workflow, skipped runs pass (PR #120, open)) Running, expected 01 Nov." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="298"/><text x="200" y="28">09:30</text><line class="rt-grid" x1="330" y1="36" x2="330" y2="298"/><text x="330" y="28">10:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="298"/><text x="460" y="28">10:30</text><line class="rt-grid" x1="590" y1="36" x2="590" y2="298"/><text x="590" y="28">11:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="298"/><text x="720" y="28">11:30</text><line class="rt-grid" x1="820" y1="36" x2="820" y2="298"/><text x="820" y="28">01 Nov</text><path class="rt-break" d="M738 30 l8 -8 M750 30 l8 -8"/></g>
+<div class="timeline-scroll"><svg viewBox="0 0 960 322" role="img" aria-label="Next releases: DS160 (Release: setup offers, design starter, spec split, hook text, audit fixes) expected live about 10:47, worst case 10:54; DS165 (Release: per-user load cache (security F6)) expected live about 11:20. Other work (no release): DS159 (DL-06 newest run per workflow, skipped runs pass (PR #120, open)) Running, expected 01 Nov." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="298"/><text x="200" y="28">09:30</text><line class="rt-grid" x1="330" y1="36" x2="330" y2="298"/><text x="330" y="28">10:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="298"/><text x="460" y="28">10:30</text><line class="rt-grid" x1="590" y1="36" x2="590" y2="298"/><text x="590" y="28">11:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="298"/><text x="720" y="28">11:30</text><line class="rt-grid" x1="820" y1="36" x2="820" y2="298"/><text x="820" y="28">01 Nov</text><path class="rt-break" d="M738 30 l8 -8 M750 30 l8 -8"/></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-25 · Release: setup offers, design starter, spec split, hook text, audit fixes</title>RELEASE-25 · Release: set…</text>
 <text class="rt-sub" x="0" y="77"><title>DS152, DS153, DS154, DS155, DS156, DS161, DS162, DS163, SO2, SO3, ST2</title>DS152, DS153, DS154, DS155, DS156…</text>
 <rect class="rt-bar agents" x="286.7" y="52" width="52" height="22"><title>agents 09:50-10:02</title></rect>
-<rect class="rt-bar join" x="351.7" y="52" width="108.3" height="22"><title>join 10:05-10:30</title></rect>
-<rect class="rt-bar ci" x="460" y="52" width="65" height="22"><title>PR CI 10:30-10:45</title></rect>
-<rect class="rt-risk" x="525" y="58" width="86.7" height="10"><title>+1 fix round</title></rect>
-<polygon class="rt-worst" points="611.7,51 618.7,63 611.7,75 604.7,63"/>
-<text class="rt-risk-label" x="622.7" y="67">+1 fix round → worst ~11:05</text>
-<polygon class="rt-expected" points="525,50 533,63 525,76 517,63"/>
-<text class="rt-live-label" x="525" y="92">live ~10:45</text>
+<rect class="rt-bar join" x="351.7" y="52" width="117" height="22"><title>join 10:05-10:32</title></rect>
+<rect class="rt-bar ci" x="468.7" y="52" width="65" height="22"><title>PR CI 10:32-10:47</title></rect>
+<rect class="rt-risk" x="533.7" y="58" width="30.3" height="10"><title>first CI failed; fix-forward</title></rect>
+<polygon class="rt-worst" points="564,51 571,63 564,75 557,63"/>
+<text class="rt-risk-label" x="575" y="67">first CI failed; fix-forward → worst ~10:54</text>
+<polygon class="rt-expected" points="533.7,50 541.7,63 533.7,76 525.7,63"/>
+<text class="rt-live-label" x="533.7" y="92">live ~10:47</text>
 <text class="rt-name" x="0" y="122"><title>RELEASE-26 · Release: per-user load cache (security F6)</title>RELEASE-26 · Release: per…</text>
 <text class="rt-sub" x="0" y="139"><title>DS164</title>DS164</text>
 <rect class="rt-bar agents" x="451.3" y="114" width="130" height="22"><title>agents 10:28-10:58</title></rect>
@@ -4114,13 +4113,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <text class="rt-name" x="0" y="218"><title>DS159 · DL-06 newest run per workflow, skipped runs pass (PR #120, open)</title>DS159 · DL-06 newest run…</text>
 <polygon class="rt-day" points="820,210 828,223 820,236 812,223"/><text class="rt-day-label" x="836" y="227">01 Nov</text>
 <text class="rt-other-label" x="812" y="250">PR #120 open; owned by another terminal</text>
-<line class="rt-now" x1="442.7" y1="36" x2="442.7" y2="306"/><text class="rt-now-label" x="442.7" y="319">now 10:26</text>
+<line class="rt-now" x1="477.3" y1="36" x2="477.3" y2="306"/><text class="rt-now-label" x="477.3" y="319">now 10:34</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days. Under Other work (no release), a bar runs from the start to its Expected, coloured by status; a red outline means it is past its Expected.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-25" open><summary><strong>RELEASE-25 · live ~10:45 · worst ~11:05</strong><span class="fold-count">12 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-25" open><summary><strong>RELEASE-25 · live ~10:47 · worst ~10:54</strong><span class="fold-count">12 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS160"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS160</span><span class="release-name">RELEASE-25</span>Release: setup offers, design starter, spec split, hook text, audit fixes</td><td data-label="App / service"></td><td data-label="Detail">ST2 SO2 SO3 DS152 DS153 DS154 DS155 DS156 DS161 DS162 DS163</td><td data-label="Expected">01 Nov ~10:45<span class="expected-basis">CI for RELEASE-25, pushed ~10:30, ~15 min</span></td></tr>
+<tr data-task="DS160"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS160</span><span class="release-name">RELEASE-25</span>Release: setup offers, design starter, spec split, hook text, audit fixes</td><td data-label="App / service"></td><td data-label="Detail">ST2 SO2 SO3 DS152 DS153 DS154 DS155 DS156 DS161 DS162 DS163</td><td data-label="Expected">01 Nov ~10:47<span class="expected-basis">fix-forward CI started 10:32, ~15 min</span></td></tr>
 <tr data-task="DS152"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS152</span>ARTIFACTSPEC section 8: three hooks, before-command retired</td><td data-label="App / service"></td><td data-label="Detail">Owner chose fix the spec text: intro says three hooks, R8.16 keeps its ID marked retired, At a glance checked. See docs/architecture/hook-list-mismatch.md.</td><td data-label="Expected">01 Nov ~10:45</td></tr>
 <tr data-task="DS153"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS153</span>Security F1: validate artifacts manifest file names</td><td data-label="App / service"></td><td data-label="Detail">Accept only ^[a-z0-9-]+\.html$ and refuse a path outside the record folder in Record.load (2026-11-01 security audit F1).</td><td data-label="Expected">01 Nov ~10:45</td></tr>
 <tr data-task="DS154"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS154</span>Security F2: repo files choose what runs (docs_check, watcher)</td><td data-label="App / service"></td><td data-label="Detail">Repo-chosen commands, Mermaid integrity, Actions pinned by commit, temp file name, Link host check, eval in a migration tool.</td><td data-label="Expected">01 Nov ~10:45</td></tr>
@@ -4137,7 +4136,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <details class="status-fold release-group" data-group="release-26" open><summary><strong>RELEASE-26 · live ~11:20</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS165"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS165</span><span class="release-name">RELEASE-26</span>Release: per-user load cache (security F6)</td><td data-label="App / service"></td><td data-label="Detail">DS164</td><td data-label="Expected">01 Nov ~11:20<span class="expected-basis">agent 10:28-10:58, join 10, CI 15</span></td></tr>
-<tr data-task="DS164"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS164</span>Security F6: per-user load cache, unguessable temp file</td><td data-label="App / service"></td><td data-label="Detail">load.py cache moves under ~/.claude/, mkstemp + os.replace (audit F6). Waits for DS155, same file.</td><td data-label="Expected">01 Nov ~11:05<span class="expected-basis">cloud run 10:28: setup 5 + work 20 + checks 5, join 10</span></td></tr>
+<tr data-task="DS164"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS164</span>Security F6: per-user load cache, unguessable temp file</td><td data-label="App / service"></td><td data-label="Detail">load.py cache moves under ~/.claude/, mkstemp + os.replace (audit F6). Waits for DS155, same file.</td><td data-label="Expected">01 Nov</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
