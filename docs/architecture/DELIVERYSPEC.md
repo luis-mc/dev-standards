@@ -244,16 +244,16 @@ One file per repository (git-ignored with `.delivery/`). Only `delivery_ledger.p
 
 | Rule | Why not mechanical | Best proxy |
 |---|---|---|
-| DL-40 bundle related tasks into one agent | "same area" and "large" are judgment | PRE on launch injects the open To do/Waiting tasks with the same app/owner and the running agents' `owns[]` overlap as additionalContext; deny only when a running agent owns the same paths (DL-41) |
-| DL-30 ETA sizing honesty | true scope unknown to a hook | require the breakdown block; warn when total > 2x the `eta_table` row for the declared size; record actual vs ETA in `events` and show the ratio on Full Progress so padding is visible |
-| DL-44 report first, push after every step | inside the agent's own session | brief marker (DL-36) + watcher marks `stalled` when the branch has not moved for `2x eta.breakdown.work` |
-| DL-50/51 memory weighing | memory is machine state, thresholds vary | `runner_plan.py` reads free memory and running heavy jobs; PRE on known heavy commands outside the wrapper |
-| DL-70 "all questions" | whether every open decision is listed is judgment | `owner_questions[]`: PRE on a dialog adds the list of unanswered ledger questions not in this call; STOP warns when a later turn asks new questions while older ones stay unasked |
-| DL-71 no text before a dialog | text length is a crude signal | PRE deny once when > ~300 chars of assistant text precede the dialog in the turn; reason says "end the turn with the text, ask in plain chat" |
+| DL-40 bundle related tasks into one agent | "same area" and "large" are judgment | PRE on launch injects as additionalContext the open To do/Waiting tasks with the same app/owner, and any overlap with running agents' `owns[]`. It denies only when a running agent owns the same paths (DL-41) |
+| DL-30 ETA sizing honesty | true scope unknown to a hook | Require the breakdown block. Warn when the total is > 2x the `eta_table` row for the declared size. Record actual vs ETA in `events` and show the ratio on Full Progress, so padding is visible |
+| DL-44 report first, push after every step | inside the agent's own session | A brief marker (DL-36), plus the watcher marks `stalled` when the branch has not moved for `2x eta.breakdown.work` |
+| DL-50/51 memory weighing | memory is machine state, thresholds vary | `runner_plan.py` reads free memory and running heavy jobs. PRE acts on known heavy commands outside the wrapper |
+| DL-70 "all questions" | whether every open decision is listed is judgment | `owner_questions[]`: PRE on a dialog adds the unanswered ledger questions that are not in this call. STOP warns when a later turn asks new questions while older ones stay unasked |
+| DL-71 no text before a dialog | text length is a crude signal | PRE denies once when more than ~300 chars of assistant text precede the dialog in the turn. The reason says "end the turn with the text, ask in plain chat" |
 | DL-72 rejected dialog is not a stop | needs reading intent | POST-failure context line only |
 | DL-65 one truth | design property | the ledger is the only source the renderer and hooks read; a guard test fails if a hook parses chat for state |
 | speed-without-compromise, parallel-by-default | goals, not checks | STOP lists "startable now" items (To do tasks with deps met while slots are free; trains green and unpushed) once per turn |
-| DL-73 never send as owner | outbound tools are open-ended | deny list of known outbound commands/MCP tools in config; the classifier stays the backstop |
+| DL-73 never send as owner | outbound tools are open-ended | A deny list of known outbound commands and MCP tools in config. The classifier stays the backstop |
 
 ## 4. Build split: four parts by file ownership
 
