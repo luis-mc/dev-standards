@@ -1238,11 +1238,13 @@ double-click.
 
 ### 6.2 Groups and order
 
-- **R6.2** — Checklist rows are grouped, in this order: `Running now and next`
-  (Running, Waiting, To do — earliest expected first), `Needs you, failed or
-  on hold` (Needs you, Failed, On hold), `Live or built` (newest `changed`
-  first; Dropped rows with them, R5.49). An empty group is omitted. The full-progress artifact groups by
-  release instead (R5.46); these groups still order the rows inside it.
+- **R6.2** — Checklist rows are grouped, in this order:
+  1. `Running now and next`: Running, Waiting, To do, earliest expected first;
+  2. `Needs you, failed or on hold`: Needs you, Failed, On hold;
+  3. `Live or built`: newest `changed` first; Dropped rows with them (R5.49).
+
+  An empty group is omitted. The full-progress artifact groups by release
+  instead (R5.46); these groups still order the rows inside it.
 - **R6.3** — In the full-progress artifact, `Live` rows whose `changed` is more
   than 14 days old fold into a closed `<details>` titled `Earlier`. `Built` rows
   never fold, however old: unreleased work must not be hidden. Verified by
@@ -1262,7 +1264,7 @@ double-click.
 - **R6.6** — On a Running, Waiting, To do, Needs you or On hold row, Expected is
   `DD Mon` or `DD Mon ~HH:MM` (a time for work due within a day) in the
   owner's zone, optionally followed by `; ` and a short note. Words such as
-  `today`, `soon`, `tomorrow` or `next` alone fail — a relative word goes stale
+  `today`, `soon`, `tomorrow` or `next` alone fail: a relative word goes stale
   without anyone changing it.
 - **R6.7** — On a Live or Built row, Expected is the date it happened.
 - **R6.8** — `set-task-status` to Live or Built sets Expected to the current
@@ -1270,8 +1272,8 @@ double-click.
 
 ### 6.5 The retired status Done
 
-- **R6.9** — `Done`, a status of 1.0.0, is retired: it meant "finished" even
-  when merging, releasing or deploying was still to come, and `Built` and `Live`
+- **R6.9** — `Done`, a status of 1.0.0, is retired. It meant "finished" even
+  when merging, releasing or deploying was still to come. `Built` and `Live`
   say which. `set-task-status` and `task-add` accept `Done` as a deprecated
   alias, store `Built` and print a note. A record that still holds `Done` (a
   task status, or `merged_status`) is read as `Built`, the next writing command
@@ -1285,7 +1287,7 @@ double-click.
   hold) may carry `expected_basis`, a plain-text line of at most 80 characters
   saying what sets the estimate: what it waits on and how long (for example
   `agent slot ~01:30, ~1.5 h`). `task-add` and `set-task-status` take it as
-  `--basis TEXT`; `--basis ""` clears it on `set-task-status`; the field is
+  `--basis TEXT`; `--basis ""` clears it on `set-task-status`. The field is
   absent when there is none. A task whose status becomes Live, Built or Failed
   loses it, as Expected itself is replaced (R6.7, R6.8); `--basis` given for such
   a status is ignored with a warning. `check` reports an empty or longer
@@ -1346,7 +1348,7 @@ double-click.
   Expected time is in the past is flagged (DL-63). A date alone (`DD Mon`)
   ends at 23:59 of that day in the project's zone. `check` prints one warning
   per such row, in `--json` under `warnings`, naming the task and its
-  Expected; it is a warning and not a finding, so a writing command is never
+  Expected. It is a warning and not a finding, so a writing command is never
   refused for it. The end-of-turn hook blocks on it (R8.19). Verified by
   `test_check_flags_open_rows_past_their_expected_time`.
 
@@ -1355,11 +1357,15 @@ double-click.
 ## 7. Commands
 
 All commands run as `python <plugin>/scripts/project_artifacts.py <command>`
-from anywhere inside the project's repository, read `docs/artifacts/` from the
-the working tree (§4.6), and exit 0 on success, 1 on findings or a refused
-action, 2 on an unreadable record (exit codes 3 and 4 are no longer used).
+from anywhere inside the project's repository. They read `docs/artifacts/` from
+the working tree (§4.6). Exit codes:
+
+- 0: success;
+- 1: findings or a refused action;
+- 2: an unreadable record (exit codes 3 and 4 are no longer used).
+
 `--json` prints a machine-readable result. Every writing command writes files
-and stops (R4.13); it accepts `--no-push` and `--push` for compatibility, and
+and stops (R4.13). It accepts `--no-push` and `--push` for compatibility, and
 they do nothing (R4.17).
 
 | Command | Does |
