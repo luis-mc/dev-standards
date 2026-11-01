@@ -1363,40 +1363,40 @@ MUST fail the build on:
 12. Layer-boundary check (§3.2)
 
 Workflows MUST be path-filtered so a change to one surface does not rebuild
-unrelated ones. Where a track's runners are materially more expensive — macOS
-runners for iOS builds — path filtering is mandatory rather than an optimization.
+unrelated ones. Where a track's runners cost much more (macOS runners for iOS
+builds), path filtering is mandatory, not an optimization.
 
-CI cost SHOULD be kept down without dropping a gate, because CI platforms bill
-per job, rounded up to a whole unit of time:
+CI cost SHOULD be kept down without dropping a gate. CI platforms bill per job,
+rounded up to a whole unit of time:
 
 - No job runs for much less than a minute when it could be a step in another job.
   A few-second check as its own job is billed as a full minute. This applies to
-  runners billed per job-minute; on self-hosted runners a separate short job
+  runners billed per job-minute. On self-hosted runners a separate short job
   costs nothing and needs no deviation.
-- A run superseded by a newer push to the same pull request is cancelled. A run on
-  the default branch is never cancelled — a merged commit should never be left
+- A newer push to the same pull request cancels the superseded run. A run on the
+  default branch is never cancelled, because a merged commit should never be left
   unverified.
 - Draft pull requests skip CI until they are marked ready for review.
-- Dependency installs are cached, and so are the task runner's results. The latter
-  is sound only because §2.2 requires every environment variable a task reads to
-  be declared in the runner's configuration; otherwise a cache hit can replay a
-  result computed under different inputs.
-- CI wall time is set by its slowest job, so a job or step that takes most of a
-  run SHOULD get its own job, and a test step that can be split SHOULD run as
+- Dependency installs are cached, and so are the task runner's results. Caching
+  results is sound only because §2.2 requires every environment variable a task
+  reads to be declared in the runner's configuration. Otherwise a cache hit can
+  replay a result computed under different inputs.
+- The slowest job sets CI wall time. A job or step that takes most of a run
+  SHOULD get its own job, and a test step that can be split SHOULD run as
   parallel shards. Small steps stay together, because every job repeats setup.
   A project finds the dominant job from the slowest-job summary `ci_watch`
   prints when its runs complete (§13.6).
 - A pull request SHOULD run only the expensive jobs (integration, browser) its
   change reaches. The project commits a map of areas to paths and jobs; a change
   under a shared path (the lockfile, root configuration, the CI itself), under a
-  path in no area, or on the default branch runs everything, and a
+  path in no area, or on the default branch runs everything. A
   documentation-only change runs none. A job the map leaves out is a planned skip
-  and MUST NOT count as a failure; a job that cannot read the plan runs. Because
-  a skipped area is only skipped, the full suite SHOULD still run on the default
-  branch on a schedule, and only when the default branch moved since the last
-  successful scheduled run.
+  and MUST NOT count as a failure. A job that cannot read the plan runs. A
+  skipped area is only skipped, not tested, so the full suite SHOULD still run on
+  the default branch on a schedule, and only when the default branch moved since
+  the last successful scheduled run.
 - Test shards SHOULD be balanced by measured seconds from a committed timings
-  file, longest file first, rather than by file count; a file with no measurement
+  file, longest file first, rather than by file count. A file with no measurement
   weighs the median. The ts template ships this (`shard_balance.py`,
   `area_select.py`, a `plan` job, `nightly-full.yml`).
 
@@ -1405,48 +1405,48 @@ each workflow, so a product can move between hosted and self-hosted runners
 without editing its workflows.
 
 A push run on the default branch MUST NOT repeat a suite that already passed.
-When the pushed commit's tree is identical to the tree of a pull-request head
+If the pushed commit's tree is identical to the tree of a pull-request head
 whose run of the same workflow passed, the default-branch run records that and
-skips its jobs; otherwise it runs in full. The comparison is by tree, except
+skips its jobs. Otherwise it runs in full. The comparison is by tree, except
 that paths the workflow itself ignores (documentation, Markdown, apps tested by
-their own workflows) may differ: a merge that differs from the tested head only
-there skips too. A merge that changed anything else runs the suite, and a
-failure to decide runs it too.
+their own workflows) may differ. A merge that differs from the tested head only
+there skips too. A merge that changed anything else runs the suite. So does a
+failure to decide.
 
 **Build artifacts.** The CI platform MUST keep only the newest build artifact of
 each name. A build artifact is any output a workflow uploads to the platform's
 artifact store: an installer (an MSI, an APK), a bundle, a test or coverage
 report. After every run of a workflow that uploads one, the older artifacts of
-the same name are deleted, and a scheduled sweep deletes any the per-run pruning
+the same name are deleted. A scheduled sweep deletes any the per-run pruning
 missed. So that pruning can tell kinds apart, an artifact's name MUST be stable
-for its kind — `windows-installer`, never `windows-installer-1.4.2-run-812`; the
+for its kind: `windows-installer`, never `windows-installer-1.4.2-run-812`. The
 version and commit go inside the artifact. A build that must outlive the next
 one (a release) is published as a release asset, not kept as an artifact.
 
 A workflow that builds a shipped artifact (an installer, a bundle, a package, an
-image) SHOULD be a workflow of its own that runs only when a path that feeds it
-changes, never for a documentation-only or record-only change, and that can
+image) SHOULD be a workflow of its own. It runs only when a path that feeds it
+changes, never for a documentation-only or record-only change, and it can
 always be started by hand. The path filter is the cost control: a merge that
 changed nothing the artifact is built from builds nothing.
 
 ### 13.2 Promotion
 
 **The three-tier promotion flow is not optional**, whichever host is chosen:
-preview per ready pull request, staging on merge to the default branch,
+preview per ready pull request, staging on merge to the default branch, and
 production on an explicit release action.
 
 - Draft pull requests MUST NOT deploy a preview; agent branches are verified by
   the branch gate (§13.5), and only the one ready pull request (§13.6) gets one.
 
 - Migrations run in the deploy pipeline **before** the new code is serving.
-- Every deploy is traceable to a commit, and rollback is a documented, rehearsed
-  procedure — not an improvisation.
+- Every deploy is traceable to a commit. Rollback is a documented, rehearsed
+  procedure, not an improvisation.
 - A deployment target that cannot provide an isolated per-PR preview MUST provide
   an equivalent pre-merge verification environment, and the substitution MUST be
   recorded in the Stack Profile.
 
-**Stateful web clients constrain the deployment target.** A web client holding a
-persistent server-side session per connection requires sticky routing and
+**Stateful web clients constrain the deployment target.** A web client that holds
+a persistent server-side session per connection requires sticky routing and
 graceful connection draining on deploy. Where a product chooses that model, its
 host MUST support both, and the release runbook MUST state what happens to
 in-flight sessions during a deploy.
@@ -1454,71 +1454,70 @@ in-flight sessions during a deploy.
 ### 13.3 Mobile release
 
 - Signing material MUST be stored reproducibly with a documented, **tested**
-  recovery path. Losing an Android upload key is unrecoverable.
+  recovery path. A lost Android upload key cannot be recovered.
 - PR builds compile and run tests; they do not sign or distribute.
 - Merges to the default branch produce an internal-track build automatically.
 - Store submission is an explicit, triggered action, never automatic.
-- Build numbers derive from CI run identifiers; marketing versions are set
+- Build numbers derive from CI run identifiers. Marketing versions are set
   deliberately. Both MUST be traceable to a commit.
 
 ### 13.4 Release coordination
 
-The API MUST be deployed before clients that depend on new endpoints. Because
-mobile release timing is controlled by store review, the sequence is always
+The API MUST be deployed before clients that depend on new endpoints. Store
+review controls mobile release timing, so the sequence is always
 **additive API → web/admin → mobile submission**. A mobile binary MUST NOT depend
 on an unreleased endpoint.
 
 ### 13.5 Branch gate
 
 Every repository MUST ship a branch gate: one command that an agent or a person
-runs on a branch before it is joined. Against the merge base with the branch it
-will join, it runs:
+runs on a branch before it is joined. The gate works against the merge base with
+the branch it will join. It runs these steps:
 
 1. Every guard test, whatever changed. A guard test scans the source or the
    specs as a whole (retired vocabulary, design rules, duplication ratchets,
-   spec-note rules); scoping it by package lets a change elsewhere break it
-   unseen.
+   spec-note rules). If a guard is scoped by package, a change elsewhere can
+   break it unseen.
 2. The secret scan over the branch's new commits.
 3. Type check of the changed packages and every package that depends on them.
-4. Lint of the same set, continuing past a failing package so that one run
+4. Lint of the same set. It continues past a failing package, so one run
    reports every error.
 5. Unit tests of the changed packages, then integration tests where the
    repository has them.
 6. End-to-end tests, only when a user-facing app, or a package it renders,
    changed. The gate SHOULD run only the specs the change affects, through a
-   committed map from specs to source paths or, when there is no map, the specs
-   of the apps that depend on the changed package (from the workspace dependency
-   graph); a change the map does not cover, or one to shared configuration or
-   the API contract, runs them all. The
-   ready pull request's CI always runs every spec.
+   committed map from specs to source paths. When there is no map, it runs the
+   specs of the apps that depend on the changed package (from the workspace
+   dependency graph). A change the map does not cover, or one to shared
+   configuration or the API contract, runs them all. The ready pull request's CI
+   always runs every spec.
 
-The order is binding: the checks that take seconds or minutes and
-fail most often (guards, type check, lint) come before the slow test steps, so a
+The order is binding. The checks that take seconds or minutes and fail most
+often (guards, type check, lint) come before the slow test steps, so a
 time-limited gate always reaches them. Type check and lint are required steps
-(the repository's gate configuration may name others): the gate MUST NOT skip
+(the repository's gate configuration may name others). The gate MUST NOT skip
 them because the time limit is used up, and the result's verifier MUST refuse a
 result in which a required step is missing or was skipped for any reason other
 than "nothing in its scope changed". A gate that spends its limit on tests before
 lint lets a lint error reach pull-request CI, where one run costs a full suite.
 
-Because a result is trusted only against the current head of the branch it
-joins, the gate fetches that branch before computing the merge base; only when
-the remote cannot be reached does it use the local copy, and its result then
-says so.
+A result is trusted only against the current head of the branch it joins. So the
+gate fetches that branch before it computes the merge base. Only when the remote
+cannot be reached does it use the local copy, and its result then says so.
 
-Before the first step the gate installs dependencies from the committed
-lockfile in frozen mode, so a lockfile that no longer matches the manifests
-fails the gate instead of a later run. The gate stops at the first failed step
-unless it is asked to go on, and it has a time limit (30 minutes by default):
-when the limit is reached, the running step is stopped with its child processes
+Before the first step, the gate installs dependencies from the committed
+lockfile in frozen mode. A lockfile that no longer matches the manifests then
+fails the gate, not a later run. The gate stops at the first failed step
+unless it is asked to go on. It has a time limit (30 minutes by default).
+When the limit is reached, the running step is stopped with its child processes
 and the result records a timeout. A gate that could not finish never passes.
 
 A change to the task runner's configuration or the CI workflows widens the gate
 to every package. A change to the lockfile widens it too, unless the lockfile
 format lets the gate see which packages' dependencies changed (a per-package
-lockfile, or a workspace lockfile with a section per package): then the gate
-SHOULD treat those packages as changed and widen only for a change it cannot
-attribute to a package, such as one to the root package or to a transitive
+lockfile, or a workspace lockfile with a section per package). In that case the
+gate SHOULD treat those packages as changed. It widens only for a change it
+cannot attribute to a package, such as one to the root package or to a transitive
 resolution. A lockfile whose format the gate does not read widens as before.
 
 The gate MUST write a machine-readable result: the head commit, the base commit,
@@ -1529,23 +1528,22 @@ result. Results travel with the repository, never in pull-request comments.
 
 A result gated against an older base SHOULD stay valid when that base is an
 ancestor of the branch's current base and every commit in between touches only
-inert paths (the repository declares them; the default is the documentation
-directory, which already covers the project record when the artifacts plugin is
-enabled), so a branch is not gated again because a note was merged. The ready
-pull request's CI still tests the real merge, which is why this is safe. The
-check reports why it accepted the result, and a strict mode keeps the exact-base
-rule.
+inert paths. The repository declares the inert paths. The default is the
+documentation directory, which already covers the project record when the
+artifacts plugin is enabled. This way a branch is not gated again because a note
+was merged. The ready pull request's CI still tests the real merge, which is why
+this is safe. The check reports why it accepted the result, and a strict mode
+keeps the exact-base rule.
 
 The guard tests and the secret scan MUST also run as a pre-push hook. They take
 seconds and catch the failures that otherwise reach pull-request CI. The hook
-SHOULD also run type check and lint of the touched packages and their dependents;
-the task runner's cache makes a repeat cheap, and a push that changes
-no package (documentation only) skips them. For a
-branch pushed for the first time, the hook compares with the branch it forks
-from (the nearest one), not with the default branch, so it checks only what the
-push adds. Every
-scanner CI uses MUST be installed by the repository's agent setup script, so the
-gate runs the scanner CI runs.
+SHOULD also run type check and lint of the touched packages and their dependents.
+The task runner's cache makes a repeat cheap, and a push that changes no package
+(documentation only) skips them. For a branch pushed for the first time, the
+hook compares with the branch it forks from (the nearest one), not with the
+default branch, so it checks only what the push adds. Every scanner CI uses MUST
+be installed by the repository's agent setup script, so the gate runs the
+scanner CI runs.
 
 ### 13.6 Integration flow
 
