@@ -18,6 +18,8 @@ eta: setup <m> + work <m> + checks <m> = <total> min
 
 <What to build, the files, the constraints.>
 
+E2E: if this branch changes UI code, run the e2e specs of the screens you change (`scripts/delivery/branch_gate.py --e2e-only`, at most 2 workers on a PC) before CODE DONE, and never push an e2e fix you have not run; if it changes no UI, write "no UI change" in your report.
+
 Your gate (pick the path your project uses):
 
 A. Branch gate (default): run ONE affected gate at the end, one affected gate = `<the project's branch gate command>`; push only when it passes.

@@ -398,7 +398,7 @@ def sc_scopes(t: T, shared: Path) -> None:
     t.eq("result: contract keys present",
          sorted(res), sorted(["schema", "kind", "branch", "head", "base", "base_ref", "base_fetched", "widened",
                               "changed_dirs", "steps", "required_steps", "pass", "timed_out", "partial", "started_at",
-                              "finished_at", "tool"]))
+                              "finished_at", "tool", "e2e_only", "ui_changed", "e2e"]))
     t.eq("result: branch", res["branch"], "feat/web")
     t.eq("result: head", res["head"], box.g("rev-parse", "HEAD"))
     t.eq("result: base", res["base"], box.main_sha)

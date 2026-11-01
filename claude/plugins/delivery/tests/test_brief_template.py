@@ -33,6 +33,22 @@ class BriefTemplateTests(unittest.TestCase):
         self.assertEqual(self.block["effort"], "medium")
 
 
+class E2eLineTests(unittest.TestCase):
+    """DL-89: the template tells the agent to run the e2e specs of the screens it changes."""
+
+    def setUp(self):
+        self.text = TEMPLATE.read_text(encoding="utf-8")
+
+    def test_template_carries_the_marker_the_launch_check_needs(self):
+        low = self.text.lower()
+        self.assertTrue(any(m in low for m in P.E2E_BRIEF_MARKER))
+
+    def test_template_names_the_command_and_the_no_blind_fix_rule(self):
+        self.assertIn("branch_gate.py --e2e-only", self.text)
+        self.assertIn("never push an e2e fix you have not run", self.text)
+        self.assertIn("at most 2 workers", self.text)
+
+
 class TemplateEtaTests(unittest.TestCase):
     def test_example_block_parses_to_a_breakdown_when_filled(self):
         import hook_post_tool as H

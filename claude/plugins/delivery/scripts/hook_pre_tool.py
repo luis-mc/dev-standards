@@ -322,6 +322,9 @@ def brief_text(tool_input):
     return '\n'.join(v for k, v in walk(tool_input) if isinstance(v, str))
 
 
+E2E_BRIEF_MARKER = ('e2e specs', 'no ui change')   # DL-89: any one in the brief satisfies the check
+
+
 def delivery_block(text):
     """Key/value pairs from the fenced ```delivery block of a brief; owns as a list."""
     m = re.search(r'```delivery\s*\n(.*?)```', text, re.S)
@@ -417,6 +420,11 @@ def check_launch(cfg, ledger, data, where):
     low = text.lower()
     missing = [' / '.join(m) if isinstance(m, list) else m for m in cfg['brief_markers']
                if not any(str(x).lower() in low for x in (m if isinstance(m, list) else [m]))]
+    # DL-89: every cloud brief says the agent runs the e2e specs of the screens it changes (or that it changes no UI).
+    if H.check_on(cfg, 'DL-89') and not any(str(x).lower() in low for x in E2E_BRIEF_MARKER):
+        deny('DL-89 the brief must say the agent runs the e2e specs of the screens it changes before CODE DONE '
+             '("run the e2e specs of the screens you change"), or that it changes no UI ("no UI change"). '
+             'The template line is in references/agent-brief-template.md. Add it, then launch.')
     if missing and H.check_on(cfg, 'DL-36'):
         deny('DL-36 the brief lacks required markers: %s. Add them (config brief_markers), then launch.'
              % '; '.join(missing))
