@@ -400,16 +400,16 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 
 ### 11.1 Decisions
 
-- **R11.1** — A decision about one feature is kept in that feature's `decisions.json` in the record and copied into the spec's Decisions table when decided. A choice that spans features is a MADR file `docs/architecture/decisions/NNNN-title.md` (`templates/madr.md`); a superseded one links to its replacement. `docs/architecture/decisions.md` is generated and lists both.
+- **R11.1** — A decision about one feature is kept in that feature's `decisions.json` in the record. It is copied into the spec's Decisions table when decided. A choice that spans features is a MADR file `docs/architecture/decisions/NNNN-title.md` (`templates/madr.md`). A superseded one links to its replacement. `docs/architecture/decisions.md` is generated and lists both.
 
 ### 11.2 Design system
 
-- **R11.2** — UX rules, tokens, components and patterns MUST live only in `docs/design-system/`. A feature spec shows its screens and states and cites rules by ID without copying them. `docs_check.py` warns (U1) on rule-like text (must, never, always, should next to a UI term) in a screens section unless the line cites a design-system ID or carries `<!-- ux-ok -->` (U1). **U1 is a warning for now; it becomes an error later (owner decision, 31 Oct 2026).** Keep `<!-- ux-ok -->` on lines that are allowed.
+- **R11.2** — UX rules, tokens, components and patterns MUST live only in `docs/design-system/`. A feature spec shows its screens and states. It cites rules by ID and does not copy them. `docs_check.py` warns (U1) on rule-like text (must, never, always, should next to a UI term) in a screens section, unless the line cites a design-system ID or carries `<!-- ux-ok -->` (U1). **U1 is a warning for now; it becomes an error later (owner decision, 31 Oct 2026).** Keep `<!-- ux-ok -->` on lines that are allowed.
 - **R11.3** — The words users see (labels, messages) live in the design system's content rules or in the glossary.
 
 ### 11.3 Diagrams
 
-- **R11.4** — Flows, sequences, states and C4-style diagrams are Mermaid code blocks in the Markdown. Screenshots and mocks are image files next to the spec, with alt text.
+- **R11.4** — Flows, sequences, states and C4-style diagrams are Mermaid code blocks in the Markdown. Screenshots and mocks are image files next to the spec. Each has alt text.
 
 ---
 
