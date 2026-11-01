@@ -1220,6 +1220,21 @@ def test_feature_updated_and_published_line(env):
 
 
 @case
+def test_manifest_file_names_are_checked(env):
+    """Audit F1: a manifest `file` that is not a plain page name is refused; a normal one loads."""
+    p = env.baseline()
+    for bad in ('../x.html', '/tmp/x.html', 'page.txt', 'sub/x.html'):
+        d = p.record_copy('badname')
+        man = json.loads((d / 'manifest.json').read_text(encoding='utf-8'))
+        man['feature_artifacts'][0]['file'] = bad
+        (d / 'manifest.json').write_text(json.dumps(man, indent=1), encoding='utf-8')
+        r = check_record(env, d)
+        assert r.code == 1 and 'unsafe file name' in r.all and bad in r.all, (bad, r.all)
+    d = p.record_copy('goodname')
+    assert check_record(env, d).code == 0, check_record(env, d).all
+
+
+@case
 def test_publish_does_not_loop(env):
     """R5.38: recording a publish puts the line on the feature pages without moving their stamps, so Full
     Progress does not change and `pending` has nothing to list, again and again."""
