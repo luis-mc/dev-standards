@@ -1,5 +1,5 @@
 ---
-description: Apply Claude Code configuration — statusline, settings.json (auto-compact window, output style, Opus-plans/Sonnet-codes model split with a medium-or-high effort level per model), output styles, rules, and CLAUDE.md — to this project and/or the user-level ~/.claude/, turns on and configures all 8 plugins of the luismc marketplace in the project settings (installing missing ones after the owner confirms), and always enables luismc-transcript-folds and binds its two chords at user level. Use when the user asks to set up Claude, configure the statusline, fix their Claude settings, add a CLAUDE.md, or apply their Claude config to a repo or a new machine, or invokes /luismc-project-setup:claude-setup. Not for repo or product tooling (hooks, gitleaks, CI, playwright) — that is /luismc-project-setup:tech-stack-setup.
+description: Apply Claude Code configuration — statusline, settings.json (auto-compact window, output style, Opus-plans/Sonnet-codes model split with a medium-or-high effort level per model), output styles, rules, and CLAUDE.md — to this project and/or the user-level ~/.claude/, turns on and configures all 8 plugins of the luismc marketplace in the project settings (installing missing ones after the owner confirms), and always enables luismc-transcript-folds and binds its two chords at user level, then offers to start enforcing the docs, design system, delivery, project record, CI checks and other dev-standards setups (`claude-setup status` only reports). Use when the user asks to set up Claude, configure the statusline, fix their Claude settings, add a CLAUDE.md, or apply their Claude config to a repo or a new machine, or invokes /luismc-project-setup:claude-setup. Not for repo or product tooling (hooks, gitleaks, CI, playwright) — that is /luismc-project-setup:tech-stack-setup.
 model: sonnet
 effort: medium
 ---
@@ -91,6 +91,58 @@ this plugin, `tech-stack-setup`, which generates them from `STACKSPEC`, not from
 a stack-neutral baseline. The split is deliberate. This skill sets up the agent
 that works in the repo. The other skills set up the repo: `tech-stack-setup` its
 structure and gates, `auth-setup` its authentication.
+
+## Offers and enforcement — after the Claude config
+
+Turning a plugin on is not enforcing it. After the Claude config (steps 1-2),
+go through every plugin and every other dev-standards setup and ask which to
+start enforcing. The flow keeps the rules above: ask first, one change plan,
+confirm once, never touch git, never overwrite `CLAUDE.md` or
+`.delivery/config.json`. Everything here is a file in the working tree.
+
+### Status mode — `claude-setup status`
+
+When the owner asks for `claude-setup status`, run only the scan below and the
+enforcement report (step 5). Ask no target question, write nothing, install
+nothing.
+
+### The status scan — no writes
+
+Report each offer as **done**, **missing** or **broken**:
+
+- **docs** — `docs/docs.json` present; run `docs_check.py` and note errors.
+- **design system** — `docs/design-system/` present. Only when the project has a UI; otherwise "not applicable".
+- **delivery** — `.delivery/config.json` present and `delivery_doctor.py` reports no FAIL.
+- **project record** — `.claude/artifacts.json` present.
+- **specs** — spec files present (nothing to install).
+- **CI checks workflow** — `.github/workflows/dev-standards.yml` present.
+- **repo gates** — `scripts/delivery/` and `.githooks/` present.
+- **auth** — judged only after repo gates are done (auth-setup refuses a repo not set up by tech-stack-setup).
+
+### The four grouped questions — one AskUserQuestion call
+
+Ask them in one call. Each question carries its own context. Leave out what is
+already done.
+
+1. **Enforce** (multi-select): docs, design system, delivery, project record.
+2. **Delivery mode**: `Warn first (Recommended)` listed first, preselected; `Block now` second. It sets `enforcement.mode` in `.delivery/config.json` only when that file is created in this run. Never change an existing file.
+3. **CI**: write `.github/workflows/dev-standards.yml` (from `assets/ci/dev-standards.yml`), which runs `docs_check.py --strict`, the design guard tests when present, and spec-check. The skill also prints the branch-protection command for the owner to run. It never runs it.
+4. **Other setups** (multi-select, all off by default): a `tech-stack-setup` audit, `auth-setup`, one `luismc-audits` run.
+
+### What each yes adds to the one change plan (step 3)
+
+- **docs** — `docs_setup.py init --apply`; or in a repo with docs, `migrate`, and `migrate --apply` only after the owner reads the dry run.
+- **design system** — `/luismc-docs:design-system-setup`: `init`, `guards`, style reading, review gallery. Promotion to v1 only with the owner's approval date and evidence.
+- **delivery** — `.delivery/config.json` (add if missing, with the chosen `enforcement.mode`), then `delivery_doctor.py`.
+- **project record** — `.claude/artifacts.json` with `record_dir` `docs/project`.
+- **CI** — copy `assets/ci/dev-standards.yml` to `.github/workflows/dev-standards.yml` and fill the placeholders. The workflow finds `docs_check.py` and `spec_check.py` through a pinned checkout of the dev-standards repo into `.dev-standards-tools/` (`{{DEV_STANDARDS_REPO}}`, `{{DEV_STANDARDS_REF}}`, `{{DOCS_SCRIPTS}}`, `{{SPEC_CHECK}}`). Ask the owner for the repo and a tag or commit if they cannot be read from the marketplace. Never overwrite an existing workflow file. Then print:
+  `gh api -X PUT repos/<owner>/<repo>/branches/<default>/protection --input -` with a body that sets `required_status_checks` to the `checks` job of the `dev-standards` workflow. Only print it.
+- **other setups** — hand over to the named skill; do not run them inside this plan.
+
+### Docs Stop hook (D4)
+
+The docs Stop hook stays warn-only. In the report, say that the block is the
+required CI check.
 
 ## Step 1 — Ask which target, before reading or writing anything
 
@@ -504,6 +556,8 @@ file it points at exists.
 
 ## Step 3 — Present one batch summary and confirm once
 
+Also list every offer the owner said yes to (see "Offers and enforcement"): the commands, the CI workflow file, and the printed branch-protection command.
+
 Group every queued change by target and by file. List what is being added, what
 is being overwritten unconditionally, what is being removed (a target's old
 `rules/model-delegation.md`), and which individual settings keys are being
@@ -610,6 +664,28 @@ anything removed (the old `model-delegation.md`), and whether the project has
 was written or already present, whether the `no-tomorrow.mjs` entry was removed
 or declined, and give the memory-to-rule table for the orchestrator. If both
 targets were written, note which keys the project file now shadows.
+
+### Enforcement report — end of step 5
+
+End with one line per plugin: its level and, when it does not block yet, the
+next step. Levels: `blocks in session`, `blocks merge`, `warns`, `on demand`,
+`not enforced`, `missing`. Use these facts: delivery blocks in session (warns in
+warn mode; blocks merge only with branch protection); docs warns (Stop hook) and
+blocks merge once the CI check is required; design system warns until the guard
+tests run in CI and v1 is approved; project record is active at turn end;
+specs are not enforced until spec-check runs in CI; repo gates block through
+their git hooks and CI, or are missing; audits are on demand. Example:
+
+```
+Enforcement after claude-setup
+  delivery       blocks in session   merge not protected: run the printed gh command
+  docs           warns               make dev-standards.yml a required check
+  design system  warns               v1 not approved yet: review the gallery, then promote
+  project record active              Full Progress published at turn end
+  specs          not enforced        no spec files found
+  repo gates     missing             run /luismc-project-setup:tech-stack-setup (audit)
+  audits         on demand           -
+```
 
 ## The alias-drift warning
 
