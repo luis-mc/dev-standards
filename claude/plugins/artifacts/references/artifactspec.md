@@ -702,10 +702,14 @@ entry (R4.1). `retire` removes a finished feature cleanly and keeps what history
 
 The templates hold `{{placeholders}}`: `title`, `fonts_link`, `design_css`,
 `structure_css`, `extra_css`, `kind_label`, `project`, `hero`, `contents`,
-`sections`, `stamp`. A feature artifact is rendered as a complete HTML document
-that opens in any browser on its own; the full-progress artifact is rendered as
-an HTML fragment beginning with `<title>`, as the Artifact tool expects (no
-`<html>`, `<head>` or `<body>`). Both are described in §5.5.
+`sections`, `stamp`.
+
+- A feature artifact is rendered as a complete HTML document. It opens in any
+  browser on its own.
+- The full-progress artifact is rendered as an HTML fragment beginning with
+  `<title>`, as the Artifact tool expects (no `<html>`, `<head>` or `<body>`).
+
+§5.5 describes both.
 
 - **R5.1** — A feature artifact's title is `Feature: <name>`; the full-progress
   artifact's is `Full Progress: <project>`.
@@ -732,17 +736,23 @@ an HTML fragment beginning with `<title>`, as the Artifact tool expects (no
 
 - **R5.7** — The lede is the content lede alone, in `<p class="lede">`: a short
   note (§4.4). When the content lede is empty the paragraph is omitted. The
-  statuses are not in it: the At a glance block's Needs you group (R5.34) lists
-  every task in Needs you, every Waiting or On hold task that waits on the owner (R5.34a), and every task in Failed, then every open decision (R5.25), and reads
-  `Nothing needs you.` when none waits. `check` finds a Needs you group that
-  differs from the generated set.
-The At a glance block itself is specified in §5.6 (R5.33 to R5.35).
+  statuses are not in it. The At a glance block's Needs you group (R5.34) lists,
+  in this order:
+  1. every task in Needs you;
+  2. every Waiting or On hold task that waits on the owner (R5.34a);
+  3. every task in Failed;
+  4. every open decision (R5.25).
+
+  It reads `Nothing needs you.` when none waits. `check` finds a Needs you
+  group that differs from the generated set.
+
+§5.6 specifies the At a glance block itself (R5.33 to R5.35).
 
 - **R5.8** — Tiles show the count of each status that has at least one task,
   in the order of §6.1, computed from the registry.
 - **R5.8a** — A tile's label names what it counts: `tasks <status in lower
-  case>`, for example `123` over `tasks live`, `1 task running` in the singular
-  (the label reads `task running`). Verified by `tiles_say_tasks`.
+  case>`. For example, `123` over `tasks live`; in the singular, `1` over
+  `task running`. Verified by `tiles_say_tasks`.
 - **R5.9** — The full-progress artifact embeds the registry as
   `<script type="application/json" id="task-registry">`, the only JSON
   script it contains. The only other script allowed in any artifact is the
@@ -770,9 +780,10 @@ The At a glance block itself is specified in §5.6 (R5.33 to R5.35).
 ### 5.4 Decisions
 
 A feature artifact shows the owner's choices between options (designs,
-approaches, names) so that what the owner was offered, what was recommended and
-what was chosen stay visible. They are kept in `content/<key>/decisions.json`
-and drawn by the renderer; they are never written as a content section.
+approaches, names). It keeps visible what the owner was offered, what was
+recommended and what was chosen. The choices are kept in
+`content/<key>/decisions.json` and drawn by the renderer. They are never
+written as a content section.
 
 ```json
 {"decisions": [
@@ -814,7 +825,7 @@ and drawn by the renderer; they are never written as a content section.
   URL or external URL (`http:`, `https:` or `//`); an inline `style` attribute
   may not use `url()`, `@import` or fixed positions; a `data:` URL must be a
   base64 image. `image` is `assets/<file>` under the artifact's content folder:
-  the file exists, is a png, jpg, gif or webp, and is at most 300 KB; the
+  the file exists, is a png, jpg, gif or webp, and is at most 300 KB. The
   renderer embeds it as a `data:` URL. An option has a preview or an image, not
   both.
 - **R5.18** — `replaces` names an existing earlier decision of the same
@@ -857,11 +868,12 @@ and drawn by the renderer; they are never written as a content section.
 - **R5.26** — `check` warns, without failing, for an open, unreplaced decision
   whose `task` is not a task of that feature in Needs you, or, when it names no
   task, when the feature has no task in Needs you.
+
 ### 5.5 Standalone files, the publish copy and links
 
 claude.ai allows 200 artifact publishes per account per day, and every
-republish counts. Only the full-progress artifact is published; a feature
-artifact is a file in the repository that anyone with a checkout opens by
+republish counts. Only the full-progress artifact is published. A feature
+artifact is a file in the repository. Anyone with a checkout opens it by
 double-click.
 
 **The feature file**
@@ -930,14 +942,18 @@ double-click.
   tasks; decisions as in R5.25, which the full-progress artifact has none of),
   and is deterministic (R7.4).
 - **R5.34** — The groups, in this order, each omitted when empty except the
-  first: `you` *Needs you* (tasks in Needs you, then Waiting or On hold tasks
-  that wait on the owner, R5.34a, then Failed, then open decisions
-  as in R5.25); `running` *Running now* (Running tasks, soonest Expected first);
-  `built` *Built, not released* (Built, newest first); `waiting` *Waiting for
-  other work* (Waiting, then On hold, except those that wait on the owner); `live` *Live in the last 24 hours* (Live tasks
-  whose `changed` is within 24 hours of the stamp, newest first, at most 8, then
-  an item `and N more`). To do tasks are not listed. A group in a feature
-  artifact never names a task of another owner.
+  first:
+  1. `you` *Needs you*: tasks in Needs you, then Waiting or On hold tasks that
+     wait on the owner (R5.34a), then Failed, then open decisions as in R5.25.
+  2. `running` *Running now*: Running tasks, soonest Expected first.
+  3. `built` *Built, not released*: Built tasks, newest first.
+  4. `waiting` *Waiting for other work*: Waiting, then On hold, except those
+     that wait on the owner.
+  5. `live` *Live in the last 24 hours*: Live tasks whose `changed` is within 24
+     hours of the stamp, newest first, at most 8, then an item `and N more`.
+
+  To do tasks are not listed. A group in a feature artifact never names a task
+  of another owner.
 - **R5.34a** — Who a Waiting or On hold task waits on is its optional field
   `waits_on`, `owner` or `work`; absent means `work`, so a record without the
   field groups as before the split, except that the group is now named *Waiting
@@ -981,13 +997,13 @@ double-click.
   Progress, so its section 1 shows the stamps just written (R7.4, INV-3).
   Verified by `test_publish_does_not_loop` and `check_r538_published_line`.
 - **R5.39** — The headers `Feature artifact` and `Last updated` of section 1 are
-  buttons (`<button type="button" class="sort-header" data-sort="name|updated">`):
-  a click sorts the rows by that column, a second click reverses the order, an
+  buttons (`<button type="button" class="sort-header" data-sort="name|updated">`).
+  A click sorts the rows by that column. A second click reverses the order. An
   arrow and `aria-sort` on the header show the current order. The page starts
-  in Last updated, newest first (the committed order); sorting is done by the
-  template's own script on the page, stores nothing and calls nothing outside
-  the page, so it works in the publish copy, whose Copy link buttons (R5.31)
-  keep working in any order. Verified by `check_r539_sort_headers` and
+  in Last updated, newest first (the committed order). The template's own
+  script does the sorting on the page. It stores nothing and calls nothing
+  outside the page, so it works in the publish copy, whose Copy link buttons
+  (R5.31) keep working in any order. Verified by `check_r539_sort_headers` and
   `test_full_progress_sort_script`.
 
 ### 5.7 Releases, the release timeline and the State column
@@ -1020,8 +1036,8 @@ double-click.
   an open status has phases, its Expected (before any `; note`) must equal
   `DD Mon ~HH:MM`, the end of its last phase to the minute. A writing command
   that would leave a mismatch is refused, and `check` reports one (R5.41). There
-  is no silent padding: a margin for what may go wrong is named as the
-  release's `risk`, not added to Expected. Verified by `test_release_expected_is_the_end_of_the_last_phase`,
+  is no silent padding. A margin for what may go wrong is named as the
+  release's `risk` and is not added to Expected. Verified by `test_release_expected_is_the_end_of_the_last_phase`,
   `rule_file_carries_the_release_rule` and the R5.41 fixture of `test_check_fixtures`.
 - **R5.42** — Section 0 of the full-progress artifact holds, after the status key
   and before the checklist, the **release timeline** whenever at least one
