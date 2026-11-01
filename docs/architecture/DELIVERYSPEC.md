@@ -257,11 +257,11 @@ One file per repository (git-ignored with `.delivery/`). Only `delivery_ledger.p
 
 ## 4. Build split: four parts by file ownership
 
-The shared contract is committed to the integration branch before any part is built: section 2 of this file
+Commit the shared contract to the integration branch before any part is built. The contract is section 2 of this file
 as `claude/plugins/delivery/references/ledger-schema.json` (JSON Schema) and the config shape
 `.delivery/config.json` (caps, work_root, tz, brief_markers, train_label_re, long_pole_globs,
 measure_globs, eta_table, heavy_commands, outbound_deny). The home is the plugin
-`claude/plugins/delivery/` (`luismc-delivery`), so the artifacts plugin stays to ARTIFACTSPEC.
+`claude/plugins/delivery/` (`luismc-delivery`), so the artifacts plugin keeps to ARTIFACTSPEC.
 
 **(a) Ledger + PostToolUse + watchers**
 - `claude/plugins/delivery/scripts/delivery_ledger.py` (module + CLI: plan, hold, measure, show, lock, atomic write, derive phases)
@@ -281,7 +281,7 @@ measure_globs, eta_table, heavy_commands, outbound_deny). The home is the plugin
 - reads the ledger only through (a)'s module; uses fixtures until (a) lands
 
 **(c) runner_plan + artifacts publish-on-change / hourly**
-- `tech-stack-setup/.../scripts/delivery/runner_plan.py` (generic heavy-job wrapper: wait for train CI, pause/resume the local runner, one heavy job at a time, memory floor, optional affinity/priority; records `jobs[]`, `runners[].paused_by`; `runners` subcommand = D6a: report offline runners, repair via `runners[].repair` every `retry_seconds` (300), re-run the failed train CI runs that are still wanted: the run's head is the branch's current head, it is the newest run of its workflow for that head, no run of the branch is queued or running, and it did not end `cancelled` unless `rerun_cancelled` is true; ledger events `runner.offline|repair|retry|online|rerun|rerun_skipped|giveup`) + its test; a project's heavy-job script becomes a thin caller later (project branch, not here)
+- `tech-stack-setup/.../scripts/delivery/runner_plan.py` (generic heavy-job wrapper: waits for train CI, pauses and resumes the local runner, runs one heavy job at a time, keeps a memory floor, optional affinity/priority; records `jobs[]` and `runners[].paused_by`. The `runners` subcommand is D6a: it reports offline runners, repairs them via `runners[].repair` every `retry_seconds` (300), and re-runs the failed train CI runs that are still wanted. A run is still wanted when its head is the branch's current head, it is the newest run of its workflow for that head, no run of the branch is queued or running, and it did not end `cancelled` unless `rerun_cancelled` is true. Ledger events `runner.offline|repair|retry|online|rerun|rerun_skipped|giveup`) + its test; a project's heavy-job script becomes a thin caller later (project branch, not here)
 - `claude/plugins/artifacts/scripts/hook_end_of_turn.py` (hourly fail-safe: block when `publishes[full-progress].last_at` > 60 min; fresh-copy check DL-62)
 - `claude/plugins/artifacts/scripts/project_artifacts.py` (`pending --json` records copy hash/time; `mark-published` refuses when no publish of the current copy is recorded; expired-Expected check DL-63)
 - `claude/plugins/artifacts/scripts/publish_hourly.py` (new: what the hourly cron/watcher calls)
@@ -296,8 +296,8 @@ measure_globs, eta_table, heavy_commands, outbound_deny). The home is the plugin
 - `.claude-plugin/marketplace.json`, `README.md` section for the new plugin, this spec
 - model-profiles / rule-tag tests that check every `<!-- check: -->` path exists
 
-Order: contract commit, then (a)-(d) in parallel; (b) and (c) code against the schema and
-fixtures; the join runs (a) first. A project then wires the plugin, adds `.delivery/config.json`, drops any `Co-Authored-By` line from its CI auto-fix script, and makes its heavy-job script call `runner_plan.py`. Each is a change in that project, on its own branch.
+Order: contract commit, then (a)-(d) in parallel. (b) and (c) code against the schema and
+fixtures. The join runs (a) first. A project then wires the plugin, adds `.delivery/config.json`, drops any `Co-Authored-By` line from its CI auto-fix script, and makes its heavy-job script call `runner_plan.py`. Each is a change in that project, on its own branch.
 
 ## 5. Owner decisions (14 Oct 2026, 22:3x Lisbon)
 
