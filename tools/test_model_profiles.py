@@ -19,8 +19,9 @@ What is checked against a repo root:
       source (claude/plugins/transcript-folds/hooks/) is on the branch it names
       the same two actions, otherwise that cross-check is skipped with a
       printed message, never silently passed
-  K2  SKILL.md names the luismc-transcript-folds enabledPlugins entry, the
-      keybindings merge and the plugin install in its report
+  K2  SKILL.md turns luismc-transcript-folds on in the project's enabledPlugins
+      (SO4: no user-level entry), names the keybindings merge and the plugin
+      install with --scope project in its report
   D1  the owner's default, medium for Opus and Sonnet alike: every profile
       is medium, the architect agent (Opus) is medium, the settings
       template's top-level effortLevel is medium, and claude-setup recommends
@@ -179,8 +180,8 @@ def keybindings(root):
         text = " ".join((root / SKILL).read_text(encoding="utf-8").split())
     except OSError:
         text = ""
-    for needle in (f'"{FOLDS_PLUGIN}@<marketplace>"', "~/.claude/keybindings.json",
-                   f"claude plugin install {FOLDS_PLUGIN}@<marketplace>",
+    for needle in ("project target only (transcript-folds included)", "~/.claude/keybindings.json",
+                   f"claude plugin install {FOLDS_PLUGIN}@<marketplace> --scope project",
                    "/reload-plugins"):
         if needle not in text:
             found.append(f"K2 SKILL.md lacks: {needle}")
