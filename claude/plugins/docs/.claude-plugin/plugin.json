@@ -1,7 +1,7 @@
 {
   "name": "luismc-docs",
   "description": "The documentation standard for every project, to DOCSPEC: the docs/ layout by reader question (overview, features, design-system, architecture, guides, reference, project), a feature-spec template with front matter, a generated offline docs/index.html with search and a feature index by app and topic, one version per release folded from change notes, checks that keep docs true to the code (links, Source: lines, code-to-doc map, freshness, generated reference), a scripted move for existing repos, a guard that keeps agent briefs and reports off the default branch, and Stop and SessionStart hooks that remind the agent. Generic: nothing project-specific.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "Luis Carvalho"
   }
