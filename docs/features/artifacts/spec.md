@@ -9,6 +9,7 @@ owner: agents
 type: reference
 code:
   - claude/plugins/artifacts/**
+  - claude/plugins/artifacts/references/artifactspec.md
   - tools/test_project_artifacts.py
   - tools/test_project_artifacts_hooks.py
   - tools/test_render_artifacts.py
@@ -18,15 +19,15 @@ artifact: feature-project-artifacts-standard.html
 ---
 # Project artifacts
 
-This page describes the `luismc-artifacts` plugin as it is built. The normative rules are in [ARTIFACTSPEC](../../../claude/plugins/artifacts/references/artifactspec.md); this page links to them and does not copy them.
+This page describes the `luismc-artifacts` plugin as it is built. The normative rules are in [ARTIFACTSPEC](../../../claude/plugins/artifacts/references/artifactspec.md); this page links to them. It does not copy them.
 
 ## 1. In one paragraph
 
-`luismc-artifacts` keeps one record of a project's work in `docs/artifacts/` and draws it as pages. Each feature has a feature artifact (a standalone HTML file). The whole project has one full-progress artifact, published to claude.ai once per turn. An owner can see what is live, what is running and what needs them without reading code or chat. Every status is written once, in a task registry, and every page is generated from it.
+`luismc-artifacts` keeps one record of a project's work in `docs/artifacts/` and draws it as pages. Each feature has a feature artifact (a standalone HTML file). The whole project has one full-progress artifact. It is published to claude.ai once per turn. An owner can see what is live, what is running and what needs them without reading code or chat. Every status is written once, in a task registry. Every page is generated from it.
 
 ## 2. Why
 
-A project builds many things at once. In an earlier project the pages drifted: a feature page still said "Needs you" hours after the step was done, because the status was typed by hand in two places.
+A project builds many things at once. In an earlier project the pages drifted. A feature page still said "Needs you" hours after the step was done. The status was typed by hand in two places.
 
 Goals:
 
@@ -50,20 +51,20 @@ flowchart LR
   hook[End-of-turn hook] -. blocks until published .-> pub
 ```
 
-- The project keeps its record in `docs/artifacts/`: a manifest, a task registry, the content of each feature and the rendered pages.
-- A task is a unit of work with an ID (a registered prefix plus a number). Every activity is a task before it starts, the session's own work included.
-- One command, `set-task-status`, changes a task's status, renders every page that shows it, and writes the files. It never commits or pushes (see [decision 0010](../../architecture/decisions/0010-artifacts-never-commit-or-push.md)).
-- A feature artifact is a file opened in a browser and never published. Full Progress lists every task, links the feature files, and is the only page published to claude.ai (see [decision 0011](../../architecture/decisions/0011-only-full-progress-is-published.md)).
-- Hooks make the session do the rest: they queue status changes seen in git and CI, deliver the rule at session start, and stop a turn that ends with something unpublished.
+- The project keeps its record in `docs/artifacts/`. It holds a manifest, a task registry, the content of each feature and the rendered pages.
+- A task is a unit of work with an ID (a registered prefix plus a number). Every activity is a task before it starts. This includes the session's own work.
+- One command, `set-task-status`, changes a task's status. It renders every page that shows the task and writes the files. It never commits or pushes (see [decision 0010](../../architecture/decisions/0010-artifacts-never-commit-or-push.md)).
+- A feature artifact is a file opened in a browser. It is never published. Full Progress lists every task and links the feature files. It is the only page published to claude.ai (see [decision 0011](../../architecture/decisions/0011-only-full-progress-is-published.md)).
+- Hooks make the session do the rest. They queue status changes seen in git and CI. They deliver the rule at session start. They stop a turn that ends with something unpublished.
 
-Eight statuses with fixed meanings: Live, Built, Running, Needs you, Waiting, To do, On hold, Failed (ARTIFACTSPEC section 6). A release is a task that other tasks ride; Full Progress draws a release timeline and groups items by release (ARTIFACTSPEC sections 5.7 and 5.8).
+Eight statuses with fixed meanings: Live, Built, Running, Needs you, Waiting, To do, On hold, Failed (ARTIFACTSPEC section 6). A release is a task that other tasks ride. Full Progress draws a release timeline and groups items by release (ARTIFACTSPEC sections 5.7 and 5.8).
 
 ### The skills
 
 | Skill | What it does |
 |---|---|
-| `feature-artifact-new` | Writes a feature artifact and its tasks; creates Full Progress first if the project has none. |
-| `full-progress-artifact-new` | Writes the project's one full-progress artifact; refuses if one exists. |
+| `feature-artifact-new` | Writes a feature artifact and its tasks. It creates Full Progress first if the project has none. |
+| `full-progress-artifact-new` | Writes the project's one full-progress artifact. It refuses if one exists. |
 | `task-add` | Records new work as a task with the next ID. |
 | `task-status-update` | Runs `set-task-status`, checks, and publishes what changed. |
 | `project-artifact-check` | Checks a project's artifacts against ARTIFACTSPEC. |
@@ -72,17 +73,17 @@ The commands are listed in ARTIFACTSPEC section 7. They include `init`, `feature
 
 ## 4. Screens and states
 
-The two pages are HTML. Section 0 of each is always "Status and checklist": a stamp, a lede that says what needs the owner (or "Nothing needs you"), tiles and the checklist. Both pages work in light and dark themes and at phone width. The structure stylesheet is fixed; a project's design tokens are free. See ARTIFACTSPEC section 5.
+The two pages are HTML. Section 0 of each is always "Status and checklist". It holds a stamp, a lede, tiles and the checklist. The lede says what needs the owner, or "Nothing needs you". Both pages work in light and dark themes and at phone width. The structure stylesheet is fixed. A project's design tokens are free. See ARTIFACTSPEC section 5.
 
 ## 5. Functional requirements
 
-**R5.1** — A project has feature artifacts and exactly one full-progress artifact; creating the first feature artifact creates Full Progress when none exists.
+**R5.1** — A project has feature artifacts and exactly one full-progress artifact. Creating the first feature artifact creates Full Progress when none exists.
 
 **R5.2** — A task's status is stored once, in `docs/artifacts/registry.json`. Every checklist and tile is generated from it.
 
 **R5.3** — `set-task-status` updates the registry, renders each page that shows the task, and writes the files in one run.
 
-**R5.4** — `set-task-status` rejects a status outside the eight and names the nearest allowed one.
+**R5.4** — `set-task-status` rejects a status outside the eight. It names the nearest allowed one.
 
 **R5.5** — Rendering is deterministic: the same record and stamp give identical HTML.
 
@@ -90,15 +91,15 @@ The two pages are HTML. Section 0 of each is always "Status and checklist": a st
 
 **R5.7** — A feature artifact is never published and has no URL. Only Full Progress is published.
 
-**R5.8** — Full Progress needs a publish only when what the owner sees changes; a detail-only change does not.
+**R5.8** — Full Progress needs a publish only when what the owner sees changes. A detail-only change does not.
 
-**R5.9** — When claude.ai refuses a publish for its daily limit, the publish is deferred until the reset and the end-of-turn hook does not block on it.
+**R5.9** — When claude.ai refuses a publish for its daily limit, the publish is deferred until the reset, and the end-of-turn hook does not block on it.
 
 **R5.10** — Full Progress is published at least every 60 minutes while the project has a record.
 
-**R5.11** — A release's Expected time is the end of its last phase; a mismatch is refused.
+**R5.11** — A release's Expected time is the end of its last phase. A mismatch is refused.
 
-**R5.12** — A finished feature artifact can be retired: its tasks and decisions are kept, its file and content are deleted.
+**R5.12** — A finished feature artifact can be retired. Its tasks and decisions are kept. Its file and content are deleted.
 
 **R5.13** — `promote-to-spec` writes a feature artifact's content to a feature spec in the luismc-docs template.
 
@@ -108,15 +109,15 @@ The two pages are HTML. Section 0 of each is always "Status and checklist": a st
 
 **R6.2** — The scripts use the Python standard library only.
 
-**R6.3** — The after-command hook finishes in under two seconds, and every hook does nothing in a project without a manifest.
+**R6.3** — The after-command hook finishes in under two seconds. Every hook does nothing in a project without a manifest.
 
-**R6.4** — Hooks fail open on an internal error: they exit 0 and print one line on stderr. A turn is released after three unchanged blocks.
+**R6.4** — Hooks fail open on an internal error. They exit 0 and print one line on stderr. A turn is released after three unchanged blocks.
 
-**R6.5** — The two pages show no sideways page scroll at 360 px wide; wide tables scroll inside their box.
+**R6.5** — The two pages show no sideways page scroll at 360 px wide. Wide tables scroll inside their box.
 
 **R6.6** — Times are shown in the project's own time zone, named in the page.
 
-Limit: 200 publishes a day per account (a claude.ai limit). The plugin spends one per turn at most.
+Limit: 200 publishes a day per account (a claude.ai limit). The plugin spends at most one per turn.
 
 ## 7. Design
 
@@ -130,19 +131,19 @@ flowchart TB
   hooks --> queue[artifact_queue.py]
 ```
 
-- `project_artifacts.py` is the one script. Skills and hooks call it and never edit the record themselves.
+- `project_artifacts.py` is the one script. Skills and hooks call it. They never edit the record themselves.
 - `render_artifacts.py` renders the pages from the record.
-- Four hooks: after-command (queues status changes), before-command (silent), end-of-turn (blocks), session-start (delivers the rule, runs the migration of an older record).
-- The rule is delivered at each session start; no copy is placed in the project (ARTIFACTSPEC section 10).
+- Four hooks: after-command (queues status changes), before-command (silent), end-of-turn (blocks), session-start (delivers the rule and migrates an older record).
+- The rule is delivered at each session start. No copy is placed in the project (ARTIFACTSPEC section 10).
 - Record files are listed in ARTIFACTSPEC section 4. The record folder can move under `docs/` with `move-record`.
 
 ## 8. Failure modes
 
 | Dependency | If it fails | Why |
 |---|---|---|
-| `gh` or CI lookup at session start | Skip the catch-up, say so once | A missing tool must not stop work. |
+| `gh` or CI lookup at session start | Skip the catch-up. Say so once. | A missing tool must not stop work. |
 | `pending` unreadable in the end-of-turn hook | Fail open | A broken script must not trap a turn. |
-| claude.ai daily limit | Defer; do not block | The owner cannot fix it; it resets. |
+| claude.ai daily limit | Defer. Do not block. | The owner cannot fix it. It resets. |
 | Time zone data missing (Windows) | Fall back to local time, with a warning | The page still renders. |
 | A change that adds a finding | Fail closed: write nothing | A record that was valid stays valid. |
 
@@ -187,7 +188,7 @@ The full list is the ARTIFACTSPEC decision record (D1 to D24). These are the las
 
 ## 11. Not built yet
 
-- A cloud routine that catches changes made outside a session. Today they are caught at the next session start (ARTIFACTSPEC D3).
+- A cloud routine that catches changes made outside a session. Today the next session start catches them (ARTIFACTSPEC D3).
 - Moving other projects onto the plugin from dev-standards. Each project adopts it in its own sessions (ARTIFACTSPEC D9).
 
 ## 12. Code map
