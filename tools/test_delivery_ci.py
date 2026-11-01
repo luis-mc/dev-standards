@@ -1393,14 +1393,14 @@ def check_workflow(track: str, text: str) -> list[str]:
         problems.append("verify checkout must use fetch-depth: 0 (gitleaks scans full history)")
     if "sha256sum -c" not in v:
         problems.append("gitleaks download is not checksum verified")
-    if "['sha256']['linux_x64']" not in v:
+    if "'linux_x64'" not in v:
         problems.append("gitleaks is not checked against the SHA-256 pinned in tools.json")
     elif 'echo "${sha}  ${archive}" | sha256sum -c -' not in v:
         problems.append("the pinned SHA-256 is not what the archive is checked against")
-    if "::warning::" not in v or "old form" not in v:
-        problems.append("the old tools.json form must be read with a warning")
-    if v.count("checksums.txt") != 2:
-        problems.append("the release's checksums file must only be the fallback for the old form")
+    if "::error::" not in v or "tools_pin.py" not in v or '[ -z "${sha:-}" ]' not in v:
+        problems.append("a missing pin must fail the secret scan and name tools_pin.py")
+    if "checksums.txt" in v:
+        problems.append("the release's checksums file must not be a fallback")
 
     # triggers, paths-ignore, concurrency kept
     if text.count("docs/**") < 2:
@@ -1564,14 +1564,14 @@ def workflow_checker_detects_each_defect():
         ("dotnet", read(TOOLING / "dotnet/.github/workflows/ci.yml"), "runs-on is not the CI_RUNS_ON expression",
          lambda t: mutate(t, RUNS_ON, "runs-on: ubuntu-24.04", 1)),
         ("ts", ts, "not checked against the SHA-256 pinned",
-         lambda t: mutate(t, "g['sha256']['linux_x64']", "g['version']")),
+         lambda t: mutate(t, "'linux_x64'", "'none'")),
         ("go", go, "pinned SHA-256 is not what the archive",
          lambda t: mutate(t, 'echo "${sha}  ${archive}" | sha256sum -c -', 'echo "${sha}  ${archive}"')),
-        ("rust", read(TOOLING / "rust/.github/workflows/ci.yml"), "old tools.json form must be read with a warning",
-         lambda t: mutate(t, "::warning::", "::notice::")),
-        ("dotnet", read(TOOLING / "dotnet/.github/workflows/ci.yml"), "only be the fallback",
-         lambda t: mutate(t, "          fi\n          tar -xzf",
-                          "          fi\n          curl -sSfL -O \"${base}/gitleaks_${version}_checksums.txt\"\n          tar -xzf")),
+        ("rust", read(TOOLING / "rust/.github/workflows/ci.yml"), "missing pin must fail",
+         lambda t: mutate(t, '[ -z "${sha:-}" ]', '[ -n "${sha:-}" ]')),
+        ("dotnet", read(TOOLING / "dotnet/.github/workflows/ci.yml"), "must not be a fallback",
+         lambda t: mutate(t, "          tar -xzf",
+                          "          curl -sSfL -O \"${base}/gitleaks_${version}_checksums.txt\"\n          tar -xzf")),
         ("ts", ts, "job name",
          lambda t: mutate(t, "name: integration tests (ephemeral Postgres)", "name: integration")),
         ("ts", ts, "named 'web E2E",
@@ -1847,8 +1847,8 @@ def agent_setup_problems(script_text: str) -> list[str]:
         problems.append(f"a matching pin must install (exit {r['code']}): {r['err'][-300:]}")
     if any("checksums" in q for q in r["requests"]):
         problems.append("the pinned form must not download the checksums file")
-    if "old form" in r["err"]:
-        problems.append("the pinned form must not warn")
+    if "refusing" in r["err"]:
+        problems.append("the pinned form must not be refused")
 
     # 2. a pin that does not match the archive installs nothing, and the checksums
     #    file cannot overrule it (the server's file lists the right digest).
@@ -1866,20 +1866,16 @@ def agent_setup_problems(script_text: str) -> list[str]:
     if r["code"] != 2 or r["installed"]:
         problems.append(f"a missing platform pin must exit 2 with nothing installed (exit {r['code']})")
 
-    # 4. the old form still installs, with a warning, through the checksums file.
+    # 4. the old form (a bare version, no pin) is refused: nothing downloaded, nothing
+    #    installed, and the message names the command that writes the pins.
     r = run_agent_setup(script_text, json.dumps({"gitleaks": VERSION}), archive, exe, asset,
                         with_checksums=right_sums)
-    if r["code"] != 0 or not r["installed"]:
-        problems.append(f"the old form must still install (exit {r['code']}): {r['err'][-300:]}")
-    if "old form" not in r["err"]:
-        problems.append("the old form must warn")
-    if not any("checksums" in q for q in r["requests"]):
-        problems.append("the old form must fall back to the checksums file")
-    wrong_sums = f"{'1' * 64}  {asset}\n"
-    r = run_agent_setup(script_text, json.dumps({"gitleaks": VERSION}), archive, exe, asset,
-                        with_checksums=wrong_sums)
-    if r["code"] != 2 or r["installed"]:
-        problems.append("the old form must still refuse a checksums-file mismatch")
+    if r["code"] == 0 or r["installed"]:
+        problems.append(f"the old form must be refused (exit {r['code']}, installed {r['installed']})")
+    if "tools_pin.py" not in r["err"]:
+        problems.append("the refusal must name tools_pin.py")
+    if r["requests"]:
+        problems.append("the old form must not download anything")
     return problems
 
 
@@ -1922,14 +1918,12 @@ def agent_setup_pin_check_detects_each_defect():
     script = AGENT_SETUP.read_text(encoding="utf-8").replace("\r\n", "\n")
     cases = [
         ("the comparison removed", "if got != want:", "if False:", "wrong pin must exit 2"),
-        ("the pin ignored", 'want = pin.lower() or None', 'want = None',
+        ("the pin ignored", 'want = pin.lower()\n', 'want = "0"\n',
          "a matching pin must install"),
         ("the pin never read", 'print("" if isinstance(g, str) else g.get("sha256", {}).get(sys.argv[2], ""))',
          'print("")', "a matching pin must install"),
-        ("no warning for the old form", 'say "warning: tools.json uses the old form;', 'say "note: tools.json;',
-         "the old form must warn"),
         ("a missing pin falls through", 'die "tools.json has no pinned SHA-256 for', 'say "tools.json has no pinned SHA-256 for',
-         "a missing platform pin must exit 2"),
+         "the old form must not download anything"),
     ]
     for label, old, new, expect in cases:
         mutated = mutate(script, old, new)

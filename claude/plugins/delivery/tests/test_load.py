@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -90,10 +91,62 @@ class Cache(unittest.TestCase):
             d = L.sample(now=1100, measure=measure(20))           # the old ones left the 30 s window
             self.assertEqual(d["cpu"], 20.0)
 
+    def test_no_sleep_and_delta_from_saved_raw(self):
+        raws = iter([(1000, 10000), (1500, 11000)])
+        with env(), mock.patch.object(L.time, "sleep", side_effect=AssertionError("slept")) as sl, \
+                mock.patch.object(L, "sys", mock.Mock(platform="linux")), \
+                mock.patch.object(L, "_read_text", side_effect=lambda p: MEMINFO if "meminfo" in p else "x"), \
+                mock.patch.object(L, "parse_proc_stat", side_effect=lambda t: next(raws)), \
+                mock.patch.object(L, "_loadavg_cpu", return_value=7.0):
+            a = L.sample(now=time.time())
+            self.assertEqual(a["cpu"], 7.0)                       # first call: load average fallback
+            b = L.sample(now=time.time() + 20)
+            self.assertEqual(b["cpu"], round((7.0 + 50.0) / 2, 1))  # 500 busy of 1000 total, smoothed with the first
+            sl.assert_not_called()
+
+    def test_delta_and_fallbacks(self):
+        now = time.time()
+        with mock.patch.object(L, "sys", mock.Mock(platform="linux")), \
+                mock.patch.object(L, "_read_text", side_effect=lambda p: MEMINFO if "meminfo" in p else STAT_B), \
+                mock.patch.object(L, "_loadavg_cpu", return_value=None):
+            s = L.measure_now({"raw": [1000, 10000], "at": now - 5})
+            self.assertEqual(L.cpu_between((1000, 10000), tuple(s["raw"])), s["cpu"])
+            old = L.measure_now({"raw": [1000, 10000], "at": now - 601})
+            self.assertIsNone(old["cpu"])                          # too old and no load average: unknown
+            self.assertIsNone(L.measure_now()["cpu"])
+        with env(), mock.patch.object(L, "measure_now", return_value={"mem": 50.0, "cpu": None, "at": 1.0}):
+            self.assertEqual(L.sample(now=1)["cpu"], 0.0)
+
     def test_unwritable_cache_still_works(self):
-        with env(DELIVERY_LOAD_CACHE="/nonexistent-dir/x/c.json"):
+        blocker = Path(tempfile.mkdtemp(prefix="load-")) / "file"
+        blocker.write_text("x")                                    # a file where the folder should be
+        with env(DELIVERY_LOAD_CACHE=str(blocker / "x" / "c.json")):
             s = L.sample(now=5, measure=lambda: {"mem": 1.0, "cpu": 2.0, "at": 0})
             self.assertEqual((s["mem"], s["cpu"]), (1.0, 2.0))
+
+    def test_default_cache_is_per_user_not_shared_temp(self):
+        d = tempfile.mkdtemp(prefix="home-")
+        with mock.patch.dict(os.environ, {"HOME": d, "USERPROFILE": d}):
+            os.environ.pop("DELIVERY_LOAD_CACHE", None)
+            os.environ.pop("DELIVERY_MACHINE_CONFIG", None)
+            path = Path(L.cache_file())
+            self.assertEqual(path.parent, Path(os.path.expanduser("~")) / ".claude")
+            self.assertNotEqual(str(path.parent), tempfile.gettempdir())
+
+    def test_write_leaves_no_temp_file_and_makes_folder(self):
+        d = Path(tempfile.mkdtemp(prefix="load-")) / "new" / "dir"
+        with env(DELIVERY_LOAD_CACHE=str(d / "c.json")):
+            L.sample(now=100, measure=lambda: {"mem": 1.0, "cpu": 2.0, "at": 0})
+            L.sample(now=200, measure=lambda: {"mem": 1.0, "cpu": 2.0, "at": 0})
+        self.assertEqual([x.name for x in d.iterdir()], ["c.json"])
+
+    def test_corrupt_cache_is_ignored(self):
+        d = Path(tempfile.mkdtemp(prefix="load-"))
+        (d / "c.json").write_text("{not json")
+        with env(DELIVERY_LOAD_CACHE=str(d / "c.json")):
+            s = L.sample(now=5, measure=lambda: {"mem": 1.0, "cpu": 2.0, "at": 0})
+            self.assertFalse(s["cached"])
+            self.assertEqual(len(json.loads((d / "c.json").read_text())["samples"]), 1)
 
     def test_unmeasurable_raises(self):
         def boom():

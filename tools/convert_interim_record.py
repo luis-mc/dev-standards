@@ -139,6 +139,26 @@ def load_modules(build_dir):
     return [content_artifacts, content_models]
 
 
+def safe_eval(node):
+    """Value of an AST expression: a literal, or dict(...) with keyword arguments whose values
+    are again such expressions. Anything else (names, attributes, other calls) is refused."""
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'dict' \
+            and not node.args and all(kw.arg is not None for kw in node.keywords):
+        return {kw.arg: safe_eval(kw.value) for kw in node.keywords}
+    if isinstance(node, (ast.List, ast.Tuple, ast.Set)):
+        items = [safe_eval(elt) for elt in node.elts]
+        return items if isinstance(node, ast.List) else (tuple(items) if isinstance(node, ast.Tuple) else set(items))
+    if isinstance(node, ast.Dict):
+        if any(key is None for key in node.keys):
+            raise ValueError('build.py: dict unpacking (**) is not allowed')
+        return {safe_eval(k): safe_eval(v) for k, v in zip(node.keys, node.values)}
+    try:
+        return ast.literal_eval(node)
+    except ValueError:
+        raise ValueError('build.py: expression not allowed (only literals and dict(name=literal)): %s'
+                         % ast.dump(node)[:80]) from None
+
+
 def read_build_py(build_dir):
     """Project tasks and the full-progress content from build.py, by parsing it (it is a script)."""
     with open(os.path.join(build_dir, 'build.py'), encoding='utf-8') as handle:
@@ -148,8 +168,7 @@ def read_build_py(build_dir):
     for node in tree.body:
         if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name) \
                 and node.targets[0].id in wanted:
-            code = compile(ast.Expression(node.value), 'build.py', 'eval')
-            values[node.targets[0].id] = eval(code, {'__builtins__': {'dict': dict}}, {})  # literals and dict() only
+            values[node.targets[0].id] = safe_eval(node.value)  # literals and dict(key=literal) only
     hero = None
     for node in ast.walk(tree):  # progress = page(FP_TITLE, kind, label, <hero>, meta, sections, ...)
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'page' \

@@ -1,6 +1,6 @@
 ---
 name: feature-artifact-new
-description: Create a feature artifact — the standalone HTML file `docs/artifacts/feature-<slug>.html` of one feature, titled `Feature: <name>`, with a status checklist, written content and a history. It opens by double-click in any browser and is never published. Use when the user starts a feature and wants it tracked, asks for a feature artifact or feature page, or says a feature needs its own status view. Creates the project's full-progress artifact first when it does not exist yet. Also promotes a feature page's decided content into the feature's spec (`docs/features/<x>/spec.md`, DOCSPEC) when the user asks to promote, finish or document a feature.
+description: Create a feature artifact — the standalone HTML file `docs/artifacts/feature-<slug>.html` of one feature, titled `Feature: <name>`, with a status checklist, written content and a history. It opens by double-click in any browser and is never published. Use when the user starts a feature and wants it tracked, asks for a feature artifact or feature page, or says a feature needs its own status view. Creates the project's full-progress artifact first when it does not exist yet. Also promotes a feature page's decided content into the feature's spec (`docs/features/<x>/spec.md`, DOCSPEC; the file `luismc-docs:feature-spec-new` owns) when the user asks to promote, finish or document a feature.
 model: opus
 effort: medium
 ---
@@ -176,7 +176,7 @@ This never blocks the feature work or the end of the turn.
 ## Promote to a spec
 
 The artifact is for work and decisions in flight. The feature's spec is how it
-works now (DOCSPEC R4.10, `luismc-docs`). When a feature's content is decided,
+works now (DOCSPEC R4.10, `luismc-docs`). Promote-to-spec is the one link from a feature page's decided content to its feature spec. It writes the same file `luismc-docs:feature-spec-new` owns and follows that skill's template. When a feature's content is decided,
 or before its branch joins (R10.4), promote it in the same branch:
 
 1. Dry run: `promote-to-spec KEY [--feature ID]`. It prints:

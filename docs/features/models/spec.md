@@ -4,7 +4,7 @@ title: Model and effort profiles
 apps: [luismc-project-setup, luismc-agents]
 topics: [models]
 status: live
-version: 0.1.1
+version: 0.1.2
 owner: agents
 type: reference
 code:
@@ -175,4 +175,5 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.1.2 | 2026-11-01 | RELEASE-25 | The model profiles list the docs plugin's new design-system-setup skill under the mechanical profile (Sonnet, medium). | DOC17-model-profile |
 | 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. | DS143 |

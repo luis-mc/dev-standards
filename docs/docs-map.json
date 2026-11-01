@@ -34,6 +34,9 @@
     "claude/plugins/delivery/scripts/*.py": [
       "docs/features/delivery/spec.md"
     ],
+    "claude/plugins/delivery/tests/*.py": [
+      "docs/features/delivery/spec.md"
+    ],
     "claude/plugins/docs/**": [
       "docs/features/docs/spec.md"
     ],

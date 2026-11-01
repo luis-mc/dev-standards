@@ -77,13 +77,13 @@ jobs:
       # Throwaway service-container credentials, as in ci.yml.
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ needs.changed.outputs.sha }}
 
       - run: corepack enable
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -107,7 +107,7 @@ jobs:
     runs-on: ${{ fromJSON(vars.NIGHTLY_RUNS_ON || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ needs.changed.outputs.sha }}
 
@@ -126,7 +126,7 @@ jobs:
         run: corepack enable
 
       - if: steps.probe.outputs.present == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
           cache: pnpm

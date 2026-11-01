@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 0.1.2
+version: 0.2.0
 owner: agents
 type: reference
 code:
@@ -158,5 +158,6 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.2.0 | 2026-11-01 | RELEASE-25 | The docs plugin gains the design-system-setup skill and design_system.py: it lays out docs/design-system (version folders, approvals.json, review visuals), promotes an approved next-version and adds the DS1-DS5 checks (DOCSPEC section 15).<br>The docs gate prints each generated_reference command before running it.<br>fetch-mermaid checks the downloaded mermaid.min.js against a pinned SHA-256 and refuses on a mismatch.<br>feature-spec-new is stated as the one skill that writes every feature spec.<br>The design system starter is now a full, project-neutral set: about 29 UX rules, 20 components, light and dark tokens and an action vocabulary. A read-only design_system.py styles command lists the project's style files. | DOC17-design-system-skill, DS154, DS161, SO3, ST2 |
 | 0.1.2 | 2026-11-01 | RELEASE-24 | The front-matter parser reads block lists, so the docs map is no longer empty for specs that list code paths. | DS150 |
 | 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. | DS142 |

@@ -36,6 +36,12 @@
       "type": "string",
       "description": "Default branch (default main)."
     },
+    "ledger_retention_days": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 14,
+      "description": "DS156: days the ledger keeps finished rows (closed trains, finished or disabled agents, finished installs, events). Older ones are dropped when the ledger is written. Open rows are never dropped. 0 = keep all."
+    },
     "train_label_re": {
       "type": "string",
       "format": "regex",
