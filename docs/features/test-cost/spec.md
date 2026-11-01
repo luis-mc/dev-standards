@@ -24,11 +24,11 @@ All eight fixes shipped in #47: CI runs only the areas a change touches, mutatio
 
 ### What is wrong
 
-The owner was right about duplication, and wrong in one place it would be easy to cut: the checks themselves are good. All 94 gate mutants are caught, and the extra CI runs found three Linux-only bugs and one weak test. What is wrong is *how often* and *how indiscriminately* they run. Four causes:
+The owner was right about duplication. But the checks themselves are good, so they must not be cut. All 94 gate mutants are caught. The extra CI runs found three Linux-only bugs and one weak test. The problem is *how often* the checks run and that they run for every change. There are four causes:
 
 1. **Everything runs for every change.** spec-lint is one job of 17 steps with no scoping, so a luismc-artifacts patch pays 13.7 minutes for delivery-script tests it cannot affect, including an 8.8-minute mutation pass.
-2. **The same commit is tested at three stages.** Agents ran the full workflow on their branches (half of all CI time), the ready PR ran it again on the joined result, and `main` ran it a third time on a tree that differs only in record files.
-3. **Tests that once had a reason were never retired.** The fake-renderer group covered the time before the real renderer existed; it now doubles the artifacts suite. Mutants rerun whole scenarios after they are already caught.
+2. **The same commit is tested at three stages.** Agents ran the full workflow on their branches (half of all CI time). The ready PR ran it again on the joined result. Then `main` ran it a third time on a tree that differs only in record files.
+3. **Tests that once had a reason were never retired.** The fake-renderer group covered the time before the real renderer existed. Now it doubles the artifacts suite. Mutants rerun whole scenarios after they are already caught.
 4. **The record writes to main like a chat.** One push per status change: 264 commits in a day, each scanned, all of them moving `main` under the CI runs that are meant to test a fixed tree.
 
 What this cost the owner: a release that changes only luismc-artifacts waits about 17.5 minutes for its ready-PR run where about 3.8 would prove the same, plus 17.4 more on `main`. A train like 7.1.0 spent 1 h 54 between its first branch run and its merge.
@@ -41,11 +41,11 @@ On 11 October the owner wrote: I'm concerned we're overdoing it in terms of test
 
 Scope: the test suites in `tools/`, the GitHub workflows of this repository (`spec-lint`, `secret-scan`, `template-build`, `train-cleanup`), the runs agents and the session made on this PC, and the record commands of luismc-artifacts. Window: 10 October 20:35 to 11 October 11:00 (Lisbon), the two days in which STACKSPEC 7.0.0 and 7.1.0 and luismc-artifacts 1.1.0 to 1.3.1 were built.
 
-**One correction up front.** This repository is public, so GitHub Actions minutes are free (a sampled run reports 0 billable milliseconds). The cost is not money: it is the owner's waiting time before a merge, this PC's CPU while agents test, and noise in the history. The findings below are weighed on those three.
+**One correction up front.** This repository is public, so GitHub Actions minutes are free (a sampled run reports 0 billable milliseconds). The cost is not money. The cost is the owner's waiting time before a merge, this PC's CPU while agents test, and noise in the history. The findings below are weighed on those three.
 
 ### How it was measured
 
-Each suspicion was written down as a hypothesis first, then tested against data that could prove it wrong. Four sources:
+Each suspicion was first written down as a hypothesis. Then it was tested against data that could prove it wrong. There were four sources:
 
 | Source | What it gave |
 |---|---|
@@ -54,11 +54,11 @@ Each suspicion was written down as a hypothesis first, then tested against data 
 | Session and agent transcripts on this PC (45 files) | Every local suite execution, with its flags, before and after the 02:30 testing rule. |
 | Timed experiments on this PC (Windows), in a scratch worktree of `main` | E1: every case of the artifacts suite timed in both renderer groups. E2: every scenario and each of the 94 mutants of the gate suite timed to its end and to its first failed check. A static read of the suites replaced a planned E3 (see H4). |
 
-Two hypotheses I had stated earlier turned out false and are kept below as false, with the evidence. One estimate from the read-only audit (DS46) was tested and corrected.
+Two hypotheses I had stated earlier turned out false. They stay below, marked false, with the evidence. One estimate from the read-only audit (DS46) was tested and corrected.
 
 ### Hypotheses and verdicts
 
-Ten hypotheses, each with the test that could have proved it wrong. Three were false or overstated, and say so.
+There are ten hypotheses. Each has the test that could have proved it wrong. Three were false or overstated, and the table says so.
 
 | # | Hypothesis | Test | Verdict |
 |---|---|---|---|
@@ -73,7 +73,7 @@ Ten hypotheses, each with the test that could have proved it wrong. Three were f
 | H8 | Record commits flood `main` and its checks | Classify every commit on `main` and every secret-scan run | **True.** 264 of 276 commits on `main` since 10 October are record commits, and 189 of 194 secret-scan runs on `main` scanned one. Cheap (10 s each), but they bury the 12 real commits and keep `main` moving under every CI run. |
 | H9 | Stopping a mutant at its first failed check would halve the mutation pass | E2: for each mutant, time to its first failed check against its full run | **Partly true.** 51% of mutant time comes after the first failure, so about 49% is saved, not the audit's 45 to 65%. Uneven: `e2e_map`, `push_check` and `fast_report` fail in the first third; `timeout` and `verify` fail late and save little. |
 
-**What the extra runs did catch.** In the window, CI found three Linux-only bugs that Windows runs could not (DS17 twice: a test PATH that dropped `/usr/bin`; DS29: a missing `origin/main` case) and one weak test (a DS29 mutant nobody caught). So the checks themselves earn their place. The problem is running them several times, and running all of them whatever changed.
+**What the extra runs did catch.** In the window, CI found three Linux-only bugs that Windows runs could not (DS17 twice: a test PATH that dropped `/usr/bin`; DS29: a missing `origin/main` case) and one weak test (a DS29 mutant nobody caught). So the checks themselves earn their place. The problem is that they run several times, and that all of them run whatever changed.
 
 ### Where the time goes
 
@@ -87,15 +87,15 @@ Ten hypotheses, each with the test that could have proved it wrong. Three were f
 
 ##### The full run doubled in six hours
 
-The full ready-PR run took 8.5 min at 21:36 on 10 October and 17.5 min at 03:59 on 11 October. Every release added tests and mutants, nothing was removed, and all of it runs for every change.
+The full ready-PR run took 8.5 min at 21:36 on 10 October and 17.5 min at 03:59 on 11 October. Every release added tests and mutants. Nothing was removed. All of it runs for every change.
 
 ### The mutation pass
 
-A mutant breaks one rule in a copy of the delivery scripts and reruns the scenario that should notice. All 94 gate mutants were caught: the tests are strong. But each mutant reruns its *whole* scenario even after the first check has already failed, and the pass runs for every change, including ones that never touch the files it mutates.
+A mutant breaks one rule in a copy of the delivery scripts and reruns the scenario that should notice. All 94 gate mutants were caught, so the tests are strong. But each mutant reruns its *whole* scenario even after the first check has failed. And the pass runs for every change, including changes that never touch the files it mutates.
 
    timeout (7)196 s e2e_map (7)174 s push_check (13)173 s verify (8)157 s fast_report (7)156 s fork_point (7)94 s the other 45407 s* until the first failed check after it: the mutant is already caught E2, Windows · 2.04 px per second · * this row at half scale  E2 on this PC: 1,357 s of mutant runs, 692 s of them up to the first failed check (51%). Stopping at the first failure saves about 49%, about 4.3 of the 8.8 minutes on Linux.
 
-The larger saving is *when* it runs. The gate mutants guard six files under `tooling/shared/scripts/delivery/` and the pre-push hook. Of the five releases in the window, two changed those files (STACKSPEC 7.0.0 and 7.1.0). A third (#42) changed only `cleanup.py`, which the cleanup suite's own 54 mutants guard. For #42 and the other two (luismc-artifacts 1.1.0 and 1.1.1) the gate's 8.8 minutes proved nothing new, checked with `git diff` of each merge.
+The larger saving is in *when* the pass runs. The gate mutants guard six files under `tooling/shared/scripts/delivery/` and the pre-push hook. Of the five releases in the window, two changed those files (STACKSPEC 7.0.0 and 7.1.0). A third (#42) changed only `cleanup.py`, which the cleanup suite's own 54 mutants guard. For #42 and the other two (luismc-artifacts 1.1.0 and 1.1.1) the gate's 8.8 minutes proved nothing new, checked with `git diff` of each merge.
 
 ### Repeats and noise
 
