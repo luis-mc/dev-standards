@@ -1741,7 +1741,7 @@ Staff alerts are immediate and go through a channel outside the application (R12
 
 ## 20. Client SDK contract
 
-Every consuming web and mobile application implements this contract. It exists so behaviour cannot drift between applications.
+Every web and mobile application implements this contract. It exists so behaviour cannot drift between applications.
 
 ### 20.1 Interface
 
@@ -1765,82 +1765,82 @@ onStepUpRequired(listener)        → unsubscribe
 | Android | Keystore-backed EncryptedSharedPreferences or equivalent | plain SharedPreferences, plaintext files, external storage |
 
 - **R20.1** — On native platforms the session secret **MUST** reside only in platform secure storage.
-- **R20.2** — The secret **MUST NOT** be written to any log, crash report, analytics payload, breadcrumb, or debug output — including in development builds, because development habits become production leaks.
-- **R20.3** — Secrets **MUST** be purged from storage on logout, on any `unauthorized` response, and on account deletion.
+- **R20.2** — The secret **MUST NOT** be written to any log, crash report, analytics payload, breadcrumb or debug output. This includes development builds, because development habits become production leaks.
+- **R20.3** — Secrets **MUST** be purged from storage on logout, on any `unauthorized` response and on account deletion.
 
 ### 20.3 Session handling
 
-- **R20.4** — A single-flight guard **MUST** ensure that concurrent requests encountering an expired session trigger **exactly one** re-authentication or refresh. Without it, N concurrent requests produce N simultaneous auth calls — a self-inflicted retry storm (§22.6).
+- **R20.4** — A single-flight guard **MUST** ensure that concurrent requests that hit an expired session trigger **exactly one** re-authentication or refresh. Without it, N concurrent requests make N simultaneous auth calls, a self-inflicted retry storm (§22.6).
 - **R20.5** — Requests blocked during re-authentication are queued and replayed once, or failed cleanly. They **MUST NOT** be retried indefinitely.
-- **R20.6** — On `unauthorized`, the SDK purges local state and emits a session-change event. It **MUST NOT** attempt to repair the session by guessing.
+- **R20.6** — On `unauthorized`, the SDK purges local state and emits a session-change event. It **MUST NOT** try to repair the session by guessing.
 
 ### 20.4 Retry policy
 
-- **R20.7** — Retries are permitted **only** for idempotent requests and **only** on transport errors or `unavailable`. Never on `unauthorized`, `forbidden`, `invalid_credentials`, or `rate_limited`.
-- **R20.8** — Exponential backoff with full jitter, maximum 3 attempts, honoring `Retry-After`. Unjittered retries synchronize clients into a thundering herd — a P0 load-amplification pattern.
-- **R20.9** — Non-idempotent requests **MUST** carry an idempotency key (R19.5) if they are to be retried at all.
+- **R20.7** — Retry **only** idempotent requests, and **only** on transport errors or `unavailable`. Never retry on `unauthorized`, `forbidden`, `invalid_credentials` or `rate_limited`.
+- **R20.8** — Use exponential backoff with full jitter, maximum 3 attempts, and honor `Retry-After`. Retries without jitter synchronize clients into a thundering herd, a P0 load-amplification pattern.
+- **R20.9** — A non-idempotent request **MUST** carry an idempotency key (R19.5) if it is retried at all.
 
 ### 20.5 Error mapping
 
-- **R20.10** — The SDK maps every error code to a defined client state. Unknown codes map to a generic failure — never to a crash, and never to silent success.
-- **R20.11** — `consent_required` and `step_up_required` **MUST** be surfaced as first-class, handleable states, not treated as generic failures. Every consuming UI handles them identically.
+- **R20.10** — The SDK maps every error code to a defined client state. Unknown codes map to a generic failure, never to a crash and never to silent success.
+- **R20.11** — `consent_required` and `step_up_required` **MUST** be surfaced as first-class, handleable states, not treated as generic failures. Every UI handles them the same way.
 
 ### 20.6 Native platform requirements
 
-- **R20.12** — OAuth and magic-link callbacks **MUST** use verified platform deep links (Universal Links / App Links). Custom URL schemes **MUST NOT** be used — any installed app can register the same scheme and intercept the authorization code.
-- **R20.13** — Federated flows **MUST** use the platform's secure authentication session API (`ASWebAuthenticationSession` / Custom Tabs). An embedded web view **MUST NOT** be used: it lets the host application observe credentials and defeats the IdP's own protections.
+- **R20.12** — OAuth and magic-link callbacks **MUST** use verified platform deep links (Universal Links / App Links). Custom URL schemes **MUST NOT** be used. Any installed app can register the same scheme and intercept the authorization code.
+- **R20.13** — Federated flows **MUST** use the platform's secure authentication session API (`ASWebAuthenticationSession` / Custom Tabs). An embedded web view **MUST NOT** be used: it lets the host application see credentials and defeats the IdP's own protections.
 - **R20.14** — PKCE (S256) is mandatory on every native authorization exchange (R7.26).
-- **R20.15** — Certificate validation **MUST NOT** be relaxed in any build configuration. Certificate pinning **MAY** be added with a documented rotation and failure plan.
+- **R20.15** — Certificate validation **MUST NOT** be relaxed in any build configuration. Certificate pinning **MAY** be added, with a documented rotation and failure plan.
 
 ### 20.7 Biometric gate
 
 - **R20.16** — Local biometric confirmation **MAY** gate sensitive actions in the UI. It is a **local UX control only**.
-- **R20.17** — The server **MUST NOT** treat a client's assertion of biometric success as an authentication factor or as step-up satisfaction. A client claim is attacker-controlled on a compromised device. Server-side step-up (§8.5) is still required, and the biometric gate simply decides whether the app asks for it.
+- **R20.17** — The server **MUST NOT** treat a client's assertion of biometric success as an authentication factor or as step-up satisfaction. On a compromised device, an attacker controls the client's claim. Server-side step-up (§8.5) is still required. The biometric gate only decides whether the app asks for it.
 
 ### 20.8 Compatibility
 
-- **R20.18** — Clients tolerate unknown response fields (forward compatibility, R19.17) while the server rejects unknown request fields (R19.3). The asymmetry is deliberate.
+- **R20.18** — Clients tolerate unknown response fields (forward compatibility, R19.17). The server rejects unknown request fields (R19.3). The asymmetry is deliberate.
 - **R20.19** — Clients **MUST** tolerate ≤60 s clock skew and **MUST NOT** rely on local time for security decisions. The server is authoritative on expiry.
 
 ---
 
 ## 21. Interface (UI) requirements
 
-Normative for **every** visual interface built against this API. Accessibility is validated by the compliance audit; an inaccessible auth screen fails it regardless of how correct the API is.
+Normative for **every** visual interface built against this API. The compliance audit validates accessibility. An inaccessible auth screen fails it, however correct the API is.
 
 ### 21.1 Baseline
 
-- **R21.1** — WCAG 2.2 Level **AA** is the floor for every authentication, recovery, consent, and account-deletion flow. Level **AAA** contrast (7:1 for normal text, 4.5:1 for large text) **MUST** be met on error messages, validation feedback, status indicators, and primary actions.
-- **R21.2** — Every flow **MUST** be completable using the keyboard alone.
-- **R21.3** — No focus traps. Modals return focus to the invoking element on close (WCAG 2.1.2).
+- **R21.1** — WCAG 2.2 Level **AA** is the floor for every authentication, recovery, consent and account-deletion flow. Level **AAA** contrast (7:1 for normal text, 4.5:1 for large text) **MUST** be met on error messages, validation feedback, status indicators and primary actions.
+- **R21.2** — Every flow **MUST** be completable with the keyboard alone.
+- **R21.3** — No focus traps. A modal returns focus to the element that opened it when it closes (WCAG 2.1.2).
 - **R21.4** — Focus indicators **MUST** be visible and **MUST NOT** be suppressed by a reset stylesheet (WCAG 2.4.7, 2.4.11).
 
 ### 21.2 Semantics
 
-- **R21.5** — Native form semantics: real `<form>`, real `<label>` associated with every input, real `<button>`. A `<div>` with a click handler is not a button.
+- **R21.5** — Use native form semantics: a real `<form>`, a real `<label>` associated with every input and a real `<button>`. A `<div>` with a click handler is not a button.
 - **R21.6** — Errors **MUST** be programmatically associated with their field (`aria-describedby`, `aria-invalid`) and announced through a live region (WCAG 3.3.1).
 - **R21.7** — Errors **MUST NOT** be conveyed by color alone (WCAG 1.4.1).
-- **R21.8** — Loading and success states **MUST** be announced to assistive technology, not conveyed only by a spinner.
+- **R21.8** — Loading and success states **MUST** be announced to assistive technology, not shown only by a spinner.
 
 ### 21.3 Accessible authentication (WCAG 2.2 SC 3.3.8 / 3.3.9)
 
-- **R21.9** — No step may require a cognitive function test (memorizing, transcribing, solving a puzzle) without an accessible alternative. This is precisely why passkeys and email OTP satisfy 3.3.8 more readily than password-plus-puzzle flows.
-- **R21.10** — Paste **MUST** be permitted in every field, including password and OTP inputs. Blocking paste breaks password managers and directly violates 3.3.8.
-- **R21.11** — Correct `autocomplete` attributes are mandatory: `username`, `current-password`, `new-password`, `one-time-code`, `email`. These make the flow work with password managers and platform autofill, which is both an accessibility and a security improvement.
-- **R21.12** — OTP fields **MUST** accept a full pasted code into a single input. Split single-character boxes that reject a paste are an accessibility failure.
+- **R21.9** — No step may require a cognitive function test (memorizing, transcribing, solving a puzzle) without an accessible alternative. This is why passkeys and email OTP satisfy 3.3.8 more readily than password-plus-puzzle flows.
+- **R21.10** — Paste **MUST** be permitted in every field, including password and OTP inputs. Blocking paste breaks password managers and violates 3.3.8.
+- **R21.11** — Correct `autocomplete` attributes are mandatory: `username`, `current-password`, `new-password`, `one-time-code`, `email`. They make the flow work with password managers and platform autofill. That improves both accessibility and security.
+- **R21.12** — OTP fields **MUST** accept a full pasted code into a single input. Split single-character boxes that reject a paste fail accessibility.
 
 ### 21.4 Password fields
 
-- **R21.13** — A show/hide toggle **MUST** be provided, keyboard-operable, with its state announced.
-- **R21.14** — Minimum and maximum length **MUST** be stated **before** submission, not discovered through rejection.
+- **R21.13** — A show/hide toggle **MUST** be provided. It is keyboard-operable and its state is announced.
+- **R21.14** — Minimum and maximum length **MUST** be stated **before** submission. Users must not have to find them out through rejection.
 - **R21.15** — Password strength feedback **MUST NOT** block submission of a policy-compliant password.
 - **R21.16** — Breach rejection **MUST** be explained plainly ("this password has appeared in a known data breach") with a clear path forward.
 
 ### 21.5 Timeouts (WCAG 2.2.1, 2.2.6)
 
-- **R21.17** — Users **MUST** be warned before an idle session expires, with at least 20 seconds to extend, and the warning **MUST** be announced to assistive technology.
-- **R21.18** — Where session expiry could lose entered data, the interface **MUST** either preserve that data or warn about the loss on entry to the flow.
-- **R21.19** — For the admin plane's 15-minute idle timeout, the warning is mandatory — a silent 15-minute timeout mid-task is a genuine usability failure that drives operators toward unsafe workarounds.
+- **R21.17** — Users **MUST** be warned before an idle session expires, with at least 20 seconds to extend. The warning **MUST** be announced to assistive technology.
+- **R21.18** — If session expiry could lose entered data, the interface **MUST** either preserve that data or warn about the loss when the flow starts.
+- **R21.19** — For the admin plane's 15-minute idle timeout, the warning is mandatory. A silent 15-minute timeout in the middle of a task is a real usability failure that pushes operators toward unsafe workarounds.
 
 ### 21.6 Redundant entry (WCAG 2.2 SC 3.3.7)
 
@@ -1848,21 +1848,25 @@ Normative for **every** visual interface built against this API. Accessibility i
 
 ### 21.7 Consent interfaces
 
-- **R21.21** — Consent **MUST** be an unchecked-by-default affirmative action. Pre-ticked boxes and implied consent are non-compliant.
-- **R21.22** — The exact document version being accepted **MUST** be identified and linked, and the link **MUST** be reachable without accepting.
-- **R21.23** — The re-consent gate **MUST** keep export, deletion, and logout reachable (R14.7).
+- **R21.21** — Consent **MUST** be an affirmative action, unchecked by default. Pre-ticked boxes and implied consent are non-compliant.
+- **R21.22** — The exact document version being accepted **MUST** be identified and linked. The link **MUST** be reachable without accepting.
+- **R21.23** — The re-consent gate **MUST** keep export, deletion and logout reachable (R14.7).
 - **R21.24** — Where purpose-level consent exists, withdrawing **MUST** take no more steps than granting (R14.10).
 
 ### 21.8 Privacy interfaces
 
 - **R21.25** — Export and deletion **MUST** be discoverable in account settings within two navigation steps. Burying them is a dark pattern and a compliance finding.
-- **R21.26** — The deletion flow **MUST** state plainly: what is erased, what is retained (audit records and why), the exact date of irreversible erasure, and how to cancel.
+- **R21.26** — The deletion flow **MUST** state plainly:
+  - what is erased;
+  - what is retained (audit records, and why);
+  - the exact date of irreversible erasure;
+  - how to cancel.
 - **R21.27** — Deletion **MUST NOT** use confirm-shaming or asymmetric button prominence.
 
 ### 21.9 Client-side data hygiene
 
-- **R21.28** — Personal data **MUST NOT** be written to browser console, `localStorage`, analytics payloads, session-replay tools, or crash reports. Session-replay tooling **MUST** be disabled entirely on authentication and account-settings screens, or masked at the DOM level with verified coverage.
-- **R21.29** — Third-party scripts (analytics, tag managers, support widgets) **MUST NOT** load on any authentication screen. They are a credential-theft vector and, absent consent, an ePrivacy violation (§25.4).
+- **R21.28** — Personal data **MUST NOT** be written to the browser console, `localStorage`, analytics payloads, session-replay tools or crash reports. Session-replay tooling **MUST** be disabled entirely on authentication and account-settings screens, or masked at the DOM level with verified coverage.
+- **R21.29** — Third-party scripts (analytics, tag managers, support widgets) **MUST NOT** load on any authentication screen. They are a credential-theft vector. Without consent they are also an ePrivacy violation (§25.4).
 
 ---
 
