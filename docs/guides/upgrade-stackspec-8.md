@@ -4,7 +4,7 @@ type: how-to
 ---
 # Upgrade a project to STACKSPEC 8
 
-Use this to bring a project up to STACKSPEC 8.0.0, released with `luismc-project-setup` 14.0.0 and `luismc-artifacts` 1.4.0. The rules are in [STACKSPEC](../../claude/plugins/project-setup/skills/tech-stack-setup/references/invariants.md). Later releases may add more; the plugin ships the current spec.
+Use this guide to bring a project up to STACKSPEC 8.0.0. It was released with `luismc-project-setup` 14.0.0 and `luismc-artifacts` 1.4.0. The rules are in [STACKSPEC](../../claude/plugins/project-setup/skills/tech-stack-setup/references/invariants.md). Later releases may add more. The plugin ships the current spec.
 
 You need Claude Code open in the project.
 
@@ -38,7 +38,7 @@ Change the Stack Profile's claimed version to 8.0.0 only after the audit passes.
 ## What each step does
 
 1. Updates both plugins at every scope, so the skills and the spec match.
-2. Audits the repository against 8.0.0. The one new MUST is the packaged-program smoke test: a product that ships a program has CI start it and every worker it starts. A product that ships none already conforms.
+2. Audits the repository against 8.0.0. The one new MUST is the packaged-program smoke test. A product that ships a program has CI start it and every worker it starts. A product that ships none already conforms.
 3. Refreshes the agents rule so agents test only what they touch.
 4. Makes the artifact pages show the At a glance block.
 
