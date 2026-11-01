@@ -45,18 +45,18 @@ skill must not default them.
 
 ## Mode 1 — Build the auth stack
 
-`AUTHSPEC` does not carry its own generation order the way `STACKSPEC §26`
-does, so use this one. Each step is a dependency of the next.
+`AUTHSPEC` has no generation order of its own, unlike `STACKSPEC §26`. Use this
+one. Each step is a dependency of the next.
 
 1. **Resolve the stack.** Read `docs/architecture/stack-profile.md` (else the old `docs/specs/stack-profile.md`) fully
    (`AUTHSPEC §2.1`). Note the database, runtime, package manager, and the
    `AUTHSPEC` version it claims. If it claims a version older than
-   `references/`, say so before generating — the delta is a finding, and
-   generating 3.1.0 code into a repo that declares 1.0.0 conformance silently
-   makes the profile wrong.
+   `references/`, say so before generating. The difference is a finding.
+   Generating 3.1.0 code into a repo that declares 1.0.0 conformance makes the
+   profile wrong without any warning.
 
-2. **Interview for the decisions the spec refuses to default.** Do not guess
-   any of these; `AUTHSPEC` states them as choices, not as defaults:
+2. **Interview for the decisions the spec does not default.** Do not guess any
+   of these. `AUTHSPEC` states them as choices, not as defaults:
    - which authentication methods the user plane offers (`§7.2` — password,
      passkey, magic link / email OTP, social OIDC, enterprise SAML)
    - whether an admin plane exists at all. If it does, `§4.5` and `§9.4` are
@@ -84,24 +84,25 @@ does, so use this one. Each step is a dependency of the next.
 
 4. **Do not weaken a `MUST` to make a step easier.** If a requirement cannot be
    met with the stack the profile declares, stop and say so. `§0.2` defines only
-   `MUST` / `MUST NOT`, `SHOULD`, and `MAY`; a `MUST` you cannot satisfy is a
-   conversation, not a judgement call you make silently.
+   `MUST` / `MUST NOT`, `SHOULD`, and `MAY`. A `MUST` you cannot satisfy is a
+   matter to raise with the user, not a judgement call to make silently.
 
-5. **Wire into what `tech-stack-setup` already built** rather than creating
-   parallel structures:
+5. **Wire into what `tech-stack-setup` already built.** Do not create parallel
+   structures:
    - notifications go through the existing `packages/mail` adapter
    - retention pruners join the existing `packages/jobs`
    - the route-authorization coverage test harness already exists in
-     `apps/api`; your new routes must satisfy it, and it should fail the moment
+     `apps/api`; your new routes must satisfy it, and it should fail as soon as
      a route ships without a declaration
 
 6. **Update the Stack Profile.** Record the `AUTHSPEC` version now implemented,
    plus every `SHOULD` not followed and every `MUST` waived, each with a named
    approver (`§27` item 13). A profile that still claims no auth after this
-   skill has run is stale.
+   skill has run is out of date.
 
-7. **Run Mode 2 against what you built** and report it. Then say what remains:
-   default UX pages for the user and admin apps are **not** part of this skill.
+7. **Run Mode 2 against what you built** and report the result. Then say what
+   remains: default UX pages for the user and admin apps are **not** part of
+   this skill.
 
 ## Mode 2 — Check an existing implementation
 
