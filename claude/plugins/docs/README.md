@@ -1,6 +1,6 @@
 # luismc-docs
 
-The documentation standard for every project, to **DOCSPEC** (`references/docspec.md`). Generic: nothing in it belongs to one project.
+The documentation standard for every project, to **DOCSPEC** (`references/docspec.md`). It is generic: nothing in it belongs to one project.
 
 | Part | What it does |
 |---|---|
@@ -11,10 +11,10 @@ The documentation standard for every project, to **DOCSPEC** (`references/docspe
 | `docs-note` | One-line change notes; the release fold writes one version row per doc per release |
 | Hooks | SessionStart hands the agent the docs rule; Stop warns when mapped code changed without docs. Opt-in with `docs/docs.json`; they only warn |
 
-Bundled: `vendor/mermaid.min.js`, Mermaid 11.4.1 from the npm package `mermaid@11.4.1` (MIT, `vendor/LICENSE-mermaid`); `docs_index.py` uses it by default (`--mermaid PATH` and `fetch-mermaid` override).
+Bundled: `vendor/mermaid.min.js`, Mermaid 11.4.1 from the npm package `mermaid@11.4.1` (MIT, `vendor/LICENSE-mermaid`). `docs_index.py` uses it by default (`--mermaid PATH` and `fetch-mermaid` override).
 
 Scripts (`scripts/`, Python standard library only): `docs_setup.py`, `docs_index.py`, `docs_fold.py`, `docs_check.py`, `docs_work.py`, `docs_lib.py`, `hook_stop.py`, `hook_session_start.py`. Tests: `python3 -I -m unittest discover -s claude/plugins/docs/tests`.
 
 Install: `claude plugin install luismc-docs@dev-standards`. First use in a repo: `python3 <plugin>/scripts/docs_setup.py migrate` (plan), then `--apply`, set `apps` and `topics` in `docs/docs.json`, `docs_index.py build`, `docs_check.py`.
 
-Settings are in `docs/docs.json`: `apps`, `topics`, `record_dir` (default `docs/project`), `default_branch`, `stale_days` (90), `binding`, `code_roots`, `generated_reference`.
+Settings live in `docs/docs.json`: `apps`, `topics`, `record_dir` (default `docs/project`), `default_branch`, `stale_days` (90), `binding`, `code_roots`, `generated_reference`.
