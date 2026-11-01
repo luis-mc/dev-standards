@@ -806,7 +806,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-01T09:40+00:00",
+ "updated": "2026-11-01T10:24+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -3541,12 +3541,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS152",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "ARTIFACTSPEC section 8: three hooks, before-command retired",
    "detail": "Owner chose fix the spec text: intro says three hooks, R8.16 keeps its ID marked retired, At a glance checked. See docs/architecture/hook-list-mismatch.md.",
-   "expected": "01 Nov ~11:05",
-   "changed": "2026-11-01T09:36+00:00",
-   "expected_basis": "cloud run 09:50: setup 5 + work 15-60 + checks 10",
+   "expected": "01 Nov ~10:45",
+   "changed": "2026-11-01T10:24+00:00",
    "rides": "DS160",
    "started": "2026-11-01T09:50+00:00"
   },
@@ -3554,12 +3553,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS153",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Security F1: validate artifacts manifest file names",
    "detail": "Accept only ^[a-z0-9-]+\\.html$ and refuse a path outside the record folder in Record.load (2026-11-01 security audit F1).",
-   "expected": "01 Nov ~11:05",
-   "changed": "2026-11-01T09:36+00:00",
-   "expected_basis": "cloud run 09:50: setup 5 + work 15-60 + checks 10",
+   "expected": "01 Nov ~10:45",
+   "changed": "2026-11-01T10:24+00:00",
    "rides": "DS160",
    "started": "2026-11-01T09:50+00:00"
   },
@@ -3567,12 +3565,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS154",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Security F2: repo files choose what runs (docs_check, watcher)",
    "detail": "Repo-chosen commands, Mermaid integrity, Actions pinned by commit, temp file name, Link host check, eval in a migration tool.",
-   "expected": "01 Nov ~11:05",
-   "changed": "2026-11-01T09:38+00:00",
-   "expected_basis": "cloud run 09:55: setup 5 + work 35 + checks 10",
+   "expected": "01 Nov ~10:45",
+   "changed": "2026-11-01T10:24+00:00",
    "rides": "DS160",
    "started": "2026-11-01T09:50+00:00"
   },
@@ -3580,12 +3577,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS155",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Performance F1: no 1 s CPU sampling sleep in the load guard",
    "detail": "Reuse the cached sample or getloadavg on Stop and SessionStart (2026-11-01 performance audit F1).",
-   "expected": "01 Nov ~11:05",
-   "changed": "2026-11-01T09:39+00:00",
-   "expected_basis": "cloud run 09:50: setup 5 + work 15-60 + checks 10",
+   "expected": "01 Nov ~10:45",
+   "changed": "2026-11-01T10:24+00:00",
    "rides": "DS160",
    "started": "2026-11-01T09:50+00:00"
   },
@@ -3593,12 +3589,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS156",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Performance F2: expire old delivery ledger rows",
    "detail": "Hooks read the whole ledger; drop rows past a retention window (2026-11-01 performance audit F2).",
-   "expected": "01 Nov ~11:05",
-   "changed": "2026-11-01T09:36+00:00",
-   "expected_basis": "cloud run 09:50: setup 5 + work 15-60 + checks 10",
+   "expected": "01 Nov ~10:45",
+   "changed": "2026-11-01T10:24+00:00",
    "rides": "DS160",
    "started": "2026-11-01T09:50+00:00"
   },
@@ -3642,9 +3637,9 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "status": "Running",
    "item": "Release: setup offers, design starter, spec split, hook text, audit fixes",
    "detail": "ST2 SO2 SO3 DS152 DS153 DS154 DS155 DS156 DS161 DS162 DS163",
-   "expected": "01 Nov ~11:40",
-   "changed": "2026-11-01T09:38+00:00",
-   "expected_basis": "agents start 09:50 (~75 min), join 20, CI 15",
+   "expected": "01 Nov ~10:45",
+   "changed": "2026-11-01T10:24+00:00",
+   "expected_basis": "CI for RELEASE-25, pushed ~10:30, ~15 min",
    "release": 25,
    "risk": {
     "label": "+1 fix round",
@@ -3655,17 +3650,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
     {
      "name": "agents",
      "start": "2026-11-01T09:50+00:00",
-     "end": "2026-11-01T11:05+00:00"
+     "end": "2026-11-01T10:02+00:00"
     },
     {
      "name": "join",
-     "start": "2026-11-01T11:05+00:00",
-     "end": "2026-11-01T11:25+00:00"
+     "start": "2026-11-01T10:05+00:00",
+     "end": "2026-11-01T10:30+00:00"
     },
     {
      "name": "ci",
-     "start": "2026-11-01T11:25+00:00",
-     "end": "2026-11-01T11:40+00:00"
+     "start": "2026-11-01T10:30+00:00",
+     "end": "2026-11-01T10:45+00:00"
     }
    ]
   },
@@ -3673,12 +3668,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS161",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Security F3: Mermaid download checked against a SHA-256",
    "detail": "docs_index.py fetch-mermaid refuses a file whose hash differs (audit F3).",
-   "expected": "01 Nov ~11:05",
-   "changed": "2026-11-01T09:38+00:00",
-   "expected_basis": "cloud run 09:50: setup 5 + work 20-45 + checks 10",
+   "expected": "01 Nov ~10:45",
+   "changed": "2026-11-01T10:24+00:00",
    "rides": "DS160",
    "started": "2026-11-01T09:50+00:00"
   },
@@ -3686,12 +3680,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS162",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Security F4+F5: gitleaks pin fails closed; actions pinned by commit",
    "detail": "agent_setup.sh and ci.yml templates (audit F4, F5).",
-   "expected": "01 Nov ~11:05",
-   "changed": "2026-11-01T09:38+00:00",
-   "expected_basis": "cloud run 09:50: setup 5 + work 20-45 + checks 10",
+   "expected": "01 Nov ~10:45",
+   "changed": "2026-11-01T10:24+00:00",
    "rides": "DS160",
    "started": "2026-11-01T09:50+00:00"
   },
@@ -3699,12 +3692,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS163",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Security F7+F8: Link host check; no eval in the record converter",
    "detail": "artifact_prune.py next-URL host check; ast.literal_eval in convert_interim_record.py (audit F7, F8).",
-   "expected": "01 Nov ~11:05",
-   "changed": "2026-11-01T09:38+00:00",
-   "expected_basis": "cloud run 09:50: setup 5 + work 20-45 + checks 10",
+   "expected": "01 Nov ~10:45",
+   "changed": "2026-11-01T10:24+00:00",
    "rides": "DS160",
    "started": "2026-11-01T09:50+00:00"
   },
@@ -3804,12 +3796,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "SO2",
    "owner": "setup-offers",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "claude-setup: scan, enforce questions, offers, enforcement report",
    "detail": "Built after D1-D4 are decided",
-   "expected": "01 Nov ~11:05",
-   "changed": "2026-11-01T09:36+00:00",
-   "expected_basis": "cloud run 09:50: setup 5 + work 15-60 + checks 10",
+   "expected": "01 Nov ~10:45",
+   "changed": "2026-11-01T10:24+00:00",
    "rides": "DS160",
    "started": "2026-11-01T09:50+00:00"
   },
@@ -3817,12 +3808,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "SO3",
    "owner": "setup-offers",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Split spec-writing skills by kind (after D5)",
    "detail": "Wording of spec-new, feature-spec-new and promote-to-spec descriptions",
-   "expected": "01 Nov ~11:05",
-   "changed": "2026-11-01T09:36+00:00",
-   "expected_basis": "cloud run 09:50: setup 5 + work 15-60 + checks 10",
+   "expected": "01 Nov ~10:45",
+   "changed": "2026-11-01T10:24+00:00",
    "rides": "DS160",
    "started": "2026-11-01T09:50+00:00"
   },
@@ -3841,12 +3831,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "ST2",
    "owner": "design-starter",
    "app": "luismc-docs",
-   "status": "Running",
+   "status": "Built",
    "item": "Neutral starter template, style reading, DOCSPEC R15.6 note",
    "detail": "Per D1-D7; replaces templates/design-system/next-version.",
-   "expected": "01 Nov ~11:05",
-   "changed": "2026-11-01T09:36+00:00",
-   "expected_basis": "cloud run 09:50: setup 5 + work 15-60 + checks 10",
+   "expected": "01 Nov ~10:45",
+   "changed": "2026-11-01T10:24+00:00",
    "rides": "DS160",
    "started": "2026-11-01T09:50+00:00"
   },
@@ -4025,26 +4014,30 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-01T09:40+00:00">01 Nov 09:40</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-01T10:24+00:00">01 Nov 10:24</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">13 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
 <ul>
-<li data-glance-task="DS152"><span class="task-id">DS152</span>ARTIFACTSPEC section 8: three hooks, before-command retired <span class="glance-expected">01 Nov ~11:05</span><span class="glance-basis">cloud run 09:50: setup 5 + work 15-60 + checks 10</span></li>
-<li data-glance-task="DS153"><span class="task-id">DS153</span>Security F1: validate artifacts manifest file names <span class="glance-expected">01 Nov ~11:05</span><span class="glance-basis">cloud run 09:50: setup 5 + work 15-60 + checks 10</span></li>
-<li data-glance-task="DS154"><span class="task-id">DS154</span>Security F2: repo files choose what runs (docs_check, watcher) <span class="glance-expected">01 Nov ~11:05</span><span class="glance-basis">cloud run 09:55: setup 5 + work 35 + checks 10</span></li>
-<li data-glance-task="DS155"><span class="task-id">DS155</span>Performance F1: no 1 s CPU sampling sleep in the load guard <span class="glance-expected">01 Nov ~11:05</span><span class="glance-basis">cloud run 09:50: setup 5 + work 15-60 + checks 10</span></li>
-<li data-glance-task="DS156"><span class="task-id">DS156</span>Performance F2: expire old delivery ledger rows <span class="glance-expected">01 Nov ~11:05</span><span class="glance-basis">cloud run 09:50: setup 5 + work 15-60 + checks 10</span></li>
-<li data-glance-task="DS161"><span class="task-id">DS161</span>Security F3: Mermaid download checked against a SHA-256 <span class="glance-expected">01 Nov ~11:05</span><span class="glance-basis">cloud run 09:50: setup 5 + work 20-45 + checks 10</span></li>
-<li data-glance-task="DS162"><span class="task-id">DS162</span>Security F4+F5: gitleaks pin fails closed; actions pinned by commit <span class="glance-expected">01 Nov ~11:05</span><span class="glance-basis">cloud run 09:50: setup 5 + work 20-45 + checks 10</span></li>
-<li data-glance-task="DS163"><span class="task-id">DS163</span>Security F7+F8: Link host check; no eval in the record converter <span class="glance-expected">01 Nov ~11:05</span><span class="glance-basis">cloud run 09:50: setup 5 + work 20-45 + checks 10</span></li>
-<li data-glance-task="SO2"><span class="task-id">SO2</span>claude-setup: scan, enforce questions, offers, enforcement report <span class="glance-expected">01 Nov ~11:05</span><span class="glance-basis">cloud run 09:50: setup 5 + work 15-60 + checks 10</span></li>
-<li data-glance-task="SO3"><span class="task-id">SO3</span>Split spec-writing skills by kind (after D5) <span class="glance-expected">01 Nov ~11:05</span><span class="glance-basis">cloud run 09:50: setup 5 + work 15-60 + checks 10</span></li>
-<li data-glance-task="ST2"><span class="task-id">ST2</span>Neutral starter template, style reading, DOCSPEC R15.6 note <span class="glance-expected">01 Nov ~11:05</span><span class="glance-basis">cloud run 09:50: setup 5 + work 15-60 + checks 10</span></li>
-<li data-glance-task="DS160"><span class="task-id">DS160</span><span class="release-name">RELEASE-25</span>Release: setup offers, design starter, spec split, hook text, audit fixes <span class="glance-expected">01 Nov ~11:40</span><span class="glance-basis">agents start 09:50 (~75 min), join 20, CI 15</span></li>
+<li data-glance-task="DS160"><span class="task-id">DS160</span><span class="release-name">RELEASE-25</span>Release: setup offers, design starter, spec split, hook text, audit fixes <span class="glance-expected">01 Nov ~10:45</span><span class="glance-basis">CI for RELEASE-25, pushed ~10:30, ~15 min</span></li>
 <li data-glance-task="DS159"><span class="task-id">DS159</span>DL-06 newest run per workflow, skipped runs pass (PR #120, open) <span class="glance-expected">01 Nov; waits on the other terminal</span><span class="glance-basis">PR #120 open; owned by another terminal</span></li>
+</ul>
+</details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">11 tasks</span></summary>
+<ul>
+<li data-glance-task="DS152"><span class="task-id">DS152</span>ARTIFACTSPEC section 8: three hooks, before-command retired</li>
+<li data-glance-task="DS153"><span class="task-id">DS153</span>Security F1: validate artifacts manifest file names</li>
+<li data-glance-task="DS154"><span class="task-id">DS154</span>Security F2: repo files choose what runs (docs_check, watcher)</li>
+<li data-glance-task="DS155"><span class="task-id">DS155</span>Performance F1: no 1 s CPU sampling sleep in the load guard</li>
+<li data-glance-task="DS156"><span class="task-id">DS156</span>Performance F2: expire old delivery ledger rows</li>
+<li data-glance-task="DS161"><span class="task-id">DS161</span>Security F3: Mermaid download checked against a SHA-256</li>
+<li data-glance-task="DS162"><span class="task-id">DS162</span>Security F4+F5: gitleaks pin fails closed; actions pinned by commit</li>
+<li data-glance-task="DS163"><span class="task-id">DS163</span>Security F7+F8: Link host check; no eval in the record converter</li>
+<li data-glance-task="SO2"><span class="task-id">SO2</span>claude-setup: scan, enforce questions, offers, enforcement report</li>
+<li data-glance-task="SO3"><span class="task-id">SO3</span>Split spec-writing skills by kind (after D5)</li>
+<li data-glance-task="ST2"><span class="task-id">ST2</span>Neutral starter template, style reading, DOCSPEC R15.6 note</li>
 </ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">54 tasks</span></summary>
@@ -4061,43 +4054,43 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">240</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">13</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">240</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">11</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 260" role="img" aria-label="Next releases: DS160 (Release: setup offers, design starter, spec split, hook text, audit fixes) expected live about 11:40, worst case 12:00. Other work (no release): DS159 (DL-06 newest run per workflow, skipped runs pass (PR #120, open)) Running, expected 01 Nov." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="236"/><text x="200" y="28">09:30</text><line class="rt-grid" x1="304" y1="36" x2="304" y2="236"/><text x="304" y="28">10:00</text><line class="rt-grid" x1="408" y1="36" x2="408" y2="236"/><text x="408" y="28">10:30</text><line class="rt-grid" x1="512" y1="36" x2="512" y2="236"/><text x="512" y="28">11:00</text><line class="rt-grid" x1="616" y1="36" x2="616" y2="236"/><text x="616" y="28">11:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="236"/><text x="720" y="28">12:00</text><line class="rt-grid" x1="820" y1="36" x2="820" y2="236"/><text x="820" y="28">01 Nov</text><path class="rt-break" d="M738 30 l8 -8 M750 30 l8 -8"/></g>
+<div class="timeline-scroll"><svg viewBox="0 0 960 260" role="img" aria-label="Next releases: DS160 (Release: setup offers, design starter, spec split, hook text, audit fixes) expected live about 10:45, worst case 11:05. Other work (no release): DS159 (DL-06 newest run per workflow, skipped runs pass (PR #120, open)) Running, expected 01 Nov." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="236"/><text x="200" y="28">09:30</text><line class="rt-grid" x1="330" y1="36" x2="330" y2="236"/><text x="330" y="28">10:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="236"/><text x="460" y="28">10:30</text><line class="rt-grid" x1="590" y1="36" x2="590" y2="236"/><text x="590" y="28">11:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="236"/><text x="720" y="28">11:30</text><line class="rt-grid" x1="820" y1="36" x2="820" y2="236"/><text x="820" y="28">01 Nov</text><path class="rt-break" d="M738 30 l8 -8 M750 30 l8 -8"/></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-25 · Release: setup offers, design starter, spec split, hook text, audit fixes</title>RELEASE-25 · Release: set…</text>
 <text class="rt-sub" x="0" y="77"><title>DS152, DS153, DS154, DS155, DS156, DS161, DS162, DS163, SO2, SO3, ST2</title>DS152, DS153, DS154, DS155, DS156…</text>
-<rect class="rt-bar agents" x="269.3" y="52" width="260" height="22"><title>agents 09:50-11:05</title></rect>
-<rect class="rt-bar join" x="529.3" y="52" width="69.3" height="22"><title>join 11:05-11:25</title></rect>
-<rect class="rt-bar ci" x="598.7" y="52" width="52" height="22"><title>PR CI 11:25-11:40</title></rect>
-<rect class="rt-risk" x="650.7" y="58" width="69.3" height="10"><title>+1 fix round</title></rect>
-<polygon class="rt-worst" points="720,51 727,63 720,75 713,63"/>
-<text class="rt-risk-label" x="731" y="67">+1 fix round → worst ~12:00</text>
-<polygon class="rt-expected" points="650.7,50 658.7,63 650.7,76 642.7,63"/>
-<text class="rt-live-label" x="650.7" y="92">live ~11:40</text>
+<rect class="rt-bar agents" x="286.7" y="52" width="52" height="22"><title>agents 09:50-10:02</title></rect>
+<rect class="rt-bar join" x="351.7" y="52" width="108.3" height="22"><title>join 10:05-10:30</title></rect>
+<rect class="rt-bar ci" x="460" y="52" width="65" height="22"><title>PR CI 10:30-10:45</title></rect>
+<rect class="rt-risk" x="525" y="58" width="86.7" height="10"><title>+1 fix round</title></rect>
+<polygon class="rt-worst" points="611.7,51 618.7,63 611.7,75 604.7,63"/>
+<text class="rt-risk-label" x="622.7" y="67">+1 fix round → worst ~11:05</text>
+<polygon class="rt-expected" points="525,50 533,63 525,76 517,63"/>
+<text class="rt-live-label" x="525" y="92">live ~10:45</text>
 <text class="rt-strip-title" x="0" y="122">Other work (no release)</text>
 <text class="rt-name" x="0" y="156"><title>DS159 · DL-06 newest run per workflow, skipped runs pass (PR #120, open)</title>DS159 · DL-06 newest run…</text>
 <polygon class="rt-day" points="820,148 828,161 820,174 812,161"/><text class="rt-day-label" x="836" y="165">01 Nov</text>
 <text class="rt-other-label" x="812" y="188">PR #120 open; owned by another terminal</text>
-<line class="rt-now" x1="234.7" y1="36" x2="234.7" y2="244"/><text class="rt-now-label" x="234.7" y="257">now 09:40</text>
+<line class="rt-now" x1="434" y1="36" x2="434" y2="244"/><text class="rt-now-label" x="434" y="257">now 10:24</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days. Under Other work (no release), a bar runs from the start to its Expected, coloured by status; a red outline means it is past its Expected.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-25" open><summary><strong>RELEASE-25 · live ~11:40 · worst ~12:00</strong><span class="fold-count">12 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-25" open><summary><strong>RELEASE-25 · live ~10:45 · worst ~11:05</strong><span class="fold-count">12 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS160"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS160</span><span class="release-name">RELEASE-25</span>Release: setup offers, design starter, spec split, hook text, audit fixes</td><td data-label="App / service"></td><td data-label="Detail">ST2 SO2 SO3 DS152 DS153 DS154 DS155 DS156 DS161 DS162 DS163</td><td data-label="Expected">01 Nov ~11:40<span class="expected-basis">agents start 09:50 (~75 min), join 20, CI 15</span></td></tr>
-<tr data-task="DS152"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS152</span>ARTIFACTSPEC section 8: three hooks, before-command retired</td><td data-label="App / service"></td><td data-label="Detail">Owner chose fix the spec text: intro says three hooks, R8.16 keeps its ID marked retired, At a glance checked. See docs/architecture/hook-list-mismatch.md.</td><td data-label="Expected">01 Nov ~11:05<span class="expected-basis">cloud run 09:50: setup 5 + work 15-60 + checks 10</span></td></tr>
-<tr data-task="DS153"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS153</span>Security F1: validate artifacts manifest file names</td><td data-label="App / service"></td><td data-label="Detail">Accept only ^[a-z0-9-]+\.html$ and refuse a path outside the record folder in Record.load (2026-11-01 security audit F1).</td><td data-label="Expected">01 Nov ~11:05<span class="expected-basis">cloud run 09:50: setup 5 + work 15-60 + checks 10</span></td></tr>
-<tr data-task="DS154"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS154</span>Security F2: repo files choose what runs (docs_check, watcher)</td><td data-label="App / service"></td><td data-label="Detail">Repo-chosen commands, Mermaid integrity, Actions pinned by commit, temp file name, Link host check, eval in a migration tool.</td><td data-label="Expected">01 Nov ~11:05<span class="expected-basis">cloud run 09:55: setup 5 + work 35 + checks 10</span></td></tr>
-<tr data-task="DS155"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS155</span>Performance F1: no 1 s CPU sampling sleep in the load guard</td><td data-label="App / service"></td><td data-label="Detail">Reuse the cached sample or getloadavg on Stop and SessionStart (2026-11-01 performance audit F1).</td><td data-label="Expected">01 Nov ~11:05<span class="expected-basis">cloud run 09:50: setup 5 + work 15-60 + checks 10</span></td></tr>
-<tr data-task="DS156"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS156</span>Performance F2: expire old delivery ledger rows</td><td data-label="App / service"></td><td data-label="Detail">Hooks read the whole ledger; drop rows past a retention window (2026-11-01 performance audit F2).</td><td data-label="Expected">01 Nov ~11:05<span class="expected-basis">cloud run 09:50: setup 5 + work 15-60 + checks 10</span></td></tr>
-<tr data-task="DS161"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS161</span>Security F3: Mermaid download checked against a SHA-256</td><td data-label="App / service"></td><td data-label="Detail">docs_index.py fetch-mermaid refuses a file whose hash differs (audit F3).</td><td data-label="Expected">01 Nov ~11:05<span class="expected-basis">cloud run 09:50: setup 5 + work 20-45 + checks 10</span></td></tr>
-<tr data-task="DS162"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS162</span>Security F4+F5: gitleaks pin fails closed; actions pinned by commit</td><td data-label="App / service"></td><td data-label="Detail">agent_setup.sh and ci.yml templates (audit F4, F5).</td><td data-label="Expected">01 Nov ~11:05<span class="expected-basis">cloud run 09:50: setup 5 + work 20-45 + checks 10</span></td></tr>
-<tr data-task="DS163"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS163</span>Security F7+F8: Link host check; no eval in the record converter</td><td data-label="App / service"></td><td data-label="Detail">artifact_prune.py next-URL host check; ast.literal_eval in convert_interim_record.py (audit F7, F8).</td><td data-label="Expected">01 Nov ~11:05<span class="expected-basis">cloud run 09:50: setup 5 + work 20-45 + checks 10</span></td></tr>
-<tr data-task="SO2"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO2</span>claude-setup: scan, enforce questions, offers, enforcement report</a></td><td data-label="App / service"></td><td data-label="Detail">Built after D1-D4 are decided</td><td data-label="Expected">01 Nov ~11:05<span class="expected-basis">cloud run 09:50: setup 5 + work 15-60 + checks 10</span></td></tr>
-<tr data-task="SO3"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO3</span>Split spec-writing skills by kind (after D5)</a></td><td data-label="App / service"></td><td data-label="Detail">Wording of spec-new, feature-spec-new and promote-to-spec descriptions</td><td data-label="Expected">01 Nov ~11:05<span class="expected-basis">cloud run 09:50: setup 5 + work 15-60 + checks 10</span></td></tr>
-<tr data-task="ST2"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-design-system-starter.html"><span class="task-id">ST2</span>Neutral starter template, style reading, DOCSPEC R15.6 note</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Per D1-D7; replaces templates/design-system/next-version.</td><td data-label="Expected">01 Nov ~11:05<span class="expected-basis">cloud run 09:50: setup 5 + work 15-60 + checks 10</span></td></tr>
+<tr data-task="DS160"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS160</span><span class="release-name">RELEASE-25</span>Release: setup offers, design starter, spec split, hook text, audit fixes</td><td data-label="App / service"></td><td data-label="Detail">ST2 SO2 SO3 DS152 DS153 DS154 DS155 DS156 DS161 DS162 DS163</td><td data-label="Expected">01 Nov ~10:45<span class="expected-basis">CI for RELEASE-25, pushed ~10:30, ~15 min</span></td></tr>
+<tr data-task="DS152"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS152</span>ARTIFACTSPEC section 8: three hooks, before-command retired</td><td data-label="App / service"></td><td data-label="Detail">Owner chose fix the spec text: intro says three hooks, R8.16 keeps its ID marked retired, At a glance checked. See docs/architecture/hook-list-mismatch.md.</td><td data-label="Expected">01 Nov ~10:45</td></tr>
+<tr data-task="DS153"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS153</span>Security F1: validate artifacts manifest file names</td><td data-label="App / service"></td><td data-label="Detail">Accept only ^[a-z0-9-]+\.html$ and refuse a path outside the record folder in Record.load (2026-11-01 security audit F1).</td><td data-label="Expected">01 Nov ~10:45</td></tr>
+<tr data-task="DS154"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS154</span>Security F2: repo files choose what runs (docs_check, watcher)</td><td data-label="App / service"></td><td data-label="Detail">Repo-chosen commands, Mermaid integrity, Actions pinned by commit, temp file name, Link host check, eval in a migration tool.</td><td data-label="Expected">01 Nov ~10:45</td></tr>
+<tr data-task="DS155"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS155</span>Performance F1: no 1 s CPU sampling sleep in the load guard</td><td data-label="App / service"></td><td data-label="Detail">Reuse the cached sample or getloadavg on Stop and SessionStart (2026-11-01 performance audit F1).</td><td data-label="Expected">01 Nov ~10:45</td></tr>
+<tr data-task="DS156"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS156</span>Performance F2: expire old delivery ledger rows</td><td data-label="App / service"></td><td data-label="Detail">Hooks read the whole ledger; drop rows past a retention window (2026-11-01 performance audit F2).</td><td data-label="Expected">01 Nov ~10:45</td></tr>
+<tr data-task="DS161"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS161</span>Security F3: Mermaid download checked against a SHA-256</td><td data-label="App / service"></td><td data-label="Detail">docs_index.py fetch-mermaid refuses a file whose hash differs (audit F3).</td><td data-label="Expected">01 Nov ~10:45</td></tr>
+<tr data-task="DS162"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS162</span>Security F4+F5: gitleaks pin fails closed; actions pinned by commit</td><td data-label="App / service"></td><td data-label="Detail">agent_setup.sh and ci.yml templates (audit F4, F5).</td><td data-label="Expected">01 Nov ~10:45</td></tr>
+<tr data-task="DS163"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS163</span>Security F7+F8: Link host check; no eval in the record converter</td><td data-label="App / service"></td><td data-label="Detail">artifact_prune.py next-URL host check; ast.literal_eval in convert_interim_record.py (audit F7, F8).</td><td data-label="Expected">01 Nov ~10:45</td></tr>
+<tr data-task="SO2"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO2</span>claude-setup: scan, enforce questions, offers, enforcement report</a></td><td data-label="App / service"></td><td data-label="Detail">Built after D1-D4 are decided</td><td data-label="Expected">01 Nov ~10:45</td></tr>
+<tr data-task="SO3"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO3</span>Split spec-writing skills by kind (after D5)</a></td><td data-label="App / service"></td><td data-label="Detail">Wording of spec-new, feature-spec-new and promote-to-spec descriptions</td><td data-label="Expected">01 Nov ~10:45</td></tr>
+<tr data-task="ST2"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-design-system-starter.html"><span class="task-id">ST2</span>Neutral starter template, style reading, DOCSPEC R15.6 note</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Per D1-D7; replaces templates/design-system/next-version.</td><td data-label="Expected">01 Nov ~10:45</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">2 tasks</span></summary>
@@ -4358,8 +4351,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (2)</strong><span class="fold-count">2 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29892096"><time datetime="2026-11-01T09:36+00:00">01 Nov 09:36</time></td><td data-label="Tasks">SO1 to SO3</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">2 Running</span></span></td><td data-label="Where it stands">On 01 Nov the owner ran claude-setup in an existing project and could not tell whether the docs, design-system and delivery plugins were enforced.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29892096"><time datetime="2026-11-01T09:36+00:00">01 Nov 09:36</time></td><td data-label="Tasks">ST1 to ST2</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29892144"><time datetime="2026-11-01T10:24+00:00">01 Nov 10:24</time></td><td data-label="Tasks">SO1 to SO3</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">2 Built</span></span></td><td data-label="Where it stands">On 01 Nov the owner ran claude-setup in an existing project and could not tell whether the docs, design-system and delivery plugins were enforced.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29892144"><time datetime="2026-11-01T10:24+00:00">01 Nov 10:24</time></td><td data-label="Tasks">ST1 to ST2</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (5)</strong><span class="fold-count">5 feature artifacts</span></summary>

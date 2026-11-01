@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-artifacts]
 topics: [artifacts]
 status: live
-version: 0.1.1
+version: 0.1.2
 owner: agents
 type: reference
 code:
@@ -216,4 +216,5 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.1.2 | 2026-11-01 | RELEASE-25 | ARTIFACTSPEC section 8 lists the three registered hooks and marks the before-command hook retired (AR50).<br>The artifacts record refuses a manifest file name that is not a plain [a-z0-9-]+.html name inside the record folder (audit F1). | DS152, DS153 |
 | 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. Added claude/plugins/artifacts/references/artifactspec.md to the code mapping. | DS142 |

@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.18.1
+**Version:** 1.18.2
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.18.2 — 2026-11-01.**
+
+- ARTIFACTSPEC section 8 now says three hooks are registered and marks the before-command hook retired (AR50); R8.16 keeps its ID and says the same.
 
 **1.18.1 — 2026-11-01.**
 
