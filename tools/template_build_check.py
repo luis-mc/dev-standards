@@ -50,6 +50,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 TOOLING = REPO / "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling"
+TEMPLATES = REPO / "claude/plugins/delivery/templates"
 
 # Built from pieces so this file does not contain a marker line itself.
 MARKER_START = "<" * 7 + " HEAD"
@@ -202,7 +203,7 @@ class Checker:
 
 
 def gate_json(track: str) -> dict:
-    return json.loads((TOOLING / track / "scripts/delivery/gate.json").read_text(encoding="utf-8"))
+    return json.loads((TEMPLATES / track / "scripts/delivery/gate.json").read_text(encoding="utf-8"))
 
 
 def gate_step(gate: dict, name: str) -> str:
@@ -216,6 +217,7 @@ def new_scaffold(c: Checker) -> None:
     """Copy the track's template into the scaffold and make it a repository."""
     c.say(f"scaffold: {c.root}")
     shutil.copytree(TOOLING / c.track, c.root, dirs_exist_ok=True)
+    shutil.copytree(TEMPLATES / c.track, c.root, dirs_exist_ok=True)
     # The guards find the repository root by its .git, as in a real product.
     subprocess.run(["git", "init", "-q", str(c.root)], check=True)
 

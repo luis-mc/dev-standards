@@ -25,16 +25,22 @@ on:
     branches: [main]
     paths:
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/go/**'
+      - 'claude/plugins/delivery/templates/go/**'
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/rust/**'
+      - 'claude/plugins/delivery/templates/rust/**'
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/dotnet/**'
+      - 'claude/plugins/delivery/templates/dotnet/**'
       - 'tools/template_build_check.py'
       - '.github/workflows/template-build.yml'
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/go/**'
+      - 'claude/plugins/delivery/templates/go/**'
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/rust/**'
+      - 'claude/plugins/delivery/templates/rust/**'
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/dotnet/**'
+      - 'claude/plugins/delivery/templates/dotnet/**'
       - 'tools/template_build_check.py'
       - '.github/workflows/template-build.yml'
   workflow_dispatch:

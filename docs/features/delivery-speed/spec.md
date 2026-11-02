@@ -8,7 +8,7 @@ version: 0.3.0
 owner: agents
 type: explanation
 code:
-  - claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/*.py
+  - claude/plugins/delivery/templates/shared/scripts/delivery/*.py
   - claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/pre-push
   - tools/test_delivery_*.py
 last_verified: 2026-11-01
@@ -93,7 +93,7 @@ flowchart LR
 
 ## 7. Design
 
-The scripts live in `tooling/shared/scripts/delivery/`. tech-stack-setup copies them into a product. `gate.json` (per track) holds `inert_paths`, steps and `widen_on`. `.delivery/` holds results and logs. `CONTRACT.md` has the details.
+The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). Its installer writes them into a product. `gate.json` (per track) holds `inert_paths`, steps and `widen_on`. `.delivery/` holds results and logs. `CONTRACT.md` has the details.
 
 ## 8. Failure modes
 
@@ -146,7 +146,7 @@ Nothing from the plan is open. Late branches ride the next train by design.
 
 ## 12. Code map
 
-Source: claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/
+Source: claude/plugins/delivery/templates/shared/scripts/delivery/
 Source: claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/pre-push
 
 ## Versions

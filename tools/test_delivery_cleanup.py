@@ -36,7 +36,7 @@ from test_delivery_gate import PY, SHARED, T, run  # noqa: E402
 
 ZERO = "0" * 40
 WORKFLOW = SHARED / ".github/workflows/train-cleanup.yml"
-TS_CI = tdg.TOOLING / "ts/.github/workflows/ci.yml"
+TS_CI = tdg.TEMPLATES / "ts/.github/workflows/ci.yml"
 _TMP = Path(tempfile.mkdtemp(prefix="delivery-cleanup-test-"))
 
 GATE_JSON = {

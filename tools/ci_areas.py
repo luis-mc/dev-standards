@@ -16,7 +16,8 @@ Area map (first matching rule wins; see RULES):
              spec-check script, the Stack Profile template, authspec_check.py,
              route-ratelimit-map.json and their tests.
   delivery   the tech-stack-setup preflight and everything under
-             assets/tooling/ (delivery scripts, git hooks, ci.yml templates),
+             assets/tooling/ (git hooks, linters, guards) and claude/plugins/delivery/
+             (hooks, scripts, templates/ with the delivery scripts and ci.yml files),
              the delivery/cleanup/prune/change-notes/preflight tests.
   artifacts  claude/plugins/artifacts/ (renderer, commands, hooks, templates)
              and their tests; ARTIFACTSPEC itself counts as specs.
@@ -76,7 +77,8 @@ HEAVY = ("delivery", "artifacts")
 PS = "claude/plugins/project-setup/skills"
 TS = PS + "/tech-stack-setup"
 TOOLING = TS + "/assets/tooling"
-DELIVERY_SCRIPTS = TOOLING + "/shared/scripts/delivery/"
+TEMPLATES = "claude/plugins/delivery/templates"
+DELIVERY_SCRIPTS = TEMPLATES + "/shared/scripts/delivery/"
 HOOKS = TOOLING + "/shared/.githooks/"
 DS = DELIVERY_SCRIPTS
 # TC7: suite -> the files whose change turns its mutation pass on. Derived from
@@ -96,8 +98,8 @@ SUITE_MUTANTS: dict[str, frozenset[str]] = {
         "tools/test_delivery_cleanup.py", "tools/test_delivery_gate.py",
         DS + "delivery_common.py", DS + "fast_guards.py", DS + "delivery_log.py",
         DS + "cleanup.py", DS + "join.py",
-        TOOLING + "/shared/.github/workflows/train-cleanup.yml",
-        TOOLING + "/ts/.github/workflows/ci.yml",
+        TEMPLATES + "/shared/.github/workflows/train-cleanup.yml",
+        TEMPLATES + "/ts/.github/workflows/ci.yml",
     }),
     # test_change_notes.py: copies delivery_common.py and change_notes.py.
     "notes": frozenset({

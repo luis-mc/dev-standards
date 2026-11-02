@@ -78,6 +78,83 @@ def runner_plan_flags(cfg) -> dict:
             "heavy_jobs_yield": _flag(r, ("heavy_jobs_yield", "heavy_local_jobs_yield"), True)}
 
 
+# --- CI options (DL15) -----------------------------------------------------------------------------
+
+CI_OS = ("linux", "windows", "macos")
+CI_OPTIONS = ("self-hosted", "github-hosted", "cloud")
+CI_OPTION_LETTER = {"self-hosted": "a", "github-hosted": "b", "cloud": "c"}
+DEFAULT_SHARD_TABLE = "scripts/delivery/ci-shards.json"
+DEFAULT_RESULTS_PREFIX = "ci-result"
+
+
+def ci_options(cfg) -> dict:
+    """ci.options as {os: option} for the OS names that hold a valid option. There is no default: an OS that is
+    not chosen is simply absent."""
+    o = _section(_section(cfg, "ci"), "options")
+    return {k: v for k, v in o.items() if k in CI_OS and v in CI_OPTIONS}
+
+
+def ci_cloud(cfg) -> dict:
+    c = _section(_section(cfg, "ci"), "cloud")
+    return {"repo": c.get("repo") if isinstance(c.get("repo"), str) else "",
+            "status_token_env": c.get("status_token_env") if isinstance(c.get("status_token_env"), str) else "",
+            "branches": [x for x in c.get("branches", []) if isinstance(x, str)] if isinstance(c.get("branches"), list) else [],
+            "results_prefix": c.get("results_prefix") if isinstance(c.get("results_prefix"), str) and c.get("results_prefix")
+            else DEFAULT_RESULTS_PREFIX,
+            "shard_timeout_min": c.get("shard_timeout_min") if isinstance(c.get("shard_timeout_min"), (int, float))
+            and not isinstance(c.get("shard_timeout_min"), bool) and c.get("shard_timeout_min") >= 1 else 60}
+
+
+def shard_table_path(root, cfg) -> str:
+    v = _section(cfg, "ci").get("shard_table")
+    rel = v if isinstance(v, str) and v.strip() else DEFAULT_SHARD_TABLE
+    return os.path.join(root, *rel.split("/"))
+
+
+def load_shards(root, cfg):
+    """(shards, error). A shard is {id, os, commands, context}; context falls back to the id. error is None for a
+    good table, a message for a missing or bad one (shards is [] then)."""
+    path = shard_table_path(root, cfg)
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        return [], "no shard table at %s" % os.path.relpath(path, root).replace(os.sep, "/")
+    except (OSError, ValueError) as exc:
+        return [], "shard table is not readable JSON (%s)" % exc
+    raw = data.get("shards") if isinstance(data, dict) else None
+    if not isinstance(raw, list) or not raw:
+        return [], "shard table has no shards"
+    out, seen = [], set()
+    for i, sh in enumerate(raw):
+        if not isinstance(sh, dict) or not isinstance(sh.get("id"), str) or not sh["id"].strip():
+            return [], "shard %d has no id" % i
+        if sh["id"] in seen:
+            return [], "shard id %r is used twice" % sh["id"]
+        seen.add(sh["id"])
+        osn = sh.get("os")
+        if osn not in CI_OS:
+            return [], "shard %r: os must be one of %s" % (sh["id"], ", ".join(CI_OS))
+        cmds = sh.get("commands")
+        if not isinstance(cmds, list) or not cmds or not all(isinstance(c, str) and c.strip() for c in cmds):
+            return [], "shard %r: commands must be a non-empty list of strings" % sh["id"]
+        ctx = sh.get("context") if isinstance(sh.get("context"), str) and sh.get("context").strip() else sh["id"]
+        out.append({"id": sh["id"], "os": osn, "commands": cmds, "context": ctx})
+    return out, None
+
+
+def cloud_contexts(root, cfg) -> list:
+    """The status contexts the watcher needs for option c: the context of every shard whose OS is cloud."""
+    opts = ci_options(cfg)
+    shards, _ = load_shards(root, cfg)
+    seen, out = set(), []
+    for sh in shards:
+        if opts.get(sh["os"]) == "cloud" and sh["context"] not in seen:
+            seen.add(sh["context"])
+            out.append(sh["context"])
+    return out
+
+
 def load_tz(name):
     """The zone `name` as a tzinfo; raises ValueError with the cause and the fix when it cannot be loaded."""
     try:

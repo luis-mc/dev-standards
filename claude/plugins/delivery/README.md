@@ -116,6 +116,24 @@ For a project whose agents are gated by CI on their branch instead of a full loc
 - **E2E (DL-86..DL-89)**: an agent that changes UI code runs the e2e specs of the screens it changed (`scripts/delivery/branch_gate.py --e2e-only`) before CODE DONE. The gate records them, `gate_verify.py` and `agent_ci.py` refuse a UI branch without the record, the pre-push hook refuses an unrun e2e fix, and the launch check needs the brief line "run the e2e specs of the screens you change" (or "no UI change").
 - **Brief**: `references/agent-brief-template.md`; `brief_markers` entries may be lists (`["one affected gate", "CI is the gate"]`).
 
+## CI options (DL15)
+
+CI can run in three places. The owner picks one for each OS (linux, windows, macos). There is no default: setup asks, and the same command changes the choice later.
+
+| Letter | Option | Runs on |
+|---|---|---|
+| a | `self-hosted` | GitHub Actions on the owner's runners |
+| b | `github-hosted` | GitHub Actions on GitHub's runners |
+| c | `cloud` | Claude cloud sessions (no Actions, no webhooks) |
+
+1. Ask the owner, per OS. Record it: `python3 scripts/delivery_ci.py set --os linux --option a|b|c` (`show`, `unset` also exist). It writes `ci.options` in `.delivery/config.json`.
+2. Write the CI and delivery files: `python3 scripts/delivery_ci_install.py install --track ts|go|rust|dotnet --root .` (`update` later). The files come from `templates/`. tech-stack-setup calls this at the end of its setup. The command never commits.
+3. The product gives a shard table, `scripts/delivery/ci-shards.json` (format: `ci-shards.example.json`).
+4. Option a: list the runners in `runners`. Option c: set `ci.cloud.repo`, `ci.cloud.status_token_env` and `ci.cloud.branches`; the owner creates a statuses-only token and puts it in the cloud environment under that name.
+5. `python3 scripts/delivery_doctor.py` reports the `ci` check.
+
+Rules: `docs/features/delivery/spec.md` section 13. File formats: `templates/shared/scripts/delivery/CONTRACT.md`, "CI options".
+
 ## Tests
 
 ```

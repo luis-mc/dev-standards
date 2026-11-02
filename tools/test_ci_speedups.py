@@ -32,10 +32,11 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 TOOLING = REPO / "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling"
-DELIVERY = TOOLING / "shared/scripts/delivery"
-NIGHTLY = TOOLING / "ts/.github/workflows/nightly-full.yml"
-TS_MAP = TOOLING / "ts/scripts/delivery/ci-areas.json"
-TS_TIMINGS = TOOLING / "ts/scripts/delivery/ci-timings.json"
+TEMPLATES = REPO / "claude/plugins/delivery/templates"
+DELIVERY = TEMPLATES / "shared/scripts/delivery"
+NIGHTLY = TEMPLATES / "ts/.github/workflows/nightly-full.yml"
+TS_MAP = TEMPLATES / "ts/scripts/delivery/ci-areas.json"
+TS_TIMINGS = TEMPLATES / "ts/scripts/delivery/ci-timings.json"
 
 TESTS: list = []
 
@@ -493,7 +494,7 @@ def nightly_compare_step_skips_an_unchanged_head():
 
 @test
 def ts_ci_plan_job_is_in_the_template():
-    text = (TOOLING / "ts/.github/workflows/ci.yml").read_text(encoding="utf-8")
+    text = (TEMPLATES / "ts/.github/workflows/ci.yml").read_text(encoding="utf-8")
     plan = jobs_of(text.replace("\r\n", "\n"))["plan"]
     check("area_select.py --base" in plan and "area_select.py --all" in plan,
           "the plan job runs area_select.py for pull requests and --all otherwise")
@@ -505,7 +506,7 @@ def ts_ci_plan_job_is_in_the_template():
 SCOPE = DELIVERY / "ci_scope.py"
 AGENT_CI = DELIVERY / "agent_ci.py"
 RUN_TIMES = DELIVERY / "ci_run_times.py"
-TS_SCOPE = TOOLING / "ts/scripts/delivery/ci-scope.json"
+TS_SCOPE = TEMPLATES / "ts/scripts/delivery/ci-scope.json"
 REL = ["--event", "pull_request", "--head-ref", "release/7", "--base-ref", "main"]
 AGENT = ["--event", "pull_request", "--head-ref", "claude/x-1", "--base-ref", "main"]
 
@@ -847,7 +848,7 @@ def run_times_summary_and_report_only():
 
 @test
 def ts_ci_runs_by_hand_and_reports_times():
-    text = (TOOLING / "ts/.github/workflows/ci.yml").read_text(encoding="utf-8").replace("\r\n", "\n")
+    text = (TEMPLATES / "ts/.github/workflows/ci.yml").read_text(encoding="utf-8").replace("\r\n", "\n")
     check("workflow_dispatch:" in text, "ci.yml can be started by hand")
     plan = jobs_of(text)["plan"]
     check('area_select.py --base "origin/$DEFAULT_BRANCH"' in plan, "a manual run on a branch plans origin/<default>...HEAD")

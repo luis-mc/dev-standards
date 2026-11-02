@@ -251,7 +251,7 @@ Build in dependency order. Each step is a precondition of the next:
 
 | Step | Owner |
 |---|---|
-| 1. Repository skeleton, workspace, CI, hooks, secret scanning, branch gate and delivery scripts — copy `assets/tooling/shared/` and `assets/tooling/<track>/` (see below) | this skill |
+| 1. Repository skeleton, workspace, CI, hooks, secret scanning, branch gate and delivery scripts — copy the hooks, linters and guards from `assets/tooling/shared/` and `assets/tooling/<track>/` (see below); the CI and delivery files come from `luismc-delivery`'s installer (see below) | this skill and `luismc-delivery` |
 | 2. `core`, then the data module with initial schema and migration runner | this skill |
 | 3. `contract` — the OpenAPI document and generators | this skill |
 | 4. *(auth)* | **`auth-setup`** — skip entirely |
@@ -265,24 +265,24 @@ Build in dependency order. Each step is a precondition of the next:
 
 ### Step 1 in detail — what is copied where
 
-Paths and owners are fixed by `assets/tooling/shared/scripts/delivery/CONTRACT.md`.
-Copy all of this in the first commit, so the first branch is already gated:
+Paths and owners are fixed by `CONTRACT.md` in `luismc-delivery` (`templates/shared/scripts/delivery/CONTRACT.md`).
+This skill carries no CI logic. It picks technologies and copies the hooks, linters and guards below. At the end of step 1 it calls the delivery installer, which writes the delivery scripts, the workflow files and the per-track `gate.json` and `smoke.json`:
+
+`python3 <luismc-delivery>/scripts/delivery_ci_install.py install --track <track> --root .`
+
+Do it in the first commit, so the first branch is already gated:
 
 | Into the repository | From `assets/tooling/` | Clause |
 |---|---|---|
-| `scripts/delivery/*` | `shared/scripts/delivery/` — every file **except** `CONTRACT.md`, which stays in the plugin | `§13.5`, `§13.6`, `§13.1` |
-| `scripts/delivery/gate.json` | `<track>/scripts/delivery/gate.json` — set `default_branch` to the repo's own, and `ui_paths` to the apps that exist | `§13.5` |
+| `scripts/delivery/*`, `.github/workflows/*`, `scripts/delivery/gate.json`, `smoke.json` | the delivery installer (`luismc-delivery`, `templates/`). Afterwards set `default_branch` in `gate.json` to the repo's own and `ui_paths` to the apps that exist. `CONTRACT.md` is not copied. | `§13.5`, `§13.6`, `§13.1`, `§11.2` |
+| `e2e/quarantine.json` (TypeScript track only) | `ts/e2e/quarantine.json` | `§11.2` |
 | `.githooks/pre-push` | `shared/.githooks/pre-push`, beside `pre-commit` | `§13.5` |
 | `.githooks/commit-msg` | `shared/.githooks/commit-msg`, beside `pre-commit`; does nothing unless `.delivery/config.json` sets `no_attribution: true` (DL-74). `pre-commit` also refuses staged conflict markers (DL-24) | DELIVERYSPEC |
-| `e2e/quarantine.json` (TypeScript track only) | `ts/e2e/quarantine.json` | `§11.2` |
 | `.gitattributes` | `shared/.gitattributes` — LF for shell scripts, hooks and the delivery scripts, so a CRLF checkout cannot break them | `§13.5` |
 | the guard-test starter, TypeScript | `ts/guards/*.guard.test.ts` and `ts/vitest.config.ts` (its `guard` project) | `§13.5` item 4 |
 | the guard-test starter, Go | `go/guards/` (`TestGuard*`) | `§13.5` item 4 |
 | the guard-test starter, Rust | `rust/crates/guards/` — a member crate (`guard_*` tests); add `crates/guards` to the workspace `members` in the root `Cargo.toml` | `§13.5` item 4 |
 | the guard-test starter, .NET | `dotnet/tests/Guards/` (`Category=Guard`); add `Guards.csproj` to the solution and match its `TargetFramework` to `global.json` | `§13.5` item 4 |
-| `.github/workflows/ci.yml` | `<track>/.github/workflows/ci.yml` — carries the `decide` job and the gated E2E job | `§11.2`, `§13.1` |
-| `.github/workflows/artifact-prune.yml` | `shared/.github/workflows/artifact-prune.yml` — keeps only the newest build artifact of each name; add every workflow that uploads one to its `workflows:` list | `§13.1` |
-| `.github/workflows/train-cleanup.yml` | `shared/.github/workflows/train-cleanup.yml` — removes a merged train's remote branches and gate-result refs | `§13.6` |
 | a `.gitignore` line `.delivery/` | no asset: append it to the generated `.gitignore` | `§13.5` |
 
 Turn on the repository setting that deletes a merged pull request's head
@@ -296,7 +296,9 @@ as an MSI, a bundle, a report), give each kind a stable name, with no version,
 run number or commit in it. Add the workflow to `artifact-prune.yml`'s
 `workflows:` list (`§13.1`).
 
-**Runners (`§13.1`).** Ask whether CI runs on hosted or self-hosted runners.
+**CI option, per OS (DL15).** Ask the owner where CI runs, once for each OS the product tests on (linux, windows, macos). There is no default and no assumed answer. The choices are (a) GitHub self-hosted runners, (b) GitHub-hosted runners, (c) Claude cloud sessions. Record each answer with `python3 <luismc-delivery>/scripts/delivery_ci.py set --os <os> --option a|b|c`, then run `delivery_doctor.py` and fix what its `ci` check reports. The owner changes the choice later with the same command. Everything about the options (shard table, runners, cloud sessions, statuses) is in `luismc-delivery`.
+
+**Runners (`§13.1`).** For option (a) or (b): ask whether CI runs on hosted or self-hosted runners.
 Every workflow template reads its runner labels from the repository variable
 `CI_RUNS_ON` (a JSON string or list; unset means `ubuntu-latest`). For
 self-hosted or shared runners, set it and turn on one-at-a-time ready-PR CI
@@ -581,8 +583,8 @@ check, performed by reading.
    - `artifact-prune.yml` missing, or an upload with a per-run name → `§13.1`;
      `train-cleanup.yml` or `cleanup.py` missing → `§13.6`
 
-   Copy the delivery assets the same way as the others (`assets/tooling/shared/`
-   and `assets/tooling/<track>/`, paths per `CONTRACT.md`), keep the repo's own
+   Copy the hooks and guards from `assets/tooling/`, and the delivery assets with
+   `delivery_ci_install.py update` (paths per `CONTRACT.md` in `luismc-delivery`), keep the repo's own
    `default_branch` in `gate.json`, and leave the `§13.6` documentation to the
    user: offer to draft the text for the repo's rules file, as a diff.
 
@@ -637,7 +639,7 @@ Do not assert it. Verify it before blocking a user's choice on it.
 
 `assets/tooling/<track>/` holds working implementations of `§13.1`'s twelve
 gates, one set per track. Copy in Phase 7 step 1, before any module exists, so
-the first commit is already gated. `assets/tooling/shared/scripts/delivery/`
+the first commit is already gated. `luismc-delivery`'s `templates/shared/scripts/delivery/`
 holds the track-independent delivery scripts (branch gate, verifier, pre-push
 guards, merge script, CI watcher, default-branch skip check, agent setup), and
 its `CONTRACT.md` is the one place their paths, exit codes and file formats are

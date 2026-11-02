@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DELIVERY = ROOT / "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery"
+DELIVERY = ROOT / "claude/plugins/delivery/templates/shared/scripts/delivery"
 SETTINGS = ROOT / "claude/plugins/project-setup/skills/claude-setup/assets/.claude/settings.json"
 sys.path.insert(0, str(DELIVERY))
 sys.dont_write_bytecode = True
@@ -317,7 +317,7 @@ def template_settings_register_a_guarded_hook():
 def this_repo_registers_the_hook_and_declares_suites():
     cfg = json.loads((ROOT / ".claude/settings.json").read_text(encoding="utf-8"))
     cmd = cfg["hooks"]["PreToolUse"][0]["hooks"][0]["command"]
-    assert "tooling/shared/scripts/delivery/session_guard.py" in cmd
+    assert "templates/shared/scripts/delivery/session_guard.py" in cmd
     # DS91: every $CLAUDE_PROJECT_DIR path the hook runs exists, and every enabled
     # plugin is one this repository's marketplace ships.
     for rel in set(re.findall(r'\$CLAUDE_PROJECT_DIR/([^"\\\s]+)', cmd)):

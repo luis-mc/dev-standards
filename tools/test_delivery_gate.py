@@ -45,7 +45,9 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 TOOLING = REPO / "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling"
-SHARED = TOOLING / "shared"
+TEMPLATES = REPO / "claude/plugins/delivery/templates"
+SHARED = TEMPLATES / "shared"
+HOOKS_SHARED = TOOLING / "shared"
 PY = Path(sys.executable).as_posix()
 
 sys.path.insert(0, str(SHARED / "scripts/delivery"))
@@ -259,7 +261,7 @@ class Box:
         (d / "gate.json").write_text(json.dumps(gate_json or self.gate_json(), indent=2) + "\n", encoding="utf-8")
         if hooks:
             (self.work / ".githooks").mkdir()
-            self.copy_text(shared / ".githooks/pre-push", self.work / ".githooks/pre-push")
+            self.copy_text(HOOKS_SHARED / ".githooks/pre-push", self.work / ".githooks/pre-push")
         for exe in (d / "agent_setup.sh", self.work / ".githooks/pre-push"):
             if exe.exists():
                 exe.chmod(0o755)
@@ -1192,7 +1194,7 @@ def sc_required_steps(t: T, shared: Path) -> None:
          verify(box, "feat/old").code, 0)
 
     # the shipped gate.json of every track: order, and lint/types in the pre-push hook
-    tooling = shared.parent
+    tooling = TEMPLATES
     for track in ("ts", "go", "rust", "dotnet"):
         c = dc.load_gate(tooling / track)
         order = [x["name"] for x in c["steps"]]
@@ -2554,7 +2556,7 @@ def sc_assets(t: T, shared: Path) -> None:
     t.check("... new enough for the `git` subcommand (8.19+)", parts >= (8, 19, 0), ver)
 
     for track, kind in TRACKS.items():
-        path = TOOLING / track / "scripts/delivery/gate.json"
+        path = TEMPLATES / track / "scripts/delivery/gate.json"
         label = "%s gate.json" % track
         t.check(label + " exists", path.is_file())
         if not path.is_file():
@@ -2594,7 +2596,7 @@ def sc_assets(t: T, shared: Path) -> None:
     t.eq("a frozen setup is accepted",
          unfrozen_setup(["pnpm install --frozen-lockfile", "cargo fetch --locked", "dotnet restore --locked-mode",
                          "go mod download", "go list -mod=readonly -m all"]), [])
-    ts = json.loads((TOOLING / "ts/scripts/delivery/gate.json").read_text())
+    ts = json.loads((TEMPLATES / "ts/scripts/delivery/gate.json").read_text())
     t.check("ts gate.json matches the contract example commands",
             any("--filter" in s["run"] and "{base}" in s["run"] for s in ts["steps"] if s["name"] == "typecheck")
             and any(s["name"] == "unit" and "{affected_dirs}" in s["run"] and "--project unit" in s["run"] and "--passWithNoTests" in s["run"] for s in ts["steps"]))
@@ -2607,11 +2609,11 @@ def sc_assets(t: T, shared: Path) -> None:
             all(runners[n].get("env") == {"CI": "true"} for n in ("unit", "guards", "e2e")),
             str({n: runners[n].get("env") for n in ("unit", "guards", "e2e")}))
     t.check("go guards select TestGuard*",
-            "TestGuard" in next(s for s in json.loads((TOOLING / "go/scripts/delivery/gate.json").read_text())["steps"] if s["name"] == "guards")["run"])
+            "TestGuard" in next(s for s in json.loads((TEMPLATES / "go/scripts/delivery/gate.json").read_text())["steps"] if s["name"] == "guards")["run"])
     t.check("rust guards select guard_*",
-            "guard_" in next(s for s in json.loads((TOOLING / "rust/scripts/delivery/gate.json").read_text())["steps"] if s["name"] == "guards")["run"])
+            "guard_" in next(s for s in json.loads((TEMPLATES / "rust/scripts/delivery/gate.json").read_text())["steps"] if s["name"] == "guards")["run"])
     t.check("dotnet guards select Category=Guard",
-            "Category=Guard" in next(s for s in json.loads((TOOLING / "dotnet/scripts/delivery/gate.json").read_text())["steps"] if s["name"] == "guards")["run"])
+            "Category=Guard" in next(s for s in json.loads((TEMPLATES / "dotnet/scripts/delivery/gate.json").read_text())["steps"] if s["name"] == "guards")["run"])
 
     # starter guard tests exist, follow their track's naming convention, and contain no marker themselves
     vitest = (TOOLING / "ts/vitest.config.ts").read_text(encoding="utf-8")
@@ -2647,10 +2649,10 @@ def sc_assets(t: T, shared: Path) -> None:
             'path.join(".git").exists()' in starters["rust"][0].read_text(encoding="utf-8"))
     t.check("dotnet guard skips another checkout (a directory holding .git)",
             "IsOtherCheckout(sub)" in starters["dotnet"][0].read_text(encoding="utf-8"))
-    hook = (shared / ".githooks/pre-push").read_text(encoding="utf-8")
+    hook = (HOOKS_SHARED / ".githooks/pre-push").read_text(encoding="utf-8")
     t.check("pre-push is a POSIX sh script", hook.startswith("#!/bin/sh"))
     # a Windows checkout must not turn the hook or the scripts into CRLF (sh: not found)
-    rels = [(shared / ".githooks/pre-push"), (shared / "scripts/delivery/agent_setup.sh"),
+    rels = [(HOOKS_SHARED / ".githooks/pre-push"), (shared / "scripts/delivery/agent_setup.sh"),
             (shared / "scripts/delivery/branch_gate.py"), (shared / "scripts/delivery/gate.json")]
     attr = run(["git", "check-attr", "eol", "--", *[r.as_posix() for r in rels]], cwd=shared)
     lines = [l for l in attr.out.splitlines() if l.strip()]
@@ -2918,7 +2920,7 @@ def sc_lockfile_scope(t: T, shared: Path) -> None:
     # the shipped tracks
     for track, widening, scope in (("ts", "pnpm-lock.yaml", "pnpm-importers"), ("go", "go.sum", "per-package"),
                                    ("dotnet", "packages.lock.json", "per-package"), ("rust", None, "widen")):
-        cfg = json.loads((TOOLING / track / "scripts/delivery/gate.json").read_text(encoding="utf-8"))
+        cfg = json.loads((TEMPLATES / track / "scripts/delivery/gate.json").read_text(encoding="utf-8"))
         t.eq("%s gate.json: lockfile_scope" % track, cfg.get("lockfile_scope"), scope)
         t.eq("%s gate.json: inert_paths" % track, cfg.get("inert_paths"), ["docs/**"])
         listed = [e for e in cfg["widen_on"] if "lock" in e or "go.sum" in e or e == "go.mod"]

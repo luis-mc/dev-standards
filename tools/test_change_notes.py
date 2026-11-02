@@ -29,8 +29,9 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 
 REPO = Path(__file__).resolve().parent.parent
+TEMPLATES = REPO / "claude/plugins/delivery/templates"
 SHARED = REPO / "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared"
-SRC = SHARED / "scripts/delivery"
+SRC = TEMPLATES / "shared/scripts/delivery"
 PY = Path(sys.executable).as_posix()
 FILES = ["delivery_common.py", "change_notes.py"]
 
@@ -578,7 +579,7 @@ def sc_plugins(t: T, s: Path) -> None:
 
 def sc_track_gates(t: T, s: Path) -> None:
     for track in ("ts", "go", "rust", "dotnet"):
-        cfg = json.loads((SHARED.parent / track / "scripts/delivery/gate.json").read_text(encoding="utf-8"))
+        cfg = json.loads((TEMPLATES / track / "scripts/delivery/gate.json").read_text(encoding="utf-8"))
         steps = [x for x in cfg["steps"] if x["name"] == "change-notes"]
         ok = (len(steps) == 1 and steps[0]["scope"] == "always" and steps[0]["pre_push"] is True
               and "change_notes.py check --base-ref {base}" in steps[0]["run"])

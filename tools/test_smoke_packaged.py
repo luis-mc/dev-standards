@@ -223,7 +223,7 @@ def sc_declaration(t: T, shared: Path) -> None:
 
 def sc_templates(t: T, shared: Path) -> None:
     for track in TRACKS:
-        base = tdg.TOOLING / track
+        base = tdg.TEMPLATES / track
         smoke = base / "scripts/delivery/smoke.json"
         t.check("%s: has a smoke.json template" % track, smoke.exists())
         if smoke.exists():

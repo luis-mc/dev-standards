@@ -57,7 +57,7 @@ flowchart LR
 
 **R5.1** — `tech-stack-setup` offers only technologies compatible with the choices already made, and `check_stack.py --selection` verifies a selection against the catalog.
 
-**R5.2** — `tech-stack-setup` generates for four tracks: TypeScript, Go, Rust and .NET. Each track has its own `gate.json`, `smoke.json` and CI workflows under `assets/tooling/`.
+**R5.2** — `tech-stack-setup` generates for four tracks: TypeScript, Go, Rust and .NET. Each track has its own `gate.json`, `smoke.json` and CI workflows. They live in `luismc-delivery` (`templates/`), and `tech-stack-setup` calls the delivery installer at the end of its setup (see [delivery](../delivery/spec.md), R13.3).
 
 **R5.3** — `tech-stack-setup` writes a Stack Profile that records the STACKSPEC version claimed and the vendor choices. It does not copy either spec into the project.
 
@@ -105,7 +105,7 @@ flowchart TB
 ```
 
 - The catalog is data, not requirements. STACKSPEC defines a `CHOICE` level. A choice is reported as recorded or unrecorded, never as violating.
-- The shared delivery tooling (`assets/tooling/shared/scripts/delivery/`, git hooks, workflows) is copied into each generated repository. Its rules and tests belong to [delivery](../delivery/spec.md) and [delivery-speed](../delivery-speed/spec.md). This page does not repeat them.
+- The shared delivery tooling (scripts and workflows in `luismc-delivery` `templates/`) is written into each generated repository by the delivery installer; the git hooks, linters and guards in `assets/tooling/` are copied by `tech-stack-setup`. Its rules and tests belong to [delivery](../delivery/spec.md) and [delivery-speed](../delivery-speed/spec.md). This page does not repeat them.
 - The per-skill model table, the effort-drift hook and how profiles are applied belong to [models](../models/spec.md).
 
 ## 8. Failure modes
