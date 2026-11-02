@@ -1,183 +1,275 @@
 {
- "decisions": [
-  {
-   "id": "D1",
-   "question": "How should claude-setup ask about enforcing each plugin?",
-   "asked": "2026-11-01",
-   "status": "decided",
-   "task": "SO1",
-   "options": [
+  "decisions": [
     {
-     "label": "Grouped pages",
-     "summary": "One AskUserQuestion call with 4 grouped questions (enforce, delivery mode, CI, other setups). Done offers are left out.",
-     "recommended": true
+      "id": "D1",
+      "question": "How should claude-setup ask about enforcing each plugin?",
+      "asked": "2026-11-01",
+      "status": "decided",
+      "task": "SO1",
+      "options": [
+        {
+          "label": "Grouped pages",
+          "summary": "One AskUserQuestion call with 4 grouped questions (enforce, delivery mode, CI, other setups). Done offers are left out.",
+          "recommended": true
+        },
+        {
+          "label": "One question per plugin",
+          "summary": "A question for each of the 8 plugins and each other setup, over several pages."
+        }
+      ],
+      "chosen": "Grouped pages",
+      "decided": "2026-11-01",
+      "owner_words": "Grouped pages (Recommended)"
     },
     {
-     "label": "One question per plugin",
-     "summary": "A question for each of the 8 plugins and each other setup, over several pages."
+      "id": "D2",
+      "question": "Which delivery mode should a project start in?",
+      "asked": "2026-11-01",
+      "status": "decided",
+      "task": "SO1",
+      "options": [
+        {
+          "label": "Ask, warn preselected",
+          "summary": "The owner picks. Warn is preselected, so a new project is not blocked on day one.",
+          "recommended": true
+        },
+        {
+          "label": "Ask, block preselected",
+          "summary": "The owner picks. Block is preselected."
+        },
+        {
+          "label": "Always block",
+          "summary": "No question. Block from the start."
+        }
+      ],
+      "chosen": "Ask, warn preselected",
+      "decided": "2026-11-01",
+      "owner_words": "Ask, warn preselected (Recommended)"
+    },
+    {
+      "id": "D3",
+      "question": "Should claude-setup write a CI workflow for the docs, design-system and spec checks?",
+      "asked": "2026-11-01",
+      "status": "decided",
+      "task": "SO1",
+      "options": [
+        {
+          "label": "Yes, in claude-setup",
+          "summary": "claude-setup writes .github/workflows/dev-standards.yml and prints the branch-protection command.",
+          "recommended": true
+        },
+        {
+          "label": "Hand to tech-stack-setup",
+          "summary": "claude-setup only offers tech-stack-setup, which owns CI files."
+        }
+      ],
+      "chosen": "Yes, in claude-setup",
+      "decided": "2026-11-01",
+      "owner_words": "Yes, claude-setup writes it (Recommended)"
+    },
+    {
+      "id": "D4",
+      "question": "Should the docs Stop hook be able to block?",
+      "asked": "2026-11-01",
+      "status": "decided",
+      "task": "SO1",
+      "options": [
+        {
+          "label": "Warn only, block in CI",
+          "summary": "Keep today's warning. The required CI check is the block.",
+          "recommended": true
+        },
+        {
+          "label": "Opt-in block",
+          "summary": "A docs.json setting turns the warning into a block, with a 3-block ceiling."
+        }
+      ],
+      "chosen": "Warn only, block in CI",
+      "decided": "2026-11-01",
+      "owner_words": "Warn only, block in CI (Recommended)"
+    },
+    {
+      "id": "D5",
+      "question": "Three paths can write a feature spec (specs spec-new, docs feature-spec-new, artifacts promote-to-spec). How should they split?",
+      "asked": "2026-11-01",
+      "status": "decided",
+      "task": "SO1",
+      "options": [
+        {
+          "label": "Split by kind",
+          "summary": "spec-new writes only specs that are not features (standards, migrations, services). luismc-docs feature-spec-new writes every feature spec. promote-to-spec stays the one link from a feature page to its spec. Only skill descriptions and the hand-off text change.",
+          "recommended": true
+        },
+        {
+          "label": "Keep as is",
+          "summary": "spec-new keeps handing feature specs to feature-spec-new in a DOCSPEC repo; nothing changes."
+        },
+        {
+          "label": "Merge spec-new into luismc-docs",
+          "summary": "Move spec-new into the docs plugin; luismc-specs keeps only spec-check."
+        }
+      ],
+      "chosen": "Split by kind",
+      "decided": "2026-11-01",
+      "owner_words": "Split by kind (Recommended)"
+    },
+    {
+      "id": "D6",
+      "question": "Where should transcript-folds be installed and turned on?",
+      "asked": "2026-11-01",
+      "status": "decided",
+      "task": "SO4",
+      "options": [
+        {
+          "label": "Project level",
+          "summary": "Install and enable it per project like the other seven; only the two chords stay in ~/.claude/keybindings.json.",
+          "recommended": true
+        },
+        {
+          "label": "Keep user level",
+          "summary": "Keep the exception: on in every project."
+        }
+      ],
+      "chosen": "Project level",
+      "decided": "2026-11-01",
+      "owner_words": "Project level (Recommended)"
+    },
+    {
+      "id": "D7",
+      "question": "Where should claude-setup write its config files (rules, CLAUDE.md, statusline, output style, effort hook, model split) by default?",
+      "asked": "2026-11-01",
+      "status": "decided",
+      "task": "SO4",
+      "options": [
+        {
+          "label": "Project by default",
+          "summary": "Write them into the project's .claude/ by default; user level only when picked. Existing ~/.claude copies stay."
+        },
+        {
+          "label": "Project, remove mine",
+          "summary": "Same, and remove the copies in ~/.claude on this PC now."
+        },
+        {
+          "label": "Keep user level",
+          "summary": "Change only where plugins are installed."
+        }
+      ],
+      "chosen": "Project by default",
+      "decided": "2026-11-01",
+      "owner_words": "Project by default"
+    },
+    {
+      "id": "D8",
+      "question": "Should claude-setup register the dev-standards marketplace in each project?",
+      "asked": "2026-11-01",
+      "status": "decided",
+      "task": "SO4",
+      "options": [
+        {
+          "label": "Add per project",
+          "summary": "Write extraKnownMarketplaces.dev-standards into each project's settings; the user-level entry stays.",
+          "recommended": true
+        },
+        {
+          "label": "User level only",
+          "summary": "Each new machine runs claude plugin marketplace add once."
+        }
+      ],
+      "chosen": "Add per project",
+      "decided": "2026-11-01",
+      "owner_words": "Add per project (Recommended)"
+    },
+    {
+      "id": "D9",
+      "question": "What should claude-setup do with the other setups the owner picks?",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "task": "SO5",
+      "options": [
+        {
+          "label": "Run them in order",
+          "summary": "After the config plan, run each picked skill in the session: tech-stack-setup audit, auth-setup, then each audit; hold when over the PC load limits.",
+          "recommended": true
+        },
+        {
+          "label": "Run, but ask before each",
+          "summary": "Same order with a yes/no before each skill."
+        },
+        {
+          "label": "Keep handing over",
+          "summary": "Only fix the wording."
+        }
+      ],
+      "chosen": "Run them in order",
+      "decided": "2026-11-02",
+      "owner_words": "Run them in order (Recommended)"
+    },
+    {
+      "id": "D10",
+      "question": "How should claude-setup offer the three audits?",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "task": "SO5",
+      "options": [
+        {
+          "label": "Three separate options",
+          "summary": "Security, compliance and performance are each an option; each pick is run.",
+          "recommended": true
+        },
+        {
+          "label": "One option, runs all three",
+          "summary": "A single option that runs all three."
+        }
+      ],
+      "chosen": "Three separate options",
+      "decided": "2026-11-02",
+      "owner_words": "Three separate options (Recommended)"
+    },
+    {
+      "id": "D11",
+      "question": "What should claude-setup do about branch protection for the dev-standards check?",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "task": "SO5",
+      "options": [
+        {
+          "label": "Ask, then run when possible",
+          "summary": "Ask during setup; run the gh command after a yes once the workflow has run on the default branch, otherwise record the yes and apply it at status or the next run.",
+          "recommended": true
+        },
+        {
+          "label": "Ask, and always print only",
+          "summary": "Ask, then print the command as an owner step."
+        },
+        {
+          "label": "Keep as is",
+          "summary": "Print the command without asking."
+        }
+      ],
+      "chosen": "Ask, then run when possible",
+      "decided": "2026-11-02",
+      "owner_words": "Ask, then run when possible (Recommended)"
+    },
+    {
+      "id": "D12",
+      "question": "How should the final report show what is left for the owner?",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "task": "SO5",
+      "options": [
+        {
+          "label": "One numbered 'Left for you' list",
+          "summary": "One ordered list of only the owner's steps, each with its command or link; the enforcement table follows and each missing row names its step.",
+          "recommended": true
+        },
+        {
+          "label": "Keep the table, add the list",
+          "summary": "Current sections plus a short list."
+        }
+      ],
+      "chosen": "One numbered 'Left for you' list",
+      "decided": "2026-11-02",
+      "owner_words": "One numbered 'Left for you' list (Recommended)"
     }
-   ],
-   "chosen": "Grouped pages",
-   "decided": "2026-11-01",
-   "owner_words": "Grouped pages (Recommended)"
-  },
-  {
-   "id": "D2",
-   "question": "Which delivery mode should a project start in?",
-   "asked": "2026-11-01",
-   "status": "decided",
-   "task": "SO1",
-   "options": [
-    {
-     "label": "Ask, warn preselected",
-     "summary": "The owner picks. Warn is preselected, so a new project is not blocked on day one.",
-     "recommended": true
-    },
-    {
-     "label": "Ask, block preselected",
-     "summary": "The owner picks. Block is preselected."
-    },
-    {
-     "label": "Always block",
-     "summary": "No question. Block from the start."
-    }
-   ],
-   "chosen": "Ask, warn preselected",
-   "decided": "2026-11-01",
-   "owner_words": "Ask, warn preselected (Recommended)"
-  },
-  {
-   "id": "D3",
-   "question": "Should claude-setup write a CI workflow for the docs, design-system and spec checks?",
-   "asked": "2026-11-01",
-   "status": "decided",
-   "task": "SO1",
-   "options": [
-    {
-     "label": "Yes, in claude-setup",
-     "summary": "claude-setup writes .github/workflows/dev-standards.yml and prints the branch-protection command.",
-     "recommended": true
-    },
-    {
-     "label": "Hand to tech-stack-setup",
-     "summary": "claude-setup only offers tech-stack-setup, which owns CI files."
-    }
-   ],
-   "chosen": "Yes, in claude-setup",
-   "decided": "2026-11-01",
-   "owner_words": "Yes, claude-setup writes it (Recommended)"
-  },
-  {
-   "id": "D4",
-   "question": "Should the docs Stop hook be able to block?",
-   "asked": "2026-11-01",
-   "status": "decided",
-   "task": "SO1",
-   "options": [
-    {
-     "label": "Warn only, block in CI",
-     "summary": "Keep today's warning. The required CI check is the block.",
-     "recommended": true
-    },
-    {
-     "label": "Opt-in block",
-     "summary": "A docs.json setting turns the warning into a block, with a 3-block ceiling."
-    }
-   ],
-   "chosen": "Warn only, block in CI",
-   "decided": "2026-11-01",
-   "owner_words": "Warn only, block in CI (Recommended)"
-  },
-  {
-   "id": "D5",
-   "question": "Three paths can write a feature spec (specs spec-new, docs feature-spec-new, artifacts promote-to-spec). How should they split?",
-   "asked": "2026-11-01",
-   "status": "decided",
-   "task": "SO1",
-   "options": [
-    {
-     "label": "Split by kind",
-     "summary": "spec-new writes only specs that are not features (standards, migrations, services). luismc-docs feature-spec-new writes every feature spec. promote-to-spec stays the one link from a feature page to its spec. Only skill descriptions and the hand-off text change.",
-     "recommended": true
-    },
-    {
-     "label": "Keep as is",
-     "summary": "spec-new keeps handing feature specs to feature-spec-new in a DOCSPEC repo; nothing changes."
-    },
-    {
-     "label": "Merge spec-new into luismc-docs",
-     "summary": "Move spec-new into the docs plugin; luismc-specs keeps only spec-check."
-    }
-   ],
-   "chosen": "Split by kind",
-   "decided": "2026-11-01",
-   "owner_words": "Split by kind (Recommended)"
-  },
-  {
-   "id": "D6",
-   "question": "Where should transcript-folds be installed and turned on?",
-   "asked": "2026-11-01",
-   "status": "decided",
-   "task": "SO4",
-   "options": [
-    {
-     "label": "Project level",
-     "summary": "Install and enable it per project like the other seven; only the two chords stay in ~/.claude/keybindings.json.",
-     "recommended": true
-    },
-    {
-     "label": "Keep user level",
-     "summary": "Keep the exception: on in every project."
-    }
-   ],
-   "chosen": "Project level",
-   "decided": "2026-11-01",
-   "owner_words": "Project level (Recommended)"
-  },
-  {
-   "id": "D7",
-   "question": "Where should claude-setup write its config files (rules, CLAUDE.md, statusline, output style, effort hook, model split) by default?",
-   "asked": "2026-11-01",
-   "status": "decided",
-   "task": "SO4",
-   "options": [
-    {
-     "label": "Project by default",
-     "summary": "Write them into the project's .claude/ by default; user level only when picked. Existing ~/.claude copies stay."
-    },
-    {
-     "label": "Project, remove mine",
-     "summary": "Same, and remove the copies in ~/.claude on this PC now."
-    },
-    {
-     "label": "Keep user level",
-     "summary": "Change only where plugins are installed."
-    }
-   ],
-   "chosen": "Project by default",
-   "decided": "2026-11-01",
-   "owner_words": "Project by default"
-  },
-  {
-   "id": "D8",
-   "question": "Should claude-setup register the dev-standards marketplace in each project?",
-   "asked": "2026-11-01",
-   "status": "decided",
-   "task": "SO4",
-   "options": [
-    {
-     "label": "Add per project",
-     "summary": "Write extraKnownMarketplaces.dev-standards into each project's settings; the user-level entry stays.",
-     "recommended": true
-    },
-    {
-     "label": "User level only",
-     "summary": "Each new machine runs claude plugin marketplace add once."
-    }
-   ],
-   "chosen": "Add per project",
-   "decided": "2026-11-01",
-   "owner_words": "Add per project (Recommended)"
-  }
- ]
+  ]
 }
