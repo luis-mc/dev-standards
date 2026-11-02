@@ -806,7 +806,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-02T21:47+00:00",
+ "updated": "2026-11-02T23:13+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1476,14 +1476,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL15",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "CI options in delivery: local runners, GitHub-hosted, cloud sessions",
    "detail": "Owner 2 Nov: delivery spec for three CI options chosen per OS at setup (no defaults), changeable later; move CI scripts and workflow templates from tech-stack-setup into delivery; cloud sessions use no Actions or webhooks, only commit statuses",
-   "expected": "03 Nov ~22:00",
-   "changed": "2026-11-02T21:22+00:00",
-   "expected_basis": "cloud agent ~1 day: spec + move of the CI scripts and templates + tests",
-   "no_release": "rides the next dev-standards release; release task added at join",
-   "started": "2026-11-02T21:35+00:00"
+   "expected": "02 Nov",
+   "changed": "2026-11-02T23:12+00:00",
+   "started": "2026-11-02T21:35+00:00",
+   "rides": "DS178"
   },
   {
    "id": "DS1",
@@ -4051,13 +4050,51 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS178",
    "owner": "project",
    "app": "",
-   "status": "To do",
-   "item": "Release: CI options in delivery",
-   "detail": "Joins DL15 after its code is done",
-   "expected": "03 Nov ~23:00",
-   "changed": "2026-11-02T21:22+00:00",
-   "expected_basis": "after DL15 (~22:00) + CI + merge",
-   "release": 34
+   "status": "Running",
+   "item": "RELEASE-34: CI options in luismc-delivery (DL15)",
+   "detail": "Joined DL15 on release/34, PR #124; fold: delivery 1.3.0, project-setup 1.3.1; merge on green (owner ~21:55)",
+   "expected": "02 Nov ~23:25",
+   "changed": "2026-11-02T23:12+00:00",
+   "expected_basis": "dev-standards CI started 23:10, ~3-15 min",
+   "release": 34,
+   "phases": [
+    {
+     "name": "join",
+     "start": "2026-11-02T23:05+00:00",
+     "end": "2026-11-02T23:10+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-11-02T23:10+00:00",
+     "end": "2026-11-02T23:25+00:00"
+    }
+   ],
+   "started": "2026-11-02T23:12+00:00"
+  },
+  {
+   "id": "DS179",
+   "owner": "project",
+   "app": "",
+   "status": "Dropped",
+   "item": "RELEASE-34: CI options in luismc-delivery (DL15)",
+   "detail": "Joined DL15 on release/34, PR #124; fold: delivery 1.3.0, project-setup 1.3.1; merge on green (owner ~21:55)",
+   "expected": "02 Nov",
+   "changed": "2026-11-02T23:13+00:00",
+   "release": 35,
+   "phases": [
+    {
+     "name": "join",
+     "start": "2026-11-02T23:05+00:00",
+     "end": "2026-11-02T23:10+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-11-02T23:10+00:00",
+     "end": "2026-11-02T23:25+00:00"
+    }
+   ],
+   "started": "2026-11-02T23:11+00:00",
+   "dropped_into": "DS178"
   },
   {
    "id": "MP1",
@@ -4422,17 +4459,22 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-02T21:47+00:00">02 Nov 21:47</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-02T23:13+00:00">02 Nov 23:13</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
 <details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DL15"><span class="task-id">DL15</span>CI options in delivery: local runners, GitHub-hosted, cloud sessions <span class="glance-expected">03 Nov ~22:00</span><span class="glance-basis">cloud agent ~1 day: spec + move of the CI scripts and templates + tests</span></li>
+<li data-glance-task="DS178"><span class="task-id">DS178</span><span class="release-name">RELEASE-34</span>CI options in luismc-delivery (DL15) <span class="glance-expected">02 Nov ~23:25</span><span class="glance-basis">dev-standards CI started 23:10, ~3-15 min</span></li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">10 tasks</span></summary>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL15"><span class="task-id">DL15</span>CI options in delivery: local runners, GitHub-hosted, cloud sessions</li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">7 tasks</span></summary>
 <ul>
 <li data-glance-task="DS177"><span class="task-id">DS177</span><span class="release-name">RELEASE-33</span>gallery rebuilds itself (ST5)</li>
 <li data-glance-task="ST5"><span class="task-id">ST5</span>Docs hooks rebuild a stale next-version gallery</li>
@@ -4441,38 +4483,33 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="ST4"><span class="task-id">ST4</span>Gallery draws swatches, samples and every starter component</li>
 <li data-glance-task="DS175"><span class="task-id">DS175</span><span class="release-name">RELEASE-31</span>claude-setup runs what the owner picks (SO5)</li>
 <li data-glance-task="SO5"><span class="task-id">SO5</span>claude-setup runs the setups the owner picks and lists only the owner&#x27;s steps</li>
-<li data-glance-task="AR52"><span class="task-id">AR52</span>Background marker clears when the work ends</li>
-<li class="glance-more">and 2 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">275</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">275</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">1</div><div class="label">task dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 260" role="img" aria-label="Next releases: DS178 (Release: CI options in delivery) expected 03 Nov. Other work (no release): DL15 (CI options in delivery: local runners, GitHub-hosted, cloud sessions) Running, expected 03 Nov." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="220" y1="36" x2="220" y2="236"/><text x="220" y="28">03 Nov</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-34 · Release: CI options in delivery</title>RELEASE-34 · Release: CI…</text>
-<polygon class="rt-day" points="220,52 228,65 220,78 212,65"/><text class="rt-day-label" x="236" y="69">03 Nov</text>
-<text class="rt-strip-title" x="0" y="122">Other work (no release)</text>
-<text class="rt-name" x="0" y="156"><title>DL15 · CI options in delivery: local runners, GitHub-hosted, cloud sessions</title>DL15 · CI options in deli…</text>
-<polygon class="rt-day" points="220,148 228,161 220,174 212,161"/><text class="rt-day-label" x="236" y="165">03 Nov</text>
-<text class="rt-other-label" x="212" y="188">cloud agent ~1 day: spec + move of the CI scripts and templ…</text>
-
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS178 (CI options in luismc-delivery (DL15)) expected live about 23:25." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">23:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">23:30</text></g>
+<text class="rt-name" x="0" y="60"><title>RELEASE-34 · CI options in luismc-delivery (DL15)</title>RELEASE-34 · CI options i…</text>
+<text class="rt-sub" x="0" y="77"><title>DL15</title>DL15</text>
+<rect class="rt-bar join" x="286.7" y="52" width="86.7" height="22"><title>join 23:05-23:10</title></rect>
+<rect class="rt-bar ci" x="373.3" y="52" width="260" height="22"><title>PR CI 23:10-23:25</title></rect>
+<polygon class="rt-expected" points="633.3,50 641.3,63 633.3,76 625.3,63"/>
+<text class="rt-live-label" x="633.3" y="92">live ~23:25</text>
+<line class="rt-now" x1="425.3" y1="36" x2="425.3" y2="148"/><text class="rt-now-label" x="425.3" y="161">now 23:13</text>
 </svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days. Under Other work (no release), a bar runs from the start to its Expected, coloured by status; a red outline means it is past its Expected.</p>
+<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-34" open><summary><strong>RELEASE-34 · live ~23:00</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold release-group" data-group="release-34" open><summary><strong>RELEASE-34 · live ~23:25</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS178"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS178</span><span class="release-name">RELEASE-34</span>Release: CI options in delivery</td><td data-label="App / service"></td><td data-label="Detail">Joins DL15 after its code is done</td><td data-label="Expected">03 Nov ~23:00<span class="expected-basis">after DL15 (~22:00) + CI + merge</span></td></tr>
+<tr data-task="DS178"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS178</span><span class="release-name">RELEASE-34</span>CI options in luismc-delivery (DL15)</td><td data-label="App / service"></td><td data-label="Detail">Joined DL15 on release/34, PR #124; fold: delivery 1.3.0, project-setup 1.3.1; merge on green (owner ~21:55)</td><td data-label="Expected">02 Nov ~23:25<span class="expected-basis">dev-standards CI started 23:10, ~3-15 min</span></td></tr>
+<tr data-task="DL15"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL15</span>CI options in delivery: local runners, GitHub-hosted, cloud sessions</a></td><td data-label="App / service"></td><td data-label="Detail">Owner 2 Nov: delivery spec for three CI options chosen per OS at setup (no defaults), changeable later; move CI scripts and workflow templates from tech-stack-setup into delivery; cloud sessions use no Actions or webhooks, only commit statuses</td><td data-label="Expected">02 Nov</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">276 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL15"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL15</span>CI options in delivery: local runners, GitHub-hosted, cloud sessions</a><span class="no-release-line">ships nothing: rides the next dev-standards release; release task added at join</span></td><td data-label="App / service"></td><td data-label="Detail">Owner 2 Nov: delivery spec for three CI options chosen per OS at setup (no defaults), changeable later; move CI scripts and workflow templates from tech-stack-setup into delivery; cloud sessions use no Actions or webhooks, only commit statuses</td><td data-label="Expected">03 Nov ~22:00<span class="expected-basis">cloud agent ~1 day: spec + move of the CI scripts and templates + tests</span></td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">275 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS179"><td data-label="Status"><span class="status-chip status-dropped">Dropped</span></td><td data-label="Item"><span class="task-id">DS179</span><span class="release-name">RELEASE-35</span>RELEASE-34: CI options in luismc-delivery (DL15)<span class="dropped-line">dropped: folded into RELEASE-34</span></td><td data-label="App / service"></td><td data-label="Detail">Joined DL15 on release/34, PR #124; fold: delivery 1.3.0, project-setup 1.3.1; merge on green (owner ~21:55)</td><td data-label="Expected">02 Nov</td></tr>
 <tr data-task="DS177"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS177</span><span class="release-name">RELEASE-33</span>gallery rebuilds itself (ST5)</td><td data-label="App / service"></td><td data-label="Detail">Joined ST5; fold: docs 1.3.0, docspec 1.5.0, docs feature spec 0.5.0. CI green 21:47.</td><td data-label="Expected">02 Nov</td></tr>
 <tr data-task="ST5"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-design-system-starter.html"><span class="task-id">ST5</span>Docs hooks rebuild a stale next-version gallery</a><span class="release-line"><span class="release-name">RELEASE-33</span></span></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">D14 Both: SessionStart and Stop hooks rebuild docs/design-system/next-version/review-visuals when its source or script stamp is stale; never a numbered version; write only, fail open.</td><td data-label="Expected">02 Nov</td></tr>
 <tr data-task="DL14"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL14</span>Finished cloud agents are marked done in the ledger</a><span class="release-line"><span class="release-name">RELEASE-32</span></span></td><td data-label="App / service"></td><td data-label="Detail">D20: branch signals (merged, deleted, report READY/NOT READY) in the watcher; the Stop hook asks the session to check list_runs only for cloud rows still open after their ETA.</td><td data-label="Expected">02 Nov</td></tr>
@@ -4758,7 +4795,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29894243"><time datetime="2026-11-02T21:23+00:00">02 Nov 21:23</time></td><td data-label="Tasks">DL1 to DL15</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29894352"><time datetime="2026-11-02T23:12+00:00">02 Nov 23:12</time></td><td data-label="Tasks">DL1 to DL15</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (6)</strong><span class="fold-count">6 feature artifacts</span></summary>
