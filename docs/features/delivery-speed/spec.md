@@ -136,6 +136,7 @@ The scripts live in `tooling/shared/scripts/delivery/`. tech-stack-setup copies 
 | D17 | DELIVERYSPEC Source cells named after another project's memory notes: make generic or keep? | Make them generic | 2026-10-26 |
 | D18 | Commit the uncommitted artifacts record and docs/drafts? | Commit both | 2026-10-26 |
 | D19 | docs/drafts/delivery-inventory.md is an older copy of DELIVERYSPEC full of another project's paths and rules: what happens to it? | Delete it | 2026-10-26 |
+| D20 | The ledger never marks a finished cloud agent done. Close it from branch signals, from a session check, or both? | Both: branch signals first (DL-32a), the session check only as the fallback | 2026-11-02 |
 
 Decisions in MADR form: [0032](../../architecture/decisions/0032-delivery-speed-plan.md), [0033](../../architecture/decisions/0033-packaged-smoke-test-must.md), [0034](../../architecture/decisions/0034-delivery-log-in-release-notes.md), [0039](../../architecture/decisions/0039-generic-ci-speed-for-products.md).
 

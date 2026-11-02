@@ -289,6 +289,20 @@ def limit_notice(noticed, limit):
             % (limit, '/'.join(rules), ', '.join(names), limit, ' '.join(m for _, m in noticed)))
 
 
+def _past_eta(a, eta, due, at):
+    """Start plus the setup+work+checks estimate is behind us."""
+    if due is None:
+        start = H.parse_ts(a.get('started'))
+        try:
+            mins = float(eta.get('total_min') or 0)
+        except (TypeError, ValueError):
+            mins = 0
+        if start is None or not mins:
+            return False
+        return H.minutes_since(a.get('started'), at) >= mins
+    return due <= at
+
+
 def check_agents(ledger, cfg, at):
     out = []
     for a in ledger['agents']:
@@ -306,8 +320,17 @@ def check_agents(ledger, cfg, at):
         age = H.minutes_since(since, at)
         due = H.parse_ts(eta.get('due'))
         overdue = due is not None and due <= at and (H.parse_ts(a.get('last_checked')) or due) <= due
+        cloud_late = a.get('where') == 'cloud' and (due is not None or eta.get('total_min')) and \
+            _past_eta(a, eta, due, at)
         stalled = a.get('stalled') is True       # DS33: the watcher flags it when it checks
-        if overdue or stalled or (age is not None and age > cfg['check_min']):
+        if cloud_late:
+            trig = a.get('trigger_id') or (a.get('id') if str(a.get('id', '')).startswith('trig_') else None)
+            out.append(('DL-32:' + str(a.get('id')), 'DL-32 cloud agent %s is past its ETA and its branch gave no done '
+                        'signal. %sThen record it with: delivery_ledger.py agent-done %s --by session '
+                        '--result ready|not-ready|failed.'
+                        % (name, 'Call RemoteTrigger list_runs for trigger %s. ' % trig if trig
+                           else 'Call RemoteTrigger list_runs for its trigger. ', a.get('id') or name)))
+        elif overdue or stalled or (age is not None and age > cfg['check_min']):
             out.append(('DL-32:' + str(a.get('id')), 'DL-32 agent %s %s. Check its log, branch and run status now '
                         '(a log older than the step\'s typical time means investigate), then the check is recorded.'
                         % (name, 'is past its due time without a check' if overdue

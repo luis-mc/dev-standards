@@ -149,15 +149,19 @@ class Watcher:
     def pass_agents(self) -> None:
         led = L.load(self.root)
         now = self.now()
+        self._fetched = False
+        self._default = None
         for idx, a in enumerate(led["agents"]):
             if a.get("state") not in ("queued", "running", "pushed", "stalled"):
                 continue
             changes: dict = {}
             activity = L.parse_iso(a.get("last_activity")) or L.parse_iso(a.get("started"))
             branch = a.get("branch")
+            remote_seen = None
             if branch and a.get("where") != "cloud-skip":
                 rc, out, _ = self.read(["git", "ls-remote", "origin", "refs/heads/%s" % branch])
                 sha = out.split()[0] if rc == 0 and out.strip() else None
+                remote_seen = bool(sha) if rc == 0 else None
                 if sha and sha != a.get("head_sha"):
                     changes["head_sha"] = sha
                     activity = now
@@ -188,8 +192,66 @@ class Watcher:
                     changes["state"] = "stalled"
                 elif state == "stalled":
                     changes["state"] = "running"
+            if (changes.get("state") or a.get("state")) in ("queued", "running", "pushed", "stalled"):
+                closed = self.branch_signal(a, changes.get("head_sha") or a.get("head_sha"), branch, remote_seen)
+                if closed:
+                    changes.update(closed)
             if changes:
                 self._apply_agent(idx, a, changes)
+
+    # -- branch signals (DL14, D20): how a finished agent row is closed without claude.ai --
+    def _default_branch(self) -> str:
+        if getattr(self, "_default", None) is None:
+            rc, out, _ = self.read(["git", "symbolic-ref", "--short", "refs/remotes/origin/HEAD"])
+            name = out.strip().split("/", 1)[1] if rc == 0 and "/" in out.strip() else "main"
+            self._default = name
+        return self._default
+
+    def _fetch_once(self) -> None:
+        """One fetch per tick, only when a row needs it."""
+        if not getattr(self, "_fetched", False):
+            self._fetched = True
+            self.read(["git", "fetch", "--quiet", "origin"])
+
+    def _report_verdict(self, a: dict, branch: str):
+        """'ready', 'not-ready' or None from the last non-empty line of the branch's report file."""
+        ref = "origin/%s" % branch
+        paths = [a["report"]] if a.get("report") else []
+        if not paths and a.get("task"):
+            rc, out, _ = self.read(["git", "ls-tree", "-r", "--name-only", ref, "--", "docs/work/"])
+            if rc == 0:
+                paths = [x for x in out.split() if os.path.basename(x).startswith(str(a["task"])) and x.endswith(".md")]
+        for path in paths:
+            rc, out, _ = self.read(["git", "show", "%s:%s" % (ref, path)])
+            lines = [x.strip() for x in out.splitlines() if x.strip()] if rc == 0 else []
+            if lines and lines[-1].startswith("NOT READY"):
+                return "not-ready"
+            if lines and lines[-1].startswith("READY"):
+                return "ready"
+        return None
+
+    def branch_signal(self, a: dict, head, branch, remote_seen):
+        """Fields that close an open agent row, or None. Signals: merged, deleted, report-ready, report-not-ready.
+        `remote_seen` is False when ls-remote failed (nothing is concluded then)."""
+        if not branch or a.get("where") == "cloud-skip" or remote_seen is None:
+            return None
+        done = lambda by: {"state": "done", "done_by": by, "needs_check": by == "report-not-ready",
+                           "done_at": L.iso(self.now())}
+        if not remote_seen:                               # ls-remote answered, no such branch
+            work = ((a.get("eta") or {}).get("breakdown") or {}).get("work")
+            started = L.parse_iso(a.get("started"))
+            old = bool(work and started and (self.now() - started).total_seconds() / 60.0 > float(work))
+            return done("deleted") if (a.get("head_sha") or old) else None
+        self._fetch_once()
+        default = self._default_branch()
+        if head and a.get("head_sha"):                    # the ledger saw the branch before this tick
+            rc, tip, _ = self.read(["git", "rev-parse", "origin/%s" % default])
+            if rc == 0 and tip.strip() != head:
+                rc, _, _ = self.read(["git", "merge-base", "--is-ancestor", head, "origin/%s" % default])
+                if rc == 0:
+                    return done("merged")
+        verdict = self._report_verdict(a, branch)
+        return done("report-" + verdict) if verdict else None
 
     def _apply_agent(self, idx: int, before: dict, changes: dict) -> None:
         def fn(led):
@@ -198,7 +260,9 @@ class Watcher:
             if row is None:
                 return
             if changes.get("state") and changes["state"] != row.get("state"):
-                L.add_event(led, "agent.%s" % changes["state"], str(row.get("task") or row.get("id")), "delivery_watch")
+                by = changes.get("done_by")
+                L.add_event(led, "agent.%s" % changes["state"],
+                            str(row.get("task") or row.get("id")) + (" by %s" % by if by else ""), "delivery_watch")
             row.update(changes)
         self.mut(fn)
         if self.dry:

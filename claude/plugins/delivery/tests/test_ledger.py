@@ -260,6 +260,25 @@ class AgentEtaTests(unittest.TestCase):
         self.assertIsNone(L.load(root)["agents"][1]["eta"])
 
 
+class AgentDoneTests(AgentEtaTests):
+    def test_writes_state_and_event(self):
+        for result, state, check in (("ready", "done", False), ("not-ready", "done", True), ("failed", "failed", False)):
+            root, _ = self.seed()
+            r = self.run_cli(root, "agent-done", "ag1", "--by", "session", "--result", result)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            led = L.load(root)
+            a = led["agents"][0]
+            self.assertEqual((a["state"], a["done_by"], a["result"], a["needs_check"]), (state, "session", result, check))
+            self.assertTrue(any(e["kind"] == "agent." + state and "ag1" not in e["kind"] for e in led["events"]))
+
+    def test_closed_or_unknown_agent_fails_and_changes_nothing(self):
+        root, _ = self.seed()
+        for key in ("ag2", "nope"):
+            r = self.run_cli(root, "agent-done", key, "--result", "ready")
+            self.assertEqual(r.returncode, 1)
+        self.assertEqual(L.load(root)["agents"][0]["state"], "running")
+
+
 class ExpiryTests(unittest.TestCase):
     """DS156: finished rows older than the retention window are dropped when the ledger is written."""
 
