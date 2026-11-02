@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "luismc-delivery/config-schema.json",
   "title": "luismc-delivery .delivery/config.json",
-  "description": "Schema of the per-project config (plugin 0.2.0). Validated by `delivery_config.py validate`, which reads the JSON Schema subset used here (type, enum, const, properties, items, minimum, minItems, pattern, oneOf, additionalProperties). Keys starting with _ are comments. Keys not listed warn (they never fail). Every key is optional; a 0.1.0 config stays valid.",
+  "description": "Schema of the per-project config (plugin 0.2.0; the `ci` key is DL15). Validated by `delivery_config.py validate`, which reads the JSON Schema subset used here (type, enum, const, properties, items, minimum, minItems, pattern, oneOf, additionalProperties). Keys starting with _ are comments. Keys not listed warn (they never fail). Every key is optional; a 0.1.0 config stays valid.",
   "type": "object",
   "properties": {
     "caps": {
@@ -430,6 +430,56 @@
         "script": {
           "type": "string",
           "description": "Path of runner_plan.py for the watcher (default scripts/delivery/runner_plan.py under the repository root)."
+        }
+      }
+    },
+    "ci": {
+      "type": "object",
+      "description": "DL15: where CI runs, chosen PER OS. There is no default: setup asks, and `delivery_ci.py set` changes it later. Option values: self-hosted (a, GitHub Actions on the owner's runners; the `runners` and `local_runners` keys belong to it), github-hosted (b, GitHub Actions on GitHub's runners), cloud (c, Claude cloud sessions, no Actions and no webhooks). All three use the same shard table; the option only decides where a shard runs and how its result comes back.",
+      "properties": {
+        "options": {
+          "type": "object",
+          "description": "One entry per OS the project tests on. A missing OS is not chosen; the doctor fails when the shard table has a shard for it.",
+          "properties": {
+            "linux": {"type": "string", "enum": ["self-hosted", "github-hosted", "cloud"]},
+            "windows": {"type": "string", "enum": ["self-hosted", "github-hosted", "cloud"]},
+            "macos": {"type": "string", "enum": ["self-hosted", "github-hosted", "cloud"]}
+          }
+        },
+        "shard_table": {
+          "type": "string",
+          "description": "Path of the shard table, from the repository root (default scripts/delivery/ci-shards.json)."
+        },
+        "cloud": {
+          "type": "object",
+          "description": "Settings of option c. Needed as soon as one OS is cloud.",
+          "properties": {
+            "repo": {
+              "type": "string",
+              "pattern": "^[^/\\s]+/[^/\\s]+$",
+              "description": "OWNER/NAME the commit statuses are posted to."
+            },
+            "status_token_env": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+              "description": "Name of the environment variable that holds the statuses-only token. The token itself is never written to a file."
+            },
+            "branches": {
+              "type": "array",
+              "items": {"type": "string"},
+              "minItems": 1,
+              "description": "Branch name globs whose heads the watcher routine tests."
+            },
+            "results_prefix": {
+              "type": "string",
+              "description": "Branch prefix a shard pushes its result JSON to: <prefix>/<sha>/<shard id> (default ci-result)."
+            },
+            "shard_timeout_min": {
+              "type": "number",
+              "minimum": 1,
+              "description": "Minutes after which the watcher counts a launched shard with no result as lost."
+            }
+          }
         }
       }
     },
