@@ -541,6 +541,72 @@ class AgentTests(unittest.TestCase):
         self.assertFalse(any(c[0] == "git" for c in sh.calls))
 
 
+class BranchSignalTests(unittest.TestCase):
+    """DL14: a finished agent row is closed by its branch, with no claude.ai access."""
+    MAIN = "c" * 40
+
+    def agent(self, **kw):
+        a = {"task": "DL9", "where": "cloud", "id": "trig_1", "branch": "DL9-x", "head_sha": SHA,
+             "started": "2026-10-14T11:00:00Z", "last_activity": "2026-10-14T11:55:00Z",
+             "eta": {"total_min": 25, "breakdown": {"setup": 5, "work": 12, "checks": 8}}, "state": "running"}
+        a.update(kw)
+        return a
+
+    def run_agent(self, agent, remote=SHA, merged=False, report=None, report_path="docs/work/DL9-report.md"):
+        root = make_root()
+        seed(root, agents=[agent])
+        routes = {
+            ("git", "ls-remote"): (0, ("%s\trefs/heads/DL9-x\n" % remote) if remote else ""),
+            ("git", "symbolic-ref"): (0, "origin/main\n"),
+            ("git", "fetch"): (0, ""),
+            ("git", "rev-parse"): (0, self.MAIN + "\n"),
+            ("git", "merge-base"): (0 if merged else 1, ""),
+            ("git", "ls-tree"): (0, report_path + "\n" if report is not None else ""),
+            ("git", "show"): (0, report or ""),
+            ("gh", "api"): (1, ""),
+        }
+        sh = FakeShell(routes)
+        W.Watcher(root, sh=sh, now=lambda: NOW, out=lambda *_: None).run_once()
+        led = L.load(root)
+        return led["agents"][0], led, sh
+
+    def test_merged_branch_closes_the_row(self):
+        a, led, _ = self.run_agent(self.agent(), merged=True)
+        self.assertEqual((a["state"], a["done_by"], a["needs_check"]), ("done", "merged", False))
+        self.assertTrue(any(e["kind"] == "agent.done" and "merged" in e["ref"] for e in led["events"]))
+
+    def test_deleted_branch_closes_the_row(self):
+        a, led, _ = self.run_agent(self.agent(), remote="")
+        self.assertEqual((a["state"], a["done_by"]), ("done", "deleted"))
+        self.assertTrue(any(e["kind"] == "agent.done" for e in led["events"]))
+
+    def test_missing_branch_never_seen_and_row_young_stays_open(self):
+        a, _, _ = self.run_agent(self.agent(head_sha=None, started="2026-10-14T11:55:00Z"), remote="")
+        self.assertNotEqual(a["state"], "done")
+
+    def test_report_ready_closes_the_row(self):
+        a, _, _ = self.run_agent(self.agent(), report="# Report\n\nbody\nREADY\n\n")
+        self.assertEqual((a["state"], a["done_by"], a["needs_check"]), ("done", "report-ready", False))
+
+    def test_report_not_ready_closes_with_needs_check(self):
+        a, _, _ = self.run_agent(self.agent(), report="body\nNOT READY: tests fail\n")
+        self.assertEqual((a["state"], a["done_by"], a["needs_check"]), ("done", "report-not-ready", True))
+
+    def test_none_of_the_signals_stays_open(self):
+        a, _, _ = self.run_agent(self.agent(), report="body\nstill working\n")
+        self.assertEqual(a["state"], "running")
+        self.assertNotIn("done_by", a)
+
+    def test_branch_at_main_tip_is_not_merged(self):
+        a, _, _ = self.run_agent(self.agent(head_sha=self.MAIN), remote=self.MAIN, merged=True)
+        self.assertEqual(a["state"], "running")
+
+    def test_one_fetch_and_one_ls_remote_per_row_per_tick(self):
+        _, _, sh = self.run_agent(self.agent())
+        self.assertEqual(sum(1 for c in sh.calls if c[:2] == ["git", "fetch"]), 1)
+        self.assertEqual(sum(1 for c in sh.calls if c[:2] == ["git", "ls-remote"]), 1)
+
+
 class RunnersInstallsHeartbeatTests(unittest.TestCase):
     def test_runners_installs_and_heartbeat(self):
         import tempfile

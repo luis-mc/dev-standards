@@ -544,6 +544,26 @@ def _cmd_agent_eta(root, args) -> int:
     return 0
 
 
+def _cmd_agent_done(root, args) -> int:
+    """DL14: the session's fallback record for a cloud agent whose run it read with RemoteTrigger list_runs."""
+    def fn(led):
+        key = str(args.agent)
+        rows = [a for a in led["agents"] if a.get("state") in ("queued", "running", "pushed", "stalled")
+                and (str(a.get("id")) == key or a.get("task") == key)]
+        if not rows:
+            raise LedgerError("no open agent %s" % key)
+        a = rows[0]
+        a["state"] = "failed" if args.result == "failed" else "done"
+        a["done_by"] = args.by
+        a["result"] = args.result
+        a["needs_check"] = args.result == "not-ready"
+        a["done_at"] = iso()
+        add_event(led, "agent.%s" % a["state"], "%s by %s (%s)" % (a.get("task") or a.get("id"), args.by, args.result),
+                  "delivery_ledger")
+    update(root, fn)
+    return 0
+
+
 def _cmd_show(root, args) -> int:
     led = load(root)
     if args.json:
@@ -730,6 +750,10 @@ def main(argv=None) -> int:
     for k in ("setup", "work", "checks"):
         p.add_argument("--" + k, required=True, type=float, metavar="MIN")
     p.add_argument("--basis")
+    p = sub.add_parser("agent-done")
+    p.add_argument("agent", help="the agent id or task of an open agent")
+    p.add_argument("--by", default="session", choices=("session",))
+    p.add_argument("--result", required=True, choices=("ready", "not-ready", "failed"))
     p = sub.add_parser("show")
     p.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
@@ -739,7 +763,7 @@ def main(argv=None) -> int:
         return 2
     try:
         return {"plan": _cmd_plan, "hold": _cmd_hold, "measure": _cmd_measure, "show": _cmd_show,
-                "agent-eta": _cmd_agent_eta, "smoke": _cmd_smoke, "cleaned": _cmd_cleaned}[args.cmd](root, args)
+                "agent-eta": _cmd_agent_eta, "agent-done": _cmd_agent_done, "smoke": _cmd_smoke, "cleaned": _cmd_cleaned}[args.cmd](root, args)
     except LedgerError as exc:
         print("delivery_ledger: %s" % exc, file=sys.stderr)
         return 1

@@ -276,10 +276,35 @@ def dl32_unchecked_30_min_and_past_due():
     p = Project(ledger(agents=[due]))
     expect_block(p, 'DL-32')
     p.close()
-    ok = agent(last_checked=iso(1), started=iso(60))
+    ok = agent(where='local', last_checked=iso(1), started=iso(60))      # a cloud row past its ETA is asked (DL14)
     ok['eta']['due'] = iso(10)
     p = Project(ledger(agents=[ok]))
     expect_pass(p.stop(''))
+    p.close()
+
+
+@test
+def dl32_cloud_row_past_eta_names_list_runs_and_agent_done():
+    late = agent(started=iso(60), last_checked=iso(1), trigger_id='trig_9')
+    late['eta']['due'] = iso(10)
+    p = Project(ledger(agents=[late]))
+    r = expect_block(p, 'DL-32')
+    assert 'list_runs' in reason(r) and 'trig_9' in reason(r) and 'agent-done' in reason(r), reason(r)
+    p.close()
+    early = agent(started=iso(5), last_checked=iso(45), trigger_id='trig_9')      # unchecked, before its ETA
+    p = Project(ledger(agents=[early]))
+    r = expect_block(p, 'DL-32')
+    assert 'list_runs' not in reason(r) and 'agent-done' not in reason(r), reason(r)
+    p.close()
+    fine = agent(started=iso(5), last_checked=iso(1))
+    p = Project(ledger(agents=[fine]))
+    expect_pass(p.stop(''))
+    p.close()
+    local = agent(where='local', started=iso(60), last_checked=iso(25))
+    local['eta']['due'] = iso(10)
+    p = Project(ledger(agents=[local]))
+    r = expect_block(p, 'DL-32')
+    assert 'list_runs' not in reason(r), reason(r)
     p.close()
 
 
