@@ -33,7 +33,7 @@ TRACKS = ("ts", "go", "rust", "dotnet")
 
 # Project-edited: `update` never overwrites these (the project owns them after the first install).
 PROJECT_OWNED_NAMES = {"gate.json", "smoke.json", "ci-areas.json", "ci-timings.json", "ci-scope.json",
-                       "quarantine.json", "ci-shards.json", "ci.yml", "package.yml", "nightly-full.yml"}
+                       "quarantine.json", "ci-shards.json", "ci-shards.example.json", "ci.yml", "package.yml", "nightly-full.yml"}
 SKIP_DIRS = {"__pycache__"}
 SKIP_FILES = {"CONTRACT.md"}
 

@@ -8,9 +8,14 @@ are built against; change it first, then the code.
 
 ## Where things land in a generated repository
 
+Sources named `templates/...` are in `luismc-delivery` (`claude/plugins/delivery/templates/`) and are written by
+`delivery_ci_install.py install|update --track <track>`. Sources named `tooling/...` are in `luismc-project-setup`
+(`tech-stack-setup/assets/tooling/`); tech-stack-setup copies them itself (hooks, linters, guards). tech-stack-setup
+carries no CI logic (DL15).
+
 | Repository path | Source in this plugin | Owner |
 |---|---|---|
-| `scripts/delivery/branch_gate.py` | `tooling/shared/scripts/delivery/` | gate |
+| `scripts/delivery/branch_gate.py` | `templates/shared/scripts/delivery/` (`luismc-delivery`) | gate |
 | `scripts/delivery/gate_verify.py` | same | gate |
 | `scripts/delivery/e2e_push_check.py` | same (called by the `pre-push` hook: refuses a push of changed e2e specs that were not run and passed; DL-88, DS35) | gate |
 | `scripts/delivery/fast_guards.py` | same | gate |
@@ -28,30 +33,33 @@ are built against; change it first, then the code.
 | `scripts/delivery/shard_balance.py` | same (balanced test shards from a timings file; `update` refreshes it from a runner's JSON report; DS9) | ci |
 | `scripts/delivery/area_select.py` | same (changed paths + the project's area map -> the jobs and test areas a change needs; DS9) | ci |
 | `scripts/delivery/ci_scope.py` | same (changed paths + the project's scope rules -> `full`, `ci-smoke` or `affected` and the named smoke set; a manual run plans `origin/<default>...HEAD`; DELIVERYSPEC DL-80, DS26) | ci |
-| `scripts/delivery/ci-scope.json` | `tooling/ts/scripts/delivery/` (release PR pattern, `full_files`, `ci_files`, `docs`, `smoke`, `agent_ci`; the project edits it; deleting it opts out) | ci |
+| `scripts/delivery/ci-scope.json` | `templates/ts/scripts/delivery/` (release PR pattern, `full_files`, `ci_files`, `docs`, `smoke`, `agent_ci`; the project edits it; deleting it opts out) | ci |
 | `scripts/delivery/agent_ci.py` | same (starts one `workflow_dispatch` CI run per agent branch head when its report has a `CODE DONE` line; that run is the agent's gate; DL-81, DS26) | ci |
 | `scripts/delivery/ci_run_times.py` | same (the last CI job: wall time and per-job queue/run times as a job summary and the artifact `ci-run-times`; report only; DL-82, DS26) | ci |
-| `scripts/delivery/ci-areas.json`, `scripts/delivery/ci-timings.json` | `tooling/ts/scripts/delivery/` (the area map and the shard timings; the project edits them) | ci |
-| `.github/workflows/nightly-full.yml` (ts only) | `tooling/ts/.github/workflows/nightly-full.yml` | ci |
+| `scripts/delivery/ci-areas.json`, `scripts/delivery/ci-timings.json` | `templates/ts/scripts/delivery/` (the area map and the shard timings; the project edits them) | ci |
+| `.github/workflows/nightly-full.yml` (ts only) | `templates/ts/.github/workflows/nightly-full.yml` | ci |
 | `scripts/delivery/delivery_log.py` | same | cleanup |
 | `scripts/delivery/smoke_packaged.py` | same | ci |
 | `scripts/delivery/run_suite.py` | same (declared suites, named cases, per-machine times in `.delivery/suite-times.json`; STACKSPEC 13.8) | gate |
 | `scripts/delivery/session_guard.py` | same (Claude Code PreToolUse hook for Bash: test guard and ready-PR guard; exit 2 refuses; STACKSPEC 13.8) | gate |
 | `scripts/delivery/suites.json` | per product (`suites`: name, `full`, `cases` with `{cases}`, `full_args`, `ci_step`, `measure`); or `.claude/suites.json`, or `$SUITES_JSON` | gate |
-| `scripts/delivery/smoke.json` | `tooling/<track>/scripts/delivery/smoke.json` | ci |
-| `.github/workflows/package.yml` | `tooling/<track>/.github/workflows/package.yml` | ci |
-| `.github/workflows/train-cleanup.yml` | `tooling/shared/.github/workflows/train-cleanup.yml` | cleanup |
-| `.github/workflows/artifact-prune.yml` | `tooling/shared/.github/workflows/artifact-prune.yml` | ci |
+| `scripts/delivery/smoke.json` | `templates/<track>/scripts/delivery/smoke.json` | ci |
+| `.github/workflows/package.yml` | `templates/<track>/.github/workflows/package.yml` | ci |
+| `.github/workflows/train-cleanup.yml` | `templates/shared/.github/workflows/train-cleanup.yml` | cleanup |
+| `.github/workflows/artifact-prune.yml` | `templates/shared/.github/workflows/artifact-prune.yml` | ci |
 | `scripts/delivery/tools.json` | same | gate |
-| `scripts/delivery/gate.json` | `tooling/<track>/scripts/delivery/gate.json` | gate |
+| `scripts/delivery/gate.json` | `templates/<track>/scripts/delivery/gate.json` | gate |
 | `.githooks/pre-push` | `tooling/shared/.githooks/pre-push` | gate |
 | `.gitattributes` | `tooling/shared/.gitattributes` (LF for scripts and hooks) | gate |
 | guard starter, TS | `tooling/ts/guards/*.guard.test.ts`, run by the Vitest `guard` project in `vitest.config.ts` | gate |
 | guard starter, Go | `tooling/go/guards/` | gate |
 | guard starter, Rust | `tooling/rust/crates/guards/`, a member crate; add `crates/guards` to the workspace `members` | gate |
 | guard starter, .NET | `tooling/dotnet/tests/Guards/`; add the project to the solution | gate |
-| `e2e/quarantine.json` (ts only) | `tooling/ts/e2e/quarantine.json` | ci |
-| `.github/workflows/ci.yml` | `tooling/<track>/.github/workflows/ci.yml` | ci |
+| `e2e/quarantine.json` (ts only) | `templates/ts/e2e/quarantine.json` | ci |
+| `.github/workflows/ci.yml` | `templates/<track>/.github/workflows/ci.yml` | ci |
+| `scripts/delivery/cloud_shard.py` | `templates/shared/scripts/delivery/` (CI option c: runs one shard in a cloud session and writes its result JSON; starter, see "CI options") | ci |
+| `scripts/delivery/cloud_status.py` | same (CI option c: lists the heads that need shards and posts the results as commit statuses; starter) | ci |
+| `scripts/delivery/ci-shards.json` | per product (the shard table, see "CI options"; `ci-shards.example.json` is the format) | ci |
 
 `.delivery/` (local results and step logs) is added to the generated `.gitignore`.
 
@@ -575,6 +583,60 @@ then runs `gate.json`'s `setup` commands. Idempotent.
   and browser jobs (every file, every spec) need `run == 'true'` and test the compared commit. go, rust and
   dotnet get none: their `ci.yml` has no area selection to catch up on.
 
+## CI options (DL15)
+
+The same contract for all three places CI can run. A product gives a **shard table** and its test commands; the
+CI option decides only where a shard runs and how its result comes back. Which option a product uses is set per OS
+in `.delivery/config.json` `ci.options` (`self-hosted` = a, `github-hosted` = b, `cloud` = c). There is no default.
+`delivery_ci.py set` changes it. The full rules are `docs/features/delivery/spec.md`, section 13.
+
+### Shard table: `scripts/delivery/ci-shards.json`
+
+```json
+{"schema": 1,
+ "tests": {"unit": "pnpm test"},
+ "shards": [{"id": "unit-linux", "os": "linux", "context": "unit (linux)", "commands": ["@unit"]}]}
+```
+
+- `id` (unique), `os` (`linux`, `windows`, `macos`) and `commands` (a non-empty list run in order from the repository
+  root, stopping at the first failure) are required. A command `@name` is replaced by `tests.name`.
+- `context` is the check name the shard reports under. It is what branch protection requires. It falls back to the
+  `id`. Two shards of one cloud OS never share a context.
+
+### Where a shard runs
+
+| Option | Runs on | Result comes back as | The watcher reads |
+|---|---|---|---|
+| a `self-hosted` | a GitHub Actions job on a runner listed in `runners` | the job's check | the newest `ci.yml` run of the head |
+| b `github-hosted` | a GitHub Actions job on a GitHub runner | the job's check | the same workflow runs |
+| c `cloud` | one Claude cloud session per shard (no Actions, no webhooks) | `result.json` on the branch `ci-result/<sha>/<shard id>`, then a commit status | the commit statuses of the head |
+
+### Option c
+
+- **Launcher.** A cloud session started for a head runs `cloud_status.py pending`, then starts one session per
+  missing shard through the routines API (`RemoteTrigger` create, run, then disable). Each shard session checks out the
+  head and runs `cloud_shard.py run --shard <id> --sha <sha> --push`.
+- **Watcher.** A scheduled cloud routine runs `cloud_status.py pending` with plain git, hands the heads that need
+  shards to the launcher, and for every sha whose shards have all pushed a result runs
+  `cloud_status.py post-ready --sha <sha>`.
+- **Result JSON**, written by `cloud_shard.py`: `schema` (1), `shard`, `context`, `os`, `sha` (all 40 characters),
+  `state` (`success`, `failure`, `error`), `started`, `finished`, `commands` (`command`, `exit`, `seconds`, `tail`),
+  `summary`. `error` means the shard could not run (wrong OS, wrong HEAD, bad table); it is never a pass.
+- **Commit status.** The one GitHub dependency: `POST /repos/{owner}/{repo}/statuses/{sha}` with `context` = the
+  shard's context, `state` = the result's state, `description` = the summary (140 characters). The token is read from
+  the environment variable named by `ci.cloud.status_token_env`; the owner creates a statuses-only token. A status is
+  posted only for the sha in the result, never for a branch name or a later head.
+- A new head needs new results. A result of an older sha is never reused.
+- `cloud_shard.py` and `cloud_status.py` are starters. A product may contribute a proven runner; it keeps the result
+  JSON, the result branch name and the status rules above.
+
+### Reading results
+
+`delivery_watch.py` counts a train green when, for the PR head, the newest result of every required check is
+`success`: each workflow of `watcher.ci_workflows` (a, b) and each cloud context from the shard table (c). A missing
+result is not green. `ci_watch.py SHA --context NAME ...` waits for statuses with the same exit codes as the
+workflow watch (0, 1, 4).
+
 ## Tests (in `tools/` of this repository)
 
 - `tools/test_delivery_gate.py` — branch_gate, gate_verify, fast_guards, join (light check,
@@ -790,7 +852,7 @@ such as the record commits, start no run at all.
 
 A workflow that builds a shipped artifact (installer, bundle, package, image) is
 its own workflow, not a job of `ci.yml`, so the paths that feed it can filter it.
-`tooling/<track>/.github/workflows/package.yml` (workflow name `Package`) is the
+`templates/<track>/.github/workflows/package.yml` (workflow name `Package`) is the
 template: `on: pull_request` (types as `ci.yml`, drafts skipped by the job-level
 `if`) and `push` to the default branch, both with a `paths:` list of the
 directories and manifests that feed the packaged program, the workflow itself and
