@@ -63,6 +63,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D18 | Commit the uncommitted artifacts record and docs/drafts? | Commit both | decided | 2026-10-26 |
 | delivery-speed | D19 | docs/drafts/delivery-inventory.md is an older copy of DELIVERYSPEC full of another project's paths and rules: what happens to it? | Delete it | decided | 2026-10-26 |
 | delivery-speed | D2 | Point 7, a smoke test of the packaged program: MUST or SHOULD? | MUST, STACKSPEC 8.0.0 | decided | 2026-10-11 |
+| delivery-speed | D20 | How does a finished cloud agent row become done in the ledger? | Both | decided | 2026-11-02 |
 | delivery-speed | D3 | Point 8: where is the delivery log kept? | Release notes | decided | 2026-10-11 |
 | delivery-speed | D4 | Point 4: what does the pre-push hook do when it cannot reach GitHub? | Allow and warn | decided | 2026-10-11 |
 | delivery-speed | D5 | Point 5: no online runner for a job’s labels before the ready PR opens? | Warn, don’t block | decided | 2026-10-11 |
@@ -71,12 +72,18 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D8 | Should dev-standards adopt the train freeze? (same multi-select question) | Yes | decided | 2026-10-11 |
 | delivery-speed | D9 | Point 4: how is the train freeze overridden on purpose? | Env variable, logged | decided | 2026-10-11 |
 | design-starter | D1 | Which starter should the docs plugin ship? | C+E now | decided | 2026-11-01 |
+| design-starter | D10 | What happens when a token a sample needs is missing or not a plain value? | Draw with a marked fallback | decided | 2026-11-02 |
+| design-starter | D11 | Which bar do the contrast marks use? | WCAG 2.2 AA | decided | 2026-11-02 |
+| design-starter | D12 | Does a gallery built by an older script count as stale? | Yes, stale | decided | 2026-11-02 |
+| design-starter | D13 | Do samples show light and dark? | Both, side by side | decided | 2026-11-02 |
 | design-starter | D2 | May DOCSPEC R15.6 be reworded to allow a starter set of generic rules? | Yes, reword | decided | 2026-11-01 |
 | design-starter | D3 | How big should the starter be? | As close to v4 as neutral allows | decided | 2026-11-01 |
 | design-starter | D4 | Which themes should the starter ship? | Light + dark | decided | 2026-11-01 |
 | design-starter | D5 | Which fonts should the starter use? | System font stacks | decided | 2026-11-01 |
 | design-starter | D6 | What should the skill do with the project's existing styles? | Show, ask, then fill | decided | 2026-11-01 |
 | design-starter | D7 | Where does the report of what was left out go? | Section on the feature page | decided | 2026-11-01 |
+| design-starter | D8 | Should the gallery draw real visuals? | Swatches, samples and rendered components | decided | 2026-11-02 |
+| design-starter | D9 | Which components does the gallery draw? | Every starter component | decided | 2026-11-02 |
 | models | D1 | Effort for each model of the split? | Keep asking, high preselected | decided | 2026-10-10 |
 | models | D2 | Where do the role rules live? | Plugin-owned rule file | decided | 2026-10-10 |
 | models | D3 | Override Explore and Plan? | Leave both on Opus | decided | 2026-10-10 |
