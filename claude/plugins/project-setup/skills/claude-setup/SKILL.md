@@ -124,25 +124,42 @@ Report each offer as **done**, **missing** or **broken**:
 - **repo gates** — `scripts/delivery/` and `.githooks/` present.
 - **auth** — judged only after repo gates are done (auth-setup refuses a repo not set up by tech-stack-setup).
 
-### The four grouped questions — one AskUserQuestion call
+### The grouped questions — one AskUserQuestion round
 
-Ask them in one call. Each question carries its own context. Leave out what is
-already done.
+Ask every question of every offer during setup, in one grouped round. Ask more
+rounds only when an answer opens new questions. Each question carries its own
+context. Leave out what is already done. If the owner answers with free text
+(Other) such as "all", treat it as picking every option of that question.
+AskUserQuestion allows at most 4 options per question, so split a list of more
+than four options into more questions.
 
 1. **Enforce** (multi-select): docs, design system, delivery, project record.
 2. **Delivery mode**: `Warn first (Recommended)` listed first, preselected; `Block now` second. It sets `enforcement.mode` in `.delivery/config.json` only when that file is created in this run. Never change an existing file.
-3. **CI**: write `.github/workflows/dev-standards.yml` (from `assets/ci/dev-standards.yml`), which runs `docs_check.py --strict`, the design guard tests when present, and spec-check. The skill also prints the branch-protection command for the owner to run. It never runs it.
-4. **Other setups** (multi-select, all off by default): a `tech-stack-setup` audit, `auth-setup`, one `luismc-audits` run.
+3. **CI**: write `.github/workflows/dev-standards.yml` (from `assets/ci/dev-standards.yml`), which runs `docs_check.py --strict`, the design guard tests when present, and spec-check.
+4. **Branch protection**: make the dev-standards check required on the default branch? Yes or no.
+5. **Other setups** (multi-select, all off by default): a `tech-stack-setup` audit, `auth-setup`.
+6. **Audits** (multi-select, all off by default, three separate options): security audit, compliance audit, performance audit.
 
 ### What each yes adds to the one change plan (step 3)
 
-- **docs** — `docs_setup.py init --apply`; or in a repo with docs, `migrate`, and `migrate --apply` only after the owner reads the dry run.
-- **design system** — `/luismc-docs:design-system-setup`: `init`, `guards`, style reading, review gallery. Promotion to v1 only with the owner's approval date and evidence.
+After the owner's yes, the skill runs the step itself. It does not print it for
+the owner. Steps only the owner can do go to the "Left for you" list.
+
+- **docs** — run `docs_setup.py init --apply`; or in a repo with docs, run `migrate` (dry run), show the result, and ask before `migrate --apply`.
+- **design system** — run `/luismc-docs:design-system-setup`: `init`, `guards`, style reading, review gallery. Then tell the owner how to open the gallery, what to look at and how to approve (the approval command or the words to say). Promotion to v1 only with the owner's approval date and evidence.
 - **delivery** — `.delivery/config.json` (add if missing, with the chosen `enforcement.mode`), then `delivery_doctor.py`.
 - **project record** — `.claude/artifacts.json` with `record_dir` `docs/project`.
-- **CI** — copy `assets/ci/dev-standards.yml` to `.github/workflows/dev-standards.yml` and fill the placeholders. The workflow finds `docs_check.py` and `spec_check.py` through a pinned checkout of the dev-standards repo into `.dev-standards-tools/` (`{{DEV_STANDARDS_REPO}}`, `{{DEV_STANDARDS_REF}}`, `{{DOCS_SCRIPTS}}`, `{{SPEC_CHECK}}`). Ask the owner for the repo and a tag or commit if they cannot be read from the marketplace. Never overwrite an existing workflow file. Then print:
-  `gh api -X PUT repos/<owner>/<repo>/branches/<default>/protection --input -` with a body that sets `required_status_checks` to the `checks` job of the `dev-standards` workflow. Only print it.
-- **other setups** — hand over to the named skill; do not run them inside this plan.
+- **CI** — copy `assets/ci/dev-standards.yml` to `.github/workflows/dev-standards.yml` and fill the placeholders. The workflow finds `docs_check.py` and `spec_check.py` through a pinned checkout of the dev-standards repo into `.dev-standards-tools/` (`{{DEV_STANDARDS_REPO}}`, `{{DEV_STANDARDS_REF}}`, `{{DOCS_SCRIPTS}}`, `{{SPEC_CHECK}}`). Ask the owner for the repo and a tag or commit if they cannot be read from the marketplace. Never overwrite an existing workflow file.
+- **branch protection** — after a yes, check whether the workflow has run on the default branch: `gh run list --workflow dev-standards.yml --branch <default>`.
+  - If it has run: read the current protection first with `gh api repos/<owner>/<repo>/branches/<default>/protection`. Merge the `checks` job of the `dev-standards` workflow into `required_status_checks` and keep all existing protection. Then run `gh api -X PUT repos/<owner>/<repo>/branches/<default>/protection --input -` with the merged body.
+  - If it has not run yet: record the yes in `.delivery/config.json` as `pending_protection: true`. Add it only if the file is created this run or the key is missing. Never change other keys. `claude-setup status` or the next run applies it once the check exists.
+  - Never commit or push.
+- **other setups** — run the picked setups in the same session, after the config plan is applied, in this order:
+  1. the `tech-stack-setup` audit;
+  2. `auth-setup`, only when repo gates exist; otherwise say why it waits;
+  3. each picked audit, by invoking `/luismc-audits:security-audit`, `/luismc-audits:compliance-audit` or `/luismc-audits:performance-audit`.
+
+  Before each heavy one, measure memory and CPU. Hold the step when the machine is over 85% memory or 60% CPU. Say so, and list it as a held step in "Left for you".
 
 ### Docs Stop hook (D4)
 
@@ -569,7 +586,7 @@ file it points at exists.
 
 ## Step 3 — Present one batch summary and confirm once
 
-Also list every offer the owner said yes to (see "Offers and enforcement"): the commands, the CI workflow file, and the printed branch-protection command.
+Also list every offer the owner said yes to (see "Offers and enforcement"): the commands, the CI workflow file, the branch-protection step, and the setups and audits that will run.
 
 Group every queued change by target and by file. List what is being added, what
 is being overwritten unconditionally, what is being removed (a target's old
@@ -677,10 +694,23 @@ was written or already present, whether the `no-tomorrow.mjs` entry was removed
 or declined, and give the memory-to-rule table for the orchestrator. If both
 targets were written, note which keys the project file now shadows.
 
-### Enforcement report — end of step 5
+### Left for you — end of step 5
 
-End with one line per plugin: its level and, when it does not block yet, the
-next step. Levels: `blocks in session`, `blocks merge`, `warns`, `on demand`,
+Before the enforcement table, give one numbered "Left for you" list. Keep only
+the steps that need the owner, in order. Each has its exact command or link and
+one line on why. Typical entries:
+
+1. Commit and push the new files (plugins never commit or push).
+2. Approve design system v1 from its review gallery (how to open it, the approval command or words).
+3. Steps held for PC load, with the command to run them later.
+4. Anything a run could not do.
+
+Do not mix done or skipped items into this list. Report those above it.
+
+### Enforcement report — after "Left for you"
+
+Then one line per plugin: its level and, when it does not block yet, the
+step number in "Left for you" that fixes it. Levels: `blocks in session`, `blocks merge`, `warns`, `on demand`,
 `not enforced`, `missing`. Use these facts: delivery blocks in session (warns in
 warn mode; blocks merge only with branch protection); docs warns (Stop hook) and
 blocks merge once the CI check is required; design system warns until the guard
@@ -690,12 +720,12 @@ their git hooks and CI, or are missing; audits are on demand. Example:
 
 ```
 Enforcement after claude-setup
-  delivery       blocks in session   merge not protected: run the printed gh command
-  docs           warns               make dev-standards.yml a required check
-  design system  warns               v1 not approved yet: review the gallery, then promote
+  delivery       blocks in session   merge not protected: step 4
+  docs           warns               make dev-standards.yml a required check: step 4
+  design system  warns               v1 not approved yet: step 2
   project record active              Full Progress published at turn end
   specs          not enforced        no spec files found
-  repo gates     missing             run /luismc-project-setup:tech-stack-setup (audit)
+  repo gates     missing             step 3 (held for PC load)
   audits         on demand           -
 ```
 
