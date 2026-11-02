@@ -274,7 +274,8 @@ Do it in the first commit, so the first branch is already gated:
 
 | Into the repository | From `assets/tooling/` | Clause |
 |---|---|---|
-| `scripts/delivery/*`, `.github/workflows/*`, `scripts/delivery/gate.json`, `smoke.json`, `e2e/quarantine.json` (TypeScript track only) | the delivery installer (`luismc-delivery`, `templates/`). Afterwards set `default_branch` in `gate.json` to the repo's own and `ui_paths` to the apps that exist. `CONTRACT.md` is not copied. | `§13.5`, `§13.6`, `§13.1`, `§11.2` |
+| `scripts/delivery/*`, `.github/workflows/*`, `scripts/delivery/gate.json`, `smoke.json` | the delivery installer (`luismc-delivery`, `templates/`). Afterwards set `default_branch` in `gate.json` to the repo's own and `ui_paths` to the apps that exist. `CONTRACT.md` is not copied. | `§13.5`, `§13.6`, `§13.1`, `§11.2` |
+| `e2e/quarantine.json` (TypeScript track only) | `ts/e2e/quarantine.json` | `§11.2` |
 | `.githooks/pre-push` | `shared/.githooks/pre-push`, beside `pre-commit` | `§13.5` |
 | `.githooks/commit-msg` | `shared/.githooks/commit-msg`, beside `pre-commit`; does nothing unless `.delivery/config.json` sets `no_attribution: true` (DL-74). `pre-commit` also refuses staged conflict markers (DL-24) | DELIVERYSPEC |
 | `.gitattributes` | `shared/.gitattributes` — LF for shell scripts, hooks and the delivery scripts, so a CRLF checkout cannot break them | `§13.5` |

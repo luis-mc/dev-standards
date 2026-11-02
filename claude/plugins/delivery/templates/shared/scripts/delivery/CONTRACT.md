@@ -55,7 +55,7 @@ carries no CI logic (DL15).
 | guard starter, Go | `tooling/go/guards/` | gate |
 | guard starter, Rust | `tooling/rust/crates/guards/`, a member crate; add `crates/guards` to the workspace `members` | gate |
 | guard starter, .NET | `tooling/dotnet/tests/Guards/`; add the project to the solution | gate |
-| `e2e/quarantine.json` (ts only) | `templates/ts/e2e/quarantine.json` | ci |
+| `e2e/quarantine.json` (ts only) | `tooling/ts/e2e/quarantine.json` | ci |
 | `.github/workflows/ci.yml` | `templates/<track>/.github/workflows/ci.yml` | ci |
 | `scripts/delivery/cloud_shard.py` | `templates/shared/scripts/delivery/` (CI option c: runs one shard in a cloud session and writes its result JSON; starter, see "CI options") | ci |
 | `scripts/delivery/cloud_status.py` | same (CI option c: lists the heads that need shards and posts the results as commit statuses; starter) | ci |
