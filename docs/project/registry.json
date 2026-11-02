@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-02T19:17+00:00",
+  "updated": "2026-11-02T19:18+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -661,9 +661,9 @@
       "status": "Running",
       "item": "Finished cloud agents are marked done in the ledger",
       "detail": "D20: branch signals (merged, deleted, report READY/NOT READY) in the watcher; the Stop hook asks the session to check list_runs only for cloud rows still open after their ETA.",
-      "expected": "02 Nov ~19:45",
-      "changed": "2026-11-02T19:16+00:00",
-      "expected_basis": "cloud agent from 19:20: setup 5 + work 15 + checks 5",
+      "expected": "02 Nov ~19:43",
+      "changed": "2026-11-02T19:18+00:00",
+      "expected_basis": "cloud agent from 19:18: setup 5 + work 15 + checks 5",
       "rides": "DS176",
       "started": "2026-11-02T19:16+00:00"
     },
@@ -3180,25 +3180,25 @@
       "status": "To do",
       "item": "RELEASE-32: ledger done signals (DL14) and gallery visuals (ST4)",
       "detail": "Join, fold, CI and merge of DL14 and ST4.",
-      "expected": "02 Nov ~20:30",
-      "changed": "2026-11-02T19:16+00:00",
-      "expected_basis": "agents 19:20-20:10, join 20:10-20:20, CI 20:20-20:30",
+      "expected": "02 Nov ~20:28",
+      "changed": "2026-11-02T19:18+00:00",
+      "expected_basis": "agents 19:18-20:08, join 20:08-20:18, CI 20:18-20:28",
       "release": 32,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-02T19:20+00:00",
-          "end": "2026-11-02T20:10+00:00"
+          "start": "2026-11-02T19:18+00:00",
+          "end": "2026-11-02T20:08+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-02T20:10+00:00",
-          "end": "2026-11-02T20:20+00:00"
+          "start": "2026-11-02T20:08+00:00",
+          "end": "2026-11-02T20:18+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-02T20:20+00:00",
-          "end": "2026-11-02T20:30+00:00"
+          "start": "2026-11-02T20:18+00:00",
+          "end": "2026-11-02T20:28+00:00"
         }
       ]
     },
@@ -3373,9 +3373,9 @@
       "status": "Running",
       "item": "Gallery draws swatches, samples and every starter component",
       "detail": "D8-D13: colour swatches with WCAG AA marks, type/spacing/radius samples, every starter component drawn from tokens in light and dark, marked fallbacks, DS4 stale on an older script; plus the printf test fix.",
-      "expected": "02 Nov ~20:10",
-      "changed": "2026-11-02T19:17+00:00",
-      "expected_basis": "cloud agent from 19:20: setup 5 + work 35 + checks 10",
+      "expected": "02 Nov ~20:08",
+      "changed": "2026-11-02T19:18+00:00",
+      "expected_basis": "cloud agent from 19:18: setup 5 + work 35 + checks 10",
       "rides": "DS176",
       "started": "2026-11-02T19:17+00:00"
     },
