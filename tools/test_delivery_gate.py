@@ -2649,10 +2649,10 @@ def sc_assets(t: T, shared: Path) -> None:
             'path.join(".git").exists()' in starters["rust"][0].read_text(encoding="utf-8"))
     t.check("dotnet guard skips another checkout (a directory holding .git)",
             "IsOtherCheckout(sub)" in starters["dotnet"][0].read_text(encoding="utf-8"))
-    hook = (shared / ".githooks/pre-push").read_text(encoding="utf-8")
+    hook = (HOOKS_SHARED / ".githooks/pre-push").read_text(encoding="utf-8")
     t.check("pre-push is a POSIX sh script", hook.startswith("#!/bin/sh"))
     # a Windows checkout must not turn the hook or the scripts into CRLF (sh: not found)
-    rels = [(shared / ".githooks/pre-push"), (shared / "scripts/delivery/agent_setup.sh"),
+    rels = [(HOOKS_SHARED / ".githooks/pre-push"), (shared / "scripts/delivery/agent_setup.sh"),
             (shared / "scripts/delivery/branch_gate.py"), (shared / "scripts/delivery/gate.json")]
     attr = run(["git", "check-attr", "eol", "--", *[r.as_posix() for r in rels]], cwd=shared)
     lines = [l for l in attr.out.splitlines() if l.strip()]
