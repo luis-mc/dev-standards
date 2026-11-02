@@ -814,24 +814,31 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>What claude-setup can offer</a><a href="#s3"><b>3</b>How each offer is enforced</a><a href="#s4"><b>4</b>How the owner sees it</a><a href="#s5"><b>5</b>Gaps, why they exist, and what would help</a><a href="#s6"><b>6</b>Decisions</a><a href="#s7"><b>7</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: claude-setup offers and enforcement</h1><p>claude-setup walks through every dev-standards plugin and setup, asks which to enforce, and reports what each one now enforces.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-01T16:59+00:00">01 Nov 16:59</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-02T15:16+00:00">02 Nov 15:16</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">02 Nov 15:08</a> (Lisbon)</p>
 <p class="lede">On 01 Nov the owner ran claude-setup in an existing project and could not tell whether the docs, design-system and delivery plugins were enforced. Today claude-setup turns plugins on, but most of them stay silent until a config file exists, and some only warn. This page lists what claude-setup can offer, how each offer is enforced, how it is shown to the owner, and the gaps. Nothing is built yet.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">4 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="SO5"><span class="task-id">SO5</span>claude-setup runs the setups the owner picks and lists only the owner&#x27;s steps <span class="glance-expected">02 Nov ~15:45</span><span class="glance-basis">cloud agent from 15:20: setup 5 + work 15 + checks 5</span></li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">1 task</span></summary>
 <ul>
 <li data-glance-task="SO4"><span class="task-id">SO4</span>Project level by default for every dev-standards install (D6-D8)</li>
-<li data-glance-task="SO2"><span class="task-id">SO2</span>claude-setup: scan, enforce questions, offers, enforcement report</li>
-<li data-glance-task="SO3"><span class="task-id">SO3</span>Split spec-writing skills by kind (after D5)</li>
-<li data-glance-task="SO1"><span class="task-id">SO1</span>Owner decides D1-D4 on the setup-offers page</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">4</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">4</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="SO5"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">SO5</span>claude-setup runs the setups the owner picks and lists only the owner&#x27;s steps<span class="release-line"><span class="release-name">RELEASE-31</span></span></td><td data-label="Detail">D9-D12: run picked skills in order, three audit options, protect main after a yes, one numbered Left for you list.</td><td data-label="Expected">02 Nov ~15:45<span class="expected-basis">cloud agent from 15:20: setup 5 + work 15 + checks 5</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">4 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="SO4"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">SO4</span>Project level by default for every dev-standards install (D6-D8)<span class="release-line"><span class="release-name">RELEASE-28</span></span></td><td data-label="Detail">README and claude-setup install with --scope project; transcript-folds per project; config files to project .claude/ by default; marketplace registered per project</td><td data-label="Expected">01 Nov ~17:00</td></tr>
@@ -937,6 +944,74 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s6"><h2><span class="section-number">&sect; 6</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D12">
+<h3 class="decision-head"><span class="decision-id">D12</span> <span class="decision-question">How should the final report show what is left for the owner?</span></h3>
+<p class="decision-meta">Asked 02 Nov · Decided 02 Nov · Task SO5</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One numbered &#x27;Left for you&#x27; list</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 02 Nov</span></div>
+<p class="decision-summary">One ordered list of only the owner&#x27;s steps, each with its command or link; the enforcement table follows and each missing row names its step.</p>
+<blockquote class="decision-words">&ldquo;One numbered &#x27;Left for you&#x27; list (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep the table, add the list</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Current sections plus a short list.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D11">
+<h3 class="decision-head"><span class="decision-id">D11</span> <span class="decision-question">What should claude-setup do about branch protection for the dev-standards check?</span></h3>
+<p class="decision-meta">Asked 02 Nov · Decided 02 Nov · Task SO5</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Ask, then run when possible</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 02 Nov</span></div>
+<p class="decision-summary">Ask during setup; run the gh command after a yes once the workflow has run on the default branch, otherwise record the yes and apply it at status or the next run.</p>
+<blockquote class="decision-words">&ldquo;Ask, then run when possible (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ask, and always print only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Ask, then print the command as an owner step.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep as is</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Print the command without asking.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D10">
+<h3 class="decision-head"><span class="decision-id">D10</span> <span class="decision-question">How should claude-setup offer the three audits?</span></h3>
+<p class="decision-meta">Asked 02 Nov · Decided 02 Nov · Task SO5</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Three separate options</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 02 Nov</span></div>
+<p class="decision-summary">Security, compliance and performance are each an option; each pick is run.</p>
+<blockquote class="decision-words">&ldquo;Three separate options (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">One option, runs all three</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">A single option that runs all three.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D9">
+<h3 class="decision-head"><span class="decision-id">D9</span> <span class="decision-question">What should claude-setup do with the other setups the owner picks?</span></h3>
+<p class="decision-meta">Asked 02 Nov · Decided 02 Nov · Task SO5</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Run them in order</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 02 Nov</span></div>
+<p class="decision-summary">After the config plan, run each picked skill in the session: tech-stack-setup audit, auth-setup, then each audit; hold when over the PC load limits.</p>
+<blockquote class="decision-words">&ldquo;Run them in order (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Run, but ask before each</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Same order with a yes/no before each skill.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep handing over</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Only fix the wording.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D8">
 <h3 class="decision-head"><span class="decision-id">D8</span> <span class="decision-question">Should claude-setup register the dev-standards marketplace in each project?</span></h3>
 <p class="decision-meta">Asked 01 Nov · Decided 01 Nov · Task SO4</p>

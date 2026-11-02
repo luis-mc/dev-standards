@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-01T22:45+00:00",
+  "updated": "2026-11-02T15:16+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3133,6 +3133,35 @@
       ]
     },
     {
+      "id": "DS175",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-31: claude-setup runs what the owner picks (SO5)",
+      "detail": "Join, fold, CI and merge of SO5.",
+      "expected": "02 Nov ~15:57",
+      "changed": "2026-11-02T15:16+00:00",
+      "expected_basis": "agent 15:20-15:45, join 15:45-15:52, CI 15:52-15:57",
+      "release": 31,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-02T15:20+00:00",
+          "end": "2026-11-02T15:45+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-02T15:45+00:00",
+          "end": "2026-11-02T15:52+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-02T15:52+00:00",
+          "end": "2026-11-02T15:57+00:00"
+        }
+      ]
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
@@ -3248,6 +3277,19 @@
       "changed": "2026-11-01T16:59+00:00",
       "rides": "DS172",
       "started": "2026-11-01T16:20+00:00"
+    },
+    {
+      "id": "SO5",
+      "owner": "setup-offers",
+      "app": "",
+      "status": "Running",
+      "item": "claude-setup runs the setups the owner picks and lists only the owner's steps",
+      "detail": "D9-D12: run picked skills in order, three audit options, protect main after a yes, one numbered Left for you list.",
+      "expected": "02 Nov ~15:45",
+      "changed": "2026-11-02T15:16+00:00",
+      "expected_basis": "cloud agent from 15:20: setup 5 + work 15 + checks 5",
+      "rides": "DS175",
+      "started": "2026-11-02T15:16+00:00"
     },
     {
       "id": "ST1",
