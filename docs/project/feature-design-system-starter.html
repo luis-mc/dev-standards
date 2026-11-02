@@ -814,12 +814,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>What the starter holds</a><a href="#s3"><b>3</b>Left out of the starter, and how to bring it in</a><a href="#s4"><b>4</b>Decisions</a><a href="#s5"><b>5</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Design-system starter</h1><p>A neutral, full starter design system that design-system-setup writes on init, filled from the project's own styles when the owner agrees.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-02T19:49+00:00">02 Nov 19:49</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-02T21:19+00:00">02 Nov 21:19</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">02 Nov 21:17</a> (Lisbon)</p>
 <p class="lede">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page. The owner chose a full, project-neutral starter written from scratch, close in scope to a mature design system the owner already uses, without its product rules.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
+</details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="ST5"><span class="task-id">ST5</span>Docs hooks rebuild a stale next-version gallery <span class="glance-expected">02 Nov ~21:46</span><span class="glance-basis">cloud agent from 21:21: setup 5 + work 15 + checks 5</span></li>
+</ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">1 task</span></summary>
 <ul>
@@ -827,8 +832,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">4</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">4</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="ST5"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">ST5</span>Docs hooks rebuild a stale next-version gallery<span class="release-line"><span class="release-name">RELEASE-33</span></span></td><td data-label="Detail">D14 Both: SessionStart and Stop hooks rebuild docs/design-system/next-version/review-visuals when its source or script stamp is stale; never a numbered version; write only, fail open.</td><td data-label="Expected">02 Nov ~21:46<span class="expected-basis">cloud agent from 21:21: setup 5 + work 15 + checks 5</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">4 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="ST4"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">ST4</span>Gallery draws swatches, samples and every starter component<span class="release-line"><span class="release-name">RELEASE-32</span></span></td><td data-label="Detail">D8-D13: colour swatches with WCAG AA marks, type/spacing/radius samples, every starter component drawn from tokens in light and dark, marked fallbacks, DS4 stale on an older script; plus the printf test fix.</td><td data-label="Expected">02 Nov</td></tr>
@@ -875,6 +885,29 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s4"><h2><span class="section-number">&sect; 4</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D14">
+<h3 class="decision-head"><span class="decision-id">D14</span> <span class="decision-question">Where should the docs plugin rebuild a stale next-version gallery automatically?</span></h3>
+<p class="decision-meta">Asked 02 Nov · Decided 02 Nov · Task ST5</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">At session start</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">SessionStart hook rebuilds a stale next-version gallery; catches plugin updates.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">At end of turn</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Stop hook rebuilds it when stale; follows edits in the session.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Both</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 02 Nov</span></div>
+<p class="decision-summary">Session start for plugin updates, end of turn for edits.</p>
+<blockquote class="decision-words">&ldquo;Both&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep manual</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">DS4 warns until someone runs visuals.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D13">
 <h3 class="decision-head"><span class="decision-id">D13</span> <span class="decision-question">Do samples show light and dark?</span></h3>
 <p class="decision-meta">Asked 02 Nov · Decided 02 Nov · Task ST4</p>

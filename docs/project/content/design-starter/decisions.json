@@ -296,6 +296,35 @@
       "chosen": "Both, side by side",
       "decided": "2026-11-02",
       "owner_words": "Both, side by side"
+    },
+    {
+      "id": "D14",
+      "question": "Where should the docs plugin rebuild a stale next-version gallery automatically?",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "task": "ST5",
+      "options": [
+        {
+          "label": "At session start",
+          "summary": "SessionStart hook rebuilds a stale next-version gallery; catches plugin updates.",
+          "recommended": true
+        },
+        {
+          "label": "At end of turn",
+          "summary": "Stop hook rebuilds it when stale; follows edits in the session."
+        },
+        {
+          "label": "Both",
+          "summary": "Session start for plugin updates, end of turn for edits."
+        },
+        {
+          "label": "Keep manual",
+          "summary": "DS4 warns until someone runs visuals."
+        }
+      ],
+      "chosen": "Both",
+      "decided": "2026-11-02",
+      "owner_words": "Both"
     }
   ]
 }

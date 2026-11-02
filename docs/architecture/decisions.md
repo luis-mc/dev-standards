@@ -76,6 +76,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | design-starter | D11 | Which bar do the contrast marks use? | WCAG 2.2 AA | decided | 2026-11-02 |
 | design-starter | D12 | Does a gallery built by an older script count as stale? | Yes, stale | decided | 2026-11-02 |
 | design-starter | D13 | Do samples show light and dark? | Both, side by side | decided | 2026-11-02 |
+| design-starter | D14 | Where should the docs plugin rebuild a stale next-version gallery automatically? | Both | decided | 2026-11-02 |
 | design-starter | D2 | May DOCSPEC R15.6 be reworded to allow a starter set of generic rules? | Yes, reword | decided | 2026-11-01 |
 | design-starter | D3 | How big should the starter be? | As close to v4 as neutral allows | decided | 2026-11-01 |
 | design-starter | D4 | Which themes should the starter ship? | Light + dark | decided | 2026-11-01 |
