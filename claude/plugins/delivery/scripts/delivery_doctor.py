@@ -311,6 +311,8 @@ def check_ci(root, cfg):
     problems, notes = [], []
     if table_exists and err:
         problems.append(err)
+    if "cloud" in opts.values() and not table_exists:
+        problems.append("an OS is cloud (c) but there is no shard table (%s)" % (err or "missing"))
     used = sorted({sh["os"] for sh in shards})
     for o in used:
         if o not in opts:
