@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import unittest
 from _helpers import *  # noqa
 import docs_check as C
@@ -94,7 +95,7 @@ class CheckTests(unittest.TestCase):
     def test_generated_reference(self):
         d = proj()
         cfg = json.loads(r(d, "docs/docs.json"))
-        cfg["generated_reference"] = [{"name": "cli", "command": "printf 'a\\nb\\n'", "output": "docs/reference/cli.md"}]
+        cfg["generated_reference"] = [{"name": "cli", "command": '"' + sys.executable + '" -c "print(\'a\'); print(\'b\')"', "output": "docs/reference/cli.md"}]
         w(d, "docs/docs.json", json.dumps(cfg))
         w(d, "docs/reference/cli.md", "a\nb\n")
         I.build(d)
