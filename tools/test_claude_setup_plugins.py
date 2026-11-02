@@ -35,9 +35,22 @@ def main():
                   "CI checks workflow", "repo gates", "auth"):
         if f"**{offer}**" not in skill:
             errors.append(f"SKILL.md status scan does not name the {offer} offer")
-    for q in ("**Enforce**", "**Delivery mode**", "**CI**", "**Other setups**"):
+    for q in ("**Enforce**", "**Delivery mode**", "**CI**", "**Branch protection**",
+              "**Other setups**", "**Audits**"):
         if q not in skill:
             errors.append(f"SKILL.md lacks the grouped question {q}")
+    for a in ("security audit", "compliance audit", "performance audit"):
+        if a not in skill:
+            errors.append(f"SKILL.md lacks the separate audit option {a}")
+    if "run the picked setups" not in skill:
+        errors.append("SKILL.md does not say picked setups are run")
+    if "Left for you" not in skill:
+        errors.append("SKILL.md lacks the Left for you list")
+    if skill.find("branches/<default>/protection`") < 0 or \
+            skill.find("read the current protection first") < 0:
+        errors.append("SKILL.md does not read current protection before the PUT")
+    if "inside this plan" in skill or "Only print it" in skill:
+        errors.append("SKILL.md still hands setups over or only prints the command")
     if "claude-setup status" not in skill:
         errors.append("SKILL.md lacks the status mode")
     tpl = SKILL / "assets/ci/dev-standards.yml"
