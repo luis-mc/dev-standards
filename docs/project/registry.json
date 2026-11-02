@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-02T19:18+00:00",
+  "updated": "2026-11-02T19:49+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -658,12 +658,11 @@
       "id": "DL14",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Finished cloud agents are marked done in the ledger",
       "detail": "D20: branch signals (merged, deleted, report READY/NOT READY) in the watcher; the Stop hook asks the session to check list_runs only for cloud rows still open after their ETA.",
-      "expected": "02 Nov ~19:43",
-      "changed": "2026-11-02T19:18+00:00",
-      "expected_basis": "cloud agent from 19:18: setup 5 + work 15 + checks 5",
+      "expected": "02 Nov",
+      "changed": "2026-11-02T19:49+00:00",
       "rides": "DS176",
       "started": "2026-11-02T19:16+00:00"
     },
@@ -3177,12 +3176,11 @@
       "id": "DS176",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Live",
       "item": "RELEASE-32: ledger done signals (DL14) and gallery visuals (ST4)",
-      "detail": "Join, fold, CI and merge of DL14 and ST4.",
-      "expected": "02 Nov ~20:28",
-      "changed": "2026-11-02T19:18+00:00",
-      "expected_basis": "agents 19:18-20:08, join 20:08-20:18, CI 20:18-20:28",
+      "detail": "Joined DL14 and ST4; fold: delivery 1.2.0, docs 1.2.0, DELIVERYSPEC 1.3.0, docspec 1.4.0. CI green 19:49.",
+      "expected": "02 Nov",
+      "changed": "2026-11-02T19:49+00:00",
       "release": 32,
       "phases": [
         {
@@ -3370,12 +3368,11 @@
       "id": "ST4",
       "owner": "design-starter",
       "app": "luismc-docs",
-      "status": "Running",
+      "status": "Live",
       "item": "Gallery draws swatches, samples and every starter component",
       "detail": "D8-D13: colour swatches with WCAG AA marks, type/spacing/radius samples, every starter component drawn from tokens in light and dark, marked fallbacks, DS4 stale on an older script; plus the printf test fix.",
-      "expected": "02 Nov ~20:08",
-      "changed": "2026-11-02T19:18+00:00",
-      "expected_basis": "cloud agent from 19:18: setup 5 + work 35 + checks 10",
+      "expected": "02 Nov",
+      "changed": "2026-11-02T19:49+00:00",
       "rides": "DS176",
       "started": "2026-11-02T19:17+00:00"
     },
