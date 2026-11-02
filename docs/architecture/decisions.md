@@ -83,6 +83,9 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | models | D4 | Per-skill profiles? | By kind of work | decided | 2026-10-10 |
 | models | D5 | Saved effort when an alias moves? | Warn at session start | decided | 2026-10-10 |
 | setup-offers | D1 | How should claude-setup ask about enforcing each plugin? | Grouped pages | decided | 2026-11-01 |
+| setup-offers | D10 | How should claude-setup offer the three audits? | Three separate options | decided | 2026-11-02 |
+| setup-offers | D11 | What should claude-setup do about branch protection for the dev-standards check? | Ask, then run when possible | decided | 2026-11-02 |
+| setup-offers | D12 | How should the final report show what is left for the owner? | One numbered 'Left for you' list | decided | 2026-11-02 |
 | setup-offers | D2 | Which delivery mode should a project start in? | Ask, warn preselected | decided | 2026-11-01 |
 | setup-offers | D3 | Should claude-setup write a CI workflow for the docs, design-system and spec checks? | Yes, in claude-setup | decided | 2026-11-01 |
 | setup-offers | D4 | Should the docs Stop hook be able to block? | Warn only, block in CI | decided | 2026-11-01 |
@@ -90,6 +93,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | setup-offers | D6 | Where should transcript-folds be installed and turned on? | Project level | decided | 2026-11-01 |
 | setup-offers | D7 | Where should claude-setup write its config files (rules, CLAUDE.md, statusline, output style, effort hook, model split) by default? | Project by default | decided | 2026-11-01 |
 | setup-offers | D8 | Should claude-setup register the dev-standards marketplace in each project? | Add per project | decided | 2026-11-01 |
+| setup-offers | D9 | What should claude-setup do with the other setups the owner picks? | Run them in order | decided | 2026-11-02 |
 | test-cost | D1 | Make path-scoped CI jobs? (asked as one of four cuts in a single multi-select question) | Yes | decided | 2026-10-11 |
 | test-cost | D10 | Shorten the PR CI run (11 min, one serial delivery job with every suite's mutants on for any delivery change)? | Add to DL12 now | decided | 2026-10-11 |
 | test-cost | D11 | Which of the three CI cuts go into DL12 now? | 1+2+3 | decided | 2026-10-11 |
