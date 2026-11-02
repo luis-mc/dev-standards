@@ -429,6 +429,55 @@ def finish(code: int, runs: list[dict], sha: str, args: argparse.Namespace) -> i
     return code
 
 
+def list_statuses(sha: str, repo: str | None) -> dict:
+    """{context: state} of the newest commit status of each context (CI option c)."""
+    data = gh_json(["api", "repos/%s/commits/%s/status" % (repo or "{owner}/{repo}", sha)])
+    if not isinstance(data, dict) or not isinstance(data.get("statuses"), list):
+        raise GhError("gh api commit status did not return a status list")
+    return {st["context"]: st.get("state") for st in data["statuses"]
+            if isinstance(st, dict) and isinstance(st.get("context"), str)}
+
+
+def watch_statuses(sha: str, args: argparse.Namespace) -> int:
+    """Wait for the commit statuses of the cloud shards (option c). Reads results the way the watcher does."""
+    deadline = time.monotonic() + args.timeout
+    errors = 0
+    last_state = ""
+    while True:
+        state = ""
+        try:
+            got = list_statuses(sha, args.repo)
+            errors = 0
+        except GhError as exc:
+            errors += 1
+            state = f"gh error ({errors}): {exc}"
+            if errors >= MAX_CONSECUTIVE_GH_ERRORS:
+                print(f"ci_watch: giving up, gh failed {errors} times in a row: {exc}", file=sys.stderr)
+                return 2
+            got = None
+        if got is not None:
+            bad = [c for c in args.context if got.get(c) in ("failure", "error")]
+            waiting = [c for c in args.context if got.get(c) not in ("success", "failure", "error")]
+            if bad:
+                print(f"ci_watch: {len(bad)} of {len(args.context)} status(es) for {sha[:10]} did not "
+                      f"succeed: {', '.join(bad)}")
+                ledger_ci(sha, "failure")
+                return 1
+            if not waiting:
+                print(f"ci_watch: {len(args.context)} status(es) for {sha[:10]} succeeded")
+                ledger_ci(sha, "success")
+                return 0
+            state = f"{len(waiting)} of {len(args.context)} status(es) not posted yet: {', '.join(waiting)}"
+        if state != last_state:
+            print(f"ci_watch: waiting, {state}", flush=True)
+            last_state = state
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            print(f"ci_watch: timed out after {args.timeout:g}s, {state}", file=sys.stderr)
+            return 4
+        time.sleep(min(args.interval, remaining))
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         description="Wait for the CI workflow runs of a commit (never reads PR checks).")
@@ -443,6 +492,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--queue-warn-seconds", type=float, default=QUEUE_WARN_SECONDS,
                     help="warn about a job queued this long with no runner for its labels "
                          "(default 600)")
+    ap.add_argument("--context", action="append", default=[],
+                    help="CI option c (cloud sessions): watch this commit status context instead of a "
+                         "workflow; repeat it for several. Same exit codes: 0 all success, 1 one failed, "
+                         "4 timed out")
     ap.add_argument("--repo", help="OWNER/NAME (default: the current repository)")
     ap.add_argument("--config", help="project config with ci_watch.post_run "
                                      "(default: .delivery/config.json in the repository root)")
@@ -468,6 +521,8 @@ def main(argv: list[str] | None = None) -> int:
               "(`gh run list --commit` matches full shas only); pass all 40 characters",
               file=sys.stderr)
         return 2
+    if args.context:
+        return watch_statuses(sha, args)
     deadline = time.monotonic() + args.timeout
     errors = 0
     last_state = ""

@@ -3,7 +3,7 @@
 
     delivery_doctor.py [self-check] [--root DIR] [--json]
 
-Six checks, each `ok` or `FAIL` with the fix:
+Seven checks, each `ok` or `FAIL` with the fix:
   config   .delivery/config.json passes delivery_config.py validate (no errors; a missing file is fine)
   gh       `gh auth status` succeeds (the watcher and the hooks need a signed-in gh; DELIVERY_GH replaces gh in tests)
   tz       the configured `tz` loads through zoneinfo; if tzdata is missing this FAILS instead of quietly using UTC
@@ -17,6 +17,10 @@ Six checks, each `ok` or `FAIL` with the fix:
            On Windows, for a runner service whose hook is a .ps1, it also reads the PowerShell execution policy that
            applies to the service's account and FAILS when it is Restricted, AllSigned or undefined (the script would not
            start and every job would fail); an unreadable policy is reported as "cannot check", not a failure.
+  ci       (DL15) the CI option chosen per OS (a self-hosted, b github-hosted, c cloud) and what each one needs:
+           a: an entry in `runners` for that OS; b: workflow files in .github/workflows; c: ci.cloud.repo,
+           status_token_env and branches, a shard for the OS, and one context per shard. FAILS when the shard table
+           has a shard for an OS that was not chosen (there is no default). Nothing chosen and no shard table: ok.
 Exit 0 all ok, 1 at least one FAIL, 2 no .delivery/ folder. Standard library only.
 """
 from __future__ import annotations
@@ -24,6 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import tempfile
 
@@ -285,8 +290,65 @@ def _check_runner_hook(root, cfg):
     return True, "no self-hosted runner found on this machine (nothing to hook)"
 
 
+def _runner_oses(cfg):
+    """The OS names (linux, windows, macos) that the `runners` entries name in their os or labels."""
+    words = {"linux": {"linux"}, "windows": {"windows", "win"}, "macos": {"macos", "mac", "darwin", "osx"}}
+    out = set()
+    for r in cfg.get("runners") or []:
+        if isinstance(r, dict):
+            text = " ".join([str(r.get("os", ""))] + [x for x in r.get("labels") or [] if isinstance(x, str)]).lower()
+            tokens = set(re.split(r"[^a-z0-9]+", text))
+            out.update(name for name, w in words.items() if tokens & w)
+    return out
+
+
+def check_ci(root, cfg):
+    opts = C.ci_options(cfg)
+    shards, err = C.load_shards(root, cfg)
+    table_exists = os.path.exists(C.shard_table_path(root, cfg))
+    if not opts and not table_exists:
+        return True, "no CI option chosen and no shard table (run `delivery_ci.py set`, ask the owner per OS)"
+    problems, notes = [], []
+    if table_exists and err:
+        problems.append(err)
+    used = sorted({sh["os"] for sh in shards})
+    for o in used:
+        if o not in opts:
+            problems.append("the shard table has a shard for %s but no CI option is chosen for it. Ask the owner, then run "
+                            "`delivery_ci.py set --os %s --option a|b|c`" % (o, o))
+    chosen = {o: v for o, v in opts.items() if o in used or not shards}
+    for o, v in sorted(chosen.items()):
+        if v == "self-hosted":
+            if o not in _runner_oses(cfg):
+                problems.append("%s is self-hosted (a) but `runners` lists no %s runner" % (o, o))
+        elif v == "github-hosted":
+            wf = os.path.join(root, ".github", "workflows")
+            if not os.path.isdir(wf) or not [n for n in os.listdir(wf) if n.endswith((".yml", ".yaml"))]:
+                problems.append("%s is github-hosted (b) but .github/workflows has no workflow file" % o)
+        elif v == "cloud":
+            cl = C.ci_cloud(cfg)
+            if not cl["repo"]:
+                problems.append("%s is cloud (c) but ci.cloud.repo is not set" % o)
+            if not cl["status_token_env"]:
+                problems.append("%s is cloud (c) but ci.cloud.status_token_env is not set" % o)
+            elif not os.environ.get(cl["status_token_env"]):
+                notes.append("token variable %s is not set here (set it in the cloud environment)" % cl["status_token_env"])
+            if not cl["branches"]:
+                problems.append("%s is cloud (c) but ci.cloud.branches is empty" % o)
+            if shards and not any(sh["os"] == o for sh in shards):
+                problems.append("%s is cloud (c) but the shard table has no shard for it" % o)
+    cloud_shards = [sh for sh in shards if opts.get(sh["os"]) == "cloud"]
+    ctxs = [sh["context"] for sh in cloud_shards]
+    for c in sorted({c for c in ctxs if ctxs.count(c) > 1}):
+        problems.append("two cloud shards share the status context %r" % c)
+    if problems:
+        return False, "; ".join(problems)
+    summary = ", ".join("%s=%s" % (o, C.CI_OPTION_LETTER[v]) for o, v in sorted(opts.items())) or "no OS chosen"
+    return True, "; ".join([summary, *notes])
+
+
 CHECKS = (("config", check_config), ("gh", check_gh), ("tz", check_tz), ("hooks", check_hooks), ("ledger", check_ledger),
-          ("runner", check_runner))
+          ("runner", check_runner), ("ci", check_ci))
 
 
 def run_checks(root):
