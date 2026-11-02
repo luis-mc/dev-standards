@@ -171,26 +171,22 @@
       "task": "ST4",
       "options": [
         {
-          "label": "Colour swatches + contrast",
-          "summary": "Swatches with WCAG ratios.",
-          "recommended": true
+          "label": "Swatches, samples and rendered components",
+          "summary": "Colour swatches with WCAG marks, type/spacing/radius samples and components drawn from the tokens.",
+          "recommended": false
         },
         {
-          "label": "Type, spacing, radius samples",
-          "summary": "Drawn samples."
-        },
-        {
-          "label": "Rendered components",
-          "summary": "Components drawn from tokens."
+          "label": "Swatches and samples only",
+          "summary": "No drawn components."
         },
         {
           "label": "Keep text only",
           "summary": "No change."
         }
       ],
-      "chosen": "Colour swatches + contrast; Type, spacing, radius samples; Rendered components",
+      "chosen": "Swatches, samples and rendered components",
       "decided": "2026-11-02",
-      "owner_words": "Colour swatches + contrast; Type, spacing, radius samples; Rendered components"
+      "owner_words": "Colour swatches + contrast; Type, spacing, radius samples; Rendered components (multi-select)"
     },
     {
       "id": "D9",
