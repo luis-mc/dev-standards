@@ -46,8 +46,9 @@ def main():
         errors.append("SKILL.md does not say picked setups are run")
     if "Left for you" not in skill:
         errors.append("SKILL.md lacks the Left for you list")
-    if skill.find("branches/<default>/protection`") < 0 or \
-            skill.find("read the current protection first") < 0:
+    read_at = skill.find("read the current protection first")
+    put_at = skill.find("gh api -X PUT repos/<owner>/<repo>/branches/<default>/protection")
+    if read_at < 0 or put_at < 0 or read_at > put_at:
         errors.append("SKILL.md does not read current protection before the PUT")
     if "inside this plan" in skill or "Only print it" in skill:
         errors.append("SKILL.md still hands setups over or only prints the command")
