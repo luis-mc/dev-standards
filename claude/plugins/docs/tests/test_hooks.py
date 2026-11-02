@@ -6,6 +6,7 @@ import sys
 import unittest
 from _helpers import *  # noqa
 import docs_index as I
+import design_system as DSY
 
 
 def run_hook(name, cwd):
@@ -130,6 +131,72 @@ class HookTests(unittest.TestCase):
         (d / ".git" / "luismc-docs-stop.json").write_text("{nope")
         rc, out = run_hook("hook_stop.py", d)
         self.assertIn("systemMessage", out)
+
+
+GAL = "docs/design-system/next-version/review-visuals/index.html"
+
+
+def ds_proj():
+    d = proj()
+    assert DSY.cmd_init(d, True) == 0
+    return d
+
+
+class GalleryHookTests(unittest.TestCase):
+    def ctx(self, out):
+        return json.loads(out)["hookSpecificOutput"]["additionalContext"]
+
+    def test_session_start_rebuilds_older_script_stamp(self):
+        d = ds_proj()
+        w(d, GAL, r(d, GAL).replace("gallery-script: %d" % DSY.GALLERY_SCRIPT_VERSION, "gallery-script: 0"))
+        rc, out = run_hook("hook_session_start.py", d)
+        self.assertEqual(rc, 0)
+        self.assertIn("rebuilt the design-system gallery", self.ctx(out))
+        self.assertIn("older gallery script", self.ctx(out))
+        self.assertEqual(DSY.gallery_state(d / "docs/design-system/next-version"), "fresh")
+
+    def test_session_start_rebuilds_when_markdown_changed(self):
+        d = ds_proj()
+        w(d, "docs/design-system/next-version/tokens.md", r(d, "docs/design-system/next-version/tokens.md") + "\nmore\n")
+        rc, out = run_hook("hook_session_start.py", d)
+        self.assertIn("design files changed", self.ctx(out))
+        self.assertEqual(DSY.gallery_state(d / "docs/design-system/next-version"), "fresh")
+
+    def test_session_start_silent_when_fresh(self):
+        d = ds_proj()
+        before = r(d, GAL)
+        rc, out = run_hook("hook_session_start.py", d)
+        self.assertNotIn("rebuilt", self.ctx(out))
+        self.assertEqual(r(d, GAL), before)
+
+    def test_numbered_version_never_touched(self):
+        d = ds_proj()
+        v1 = d / "docs/design-system/v1"
+        (v1 / "review-visuals").mkdir(parents=True)
+        (v1 / "ux-rules.md").write_text("# r\n", encoding="utf-8")
+        old = "<!-- source-digest: abc -->\n<!-- gallery-script: 0 -->\n"
+        (v1 / "review-visuals/index.html").write_text(old, encoding="utf-8")
+        run_hook("hook_session_start.py", d)
+        run_hook("hook_stop.py", d)
+        self.assertEqual((v1 / "review-visuals/index.html").read_text(encoding="utf-8"), old)
+
+    def test_stop_rebuilds_after_tokens_edit_and_is_silent_when_fresh(self):
+        d = ds_proj()
+        rc, out = run_hook("hook_stop.py", d)
+        self.assertNotIn("rebuilt", out)
+        w(d, "docs/design-system/next-version/tokens.md", r(d, "docs/design-system/next-version/tokens.md") + "\nmore\n")
+        rc, out = run_hook("hook_stop.py", d)
+        self.assertEqual(rc, 0)
+        self.assertIn("rebuilt the design-system gallery", json.loads(out)["systemMessage"])
+        rc, out = run_hook("hook_stop.py", d)
+        self.assertNotIn("rebuilt", out)
+
+    def test_broken_design_file_does_not_fail_hooks(self):
+        d = ds_proj()
+        (d / "docs/design-system/next-version/tokens.md").write_bytes(b"\xff\xfe\x00 bad \x80")
+        for name in ("hook_session_start.py", "hook_stop.py"):
+            rc, out = run_hook(name, d)
+            self.assertEqual(rc, 0)
 
 
 if __name__ == "__main__":
