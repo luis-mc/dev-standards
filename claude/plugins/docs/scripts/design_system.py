@@ -32,6 +32,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import docs_lib as D  # noqa: E402
+import gallery_draw as G  # noqa: E402
+import gallery_tokens as GT  # noqa: E402
 
 PLUGIN = Path(__file__).resolve().parent.parent
 TEMPLATES = PLUGIN / "templates" / "design-system"
@@ -185,17 +187,24 @@ def md_to_html(text: str) -> str:
     return "\n".join(out)
 
 
+GALLERY_SCRIPT_VERSION = 1  # bump whenever the drawing changes (R15.2); an older stamp makes next-version's gallery stale (DS4)
 GALLERY_CSS = (
     ":root{--bg:#fff;--fg:#1b1f24;--mute:#59636e;--line:#d0d7de;--code:#f2f4f6}"
     "@media(prefers-color-scheme:dark){:root{--bg:#14171a;--fg:#e6e9ec;--mute:#9aa4af;--line:#363c43;--code:#1f2429}}"
     "body{margin:0;font:16px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--fg)}"
-    "nav{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap}"
+    "nav{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;z-index:10}"
     "nav a{color:var(--fg)}main{max-width:960px;margin:0 auto;padding:0 16px 48px}"
     "table{border-collapse:collapse;width:100%;margin:12px 0;display:block;overflow-x:auto}"
     "th,td{border:1px solid var(--line);padding:4px 8px;text-align:left;vertical-align:top}"
     "code,pre{background:var(--code);border-radius:4px}code{padding:0 4px}pre{padding:8px;overflow-x:auto}"
     ".sw{display:inline-block;width:1.1em;height:1.1em;border:1px solid var(--line);vertical-align:-.2em;margin-right:6px}"
-    "section{border-top:1px solid var(--line);margin-top:24px}.meta{color:var(--mute)}"
+    "section{border-top:1px solid var(--line);margin-top:24px}.meta{color:var(--mute);margin:4px 0}"
+    ".pair{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0}.theme{flex:1 1 280px;min-width:0}"
+    ".canvas{border:1px solid var(--line);border-radius:6px;overflow-x:auto}.canvas p{margin:8px 0}"
+    ".cr{display:inline-block;font:600 12px/1.4 system-ui,sans-serif;padding:0 6px;border:1px solid currentColor;border-radius:4px;margin:0 4px 0 2px}"
+    ".cr.fail{text-decoration:underline wavy}.gap{color:#8a5300;font-weight:600;margin:2px 0}"
+    ".swb{display:inline-block;width:56px;height:28px;border:1px solid var(--line);vertical-align:middle;margin-right:6px}"
+    ".demo{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}.demo div{background:#7a8590;color:#fff;padding:4px 8px}"
 )
 SECTIONS = (("README.md", "Version"), ("CHANGES.md", "Changes"), ("ux-rules.md", "Rules"), ("components.md", "Components"),
             ("tokens.md", "Tokens"), ("content.md", "Words"))
@@ -209,8 +218,134 @@ def sources_digest(folder: Path) -> str:
     return h.hexdigest()[:16]
 
 
+def _read(folder: Path, name: str) -> str:
+    p = Path(folder) / name
+    return p.read_text(encoding="utf-8") if p.is_file() else ""
+
+
+def _swatch(v):
+    return f'<span class="swb" style="background:{html.escape(v)}"></span><code>{html.escape(v)}</code>' if GT.is_hex(v) else f'<span class="gap">not a plain colour: {html.escape(v or "(empty)")}</span>'
+
+
+def _token_samples(toks, gaps, failures) -> list:
+    """The drawn token sections: colour with contrast, type, spacing, radius, shadows. Returns [(id, label, html)]."""
+    out = []
+    # colour swatches, one row per colour token
+    rows = []
+    for name, v in toks.values.items():
+        if not name.startswith(toks.prefix + "color-"):
+            continue
+        light, dark = v["light"], v["dark"]
+        if not GT.is_hex(light) or (dark and not GT.is_hex(dark)):
+            for bad in (light, dark):
+                if bad and not GT.is_hex(bad):
+                    gaps.setdefault(name[len(toks.prefix):], []).append("colour swatches")
+        cells = f"<td><code>{html.escape(name)}</code></td><td>{_swatch(light)}</td>"
+        if toks.has_dark():
+            cells += f"<td>{_swatch(dark) if dark else '<span class=meta>same as light</span>'}</td>"
+        rows.append(f"<tr>{cells}<td>{html.escape(v['use'])}</td></tr>")
+    head = "<th>Token</th><th>Light</th>" + ("<th>Dark</th>" if toks.has_dark() else "") + "<th>Use</th>"
+    note = "" if toks.has_dark() else '<p class="meta">No dark values were found in tokens.md, so only the light theme is drawn.</p>'
+    # contrast pairs
+    prow = []
+    for fg, bg, need, what in G.PAIRS:
+        cells = []
+        for th in G.themes_for(toks):
+            d = G.Draw(toks, th)
+            m = d.mark(fg, bg, need, what)
+            for g in d.missing:
+                gaps.setdefault(g, []).append("contrast table")
+            for label, r, n, ok in d.checks:
+                if not ok:
+                    failures.append(f"contrast table ({th}): {what} is {GT.ratio_text(r)}, needs {n:g}:1")
+            cells.append(f"<td>{m}</td>")
+        prow.append(f"<tr><td>{html.escape(what)}</td><td>{need:g}:1</td>{''.join(cells)}</tr>")
+    chead = "".join(f"<th>{t.title()}</th>" for t in G.themes_for(toks))
+    out.append(("colour", "Colour", f"<h2>Colour</h2>{note}<table><thead><tr>{head}</tr></thead><tbody>{''.join(rows)}</tbody></table>"
+                f"<h3>Contrast (WCAG 2.2 AA)</h3><p class='meta'>4.5:1 for normal text, 3:1 for large text and UI parts. Ratios are rounded down.</p>"
+                f"<table><thead><tr><th>Pair</th><th>Needs</th>{chead}</tr></thead><tbody>{''.join(prow)}</tbody></table>"))
+
+    def sample(fn, what):
+        return G.panels(toks, fn, gaps, failures, what)
+
+    def type_fn(d):
+        out = []
+        for role, r in toks.roles.items():
+            size_tok = r["size"][len(toks.prefix):] if r["size"].startswith(toks.prefix) else ""
+            fam_tok = r["family"][len(toks.prefix):] if r["family"].startswith(toks.prefix) else "font-body"
+            wt = r["weight"] if r["weight"].isdigit() else "400"
+            if not size_tok:
+                d._gap(f"role {role}")
+            out.append(f'<div style="font:{wt} {d.size(size_tok) if size_tok else "1rem"} {html.escape(d.raw(fam_tok, "system-ui"))};color:{d.col("color-text")}">{html.escape(role)} \u00b7 Sample text {html.escape(r["size"])}</div>')
+        return "".join(out) or '<p class="meta">No type roles found.</p>'
+
+    def space_fn(d):
+        rows = [f'<div style="display:flex;align-items:center;gap:8px"><code style="min-width:7rem">{html.escape(n[len(toks.prefix):])}</code>'
+                f'<div style="height:12px;width:{d.size(n[len(toks.prefix):], "0")};max-width:100%;background:{d.col("color-primary")}"></div>{html.escape(v["light"])}</div>'
+                for n, v in toks.values.items() if n.startswith(toks.prefix + "space-") or n == toks.prefix + "target-min"]
+        return "".join(rows)
+
+    def radius_fn(d):
+        return '<div class="demo">' + "".join(
+            f'<div style="background:{d.col("color-surface")};color:{d.col("color-text")};border:1px solid {d.col("color-border")};width:64px;height:48px;'
+            f'border-radius:{d.size(n[len(toks.prefix):], "0")}">{html.escape(n[len(toks.prefix) + 7:])}</div>'
+            for n in toks.values if n.startswith(toks.prefix + "radius-")) + "</div>"
+
+    def shadow_fn(d):
+        return '<div class="demo">' + "".join(
+            f'<div style="background:{d.col("color-surface")};color:{d.col("color-text")};width:80px;height:48px;box-shadow:{d.shadow(n[len(toks.prefix):])}">{html.escape(n[len(toks.prefix) + 7:])}</div>'
+            for n in toks.values if n.startswith(toks.prefix + "shadow-")) + "</div>"
+
+    out.append(("type", "Type", "<h2>Type</h2>" + sample(type_fn, "type roles")))
+    out.append(("spacing", "Spacing and radius", "<h2>Spacing, radius and shadow</h2>" + sample(space_fn, "spacing") + sample(radius_fn, "radius") + sample(shadow_fn, "shadows")))
+    return out
+
+
+def _component_samples(components_text, toks, gaps, failures):
+    """One drawn sample per component section. Returns (html, not_drawn_names, drawn_count)."""
+    parts, undrawn, n = [], [], 0
+    for num, title, body in G.parse_components(components_text):
+        fn = G.DRAWINGS.get(title.strip().lower())
+        if not fn:
+            undrawn.append(f"{num}. {title}")
+            continue
+        n += 1
+        kind = " (rule section: an annotated sample of what the rules govern)" if title.strip().lower() in G.RULE_SECTIONS else ""
+        parts.append(f'<h3 id="component-{num}">{num}. {html.escape(title)}</h3><p class="meta">{html.escape(G.used_for(body))}{kind}</p>'
+                     + G.panels(toks, fn, gaps, failures, f"{num}. {title}"))
+    return "".join(parts), undrawn, n
+
+
+def build_drawn(folder: Path) -> tuple:
+    """The drawn part of the gallery: (nav links, html). Reads tokens.md and components.md as they are."""
+    toks = GT.Tokens(_read(folder, "tokens.md"))
+    gaps: dict = {}
+    failures: list = []
+    samples = _token_samples(toks, gaps, failures)
+    comp_html, undrawn, n = _component_samples(_read(folder, "components.md"), toks, gaps, failures)
+    top = []
+    if not toks.values:
+        gaps.setdefault("tokens.md has no token tables", [])
+    shown = lambda k: k if k.startswith(("tone edge", "role ", "tokens.md")) else toks.name(k)  # noqa: E731
+    gl = "".join(f"<li><code>{html.escape(shown(k))}</code> ({html.escape(', '.join(dict.fromkeys(v))) if v else 'none'})</li>" for k, v in sorted(gaps.items()))
+    top.append(f'<h2>Token gaps</h2>' + (f"<p>These tokens are missing or not a plain value. Samples use a neutral fallback and carry a 'token missing' label.</p><ul>{gl}</ul>" if gaps else "<p>No gaps: every token the samples need has a plain value.</p>"))
+    if failures:
+        top.append("<h2>Contrast failures</h2><ul>" + "".join(f"<li>{html.escape(f)}</li>" for f in failures) + "</ul>")
+    else:
+        top.append("<h2>Contrast failures</h2><p>None: every drawn pair meets WCAG 2.2 AA.</p>")
+    top.append(f"<p class='meta'>Themes drawn: {' and '.join(G.themes_for(toks))}." + ("" if toks.has_dark() else " No dark values were found in tokens.md.") + f" Components drawn: {n}.</p>")
+    nd = ("<ul>" + "".join(f"<li>{html.escape(x)}</li>" for x in undrawn) + "</ul>") if undrawn else "<p>None: every component section has a drawing.</p>"
+    sections = [("gaps", "Gaps", "".join(top))]
+    sections += [(i, label, h) for i, label, h in samples]
+    sections.append(("drawn-components", "Drawn components", f"<h2>Components</h2>{comp_html}<h3>Not drawn</h3>{nd}"))
+    nav = "".join(f'<a href="#{i}">{html.escape(label)}</a>' for i, label, _ in sections)
+    body = "".join(f'<section id="{i}">{h}</section>' for i, _, h in sections)
+    return nav, body
+
+
 def build_visuals(folder: Path, title: str = "Design system") -> Path:
     folder = Path(folder)
+    drawn_nav, drawn = build_drawn(folder)
     parts, nav = [], []
     for name, label in SECTIONS:
         p = folder / name
@@ -221,19 +356,38 @@ def build_visuals(folder: Path, title: str = "Design system") -> Path:
         parts.append(f'<section id="{sid}"><p class="meta">{html.escape(name)}</p>{md_to_html(p.read_text(encoding="utf-8"))}</section>')
     page = (f'<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             f"<title>{html.escape(title)} {html.escape(folder.name)}</title><style>{GALLERY_CSS}</style></head><body>"
-            f"<!-- source-digest: {sources_digest(folder)} -->\n<nav>{''.join(nav)}</nav><main>{''.join(parts)}</main></body></html>\n")
+            f"<!-- source-digest: {sources_digest(folder)} -->\n<!-- gallery-script: {GALLERY_SCRIPT_VERSION} -->\n"
+            f"<nav>{drawn_nav}{''.join(nav)}</nav><main>{drawn}{''.join(parts)}</main></body></html>\n")
     out = folder / "review-visuals" / "index.html"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page, encoding="utf-8")
     return out
 
 
-def visuals_fresh(folder: Path) -> bool:
+def gallery_state(folder: Path) -> str:
+    """'missing', 'source' (the files changed), 'script' (built by an older gallery script) or 'fresh'."""
     p = Path(folder) / "review-visuals" / "index.html"
     if not p.is_file():
-        return False
-    m = re.search(r"<!-- source-digest: (\w+) -->", p.read_text(encoding="utf-8"))
-    return bool(m) and m.group(1) == sources_digest(folder)
+        return "missing"
+    text = p.read_text(encoding="utf-8")
+    m = re.search(r"<!-- source-digest: (\w+) -->", text)
+    if not m or m.group(1) != sources_digest(folder):
+        return "source"
+    s = re.search(r"<!-- gallery-script: (\d+) -->", text)
+    return "fresh" if s and int(s.group(1)) >= GALLERY_SCRIPT_VERSION else "script"
+
+
+def visuals_fresh(folder: Path) -> bool:
+    return gallery_state(folder) == "fresh"
+
+
+def gallery_info(root: Path) -> list:
+    """Information only: numbered versions whose gallery was built by an older script. They are frozen; nothing to rebuild."""
+    out = []
+    for n in numbers(root):
+        if gallery_state(ds_dir(root) / f"v{n}") == "script":
+            out.append(f"v{n}: gallery built by an older gallery script (frozen, information only; next-version is rebuilt, not v{n})")
+    return out
 
 
 # ------------------------------------------------------------------ checks
@@ -273,8 +427,12 @@ def check(root: Path, base: str | None = None) -> list:
         rules = RULE_ID_RE.findall((folder / "ux-rules.md").read_text(encoding="utf-8")) if (folder / "ux-rules.md").is_file() else []
         for rid in sorted({r for r in rules if rules.count(r) > 1}):
             out.append(finding(WARN, "DS5", rel(name, "ux-rules.md"), f"rule ID {rid} appears twice (R15.2)"))
-        if (folder / "ux-rules.md").is_file() and not visuals_fresh(folder) and name in (DRAFT, f"v{nums[-1]}" if nums else DRAFT):
-            out.append(finding(WARN, "DS4", rel(name, "review-visuals/index.html"), "missing or older than the version's files: run design_system.py visuals"))
+        if (folder / "ux-rules.md").is_file() and name in (DRAFT, f"v{nums[-1]}" if nums else DRAFT):
+            state = gallery_state(folder)
+            if state in ("missing", "source"):
+                out.append(finding(WARN, "DS4", rel(name, "review-visuals/index.html"), "missing or older than the version's files: run design_system.py visuals"))
+            elif state == "script" and name == DRAFT:  # a numbered version is frozen: older script is information only (gallery_info)
+                out.append(finding(WARN, "DS4", rel(name, "review-visuals/index.html"), "built by an older gallery script, run design_system.py visuals"))
         if NUMBERED.match(name):
             rec = appr.get(name)
             if not rec or not rec.get("approved"):
@@ -390,6 +548,8 @@ def cmd_status(root: Path) -> int:
     res = check(root)
     for x in res:
         print(f"  {x['severity'].upper()} {x['code']} {x['path']}: {x['message']}")
+    for line in gallery_info(root):
+        print(f"  INFO {line}")
     return 0
 
 

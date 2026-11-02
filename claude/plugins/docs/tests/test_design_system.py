@@ -1,11 +1,14 @@
 import argparse
 import json
 import os
+import re
 import stat
 import unittest
 
 from _helpers import *  # noqa
 import design_system as S
+import gallery_draw as GD
+import gallery_tokens as GT
 import docs_check as C
 
 
@@ -240,6 +243,109 @@ class DesignSystemTests(unittest.TestCase):
         p = folder / "tokens.md"
         p.write_bytes(p.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
         self.assertEqual(S.tree_digest(folder), a)
+
+
+TOKENS_MIN = """# Tokens
+**Prefix:** `--ds-`
+## Colour
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--ds-color-text` | `#000000` | `#ffffff` | text |
+| `--ds-color-page` | `#ffffff` | `#000000` | page |
+| `--ds-color-primary` | `#777777` | `#888888` | action |
+| `--ds-color-surface` | `primary` | `#111111` | a name, not a colour |
+"""
+
+
+def gallery_html(tokens, components="# C\n## 1. Buttons\n- **Used for:** x\n"):
+    import tempfile
+    from pathlib import Path
+    d = Path(tempfile.mkdtemp()) / "next-version"
+    d.mkdir()
+    (d / "tokens.md").write_text(tokens, encoding="utf-8")
+    (d / "components.md").write_text(components, encoding="utf-8")
+    return S.build_visuals(d).read_text(encoding="utf-8")
+
+
+class GalleryTests(unittest.TestCase):
+    def test_contrast_math(self):  # R15.2 WCAG 2.2
+        self.assertAlmostEqual(GT.contrast("#000", "#fff"), 21.0, places=6)
+        self.assertEqual(GT.ratio_text(GT.contrast("#000000", "#ffffff")), "21.0:1")
+        self.assertLess(GT.contrast("#777777", "#888888"), 4.5)
+
+    def test_swatches_and_pass_fail_marks(self):
+        html = gallery_html(TOKENS_MIN)
+        self.assertIn('class="swb" style="background:#000000"', html)
+        self.assertIn('class="cr pass">21.0:1 pass', html)
+        d = GD.Draw(GT.Tokens(TOKENS_MIN))
+        self.assertIn("fail".upper(), d.mark("color-primary", "color-surface") + d.mark("color-primary", "color-page", 7.0))
+        self.assertIn('cr fail', d.mark("color-primary", "color-page", 7.0))
+
+    def test_every_starter_component_has_a_drawing(self):
+        text = r(S.PLUGIN, "templates/design-system/next-version/components.md")
+        secs = GD.parse_components(text)
+        self.assertGreaterEqual(len(secs), 33)
+        drawn = [t for _, t, _ in secs if t.lower() in GD.DRAWINGS]
+        rules_only = [t for _, t, _ in secs if t.lower() in GD.RULE_SECTIONS]
+        self.assertEqual(len(drawn), len(secs))  # none is listed as 'nothing to draw'
+        self.assertEqual(rules_only, ["Shared component rules"])  # drawn as an annotated sample
+        html = gallery_html(r(S.PLUGIN, "templates/design-system/next-version/tokens.md"), text)
+        self.assertEqual(len(re.findall(r'<h3 id="component-\d+"', html)), len(secs))
+        self.assertIn("every component section has a drawing", html)
+        self.assertEqual(html.count('class="cr fail"'), 0)
+
+    def test_undrawn_section_is_listed(self):
+        html = gallery_html(TOKENS_MIN, "## 1. Buttons\n- x\n## 2. Mine only\n- x\n")
+        self.assertIn("2. Mine only", html.split("Not drawn")[1])
+
+    def test_missing_token_gets_fallback_label_and_gap(self):
+        html = gallery_html(TOKENS_MIN)
+        self.assertIn("token missing: --ds-color-surface", html)  # a name, not a colour
+        self.assertIn("token missing: --ds-color-on-primary", html)  # absent
+        top = html.split('id="gaps"')[1].split("</section>")[0]
+        self.assertIn("--ds-color-surface", top)
+        self.assertIn("--ds-color-on-primary", top)
+
+    def test_themes_light_and_dark_or_light_only(self):  # D13
+        both = gallery_html(TOKENS_MIN)
+        self.assertIn('<p class="meta">dark</p>', both)
+        light = gallery_html(TOKENS_MIN.replace("| Dark |", "|").replace("|---|---|---|---|", "|---|---|---|").replace(" `#ffffff` | `#000000` |", " |")
+                             .replace("| `#000000` |", "|").replace("| `#111111` |", "|"))
+        self.assertNotIn('<p class="meta">dark</p>', light)
+        self.assertIn("No dark values were found", light)
+
+    def test_page_loads_nothing_from_the_network(self):
+        html = gallery_html(r(S.PLUGIN, "templates/design-system/next-version/tokens.md"), r(S.PLUGIN, "templates/design-system/next-version/components.md"))
+        self.assertEqual(re.findall(r'(?:src|href)="https?:', html), [])
+        self.assertNotIn("<script", html)
+        self.assertNotIn("@import", html)
+
+    def test_older_or_missing_script_stamp_is_stale_for_next_version(self):  # D12 DS4
+        d = ds_repo()
+        f = d / "docs/design-system/next-version/review-visuals/index.html"
+        self.assertIn(f"<!-- gallery-script: {S.GALLERY_SCRIPT_VERSION} -->", f.read_text(encoding="utf-8"))
+        f.write_text(re.sub(r"<!-- gallery-script: \d+ -->\n", "", f.read_text(encoding="utf-8")), encoding="utf-8")
+        res = S.check(d)
+        self.assertEqual(codes(res), ["DS4"])
+        self.assertIn("built by an older gallery script, run design_system.py visuals", res[0]["message"])
+        f.write_text(f.read_text(encoding="utf-8").replace("<nav>", "<!-- gallery-script: 0 -->\n<nav>", 1), encoding="utf-8")
+        self.assertEqual(codes(S.check(d)), ["DS4"])
+        self.assertEqual(S.main(["visuals", "--root", str(d)]), 0)
+        self.assertEqual(S.check(d), [])
+
+    def test_numbered_version_with_older_stamp_is_information_only(self):  # D12
+        d = ds_repo()
+        S.cmd_promote(d, args())
+        f = d / "docs/design-system/v1/review-visuals/index.html"
+        unlock(f)
+        f.write_text(re.sub(r"<!-- gallery-script: \d+ -->\n", "", f.read_text(encoding="utf-8")), encoding="utf-8")
+        appr = S.read_approvals(d)
+        appr["versions"]["v1"]["digest"] = S.tree_digest(d / "docs/design-system/v1")
+        S.write_approvals(d, appr)
+        self.assertEqual(S.check(d), [])  # no DS2, no DS4, no request to rebuild
+        self.assertEqual(len(S.gallery_info(d)), 1)
+        self.assertIn("information only", S.gallery_info(d)[0])
+        self.assertEqual(S.main(["visuals", "v1", "--root", str(d)]), 2)
 
 
 if __name__ == "__main__":
