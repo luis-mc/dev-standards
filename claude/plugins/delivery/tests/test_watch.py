@@ -584,6 +584,11 @@ class BranchSignalTests(unittest.TestCase):
         a, _, _ = self.run_agent(self.agent(head_sha=None, started="2026-10-14T11:55:00Z"), remote="")
         self.assertNotEqual(a["state"], "done")
 
+    def test_missing_branch_never_seen_and_row_old_stays_open(self):
+        # a cloud run that starts late has no branch yet; only the session check past the ETA may close it
+        a, _, _ = self.run_agent(self.agent(head_sha=None, started="2026-10-13T08:00:00Z"), remote="")
+        self.assertNotEqual(a["state"], "done")
+
     def test_report_ready_closes_the_row(self):
         a, _, _ = self.run_agent(self.agent(), report="# Report\n\nbody\nREADY\n\n")
         self.assertEqual((a["state"], a["done_by"], a["needs_check"]), ("done", "report-ready", False))

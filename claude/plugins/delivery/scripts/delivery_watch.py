@@ -238,10 +238,9 @@ class Watcher:
         done = lambda by: {"state": "done", "done_by": by, "needs_check": by == "report-not-ready",
                            "done_at": L.iso(self.now())}
         if not remote_seen:                               # ls-remote answered, no such branch
-            work = ((a.get("eta") or {}).get("breakdown") or {}).get("work")
-            started = L.parse_iso(a.get("started"))
-            old = bool(work and started and (self.now() - started).total_seconds() / 60.0 > float(work))
-            return done("deleted") if (a.get("head_sha") or old) else None
+            # Only a branch the ledger saw before counts as deleted. A branch that never appeared is an agent that
+            # has not pushed yet (a late start is common); the session check after the ETA covers it (DL-32a).
+            return done("deleted") if a.get("head_sha") else None
         self._fetch_once()
         default = self._default_branch()
         if head and a.get("head_sha"):                    # the ledger saw the branch before this tick
