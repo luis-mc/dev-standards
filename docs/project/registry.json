@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-02T21:19+00:00",
+  "updated": "2026-11-02T21:47+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -665,6 +665,19 @@
       "changed": "2026-11-02T19:49+00:00",
       "rides": "DS176",
       "started": "2026-11-02T19:16+00:00"
+    },
+    {
+      "id": "DL15",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "CI options in delivery: local runners, GitHub-hosted, cloud sessions",
+      "detail": "Owner 2 Nov: delivery spec for three CI options chosen per OS at setup (no defaults), changeable later; move CI scripts and workflow templates from tech-stack-setup into delivery; cloud sessions use no Actions or webhooks, only commit statuses",
+      "expected": "03 Nov ~22:00",
+      "changed": "2026-11-02T21:22+00:00",
+      "expected_basis": "cloud agent ~1 day: spec + move of the CI scripts and templates + tests",
+      "no_release": "rides the next dev-standards release; release task added at join",
+      "started": "2026-11-02T21:35+00:00"
     },
     {
       "id": "DS1",
@@ -3204,12 +3217,11 @@
       "id": "DS177",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Live",
       "item": "RELEASE-33: gallery rebuilds itself (ST5)",
-      "detail": "Join, fold, CI and merge of ST5.",
-      "expected": "02 Nov ~21:59",
-      "changed": "2026-11-02T21:19+00:00",
-      "expected_basis": "agent 21:19-21:44, join 21:44-21:51, CI 21:51-21:59",
+      "detail": "Joined ST5; fold: docs 1.3.0, docspec 1.5.0, docs feature spec 0.5.0. CI green 21:47.",
+      "expected": "02 Nov",
+      "changed": "2026-11-02T21:47+00:00",
       "release": 33,
       "phases": [
         {
@@ -3228,6 +3240,18 @@
           "end": "2026-11-02T21:59+00:00"
         }
       ]
+    },
+    {
+      "id": "DS178",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Release: CI options in delivery",
+      "detail": "Joins DL15 after its code is done",
+      "expected": "03 Nov ~23:00",
+      "changed": "2026-11-02T21:22+00:00",
+      "expected_basis": "after DL15 (~22:00) + CI + merge",
+      "release": 34
     },
     {
       "id": "MP1",
@@ -3409,12 +3433,11 @@
       "id": "ST5",
       "owner": "design-starter",
       "app": "luismc-docs",
-      "status": "Running",
+      "status": "Live",
       "item": "Docs hooks rebuild a stale next-version gallery",
       "detail": "D14 Both: SessionStart and Stop hooks rebuild docs/design-system/next-version/review-visuals when its source or script stamp is stale; never a numbered version; write only, fail open.",
-      "expected": "02 Nov ~21:44",
-      "changed": "2026-11-02T21:19+00:00",
-      "expected_basis": "cloud agent from 21:19: setup 5 + work 15 + checks 5",
+      "expected": "02 Nov",
+      "changed": "2026-11-02T21:47+00:00",
       "rides": "DS177",
       "started": "2026-11-02T21:19+00:00"
     },

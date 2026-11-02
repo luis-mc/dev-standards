@@ -1,5 +1,9 @@
 [
   {
+    "date": "02 Nov 21:47",
+    "change": "RELEASE-33 live 21:47, CI green on 7a4259e"
+  },
+  {
     "date": "02 Nov 19:49",
     "change": "RELEASE-32 live 19:49, CI green on 040345d"
   },

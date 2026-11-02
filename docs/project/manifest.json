@@ -12,9 +12,9 @@
     "title": "Full Progress: dev-standards",
     "url": "https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv",
     "file": "full-progress-dev-standards.html",
-    "published_sha256": "e7514db9b057df9b6732410ae09bf40d1e2ec3458e37057d685b382ec86aa2a5",
-    "published_at": "2026-11-02T21:20+00:00",
-    "published_fingerprint": "778337fe19871c54c47371baa8c2770331ba389dbf6a3aa7433722921c156969"
+    "published_sha256": "118753508c633cac83cfed29d2957d703839b4f17ab523abce5a8e1f504d58e9",
+    "published_at": "2026-11-02T21:50+00:00",
+    "published_fingerprint": "5d2b8acd40724cb2f241461224fdbd228768412765a7208692ae886fbf980701"
   },
   "feature_artifacts": [
     {
@@ -25,7 +25,7 @@
       "apps": [
         "luismc-artifacts"
       ],
-      "updated": "2026-11-01T22:45+00:00"
+      "updated": "2026-11-02T21:23+00:00"
     },
     {
       "key": "models",
@@ -35,7 +35,7 @@
       "apps": [
         "luismc-project-setup"
       ],
-      "updated": "2026-10-27T08:30+00:00"
+      "updated": "2026-11-02T21:23+00:00"
     },
     {
       "key": "test-cost",
@@ -47,7 +47,7 @@
         "delivery scripts",
         "luismc-artifacts"
       ],
-      "updated": "2026-10-27T08:30+00:00"
+      "updated": "2026-11-02T21:23+00:00"
     },
     {
       "key": "delivery-speed",
@@ -59,7 +59,7 @@
         "STACKSPEC",
         "tech-stack-setup"
       ],
-      "updated": "2026-11-02T19:49+00:00"
+      "updated": "2026-11-02T21:23+00:00"
     },
     {
       "key": "transcript-folds",
@@ -70,7 +70,7 @@
         "luismc-transcript-folds",
         "luismc-project-setup"
       ],
-      "updated": "2026-10-27T08:30+00:00"
+      "updated": "2026-11-02T21:23+00:00"
     },
     {
       "key": "setup-offers",
@@ -83,7 +83,7 @@
         "luismc-delivery",
         "luismc-artifacts"
       ],
-      "updated": "2026-11-02T15:59+00:00"
+      "updated": "2026-11-02T21:23+00:00"
     },
     {
       "key": "design-starter",
@@ -93,13 +93,13 @@
       "apps": [
         "luismc-docs"
       ],
-      "updated": "2026-11-02T21:19+00:00"
+      "updated": "2026-11-02T21:47+00:00"
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-11-02T21:20+00:00",
+  "updated": "2026-11-02T21:50+00:00",
   "retired": [],
   "deleted": [
     {
