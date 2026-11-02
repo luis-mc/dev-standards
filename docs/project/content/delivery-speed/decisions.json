@@ -1,431 +1,456 @@
 {
- "decisions": [
-  {
-   "id": "D1",
-   "question": "Rewrite the pasted delivery prompt with the review’s fixes and queue it after TC6?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
+  "decisions": [
     {
-     "label": "Rewrite and queue",
-     "summary": "Fix the gaps and conflicts, record its points as tasks, start it as one release once TC6 merges.",
-     "recommended": true
+      "id": "D1",
+      "question": "Rewrite the pasted delivery prompt with the review’s fixes and queue it after TC6?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Rewrite and queue",
+          "summary": "Fix the gaps and conflicts, record its points as tasks, start it as one release once TC6 merges.",
+          "recommended": true
+        },
+        {
+          "label": "Rewrite only",
+          "summary": "Give the fixed prompt; queue nothing."
+        },
+        {
+          "label": "Drop it",
+          "summary": "No changes beyond TC6."
+        }
+      ],
+      "chosen": "Rewrite and queue",
+      "decided": "2026-10-11",
+      "task": "DL11",
+      "owner_words": "Rewrite and queue (Recommended)"
     },
     {
-     "label": "Rewrite only",
-     "summary": "Give the fixed prompt; queue nothing."
+      "id": "D2",
+      "question": "Point 7, a smoke test of the packaged program: MUST or SHOULD?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "MUST, STACKSPEC 8.0.0",
+          "summary": "Every product that ships a packaged program has CI start it and exercise every worker; a major version.",
+          "recommended": true
+        },
+        {
+          "label": "SHOULD, STACKSPEC 7.2.0",
+          "summary": "Recommended but not required; stays minor."
+        }
+      ],
+      "chosen": "MUST, STACKSPEC 8.0.0",
+      "decided": "2026-10-11",
+      "task": "DL9",
+      "owner_words": "MUST, STACKSPEC 8.0.0 (Recommended)"
     },
     {
-     "label": "Drop it",
-     "summary": "No changes beyond TC6."
+      "id": "D3",
+      "question": "Point 8: where is the delivery log kept?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Release notes",
+          "summary": "Appended to the GitHub release of each train: durable, no commits to main.",
+          "recommended": true
+        },
+        {
+          "label": "delivery-log branch",
+          "summary": "A JSON lines file on its own branch, one commit per train."
+        },
+        {
+          "label": "One commit per train on main",
+          "summary": "docs/delivery/log.jsonl appended once per train; adds a commit to main each time."
+        }
+      ],
+      "chosen": "Release notes",
+      "decided": "2026-10-11",
+      "task": "DL8",
+      "owner_words": "Release notes (Recommended)"
+    },
+    {
+      "id": "D4",
+      "question": "Point 4: what does the pre-push hook do when it cannot reach GitHub?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Allow and warn",
+          "summary": "The push goes through with a warning; the ready PR’s CI still decides the merge.",
+          "recommended": true
+        },
+        {
+          "label": "Refuse",
+          "summary": "No push to a train branch until GitHub confirms CI finished; offline work stops."
+        }
+      ],
+      "chosen": "Allow and warn",
+      "decided": "2026-10-11",
+      "task": "DL6",
+      "owner_words": "Allow and warn (Recommended)"
+    },
+    {
+      "id": "D5",
+      "question": "Point 5: no online runner for a job’s labels before the ready PR opens?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Warn, don’t block",
+          "summary": "join.py and ci_watch.py print a clear warning; works without admin rights.",
+          "recommended": true
+        },
+        {
+          "label": "Block the ready PR",
+          "summary": "Refuse to open it until a runner is online; needs admin rights, else a warning."
+        }
+      ],
+      "chosen": "Warn, don’t block",
+      "decided": "2026-10-11",
+      "task": "DL7",
+      "owner_words": "Warn, don't block (Recommended)"
+    },
+    {
+      "id": "D6",
+      "question": "Point 3: which tests run at the join when branches affect overlapping packages?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Union plus dependents",
+          "summary": "Every package any branch affected plus their dependents, so an interaction is caught before the ready PR.",
+          "recommended": true
+        },
+        {
+          "label": "Union only",
+          "summary": "Only the packages the branches affected; an interaction shows first in the ready PR’s CI."
+        }
+      ],
+      "chosen": "Union plus dependents",
+      "decided": "2026-10-11",
+      "task": "DL2",
+      "owner_words": "Union plus dependents (Recommended)"
+    },
+    {
+      "id": "D7",
+      "question": "Should dev-standards adopt the delivery log in its own releases? (asked as one multi-select question)",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes",
+          "summary": "Each dev-standards release gets its time-to-live breakdown in its release notes."
+        },
+        {
+          "label": "No",
+          "summary": "Products only."
+        }
+      ],
+      "chosen": "Yes",
+      "decided": "2026-10-11",
+      "task": "DL10",
+      "owner_words": "Delivery log in releases, Train freeze, good to use this projects for its own dogfood"
+    },
+    {
+      "id": "D8",
+      "question": "Should dev-standards adopt the train freeze? (same multi-select question)",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes",
+          "summary": "No pushes to an integration branch while its ready-PR CI runs."
+        },
+        {
+          "label": "No",
+          "summary": "Products only."
+        }
+      ],
+      "chosen": "Yes",
+      "decided": "2026-10-11",
+      "task": "DL10",
+      "owner_words": "Delivery log in releases, Train freeze, good to use this projects for its own dogfood"
+    },
+    {
+      "id": "D9",
+      "question": "Point 4: how is the train freeze overridden on purpose?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Env variable, logged",
+          "summary": "DELIVERY_FREEZE_OVERRIDE=1 on the push; the hook allows it and prints that the running CI will restart.",
+          "recommended": true
+        },
+        {
+          "label": "Abandon the train first",
+          "summary": "No override: close the ready PR, push, open a new ready PR."
+        }
+      ],
+      "chosen": "Env variable, logged",
+      "decided": "2026-10-11",
+      "task": "DL6",
+      "owner_words": "Env variable, logged (Recommended)"
+    },
+    {
+      "id": "D10",
+      "question": "dev-standards is public: create a public GitHub release per train for the delivery log?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, public releases",
+          "summary": "One release per train, notes = the delivery log.",
+          "recommended": true
+        },
+        {
+          "label": "Draft releases only",
+          "summary": "Visible only with write access."
+        },
+        {
+          "label": "Skip the log here",
+          "summary": "Adopt only the freeze."
+        }
+      ],
+      "chosen": "Yes, public releases",
+      "decided": "2026-10-11",
+      "task": "DL10",
+      "owner_words": "Yes, public releases (Recommended)"
+    },
+    {
+      "id": "D11",
+      "question": "Install the train freeze in this repo’s own git hooks?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes",
+          "summary": ".githooks/pre-push next to pre-commit.",
+          "recommended": true
+        },
+        {
+          "label": "No",
+          "summary": "Products only."
+        }
+      ],
+      "chosen": "Yes",
+      "decided": "2026-10-11",
+      "task": "DL10",
+      "owner_words": "Yes (Recommended)"
+    },
+    {
+      "id": "D12",
+      "question": "Merge this release on green CI without asking again?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Merge on green",
+          "summary": "One ready PR, its CI, squash-merge when green, fix forward if red.",
+          "recommended": true
+        },
+        {
+          "label": "Ask me before merging",
+          "summary": "Stop at a green ready PR."
+        }
+      ],
+      "chosen": "Merge on green",
+      "decided": "2026-10-11",
+      "task": "DL11",
+      "owner_words": "Merge on green (Recommended)"
+    },
+    {
+      "id": "D13",
+      "question": "Turn hooks on here (core.hooksPath .githooks), which also activates the pre-commit secret check?",
+      "asked": "2026-10-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, both hooks",
+          "summary": "Secret check on every commit, freeze on every push.",
+          "recommended": true
+        },
+        {
+          "label": "Freeze only",
+          "summary": "Only pre-push."
+        },
+        {
+          "label": "Not now",
+          "summary": "Leave hooks off."
+        }
+      ],
+      "chosen": "Yes, both hooks",
+      "decided": "2026-10-11",
+      "task": "DL10",
+      "owner_words": "Yes, both hooks (Recommended)"
+    },
+    {
+      "id": "D14",
+      "question": "How should the runner load gate be reinstalled, now that PowerShell refuses unsigned scripts for the runner's account?",
+      "asked": "2026-10-26",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Runner account only",
+          "summary": "RemoteSigned for NETWORK SERVICE only; test as the runner runs it, then watch the first real job.",
+          "recommended": true
+        },
+        {
+          "label": "Whole PC",
+          "summary": "RemoteSigned for every account on the PC."
+        },
+        {
+          "label": "Leave it off",
+          "summary": "No gate; runner jobs start without a load check."
+        }
+      ],
+      "chosen": "Runner account only",
+      "decided": "2026-10-26",
+      "task": "DS83",
+      "owner_words": "Runner account only (Recommended)"
+    },
+    {
+      "id": "D15",
+      "question": "Stop train-cleanup creating a GitHub release on every merge to main?",
+      "asked": "2026-10-26",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Stop release per merge",
+          "summary": "Only a real train makes a release."
+        },
+        {
+          "label": "Leave it",
+          "summary": "Every merge keeps making a release (the Neither option)."
+        }
+      ],
+      "chosen": "Stop release per merge",
+      "decided": "2026-10-26",
+      "task": "DS86",
+      "owner_words": "Stop release per merge, Fix ci_watch.py (multi-select; Neither also offered)"
+    },
+    {
+      "id": "D16",
+      "question": "Fix ci_watch.py: right default workflow, repeated gh errors fail instead of green?",
+      "asked": "2026-10-26",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Fix ci_watch.py",
+          "summary": "Right default; errors exit non-zero."
+        },
+        {
+          "label": "Leave it",
+          "summary": "Keep current behaviour (the Neither option)."
+        }
+      ],
+      "chosen": "Fix ci_watch.py",
+      "decided": "2026-10-26",
+      "task": "DS87",
+      "owner_words": "Stop release per merge, Fix ci_watch.py (multi-select; Neither also offered)"
+    },
+    {
+      "id": "D17",
+      "question": "DELIVERYSPEC Source cells named after another project's memory notes: make generic or keep?",
+      "asked": "2026-10-26",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Make them generic",
+          "summary": "Neutral descriptions; dev-standards names no other project.",
+          "recommended": true
+        },
+        {
+          "label": "Keep them",
+          "summary": "Leave as they are."
+        }
+      ],
+      "chosen": "Make them generic",
+      "decided": "2026-10-26",
+      "task": "DS88",
+      "owner_words": "Make them generic (Recommended)"
+    },
+    {
+      "id": "D18",
+      "question": "Commit the uncommitted artifacts record and docs/drafts?",
+      "asked": "2026-10-26",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Commit record only",
+          "summary": "docs/artifacts/ through a PR; docs/drafts/ stays uncommitted.",
+          "recommended": true
+        },
+        {
+          "label": "Commit both",
+          "summary": "docs/artifacts/ and docs/drafts/ through a PR."
+        },
+        {
+          "label": "Not now",
+          "summary": "Leave everything uncommitted."
+        }
+      ],
+      "chosen": "Commit both",
+      "decided": "2026-10-26",
+      "task": "DS89",
+      "owner_words": "Commit both"
+    },
+    {
+      "id": "D19",
+      "question": "docs/drafts/delivery-inventory.md is an older copy of DELIVERYSPEC full of another project's paths and rules: what happens to it?",
+      "asked": "2026-10-26",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Delete it",
+          "summary": "DELIVERYSPEC holds what it led to; commit only the record.",
+          "recommended": true
+        },
+        {
+          "label": "Keep it uncommitted",
+          "summary": "Leave it untracked on disk."
+        },
+        {
+          "label": "Scrub, then commit",
+          "summary": "Make ~30 places generic, then commit."
+        },
+        {
+          "label": "Commit as-is",
+          "summary": "Commit unchanged."
+        }
+      ],
+      "chosen": "Delete it",
+      "decided": "2026-10-26",
+      "task": "DS89",
+      "owner_words": "Delete it (Recommended)"
+    },
+    {
+      "id": "D20",
+      "question": "How does a finished cloud agent row become done in the ledger?",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "task": "DL14",
+      "options": [
+        {
+          "label": "Branch signals",
+          "summary": "Done when its branch is merged or deleted, or its report ends READY / NOT READY.",
+          "recommended": true
+        },
+        {
+          "label": "Session checks runs",
+          "summary": "The Stop hook asks the session to call list_runs and record the result."
+        },
+        {
+          "label": "Both",
+          "summary": "Branch signals first; the session check only for rows still open after their ETA."
+        }
+      ],
+      "chosen": "Both",
+      "decided": "2026-11-02",
+      "owner_words": "Both"
     }
-   ],
-   "chosen": "Rewrite and queue",
-   "decided": "2026-10-11",
-   "task": "DL11",
-   "owner_words": "Rewrite and queue (Recommended)"
-  },
-  {
-   "id": "D2",
-   "question": "Point 7, a smoke test of the packaged program: MUST or SHOULD?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "MUST, STACKSPEC 8.0.0",
-     "summary": "Every product that ships a packaged program has CI start it and exercise every worker; a major version.",
-     "recommended": true
-    },
-    {
-     "label": "SHOULD, STACKSPEC 7.2.0",
-     "summary": "Recommended but not required; stays minor."
-    }
-   ],
-   "chosen": "MUST, STACKSPEC 8.0.0",
-   "decided": "2026-10-11",
-   "task": "DL9",
-   "owner_words": "MUST, STACKSPEC 8.0.0 (Recommended)"
-  },
-  {
-   "id": "D3",
-   "question": "Point 8: where is the delivery log kept?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Release notes",
-     "summary": "Appended to the GitHub release of each train: durable, no commits to main.",
-     "recommended": true
-    },
-    {
-     "label": "delivery-log branch",
-     "summary": "A JSON lines file on its own branch, one commit per train."
-    },
-    {
-     "label": "One commit per train on main",
-     "summary": "docs/delivery/log.jsonl appended once per train; adds a commit to main each time."
-    }
-   ],
-   "chosen": "Release notes",
-   "decided": "2026-10-11",
-   "task": "DL8",
-   "owner_words": "Release notes (Recommended)"
-  },
-  {
-   "id": "D4",
-   "question": "Point 4: what does the pre-push hook do when it cannot reach GitHub?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Allow and warn",
-     "summary": "The push goes through with a warning; the ready PR’s CI still decides the merge.",
-     "recommended": true
-    },
-    {
-     "label": "Refuse",
-     "summary": "No push to a train branch until GitHub confirms CI finished; offline work stops."
-    }
-   ],
-   "chosen": "Allow and warn",
-   "decided": "2026-10-11",
-   "task": "DL6",
-   "owner_words": "Allow and warn (Recommended)"
-  },
-  {
-   "id": "D5",
-   "question": "Point 5: no online runner for a job’s labels before the ready PR opens?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Warn, don’t block",
-     "summary": "join.py and ci_watch.py print a clear warning; works without admin rights.",
-     "recommended": true
-    },
-    {
-     "label": "Block the ready PR",
-     "summary": "Refuse to open it until a runner is online; needs admin rights, else a warning."
-    }
-   ],
-   "chosen": "Warn, don’t block",
-   "decided": "2026-10-11",
-   "task": "DL7",
-   "owner_words": "Warn, don't block (Recommended)"
-  },
-  {
-   "id": "D6",
-   "question": "Point 3: which tests run at the join when branches affect overlapping packages?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Union plus dependents",
-     "summary": "Every package any branch affected plus their dependents, so an interaction is caught before the ready PR.",
-     "recommended": true
-    },
-    {
-     "label": "Union only",
-     "summary": "Only the packages the branches affected; an interaction shows first in the ready PR’s CI."
-    }
-   ],
-   "chosen": "Union plus dependents",
-   "decided": "2026-10-11",
-   "task": "DL2",
-   "owner_words": "Union plus dependents (Recommended)"
-  },
-  {
-   "id": "D7",
-   "question": "Should dev-standards adopt the delivery log in its own releases? (asked as one multi-select question)",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Yes",
-     "summary": "Each dev-standards release gets its time-to-live breakdown in its release notes."
-    },
-    {
-     "label": "No",
-     "summary": "Products only."
-    }
-   ],
-   "chosen": "Yes",
-   "decided": "2026-10-11",
-   "task": "DL10",
-   "owner_words": "Delivery log in releases, Train freeze, good to use this projects for its own dogfood"
-  },
-  {
-   "id": "D8",
-   "question": "Should dev-standards adopt the train freeze? (same multi-select question)",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Yes",
-     "summary": "No pushes to an integration branch while its ready-PR CI runs."
-    },
-    {
-     "label": "No",
-     "summary": "Products only."
-    }
-   ],
-   "chosen": "Yes",
-   "decided": "2026-10-11",
-   "task": "DL10",
-   "owner_words": "Delivery log in releases, Train freeze, good to use this projects for its own dogfood"
-  },
-  {
-   "id": "D9",
-   "question": "Point 4: how is the train freeze overridden on purpose?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Env variable, logged",
-     "summary": "DELIVERY_FREEZE_OVERRIDE=1 on the push; the hook allows it and prints that the running CI will restart.",
-     "recommended": true
-    },
-    {
-     "label": "Abandon the train first",
-     "summary": "No override: close the ready PR, push, open a new ready PR."
-    }
-   ],
-   "chosen": "Env variable, logged",
-   "decided": "2026-10-11",
-   "task": "DL6",
-   "owner_words": "Env variable, logged (Recommended)"
-  },
-  {
-   "id": "D10",
-   "question": "dev-standards is public: create a public GitHub release per train for the delivery log?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Yes, public releases",
-     "summary": "One release per train, notes = the delivery log.",
-     "recommended": true
-    },
-    {
-     "label": "Draft releases only",
-     "summary": "Visible only with write access."
-    },
-    {
-     "label": "Skip the log here",
-     "summary": "Adopt only the freeze."
-    }
-   ],
-   "chosen": "Yes, public releases",
-   "decided": "2026-10-11",
-   "task": "DL10",
-   "owner_words": "Yes, public releases (Recommended)"
-  },
-  {
-   "id": "D11",
-   "question": "Install the train freeze in this repo’s own git hooks?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Yes",
-     "summary": ".githooks/pre-push next to pre-commit.",
-     "recommended": true
-    },
-    {
-     "label": "No",
-     "summary": "Products only."
-    }
-   ],
-   "chosen": "Yes",
-   "decided": "2026-10-11",
-   "task": "DL10",
-   "owner_words": "Yes (Recommended)"
-  },
-  {
-   "id": "D12",
-   "question": "Merge this release on green CI without asking again?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Merge on green",
-     "summary": "One ready PR, its CI, squash-merge when green, fix forward if red.",
-     "recommended": true
-    },
-    {
-     "label": "Ask me before merging",
-     "summary": "Stop at a green ready PR."
-    }
-   ],
-   "chosen": "Merge on green",
-   "decided": "2026-10-11",
-   "task": "DL11",
-   "owner_words": "Merge on green (Recommended)"
-  },
-  {
-   "id": "D13",
-   "question": "Turn hooks on here (core.hooksPath .githooks), which also activates the pre-commit secret check?",
-   "asked": "2026-10-11",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Yes, both hooks",
-     "summary": "Secret check on every commit, freeze on every push.",
-     "recommended": true
-    },
-    {
-     "label": "Freeze only",
-     "summary": "Only pre-push."
-    },
-    {
-     "label": "Not now",
-     "summary": "Leave hooks off."
-    }
-   ],
-   "chosen": "Yes, both hooks",
-   "decided": "2026-10-11",
-   "task": "DL10",
-   "owner_words": "Yes, both hooks (Recommended)"
-  },
-  {
-   "id": "D14",
-   "question": "How should the runner load gate be reinstalled, now that PowerShell refuses unsigned scripts for the runner's account?",
-   "asked": "2026-10-26",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Runner account only",
-     "summary": "RemoteSigned for NETWORK SERVICE only; test as the runner runs it, then watch the first real job.",
-     "recommended": true
-    },
-    {
-     "label": "Whole PC",
-     "summary": "RemoteSigned for every account on the PC."
-    },
-    {
-     "label": "Leave it off",
-     "summary": "No gate; runner jobs start without a load check."
-    }
-   ],
-   "chosen": "Runner account only",
-   "decided": "2026-10-26",
-   "task": "DS83",
-   "owner_words": "Runner account only (Recommended)"
-  },
-  {
-   "id": "D15",
-   "question": "Stop train-cleanup creating a GitHub release on every merge to main?",
-   "asked": "2026-10-26",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Stop release per merge",
-     "summary": "Only a real train makes a release."
-    },
-    {
-     "label": "Leave it",
-     "summary": "Every merge keeps making a release (the Neither option)."
-    }
-   ],
-   "chosen": "Stop release per merge",
-   "decided": "2026-10-26",
-   "task": "DS86",
-   "owner_words": "Stop release per merge, Fix ci_watch.py (multi-select; Neither also offered)"
-  },
-  {
-   "id": "D16",
-   "question": "Fix ci_watch.py: right default workflow, repeated gh errors fail instead of green?",
-   "asked": "2026-10-26",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Fix ci_watch.py",
-     "summary": "Right default; errors exit non-zero."
-    },
-    {
-     "label": "Leave it",
-     "summary": "Keep current behaviour (the Neither option)."
-    }
-   ],
-   "chosen": "Fix ci_watch.py",
-   "decided": "2026-10-26",
-   "task": "DS87",
-   "owner_words": "Stop release per merge, Fix ci_watch.py (multi-select; Neither also offered)"
-  },
-  {
-   "id": "D17",
-   "question": "DELIVERYSPEC Source cells named after another project's memory notes: make generic or keep?",
-   "asked": "2026-10-26",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Make them generic",
-     "summary": "Neutral descriptions; dev-standards names no other project.",
-     "recommended": true
-    },
-    {
-     "label": "Keep them",
-     "summary": "Leave as they are."
-    }
-   ],
-   "chosen": "Make them generic",
-   "decided": "2026-10-26",
-   "task": "DS88",
-   "owner_words": "Make them generic (Recommended)"
-  },
-  {
-   "id": "D18",
-   "question": "Commit the uncommitted artifacts record and docs/drafts?",
-   "asked": "2026-10-26",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Commit record only",
-     "summary": "docs/artifacts/ through a PR; docs/drafts/ stays uncommitted.",
-     "recommended": true
-    },
-    {
-     "label": "Commit both",
-     "summary": "docs/artifacts/ and docs/drafts/ through a PR."
-    },
-    {
-     "label": "Not now",
-     "summary": "Leave everything uncommitted."
-    }
-   ],
-   "chosen": "Commit both",
-   "decided": "2026-10-26",
-   "task": "DS89",
-   "owner_words": "Commit both"
-  },
-  {
-   "id": "D19",
-   "question": "docs/drafts/delivery-inventory.md is an older copy of DELIVERYSPEC full of another project's paths and rules: what happens to it?",
-   "asked": "2026-10-26",
-   "status": "decided",
-   "options": [
-    {
-     "label": "Delete it",
-     "summary": "DELIVERYSPEC holds what it led to; commit only the record.",
-     "recommended": true
-    },
-    {
-     "label": "Keep it uncommitted",
-     "summary": "Leave it untracked on disk."
-    },
-    {
-     "label": "Scrub, then commit",
-     "summary": "Make ~30 places generic, then commit."
-    },
-    {
-     "label": "Commit as-is",
-     "summary": "Commit unchanged."
-    }
-   ],
-   "chosen": "Delete it",
-   "decided": "2026-10-26",
-   "task": "DS89",
-   "owner_words": "Delete it (Recommended)"
-  }
- ]
+  ]
 }
