@@ -443,7 +443,7 @@ These are the owner's choices of 31 October 2026, from the documentation standar
   | R8.1 to R8.7 | `test_check.py`, `test_hooks.py` |
   | R9.1 to R9.7 | `test_setup.py` |
   | R10.2, R10.3 | `test_work.py` |
-  | R15.1 to R15.7 | `test_design_system.py` |
+  | R15.1 to R15.7b | `test_design_system.py` |
 - **R13.3** — This specification MUST pass `python3 tools/spec_check.py claude/plugins/docs/references/docspec.md`.
 
 ---
@@ -468,4 +468,5 @@ The design system is the one home of a project's UX rules, tokens, components an
 - **R15.6** — The project MUST have guard tests, from `templates/design-system/guards/<stack>/` (`design_system.py guards --stack`; at least `typescript-vitest`), that prove: the layout (R15.1, R15.2); the freeze (the digest matches `approvals.json`, and the branch changes no numbered folder against its base); and that the apps follow the enforced version (no retired word as UI text, a well formed rule table whose guards exist, every cited rule ID exists, tokens instead of raw colours). Templates hold structure and a starter set of generic, project-neutral rules, never one project's rules.
 - **R15.7** — `docs_check.py` MUST warn (never error) with these codes: DS1 README missing or without an order of work; DS2 a numbered version without a recorded approval, edited after its digest, or changed by the branch; DS3 a folder or file outside the layout, a gap in numbering, a missing version file; DS4 a gallery missing or older than its version's files; DS5 a duplicate rule ID. It reports nothing in a repo with no design system yet.
 - **R15.7a** — A gallery carries `<!-- gallery-script: N -->` beside its source digest, where N is `GALLERY_SCRIPT_VERSION` in `design_system.py`, raised whenever the drawing changes. For `next-version`, a missing or older stamp is DS4 ("built by an older gallery script, run design_system.py visuals"). A numbered version is frozen and is never rebuilt: an older stamp there is information only (`design_system.py status`), never DS2 and never a request to rebuild. The stamp sits in the gallery, so a frozen version's digest does not change.
+- **R15.7b** — The docs plugin rebuilds a stale `next-version` gallery by itself: `design_system.py refresh_draft_gallery` runs at SessionStart and at Stop, and rebuilds when the state is missing, source or script. It prints one line that names the reason. It never rebuilds a numbered version, does nothing without `docs/docs.json` or `next-version/ux-rules.md`, fails open, and never commits. Running `design_system.py visuals` by hand still works.
 - **R15.8** — A project moving its design system to `docs/design-system/` from another path rewrites every link and guard path in one task, keeps its numbered folders and their approval lines, and runs `design_system.py check` afterwards. The approval record for versions approved before the move is added to `approvals.json` by hand with the original date and evidence.

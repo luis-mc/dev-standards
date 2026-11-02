@@ -267,6 +267,34 @@ def gallery_html(tokens, components="# C\n## 1. Buttons\n- **Used for:** x\n"):
     return S.build_visuals(d).read_text(encoding="utf-8")
 
 
+class RefreshDraftGalleryTests(unittest.TestCase):  # R15.7b
+    def test_stale_rebuilds_and_fresh_does_nothing(self):
+        d = ds_repo()
+        self.assertEqual(S.refresh_draft_gallery(d), "")
+        g = "docs/design-system/next-version/review-visuals/index.html"
+        w(d, g, r(d, g).replace("gallery-script: %d" % S.GALLERY_SCRIPT_VERSION, "gallery-script: 0"))
+        self.assertIn("older gallery script", S.refresh_draft_gallery(d))
+        self.assertEqual(S.refresh_draft_gallery(d), "")
+        (d / g).unlink()
+        self.assertIn("no gallery yet", S.refresh_draft_gallery(d))
+
+    def test_no_config_or_no_draft_does_nothing(self):
+        d = ds_repo()
+        (d / "docs/design-system/next-version/ux-rules.md").unlink()
+        self.assertEqual(S.refresh_draft_gallery(d), "")
+        self.assertEqual(S.refresh_draft_gallery(make_repo({"a": "b"})), "")
+
+    def test_fails_open(self):
+        d = ds_repo()
+        (d / "docs/design-system/next-version/review-visuals/index.html").unlink()
+        orig = S.build_visuals
+        S.build_visuals = lambda *a, **k: 1 / 0
+        try:
+            self.assertEqual(S.refresh_draft_gallery(d), "")
+        finally:
+            S.build_visuals = orig
+
+
 class GalleryTests(unittest.TestCase):
     def test_contrast_math(self):  # R15.2 WCAG 2.2
         self.assertAlmostEqual(GT.contrast("#000", "#fff"), 21.0, places=6)

@@ -107,7 +107,15 @@ def main() -> int:
         except Exception:
             pass
         import docs_lib as D
-        msg = cached_message(D.repo_root())
+        root = D.repo_root()
+        msg = cached_message(root)
+        try:
+            import design_system as DS
+            line = DS.refresh_draft_gallery(root)  # outside the cache: edits to the design files must show
+            if line:
+                msg = f"{msg}\n{line}" if msg else line
+        except Exception:
+            pass
         if msg:
             print(json.dumps({"systemMessage": msg}))
     except Exception:

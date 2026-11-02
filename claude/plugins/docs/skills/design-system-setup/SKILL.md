@@ -14,7 +14,7 @@ S="${CLAUDE_PLUGIN_ROOT}/scripts/design_system.py"
 python3 "$S" init --apply                  # docs/design-system/: README, approvals.json, next-version/ (never overwrites)
 python3 "$S" styles                        # read-only: style files and CSS custom properties the project already has
 python3 "$S" guards --apply                # guard tests into scripts/design/ (--stack typescript-vitest, --dest DIR)
-python3 "$S" visuals                       # rebuild next-version/review-visuals/index.html: offline gallery with drawn swatches, contrast and every component
+python3 "$S" visuals                       # rebuild next-version/review-visuals/index.html: offline gallery with drawn swatches, contrast and every component (the session-start and stop hooks now do this when it is stale; running it by hand still works)
 python3 "$S" check                         # DS1-DS5 findings (DS4 also flags a gallery from an older script); docs_check.py runs the same
 python3 "$S" status                        # versions, the enforced one, approvals
 python3 "$S" promote --approved-by owner --approved-on 2026-11-02 --evidence "chat, 2026-11-02"   # dry run; add --apply

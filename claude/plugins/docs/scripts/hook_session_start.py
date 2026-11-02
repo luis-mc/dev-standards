@@ -29,6 +29,13 @@ def main() -> int:
         if not D.has_config(root):
             return 0
         text = RULE.replace("${CLAUDE_PLUGIN_ROOT}", str(Path(__file__).resolve().parent.parent))
+        try:
+            import design_system as DS
+            line = DS.refresh_draft_gallery(root)
+            if line:
+                text += "\n\n" + line
+        except Exception:
+            pass
         print(json.dumps({"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": text}}))
     except Exception:
         pass

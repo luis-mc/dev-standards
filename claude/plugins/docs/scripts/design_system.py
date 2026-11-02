@@ -377,6 +377,29 @@ def gallery_state(folder: Path) -> str:
     return "fresh" if s and int(s.group(1)) >= GALLERY_SCRIPT_VERSION else "script"
 
 
+_REASONS = {"missing": "no gallery yet", "source": "design files changed", "script": "built by an older gallery script"}
+
+
+def refresh_draft_gallery(root: Path) -> str:
+    """Rebuild next-version's gallery when it is stale (R15.7b). Returns one line, or "" when nothing was done.
+    Only next-version is ever written; a numbered version is frozen. Fails open: any error returns ""."""
+    try:
+        root = Path(root)
+        if not D.has_config(root):
+            return ""
+        folder = ds_dir(root) / DRAFT
+        if not (folder / "ux-rules.md").is_file():
+            return ""
+        state = gallery_state(folder)
+        if state not in _REASONS:
+            return ""
+        build_visuals(folder)
+        return (f"luismc-docs: rebuilt the design-system gallery ({DRAFT}/review-visuals/index.html): "
+                f"{_REASONS[state]}. Commit it with the next change.")
+    except Exception:
+        return ""
+
+
 def visuals_fresh(folder: Path) -> bool:
     return gallery_state(folder) == "fresh"
 
