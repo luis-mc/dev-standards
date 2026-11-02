@@ -3284,7 +3284,7 @@
       "app": "",
       "status": "Running",
       "item": "claude-setup runs the setups the owner picks and lists only the owner's steps",
-      "detail": "D9-D12: run picked skills in order, three audit options, protect main after a yes, one numbered Left for you list.",
+      "detail": "D9-D12 plus the owner's 2 Nov instruction: guide every setup (docs, design system, delivery, record, CI, gates, auth, audits, protection) with clear steps and run each one after a yes; one numbered Left for you list.",
       "expected": "02 Nov ~15:45",
       "changed": "2026-11-02T15:16+00:00",
       "expected_basis": "cloud agent from 15:20: setup 5 + work 15 + checks 5",
