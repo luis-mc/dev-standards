@@ -3207,25 +3207,25 @@
       "status": "To do",
       "item": "RELEASE-33: gallery rebuilds itself (ST5)",
       "detail": "Join, fold, CI and merge of ST5.",
-      "expected": "02 Nov ~22:01",
+      "expected": "02 Nov ~21:59",
       "changed": "2026-11-02T21:19+00:00",
-      "expected_basis": "agent 21:21-21:46, join 21:46-21:53, CI 21:53-22:01",
+      "expected_basis": "agent 21:19-21:44, join 21:44-21:51, CI 21:51-21:59",
       "release": 33,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-02T21:21+00:00",
-          "end": "2026-11-02T21:46+00:00"
+          "start": "2026-11-02T21:19+00:00",
+          "end": "2026-11-02T21:44+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-02T21:46+00:00",
-          "end": "2026-11-02T21:53+00:00"
+          "start": "2026-11-02T21:44+00:00",
+          "end": "2026-11-02T21:51+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-02T21:53+00:00",
-          "end": "2026-11-02T22:01+00:00"
+          "start": "2026-11-02T21:51+00:00",
+          "end": "2026-11-02T21:59+00:00"
         }
       ]
     },
@@ -3412,9 +3412,9 @@
       "status": "Running",
       "item": "Docs hooks rebuild a stale next-version gallery",
       "detail": "D14 Both: SessionStart and Stop hooks rebuild docs/design-system/next-version/review-visuals when its source or script stamp is stale; never a numbered version; write only, fail open.",
-      "expected": "02 Nov ~21:46",
+      "expected": "02 Nov ~21:44",
       "changed": "2026-11-02T21:19+00:00",
-      "expected_basis": "cloud agent from 21:21: setup 5 + work 15 + checks 5",
+      "expected_basis": "cloud agent from 21:19: setup 5 + work 15 + checks 5",
       "rides": "DS177",
       "started": "2026-11-02T21:19+00:00"
     },
