@@ -1,5 +1,9 @@
 [
   {
+    "date": "02 Nov 15:59",
+    "change": "RELEASE-31 live 15:59, CI green on f703a0d"
+  },
+  {
     "date": "01 Nov 09:04",
     "change": "Feature artifact created."
   }
