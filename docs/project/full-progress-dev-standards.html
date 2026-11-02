@@ -806,7 +806,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-02T15:16+00:00",
+ "updated": "2026-11-02T15:47+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -3945,25 +3945,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "status": "To do",
    "item": "RELEASE-31: claude-setup runs what the owner picks (SO5)",
    "detail": "Join, fold, CI and merge of SO5.",
-   "expected": "02 Nov ~15:57",
-   "changed": "2026-11-02T15:16+00:00",
-   "expected_basis": "agent 15:20-15:45, join 15:45-15:52, CI 15:52-15:57",
+   "expected": "02 Nov ~16:24",
+   "changed": "2026-11-02T15:47+00:00",
+   "expected_basis": "agent 15:47-16:12, join 16:12-16:19, CI 16:19-16:24",
    "release": 31,
    "phases": [
     {
      "name": "agents",
-     "start": "2026-11-02T15:20+00:00",
-     "end": "2026-11-02T15:45+00:00"
+     "start": "2026-11-02T15:47+00:00",
+     "end": "2026-11-02T16:12+00:00"
     },
     {
      "name": "join",
-     "start": "2026-11-02T15:45+00:00",
-     "end": "2026-11-02T15:52+00:00"
+     "start": "2026-11-02T16:12+00:00",
+     "end": "2026-11-02T16:19+00:00"
     },
     {
      "name": "ci",
-     "start": "2026-11-02T15:52+00:00",
-     "end": "2026-11-02T15:57+00:00"
+     "start": "2026-11-02T16:19+00:00",
+     "end": "2026-11-02T16:24+00:00"
     }
    ]
   },
@@ -4091,9 +4091,9 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "status": "Running",
    "item": "claude-setup runs the setups the owner picks and lists only the owner's steps",
    "detail": "D9-D12 plus the owner's 2 Nov instruction: guide every setup (docs, design system, delivery, record, CI, gates, auth, audits, protection) with clear steps and run each one after a yes; one numbered Left for you list.",
-   "expected": "02 Nov ~15:45",
-   "changed": "2026-11-02T15:16+00:00",
-   "expected_basis": "cloud agent from 15:20: setup 5 + work 15 + checks 5",
+   "expected": "02 Nov ~16:12",
+   "changed": "2026-11-02T15:47+00:00",
+   "expected_basis": "cloud start slipped to 15:47 (scheduler); +25 min",
    "rides": "DS175",
    "started": "2026-11-02T15:16+00:00"
   },
@@ -4307,14 +4307,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-02T15:16+00:00">02 Nov 15:16</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-02T15:47+00:00">02 Nov 15:47</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
 <details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="SO5"><span class="task-id">SO5</span>claude-setup runs the setups the owner picks and lists only the owner&#x27;s steps <span class="glance-expected">02 Nov ~15:45</span><span class="glance-basis">cloud agent from 15:20: setup 5 + work 15 + checks 5</span></li>
+<li data-glance-task="SO5"><span class="task-id">SO5</span>claude-setup runs the setups the owner picks and lists only the owner&#x27;s steps <span class="glance-expected">02 Nov ~16:12</span><span class="glance-basis">cloud start slipped to 15:47 (scheduler); +25 min</span></li>
 </ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">7 tasks</span></summary>
@@ -4333,22 +4333,22 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS175 (claude-setup runs what the owner picks (SO5)) expected live about 15:57." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">15:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">15:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">16:00</text></g>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS175 (claude-setup runs what the owner picks (SO5)) expected live about 16:24." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">15:30</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">16:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">16:30</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-31 · claude-setup runs what the owner picks (SO5)</title>RELEASE-31 · claude-setup…</text>
 <text class="rt-sub" x="0" y="77"><title>SO5</title>SO5</text>
-<rect class="rt-bar agents" x="373.3" y="52" width="216.7" height="22"><title>agents 15:20-15:45</title></rect>
-<rect class="rt-bar join" x="590" y="52" width="60.7" height="22"><title>join 15:45-15:52</title></rect>
-<rect class="rt-bar ci" x="650.7" y="52" width="43.3" height="22"><title>PR CI 15:52-15:57</title></rect>
-<polygon class="rt-expected" points="694,50 702,63 694,76 686,63"/>
-<text class="rt-live-label" x="694" y="92">live ~15:57</text>
-<line class="rt-now" x1="338.7" y1="36" x2="338.7" y2="148"/><text class="rt-now-label" x="338.7" y="161">now 15:16</text>
+<rect class="rt-bar agents" x="347.3" y="52" width="216.7" height="22"><title>agents 15:47-16:12</title></rect>
+<rect class="rt-bar join" x="564" y="52" width="60.7" height="22"><title>join 16:12-16:19</title></rect>
+<rect class="rt-bar ci" x="624.7" y="52" width="43.3" height="22"><title>PR CI 16:19-16:24</title></rect>
+<polygon class="rt-expected" points="668,50 676,63 668,76 660,63"/>
+<text class="rt-live-label" x="668" y="92">live ~16:24</text>
+<line class="rt-now" x1="347.3" y1="36" x2="347.3" y2="148"/><text class="rt-now-label" x="347.3" y="161">now 15:47</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-31" open><summary><strong>RELEASE-31 · live ~15:57</strong><span class="fold-count">2 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-31" open><summary><strong>RELEASE-31 · live ~16:24</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS175"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS175</span><span class="release-name">RELEASE-31</span>claude-setup runs what the owner picks (SO5)</td><td data-label="App / service"></td><td data-label="Detail">Join, fold, CI and merge of SO5.</td><td data-label="Expected">02 Nov ~15:57<span class="expected-basis">agent 15:20-15:45, join 15:45-15:52, CI 15:52-15:57</span></td></tr>
-<tr data-task="SO5"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO5</span>claude-setup runs the setups the owner picks and lists only the owner&#x27;s steps</a></td><td data-label="App / service"></td><td data-label="Detail">D9-D12 plus the owner&#x27;s 2 Nov instruction: guide every setup (docs, design system, delivery, record, CI, gates, auth, audits, protection) with clear steps and run each one after a yes; one numbered Left for you list.</td><td data-label="Expected">02 Nov ~15:45<span class="expected-basis">cloud agent from 15:20: setup 5 + work 15 + checks 5</span></td></tr>
+<tr data-task="DS175"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS175</span><span class="release-name">RELEASE-31</span>claude-setup runs what the owner picks (SO5)</td><td data-label="App / service"></td><td data-label="Detail">Join, fold, CI and merge of SO5.</td><td data-label="Expected">02 Nov ~16:24<span class="expected-basis">agent 15:47-16:12, join 16:12-16:19, CI 16:19-16:24</span></td></tr>
+<tr data-task="SO5"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO5</span>claude-setup runs the setups the owner picks and lists only the owner&#x27;s steps</a></td><td data-label="App / service"></td><td data-label="Detail">D9-D12 plus the owner&#x27;s 2 Nov instruction: guide every setup (docs, design system, delivery, record, CI, gates, auth, audits, protection) with clear steps and run each one after a yes; one numbered Left for you list.</td><td data-label="Expected">02 Nov ~16:12<span class="expected-basis">cloud start slipped to 15:47 (scheduler); +25 min</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">268 tasks</span></summary>
@@ -4631,7 +4631,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29893876"><time datetime="2026-11-02T15:16+00:00">02 Nov 15:16</time></td><td data-label="Tasks">SO1 to SO5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td data-label="Where it stands">On 01 Nov the owner ran claude-setup in an existing project and could not tell whether the docs, design-system and delivery plugins were enforced.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29893907"><time datetime="2026-11-02T15:47+00:00">02 Nov 15:47</time></td><td data-label="Tasks">SO1 to SO5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td data-label="Where it stands">On 01 Nov the owner ran claude-setup in an existing project and could not tell whether the docs, design-system and delivery plugins were enforced.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (6)</strong><span class="fold-count">6 feature artifacts</span></summary>

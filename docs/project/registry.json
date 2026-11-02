@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-02T15:16+00:00",
+  "updated": "2026-11-02T15:47+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3139,25 +3139,25 @@
       "status": "To do",
       "item": "RELEASE-31: claude-setup runs what the owner picks (SO5)",
       "detail": "Join, fold, CI and merge of SO5.",
-      "expected": "02 Nov ~15:57",
-      "changed": "2026-11-02T15:16+00:00",
-      "expected_basis": "agent 15:20-15:45, join 15:45-15:52, CI 15:52-15:57",
+      "expected": "02 Nov ~16:24",
+      "changed": "2026-11-02T15:47+00:00",
+      "expected_basis": "agent 15:47-16:12, join 16:12-16:19, CI 16:19-16:24",
       "release": 31,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-02T15:20+00:00",
-          "end": "2026-11-02T15:45+00:00"
+          "start": "2026-11-02T15:47+00:00",
+          "end": "2026-11-02T16:12+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-02T15:45+00:00",
-          "end": "2026-11-02T15:52+00:00"
+          "start": "2026-11-02T16:12+00:00",
+          "end": "2026-11-02T16:19+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-02T15:52+00:00",
-          "end": "2026-11-02T15:57+00:00"
+          "start": "2026-11-02T16:19+00:00",
+          "end": "2026-11-02T16:24+00:00"
         }
       ]
     },
@@ -3285,9 +3285,9 @@
       "status": "Running",
       "item": "claude-setup runs the setups the owner picks and lists only the owner's steps",
       "detail": "D9-D12 plus the owner's 2 Nov instruction: guide every setup (docs, design system, delivery, record, CI, gates, auth, audits, protection) with clear steps and run each one after a yes; one numbered Left for you list.",
-      "expected": "02 Nov ~15:45",
-      "changed": "2026-11-02T15:16+00:00",
-      "expected_basis": "cloud agent from 15:20: setup 5 + work 15 + checks 5",
+      "expected": "02 Nov ~16:12",
+      "changed": "2026-11-02T15:47+00:00",
+      "expected_basis": "cloud start slipped to 15:47 (scheduler); +25 min",
       "rides": "DS175",
       "started": "2026-11-02T15:16+00:00"
     },
