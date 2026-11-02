@@ -261,7 +261,8 @@ class Box:
         (d / "gate.json").write_text(json.dumps(gate_json or self.gate_json(), indent=2) + "\n", encoding="utf-8")
         if hooks:
             (self.work / ".githooks").mkdir()
-            self.copy_text(HOOKS_SHARED / ".githooks/pre-push", self.work / ".githooks/pre-push")
+            hook = shared / ".githooks/pre-push"  # a mutant copy carries its own hook
+            self.copy_text(hook if hook.exists() else HOOKS_SHARED / ".githooks/pre-push", self.work / ".githooks/pre-push")
         for exe in (d / "agent_setup.sh", self.work / ".githooks/pre-push"):
             if exe.exists():
                 exe.chmod(0o755)
@@ -3703,6 +3704,8 @@ SCENARIOS = {
 def mutated_shared(rel: str, old: str, new: str) -> Path | None:
     dst = Path(tempfile.mkdtemp(dir=_TMP_ROOT, prefix="mutant-"))
     shutil.copytree(SHARED, dst / "shared", ignore=shutil.ignore_patterns("CONTRACT.md"))
+    # the hooks stay with tech-stack-setup (DL15); the mutants of .githooks/pre-push need them here
+    shutil.copytree(HOOKS_SHARED / ".githooks", dst / "shared" / ".githooks")
     target = dst / "shared" / rel
     text = target.read_bytes().decode("utf-8").replace("\r\n", "\n")
     if text.count(old) != 1:
