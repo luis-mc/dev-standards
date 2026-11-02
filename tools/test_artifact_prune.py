@@ -31,8 +31,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TOOLING = (ROOT / "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling")
-SCRIPT = TOOLING / "shared/scripts/delivery/artifact_prune.py"
-WORKFLOW = TOOLING / "shared/.github/workflows/artifact-prune.yml"
+TEMPLATES = ROOT / "claude/plugins/delivery/templates"
+SCRIPT = TEMPLATES / "shared/scripts/delivery/artifact_prune.py"
+WORKFLOW = TEMPLATES / "shared/.github/workflows/artifact-prune.yml"
 TRACKS = ("ts", "go", "rust", "dotnet")
 
 REPO = "acme/widgets"
@@ -776,7 +777,7 @@ def workflow_structure():
     check(not problems, "artifact-prune.yml: " + "; ".join(problems))
     # The workflow named in `workflows:` is the one the tracks really have.
     for track in TRACKS:
-        ci = (TOOLING / track / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        ci = (TEMPLATES / track / ".github/workflows/ci.yml").read_text(encoding="utf-8")
         check(re.search(r"^name:\s*CI\s*$", ci, re.M), f"{track} ci.yml `name:` is not CI")
 
 
@@ -831,7 +832,7 @@ def upload_artifact_steps_use_stable_names():
         return bad
 
     for track in TRACKS:
-        text = (TOOLING / track / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        text = (TEMPLATES / track / ".github/workflows/ci.yml").read_text(encoding="utf-8")
         check(not unstable(text), f"{track} ci.yml: unstable artifact names {unstable(text)}")
     # The detector can fail.
     sample = ("      - uses: actions/upload-artifact@v4\n        with:\n"

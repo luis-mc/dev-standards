@@ -30,7 +30,7 @@ TAG_RE = re.compile(r"<!-- (advice|check: (.+?)) -->$")
 ID_RE = re.compile(r"^(DL-\d\d|Q-\d+)$")
 SPEC = "docs/architecture/DELIVERYSPEC.md"
 BULLET_RE = re.compile(r"^\s*[-*] ")
-LATE = ("claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/session_guard.py",)
+LATE = ("claude/plugins/delivery/templates/shared/scripts/delivery/session_guard.py",)
 EXPECTED = (
     "claude/plugins/artifacts/rules/project-artifacts.md",
     "claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md",

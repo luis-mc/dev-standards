@@ -44,7 +44,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TOOLING = (ROOT / "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling")
-DELIVERY = TOOLING / "shared/scripts/delivery"
+TEMPLATES = ROOT / "claude/plugins/delivery/templates"
+DELIVERY = TEMPLATES / "shared/scripts/delivery"
 CI_WATCH = DELIVERY / "ci_watch.py"
 CI_SKIP = DELIVERY / "ci_skip_check.py"
 REACH = DELIVERY / "reach_check.py"
@@ -1103,7 +1104,7 @@ def skip_ignored_paths_still_need_a_passed_run():
 def every_track_ci_skips_docs_and_markdown_on_push():
     mod = import_skip_module()
     for track in TRACKS:
-        text = read(TOOLING / track / ".github/workflows/ci.yml")
+        text = read(TEMPLATES / track / ".github/workflows/ci.yml")
         listed = mod.push_paths_ignore(text)
         check(listed and "docs/**" in listed and "**/*.md" in listed,
               f"{track}: push paths-ignore must list docs/** and **/*.md, got {listed}")
@@ -1498,7 +1499,7 @@ def mutate(text: str, old: str, new: str, count: int = 1) -> str:
 @test
 def workflows_conform():
     for track in TRACKS:
-        path = TOOLING / track / ".github/workflows/ci.yml"
+        path = TEMPLATES / track / ".github/workflows/ci.yml"
         problems = check_workflow(track, read(path))
         check(not problems, f"{track}/ci.yml:\n  " + "\n  ".join(problems))
 
@@ -1506,7 +1507,7 @@ def workflows_conform():
 @test
 def shared_workflows_take_their_runner_from_the_variable():
     for name in SHARED_WORKFLOWS:
-        text = read(TOOLING / "shared/.github/workflows" / name)
+        text = read(TEMPLATES / "shared/.github/workflows" / name)
         check(not runs_on_problems(text), f"{name}: {runs_on_problems(text)}")
         check(runs_on_problems(text.replace(RUNS_ON, "runs-on: ubuntu-latest")),
               f"{name}: a hard-coded runner was not detected")
@@ -1514,8 +1515,8 @@ def shared_workflows_take_their_runner_from_the_variable():
 
 @test
 def workflow_checker_detects_each_defect():
-    ts = read(TOOLING / "ts/.github/workflows/ci.yml")
-    go = read(TOOLING / "go/.github/workflows/ci.yml")
+    ts = read(TEMPLATES / "ts/.github/workflows/ci.yml")
+    go = read(TEMPLATES / "go/.github/workflows/ci.yml")
     cond_line = f"    if: {IF_COND}\n"
     cases = [
         ("ts", ts, "missing 'needs: decide'", lambda t: mutate(t, "    needs: decide\n", "", 3)),
@@ -1533,9 +1534,9 @@ def workflow_checker_detects_each_defect():
         ("go", go, "decide checkout must use fetch-depth",
          lambda t: mutate(t, "          # The pull-request head commit must be present to compare trees.\n"
                              "          fetch-depth: 0\n", "")),
-        ("rust", read(TOOLING / "rust/.github/workflows/ci.yml"), "decide permissions lack actions: read",
+        ("rust", read(TEMPLATES / "rust/.github/workflows/ci.yml"), "decide permissions lack actions: read",
          lambda t: mutate(t, "      actions: read\n", "")),
-        ("dotnet", read(TOOLING / "dotnet/.github/workflows/ci.yml"), "GH_TOKEN",
+        ("dotnet", read(TEMPLATES / "dotnet/.github/workflows/ci.yml"), "GH_TOKEN",
          lambda t: mutate(t, "GH_TOKEN: ${{ github.token }}", "GH_TOKEN: x")),
         ("ts", ts, "verify checkout must use fetch-depth: 0",
          lambda t: mutate(t, "          fetch-depth: 0\n\n      # §12: secret scanning",
@@ -1550,26 +1551,26 @@ def workflow_checker_detects_each_defect():
                           "cancel-in-progress: true")),
         ("go", go, "concurrency block differs",
          lambda t: mutate(t, "'ci-ready-serial'", "'ci-serial'")),
-        ("rust", read(TOOLING / "rust/.github/workflows/ci.yml"), "concurrency block differs",
+        ("rust", read(TEMPLATES / "rust/.github/workflows/ci.yml"), "concurrency block differs",
          lambda t: mutate(t, "format('ci-{0}', github.ref)", "format('ci-{0}', github.workflow)")),
-        ("dotnet", read(TOOLING / "dotnet/.github/workflows/ci.yml"), "concurrency must cancel only",
+        ("dotnet", read(TEMPLATES / "dotnet/.github/workflows/ci.yml"), "concurrency must cancel only",
          lambda t: t.replace(CONCURRENCY, "concurrency:\n  group: ci-${{ github.ref }}\n"
                              "  cancel-in-progress: ${{ github.event_name == 'pull_request' }}\n")),
         ("ts", ts, "runs-on is not the CI_RUNS_ON expression",
          lambda t: mutate(t, RUNS_ON, "runs-on: ubuntu-latest", 1)),
         ("go", go, "runs-on is not the CI_RUNS_ON expression",
          lambda t: mutate(t, RUNS_ON, "runs-on: ${{ vars.CI_RUNS_ON }}", 2)),
-        ("rust", read(TOOLING / "rust/.github/workflows/ci.yml"), "runs-on is not the CI_RUNS_ON expression",
+        ("rust", read(TEMPLATES / "rust/.github/workflows/ci.yml"), "runs-on is not the CI_RUNS_ON expression",
          lambda t: mutate(t, RUNS_ON, "runs-on: windows-latest", 3)),
-        ("dotnet", read(TOOLING / "dotnet/.github/workflows/ci.yml"), "runs-on is not the CI_RUNS_ON expression",
+        ("dotnet", read(TEMPLATES / "dotnet/.github/workflows/ci.yml"), "runs-on is not the CI_RUNS_ON expression",
          lambda t: mutate(t, RUNS_ON, "runs-on: ubuntu-24.04", 1)),
         ("ts", ts, "not checked against the SHA-256 pinned",
          lambda t: mutate(t, "'linux_x64'", "'none'")),
         ("go", go, "pinned SHA-256 is not what the archive",
          lambda t: mutate(t, 'echo "${sha}  ${archive}" | sha256sum -c -', 'echo "${sha}  ${archive}"')),
-        ("rust", read(TOOLING / "rust/.github/workflows/ci.yml"), "missing pin must fail",
+        ("rust", read(TEMPLATES / "rust/.github/workflows/ci.yml"), "missing pin must fail",
          lambda t: mutate(t, '[ -z "${sha:-}" ]', '[ -n "${sha:-}" ]')),
-        ("dotnet", read(TOOLING / "dotnet/.github/workflows/ci.yml"), "must not be a fallback",
+        ("dotnet", read(TEMPLATES / "dotnet/.github/workflows/ci.yml"), "must not be a fallback",
          lambda t: mutate(t, "          tar -xzf",
                           "          curl -sSfL -O \"${base}/gitleaks_${version}_checksums.txt\"\n          tar -xzf")),
         ("ts", ts, "job name",

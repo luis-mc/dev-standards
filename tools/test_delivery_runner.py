@@ -25,7 +25,7 @@ import contextlib
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-DS = REPO / "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery"
+DS = REPO / "claude/plugins/delivery/templates/shared/scripts/delivery"
 sys.path.insert(0, str(DS))
 import runner_plan as rp  # noqa: E402
 

@@ -50,8 +50,8 @@ for path, want in [
     (".claude/settings.json", {"specs"}),
     (".claude/suites.json", {"specs"}),
     (f"{TS}/assets/preflight.py", {"delivery"}),
-    (f"{TS}/assets/tooling/shared/scripts/delivery/join.py", {"delivery"}),
-    (f"{TS}/assets/tooling/ts/.github/workflows/ci.yml", {"delivery"}),
+    ("claude/plugins/delivery/templates/shared/scripts/delivery/join.py", {"delivery"}),
+    ("claude/plugins/delivery/templates/ts/.github/workflows/ci.yml", {"delivery"}),
     ("tools/test_delivery_gate.py", {"delivery"}),
     ("tools/test_artifact_prune.py", {"delivery"}),
     ("tools/test_delivery_runner.py", {"delivery"}),
@@ -126,7 +126,7 @@ NOMUT = {"mutants": False, "mutants_gate": False, "mutants_cleanup": False,
          "mutants_notes": False}
 
 # mutants
-D = f"{TS}/assets/tooling/shared/scripts/delivery/"
+D = "claude/plugins/delivery/templates/shared/scripts/delivery/"
 TOOL = f"{TS}/assets/tooling"
 
 
@@ -147,8 +147,8 @@ for path, want in [
     (D + "CONTRACT.md", (F, F, F, F)), (D + "ci_watch.py", (F, F, F, F)),
     (D + "smoke_packaged.py", (F, F, F, F)), (D + "artifact_prune.py", (F, F, F, F)),
     (f"{TOOL}/shared/.githooks/pre-push", (T, T, F, F)),
-    (f"{TOOL}/shared/.github/workflows/train-cleanup.yml", (T, F, T, F)),
-    (f"{TOOL}/ts/.github/workflows/ci.yml", (T, F, T, F)),
+    ("claude/plugins/delivery/templates/shared/.github/workflows/train-cleanup.yml", (T, F, T, F)),
+    ("claude/plugins/delivery/templates/ts/.github/workflows/ci.yml", (T, F, T, F)),
     ("tools/test_delivery_gate.py", (T, T, T, F)),
     ("tools/test_delivery_cleanup.py", (T, F, T, F)),
     ("tools/test_change_notes.py", (T, F, F, T)),
