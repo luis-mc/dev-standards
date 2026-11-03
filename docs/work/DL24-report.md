@@ -22,14 +22,9 @@ Branch `DL24-fallback-launchers`. Contract: `docs/proposals/CIR10-delivery-ci.md
 - Answer 7: Windows fallback is hosted Windows for the Windows-only set, on ready PRs.
 - Answer 4: caps are optional.
 
-## Interface assumed from DL23 (S7)
+## Interface from DL23 (S7), now real
 
-DL23 had not pushed `DL23-option4-core` when this was written. The code reaches it only through two small adapters in `fallback_launch.py` (`load_claim`, `load_caps`) so a rebase changes two functions:
-
-- `ci_claim.take(root, remote, sha, shard, who) -> bool` (section 4.3: true = this caller holds the claim).
-- `ci_caps.check(root, kind, shards) -> (allowed: bool, reason: str)` and `ci_caps.record(root, kind, shards, minutes)` (section 4.5).
-
-If a module is missing: the claim step fails closed (the shard does not run), and caps count as "none set" (caps are optional, answer 4).
+Rebased on `origin/DL23-option4-core` (the PR is stacked on it until it merges). Used: `ci_fallback.fallback_settings`, `shard_wait_minutes`, `fallback_decision`, `fallback_gate` (counts caps before a start), `next_attempt`, `claim`, `post_checked`. Config follows DL23's `ci.fallback` (`options` per OS, `after_min`); I added `ci.fallback.cloud` and `ci.fallback.hosted` for the launchers. Not added to `config-schema.json` (DL23 edits that hunk; a follow-up must add the two keys).
 
 ## Shared files (touched outside my own files)
 
@@ -39,7 +34,7 @@ If a module is missing: the claim step fails closed (the shard does not run), an
 
 ## Log
 - Built: `fallback_launch.py` (wait measurement, once-only reservation branch `ci-fallback/<sha>/<shard>`, cloud launcher through the routine API trigger, hosted launcher through `gh workflow run`, `sweep`, `launch`), `fallback_run.py` (claim last), `ci-fallback.yml`, `routines/ci-fallback-watch.json` (template, not created), the hook in `ci_watch.py` (`--no-fallback`).
-- Tests: `python tools/test_delivery_fallback_launch.py` (25 tests, fakes only). Also green: `test_delivery_ci.py`, `test_delivery_cloud.py`, `test_ci_areas.py`, `test_delivery_runner.py`. `ci_areas.py --branch-advice`: "light: test locally only".
+- Tests: `python tools/test_delivery_fallback_launch.py` (27 tests, fakes only). Also green: `test_delivery_ci.py`, `test_delivery_cloud.py`, `test_ci_areas.py`, `test_delivery_runner.py`. `ci_areas.py --branch-advice`: "light: test locally only".
 - Docs: spec section 13 gains R13.40 to R13.45 (high numbers on purpose, so DL23 does not collide), guide `docs/guides/ci-fallback-test-run.md` (setup, the "up to an hour late" warning, test-repository run recipe), CONTRACT.md rows, two change notes (`DL24-delivery-plugin-fallback.md`, `docs/features/delivery/changes/DL24.md`).
 - `docs_check`: two errors, both expected on a task branch. G1: `docs/llms.txt` is stale because of the new guide; generated files are not committed on a task branch, the release regenerates. W1: this report under `docs/work/`; it must be stripped before the join.
 
@@ -48,11 +43,11 @@ If a module is missing: the claim step fails closed (the shard does not run), an
 - The routine API: POST to `ci.fallback.cloud.fire_url` with bearer token, header `anthropic-beta: experimental-cc-routine-2026-04-01`, body `{"text": ...}`. The URL and header come from my memory of the routines API; check them against the routine's own "API trigger" page before the first real run.
 - Job to shard match: the shard `id` or `context` appears in the job name. A project whose job names differ needs that changed.
 - Hosted workflow runs on `ref` (default `main`) because the workflow file must exist on that ref.
-- DL23 interface (see above): `ci_claim.take`, optional `ci_claim.post_status`, `ci_caps.check`, `ci_caps.record`. Missing claim module: fail closed. Missing caps module: no caps.
 
 ## Not done / for others
 
 - `cleanup.py` should delete `ci-fallback/*` branches for finished commits next to `ci-claim/*` (a file I do not own).
 - The doctor and the setup command (S6) should write `ci.fallback` and print the "up to an hour late" warning and the by-hand steps; the guide has the text.
 - No real run was made. The owner starts the test-repository recipe by hand.
-- DL23 branch was not on the remote when this was written; I did not rebase on it.
+- DL23 also owns `tools/test_delivery_fallback.py`; my tests are in `tools/test_delivery_fallback_launch.py`.
+- A cap pause deletes the launch reservation again, so the launch is possible when the cap lifts.

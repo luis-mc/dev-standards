@@ -269,7 +269,7 @@ flowchart TD
 
 ### Option 4 fallback launchers (DL24)
 
-When Option 4 is chosen, a shard that waits too long for its own runner may start on a fallback. The settings are `ci.fallback` in `.delivery/config.json`: `kind` (`cloud` or `hosted`), `after_min` (X, no default; the setup shows 10 as an example), `only_for` (`all` or `ready-prs`, default `all`), and the launcher's own keys (`cloud.fire_url`, `cloud.token_env`; `hosted.workflow`, `hosted.ref`). Caps are optional.
+When Option 4 is chosen, a shard that waits too long for its own runner may start on a fallback. The core's settings are `ci.fallback` in `.delivery/config.json` (`options` per OS, `after_min` = X with no default, optional caps). The launchers add their own keys (`cloud.fire_url`, `cloud.token_env`; `hosted.workflow`, `hosted.ref`). Caps are optional.
 
 ```mermaid
 flowchart LR

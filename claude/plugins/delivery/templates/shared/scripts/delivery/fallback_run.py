@@ -11,9 +11,9 @@ setup. Order, from section 4.3 of the CIR10 proposal:
   3. Run the shard with `cloud_shard.py` (result JSON, result branch).
   4. Post ONE commit status for the shard's context, only as the claim holder.
 
-The claim and the claim-checked poster come from the Option 4 core (`ci_claim.py`, DL23). If that module is
-missing the run fails closed: it claims nothing, runs nothing, posts nothing, and exits 2.
-Exit 0 ran and posted (or lost the claim), 1 the shard failed (the failure is posted), 2 error.
+The claim and the claim-checked poster come from the Option 4 core (`ci_fallback.py`, DL23): `next_attempt`,
+`claim`, `post_checked`. The status is posted only if this job holds the claim of the newest attempt.
+Exit 0 ran and posted (or lost the claim or the shard was answered), 1 the shard failed (the failure is posted), 2 error.
 Standard library only.
 """
 from __future__ import annotations
@@ -28,6 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import cloud_shard  # noqa: E402
 import cloud_status  # noqa: E402
+import ci_fallback  # noqa: E402  (the Option 4 core: next_attempt, claim, post_checked; DL23)
 
 
 def head_sha(root: str) -> str:
@@ -35,16 +36,7 @@ def head_sha(root: str) -> str:
     return r.stdout.strip().lower()
 
 
-def load_claim():
-    """The Option 4 core: take(root, remote, sha, shard, who) -> bool; optional post_status(...)."""
-    try:
-        import ci_claim  # noqa: PLC0415
-        return ci_claim
-    except ImportError:
-        return None
-
-
-def main(argv=None, claim=None, shard_runner=None) -> int:
+def main(argv=None, core=None, shard_runner=None) -> int:
     ap = argparse.ArgumentParser(prog="fallback_run.py", description=__doc__.split("\n\n")[0])
     ap.add_argument("--sha", required=True)
     ap.add_argument("--shard", required=True)
@@ -55,15 +47,17 @@ def main(argv=None, claim=None, shard_runner=None) -> int:
     args = ap.parse_args(argv)
     root = os.path.abspath(args.root)
     sha = args.sha.lower()
+    core = core or ci_fallback
     if head_sha(root) != sha:
         print("fallback_run: HEAD is not %s: refusing to run" % sha[:10], file=sys.stderr)
         return 2
-    claim = claim or load_claim()
-    if claim is None:
-        print("fallback_run: the claim module (ci_claim.py) is missing: nothing is run", file=sys.stderr)
-        return 2
-    if not claim.take(root, args.remote, sha, args.shard, args.who):
-        print("fallback_run: shard %s of %s is already claimed: ending, no tests, no status" % (args.shard, sha[:10]))
+    holder = "fallback-" + args.who
+    attempt = core.next_attempt(root, args.remote, sha, args.shard)
+    # None: the shard is answered already, or the attempt cap is spent. A live claim gives its own attempt
+    # and the claim below then fails. Either way: no tests, no status.
+    if attempt is None or not core.claim(root, args.remote, sha, args.shard, attempt, holder):
+        print("fallback_run: shard %s of %s is already claimed or answered: ending, no tests, no status"
+              % (args.shard, sha[:10]))
         return 0
     cfg = cloud_status.cloud_settings(cloud_status.read_config(root))
     table = cloud_shard.load_table(os.path.join(root, *cfg["table"].split("/")))
@@ -76,14 +70,13 @@ def main(argv=None, claim=None, shard_runner=None) -> int:
     repo = cfg["repo"] or os.environ.get("GITHUB_REPOSITORY", "")
     token_env = cfg["token_env"] or ("GITHUB_TOKEN" if args.who == "hosted" else "")
     try:
-        post = getattr(claim, "post_status", None)
-        if post is not None:
-            post(root, args.remote, result, repo, token_env)
-        else:  # we hold the claim, so posting here is the one post
-            sha_, body = cloud_status.status_payload(result, sha)
-            cloud_status.post_status(repo, sha_, body, cloud_status.token_from(token_env))
+        token = cloud_status.token_from(token_env)
+        posted = core.post_checked(root, args.remote, repo, token, result, sha, args.shard, attempt, holder)
     except Exception as exc:  # noqa: BLE001
         print("fallback_run: status not posted: %s" % exc, file=sys.stderr)
+        return 2
+    if not posted.get("posted"):
+        print("fallback_run: status not posted: %s" % posted.get("reason"), file=sys.stderr)
         return 2
     return {"success": 0, "failure": 1}.get(result["state"], 2)
 

@@ -44,34 +44,35 @@ def jobs_answer(spec):
     return gh
 
 
-def settings(kind="cloud", after=10, only_for="all"):
-    return F.settings_from({"ci": {"fallback": {"kind": kind, "after_min": after, "only_for": only_for,
-                                                "cloud": {"fire_url": "https://x/fire", "token_env": "T"}},
-                                   "cloud": {"repo": "o/r", "status_token_env": "S"}}})
+def config(kind="cloud", after=10):
+    return {"ci": {"fallback": {"options": {"linux": kind, "windows": "github-hosted"}, "after_min": after,
+                                "cloud": {"fire_url": "https://x/fire", "token_env": "T"}},
+                   "cloud": {"repo": "o/r", "status_token_env": "S"}}}
+
+
+def settings(kind="cloud", after=10):
+    return F.settings_from(config(kind, after))
 
 
 class Rec:
-    """Fake launchers and caps that record what was asked."""
+    """Fake launchers, reservation and caps gate that record what was asked."""
 
     def __init__(self, caps_ok=True, ready=True, settled=False):
-        self.cloud, self.hosted, self.out, self.reserved, self.recorded = [], [], [], [], []
+        self.cloud, self.hosted, self.out, self.reserved, self.released, self.gated = [], [], [], [], [], []
         self.caps_ok, self.ready, self.settled = caps_ok, ready, settled
 
+    def gate(self, st, os_name, waited):
+        self.gated.append(os_name)
+        return {"start": True} if self.caps_ok else {"start": False, "warning": "fallback paused: monthly cap"}
+
     def deps(self, gh_json, **over):
-        rec = self
-
-        class Caps:
-            def check(self, root, kind, ids):
-                return (True, "") if rec.caps_ok else (False, "monthly cap")
-
-            def record(self, root, kind, ids, minutes):
-                rec.recorded.append((kind, ids))
         kw = dict(gh_json=gh_json, now=lambda: NOW, out=self.out.append,
                   cloud=lambda st, sha, sh: self.cloud.append(sh["id"]),
                   hosted=lambda st, sha, sh: self.hosted.append(sh["id"]),
                   reserve=lambda sha, sh: self.reserved.append(sh) or True,
+                  release=lambda sha, sh: self.released.append(sh),
                   settled=lambda sha, sh, prefix: self.settled,
-                  ready_pr=lambda sha: self.ready, caps=Caps(), is_hosted=lambda l: "ubuntu-latest" in l)
+                  ready_pr=lambda sha: self.ready, gate=self.gate, is_hosted=lambda l: "ubuntu-latest" in l)
         kw.update(over)
         return F.Deps("/nowhere", "origin", "o/r", **kw)
 
@@ -99,7 +100,7 @@ class Hook(unittest.TestCase):
         self.assertEqual(sorted(rec.cloud), ["int-linux", "unit-linux"])
         self.assertEqual(rec.hosted, [])
         self.assertEqual(len(rec.reserved), 2)
-        self.assertEqual(len(rec.recorded), 2)
+        self.assertEqual(len(rec.gated), 2)  # caps are counted once per started shard
         self.assertEqual(len([l for l in rec.out if "started" in l]), 2)
 
     def test_only_shards_over_x_launch(self):
@@ -109,7 +110,7 @@ class Hook(unittest.TestCase):
 
     def test_hosted_kind_uses_the_hosted_launcher(self):
         rec = Rec()
-        self.go(rec, SPEC_TWO_LATE, settings("hosted"))
+        self.go(rec, SPEC_TWO_LATE, settings("github-hosted"))
         self.assertEqual((sorted(rec.hosted), rec.cloud), (["int-linux", "unit-linux"], []))
 
     def test_caps_paused_no_launch_and_one_warning(self):
@@ -117,14 +118,9 @@ class Hook(unittest.TestCase):
         deps = rec.deps(jobs_answer(SPEC_TWO_LATE))
         for _ in range(4):
             F.check_and_launch(SHA, RUNS, deps, settings(), SHARDS)
-        self.assertEqual((rec.cloud, rec.hosted, rec.reserved), ([], [], []))
+        self.assertEqual((rec.cloud, rec.hosted), ([], []))
         self.assertEqual(rec.out, ["ci_watch: fallback paused: monthly cap"])
-
-    def test_no_caps_module_means_no_caps(self):
-        rec = Rec()
-        deps = rec.deps(jobs_answer(SPEC_TWO_LATE), caps=None)
-        F.check_and_launch(SHA, RUNS, deps, settings(), SHARDS)
-        self.assertEqual(len(rec.cloud), 2)
+        self.assertEqual(sorted(rec.released), sorted(rec.reserved))  # the launch stays possible later
 
     def test_only_runner_waits_count(self):
         rec = Rec()
@@ -153,13 +149,26 @@ class Hook(unittest.TestCase):
         self.go(rec, spec, settings("cloud"))
         self.assertEqual((rec.hosted, rec.cloud), ([], []))
 
-    def test_only_for_ready_prs_blocks_a_draft(self):
+    def test_windows_set_to_cloud_is_refused_with_one_warning(self):
+        cfg = config()
+        cfg["ci"]["fallback"]["options"]["windows"] = "cloud"
+        rec = Rec()
+        deps = rec.deps(jobs_answer([("real (windows)", "queued", 20, ["self-hosted"])]))
+        for _ in range(3):
+            F.check_and_launch(SHA, RUNS, deps, F.settings_from(cfg), SHARDS)
+        self.assertEqual((rec.cloud, rec.hosted, len(rec.out)), ([], [], 1))
+
+    def test_every_run_may_use_the_fallback_even_a_draft(self):  # answer 6
         rec = Rec(ready=False)
-        self.go(rec, SPEC_TWO_LATE, settings(only_for="ready-prs"))
-        self.assertEqual(rec.cloud, [])
-        rec = Rec(ready=False)
-        self.go(rec, SPEC_TWO_LATE, settings(only_for="all"))  # answer 6: every run may use it
+        self.go(rec, SPEC_TWO_LATE, settings("cloud"))
         self.assertEqual(len(rec.cloud), 2)
+
+    def test_os_without_a_fallback_is_left_alone(self):
+        cfg = config()
+        del cfg["ci"]["fallback"]["options"]["linux"]
+        rec = Rec()
+        self.go(rec, SPEC_TWO_LATE, F.settings_from(cfg))
+        self.assertEqual((rec.cloud, rec.hosted), ([], []))
 
     def test_launch_failure_warns_and_stops_after_three(self):
         rec = Rec()
@@ -171,6 +180,7 @@ class Hook(unittest.TestCase):
             F.check_and_launch(SHA, RUNS, deps, settings(), SHARDS)
         self.assertEqual(len(rec.out), 3)
         self.assertIn("503", rec.out[0])
+        self.assertEqual(len(rec.released), 3)
 
     def test_no_config_no_launch_and_never_raises(self):
         rec = Rec()
@@ -184,9 +194,9 @@ class Hook(unittest.TestCase):
 
     def test_settings_need_kind_and_x(self):
         self.assertIsNone(F.settings_from({}))
-        self.assertIsNone(F.settings_from({"ci": {"fallback": {"kind": "cloud"}}}))
-        self.assertIsNone(F.settings_from({"ci": {"fallback": {"kind": "other", "after_min": 5}}}))
-        self.assertEqual(settings(after=10)["after_s"], 600)
+        self.assertIsNone(F.settings_from({"ci": {"fallback": {"options": {"linux": "cloud"}}}}))  # no X, no default
+        self.assertIsNone(F.settings_from({"ci": {"fallback": {"options": {"linux": "other"}, "after_min": 5}}}))
+        self.assertEqual(settings(after=10)["core"]["after_min"], 10)
 
     def test_job_shard_prefers_the_longest_name(self):
         shards = [{"id": "unit", "context": "unit"}, {"id": "unit-windows", "context": "unit (windows)"}]
@@ -220,13 +230,13 @@ class Launchers(unittest.TestCase):
         def run(args):
             seen.append(args)
             return subprocess.CompletedProcess(args, 0, "", "")
-        F.launch_hosted(settings("hosted"), SHA, SHARDS[2], "o/r", run=run)
+        F.launch_hosted(settings("github-hosted"), SHA, SHARDS[2], "o/r", run=run)
         args = seen[0]
         self.assertEqual(args[:3], ["workflow", "run", "ci-fallback.yml"])
         for want in ("sha=" + SHA, "shard=real-windows", "os=windows"):
             self.assertIn(want, args)
         with self.assertRaises(RuntimeError):
-            F.launch_hosted(settings("hosted"), SHA, SHARDS[2], None, run=lambda a: subprocess.CompletedProcess(a, 1, "", "no"))
+            F.launch_hosted(settings("github-hosted"), SHA, SHARDS[2], None, run=lambda a: subprocess.CompletedProcess(a, 1, "", "no"))
 
     def test_reserve_is_once_only_on_a_real_remote(self):
         base = Path(tempfile.mkdtemp(prefix="fb-"))
@@ -235,6 +245,8 @@ class Launchers(unittest.TestCase):
         subprocess.run(["git", "remote", "add", "origin", str(base / "r.git")], cwd=base / "w", check=True)
         self.assertTrue(F.reserve_launch(str(base / "w"), "origin", SHA, "unit-linux"))
         self.assertFalse(F.reserve_launch(str(base / "w"), "origin", SHA, "unit-linux"))
+        F.release_launch(str(base / "w"), "origin", SHA, "unit-linux")
+        self.assertTrue(F.reserve_launch(str(base / "w"), "origin", SHA, "unit-linux"))  # free again
         self.assertTrue(F.reserve_launch(str(base / "w"), "origin", SHA, "int-linux"))
         self.assertTrue(F.remote_has(str(base / "w"), "origin", "ci-fallback/%s/*" % SHA))
         self.assertFalse(F.remote_has(str(base / "w"), "origin", "ci-claim/%s/*" % SHA))
@@ -247,7 +259,7 @@ class Sweep(unittest.TestCase):
         os.makedirs(os.path.join(root, ".delivery"))
         os.makedirs(os.path.join(root, "scripts/delivery"))
         Path(root, ".delivery/config.json").write_text(json.dumps({"ci": {"fallback": {
-            "kind": "cloud", "after_min": 10, "cloud": {"fire_url": "https://x", "token_env": "T"}}}}))
+            "options": {"linux": "cloud"}, "after_min": 10, "cloud": {"fire_url": "https://x", "token_env": "T"}}}}))
         Path(root, "scripts/delivery/ci-shards.json").write_text(json.dumps({"shards": SHARDS}))
 
         def gh(args):
@@ -284,42 +296,60 @@ class Run(unittest.TestCase):
         root, sha = self.project()
         ran, posted = [], []
 
-        class Claim:
-            def take(self, *a):
+        class Core:
+            def next_attempt(self, *a):
+                return 1
+
+            def claim(self, *a):
                 return False
 
-            def post_status(self, *a):
+            def post_checked(self, *a):
                 posted.append(a)
-        code = R.main(["--sha", sha, "--shard", "s", "--who", "cloud", "--root", root], claim=Claim(),
+        code = R.main(["--sha", sha, "--shard", "s", "--who", "cloud", "--root", root], core=Core(),
                       shard_runner=lambda *a: ran.append(a))
         self.assertEqual((code, ran, posted), (0, [], []))
+
+    def test_answered_shard_runs_nothing(self):
+        root, sha = self.project()
+
+        class Core:
+            def next_attempt(self, *a):
+                return None
+
+            def claim(self, *a):
+                raise AssertionError("claimed an answered shard")
+        self.assertEqual(R.main(["--sha", sha, "--shard", "s", "--who", "cloud", "--root", root], core=Core(),
+                                shard_runner=lambda *a: self.fail("ran")), 0)
 
     def test_claim_is_taken_before_the_tests_and_one_status_follows(self):
         root, sha = self.project()
         order = []
 
-        class Claim:
-            def take(self, *a):
-                order.append("claim")
+        class Core:
+            def next_attempt(self, *a):
+                return 1
+
+            def claim(self, root_, remote, sha_, shard, attempt, holder):
+                order.append("claim:%d:%s" % (attempt, holder))
                 return True
 
-            def post_status(self, root_, remote, result, repo, token_env):
+            def post_checked(self, root_, remote, repo, token, result, sha_, shard, attempt, holder):
                 order.append("post:" + result["state"])
+                return {"posted": True}
 
         def runner(table, shard, cwd, sha_, timeout):
             order.append("tests")
             return {"schema": 1, "shard": shard, "context": "s (linux)", "os": "linux", "sha": sha_,
                     "state": "success", "summary": "ok", "commands": []}
-        with mock.patch.object(R.cloud_shard, "push_result", return_value=(True, "b")):
-            code = R.main(["--sha", sha, "--shard", "s", "--who", "hosted", "--root", root], claim=Claim(), shard_runner=runner)
-        self.assertEqual((code, order), (0, ["claim", "tests", "post:success"]))
+        with mock.patch.object(R.cloud_shard, "push_result", return_value=(True, "b")), \
+                mock.patch.dict(os.environ, {"GITHUB_TOKEN": "t", "GITHUB_REPOSITORY": "o/r"}):
+            code = R.main(["--sha", sha, "--shard", "s", "--who", "hosted", "--root", root], core=Core(), shard_runner=runner)
+        self.assertEqual((code, order), (0, ["claim:1:fallback-hosted", "tests", "post:success"]))
 
-    def test_wrong_head_and_missing_claim_module_fail_closed(self):
+    def test_wrong_head_fails_closed(self):
         root, sha = self.project()
-        self.assertEqual(R.main(["--sha", "b" * 40, "--shard", "s", "--who", "cloud", "--root", root]), 2)
-        with mock.patch.object(R, "load_claim", return_value=None):
-            self.assertEqual(R.main(["--sha", sha, "--shard", "s", "--who", "cloud", "--root", root],
-                                    shard_runner=lambda *a: self.fail("ran without a claim")), 2)
+        self.assertEqual(R.main(["--sha", "b" * 40, "--shard", "s", "--who", "cloud", "--root", root],
+                                shard_runner=lambda *a: self.fail("ran")), 2)
 
 
 class WatchHook(unittest.TestCase):

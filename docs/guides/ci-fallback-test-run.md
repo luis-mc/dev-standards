@@ -19,10 +19,11 @@ Use this guide when a project uses Option 4 (its own runners first, a fallback a
 
    ```json
    {"ci": {"fallback": {
-     "kind": "cloud", "after_min": 10, "only_for": "all",
+     "options": {"linux": "cloud", "windows": "github-hosted"}, "after_min": 10,
      "cloud":  {"fire_url": "<API URL of the routine>", "token_env": "FALLBACK_ROUTINE_TOKEN"},
      "hosted": {"workflow": "ci-fallback.yml", "ref": "main"}}}}
    ```
+   Optional caps (`max_shards_per_day`, `max_minutes_per_month`) are in the delivery spec, section 13.
 2. Run `delivery_ci_install.py install`. It writes `fallback_launch.py`, `fallback_run.py` and `.github/workflows/ci-fallback.yml`.
 3. In `ci-fallback.yml`, fill the step marked `PROJECT STEP` with your install commands. Keep it before the claim.
 4. Create the routine for cloud shards: a routine with an API trigger whose prompt says "run what the text says". Put its URL in `fire_url` and its token in the cloud environment, under the name in `token_env`. Never write the token to a file.
@@ -34,7 +35,7 @@ Use this guide when a project uses Option 4 (its own runners first, a fallback a
 Use a repository that is not a product. It needs a shard table with one quick shard (`echo ok`) and the files from the install step.
 
 1. Offline check, nothing starts: `python scripts/delivery/fallback_launch.py sweep --dry-run`. It prints how many commits it swept and how many shards it would start.
-2. Hosted launch by hand: `python scripts/delivery/fallback_launch.py launch --kind hosted --sha <40-char sha> --shard <id>`. Expect one `ci-fallback` run on a hosted runner, one branch `ci-claim/<sha>/<id>/1` and one commit status on that sha.
+2. Hosted launch by hand: `python scripts/delivery/fallback_launch.py launch --kind github-hosted --sha <40-char sha> --shard <id>`. Expect one `ci-fallback` run on a hosted runner, one branch `ci-claim/<sha>/<id>/1` and one commit status on that sha.
 3. Cloud launch by hand: the same command with `--kind cloud`. Expect one new session for the shard, and the same claim and status.
 4. Wait test: make the main runner busy (stop it, or queue a long job), push a commit, and run `ci_watch.py <sha>` in a session. Under X it prints only the waiting line. After X it prints `fallback (...) started for shard ...` once per waiting shard, however long you keep watching.
 5. Second watcher: run `fallback_launch.py sweep` while step 4 is going. It starts nothing, because `ci-fallback/<sha>/<shard>` is already reserved.

@@ -2,7 +2,7 @@
 """Start the fallback for shards that waited too long for their own runner (Option 4, CIR10 S8).
 
     fallback_launch.py sweep  [--root DIR] [--repo OWNER/NAME] [--dry-run]
-    fallback_launch.py launch --sha SHA --shard ID [--kind cloud|hosted] [--root DIR] [--repo OWNER/NAME]
+    fallback_launch.py launch --sha SHA --shard ID [--kind cloud|github-hosted] [--root DIR] [--repo OWNER/NAME]
 
 Who calls it:
   * `ci_watch.py` calls `check_and_launch` on every poll while runs are pending. That is the watcher of the
@@ -11,10 +11,10 @@ Who calls it:
     An unattended fallback can therefore start up to an hour late. There is no watchdog job in the workflow.
   * `launch` starts one shard by hand (the test-repository recipe uses it).
 
-Config, `.delivery/config.json` -> `ci.fallback` (the setup writes it; nothing here has a default for X):
-  {"kind": "cloud" | "hosted", "after_min": 10, "only_for": "all" | "ready-prs",
-   "cloud":  {"fire_url": "https://...", "token_env": "NAME"},        # the routine's API trigger
-   "hosted": {"workflow": "ci-fallback.yml", "ref": "main"}}
+Config, `.delivery/config.json` -> `ci.fallback`. The core's keys are in ci_fallback.py (`options` per OS:
+`cloud` or `github-hosted`; `after_min` = X with no default; optional caps). This file adds the launchers' keys:
+  "cloud":  {"fire_url": "https://...", "token_env": "NAME"},        # the routine's API trigger
+  "hosted": {"workflow": "ci-fallback.yml", "ref": "main"}
 
 Rules:
   * Only runner waits count: a job is waiting while GitHub reports it `queued`. A run held back by the
@@ -24,7 +24,8 @@ Rules:
     hourly routine never launch the same shard twice.
   * A shard that already has a claim (`ci-claim/<sha>/<shard>/*`) or a result branch is never launched.
   * Windows shards use hosted Windows only (cloud sessions are Linux) and only for a ready pull request.
-  * Caps are optional. When a cap is hit nothing is launched and one warning is printed per sha and kind.
+  * Caps are optional and counted by the core (`ci_fallback.fallback_gate`) before the launch. When a cap is hit
+    nothing is launched and one warning is printed per commit and kind.
   * The launched job takes the claim last, just before its tests (`fallback_run.py`). First claim wins.
 
 Python 3.11+, standard library only; `git` is needed, `gh` for the hosted launch and the sweep.
@@ -45,10 +46,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # -I leaves the script dir off sys.path
 
+import ci_fallback  # noqa: E402  (the Option 4 core: settings, decision, caps, claim; DL23)
+
 LAUNCH_PREFIX = "ci-fallback"
 CLAIM_PREFIX = "ci-claim"
 MAX_LAUNCH_FAILURES = 3
-KINDS = ("cloud", "hosted")
+KINDS = ("cloud", "github-hosted")
 FULL_SHA = re.compile(r"[0-9a-f]{40}")
 
 
@@ -68,26 +71,25 @@ def _dict(value) -> dict:
 
 
 def settings_from(cfg: dict) -> dict | None:
-    """The fallback settings, or None when no fallback is configured (then nothing ever launches)."""
+    """The fallback settings, or None when the fallback is off (then nothing ever launches).
+
+    The core's keys (`options` per OS, `after_min`, caps) are read by `ci_fallback.fallback_settings`; this
+    adds the launchers' own keys: `ci.fallback.cloud` (fire_url, token_env) and `ci.fallback.hosted`
+    (workflow, ref). Kind names are the core's: `cloud` and `github-hosted`."""
+    fb_all = ci_fallback.fallback_settings(cfg)
+    if not fb_all["enabled"]:
+        return None
     ci = _dict(cfg.get("ci"))
     fb = _dict(ci.get("fallback"))
-    kind = fb.get("kind")
-    after = fb.get("after_min")
-    if kind not in KINDS or isinstance(after, bool) or not isinstance(after, (int, float)) or after <= 0:
-        return None
     cloud = _dict(ci.get("cloud"))
     timeout = cloud.get("shard_timeout_min")
     return {
-        "kind": kind,
-        "after_s": float(after) * 60,
-        "only_for": fb.get("only_for") if fb.get("only_for") in ("all", "ready-prs") else "all",
+        "core": fb_all, "cfg": cfg,
         "cloud": _dict(fb.get("cloud")),
         "hosted": _dict(fb.get("hosted")),
         "table": ci.get("shard_table") if isinstance(ci.get("shard_table"), str) else "scripts/delivery/ci-shards.json",
         "prefix": cloud.get("results_prefix") if isinstance(cloud.get("results_prefix"), str) and cloud.get("results_prefix") else "ci-result",
         "timeout_min": timeout if isinstance(timeout, (int, float)) and not isinstance(timeout, bool) and timeout >= 1 else 60,
-        "repo": cloud.get("repo") if isinstance(cloud.get("repo"), str) else "",
-        "token_env": cloud.get("status_token_env") if isinstance(cloud.get("status_token_env"), str) else "",
     }
 
 
@@ -95,11 +97,6 @@ def load_shards(root: str, st: dict) -> list[dict]:
     with open(os.path.join(root, *st["table"].split("/")), encoding="utf-8") as f:
         table = json.load(f)
     return [s for s in table.get("shards", []) if isinstance(s, dict) and isinstance(s.get("id"), str)]
-
-
-def kind_for(shard: dict, st: dict) -> str:
-    """Cloud sessions are Linux: a Windows shard always goes to a hosted Windows runner (answer 7)."""
-    return "hosted" if shard.get("os") == "windows" else st["kind"]
 
 
 # ---------------------------------------------------------------- git helpers
@@ -132,6 +129,11 @@ def reserve_launch(root: str, remote: str, sha: str, shard: str) -> bool:
     return p.returncode == 0
 
 
+def release_launch(root: str, remote: str, sha: str, shard: str) -> None:
+    """Delete the reservation again (a cap paused the launch, or the launch call failed). Best effort."""
+    git(root, "push", "-q", remote, "--delete", "refs/heads/%s/%s/%s" % (LAUNCH_PREFIX, sha, shard))
+
+
 # ---------------------------------------------------------------- wait measurement
 
 def _age(raw, now: float):
@@ -155,31 +157,35 @@ def job_shard(job_name: str, shards: list[dict]):
     return best[1] if best else None
 
 
-def waiting_shards(runs: list[dict], shards: list[dict], repo: str | None, now: float, threshold_s: float,
+def waiting_shards(runs: list[dict], shards: list[dict], repo: str | None, now: float,
                    gh_json, is_hosted=None) -> list[dict]:
-    """Shards with a job that has been `queued` for at least threshold_s. [{"shard", "wait_s"}].
+    """Shards that wait for a runner now: [{"shard", "wait_min"}].
 
-    Only runner waits count (answer 5). A hosted-label job is the platform's wait and is skipped."""
+    The core measures the wait (`ci_fallback.shard_wait_minutes`): only a `queued` job counts, a run held back
+    by the one-at-a-time setting has none, and a shard with any started job has its runner. A job with a
+    GitHub-hosted label is the platform's wait and is left out here."""
     base = "repos/%s" % repo if repo else "repos/{owner}/{repo}"
-    longest: dict[str, tuple[float, dict]] = {}
+    jobs_of: dict[str, tuple[dict, list[dict], str]] = {}
     for run in runs:
         try:
             data = gh_json(["api", "%s/actions/runs/%s/jobs?per_page=100" % (base, run.get("databaseId"))])
         except Exception:  # noqa: BLE001 - a poll error is retried on the next poll
             continue
         for job in (data.get("jobs", []) if isinstance(data, dict) else []):
-            if not isinstance(job, dict) or job.get("status") != "queued":
+            if not isinstance(job, dict):
                 continue
             labels = [str(x) for x in job.get("labels") or []]
             if is_hosted and labels and is_hosted(labels):
                 continue
-            age = _age(job.get("created_at"), now)
             shard = job_shard(str(job.get("name") or ""), shards)
-            if age is None or age < threshold_s or shard is None:
-                continue
-            if shard["id"] not in longest or age > longest[shard["id"]][0]:
-                longest[shard["id"]] = (age, shard)
-    return [{"shard": s, "wait_s": a} for a, s in longest.values()]
+            if shard is not None:
+                jobs_of.setdefault(shard["id"], (shard, [], str(run.get("status") or "")))[1].append(job)
+    out = []
+    for shard, jobs, run_status in jobs_of.values():
+        wait = ci_fallback.shard_wait_minutes(jobs, datetime.fromtimestamp(now, timezone.utc), run_status)
+        if wait is not None:
+            out.append({"shard": shard, "wait_min": wait})
+    return out
 
 
 # ---------------------------------------------------------------- launchers
@@ -234,18 +240,6 @@ def launch_hosted(st: dict, sha: str, shard: dict, repo: str | None, run=run_gh)
         raise RuntimeError("gh workflow run failed: %s" % (proc.stderr or proc.stdout).strip()[:200])
 
 
-# ---------------------------------------------------------------- adapters to the Option 4 core (DL23)
-
-def load_caps(root: str):
-    """The caps module of the Option 4 core: check(root, kind, shards) -> (ok, reason) and
-    record(root, kind, shards, minutes). Missing = no caps (caps are optional, answer 4)."""
-    try:
-        import ci_caps  # noqa: PLC0415
-        return ci_caps
-    except ImportError:
-        return None
-
-
 # ---------------------------------------------------------------- the decision
 
 class Deps:
@@ -258,9 +252,10 @@ class Deps:
         self.cloud = over.get("cloud") or (lambda st, sha, shard: launch_cloud(st, sha, shard))
         self.hosted = over.get("hosted") or (lambda st, sha, shard: launch_hosted(st, sha, shard, repo))
         self.reserve = over.get("reserve") or (lambda sha, shard: reserve_launch(root, remote, sha, shard))
+        self.release = over.get("release") or (lambda sha, shard: release_launch(root, remote, sha, shard))
         self.settled = over.get("settled") or self._settled
         self.ready_pr = over.get("ready_pr") or self._ready_pr
-        self.caps = over["caps"] if "caps" in over else load_caps(root)
+        self.gate = over.get("gate") or self._gate  # caps: counts the shard before it starts
         self.out = over.get("out") or (lambda line: print(line, flush=True))
         self.state: dict = over.get("state") if over.get("state") is not None else {}
         try:
@@ -286,22 +281,26 @@ class Deps:
         return isinstance(data, list) and any(
             isinstance(p, dict) and p.get("state") == "open" and not p.get("draft") for p in data)
 
+    def _gate(self, st: dict, os_name: str, waited_min: float) -> dict:
+        return ci_fallback.fallback_gate(self.root, self.remote, st["cfg"], os_name, waited_min, False,
+                                         datetime.fromtimestamp(self.now(), timezone.utc), st["timeout_min"])
+
 
 def check_and_launch(sha: str, runs: list[dict], deps: Deps, st: dict | None = None,
                      shards: list[dict] | None = None, force: list[dict] | None = None) -> list[dict]:
     """Measure the waits of the pending runs and start the fallback for each shard over X.
 
-    Returns the launches: [{"shard", "kind", "wait_s"}]. Never raises. `force` names shards to launch
-    without a wait (the `launch` command); everything else still applies."""
+    Returns the launches: [{"shard", "kind", "wait_min"}]. Never raises. `force` names shards to launch
+    without a wait (the `launch` command); the claim, the caps and the scope rules still apply."""
     try:
         st = st or settings_from(read_config(deps.root))
         if st is None:
             return []
         shards = shards if shards is not None else load_shards(deps.root, st)
         if force is not None:
-            waiting = [{"shard": s, "wait_s": 0.0} for s in force]
+            waiting = [{"shard": s, "wait_min": float(st["core"]["after_min"])} for s in force]
         else:
-            waiting = waiting_shards(runs, shards, deps.repo, deps.now(), st["after_s"], deps.gh_json, deps.is_hosted)
+            waiting = waiting_shards(runs, shards, deps.repo, deps.now(), deps.gh_json, deps.is_hosted)
         return _launch(sha, waiting, deps, st, scoped=force is None)
     except Exception as exc:  # noqa: BLE001 - the fallback must never break the watch
         deps.out("ci_watch: fallback skipped (%s: %s)" % (type(exc).__name__, exc))
@@ -313,13 +312,22 @@ def _launch(sha: str, waiting: list[dict], deps: Deps, st: dict, scoped: bool = 
     failed = deps.state.setdefault("failed", {})
     warned = deps.state.setdefault("warned", set())
     ready = None
-    todo: dict[str, list[dict]] = {}
+    out = []
     for w in sorted(waiting, key=lambda w: w["shard"]["id"]):
-        sid = w["shard"]["id"]
+        shard, sid = w["shard"], w["shard"]["id"]
+        os_name = str(shard.get("os") or "linux")
         if (sha, sid) in launched or failed.get((sha, sid), 0) >= MAX_LAUNCH_FAILURES:
             continue
-        kind = kind_for(w["shard"], st)
-        if scoped and ((kind == "hosted" and w["shard"].get("os") == "windows") or st["only_for"] == "ready-prs"):
+        # Under X, or no fallback for this OS: nothing (pure rule of the core, no I/O).
+        if not ci_fallback.fallback_decision(st["core"], os_name, w["wait_min"])["start"]:
+            continue
+        kind = st["core"]["options"][os_name]
+        if os_name == "windows" and kind != "github-hosted":
+            if (sha, sid, "os") not in warned:
+                warned.add((sha, sid, "os"))
+                deps.out("ci_watch: WARNING: shard %s is Windows; cloud sessions are Linux, so it has no fallback" % sid)
+            continue
+        if scoped and os_name == "windows":  # answer 7: hosted Windows on ready pull requests only
             if ready is None:
                 ready = bool(deps.ready_pr(sha))
             if not ready:
@@ -327,37 +335,27 @@ def _launch(sha: str, waiting: list[dict], deps: Deps, st: dict, scoped: bool = 
         if deps.settled(sha, sid, st["prefix"]):
             launched.add((sha, sid))
             continue
-        todo.setdefault(kind, []).append(w)
-    out = []
-    for kind, items in sorted(todo.items()):
-        ids = [w["shard"]["id"] for w in items]
-        if deps.caps is not None:
-            ok, reason = deps.caps.check(deps.root, kind, ids)
-            if not ok:
-                if (sha, kind) not in warned:
-                    warned.add((sha, kind))
-                    deps.out("ci_watch: fallback paused: %s" % reason)
-                continue
-        for w in items:
-            sid = w["shard"]["id"]
-            if not deps.reserve(sha, sid):
-                launched.add((sha, sid))  # someone else reserved it (or git refused): not ours to start
-                continue
-            try:
-                (deps.cloud if kind == "cloud" else deps.hosted)(st, sha, w["shard"])
-            except Exception as exc:  # noqa: BLE001
-                failed[(sha, sid)] = failed.get((sha, sid), 0) + 1
-                deps.out("ci_watch: WARNING: fallback launch (%s) failed for shard %s: %s" % (kind, sid, exc))
-                continue
-            launched.add((sha, sid))
-            if deps.caps is not None:
-                try:
-                    deps.caps.record(deps.root, kind, [sid], None)
-                except Exception:  # noqa: BLE001
-                    pass
-            deps.out("ci_watch: fallback (%s) started for shard %s after %d min of waiting"
-                     % (kind, sid, int(w["wait_s"] // 60)))
-            out.append({"shard": sid, "kind": kind, "wait_s": w["wait_s"]})
+        if not deps.reserve(sha, sid):
+            launched.add((sha, sid))  # someone else reserved it (or git refused): not ours to start
+            continue
+        gate = deps.gate(st, os_name, w["wait_min"])  # counts the caps before anything starts
+        if not gate.get("start"):
+            deps.release(sha, sid)  # the launch stays possible when the cap lifts
+            if gate.get("warning") and (sha, kind) not in warned:
+                warned.add((sha, kind))
+                deps.out("ci_watch: %s" % gate["warning"])
+            continue
+        try:
+            (deps.cloud if kind == "cloud" else deps.hosted)(st, sha, shard)
+        except Exception as exc:  # noqa: BLE001
+            failed[(sha, sid)] = failed.get((sha, sid), 0) + 1
+            deps.release(sha, sid)
+            deps.out("ci_watch: WARNING: fallback launch (%s) failed for shard %s: %s" % (kind, sid, exc))
+            continue
+        launched.add((sha, sid))
+        deps.out("ci_watch: fallback (%s) started for shard %s after %d min of waiting"
+                 % (kind, sid, int(w["wait_min"])))
+        out.append({"shard": sid, "kind": kind, "wait_min": w["wait_min"]})
     return out
 
 
@@ -413,12 +411,12 @@ def main(argv=None) -> int:
     if not args.sha or not FULL_SHA.fullmatch(args.sha.lower()) or not args.shard:
         print("fallback_launch: launch needs --sha (40 characters) and --shard", file=sys.stderr)
         return 2
-    if args.kind:
-        st = dict(st, kind=args.kind)
     shard = next((s for s in load_shards(root, st) if s["id"] == args.shard), None)
     if shard is None:
         print("fallback_launch: no shard %r in the shard table" % args.shard, file=sys.stderr)
         return 2
+    if args.kind:  # a by-hand launch may pick the kind for this one shard
+        st = dict(st, core=dict(st["core"], options=dict(st["core"]["options"], **{str(shard.get("os") or "linux"): args.kind})))
     done = check_and_launch(args.sha.lower(), [], deps, st, [shard], force=[shard])
     return 0 if done else 1
 
