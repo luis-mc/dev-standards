@@ -37,6 +37,7 @@ Done and pushed on `DL19-shard-table-guard`:
 - `claude/plugins/delivery/templates/shared/scripts/delivery/cloud_shard.py` (S4, S7 may also edit; my edits: imports, `run_command` signature gets `env`, `run_shard` sizing block, result keys).
 - `claude/plugins/delivery/templates/shared/scripts/delivery/shard_balance.py` (CLI only).
 - `claude/plugins/delivery/templates/shared/scripts/delivery/ci-shards.example.json`.
+- Also edited: `.claude/suites.json` (declares the `shard-guard` suite; a repo guard test requires every tools test to be declared) and `tools/ci_areas.py` (maps `test_shard_guard.py` to the delivery area).
 - Not touched, left to S11: `docs/features/delivery/spec.md` section 13 needs a sentence for the suites, the guard and sizing (R13.2 and R13.6). `.github/workflows/spec-lint.yml` should run `tools/test_shard_guard.py` beside `test_ci_speedups.py` (workflow is shared; not edited here).
 
 ## Open points
