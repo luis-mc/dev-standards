@@ -118,6 +118,22 @@ jobs:
       - name: Install (locked)
         run: dotnet restore --locked-mode
 
+      - name: Format check
+        run: dotnet format --verify-no-changes --no-restore
+
+      # Build is both the typecheck and the analyzer gate. TreatWarningsAsErrors
+      # in Directory.Build.props is what makes analyzer findings fail the build
+      # rather than scroll past — without it this step lints nothing.
+      - name: Build (typecheck + analyzers)
+        run: dotnet build --no-restore --configuration Release
+
+      # §3.2 + §3.3: the layer rules and the adapter rule, enforced as a test so
+      # they fail the build rather than being reviewed. NetArchTest asserts on
+      # the assembly graph — see tests/Architecture. A documented convention
+      # without enforcement decays.
+      - name: Boundary check (§3.2, §3.3)
+        run: dotnet test --no-build --configuration Release --filter "Category=Architecture"
+
       # §4.1: generated clients regenerated and committed. Asserting a clean
       # tree is the only check a stale committed artifact cannot satisfy.
       - name: Codegen drift check
@@ -129,15 +145,6 @@ jobs:
             exit 1
           fi
 
-      - name: Format check
-        run: dotnet format --verify-no-changes --no-restore
-
-      # Build is both the typecheck and the analyzer gate. TreatWarningsAsErrors
-      # in Directory.Build.props is what makes analyzer findings fail the build
-      # rather than scroll past — without it this step lints nothing.
-      - name: Build (typecheck + analyzers)
-        run: dotnet build --no-restore --configuration Release
-
       # §11.1: unit tests over core and service logic. Pure, fast, no I/O.
       - name: Unit tests
         run: dotnet test --no-build --configuration Release --filter "Category=Unit"
@@ -146,13 +153,6 @@ jobs:
       # fixtures. The highest-value control in the repository.
       - name: Contract tests
         run: dotnet test --no-build --configuration Release --filter "Category=Contract"
-
-      # §3.2 + §3.3: the layer rules and the adapter rule, enforced as a test so
-      # they fail the build rather than being reviewed. NetArchTest asserts on
-      # the assembly graph — see tests/Architecture. A documented convention
-      # without enforcement decays.
-      - name: Boundary check (§3.2, §3.3)
-        run: dotnet test --no-build --configuration Release --filter "Category=Architecture"
 
       # §12: dependency scanning, failing on known-exploitable advisories.
       # `dotnet list package --vulnerable` exits 0 even when it finds things, so

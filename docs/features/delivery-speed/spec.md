@@ -85,6 +85,8 @@ flowchart LR
 
 **R5.9** — When all watched runs finish, `ci_watch.py` prints each run's wall time and slowest job. It never changes the exit code.
 
+**R5.10** — The CI workflow templates fail fast and use few jobs (CIR10 L1, L2, L6). In `verify`, the secret scan runs first, then format, lint, typecheck, the boundary check, the codegen drift check, and last the unit and contract tests. Each track's `gate.json` lists its steps in `fail_fast_order`, and the steps run in that order. A Linux workflow has one job per suite family (`verify`, `integration`, `e2e`), never one per tool. A job that only reports is the last step of the last job, with `continue-on-error`, and is never a job of its own. Guard tests in `tools/test_delivery_ci.py` fail a template that breaks any of this.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -110,7 +112,7 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 |---|---|
 | R5.1, R5.2, R5.3, R5.5 | `tools/test_delivery_gate.py` |
 | R5.4, R5.8 | `tools/test_smoke_packaged.py`, `tools/template_build_check.py` |
-| R5.6, R5.9 | `tools/test_delivery_ci.py`, `tools/test_delivery_runner.py` |
+| R5.6, R5.9, R5.10 | `tools/test_delivery_ci.py`, `tools/test_delivery_runner.py` |
 | R5.7 | `tools/test_delivery_cleanup.py` |
 
 ## 10. Decisions

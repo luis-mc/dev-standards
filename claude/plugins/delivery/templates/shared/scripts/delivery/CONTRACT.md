@@ -146,6 +146,10 @@ timed out. A script never exits 0 when it could not decide.
   its changed entries to the crates that depend on them needs a dependency graph
   the gate does not build, so any change to it widens. (The older `lockfiles`
   array is unrelated: it only lists extra files `join.py` may resolve.)
+- `fail_fast_order` (optional, shipped by every track): the step names, cheapest first
+  (secret scan, change notes, guards, lint, typecheck, unit, e2e). The shipped `steps` run in
+  this order so a cheap failure ends the gate before a costly test starts. Nothing reads the key
+  at run time; a guard test over the templates checks the order.
 - `inert_paths` (optional, default `["docs/**"]`): globs (same rules as
   `widen_on`) for paths whose change cannot affect what a gate result tested.
   `gate_verify.py` keeps a result valid across a move of the base that touches only

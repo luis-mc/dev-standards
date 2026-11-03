@@ -119,17 +119,6 @@ jobs:
       - name: Install (locked)
         run: cargo fetch --locked
 
-      # §4.1: generated clients regenerated and committed. Asserting a clean tree
-      # is the only check a stale committed artifact cannot satisfy.
-      - name: Codegen drift check
-        run: |
-          cargo run --locked --bin codegen
-          if ! git diff --exit-code; then
-            echo "::error::Generated output differs from what is committed."
-            echo "Run 'cargo run --bin codegen' and commit the result (STACKSPEC §4.1)."
-            exit 1
-          fi
-
       - name: Format check
         run: cargo fmt --all --check
 
@@ -150,6 +139,17 @@ jobs:
         run: |
           cargo install --locked cargo-deny || true
           cargo deny check bans
+
+      # §4.1: generated clients regenerated and committed. Asserting a clean tree
+      # is the only check a stale committed artifact cannot satisfy.
+      - name: Codegen drift check
+        run: |
+          cargo run --locked --bin codegen
+          if ! git diff --exit-code; then
+            echo "::error::Generated output differs from what is committed."
+            echo "Run 'cargo run --bin codegen' and commit the result (STACKSPEC §4.1)."
+            exit 1
+          fi
 
       # §11.1: unit tests over core and service logic. Pure, fast, no I/O.
       - name: Unit tests
