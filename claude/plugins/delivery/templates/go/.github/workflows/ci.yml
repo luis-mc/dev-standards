@@ -133,18 +133,6 @@ jobs:
             exit 1
           fi
 
-      # §4.1: all generated clients must be regenerated and committed. Running
-      # codegen and asserting a clean tree is the only check that a stale
-      # committed artifact cannot satisfy.
-      - name: Codegen drift check
-        run: |
-          go generate ./...
-          if ! git diff --exit-code; then
-            echo "::error::Generated output differs from what is committed."
-            echo "Run 'go generate ./...' and commit the result (STACKSPEC §4.1)."
-            exit 1
-          fi
-
       - name: Format check
         run: |
           unformatted=$(gofmt -l .)
@@ -168,6 +156,18 @@ jobs:
 
       - name: Vet
         run: go vet ./...
+
+      # §4.1: all generated clients must be regenerated and committed. Running
+      # codegen and asserting a clean tree is the only check that a stale
+      # committed artifact cannot satisfy.
+      - name: Codegen drift check
+        run: |
+          go generate ./...
+          if ! git diff --exit-code; then
+            echo "::error::Generated output differs from what is committed."
+            echo "Run 'go generate ./...' and commit the result (STACKSPEC §4.1)."
+            exit 1
+          fi
 
       # §11.1: unit tests over core and service-package logic. -race because a
       # data race that only manifests under load is exactly what §5.3's

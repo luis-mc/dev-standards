@@ -118,19 +118,30 @@ For a project whose agents are gated by CI on their branch instead of a full loc
 
 ## CI options (DL15)
 
-CI can run in three places. The owner picks one for each OS (linux, windows, macos). There is no default: setup asks, and the same command changes the choice later.
+CI can run in four ways (the owner's Option 1 to 4). The owner picks one for each OS (linux, windows, macos). Config values exist for Options 1 to 3; Option 4 is the `ci.fallback` block on an Option 1 OS. There is no default: `/delivery-ci-setup` asks every question and writes the config, and running it again changes the choice.
 
-| Letter | Option | Runs on |
+| Option | Config value | Runs on |
 |---|---|---|
-| a | `self-hosted` | GitHub Actions on the owner's runners |
-| b | `github-hosted` | GitHub Actions on GitHub's runners |
-| c | `cloud` | Claude cloud sessions (no Actions, no webhooks) |
+| 1 | `self-hosted` | GitHub Actions on your own self-hosted runners, on any machines you run |
+| 2 | `github-hosted` | GitHub Actions on GitHub's runners |
+| 3 | `cloud` | Claude cloud sessions (no Actions, no webhooks) |
+| 4 | `self-hosted` plus `ci.fallback` | Own runners first, a fallback after X minutes of runner wait (`ci.fallback`: `options`, `after_min`, optional caps, `cloud`, `hosted`) |
 
-1. Ask the owner, per OS. Record it: `python3 scripts/delivery_ci.py set --os linux --option a|b|c` (`show`, `unset` also exist). It writes `ci.options` in `.delivery/config.json`.
+1. Guided: run `/delivery-ci-setup` (engine `scripts/delivery_ci_setup.py`). It writes `ci.options`, `ci.fallback`, `ci.limits`, the runners and the files, and prints the by-hand list. By hand: ask the owner, per OS. Record it: `python3 scripts/delivery_ci.py set --os linux --option 1|2|3` (`show`, `unset` also exist). It writes `ci.options` in `.delivery/config.json`.
 2. Write the CI and delivery files: `python3 scripts/delivery_ci_install.py install --track ts|go|rust|dotnet --root .` (`update` later). The files come from `templates/`. tech-stack-setup calls this at the end of its setup. The command never commits.
 3. The product gives a shard table, `scripts/delivery/ci-shards.json` (format: `ci-shards.example.json`).
-4. Option a: list the runners in `runners`. Option c: set `ci.cloud.repo`, `ci.cloud.status_token_env` and `ci.cloud.branches`; the owner creates a statuses-only token and puts it in the cloud environment under that name.
-5. `python3 scripts/delivery_doctor.py` reports the `ci` check.
+4. Option 1: list the runners in `runners`, one entry per machine. Option 3: set `ci.cloud.repo`, `ci.cloud.status_token_env` and `ci.cloud.branches`; the owner creates a statuses-only token and puts it in the cloud environment under that name.
+5. `python3 scripts/delivery_doctor.py` reports the `ci` check. For Option 1 it names each machine it found and the by-hand steps to add another.
+
+### Add a second runner (Option 1)
+
+One runner of a label is the first bottleneck. A job that waits more than X minutes (the CI watch warns at 10) means: add a runner with the same label on another machine, any machine you run. A plugin cannot do it; it needs a person on that machine. Print the steps for that machine's OS:
+
+```
+python3 scripts/delivery_ci.py add-runner --os linux|windows|macos --labels self-hosted,linux
+```
+
+The steps: get the token on GitHub, unpack the runner, run `config.sh` (`config.cmd` on Windows) with the same labels, install it as a service, add the machine to `runners`, run the doctor.
 
 Rules: `docs/features/delivery/spec.md` section 13. File formats: `templates/shared/scripts/delivery/CONTRACT.md`, "CI options".
 

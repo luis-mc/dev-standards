@@ -1414,8 +1414,61 @@ def check_workflow(track: str, text: str) -> list[str]:
     if "branches: [main]" not in text or "ready_for_review" not in text:
         problems.append("push/pull_request triggers changed")
 
+    problems += check_job_shape(track, jobs)
+    problems += check_verify_order(jobs.get("verify", ""))
     if track == "ts":
         problems += check_ts_e2e(text, jobs)
+    return problems
+
+
+# DL18 (CIR10 L1, L2, L6). The jobs a Linux workflow may have: one per suite family, never one per tool.
+# A job that no other job needs must be a required check (it judges); anything else only reports.
+FAMILY_JOBS = {"decide", "plan", "verify", "integration", "e2e-shard", "e2e"}
+
+
+def check_job_shape(track: str, jobs: dict[str, str]) -> list[str]:
+    problems = []
+    needed = set()
+    for block in jobs.values():
+        m = re.search(r"^    needs: (.+)$", block, re.M)
+        if m:
+            needed |= set(re.findall(r"[\w-]+", m.group(1)))
+    required = set(REQUIRED_NAMES[track])
+    for name, block in jobs.items():
+        if name not in FAMILY_JOBS:
+            problems.append(f"job {name}: not a suite family (one job per family, not per tool)")
+        if name in needed:
+            continue
+        job_name = re.search(r"^    name: ['\"]?(.+?)['\"]?\s*$", block, re.M)
+        if not job_name or job_name.group(1) not in required:
+            problems.append(f"job {name}: report-only job (no job needs it and it is not a required check); "
+                            "make it the last step of the last job, continue-on-error")
+    return problems
+
+
+# Cheap first (L1): the tier of each step in `verify`, lowest first. A step with no tier is not ordered.
+VERIFY_TIERS = [
+    ("secret scan", 0), ("format", 1), ("lint", 2), ("typecheck", 2), ("build", 2), ("check (", 2),
+    ("vet", 2), ("boundary", 3), ("codegen", 4), ("unit", 5), ("contract", 5),
+]
+
+
+def check_verify_order(verify: str) -> list[str]:
+    tiers = []
+    for step in split_steps(verify):
+        m = re.search(r"^      - name: (.+)$", step, re.M)
+        if not m:
+            continue
+        label = m.group(1).lower()
+        hit = next((t for key, t in VERIFY_TIERS if key in label), None)
+        if hit is not None:
+            tiers.append((hit, m.group(1)))
+    problems = []
+    if not tiers or tiers[0][0] != 0:
+        problems.append("verify: the secret scan must be the first ordered step (fail fast, cheapest first)")
+    for (a, an), (b, bn) in zip(tiers, tiers[1:]):
+        if b < a:
+            problems.append(f"verify: '{bn}' must come before '{an}' (cheap checks first)")
     return problems
 
 
@@ -1442,7 +1495,7 @@ def check_ts_e2e(text: str, jobs: dict[str, str]) -> list[str]:
         return ["ts: e2e-shard job missing (the browser suite must run as shards)"]
     if not re.search(r"^    name: web E2E \(§11\.2\)\s*$", e, re.M):
         problems.append("ts: e2e job must be named 'web E2E (§11.2)'")
-    if not re.search(r"^    needs: \[decide, plan, e2e-shard\]\s*$", e, re.M):
+    if not re.search(r"^    needs: \[decide, plan, verify, integration, e2e-shard\]\s*$", e, re.M):
         problems.append("ts: e2e (the required check) must need e2e-shard")
     for name, block in (("e2e", e), ("e2e-shard", sh)):
         if re.search(r"^    continue-on-error:", block, re.M):
@@ -1491,6 +1544,32 @@ def check_ts_e2e(text: str, jobs: dict[str, str]) -> list[str]:
     return problems
 
 
+REPORT_JOB = """
+  run-times:
+    name: run times (report only)
+    needs: [decide, verify, integration, e2e]
+    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    steps:
+      - run: echo report
+"""
+
+
+def swap_steps(text: str, first: str, second: str) -> str:
+    """Swap two steps of `verify` by name (a mutant that breaks the cheap-first order)."""
+    v = split_jobs(text)["verify"]
+    parts = re.split(r"^(?=      - )", v, flags=re.M)
+    idx = {}
+    for i, p in enumerate(parts):
+        for n in (first, second):
+            if re.search(rf"^      - name: {re.escape(n)}\s*$", p, re.M):
+                idx[n] = i
+    check(first in idx and second in idx, f"steps to swap not found: {first!r}, {second!r}")
+    i, j = idx[first], idx[second]
+    parts[i], parts[j] = parts[j], parts[i]
+    return text.replace(v, "".join(parts))
+
+
 def mutate(text: str, old: str, new: str, count: int = 1) -> str:
     check(old in text, f"mutation target not found: {old!r}")
     return text.replace(old, new, count)
@@ -1502,6 +1581,36 @@ def workflows_conform():
         path = TEMPLATES / track / ".github/workflows/ci.yml"
         problems = check_workflow(track, read(path))
         check(not problems, f"{track}/ci.yml:\n  " + "\n  ".join(problems))
+
+
+def gate_order_problems(cfg: dict) -> list[str]:
+    """The steps of a gate.json run in its `fail_fast_order` (L1): cheap checks first, tests last."""
+    order = cfg.get("fail_fast_order")
+    if not isinstance(order, list) or not order:
+        return ["fail_fast_order missing"]
+    names = [st["name"] for st in cfg["steps"]]
+    problems = [f"step {n!r} is not in fail_fast_order" for n in names if n not in order]
+    problems += [f"fail_fast_order names {n!r}, which is no step" for n in order if n not in names]
+    ranks = [order.index(n) for n in names if n in order]
+    if ranks != sorted(ranks):
+        problems.append("steps are not in fail_fast_order (cheap checks first)")
+    if order and order[0] != "secret-scan":
+        problems.append("fail_fast_order must start with secret-scan")
+    return problems
+
+
+@test
+def gate_steps_run_cheapest_first():
+    for track in TRACKS:
+        cfg = json.loads(read(TEMPLATES / track / "scripts/delivery/gate.json"))
+        check(not gate_order_problems(cfg), f"{track}/gate.json: {gate_order_problems(cfg)}")
+        # Mutants: a test step moved first, a step left out of the list, a stale name.
+        moved = dict(cfg, steps=list(reversed(cfg["steps"])))
+        check(any("not in fail_fast_order" in p for p in gate_order_problems(moved)), f"{track}: reorder missed")
+        unlisted = dict(cfg, fail_fast_order=cfg["fail_fast_order"][:-1])
+        check(any("is not in fail_fast_order" in p for p in gate_order_problems(unlisted)), f"{track}: unlisted missed")
+        stale = dict(cfg, fail_fast_order=cfg["fail_fast_order"] + ["gone"])
+        check(any("no step" in p for p in gate_order_problems(stale)), f"{track}: stale missed")
 
 
 @test
@@ -1604,7 +1713,20 @@ def workflow_checker_detects_each_defect():
          lambda t: mutate(t, "needs.plan.outputs.e2e != 'false'", "needs.plan.outputs.e2e == 'true'")),
         ("ts", ts, "must accept a planned skip", lambda t: mutate(t, 'if [ "$PLANNED" = "false" ]', 'if false')),
         ("ts", ts, "must need e2e-shard",
-         lambda t: mutate(t, "needs: [decide, plan, e2e-shard]", "needs: decide")),
+         lambda t: mutate(t, "needs: [decide, plan, verify, integration, e2e-shard]", "needs: decide")),
+        ("ts", ts, "report-only job", lambda t: t + REPORT_JOB),
+        ("go", go, "report-only job", lambda t: t + REPORT_JOB.replace(", e2e]", "]")),
+        ("rust", read(TEMPLATES / "rust/.github/workflows/ci.yml"), "report-only job", lambda t: t + REPORT_JOB.replace(", e2e]", "]")),
+        ("dotnet", read(TEMPLATES / "dotnet/.github/workflows/ci.yml"), "report-only job", lambda t: t + REPORT_JOB.replace(", e2e]", "]")),
+        ("ts", ts, "not a suite family", lambda t: t + REPORT_JOB.replace("run-times", "lint-only")),
+        ("ts", ts, "must come before 'Unit tests'", lambda t: swap_steps(t, "Lint", "Unit tests")),
+        ("go", go, "must come before 'Unit tests'", lambda t: swap_steps(t, "Format check", "Unit tests")),
+        ("rust", read(TEMPLATES / "rust/.github/workflows/ci.yml"), "must come before 'Unit tests'",
+         lambda t: swap_steps(t, "Boundary check (§3.2, §3.3)", "Unit tests")),
+        ("dotnet", read(TEMPLATES / "dotnet/.github/workflows/ci.yml"), "must come before 'Unit tests'",
+         lambda t: swap_steps(t, "Build (typecheck + analyzers)", "Unit tests")),
+        ("ts", ts, "secret scan must be the first",
+         lambda t: swap_steps(t, "Secret scan (gitleaks, full history)", "Lint")),
         ("ts", ts, "exactly one step running with E2E_QUARANTINE",
          lambda t: mutate(t, "E2E_QUARANTINE: only", "E2E_QUARANTINE: no")),
     ]

@@ -1,11 +1,21 @@
 {
   "schema": 1,
+  "root_files": ["pnpm-lock.yaml"],
   "tests": {
     "unit": "pnpm test:unit",
     "integration": "pnpm test:integration"
   },
+  "limits": {"cpus": 4, "memory_gib": 8, "timeout_min": 15},
+  "timings": "scripts/delivery/ci-timings.json",
+  "discover": ["**/*.test.ts"],
+  "suites": {
+    "unit": {"globs": ["packages/**/*.test.ts"]}
+  },
   "shards": [
-    {"id": "unit-linux", "os": "linux", "context": "unit (linux)", "commands": ["@unit"]},
+    {"id": "unit-linux-1", "os": "linux", "context": "unit 1 (linux)", "suite": "unit", "part": "1/2", "inputs": ["packages/core", "packages/app"],
+     "size": {"workers": 4}, "commands": ["pnpm vitest run {files}"]},
+    {"id": "unit-linux-2", "os": "linux", "context": "unit 2 (linux)", "suite": "unit", "part": "2/2", "inputs": ["packages/core", "packages/app"],
+     "size": {"workers": 4}, "commands": ["pnpm vitest run {files}"]},
     {"id": "integration-linux", "os": "linux", "context": "integration (linux)", "commands": ["@integration"]},
     {"id": "unit-windows", "os": "windows", "context": "unit (windows)", "commands": ["@unit"]}
   ]

@@ -98,6 +98,8 @@
 
 ## guides
 
+- [Set up the CI fallback and try it on a test repository](docs/guides/ci-fallback-test-run.md)
+- [Set up CI for a project](docs/guides/set-up-ci.md)
 - [Upgrade a project to STACKSPEC 8](docs/guides/upgrade-stackspec-8.md)
 
 ## overview

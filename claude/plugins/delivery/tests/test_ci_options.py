@@ -79,13 +79,15 @@ class CommandTests(unittest.TestCase):
         root = make_root({"tz": "UTC"})
         r = str(root)
         self.assertEqual(cli(CI.main, "show", "--root", r)[1].splitlines()[0], "linux    not chosen")
-        self.assertEqual(cli(CI.main, "set", "--os", "linux", "--option", "c", "--root", r)[0], 0)
+        self.assertEqual(cli(CI.main, "set", "--os", "linux", "--option", "3", "--root", r)[0], 0)
         self.assertEqual(cli(CI.main, "set", "--os", "windows", "--option", "self-hosted", "--root", r)[0], 0)
         cfg = json.loads(C.config_file(root).read_text() if hasattr(C.config_file(root), "read_text") else open(C.config_file(root)).read())
         self.assertEqual(cfg["ci"]["options"], {"linux": "cloud", "windows": "self-hosted"})
         self.assertEqual(cfg["tz"], "UTC")           # other keys stay
         code, out, _ = cli(CI.main, "show", "--root", r, "--json")
         self.assertEqual({x["os"]: x["letter"] for x in json.loads(out)}, {"linux": "c", "windows": "a", "macos": None})
+        self.assertEqual({x["os"]: x["number"] for x in json.loads(out)}, {"linux": 3, "windows": 1, "macos": None})
+        self.assertIn("Option 3 (cloud)", cli(CI.main, "show", "--root", r)[1])
         self.assertEqual(cli(CI.main, "unset", "--os", "linux", "--root", r)[0], 0)
         self.assertNotIn("linux", C.ci_options(json.load(open(C.config_file(root)))))
 
@@ -93,6 +95,9 @@ class CommandTests(unittest.TestCase):
         root = make_root({})
         before = open(C.config_file(root)).read()
         self.assertEqual(cli(CI.main, "set", "--os", "linux", "--option", "d", "--root", str(root))[0], 1)
+        code, _, err = cli(CI.main, "set", "--os", "linux", "--option", "4", "--root", str(root))
+        self.assertEqual(code, 1)
+        self.assertIn("Option 4", err)
         self.assertEqual(cli(CI.main, "set", "--os", "amiga", "--option", "a", "--root", str(root))[0], 1)
         self.assertEqual(open(C.config_file(root)).read(), before)
 
@@ -146,6 +151,43 @@ class InstallTests(unittest.TestCase):
             self.assertIn("scripts/delivery/ci_watch.py", rels, track)
 
 
+class OptionNameTests(unittest.TestCase):
+    def test_numbers_letters_and_names_all_work(self):
+        for raw, want in (("1", "self-hosted"), ("a", "self-hosted"), ("Option 2", "github-hosted"), ("cloud", "cloud")):
+            self.assertEqual(CI.normalise_option(raw), want)
+        self.assertIsNone(CI.normalise_option("4"))
+
+    def test_fallback_block_is_in_the_schema_with_the_option_4_keys(self):
+        schema = json.load(open(os.path.join(os.path.dirname(C.__file__), "..", "references", "config-schema.json")))
+        fb = schema["properties"]["ci"]["properties"]["fallback"]
+        self.assertEqual(fb["type"], "object")   # DS180: DL23 and DL24 filled the block DL17 reserved
+        for key in ("options", "after_min", "after_min_if_offline", "only_for", "max_shards_per_day",
+                    "max_minutes_per_month", "records_branch", "cloud", "hosted"):
+            self.assertIn(key, fb["properties"])
+        root = make_root({"ci": {"fallback": {}}})
+        errors, warnings, _s = C.validate_file(C.config_file(root))
+        self.assertEqual((errors, warnings), ([], []))
+
+    def test_runner_texts_never_say_this_pc(self):
+        base = os.path.join(os.path.dirname(C.__file__), "..")
+        for rel in ("README.md", "scripts/delivery_ci.py", "scripts/delivery_doctor.py", "scripts/delivery_config.py",
+                    "references/config-schema.json", "templates/shared/scripts/delivery/CONTRACT.md"):
+            text = open(os.path.join(base, rel), encoding="utf-8").read().lower()
+            self.assertNotIn("this pc", text, rel)
+            self.assertNotIn("owner's runners", text, rel)
+        self.assertIn("any machines you run", C.CI_OPTION_TEXT["self-hosted"])
+
+    def test_add_runner_prints_steps_for_each_os(self):
+        for os_name, needle in (("linux", "./config.sh"), ("windows", "config.cmd"), ("macos", "./svc.sh")):
+            code, out, _ = cli(CI.main, "add-runner", "--os", os_name, "--labels", "self-hosted,%s,big" % os_name)
+            self.assertEqual(code, 0)
+            self.assertIn(needle, out)
+            self.assertIn("--labels self-hosted,%s,big" % os_name, out)
+            self.assertIn("waits more than 10 min", out)
+            self.assertIn("another machine", out)
+        self.assertEqual(cli(CI.main, "add-runner", "--os", "amiga")[0], 1)
+
+
 class DoctorTests(unittest.TestCase):
     def ci(self, root, cfg=None):
         with mock.patch.dict(os.environ, {"CLOUD_STATUS_TOKEN": ""}):
@@ -175,6 +217,30 @@ class DoctorTests(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("no linux runner", detail)
         self.assertNotIn("no windows runner", detail)
+
+    def test_option_1_names_the_steps_for_a_second_machine(self):
+        cfg = {"ci": {"options": {"linux": "self-hosted", "windows": "self-hosted"}},
+               "runners": [{"name": "pc", "os": "Windows", "labels": ["self-hosted", "windows"]},
+                           {"name": "box", "os": "Linux", "labels": ["self-hosted", "linux", "big"]}]}
+        root = make_root(cfg)
+        write_table(root)
+        ok, detail = self.ci(root)
+        self.assertTrue(ok, detail)
+        self.assertIn("another machine", detail)
+        self.assertIn("waits more than 10 min", detail)
+        self.assertIn("linux: 1 runner(s) (box)", detail)
+        self.assertIn("./config.sh", detail)                           # the Linux steps
+        self.assertIn("--labels self-hosted,linux,big", detail)        # the machine's own labels
+        self.assertIn("config.cmd", detail)                            # the Windows steps
+        self.assertIn("Option 1", D.check_ci(str(root), cfg)[1])
+
+    def test_missing_runner_failure_names_the_by_hand_steps(self):
+        root = make_root({"ci": {"options": {"linux": "self-hosted"}}})
+        ok, detail = self.ci(root)
+        self.assertFalse(ok)
+        self.assertIn("Option 1", detail)
+        self.assertIn("by hand", detail)
+        self.assertIn("./config.sh", detail)
 
     def test_option_b_needs_a_workflow_file(self):
         root = make_root({"ci": {"options": {"linux": "github-hosted", "windows": "github-hosted"}}})

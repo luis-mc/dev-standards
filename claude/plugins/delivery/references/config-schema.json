@@ -435,7 +435,7 @@
     },
     "ci": {
       "type": "object",
-      "description": "DL15: where CI runs, chosen PER OS. There is no default: setup asks, and `delivery_ci.py set` changes it later. Option values: self-hosted (a, GitHub Actions on the owner's runners; the `runners` and `local_runners` keys belong to it), github-hosted (b, GitHub Actions on GitHub's runners), cloud (c, Claude cloud sessions, no Actions and no webhooks). All three use the same shard table; the option only decides where a shard runs and how its result comes back.",
+      "description": "DL15: where CI runs, chosen PER OS. There is no default: setup asks, and `delivery_ci.py set` changes it later. Option values: Option 1 self-hosted (your own self-hosted runners on any machines you run; the `runners` and `local_runners` keys belong to it), Option 2 github-hosted (GitHub's runners), Option 3 cloud (Claude cloud sessions, no Actions and no webhooks). Option 4 (own runners first, a fallback after a wait) is the `fallback` block. All use the same shard table; the option only decides where a shard runs and how its result comes back.",
       "properties": {
         "options": {
           "type": "object",
@@ -446,13 +446,51 @@
             "macos": {"type": "string", "enum": ["self-hosted", "github-hosted", "cloud"]}
           }
         },
+        "limits": {
+          "type": "object",
+          "description": "CIR10 L8: fixed concurrency and memory per option, with measured defaults. browser_workers defaults to 2 and memory_gib to 8.5 (a cloud session); integration_workers has no default. A shard whose reported peak memory is above memory_gib fails the guard.",
+          "properties": {
+            "self-hosted": {"type": "object", "properties": {"browser_workers": {"type": "integer", "minimum": 1}, "integration_workers": {"type": "integer", "minimum": 1}, "memory_gib": {"type": "number", "minimum": 0.5}}},
+            "github-hosted": {"type": "object", "properties": {"browser_workers": {"type": "integer", "minimum": 1}, "integration_workers": {"type": "integer", "minimum": 1}, "memory_gib": {"type": "number", "minimum": 0.5}}},
+            "cloud": {"type": "object", "properties": {"browser_workers": {"type": "integer", "minimum": 1}, "integration_workers": {"type": "integer", "minimum": 1}, "memory_gib": {"type": "number", "minimum": 0.5}}}
+          }
+        },
         "shard_table": {
           "type": "string",
           "description": "Path of the shard table, from the repository root (default scripts/delivery/ci-shards.json)."
         },
+        "fallback": {
+          "type": "object",
+          "description": "DL23 (Option 4): own runners first, a fallback after a wait. Without `after_min` the fallback is off; there is no default.",
+          "properties": {
+            "options": {
+              "type": "object",
+              "description": "Which fallback per OS: cloud or github-hosted.",
+              "properties": {
+                "linux": {"type": "string", "enum": ["cloud", "github-hosted"]},
+                "windows": {"type": "string", "enum": ["cloud", "github-hosted"]},
+                "macos": {"type": "string", "enum": ["cloud", "github-hosted"]}
+              }
+            },
+            "after_min": {"type": "number", "minimum": 0, "description": "X: minutes a shard waits for a runner before the fallback may start. No default."},
+            "after_min_if_offline": {"type": "number", "minimum": 0, "description": "X when no online runner carries the labels. Absent means the same as after_min."},
+            "only_for": {"type": "string", "enum": ["all"], "description": "Which runs may use the fallback. Only `all` (every run)."},
+            "max_shards_per_day": {"description": "Optional cap on fallback shards per UTC day: a whole number, or null for no cap."},
+            "max_minutes_per_month": {"description": "Optional cap on hosted fallback minutes per UTC month: a number, or null for no cap."},
+            "records_branch": {"type": "string", "description": "Branch that holds the caps counter (default ci-pass-records). The pass records (DL20) live on the same branch."},
+            "cloud": {"type": "object", "description": "DL24: the cloud launcher. fire_url is the routine's API trigger; token_env is the NAME of the environment variable that holds its token.", "properties": {"fire_url": {"type": "string"}, "token_env": {"type": "string"}}},
+            "hosted": {"type": "object", "description": "DL24: the hosted launcher: the workflow file and the ref it runs on.", "properties": {"workflow": {"type": "string"}, "ref": {"type": "string"}}}
+          }
+        },
+        "guided": {"type": "boolean", "description": "CIR10 S6: true when /delivery-ci-setup wrote this block. The doctor then checks every by-hand item the setup printed."},
+        "confirmed": {"type": "array", "items": {"type": "string"}, "description": "By-hand item ids the owner confirmed with `delivery_ci_setup.py confirm` (only for items the doctor cannot read)."},
+        "serial": {"type": "boolean", "description": "Option 1: ready-PR runs queue one at a time (the CI_SERIAL variable)."},
+        "wait_min": {"type": "number", "minimum": 1, "description": "Option 1: minutes a job may wait before the owner adds a runner on another machine."},
+        "load_limits": {"type": "object", "description": "Option 1 (DL22; was `limits`, renamed to keep `ci.limits` for the speed limits): the memory and CPU ceilings of each machine, by machine name."},
+        "hosted": {"type": "object", "description": "Option 2: runner label per OS, larger runners yes or no, optional monthly minutes cap (null = none).", "properties": {"runner": {"type": "object"}, "larger": {"type": "boolean"}, "monthly_minutes_cap": {"description": "A number, or null for no cap."}, "windows_small_set_only": {"type": "boolean"}}},
         "cloud": {
           "type": "object",
-          "description": "Settings of option c. Needed as soon as one OS is cloud.",
+          "description": "Settings of Option 3. Needed as soon as one OS is cloud.",
           "properties": {
             "repo": {
               "type": "string",
@@ -478,6 +516,9 @@
               "type": "number",
               "minimum": 1,
               "description": "Minutes after which the watcher counts a launched shard with no result as lost."
+            },
+            "max_sessions_per_day": {
+              "description": "A number, or null for no cap. Optional cap on cloud sessions started per day; null = no cap (the owner chose that)."
             }
           }
         }

@@ -83,6 +83,49 @@ def runner_plan_flags(cfg) -> dict:
 CI_OS = ("linux", "windows", "macos")
 CI_OPTIONS = ("self-hosted", "github-hosted", "cloud")
 CI_OPTION_LETTER = {"self-hosted": "a", "github-hosted": "b", "cloud": "c"}
+# The owner's names (CIR10): Option 1 to 3 are the three config values. Option 4 (own runners first, a fallback
+# after a wait) is the `ci.fallback` block; it is built in a later step, so it is not a config value yet.
+CI_OPTION_NUMBER = {"self-hosted": 1, "github-hosted": 2, "cloud": 3}
+CI_OPTION_TEXT = {
+    "self-hosted": "own self-hosted runners on any machines you run",
+    "github-hosted": "GitHub-hosted runners",
+    "cloud": "Claude cloud sessions (no Actions, no webhooks)",
+}
+RUNNER_WAIT_EXAMPLE_MIN = 10
+
+
+def option_name(option) -> str:
+    """'Option 1 (self-hosted)' for a config value; '' for anything else."""
+    n = CI_OPTION_NUMBER.get(option)
+    return "Option %d (%s)" % (n, option) if n else ""
+
+
+def runner_steps(os_name: str, labels=None, wait_min: int = RUNNER_WAIT_EXAMPLE_MIN) -> list:
+    """The by-hand steps to add one self-hosted runner on another machine, for that machine's OS. A plugin cannot do
+    them: each needs a person on that machine and a registration token from GitHub."""
+    labels = [x for x in (labels or []) if isinstance(x, str) and x] or ["self-hosted", os_name]
+    lab = ",".join(labels)
+    if os_name == "windows":
+        install = ["download the Windows x64 runner from the first step's page and unpack it, for example to C:\\actions-runner",
+                   "in PowerShell there: .\\config.cmd --runasservice --url https://github.com/OWNER/REPO --token TOKEN --labels %s" % lab,
+                   "if you did not ask for a service, start .\\run.cmd by hand while you need the runner"]
+    elif os_name == "macos":
+        install = ["download the macOS runner from that page and unpack it",
+                   "./config.sh --url https://github.com/OWNER/REPO --token TOKEN --labels %s" % lab,
+                   "./svc.sh install && ./svc.sh start"]
+    else:
+        install = ["download the Linux runner from that page and unpack it",
+                   "./config.sh --url https://github.com/OWNER/REPO --token TOKEN --labels %s" % lab,
+                   "sudo ./svc.sh install && sudo ./svc.sh start"]
+    return (["open the repository's Settings > Actions > Runners > New self-hosted runner and pick %s (it shows the token)" % os_name]
+            + install
+            + ["add the machine to `runners` in .delivery/config.json (name, os, labels as above)",
+               "run delivery_doctor.py: it checks the runner list again"])
+
+
+def add_runner_advice(wait_min: int = RUNNER_WAIT_EXAMPLE_MIN) -> str:
+    return ("a job that waits more than %d min for a runner means: add a runner with the same label on another machine"
+            % wait_min)
 DEFAULT_SHARD_TABLE = "scripts/delivery/ci-shards.json"
 DEFAULT_RESULTS_PREFIX = "ci-result"
 
@@ -92,6 +135,28 @@ def ci_options(cfg) -> dict:
     not chosen is simply absent."""
     o = _section(_section(cfg, "ci"), "options")
     return {k: v for k, v in o.items() if k in CI_OS and v in CI_OPTIONS}
+
+
+LIMIT_KEYS = ("browser_workers", "integration_workers", "memory_gib")
+# Measured defaults (CIR10 L8): the browser suite ran 7 workers in 14.3 min and 2 workers in 23.7 min, and the
+# owner chose 2, in CI as well. A cloud session has 8.5 GiB. integration_workers has no measured default.
+LIMIT_DEFAULTS = {"browser_workers": 2, "memory_gib": 8.5}
+
+
+def ci_limits(cfg) -> dict:
+    """ci.limits as {option: {browser_workers, integration_workers, memory_gib}}. Only valid positive numbers
+    are kept; a key that is not set falls back to LIMIT_DEFAULTS, else it is absent (no limit)."""
+    raw = _section(_section(cfg, "ci"), "limits")
+    out = {}
+    for opt in CI_OPTIONS:
+        sec = _section(raw, opt)
+        lim = dict(LIMIT_DEFAULTS)
+        for k in LIMIT_KEYS:
+            v = sec.get(k)
+            if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0:
+                lim[k] = v
+        out[opt] = lim
+    return out
 
 
 def ci_cloud(cfg) -> dict:

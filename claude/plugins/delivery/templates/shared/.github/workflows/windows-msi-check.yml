@@ -1,0 +1,38 @@
+name: Windows MSI (Linux check)
+
+# CIR10 W1/W2. OPTIONAL. A CI CHECK ONLY: it proves the MSI authoring builds under Wine.
+# The shipped MSI is built on Windows (package-windows.yml). Wine cannot write LZX, so this
+# build uses `mszip`; the file is bigger and has never been installed.
+# PRODUCT: delete this file if the product ships no MSI. Fill scripts/delivery/windows-build-tools.json.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'installer/**'
+      - 'scripts/delivery/windows-build-tools.json'
+      - '.github/workflows/windows-msi-check.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: msi-check-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  msi:
+    name: MSI builds under Wine (check only)
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install Wine and a virtual display
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends wine xvfb
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/msi-build
+          key: msi-build-${{ hashFiles('scripts/delivery/windows-build-tools.json') }}
+      - name: Build the MSI (not the shipped file)
+        run: bash scripts/delivery/windows-msi-linux.sh

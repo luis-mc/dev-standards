@@ -23,6 +23,10 @@ carries no CI logic (DL15).
 | `scripts/delivery/agent_setup.sh` | same | gate |
 | `scripts/delivery/delivery_common.py` | same (shared helpers: git, JSON, gate.json loading) | gate |
 | `scripts/delivery/ci_watch.py` | same | ci |
+| `scripts/delivery/fallback_launch.py` | same (Option 4: measures shard waits, starts the cloud or hosted fallback once per shard over X; `sweep` is the hourly routine; `launch` starts one by hand; DL24) | ci |
+| `scripts/delivery/fallback_run.py` | same (what a fallback job runs: HEAD check, claim last, shard, one status; DL24) | ci |
+| `.github/workflows/ci-fallback.yml` | `templates/shared/.github/workflows/ci-fallback.yml` (hosted fallback, started only by `workflow_dispatch`) | ci |
+| `routines/ci-fallback-watch.json` | `templates/shared/routines/` (template of the hourly safety-net routine; never created by a script) | ci |
 | `scripts/delivery/runner_health.py` | same (runner labels against online runners; used by `join.py` and `ci_watch.py`) | gate |
 | `scripts/delivery/runner_plan.py` | same (heavy-job wrapper: waits for train CI, one heavy job at a time, memory floor, pauses and always resumes the local runner; `runners` subcommand reports offline CI runners, repairs them with the project's `runners[].repair` commands every 5 minutes and re-runs the CI they cancelled; DELIVERYSPEC DL-50, D6, D6a) | gate |
 | `scripts/delivery/train_freeze.py` | same (called by the `pre-push` hook) | gate |
@@ -58,8 +62,12 @@ carries no CI logic (DL15).
 | `e2e/quarantine.json` (ts only) | `tooling/ts/e2e/quarantine.json` | ci |
 | `.github/workflows/ci.yml` | `templates/<track>/.github/workflows/ci.yml` | ci |
 | `scripts/delivery/cloud_shard.py` | `templates/shared/scripts/delivery/` (CI option c: runs one shard in a cloud session and writes its result JSON; starter, see "CI options") | ci |
+| `scripts/delivery/shard_table.py`, `scripts/delivery/shard_guard.py` | same (DL19: resolves the shard table to test files per shard; the guard that every test file is in exactly one shard and every shard fits its limits) | ci |
 | `scripts/delivery/cloud_status.py` | same (CI option c: lists the heads that need shards and posts the results as commit statuses; starter) | ci |
+| `scripts/delivery/pass_records.py` | same (inputs key and pass records: a shard whose inputs already passed is skipped; see "Pass records") | ci |
 | `scripts/delivery/ci-shards.json` | per product (the shard table, see "CI options"; `ci-shards.example.json` is the format) | ci |
+| `scripts/delivery/speed_probe.py`, `scaled.mjs` | `templates/shared/scripts/delivery/` (speed probe and `scaled(ms)` for timing budgets, see "Speed probe") | ci |
+| `scripts/delivery/db_per_worker.py` | same (one Postgres database per test worker from a template; Postgres projects only) | ci |
 
 `.delivery/` (local results and step logs) is added to the generated `.gitignore`.
 
@@ -146,6 +154,10 @@ timed out. A script never exits 0 when it could not decide.
   its changed entries to the crates that depend on them needs a dependency graph
   the gate does not build, so any change to it widens. (The older `lockfiles`
   array is unrelated: it only lists extra files `join.py` may resolve.)
+- `fail_fast_order` (optional, shipped by every track): the step names, cheapest first
+  (secret scan, change notes, guards, lint, typecheck, unit, e2e). The shipped `steps` run in
+  this order so a cheap failure ends the gate before a costly test starts. Nothing reads the key
+  at run time; a guard test over the templates checks the order.
 - `inert_paths` (optional, default `["docs/**"]`): globs (same rules as
   `widen_on`) for paths whose change cannot affect what a gate result tested.
   `gate_verify.py` keeps a result valid across a move of the base that touches only
@@ -587,8 +599,9 @@ then runs `gate.json`'s `setup` commands. Idempotent.
 
 The same contract for all three places CI can run. A product gives a **shard table** and its test commands; the
 CI option decides only where a shard runs and how its result comes back. Which option a product uses is set per OS
-in `.delivery/config.json` `ci.options` (`self-hosted` = a, `github-hosted` = b, `cloud` = c). There is no default.
-`delivery_ci.py set` changes it. The full rules are `docs/features/delivery/spec.md`, section 13.
+in `.delivery/config.json` `ci.options` (`self-hosted` = Option 1, `github-hosted` = Option 2, `cloud` = Option 3). There is no default.
+`delivery_ci.py set --os <os> --option 1|2|3` changes it. Option 4 (own runners first, a fallback after a wait) is the
+`ci.fallback` block of the config; its schema is empty until the Option 4 step is built. The full rules are `docs/features/delivery/spec.md`, section 13.
 
 ### Shard table: `scripts/delivery/ci-shards.json`
 
@@ -603,15 +616,51 @@ in `.delivery/config.json` `ci.options` (`self-hosted` = a, `github-hosted` = b,
 - `context` is the check name the shard reports under. It is what branch protection requires. It falls back to the
   `id`. Two shards of one cloud OS never share a context.
 
+#### Suites, parts, sizes and the guard (DL19)
+
+```json
+{"schema": 1,
+ "limits": {"cpus": 4, "memory_gib": 8, "timeout_min": 15},
+ "timings": "scripts/delivery/ci-timings.json",
+ "discover": ["**/*.test.ts", "**/*.spec.ts"],
+ "suites": {"unit": {"globs": ["packages/**/*.test.ts"]}, "budget": {"globs": ["budgets/*.budget.ts"]}},
+ "shards": [
+  {"id": "unit-1", "os": "linux", "suite": "unit", "part": "1/2", "size": {"workers": 4}, "commands": ["pnpm vitest run {files}"]},
+  {"id": "unit-2", "os": "linux", "suite": "unit", "part": "2/2", "size": {"workers": 4}, "commands": ["pnpm vitest run {files}"]},
+  {"id": "budget", "os": "linux", "suite": "budget", "members": ["budgets/*.budget.ts"], "commands": ["pnpm budgets {files}"]}]}
+```
+
+- `suites` name the test files of one kind (`globs`, optional `exclude` and `timings`). A shard with `suite` takes
+  its files either as `part` `"K/N"` (a share cut by recorded seconds, longest file first onto the lightest shard,
+  the same cut `shard_balance.py` makes; this works for every suite, not only e2e) or as `members` (explicit globs).
+  Files that a `members` shard claims leave the pool the `part` shards share. Each OS is cut on its own.
+- `timings` is the seconds-per-file file (default `scripts/delivery/ci-timings.json`; a suite may set its own).
+  `shard_balance.py update` refreshes it; `shard_balance.py --table T --shard-id ID` prints one shard's files.
+- `limits` is the machine a shard runs on. `size` (`cpus`, `memory_gib`, `workers`, `timeout_min`) fills from
+  `limits`; `workers` defaults to 1. `cloud_shard.py` sets `CI_SHARD_WORKERS`, `CI_SHARD_CPUS` and
+  `CI_SHARD_MEMORY_GIB`, expands `{files}` and `{workers}` in a command, reads the largest child peak after each
+  command into `peak_memory_gib` (null on Windows) and fails the shard when it is over `memory_gib`. A `size` over
+  `limits` is state `error`; nothing runs.
+- **Guard.** `shard_guard.py check` exits 1 when a test file of a suite, or a file matched by `discover` (every
+  test file of the repository, minus `discover_exclude`), is in no shard; when a file is in two shards of one OS
+  (overlapping `members`, a repeated `part`, two suites); when a suite has no shard, matches no file, or its
+  `part`s do not cover `1..N` once; when a `members` glob matches nothing; when a `size` is over `limits` or has
+  more workers than cpus; or when a shard's estimate (recorded seconds over its workers) is over its timeout. Run it
+  in the product's fast tests so a new test file that no shard names fails the pull request that adds it.
+
+- `inputs` (optional, per shard) lists the paths (files or folders) the shard depends on: its workspaces and their
+  dependencies. `root_files` (optional, whole table) lists files that change every shard's key, such as the lock
+  file. A shard with no `inputs` is never skipped. The product owns both lists.
+
 ### Where a shard runs
 
 | Option | Runs on | Result comes back as | The watcher reads |
 |---|---|---|---|
-| a `self-hosted` | a GitHub Actions job on a runner listed in `runners` | the job's check | the newest `ci.yml` run of the head |
-| b `github-hosted` | a GitHub Actions job on a GitHub runner | the job's check | the same workflow runs |
-| c `cloud` | one Claude cloud session per shard (no Actions, no webhooks) | `result.json` on the branch `ci-result/<sha>/<shard id>`, then a commit status | the commit statuses of the head |
+| Option 1 `self-hosted` | a GitHub Actions job on your own self-hosted runners, on any machines you run, listed in `runners` | the job's check | the newest `ci.yml` run of the head |
+| Option 2 `github-hosted` | a GitHub Actions job on a GitHub runner | the job's check | the same workflow runs |
+| Option 3 `cloud` | one Claude cloud session per shard (no Actions, no webhooks) | `result.json` on the branch `ci-result/<sha>/<shard id>`, then a commit status | the commit statuses of the head |
 
-### Option c
+### Option 3 (cloud)
 
 - **Launcher.** A cloud session started for a head runs `cloud_status.py pending`, then starts one session per
   missing shard through the routines API (`RemoteTrigger` create, run, then disable). Each shard session checks out the
@@ -629,6 +678,27 @@ in `.delivery/config.json` `ci.options` (`self-hosted` = a, `github-hosted` = b,
 - A new head needs new results. A result of an older sha is never reused.
 - `cloud_shard.py` and `cloud_status.py` are starters. A product may contribute a proven runner; it keeps the result
   JSON, the result branch name and the status rules above.
+
+### Pass records (DL20)
+
+`pass_records.py` skips a shard whose inputs already passed. `cloud_shard.py run --records` uses it; a workflow can
+call `pass_records.py check|write` itself.
+
+- **Inputs key.** SHA-256 of the shard id, its OS, its expanded commands and the git blob id of every committed
+  file under the shard's `inputs` and the table's `root_files` at HEAD. No `inputs`, a path that matches nothing, or
+  uncommitted changes under those paths give no key, and a shard with no key always runs.
+- **Records.** One orphan branch (default `ci-pass-records`), one file `<branch>/<shard>/<key>.json` per record
+  (`schema`, `shard`, `key`, `state`, `sha`, `branch`, `seconds`, `at`). Shards write different files; a push that
+  loses a race is fetched and retried (5 tries).
+- **Skip rule.** Only a `success` record with the same key and shard skips. A `failure` record never skips, and an
+  `error` is never recorded. A skipped result is `success`, with `"skipped": true`, the `inputs_key` and the
+  `record` it relied on, and no commands. No reachable records branch means the shard runs.
+- **Read rule.** A ready pull request to the base branch (`--ready`) reads only the base branch's records, never
+  its own branch's. Any other run reads its own branch's records and the base branch's. `--all` ignores records.
+  Each run writes records only under its own branch.
+- **Cleanup.** `pass_records.py cleanup` drops the records of branches that no longer exist on the remote and keeps
+  the newest `--keep` (20) records of each branch and shard. It removes nothing when it cannot list the remote's
+  branches. `cleanup.py` drops a branch's records when it deletes the branch, and never deletes the records branch.
 
 ### Reading results
 
@@ -662,6 +732,10 @@ workflow watch (0, 1, 4).
   artifact pages: grouping, ties, expired, `--keep`, `--dry-run`, a failed
   deletion, pagination, and the structure of `artifact-prune.yml`.
 
+- `tools/test_shard_guard.py` — shard_guard.py and shard_table.py on a sample project (it passes and fits its limits;
+  a file in no shard, a file in two shards, a missing or repeated part, a stale `members` glob, sizes and timeouts
+  over limits fail), the cut of every suite by timings, `shard_balance.py --table`, `cloud_shard.py` sizing,
+  `{files}` and the memory limit, and guard mutants that must each fail a scenario.
 - `tools/test_ci_speedups.py` — shard_balance.py (greedy split, median for unknown files, glob and
   stdin input, `update` from vitest and Playwright reports), area_select.py (areas, shared, unknown,
   docs-only, `--base` on a throwaway git repository, `$GITHUB_OUTPUT`), the starter files, the structure
@@ -932,3 +1006,38 @@ after a measurement, `gh pr create` without `--draft` and `gh pr ready` from a b
 not matching `release_branches` of `tools/change-notes.json` (default `*-integration`).
 Named-case runs are always allowed. `join.py` works without `gate.json`: it says the gate
 is not configured and writes `"gate": "not configured"` to `join-result.json`.
+
+## Speed probe, limits and database per worker (CIR10 L7, L8)
+
+- `speed_probe.py [--runs 5] [--reference-ms MS] [--max-scale 3] [--json] [--result FILE] [--export-env]` times a fixed
+  workload and prints the scale (median / reference, never below 1). `calibrate` writes the reference to
+  `scripts/delivery/speed-probe.json` (`{"reference_ms": N}`); without it a built-in reference is used and the
+  output says so. A scale above 3 is a refusal: exit 2, `--result` gets `"state": "error"`, never `success`.
+  Exit 0 ok, 2 refused, 64 usage. Run it once at the start of the job that runs budgets and export
+  `DELIVERY_SPEED_SCALE` (`--export-env` prints the line for `$GITHUB_ENV`).
+- `scaled(ms)`: in Python `speed_probe.scaled`, in JavaScript `scaled.mjs`. Both read `DELIVERY_SPEED_SCALE`.
+  At scale 1 the result is `ms` unchanged; above 1 it rounds up. An unreadable value or a scale above 3 raises;
+  it is never treated as 1. Without the variable, `scaled.mjs` uses 1 (a developer machine) and Python probes.
+- Naming: a test file with a timing budget is named `*.budget.test.*`, and runs only in the job that runs budgets,
+  alone, on one runner. Which budgets exist is the project's.
+- `ci.limits.<option>.{browser_workers, integration_workers, memory_gib}` in `.delivery/config.json`
+  (`delivery_config.ci_limits()`): defaults `browser_workers` 2, `memory_gib` 8.5; `integration_workers` has none.
+- `db_per_worker.py setup|teardown|name --base NAME [--workers N] [--phase template|workers|all] [--run]`: the
+  template `<base>_tpl` is migrated once, then `<base>_w<K>` is created from it for each worker. Names are letters,
+  digits and underscore only. Exit 0, 1 psql failed, 2 usage.
+
+### DL25 — Windows learnings (CIR10 W1 to W5)
+
+- `windows_real.py check|files` and `windows-real.example.json`: the table of tests that need a real Windows
+  machine, with a `cap`, a `max_minutes` and a `marker` per file. `check` fails for a missing file, a file that
+  lost its marker, a count over the cap, and any `os: windows` shard that is not `"set": "windows-real"` running
+  only `@windows-real`. Nothing else runs on Windows.
+- `artifact_prune.py --hold NAME --hold-workflow FILE`: every artifact of NAME is kept while the newest run of the
+  workflow has not succeeded (failed, cancelled, running, or unreadable). Use it for the installer artifacts.
+- `publish_token.py`: asks the publish service for a token, retries 5xx and no answer after 1, 2, 4 s, never a 4xx.
+- `smoke.json` `"installer": true` needs `"rollback_check"`: the command that proves an update leaves a verified copy
+  of the running version. It runs after the readiness checks.
+- `rerun_args.py`: re-run files as paths relative to the test root with forward slashes, option values kept, and a
+  re-run that crashed before running a test is a crash, not a second failure.
+- `windows-msi-linux.sh` and `windows-msi-check.yml`: the optional Linux MSI recipe. A CI check only; the shipped
+  MSI is built on Windows (decision 10). Wine cannot write LZX, so the cabinet level is `mszip` off Windows.

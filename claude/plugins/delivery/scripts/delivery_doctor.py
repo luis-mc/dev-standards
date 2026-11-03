@@ -17,10 +17,14 @@ Seven checks, each `ok` or `FAIL` with the fix:
            On Windows, for a runner service whose hook is a .ps1, it also reads the PowerShell execution policy that
            applies to the service's account and FAILS when it is Restricted, AllSigned or undefined (the script would not
            start and every job would fail); an unreadable policy is reported as "cannot check", not a failure.
-  ci       (DL15) the CI option chosen per OS (a self-hosted, b github-hosted, c cloud) and what each one needs:
+  ci       (DL15) the CI option chosen per OS (Option 1 self-hosted, Option 2 github-hosted, Option 3 cloud) and what each one needs:
            a: an entry in `runners` for that OS; b: workflow files in .github/workflows; c: ci.cloud.repo,
            status_token_env and branches, a shard for the OS, and one context per shard. FAILS when the shard table
            has a shard for an OS that was not chosen (there is no default). Nothing chosen and no shard table: ok.
+           (CIR10 S6) When `/delivery-ci-setup` wrote the config (`ci.guided`), it also checks every item of the by-hand
+           list that the setup printed (delivery_ci_setup.py `by_hand_items`): runner online with its labels, repository
+           variables, larger runner, token variable, ruleset 'Any source'. An item it cannot read (billing, a remote
+           machine, the cloud environment) FAILS until `delivery_ci_setup.py confirm ITEM`.
 Exit 0 all ok, 1 at least one FAIL, 2 no .delivery/ folder. Standard library only.
 """
 from __future__ import annotations
@@ -35,6 +39,7 @@ import tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
+import delivery_ci_setup as SETUP  # noqa: E402
 import delivery_config as C  # noqa: E402
 import hooklib as H  # noqa: E402
 
@@ -302,50 +307,67 @@ def _runner_oses(cfg):
     return out
 
 
+def _second_machine_note(cfg, os_name):
+    """Option 1 is own runners on ANY machines. Name the machines found for the OS, and the by-hand steps to add one
+    more on another machine (a note, never a failure: one runner works, it is only the first bottleneck)."""
+    mine = [r for r in cfg.get("runners") or [] if isinstance(r, dict) and os_name in _runner_oses({"runners": [r]})]
+    names = ", ".join(str(r.get("name")) for r in mine)
+    labels = next((r.get("labels") for r in mine if r.get("labels")), None)
+    steps = "; ".join("(%d) %s" % (i, t) for i, t in enumerate(C.runner_steps(os_name, labels), 1))
+    return "%s: %d runner(s) (%s). %s. To add a runner on another machine, by hand: %s" % (
+        os_name, len(mine), names, C.add_runner_advice(), steps)
+
+
 def check_ci(root, cfg):
     opts = C.ci_options(cfg)
     shards, err = C.load_shards(root, cfg)
     table_exists = os.path.exists(C.shard_table_path(root, cfg))
     if not opts and not table_exists:
-        return True, "no CI option chosen and no shard table (run `delivery_ci.py set`, ask the owner per OS)"
+        return True, "no CI option chosen and no shard table (run `delivery_ci.py set --os <os> --option 1|2|3`, ask the owner per OS)"
     problems, notes = [], []
     if table_exists and err:
         problems.append(err)
     if "cloud" in opts.values() and not table_exists:
-        problems.append("an OS is cloud (c) but there is no shard table (%s)" % (err or "missing"))
+        problems.append("an OS is Option 3 (cloud) but there is no shard table (%s)" % (err or "missing"))
     used = sorted({sh["os"] for sh in shards})
     for o in used:
         if o not in opts:
             problems.append("the shard table has a shard for %s but no CI option is chosen for it. Ask the owner, then run "
-                            "`delivery_ci.py set --os %s --option a|b|c`" % (o, o))
+                            "`delivery_ci.py set --os %s --option 1|2|3`" % (o, o))
     chosen = {o: v for o, v in opts.items() if o in used or not shards}
     for o, v in sorted(chosen.items()):
         if v == "self-hosted":
             if o not in _runner_oses(cfg):
-                problems.append("%s is self-hosted (a) but `runners` lists no %s runner" % (o, o))
+                problems.append("%s is Option 1 (self-hosted) but `runners` lists no %s runner. Install a runner on a machine you "
+                                "run, by hand: %s" % (o, o, "; ".join("(%d) %s" % (i, t) for i, t in enumerate(C.runner_steps(o), 1))))
+            else:
+                notes.append(_second_machine_note(cfg, o))
         elif v == "github-hosted":
             wf = os.path.join(root, ".github", "workflows")
             if not os.path.isdir(wf) or not [n for n in os.listdir(wf) if n.endswith((".yml", ".yaml"))]:
-                problems.append("%s is github-hosted (b) but .github/workflows has no workflow file" % o)
+                problems.append("%s is Option 2 (github-hosted) but .github/workflows has no workflow file" % o)
         elif v == "cloud":
             cl = C.ci_cloud(cfg)
             if not cl["repo"]:
-                problems.append("%s is cloud (c) but ci.cloud.repo is not set" % o)
+                problems.append("%s is Option 3 (cloud) but ci.cloud.repo is not set" % o)
             if not cl["status_token_env"]:
-                problems.append("%s is cloud (c) but ci.cloud.status_token_env is not set" % o)
+                problems.append("%s is Option 3 (cloud) but ci.cloud.status_token_env is not set" % o)
             elif not os.environ.get(cl["status_token_env"]):
                 notes.append("token variable %s is not set here (set it in the cloud environment)" % cl["status_token_env"])
             if not cl["branches"]:
-                problems.append("%s is cloud (c) but ci.cloud.branches is empty" % o)
+                problems.append("%s is Option 3 (cloud) but ci.cloud.branches is empty" % o)
             if shards and not any(sh["os"] == o for sh in shards):
-                problems.append("%s is cloud (c) but the shard table has no shard for it" % o)
+                problems.append("%s is Option 3 (cloud) but the shard table has no shard for it" % o)
     cloud_shards = [sh for sh in shards if opts.get(sh["os"]) == "cloud"]
     ctxs = [sh["context"] for sh in cloud_shards]
     for c in sorted({c for c in ctxs if ctxs.count(c) > 1}):
         problems.append("two cloud shards share the status context %r" % c)
+    hand_problems, hand_notes = SETUP.check_by_hand(root, cfg)
+    problems += hand_problems
+    notes += hand_notes
     if problems:
         return False, "; ".join(problems)
-    summary = ", ".join("%s=%s" % (o, C.CI_OPTION_LETTER[v]) for o, v in sorted(opts.items())) or "no OS chosen"
+    summary = ", ".join("%s=Option %d" % (o, C.CI_OPTION_NUMBER[v]) for o, v in sorted(opts.items())) or "no OS chosen"
     return True, "; ".join([summary, *notes])
 
 

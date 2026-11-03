@@ -80,6 +80,11 @@ try:  # the manual CI runs on ci/<task>, removed with their train; absent in a p
 except ImportError:
     agent_ci = None
 
+try:  # pass records of a deleted branch (DL20); absent in a project without pass_records.py
+    import pass_records
+except ImportError:
+    pass_records = None
+
 PR_FIELDS = "number,state,baseRefName,headRefOid,mergedAt"
 MAX_PRS = "200"
 NEEDS_GH = "needs gh to confirm"  # the detail of a branch that only gh can say is finished
@@ -557,7 +562,8 @@ def main(argv: list[str] | None = None) -> int:
         raise dc.DeliveryError("remote '%s' not found" % args.remote)
     do_remote, do_local = not args.local, not args.remote_only
     default = default_branch(root, args.remote)
-    ctx = Ctx(root, args.remote, args.repo, default, {default}, args.dry_run)
+    ctx = Ctx(root, args.remote, args.repo, default,
+              {default} | ({pass_records.RECORDS_BRANCH} if pass_records else set()), args.dry_run)
 
     fetch = ["fetch", "--quiet"] + ([] if args.dry_run else ["--prune"]) + [args.remote]
     if ctx.git(fetch).returncode != 0:
@@ -648,6 +654,12 @@ def main(argv: list[str] | None = None) -> int:
                         if err:
                             raise RuntimeError("could not delete %s: %s" % (ref, err))
                     row.removed.append("remote branch" if ref.startswith("refs/heads/") else "gate-result ref")
+                    if ref.startswith("refs/heads/") and not ctx.dry and pass_records is not None:
+                        n, perr = pass_records.drop_branch(ctx.root, ctx.remote, pass_records.RECORDS_BRANCH, branch)
+                        if n:
+                            row.removed.append("%d pass record(s)" % n)
+                        if perr:
+                            dc.eprint("cleanup: warning: pass records of %s not removed: %s" % (branch, perr))
             if do_local:
                 why = clean_local(ctx, branch, v, trees, row)
                 if why:

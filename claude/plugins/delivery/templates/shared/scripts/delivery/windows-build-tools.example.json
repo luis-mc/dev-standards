@@ -1,0 +1,7 @@
+{
+  "_note": "CIR10 W1. Every download is pinned by SHA-256. Fill name, url, sha256 and the build command for your authoring.",
+  "tools": [
+    {"name": "wix", "url": "https://example.invalid/wix-tools.zip", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "file": "wix-tools.zip"}
+  ],
+  "build": {"exe": "wix/candle.exe", "args": ["-out", "{out}/app.msi", "installer/app.wxs"]}
+}

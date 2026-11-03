@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.3.1
+version: 0.4.0
 owner: agents
 type: explanation
 code:
@@ -85,6 +85,14 @@ flowchart LR
 
 **R5.9** — When all watched runs finish, `ci_watch.py` prints each run's wall time and slowest job. It never changes the exit code.
 
+**R5.10** — The CI workflow templates fail fast and use few jobs (CIR10 L1, L2, L6). In `verify`, the secret scan runs first, then format, lint, typecheck, the boundary check, the codegen drift check, and last the unit and contract tests. Each track's `gate.json` lists its steps in `fail_fast_order`, and the steps run in that order. A Linux workflow has one job per suite family (`verify`, `integration`, `e2e`), never one per tool. A job that only reports is the last step of the last job, with `continue-on-error`, and is never a job of its own. Guard tests in `tools/test_delivery_ci.py` fail a template that breaks any of this.
+
+**R5.11** — `speed_probe.py` times a fixed workload (median of 5 runs) and gives a scale: median over the reference time, never below 1. `scaled(ms)` (Python, and `scaled.mjs`) multiplies a timing budget by it; at scale 1 the budget is unchanged. A scale above 3 is a refusal: the probe exits 2, writes state `error` (never `success`), and the budgets are not judged. A bad `DELIVERY_SPEED_SCALE` also refuses. Budgets run in CI only, alone, one probe per job.
+
+**R5.12** — `ci.limits` in `.delivery/config.json` sets `browser_workers`, `integration_workers` and `memory_gib` per CI option. `delivery_config.ci_limits()` returns them with the measured defaults: 2 browser workers and 8.5 GiB.
+
+**R5.13** — `db_per_worker.py` prints (or runs with `psql`) the SQL for one Postgres database per test worker, copied from a migrated template. Names are checked so they cannot carry SQL. Postgres projects only.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -110,8 +118,9 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 |---|---|
 | R5.1, R5.2, R5.3, R5.5 | `tools/test_delivery_gate.py` |
 | R5.4, R5.8 | `tools/test_smoke_packaged.py`, `tools/template_build_check.py` |
-| R5.6, R5.9 | `tools/test_delivery_ci.py`, `tools/test_delivery_runner.py` |
+| R5.6, R5.9, R5.10 | `tools/test_delivery_ci.py`, `tools/test_delivery_runner.py` |
 | R5.7 | `tools/test_delivery_cleanup.py` |
+| R5.11, R5.12, R5.13 | `tools/test_delivery_speed.py` |
 
 ## 10. Decisions
 
@@ -155,6 +164,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.4.0 | 2026-11-03 | RELEASE-36 | The ts CI template writes the run times as the last step of its last job instead of a job of its own.<br>CI templates run cheap checks first, keep one job per suite family and make report-only work a step of the last job; guard tests cover it (R5.10).<br>Speed probe and scaled(ms) for timing budgets (refuse above scale 3), ci.limits in the config, and a database-per-worker template (R5.10 to R5.12).<br>artifact_prune.py gains --hold and smoke_packaged.py gains an installer rollback check (Windows learnings); no change to the speed rules. | DL16, DL18, DL21, DL25 |
 | 0.3.1 | 2026-11-02 | RELEASE-34 | The delivery scripts moved from tech-stack-setup assets/tooling/shared to luismc-delivery templates/shared. The rules are unchanged. | DL15 |
 | 0.3.0 | 2026-11-02 | RELEASE-32 | D20: finished agent rows close from branch signals (DL-32a), with a session check as the fallback. | DL14 |
 | 0.2.1 | 2026-11-01 | RELEASE-28 | agent_ci.py prints one line per skipped branch with its reason, reports a push the pre-push guards refuse as a failing branch with the guard's own lines (and goes on with the next branch), and reads `agent_ci` from `.delivery/config.json` over `ci-scope.json`. | DS36 |
