@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.3.1
+version: 0.4.0
 owner: agents
 type: explanation
 code:
@@ -164,6 +164,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.4.0 | 2026-11-03 | RELEASE-35 | The ts CI template writes the run times as the last step of its last job instead of a job of its own.<br>CI templates run cheap checks first, keep one job per suite family and make report-only work a step of the last job; guard tests cover it (R5.10).<br>Speed probe and scaled(ms) for timing budgets (refuse above scale 3), ci.limits in the config, and a database-per-worker template (R5.10 to R5.12).<br>artifact_prune.py gains --hold and smoke_packaged.py gains an installer rollback check (Windows learnings); no change to the speed rules. | DL16, DL18, DL21, DL25 |
 | 0.3.1 | 2026-11-02 | RELEASE-34 | The delivery scripts moved from tech-stack-setup assets/tooling/shared to luismc-delivery templates/shared. The rules are unchanged. | DL15 |
 | 0.3.0 | 2026-11-02 | RELEASE-32 | D20: finished agent rows close from branch signals (DL-32a), with a session check as the fallback. | DL14 |
 | 0.2.1 | 2026-11-01 | RELEASE-28 | agent_ci.py prints one line per skipped branch with its reason, reports a push the pre-push guards refuse as a failing branch with the guard's own lines (and goes on with the next branch), and reads `agent_ci` from `.delivery/config.json` over `ci-scope.json`. | DS36 |
