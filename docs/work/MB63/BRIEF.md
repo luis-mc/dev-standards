@@ -19,3 +19,7 @@ Output: `docs/research/shared-self-hosted-runners.md` (or the repo's research la
 ## Progress log
 
 - 2026-11-03: branch created from origin/main; read the delivery spec section 13, /delivery-ci-setup, delivery_ci_setup.py by_hand_items, delivery_doctor.py runner checks.
+- 2026-11-03: read the private project's runner setup (one runner container plus a database sidecar, a host Windows service runner, hard-coded labels in runs-on); described in general terms only.
+- 2026-11-03: docs.github.com unreachable (DNS refused, outside the allowed network); platform facts cited from web-search snippets of docs URLs, unverified ones marked.
+- 2026-11-03: wrote docs/features/delivery/shared-self-hosted-runners.md (no docs/research/ folder exists; DOCSPEC R2.2 puts feature docs in the feature folder).
+- 2026-11-03: docs_check.py: 2 errors, both expected on a task branch: G1 llms.txt stale (generated files are rebuilt by the release, branches do not commit them) and W1 this brief under docs/work/ (strip with docs_work.py before any join). ci_areas --branch-advice: light, local only.
