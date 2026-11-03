@@ -22,6 +22,8 @@ import argparse
 import os
 import subprocess
 import sys
+import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -34,6 +36,25 @@ import ci_fallback  # noqa: E402  (the Option 4 core: next_attempt, claim, post_
 def head_sha(root: str) -> str:
     r = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, check=False)
     return r.stdout.strip().lower()
+
+
+def reserved_minutes(root: str) -> float:
+    """What the gate reserved for a hosted shard: ci.cloud.shard_timeout_min (60 when unset), as fallback_launch reads it."""
+    cloud = ((cloud_status.read_config(root) or {}).get("ci") or {}).get("cloud") or {}
+    v = cloud.get("shard_timeout_min")
+    return v if isinstance(v, (int, float)) and not isinstance(v, bool) and v >= 1 else 60
+
+
+def settle_hosted_minutes(core, root: str, args, actual_min: float) -> None:
+    """DL23: the gate reserved the full timeout for a hosted shard; replace it by the real minutes. Best effort."""
+    if args.who != "hosted":
+        return
+    try:
+        cfg = cloud_status.read_config(root) or {}
+        core.settle(root, args.remote, core.fallback_settings(cfg), datetime.now(timezone.utc), "github-hosted",
+                    args.timeout_min or reserved_minutes(root), actual_min)
+    except Exception as exc:  # noqa: BLE001
+        print("fallback_run: minutes not settled: %s" % exc, file=sys.stderr)
 
 
 def main(argv=None, core=None, shard_runner=None) -> int:
@@ -61,7 +82,9 @@ def main(argv=None, core=None, shard_runner=None) -> int:
         return 0
     cfg = cloud_status.cloud_settings(cloud_status.read_config(root))
     table = cloud_shard.load_table(os.path.join(root, *cfg["table"].split("/")))
+    started = time.monotonic()
     result = (shard_runner or cloud_shard.run_shard)(table, args.shard, root, sha, args.timeout_min)
+    settle_hosted_minutes(core, root, args, (time.monotonic() - started) / 60.0)
     cloud_shard.write_result(result, os.path.join(root, ".delivery", "ci-results", result["sha"], args.shard + ".json"))
     ok, msg = cloud_shard.push_result(result, root, cfg["prefix"], args.remote)
     print("fallback_run: %s %s: %s" % (args.shard, result["state"], result["summary"]))

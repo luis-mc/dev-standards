@@ -346,6 +346,38 @@ class Run(unittest.TestCase):
             code = R.main(["--sha", sha, "--shard", "s", "--who", "hosted", "--root", root], core=Core(), shard_runner=runner)
         self.assertEqual((code, order), (0, ["claim:1:fallback-hosted", "tests", "post:success"]))
 
+    def test_hosted_run_settles_its_reserved_minutes_and_cloud_does_not(self):
+        # DS180: DL23 reserves the full shard timeout for a hosted shard; the run must settle it (DL23 open point)
+        for who, settled in (("hosted", 1), ("cloud", 0)):
+            root, sha = self.project()
+            calls = []
+
+            class Core:
+                def next_attempt(self, *a):
+                    return 1
+
+                def claim(self, *a):
+                    return True
+
+                def post_checked(self, *a):
+                    return {"posted": True}
+
+                def fallback_settings(self, cfg):
+                    return {"settings": True}
+
+                def settle(self, root_, remote, settings, now, kind, reserved, actual):
+                    calls.append((kind, reserved, actual >= 0))
+
+            def runner(table, shard, cwd, sha_, timeout):
+                return {"schema": 1, "shard": shard, "context": "s (linux)", "os": "linux", "sha": sha_,
+                        "state": "success", "summary": "ok", "commands": []}
+            with mock.patch.object(R.cloud_shard, "push_result", return_value=(True, "b")), \
+                    mock.patch.dict(os.environ, {"GITHUB_TOKEN": "t", "GITHUB_REPOSITORY": "o/r", "CLOUD_TOKEN": "t"}):
+                R.main(["--sha", sha, "--shard", "s", "--who", who, "--root", root], core=Core(), shard_runner=runner)
+            self.assertEqual(len(calls), settled, who)
+            if settled:
+                self.assertEqual(calls[0], ("github-hosted", 60, True))
+
     def test_wrong_head_fails_closed(self):
         root, sha = self.project()
         self.assertEqual(R.main(["--sha", "b" * 40, "--shard", "s", "--who", "cloud", "--root", root],
