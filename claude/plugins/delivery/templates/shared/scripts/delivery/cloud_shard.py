@@ -21,6 +21,11 @@ state: success = every command exited 0; failure = a command failed or timed out
 file `result.json`. The branch is new for each (sha, shard), so two shards never conflict. The watcher routine
 reads these branches with `git ls-remote` and `git fetch`.
 
+--records (DL20, pass_records.py): before running, compute the shard's inputs key; when a success record for it
+exists (own branch and base, or the base only with --ready) the shard is skipped, the result is `success` with
+`"skipped": true` and the record it relied on. After a real run a success or failure record is written. A
+failed record never skips. --all ignores records. Without --records nothing changes.
+
 Exit 0 success, 1 failure, 2 error (a result is still written when the table and the sha are known). Standard library only.
 """
 from __future__ import annotations
@@ -82,7 +87,7 @@ def run_command(command: str, cwd: str, timeout_s):
     return {"command": command, "exit": code, "seconds": round(time.monotonic() - t0, 1), "tail": tail}
 
 
-def run_shard(table: dict, shard_id: str, cwd: str, sha: str | None, timeout_min):
+def run_shard(table: dict, shard_id: str, cwd: str, sha: str | None, timeout_min, records=None):
     """Returns the result dict. Never raises for a bad shard: that is state error."""
     started = now_iso()
     head = git("rev-parse", "HEAD", cwd=cwd).stdout.strip()
@@ -107,6 +112,13 @@ def run_shard(table: dict, shard_id: str, cwd: str, sha: str | None, timeout_min
     if not isinstance(commands, list) or not commands:
         return done("error", "shard %r has no commands" % shard_id)
     tests = table.get("tests") if isinstance(table.get("tests"), dict) else {}
+    if records is not None:  # pass records (DL20): the same inputs already passed -> skip, proved by the record
+        key, hit, note = records.consult(table, shard_id)
+        result["inputs_key"] = key
+        if hit:
+            result["skipped"] = True
+            result["record"] = {k: hit.get(k) for k in ("key", "sha", "branch", "at")}
+            return done("success", "skipped: pass record for inputs key %s (sha %s)" % (key[:12], str(hit.get("sha"))[:10]))
     limit = timeout_min * 60 if timeout_min else None
     deadline = time.monotonic() + limit if limit else None
     for raw in commands:
@@ -176,6 +188,12 @@ def main(argv=None) -> int:
     ap.add_argument("--push", action="store_true", help="publish the result as a branch (see the docstring)")
     ap.add_argument("--prefix", default="ci-result")
     ap.add_argument("--remote", default="origin")
+    ap.add_argument("--records", action="store_true", help="skip a shard whose inputs key has a pass record (pass_records.py)")
+    ap.add_argument("--records-branch", default="ci-pass-records")
+    ap.add_argument("--base", default="main", help="the base branch; its records are always read")
+    ap.add_argument("--branch", default="", help="the branch under test (default: the current branch)")
+    ap.add_argument("--ready", action="store_true", help="a ready pull request to --base: read only the base's records")
+    ap.add_argument("--all", action="store_true", help="ignore pass records and run the shard")
     ap.add_argument("--root", default=".", help="repository root (default: the current folder)")
     args = ap.parse_args(argv)
     root = os.path.abspath(args.root)
@@ -184,7 +202,14 @@ def main(argv=None) -> int:
     except (OSError, ValueError) as exc:
         print("cloud_shard: cannot read the shard table (%s)" % exc, file=sys.stderr)
         return 2
-    result = run_shard(table, args.shard, root, args.sha, args.timeout_min)
+    rec = None
+    if args.records:
+        import pass_records
+        rec = pass_records.Records(root, args.remote, args.records_branch, args.base, args.branch, args.ready, args.all)
+    result = run_shard(table, args.shard, root, args.sha, args.timeout_min, rec)
+    if rec is not None and result.get("inputs_key") and not result.get("skipped"):
+        ok, msg = rec.save(result)
+        print("cloud_shard: pass record %s" % ("written" if ok else "not written (%s)" % msg))
     out = args.out or os.path.join(root, ".delivery", "ci-results", result["sha"], args.shard + ".json")
     write_result(result, out)
     print("cloud_shard: %s %s: %s" % (args.shard, result["state"], result["summary"]))
