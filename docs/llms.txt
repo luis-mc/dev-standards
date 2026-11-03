@@ -98,6 +98,7 @@
 
 ## guides
 
+- [Set up CI for a project](docs/guides/set-up-ci.md)
 - [Upgrade a project to STACKSPEC 8](docs/guides/upgrade-stackspec-8.md)
 
 ## overview
