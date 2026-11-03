@@ -326,6 +326,18 @@ jobs:
       - name: Prove the shard balancer, area select and nightly template
         run: python3 tools/test_ci_speedups.py
 
+      - name: Prove the shard table guard and sizing
+        run: python3 tools/test_shard_guard.py
+
+      - name: Prove the pass records
+        run: python3 tools/test_delivery_records.py
+
+      - name: Prove the speed probe, limits and database per worker
+        run: python3 tools/test_delivery_speed.py
+
+      - name: Prove Option 4 (the fallback core and the launchers)
+        run: python3 tools/test_delivery_fallback.py && python3 tools/test_delivery_fallback_launch.py
+
   # STACKSPEC 7.0.0 section 13.6: once a train merges, cleanup.py removes its
   # branches, gate-result refs and worktrees. A cleanup that deletes a
   # branch with an open pull request, unmerged work, or a worktree holding
