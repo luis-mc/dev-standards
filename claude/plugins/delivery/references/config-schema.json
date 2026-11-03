@@ -450,6 +450,27 @@
           "type": "string",
           "description": "Path of the shard table, from the repository root (default scripts/delivery/ci-shards.json)."
         },
+        "fallback": {
+          "type": "object",
+          "description": "DL23 (Option 4): own runners first, a fallback after a wait. Without `after_min` the fallback is off; there is no default.",
+          "properties": {
+            "options": {
+              "type": "object",
+              "description": "Which fallback per OS: cloud or github-hosted.",
+              "properties": {
+                "linux": {"type": "string", "enum": ["cloud", "github-hosted"]},
+                "windows": {"type": "string", "enum": ["cloud", "github-hosted"]},
+                "macos": {"type": "string", "enum": ["cloud", "github-hosted"]}
+              }
+            },
+            "after_min": {"type": "number", "minimum": 0, "description": "X: minutes a shard waits for a runner before the fallback may start. No default."},
+            "after_min_if_offline": {"type": "number", "minimum": 0, "description": "X when no online runner carries the labels. Absent means the same as after_min."},
+            "only_for": {"type": "string", "enum": ["all"], "description": "Which runs may use the fallback. Only `all` (every run)."},
+            "max_shards_per_day": {"type": "integer", "minimum": 0, "description": "Optional cap on fallback shards per UTC day."},
+            "max_minutes_per_month": {"type": "number", "minimum": 0, "description": "Optional cap on hosted fallback minutes per UTC month."},
+            "records_branch": {"type": "string", "description": "Branch that holds the caps counter (default ci-pass-records)."}
+          }
+        },
         "cloud": {
           "type": "object",
           "description": "Settings of option c. Needed as soon as one OS is cloud.",

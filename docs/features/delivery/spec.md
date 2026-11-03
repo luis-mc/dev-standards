@@ -239,6 +239,34 @@ Failure modes of option c:
 | The status token is missing or wrong | `cloud_status.py` exits 2 and posts nothing. The head stays not green. |
 | A new push moves the branch | Results of the old sha are ignored. The new head needs its own. |
 
+### 13.x Option 4 core: a fallback after a wait
+
+Own runners run a shard first. If the shard waits too long for a runner, a fallback may run it. The code is `scripts/delivery/ci_fallback.py` (standard library, plain git, no service).
+
+```mermaid
+flowchart TD
+  wait[Shard waits for a runner] -->|X minutes, caps allow| gate[fallback_gate counts the caps]
+  gate --> fb[Fallback boots]
+  main[Runner frees] --> c{claim ci-claim/sha/shard/attempt}
+  fb --> c
+  c -->|won| run[Run the shard]
+  c -->|lost| end[End, post nothing]
+  run --> post[post_checked: one status]
+  run -.->|no result after shard_timeout_min| reap[Reaper posts error, opens attempt N+1]
+```
+
+**R13.30** — Config block `ci.fallback`: `options` (the fallback per OS, `cloud` or `github-hosted`), `after_min` (X, no default; absent means the fallback is off), `after_min_if_offline` (absent means the same as X), `only_for` (`all`: every run may use it), and the optional caps `max_shards_per_day` and `max_minutes_per_month` (hosted only). A fallback without caps is allowed; the setup says what that risks.
+
+**R13.31** — The wait is per shard. It counts only while a job is `queued` and no runner has started it. A run held back by the `CI_SERIAL` queue has no jobs or a pending run status and counts as no wait.
+
+**R13.32** — The claim is the branch `ci-claim/<sha>/<shard>/<attempt>`, created by a push that creates it. The first claim wins. Nobody is pre-empted: a runner that frees up during a fallback sees the claim, ends, and posts nothing. The fallback claims last, just before its first test command.
+
+**R13.33** — A shard's result is one commit status with the shard's context, posted only by `post_checked`. It refuses a result for another sha, a poster that is not the claim holder, a superseded attempt, and a second post of the same attempt (the `ci-posted/<sha>/<shard>/<attempt>` branch is created first).
+
+**R13.34** — The reaper: a claim with no posted marker and no result branch after `ci.cloud.shard_timeout_min` is dead. It posts `error` ("run lost") and opens attempt N+1. Attempts are capped at 2; after attempt 2 the error stays.
+
+**R13.35** — Caps are counted on the pass-records branch (`fallback-counter.json`) before a fallback starts, with the shard timeout as the worst case for hosted minutes, and settled to the real minutes after. A cap that would be passed pauses the fallback with one line (`fallback paused: daily cap` or `fallback paused: monthly cap`). A cap is never overrun, also with two watchers at once.
+
 ## Versions
 
 Written by the release fold. Do not edit by hand.
