@@ -36,7 +36,7 @@ def fetch(url: str, headers: dict[str, str], data: bytes, delays: list[float],
         except (OSError, ValueError) as exc:
             reason = "no answer (%s)" % type(exc).__name__
         if attempt < len(delays):
-            print("publish_token: %s, retrying in %g s" % (reason, delays[attempt]), file=sys.stderr)
+            print("publish-token: %s, retrying in %g s" % (reason, delays[attempt]), file=sys.stderr)
             sleep(delays[attempt])
     return 1, reason
 
@@ -53,12 +53,12 @@ def main(argv: list[str] | None = None) -> int:
         delays = [float(x) for x in args.delays.split(",") if x.strip()]
         headers = dict(h.split(":", 1) for h in args.header)
     except ValueError:
-        print("publish_token: bad --delays or --header", file=sys.stderr)
+        print("publish-token: bad --delays or --header", file=sys.stderr)
         return 2
     headers = {k.strip(): v.strip() for k, v in headers.items()}
     code, body = fetch(args.url, headers, args.data.encode("utf-8"), delays)
     if code:
-        print("publish_token: gave up: %s" % body, file=sys.stderr)
+        print("publish-token: gave up: %s" % body, file=sys.stderr)
         return 1
     if args.out:
         with open(args.out, "w", encoding="utf-8") as fh:

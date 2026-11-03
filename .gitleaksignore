@@ -2,6 +2,7 @@
 # project-named-secret read these as credentials; none is a secret:
 # 0751e61: the GitHub token passed as an Actions expression (now allowlisted).
 # 3a5ad29: identifiers ending in "key" and a test command that set a token variable (renamed in #19).
+# 65566f4: log prefixes naming the publish_token.py script, not a credential (reworded at HEAD).
 # Add an entry only after reviewing the finding; never for a real credential.
 0751e61feaf431380c474274fdb32f957f97ebbb:claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/dotnet/.github/workflows/ci.yml:project-named-secret:61
 0751e61feaf431380c474274fdb32f957f97ebbb:claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/go/.github/workflows/ci.yml:project-named-secret:61
@@ -42,3 +43,6 @@ cf3f5f73e3dadad1ca824505bdf896f1fb2115f1:claude/plugins/docs/vendor/mermaid.min.
 cf3f5f73e3dadad1ca824505bdf896f1fb2115f1:claude/plugins/docs/vendor/mermaid.min.js:project-named-secret:604
 cf3f5f73e3dadad1ca824505bdf896f1fb2115f1:claude/plugins/docs/vendor/mermaid.min.js:project-named-secret:7
 cf3f5f73e3dadad1ca824505bdf896f1fb2115f1:claude/plugins/docs/vendor/mermaid.min.js:project-named-secret:769
+65566f4dac81f0f1b09eee60c1c8e6016701bcba:claude/plugins/delivery/templates/shared/scripts/delivery/publish_token.py:project-named-secret:39
+65566f4dac81f0f1b09eee60c1c8e6016701bcba:claude/plugins/delivery/templates/shared/scripts/delivery/publish_token.py:project-named-secret:56
+65566f4dac81f0f1b09eee60c1c8e6016701bcba:claude/plugins/delivery/templates/shared/scripts/delivery/publish_token.py:project-named-secret:61
