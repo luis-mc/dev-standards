@@ -58,6 +58,7 @@ carries no CI logic (DL15).
 | `e2e/quarantine.json` (ts only) | `tooling/ts/e2e/quarantine.json` | ci |
 | `.github/workflows/ci.yml` | `templates/<track>/.github/workflows/ci.yml` | ci |
 | `scripts/delivery/cloud_shard.py` | `templates/shared/scripts/delivery/` (CI option c: runs one shard in a cloud session and writes its result JSON; starter, see "CI options") | ci |
+| `scripts/delivery/shard_table.py`, `scripts/delivery/shard_guard.py` | same (DL19: resolves the shard table to test files per shard; the guard that every test file is in exactly one shard and every shard fits its limits) | ci |
 | `scripts/delivery/cloud_status.py` | same (CI option c: lists the heads that need shards and posts the results as commit statuses; starter) | ci |
 | `scripts/delivery/ci-shards.json` | per product (the shard table, see "CI options"; `ci-shards.example.json` is the format) | ci |
 
@@ -603,6 +604,38 @@ in `.delivery/config.json` `ci.options` (`self-hosted` = a, `github-hosted` = b,
 - `context` is the check name the shard reports under. It is what branch protection requires. It falls back to the
   `id`. Two shards of one cloud OS never share a context.
 
+#### Suites, parts, sizes and the guard (DL19)
+
+```json
+{"schema": 1,
+ "limits": {"cpus": 4, "memory_gib": 8, "timeout_min": 15},
+ "timings": "scripts/delivery/ci-timings.json",
+ "discover": ["**/*.test.ts", "**/*.spec.ts"],
+ "suites": {"unit": {"globs": ["packages/**/*.test.ts"]}, "budget": {"globs": ["budgets/*.budget.ts"]}},
+ "shards": [
+  {"id": "unit-1", "os": "linux", "suite": "unit", "part": "1/2", "size": {"workers": 4}, "commands": ["pnpm vitest run {files}"]},
+  {"id": "unit-2", "os": "linux", "suite": "unit", "part": "2/2", "size": {"workers": 4}, "commands": ["pnpm vitest run {files}"]},
+  {"id": "budget", "os": "linux", "suite": "budget", "members": ["budgets/*.budget.ts"], "commands": ["pnpm budgets {files}"]}]}
+```
+
+- `suites` name the test files of one kind (`globs`, optional `exclude` and `timings`). A shard with `suite` takes
+  its files either as `part` `"K/N"` (a share cut by recorded seconds, longest file first onto the lightest shard,
+  the same cut `shard_balance.py` makes; this works for every suite, not only e2e) or as `members` (explicit globs).
+  Files that a `members` shard claims leave the pool the `part` shards share. Each OS is cut on its own.
+- `timings` is the seconds-per-file file (default `scripts/delivery/ci-timings.json`; a suite may set its own).
+  `shard_balance.py update` refreshes it; `shard_balance.py --table T --shard-id ID` prints one shard's files.
+- `limits` is the machine a shard runs on. `size` (`cpus`, `memory_gib`, `workers`, `timeout_min`) fills from
+  `limits`; `workers` defaults to 1. `cloud_shard.py` sets `CI_SHARD_WORKERS`, `CI_SHARD_CPUS` and
+  `CI_SHARD_MEMORY_GIB`, expands `{files}` and `{workers}` in a command, reads the largest child peak after each
+  command into `peak_memory_gib` (null on Windows) and fails the shard when it is over `memory_gib`. A `size` over
+  `limits` is state `error`; nothing runs.
+- **Guard.** `shard_guard.py check` exits 1 when a test file of a suite, or a file matched by `discover` (every
+  test file of the repository, minus `discover_exclude`), is in no shard; when a file is in two shards of one OS
+  (overlapping `members`, a repeated `part`, two suites); when a suite has no shard, matches no file, or its
+  `part`s do not cover `1..N` once; when a `members` glob matches nothing; when a `size` is over `limits` or has
+  more workers than cpus; or when a shard's estimate (recorded seconds over its workers) is over its timeout. Run it
+  in the product's fast tests so a new test file that no shard names fails the pull request that adds it.
+
 ### Where a shard runs
 
 | Option | Runs on | Result comes back as | The watcher reads |
@@ -662,6 +695,10 @@ workflow watch (0, 1, 4).
   artifact pages: grouping, ties, expired, `--keep`, `--dry-run`, a failed
   deletion, pagination, and the structure of `artifact-prune.yml`.
 
+- `tools/test_shard_guard.py` — shard_guard.py and shard_table.py on a sample project (it passes and fits its limits;
+  a file in no shard, a file in two shards, a missing or repeated part, a stale `members` glob, sizes and timeouts
+  over limits fail), the cut of every suite by timings, `shard_balance.py --table`, `cloud_shard.py` sizing,
+  `{files}` and the memory limit, and guard mutants that must each fail a scenario.
 - `tools/test_ci_speedups.py` — shard_balance.py (greedy split, median for unknown files, glob and
   stdin input, `update` from vitest and Playwright reports), area_select.py (areas, shared, unknown,
   docs-only, `--base` on a throwaway git repository, `$GITHUB_OUTPUT`), the starter files, the structure
