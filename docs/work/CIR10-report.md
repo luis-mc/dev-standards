@@ -1,0 +1,12 @@
+# CIR10: proposal for CI in the delivery plugin (report)
+
+Status: in progress. Written first, kept current, pushed after every step. A written proposal only: no code, no workflow, no config change.
+
+## Step 1 (3 Nov 2026): reading
+- Branch claude/CIR10-v2-delivery-ci-proposal from main. The older branch claude/CIR10-delivery-ci-proposal is ignored.
+- Read in the reference product: the ci-under-15 pages 01 to 08 and its study report (they live only on its branch CIR1-ci-under-15), the reports CIR13 to CIR18, CO815, DS41, DL16, its ci.yml, shard table and delivery scripts.
+- Read here: the delivery plugin (delivery_ci.py, delivery_ci_install.py, cloud_shard.py, cloud_status.py, runner_health.py, the ts template ci.yml), spec section 13, the DL16 branch.
+- NOT FOUND, so not used: the 09-measured page, the ci-under-15 decisions.json (D15 to D19, D28, D29) and the CIR12 rented-runner prices. The brief's wording of the options and its numbers (38.9 min cold run against 27.9 predicted, cloud shards about 12 min, run 41602331288: 31 min = 19 work + 12 waiting) are used as given and marked as such.
+
+## Step 2: proposal written
+- docs/proposals/CIR10-delivery-ci.md (six sections as briefed, plus what could not be checked).
