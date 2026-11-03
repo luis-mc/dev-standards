@@ -435,9 +435,12 @@ jobs:
   # count, so branch protection never needs editing when shards are added.
   e2e:
     name: web E2E (§11.2)
-    needs: [decide, plan, e2e-shard]
+    needs: [decide, plan, verify, integration, e2e-shard]
     if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    permissions:
+      contents: read
+      actions: read
     steps:
       - name: Every shard passed
         env:
@@ -453,26 +456,23 @@ jobs:
           fi
           [ "$SHARDS" = "success" ]
 
-  # Opt in with the repository variable CI_RUN_TIMES=true (DL-82). The last job: how long the run took, as a job
-  # summary and the artifact `ci-run-times` (a stable name; artifact-prune.yml keeps the newest). Report only: it
-  # never fails the run.
-  run-times:
-    name: run times (report only)
-    needs: [decide, plan, verify, integration, e2e]
-    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && vars.CI_RUN_TIMES == 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
-    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
-    permissions:
-      contents: read
-      actions: read
-    steps:
+      # Opt in with the repository variable CI_RUN_TIMES=true (DL-82). The report is the LAST STEP of the last job, not
+      # a job of its own: a job of its own waits for a runner and pays its start-up for a few seconds of work (DL16).
+      # How long the run took, as a job summary and the artifact `ci-run-times` (a stable name; artifact-prune.yml
+      # keeps the newest). Report only: no step here ever fails the run.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: ${{ always() && vars.CI_RUN_TIMES == 'true' }}
+        continue-on-error: true
       - name: Write the run times
+        if: ${{ always() && vars.CI_RUN_TIMES == 'true' }}
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ github.token }}
           CI_SCOPE: ${{ needs.plan.outputs.scope }}
         run: python3 scripts/delivery/ci_run_times.py
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: ${{ always() }}
+        if: ${{ always() && vars.CI_RUN_TIMES == 'true' }}
+        continue-on-error: true
         with:
           name: ci-run-times
           path: ci-run-times.json
