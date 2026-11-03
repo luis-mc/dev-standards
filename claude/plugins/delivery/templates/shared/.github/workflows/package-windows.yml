@@ -1,0 +1,66 @@
+name: Package Windows
+
+# CIR10 W5. OPTIONAL: for a product that ships a Windows installer. The MSI is built ON WINDOWS.
+# Artifacts are held until the publish succeeds:
+#   - the clean-up job runs only when no publish job failed or was cancelled;
+#   - artifact-prune.yml holds `windows-installer` while the newest run of this workflow has not
+#     succeeded (artifact_prune.py --hold windows-installer --hold-workflow package-windows.yml);
+#   - the token request retries a 5xx answer after 1, 2 and 4 seconds (publish_token.py).
+# PRODUCT: fill the build and publish commands. Re-running failed jobs then finds the installer.
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # PRODUCT: build the installer here; the compression level is `high` on Windows.
+      - name: Build the installer
+        run: echo "PRODUCT - build the MSI"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-installer
+          path: build/*.msi
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    permissions:
+      contents: read
+      actions: read
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Download the installer
+        run: gh run download "$GITHUB_RUN_ID" --name windows-installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Get the publish token (retries 5xx)
+        run: python3 scripts/delivery/publish_token.py --url "$TOKEN_URL" --out "$RUNNER_TEMP/token"
+        env:
+          TOKEN_URL: ${{ vars.PUBLISH_TOKEN_URL }}
+      # PRODUCT: publish with the token in $RUNNER_TEMP/token.
+
+  clean-artifacts:
+    needs: [build, publish]
+    # Only when nothing failed or was cancelled: a failed publish keeps its installer.
+    if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    permissions:
+      actions: write
+    steps:
+      - name: Delete the installer artifact of this run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ids=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" \
+            --jq '.artifacts[] | select(.name=="windows-installer") | .id')
+          for id in $ids; do gh api --method DELETE "repos/$GITHUB_REPOSITORY/actions/artifacts/$id"; done

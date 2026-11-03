@@ -22,6 +22,12 @@ fails (exit 1) when the program exits first or a line never shows, naming each
 one missing. The whole process tree is stopped at the end, on success and on
 failure; only processes this script started are touched.
 
+An installer product (CIR10 W4) adds `"installer": true` and `"rollback_check": CMD`. The
+checklist item is "an update leaves a verified copy of the running version, so the first
+self-update can roll back". `rollback_check` is a command that proves it (exit 0); it runs
+after the readiness checks pass, and its failure fails the run (exit 1). `"installer": true`
+without a `rollback_check` is refused (exit 2). The item is printed on every run.
+
 A declaration with an empty `start` means the product ships no packaged program:
 the script says so on stdout and exits 0. A product that does ship one MUST NOT
 leave it empty (STACKSPEC 13.7); an empty `expect` with a `start` is refused
@@ -52,6 +58,8 @@ import delivery_common as dc
 
 DEFAULT_CONFIG = "scripts/delivery/smoke.json"
 DEFAULT_TIMEOUT = 60.0
+ROLLBACK_ITEM = ("smoke: checklist: an update leaves a verified copy of the running version, "
+                 "so the first self-update can roll back")
 KEEP_LINES = 40  # the last lines of output shown when the run fails
 
 
@@ -95,8 +103,15 @@ def settings(args: argparse.Namespace, root: Path) -> dict:
         raise dc.DeliveryError('"timeout_s" must be a positive number')
     if start.strip() and not expect and not health:
         raise dc.DeliveryError('"expect" is empty: list a readiness line for the program and for each worker it starts')
+    installer = cfg.get("installer", False)
+    rollback = cfg.get("rollback_check") or ""
+    if not isinstance(installer, bool) or not isinstance(rollback, str):
+        raise dc.DeliveryError('"installer" must be true or false, "rollback_check" a command string')
+    if installer and start.strip() and not rollback.strip():
+        raise dc.DeliveryError('"installer" is true but "rollback_check" is empty: add the command that proves '
+                               "an update leaves a verified copy of the running version")
     return {"start": start.strip(), "expect": expect, "health": health, "timeout": float(timeout),
-            "cwd": cfg.get("cwd") or "."}
+            "cwd": cfg.get("cwd") or ".", "installer": installer, "rollback": rollback.strip()}
 
 
 # --------------------------------------------------------------------------
@@ -204,6 +219,16 @@ def run_smoke(cfg: dict, root: Path) -> int:
         stop_tree(proc)
     if not waiting and not probes:
         print("smoke: passed (%d readiness line(s), %d probe(s))" % (len(seen), len(cfg["health"])))
+        if cfg["installer"]:
+            print(ROLLBACK_ITEM)
+            res = subprocess.run(cfg["rollback"], shell=True, cwd=cwd, capture_output=True, text=True,
+                                 encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
+            if res.returncode != 0:
+                dc.eprint("smoke: FAILED, rollback check exited %d" % res.returncode)
+                for line in ((res.stdout or "") + (res.stderr or "")).splitlines()[-KEEP_LINES:]:
+                    dc.eprint("  | " + line)
+                return dc.EXIT_FAIL
+            print("smoke: rollback check passed")
         return dc.EXIT_OK
     missing = ["line: %s" % w for w in waiting] + ["health: %s" % u for u in probes]
     why = ("the program exited%s before everything was ready" % ("" if code is None else " with code %s" % code)

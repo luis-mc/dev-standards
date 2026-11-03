@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "cap": 12,
+  "max_minutes": 5,
+  "files": [
+    {"path": "tests/windows/acl.test.ts", "marker": "icacls", "why": "real file ACLs", "minutes": 0.3}
+  ]
+}

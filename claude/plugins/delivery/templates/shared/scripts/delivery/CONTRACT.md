@@ -932,3 +932,19 @@ after a measurement, `gh pr create` without `--draft` and `gh pr ready` from a b
 not matching `release_branches` of `tools/change-notes.json` (default `*-integration`).
 Named-case runs are always allowed. `join.py` works without `gate.json`: it says the gate
 is not configured and writes `"gate": "not configured"` to `join-result.json`.
+
+### DL25 — Windows learnings (CIR10 W1 to W5)
+
+- `windows_real.py check|files` and `windows-real.example.json`: the table of tests that need a real Windows
+  machine, with a `cap`, a `max_minutes` and a `marker` per file. `check` fails for a missing file, a file that
+  lost its marker, a count over the cap, and any `os: windows` shard that is not `"set": "windows-real"` running
+  only `@windows-real`. Nothing else runs on Windows.
+- `artifact_prune.py --hold NAME --hold-workflow FILE`: every artifact of NAME is kept while the newest run of the
+  workflow has not succeeded (failed, cancelled, running, or unreadable). Use it for the installer artifacts.
+- `publish_token.py`: asks the publish service for a token, retries 5xx and no answer after 1, 2, 4 s, never a 4xx.
+- `smoke.json` `"installer": true` needs `"rollback_check"`: the command that proves an update leaves a verified copy
+  of the running version. It runs after the readiness checks.
+- `rerun_args.py`: re-run files as paths relative to the test root with forward slashes, option values kept, and a
+  re-run that crashed before running a test is a crash, not a second failure.
+- `windows-msi-linux.sh` and `windows-msi-check.yml`: the optional Linux MSI recipe. A CI check only; the shipped
+  MSI is built on Windows (decision 10). Wine cannot write LZX, so the cabinet level is `mszip` off Windows.
