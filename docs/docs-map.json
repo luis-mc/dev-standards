@@ -25,6 +25,9 @@
     "claude/plugins/delivery/.claude-plugin/plugin.json": [
       "docs/features/delivery/spec.md"
     ],
+    "claude/plugins/delivery/commands/*.md": [
+      "docs/features/delivery/spec.md"
+    ],
     "claude/plugins/delivery/hooks/hooks.json": [
       "docs/features/delivery/spec.md"
     ],
