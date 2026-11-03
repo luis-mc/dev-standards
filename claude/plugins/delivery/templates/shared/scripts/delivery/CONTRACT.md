@@ -60,6 +60,7 @@ carries no CI logic (DL15).
 | `scripts/delivery/cloud_shard.py` | `templates/shared/scripts/delivery/` (CI option c: runs one shard in a cloud session and writes its result JSON; starter, see "CI options") | ci |
 | `scripts/delivery/shard_table.py`, `scripts/delivery/shard_guard.py` | same (DL19: resolves the shard table to test files per shard; the guard that every test file is in exactly one shard and every shard fits its limits) | ci |
 | `scripts/delivery/cloud_status.py` | same (CI option c: lists the heads that need shards and posts the results as commit statuses; starter) | ci |
+| `scripts/delivery/pass_records.py` | same (inputs key and pass records: a shard whose inputs already passed is skipped; see "Pass records") | ci |
 | `scripts/delivery/ci-shards.json` | per product (the shard table, see "CI options"; `ci-shards.example.json` is the format) | ci |
 
 `.delivery/` (local results and step logs) is added to the generated `.gitignore`.
@@ -641,6 +642,10 @@ in `.delivery/config.json` `ci.options` (`self-hosted` = Option 1, `github-hoste
   more workers than cpus; or when a shard's estimate (recorded seconds over its workers) is over its timeout. Run it
   in the product's fast tests so a new test file that no shard names fails the pull request that adds it.
 
+- `inputs` (optional, per shard) lists the paths (files or folders) the shard depends on: its workspaces and their
+  dependencies. `root_files` (optional, whole table) lists files that change every shard's key, such as the lock
+  file. A shard with no `inputs` is never skipped. The product owns both lists.
+
 ### Where a shard runs
 
 | Option | Runs on | Result comes back as | The watcher reads |
@@ -667,6 +672,27 @@ in `.delivery/config.json` `ci.options` (`self-hosted` = Option 1, `github-hoste
 - A new head needs new results. A result of an older sha is never reused.
 - `cloud_shard.py` and `cloud_status.py` are starters. A product may contribute a proven runner; it keeps the result
   JSON, the result branch name and the status rules above.
+
+### Pass records (DL20)
+
+`pass_records.py` skips a shard whose inputs already passed. `cloud_shard.py run --records` uses it; a workflow can
+call `pass_records.py check|write` itself.
+
+- **Inputs key.** SHA-256 of the shard id, its OS, its expanded commands and the git blob id of every committed
+  file under the shard's `inputs` and the table's `root_files` at HEAD. No `inputs`, a path that matches nothing, or
+  uncommitted changes under those paths give no key, and a shard with no key always runs.
+- **Records.** One orphan branch (default `ci-pass-records`), one file `<branch>/<shard>/<key>.json` per record
+  (`schema`, `shard`, `key`, `state`, `sha`, `branch`, `seconds`, `at`). Shards write different files; a push that
+  loses a race is fetched and retried (5 tries).
+- **Skip rule.** Only a `success` record with the same key and shard skips. A `failure` record never skips, and an
+  `error` is never recorded. A skipped result is `success`, with `"skipped": true`, the `inputs_key` and the
+  `record` it relied on, and no commands. No reachable records branch means the shard runs.
+- **Read rule.** A ready pull request to the base branch (`--ready`) reads only the base branch's records, never
+  its own branch's. Any other run reads its own branch's records and the base branch's. `--all` ignores records.
+  Each run writes records only under its own branch.
+- **Cleanup.** `pass_records.py cleanup` drops the records of branches that no longer exist on the remote and keeps
+  the newest `--keep` (20) records of each branch and shard. It removes nothing when it cannot list the remote's
+  branches. `cleanup.py` drops a branch's records when it deletes the branch, and never deletes the records branch.
 
 ### Reading results
 
