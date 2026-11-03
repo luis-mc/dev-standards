@@ -45,4 +45,4 @@ If a step shows two statuses for one context, or a shard that ran twice, stop an
 
 ## Tests with fakes
 
-`python tools/test_delivery_fallback.py` covers wait under X (nothing), over X (one launch per waiting shard, once), caps paused (no launch, one warning), Windows (hosted only, ready PR only), a lost claim (no tests) and the ci_watch hook. It uses no network.
+`python tools/test_delivery_fallback_launch.py` covers wait under X (nothing), over X (one launch per waiting shard, once), caps paused (no launch, one warning), Windows (hosted only, ready PR only), a lost claim (no tests) and the ci_watch hook. It uses no network.

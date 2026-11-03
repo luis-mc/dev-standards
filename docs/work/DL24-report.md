@@ -39,7 +39,7 @@ If a module is missing: the claim step fails closed (the shard does not run), an
 
 ## Log
 - Built: `fallback_launch.py` (wait measurement, once-only reservation branch `ci-fallback/<sha>/<shard>`, cloud launcher through the routine API trigger, hosted launcher through `gh workflow run`, `sweep`, `launch`), `fallback_run.py` (claim last), `ci-fallback.yml`, `routines/ci-fallback-watch.json` (template, not created), the hook in `ci_watch.py` (`--no-fallback`).
-- Tests: `python tools/test_delivery_fallback.py` (25 tests, fakes only). Also green: `test_delivery_ci.py`, `test_delivery_cloud.py`, `test_ci_areas.py`, `test_delivery_runner.py`. `ci_areas.py --branch-advice`: "light: test locally only".
+- Tests: `python tools/test_delivery_fallback_launch.py` (25 tests, fakes only). Also green: `test_delivery_ci.py`, `test_delivery_cloud.py`, `test_ci_areas.py`, `test_delivery_runner.py`. `ci_areas.py --branch-advice`: "light: test locally only".
 - Docs: spec section 13 gains R13.40 to R13.45 (high numbers on purpose, so DL23 does not collide), guide `docs/guides/ci-fallback-test-run.md` (setup, the "up to an hour late" warning, test-repository run recipe), CONTRACT.md rows, two change notes (`DL24-delivery-plugin-fallback.md`, `docs/features/delivery/changes/DL24.md`).
 - `docs_check`: two errors, both expected on a task branch. G1: `docs/llms.txt` is stale because of the new guide; generated files are not committed on a task branch, the release regenerates. W1: this report under `docs/work/`; it must be stripped before the join.
 
