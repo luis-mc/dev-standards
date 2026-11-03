@@ -190,13 +190,14 @@ The plugin holds hooks, ledger, watcher, load guard, doctor, the CI option comma
 
 ## 13. CI options
 
-CI can run in three places. The owner picks one **per OS** (linux, windows, macos). The choice is stored in `.delivery/config.json` under `ci.options`. Every project uses the same CI contract; the option decides only where a shard runs and how its result comes back.
+CI can run in four ways, the owner's Option 1 to 4. The owner picks one **per OS** (linux, windows, macos). The choice is stored in `.delivery/config.json` under `ci.options`. Every project uses the same CI contract; the option decides only where a shard runs and how its result comes back.
 
 | Option | Name in config | Runs on | Result comes back as |
 |---|---|---|---|
-| a | `self-hosted` | GitHub Actions on the owner's runners | workflow run |
-| b | `github-hosted` | GitHub Actions on GitHub's runners | workflow run |
-| c | `cloud` | Claude cloud sessions: no Actions, no webhooks | commit status |
+| 1 | `self-hosted` | GitHub Actions on your own self-hosted runners, on any machines you run | workflow run |
+| 2 | `github-hosted` | GitHub Actions on GitHub's runners | workflow run |
+| 3 | `cloud` | Claude cloud sessions: no Actions, no webhooks | commit status |
+| 4 | `self-hosted` plus the `ci.fallback` block | Own runners first, a fallback after a wait. Not built yet: the block is in the config schema and empty | commit status (later step) |
 
 ```mermaid
 flowchart LR
@@ -211,33 +212,35 @@ flowchart LR
   st --> w
 ```
 
-**R13.1** — There is no default option. Setup asks the owner once for each OS the product tests on and records the answer with `delivery_ci.py set --os <os> --option a|b|c`. The same command changes the choice later (`unset` clears it). An OS with no answer is "not chosen".
+**R13.1** — There is no default option. Setup asks the owner once for each OS the product tests on and records the answer with `delivery_ci.py set --os <os> --option 1|2|3`. The same command changes the choice later (`unset` clears it). An OS with no answer is "not chosen".
 
 **R13.2** — All three options use one **shard table**, `scripts/delivery/ci-shards.json` (path set by `ci.shard_table`). Each shard has an `id`, an `os` and `commands`. It may also have a `context`, the check name it reports under; the `id` is the fallback. The table may name test commands under `tests`; a command `@name` expands to one. The product owns the table. The format is in `CONTRACT.md`.
 
 **R13.3** — The CI and delivery templates live only in `luismc-delivery` (`templates/`). `delivery_ci_install.py install` writes the ones that are missing; `update` overwrites the plugin-owned scripts and keeps the files the project edits (`gate.json`, `smoke.json`, the area and timing maps, `ci.yml`, `package.yml`, `ci-shards.json`). Neither command commits, pushes or chooses an option. `tech-stack-setup` calls the installer at the end of its setup and copies none of these files itself.
 
-**R13.4** — Option a keeps the config keys `runners` and `local_runners`, the runner repair loop and the runner load gate. Option b needs workflow files in `.github/workflows/`. Neither needs anything else.
+**R13.4** — Option 1 keeps the config keys `runners` and `local_runners`, the runner repair loop and the runner load gate. Option 2 needs workflow files in `.github/workflows/`. Neither needs anything else.
 
-**R13.5** — Option c uses only cloud sessions. A launcher session starts one shard session per missing shard through the routines API (`RemoteTrigger` create, run, then disable). A scheduled cloud routine watches the heads of the branches in `ci.cloud.branches` with plain git (`cloud_status.py pending`). It starts no GitHub Actions run and needs no webhook.
+**R13.5** — Option 3 uses only cloud sessions. A launcher session starts one shard session per missing shard through the routines API (`RemoteTrigger` create, run, then disable). A scheduled cloud routine watches the heads of the branches in `ci.cloud.branches` with plain git (`cloud_status.py pending`). It starts no GitHub Actions run and needs no webhook.
 
 **R13.6** — A cloud shard runs its commands in order from the repository root, stops at the first failure and writes a result JSON (`schema`, `shard`, `context`, `os`, `sha`, `state`, `started`, `finished`, `commands`, `summary`). `state` is `success`, `failure` or `error`. `error` (wrong OS, HEAD not the requested sha, bad table) is never a pass. With `--push` the result is published as the only file of a new branch `<results_prefix>/<sha>/<shard id>` (default prefix `ci-result`); each (sha, shard) has its own branch, so shards never conflict.
 
-**R13.7** — The one GitHub dependency of option c is the commit status: `POST /repos/{owner}/{repo}/statuses/{sha}` with the shard's `context`, the result's `state` and a description of at most 140 characters. The contexts are the names the required checks use. The token is a statuses-only token the owner creates. It is read from the environment variable named by `ci.cloud.status_token_env` and is never written to a file or printed. A status is posted only for the `sha` in the result; a result for another sha is refused.
+**R13.7** — The one GitHub dependency of Option 3 is the commit status: `POST /repos/{owner}/{repo}/statuses/{sha}` with the shard's `context`, the result's `state` and a description of at most 140 characters. The contexts are the names the required checks use. The token is a statuses-only token the owner creates. It is read from the environment variable named by `ci.cloud.status_token_env` and is never written to a file or printed. A status is posted only for the `sha` in the result; a result for another sha is refused.
 
-**R13.8** — The watcher reads results the same way for all three options. A train is green when, for the PR head, the newest result of every required check is `success`: each workflow of `watcher.ci_workflows` (a, b) and each cloud context of the shard table (c). A missing result is not green; a failed or errored one is red. When every chosen OS is cloud, no workflow is read. `ci_watch.py SHA --context NAME` waits for statuses with the exit codes of the workflow watch (0 pass, 1 failed, 4 timed out).
+**R13.8** — The watcher reads results the same way for all three options. A train is green when, for the PR head, the newest result of every required check is `success`: each workflow of `watcher.ci_workflows` (Options 1, 2) and each cloud context of the shard table (Option 3). A missing result is not green; a failed or errored one is red. When every chosen OS is cloud, no workflow is read. `ci_watch.py SHA --context NAME` waits for statuses with the exit codes of the workflow watch (0 pass, 1 failed, 4 timed out).
 
-**R13.9** — `delivery_doctor.py` has a `ci` check. It fails when the shard table has a shard for an OS that was not chosen. For a it needs a `runners` entry for the OS; for b a workflow file; for c `ci.cloud.repo`, `status_token_env` and `branches`, a shard table, and one context per cloud shard. A missing token variable is a note, not a failure, because the token lives in the cloud environment. With nothing chosen and no shard table the check passes with a note.
+**R13.9** — `delivery_doctor.py` has a `ci` check. It fails when the shard table has a shard for an OS that was not chosen. For Option 1 it needs a `runners` entry for the OS; for Option 2 a workflow file; for Option 3 `ci.cloud.repo`, `status_token_env` and `branches`, a shard table, and one context per cloud shard. A missing token variable is a note, not a failure, because the token lives in the cloud environment. With nothing chosen and no shard table the check passes with a note.
 
 The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are **starters**: small, tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name and the status rules.
 
-Failure modes of option c:
+Failure modes of Option 3:
 
 | What fails | Result |
 |---|---|
 | A shard session dies | No result branch. The head stays not green. The watcher routine starts the shard again after `ci.cloud.shard_timeout_min`. |
 | The status token is missing or wrong | `cloud_status.py` exits 2 and posts nothing. The head stays not green. |
 | A new push moves the branch | Results of the old sha are ignored. The new head needs its own. |
+
+**R13.10** — Option 1 is the user's own self-hosted runners **on any machines they run**, not one machine. Every text that names these runners says so. The `ci` doctor check names the runners it found for each OS, and the by-hand steps to add one more on another machine for that OS (`delivery_ci.py add-runner --os <os>` prints the same steps). The rule behind it: a job that waits more than X minutes for a runner means add a runner with the same label on another machine. The config keeps the names `self-hosted`, `github-hosted` and `cloud`, and has an empty `ci.fallback` block for Option 4. The docs and the setup say Option 1 to 4.
 
 ## Versions
 

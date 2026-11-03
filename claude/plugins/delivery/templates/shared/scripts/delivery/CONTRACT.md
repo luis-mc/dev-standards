@@ -587,8 +587,9 @@ then runs `gate.json`'s `setup` commands. Idempotent.
 
 The same contract for all three places CI can run. A product gives a **shard table** and its test commands; the
 CI option decides only where a shard runs and how its result comes back. Which option a product uses is set per OS
-in `.delivery/config.json` `ci.options` (`self-hosted` = a, `github-hosted` = b, `cloud` = c). There is no default.
-`delivery_ci.py set` changes it. The full rules are `docs/features/delivery/spec.md`, section 13.
+in `.delivery/config.json` `ci.options` (`self-hosted` = Option 1, `github-hosted` = Option 2, `cloud` = Option 3). There is no default.
+`delivery_ci.py set --os <os> --option 1|2|3` changes it. Option 4 (own runners first, a fallback after a wait) is the
+`ci.fallback` block of the config; its schema is empty until the Option 4 step is built. The full rules are `docs/features/delivery/spec.md`, section 13.
 
 ### Shard table: `scripts/delivery/ci-shards.json`
 
@@ -607,11 +608,11 @@ in `.delivery/config.json` `ci.options` (`self-hosted` = a, `github-hosted` = b,
 
 | Option | Runs on | Result comes back as | The watcher reads |
 |---|---|---|---|
-| a `self-hosted` | a GitHub Actions job on a runner listed in `runners` | the job's check | the newest `ci.yml` run of the head |
-| b `github-hosted` | a GitHub Actions job on a GitHub runner | the job's check | the same workflow runs |
-| c `cloud` | one Claude cloud session per shard (no Actions, no webhooks) | `result.json` on the branch `ci-result/<sha>/<shard id>`, then a commit status | the commit statuses of the head |
+| Option 1 `self-hosted` | a GitHub Actions job on your own self-hosted runners, on any machines you run, listed in `runners` | the job's check | the newest `ci.yml` run of the head |
+| Option 2 `github-hosted` | a GitHub Actions job on a GitHub runner | the job's check | the same workflow runs |
+| Option 3 `cloud` | one Claude cloud session per shard (no Actions, no webhooks) | `result.json` on the branch `ci-result/<sha>/<shard id>`, then a commit status | the commit statuses of the head |
 
-### Option c
+### Option 3 (cloud)
 
 - **Launcher.** A cloud session started for a head runs `cloud_status.py pending`, then starts one session per
   missing shard through the routines API (`RemoteTrigger` create, run, then disable). Each shard session checks out the

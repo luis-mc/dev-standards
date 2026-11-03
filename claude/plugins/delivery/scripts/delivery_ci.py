@@ -2,11 +2,17 @@
 """Show or change where CI runs, per OS (DL15). Writes `ci.options` in .delivery/config.json.
 
     delivery_ci.py show  [--root DIR] [--json]
-    delivery_ci.py set   --os linux|windows|macos|all --option a|b|c [--root DIR]
+    delivery_ci.py set   --os linux|windows|macos|all --option 1|2|3 [--root DIR]
     delivery_ci.py unset --os linux|windows|macos|all [--root DIR]
+    delivery_ci.py add-runner --os linux|windows|macos [--labels a,b] [--root DIR]
 
-Options: a = self-hosted (GitHub Actions on the owner's runners), b = github-hosted (GitHub Actions on GitHub's
-runners), c = cloud (Claude cloud sessions, no Actions, no webhooks). The long names work too.
+Option 1 = self-hosted (GitHub Actions on your own self-hosted runners, on any machines you run), Option 2 =
+github-hosted (GitHub Actions on GitHub's runners), Option 3 = cloud (Claude cloud sessions, no Actions, no
+webhooks). The config names work too, and so do the old letters a, b, c. Option 4 (own runners first, a fallback
+after a wait) is the `ci.fallback` block; `set` does not turn it on yet.
+
+`add-runner` prints the by-hand steps to add one more runner of a label on another machine. A job that waits
+more than X minutes for a runner means: add a runner with that label on another machine.
 
 There is no default. An OS that is not set is "not chosen"; setup must ask the owner, and `delivery_doctor.py`
 fails for a shard whose OS is not chosen. The command changes the config only. It does not touch workflow
@@ -29,8 +35,15 @@ import delivery_config as C  # noqa: E402
 LETTERS = {"a": "self-hosted", "b": "github-hosted", "c": "cloud"}
 
 
+NUMBERS = {"1": "self-hosted", "2": "github-hosted", "3": "cloud"}
+
+
 def normalise_option(raw: str):
     raw = (raw or "").strip().lower()
+    if raw.startswith("option"):
+        raw = raw[6:].strip()
+    if raw in NUMBERS:
+        return NUMBERS[raw]
     if raw in LETTERS:
         return LETTERS[raw]
     return raw if raw in C.CI_OPTIONS else None
@@ -76,17 +89,29 @@ def change(cfg: dict, oses: list, option) -> dict:
 
 def describe(cfg: dict) -> list:
     opts = C.ci_options(cfg)
-    return [{"os": o, "option": opts.get(o), "letter": C.CI_OPTION_LETTER.get(opts.get(o))} for o in C.CI_OS]
+    return [{"os": o, "option": opts.get(o), "letter": C.CI_OPTION_LETTER.get(opts.get(o)),
+             "number": C.CI_OPTION_NUMBER.get(opts.get(o))} for o in C.CI_OS]
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="delivery_ci.py", description=__doc__.split("\n\n")[0])
-    ap.add_argument("action", choices=["show", "set", "unset"])
+    ap.add_argument("action", choices=["show", "set", "unset", "add-runner"])
     ap.add_argument("--os", dest="os_name", help="linux, windows, macos or all")
-    ap.add_argument("--option", help="a, b or c (self-hosted, github-hosted, cloud)")
+    ap.add_argument("--option", help="1, 2 or 3 (self-hosted, github-hosted, cloud)")
+    ap.add_argument("--labels", help="add-runner: the labels of the runner, comma separated")
     ap.add_argument("--root", default=".", help="repository root (default: the current folder)")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
+    if args.action == "add-runner":
+        if args.os_name not in C.CI_OS:
+            print("delivery_ci: --os must be linux, windows or macos", file=sys.stderr)
+            return 1
+        labels = [x.strip() for x in (args.labels or "").split(",") if x.strip()]
+        print("Add a runner on another machine (%s), by hand:" % args.os_name)
+        for i, step in enumerate(C.runner_steps(args.os_name, labels), 1):
+            print("%d. %s" % (i, step))
+        print(C.add_runner_advice())
+        return 0
     root = os.path.abspath(args.root)
     if not os.path.isdir(os.path.join(root, ".delivery")):
         print("delivery_ci: no .delivery/ folder in %s" % root, file=sys.stderr)
@@ -103,7 +128,7 @@ def main(argv=None) -> int:
             print(json.dumps(rows))
         else:
             for r in rows:
-                print("%-8s %s" % (r["os"], "%s (%s)" % (r["option"], r["letter"]) if r["option"] else "not chosen"))
+                print("%-8s %s" % (r["os"], C.option_name(r["option"]) or "not chosen"))
         return 0
     if args.os_name not in (*C.CI_OS, "all"):
         print("delivery_ci: --os must be linux, windows, macos or all", file=sys.stderr)
@@ -113,12 +138,13 @@ def main(argv=None) -> int:
     if args.action == "set":
         option = normalise_option(args.option)
         if option is None:
-            print("delivery_ci: --option must be a, b or c (self-hosted, github-hosted, cloud)", file=sys.stderr)
+            print("delivery_ci: --option must be 1, 2 or 3 (self-hosted, github-hosted, cloud). "
+                  "Option 4 (own runners, then a fallback) is not built yet", file=sys.stderr)
             return 1
     write_config(path, change(cfg, oses, option))
     for r in describe(read_config(path)):
         if r["os"] in oses:
-            print("%-8s %s" % (r["os"], r["option"] or "not chosen"))
+            print("%-8s %s" % (r["os"], C.option_name(r["option"]) or "not chosen"))
     return 0
 
 
