@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-03T11:34+00:00",
+  "updated": "2026-11-03T14:19+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -682,14 +682,15 @@
       "id": "DL16",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Waiting",
       "item": "CI wait fix: report-only jobs skipped",
-      "detail": "comics run 31 min, 12 min waiting for the one Linux runner; skip report-only jobs, scan on Windows, run times as a step",
-      "expected": "03 Nov ~13:30",
-      "changed": "2026-11-03T11:34+00:00",
-      "expected_basis": "comics branch CI green 11:26; joins next comics release with CIR19+CO820",
+      "detail": "Comics part live in RELEASE-151 (13:13; release CI 31 min, skipped report jobs accepted). Template part: draft PR #126, rides the next dev-standards release",
+      "expected": "03 Nov ~16:00",
+      "changed": "2026-11-03T14:19+00:00",
+      "expected_basis": "PR #126 joins the next dev-standards release; CI ~20 min",
       "no_release": "own dev-standards release later",
-      "started": "2026-11-03T09:03+00:00"
+      "started": "2026-11-03T09:03+00:00",
+      "waits_on": "work"
     },
     {
       "id": "DS1",
