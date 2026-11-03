@@ -10,6 +10,7 @@ type: reference
 code:
   - claude/plugins/delivery/scripts/*.py
   - claude/plugins/delivery/hooks/hooks.json
+  - claude/plugins/delivery/commands/*.md
   - claude/plugins/delivery/.claude-plugin/plugin.json
   - claude/plugins/delivery/references/*.json
   - claude/plugins/delivery/templates/shared/scripts/delivery/*.py
@@ -234,6 +235,10 @@ flowchart LR
 
 **R13.11** — Pass records live on one orphan branch (`ci-pass-records`), one file per branch, shard and key, so shards never conflict. A ready pull request to the base branch reads only the base branch's records, never its own branch's; other runs read their own and the base's. `pass_records.py cleanup` and `cleanup.py` remove the records of branches that no longer exist, and keep the newest 20 records of each branch and shard.
 
+**R13.12** — `/delivery-ci-setup` (command of `luismc-delivery`) is the guided setup for Options 1 to 3. It has **no default at any question**: the engine `delivery_ci_setup.py apply` refuses and lists each missing answer. A cap (monthly minutes, sessions a day) is offered and may be skipped, but only by an explicit "none". It reads the project, asks the option per OS, asks the option's own questions, writes `.delivery/config.json` (`ci.options`, `ci.guided`, `runners`, `ci.limits`, `ci.serial`, `ci.wait_min`, `ci.hosted`, `ci.cloud`), runs `delivery_ci_install.py install` and `delivery_doctor.py`, and prints a numbered by-hand list. Option 1 asks for each machine (name, OS, labels, memory and CPU ceilings) and the minutes X after which the owner adds a runner on another machine; the example for X is 10. Option 2 asks the runner size per OS and larger runners; Option 3 asks the repository, branches, shard timeout and the name of the token variable (Linux only).
+
+**R13.13** — The by-hand list is one function, `by_hand_items`. The printer and the doctor both read it, so each printed step has one doctor check. Option 1: the runner is online with its labels, `CI_RUNS_ON` and `CI_SERIAL` are set, the load gate is set up on the machine. Option 2: the larger runner exists, `CI_RUNS_ON` is set, a GitHub spending limit is set. Option 3: the statuses-only token variable, the ruleset accepts "Any source" for the cloud checks, the sessions can reach the repository. When the project used the setup (`ci.guided`), the `ci` check fails for a step that is open. A step the doctor cannot read (billing, a remote machine, the cloud environment) fails until the owner runs `delivery_ci_setup.py confirm ITEM`. Running the command again changes the choice and prints what the new choice still needs.
+
 The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are **starters**: small, tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name and the status rules.
 
 Failure modes of Option 3:
@@ -245,7 +250,7 @@ Failure modes of Option 3:
 | A new push moves the branch | Results of the old sha are ignored. The new head needs its own. |
 | The records branch cannot be reached | No shard is skipped; every shard runs (R13.10). |
 
-**R13.10** — Option 1 is the user's own self-hosted runners **on any machines they run**, not one machine. Every text that names these runners says so. The `ci` doctor check names the runners it found for each OS, and the by-hand steps to add one more on another machine for that OS (`delivery_ci.py add-runner --os <os>` prints the same steps). The rule behind it: a job that waits more than X minutes for a runner means add a runner with the same label on another machine. The config keeps the names `self-hosted`, `github-hosted` and `cloud`, and has an empty `ci.fallback` block for Option 4. The docs and the setup say Option 1 to 4.
+**R13.14** — Option 1 is the user's own self-hosted runners **on any machines they run**, not one machine. Every text that names these runners says so. The `ci` doctor check names the runners it found for each OS, and the by-hand steps to add one more on another machine for that OS (`delivery_ci.py add-runner --os <os>` prints the same steps). The rule behind it: a job that waits more than X minutes for a runner means add a runner with the same label on another machine. The config keeps the names `self-hosted`, `github-hosted` and `cloud`, and has an empty `ci.fallback` block for Option 4. The docs and the setup say Option 1 to 4.
 
 ## Versions
 

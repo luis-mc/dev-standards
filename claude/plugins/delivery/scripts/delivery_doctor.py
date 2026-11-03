@@ -21,6 +21,10 @@ Seven checks, each `ok` or `FAIL` with the fix:
            a: an entry in `runners` for that OS; b: workflow files in .github/workflows; c: ci.cloud.repo,
            status_token_env and branches, a shard for the OS, and one context per shard. FAILS when the shard table
            has a shard for an OS that was not chosen (there is no default). Nothing chosen and no shard table: ok.
+           (CIR10 S6) When `/delivery-ci-setup` wrote the config (`ci.guided`), it also checks every item of the by-hand
+           list that the setup printed (delivery_ci_setup.py `by_hand_items`): runner online with its labels, repository
+           variables, larger runner, token variable, ruleset 'Any source'. An item it cannot read (billing, a remote
+           machine, the cloud environment) FAILS until `delivery_ci_setup.py confirm ITEM`.
 Exit 0 all ok, 1 at least one FAIL, 2 no .delivery/ folder. Standard library only.
 """
 from __future__ import annotations
@@ -35,6 +39,7 @@ import tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
+import delivery_ci_setup as SETUP  # noqa: E402
 import delivery_config as C  # noqa: E402
 import hooklib as H  # noqa: E402
 
@@ -357,6 +362,9 @@ def check_ci(root, cfg):
     ctxs = [sh["context"] for sh in cloud_shards]
     for c in sorted({c for c in ctxs if ctxs.count(c) > 1}):
         problems.append("two cloud shards share the status context %r" % c)
+    hand_problems, hand_notes = SETUP.check_by_hand(root, cfg)
+    problems += hand_problems
+    notes += hand_notes
     if problems:
         return False, "; ".join(problems)
     summary = ", ".join("%s=Option %d" % (o, C.CI_OPTION_NUMBER[v]) for o, v in sorted(opts.items())) or "no OS chosen"
