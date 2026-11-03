@@ -25,13 +25,13 @@ Option 3 runs Linux only. If the project tests on Windows, pick another option f
 
 1. Run `/delivery-ci-setup`. It has no default at any question.
 2. It reads the project: tracks, whether an installer is built, whether a shard table exists.
-3. For each OS the product tests on, choose Option 1 to 4.
+3. For each OS the product tests on, choose Option 1, 2 or 3. Option 4 is Option 1 plus a fallback: answer Option 1, then say yes when it asks about a fallback.
 4. Answer the questions of that option:
    - Option 1: the machines (a name and an OS each), the runner labels, whether ready-PR runs queue one at a time, the memory and CPU ceiling of each machine.
    - Option 2: the runner size per OS, whether to use larger runners, an optional monthly minutes cap.
    - Option 3: the repository, the branches to watch, the shard timeout, the name of the variable that holds the token, an optional cap on sessions per day.
-   - Option 4: the main (Option 1), the fallback (Option 3, or Option 2 for Windows), X (the setup shows 10 as an example), which runs may use the fallback, and optional caps.
-5. It writes `.delivery/config.json`, runs `delivery_ci_install.py install` and `delivery_doctor.py`.
+   - Option 4 (written to `ci.fallback`): the fallback per OS (`cloud`, Linux only, or `github-hosted`), X in minutes (`after_min`; the setup shows 10 as an example), and the optional caps `max_shards_per_day` and `max_minutes_per_month`. For `cloud` it also asks the URL of the routine's API trigger and the name of the variable that holds its token. Every run may use the fallback. Optional per-option `limits` (`browser_workers`, `integration_workers`, `memory_gib`) go to `ci.limits`.
+5. It writes `.delivery/config.json` (`ci.options`, and for Option 4 `ci.fallback`), runs `delivery_ci_install.py install` and `delivery_doctor.py`.
 6. It prints the by-hand list for your choice. Do those steps next.
 7. To change the choice later, run the command again. It changes the config only and says what the new choice still needs.
 

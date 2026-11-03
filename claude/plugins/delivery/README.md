@@ -118,16 +118,16 @@ For a project whose agents are gated by CI on their branch instead of a full loc
 
 ## CI options (DL15)
 
-CI can run in four ways (the owner's Option 1 to 4). The owner picks one for each OS (linux, windows, macos). Config values exist for Options 1 to 3; Option 4 is the `ci.fallback` block, built in a later step. There is no default: setup asks, and the same command changes the choice later.
+CI can run in four ways (the owner's Option 1 to 4). The owner picks one for each OS (linux, windows, macos). Config values exist for Options 1 to 3; Option 4 is the `ci.fallback` block on an Option 1 OS. There is no default: `/delivery-ci-setup` asks every question and writes the config, and running it again changes the choice.
 
 | Option | Config value | Runs on |
 |---|---|---|
 | 1 | `self-hosted` | GitHub Actions on your own self-hosted runners, on any machines you run |
 | 2 | `github-hosted` | GitHub Actions on GitHub's runners |
 | 3 | `cloud` | Claude cloud sessions (no Actions, no webhooks) |
-| 4 | `self-hosted` plus `ci.fallback` | Own runners first, a fallback after a wait (not built yet) |
+| 4 | `self-hosted` plus `ci.fallback` | Own runners first, a fallback after X minutes of runner wait (`ci.fallback`: `options`, `after_min`, optional caps, `cloud`, `hosted`) |
 
-1. Ask the owner, per OS. Record it: `python3 scripts/delivery_ci.py set --os linux --option 1|2|3` (`show`, `unset` also exist). It writes `ci.options` in `.delivery/config.json`.
+1. Guided: run `/delivery-ci-setup` (engine `scripts/delivery_ci_setup.py`). It writes `ci.options`, `ci.fallback`, `ci.limits`, the runners and the files, and prints the by-hand list. By hand: ask the owner, per OS. Record it: `python3 scripts/delivery_ci.py set --os linux --option 1|2|3` (`show`, `unset` also exist). It writes `ci.options` in `.delivery/config.json`.
 2. Write the CI and delivery files: `python3 scripts/delivery_ci_install.py install --track ts|go|rust|dotnet --root .` (`update` later). The files come from `templates/`. tech-stack-setup calls this at the end of its setup. The command never commits.
 3. The product gives a shard table, `scripts/delivery/ci-shards.json` (format: `ci-shards.example.json`).
 4. Option 1: list the runners in `runners`, one entry per machine. Option 3: set `ci.cloud.repo`, `ci.cloud.status_token_env` and `ci.cloud.branches`; the owner creates a statuses-only token and puts it in the cloud environment under that name.
