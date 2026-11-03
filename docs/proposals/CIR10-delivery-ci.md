@@ -277,3 +277,24 @@ Sizes are agent hours (one agent at medium effort), including tests and the one 
 Order of risk: S7 and S8 carry the new ideas, so I would run them first on a test repository after S1. S4 gives the most speed for the least risk and is the one to do first for the first product.
 
 Nothing here changes a spec's version, a plugin's `version`, `.claude/rules/` or any config. The release fold writes versions from the change notes that each step adds.
+
+## 8. Owner answers (3 Nov 2026, ~14:55, decisions D30 to D41)
+
+The inputs this proposal could not read are now in `docs/proposals/CIR10-inputs/` (CIR12 runner prices, the study's `decisions.json`, `09-measured.html`).
+
+| Q | Answer | Note |
+|---|---|---|
+| 1 Watcher | **Session + hourly routine only** | No watchdog job in the workflow. Unattended, a fallback may start up to an hour late; the setup says so plainly. |
+| 2 Required checks | **Always commit statuses**, ruleset "Any source" | |
+| 3 X | Setup shows **10** as the example; no default | |
+| 4 Spend caps | **Caps optional** | The setup offers caps and explains the risk, but does not refuse a fallback without them. GitHub's spending limit stays a by-hand step it prints. |
+| 5 Queue wait | **Only runner waits count** toward X | |
+| 6 Scope | **Every run** may use the fallback | Not only ready PRs. |
+| 7 Windows | **Hosted Windows** for the Windows-only set on ready PRs, within caps if set | |
+| 8 Budgets | **Scale by speed probe**, refuse above 3 | |
+| 9 Pre-empt | **First claim wins** | |
+| 10 Linux MSI | **CI check only** for now | Reopen after a Windows install smoke passes on it each release. |
+| 11 Inputs | In `CIR10-inputs/` | |
+| 12 Names | Keep `self-hosted` / `github-hosted` / `cloud`, add a `fallback` block; docs and setup say Option 1 to 4 | |
+
+Go: **build all steps** (S1 to S11). Because of answer 1, S8 builds the cloud launcher + `ci_watch.py` hook + hourly routine, and no hosted watchdog job (a hosted fallback is started by the same watcher).

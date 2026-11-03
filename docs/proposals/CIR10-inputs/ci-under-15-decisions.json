@@ -1,0 +1,1036 @@
+{
+  "decisions": [
+    {
+      "id": "D1",
+      "question": "Which CI speed options (CIO1-CIO28) to build?",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "task": "CIR2",
+      "options": [
+        {
+          "label": "The recommended package",
+          "summary": "All except CIO18, CIO26 (owner calls) and CIO24 (optional): usual full release run ~11 min (14 avg), worst case 56 -> ~28 min.",
+          "recommended": true
+        },
+        {
+          "label": "Package plus CIO18 (4 e2e workers when e2e runs alone)",
+          "summary": "Worst case ~23 min; amends D87 for CI.",
+          "recommended": false
+        },
+        {
+          "label": "Package plus CIO26 (installers on merge, not on the PR)",
+          "summary": "Windows chain 11 -> 3 min; a packaging error shows after merge.",
+          "recommended": false
+        },
+        {
+          "label": "Pick options one by one",
+          "summary": "Choose from the 28 rows of section 7.",
+          "recommended": false
+        }
+      ],
+      "chosen": "The recommended package",
+      "decided": "2026-11-02",
+      "owner_words": "Recommended package (answered 07:19)"
+    },
+    {
+      "id": "D2",
+      "question": "Drop CIO7 (fake clock), measured 0 min saved by CIR6?",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "task": "CIR6",
+      "options": [
+        {
+          "label": "Drop CIO7",
+          "summary": "Measured 0 saving",
+          "recommended": true
+        },
+        {
+          "label": "Re-measure on CI first",
+          "summary": "CIR9 measures it",
+          "recommended": false
+        }
+      ],
+      "chosen": "Drop CIO7",
+      "decided": "2026-11-02",
+      "owner_words": "Drop CIO7 (Recommended), 08:00"
+    },
+    {
+      "id": "D3",
+      "question": "CIO12: root vitest pool 4 -> 2 at the RELEASE-144 join?",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "task": "CIR6",
+      "options": [
+        {
+          "label": "Yes, at the join",
+          "summary": "One line; measured with the package",
+          "recommended": true
+        },
+        {
+          "label": "Separate later task",
+          "summary": "Measure alone",
+          "recommended": false
+        }
+      ],
+      "chosen": "Yes, at the join",
+      "decided": "2026-11-02",
+      "owner_words": "Yes, at the join (Recommended), 08:00"
+    },
+    {
+      "id": "D4",
+      "question": "Open a task for scroll-keeps.integration failing in a cloud sandbox?",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "task": "CIR6",
+      "options": [
+        {
+          "label": "Yes, cloud agent now",
+          "summary": "Find sandbox-only vs real fault",
+          "recommended": true
+        },
+        {
+          "label": "Only if CI fails it",
+          "summary": "Watch RELEASE-144",
+          "recommended": false
+        }
+      ],
+      "chosen": "Yes, cloud agent now",
+      "decided": "2026-11-02",
+      "owner_words": "Yes, cloud agent now (Recommended), 08:00"
+    },
+    {
+      "id": "D5",
+      "question": "Which release do the new fixes ride (Now strip, fold cause, Status tabs)?",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "task": "CIR3",
+      "options": [
+        {
+          "label": "Ready ones ride 144, rest 145",
+          "summary": "Whatever is CODE DONE by the 144 join rides it; the rest form RELEASE-145",
+          "recommended": true
+        },
+        {
+          "label": "All on RELEASE-145",
+          "summary": "Keep 144 as planned; the new tasks go together next",
+          "recommended": false
+        },
+        {
+          "label": "Hold 144 for them",
+          "summary": "One bigger release later (~10:30)",
+          "recommended": false
+        }
+      ],
+      "chosen": "Hold 144 for them",
+      "decided": "2026-11-02",
+      "owner_words": "Hold 144 for them, 08:00"
+    },
+    {
+      "question": "Where should the MSI build and post-install self-test run without the PC runners (CIR11)?",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Your PC, at install time",
+          "summary": "MSI on this PC for installer releases only; self-test after update.",
+          "recommended": false
+        },
+        {
+          "label": "Hosted Windows runner",
+          "summary": "GitHub-hosted Windows for installer releases (Actions minutes).",
+          "recommended": false
+        },
+        {
+          "label": "Try Wine first",
+          "summary": "Build the MSI with WiX under Wine on Linux; 1-3 days, may fail.",
+          "recommended": false
+        },
+        {
+          "label": "Windows VM on demand",
+          "summary": "Cloud Windows VM ~5 min per release.",
+          "recommended": false
+        }
+      ],
+      "chosen": "Try Wine first",
+      "decided": "2026-11-02",
+      "owner_words": "Try Wine first (answered ~18:40)",
+      "task": "CIR11",
+      "id": "D6"
+    },
+    {
+      "question": "Is a code-signing certificate planned (CIR11)?",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "No, not planned",
+          "summary": "Keep unsigned installers.",
+          "recommended": false
+        },
+        {
+          "label": "Yes, later",
+          "summary": "Design so signing can be added via a cloud signing service.",
+          "recommended": false
+        }
+      ],
+      "chosen": "Yes, later",
+      "decided": "2026-11-02",
+      "owner_words": "Yes, later (answered ~18:40)",
+      "task": "CIR11",
+      "id": "D7"
+    },
+    {
+      "question": "RELEASE-145 integration under the new CI layout keeps failing: keep fixing, or revert to master's CI layout?",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "A, with B as safety net",
+          "summary": "Agent's fix first; revert CI layout if not proven by ~19:45.",
+          "recommended": true
+        },
+        {
+          "label": "B now",
+          "summary": "Revert new CI layout now; ship app changes on master's CI.",
+          "recommended": false
+        },
+        {
+          "label": "A only",
+          "summary": "Keep fixing the new layout however long it takes.",
+          "recommended": false
+        }
+      ],
+      "chosen": "A only",
+      "decided": "2026-11-02",
+      "owner_words": "A only (answered ~18:55)",
+      "task": "CO797",
+      "id": "D8"
+    },
+    {
+      "question": "Cloud CI full-run split",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "A: up to 10",
+          "summary": "~14 min full run",
+          "recommended": true
+        },
+        {
+          "label": "B: up to 4",
+          "summary": "~32 min full run",
+          "recommended": false
+        }
+      ],
+      "chosen": "A: up to 10",
+      "decided": "2026-11-02",
+      "owner_words": "A: up to 10 (answered ~19:05)",
+      "task": "CIR11",
+      "id": "D9"
+    },
+    {
+      "question": "Where the ~10 real-Windows tests run without this PC",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Cloud + GitHub Windows, $0",
+          "summary": "~10 tests on GitHub Windows before merge, $0 limit",
+          "recommended": true
+        },
+        {
+          "label": "All in cloud sessions",
+          "summary": "post-install self-test only",
+          "recommended": false
+        },
+        {
+          "label": "GitHub Windows for all",
+          "summary": "all Windows work on GitHub Windows, $0 limit",
+          "recommended": false
+        }
+      ],
+      "chosen": "Cloud + GitHub Windows, $0",
+      "decided": "2026-11-02",
+      "owner_words": "Cloud + GitHub Windows, $0 (answered ~19:05)",
+      "task": "CIR11",
+      "id": "D10"
+    },
+    {
+      "question": "When to start building the cloud CI",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Start now",
+          "summary": "in parallel with RELEASE-145",
+          "recommended": true
+        },
+        {
+          "label": "After RELEASE-145 merges",
+          "summary": "~21:00",
+          "recommended": false
+        }
+      ],
+      "chosen": "Start now",
+      "decided": "2026-11-02",
+      "owner_words": "Start now (answered ~19:05)",
+      "task": "CIR11",
+      "id": "D11"
+    },
+    {
+      "question": "Owner-only settings: Any source on 4 checks at switch, statuses-only token if needed, $0 Actions limit",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, all three",
+          "summary": "exact steps sent at each point",
+          "recommended": true
+        },
+        {
+          "label": "Yes, but no token",
+          "summary": "settings 1 and 3 only",
+          "recommended": false
+        }
+      ],
+      "chosen": "Yes, all three",
+      "decided": "2026-11-02",
+      "owner_words": "Yes, all three (answered ~19:05)",
+      "task": "CIR11",
+      "id": "D12"
+    },
+    {
+      "question": "CI runners once off this PC (CIR12 pricing): rent one vendor, buy hardware, or cloud sessions",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Blacksmith",
+          "summary": "rented Linux+Windows+Mac, ~$190-450/month",
+          "recommended": true
+        },
+        {
+          "label": "Namespace or WarpBuild",
+          "summary": "fallback vendors, ~$220-500/month",
+          "recommended": false
+        },
+        {
+          "label": "Buy hardware",
+          "summary": "Mac mini + x64 mini PC ~EUR 1,840 one-time",
+          "recommended": false
+        },
+        {
+          "label": "Cloud sessions, no iOS yet",
+          "summary": "free Claude sessions + GitHub Windows at $0 limit (D9-D12)",
+          "recommended": false
+        }
+      ],
+      "chosen": "Buy hardware",
+      "decided": "2026-11-02",
+      "owner_words": "leave things as is for now; I'll buy hardware. Spending cap: $0 (answered ~20:55)",
+      "task": "CIR12",
+      "id": "D13"
+    },
+    {
+      "question": "Cloud CI plan (CIR11) vs hardware (D13): build now, Phase 1 only, or hold",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Build the cloud plan now",
+          "summary": "Phase 1 today; Mac mini adds iOS later",
+          "recommended": true
+        },
+        {
+          "label": "Only Phase 1, then wait",
+          "summary": "speed-independent tests, stop till hardware",
+          "recommended": false
+        },
+        {
+          "label": "Hold it, hardware instead",
+          "summary": "CI moves to the Mac mini when bought",
+          "recommended": false
+        }
+      ],
+      "chosen": "Build the cloud plan now",
+      "decided": "2026-11-02",
+      "owner_words": "Build the cloud plan now (answered ~21:05)",
+      "task": "CIR11",
+      "id": "D14"
+    },
+    {
+      "question": "Where CI options live in dev-standards",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, delivery + templates",
+          "summary": "delivery runtime + tech-stack-setup workflow templates",
+          "recommended": true
+        },
+        {
+          "label": "All in luismc-delivery",
+          "summary": "templates move too",
+          "recommended": false
+        }
+      ],
+      "chosen": "All in luismc-delivery",
+      "decided": "2026-11-02",
+      "owner_words": "why does tech-stack-setup need ci logic? ... shouldn't CI be ONLY in delivery? (~21:20)",
+      "task": "CIR10",
+      "id": "D15"
+    },
+    {
+      "question": "CIR13 while the plugin plan starts",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Let it finish, lift later",
+          "summary": "prove on real tests, then lift runner to plugin",
+          "recommended": true
+        },
+        {
+          "label": "Redirect now",
+          "summary": "build runner in dev-standards first",
+          "recommended": false
+        }
+      ],
+      "chosen": "Let it finish, lift later",
+      "decided": "2026-11-02",
+      "owner_words": "Let it finish, lift later (~21:20)",
+      "task": "CIR13",
+      "id": "D16"
+    },
+    {
+      "question": "Default CI backend mix",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Linux cloud, Win GitHub, Mac own",
+          "summary": "per-OS mix",
+          "recommended": true
+        },
+        {
+          "label": "Keep PC runners as default",
+          "summary": "others opt-in",
+          "recommended": false
+        },
+        {
+          "label": "All GitHub-hosted",
+          "summary": "paid past free minutes",
+          "recommended": false
+        },
+        {
+          "label": "No defaults, user picks",
+          "summary": "owner answer: chosen at setup, changeable via the delivery plugin",
+          "recommended": false
+        }
+      ],
+      "chosen": "No defaults, user picks",
+      "decided": "2026-11-02",
+      "owner_words": "This should be a user choice during setup, and that can be changed using the delivery plugin; no defaults (~21:20)",
+      "task": "CIR10",
+      "id": "D17"
+    },
+    {
+      "question": "What starts cloud-session CI",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "GitHub webhook routine",
+          "summary": "GitHub event fires a routine",
+          "recommended": true
+        },
+        {
+          "label": "Orchestrator session",
+          "summary": "agent_ci.py launches",
+          "recommended": false
+        },
+        {
+          "label": "Both",
+          "summary": "webhook + by hand",
+          "recommended": false
+        },
+        {
+          "label": "Cloud sessions only",
+          "summary": "owner answer: no GitHub dependencies (sessions start sessions)",
+          "recommended": false
+        }
+      ],
+      "chosen": "Cloud sessions only",
+      "decided": "2026-11-02",
+      "owner_words": "for cloud sessions CI, focus on using only cloud sessions, no github dependencies (~21:20)",
+      "task": "CIR10",
+      "id": "D18"
+    },
+    {
+      "question": "Cloud-session CI merge gate: plugin gates via git ref, or post commit statuses",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Plugin gates the merge",
+          "summary": "results in a git ref, no GitHub API; drop 4 required checks",
+          "recommended": true
+        },
+        {
+          "label": "Post commit statuses",
+          "summary": "ruleset keeps master; one statuses-only token",
+          "recommended": false
+        }
+      ],
+      "chosen": "Post commit statuses",
+      "decided": "2026-11-02",
+      "owner_words": "Post commit statuses (~21:25)",
+      "task": "CIR10",
+      "id": "D19"
+    },
+    {
+      "question": "Integration tests in parallel: one database per worker (template clone); when to build",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Task after RELEASE-145",
+          "summary": "own branch, own CI run before a release",
+          "recommended": true
+        },
+        {
+          "label": "Fold into CIR13",
+          "summary": "cloud runner agent adds per-worker databases",
+          "recommended": false
+        },
+        {
+          "label": "Not now",
+          "summary": "one file at a time per part",
+          "recommended": false
+        }
+      ],
+      "chosen": "Fold into CIR13",
+      "decided": "2026-11-02",
+      "owner_words": "Fold into CIR13 (~21:50)",
+      "task": "CIR13",
+      "id": "D20"
+    },
+    {
+      "question": "Home/Operator self-update: when to install",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Auto when idle",
+          "summary": "installs when no job runs",
+          "recommended": true
+        },
+        {
+          "label": "Ask me first",
+          "summary": "Update ready, owner presses Install",
+          "recommended": false
+        },
+        {
+          "label": "Set hour",
+          "summary": "fixed hour, if idle",
+          "recommended": false
+        }
+      ],
+      "chosen": "Auto when idle",
+      "decided": "2026-11-02",
+      "owner_words": "Auto when idle (~21:55)",
+      "task": "CO812",
+      "id": "D21"
+    },
+    {
+      "question": "Failed self-test after a self-update",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Roll back and report",
+          "summary": "previous version back, shows why",
+          "recommended": true
+        },
+        {
+          "label": "Report only",
+          "summary": "stays on new version",
+          "recommended": false
+        }
+      ],
+      "chosen": "Roll back and report",
+      "decided": "2026-11-02",
+      "owner_words": "Roll back and report (~21:55)",
+      "task": "CO812",
+      "id": "D22"
+    },
+    {
+      "question": "Move standing rules from memory into the repo",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, move rules",
+          "summary": "docs-only release, merge on green",
+          "recommended": true
+        },
+        {
+          "label": "Yes, but show me first",
+          "summary": "owner reviews first",
+          "recommended": false
+        },
+        {
+          "label": "No, keep in memory",
+          "summary": "PC sessions only",
+          "recommended": false
+        }
+      ],
+      "chosen": "Yes, move rules",
+      "decided": "2026-11-02",
+      "owner_words": "Yes, move rules (~21:55)",
+      "task": "CO813",
+      "id": "D23"
+    },
+    {
+      "question": "Cloud watcher check-in frequency",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "On events + hourly",
+          "summary": "wake on finish, else hourly",
+          "recommended": true
+        },
+        {
+          "label": "Every 15 min",
+          "summary": "as today",
+          "recommended": false
+        },
+        {
+          "label": "Every 30 min",
+          "summary": "half the wake-ups",
+          "recommended": false
+        }
+      ],
+      "chosen": "On events + hourly",
+      "decided": "2026-11-02",
+      "owner_words": "On events + hourly (~21:55)",
+      "task": "CIR10",
+      "id": "D24"
+    },
+    {
+      "question": "Install CO810 (cloud CI phase 1 + self-update) tonight after merge",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, install tonight",
+          "summary": "jobs check, Home then Operator",
+          "recommended": true
+        },
+        {
+          "label": "Merge only, install at 08:00",
+          "summary": "owner watches first self-update",
+          "recommended": false
+        }
+      ],
+      "chosen": "Yes, install tonight",
+      "decided": "2026-11-02",
+      "owner_words": "Yes, install tonight (~22:50)",
+      "task": "CO810",
+      "id": "D25"
+    },
+    {
+      "question": "First self-update has no kept previous installer",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "OK as is",
+          "summary": "one-time gap",
+          "recommended": true
+        },
+        {
+          "label": "Keep tonight's installer too",
+          "summary": "keep RELEASE-145 installer as previous so the first update can roll back",
+          "recommended": false
+        }
+      ],
+      "chosen": "Keep tonight's installer too",
+      "decided": "2026-11-02",
+      "owner_words": "Keep tonight's installer too (~22:50)",
+      "task": "CO812",
+      "id": "D26"
+    },
+    {
+      "question": "Cloud-built MSI compression (Wine cannot write LZX)",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Lower compression is fine",
+          "summary": "larger MSI, same install",
+          "recommended": true
+        },
+        {
+          "label": "Keep 'high', build MSI on GitHub Windows",
+          "summary": "GitHub Windows runner for installer releases",
+          "recommended": false
+        }
+      ],
+      "chosen": "Lower compression is fine",
+      "decided": "2026-11-02",
+      "owner_words": "Lower compression is fine (~22:50)",
+      "task": "CIR15",
+      "id": "D27"
+    },
+    {
+      "question": "Release CI reruns jobs that already passed on every push; add rerun-only-failed/changed parts?",
+      "asked": "2026-11-02",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, in CO810",
+          "summary": "parts record a pass per inputs on the branch; next push reruns only failed or changed parts",
+          "recommended": true
+        },
+        {
+          "label": "Separate task after CO810",
+          "summary": "CO810 ships as planned, new task later",
+          "recommended": false
+        },
+        {
+          "label": "No",
+          "summary": "full rerun on every push",
+          "recommended": false
+        }
+      ],
+      "chosen": "Yes, in CO810",
+      "decided": "2026-11-02",
+      "owner_words": "Yes, in CO810 (Recommended) (~23:05)",
+      "task": "CIR13",
+      "id": "D28"
+    },
+    {
+      "question": "Add a fourth CI option to the CIR10 research: own hosted runners as main, with a fallback?",
+      "asked": "2026-11-03",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes",
+          "summary": "the user's own self-hosted runners (on any machines the user runs: this PC, other local PCs or servers) are the main CI; after X min waiting (user sets X) the run moves to a fallback the user picks: Claude cloud sessions or GitHub-hosted runners",
+          "recommended": false
+        },
+        {
+          "label": "No",
+          "summary": "keep the three options only",
+          "recommended": false
+        }
+      ],
+      "chosen": "Yes",
+      "decided": "2026-11-03",
+      "owner_words": "I want a another option available in the research what sets \"User's Own Hosted Runners\" as main, and allow setting Claude Cloude Sessions or Github hosted runners as fallback when a CI is waiting of main option for more than x minutes (~10:02) | follow-up (~10:05): don't assume the user's runners are on this PC; users can set up hosted runners on other local PCs",
+      "task": "CIR10",
+      "id": "D29"
+    },
+    {
+      "question": "Option 4: who watches the wait and starts the fallback when no session is open?",
+      "asked": "2026-11-03",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Session + workflow watchdog",
+          "summary": "session watches; a watchdog job in the workflow starts a hosted fallback unattended",
+          "recommended": true
+        },
+        {
+          "label": "Session + hourly routine only",
+          "summary": "no watchdog job; unattended, a fallback may start up to an hour late",
+          "recommended": false
+        },
+        {
+          "label": "Accept up to 1 h late",
+          "summary": "no extra machinery",
+          "recommended": false
+        }
+      ],
+      "chosen": "Session + hourly routine only",
+      "decided": "2026-11-03",
+      "owner_words": "CIR10 questions wizard ~14:55",
+      "task": "CIR10",
+      "id": "D30"
+    },
+    {
+      "question": "Required checks for Options 3 and 4: commit statuses?",
+      "asked": "2026-11-03",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Always commit statuses",
+          "summary": "one status per shard, ruleset accepts Any source",
+          "recommended": true
+        },
+        {
+          "label": "Statuses for fallback only",
+          "summary": "main keeps Actions check names; two answers possible",
+          "recommended": false
+        }
+      ],
+      "chosen": "Always commit statuses",
+      "decided": "2026-11-03",
+      "owner_words": "CIR10 questions wizard ~14:55",
+      "task": "CIR10",
+      "id": "D31"
+    },
+    {
+      "question": "Example value of X shown by the setup (no default)",
+      "asked": "2026-11-03",
+      "status": "decided",
+      "options": [
+        {
+          "label": "10",
+          "summary": "matches the existing queue warning",
+          "recommended": true
+        },
+        {
+          "label": "5",
+          "summary": "faster fallback, spends more",
+          "recommended": false
+        },
+        {
+          "label": "20",
+          "summary": "spends less, waits longer",
+          "recommended": false
+        }
+      ],
+      "chosen": "10",
+      "decided": "2026-11-03",
+      "owner_words": "CIR10 questions wizard ~14:55",
+      "task": "CIR10",
+      "id": "D32"
+    },
+    {
+      "question": "Spend caps for a fallback",
+      "asked": "2026-11-03",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Caps required: 20 shards/day, 500 min/month",
+          "summary": "setup refuses a fallback without caps",
+          "recommended": true
+        },
+        {
+          "label": "Caps required, smaller",
+          "summary": "10 shards/day, 200 min/month",
+          "recommended": false
+        },
+        {
+          "label": "Caps required, larger",
+          "summary": "40 shards/day, 1,000 min/month",
+          "recommended": false
+        },
+        {
+          "label": "Caps optional",
+          "summary": "GitHub's own spending limit is the only stop",
+          "recommended": false
+        }
+      ],
+      "chosen": "Caps optional",
+      "decided": "2026-11-03",
+      "owner_words": "CIR10 questions wizard ~14:55 (asked what a shard is first)",
+      "task": "CIR10",
+      "id": "D33"
+    },
+    {
+      "question": "Does the one-at-a-time release queue wait count toward X?",
+      "asked": "2026-11-03",
+      "status": "decided",
+      "options": [
+        {
+          "label": "No, only runner waits",
+          "summary": "a fallback cannot fix waiting for the predecessor",
+          "recommended": true
+        },
+        {
+          "label": "Yes",
+          "summary": "any wait counts",
+          "recommended": false
+        }
+      ],
+      "chosen": "No, only runner waits",
+      "decided": "2026-11-03",
+      "owner_words": "CIR10 questions wizard ~14:55",
+      "task": "CIR10",
+      "id": "D34"
+    },
+    {
+      "question": "Which runs may use the fallback?",
+      "asked": "2026-11-03",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Ready PRs to the default branch only",
+          "summary": "agent runs wait for own runners",
+          "recommended": true
+        },
+        {
+          "label": "Every run",
+          "summary": "agent branches too",
+          "recommended": false
+        },
+        {
+          "label": "Per branch pattern",
+          "summary": "setup asks for patterns",
+          "recommended": false
+        }
+      ],
+      "chosen": "Every run",
+      "decided": "2026-11-03",
+      "owner_words": "CIR10 questions wizard ~14:55",
+      "task": "CIR10",
+      "id": "D35"
+    },
+    {
+      "question": "Windows fallback (cloud sessions are Linux only)",
+      "asked": "2026-11-03",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Hosted Windows, ready PRs, capped",
+          "summary": "12-file Windows set on hosted Windows",
+          "recommended": true
+        },
+        {
+          "label": "No Windows fallback",
+          "summary": "Windows waits for its own runner",
+          "recommended": false
+        }
+      ],
+      "chosen": "Hosted Windows, ready PRs, capped",
+      "decided": "2026-11-03",
+      "owner_words": "CIR10 questions wizard ~14:55",
+      "task": "CIR10",
+      "id": "D36"
+    },
+    {
+      "question": "Timing budgets on a fallback runner",
+      "asked": "2026-11-03",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Scale by speed probe",
+          "summary": "refuse above 3x slower",
+          "recommended": true
+        },
+        {
+          "label": "Skip on fallback",
+          "summary": "reported as skipped",
+          "recommended": false
+        },
+        {
+          "label": "Fail closed",
+          "summary": "check pending until own runner runs them",
+          "recommended": false
+        }
+      ],
+      "chosen": "Scale by speed probe",
+      "decided": "2026-11-03",
+      "owner_words": "CIR10 questions wizard ~14:55",
+      "task": "CIR10",
+      "id": "D37"
+    },
+    {
+      "question": "Own runner frees up before the fallback's tests start",
+      "asked": "2026-11-03",
+      "status": "decided",
+      "options": [
+        {
+          "label": "First claim wins",
+          "summary": "nobody pre-empted; never two results",
+          "recommended": true
+        },
+        {
+          "label": "Own runner pre-empts",
+          "summary": "takes over a fallback not yet testing",
+          "recommended": false
+        }
+      ],
+      "chosen": "First claim wins",
+      "decided": "2026-11-03",
+      "owner_words": "CIR10 questions wizard ~14:55",
+      "task": "CIR10",
+      "id": "D38"
+    },
+    {
+      "question": "Linux-built MSI",
+      "asked": "2026-11-03",
+      "status": "decided",
+      "options": [
+        {
+          "label": "CI check only for now",
+          "summary": "shipped MSIs stay Windows-built until a Windows install smoke passes on it each release",
+          "recommended": true
+        },
+        {
+          "label": "Ship it",
+          "summary": "no Windows machine needed for installers",
+          "recommended": false
+        }
+      ],
+      "chosen": "CI check only for now",
+      "decided": "2026-11-03",
+      "owner_words": "CIR10 questions wizard ~14:55",
+      "task": "CIR10",
+      "id": "D39"
+    },
+    {
+      "question": "Config names for Option 4",
+      "asked": "2026-11-03",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Keep names + fallback block",
+          "summary": "self-hosted/github-hosted/cloud plus a fallback block; docs say Option 1 to 4",
+          "recommended": true
+        },
+        {
+          "label": "Rename to option-1..4",
+          "summary": "migrate DL15 configs",
+          "recommended": false
+        }
+      ],
+      "chosen": "Keep names + fallback block",
+      "decided": "2026-11-03",
+      "owner_words": "CIR10 questions wizard ~14:55",
+      "task": "CIR10",
+      "id": "D40"
+    },
+    {
+      "question": "Start building CIR10 (11 steps, ~78 agent hours)?",
+      "asked": "2026-11-03",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Start all steps now",
+          "summary": "S1 first, then S2-S11 in parallel cloud agents",
+          "recommended": true
+        },
+        {
+          "label": "Start S1 + S4 only",
+          "summary": "Option 4 after S4 is measured",
+          "recommended": false
+        },
+        {
+          "label": "Wait, review the proposal",
+          "summary": "nothing starts",
+          "recommended": false
+        }
+      ],
+      "chosen": "Start all steps now",
+      "decided": "2026-11-03",
+      "owner_words": "CIR10 questions wizard ~14:55",
+      "task": "CIR10",
+      "id": "D41"
+    }
+  ]
+}

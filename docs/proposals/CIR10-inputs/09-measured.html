@@ -1,0 +1,15 @@
+<!-- title: Measured after RELEASE-145: what the first package waves gave -->
+<p>CIR9, 3 Nov 01:30. RELEASE-145 carried the first waves of the package (one Linux job, cheap suites beside the big ones, fail fast, the integration pool with a database per part, one worker per integration file). Its last round was a cold full run: a root config file (<code>vitest.config.ts</code>) had changed, so every suite ran.</p>
+<div class="scroll"><table>
+<tr><th>Part</th><th>Predicted, cold, 2 Playwright workers (section 8)</th><th>Measured, RELEASE-145 round 13 (run 41548911168)</th><th>Gap</th></tr>
+<tr><td>Wall time of the run</td><td>27.9 min</td><td>38.9 min (23:54:13 to 00:33:09)</td><td>+11 min</td></tr>
+<tr><td>Linux suites, one job (static, unit, integration, e2e, budgets)</td><td>26.9 min on the path</td><td>30.1 min (23:57:37 to 00:27:43)</td><td>+3.2 min</td></tr>
+<tr><td>Waiting before the Linux job started</td><td>about 0 (set-up 1.0 counted inside)</td><td>3.4 min (plan, then the runner was busy with an artifact prune)</td><td>+3.4 min</td></tr>
+<tr><td>Windows tests</td><td>beside, not on the path</td><td>7.0 min, beside</td><td>none</td></tr>
+<tr><td>Report jobs after the Linux job (status jobs, run times)</td><td>0.5 min</td><td>5.4 min (00:27:43 to 00:33:09: each status job waits for a runner in turn)</td><td>+4.9 min</td></tr>
+<tr><td>Today before the package (cold full run)</td><td>56.4 min</td><td>-</td><td>the measured run is 31% shorter</td></tr>
+</table></div>
+<p><strong>What the gap is made of.</strong> The suites themselves came in 3 minutes over the estimate. The other 8 minutes are hand-overs: the queue before the Linux job and four short status jobs after it that each wait for the one Linux runner. Folding the status jobs into the Linux job (CIO1 as planned) and not running the artifact prune on the Linux runner while a release runs would bring the measured run to about 31 minutes.</p>
+<p><strong>Failed rounds cost the most.</strong> RELEASE-145 took 13 rounds. Rounds 9 to 12 each failed on one test that a rerun of the failed part alone would have caught in minutes; each round reran every part (owner question 2 Nov 23:05, decision D28). CIR17 and CIR18 (in RELEASE-147) make a push rerun only the parts that failed or whose inputs changed.</p>
+<p><strong>Cloud sessions as runners (CIR13 proof, 2 Nov).</strong> Ten shards, each in one 4-CPU session, one after another: 92 min in all; the longest shard (e2e 2 of 2) took 12.2 min. Run side by side, the ten would finish in about 12 to 13 minutes, which meets the 15-minute goal without new hardware. The timing probe read 95 to 114 ms against a reference of 82 ms on the PC (scale 1.15 to 1.39), so the budgets were stretched by that much and all passed.</p>
+<p>Not measured yet: memory of the Linux container through the run (the run-times artifact has no memory column), and a median release (an affected run, not a cold one). Both come from RELEASE-147's runs.</p>
