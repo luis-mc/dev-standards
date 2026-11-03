@@ -1442,7 +1442,7 @@ def check_ts_e2e(text: str, jobs: dict[str, str]) -> list[str]:
         return ["ts: e2e-shard job missing (the browser suite must run as shards)"]
     if not re.search(r"^    name: web E2E \(§11\.2\)\s*$", e, re.M):
         problems.append("ts: e2e job must be named 'web E2E (§11.2)'")
-    if not re.search(r"^    needs: \[decide, plan, e2e-shard\]\s*$", e, re.M):
+    if not re.search(r"^    needs: \[decide, plan, verify, integration, e2e-shard\]\s*$", e, re.M):
         problems.append("ts: e2e (the required check) must need e2e-shard")
     for name, block in (("e2e", e), ("e2e-shard", sh)):
         if re.search(r"^    continue-on-error:", block, re.M):
@@ -1604,7 +1604,7 @@ def workflow_checker_detects_each_defect():
          lambda t: mutate(t, "needs.plan.outputs.e2e != 'false'", "needs.plan.outputs.e2e == 'true'")),
         ("ts", ts, "must accept a planned skip", lambda t: mutate(t, 'if [ "$PLANNED" = "false" ]', 'if false')),
         ("ts", ts, "must need e2e-shard",
-         lambda t: mutate(t, "needs: [decide, plan, e2e-shard]", "needs: decide")),
+         lambda t: mutate(t, "needs: [decide, plan, verify, integration, e2e-shard]", "needs: decide")),
         ("ts", ts, "exactly one step running with E2E_QUARANTINE",
          lambda t: mutate(t, "E2E_QUARANTINE: only", "E2E_QUARANTINE: no")),
     ]

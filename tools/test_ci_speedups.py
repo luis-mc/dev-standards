@@ -853,8 +853,12 @@ def ts_ci_runs_by_hand_and_reports_times():
     plan = jobs_of(text)["plan"]
     check('area_select.py --base "origin/$DEFAULT_BRANCH"' in plan, "a manual run on a branch plans origin/<default>...HEAD")
     check("ci_scope.py" in plan and "ci-scope.json" in plan, "the scope step is optional on the config file")
-    rt = jobs_of(text)["run-times"]
-    check("CI_RUN_TIMES" in rt and "ci-run-times" in rt, "run times are opt-in and use the stable artifact name")
+    check("run-times" not in jobs_of(text), "the run times are a step of the last job, not a job of their own (DL16)")
+    last = jobs_of(text)["e2e"]
+    check("CI_RUN_TIMES" in last and "ci-run-times" in last, "run times are opt-in and use the stable artifact name")
+    check("ci_run_times.py" in last and "continue-on-error: true" in last, "the run-times steps never fail the run")
+    for dep in ("verify", "integration", "e2e-shard"):
+        check(dep in last.split("steps:")[0], f"the last job waits for {dep}")
 
 
 @test
