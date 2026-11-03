@@ -14,6 +14,12 @@ back to back. The output is read as a stream of JSON values (objects with an
 `artifacts` list, or bare lists), so one page, many pages and the concatenated
 form all parse the same way.
 
+Held names (CIR10 W5): `--hold NAME --hold-workflow FILE` keeps EVERY live artifact of NAME
+while the newest run of that workflow (for example `package.yml`) has not succeeded: it
+failed, was cancelled, is still running, or its state could not be read. A failed publish
+then still finds its installers when "re-run failed jobs" is used. Once the newest run
+succeeds, the hold ends and the normal keep-the-newest rule applies again.
+
 A deletion that answers 404 means the artifact is already gone (a concurrent
 prune, or it expired meanwhile): not a failure. Any other failed deletion is
 reported and makes the exit code 1; the remaining deletions are still tried.
@@ -184,7 +190,26 @@ def parse_time(value: object) -> datetime | None:
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
 
 
-def plan(artifacts: list[dict], keep: int) -> tuple[dict[str, dict], list[str]]:
+def newest_run_succeeded(repo: str, workflow: str) -> bool:
+    """True only when the newest run of `workflow` finished with `success`.
+
+    No run, a run in progress, any other conclusion, or any error reading it: False (hold)."""
+    try:
+        res = run_gh(["api", f"repos/{repo}/actions/workflows/{urllib.parse.quote(workflow)}"
+                      "/runs?per_page=1"], timeout=60)
+        if res.returncode != 0:
+            return False
+        values = parse_json_stream(res.stdout)
+        runs = values[0].get("workflow_runs") if values and isinstance(values[0], dict) else None
+    except GhError:
+        return False
+    if not isinstance(runs, list) or not runs or not isinstance(runs[0], dict):
+        return False
+    return runs[0].get("status") == "completed" and runs[0].get("conclusion") == "success"
+
+
+def plan(artifacts: list[dict], keep: int,
+         hold: frozenset[str] | set[str] = frozenset()) -> tuple[dict[str, dict], list[str]]:
     """Group live artifacts by name and split each group into keep and delete.
 
     Returns ({name: {"keep": [artifact], "delete": [artifact]}}, warnings).
@@ -206,6 +231,9 @@ def plan(artifacts: list[dict], keep: int) -> tuple[dict[str, dict], list[str]]:
     result: dict[str, dict] = {}
     for name in sorted(groups):
         ordered = sorted(groups[name], key=lambda t: (t[0], t[1]), reverse=True)
+        if name in hold:
+            result[name] = {"keep": [t[2] for t in ordered], "delete": [], "held": True}
+            continue
         result[name] = {"keep": [t[2] for t in ordered[:keep]],
                         "delete": [t[2] for t in ordered[keep:]]}
     return result, warnings
@@ -247,6 +275,11 @@ def main(argv: list[str] | None = None) -> int:
                                    "repository)")
     ap.add_argument("--keep", type=int, default=1,
                     help="how many of each name to keep, newest first (default 1)")
+    ap.add_argument("--hold", action="append", default=[], metavar="NAME",
+                    help="keep every artifact of NAME while the newest run of --hold-workflow "
+                         "has not succeeded (repeatable)")
+    ap.add_argument("--hold-workflow", metavar="FILE",
+                    help="the workflow whose newest run decides the hold, e.g. package.yml")
     ap.add_argument("--dry-run", action="store_true", help="delete nothing, print the plan")
     ap.add_argument("--json", action="store_true", dest="as_json",
                     help="print one JSON document instead of rows")
@@ -255,6 +288,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.keep < 1:
         print("artifact_prune: --keep must be at least 1 (keeping 0 would delete every "
               "artifact)", file=sys.stderr)
+        return 2
+    if args.hold and not args.hold_workflow:
+        print("artifact_prune: --hold needs --hold-workflow", file=sys.stderr)
         return 2
     if shutil.which("gh") is None and not (os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")):
         print("artifact_prune: the GitHub CLI (gh) is not installed or not on PATH, and neither "
@@ -268,7 +304,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"artifact_prune: {exc}", file=sys.stderr)
         return 2
 
-    groups, warnings = plan(artifacts, args.keep)
+    hold: set[str] = set()
+    if args.hold and not newest_run_succeeded(repo, args.hold_workflow):
+        hold = set(args.hold)
+        print(f"artifact_prune: holding {', '.join(sorted(hold))}: the newest run of "
+              f"{args.hold_workflow} has not succeeded", file=sys.stderr)
+    groups, warnings = plan(artifacts, args.keep, hold)
     for warning in warnings:
         print(f"artifact_prune: warning: {warning}", file=sys.stderr)
 
@@ -278,7 +319,7 @@ def main(argv: list[str] | None = None) -> int:
         row = {"name": name, "kept": [a["id"] for a in g["keep"]],
                "deleted": [], "already_gone": [], "failed": [], "errors": [],
                "would_delete": [a["id"] for a in g["delete"]] if args.dry_run else [],
-               "bytes_freed": 0}
+               "bytes_freed": 0, "held": bool(g.get("held"))}
         if not args.dry_run:
             for art in g["delete"]:
                 outcome = delete_artifact(repo, art["id"])
@@ -309,6 +350,8 @@ def main(argv: list[str] | None = None) -> int:
             if row["failed"]:
                 extra += f", {len(row['failed'])} FAILED"
             kept = ", ".join(str(i) for i in row["kept"])
+            if row["held"]:
+                extra += ", HELD"
             print(f"{row['name']}: kept {kept}; {label} {n_del}{extra}; "
                   f"{verb} {human(row['bytes_freed'])}")
         if not report:

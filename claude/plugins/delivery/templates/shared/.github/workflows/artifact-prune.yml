@@ -11,6 +11,9 @@ name: Artifact prune
 # lists `CI` and `Package` (package.yml); add each release or installer workflow you create, or its
 # artifacts are only caught by the daily sweep.
 #
+# Installer artifacts (CIR10 W5): when a workflow publishes them, add to the run line
+# `--hold windows-installer --hold-workflow package-windows.yml`, so a failed publish keeps its installer.
+#
 # Artifact names must be stable per kind (`windows-installer`, never
 # `windows-installer-1.4.2-run-812`), or the pruning cannot group them. A build
 # that must outlive the next one is a release asset, not an artifact.
