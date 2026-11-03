@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.2.2
+version: 0.3.0
 owner: agents
 type: reference
 code:
@@ -12,10 +12,12 @@ code:
   - claude/plugins/delivery/hooks/hooks.json
   - claude/plugins/delivery/.claude-plugin/plugin.json
   - claude/plugins/delivery/references/*.json
-  - claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/*.py
-  - claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/CONTRACT.md
+  - claude/plugins/delivery/templates/shared/scripts/delivery/*.py
+  - claude/plugins/delivery/templates/**
+  - claude/plugins/delivery/templates/shared/scripts/delivery/CONTRACT.md
   - tools/test_delivery_*.py
   - claude/plugins/delivery/tests/*.py
+  - tools/test_delivery_cloud.py
 last_verified: 2026-11-01
 ---
 # Delivery guard rails
@@ -24,7 +26,7 @@ Related: [delivery speed](../delivery-speed/spec.md), [test cost](../test-cost/s
 
 ## 1. In one paragraph
 
-`luismc-delivery` keeps a release train moving without the owner watching it. A ledger records trains, agents and questions. Hooks block a turn that leaves work half done. A background watcher pushes the next train, opens its pull request and merges it at green CI. A load guard keeps the machine under its memory and CPU limits. The shared delivery scripts do the gate, join, CI watch and cleanup. `luismc-project-setup` copies them into a product.
+`luismc-delivery` keeps a release train moving without the owner watching it. A ledger records trains, agents and questions. Hooks block a turn that leaves work half done. A background watcher pushes the next train, opens its pull request and merges it at green CI. A load guard keeps the machine under its memory and CPU limits. The shared delivery scripts do the gate, join, CI watch and cleanup. They live in `luismc-delivery` (`templates/`), and its installer writes them into a product; `luismc-project-setup` only calls the installer. The owner picks where CI runs, per OS (section 13).
 
 ## 2. Why
 
@@ -114,7 +116,7 @@ flowchart TB
     lg[load.py, load_guard.py, runner_load_gate.py]
     cfg[delivery_config.py, delivery_doctor.py]
   end
-  subgraph shared[project-setup tooling/shared/scripts/delivery]
+  subgraph shared[delivery templates/shared/scripts/delivery]
     gate[branch_gate, gate_verify, fast_guards]
     j[join, train_freeze]
     c[ci_watch, ci_scope, runner_health]
@@ -157,6 +159,7 @@ Ledger fields: `trains`, `agents`, `jobs`, `installs`, `publishes`, `runners`, `
 | R5.7, R5.8 | `claude/plugins/delivery/tests/test_watch.py` |
 | R5.9, R5.10, R6.5 | `claude/plugins/delivery/tests/test_load.py`, `tools/test_delivery_runner.py` |
 | R5.12 | `claude/plugins/delivery/tests/test_config.py`, `claude/plugins/delivery/tests/test_doctor.py` |
+| R13.1 to R13.9 | `claude/plugins/delivery/tests/test_ci_options.py`, `tools/test_delivery_cloud.py` |
 | R5.13, R5.14 | `tools/test_delivery_gate.py`, `tools/test_delivery_ci.py`, `tools/test_delivery_cleanup.py`, `tools/test_session_guard.py` |
 
 Run: `python3 -I -m unittest discover -s claude/plugins/delivery/tests -t claude/plugins/delivery/tests` and `python3 -I tools/test_delivery_hooks.py`. For the shared scripts see `docs/testing.md`.
@@ -180,9 +183,61 @@ Some DL rules are advice only today. DELIVERYSPEC section 1 marks the ones that 
 ## 12. Code map
 
 Source: claude/plugins/delivery/scripts/
-Source: claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/
+Source: claude/plugins/delivery/templates/shared/scripts/delivery/
+Source: claude/plugins/delivery/templates/
 
-The plugin holds hooks, ledger, watcher, load guard and doctor. The shared folder holds gate, join, CI watch, cleanup and `CONTRACT.md`.
+The plugin holds hooks, ledger, watcher, load guard, doctor, the CI option command and the installer. The templates folder holds the shared scripts (gate, join, CI watch, cleanup, the cloud shard runner and status poster), `CONTRACT.md`, the workflow files and each track's `gate.json` and `smoke.json`.
+
+## 13. CI options
+
+CI can run in three places. The owner picks one **per OS** (linux, windows, macos). The choice is stored in `.delivery/config.json` under `ci.options`. Every project uses the same CI contract; the option decides only where a shard runs and how its result comes back.
+
+| Option | Name in config | Runs on | Result comes back as |
+|---|---|---|---|
+| a | `self-hosted` | GitHub Actions on the owner's runners | workflow run |
+| b | `github-hosted` | GitHub Actions on GitHub's runners | workflow run |
+| c | `cloud` | Claude cloud sessions: no Actions, no webhooks | commit status |
+
+```mermaid
+flowchart LR
+  table[Shard table] --> a[a: self-hosted job]
+  table --> b[b: GitHub-hosted job]
+  table --> c[c: cloud session per shard]
+  a --> runs[(workflow runs)]
+  b --> runs
+  c --> res[result JSON on a result branch]
+  res --> st[(commit statuses)]
+  runs --> w[delivery_watch, ci_watch]
+  st --> w
+```
+
+**R13.1** — There is no default option. Setup asks the owner once for each OS the product tests on and records the answer with `delivery_ci.py set --os <os> --option a|b|c`. The same command changes the choice later (`unset` clears it). An OS with no answer is "not chosen".
+
+**R13.2** — All three options use one **shard table**, `scripts/delivery/ci-shards.json` (path set by `ci.shard_table`). Each shard has an `id`, an `os` and `commands`. It may also have a `context`, the check name it reports under; the `id` is the fallback. The table may name test commands under `tests`; a command `@name` expands to one. The product owns the table. The format is in `CONTRACT.md`.
+
+**R13.3** — The CI and delivery templates live only in `luismc-delivery` (`templates/`). `delivery_ci_install.py install` writes the ones that are missing; `update` overwrites the plugin-owned scripts and keeps the files the project edits (`gate.json`, `smoke.json`, the area and timing maps, `ci.yml`, `package.yml`, `ci-shards.json`). Neither command commits, pushes or chooses an option. `tech-stack-setup` calls the installer at the end of its setup and copies none of these files itself.
+
+**R13.4** — Option a keeps the config keys `runners` and `local_runners`, the runner repair loop and the runner load gate. Option b needs workflow files in `.github/workflows/`. Neither needs anything else.
+
+**R13.5** — Option c uses only cloud sessions. A launcher session starts one shard session per missing shard through the routines API (`RemoteTrigger` create, run, then disable). A scheduled cloud routine watches the heads of the branches in `ci.cloud.branches` with plain git (`cloud_status.py pending`). It starts no GitHub Actions run and needs no webhook.
+
+**R13.6** — A cloud shard runs its commands in order from the repository root, stops at the first failure and writes a result JSON (`schema`, `shard`, `context`, `os`, `sha`, `state`, `started`, `finished`, `commands`, `summary`). `state` is `success`, `failure` or `error`. `error` (wrong OS, HEAD not the requested sha, bad table) is never a pass. With `--push` the result is published as the only file of a new branch `<results_prefix>/<sha>/<shard id>` (default prefix `ci-result`); each (sha, shard) has its own branch, so shards never conflict.
+
+**R13.7** — The one GitHub dependency of option c is the commit status: `POST /repos/{owner}/{repo}/statuses/{sha}` with the shard's `context`, the result's `state` and a description of at most 140 characters. The contexts are the names the required checks use. The token is a statuses-only token the owner creates. It is read from the environment variable named by `ci.cloud.status_token_env` and is never written to a file or printed. A status is posted only for the `sha` in the result; a result for another sha is refused.
+
+**R13.8** — The watcher reads results the same way for all three options. A train is green when, for the PR head, the newest result of every required check is `success`: each workflow of `watcher.ci_workflows` (a, b) and each cloud context of the shard table (c). A missing result is not green; a failed or errored one is red. When every chosen OS is cloud, no workflow is read. `ci_watch.py SHA --context NAME` waits for statuses with the exit codes of the workflow watch (0 pass, 1 failed, 4 timed out).
+
+**R13.9** — `delivery_doctor.py` has a `ci` check. It fails when the shard table has a shard for an OS that was not chosen. For a it needs a `runners` entry for the OS; for b a workflow file; for c `ci.cloud.repo`, `status_token_env` and `branches`, a shard table, and one context per cloud shard. A missing token variable is a note, not a failure, because the token lives in the cloud environment. With nothing chosen and no shard table the check passes with a note.
+
+The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are **starters**: small, tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name and the status rules.
+
+Failure modes of option c:
+
+| What fails | Result |
+|---|---|
+| A shard session dies | No result branch. The head stays not green. The watcher routine starts the shard again after `ci.cloud.shard_timeout_min`. |
+| The status token is missing or wrong | `cloud_status.py` exits 2 and posts nothing. The head stays not green. |
+| A new push moves the branch | Results of the old sha are ignored. The new head needs its own. |
 
 ## Versions
 
@@ -190,6 +245,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.3.0 | 2026-11-02 | RELEASE-34 | New section 13, CI options: the owner picks GitHub self-hosted runners, GitHub-hosted runners or Claude cloud sessions per OS, with no default. All three use one shard table; the watcher reads workflow runs for a and b and commit statuses for c. The CI and delivery templates moved from tech-stack-setup into luismc-delivery (templates/) with an installer; the doctor has a ci check. | DL15 |
 | 0.2.2 | 2026-11-01 | RELEASE-27 | The DL-76 Stop check remembers its verdict per merge commit in .delivery/state/dl76-checked.json, skips skipped runs, and checks at most 3 trains per turn end.<br>The merge check (DL-06) reads only the newest run of each workflow on a pull request's head and counts a skipped run as passing; a failed, cancelled or timed-out newest run still blocks the merge. | DS167, DS34-dl06-skipped-runs |
 | 0.2.1 | 2026-11-01 | RELEASE-26 | The load guard cache is now per user (under ~/.claude/) and written atomically through a private temp file. | DS164 |
 | 0.2.0 | 2026-11-01 | RELEASE-25 | The watcher refuses a runner_plan script outside the repository root.<br>The load guard no longer waits 1 s per fresh sample; CPU comes from the change since the previous cached sample.<br>The delivery ledger now drops finished rows (closed trains, finished or disabled agents, finished installs, old events) older than 14 days when it writes. New optional config key ledger_retention_days sets the window; 0 keeps everything. Open rows are never dropped. | DS154, DS155, DS156 |

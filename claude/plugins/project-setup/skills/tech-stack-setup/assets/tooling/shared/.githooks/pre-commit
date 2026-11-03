@@ -38,7 +38,7 @@ fi
 # a usage or configuration error (exit 2) only warns, so a broken setting
 # never blocks a commit.
 cn_script=""
-for candidate in scripts/delivery/change_notes.py   claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/change_notes.py; do
+for candidate in scripts/delivery/change_notes.py   claude/plugins/delivery/templates/shared/scripts/delivery/change_notes.py; do
   if [ -f "$candidate" ]; then cn_script="$candidate"; break; fi
 done
 cn_config=()

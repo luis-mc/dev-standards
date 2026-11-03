@@ -390,13 +390,47 @@ class Watcher:
     def runs_for_commit(self, sha: str):
         """The runs of every required workflow (watcher.ci_workflows) for one commit; None when gh failed."""
         out = []
-        for wf in C.ci_workflows(self.cfg):
+        for wf in self.workflows_needed():
             data = self.gh_json(["run", "list", "--commit", sha, "--workflow", wf, "--limit", "100",
                                  "--json", RUN_FIELDS, *self.repo_args])
             if not isinstance(data, list):
                 return None
             out += [dict(r, _workflow=wf) for r in data
                     if isinstance(r, dict) and str(r.get("headSha", sha)).startswith(sha[:7])]
+        contexts = C.cloud_contexts(self.root, self.cfg)
+        if contexts:
+            statuses = self.statuses_for_commit(sha, contexts)
+            if statuses is None:
+                return None
+            out += statuses
+        return out
+
+    def ci_required(self) -> list:
+        """What must be green for a train: the workflow files (options a and b) and the commit-status contexts of
+        the cloud shards (option c). The same rule for all three: the newest result of each is success (DL15)."""
+        return self.workflows_needed() + C.cloud_contexts(self.root, self.cfg)
+
+    def workflows_needed(self) -> list:
+        """The workflow files to read. Empty when every chosen OS is cloud: option c uses no GitHub Actions."""
+        opts = C.ci_options(self.cfg)
+        if opts and all(v == "cloud" for v in opts.values()):
+            return []
+        return C.ci_workflows(self.cfg)
+
+    def statuses_for_commit(self, sha: str, contexts: list):
+        """Option c results as run-shaped rows, one per posted context; None when gh failed. A context with no status
+        yet has no row, which the state rule reads as queued."""
+        data = self.gh_json(["api", "repos/%s/commits/%s/status" % (self.repo or "{owner}/{repo}", sha)])
+        if not isinstance(data, dict) or not isinstance(data.get("statuses"), list):
+            return None
+        out = []
+        for st in data["statuses"]:
+            if not isinstance(st, dict) or st.get("context") not in contexts:
+                continue
+            state = st.get("state")
+            out.append({"_workflow": st["context"], "databaseId": st.get("id") or 0, "headSha": sha,
+                        "status": "completed" if state in ("success", "failure", "error") else "in_progress",
+                        "conclusion": "success" if state == "success" else "failure"})
         return out
 
     def cancel_superseded(self, train: dict, head: str) -> list[int]:
@@ -485,7 +519,7 @@ class Watcher:
             runs = self.runs_for_commit(head)
             if runs is None:
                 continue
-            state = ci_state_from_runs(runs, C.ci_workflows(self.cfg))
+            state = ci_state_from_runs(runs, self.ci_required())
             ci = {"head_sha": head, "run_ids": [r["databaseId"] for r in runs], "state": state}
             if state == "success" and train.get("state") != "green":
                 self._set_train(train, "green", ci=ci)
@@ -526,7 +560,7 @@ class Watcher:
         runs = self.runs_for_commit(head)
         if runs is None:
             return
-        state = ci_state_from_runs(runs, C.ci_workflows(self.cfg))
+        state = ci_state_from_runs(runs, self.ci_required())
         if not moved and state != "success":
             return
         ci = {"head_sha": head, "run_ids": [r["databaseId"] for r in runs], "state": state}

@@ -6,13 +6,21 @@ per track, plus what is genuinely language-agnostic.
 Copy in Phase 7 step 1 — before any module exists, so the first commit is
 already gated.
 
+**Where the CI files live (DL15).** The delivery scripts, the workflow files
+(`ci.yml`, `package.yml`, `artifact-prune.yml`, `train-cleanup.yml`,
+`nightly-full.yml`) and each track's `gate.json`, `smoke.json` and timing maps
+are not in this folder. They are in `luismc-delivery` (`claude/plugins/delivery/templates/`),
+and `delivery_ci_install.py` writes them into a product. This folder keeps the
+hooks, linters, guards and per-track configuration. The sections below still
+describe what the CI files do, because the required checks name this
+track's jobs.
+
 ```
 tooling/
 ├── shared/     copied for every product, whatever the track
 │   ├── .gitleaks.toml
-│   ├── .githooks/pre-commit
-│   ├── .github/workflows/  artifact pruning, train cleanup
-│   └── scripts/delivery/   branch gate, CI watch and skip, reach check, cleanup
+│   ├── .githooks/          pre-commit, pre-push, commit-msg
+│   └── .gitattributes
 ├── ts/         TypeScript / Node
 ├── go/         Go
 ├── rust/       Rust
@@ -144,7 +152,7 @@ rejected by the config.
 
 ## Delivery scripts used by CI and agents
 
-Copied to `scripts/delivery/` (see `shared/scripts/delivery/CONTRACT.md`):
+Written to `scripts/delivery/` by the delivery installer (see `CONTRACT.md` in `luismc-delivery`, `templates/shared/scripts/delivery/`):
 
 - `ci_skip_check.py`: the `decide` job's script, above.
 - `ci_watch.py SHA`: waits for the workflow runs of one commit and exits 0, 1 (it
@@ -176,17 +184,17 @@ Copied to `scripts/delivery/` (see `shared/scripts/delivery/CONTRACT.md`):
   (areas, their paths, jobs and test globs; a `run_everything` list; a `docs` list) prints which jobs a
   change needs. An unknown or shared path runs everything; documentation only runs none. The ts
   `ci.yml` `plan` job uses it; a job the plan leaves out is a planned skip, never a failure. Edit the
-  starter map for the repository. `ts/.github/workflows/nightly-full.yml` is the other half: it runs
+  starter map for the repository. the ts `nightly-full.yml` is the other half: it runs
   the whole integration and browser suites once a night, and only when the default branch moved since the
   last successful run (runners from the `NIGHTLY_RUNS_ON` / `CI_RUNS_ON` variables).
 - `artifact_prune.py`: keeps only the newest build artifact of each name and
-  deletes the rest (`§13.1`). `shared/.github/workflows/artifact-prune.yml` runs
+  deletes the rest (`§13.1`). `artifact-prune.yml` runs
   it after every `CI` run and daily; add any other workflow that uploads an
   artifact (an installer, a bundle) to its `workflows:` list, and give each kind
   a stable name.
 - `cleanup.py`: removes a merged train's branches, gate-result refs, local
   branches and worktrees, and keeps anything open, unmerged or dirty (`§13.6`).
-  `shared/.github/workflows/train-cleanup.yml` does the remote part when the
+  `train-cleanup.yml` does the remote part when the
   ready pull request merges; `join.py` does the local part before each join.
 - `delivery_log.py`: `cleanup.py --pr N` calls it before deleting a branch; it appends
   a table of each change's time to live (waiting, testing, queueing) to the train's

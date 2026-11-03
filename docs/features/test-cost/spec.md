@@ -4,7 +4,7 @@ title: Test and validation cost
 apps: [luismc-project-setup, luismc-artifacts]
 topics: [ci, testing]
 status: live
-version: 0.2.0
+version: 0.2.1
 owner: agents
 type: explanation
 code:
@@ -95,7 +95,7 @@ A mutant breaks one rule in a copy of the delivery scripts and reruns the scenar
 
    timeout (7)196 s e2e_map (7)174 s push_check (13)173 s verify (8)157 s fast_report (7)156 s fork_point (7)94 s the other 45407 s* until the first failed check after it: the mutant is already caught E2, Windows · 2.04 px per second · * this row at half scale  E2 on this PC: 1,357 s of mutant runs, 692 s of them up to the first failed check (51%). Stopping at the first failure saves about 49%, about 4.3 of the 8.8 minutes on Linux.
 
-The larger saving is in *when* the pass runs. The gate mutants guard six files under `tooling/shared/scripts/delivery/` and the pre-push hook. Of the five releases in the window, two changed those files (STACKSPEC 7.0.0 and 7.1.0). A third (#42) changed only `cleanup.py`, which the cleanup suite's own 54 mutants guard. For #42 and the other two (luismc-artifacts 1.1.0 and 1.1.1) the gate's 8.8 minutes proved nothing new, checked with `git diff` of each merge.
+The larger saving is in *when* the pass runs. The gate mutants guard six files under `templates/shared/scripts/delivery/` in `luismc-delivery` and the pre-push hook. Of the five releases in the window, two changed those files (STACKSPEC 7.0.0 and 7.1.0). A third (#42) changed only `cleanup.py`, which the cleanup suite's own 54 mutants guard. For #42 and the other two (luismc-artifacts 1.1.0 and 1.1.1) the gate's 8.8 minutes proved nothing new, checked with `git diff` of each merge.
 
 ### Repeats and noise
 
@@ -233,5 +233,6 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.2.1 | 2026-11-02 | RELEASE-34 | The gate mutants now guard files under luismc-delivery templates/shared/scripts/delivery. The measurements are unchanged. | DL15 |
 | 0.2.0 | 2026-11-01 | RELEASE-27 | Agents run the e2e specs of the screens they change: the gate records and verifies them, a pre-push check refuses an unrun e2e spec fix, and briefs say so (DELIVERYSPEC DL-86 to DL-89). | DS35 |
 | 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. | DS143 |

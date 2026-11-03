@@ -34,6 +34,16 @@
     "claude/plugins/delivery/scripts/*.py": [
       "docs/features/delivery/spec.md"
     ],
+    "claude/plugins/delivery/templates/**": [
+      "docs/features/delivery/spec.md"
+    ],
+    "claude/plugins/delivery/templates/shared/scripts/delivery/*.py": [
+      "docs/features/delivery-speed/spec.md",
+      "docs/features/delivery/spec.md"
+    ],
+    "claude/plugins/delivery/templates/shared/scripts/delivery/CONTRACT.md": [
+      "docs/features/delivery/spec.md"
+    ],
     "claude/plugins/delivery/tests/*.py": [
       "docs/features/delivery/spec.md"
     ],
@@ -61,13 +71,6 @@
     "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/pre-push": [
       "docs/features/delivery-speed/spec.md"
     ],
-    "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/*.py": [
-      "docs/features/delivery-speed/spec.md",
-      "docs/features/delivery/spec.md"
-    ],
-    "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/CONTRACT.md": [
-      "docs/features/delivery/spec.md"
-    ],
     "claude/plugins/specs/**": [
       "docs/features/specs/spec.md"
     ],
@@ -91,6 +94,9 @@
     ],
     "tools/test_delivery_*.py": [
       "docs/features/delivery-speed/spec.md",
+      "docs/features/delivery/spec.md"
+    ],
+    "tools/test_delivery_cloud.py": [
       "docs/features/delivery/spec.md"
     ],
     "tools/test_delivery_gate.py": [

@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.5.0
+version: 0.5.1
 owner: agents
 type: reference
 code:
@@ -57,7 +57,7 @@ flowchart LR
 
 **R5.1** — `tech-stack-setup` offers only technologies compatible with the choices already made, and `check_stack.py --selection` verifies a selection against the catalog.
 
-**R5.2** — `tech-stack-setup` generates for four tracks: TypeScript, Go, Rust and .NET. Each track has its own `gate.json`, `smoke.json` and CI workflows under `assets/tooling/`.
+**R5.2** — `tech-stack-setup` generates for four tracks: TypeScript, Go, Rust and .NET. Each track has its own `gate.json`, `smoke.json` and CI workflows. They live in `luismc-delivery` (`templates/`), and `tech-stack-setup` calls the delivery installer at the end of its setup (see [delivery](../delivery/spec.md), R13.3).
 
 **R5.3** — `tech-stack-setup` writes a Stack Profile that records the STACKSPEC version claimed and the vendor choices. It does not copy either spec into the project.
 
@@ -105,7 +105,7 @@ flowchart TB
 ```
 
 - The catalog is data, not requirements. STACKSPEC defines a `CHOICE` level. A choice is reported as recorded or unrecorded, never as violating.
-- The shared delivery tooling (`assets/tooling/shared/scripts/delivery/`, git hooks, workflows) is copied into each generated repository. Its rules and tests belong to [delivery](../delivery/spec.md) and [delivery-speed](../delivery-speed/spec.md). This page does not repeat them.
+- The shared delivery tooling (scripts and workflows in `luismc-delivery` `templates/`) is written into each generated repository by the delivery installer; the git hooks, linters and guards in `assets/tooling/` are copied by `tech-stack-setup`. Its rules and tests belong to [delivery](../delivery/spec.md) and [delivery-speed](../delivery-speed/spec.md). This page does not repeat them.
 - The per-skill model table, the effort-drift hook and how profiles are applied belong to [models](../models/spec.md).
 
 ## 8. Failure modes
@@ -153,6 +153,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.5.1 | 2026-11-02 | RELEASE-34 | R5.2 and the delivery tooling note: the CI and delivery templates moved to luismc-delivery. tech-stack-setup calls the delivery installer at the end of its setup. No requirement ID changed. | DL15 |
 | 0.5.0 | 2026-11-02 | RELEASE-31 | claude-setup runs the picked setups and three separate audits, applies branch protection after reading current protection, and ends its report with a numbered Left for you list. | SO5 |
 | 0.4.0 | 2026-11-01 | RELEASE-28 | claude-setup defaults to project level: config files go to the project's .claude/, plugins install with --scope project, and extraKnownMarketplaces is added when missing. | SO4 |
 | 0.3.0 | 2026-11-01 | RELEASE-27 | Agents run the e2e specs of the screens they change: the gate records and verifies them, a pre-push check refuses an unrun e2e spec fix, and briefs say so (DELIVERYSPEC DL-86 to DL-89). | DS35 |

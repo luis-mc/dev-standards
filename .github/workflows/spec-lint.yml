@@ -29,6 +29,7 @@ on:
       - 'tools/**'
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/preflight.py'
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/**'
+      - 'claude/plugins/delivery/templates/**'
       - 'claude/plugins/**'   # DS102: any plugin change needs its change note
       - 'docs/architecture/changes/**'
       - 'docs/**'      # DS109: this repository's docs follow DOCSPEC (docs-check job)
@@ -108,7 +109,7 @@ jobs:
         if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/ci_skip_check.py
+        run: python3 claude/plugins/delivery/templates/shared/scripts/delivery/ci_skip_check.py
 
       - name: Decide the areas
         id: areas
@@ -515,7 +516,7 @@ jobs:
         run: |
           git fetch --no-tags --quiet --unshallow || true
           git fetch --no-tags --quiet origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
-          python3 claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/change_notes.py check \
+          python3 claude/plugins/delivery/templates/shared/scripts/delivery/change_notes.py check \
             --config tools/change-notes.json --base-ref "origin/${BASE_REF}" --branch "${HEAD_REF}"
 
   # DS102: a note merged without a fold left a plugin at its old version (DS32).
@@ -533,7 +534,7 @@ jobs:
 
       - name: No change note waits to be folded
         run: |
-          python3 claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/change_notes.py pending \
+          python3 claude/plugins/delivery/templates/shared/scripts/delivery/change_notes.py pending \
             --config tools/change-notes.json
 
   # Not an area: this repository's own docs follow DOCSPEC (DS109). Runs on

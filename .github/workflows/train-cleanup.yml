@@ -37,5 +37,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          python3 claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/scripts/delivery/cleanup.py
+          python3 claude/plugins/delivery/templates/shared/scripts/delivery/cleanup.py
           --remote-only --no-delivery-log --pr ${{ github.event.pull_request.number }}
