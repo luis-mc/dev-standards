@@ -157,10 +157,13 @@ class OptionNameTests(unittest.TestCase):
             self.assertEqual(CI.normalise_option(raw), want)
         self.assertIsNone(CI.normalise_option("4"))
 
-    def test_fallback_block_is_in_the_schema_and_empty(self):
+    def test_fallback_block_is_in_the_schema_with_the_option_4_keys(self):
         schema = json.load(open(os.path.join(os.path.dirname(C.__file__), "..", "references", "config-schema.json")))
         fb = schema["properties"]["ci"]["properties"]["fallback"]
-        self.assertEqual((fb["type"], fb["properties"]), ("object", {}))
+        self.assertEqual(fb["type"], "object")   # DS180: DL23 and DL24 filled the block DL17 reserved
+        for key in ("options", "after_min", "after_min_if_offline", "only_for", "max_shards_per_day",
+                    "max_minutes_per_month", "records_branch", "cloud", "hosted"):
+            self.assertIn(key, fb["properties"])
         root = make_root({"ci": {"fallback": {}}})
         errors, warnings, _s = C.validate_file(C.config_file(root))
         self.assertEqual((errors, warnings), ([], []))

@@ -1,5 +1,5 @@
 ---
-description: Guided CI setup for Options 1 to 3. Asks every question (no defaults), writes .delivery/config.json, installs the CI files, runs the doctor and prints the by-hand list.
+description: Guided CI setup for Options 1 to 4. Asks every question (no defaults), writes .delivery/config.json, installs the CI files, runs the doctor and prints the by-hand list.
 ---
 # /delivery-ci-setup
 
@@ -23,7 +23,7 @@ Show this table once:
 | 2 | GitHub-hosted runners | Per minute; the GitHub spending limit is the hard stop | A spending limit, larger runners if used |
 | 3 | Claude cloud sessions, Linux only, no Actions, no webhooks | Counts against the Claude plan | A statuses-only token and the ruleset change |
 
-Option 4 (own runners first, a fallback after a wait) is not part of this command yet.
+Option 4 is Option 1 plus a fallback after a wait (section 3, "Option 4"). It is not a fourth answer: the OS is answered Option 1, and the fallback questions follow.
 
 For each OS the product tests on (linux, windows, macos), ask: "Which option for <OS>: 1, 2 or 3?" Option 3 is for Linux only.
 
@@ -34,6 +34,8 @@ For each OS the product tests on (linux, windows, macos), ask: "Which option for
 **Option 2.** The runner label or size per OS (a 2-core hosted runner is too small for a large suite). Whether larger runners are used (they need a paid plan). A monthly minutes cap: offer it, say that without it only GitHub's spending limit stops the bill, and accept "none" as an answer (store `null`). If Windows is hosted: does it run only the small Windows set?
 
 **Option 3.** The repository (OWNER/NAME). The branches to watch. The shard timeout in minutes. The NAME of the environment variable that holds the statuses-only token (never ask for the token). A cap on sessions per day: offer it, accept "none" (store `null`).
+
+**Option 4 (only for an OS answered Option 1; ask whether the owner wants it).** Per such OS, which fallback: `cloud` (Linux only) or `github-hosted`. X: after how many minutes of waiting for a runner the fallback may start (10 is only an example; only runner waits count). Optional caps, each answered by a number or "none" (`null`): `max_shards_per_day` and `max_minutes_per_month` (hosted minutes). Say plainly: without caps nothing but GitHub's spending limit stops the cost, and that limit is a by-hand step. Say that unattended, a fallback may start up to an hour late (the hourly routine is the only watcher when no session is open). For `cloud`: the URL of the routine's API trigger and the NAME of the variable that holds its token. The answers go in the `fallback` section; the engine writes `ci.fallback`. Optional `limits` (`browser_workers`, `integration_workers`, `memory_gib` per option) go to `ci.limits`.
 
 ## 4. Write the answers and run the engine
 

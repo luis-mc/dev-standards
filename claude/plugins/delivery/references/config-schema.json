@@ -475,9 +475,11 @@
             "after_min": {"type": "number", "minimum": 0, "description": "X: minutes a shard waits for a runner before the fallback may start. No default."},
             "after_min_if_offline": {"type": "number", "minimum": 0, "description": "X when no online runner carries the labels. Absent means the same as after_min."},
             "only_for": {"type": "string", "enum": ["all"], "description": "Which runs may use the fallback. Only `all` (every run)."},
-            "max_shards_per_day": {"type": "integer", "minimum": 0, "description": "Optional cap on fallback shards per UTC day."},
-            "max_minutes_per_month": {"type": "number", "minimum": 0, "description": "Optional cap on hosted fallback minutes per UTC month."},
-            "records_branch": {"type": "string", "description": "Branch that holds the caps counter (default ci-pass-records)."}
+            "max_shards_per_day": {"description": "Optional cap on fallback shards per UTC day: a whole number, or null for no cap."},
+            "max_minutes_per_month": {"description": "Optional cap on hosted fallback minutes per UTC month: a number, or null for no cap."},
+            "records_branch": {"type": "string", "description": "Branch that holds the caps counter (default ci-pass-records). The pass records (DL20) live on the same branch."},
+            "cloud": {"type": "object", "description": "DL24: the cloud launcher. fire_url is the routine's API trigger; token_env is the NAME of the environment variable that holds its token.", "properties": {"fire_url": {"type": "string"}, "token_env": {"type": "string"}}},
+            "hosted": {"type": "object", "description": "DL24: the hosted launcher: the workflow file and the ref it runs on.", "properties": {"workflow": {"type": "string"}, "ref": {"type": "string"}}}
           }
         },
         "guided": {"type": "boolean", "description": "CIR10 S6: true when /delivery-ci-setup wrote this block. The doctor then checks every by-hand item the setup printed."},

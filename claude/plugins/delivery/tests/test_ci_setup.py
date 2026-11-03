@@ -14,6 +14,9 @@ import delivery_ci_setup as S
 import delivery_config as C
 import delivery_doctor as D
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "templates" / "shared" / "scripts" / "delivery"))
+import ci_fallback as F  # noqa: E402  (DL23 reads what the setup writes)
+
 FAKE_GH = '''
 import json, os, sys
 st = json.load(open(os.environ["FAKE_GH_STATE"]))
@@ -140,6 +143,32 @@ class ApplyTests(Base):
         self.assertEqual({r["name"] for r in cfg["runners"]}, {"pc1", "win1"})
         self.assertEqual(cfg["ci"]["load_limits"]["pc1"], {"memory_pct": 85, "cpu_pct": 60})
         self.assertEqual(C.validate_file(C.config_file(root))[0], [])
+
+    def test_option_4_writes_the_fallback_and_limits_the_other_steps_read(self):
+        fb = {"options": {"linux": "cloud"}, "after_min": 10, "max_shards_per_day": None, "max_minutes_per_month": 300,
+              "cloud": {"fire_url": "https://example.test/fire", "token_env": "FB_TOKEN"},
+              "limits": {"cloud": {"browser_workers": 3, "memory_gib": 8}}}
+        root = self.project({**OPT1, "fallback": fb})
+        cfg = load(root)
+        self.assertEqual(cfg["ci"]["fallback"]["after_min"], 10)
+        self.assertEqual(cfg["ci"]["fallback"]["only_for"], "all")
+        self.assertEqual(cfg["ci"]["fallback"]["cloud"]["token_env"], "FB_TOKEN")
+        self.assertEqual(C.ci_limits(cfg)["cloud"]["browser_workers"], 3)         # DL21 reads ci.limits
+        self.assertEqual(cfg["ci"]["load_limits"]["pc1"]["memory_pct"], 85)       # DL22's own key is separate
+        self.assertEqual(C.validate_file(C.config_file(root))[0], [])
+        self.assertEqual(C.validate_file(C.config_file(root))[1], [])             # no unknown-key warning
+        self.assertTrue(F.fallback_settings(cfg)["enabled"])                       # DL23 reads ci.fallback
+
+    def test_option_4_has_no_defaults_and_needs_option_1(self):
+        base = {"options": {"linux": "cloud"}, "after_min": 10, "cloud": {"fire_url": "https://e.test", "token_env": "T"}}
+        for missing in ("max_shards_per_day", "max_minutes_per_month"):
+            a = {**OPT1, "fallback": {**base, "max_shards_per_day": None, "max_minutes_per_month": None}}
+            del a["fallback"][missing]
+            self.assertTrue(any(missing in e for e in S.validate(a)), missing)
+        a = {**OPT1, "fallback": {k: v for k, v in {**base, "max_shards_per_day": None, "max_minutes_per_month": None}.items() if k != "after_min"}}
+        self.assertTrue(any("after_min" in e for e in S.validate(a)))
+        a = {**OPT2, "fallback": {**base, "max_shards_per_day": None, "max_minutes_per_month": None}}
+        self.assertTrue(any("needs Option 1" in e for e in S.validate(a)))
 
     def test_option_2_and_3_configs_validate(self):
         for a in (OPT2, OPT3):

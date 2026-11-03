@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The engine of `/delivery-ci-setup` (CIR10 S6): guided CI setup for Options 1 to 3.
+"""The engine of `/delivery-ci-setup` (CIR10 S6, DS180 join): guided CI setup for Options 1 to 4.
 
     delivery_ci_setup.py facts     [--root DIR]
     delivery_ci_setup.py apply     --answers FILE|-  [--root DIR] [--no-install] [--set-variables] [--json]
@@ -10,18 +10,27 @@ The command file (`commands/delivery-ci-setup.md`) asks the owner every question
 There is no default at any question: `apply` refuses (exit 1, lists each missing answer) when one is absent. A
 cap may be skipped, but only by an explicit `null`, so the owner decides and the tool never does.
 
-Option 1 = `self-hosted`, 2 = `github-hosted`, 3 = `cloud` (Option 4 is not built here). Answers:
+Option 1 = `self-hosted`, 2 = `github-hosted`, 3 = `cloud`. Option 4 is Option 1 plus a `fallback` section (below). Answers:
 
   {"track": "ts", "options": {"linux": 1, "windows": "github-hosted"},
    "self_hosted": {"machines": [{"name": "pc1", "os": "linux", "labels": ["self-hosted", "linux"]}],
-                   "serial": true, "wait_min": 10, "load_limits": {"pc1": {"memory_pct": 85, "cpu_pct": 60}}},
+                   "serial": true, "wait_min": 10, "limits": {"pc1": {"memory_pct": 85, "cpu_pct": 60}}},
    "github_hosted": {"runner": {"windows": "windows-latest"}, "larger": false,
                      "monthly_minutes_cap": null, "windows_small_set_only": true},
    "cloud": {"repo": "o/r", "branches": ["release/*"], "shard_timeout_min": 30,
-             "status_token_env": "CI_STATUS_TOKEN", "max_sessions_per_day": null}}
+             "status_token_env": "CI_STATUS_TOKEN", "max_sessions_per_day": null},
+   "fallback": {"options": {"linux": "cloud", "windows": "github-hosted"}, "after_min": 10,
+                "max_shards_per_day": null, "max_minutes_per_month": null,
+                "cloud": {"fire_url": "https://...", "token_env": "FALLBACK_TOKEN"},
+                "limits": {"github-hosted": {"browser_workers": 2, "memory_gib": 8}}}}
+
+`fallback` is optional (no section: no Option 4). When it is there, `after_min` and both caps are answered (a cap by a
+number or an explicit `null`; no default). Its `options` name an OS the owner put on Option 1. It is written to
+`ci.fallback` (`options`, `after_min`, `after_min_if_offline`, `only_for: all`, the caps, `cloud`, `records_branch`)
+and `limits` to `ci.limits` (the keys `speed_probe.py` and `delivery_config.ci_limits()` read).
 
 `apply` then writes `.delivery/config.json` (`ci.options`, `ci.guided`, `runners`, `ci.load_limits`, `ci.serial`,
-`ci.wait_min`, `ci.hosted`, `ci.cloud`), runs `delivery_ci_install.py install`, runs the doctor checks, and prints the
+`ci.wait_min`, `ci.hosted`, `ci.cloud`, `ci.fallback`, `ci.limits`), runs `delivery_ci_install.py install`, runs the doctor checks, and prints the
 numbered by-hand list. The doctor re-checks every item of that list from the same function (`by_hand_items`). An item
 the doctor cannot read (billing, a ruleset without admin rights, a remote machine) is closed by `confirm ITEM`.
 It never commits or pushes. Exit 0 done, 1 refused (answers), 2 no .delivery/ folder or unreadable config.
@@ -141,6 +150,52 @@ def validate(a) -> list:
         if not (isinstance(cl.get("status_token_env"), str) and TOKEN_ENV.match(cl["status_token_env"])):
             errors.append("cloud.status_token_env: not answered (the NAME of the environment variable, never the token)")
         _cap(cl, "max_sessions_per_day", "cloud.max_sessions_per_day", errors)
+    errors += validate_fallback(a, chosen)
+    return errors
+
+
+FALLBACK_KINDS = ("cloud", "github-hosted")
+
+
+def validate_fallback(a, chosen) -> list:
+    """The optional Option 4 section: complete or absent. After X and both caps are answers, never defaults."""
+    fb = a.get("fallback")
+    errors = []
+    lim = a.get("limits") if "limits" in a else (fb or {}).get("limits")
+    if lim is not None:
+        ok = isinstance(lim, dict) and all(
+            k in FALLBACK_KINDS + ("self-hosted",) and isinstance(v, dict)
+            and all(kk in C.LIMIT_KEYS and _num(vv, 0.5) for kk, vv in v.items()) for k, v in lim.items())
+        if not ok:
+            errors.append("limits: per option (self-hosted, github-hosted, cloud), only %s, each a number of 0.5 or more"
+                          % ", ".join(C.LIMIT_KEYS))
+    if fb is None:
+        return errors
+    if not isinstance(fb, dict):
+        return errors + ["fallback: must be an object (or leave the section out for no Option 4)"]
+    fopts = fb.get("options")
+    if not isinstance(fopts, dict) or not fopts:
+        errors.append("fallback.options: not answered (per OS: cloud or github-hosted)")
+        fopts = {}
+    for o, v in fopts.items():
+        if o not in C.CI_OS or v not in FALLBACK_KINDS:
+            errors.append("fallback.options.%s: must be an OS with the value cloud or github-hosted" % o)
+        elif chosen.get(o) != "self-hosted":
+            errors.append("fallback.options.%s: Option 4 needs Option 1 for %s first" % (o, o))
+        elif v == "cloud" and o != "linux":
+            errors.append("fallback.options.%s: cloud sessions run on Linux only" % o)
+    if not _num(fb.get("after_min"), 0):
+        errors.append("fallback.after_min: not answered (X, minutes of runner wait; 10 is only an example)")
+    if "after_min_if_offline" in fb and not _num(fb["after_min_if_offline"], 0):
+        errors.append("fallback.after_min_if_offline: must be a number of 0 or more")
+    for key in ("max_shards_per_day", "max_minutes_per_month"):
+        _cap(fb, key, "fallback." + key, errors)
+    if "cloud" in fopts.values():
+        cl = fb.get("cloud") if isinstance(fb.get("cloud"), dict) else {}
+        if not (isinstance(cl.get("fire_url"), str) and cl["fire_url"].startswith("https://")):
+            errors.append("fallback.cloud.fire_url: not answered (the https URL of the routine's API trigger)")
+        if not (isinstance(cl.get("token_env"), str) and TOKEN_ENV.match(cl["token_env"])):
+            errors.append("fallback.cloud.token_env: not answered (the NAME of the variable, never the token)")
     return errors
 
 
@@ -172,6 +227,20 @@ def apply_answers(cfg: dict, a: dict) -> dict:
         cl = a["cloud"]
         ci["cloud"] = {"repo": cl["repo"], "status_token_env": cl["status_token_env"], "branches": list(cl["branches"]),
                        "shard_timeout_min": cl["shard_timeout_min"], "max_sessions_per_day": cl["max_sessions_per_day"]}
+    ci.pop("fallback", None)
+    fb = a.get("fallback")
+    if isinstance(fb, dict):
+        out = {"options": dict(fb["options"]), "after_min": fb["after_min"], "only_for": "all",
+               "max_shards_per_day": fb["max_shards_per_day"], "max_minutes_per_month": fb["max_minutes_per_month"]}
+        for key in ("after_min_if_offline", "records_branch"):
+            if key in fb:
+                out[key] = fb[key]
+        if "cloud" in fb["options"].values():
+            out["cloud"] = {"fire_url": fb["cloud"]["fire_url"], "token_env": fb["cloud"]["token_env"]}
+        ci["fallback"] = out
+    lim = a.get("limits") if "limits" in a else (fb or {}).get("limits")
+    if isinstance(lim, dict):
+        ci["limits"] = {k: dict(v) for k, v in lim.items()}
     cfg["ci"] = ci
     keep = {i["id"] for i in by_hand_items(cfg)}
     ci["confirmed"] = [x for x in ci.get("confirmed", []) if x in keep] if isinstance(ci.get("confirmed"), list) else []
@@ -255,6 +324,14 @@ def by_hand_items(cfg) -> list:
                     "steps": ["GitHub Settings > Billing and plans > Budgets and alerts: set a limit for Actions. This is the hard stop on cost; the plugin's counter is only the second brake.",
                               "The doctor cannot read billing. Run `delivery_ci_setup.py confirm spending-limit` when it is set."
                               + (" (Your minutes cap is %s a month.)" % hosted["monthly_minutes_cap"] if hosted.get("monthly_minutes_cap") else "")]})
+    fb = ci.get("fallback") if isinstance(ci.get("fallback"), dict) else {}
+    if "github-hosted" in (fb.get("options") or {}).values() and "github-hosted" not in opts.values():
+        cap = fb.get("max_minutes_per_month")
+        out.append({"id": "spending-limit", "option": 4, "check": "confirm",
+                    "title": "Set a spending limit in GitHub billing (the hosted fallback bills per minute)",
+                    "steps": ["GitHub Settings > Billing and plans > Budgets and alerts: set a limit for Actions. This is the hard stop on cost; the fallback caps are only the second brake, and they are optional.",
+                              "The doctor cannot read billing. Run `delivery_ci_setup.py confirm spending-limit` when it is set."
+                              + (" (Your minutes cap is %s a month.)" % cap if cap else " (You set no minutes cap.)")]})
     first = _first_labels(cfg)
     if first and ({"self-hosted", "github-hosted"} & set(opts.values())):
         value = json.dumps(first if isinstance(first, list) else first)
