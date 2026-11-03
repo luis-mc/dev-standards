@@ -190,54 +190,83 @@ The plugin holds hooks, ledger, watcher, load guard, doctor, the CI option comma
 
 ## 13. CI options
 
-CI can run in three places. The owner picks one **per OS** (linux, windows, macos). The choice is stored in `.delivery/config.json` under `ci.options`. Every project uses the same CI contract; the option decides only where a shard runs and how its result comes back.
+CI can run in four ways. The owner picks one **per OS** (linux, windows, macos). The choice is stored in `.delivery/config.json` under `ci.options`. Every project uses the same CI contract; the option decides only where a shard runs and how its result comes back. The docs and the setup say "Option 1 to 4". The config keeps names.
 
 | Option | Name in config | Runs on | Result comes back as |
 |---|---|---|---|
-| a | `self-hosted` | GitHub Actions on the owner's runners | workflow run |
-| b | `github-hosted` | GitHub Actions on GitHub's runners | workflow run |
-| c | `cloud` | Claude cloud sessions: no Actions, no webhooks | commit status |
+| 1 | `self-hosted` | GitHub Actions on the owner's own runners, on **any** machines (a PC, a spare box, a server, a VM) | commit status |
+| 2 | `github-hosted` | GitHub Actions on GitHub's runners | commit status |
+| 3 | `cloud` | Claude cloud sessions: no Actions, no webhooks | commit status |
+| 4 | `self-hosted` plus a `ci.fallback` block | Option 1 first. After X minutes of waiting for a runner, the fallback (Option 2 or 3) runs the shard | commit status |
+
+Option 4 is not a fourth name. It is Option 1 with a `ci.fallback` block for that OS (R13.11).
 
 ```mermaid
 flowchart LR
-  table[Shard table] --> a[a: self-hosted job]
-  table --> b[b: GitHub-hosted job]
-  table --> c[c: cloud session per shard]
-  a --> runs[(workflow runs)]
-  b --> runs
-  c --> res[result JSON on a result branch]
-  res --> st[(commit statuses)]
-  runs --> w[delivery_watch, ci_watch]
-  st --> w
+  table[Shard table] --> o1[Option 1: own runner job]
+  table --> o2[Option 2: GitHub-hosted job]
+  table --> o3[Option 3: cloud session per shard]
+  table --> o4[Option 4: Option 1, then a fallback]
+  o1 --> st[(commit statuses)]
+  o2 --> st
+  o3 --> res[result JSON on a result branch] --> st
+  o4 --> st
+  st --> w[delivery_watch, ci_watch]
 ```
 
-**R13.1** — There is no default option. Setup asks the owner once for each OS the product tests on and records the answer with `delivery_ci.py set --os <os> --option a|b|c`. The same command changes the choice later (`unset` clears it). An OS with no answer is "not chosen".
+**R13.1** — There is no default option. Setup asks the owner once for each OS the product tests on and records the answer. `/delivery-ci-setup` is the guided way (see the [set up CI guide](../../guides/set-up-ci.md)); `delivery_ci.py set --os <os> --option <name>` is the bare command and `unset` clears it. The same command changes the choice later. An OS with no answer is "not chosen". Changing the choice changes the config only; the command says what the new choice still needs.
 
-**R13.2** — All three options use one **shard table**, `scripts/delivery/ci-shards.json` (path set by `ci.shard_table`). Each shard has an `id`, an `os` and `commands`. It may also have a `context`, the check name it reports under; the `id` is the fallback. The table may name test commands under `tests`; a command `@name` expands to one. The product owns the table. The format is in `CONTRACT.md`.
+**R13.2** — All options use one **shard table**, `scripts/delivery/ci-shards.json` (path set by `ci.shard_table`). Each shard has an `id`, an `os` and `commands`. It may also have a `context`, the check name it reports under; the `id` is the fallback. The table may name test commands under `tests`; a command `@name` expands to one. The product owns the table. The format is in `CONTRACT.md`. A guard fails when a test file is in no shard or in two shards, and a shard's sizing (workers, memory, timeout) comes from the table.
 
 **R13.3** — The CI and delivery templates live only in `luismc-delivery` (`templates/`). `delivery_ci_install.py install` writes the ones that are missing; `update` overwrites the plugin-owned scripts and keeps the files the project edits (`gate.json`, `smoke.json`, the area and timing maps, `ci.yml`, `package.yml`, `ci-shards.json`). Neither command commits, pushes or chooses an option. `tech-stack-setup` calls the installer at the end of its setup and copies none of these files itself.
 
-**R13.4** — Option a keeps the config keys `runners` and `local_runners`, the runner repair loop and the runner load gate. Option b needs workflow files in `.github/workflows/`. Neither needs anything else.
+**R13.4** — Option 1 runs on the owner's own runners, on any machines. Each machine has one runner entry (a name, an OS and labels). A second or third machine is added the same way as the first. Option 1 keeps the config keys `runners` and `local_runners`, the runner repair loop and the runner load gate. The setup prints the add-a-runner commands for the OS of each machine, and says to add a runner on another machine when a job waits longer than X minutes, because one runner per label is the first bottleneck. Option 2 needs workflow files in `.github/workflows/` and, for larger runners, a paid plan.
 
-**R13.5** — Option c uses only cloud sessions. A launcher session starts one shard session per missing shard through the routines API (`RemoteTrigger` create, run, then disable). A scheduled cloud routine watches the heads of the branches in `ci.cloud.branches` with plain git (`cloud_status.py pending`). It starts no GitHub Actions run and needs no webhook.
+**R13.5** — Option 3 uses only cloud sessions. A launcher session starts one shard session per missing shard through the routines API (`RemoteTrigger` create, run, then disable). A scheduled cloud routine watches the heads of the branches in `ci.cloud.branches` with plain git (`cloud_status.py pending`). It starts no GitHub Actions run and needs no webhook. Cloud sessions run Linux only. A shard with `os: windows` needs Option 1 or 2 for Windows.
 
-**R13.6** — A cloud shard runs its commands in order from the repository root, stops at the first failure and writes a result JSON (`schema`, `shard`, `context`, `os`, `sha`, `state`, `started`, `finished`, `commands`, `summary`). `state` is `success`, `failure` or `error`. `error` (wrong OS, HEAD not the requested sha, bad table) is never a pass. With `--push` the result is published as the only file of a new branch `<results_prefix>/<sha>/<shard id>` (default prefix `ci-result`); each (sha, shard) has its own branch, so shards never conflict.
+**R13.6** — A cloud shard runs its commands in order from the repository root, stops at the first failure and writes a result JSON (`schema`, `shard`, `context`, `os`, `sha`, `state`, `started`, `finished`, `commands`, `summary`). `state` is `success`, `failure` or `error`. `error` (wrong OS, HEAD not the requested sha, bad table, a speed probe above 3) is never a pass. With `--push` the result is published as the only file of a new branch `<results_prefix>/<sha>/<shard id>` (default prefix `ci-result`); each (sha, shard) has its own branch, so shards never conflict.
 
-**R13.7** — The one GitHub dependency of option c is the commit status: `POST /repos/{owner}/{repo}/statuses/{sha}` with the shard's `context`, the result's `state` and a description of at most 140 characters. The contexts are the names the required checks use. The token is a statuses-only token the owner creates. It is read from the environment variable named by `ci.cloud.status_token_env` and is never written to a file or printed. A status is posted only for the `sha` in the result; a result for another sha is refused.
+**R13.7** — **Required checks are always commit statuses**, for every option (owner answer 2). The status is `POST /repos/{owner}/{repo}/statuses/{sha}` with the shard's `context`, the result's `state` and a description of at most 140 characters. The contexts are the names the required checks use. The repository ruleset must accept **"Any source"** for them, because the status is not posted by the Actions app; this is the one setting the plugin cannot change, so the setup prints it as a by-hand step. A job name of the workflow is never a required name. Option 3 and the cloud fallback use a statuses-only token the owner creates. It is read from the environment variable named by `ci.cloud.status_token_env` and is never written to a file or printed. A status is posted only for the `sha` in the result; a result for another sha is refused. A newer status on a context replaces the older one.
 
-**R13.8** — The watcher reads results the same way for all three options. A train is green when, for the PR head, the newest result of every required check is `success`: each workflow of `watcher.ci_workflows` (a, b) and each cloud context of the shard table (c). A missing result is not green; a failed or errored one is red. When every chosen OS is cloud, no workflow is read. `ci_watch.py SHA --context NAME` waits for statuses with the exit codes of the workflow watch (0 pass, 1 failed, 4 timed out).
+**R13.8** — The watcher reads results the same way for all options. A train is green when, for the PR head, the newest status of every required context is `success`. A missing result is not green; a failed or errored one is red. `ci_watch.py SHA --context NAME` waits for statuses with the exit codes of the workflow watch (0 pass, 1 failed, 4 timed out).
 
-**R13.9** — `delivery_doctor.py` has a `ci` check. It fails when the shard table has a shard for an OS that was not chosen. For a it needs a `runners` entry for the OS; for b a workflow file; for c `ci.cloud.repo`, `status_token_env` and `branches`, a shard table, and one context per cloud shard. A missing token variable is a note, not a failure, because the token lives in the cloud environment. With nothing chosen and no shard table the check passes with a note.
+**R13.9** — `delivery_doctor.py` has a `ci` check. It fails when the shard table has a shard for an OS that was not chosen, or a `windows` shard with no option that can run Windows. For Option 1 it needs a `runners` entry for the OS and warns when no online runner carries a job's labels; for Option 2 a workflow file; for Option 3 `ci.cloud.repo`, `status_token_env` and `branches`, a shard table, and one context per cloud shard; for Option 4 all of Option 1 and the fallback's own parts. A missing token variable is a note, not a failure, because the token lives in the cloud environment. With nothing chosen and no shard table the check passes with a note.
 
-The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are **starters**: small, tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name and the status rules.
+**R13.10** — The setup is a conversation with **no default at any question**. It reads the project, asks per OS for the option, asks that option's own questions, writes the config, runs the installer and the doctor, and prints the **by-hand list**: the steps only a person can do (runner install, tokens, repository variables, the ruleset, the spending limit). The doctor re-checks each one. Step by step, see the guide.
 
-Failure modes of option c:
+**R13.11** — **Option 4: own runners first, a fallback after a wait.** The config for an OS holds `ci.fallback`: the fallback kind (`cloud` or `github-hosted`; for Windows only `github-hosted`), `after_min` (X, the minutes a shard may wait for the main runners; the setup shows 10 as an example and has no default), and optional caps `max_shards_per_day`, `max_minutes_per_month` (hosted) and `only_for`. Every run may use the fallback; `only_for` narrows it (owner answer 6). Hosted Windows runs only the Windows-only set, on ready pull requests to the default branch, within the caps if set (owner answer 7).
+
+**R13.12** — **The wait.** A shard is waiting while GitHub reports its job `queued` and no runner has started it; the wait is now minus the job's `created_at`. The unit is the shard, not the run. Only waits for a runner count toward X; a run held back by the one-at-a-time ready-PR setting (`CI_SERIAL`) is waiting for its own predecessor and does not count (owner answer 5).
+
+**R13.13** — **The claim.** Before any work, a runner takes a **claim**: a branch `ci-claim/<sha>/<shard>/<attempt>` created by a push. A second create of the same name is refused by git, so the first claim wins and nobody is pre-empted (owner answer 9). The main job claims in its first step and ends in seconds if refused. The fallback boots, checks out, installs, and claims last, just before the first test command; if the main runner started meanwhile, the fallback ends. Only the claim holder posts the status. `cloud_status.py post` refuses a result for any sha but its own and refuses to post unless the claim names the poster. A new push gives a new sha; old claims are ignored and `cleanup.py` deletes `ci-claim/*` for finished commits.
+
+**R13.14** — **The watcher.** The fallback is started by a **watcher**: the CI watch of the session that opened the pull request, plus an hourly scheduled routine as a safety net (owner answer 1). There is no watchdog job in the workflow, also for a hosted fallback. An unattended fallback may therefore start **up to an hour late**, because a routine's minimum interval is one hour. The setup says this in plain words. If `runner_health.py` sees no online runner with the job's labels, the watcher may start the fallback at once (setting `after_min_if_offline`).
+
+**R13.15** — **The reaper.** A claim with no result after `ci.cloud.shard_timeout_min` is a lost run. The watcher posts `error` ("run lost") and opens attempt N+1. The attempt counter is capped at 2.
+
+**R13.16** — **Caps are optional.** The setup offers `max_shards_per_day` and `max_minutes_per_month`, explains the risk of none, and does **not** refuse a fallback without them (owner answer 4). A counter on the records branch adds up fallback shards and minutes. When a cap is hit, the fallback is off, the run waits and the watcher says "fallback paused: monthly cap". GitHub's own spending limit is the hard stop for hosted runners; it stays a by-hand step the setup prints.
+
+**R13.17** — **Speed rules the templates follow.** Cheap checks run first (secret scan, format, lint, typecheck, boundary check). Linux gets one job per suite family; Windows gets as few jobs as the tests allow. A job that only reports is a step of the last job, not a job. A shard is skipped when its **inputs key** (a hash of the shard id, its commands, the git blob ids of its workspaces and their dependencies, and a list of root files) has a pass record; pass records live on one orphan branch, a failed record never skips, and a ready PR to the default branch reads only the default branch's records. `--all` ignores records.
+
+**R13.18** — **Budgets and limits.** Timing budgets run only in CI, alone, on a runner of known speed. A speed probe (median of 5 runs of a fixed workload) scales every millisecond budget; a scale above 3 refuses to judge and the shard reports `error` (owner answer 8). `ci.limits` holds `browser_workers`, `integration_workers` and `memory_gib` per option; a shard that reports a peak above its limit fails a guard.
+
+**R13.19** — **Windows.** The Windows-only test set is a table (`windows-real`) with a guard, and the shard table gets `os: windows` shards that name only that set. Installer pieces may be built on Linux (an optional recipe). A Linux-built MSI is a **CI check only** (owner answer 10); the shipped MSI is built on Windows. Installer artifacts are kept until publish succeeds. Option 3 does not cover Windows.
+
+The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name, the claim and the status rules.
+
+Failure modes:
 
 | What fails | Result |
 |---|---|
-| A shard session dies | No result branch. The head stays not green. The watcher routine starts the shard again after `ci.cloud.shard_timeout_min`. |
+| A shard session or runner dies after claiming | No status. The reaper posts `error` after the timeout and opens attempt 2. |
+| Main and fallback start together | One claim wins; the other ends and posts nothing. |
+| The main runner frees up during a fallback run | The first claim wins; the fallback finishes. The caps limit the cost. |
+| A cap is hit | The fallback pauses; the run waits; one warning line. |
+| The ruleset still says "Actions app" | The doctor cannot see it. The checks stay missing. The setup lists it as a by-hand step. |
 | The status token is missing or wrong | `cloud_status.py` exits 2 and posts nothing. The head stays not green. |
-| A new push moves the branch | Results of the old sha are ignored. The new head needs its own. |
+| A new push moves the branch | Results and claims of the old sha are ignored. |
+| Nobody has a session open | The hourly routine starts the fallback, up to an hour late. |
+| The speed probe is above 3 on a fallback runner | The shard reports `error`, not `success`. |
 
 ## Versions
 
