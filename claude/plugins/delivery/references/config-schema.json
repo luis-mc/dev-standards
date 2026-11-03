@@ -450,6 +450,12 @@
           "type": "string",
           "description": "Path of the shard table, from the repository root (default scripts/delivery/ci-shards.json)."
         },
+        "guided": {"type": "boolean", "description": "CIR10 S6: true when /delivery-ci-setup wrote this block. The doctor then checks every by-hand item the setup printed."},
+        "confirmed": {"type": "array", "items": {"type": "string"}, "description": "By-hand item ids the owner confirmed with `delivery_ci_setup.py confirm` (only for items the doctor cannot read)."},
+        "serial": {"type": "boolean", "description": "Option 1: ready-PR runs queue one at a time (the CI_SERIAL variable)."},
+        "wait_min": {"type": "number", "minimum": 1, "description": "Option 1: minutes a job may wait before the owner adds a runner on another machine."},
+        "limits": {"type": "object", "description": "Option 1: the memory and CPU ceilings of each machine, by machine name."},
+        "hosted": {"type": "object", "description": "Option 2: runner label per OS, larger runners yes or no, optional monthly minutes cap (null = none).", "properties": {"runner": {"type": "object"}, "larger": {"type": "boolean"}, "monthly_minutes_cap": {"description": "A number, or null for no cap."}, "windows_small_set_only": {"type": "boolean"}}},
         "cloud": {
           "type": "object",
           "description": "Settings of option c. Needed as soon as one OS is cloud.",
@@ -478,6 +484,9 @@
               "type": "number",
               "minimum": 1,
               "description": "Minutes after which the watcher counts a launched shard with no result as lost."
+            },
+            "max_sessions_per_day": {
+              "description": "A number, or null for no cap. Optional cap on cloud sessions started per day; null = no cap (the owner chose that)."
             }
           }
         }
