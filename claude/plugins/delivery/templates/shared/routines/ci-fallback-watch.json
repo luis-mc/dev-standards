@@ -1,0 +1,8 @@
+{
+  "_comment": "TEMPLATE. Not created by any script. The owner creates the routine by hand (or asks the setup to print the steps). A routine runs at most hourly, so an unattended fallback can start up to an hour late. A session that opened the run starts it sooner, from ci_watch.py.",
+  "name": "ci-fallback-watch",
+  "cron_expression": "CRON_TZ=UTC 17 * * * *",
+  "create_new_session_on_fire": true,
+  "prompt": "Run: git fetch origin && python scripts/delivery/fallback_launch.py sweep. It starts the fallback for shards that waited longer than ci.fallback.after_min for their own runner. Do not edit, commit, push, comment or open a pull request. Report the one line it prints.",
+  "connectors": []
+}

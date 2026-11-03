@@ -23,6 +23,10 @@ carries no CI logic (DL15).
 | `scripts/delivery/agent_setup.sh` | same | gate |
 | `scripts/delivery/delivery_common.py` | same (shared helpers: git, JSON, gate.json loading) | gate |
 | `scripts/delivery/ci_watch.py` | same | ci |
+| `scripts/delivery/fallback_launch.py` | same (Option 4: measures shard waits, starts the cloud or hosted fallback once per shard over X; `sweep` is the hourly routine; `launch` starts one by hand; DL24) | ci |
+| `scripts/delivery/fallback_run.py` | same (what a fallback job runs: HEAD check, claim last, shard, one status; DL24) | ci |
+| `.github/workflows/ci-fallback.yml` | `templates/shared/.github/workflows/ci-fallback.yml` (hosted fallback, started only by `workflow_dispatch`) | ci |
+| `routines/ci-fallback-watch.json` | `templates/shared/routines/` (template of the hourly safety-net routine; never created by a script) | ci |
 | `scripts/delivery/runner_health.py` | same (runner labels against online runners; used by `join.py` and `ci_watch.py`) | gate |
 | `scripts/delivery/runner_plan.py` | same (heavy-job wrapper: waits for train CI, one heavy job at a time, memory floor, pauses and always resumes the local runner; `runners` subcommand reports offline CI runners, repairs them with the project's `runners[].repair` commands every 5 minutes and re-runs the CI they cancelled; DELIVERYSPEC DL-50, D6, D6a) | gate |
 | `scripts/delivery/train_freeze.py` | same (called by the `pre-push` hook) | gate |

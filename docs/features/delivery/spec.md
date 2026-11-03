@@ -280,6 +280,36 @@ flowchart TD
 
 **R13.35** — Caps are counted on the pass-records branch (`fallback-counter.json`) before a fallback starts, with the shard timeout as the worst case for hosted minutes, and settled to the real minutes after. A cap that would be passed pauses the fallback with one line (`fallback paused: daily cap` or `fallback paused: monthly cap`). A cap is never overrun, also with two watchers at once.
 
+### Option 4 fallback launchers (DL24)
+
+When Option 4 is chosen, a shard that waits too long for its own runner may start on a fallback. The core's settings are `ci.fallback` in `.delivery/config.json` (`options` per OS, `after_min` = X with no default, optional caps). The launchers add their own keys (`cloud.fire_url`, `cloud.token_env`; `hosted.workflow`, `hosted.ref`). Caps are optional.
+
+```mermaid
+flowchart LR
+  w[ci_watch.py of the session that opened the run] -->|every poll| m[measure queued time per shard]
+  r[hourly routine: fallback_launch.py sweep] --> m
+  m -->|under X| n[nothing]
+  m -->|over X| c{caps allow?}
+  c -->|no| p[one warning, no launch]
+  c -->|yes| k[reserve ci-fallback/sha/shard]
+  k -->|cloud| s[one cloud session per shard]
+  k -->|hosted, and every Windows shard| h[ci-fallback.yml on a hosted runner]
+  s --> run[fallback_run.py: claim last, then tests, then one status]
+  h --> run
+```
+
+**R13.40** — The wait is measured per shard. A job counts while GitHub reports it `queued`, from its `created_at`. A run held back by the one-at-a-time setting has no job yet and does not count. A job with a GitHub-hosted label does not count. A job belongs to the shard whose `id` or `context` is part of the job name.
+
+**R13.41** — Under X nothing starts. Over X, `ci_watch.py` starts one launch per waiting shard, once. The launch is reserved first by creating the branch `ci-fallback/<sha>/<shard>`; git refuses a second create, so the watching session and the hourly routine never start the same shard twice. A shard that already has a claim or a result branch is not started. The hook never changes the exit code of the watch.
+
+**R13.42** — The watcher is the session that opened the run, plus an hourly routine as a safety net (`templates/shared/routines/ci-fallback-watch.json`, a template: nothing creates it). There is no watchdog job in a workflow. **An unattended fallback can start up to an hour late**, because a routine runs at most hourly. The setup says this in plain words.
+
+**R13.43** — The cloud launcher fires the routine's API trigger once per shard (`ci.fallback.cloud.fire_url`, token from the variable named by `cloud.token_env`). The hosted launcher runs `gh workflow run ci-fallback.yml` once per shard. Cloud sessions are Linux, so every Windows shard uses the hosted launcher, and only for a ready pull request.
+
+**R13.44** — A launched job runs `fallback_run.py`: it checks that HEAD is the sha, takes the claim last (just before the first test command), runs the shard and posts one commit status. If the claim is already held it ends at once: no tests, no status. If the claim module is missing it runs nothing and exits 2.
+
+**R13.45** — When a cap is hit the launcher starts nothing and prints one warning for that commit and launch kind ("fallback paused: ..."). Caps and the claim come from the Option 4 core.
+
 ## Versions
 
 Written by the release fold. Do not edit by hand.
