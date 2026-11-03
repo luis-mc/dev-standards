@@ -11,9 +11,16 @@ What it does: read the shard table, pick the shard, check that HEAD is the commi
 run the shard's commands in order from the repository root, stop at the first failure, and write the result.
 A command written `@name` is replaced by `tests.name` of the table. Nothing here talks to GitHub.
 
+Sizing (DL19): a shard may carry `size` {cpus, memory_gib, workers, timeout_min}, filled from the table's `limits`.
+A size over the limits is state error. The commands run with CI_SHARD_WORKERS, CI_SHARD_CPUS and CI_SHARD_MEMORY_GIB
+set; `{workers}` in a command becomes the worker count and `{files}` the shard's test files (the suite and `part` or
+`members` of the table, see shard_table.py). `--timeout-min` wins over `size.timeout_min`. After each command the
+largest peak of any child process is read (`peak_memory_gib`, Linux and macOS; null on Windows). A peak above the
+memory limit is a failure, so the shard is made smaller, not rerun.
+
 Result JSON (schema 1), written to --out (default .delivery/ci-results/<sha>/<shard>.json):
   {"schema": 1, "shard": ID, "context": CONTEXT, "os": OS, "sha": FULL_SHA, "state": "success"|"failure"|"error",
-   "started": ISO8601, "finished": ISO8601, "commands": [{"command", "exit", "seconds", "tail"}], "summary": "..."}
+   "started": ISO8601, "finished": ISO8601, "commands": [{"command", "exit", "seconds", "tail"}], "summary": "...", "size": {...}, "peak_memory_gib": N or null}
 state: success = every command exited 0; failure = a command failed or timed out; error = the shard could not run
 (unknown shard, wrong OS, HEAD is not --sha, bad table).
 
@@ -29,11 +36,21 @@ import argparse
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 import tempfile
 import time
+from pathlib import Path
 from datetime import datetime, timezone
+
+try:
+    import resource
+except ImportError:  # Windows: no peak memory
+    resource = None
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import shard_table  # noqa: E402
 
 TAIL_LINES = 40
 OS_NAMES = {"linux": "linux", "win32": "windows", "darwin": "macos"}
@@ -68,10 +85,22 @@ def expand(command: str, tests: dict) -> str:
     return tests[m.group(1)]
 
 
-def run_command(command: str, cwd: str, timeout_s):
+def peak_memory_gib():
+    """Largest peak of any finished child process so far, in GiB; None where the OS cannot say."""
+    if resource is None:
+        return None
+    peak = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+    return round(peak / (1024 ** 3 if sys.platform == "darwin" else 1024 ** 2), 3)
+
+
+def quote_files(files) -> str:
+    return subprocess.list2cmdline(files) if os.name == "nt" else " ".join(shlex.quote(f) for f in files)
+
+
+def run_command(command: str, cwd: str, timeout_s, env=None):
     t0 = time.monotonic()
     try:
-        p = subprocess.run(command, cwd=cwd, shell=True, capture_output=True, text=True, timeout=timeout_s,
+        p = subprocess.run(command, cwd=cwd, env=env, shell=True, capture_output=True, text=True, timeout=timeout_s,
                            errors="replace")
         code, out = p.returncode, (p.stdout or "") + (p.stderr or "")
     except subprocess.TimeoutExpired as exc:
@@ -87,7 +116,7 @@ def run_shard(table: dict, shard_id: str, cwd: str, sha: str | None, timeout_min
     started = now_iso()
     head = git("rev-parse", "HEAD", cwd=cwd).stdout.strip()
     result = {"schema": 1, "shard": shard_id, "context": shard_id, "os": this_os(), "sha": sha or head,
-              "state": "error", "started": started, "finished": started, "commands": [], "summary": ""}
+              "state": "error", "started": started, "finished": started, "commands": [], "summary": "", "peak_memory_gib": None}
 
     def done(state, summary):
         result.update(state=state, summary=summary, finished=now_iso())
@@ -107,6 +136,23 @@ def run_shard(table: dict, shard_id: str, cwd: str, sha: str | None, timeout_min
     if not isinstance(commands, list) or not commands:
         return done("error", "shard %r has no commands" % shard_id)
     tests = table.get("tests") if isinstance(table.get("tests"), dict) else {}
+    bad = shard_table.size_problems(shard, table)
+    if bad:
+        return done("error", "; ".join(bad))
+    size = shard_table.size_of(shard, table)
+    files = []
+    if shard.get("suite") is not None:
+        assignment, _ = shard_table.resolve(table, Path(cwd))
+        if shard.get("id") not in assignment:
+            return done("error", "shard %r names suite %r, which gives it no files" % (shard_id, shard.get("suite")))
+        files = assignment[shard["id"]]
+    timeout_min = timeout_min or size["timeout_min"]
+    env = dict(os.environ)
+    for key, name in (("workers", "CI_SHARD_WORKERS"), ("cpus", "CI_SHARD_CPUS"), ("memory_gib", "CI_SHARD_MEMORY_GIB")):
+        if size[key] is not None:
+            env[name] = str(size[key])
+    limit_gib = size["memory_gib"]
+    result["size"] = size
     limit = timeout_min * 60 if timeout_min else None
     deadline = time.monotonic() + limit if limit else None
     for raw in commands:
@@ -114,11 +160,16 @@ def run_shard(table: dict, shard_id: str, cwd: str, sha: str | None, timeout_min
             cmd = expand(str(raw), tests)
         except ValueError as exc:
             return done("error", str(exc))
+        cmd = cmd.replace("{files}", quote_files(files)).replace("{workers}", str(size["workers"]))
         remaining = None if deadline is None else max(1.0, deadline - time.monotonic())
-        step = run_command(cmd, cwd, remaining)
+        step = run_command(cmd, cwd, remaining, env)
         result["commands"].append(step)
+        result["peak_memory_gib"] = peak_memory_gib()
         if step["exit"] != 0:
             return done("failure", "command failed (exit %d): %s" % (step["exit"], cmd))
+        peak = result["peak_memory_gib"]
+        if limit_gib is not None and peak is not None and peak > limit_gib:
+            return done("failure", "peak memory %.2f GiB is over the limit of %s GiB: %s" % (peak, limit_gib, cmd))
     return done("success", "%d command(s) passed" % len(commands))
 
 

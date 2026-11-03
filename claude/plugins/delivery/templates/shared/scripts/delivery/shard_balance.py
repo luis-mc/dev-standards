@@ -2,6 +2,7 @@
 """Split test files into shards of about equal run time (STACKSPEC 13.1, CI speed-ups).
 
     shard_balance.py --shard K/N [--timings FILE] [--glob PATTERN]... [--files-from FILE|-] [FILE...]
+    shard_balance.py --table FILE --shard-id ID [--root DIR] [--join SEP]
     shard_balance.py update --report FILE... [--timings FILE] [--format auto|vitest|playwright]
 
 Split: the test files come from the arguments, `--files-from` (one per line, `-` is stdin) and
@@ -14,6 +15,9 @@ lower shard number), and the files of shard K (1-based) are printed, sorted, one
 list (the median of the whole timings file when none of them is measured, else 1 second), so a new
 file lands somewhere sensible and the same input always gives the same shards. A missing timings
 file is not an error: every file then weighs the same.
+
+Table: `--table` with `--shard-id` prints the files of one shard of a shard table (`shard_table.py`), so every
+suite of the table is balanced from its timings, not only e2e. `shard_guard.py` checks the table.
 
 Update: `update` folds a test runner's JSON report (vitest or jest `testResults[]` with
 `startTime`/`endTime`, or Playwright's JSON reporter with per-test `duration`) into the timings
@@ -245,14 +249,26 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("--prune-missing", action="store_true")
         return cmd_update(p.parse_args(argv[1:]))
     p = argparse.ArgumentParser(description="print the test files of one balanced shard")
-    p.add_argument("--shard", required=True, help="K/N, 1-based")
+    p.add_argument("--shard", help="K/N, 1-based")
+    p.add_argument("--table", help="shard table; with --shard-id print that shard's files (any suite, by timings)")
+    p.add_argument("--shard-id", help="id of a shard in --table")
     p.add_argument("--timings", default=DEFAULT_TIMINGS)
     p.add_argument("--glob", action="append", default=[])
     p.add_argument("--files-from")
     p.add_argument("--root", default=".")
     p.add_argument("--join", default=None, help="print the files on one line, separated by this")
     p.add_argument("files", nargs="*")
-    return cmd_split(p.parse_args(argv))
+    a = p.parse_args(argv)
+    if a.table or a.shard_id:
+        if not (a.table and a.shard_id):
+            p.error("--table and --shard-id go together")
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import shard_table
+        return shard_table.main(["files", "--shard-id", a.shard_id, "--table", a.table, "--root", a.root]
+                                + (["--join", a.join] if a.join is not None else []))
+    if not a.shard:
+        p.error("--shard K/N is required (or --table with --shard-id)")
+    return cmd_split(a)
 
 
 if __name__ == "__main__":
