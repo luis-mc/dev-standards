@@ -435,7 +435,7 @@
     },
     "ci": {
       "type": "object",
-      "description": "DL15: where CI runs, chosen PER OS. There is no default: setup asks, and `delivery_ci.py set` changes it later. Option values: self-hosted (a, GitHub Actions on the owner's runners; the `runners` and `local_runners` keys belong to it), github-hosted (b, GitHub Actions on GitHub's runners), cloud (c, Claude cloud sessions, no Actions and no webhooks). All three use the same shard table; the option only decides where a shard runs and how its result comes back.",
+      "description": "DL15: where CI runs, chosen PER OS. There is no default: setup asks, and `delivery_ci.py set` changes it later. Option values: Option 1 self-hosted (your own self-hosted runners on any machines you run; the `runners` and `local_runners` keys belong to it), Option 2 github-hosted (GitHub's runners), Option 3 cloud (Claude cloud sessions, no Actions and no webhooks). Option 4 (own runners first, a fallback after a wait) is the `fallback` block. All use the same shard table; the option only decides where a shard runs and how its result comes back.",
       "properties": {
         "options": {
           "type": "object",
@@ -450,9 +450,14 @@
           "type": "string",
           "description": "Path of the shard table, from the repository root (default scripts/delivery/ci-shards.json)."
         },
+        "fallback": {
+          "type": "object",
+          "description": "Option 4: own runners first, a fallback after a wait. Reserved and empty (CIR10 S1): the keys are added when Option 4 is built. Nothing reads this block yet.",
+          "properties": {}
+        },
         "cloud": {
           "type": "object",
-          "description": "Settings of option c. Needed as soon as one OS is cloud.",
+          "description": "Settings of Option 3. Needed as soon as one OS is cloud.",
           "properties": {
             "repo": {
               "type": "string",
