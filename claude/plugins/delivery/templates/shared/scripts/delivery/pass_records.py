@@ -187,6 +187,7 @@ def commit_change(root, remote: str, branch: str, add: dict, remove: list[str], 
                 return False, commit.stderr.strip()
             pushed = git(root, "push", "--quiet", remote, "%s:refs/heads/%s" % (commit.stdout.strip(), branch))
             if pushed.returncode == 0:
+                git(root, "update-ref", local_ref(remote, branch), commit.stdout.strip())
                 return True, commit.stdout.strip()
             last = pushed.stderr.strip()
         finally:

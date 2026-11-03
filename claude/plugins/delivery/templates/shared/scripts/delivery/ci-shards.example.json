@@ -1,11 +1,12 @@
 {
   "schema": 1,
+  "root_files": ["pnpm-lock.yaml"],
   "tests": {
     "unit": "pnpm test:unit",
     "integration": "pnpm test:integration"
   },
   "shards": [
-    {"id": "unit-linux", "os": "linux", "context": "unit (linux)", "commands": ["@unit"]},
+    {"id": "unit-linux", "os": "linux", "context": "unit (linux)", "inputs": ["packages/core", "packages/app"], "commands": ["@unit"]},
     {"id": "integration-linux", "os": "linux", "context": "integration (linux)", "commands": ["@integration"]},
     {"id": "unit-windows", "os": "windows", "context": "unit (windows)", "commands": ["@unit"]}
   ]

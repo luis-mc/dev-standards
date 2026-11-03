@@ -229,6 +229,10 @@ flowchart LR
 
 **R13.9** — `delivery_doctor.py` has a `ci` check. It fails when the shard table has a shard for an OS that was not chosen. For a it needs a `runners` entry for the OS; for b a workflow file; for c `ci.cloud.repo`, `status_token_env` and `branches`, a shard table, and one context per cloud shard. A missing token variable is a note, not a failure, because the token lives in the cloud environment. With nothing chosen and no shard table the check passes with a note.
 
+**R13.10** — A shard may list `inputs` (paths) in the shard table, and the table may list `root_files`. From these `pass_records.py` computes an **inputs key**: a hash of the shard id, OS, commands and the git blob ids of the files at HEAD. With `cloud_shard.py run --records` a shard whose key has a `success` pass record is skipped; its result is `success` with `skipped: true` and the record it relied on. A shard with no key (no `inputs`, a path that matches nothing, uncommitted changes under its paths) always runs. A `failure` record never skips, and `--all` ignores records.
+
+**R13.11** — Pass records live on one orphan branch (`ci-pass-records`), one file per branch, shard and key, so shards never conflict. A ready pull request to the base branch reads only the base branch's records, never its own branch's; other runs read their own and the base's. `pass_records.py cleanup` and `cleanup.py` remove the records of branches that no longer exist, and keep the newest 20 records of each branch and shard.
+
 The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are **starters**: small, tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name and the status rules.
 
 Failure modes of option c:
@@ -238,6 +242,7 @@ Failure modes of option c:
 | A shard session dies | No result branch. The head stays not green. The watcher routine starts the shard again after `ci.cloud.shard_timeout_min`. |
 | The status token is missing or wrong | `cloud_status.py` exits 2 and posts nothing. The head stays not green. |
 | A new push moves the branch | Results of the old sha are ignored. The new head needs its own. |
+| The records branch cannot be reached | No shard is skipped; every shard runs (R13.10). |
 
 ## Versions
 
