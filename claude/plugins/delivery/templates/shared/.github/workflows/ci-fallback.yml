@@ -1,0 +1,30 @@
+# Hosted-runner fallback for ONE waiting shard (Option 4). Started by fallback_launch.py (`gh workflow run`),
+# never by a push. It checks out the commit, sets up, takes the claim last and only then runs the shard.
+# No watchdog job: the watcher is the session that opened the run plus the hourly routine.
+name: ci-fallback
+on:
+  workflow_dispatch:
+    inputs:
+      sha: {description: "full commit sha", required: true}
+      shard: {description: "shard id from ci-shards.json", required: true}
+      os: {description: "linux or windows", required: true, default: linux}
+permissions:
+  contents: write    # the claim and the result branch are pushed as branches
+  statuses: write    # the one commit status for the shard
+jobs:
+  shard:
+    name: fallback ${{ inputs.shard }}
+    runs-on: ${{ inputs.os == 'windows' && 'windows-latest' || 'ubuntu-latest' }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: "${{ inputs.sha }}", fetch-depth: 1}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      # PROJECT STEP: install what the shard needs (language runtime, dependencies). Keep it before the claim.
+      - name: Claim last, then run the shard
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python scripts/delivery/fallback_run.py --sha "${{ inputs.sha }}" --shard "${{ inputs.shard }}" --who hosted

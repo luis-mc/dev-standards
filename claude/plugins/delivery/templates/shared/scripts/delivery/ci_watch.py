@@ -38,6 +38,13 @@ wall time (first job start to last job end), its slowest job with that job's sha
 run, and the job's two slowest steps, from `gh run view --json jobs`. It never changes the
 exit code and prints nothing extra when anything cannot be read.
 
+Fallback (Option 4, CIR10 S8): when `.delivery/config.json` has `ci.fallback` (kind, after_min), every poll with
+pending runs measures how long each shard's job has been queued for a runner. A shard over `after_min` minutes
+gets one fallback launch (cloud session or hosted runner, `fallback_launch.py`); under it, nothing. A paused cap
+prints one warning. It never changes the exit code. This watcher is the session that opened the run; the hourly
+routine (`fallback_launch.py sweep`) is only the safety net, so an unattended fallback can start up to an hour
+late. --no-fallback turns it off.
+
 Post-run hooks (DS30): `.delivery/config.json` may list project commands under
 `ci_watch.post_run`, e.g. `{"ci_watch": {"post_run": ["python scripts/delivery/ci_watch_local.py
 {run_id} {head}"], "post_run_timeout_seconds": 900}}`. Once every watched run is complete and the
@@ -66,6 +73,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # -I leaves the script dir off sys.path
 import runner_health  # noqa: E402
+import fallback_launch  # noqa: E402
 
 OK_CONCLUSIONS = {"success", "skipped"}
 LIST_FIELDS = "databaseId,workflowName,status,conclusion,event,headSha"
@@ -238,6 +246,11 @@ def warn_queued_jobs(pending: list[dict], repo: str | None, warned: set, thresho
             else:
                 continue  # a runner exists; the job is waiting its turn
             warned.add(jid)
+
+
+def fallback_deps(repo: str | None, state: dict) -> "fallback_launch.Deps":
+    """The real dependencies of the fallback hook; `state` keeps one launch per shard across polls."""
+    return fallback_launch.Deps(str(config_root()), "origin", repo, gh_json=gh_json, state=state)
 
 
 def print_failed_jobs(run: dict, repo: str | None) -> None:
@@ -499,6 +512,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--repo", help="OWNER/NAME (default: the current repository)")
     ap.add_argument("--config", help="project config with ci_watch.post_run "
                                      "(default: .delivery/config.json in the repository root)")
+    ap.add_argument("--no-fallback", action="store_true",
+                    help="do not start the Option 4 fallback for shards that wait too long (ci.fallback)")
     ap.add_argument("--no-post-run", action="store_true",
                     help="do not run the ci_watch.post_run hooks of the project config")
     args = ap.parse_args(argv)
@@ -527,6 +542,7 @@ def main(argv: list[str] | None = None) -> int:
     errors = 0
     last_state = ""
     warned: set = set()
+    fallback_state: dict = {}
     while True:
         state = ""
         decided = False
@@ -551,6 +567,9 @@ def main(argv: list[str] | None = None) -> int:
             elif pending:
                 state = f"{len(pending)} of {len(runs)} run(s) not completed"
                 warn_queued_jobs(pending, args.repo, warned, args.queue_warn_seconds)
+                if not args.no_fallback:
+                    fallback_launch.check_and_launch(
+                        sha, pending, fallback_deps(args.repo, fallback_state))
             else:
                 bad = [r for r in runs if r.get("conclusion") not in OK_CONCLUSIONS]
                 decided = True
