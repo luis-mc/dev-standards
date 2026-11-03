@@ -60,6 +60,8 @@ carries no CI logic (DL15).
 | `scripts/delivery/cloud_shard.py` | `templates/shared/scripts/delivery/` (CI option c: runs one shard in a cloud session and writes its result JSON; starter, see "CI options") | ci |
 | `scripts/delivery/cloud_status.py` | same (CI option c: lists the heads that need shards and posts the results as commit statuses; starter) | ci |
 | `scripts/delivery/ci-shards.json` | per product (the shard table, see "CI options"; `ci-shards.example.json` is the format) | ci |
+| `scripts/delivery/speed_probe.py`, `scaled.mjs` | `templates/shared/scripts/delivery/` (speed probe and `scaled(ms)` for timing budgets, see "Speed probe") | ci |
+| `scripts/delivery/db_per_worker.py` | same (one Postgres database per test worker from a template; Postgres projects only) | ci |
 
 `.delivery/` (local results and step logs) is added to the generated `.gitignore`.
 
@@ -932,3 +934,22 @@ after a measurement, `gh pr create` without `--draft` and `gh pr ready` from a b
 not matching `release_branches` of `tools/change-notes.json` (default `*-integration`).
 Named-case runs are always allowed. `join.py` works without `gate.json`: it says the gate
 is not configured and writes `"gate": "not configured"` to `join-result.json`.
+
+## Speed probe, limits and database per worker (CIR10 L7, L8)
+
+- `speed_probe.py [--runs 5] [--reference-ms MS] [--max-scale 3] [--json] [--result FILE] [--export-env]` times a fixed
+  workload and prints the scale (median / reference, never below 1). `calibrate` writes the reference to
+  `scripts/delivery/speed-probe.json` (`{"reference_ms": N}`); without it a built-in reference is used and the
+  output says so. A scale above 3 is a refusal: exit 2, `--result` gets `"state": "error"`, never `success`.
+  Exit 0 ok, 2 refused, 64 usage. Run it once at the start of the job that runs budgets and export
+  `DELIVERY_SPEED_SCALE` (`--export-env` prints the line for `$GITHUB_ENV`).
+- `scaled(ms)`: in Python `speed_probe.scaled`, in JavaScript `scaled.mjs`. Both read `DELIVERY_SPEED_SCALE`.
+  At scale 1 the result is `ms` unchanged; above 1 it rounds up. An unreadable value or a scale above 3 raises;
+  it is never treated as 1. Without the variable, `scaled.mjs` uses 1 (a developer machine) and Python probes.
+- Naming: a test file with a timing budget is named `*.budget.test.*`, and runs only in the job that runs budgets,
+  alone, on one runner. Which budgets exist is the project's.
+- `ci.limits.<option>.{browser_workers, integration_workers, memory_gib}` in `.delivery/config.json`
+  (`delivery_config.ci_limits()`): defaults `browser_workers` 2, `memory_gib` 8.5; `integration_workers` has none.
+- `db_per_worker.py setup|teardown|name --base NAME [--workers N] [--phase template|workers|all] [--run]`: the
+  template `<base>_tpl` is migrated once, then `<base>_w<K>` is created from it for each worker. Names are letters,
+  digits and underscore only. Exit 0, 1 psql failed, 2 usage.

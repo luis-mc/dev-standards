@@ -85,6 +85,12 @@ flowchart LR
 
 **R5.9** — When all watched runs finish, `ci_watch.py` prints each run's wall time and slowest job. It never changes the exit code.
 
+**R5.10** — `speed_probe.py` times a fixed workload (median of 5 runs) and gives a scale: median over the reference time, never below 1. `scaled(ms)` (Python, and `scaled.mjs`) multiplies a timing budget by it; at scale 1 the budget is unchanged. A scale above 3 is a refusal: the probe exits 2, writes state `error` (never `success`), and the budgets are not judged. A bad `DELIVERY_SPEED_SCALE` also refuses. Budgets run in CI only, alone, one probe per job.
+
+**R5.11** — `ci.limits` in `.delivery/config.json` sets `browser_workers`, `integration_workers` and `memory_gib` per CI option. `delivery_config.ci_limits()` returns them with the measured defaults: 2 browser workers and 8.5 GiB.
+
+**R5.12** — `db_per_worker.py` prints (or runs with `psql`) the SQL for one Postgres database per test worker, copied from a migrated template. Names are checked so they cannot carry SQL. Postgres projects only.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -112,6 +118,7 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.4, R5.8 | `tools/test_smoke_packaged.py`, `tools/template_build_check.py` |
 | R5.6, R5.9 | `tools/test_delivery_ci.py`, `tools/test_delivery_runner.py` |
 | R5.7 | `tools/test_delivery_cleanup.py` |
+| R5.10, R5.11, R5.12 | `tools/test_delivery_speed.py` |
 
 ## 10. Decisions
 
