@@ -446,6 +446,15 @@
             "macos": {"type": "string", "enum": ["self-hosted", "github-hosted", "cloud"]}
           }
         },
+        "limits": {
+          "type": "object",
+          "description": "CIR10 L8: fixed concurrency and memory per option, with measured defaults. browser_workers defaults to 2 and memory_gib to 8.5 (a cloud session); integration_workers has no default. A shard whose reported peak memory is above memory_gib fails the guard.",
+          "properties": {
+            "self-hosted": {"type": "object", "properties": {"browser_workers": {"type": "integer", "minimum": 1}, "integration_workers": {"type": "integer", "minimum": 1}, "memory_gib": {"type": "number", "minimum": 0.5}}},
+            "github-hosted": {"type": "object", "properties": {"browser_workers": {"type": "integer", "minimum": 1}, "integration_workers": {"type": "integer", "minimum": 1}, "memory_gib": {"type": "number", "minimum": 0.5}}},
+            "cloud": {"type": "object", "properties": {"browser_workers": {"type": "integer", "minimum": 1}, "integration_workers": {"type": "integer", "minimum": 1}, "memory_gib": {"type": "number", "minimum": 0.5}}}
+          }
+        },
         "shard_table": {
           "type": "string",
           "description": "Path of the shard table, from the repository root (default scripts/delivery/ci-shards.json)."

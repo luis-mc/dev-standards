@@ -137,6 +137,28 @@ def ci_options(cfg) -> dict:
     return {k: v for k, v in o.items() if k in CI_OS and v in CI_OPTIONS}
 
 
+LIMIT_KEYS = ("browser_workers", "integration_workers", "memory_gib")
+# Measured defaults (CIR10 L8): the browser suite ran 7 workers in 14.3 min and 2 workers in 23.7 min, and the
+# owner chose 2, in CI as well. A cloud session has 8.5 GiB. integration_workers has no measured default.
+LIMIT_DEFAULTS = {"browser_workers": 2, "memory_gib": 8.5}
+
+
+def ci_limits(cfg) -> dict:
+    """ci.limits as {option: {browser_workers, integration_workers, memory_gib}}. Only valid positive numbers
+    are kept; a key that is not set falls back to LIMIT_DEFAULTS, else it is absent (no limit)."""
+    raw = _section(_section(cfg, "ci"), "limits")
+    out = {}
+    for opt in CI_OPTIONS:
+        sec = _section(raw, opt)
+        lim = dict(LIMIT_DEFAULTS)
+        for k in LIMIT_KEYS:
+            v = sec.get(k)
+            if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0:
+                lim[k] = v
+        out[opt] = lim
+    return out
+
+
 def ci_cloud(cfg) -> dict:
     c = _section(_section(cfg, "ci"), "cloud")
     return {"repo": c.get("repo") if isinstance(c.get("repo"), str) else "",
