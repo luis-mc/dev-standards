@@ -23,3 +23,4 @@ Output: `docs/research/shared-self-hosted-runners.md` (or the repo's research la
 - 2026-11-03: docs.github.com unreachable (DNS refused, outside the allowed network); platform facts cited from web-search snippets of docs URLs, unverified ones marked.
 - 2026-11-03: wrote docs/features/delivery/shared-self-hosted-runners.md (no docs/research/ folder exists; DOCSPEC R2.2 puts feature docs in the feature folder).
 - 2026-11-03: docs_check.py: 2 errors, both expected on a task branch: G1 llms.txt stale (generated files are rebuilt by the release, branches do not commit them) and W1 this brief under docs/work/ (strip with docs_work.py before any join). ci_areas --branch-advice: light, local only.
+- 2026-11-03: opened draft PR #140. Done.
