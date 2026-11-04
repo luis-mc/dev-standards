@@ -106,3 +106,7 @@ test('relativePath: under the root, outside it, windows paths, the root itself',
   assert.equal(relativePath('/p', '/p'), '.')
   assert.equal(relativePath('', '/p/a'), '/p/a')
 })
+
+test('F57: UNC paths compare without case', () => {
+  assert.equal(relativePath('\\\\host1\\share\\app1', '\\\\HOST1\\share\\app1\\src\\a.ts'), 'src/a.ts')
+})

@@ -6,7 +6,7 @@ import { isOverThreshold } from './change.ts'
 import { countLines } from './lines.ts'
 import { cutPieces, filesLine, piecesWidth } from './summary.ts'
 import type { Piece } from './summary.ts'
-import { cutToWidth, displayWidth, oneLine } from './width.ts'
+import { cutToWidth, displayWidth, oneLine, stripAnsi } from './width.ts'
 
 export type Outcome = {
   kind: 'output' | 'empty' | 'error'
@@ -31,7 +31,7 @@ export function linesWord(n: number): string {
 /** The first line of a text that has any characters; '' for none. */
 export function firstLine(text: string): string {
   for (const raw of text.split('\n')) {
-    const line = raw.replace(/\r$/, '').trim()
+    const line = stripAnsi(raw).replace(/\t/g, ' ').replace(/\r$/, '').trim()
     if (line !== '') return line
   }
   return ''
@@ -45,8 +45,9 @@ export function firstLine(text: string): string {
  */
 export function shellOutcome(output: unknown, isErrored: boolean): Outcome {
   if (isErrored) {
-    const text = typeof output === 'string' ? output : isRec(output) ? str(output.stderr) || str(output.stdout) : ''
-    const line = firstLine(text)
+    const line = typeof output === 'string'
+      ? firstLine(output)
+      : isRec(output) ? firstLine(str(output.stderr)) || firstLine(str(output.stdout)) : ''
     return { kind: 'error', text: line === '' ? 'failed' : line }
   }
   if (!isRec(output)) {
@@ -104,6 +105,12 @@ export function planCommand(
 ): CommandPlan {
   if (call.isRunning) return 'running'
   if (call.isInterrupted) return 'engine'
+  // No result yet (queued, waiting for permission): the engine's row stays.
+  if (!call.isErrored && (call.output === undefined || call.output === null)) return 'engine'
+  // Edit data the engine could not read or skipped: show its output.
+  if (isRec(call.output) && isRec(call.output.bashEditDiff)) {
+    if (call.output.bashEditDiff.unavailable === true || call.output.bashEditDiff.skipped === true) return 'engine'
+  }
   if (isRec(call.output)) {
     if (call.output.interrupted === true) return 'engine'
     if (typeof call.output.backgroundTaskId === 'string' && call.output.backgroundTaskId !== '') return 'engine'
