@@ -71,9 +71,11 @@ class CiRuns(unittest.TestCase):
     def test_where_kinds(self):
         _, doc = collect()
         where = {e["run_id"]: e["where"] for e in doc["finished"]}
-        self.assertEqual(where[101], {"kind": "pool", "name": "host1-pool-app1"})
+        self.assertEqual(where[101], {"kind": "pool", "name": "host1-pool-app1", "host": "host1"})
         self.assertEqual(where[102]["kind"], "windows")
         self.assertEqual(where[103]["kind"], "hosted")
+        self.assertEqual(where[102]["host"], "host1")
+        self.assertEqual(where[103]["name"], "")                  # no raw hosted runner name
         self.assertEqual(where[105]["kind"], "cloud")
 
     def test_cloud_name_is_the_claim_holder(self):
@@ -127,6 +129,30 @@ class CiRuns(unittest.TestCase):
         self.assertIsNone(act[201].get("slot_wait"))
         self.assertEqual(act[202]["slot_wait"], {"since": "2026-11-04T14:28:05Z", "fallback_in_min": 5})
         self.assertIsNone(act[202]["now"])
+
+    def test_hosted_where_uses_the_os_label(self):
+        job = {"runner_name": "GitHub Actions 1000005700", "labels": ["ubuntu-latest"]}
+        self.assertEqual(R.where_of([job]), {"kind": "hosted", "name": "", "os": "ubuntu"})
+        self.assertEqual(R.where_of([{"runner_name": "x", "labels": ["windows-2022"]}])["os"], "windows")
+        self.assertEqual(R.where_of([{"runner_name": "x", "labels": ["macos-14"]}])["os"], "macos")
+        self.assertEqual(R.where_of([])["os"], "")
+
+    def test_now_skips_bookkeeping_steps(self):
+        def step(n, name, status, start):
+            return {"name": name, "status": status, "started_at": start}
+        jobs = [{"status": "in_progress", "runner_name": "host1-pool-app1", "labels": ["self-hosted", "linux"], "steps": [
+            step(1, "Set up job", "completed", "2026-11-04T14:30:00Z"),
+            step(2, "Unit tests", "in_progress", "2026-11-04T14:30:20Z"),
+            step(3, "Post Run actions/checkout", "in_progress", "2026-11-04T14:31:00Z"),
+            step(4, "Complete job", "in_progress", "2026-11-04T14:31:01Z")]}]
+        run = {"id": 7, "name": "CI", "run_started_at": "2026-11-04T14:30:00Z", "event": "push", "head_branch": "main"}
+        act = R.build_active(run, jobs, [], "main", NOW, None)
+        self.assertEqual(act["now"], {"step": "Unit tests", "since": "2026-11-04T14:30:20Z"})
+        only_setup = [{"status": "in_progress", "steps": [step(1, "Set up job", "in_progress", "2026-11-04T14:30:00Z")]}]
+        self.assertEqual(R.build_active(run, only_setup, [], "main", NOW, None)["now"]["step"], "starting")
+        done_then = [{"status": "in_progress", "steps": [step(1, "Checkout", "completed", "2026-11-04T14:30:00Z"),
+                                                         step(2, "Post Run x", "in_progress", "2026-11-04T14:31:00Z")]}]
+        self.assertEqual(R.build_active(run, done_then, [], "main", NOW, None)["now"]["step"], "Checkout")
 
     def test_fallback_in_min_is_unknown_without_a_setting(self):
         _, doc = collect(root=make_root({}))

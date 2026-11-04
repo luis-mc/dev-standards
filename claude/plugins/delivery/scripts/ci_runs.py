@@ -128,8 +128,27 @@ def why_of(run: dict, default_branch: str, fallback_wait_min=None) -> str:
     return str(event or "unknown")
 
 
+OS_LABELS = ("ubuntu", "windows", "macos")
+BOOKKEEPING = re.compile(r"^(set up job|complete job|post run\b|post .+|initialize containers|stop containers)", re.I)
+
+
+def host_of(runner_name: str) -> str:
+    """The machine part of a pool runner name: host1-pool-app1 -> host1."""
+    return re.split(r"[-_.]", runner_name or "", maxsplit=1)[0]
+
+
+def os_of(labels: list) -> str:
+    """The OS of a hosted runner from its labels (ubuntu-latest -> ubuntu), or ''."""
+    for label in labels:
+        for os_name in OS_LABELS:
+            if label.startswith(os_name):
+                return os_name
+    return ""
+
+
 def where_of(jobs: list) -> dict:
-    """The runner kind and name of the first job that has a runner (section 11)."""
+    """The runner kind and place of the first job that has a runner (section 11): `host` for the pool and the Windows
+    service, `os` for GitHub-hosted. A hosted runner's own name is not kept."""
     for job in jobs:
         name = job.get("runner_name") or ""
         labels = [str(x).lower() for x in (job.get("labels") or [])]
@@ -137,10 +156,9 @@ def where_of(jobs: list) -> dict:
             continue
         if "self-hosted" in labels:
             kind = "windows" if "windows" in labels else "pool"
-        else:
-            kind = "hosted"
-        return {"kind": kind, "name": name or ("GitHub-hosted" if kind == "hosted" else "")}
-    return {"kind": "hosted", "name": "GitHub-hosted"}
+            return {"kind": kind, "name": name, "host": host_of(name)}
+        return {"kind": "hosted", "name": "", "os": os_of(labels)}
+    return {"kind": "hosted", "name": "", "os": ""}
 
 
 # --- one run -------------------------------------------------------------------------------------------------------
@@ -200,10 +218,18 @@ def build_finished(run: dict, jobs: list, slot_rows_: list, default_branch: str,
 def build_active(run: dict, jobs: list, slot_rows_: list, default_branch: str, now: datetime, after_min) -> dict:
     where = where_of(jobs)
     now_info, slot_wait = None, None
+    running, latest = None, None
     for job in jobs:
         for step in job.get("steps") or []:
-            if step.get("status") == "in_progress":
-                now_info = {"step": step.get("name"), "since": step.get("started_at")}
+            if not step.get("started_at") or BOOKKEEPING.match(str(step.get("name") or "")):
+                continue
+            if step.get("status") == "in_progress" and (running is None or step["started_at"] >= running["started_at"]):
+                running = step
+            if latest is None or step["started_at"] >= latest["started_at"]:
+                latest = step
+    pick = running or latest
+    if pick:
+        now_info = {"step": pick.get("name"), "since": pick.get("started_at")}
     for row in slot_rows_:
         if row.get("queued_at") and not row.get("slot_at"):
             since = parse_time(row["queued_at"])
