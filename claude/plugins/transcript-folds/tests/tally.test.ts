@@ -65,3 +65,9 @@ test('switchSentence says the new state in one line', () => {
   assert.equal(switchSentence('commands', true), 'Commands folded.')
   assert.equal(switchSentence('commands', false), 'Commands shown in full.')
 })
+
+test('F56: one Windows file in two spellings counts once', () => {
+  let t = addToTally(EMPTY_TALLY, one('C:\\Work\\app1\\a.ts', 1, 0))
+  t = addToTally(t, one('c:/Work/app1/a.ts', 1, 0))
+  assert.equal(fileCount(t), 1)
+})

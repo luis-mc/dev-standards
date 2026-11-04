@@ -646,5 +646,58 @@ class ParseDeliveryBlockTests(unittest.TestCase):
         self.assertEqual(b["owns"], ["skills/x/ (SKILL.md assets/)", "b.py"])
 
 
+class Dl54PostToolTests(unittest.TestCase):
+    """DL54: F4 push HEAD, F5 PowerShell, F6 push --delete, and gh pr create --head from another worktree."""
+
+    def setUp(self):
+        self.root = make_root()
+        seed(self.root, state="joined")
+        self.repo = make_git_repo()
+        _git(self.repo, "checkout", "-q", "-b", "release/29")
+
+    def train(self):
+        return L.load(self.root)["trains"][0]
+
+    def test_push_head_resolves_current_branch(self):
+        H.handle(bash("git push -u origin HEAD", cwd=self.repo), self.root)
+        t = self.train()
+        self.assertEqual(t["state"], "pushed")
+        self.assertIsNotNone(t["pushed_at"])
+
+    def test_push_head_colon_name(self):
+        H.handle(bash("git push origin HEAD:release/29", cwd=self.repo), self.root)
+        self.assertEqual(self.train()["state"], "pushed")
+
+    def test_powershell_push_is_recorded(self):
+        d = bash("git push origin release/29")
+        d["tool_name"] = "PowerShell"
+        H.handle(d, self.root)
+        self.assertEqual(self.train()["state"], "pushed")
+
+    def test_push_delete_changes_nothing(self):
+        for cmd in ("git push origin --delete release/29", "git push origin :release/29", "git push -d origin release/29"):
+            with self.subTest(cmd=cmd):
+                H.handle(bash(cmd), self.root)
+                t = self.train()
+                self.assertEqual(t["state"], "joined")
+                self.assertIsNone(t["pushed_at"])
+
+    def test_pr_create_head_value_wins_over_cwd_branch(self):
+        _git(self.repo, "checkout", "-q", "main")      # the shell cwd is on another branch
+        out = "https://github.com/owner/example-app/pull/77"
+        H.handle(bash(ghpr("create", "--head", "release/29", "--title", "R"), out, cwd=self.repo), self.root)
+        t = self.train()
+        self.assertEqual(t["pr"], 77)
+        self.assertEqual(t["state"], "ci")
+
+    def test_pr_create_head_unplanned_train_branch_is_recorded(self):
+        _git(self.repo, "checkout", "-q", "main")
+        out = "https://github.com/owner/example-app/pull/78"
+        H.handle(bash(ghpr("create", "--head", "release/30", "--title", "R"), out, cwd=self.repo), self.root)
+        led = L.load(self.root)
+        self.assertEqual([t["branch"] for t in led["trains"]], ["release/29", "release/30"])
+        self.assertEqual(led["trains"][1]["pr"], 78)
+
+
 if __name__ == "__main__":
     unittest.main()

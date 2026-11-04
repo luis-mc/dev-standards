@@ -932,7 +932,7 @@ def hooks_json_wires_every_script():
     assert 'hook_post_tool.py' in cmds('UserPromptSubmit')[0]
     for ev in h:
         for c in cmds(ev):
-            assert c.startswith('python3 "${CLAUDE_PLUGIN_ROOT}/scripts/') and '|| python "' in c, c
+            assert c.startswith('if command -v python3 >/dev/null 2>&1; then python3 "${CLAUDE_PLUGIN_ROOT}/scripts/') and '; else python "' in c and '|| python' not in c, c
 
 
 @test

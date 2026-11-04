@@ -156,6 +156,7 @@ export function changeOf(tool: string, output: unknown): Change | null {
     case 'NotebookEdit':
       return fromNotebook(output)
     case 'Bash':
+    case 'PowerShell':
       return fromShell(output)
     default:
       return null

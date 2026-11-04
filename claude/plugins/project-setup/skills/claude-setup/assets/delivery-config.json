@@ -30,7 +30,7 @@
   "update_state_files": [],
   "watcher_interval_s": 600,
   "runners": [],
-  "enforcement": { "mode": "block", "block_ceiling": 3, "log_every_block": false },
+  "enforcement": { "mode": "warn", "block_ceiling": 3, "log_every_block": false },
   "watcher": { "push_trains": true, "open_prs": true, "merge_on_green": true, "manage_runners": true, "ci_workflows": ["ci.yml"] },
   "runner_plan": {
     "retry_seconds": 300, "runner_max_retries": 0, "report_command": "",

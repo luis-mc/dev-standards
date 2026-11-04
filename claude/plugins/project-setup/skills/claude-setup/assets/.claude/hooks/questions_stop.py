@@ -40,11 +40,15 @@ ADDRESSED = re.compile(
     r"which (one|option|of)|let me know|prefer)\b", re.I)
 PARKED = re.compile(
     r"\b(i will ask|i'll ask|will ask (you )?(these |them |this |it )?later|"
-    r"ask (you )?(these |them |this |it )?later|parked|park(ing)? (the |this |these )?questions?|"
-    r"open questions?|still to ask|questions? (still )?to ask|"
+    r"ask (you )?(these |them |this |it )?later|questions? (are |is |were |stay |remain )?parked|"
+    r"park(ing)? (the |this |these )?questions?|"
+    r"(?:there are|there's|i have|i've got|still|remaining|some|several|a few|\d+) (?!no\b|not\b|zero\b)(?:\w+ )?open questions?|"
+    r"still to ask|questions? (still )?to ask|"
     r"waiting (on|for) your (decision|answer|input|reply))\b", re.I)
-CUE = re.compile(
-    r"\b(which|choose|pick|select|prefer|option|decide|your call|let me know)\b", re.I)
+# A line that offers a list for the owner to choose from (not "Files changed:").
+CHOOSE_HEAD = re.compile(
+    r"(\?\W*$|^\W*(please )?(pick|choose|select|decide)\b|\b(pick|choose|select) (one|from|between|a|an)\b|"
+    r"\bwhich (one|option|of)\b|\byour call\b|\blet me know which\b|^\W*(options?|choices?)\W*$)", re.I)
 ITEM = re.compile(r"^\s*(?:[-*+]|\d{1,2}[.)]|\(?[A-Da-d][.)])\s+\S")
 OPTION_LINE = re.compile(r"^\s*(?:\*\*)?option\s+[A-Za-z0-9]\b", re.I)
 
@@ -88,8 +92,9 @@ def plain_question(text):
     if len(items) >= 2:
         head = [ln for ln in lines if ln not in items]
         if len(items) == len(lines) and len(paras) > 1:
-            head = [paras[-2]]
-        return bool(CUE.search(" ".join(head)))
+            head = [ln for ln in paras[-2].splitlines() if ln.strip()]
+        # Only the line just above the list counts, and it must read as an offer.
+        return bool(head) and bool(CHOOSE_HEAD.search(head[-1].strip()))
     tail = lines[-1].rstrip().rstrip("*_)\"'” ")
     return tail.endswith("?") and bool(ADDRESSED.search(last))
 

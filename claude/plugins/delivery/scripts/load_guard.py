@@ -26,7 +26,6 @@ import io
 import json
 import os
 import re
-import socket
 import sys
 import time
 from contextlib import redirect_stdout
@@ -203,7 +202,7 @@ def _heavy_key(data):
 
 def heavy_running(cfg=None, now=None):
     """The foreground heavy calls in flight: [{'key', 'label', 'at'}]. An entry whose process is gone (same host), or
-    older than slot_stale_min, is dropped."""
+    older than slot_stale_min, is dropped (a record with no pid, as heavy_begin writes, is kept until heavy_end or then)."""
     now = time.time() if now is None else now
     stale = MS.machine_config()['slot_stale_min'] * 60
     out = []
@@ -241,8 +240,9 @@ def heavy_begin(data, cfg=None):
             return False
         folder = heavy_dir()
         MS._mkdir(folder)
-        rec = {'label': label, 'ts': time.time(), 'pid': os.getppid(), 'host': socket.gethostname(),
-               'session': data.get('session_id')}
+        # DL54 F7: no pid and no host. The parent is the short-lived shell of this hook, gone before the next hook
+        # runs, so a pid would drop a live call at once. heavy_end or slot_stale_min removes the record.
+        rec = {'label': label, 'ts': time.time(), 'session': data.get('session_id')}
         path = os.path.join(folder, _heavy_key(data) + '.json')
         tmp = MS._write_tmp(folder, rec, '.new-')
         os.replace(tmp, path)

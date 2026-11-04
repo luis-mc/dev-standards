@@ -443,5 +443,70 @@ class Schema(unittest.TestCase):
         self.assertTrue(e)
 
 
+class Dl54HeavyHolderTests(unittest.TestCase):
+    """DL54 F7: the pid of the hook shell is gone when the next hook runs; a live call must stay counted."""
+
+    def dead_pid(self):
+        p = subprocess.Popen([sys.executable, "-c", "pass"])
+        p.wait()
+        return p.pid
+
+    def test_heavy_call_survives_its_hook_shell(self):
+        with env():
+            data = {"tool_name": "Bash", "tool_use_id": "tu1", "tool_input": {"command": "npm test"}}
+            with mock.patch("os.getppid", return_value=self.dead_pid()):
+                self.assertTrue(G.heavy_begin(data, {}))
+            self.assertEqual([r["key"] for r in G.heavy_running({})], ["tu1"])
+            self.assertEqual([r["key"] for r in G.heavy_running({})], ["tu1"])
+            self.assertTrue(G.heavy_end(data))
+            self.assertEqual(G.heavy_running({}), [])
+
+    def test_heavy_call_is_dropped_when_stale(self):
+        with env():
+            data = {"tool_name": "Bash", "tool_use_id": "tu2", "tool_input": {"command": "npm test"}}
+            G.heavy_begin(data, {})
+            later = time.time() + 24 * 3600
+            self.assertEqual(G.heavy_running({}, now=later), [])
+
+
+class Dl54HooksJsonTests(unittest.TestCase):
+    """DL54 F1: the hooks.json command must pass a block (exit 2) through, and fall back only when python3 is missing."""
+
+    HOOKS = SCRIPTS.parent / "hooks" / "hooks.json"
+
+    def command(self, event):
+        return json.loads(self.HOOKS.read_text(encoding="utf-8"))["hooks"][event][0]["hooks"][0]["command"]
+
+    def run_cmd(self, cmd, env_extra, path=None):
+        e = dict(os.environ, CLAUDE_PLUGIN_ROOT=str(SCRIPTS.parent), **env_extra)
+        if path is not None:
+            e["PATH"] = path
+        payload = json.dumps({"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": "npm test"},
+                              "cwd": tempfile.mkdtemp(prefix="dl54-")})
+        return subprocess.run(["/bin/sh", "-c", cmd], input=payload, capture_output=True, text=True, env=e, timeout=60)
+
+    def test_block_exit_code_survives(self):
+        with env():
+            r = self.run_cmd(self.command("PreToolUse"), {"DELIVERY_LOAD": "99,99", **{k: os.environ[k] for k in (
+                "DELIVERY_MACHINE_CONFIG", "DELIVERY_LOAD_CACHE", "DELIVERY_MACHINE_DIR", "DELIVERY_IN_CONTAINER",
+                "DELIVERY_LOCAL_HEAVY_DIR")}})
+        self.assertEqual(r.returncode, 2, r.stderr)
+        self.assertIn("DL-77", r.stderr)
+
+    def test_no_command_chains_python_after_python3_with_or(self):
+        hooks = json.loads(self.HOOKS.read_text(encoding="utf-8"))["hooks"]
+        for event, groups in hooks.items():
+            for g in groups:
+                for h in g["hooks"]:
+                    self.assertNotIn("|| python", h["command"], event)
+                    self.assertIn("command -v python3", h["command"], event)
+
+    def test_falls_back_to_python_when_python3_is_missing(self):
+        d = tempfile.mkdtemp(prefix="bin-")
+        os.symlink(sys.executable, os.path.join(d, "python"))
+        r = self.run_cmd(self.command("Stop"), {"CLAUDE_DELIVERY_HOOKS": "off"}, path=d)
+        self.assertEqual(r.returncode, 0, r.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

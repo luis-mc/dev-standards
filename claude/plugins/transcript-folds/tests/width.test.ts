@@ -25,7 +25,7 @@ test('emoji count two cells, joined sequences and modifiers add nothing', () => 
 
 test('combining marks, variation selectors and control characters are zero', () => {
   assert.equal(displayWidth('é'), 1)
-  assert.equal(displayWidth('❤️'), 1)
+  assert.equal(displayWidth('❤️'), 2)
   assert.equal(displayWidth('\u0007'), 0)
   assert.equal(cellWidth(0x41), 1)
   assert.equal(cellWidth(0x4e00), 2)
@@ -61,4 +61,22 @@ test('cutToWidth never splits a wide character across the limit', () => {
 test('oneLine folds whitespace and newlines to single spaces', () => {
   assert.equal(oneLine('  a\n  b\t\tc \r\n'), 'a b c')
   assert.equal(oneLine(''), '')
+})
+
+test('F51: escape sequences take no cells and are never cut', () => {
+  assert.equal(displayWidth('\x1b[31merror\x1b[0m'), 5)
+  assert.equal(cutToWidth('\x1b[31merror: boom\x1b[0m', 4), '\x1b[31merr…\x1b[0m')
+})
+
+test('F53: a base with a variation selector takes two cells', () => {
+  assert.equal(displayWidth('⚠️'), 2)
+  assert.equal(displayWidth('✔️'), 2)
+})
+
+test('F54: a tab takes a cell', () => {
+  assert.equal(displayWidth('a\tb'), 3)
+})
+
+test('F58: Thai marks take no cells', () => {
+  assert.equal(displayWidth('กิน'), 2)
 })

@@ -106,7 +106,7 @@ If you do not register it, `OTHERSPEC §4.2` falls through to internal resolutio
 and silently matches your own §4.2 if you have one:
 
 ```bash
-python3 ../spec-check/assets/spec_check.py <path-to-your-spec>.md \
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/spec-check/assets/spec_check.py" <path-to-your-spec>.md \
   --external OTHERSPEC=path/to/other.md
 ```
 

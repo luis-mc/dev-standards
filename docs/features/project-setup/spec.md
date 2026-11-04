@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.7.0
+version: 0.7.1
 owner: agents
 type: reference
 code:
@@ -17,6 +17,7 @@ code:
   - tools/test_model_profiles.py
   - tools/test_rule_tags.py
   - tools/test_questions_stop.py
+  - tools/test_project_setup_fixes.py
 last_verified: 2026-11-01
 ---
 # Project setup (luismc-project-setup)
@@ -113,7 +114,7 @@ flowchart TB
 
 - The catalog is data, not requirements. STACKSPEC defines a `CHOICE` level. A choice is reported as recorded or unrecorded, never as violating.
 - The shared delivery tooling (scripts and workflows in `luismc-delivery` `templates/`) is written into each generated repository by the delivery installer; the git hooks, linters and guards in `assets/tooling/` are copied by `tech-stack-setup`. Its rules and tests belong to [delivery](../delivery/spec.md) and [delivery-speed](../delivery-speed/spec.md). This page does not repeat them.
-- The questions Stop hook (R5.13) never loops (`stop_hook_active` allows), ignores code blocks, inline code and quoted lines, lets a park through while agents of the wave still run (Q-5, a running agent in `.delivery/ledger.json`), and fails open on any error. Turn it off with `CLAUDE_QUESTIONS_STOP=off` (shell or settings `env` block) or `"questionsStop": "off"` in `~/.claude/settings.json`.
+- The questions Stop hook (R5.13) never loops (`stop_hook_active` allows), ignores code blocks, inline code and quoted lines, lets a park through while agents of the wave still run (Q-5, a running agent in `.delivery/ledger.json`), and fails open on any error. It blocks a list only when the line above it reads as an offer to pick from (not "Files changed:"), and a reply that says there are no open questions passes. Its hook command runs `python3` when present and `python` only otherwise, so exit 2 reaches Claude Code. Turn it off with `CLAUDE_QUESTIONS_STOP=off` (shell or settings `env` block) or `"questionsStop": "off"` in `~/.claude/settings.json`.
 
 ```mermaid
 flowchart TD
@@ -179,6 +180,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.7.1 | 2026-11-04 | RELEASE-42 | Questions Stop hook blocks a list only when the line above offers a choice, passes 'no open questions', and hook commands keep exit 2 (python3 if present, else python). | DS185 |
 | 0.7.0 | 2026-11-04 | RELEASE-38 | claude-setup installs a user-level Stop hook (questions_stop.py) that blocks plain-text questions and parked questions, enforcing Q-1 and Q-2 (R5.13). | SO6 |
 | 0.6.0 | 2026-11-04 | RELEASE-37 | claude-setup, tech-stack-setup and auth-setup follow the setup pattern: plan first, one line per step, and a Done, Left for you, What you can do now summary. | DL33 |
 | 0.5.1 | 2026-11-02 | RELEASE-34 | R5.2 and the delivery tooling note: the CI and delivery templates moved to luismc-delivery. tech-stack-setup calls the delivery installer at the end of its setup. No requirement ID changed. | DL15 |

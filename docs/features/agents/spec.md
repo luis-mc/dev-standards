@@ -54,7 +54,7 @@ flowchart LR
 
 **R5.2** — The agent runs on the `opus` model at `medium` effort.
 
-**R5.3** — The agent cannot write: its front matter lists `Edit`, `Write` and `NotebookEdit` in `disallowedTools`.
+**R5.3** — The agent cannot write: its front matter lists `Edit`, `Write`, `NotebookEdit` and `Bash` in `disallowedTools`. `Bash` is listed because a shell can change files. It reads with `Read`, `Grep` and `Glob`.
 
 **R5.4** — The agent's description names when to use it (hard design calls, audit-finding review) and when not to (routine or already-decided work).
 

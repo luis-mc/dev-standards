@@ -221,15 +221,19 @@ def changed_lines(root: Path, base: str, path: str, new: str = "HEAD") -> tuple[
     removed: list[tuple[int, str]] = []
     added: list[tuple[int, str]] = []
     old = new = 0
+    in_hunk = False  # '--- ' and '+++ ' are file headers only before the first @@
     for line in diff.splitlines():
         m = HUNK_RE.match(line)
         if m:
             old, new = int(m.group(1)), int(m.group(3))
+            in_hunk = True
             continue
-        if line.startswith("-") and not line.startswith("---"):
+        if not in_hunk:
+            continue
+        if line.startswith("-"):
             removed.append((old, line[1:]))
             old += 1
-        elif line.startswith("+") and not line.startswith("+++"):
+        elif line.startswith("+"):
             added.append((new, line[1:]))
             new += 1
     return removed, added

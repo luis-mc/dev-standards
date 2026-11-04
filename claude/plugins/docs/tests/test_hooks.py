@@ -78,7 +78,7 @@ class HookTests(unittest.TestCase):
         orig = D.git
 
         def spy(root, *a, **k):
-            calls.append(a[0])
+            calls.append([x for x in a if x not in ("-c",) and "=" not in x][0])
             return orig(root, *a, **k)
         D.git = spy
         try:

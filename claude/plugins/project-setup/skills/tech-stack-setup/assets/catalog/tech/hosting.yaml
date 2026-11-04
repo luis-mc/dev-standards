@@ -27,7 +27,7 @@ technologies:
     provides: [per-pr-preview, edge-cdn, cron, env-var-management, blob-storage]
     satisfies: ["§13.2 three-tier promotion natively"]
     conflicts:
-      - with: [blazor-server]
+      - with: [blazor_server]
         why: Requires sticky routing and a long-lived connection per client. Serverless invocations supply neither.
       - with: [elasticache]
         why: VPC-only cache is unreachable from Vercel functions.
@@ -54,7 +54,7 @@ technologies:
     language_note: Rust via workers-rs (WASM) is real but constrained. Go via TinyGo is painful. Neither is recommended.
     provides: [edge-cdn, cron-triggers, queues, kv, r2-storage, d1, hyperdrive]
     conflicts:
-      - with: [blazor-server]
+      - with: [blazor_server]
         why: No long-lived stateful connections in the Workers model.
     implies:
       - "Historically no raw TCP: a Postgres driver needs Hyperdrive or an HTTP-capable driver. Check §5.1's transaction requirement against whichever is used."

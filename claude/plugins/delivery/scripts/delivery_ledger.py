@@ -126,6 +126,10 @@ def empty_ledger() -> dict:
             "runners": [], "watchers": [], "owner_questions": [], "events": []}
 
 
+REPLACE_TRIES = 12
+REPLACE_PAUSE = 0.05
+
+
 def load(root) -> dict:
     """The ledger, or an empty one when absent or unreadable (a broken file is never fatal)."""
     try:
@@ -134,6 +138,39 @@ def load(root) -> dict:
         return empty_ledger()
     if not isinstance(data, dict):
         return empty_ledger()
+    base = empty_ledger()
+    for key, value in base.items():
+        data.setdefault(key, value)
+    return data
+
+
+def load_for_write(root) -> dict:
+    """The ledger for a write. Absent: an empty one. Present but unreadable: keep a copy of the file and raise,
+    so a write never replaces existing rows with an empty ledger (DL55 F2)."""
+    path = ledger_path(root)
+    if not path.exists():
+        return empty_ledger()
+    text = None
+    for attempt in range(3):  # a reader or scanner may hold the file for a moment (Windows)
+        try:
+            text = path.read_text(encoding="utf-8")
+            break
+        except FileNotFoundError:
+            return empty_ledger()
+        except OSError as exc:
+            if attempt == 2:
+                raise LedgerError("ledger %s cannot be read (%s); nothing was written" % (path, exc))
+            time.sleep(REPLACE_PAUSE * (attempt + 1))
+    try:
+        data = json.loads(text)
+        if not isinstance(data, dict):
+            raise ValueError("top level is not an object")
+    except ValueError as exc:
+        copy = path.with_name("%s.broken-%s" % (path.name, datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")))
+        with contextlib.suppress(OSError):
+            copy.write_text(text, encoding="utf-8", newline="")
+        raise LedgerError("ledger %s is not valid JSON (%s); a copy is at %s and nothing was written. "
+                          "Fix or remove the file." % (path, exc, copy.name))
     base = empty_ledger()
     for key, value in base.items():
         data.setdefault(key, value)
@@ -170,8 +207,6 @@ def locked(root, wait: float = LOCK_WAIT_SECONDS, stale: float = LOCK_STALE_SECO
             path.unlink()
 
 
-REPLACE_TRIES = 12
-REPLACE_PAUSE = 0.05
 
 
 def replace_retry(tmp, path, replace=None, sleep=None) -> None:
@@ -263,7 +298,8 @@ def prune(led: dict, days: int, now: datetime | None = None) -> int:
 def update(root, fn, **lock_kw) -> dict:
     """Lock, load, expire old finished rows, apply fn(ledger), derive phases, cap events, write. Returns the ledger."""
     with locked(root, **lock_kw):
-        led = load(root)
+        led = load_for_write(root)
+        merge_agent_rows(led)
         prune(led, retention_days(load_config(root)))   # before fn: a row fn adds or changes now is never pruned in this write
         fn(led)
         for train in led.get("trains", []):
@@ -273,6 +309,46 @@ def update(root, fn, **lock_kw) -> dict:
         led["updated_at"] = iso()
         write_atomic(root, led)
         return led
+
+
+def merge_agent_rows(led: dict) -> int:
+    """DL52: one launch can leave two rows, the routine id (trig_...) and the run session id (cse_...), for the
+    same task and branch. Merge them into the first row; the other id is kept in `alt_ids`. Returns rows merged."""
+    rows = led.get("agents")
+    if not isinstance(rows, list):
+        return 0
+    kept, merged = [], 0
+    for row in rows:
+        twin = None
+        if isinstance(row, dict) and row.get("task") and row.get("branch"):
+            for other in kept:
+                if (isinstance(other, dict) and other.get("task") == row["task"] and other.get("branch") == row["branch"]
+                        and {_id_kind(other.get("id")), _id_kind(row.get("id"))} == {"trig", "cse"}):
+                    twin = other
+                    break
+        if twin is None:
+            kept.append(row)
+            continue
+        for key, value in row.items():
+            if twin.get(key) in (None, "", [], {}) and value not in (None, "", [], {}):
+                twin[key] = value
+        alt = list(twin.get("alt_ids") or [])
+        if row.get("id") and row["id"] != twin.get("id") and row["id"] not in alt:
+            alt.append(row["id"])
+        twin["alt_ids"] = alt
+        merged += 1
+    if merged:
+        led["agents"] = kept
+    return merged
+
+
+def _id_kind(value) -> str:
+    text = str(value or "")
+    return "trig" if text.startswith("trig_") else "cse" if text.startswith("cse_") else ""
+
+
+def _agent_matches(a: dict, key: str) -> bool:
+    return str(a.get("id")) == key or key in (a.get("alt_ids") or []) or a.get("task") == key
 
 
 def add_event(led: dict, kind: str, ref: str = "", by: str = "ledger", at: str | None = None) -> None:
@@ -530,10 +606,9 @@ def _cmd_agent_eta(root, args) -> int:
 
     def fn(led):
         key = str(args.agent)
-        rows = [a for a in led["agents"] if a.get("state") == "running"
-                and (str(a.get("id")) == key or a.get("task") == key)]
+        rows = [a for a in led["agents"] if a.get("state") not in _AGENT_DONE and _agent_matches(a, key)]
         if not rows:
-            raise LedgerError("no running agent %s" % key)
+            raise LedgerError("no open agent %s" % key)
         a = rows[0]
         start = parse_iso(a.get("started")) or utcnow()
         a["eta"] = {"total_min": total, "breakdown": bd, "basis": args.basis, "due": iso(start + timedelta(minutes=total))}
@@ -549,7 +624,7 @@ def _cmd_agent_done(root, args) -> int:
     def fn(led):
         key = str(args.agent)
         rows = [a for a in led["agents"] if a.get("state") in ("queued", "running", "pushed", "stalled")
-                and (str(a.get("id")) == key or a.get("task") == key)]
+                and _agent_matches(a, key)]
         if not rows:
             raise LedgerError("no open agent %s" % key)
         a = rows[0]
@@ -746,7 +821,7 @@ def main(argv=None) -> int:
     p = sub.add_parser("cleaned")
     p.add_argument("--pr", required=True, type=int)
     p = sub.add_parser("agent-eta")
-    p.add_argument("agent", help="the agent id or task of a running agent")
+    p.add_argument("agent", help="the agent id (routine or run session) or task of an open agent")
     for k in ("setup", "work", "checks"):
         p.add_argument("--" + k, required=True, type=float, metavar="MIN")
     p.add_argument("--basis")
@@ -756,6 +831,8 @@ def main(argv=None) -> int:
     p.add_argument("--result", required=True, choices=("ready", "not-ready", "failed"))
     p = sub.add_parser("show")
     p.add_argument("--json", action="store_true")
+    for sp in sub.choices.values():  # --root also works after the subcommand
+        sp.add_argument("--root", default=argparse.SUPPRESS, help=argparse.SUPPRESS)
     args = ap.parse_args(argv)
     root = Path(args.root) if args.root else find_root()
     if root is None:

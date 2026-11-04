@@ -345,21 +345,44 @@ class Plan:
         """Try to take the lock; text naming the holder when it is held by a live process."""
         os.makedirs(os.path.dirname(self.lock_path), exist_ok=True)
         for _ in range(2):
+            # Write a private file, then link it into place: the lock is whole the moment it is visible.
+            tmp = "%s.%d.%s.tmp" % (self.lock_path, os.getpid(), self.job_id)
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump({"pid": os.getpid(), "label": self.label, "job": self.job_id, "at": utc_now()}, f)
             try:
-                fd = os.open(self.lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                os.link(tmp, self.lock_path)
+                taken = True
             except FileExistsError:
-                holder = self.read_lock()
-                if holder and self.alive(int(holder.get("pid", 0) or 0)):
-                    return "another heavy job (%s, pid %s) is running" % (holder.get("label"), holder.get("pid"))
+                taken = False
+            except OSError:                         # no hard links here: fall back to an exclusive rename target
+                taken = not os.path.exists(self.lock_path)
+                if taken:
+                    os.replace(tmp, self.lock_path)
+            finally:
                 try:
-                    os.remove(self.lock_path)       # its owner is gone: take it over
+                    os.remove(tmp)
                 except OSError:
                     pass
-                continue
-            with os.fdopen(fd, "w", encoding="utf-8") as f:
-                json.dump({"pid": os.getpid(), "label": self.label, "job": self.job_id, "at": utc_now()}, f)
-            self.have_lock = True
-            return None
+            if taken:
+                self.have_lock = True
+                return None
+            holder = self.read_lock()
+            if holder is None:
+                try:
+                    young = time.time() - os.path.getmtime(self.lock_path) < 60
+                except OSError:
+                    young = False
+                if young:
+                    return "another heavy job is taking the lock"   # empty or half written: not a dead owner
+            elif self.alive(int(holder.get("pid", 0) or 0)):
+                return "another heavy job (%s, pid %s) is running" % (holder.get("label"), holder.get("pid"))
+            # its owner is gone: move it away under a unique name (only one waiter wins the rename), then retry
+            stale = "%s.%d.%s.stale" % (self.lock_path, os.getpid(), self.job_id)
+            try:
+                os.rename(self.lock_path, stale)
+                os.remove(stale)
+            except OSError:
+                pass
         return "the lock file could not be taken"
 
     def read_lock(self):

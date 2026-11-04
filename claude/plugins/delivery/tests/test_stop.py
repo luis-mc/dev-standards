@@ -237,5 +237,78 @@ class Dl30MessageTests(unittest.TestCase):
         self.assertIn("delivery_ledger.py agent-eta ag9 --setup N --work N --checks N", msg)
 
 
+class Dl54StopTests(unittest.TestCase):
+    """DL54: F3 ~HH:MM and owner zone, F8 stalled and pushed agents, F10 year wrap."""
+
+    def utc(self, y, mo, d, h=0, mi=0):
+        from datetime import datetime, timezone
+        return datetime(y, mo, d, h, mi, tzinfo=timezone.utc)
+
+    def ny(self):
+        from zoneinfo import ZoneInfo
+        return ZoneInfo("America/New_York")
+
+    def test_tilde_time_is_read(self):
+        at = self.utc(2026, 11, 4, 18, 0)
+        exp = S.parse_expected("4 Nov ~09:00", at)
+        self.assertEqual((exp.hour, exp.minute), (9, 0))
+        self.assertLessEqual(exp, at)
+
+    def test_bare_date_ends_at_local_midnight(self):
+        at = self.utc(2026, 11, 5, 1, 0)        # 20:00 on 4 Nov in New York
+        self.assertGreater(S.parse_expected("4 Nov", at, self.ny()), at)
+        self.assertLessEqual(S.parse_expected("4 Nov", at), at)       # no zone: UTC, as before
+
+    def test_time_is_read_in_owner_zone(self):
+        at = self.utc(2026, 11, 4, 14, 30)       # 09:30 in New York
+        self.assertGreater(S.parse_expected("4 Nov 10:00", at, self.ny()), at)
+        self.assertLessEqual(S.parse_expected("4 Nov ~09:00", at, self.ny()), at)
+
+    def test_registry_uses_cfg_tz(self):
+        import json
+        root = make_root()
+        d = os.path.join(str(root), "docs", "artifacts")
+        os.makedirs(d)
+        with open(os.path.join(d, "registry.json"), "w") as f:
+            json.dump({"tasks": [{"id": "T1", "status": "running", "expected": "4 Nov"}]}, f)
+        cfg = {"registry_open": ["running"], "tz": "America/New_York"}
+        self.assertEqual(S.check_registry(str(root), cfg, self.utc(2026, 11, 5, 1, 0)), [])
+        self.assertEqual(len(S.check_registry(str(root), dict(cfg, tz="UTC"), self.utc(2026, 11, 5, 1, 0))), 1)
+
+    def test_year_wraps_forward_in_december(self):
+        at = self.utc(2026, 12, 30, 10, 0)
+        self.assertGreater(S.parse_expected("2 Jan", at), at)
+
+    def test_year_wraps_back_in_january(self):
+        at = self.utc(2027, 1, 2, 10, 0)
+        self.assertLess(S.parse_expected("30 Dec", at), at)
+
+    def _agent(self, state):
+        return {"id": "a1", "task": "T1", "state": state, "started": "2026-11-04T08:00:00Z",
+                "last_checked": "2026-11-04T08:05:00Z",
+                "eta": {"breakdown": {"work": 20}, "due": "2026-11-04T08:30:00Z", "total_min": 30}}
+
+    def test_stalled_and_pushed_agents_are_checked(self):
+        at = self.utc(2026, 11, 4, 12, 0)
+        for state in ("running", "stalled", "pushed"):
+            with self.subTest(state=state):
+                led = L.empty_ledger()
+                led["agents"].append(self._agent(state))
+                keys = [k for k, _ in S.check_agents(led, {"check_min": 10_000}, at)]
+                self.assertEqual(keys, ["DL-32:a1"])
+
+    def test_stalled_state_blocks_without_flag(self):
+        led = L.empty_ledger()
+        a = self._agent("stalled")
+        a["eta"] = None
+        a["breakdown"] = None
+        a["last_checked"] = None
+        a["started"] = "2026-11-04T11:59:00Z"
+        a["eta"] = {"breakdown": {"work": 20}}
+        led["agents"].append(a)
+        out = S.check_agents(led, {"check_min": 10_000}, self.utc(2026, 11, 4, 12, 0))
+        self.assertEqual([k for k, _ in out], ["DL-32:a1"])
+
+
 if __name__ == "__main__":
     unittest.main()

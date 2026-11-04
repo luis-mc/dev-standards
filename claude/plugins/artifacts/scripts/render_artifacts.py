@@ -164,7 +164,7 @@ def _expected_datetime(expected: str, ref: datetime):
         try:
             candidate = datetime(year, month, day, hour, minute)
         except ValueError:
-            return None
+            continue
         if best is None or abs(candidate - base) < abs(best - base):
             best = candidate
     return best
@@ -1302,6 +1302,8 @@ def _other_row(task: dict, ref: datetime):
             or not no_release_reason(task)):
         return None
     exp_dt = _expected_datetime(str(task.get('expected', '')), ref)
+    if exp_dt is not None and ref.replace(tzinfo=None) - exp_dt > timedelta(days=42):
+        return None       # F25: over six weeks back is a plan for the next occurrence, not an overdue row
     if exp_dt is None or exp_dt.date() > ref.date() + timedelta(days=1):
         return None
     midnight = datetime.combine(ref.date(), datetime.min.time())

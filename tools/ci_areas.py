@@ -145,7 +145,7 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"tools/test_model_profiles\.py", frozenset({"profiles"})),
     (r"tools/test_claude_setup_plugins\.py", frozenset({"profiles"})),
     (r"tools/test_setup_pattern\.py", frozenset({"profiles"})),
-    (r"tools/test_questions_stop\.py", frozenset({"profiles"})),
+    (r"tools/(test_questions_stop|test_project_setup_fixes)\.py", frozenset({"profiles"})),
     (r"\.claude-plugin/marketplace\.json", frozenset({"profiles"})),
     # transcript-folds (its .claude-plugin/ manifest is matched above: nothing heavy)
     (r"claude/plugins/transcript-folds/.*", frozenset({"transcript-folds"})),
@@ -154,7 +154,7 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"claude/plugins/docs/.*", frozenset({"docs"})),
     # artifacts
     (r"claude/plugins/artifacts/.*", frozenset({"artifacts"})),
-    (r"tools/(test_render_artifacts|test_project_artifacts[a-z_]*|convert_interim_record)\.py",
+    (r"tools/(test_render_artifacts|test_project_artifacts[a-z_]*|test_artifacts_ar59|convert_interim_record)\.py",
      frozenset({"artifacts"})),
     # delivery
     (r"claude/plugins/delivery/.*", frozenset({"delivery"})),
