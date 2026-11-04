@@ -588,13 +588,23 @@ def _move(root: Path, src: Path, dest: Path) -> None:
         shutil.move(str(src), str(dest))
 
 
+def _valid_date(s) -> bool:
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", s or ""):
+        return False
+    try:
+        dt.date.fromisoformat(s)
+    except ValueError:
+        return False
+    return True
+
+
 def cmd_promote(root: Path, a) -> int:
     d = ds_dir(root)
     draft = d / DRAFT
     problems = []
     if not draft.is_dir():
         problems.append("next-version/ does not exist")
-    if not (a.approved_by or "").strip() or not (a.evidence or "").strip() or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", a.approved_on or ""):
+    if not (a.approved_by or "").strip() or not (a.evidence or "").strip() or not _valid_date(a.approved_on):
         problems.append("a promotion needs the recorded owner approval: --approved-by, --approved-on YYYY-MM-DD and --evidence (where it was given)")
     if draft.is_dir():
         for f in VERSION_FILES[:-1]:
@@ -641,7 +651,7 @@ def cmd_approve_impl(root: Path, a) -> int:
     if not rec or not rec.get("approved"):
         print(f"refused: {a.version} has no recorded approval", file=sys.stderr)
         return 2
-    if not a.evidence or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", a.approved_on or ""):
+    if not a.evidence or not _valid_date(a.approved_on):
         print("refused: --approved-on YYYY-MM-DD and --evidence are required", file=sys.stderr)
         return 2
     print(f"{'recorded' if a.apply else 'would record'}: implementation of {a.version} approved on {a.approved_on}: {a.evidence}")
