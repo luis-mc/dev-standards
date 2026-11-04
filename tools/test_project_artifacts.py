@@ -1318,6 +1318,14 @@ def test_publish_copy_links_and_committed_links(env):
     a = p.run('pending', '--json').json()['artifacts'][0]
     copy = Path(a['path']).read_text(encoding='utf-8')
     committed = p.show('docs/artifacts/' + a['file'])
+    assert 'data-group="ci-runs"' not in copy, 'no .delivery/ci-runs.json: no CI runs section (R5.51)'
+    ci_file = Path(a['path']).parents[2] / '.delivery' / 'ci-runs.json'
+    ci_file.parent.mkdir(parents=True, exist_ok=True)
+    ci_file.write_text('{"generated_at": "2026-11-04T14:33:00Z", "active": [], "finished": []}', encoding='utf-8')
+    with_ci = p.run('pending', '--json').json()['artifacts'][0]
+    assert 'data-group="ci-runs"' in Path(with_ci['path']).read_text(encoding='utf-8'), 'the publish copy draws the CI runs section'
+    assert 'data-group="ci-runs"' not in p.show('docs/artifacts/' + a['file']), 'the committed render never does'
+    ci_file.unlink()
     # committed: relative file names only
     assert 'href="feature-artifacts.html"' in committed and 'href="feature-the-site.html"' in committed
     assert 'href="file:' not in committed and 'class="local-path"' not in committed and 'copy-link"' not in committed and 'data-copy="' not in committed
