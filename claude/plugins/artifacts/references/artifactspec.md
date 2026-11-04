@@ -1070,7 +1070,10 @@ double-click.
   24 hours after the stamp, whatever the calendar date; R5.42a) share a
   time axis drawn to scale: from the earliest phase start, Expected or stamp to
   the latest Expected or worst case, floored and ceiled to the half hour, with a
-  tick every 30 minutes (every hour beyond 4 hours). A release whose Expected is
+  tick every 30 minutes (every hour beyond 4 hours). Only the first and last tick are
+  always labelled; a tick between them is labelled only when its text, with a
+  small gap, clears the label before it and the last label, so time labels never
+  print on top of each other (`axis_labels_keep_a_gap`). A release whose Expected is
   more than 24 hours after the stamp, or has no time, sits after an axis break in one slot per day, as
   an outline diamond with the day. A release without phases is a filled diamond at
   its Expected only. The figure is deterministic (R7.4): the "now" mark is the
@@ -1143,7 +1146,12 @@ double-click.
   its own `RELEASE-<n>` (optionally followed by `:` or ` · `), that lead is left
   out of the item text shown, so the number appears once (`RELEASE-55: ops` shows
   as `RELEASE-55 · ops` in the timeline); the registry keeps the item as written,
-  and `check` compares the item as shown. Verified by `release_number_is_shown_once`,
+  and `check` compares the item as shown. The stored number is the only name a
+  release is shown by, in the Item, the group header, the timeline and the
+  `dropped: folded into` line. An Item that starts with a different `RELEASE-<m>`
+  has that lead left out of the text shown, and `check` reports it (R5.45); a
+  writing command refuses a change that would leave such a lead. Dropped releases keep
+  their number, so the next number stays the highest plus one. Verified by `release_number_is_shown_once`,
   `test_release_numbers_are_assigned_and_never_reused`,
   `test_rides_accepts_the_release_name`, `test_migration_numbers_old_releases`
   and the R5.45 fixtures of `test_check_fixtures`.
