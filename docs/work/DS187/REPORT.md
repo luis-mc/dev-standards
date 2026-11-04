@@ -9,3 +9,9 @@ Fixed:
 - docspec.md R15.1: one sentence added. No Version line, numbering or change log touched.
 
 Tests: 4 new tests in test_design_system.py (gap archived both layouts, gap unarchived warns, approval of archived version, branch archive). Two failed before the fix, all pass after.
+
+Also: feature change note docs/features/docs/changes/DS187.md (needed by docs_check M1).
+Checks: docs plugin tests 136 OK. docs_check on this repo: only W1 (the report under docs/work/ on the branch, expected; strip before join). ci_areas --branch-advice could not read the diff, so it said run all areas; not run.
+Branch head: see the last commit on DS187-ds-archived-versions (pushed).
+
+READY
