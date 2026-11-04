@@ -1106,6 +1106,26 @@
       "chosen": "PR #140 rewritten",
       "decided": "2026-11-04",
       "owner_words": "PR #140 rewritten"
+    },
+    {
+      "id": "D48",
+      "question": "Shared CI design: approve as is, or add to it?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL28",
+      "options": [
+        {
+          "label": "Approve as is",
+          "summary": "Build the design on PR #140."
+        },
+        {
+          "label": "Approve with an addition",
+          "summary": "Owner adds a feature before the build."
+        }
+      ],
+      "chosen": "Approve with an addition",
+      "decided": "2026-11-04",
+      "owner_words": "Shared CI Plan is ok, but add a feature; in full progress reports, another foldable section that lists current active CI runs, plus the latest 20 CI runs completed, where they ran and why, and timing metrics for all CI steps in that run; update the plan page with a sample of how that full progress section looks like before developing"
     }
   ]
 }
