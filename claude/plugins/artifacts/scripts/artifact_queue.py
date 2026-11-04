@@ -4,9 +4,11 @@ Shared by the hooks and project_artifacts.py. The queue lives at
 <repo>/.claude/artifacts-queue.json, is gitignored, and is never part of the
 record. Standard library only.
 """
+import contextlib
 import json
 import os
 import subprocess
+import time
 from datetime import datetime, timezone
 
 QUEUE_NAME = os.path.join('.claude', 'artifacts-queue.json')
@@ -125,7 +127,7 @@ def repo_root(start=None):
     """Top of the git checkout containing `start` (default: cwd), or None."""
     try:
         out = subprocess.run(['git', 'rev-parse', '--show-toplevel'], cwd=start or os.getcwd(),
-                             capture_output=True, text=True, timeout=10)
+                             capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=10)
     except (OSError, subprocess.TimeoutExpired):
         return None
     if out.returncode != 0:
@@ -150,28 +152,63 @@ def read_queue(root):
 def _write(root, events):
     p = queue_path(root)
     os.makedirs(os.path.dirname(p), exist_ok=True)
-    tmp = p + '.tmp'
+    tmp = '%s.%d.tmp' % (p, os.getpid())
     with open(tmp, 'w', encoding='utf-8', newline='\n') as f:
         json.dump({'events': events}, f, indent=1)
         f.write('\n')
     os.replace(tmp, p)
 
 
+@contextlib.contextmanager
+def _locked(root, wait=5.0):
+    """Serialize read, change and write of the queue (F21): a lock file made with O_EXCL. A lock older than
+    `wait` seconds is taken over; the work never fails because of the lock."""
+    path = queue_path(root) + '.lock'
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    deadline = time.time() + wait
+    held = False
+    while True:
+        try:
+            os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+            held = True
+            break
+        except FileExistsError:
+            if time.time() > deadline:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+                deadline = time.time() + wait
+            time.sleep(0.01)
+        except OSError:
+            break
+    try:
+        yield
+    finally:
+        if held:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+
+
 def append_event(root, task_id, suggested_status, event, command=''):
     """Queue one event; an identical (id, status, event) entry is not added twice."""
-    events = read_queue(root)
-    if any(e.get('id') == task_id and e.get('suggested_status') == suggested_status
-           and e.get('event') == event for e in events):
+    with _locked(root):
+        events = read_queue(root)
+        if any(e.get('id') == task_id and e.get('suggested_status') == suggested_status
+               and e.get('event') == event for e in events):
+            return events
+        events.append({'id': task_id, 'suggested_status': suggested_status, 'event': event,
+                       'command': command[:200],
+                       'time': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')})
+        _write(root, events)
         return events
-    events.append({'id': task_id, 'suggested_status': suggested_status, 'event': event,
-                   'command': command[:200],
-                   'time': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')})
-    _write(root, events)
-    return events
 
 
 def remove_events(root, task_id=None):
     """Remove the events of one task, or all events when task_id is None."""
-    events = [] if task_id is None else [e for e in read_queue(root) if e.get('id') != task_id]
-    _write(root, events)
-    return events
+    with _locked(root):
+        events = [] if task_id is None else [e for e in read_queue(root) if e.get('id') != task_id]
+        _write(root, events)
+        return events

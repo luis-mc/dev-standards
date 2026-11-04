@@ -9,9 +9,10 @@ Seam for tests: CLAUDE_ARTIFACTS_NOW (ISO) overrides the clock, as in project_ar
 """
 import os
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 STALE_MINUTES = 60      # R9.8: Full Progress is published at least this often while a project is live
+FAR_PAST = timedelta(days=42)   # F25
 OPEN_STATUSES = ('Running', 'Waiting', 'To do', 'Needs you', 'On hold')
 MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 EXPECTED_RE = re.compile(r'^(0[1-9]|[12][0-9]|3[01]) (' + '|'.join(MONTHS) + r')(?: ~([01][0-9]|2[0-3]):([0-5][0-9]))?(?:; \S.*)?$')
@@ -47,6 +48,12 @@ def published_at(manifest):
     return parse_iso(fp.get('published_at')) if fp.get('published_at') else None
 
 
+def is_deferred(manifest, now=None):
+    """R9.7: True while Full Progress's `deferred_until` is in the future."""
+    until = parse_iso(full_progress(manifest).get('deferred_until')) if full_progress(manifest).get('deferred_until') else None
+    return until is not None and until > (now or now_instant())
+
+
 def minutes_since_publish(manifest, now=None):
     at = published_at(manifest)
     if at is None:
@@ -56,6 +63,8 @@ def minutes_since_publish(manifest, now=None):
 
 def hourly_due(manifest, now=None):
     """R9.8: minutes since the last publish when that is over STALE_MINUTES, else None."""
+    if is_deferred(manifest, now):
+        return None
     mins = minutes_since_publish(manifest, now)
     return mins if mins is not None and mins > STALE_MINUTES else None
 
@@ -65,11 +74,11 @@ def is_release(task):
     return r is True or (isinstance(r, int) and not isinstance(r, bool))
 
 
-def release_changes(tasks, manifest):
+def release_changes(tasks, manifest, now=None):
     """R9.9: release tasks whose status or phases changed after the last publish (their `changed` stamp,
     which the script sets on every change, is later than `published_at`). [] when never published."""
     at = published_at(manifest)
-    if at is None:
+    if at is None or is_deferred(manifest, now):
         return []
     out = []
     for t in tasks:
@@ -109,7 +118,7 @@ def expected_datetime(text, ref):
         try:
             cand = datetime(year, month, day, hour, minute)
         except ValueError:
-            return None
+            continue
         if best is None or abs(cand - ref) < abs(best - ref):
             best = cand
     return best
@@ -123,6 +132,8 @@ def overdue_tasks(tasks, manifest, now=None):
         if not isinstance(t, dict) or t.get('status') not in OPEN_STATUSES:
             continue
         when = expected_datetime(t.get('expected'), ref)
+        if when is not None and ref - when > FAR_PAST and EXPECTED_RE.match(str(t.get('expected'))):
+            continue      # F25: over six weeks back means a plan for the next occurrence, not an overdue row
         if when is not None and when < ref:
             out.append((t, when))
     return out
