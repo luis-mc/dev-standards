@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T23:02+00:00",
+  "updated": "2026-11-04T23:27+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -552,11 +552,11 @@
       "id": "AR56",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "--phase accepts a phase that crosses midnight",
       "detail": "merge=23:55-00:05 is refused (end must be after start); a release near midnight cannot record its real phases. Ships in RELEASE-41.",
       "expected": "04 Nov",
-      "changed": "2026-11-04T22:51+00:00",
+      "changed": "2026-11-04T23:27+00:00",
       "rides": "DL49",
       "started": "2026-11-04T22:39+00:00"
     },
@@ -564,11 +564,11 @@
       "id": "AR57",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "--release takes an explicit number and corrects a stored one",
       "detail": "A real release with no release task makes every later --release number one low. Allow --release N (or the delivery ledger's number) and fix a stored number.",
       "expected": "04 Nov",
-      "changed": "2026-11-04T22:51+00:00",
+      "changed": "2026-11-04T23:27+00:00",
       "rides": "DL49",
       "started": "2026-11-04T22:39+00:00"
     },
@@ -576,11 +576,11 @@
       "id": "AR58",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "R5.45 advice: name the wrong side, Item or stored number",
       "detail": "When the Item matches the delivery ledger's release, R5.45 must say to correct the stored number (with --release N), not the Item.",
       "expected": "04 Nov",
-      "changed": "2026-11-04T22:51+00:00",
+      "changed": "2026-11-04T23:27+00:00",
       "rides": "DL49",
       "started": "2026-11-04T22:39+00:00"
     },
@@ -1227,12 +1227,11 @@
       "id": "DL49",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-41: release numbers from the ledger, phases over midnight, R5.45 advice",
       "detail": "AR56-AR58 and every DL48 finding (D84). Join after RELEASE-40 merges; merge on green (D82).",
-      "expected": "04 Nov ~23:19",
-      "changed": "2026-11-04T23:02+00:00",
-      "expected_basis": "Join had a merge conflict (fixed); CI from ~23:01, ~15 min",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T23:27+00:00",
       "release": 41,
       "started": "2026-11-04T22:39+00:00",
       "phases": [
@@ -1293,6 +1292,19 @@
       "expected": "05 Nov ~03:40",
       "changed": "2026-11-04T22:50+00:00",
       "expected_basis": "RELEASE-42 with the DL50 review fixes"
+    },
+    {
+      "id": "DL53",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Green CI waits only for workflows that run on every PR commit",
+      "detail": "DL46 regression: closed-only and path-filtered pull_request workflows never run on the head, so no release goes green; a configured ci_workflows list was ignored.",
+      "expected": "04 Nov ~23:45",
+      "changed": "2026-11-04T23:08+00:00",
+      "expected_basis": "Fix by the orchestrator ~20 min, then CI ~15",
+      "rides": "DL50",
+      "started": "2026-11-04T23:08+00:00"
     },
     {
       "id": "DS1",

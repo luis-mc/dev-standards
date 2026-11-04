@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-04T23:02+00:00",
+ "updated": "2026-11-04T23:27+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1432,11 +1432,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "AR56",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "Built",
+   "status": "Live",
    "item": "--phase accepts a phase that crosses midnight",
    "detail": "merge=23:55-00:05 is refused (end must be after start); a release near midnight cannot record its real phases. Ships in RELEASE-41.",
    "expected": "04 Nov",
-   "changed": "2026-11-04T22:51+00:00",
+   "changed": "2026-11-04T23:27+00:00",
    "rides": "DL49",
    "started": "2026-11-04T22:39+00:00"
   },
@@ -1444,11 +1444,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "AR57",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "Built",
+   "status": "Live",
    "item": "--release takes an explicit number and corrects a stored one",
    "detail": "A real release with no release task makes every later --release number one low. Allow --release N (or the delivery ledger's number) and fix a stored number.",
    "expected": "04 Nov",
-   "changed": "2026-11-04T22:51+00:00",
+   "changed": "2026-11-04T23:27+00:00",
    "rides": "DL49",
    "started": "2026-11-04T22:39+00:00"
   },
@@ -1456,11 +1456,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "AR58",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "Built",
+   "status": "Live",
    "item": "R5.45 advice: name the wrong side, Item or stored number",
    "detail": "When the Item matches the delivery ledger's release, R5.45 must say to correct the stored number (with --release N), not the Item.",
    "expected": "04 Nov",
-   "changed": "2026-11-04T22:51+00:00",
+   "changed": "2026-11-04T23:27+00:00",
    "rides": "DL49",
    "started": "2026-11-04T22:39+00:00"
   },
@@ -2107,12 +2107,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL49",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "RELEASE-41: release numbers from the ledger, phases over midnight, R5.45 advice",
    "detail": "AR56-AR58 and every DL48 finding (D84). Join after RELEASE-40 merges; merge on green (D82).",
-   "expected": "04 Nov ~23:19",
-   "changed": "2026-11-04T23:02+00:00",
-   "expected_basis": "Join had a merge conflict (fixed); CI from ~23:01, ~15 min",
+   "expected": "04 Nov",
+   "changed": "2026-11-04T23:27+00:00",
    "release": 41,
    "started": "2026-11-04T22:39+00:00",
    "phases": [
@@ -2173,6 +2172,19 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "expected": "05 Nov ~03:40",
    "changed": "2026-11-04T22:50+00:00",
    "expected_basis": "RELEASE-42 with the DL50 review fixes"
+  },
+  {
+   "id": "DL53",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Running",
+   "item": "Green CI waits only for workflows that run on every PR commit",
+   "detail": "DL46 regression: closed-only and path-filtered pull_request workflows never run on the head, so no release goes green; a configured ci_workflows list was ignored.",
+   "expected": "04 Nov ~23:45",
+   "changed": "2026-11-04T23:08+00:00",
+   "expected_basis": "Fix by the orchestrator ~20 min, then CI ~15",
+   "rides": "DL50",
+   "started": "2026-11-04T23:08+00:00"
   },
   {
    "id": "DS1",
@@ -5241,73 +5253,51 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-04T23:02+00:00">04 Nov 23:02</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T23:27+00:00">04 Nov 23:27</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
 <details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
 <ul>
-<li data-glance-task="DL49"><span class="task-id">DL49</span><span class="release-name">RELEASE-41</span>release numbers from the ledger, phases over midnight, R5.45 advice <span class="glance-expected">04 Nov ~23:19</span><span class="glance-basis">Join had a merge conflict (fixed); CI from ~23:01, ~15 min</span></li>
 <li data-glance-task="DL48"><span class="task-id">DL48</span>Review the delivery and artifacts plugins for bugs (RELEASE-41) <span class="glance-expected">04 Nov ~23:40</span><span class="glance-basis">Review agent from 22:39, ~60 min; fixes ride RELEASE-42</span></li>
+<li data-glance-task="DL53"><span class="task-id">DL53</span>Green CI waits only for workflows that run on every PR commit <span class="glance-expected">04 Nov ~23:45</span><span class="glance-basis">Fix by the orchestrator ~20 min, then CI ~15</span></li>
 <li data-glance-task="DL51"><span class="task-id">DL51</span>Review docs, project-setup, specs, transcript-folds, audits, agents for bugs <span class="glance-expected">05 Nov ~00:05</span><span class="glance-basis">Review agent from 22:47, ~75 min</span></li>
 </ul>
 </details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">3 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">31 tasks</span></summary>
 <ul>
 <li data-glance-task="AR56"><span class="task-id">AR56</span>--phase accepts a phase that crosses midnight</li>
 <li data-glance-task="AR57"><span class="task-id">AR57</span>--release takes an explicit number and corrects a stored one</li>
 <li data-glance-task="AR58"><span class="task-id">AR58</span>R5.45 advice: name the wrong side, Item or stored number</li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">27 tasks</span></summary>
-<ul>
+<li data-glance-task="DL49"><span class="task-id">DL49</span><span class="release-name">RELEASE-41</span>release numbers from the ledger, phases over midnight, R5.45 advice</li>
 <li data-glance-task="AR55"><span class="task-id">AR55</span>set-task-status takes Expected from the last phase</li>
 <li data-glance-task="DL43"><span class="task-id">DL43</span>Stop hook DL-31 flags only future estimates</li>
 <li data-glance-task="DL44"><span class="task-id">DL44</span>Cloud agent setup installs the Node version from engines</li>
 <li data-glance-task="DL45"><span class="task-id">DL45</span>Docs: a routine&#x27;s run_once_at must stay ahead of updates</li>
-<li data-glance-task="DL46"><span class="task-id">DL46</span>Ledger calls a train green only when every CI run passed</li>
-<li data-glance-task="DL47"><span class="task-id">DL47</span><span class="release-name">RELEASE-40</span>five plugin bug fixes and two doc checks</li>
-<li data-glance-task="TC12"><span class="task-id">TC12</span>Verify the test-cost spec against the code (T2)</li>
-<li data-glance-task="AR54"><span class="task-id">AR54</span>Full Progress: release label, chart header basis, axis label overlap</li>
-<li class="glance-more">and 19 more</li>
+<li class="glance-more">and 23 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">316</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">3</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">320</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 226" role="img" aria-label="Next releases: DL49 (release numbers from the ledger, phases over midnight, R5.45 advice) expected live about 23:19; DL50 (fixes from both plugin reviews (DL48, DL51), DL52) expected live about 02:00." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="202"/><text x="200" y="28">22:30</text><line class="rt-grid" x1="274.3" y1="36" x2="274.3" y2="202"/><text x="274.3" y="28">23:00</text><line class="rt-grid" x1="348.6" y1="36" x2="348.6" y2="202"/><text x="348.6" y="28">23:30</text><line class="rt-grid" x1="422.9" y1="36" x2="422.9" y2="202"/><text x="422.9" y="28">05 Nov 00:00</text><line class="rt-grid" x1="571.4" y1="36" x2="571.4" y2="202"/><text x="571.4" y="28">01:00</text><line class="rt-grid" x1="645.7" y1="36" x2="645.7" y2="202"/><text x="645.7" y="28">01:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="202"/><text x="720" y="28">02:00</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-41 · release numbers from the ledger, phases over midnight, R5.45 advice</title>RELEASE-41 · release numb…</text>
-<text class="rt-sub" x="0" y="77"><title>AR56, AR57, AR58</title>AR56, AR57, AR58</text>
-<rect class="rt-bar agents" x="222.3" y="52" width="27.2" height="22"><title>agents 22:39-22:50</title></rect>
-<rect class="rt-bar join" x="252" y="52" width="22.3" height="22"><title>join 22:51-23:00</title></rect>
-<rect class="rt-bar ci" x="276.8" y="52" width="37.1" height="22"><title>PR CI 23:01-23:16</title></rect>
-<rect class="rt-bar merge" x="313.9" y="52" width="7.4" height="22"><title>merge + cleanup 23:16-23:19</title></rect>
-<polygon class="rt-expected" points="321.3,50 329.3,63 321.3,76 313.3,63"/>
-<text class="rt-live-label" x="321.3" y="92">live ~23:19</text>
-<text class="rt-name" x="0" y="122"><title>RELEASE-42 · fixes from both plugin reviews (DL48, DL51), DL52</title>RELEASE-42 · fixes from b…</text>
-<text class="rt-sub" x="0" y="139"><title>DL48, DL51</title>DL48, DL51</text>
-<polygon class="rt-expected" points="720,112 728,125 720,138 712,125"/>
-<text class="rt-live-label" x="720" y="154">live ~02:00</text>
-<line class="rt-now" x1="279.2" y1="36" x2="279.2" y2="210"/><text class="rt-now-label" x="279.2" y="223">now 23:02</text>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DL50 (fixes from both plugin reviews (DL48, DL51), DL52) expected live about 02:00." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">23:00</text><line class="rt-grid" x1="286.7" y1="36" x2="286.7" y2="140"/><text x="286.7" y="28">23:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">05 Nov 00:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">01:00</text><line class="rt-grid" x1="633.3" y1="36" x2="633.3" y2="140"/><text x="633.3" y="28">01:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">02:00</text></g>
+<text class="rt-name" x="0" y="60"><title>RELEASE-42 · fixes from both plugin reviews (DL48, DL51), DL52</title>RELEASE-42 · fixes from b…</text>
+<text class="rt-sub" x="0" y="77"><title>DL48, DL51, DL53</title>DL48, DL51, DL53</text>
+<polygon class="rt-expected" points="720,50 728,63 720,76 712,63"/>
+<text class="rt-live-label" x="720" y="92">live ~02:00</text>
+<line class="rt-now" x1="278" y1="36" x2="278" y2="148"/><text class="rt-now-label" x="278" y="161">now 23:27</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-41" open><summary><strong>RELEASE-41 · live ~23:19</strong><span class="fold-count">4 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL49"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL49</span><span class="release-name">RELEASE-41</span>release numbers from the ledger, phases over midnight, R5.45 advice</a></td><td data-label="App / service"></td><td data-label="Detail">AR56-AR58 and every DL48 finding (D84). Join after RELEASE-40 merges; merge on green (D82).</td><td data-label="Expected">04 Nov ~23:19<span class="expected-basis">Join had a merge conflict (fixed); CI from ~23:01, ~15 min</span></td></tr>
-<tr data-task="AR56"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR56</span>--phase accepts a phase that crosses midnight</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">merge=23:55-00:05 is refused (end must be after start); a release near midnight cannot record its real phases. Ships in RELEASE-41.</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="AR57"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR57</span>--release takes an explicit number and corrects a stored one</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">A real release with no release task makes every later --release number one low. Allow --release N (or the delivery ledger&#x27;s number) and fix a stored number.</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="AR58"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR58</span>R5.45 advice: name the wrong side, Item or stored number</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">When the Item matches the delivery ledger&#x27;s release, R5.45 must say to correct the stored number (with --release N), not the Item.</td><td data-label="Expected">04 Nov</td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold release-group" data-group="release-42" open><summary><strong>RELEASE-42 · live ~02:00</strong><span class="fold-count">3 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-42" open><summary><strong>RELEASE-42 · live ~02:00</strong><span class="fold-count">4 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL50"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL50</span><span class="release-name">RELEASE-42</span>fixes from both plugin reviews (DL48, DL51), DL52</a></td><td data-label="App / service"></td><td data-label="Detail">Every proven DL50 finding; merge on green (D82); last overnight round (D91).</td><td data-label="Expected">05 Nov ~02:00<span class="expected-basis">Reviews ~23:40 and ~00:05, fixes ~60, CI 15, merge</span></td></tr>
 <tr data-task="DL48"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL48</span>Review the delivery and artifacts plugins for bugs (RELEASE-41)</a></td><td data-label="App / service"></td><td data-label="Detail">One agent reviews both plugins, records findings as tasks; fixes ship in RELEASE-41 (D80).</td><td data-label="Expected">04 Nov ~23:40<span class="expected-basis">Review agent from 22:39, ~60 min; fixes ride RELEASE-42</span></td></tr>
 <tr data-task="DL51"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL51</span>Review docs, project-setup, specs, transcript-folds, audits, agents for bugs</a></td><td data-label="App / service"></td><td data-label="Detail">Read-only review (D89) on branch DL50-plugin-review-2; findings become RELEASE-42 tasks; suspected ones proven first (D90).</td><td data-label="Expected">05 Nov ~00:05<span class="expected-basis">Review agent from 22:47, ~75 min</span></td></tr>
+<tr data-task="DL53"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL53</span>Green CI waits only for workflows that run on every PR commit</a></td><td data-label="App / service"></td><td data-label="Detail">DL46 regression: closed-only and path-filtered pull_request workflows never run on the head, so no release goes green; a configured ci_workflows list was ignored.</td><td data-label="Expected">04 Nov ~23:45<span class="expected-basis">Fix by the orchestrator ~20 min, then CI ~15</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
@@ -5315,8 +5305,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DL52"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL52</span>agent-eta accepts an agent already pushed; one row per agent</a></td><td data-label="App / service"></td><td data-label="Detail">A launch makes two ledger rows (trigger and session); agent-eta refuses the trigger row once its branch is pushed, so DL-30 cannot be cleared.</td><td data-label="Expected">05 Nov ~03:40<span class="expected-basis">RELEASE-42 with the DL50 review fixes</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">318 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">322 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="AR56"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR56</span>--phase accepts a phase that crosses midnight</a><span class="release-line"><span class="release-name">RELEASE-41</span></span></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">merge=23:55-00:05 is refused (end must be after start); a release near midnight cannot record its real phases. Ships in RELEASE-41.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="AR57"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR57</span>--release takes an explicit number and corrects a stored one</a><span class="release-line"><span class="release-name">RELEASE-41</span></span></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">A real release with no release task makes every later --release number one low. Allow --release N (or the delivery ledger&#x27;s number) and fix a stored number.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="AR58"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR58</span>R5.45 advice: name the wrong side, Item or stored number</a><span class="release-line"><span class="release-name">RELEASE-41</span></span></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">When the Item matches the delivery ledger&#x27;s release, R5.45 must say to correct the stored number (with --release N), not the Item.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL49"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL49</span><span class="release-name">RELEASE-41</span>release numbers from the ledger, phases over midnight, R5.45 advice</a></td><td data-label="App / service"></td><td data-label="Detail">AR56-AR58 and every DL48 finding (D84). Join after RELEASE-40 merges; merge on green (D82).</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="AR55"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR55</span>set-task-status takes Expected from the last phase</a><span class="release-line"><span class="release-name">RELEASE-40</span></span></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Passing only --phase or --basis must set Expected to the end of the last phase, not refuse the change.</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DL43"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL43</span>Stop hook DL-31 flags only future estimates</a><span class="release-line"><span class="release-name">RELEASE-40</span></span></td><td data-label="App / service"></td><td data-label="Detail">Past-tense lines such as &#x27;CI failed about 2 minutes in&#x27; are not ETAs; DL-31 must match future estimates only.</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DL44"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL44</span>Cloud agent setup installs the Node version from engines</a><span class="release-line"><span class="release-name">RELEASE-40</span></span></td><td data-label="App / service"></td><td data-label="Detail">agent_setup.sh uses the sandbox Node 22 when the project&#x27;s engines field asks for another major; pnpm warns on every run.</td><td data-label="Expected">04 Nov</td></tr>
@@ -5643,14 +5637,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
-<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (2)</strong><span class="fold-count">2 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897222"><time datetime="2026-11-04T23:02+00:00">04 Nov 23:02</time></td><td data-label="Tasks">DL1 to DL52</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">3 Running</span><span class="status-chip status-to-do">2 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29897211"><time datetime="2026-11-04T22:51+00:00">04 Nov 22:51</time></td><td data-label="Tasks">AR2 to AR58</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">3 Built</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897247"><time datetime="2026-11-04T23:27+00:00">04 Nov 23:27</time></td><td data-label="Tasks">DL1 to DL53</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">3 Running</span><span class="status-chip status-to-do">2 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (5)</strong><span class="fold-count">5 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (6)</strong><span class="fold-count">6 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
+<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29897247"><time datetime="2026-11-04T23:27+00:00">04 Nov 23:27</time></td><td data-label="Tasks">AR2 to AR58</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-label="Last updated" data-value="29897208"><time datetime="2026-11-04T22:48+00:00">04 Nov 22:48</time></td><td data-label="Tasks">TC1 to TC12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29897192"><time datetime="2026-11-04T22:32+00:00">04 Nov 22:32</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">claude-setup turns plugins on, but most stay silent until a config file exists and some only warn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29897090"><time datetime="2026-11-04T20:50+00:00">04 Nov 20:50</time></td><td data-label="Tasks">ST1 to ST5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
