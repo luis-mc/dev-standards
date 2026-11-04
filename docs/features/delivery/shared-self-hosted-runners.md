@@ -1,241 +1,271 @@
 ---
-title: Shared self-hosted runner pool (research)
+title: Shared CI on the owner's machine (design)
 type: explanation
 ---
-# Shared self-hosted runner pool (research, MB63)
+# Shared CI on the owner's machine (design, DL28)
 
-Research for `luismc-delivery`. It is not a binding rule. When the owner approves a design, the delivery spec section 13 gets the rules and a change note.
+This is the design for owner approval. It is not a binding rule yet. When the owner approves it, task DL27 builds it, and the rules move into [delivery spec section 13](spec.md#13-ci-options) with a change note.
 
-**The idea.** One Docker container on the owner's machine, with one CPU and memory cap, runs several GitHub Actions runner agents. Each agent is registered to one repository. When a project picks Option 1 (own runners), setup looks for runners that already exist. If it finds this kind of pool, it asks: add an agent for this project to the pool, or make a new runner?
+It joins two pieces of work:
 
-**Where this file lives.** The repository has no `docs/research/` folder. DOCSPEC R2.2 puts a doc about one feature in that feature's folder, so this is `docs/features/delivery/shared-self-hosted-runners.md`.
+- **MB63** (first version of this page): one Docker container that runs a CI runner for every Linux project.
+- **DL27**: one CI queue for the whole machine, so runners of many projects cannot overload it.
 
-## 0. How sure the platform facts are
+The decisions behind it are D21 to D47 in the delivery-speed record (`docs/project/content/delivery-speed/decisions.json`).
 
-`docs.github.com` was not reachable from the session that wrote this (DNS refused, outside the allowed network). No page was fetched. Each fact below cites the docs URL where a web search showed the text. Read the cited page before you build on a fact. A fact marked **(unverified)** has no docs text behind it in this run.
+## 1. What it fixes
 
-## 1. Runner scope: personal accounts and organisations
+| # | Today | Effect |
+|---|---|---|
+| G1 | The runner gate (DL-79) checks load only when a job starts. | Two runners of two projects can both start on a quiet machine, then both run heavy jobs. |
+| G2 | The gate reads its limits from `~/.claude/luismc-delivery-machine.json`. A Windows runner service runs as `NETWORK SERVICE`, which has another home folder. | Runners never see the owner's limits file. They use the defaults. |
+| G3 | A runner in WSL or in a container measures only its VM. | A Linux job starts while Windows is at 90% memory. |
+| G4 | Local Claude work and CI runners see each other only through the load numbers. | A local test run and a CI job can start in the same second. |
+| G5 | The doctor checks the runners of one project. | Nothing shows every runner on the machine. |
+| G6 | Option 4 counts a job as waiting only until it starts (`ci_fallback.py`, `shard_wait_minutes`). The gate holds a job after it starts. | A job held by the gate never starts the fallback. |
+| G7 | Each project installs its own runner its own way. | Ten projects mean ten services, ten folders and no common cap. |
 
-| Fact | Source |
-|---|---|
-| A runner registered on a repository serves only that repository. A runner registered on an organisation can serve several repositories of that organisation. | [Add runners](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/add-runners), [Self-hosted runners (concepts)](https://docs.github.com/en/enterprise-server@3.18/actions/concepts/runners/self-hosted-runners) |
-| Only the repository owner can add a runner to a user (personal) repository. | [Add runners](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/add-runners) |
-| A personal account has no account-level runners. The docs list repository, organisation and enterprise levels only. | Same pages; a community thread says the same: [discussion 179202](https://github.com/orgs/community/discussions/179202) |
-| One runner agent is registered to one repository, organisation or enterprise at a time. | Community answer only, [discussion 179202](https://github.com/orgs/community/discussions/179202) **(unverified in the docs)** |
-| Runner groups belong to organisations and enterprises. Every organisation has a default group; extra groups are a Team plan feature in the current English page (one localised Enterprise Cloud page also names Free). Public repositories cannot use a group's runners unless the group allows it. | [Managing access with groups](https://docs.github.com/en/actions/how-tos/hosting-your-own-runners/managing-self-hosted-runners/managing-access-to-self-hosted-runners-using-groups) |
-| A runner that has not connected for more than 14 days is removed. An ephemeral runner is removed after 1 day offline. A just-in-time runner that never runs a job is removed by itself. | [Remove runners](https://docs.github.com/en/enterprise-server@3.20/actions/how-tos/manage-runners/self-hosted-runners/remove-runners) (Enterprise Server text; github.com text **unverified**) |
-| A runner updates itself. With `--disableupdate` the owner must install a new version within 30 days, or GitHub stops queuing jobs to it. A critical security update also stops queuing until the runner is updated. | [Self-hosted runners reference](https://docs.github.com/zh/actions/reference/self-hosted-runners-reference) |
-| One runner agent runs one job at a time. | **(unverified)** in this run; it is how the runner works in practice |
-
-**What this means for a personal account.** One agent cannot serve many repositories. A pool needs **one agent per repository**: N registrations, N agent folders, one container. An organisation could register one organisation-level agent instead; the design keeps that as a later variant (section 7, question 1).
-
-## 2. One container, many agents
+## 2. The picture
 
 ```mermaid
-flowchart LR
-  subgraph host[Owner's machine]
-    subgraph vm[Docker VM, WSL2 on Windows]
-      subgraph pool[pool container: one --cpus / --memory cap]
-        sup[tini, then the supervisor]
-        sup --> a1[agent: repo A, user ra, agents/A]
-        sup --> a2[agent: repo B, user rb, agents/B]
-        sup --> a3[agent: repo C, user rc, agents/C]
-        gate[job-started hook: shared slot gate]
-        a1 -.-> gate
-        a2 -.-> gate
-        a3 -.-> gate
-      end
-      side[optional sidecars on a private network]
+flowchart TB
+  subgraph pc[Owner's machine]
+    cfg[(machine config<br/>ProgramData)]
+    slots[(CI slots: 2)]
+    hostload[(host load file<br/>every 15 s)]
+    subgraph win[Windows]
+      w1[runner service: repo A]
+      w2[runner service: repo B]
     end
+    subgraph vm[Docker in WSL2]
+      subgraph pool[pool container: one CPU and memory cap]
+        a1[agent: repo A]
+        a2[agent: repo B]
+        a3[agent: repo C]
+      end
+      db[(shared test database)]
+    end
+    local[local Claude work: limit 2]
   end
-  a1 <--> gh[(GitHub: repo A)]
-  a2 <--> gh2[(GitHub: repo B)]
-  a3 <--> gh3[(GitHub: repo C)]
+  cloud[Claude cloud CI sessions: limit 10]
+  w1 & w2 & a1 & a2 & a3 --> slots
+  pool --> hostload
+  a1 & a2 & a3 --- db
 ```
 
-| Part | Choice | Why |
-|---|---|---|
-| Image | One Linux image, the runner tarball checked by SHA-256 at build, the runner's own dependencies, git. No language toolchains: workflows install them. | The same shape the owner already runs for one repository. |
-| Agents | One folder per repository, `agents/<slug>/`, each a copy of the runner files with its own `.runner`, `.credentials`, `_work`. | The runner keeps its registration in its own folder; two registrations cannot share one folder. |
-| Users | Each agent runs as its own Unix user (`r-<slug>`, its own uid). Folders are `0700`. | One repository's job cannot read another's credentials or checkout. |
-| State | One named volume for `agents/`, so a restart does not re-register. | Same as the single-runner setup. |
-| PID 1 | `tini` (or `docker run --init`), then a supervisor. | Signals reach the agents; zombies are reaped. |
-| Supervisor | A small standard-library Python script owned by the plugin (`pool_supervisor.py`) that reads `agents.json`, starts `run.sh` per agent as its user, restarts a dead agent with back-off, and on SIGTERM passes the signal on and waits for running jobs. `s6-overlay` or `supervisord` would also work. | The plugin is standard-library Python and tests its scripts; one config file drives the supervisor, the doctor and add/remove. |
-| Shared cap | `cpus:` and `mem_limit:` (= `memswap_limit:`) on the one container. | The owner sets one ceiling for all CI on the machine. |
-| Concurrency | Every agent can take a job, so N agents could run N jobs inside one cap. A job-started hook takes one of K slots (a lock file per slot in a shared `/run/pool`) and waits while none is free. K comes from the cap and the shard table's `memory_gib`. | Without it, three heavy jobs share one cap and all run slowly or hit the memory limit. |
-| Load gate | The existing `runner_load_gate` hook, run inside the container. It must read the container's cgroup (`/sys/fs/cgroup/memory.current`, `memory.max`, `cpu.stat`), not `/proc/meminfo`, which shows the VM. | Today `load.py` reads machine figures; inside a container that is the wrong number (open work item). |
-| Persistent or ephemeral | **Persistent agents** first. Each is registered once by the owner. The job-completed hook cleans `_work` of that agent. | Ephemeral or just-in-time agents need a new registration for every job, so the container would hold a long-lived token that may create runners. See section 4. |
-| Just-in-time | Later option. `POST /repos/{owner}/{repo}/actions/runners/generate-jitconfig` returns a config for one runner, passed to `run.sh --jitconfig`; it needs the "Self-hosted runners" write permission. | [REST: self-hosted runners](https://docs.github.com/en/rest/actions/self-hosted-runners) |
-| Auto-update | Leave updates on. The runner replaces its own files in its folder; each agent folder updates by itself. The image's version only sets the first install. | No 30-day trap from `--disableupdate`. |
-| Restarts | `restart: unless-stopped`, `stop_grace_period` of a few minutes. | A host reboot brings the pool back; a stop lets running jobs finish. |
-| Docker in jobs | No Docker socket in the pool. Workflow `services:` and container actions do not work there. A project that needs a database gets a sidecar on the pool's private network, one database per repository (its own user and password). Docker-in-Docker is not offered first. | A mounted socket is root on the VM and lets one repository's job see every container. |
-| Labels | Each agent: `self-hosted`, `linux`, `x64`, the pool label `pool-<name>`, and a repository label `repo-<slug>`. `CI_RUNS_ON` = `["self-hosted","linux","pool-<name>"]`. | Repository registration already stops another repository's jobs from reaching an agent. The labels route this repository's jobs to the pool and let the doctor match agents. |
+- **Linux jobs** run in one pool container, with one agent per repository (section 4).
+- **Windows jobs** run in one runner service per repository on Windows (D43).
+- **All of them** take one of the machine's **2 CI slots** (D21).
+- **Local Claude work** (tests, builds, local agents) has its own limit of **2** (D36), not the CI slots.
+- **Claude cloud sessions** that run CI, as main runner (Option 3) or fallback (Option 4), have a limit of **10 at once** (D37). They do not use this machine.
+- The 85% memory and 60% CPU check (DL-77, DL-79) still applies on top of every limit.
 
-**Windows host.** Docker Desktop runs Linux containers in the WSL2 VM. `%UserProfile%\.wslconfig` (`memory=`, `processors=`) is the outer ceiling; the pool cap must fit inside it with room for sidecars and the VM. Windows jobs cannot run in this pool; a Windows shard still needs a runner service on the host (`actions.runner.*`). One host runner per repository is the same personal-account limit.
+## 3. The machine layer
 
-**Linux host.** The same compose file. The cap is real cgroup v2 on the host. A systemd unit is not needed; Docker's restart policy starts the pool.
+### 3.1 Machine config
 
-**macOS host.** Docker Desktop runs a Linux VM; its memory setting is the outer ceiling. macOS jobs need a host runner under launchd, one per repository.
+One file for the machine, readable by every runner account:
 
-## 3. Finding runners that already exist
+- Windows: `C:\ProgramData\luismc-delivery\machine.json`
+- Linux and macOS: `/etc/luismc-delivery/machine.json`
+- Inside the pool container: the same folder, mounted at `/machine`
 
-Detection reads only. It never registers, removes or changes anything.
+```json
+{
+  "load_limits": {"memory_pct": 85, "cpu_pct": 60},
+  "ci_slots": 2,
+  "local_heavy": 2,
+  "cloud_ci_sessions": 10,
+  "slot_stale_min": 120,
+  "runner_gate": {"max_wait_min": 30, "poll_sec": 15},
+  "runner_dirs": ["C:\\actions-runners"]
+}
+```
 
-### 3.1 Remote (GitHub)
+- `load.py` reads this file first. The old `~/.claude/luismc-delivery-machine.json` is still read when the new one is missing.
+- When both exist and differ, the doctor warns and names the keys.
+- A project's `.delivery/config.json` can lower a limit for its own work, never raise a machine limit.
+- This fixes G2.
 
-1. `gh repo list <owner> --limit 1000 --json nameWithOwner,visibility,viewerPermission`.
-2. For each repository with `viewerPermission == ADMIN`: `gh api repos/{o}/{r}/actions/runners --paginate`. Each runner has `id`, `name`, `os`, `status` (`online`/`offline`), `busy` and `labels`. Listing needs admin on the repository ([REST: self-hosted runners](https://docs.github.com/en/rest/actions/self-hosted-runners)).
-3. For an organisation owner, also `gh api orgs/{org}/actions/runners` and `orgs/{org}/actions/runner-groups`.
-4. Result: a table of runners by repository, with their labels and state. A `pool-<name>` label marks an agent of a plugin pool.
+### 3.2 CI slots
 
-When the API refuses (no admin, a token without the permission, no `gh`): the step says which repository and why, and goes on with the local scan. It never asks for a token.
+- The folder `C:\ProgramData\luismc-delivery\slots\` holds one lock file per busy slot: `slot-1.lock`, `slot-2.lock`.
+- The **job-started hook** (`runner_load_gate`, DL-79) does this before a job runs:
+  1. It writes a ticket in `queue\` with the repository, run, job, start time and priority.
+  2. It waits until its ticket is first in line, a slot is free, and the load is under the limits.
+  3. It takes the slot by creating the lock file. Creating it is atomic (create-new), so two hooks never take the same slot.
+  4. It removes the ticket and lets the job run.
+- **Order** (D30): a ready pull request's run and a run on the default branch come first. Branch and agent runs come next. Within each group it is first come, first served. The hook reads the priority from the event file the runner gives every job (`GITHUB_EVENT_PATH`: a pull request that is not a draft, or a push to the default branch).
+- The **job-completed hook** (`ACTIONS_RUNNER_HOOK_JOB_COMPLETED`, new) frees the slot and empties that runner's `_work` folder for that job.
+- **Stale slots** (D25): a slot whose runner process is gone is freed at once. Any slot older than `slot_stale_min` (120 minutes) is freed. A freed slot is logged with what held it.
+- `delivery_ci.py slots` prints who holds each slot, the queue, and the wait of each ticket.
+- This fixes G1 and G7's missing common cap.
 
-### 3.2 Local (this machine)
+### 3.3 Host load file
 
-| Where | What to look for |
+- A Windows scheduled task runs `load.py --write` every 15 seconds. It writes `C:\ProgramData\luismc-delivery\host-load.json` (memory %, CPU %, time).
+- The hook inside WSL or the pool reads that file. When it is older than 60 seconds, the hook uses its own figures and logs that.
+- The hook in the pool also reads the container's own cap (`/sys/fs/cgroup/memory.current`, `memory.max`, `cpu.stat`). A job starts only when both the host and the pool are under the limits.
+- This fixes G3, and MB63's question 12.
+
+### 3.4 Slot wait starts the fallback
+
+- While the hook waits for a slot, it writes a wait marker for the shard: `ci-wait/<sha>/<shard>`, with the time it started waiting. It uses the same git marker method as the claim markers in `ci_fallback.py`.
+- `shard_wait_minutes` counts a shard as waiting while a wait marker exists and no claim does.
+- After X minutes (`after_min`), the fallback claims the shard and runs it elsewhere (Option 4, first claim wins).
+- When the held job later gets its slot, it sees the claim is taken. It ends without work (exit 3, "claim lost") and frees the slot.
+- The hook needs the shard name. The workflow templates pass it to the hook in an environment variable set on the job (`DELIVERY_SHARD`).
+- This fixes G6.
+
+### 3.5 Local Claude work
+
+- The load guard (DL-77) counts heavy local work in flight: a heavy foreground command from its start (PreToolUse) to its end (PostToolUse), and local agents from the delivery ledger (the same count DL-38 uses for its cap of 3).
+- When the count is at `local_heavy` (2), a new heavy call is refused with the list of what is running. Same message style as DL-77.
+- Local work does not take CI slots (D23). The load check covers both.
+- This fixes G4.
+
+### 3.6 Cloud CI sessions
+
+- `cloud_ci_sessions` (10) limits Claude cloud sessions that run CI at the same time, as main runner (Option 3) or fallback (Option 4) (D34, D37).
+- The count is the claims held by a cloud session without a posted status (`ci-claim` without `ci-posted`).
+- At the limit, the launcher waits and retries. It never starts an 11th session.
+- These sessions also count toward the cap of 50 cloud agents in `.delivery/config.json`.
+
+## 4. The Linux pool
+
+### 4.1 What it is
+
+One Docker container with one CPU and memory cap. Inside it, one runner agent per repository. GitHub needs one registration per repository on a personal account (section 8). The pool keeps them all in one place, under one cap.
+
+| Part | Choice |
 |---|---|
-| Windows services | `Get-Service actions.runner.*`. The service name is `actions.runner.<owner>-<repo>.<runner name>`, so it names the repository. |
-| Linux systemd | `systemctl list-units 'actions.runner.*'`, same naming. |
-| macOS launchd | `~/Library/LaunchAgents/actions.runner.*.plist`. |
-| Runner folders | A `.runner` JSON file (it holds the agent name, the GitHub URL, the agent id and the work folder) in `actions-runner*` folders, the doctor's `runner_dirs`, `DELIVERY_RUNNER_DIRS`. Read the file; never read `.credentials`. |
-| Containers | `docker ps -a --format '{{json .}}'`, then `docker inspect` for the label `dev.luismc.runner-pool` (set by the plugin image) or a command that runs `Runner.Listener` / `run.sh`. For a pool, `docker exec <c> cat /pool/agents.json`. For a foreign container, list it as "a runner container the plugin did not make". |
-| Docker images | `docker images` for the plugin image name, to say "image built, no container". |
+| Image | One Linux image: the runner tarball checked by SHA-256, git, the runner's own dependencies. Workflows install their own toolchains. Label `dev.luismc.runner-pool`. |
+| Agents | One folder per repository, `agents/<slug>/`, each with its own `.runner`, `.credentials` and `_work`. Persistent agents only (D39). |
+| Users | Each agent runs as its own Unix user (`r-<slug>`), folders `0700`. One repository's job cannot read another's checkout or credentials. |
+| Start | `tini`, then `pool_supervisor.py` (standard-library Python, owned by the plugin). It reads `agents.json`, starts each agent as its user, restarts a dead one with back-off, and on stop lets running jobs finish. |
+| Cap | `cpus`, `mem_limit` (= `memswap_limit`) on the container. Proposed by the setup from the machine (section 6). |
+| Slots | The pool's hooks take the machine's CI slots (section 3.2). The pool has no separate slot count. |
+| Database | One shared database sidecar on the pool's private network. Each repository gets its own database and login (D40). |
+| Docker in jobs | Refused (D41). No Docker socket in the pool. A job that needs `services:` or a container action uses the sidecar or another runner. |
+| Updates | Runner auto-update stays on. |
+| Restart | `restart: unless-stopped`, a stop grace period of a few minutes. |
+| Files | `C:\ProgramData\luismc-delivery\pools\<name>\`: `compose.yaml`, `agents.json`, `.env` with the cap only (D42). |
+| Labels | Each agent: `self-hosted`, `linux`, `x64`, `pool-<name>`, `repo-<slug>`. A project's `CI_RUNS_ON` is `["self-hosted","linux","pool-<name>"]`. |
 
-### 3.3 Matching a remote runner to this machine
+### 4.2 WSL ceiling
 
-- A local `.runner` file gives the agent id and the GitHub URL. A remote runner with the same id on that repository is this machine's runner.
-- Without the file (a container not made by the plugin), match on the runner name and the repository from the service or container name.
-- A remote runner that matches nothing local is "on another machine". A local folder that matches no remote runner is "registered once, now removed or offline for over 14 days".
+Docker Desktop runs in the WSL2 VM. `%UserProfile%\.wslconfig` (`memory=`, `processors=`) is the outer ceiling. The pool cap must fit inside it, with room for the sidecar and the VM. The setup proposes both values. A change to `.wslconfig` needs `wsl --shutdown`, which stops every container. The setup only does that when no job runs and the owner says yes.
 
-## 4. Security
+### 4.3 Windows jobs
 
-- **Private repositories only.** GitHub recommends self-hosted runners only for private repositories, because a pull request from a fork can run code on the runner ([Add runners](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/add-runners)). The plugin refuses to add an agent for a public repository, and the doctor fails when a pool agent belongs to a public one.
-- **Fork pull requests.** The workflow templates run self-hosted jobs only for pushes and for pull requests whose head repository is the same repository.
-- **One user and one folder per repository.** No shared home, no shared tool cache between users. The job-completed hook empties that agent's `_work`.
-- **Persistent registration.** Each agent's `.credentials` file is a secret for that one runner. It stays in its own user's `0700` folder on the volume and is never read by the plugin.
-- **Registration tokens are secrets.** The owner runs the command; the token passes through a pipe and is never printed, written to a file or put in the compose environment:
-  `gh api -X POST repos/OWNER/REPO/actions/runners/registration-token --jq .token | docker exec -i POOL pool-add-agent SLUG --url https://github.com/OWNER/REPO --labels ...`
-- **No Docker socket** in the pool (section 2).
-- **Sidecars** (a test database) get one database and one login per repository.
-- **Shared cap means shared resources.** One repository's heavy job slows another's. That is a speed risk, not a secret risk.
+One runner service per repository on Windows, in `C:\actions-runners\<slug>\`, with the same two hooks. They take the same CI slots. Windows containers are not used.
 
-## 5. Machine load
+## 5. Security
 
-The owner sets ceilings per machine (`load_limits` in `~/.claude/luismc-delivery-machine.json`, for example 85% memory and 60% CPU). Before it writes a cap or adds an agent, the plugin:
+- **Private repositories only.** The setup refuses a self-hosted runner for a public repository. The doctor fails if one exists. A pull request from a fork could run code on the machine.
+- **Fork pull requests.** The templates run self-hosted jobs only for pushes and for pull requests from the same repository.
+- **Tokens.** Registration and removal tokens pass through a pipe and are never printed or written:
+  `gh api -X POST repos/OWNER/REPO/actions/runners/registration-token --jq .token | docker exec -i POOL pool-add-agent SLUG ...`
+- **Credentials.** Each agent's `.credentials` stays in its own `0700` folder. The plugin never reads it.
+- **No Docker socket** in the pool.
 
-1. Measures the machine: total memory, memory in use without the pool, logical CPUs, CPU use (`load.py`).
-2. Reads Docker's own ceiling (`docker info`: `NCPU`, `MemTotal`), which on Windows and macOS is the VM.
-3. Computes the room: memory room = total × memory ceiling − memory in use now without the pool; CPU room = logical CPUs × CPU ceiling.
-4. Proposes the pool cap: memory = the smaller of the room and Docker's memory less sidecars and 1 GB for the VM; CPUs = the smaller of the CPU room and Docker's CPUs less 1.
-5. Sets the slots K = floor(cap memory / largest `memory_gib` of the pool's Linux shards), at least 1.
-6. Refuses to add an agent when the cap is under the largest shard's memory, and says what to change (the cap, `.wslconfig`, or another machine).
+## 6. Setup: one guided path
 
-Adding an agent does not raise the cap. It adds one more repository that shares the K slots. The `add-agent` step prints the new sharing (for example "3 repositories, 2 slots").
-
-## 6. When the pool is offline
-
-- `runner_health.py` (in `join.py` and `ci_watch.py`) already warns when no online runner carries a job's labels. With a pool it also names the pool and says "the pool container is stopped" when the local scan sees it.
-- An unset `CI_RUNS_ON` makes the templates run on `ubuntu-latest`: a hosted run that may bill minutes. The doctor should fail an Option 1 project whose `CI_RUNS_ON` is unset, so this never happens by accident.
-- Option 4 (`ci.fallback`, `after_min_if_offline`) is the planned way to run elsewhere when the pool is down. Nothing new is needed.
-- Projects that write labels into `runs-on` instead of `CI_RUNS_ON` cannot switch to a pool or a fallback without an edit. The setup should say so.
-
-## 7. The design: the setup flow
+`/delivery-ci-setup`, Option 1, offers to set everything up and run it for the owner (D26, D44). Every step that changes the machine is shown first and runs only after a yes. Deleting anything needs its own yes.
 
 ```mermaid
 flowchart TD
-  pick[Owner picks Option 1 for linux] --> det[detect: remote and local]
-  det -->|a plugin pool found| q1{Ask: use the pool, or a new runner?}
-  det -->|other runners found| q2{Ask: which runner, or a new one?}
-  det -->|nothing found| q3{Ask: new pool, or a plain runner?}
-  q1 -->|use the pool| plan
-  q1 -->|new| q3
-  q2 -->|adopt a single-runner container as a pool| mig[migration plan]
-  q2 -->|new| q3
-  q3 --> plan[plan: commands, files, CI_RUNS_ON, CI_SERIAL, cap, K]
-  mig --> plan
-  plan --> run[Owner runs the by-hand list]
-  run --> ver[verify: agent online with labels, one test job]
+  a[Owner picks Option 1] --> b[Detect: GitHub and this machine]
+  b --> c[Show what exists and the plan]
+  c --> d{Owner: run it, or print the steps?}
+  d -->|run| e[Remove old runners, build machine layer, pool, services]
+  d -->|print| f[By-hand list]
+  e --> g[Verify: one test job per repo]
+  f --> g
 ```
 
-### 7.1 Who owns each step
+### 6.1 Detect (read only)
 
-| Step | Owner in the plugin |
+- **GitHub** (D46): every repository the owner is admin of. `gh api repos/{o}/{r}/actions/runners` gives name, OS, status, busy and labels. A repository the API refuses is named with the reason. The scan goes on.
+- **This machine**:
+  - runner services: `Get-Service actions.runner.*`, systemd units, launchd plists;
+  - runner folders with a `.runner` file (never `.credentials`);
+  - containers: the label `dev.luismc.runner-pool`, or a command that runs `Runner.Listener`;
+  - the WSL ceiling in `.wslconfig`.
+- A local runner is matched to its GitHub entry by agent id, else by name and repository.
+
+### 6.2 The plan the owner sees
+
+- Every existing runner, where it runs, its repository, and that it will be removed (D44: start clean).
+- The machine config with the limits.
+- The pool: name, cap, `.wslconfig` values, the repositories that get an agent.
+- The Windows services, one per repository that tests on Windows.
+- The repository variables (`CI_RUNS_ON`, `CI_SERIAL`).
+- The scheduled task for the host load file.
+
+### 6.3 Run (after the owner's yes)
+
+1. **Wait for idle.** Each existing runner finishes its job. Nothing is stopped mid-job.
+2. **Remove old runners.** For each one: remove its registration (`config remove` with a removal token through a pipe, or `DELETE /repos/{o}/{r}/actions/runners/{id}`). Then stop and delete its service or container. A container's volumes are deleted only after a separate yes that names them. A test database the owner wants to keep is backed up first.
+3. **Machine layer.** Write `machine.json`, create the slot and queue folders, register the host load scheduled task.
+4. **WSL ceiling.** Write `.wslconfig`, then `wsl --shutdown` only after a yes.
+5. **Pool.** Write the pool files, `docker compose up -d --build`, add one agent per Linux repository with the token pipe.
+6. **Windows services.** One per repository that tests on Windows, with both hooks in its `.env`.
+7. **Variables.** `gh variable set CI_RUNS_ON` (and `CI_SERIAL` when chosen) per repository.
+8. **Verify.** For each repository: the agent is online with its labels, then one run of `pool-check.yml` that takes a slot, prints the runner name and passes. The doctor runs last.
+
+When a step fails, the setup stops, says what is done and what is not, and prints the remaining steps.
+
+A step that needs an elevated shell (a Windows service, the scheduled task, the `NETWORK SERVICE` execution policy) is printed for the owner to run. The setup then checks it.
+
+### 6.4 Sizing (from MB63)
+
+- Memory room = total memory × 85% − memory in use now.
+- CPU room = logical CPUs × 60%.
+- Pool cap = the smaller of the room and Docker's ceiling, minus the sidecar and 1 GB for the VM.
+- The setup refuses a cap below the largest Linux shard's `memory_gib`, and says what to change.
+
+## 7. Doctor: the `machine` check
+
+- The machine config exists and runners can read it. A difference with the old file is a warning.
+- Every runner on the machine (services, folders, the pool) has both hooks. A Windows `.ps1` hook passes the execution policy check of DL-79.
+- Slots: none is stale. The queue has no ticket older than `slot_stale_min`.
+- The host load file is under 60 seconds old.
+- The pool: running, plugin image label, cap inside the machine and WSL ceilings, one user per agent, no Docker socket, every agent's repository private.
+- An Option 1 project with `CI_RUNS_ON` unset **fails** (D45). It would run on hosted runners and may bill minutes.
+- **Disk** (D31): each runner's `_work` size. When the total is large, the doctor offers to clean old work folders. It cleans only after a yes, and only folders of runners with no job running.
+
+## 8. Not in this design
+
+- **A GitHub organization.** One organization-level runner could serve every repository, but on the Free plan private repositories lose branch protection, so it needs the Team plan. Documented here as a later variant (D38). Not built.
+- **Ephemeral runners** (D39). They need a long-lived token in the container.
+- **Docker inside jobs** (D41).
+- **Windows containers** (D43).
+- **Lowering CI job priority** (D24). Slots and the load check are the only controls.
+
+## 9. Risks to test in the build
+
+| Risk | Test |
 |---|---|
-| Ask the questions | `commands/delivery-ci-setup.md`, Option 1 section |
-| Detect | new `scripts/delivery_runner_pool.py detect [--json]` |
-| Plan, write files | `delivery_runner_pool.py plan` and `delivery_ci_setup.py apply` (answers gain a `pool` section) |
-| By-hand list | `by_hand_items` gains the pool items, so the doctor checks each one |
-| Add or remove an agent | `pool-add-agent` and `pool-remove-agent` inside the image; `delivery_runner_pool.py add-agent|remove-agent` prints the owner's command |
-| Verify | `delivery_runner_pool.py verify`: the agent is online with its labels, then a `workflow_dispatch` of `pool-check.yml` that prints the runner name and passes |
-| Check later | `delivery_doctor.py`, check `pool` |
+| Lock files created over the Docker bind mount from Windows may not be atomic. | Two processes, one on Windows and one in the pool, race for one slot 1,000 times. If one ever loses, slots move to a small lock service on the host. |
+| A hook run as `NETWORK SERVICE` cannot write to `ProgramData`. | The setup grants that account modify rights on `C:\ProgramData\luismc-delivery`. Tested as the real caller (a scheduled task as that account). |
+| A crashed job holds a slot for up to 2 hours. | A dead process frees its slot at once; the doctor and `delivery_ci.py slots` show long holders. |
+| The hourly routine cannot read the machine's queue. | The wait marker is a git branch (section 3.4), which the routine can read. |
+| `wsl --shutdown` stops running containers. | The setup runs it only when no job runs, after a yes. |
 
-### 7.2 Questions (AskUserQuestion texts)
+## 10. Build plan (DL27)
 
-No question has a default (R13.12).
+One task, one cloud agent, one release.
 
-1. Pool found: "This machine runs a shared runner pool, '<name>', with agents for <n> repositories (<list>). Its cap is <cpus> CPUs and <mem> GB, with <K> jobs at a time. Add an agent for <repo> to it, or make a new runner for <repo>?" Options: "Add an agent to '<name>'", "Make a new runner".
-2. Other runners found: "These runners already exist: <table: where, repository, name, labels, online>. A personal account cannot share one runner between repositories, so <repo> needs its own agent. Which do you want?" Options: "Turn the runner container '<c>' into a shared pool and add <repo>", "Make a new shared pool", "Make a plain runner for <repo> only".
-3. Nothing found: "No runner was found on GitHub or on this machine. Make a shared pool (one container, one cap, one agent per repository) or a plain runner for <repo> only?"
-4. Cap (new pool or a changed cap): "This machine has <mem> GB and <cpus> CPUs; your ceilings are <m>% memory and <c>% CPU; memory in use now is <u> GB. The plugin proposes a cap of <X> CPUs and <Y> GB, so <K> jobs at a time. Use it, or give your own?"
-5. Pool name, only for a new pool: "Name the pool (it becomes the label pool-<name>)."
-6. Queue: "Should ready-PR runs of <repo> wait for each other (CI_SERIAL)?"
-7. When detection could not read some repositories: "<n> repositories could not be listed (no admin rights). Go on with what was found, or stop so you can check them?"
-8. Public repository: no question. The setup stops and says a self-hosted runner is refused for a public repository.
-
-### 7.3 The plan the setup prints
-
-- Files written in the project: nothing new in the repository except `CI_RUNS_ON` and `CI_SERIAL` as repository variables (by-hand), and the pool entry in `.delivery/config.json` (`runners[]` gains `{"name": "<pool>/<slug>", "os": "linux", "labels": [...], "pool": "<name>"}`).
-- Files on the machine, written by the plugin into a folder it owns (`~/.claude/luismc-delivery/pools/<name>/`, not a repository): `compose.yaml`, `agents.json`, `.env` with only the cap values.
-- Owner commands, in order: `docker compose -f <pool>/compose.yaml up -d --build` (new pool), then the token pipe from section 4, then `gh variable set CI_RUNS_ON --body '["self-hosted","linux","pool-<name>"]'`, then `gh variable set CI_SERIAL --body true` if asked.
-- Verify: `delivery_runner_pool.py verify --repo <repo>`.
-
-### 7.4 Assets to add under `templates/runner-pool/`
-
-| File | What |
+| Area | Files |
 |---|---|
-| `Dockerfile` | The image; label `dev.luismc.runner-pool`. |
-| `compose.yaml` | The pool service with the cap, the volume, the private network; optional sidecar blocks commented out. |
-| `pool_supervisor.py` | The supervisor (section 2). |
-| `agents.json` | `{"pool": "<name>", "slots": K, "agents": [{"slug", "repo", "user", "labels"}]}`. |
-| `pool-add-agent`, `pool-remove-agent` | Inside the image: make the user and folder, copy the runner files, read the token from stdin, run `config.sh --unattended`, update `agents.json`, tell the supervisor. Removal reads a remove token the same way and runs `config.sh remove`. |
-| `job-started.sh`, `job-completed.sh` | The slot gate and load gate; the `_work` clean-up. |
-| `pool-check.yml` | The verify workflow (`workflow_dispatch`, `runs-on` from `CI_RUNS_ON`). |
+| Machine config and load | `scripts/load.py`, `references/config-schema.json` |
+| Slots and hooks | `scripts/runner_load_gate.py` (+ `.ps1`, `.sh`, `.cmd`), new `scripts/runner_job_done.py` (+ wrappers), new `scripts/machine_slots.py` |
+| Fallback | `templates/shared/scripts/delivery/ci_fallback.py`, the workflow templates (`DELIVERY_SHARD`) |
+| Local and cloud limits | `scripts/load_guard.py`, `scripts/hook_pre_tool.py`, `scripts/hook_post_tool.py`, the cloud launcher |
+| Pool | new `templates/runner-pool/` (Dockerfile, compose, supervisor, add and remove agent, hooks, `pool-check.yml`), new `scripts/delivery_runner_pool.py` (detect, plan, run, verify) |
+| Setup and doctor | `scripts/delivery_ci_setup.py`, `commands/delivery-ci-setup.md`, `scripts/delivery_doctor.py`, `scripts/delivery_ci.py` (`slots`) |
+| Docs | `docs/features/delivery/spec.md` section 13, `docs/architecture/DELIVERYSPEC.md` (DL-79 change, new DL-90), `docs/guides/set-up-ci.md`, the plugin README, change notes |
+| Tests | slot take, free, stale and order; the race test; host load file read and stale; wait marker and fallback; local and cloud limits; detect and plan on fixtures; doctor `machine` check |
 
-### 7.5 What `delivery_doctor.py` should check (`pool`)
-
-- The pool container is running, and its image carries the plugin label.
-- The cap fits the machine ceilings and Docker's ceiling (section 5); K ≥ 1.
-- Each agent in `agents.json` is registered on its repository, online, with its labels (needs admin; otherwise "cannot read", closed by `confirm`).
-- Each agent runs as its own user; no two agents share a folder; no Docker socket is mounted.
-- Each agent's repository is private.
-- `CI_RUNS_ON` of this project names the pool label; it is not unset.
-- The job-started hook is set for every agent; the load gate reads cgroup figures.
-- The runner version inside each agent is the newest or under 30 days old.
-
-### 7.6 Migration: a single-repository runner container
-
-The owner already runs one container with one runner agent for one repository, a state volume holding the registration, and a database sidecar on a private network. To turn it into a pool without re-registering:
-
-1. Wait until the runner is idle; stop the container.
-2. Build the pool image. Mount the old state volume read-only once and copy `.runner`, `.credentials` and `.credentials_rsaparams` into `agents/<slug>/` (owned by that agent's new user). The agent keeps its id, name and labels; GitHub sees the same runner.
-3. Add the pool label to the agent, through the repository's runner settings or `POST /repos/{o}/{r}/actions/runners/{id}/labels` (owner runs it).
-4. Start the pool with the old cap. The sidecar stays on the same network; a new repository gets its own database in it.
-5. Add agents for the other repositories with the token pipe.
-6. Keep the old container definition until the first green run through the pool.
-
-A project whose workflows write labels in `runs-on` keeps working, because the agent keeps its old labels. Moving it to `CI_RUNS_ON` is its own change.
-
-## 8. Open questions for the owner
-
-1. Personal account or organisation? With an organisation, one organisation-level agent group could serve all repositories, and the pool would need fewer agents. Should the plugin offer that variant, or stay with one agent per repository?
-2. Persistent agents only, or also ephemeral just-in-time agents? Ephemeral needs a long-lived token in the container that can create runners.
-3. Slots: should K be computed from the shard table (proposed), or set by hand?
-4. Should the slot gate let a small job pass while a heavy job holds the last slot, or is it strict first come, first served?
-5. Sidecars: offer a shared database sidecar with one database per repository, or one sidecar per repository, or none?
-6. Docker inside jobs: refuse it (proposed), or offer a rootless Docker-in-Docker sidecar per repository later?
-7. Where should the pool's files live: in a plugin-owned folder on the machine (proposed), or in a repository the owner picks?
-8. Windows jobs: keep one host service runner per repository, or look at Windows containers later?
-9. Migration: may the plugin print the migration steps for the existing single-repository container, or does the owner want to do it by hand from this page?
-10. An Option 1 project with `CI_RUNS_ON` unset silently runs on hosted runners. Should the doctor fail it (proposed) or only warn?
-11. Should detection scan every repository the owner has admin on, or only the repositories the owner names?
-12. The load gate must read cgroup figures inside the container. Change `load.py` for that, or give the pool its own small gate?
+After the release, the owner runs the setup on this machine. The first real job through the pool is watched.
