@@ -64,8 +64,36 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D19 | docs/drafts/delivery-inventory.md is an older copy of DELIVERYSPEC full of another project's paths and rules: what happens to it? | Delete it | decided | 2026-10-26 |
 | delivery-speed | D2 | Point 7, a smoke test of the packaged program: MUST or SHOULD? | MUST, STACKSPEC 8.0.0 | decided | 2026-10-11 |
 | delivery-speed | D20 | How does a finished cloud agent row become done in the ledger? | Both | decided | 2026-11-02 |
+| delivery-speed | D21 | Machine-wide CI load control: how many CI jobs may run on this PC at once, across all repos (ci_slots)? | 2 slots | decided | 2026-11-04 |
+| delivery-speed | D22 | Machine-wide CI load control: how does a runner inside WSL see the Windows host's load? | Host load file | decided | 2026-11-04 |
+| delivery-speed | D23 | Machine-wide CI queue: should LOCAL Claude Code work on this PC (tests, builds, local agents) take the PC's CI slots? | Own limit, not CI slots | decided | 2026-11-04 |
+| delivery-speed | D24 | Machine-wide CI load control: should CI jobs run at below-normal CPU priority? | No, keep the rule | decided | 2026-11-04 |
+| delivery-speed | D25 | Machine-wide CI load control: when a crashed job keeps its slot, free it after how long? | 2 hours | decided | 2026-11-04 |
+| delivery-speed | D26 | Machine-wide CI load control: how does /delivery-ci-setup install the hooks and machine config? | Run it with permission | decided | 2026-11-04 |
+| delivery-speed | D27 | Machine-wide CI load control: where is it specified? | Delivery spec section 13 | decided | 2026-11-04 |
+| delivery-speed | D28 | Machine-wide CI load control: when is it built? | Build now | decided | 2026-11-04 |
+| delivery-speed | D29 | Machine-wide CI queue: what happens to a job that waits too long for a slot? | Fall back after X min | decided | 2026-11-04 |
 | delivery-speed | D3 | Point 8: where is the delivery log kept? | Release notes | decided | 2026-10-11 |
+| delivery-speed | D30 | Machine-wide CI queue: in what order do waiting jobs get a slot? | Ready-PR jobs first | decided | 2026-11-04 |
+| delivery-speed | D31 | Machine-wide CI queue: should the doctor's machine check report runner disk use and offer cleanup? | Report and offer cleanup | decided | 2026-11-04 |
+| delivery-speed | D32 | Machine-wide CI queue: ship the limits-file path fix (G2) and slot-wait-counts-for-fallback fix (G6) inside DL27? | Yes, in DL27 | decided | 2026-11-04 |
+| delivery-speed | D33 | Who owns dev-standards draft PR #140 (shared runner pool research) from here? | This session | decided | 2026-11-04 |
+| delivery-speed | D34 | Should Claude cloud sessions running CI (Option 3 main or Option 4 fallback) have a limit on how many run at once? | Yes, one limit for both roles | decided | 2026-11-04 |
+| delivery-speed | D35 | How do DL27 (PC-wide CI queue) and PR #140 (Docker runner pool) combine? | One combined design first | decided | 2026-11-04 |
+| delivery-speed | D36 | How many heavy local Claude jobs may run at once on this PC (own limit, separate from CI slots)? | 2 at once | decided | 2026-11-04 |
+| delivery-speed | D37 | How many Claude cloud sessions may run CI at once (main and fallback together)? | 10 at once | decided | 2026-11-04 |
+| delivery-speed | D38 | Runner pool: offer the GitHub organization variant? | Offer org as a later variant | decided | 2026-11-04 |
+| delivery-speed | D39 | Runner pool: persistent or ephemeral runners? | Persistent only | decided | 2026-11-04 |
 | delivery-speed | D4 | Point 4: what does the pre-push hook do when it cannot reach GitHub? | Allow and warn | decided | 2026-10-11 |
+| delivery-speed | D40 | Runner pool: how are test databases offered? | One shared DB sidecar | decided | 2026-11-04 |
+| delivery-speed | D41 | Runner pool: Docker inside jobs? | Refuse it | decided | 2026-11-04 |
+| delivery-speed | D42 | Runner pool: where do the pool's files live? | Plugin folder on the PC | decided | 2026-11-04 |
+| delivery-speed | D43 | Runner pool: how are Windows jobs handled? | Services per repo, PC slots | decided | 2026-11-04 |
+| delivery-speed | D44 | Runner pool: what happens to runners that already exist (e.g. comics-ci-runner)? | Delete and recreate clean | decided | 2026-11-04 |
+| delivery-speed | D45 | Doctor: Option 1 project with CI_RUNS_ON unset? | Fail | decided | 2026-11-04 |
+| delivery-speed | D46 | Runner detection: which repos are scanned? | All repos you admin | decided | 2026-11-04 |
+| delivery-speed | D47 | Where is the combined CI design written and approved? | PR #140 rewritten | decided | 2026-11-04 |
+| delivery-speed | D48 | Shared CI design: approve as is, or add to it? | Approve with an addition | decided | 2026-11-04 |
 | delivery-speed | D5 | Point 5: no online runner for a job’s labels before the ready PR opens? | Warn, don’t block | decided | 2026-10-11 |
 | delivery-speed | D6 | Point 3: which tests run at the join when branches affect overlapping packages? | Union plus dependents | decided | 2026-10-11 |
 | delivery-speed | D7 | Should dev-standards adopt the delivery log in its own releases? (asked as one multi-select question) | Yes | decided | 2026-10-11 |
