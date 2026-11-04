@@ -54,10 +54,10 @@ flowchart TD
 ```
 
 1. **Detect.** The setup lists every repository you administer, the runners GitHub knows, runner services, runner folders, containers and the WSL limits. It only reads. A public repository is named and refused.
-2. **Plan.** You see one plan: each old runner that will be removed, the pool and its CPU and memory cap, the files it writes (under the machine folder, not your repository), what changes outside the repository, what needs you, and about how long it takes.
+2. **Plan.** You see one plan: each old runner that will be removed, the pool and its CPU and memory cap, the files it writes (under the machine folder, not your repository), what changes outside the repository, what needs you, and about how long it takes. If you name no repository, the plan takes every private repository that has a runner or a workflow with `self-hosted`. If it finds none, it plans nothing and removes nothing. The cap is measured on your machine; you only give numbers to override it.
 3. **Yes.** Answer yes to run it. Each step prints one line while it runs.
-4. **Deletions.** Removing a runner folder, a container or its volumes needs its own yes that names what goes. A "no" stops the run and lists what is left.
-5. **Your part.** Steps that need an administrator shell (a Windows service, the scheduled task) are printed. Run them, and the setup checks them.
+4. **Deletions.** Removing a runner from GitHub, a Windows runner service, a runner folder, a container or its volumes needs its own yes that names what goes. A "no" stops the run and lists what is left.
+5. **Your part.** Steps that need an administrator shell are printed: stopping and deleting an old Windows runner service, creating the new Windows service, and the scheduled task for the host load file. Run them, and the setup checks them. The task starts at boot and runs a loop that writes the file every 15 seconds, because a scheduled task cannot repeat faster than once a minute.
 6. **Verify.** Each agent must be online with its labels, then one `pool-check` run per repository takes a slot and passes.
 7. **Summary.** Three parts: *Done*, *Left for you* (numbered, exact steps) and *What you can do now*.
 

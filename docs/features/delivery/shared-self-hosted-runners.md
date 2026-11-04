@@ -229,17 +229,21 @@ flowchart TD
 
 - **GitHub** (D46): every repository the owner is admin of. `gh api repos/{o}/{r}/actions/runners` gives name, OS, status, busy and labels. A repository the API refuses is named with the reason. The scan goes on.
 - **This machine**:
-  - runner services: `Get-Service actions.runner.*`, systemd units, launchd plists;
-  - runner folders with a `.runner` file (never `.credentials`);
-  - containers: the label `dev.luismc.runner-pool`, or a command that runs `Runner.Listener`;
-  - the WSL ceiling in `.wslconfig`.
+  - runner services: Windows services `actions.runner.*` with their image path (the runner folder is found from it), systemd units, launchd plists;
+  - runner folders with a `.runner` file (never `.credentials`), plus the folder of each Windows service;
+  - containers: the label `dev.luismc.runner-pool`, or a command that runs `Runner.Listener`. On Windows the setup also asks the Docker inside WSL (`wsl docker ps`, read only), so a Linux runner in a WSL container is found;
+  - the WSL ceiling in `.wslconfig`;
+  - this machine's figures: total memory, memory in use (the `load.py` figure), logical CPUs;
+  - for each private repository, whether a workflow names `self-hosted`.
 - A local runner is matched to its GitHub entry by agent id, else by name and repository.
 
 ### 6.2 The plan the owner sees
 
-- Every existing runner, where it runs, its repository, and that it will be removed (D44: start clean).
+- The repositories. When the owner names none, they come from detect: every private repository that has a runner or a workflow with `self-hosted`; the Windows ones are those with a Windows runner. With none found, the plan has no step and removes nothing.
+- Every existing runner, where it runs, its repository, and that it will be removed (D44: start clean). Removing a runner from GitHub is a deletion: it needs its own yes that names the runner. Only runners of the planned repositories are removed.
+- A detected Windows runner service: the administrator commands to stop and delete it, and its runner folder (a deletion with its own yes).
 - The machine config with the limits.
-- The pool: name, cap, `.wslconfig` values, the repositories that get an agent.
+- The pool: name, cap, `.wslconfig` values, the repositories that get an agent. The cap comes from the measured figures unless the owner gives `--total-gib`, `--used-gib` or `--cpus`; the `.wslconfig` memory counts as Docker's ceiling. If sizing refuses, the plan has no step.
 - The Windows services, one per repository that tests on Windows.
 - The repository variables (`CI_RUNS_ON`, `CI_SERIAL`).
 - The scheduled task for the host load file.
@@ -248,8 +252,8 @@ flowchart TD
 
 1. **Wait for idle.** Each existing runner finishes its job. Nothing is stopped mid-job.
 2. **Remove old runners.** For each one: remove its registration (`config remove` with a removal token through a pipe, or `DELETE /repos/{o}/{r}/actions/runners/{id}`). Then stop and delete its service or container. A container's volumes are deleted only after a separate yes that names them. A test database the owner wants to keep is backed up first.
-3. **Machine layer.** Write `machine.json`, create the slot and queue folders, register the host load scheduled task.
-4. **WSL ceiling.** Write `.wslconfig`, then `wsl --shutdown` only after a yes.
+3. **Machine layer.** Write `machine.json`, create the slot and queue folders, register the host load scheduled task. On Windows the task is one entry that starts at boot and runs a small loop script, because `schtasks` cannot repeat faster than every minute. The setup first copies `load.py`, `machine_slots.py` and `host-load-loop.py` (writes the host load file, sleeps 15 s, repeats) into `<machine folder>/host-load/`; the printed `schtasks /Create /SC ONSTART /RU SYSTEM` line uses absolute paths to `python` and that loop script, so a SYSTEM task can find them.
+4. **WSL ceiling.** Write `.wslconfig` (`memory=`, `processors=` from sizing; the old file is kept as `.wslconfig.bak`; nothing is written when it already has at least that much). Then `wsl --shutdown` only after a yes and only when no runner is busy.
 5. **Pool.** Write the pool files, `docker compose up -d --build`, add one agent per Linux repository with the token pipe.
 6. **Windows services.** One per repository that tests on Windows, with both hooks in its `.env`.
 7. **Variables.** `gh variable set CI_RUNS_ON` (and `CI_SERIAL` when chosen) per repository.
@@ -257,7 +261,7 @@ flowchart TD
 
 When a step fails, the setup stops, says what is done and what is not, and prints the remaining steps.
 
-A step that needs an elevated shell (a Windows service, the scheduled task, the `NETWORK SERVICE` execution policy) is printed for the owner to run. The setup then checks it.
+A step that needs an elevated shell (a Windows service, removing a Windows service, the scheduled task, the `NETWORK SERVICE` execution policy) is printed for the owner to run. The setup then checks it (D58): the old service is gone, or the task exists.
 
 ### 6.4 Sizing
 
