@@ -23,7 +23,9 @@ Branch: DL30-runner-pool. Status: READY (see the end).
 ## What I ran
 - `python3 -I -m unittest discover -s claude/plugins/delivery/tests -t claude/plugins/delivery/tests`: 437 tests, OK (42 new).
 - `python3 tools/ci_areas.py --branch-advice`: heavy delivery area; not run (CI job, per the rules).
-- `docs_index.py build` then `docs_check.py`: only W1 (this report, expected on a task branch) and two warnings that also exist for README mapping and the spec age. Generated files were restored with git checkout.
+- `docs_index.py build` then `docs_check.py`: one error, W1 (this report, expected on a task branch). Two warnings: M1 says the delivery README is not mapped by any spec `code:` list (the spec belongs to agent A), and T2 says the delivery spec is older than its code. Generated files were restored with git checkout.
 - Not run: Docker, mutation passes, any real gh or machine step.
 
 No UI change.
+
+READY
