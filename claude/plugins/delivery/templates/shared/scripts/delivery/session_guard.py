@@ -38,7 +38,7 @@ import run_suite as rs  # noqa: E402
 
 DEFAULT_RELEASE_BRANCHES = ["*-integration"]
 REDIRECT = re.compile(r"^\d*>{1,2}(&\d+|\S*)$")
-SPLIT = re.compile(r"&&|\|\||[;|\n]")
+HEREDOC = re.compile(r"<<(-?)[ \t]*(?:'([^'\n]*)'|\"([^\n\"]*)\"|\\?([A-Za-z0-9_.\-]+))")
 INTERPRETERS = {"python3": "python", "py": "python", "python3.11": "python", "python3.12": "python"}
 
 
@@ -65,8 +65,72 @@ def tokens(segment: str) -> list[str]:
     return toks
 
 
+def split_command(command: str) -> list[str]:
+    """Split on unquoted && || ; | and newlines. Quoted text stays whole; heredoc bodies are skipped."""
+    parts: list[str] = []
+    cur: list[str] = []
+    pending: list[tuple[str, bool]] = []   # heredocs opened on this line: (terminator, strip tabs)
+    quote = ""
+    i, n = 0, len(command)
+
+    def flush() -> None:
+        seg = "".join(cur).strip()
+        if seg:
+            parts.append(seg)
+        cur.clear()
+
+    while i < n:
+        c = command[i]
+        if quote:
+            cur.append(c)
+            if c == "\\" and quote == '"' and i + 1 < n:
+                cur.append(command[i + 1])
+                i += 2
+                continue
+            if c == quote:
+                quote = ""
+            i += 1
+            continue
+        if c == "\\" and i + 1 < n:
+            cur.append(command[i:i + 2])
+            i += 2
+            continue
+        if c in "'\"":
+            quote = c
+            cur.append(c)
+            i += 1
+            continue
+        m = HEREDOC.match(command, i) if c == "<" else None
+        if m:
+            pending.append((m.group(2) or m.group(3) or m.group(4) or "", m.group(1) == "-"))
+            cur.append(m.group(0))
+            i = m.end()
+            continue
+        if c == "\n":
+            flush()
+            i += 1
+            for term, strip in pending:     # skip each body up to its terminator line
+                while i < n:
+                    end = command.find("\n", i)
+                    end = n if end < 0 else end
+                    line = command[i:end]
+                    i = min(end + 1, n)
+                    if (line.lstrip("\t") if strip else line).rstrip("\r") == term:
+                        break
+            pending = []
+            continue
+        if c in ";|" or command.startswith("&&", i):
+            flush()
+            i += 2 if command.startswith(("&&", "||"), i) else 1
+            continue
+        cur.append(c)
+        i += 1
+    flush()
+    return parts
+
+
 def segments(command: str) -> list[list[str]]:
-    return [t for t in (tokens(s) for s in SPLIT.split(command)) if t]
+    return [t for t in (tokens(s) for s in split_command(command)) if t]
 
 
 def full_run_of(suite: dict, toks: list[str]) -> bool:
@@ -91,9 +155,10 @@ def check_tests(root: Path, toks: list[str]) -> str | None:
         args = toks[script + 1:]
         if "--list" in args or "--record-ci" in args:
             return None
-        if "--measure" in args:
-            i = args.index("--measure")
-            name = args[i + 1] if i + 1 < len(args) else ""
+        measure_arg = next((a for a in args if a == "--measure" or a.startswith("--measure=")), None)
+        if measure_arg is not None:
+            name = measure_arg.split("=", 1)[1] if "=" in measure_arg else (
+                args[args.index(measure_arg) + 1] if args.index(measure_arg) + 1 < len(args) else "")
             suite = suites.get(name)
             if suite is None:
                 return None
@@ -165,7 +230,7 @@ def check_pr(root: Path, toks: list[str]) -> str | None:
     if len(toks) < 3 or toks[0] != "gh" or toks[1] != "pr" or toks[2] not in ("create", "ready"):
         return None
     verb, args = toks[2], toks[3:]
-    if verb == "create" and any(a in ("--draft", "-d") for a in args):
+    if verb == "create" and any(a in ("--draft", "-d", "--draft=true", "--draft=1") for a in args):
         return None
     if "--undo" in args:
         return None  # gh pr ready --undo returns a PR to draft

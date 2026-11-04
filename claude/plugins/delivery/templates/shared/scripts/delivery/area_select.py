@@ -4,7 +4,7 @@
     area_select.py [--map FILE] [--base REF | --changed-file FILE|- | PATH...] [--all]
                    [--github-output] [--json]
 
-The changed paths come from `git diff --name-only REF...HEAD` (`--base`), a list (`--changed-file`,
+The changed paths come from `git diff --name-only --no-renames REF...HEAD` (`--base`), a list (`--changed-file`,
 `-` is stdin) or the arguments. The project's committed map (default `scripts/delivery/ci-areas.json`):
 
     {
@@ -130,12 +130,14 @@ def select(changed: list[str], cmap: dict, force_all: bool = False) -> dict:
 
 
 def changed_from_git(base: str) -> list[str]:
-    out = subprocess.run(["git", "diff", "--name-only", f"{base}...HEAD"], capture_output=True, text=True)
+    # --no-renames: a moved file counts at its old and its new path. -z: real names, no quoting.
+    flags = ["git", "diff", "--name-only", "--no-renames", "-z"]
+    out = subprocess.run([*flags, f"{base}...HEAD"], capture_output=True)
     if out.returncode != 0:
-        out = subprocess.run(["git", "diff", "--name-only", base, "HEAD"], capture_output=True, text=True)
+        out = subprocess.run([*flags, base, "HEAD"], capture_output=True)
     if out.returncode != 0:
-        raise OSError(f"git diff {base} failed: {out.stderr.strip()}")
-    return [ln for ln in out.stdout.splitlines() if ln.strip()]
+        raise OSError(f"git diff {base} failed: {out.stderr.decode('utf-8', 'replace').strip()}")
+    return [p for p in out.stdout.decode("utf-8", "replace").split("\0") if p.strip()]
 
 
 def lines(res: dict) -> list[str]:
