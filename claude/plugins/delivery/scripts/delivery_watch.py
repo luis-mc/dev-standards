@@ -78,9 +78,45 @@ OK_CONCLUSIONS = ("success", "skipped")      # a skipped run counts as success (
 _ON_PR_RE = re.compile(r"\bpull_request(?:_target)?\b")
 
 
+_PR_HEAD_TYPES = ("opened", "synchronize", "reopened")
+
+
+def _runs_on_every_pr_commit(block: list) -> bool:
+    """True when the `on:` block (its lines) starts the workflow for every commit pushed to a pull request: a
+    pull_request trigger with no paths filter and, when types are given, opened, synchronize or reopened among them.
+    A closed-only trigger (cleanup) or a paths filter (runs only when some files change) never has a run to wait for
+    on most heads, so such a workflow is not required (DL-03)."""
+    text = "\n".join(block)
+    if not _ON_PR_RE.search(text):
+        return False
+    pr_at = None
+    for i, ln in enumerate(block):
+        if re.match(r"^\s*pull_request(?:_target)?\s*:", ln):
+            pr_at = i
+            break
+    if pr_at is None:                     # inline form: `on: [push, pull_request]` or `on: pull_request`
+        return True
+    indent = len(block[pr_at]) - len(block[pr_at].lstrip())
+    sub = []
+    for ln in block[pr_at + 1:]:
+        if ln.strip() and len(ln) - len(ln.lstrip()) <= indent:
+            break
+        sub.append(ln)
+    body = "\n".join(sub)
+    if re.search(r"^\s*paths(?:-ignore)?\s*:", body, re.M):
+        return False
+    m = re.search(r"^\s*types\s*:\s*(.*)$", body, re.M)
+    if m:
+        kinds = set(re.findall(r"[a-z_]+", m.group(1)))
+        if not kinds:                     # a block list on the next lines
+            kinds = set(re.findall(r"^\s*-\s*([a-z_]+)", body[m.end():], re.M))
+        return bool(kinds & set(_PR_HEAD_TYPES))
+    return True
+
+
 def pr_workflows(root) -> list:
-    """The workflow files under .github/workflows that run on pull_request (DL-03). A workflow that runs only
-    on push (to main, a tag, a schedule) is not in the list: nothing waits for it."""
+    """The workflow files under .github/workflows that run on every pull-request commit (DL-03). A workflow that
+    runs only on push, only when a pull request closes, or only when some paths change is not in the list."""
     out = []
     d = Path(root) / ".github" / "workflows"
     try:
@@ -102,7 +138,7 @@ def pr_workflows(root) -> list:
                 block.append(ln.split("#")[0])
             elif inside:
                 break
-        if _ON_PR_RE.search("\n".join(block)):
+        if _runs_on_every_pr_commit(block):
             out.append(p.name)
     return out
 
@@ -451,12 +487,11 @@ class Watcher:
         opts = C.ci_options(self.cfg)
         if opts and all(v == "cloud" for v in opts.values()):
             return []
-        need = list(C.ci_workflows(self.cfg))
+        if C._section(self.cfg, "watcher").get("ci_workflows"):
+            return list(C.ci_workflows(self.cfg))   # the owner's list is the required set (DL-03)
         found = pr_workflows(self.root)
-        if found and not (C._section(self.cfg, "watcher").get("ci_workflows")):
-            need = []                       # nothing configured: the default ci.yml is only a guess
-        # every workflow the repo triggers on pull_request must have a finished run too (DL-03)
-        return need + [w for w in found if w not in need]
+        # nothing configured: every workflow that runs on each pull-request commit; else the default guess
+        return found or list(C.ci_workflows(self.cfg))
 
     def statuses_for_commit(self, sha: str, contexts: list):
         """Option c results as run-shaped rows, one per posted context; None when gh failed. A context with no status

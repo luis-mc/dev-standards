@@ -331,6 +331,41 @@ class GreenNeedsEveryPrWorkflowTests(GreenNeedsEveryRequiredWorkflowTests):
         (wf / "d.yml").write_text("name: d\non:\n  schedule:\n    - cron: '0 3 * * *'\n# pull_request\njobs: {}\n")
         self.assertEqual(W.pr_workflows(root), ["a.yml", "b.yaml"])
 
+    def test_closed_only_and_path_filtered_pr_workflows_are_not_required(self):
+        """DL53: a cleanup that runs when a PR closes, or a workflow with a paths filter, has no run on most heads."""
+        root = make_root({})
+        wf = Path(root) / ".github" / "workflows"
+        wf.mkdir(parents=True)
+        (wf / "cleanup.yml").write_text("name: c\non:\n  pull_request:\n    types: [closed]\njobs: {}\n")
+        (wf / "paths.yml").write_text("name: p\non:\n  pull_request:\n    types: [opened, synchronize]\n"
+                                      "    paths:\n      - 'src/**'\njobs: {}\n")
+        (wf / "typed.yml").write_text("name: t\non:\n  pull_request:\n    types: [opened, synchronize, reopened]\n"
+                                      "  push:\n    branches: [main]\njobs: {}\n")
+        (wf / "listed.yml").write_text("name: l\non:\n  pull_request:\n    types:\n      - synchronize\njobs: {}\n")
+        self.assertEqual(W.pr_workflows(root), ["listed.yml", "typed.yml"])
+
+    def test_configured_list_is_the_required_set(self):
+        """DL53: watcher.ci_workflows, when set, is the whole required set; other PR workflows are not added."""
+        files = {"secret-scan.yml": ON_PR % "secret-scan", "spec-lint.yml": ON_LIST % "spec-lint",
+                 "docs-check.yml": ON_PR % "docs-check"}
+        root = make_root({"watcher": {"ci_workflows": ["secret-scan.yml", "spec-lint.yml"]}})
+        wf = Path(root) / ".github" / "workflows"
+        wf.mkdir(parents=True)
+        for name, text in files.items():
+            (wf / name).write_text(text)
+        seed(root, [{"branch": "release/41", "pr": 10, "state": "ci", "green_at": None}])
+        routes = routes_for_green()
+        per = {"secret-scan.yml": self.done(1), "spec-lint.yml": self.done(2)}
+
+        def listing(argv):
+            return 0, runs(*per.get(argv[argv.index("--workflow") + 1], []))
+        routes[("gh", "run", "list", "--commit")] = listing
+        sh = FakeShell(routes)
+        watcher(root, sh).run_once()
+        self.assertTrue(self.train(root)["green_at"])
+        asked = [c[c.index("--workflow") + 1] for c in sh.calls if c[:4] == ["gh", "run", "list", "--commit"]]
+        self.assertNotIn("docs-check.yml", asked)
+
 
 class RedRerunTests(unittest.TestCase):
     def red_train(self, root):
