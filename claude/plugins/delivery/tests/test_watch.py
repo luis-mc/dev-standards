@@ -243,13 +243,13 @@ class GreenNeedsEveryRequiredWorkflowTests(unittest.TestCase):
         root, _ = self.run_with(cfg, {"ci.yml": [(1, "completed", "success", SHA, "release/41")]})
         self.assertIsNone(self.train(root)["green_at"])
 
-    def test_all_required_workflows_success_is_green_and_skipped_is_not_success(self):
+    def test_all_required_workflows_success_is_green_and_skipped_counts_as_success(self):
         cfg = {"watcher": {"ci_workflows": ["ci.yml", "installer.yml"]}}
         ok = (1, "completed", "success", SHA, "release/41")
         root, _ = self.run_with(cfg, {"ci.yml": [ok], "installer.yml": [(2, "completed", "success", SHA, "r")]})
         self.assertTrue(self.train(root)["green_at"])
         root, _ = self.run_with(cfg, {"ci.yml": [ok], "installer.yml": [(2, "completed", "skipped", SHA, "r")]})
-        self.assertIsNone(self.train(root)["green_at"])
+        self.assertTrue(self.train(root)["green_at"])
 
     def test_failed_required_workflow_is_red(self):
         root, _ = self.run_with({}, {"ci.yml": [(1, "completed", "failure", SHA, "release/41")]})
@@ -265,6 +265,71 @@ class GreenNeedsEveryRequiredWorkflowTests(unittest.TestCase):
     def test_latest_run_of_a_workflow_counts(self):
         root, _ = self.run_with({}, {"ci.yml": [(1, "completed", "failure", SHA, "r"), (2, "completed", "success", SHA, "r")]})
         self.assertTrue(self.train(root)["green_at"])
+
+
+PUSH_ONLY = "name: template-build\non:\n  push:\n    branches: [main]\n"
+ON_PR = "name: %s\non:\n  pull_request:\n  push:\n    branches: [main]\n"
+ON_LIST = "name: %s\n'on': [push, pull_request]\n"
+
+
+class GreenNeedsEveryPrWorkflowTests(GreenNeedsEveryRequiredWorkflowTests):
+    """DL-03: a train is green only when every workflow that runs on pull_request has finished well on the head."""
+
+    def run_pr(self, per_workflow, files=None, state="ci"):
+        files = files or {"secret-scan.yml": ON_PR % "secret-scan", "spec-lint.yml": ON_LIST % "spec-lint",
+                          "docs-check.yml": ON_PR % "docs-check", "template-build.yml": PUSH_ONLY}
+        root = make_root({})
+        wf = Path(root) / ".github" / "workflows"
+        wf.mkdir(parents=True)
+        for name, text in files.items():
+            (wf / name).write_text(text)
+        seed(root, [{"branch": "release/41", "pr": 10, "state": state, "green_at": None}])
+        routes = routes_for_green()
+
+        def listing(argv):
+            return 0, runs(*per_workflow.get(argv[argv.index("--workflow") + 1], []))
+        routes[("gh", "run", "list", "--commit")] = listing
+        sh = FakeShell(routes)
+        watcher(root, sh).run_once()
+        return root, sh
+
+    def done(self, i, c="success"):
+        return [(i, "completed", c, SHA, "release/41")]
+
+    def test_one_of_three_runs_done_is_not_green(self):
+        root, sh = self.run_pr({"secret-scan.yml": self.done(1),
+                                "spec-lint.yml": [(2, "in_progress", None, SHA, "release/41")]})
+        t = self.train(root)
+        self.assertNotEqual(t["state"], "green")
+        self.assertIsNone(t["green_at"])
+        self.assertEqual([c for c in sh.calls if c[:3] == ["gh", "pr", "merge"]], [])
+
+    def test_all_done_is_green_and_skipped_counts(self):
+        root, _ = self.run_pr({"secret-scan.yml": self.done(1), "spec-lint.yml": self.done(2),
+                               "docs-check.yml": self.done(3, "skipped")})
+        self.assertTrue(self.train(root)["green_at"])
+
+    def test_one_failed_is_red(self):
+        root, _ = self.run_pr({"secret-scan.yml": self.done(1), "spec-lint.yml": self.done(2, "failure"),
+                               "docs-check.yml": self.done(3)})
+        self.assertEqual(self.train(root)["state"], "red")
+
+    def test_push_only_workflow_is_not_waited_on(self):
+        root, sh = self.run_pr({"secret-scan.yml": self.done(1), "spec-lint.yml": self.done(2),
+                                "docs-check.yml": self.done(3)})
+        self.assertTrue(self.train(root)["green_at"])
+        asked = [c[c.index("--workflow") + 1] for c in sh.calls if c[:4] == ["gh", "run", "list", "--commit"]]
+        self.assertNotIn("template-build.yml", asked)
+
+    def test_pr_workflows_finds_only_pull_request_triggers(self):
+        root = make_root({})
+        wf = Path(root) / ".github" / "workflows"
+        wf.mkdir(parents=True)
+        (wf / "a.yml").write_text(ON_PR % "a")
+        (wf / "b.yaml").write_text(ON_LIST % "b")
+        (wf / "c.yml").write_text(PUSH_ONLY)
+        (wf / "d.yml").write_text("name: d\non:\n  schedule:\n    - cron: '0 3 * * *'\n# pull_request\njobs: {}\n")
+        self.assertEqual(W.pr_workflows(root), ["a.yml", "b.yaml"])
 
 
 class RedRerunTests(unittest.TestCase):
