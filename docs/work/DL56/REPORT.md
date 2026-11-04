@@ -19,13 +19,13 @@ All eight findings reproduced on current main (each new test failed first) and a
 - `tools/test_change_notes.py`: 136 checks passed.
 - `tools/test_ci_speedups.py`: 24 passed.
 - `tools/test_session_guard.py this_repo`: passed (the full suite is refused by the session guard locally; PR CI runs it).
-- `tools/test_delivery_gate.py`: see the last note below.
+- `tools/test_delivery_gate.py`: not completed locally (stopped; CI-only suite).
 
 ## Outside my files
 `.claude/suites.json` and `.github/workflows/spec-lint.yml` got one entry each for the new test file (a test in `tools/` must be declared). Other agents may touch the same lines.
 
 Docs: none for the feature spec; the change note is `docs/architecture/changes/DL56-delivery-shared-fixes.md`.
 
-Gate suite result: pending at the time of writing.
+`tools/test_delivery_gate.py` is declared CI-only (measure=false) and ran over 10 minutes locally, so I stopped it. The PR CI runs it. It covers `dirty_paths` through branch_gate and join.
 
 READY
