@@ -32,6 +32,6 @@ Method (D90): a failing test first for each finding, in `tools/test_project_setu
 - claude-setup-plugins, setup-pattern, questions-stop, preflight, ci-areas, change-notes, spec-check, authspec-check (via run_suite --measure): all passed.
 - docs_check.py: remaining errors are the stale generated docs-map (G1, not committed), M1 for models and test-cost (see above), and W1 for this report (stays on the branch). No Docker, no mutation passes.
 
-Branch head: see the last commit on origin/DS185-project-setup-fixes.
+Branch head: the commit that adds this line (see git log on origin/DS185-project-setup-fixes).
 
 READY
