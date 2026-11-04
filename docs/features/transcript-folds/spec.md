@@ -107,7 +107,8 @@ flowchart TB
 | Situation | Behaviour | Why |
 |---|---|---|
 | Edit data unavailable on a Bash result | No change, no fold | Show the engine's output rather than guess |
-| A call was interrupted or errored | Never folded | The detail matters most then |
+| A call was interrupted | Never folded | The detail matters most then |
+| A call errored | Folded to its first error line (R5.4) | The row keeps the error text in view |
 | A chord is already bound to another action | `claude-setup` reports a conflict | Never overwrite a binding |
 | The plugin is not enabled | The chords do nothing | A mod runs only from an enabled plugin |
 
@@ -124,7 +125,7 @@ flowchart TB
 | R6.2 | `claude/plugins/transcript-folds/tests/purity.test.ts` |
 | R6.3 | `tools/test_model_profiles.py`, check K1 (the keybindings asset holds the two chords and their actions, and the plugin source names the same actions) |
 
-Run the Node suites with `node --test claude/plugins/transcript-folds/tests/`. R5.7 and R6.1 have no automated test; R5.7 was checked in a smoke run of the plugin in Claude Code.
+Run the Node suites with `node --test --experimental-strip-types claude/plugins/transcript-folds/tests/*.test.ts`. R5.7 and R6.1 have no automated test; R5.7 was checked in a smoke run of the plugin in Claude Code.
 
 ## 10. Decisions
 

@@ -128,3 +128,9 @@ test('threshold 0 folds every diff that changes something, and never an empty on
   assert.equal(isOverThreshold({ added: 0, removed: 1 }, 0), true)
   assert.equal(isOverThreshold({ added: 0, removed: 0 }, 0), false)
 })
+
+test('F48: a PowerShell edit is counted like Bash', () => {
+  const out = { bashEditDiff: { files: [{ filePath: '/p/a', hunks: [hunk(['+1', '-2'])] }], moreFiles: 0 } }
+  const c = changeOf('PowerShell', out)
+  assert.deepEqual([c?.files, c?.added, c?.removed], [1, 1, 1])
+})

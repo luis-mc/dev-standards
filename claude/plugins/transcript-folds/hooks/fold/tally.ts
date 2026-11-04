@@ -15,11 +15,22 @@ export type Tally = {
 
 export const EMPTY_TALLY: Tally = { files: [], extra: 0, added: 0, removed: 0 }
 
+/** A path in one spelling: forward slashes; no case for Windows paths. */
+function fileKey(path: string): string {
+  const p = path.replace(/\\/g, '/')
+  return /^[A-Za-z]:\//.test(p) || p.startsWith('//') ? p.toLowerCase() : p
+}
+
 /** The tally with one change added: its files once each, its lines in full. */
 export function addToTally(tally: Tally, change: Pick<Change, 'paths' | 'files' | 'added' | 'removed'>): Tally {
   const files = tally.files.slice()
+  const keys = files.map(fileKey)
   for (const p of change.paths) {
-    if (!files.includes(p)) files.push(p)
+    const key = fileKey(p)
+    if (!keys.includes(key)) {
+      files.push(p)
+      keys.push(key)
+    }
   }
   const unknown = Math.max(0, change.files - change.paths.length)
   return {

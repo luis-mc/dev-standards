@@ -111,6 +111,22 @@ const ZERO: ReadonlyArray<readonly [number, number]> = [
   [0xe0100, 0xe01ef],
 ]
 
+const ANSI = /\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/y
+const MARK = /^[\p{Mn}\p{Me}]$/u
+
+/** The text without terminal escape sequences. */
+export function stripAnsi(text: string): string {
+  return text.replace(/\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '')
+}
+
+/** Length of the escape sequence at `i`, or 0. */
+function ansiAt(text: string, i: number): number {
+  if (text.charCodeAt(i) !== 0x1b) return 0
+  ANSI.lastIndex = i
+  const m = ANSI.exec(text)
+  return m === null ? 0 : m[0].length
+}
+
 function inRanges(cp: number, ranges: ReadonlyArray<readonly [number, number]>): boolean {
   for (const [lo, hi] of ranges) {
     if (cp < lo) return false
@@ -121,19 +137,29 @@ function inRanges(cp: number, ranges: ReadonlyArray<readonly [number, number]>):
 
 /** Cells one code point takes: 0, 1 or 2. */
 export function cellWidth(cp: number): number {
+  if (cp === 0x09) return 1
   if (cp < 0x20 || (cp >= 0x7f && cp < 0xa0)) return 0
   if (cp < 0x300) return 1
-  if (inRanges(cp, ZERO)) return 0
+  if (inRanges(cp, ZERO) || MARK.test(String.fromCodePoint(cp))) return 0
   if (inRanges(cp, WIDE)) return 2
   return 1
 }
+
+const VS16 = 0xfe0f
 
 /** Cells a text takes. A character joined by a zero-width joiner adds nothing. */
 export function displayWidth(text: string): number {
   let total = 0
   let joined = false
-  for (const ch of text) {
-    const cp = ch.codePointAt(0) ?? 0
+  let last = 0
+  for (let i = 0; i < text.length; ) {
+    const skip = ansiAt(text, i)
+    if (skip > 0) {
+      i += skip
+      continue
+    }
+    const cp = text.codePointAt(i) ?? 0
+    i += cp > 0xffff ? 2 : 1
     if (cp === ZWJ) {
       joined = true
       continue
@@ -142,7 +168,14 @@ export function displayWidth(text: string): number {
       joined = false
       continue
     }
-    total += cellWidth(cp)
+    // A one-cell base with U+FE0F draws as an emoji, two cells.
+    if (cp === VS16 && last === 1) {
+      total += 1
+      last = 0
+      continue
+    }
+    last = cellWidth(cp)
+    total += last
   }
   return total
 }
@@ -150,7 +183,8 @@ export function displayWidth(text: string): number {
 /**
  * The text cut to at most `max` cells. A cut ends in an ellipsis that counts
  * in the width; a text that fits is returned as it is; `max` of 0 or less
- * gives an empty string.
+ * gives an empty string. Escape sequences take no cells and are never split;
+ * a cut that kept one ends with a reset.
  */
 export function cutToWidth(text: string, max: number): string {
   if (!(max > 0)) return ''
@@ -159,15 +193,28 @@ export function cutToWidth(text: string, max: number): string {
   let out = ''
   let used = 0
   let joined = false
-  for (const ch of text) {
-    const cp = ch.codePointAt(0) ?? 0
-    const w = joined ? 0 : cp === ZWJ ? 0 : cellWidth(cp)
+  let last = 0
+  let styled = false
+  for (let i = 0; i < text.length; ) {
+    const skip = ansiAt(text, i)
+    if (skip > 0) {
+      out += text.slice(i, i + skip)
+      styled = true
+      i += skip
+      continue
+    }
+    const cp = text.codePointAt(i) ?? 0
+    const ch = String.fromCodePoint(cp)
+    i += ch.length
+    let w = joined ? 0 : cp === ZWJ ? 0 : cellWidth(cp)
+    if (cp === VS16 && last === 1 && !joined) w = 1
     joined = cp === ZWJ
     if (used + w > room) break
     out += ch
     used += w
+    last = cp === VS16 ? 0 : w
   }
-  return out + ELLIPSIS
+  return out + ELLIPSIS + (styled ? '\x1b[0m' : '')
 }
 
 /** Whitespace runs, newlines included, folded to single spaces; ends trimmed. */

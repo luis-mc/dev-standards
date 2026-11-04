@@ -127,3 +127,30 @@ test('commandText and runningCommand cut to one line', () => {
   assert.equal(runningCommand('Bash', 'abcdefghijklmnopqrstuvwxyz', 20), 'abcdefghij…')
   assert.equal(runningCommand('Bash', 'a\nb', 0), 'a b')
 })
+
+test('F49: a shell call with edit data unavailable is not folded', () => {
+  const call = { isRunning: false, isErrored: false, isInterrupted: false }
+  assert.equal(planCommand({ ...call, output: { stdout: 'x', bashEditDiff: { unavailable: true } } }, null, true, 5), 'engine')
+  assert.equal(planCommand({ ...call, output: { stdout: 'x', bashEditDiff: { skipped: true } } }, null, true, 5), 'engine')
+})
+
+test('F52: a call with no result yet keeps the engine row', () => {
+  const call = { isRunning: false, isErrored: false, isInterrupted: false }
+  assert.equal(planCommand({ ...call, output: undefined }, null, true, 5), 'engine')
+  assert.equal(planCommand({ ...call, output: null }, null, true, 5), 'engine')
+  assert.equal(planCommand({ ...call, output: '' }, null, true, 5), 'fold')
+})
+
+test('F54: a tab in an error line becomes a space', () => {
+  assert.equal(shellOutcome({ stderr: 'a\tb' }, true).text, 'a b')
+})
+
+test('F55: blank stderr falls back to the stdout error', () => {
+  assert.equal(shellOutcome({ stderr: '\n', stdout: 'fatal: not a git repository' }, true).text, 'fatal: not a git repository')
+})
+
+test('F51: colour codes do not squeeze the command', () => {
+  const out = { kind: 'error' as const, text: '\x1b[31merror\x1b[0m: boom' }
+  const row = commandRow('Bash', 'npm test', out, null, '»', 34)
+  assert.match(piecesText(row), /npm test/)
+})

@@ -41,7 +41,7 @@ function slashes(path: string): string {
 }
 
 function isWindowsPath(path: string): boolean {
-  return /^[A-Za-z]:\//.test(path)
+  return /^[A-Za-z]:\//.test(path) || path.startsWith('//')
 }
 
 /**
