@@ -1489,7 +1489,7 @@ def _history(rows: list) -> str:
 
 # ------------------------------------------------------------------ CI runs section (R5.51, owner decision D48)
 CI_RUNS_TITLE = 'CI runs'
-CI_KINDS = {'pool': 'Linux pool', 'windows': 'Windows', 'hosted': 'GitHub-hosted', 'cloud': 'Claude cloud'}
+CI_KINDS = {'pool': 'Linux pool', 'windows': 'Windows service', 'hosted': 'GitHub-hosted', 'cloud': 'Claude cloud'}
 CI_RESULT = {'success': ('&#10003;', 'Passed', 'ci-pass'), 'failure': ('&#10007;', 'Failed', 'ci-fail'),
              'cancelled': ('&#8211;', 'Cancelled', 'ci-cancel')}
 
@@ -1530,34 +1530,50 @@ def _ci_median(values: list):
     return ordered[mid] if len(ordered) % 2 else (ordered[mid - 1] + ordered[mid]) / 2.0
 
 
-def _ci_clock(value, tz) -> str:
+def _ci_clock(value, tz, today=None) -> str:
+    """HH:MM for a time on the same day as `today` (the file's generated_at), else DD Mon HH:MM."""
     moment = _parse_iso(value) if value else None
-    return '&ndash;' if moment is None else _fmt_stamp(moment.astimezone(tz))
+    if moment is None:
+        return '&ndash;'
+    moment = moment.astimezone(tz)
+    if today is not None and today.astimezone(tz).date() == moment.date():
+        return '%02d:%02d' % (moment.hour, moment.minute)
+    return _fmt_stamp(moment)
 
 
 def _ci_where(where) -> tuple:
+    """One chip per run: the kind, a middle dot, then the host (pool, Windows service), the OS (GitHub-hosted) or
+    `fallback` (cloud). A raw hosted runner name is never shown."""
     where = where if isinstance(where, dict) else {}
     kind = where.get('kind') if where.get('kind') in CI_KINDS else 'hosted'
-    name = str(where.get('name') or '')
-    tag = '<span class="ci-tag ci-tag-%s">%s</span>' % (kind, esc(CI_KINDS[kind]))
-    return kind, tag + ('<span class="ci-where-name">%s</span>' % esc(name) if name else '')
+    if kind in ('pool', 'windows'):
+        place = str(where.get('host') or where.get('name') or '')
+    elif kind == 'hosted':
+        place = str(where.get('os') or '')
+    else:
+        place = 'fallback'
+    text = CI_KINDS[kind] + (' \u00b7 ' + place if place else '')
+    return kind, '<span class="ci-tag ci-tag-%s">%s</span>' % (kind, esc(text))
 
 
 def ci_runs_valid(data) -> bool:
     return isinstance(data, dict) and isinstance(data.get('active', []), list) and isinstance(data.get('finished', []), list)
 
 
-def _ci_segments(entry: dict) -> list:
-    """[(label, class, start_s, duration_s)] of the waterfall of one finished run, in order: GitHub queue, slot wait,
-    then every job step. One time scale: seconds from the start of the run."""
-    segs = []
-    queued, slot_wait = _ci_num(entry.get('queued_s')), _ci_num(entry.get('slot_wait_s'))
-    if queued:
-        segs.append(('GitHub queue', 'ci-bar-queue', 0, queued))
-    if slot_wait:
-        start = _ci_num(entry.get('slot_start_s'))
-        label = 'Slot wait, then fallback to cloud' if entry.get('fallback') else 'Slot wait'
-        segs.append((label, 'ci-bar-slot', queued or 0 if start is None else start, slot_wait))
+def _ci_bar(cls: str, start, dur, scale) -> str:
+    left, width = 100.0 * start / scale, max(100.0 * dur / scale, 0.5)
+    left = min(left, 100.0 - width)
+    return '<span class="ci-track"><span class="ci-bar %s" style="left:%.2f%%;width:%.2f%%"></span></span>' % (cls, left, width)
+
+
+def _ci_row(label: str, cls: str, start, dur, scale) -> str:
+    return ('<li class="ci-step"><span class="ci-step-name" title="%s">%s</span>%s<span class="ci-step-time">%s</span></li>'
+            % (label, label, _ci_bar(cls, start, dur, scale), _ci_dur(dur)))
+
+
+def _ci_jobs(entry: dict) -> list:
+    """[(job name, [(step name, class, start_s, duration_s)])] in the order the jobs first appear."""
+    jobs: dict = {}
     for step in entry.get('steps') or []:
         if not isinstance(step, dict):
             continue
@@ -1565,24 +1581,37 @@ def _ci_segments(entry: dict) -> list:
         if start is None or dur is None:
             continue
         failed = step.get('conclusion') == 'failure'
-        label = '%s &middot; %s' % (esc(step.get('job') or ''), esc(step.get('name') or '')) if step.get('job') else esc(step.get('name') or '')
-        segs.append((label, 'ci-bar-fail' if failed else 'ci-bar-step', start, dur))
-    return segs
+        jobs.setdefault(str(step.get('job') or ''), []).append((str(step.get('name') or ''), 'ci-bar-fail' if failed else 'ci-bar-step', start, dur))
+    return list(jobs.items())
 
 
 def _ci_waterfall(entry: dict) -> str:
-    segs = _ci_segments(entry)
-    scale = max([_ci_num(entry.get('total_s')) or 0] + [s + d for _l, _c, s, d in segs]) or 1
-    rows = []
-    for label, cls, start, dur in segs:
-        left, width = 100.0 * start / scale, max(100.0 * dur / scale, 0.5)
-        left = min(left, 100.0 - width)
-        rows.append('<li class="ci-step"><span class="ci-step-name">%s</span>'
-                    '<span class="ci-track"><span class="ci-bar %s" style="left:%.2f%%;width:%.2f%%"></span></span>'
-                    '<span class="ci-step-time">%s</span></li>' % (label, cls, left, width, _ci_dur(dur)))
+    """The waterfall of one finished run on one time scale (seconds from the start of the run): the GitHub queue, the
+    slot wait, then one row per job with its own bar. A job opens to its steps."""
+    queued, slot_wait = _ci_num(entry.get('queued_s')), _ci_num(entry.get('slot_wait_s'))
+    head = []
+    if queued:
+        head.append(('GitHub queue', 'ci-bar-queue', 0, queued))
+    if slot_wait:
+        start = _ci_num(entry.get('slot_start_s'))
+        head.append(('Slot wait, then fallback to cloud' if entry.get('fallback') else 'Slot wait', 'ci-bar-slot',
+                     queued or 0 if start is None else start, slot_wait))
+    jobs = _ci_jobs(entry)
+    ends = [s + d for _n, steps in jobs for _x, _c, s, d in steps] + [s + d for _l, _c, s, d in head]
+    scale = max([_ci_num(entry.get('total_s')) or 0] + ends) or 1
+    rows = [_ci_row(esc(l), c, s, d, scale) for l, c, s, d in head]
+    for name, steps in jobs:
+        first = min(s for _n, _c, s, _d in steps)
+        last = max(s + d for _n, _c, s, d in steps)
+        cls = 'ci-bar-fail' if any(c == 'ci-bar-fail' for _n, c, _s, _d in steps) else 'ci-bar-step'
+        label = esc(name or 'Job')
+        inner = ''.join(_ci_row(esc(n), c, s, d, scale) for n, c, s, d in steps)
+        rows.append('<li class="ci-job"><details class="ci-job-fold"><summary class="ci-step"><span class="ci-step-name" title="%s">%s</span>%s'
+                    '<span class="ci-step-time">%s</span></summary><ol class="ci-steps">%s</ol></details></li>'
+                    % (label, label, _ci_bar(cls, first, last - first, scale), _ci_dur(last - first), inner))
     if not rows:
         return '<p class="note">No step times were recorded for this run.</p>'
-    return '<ol class="ci-waterfall" aria-label="Steps of this run on one time scale, total %s">%s</ol>' % (
+    return '<ol class="ci-waterfall" aria-label="Queue, slot wait and jobs of this run on one time scale, total %s">%s</ol>' % (
         _ci_dur(_ci_num(entry.get('total_s'))).replace('&ndash;', 'unknown'), ''.join(rows))
 
 
@@ -1593,19 +1622,22 @@ def _ci_legend() -> str:
 
 
 def _ci_now(entry: dict, generated) -> str:
+    """A chip: `step · elapsed` while running, an amber `waiting for a slot · 3m · fallback in 7m` while waiting."""
     wait = entry.get('slot_wait')
     if isinstance(wait, dict):
         since = _parse_iso(wait.get('since')) if wait.get('since') else None
         mins = _ci_num(wait.get('fallback_in_min'))
-        waited = ('%s so far' % _ci_dur(_ci_num((generated - since).total_seconds()))) if since and generated else ''
-        tail = ('fallback to the cloud in %d min' % mins) if mins is not None else 'no fallback set'
-        return 'Waiting for a slot' + (' (%s)' % waited if waited else '') + '; ' + tail
+        parts = ['waiting for a slot']
+        if since and generated:
+            parts.append('%dm' % (max(0, int((generated - since).total_seconds())) // 60))
+        parts.append('fallback in %dm' % mins if mins is not None else 'no fallback set')
+        return '<span class="ci-chip ci-chip-wait">%s</span>' % esc(' \u00b7 '.join(parts))
     now = entry.get('now')
     if isinstance(now, dict) and now.get('step'):
         since = _parse_iso(now.get('since')) if now.get('since') else None
-        spent = ', %s' % _ci_dur(_ci_num((generated - since).total_seconds())) if since and generated else ''
-        return '%s%s' % (esc(now['step']), spent)
-    return 'Queued on GitHub'
+        text = str(now['step']) + (' \u00b7 ' + _ci_dur(_ci_num((generated - since).total_seconds())) if since and generated else '')
+        return '<span class="ci-chip ci-chip-run" title="%s">%s</span>' % (esc(now['step']), esc(text))
+    return '<span class="ci-chip">Queued on GitHub</span>'
 
 
 def ci_runs_section(data: dict, tz) -> str:
@@ -1621,9 +1653,9 @@ def ci_runs_section(data: dict, tz) -> str:
     failures = sum(1 for f in finished if f.get('conclusion') == 'failure')
     passed = sum(1 for f in finished if f.get('conclusion') == 'success')
     median, p90 = _ci_median(totals), _ci_percentile(totals, 90)
-    summary = ('%d in progress &middot; %d finished shown &middot; median %s &middot; %d fallback%s &middot; %d failure%s' % (
+    summary = ('%d in progress &middot; %d latest &middot; median %s &middot; %d fallback%s &middot; %d failed' % (
         len(active), len(finished), _ci_dur(int(round(median))) if median is not None else '&ndash;',
-        fallbacks, '' if fallbacks == 1 else 's', failures, '' if failures == 1 else 's'))
+        fallbacks, '' if fallbacks == 1 else 's', failures))
     figures = [('Median run time', _ci_dur(int(round(median))) if median is not None else '&ndash;'),
                ('p90 run time', _ci_dur(p90) if p90 is not None else '&ndash;'),
                ('Median slot wait', _ci_dur(int(round(_ci_median(waits)))) if waits else '&ndash;'),
@@ -1636,7 +1668,7 @@ def ci_runs_section(data: dict, tz) -> str:
             '<tr><td data-label="Run">%s</td><td data-label="Why">%s</td><td data-label="Where">%s</td>'
             '<td data-label="Started">%s</td><td data-label="Now">%s</td></tr>' % (
                 _ci_run_label(a), esc(a.get('why') or ''), _ci_where(a.get('where'))[1],
-                _ci_clock(a.get('started_at'), tz), _ci_now(a, generated)) for a in active)
+                _ci_clock(a.get('started_at'), tz, generated), _ci_now(a, generated)) for a in active)
         progress = ('<h3 class="ci-h">In progress</h3><div class="table-scroll"><table class="ci-table"><thead><tr><th>Run</th><th>Why</th>'
                     '<th>Where</th><th>Started</th><th>Now</th></tr></thead><tbody>%s</tbody></table></div>' % rows)
     else:
@@ -1648,10 +1680,10 @@ def ci_runs_section(data: dict, tz) -> str:
         items.append(
             '<details class="ci-run %s" data-run="%s"><summary>'
             '<span class="ci-mark" role="img" aria-label="%s">%s</span>'
-            '<span class="ci-run-name">%s</span><span class="ci-why">%s</span>'
+            '<span class="ci-line"><b class="ci-run-name">%s</b><span class="ci-why"> &middot; %s</span></span>'
             '<span class="ci-where">%s</span><span class="ci-total">%s</span><span class="ci-done">%s</span></summary>'
             '%s</details>' % (cls, esc(f.get('run_id', '')), word, mark, _ci_run_label(f), esc(f.get('why') or ''),
-                              _ci_where(f.get('where'))[1], _ci_dur(_ci_num(f.get('total_s'))), _ci_clock(f.get('completed_at'), tz),
+                              _ci_where(f.get('where'))[1], _ci_dur(_ci_num(f.get('total_s'))), _ci_clock(f.get('completed_at'), tz, generated),
                               _ci_waterfall(f)))
     done = ('<h3 class="ci-h">Latest %d finished</h3><div class="ci-runs-list">%s</div>%s' % (len(finished), ''.join(items), _ci_legend())
             if items else '<h3 class="ci-h">Latest finished</h3><p class="note">No finished runs yet.</p>')

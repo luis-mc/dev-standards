@@ -2931,7 +2931,7 @@ def contents_rail_toggle(fx):
 
 # ------------------------------------------------------------------ CI runs section (R5.51)
 def ci_fixture(n_finished=3):
-    where = {'kind': 'pool', 'name': 'host1-pool-app1'}
+    where = {'kind': 'pool', 'name': 'host1-pool-app1', 'host': 'host1'}
     steps = [{'job': 'unit', 'name': 'Checkout', 'start_s': 82, 'duration_s': 8, 'conclusion': 'success'},
              {'job': 'unit', 'name': 'Unit <tests>', 'start_s': 90, 'duration_s': 500, 'conclusion': 'failure'}]
     done = [{'run_id': 100 + i, 'run_number': 40 + i, 'workflow': 'CI', 'conclusion': ('failure' if i == 1 else 'success'),
@@ -2942,7 +2942,7 @@ def ci_fixture(n_finished=3):
     return {'generated_at': '2026-11-04T14:33:00Z', 'repo': 'owner/example-app',
             'active': [{'run_id': 9, 'run_number': 50, 'workflow': 'CI', 'why': 'push to main', 'where': dict(where),
                         'started_at': '2026-11-04T14:30:00Z', 'now': {'step': 'Unit tests', 'since': '2026-11-04T14:30:20Z'}},
-                       {'run_id': 10, 'run_number': 51, 'workflow': 'CI', 'why': 'agent branch DL1-x', 'where': {'kind': 'windows', 'name': 'host1-win'},
+                       {'run_id': 10, 'run_number': 51, 'workflow': 'CI', 'why': 'agent branch DL1-x', 'where': {'kind': 'windows', 'name': 'host1-win', 'host': 'host1'},
                         'started_at': '2026-11-04T14:28:00Z', 'now': None,
                         'slot_wait': {'since': '2026-11-04T14:28:05Z', 'fallback_in_min': 5}}],
             'finished': done}
@@ -2978,8 +2978,8 @@ def ci_runs_section_is_folded_with_one_summary_line(fx):
     node = R.find(root, 'details', 'ci-runs')
     assert node is not None and 'open' not in node.attrs, 'folded by default'
     assert R.text_of(R.find(node, 'summary')).startswith('CI runs')
-    assert '2 in progress' in out and '3 finished shown' in out and 'median 11m 00s' in out
-    assert '1 fallback ' in out and '1 failure' in out
+    line = R.text_of(R.find(node, 'span', 'fold-count'))
+    assert line == '2 in progress \u00b7 3 latest \u00b7 median 11m 00s \u00b7 1 fallback \u00b7 1 failed', line
     assert 'CI runs' in R.text_of(R.find(root, 'nav'))
 
 
@@ -2999,8 +2999,12 @@ def ci_runs_in_progress_table(fx):
     rows = R.find_all(R.find(root, 'table', 'ci-table'), 'tr')[1:]
     assert len(rows) == 2
     first, second = R.text_of(rows[0]), R.text_of(rows[1])
-    assert '#50 CI' in first and 'push to main' in first and 'Linux pool' in first and 'Unit tests, 2m 40s' in first, first
-    assert 'Windows' in second and 'Waiting for a slot (4m 55s so far); fallback to the cloud in 5 min' in second, second
+    assert '#50 CI' in first and 'push to main' in first and 'Linux pool \u00b7 host1' in first and 'Unit tests \u00b7 2m 40s' in first, first
+    assert 'host1-pool-app1' not in first
+    assert 'ci-chip-run' in R.find(rows[0], 'span', 'ci-chip').attrs['class']
+    assert 'Windows service \u00b7 host1' in second and 'waiting for a slot \u00b7 4m \u00b7 fallback in 5m' in second, second
+    assert 'ci-chip-wait' in R.find(rows[1], 'span', 'ci-chip').attrs['class']
+    assert '15:30' in first and '04 Nov 15:30' not in first, 'today shows HH:MM'
 
 
 @test
@@ -3012,11 +3016,20 @@ def ci_runs_finished_rows_and_waterfall(fx):
     assert all('open' not in r.attrs for r in runs)
     assert 'ci-pass' in runs[0].attrs['class'] and 'ci-fail' in runs[1].attrs['class']
     names = [R.text_of(R.find(li, 'span', 'ci-step-name')) for li in R.find_all(runs[1], 'li', 'ci-step')]
-    assert names == ['GitHub queue', 'Slot wait', 'unit \u00b7 Checkout', 'unit \u00b7 Unit <tests>'], names
+    assert names == ['GitHub queue', 'Slot wait', 'Checkout', 'Unit <tests>'], names
+    jobs = R.find_all(runs[1], 'li', 'ci-job')
+    assert len(jobs) == 1 and R.find(jobs[0], 'details', 'ci-job-fold') is not None and 'open' not in R.find(jobs[0], 'details').attrs
+    assert R.text_of(R.find(R.find(jobs[0], 'summary'), 'span', 'ci-step-name')) == 'unit'
     bars = [R.find(li, 'span', 'ci-bar').attrs['class'] for li in R.find_all(runs[1], 'li', 'ci-step')]
     assert [b.split()[1] for b in bars] == ['ci-bar-queue', 'ci-bar-slot', 'ci-bar-step', 'ci-bar-fail'], bars
+    job_bar = R.find(R.find(jobs[0], 'summary'), 'span', 'ci-bar').attrs['class']
+    assert job_bar.split()[1] == 'ci-bar-fail', 'a job with a failed step is drawn in the failure colour'
     assert 'Slot wait, then fallback to cloud' in R.text_of(runs[2])
-    assert 'ci-tag-cloud' in R.text_of(R.find(runs[2], 'span', 'ci-where')) or R.find(runs[2], 'span', 'ci-tag-cloud') is not None
+    assert R.text_of(R.find(runs[2], 'span', 'ci-tag-cloud')) == 'Claude cloud \u00b7 fallback'
+    assert R.text_of(R.find(runs[0], 'span', 'ci-tag-pool')) == 'Linux pool \u00b7 host1'
+    assert R.text_of(R.find(runs[0], 'span', 'ci-line')) == '#40 CI \u00b7 ready PR #140'
+    assert R.find(runs[0], 'b', 'ci-run-name') is not None
+    assert R.text_of(R.find(runs[0], 'span', 'ci-done')) == '15:10', 'today: HH:MM only'
     legend = R.text_of(R.find(root, 'p', 'ci-legend'))
     assert legend == 'GitHub queueSlot waitJob stepFailed step'
 
@@ -3034,6 +3047,46 @@ def ci_runs_shows_at_most_twenty_and_escapes(fx):
 
 @test
 @with_fixture
+def ci_runs_hosted_chip_uses_the_os_and_never_the_runner_name(fx):
+    data = ci_fixture(1)
+    data['finished'][0]['where'] = {'kind': 'hosted', 'name': 'GitHub Actions 1000005700', 'os': 'ubuntu'}
+    data['finished'][0]['completed_at'] = '2026-11-02T09:05:00Z'
+    out = render_ci(fx, data)
+    assert 'GitHub-hosted \u00b7 ubuntu' in out and '1000005700' not in out
+    assert R.text_of(R.find(R.parse_dom(out), 'span', 'ci-done')) == '02 Nov 10:05', 'other day: DD Mon HH:MM'
+
+
+@test
+@with_fixture
+def ci_runs_many_jobs_make_one_row_per_job(fx):
+    data = ci_fixture(1)
+    steps = []
+    for j in range(6):
+        for k in range(14):
+            steps.append({'job': 'job%d' % j, 'name': 'Step %d ' % k + 'x' * 60, 'start_s': 90 + j * 20 + k, 'duration_s': 1, 'conclusion': 'success'})
+    data['finished'][0]['steps'] = steps
+    out = render_ci(fx, data)
+    root = R.parse_dom(out)
+    jobs = R.find_all(root, 'li', 'ci-job')
+    assert len(jobs) == 6
+    assert all(len(R.find_all(j, 'li', 'ci-step')) == 14 for j in jobs), 'every step stays reachable'
+    assert all('open' not in R.find(j, 'details').attrs for j in jobs)
+    assert 'title="Step 0 ' in out, 'full name in the title'
+    assert 'white-space: nowrap' in R.structure_css()
+
+
+@test
+@with_fixture
+def ci_runs_now_chip_without_a_clock_still_renders(fx):
+    data = ci_fixture(1)
+    data['active'] = [{'run_id': 1, 'run_number': 1, 'workflow': 'CI', 'why': 'x', 'where': {'kind': 'hosted', 'os': 'windows'},
+                       'started_at': '2026-11-04T14:30:00Z', 'now': {'step': 'Build'}}]
+    out = render_ci(fx, data)
+    assert 'GitHub-hosted \u00b7 windows' in out and '>Build<' in out
+
+
+@test
+@with_fixture
 def ci_runs_empty_lists(fx):
     out = render_ci(fx, {'generated_at': '2026-11-04T14:33:00Z', 'active': [], 'finished': []})
     assert '0 in progress' in out and 'No run is in progress.' in out and 'No finished runs yet.' in out
@@ -3044,7 +3097,7 @@ def ci_runs_css_uses_tokens_only():
     css = R.structure_css()
     block = css[css.index('CI runs section'):css.index('Release header and the timeline')]
     assert not re.search(r'#[0-9a-fA-F]{3,8}\b|rgb\(|hsl\(', block), 'no colour value in the structure css'
-    assert 'tabular-nums' in block and '@media (max-width: 40rem)' in block
+    assert 'tabular-nums' in block and 'ci-chip-wait' in block and 'color-mix' in block and '@media (max-width: 40rem)' in block
 
 
 @test

@@ -77,7 +77,7 @@ The two pages are HTML. Section 0 of each is always "Status and checklist". It h
 
 ### CI runs section (D48)
 
-Full Progress ends with a folded section, `CI runs`. The summary line reads, for example, `2 in progress · 20 finished shown · median 11m 00s · 1 fallback · 1 failure`. Opened, it shows five figures (median and p90 run time, median slot wait, fallbacks to the cloud, passed out of shown), a table of runs in progress, and the latest 20 finished runs. A finished row opens to a waterfall: one bar per step on one time scale, in the order GitHub queue, slot wait, then each job step. A failed step is red. A legend names the bar colours. Rules: ARTIFACTSPEC R5.51.
+Full Progress ends with a folded section, `CI runs`. The summary line reads, for example, `2 in progress · 20 latest · median 11m 00s · 1 fallback · 1 failed`. Opened, it shows five figures (median and p90 run time, median slot wait, fallbacks to the cloud, passed out of shown), a table of runs in progress, and the latest 20 finished runs. The Where column is one chip, for example `Linux pool · host1` or `GitHub-hosted · ubuntu`; Now is a chip too (`Unit tests · 4m 12s`, or an amber `waiting for a slot · 3m · fallback in 7m`). A finished row opens to a waterfall on one time scale: GitHub queue (grey), slot wait (amber), then one row per job (teal) with its own bar. A job opens to its steps. A failed step is red. A legend names the bar colours. Rules: ARTIFACTSPEC R5.51.
 
 ![The CI runs section, opened, in the light theme](ci-runs-section.png)
 
