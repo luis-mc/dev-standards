@@ -1487,6 +1487,184 @@ def _history(rows: list) -> str:
             '<tbody>\n%s\n</tbody></table></div>\n' % body)
 
 
+# ------------------------------------------------------------------ CI runs section (R5.51, owner decision D48)
+CI_RUNS_TITLE = 'CI runs'
+CI_KINDS = {'pool': 'Linux pool', 'windows': 'Windows', 'hosted': 'GitHub-hosted', 'cloud': 'Claude cloud'}
+CI_RESULT = {'success': ('&#10003;', 'Passed', 'ci-pass'), 'failure': ('&#10007;', 'Failed', 'ci-fail'),
+             'cancelled': ('&#8211;', 'Cancelled', 'ci-cancel')}
+
+
+def _ci_num(value):
+    """A non-negative whole number of seconds, or None."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0 or value != value:
+        return None
+    return int(round(value))
+
+
+def _ci_dur(seconds) -> str:
+    """42s, 3m 05s, 1h 02m."""
+    if seconds is None:
+        return '&ndash;'
+    seconds = int(seconds)
+    if seconds < 60:
+        return '%ds' % seconds
+    if seconds < 3600:
+        return '%dm %02ds' % (seconds // 60, seconds % 60)
+    return '%dh %02dm' % (seconds // 3600, seconds % 3600 // 60)
+
+
+def _ci_percentile(values: list, pct: int):
+    """Nearest-rank percentile of a list of numbers; None when empty."""
+    if not values:
+        return None
+    ordered = sorted(values)
+    rank = max(1, -(-len(ordered) * pct // 100))
+    return ordered[rank - 1]
+
+
+def _ci_median(values: list):
+    if not values:
+        return None
+    ordered = sorted(values)
+    mid = len(ordered) // 2
+    return ordered[mid] if len(ordered) % 2 else (ordered[mid - 1] + ordered[mid]) / 2.0
+
+
+def _ci_clock(value, tz) -> str:
+    moment = _parse_iso(value) if value else None
+    return '&ndash;' if moment is None else _fmt_stamp(moment.astimezone(tz))
+
+
+def _ci_where(where) -> tuple:
+    where = where if isinstance(where, dict) else {}
+    kind = where.get('kind') if where.get('kind') in CI_KINDS else 'hosted'
+    name = str(where.get('name') or '')
+    tag = '<span class="ci-tag ci-tag-%s">%s</span>' % (kind, esc(CI_KINDS[kind]))
+    return kind, tag + ('<span class="ci-where-name">%s</span>' % esc(name) if name else '')
+
+
+def ci_runs_valid(data) -> bool:
+    return isinstance(data, dict) and isinstance(data.get('active', []), list) and isinstance(data.get('finished', []), list)
+
+
+def _ci_segments(entry: dict) -> list:
+    """[(label, class, start_s, duration_s)] of the waterfall of one finished run, in order: GitHub queue, slot wait,
+    then every job step. One time scale: seconds from the start of the run."""
+    segs = []
+    queued, slot_wait = _ci_num(entry.get('queued_s')), _ci_num(entry.get('slot_wait_s'))
+    if queued:
+        segs.append(('GitHub queue', 'ci-bar-queue', 0, queued))
+    if slot_wait:
+        start = _ci_num(entry.get('slot_start_s'))
+        label = 'Slot wait, then fallback to cloud' if entry.get('fallback') else 'Slot wait'
+        segs.append((label, 'ci-bar-slot', queued or 0 if start is None else start, slot_wait))
+    for step in entry.get('steps') or []:
+        if not isinstance(step, dict):
+            continue
+        start, dur = _ci_num(step.get('start_s')), _ci_num(step.get('duration_s'))
+        if start is None or dur is None:
+            continue
+        failed = step.get('conclusion') == 'failure'
+        label = '%s &middot; %s' % (esc(step.get('job') or ''), esc(step.get('name') or '')) if step.get('job') else esc(step.get('name') or '')
+        segs.append((label, 'ci-bar-fail' if failed else 'ci-bar-step', start, dur))
+    return segs
+
+
+def _ci_waterfall(entry: dict) -> str:
+    segs = _ci_segments(entry)
+    scale = max([_ci_num(entry.get('total_s')) or 0] + [s + d for _l, _c, s, d in segs]) or 1
+    rows = []
+    for label, cls, start, dur in segs:
+        left, width = 100.0 * start / scale, max(100.0 * dur / scale, 0.5)
+        left = min(left, 100.0 - width)
+        rows.append('<li class="ci-step"><span class="ci-step-name">%s</span>'
+                    '<span class="ci-track"><span class="ci-bar %s" style="left:%.2f%%;width:%.2f%%"></span></span>'
+                    '<span class="ci-step-time">%s</span></li>' % (label, cls, left, width, _ci_dur(dur)))
+    if not rows:
+        return '<p class="note">No step times were recorded for this run.</p>'
+    return '<ol class="ci-waterfall" aria-label="Steps of this run on one time scale, total %s">%s</ol>' % (
+        _ci_dur(_ci_num(entry.get('total_s'))).replace('&ndash;', 'unknown'), ''.join(rows))
+
+
+def _ci_legend() -> str:
+    items = (('ci-bar-queue', 'GitHub queue'), ('ci-bar-slot', 'Slot wait'), ('ci-bar-step', 'Job step'), ('ci-bar-fail', 'Failed step'))
+    return ('<p class="ci-legend">%s</p>' % ''.join(
+        '<span class="ci-legend-item"><span class="ci-swatch %s" aria-hidden="true"></span>%s</span>' % (c, esc(t)) for c, t in items))
+
+
+def _ci_now(entry: dict, generated) -> str:
+    wait = entry.get('slot_wait')
+    if isinstance(wait, dict):
+        since = _parse_iso(wait.get('since')) if wait.get('since') else None
+        mins = _ci_num(wait.get('fallback_in_min'))
+        waited = ('%s so far' % _ci_dur(_ci_num((generated - since).total_seconds()))) if since and generated else ''
+        tail = ('fallback to the cloud in %d min' % mins) if mins is not None else 'no fallback set'
+        return 'Waiting for a slot' + (' (%s)' % waited if waited else '') + '; ' + tail
+    now = entry.get('now')
+    if isinstance(now, dict) and now.get('step'):
+        since = _parse_iso(now.get('since')) if now.get('since') else None
+        spent = ', %s' % _ci_dur(_ci_num((generated - since).total_seconds())) if since and generated else ''
+        return '%s%s' % (esc(now['step']), spent)
+    return 'Queued on GitHub'
+
+
+def ci_runs_section(data: dict, tz) -> str:
+    """The inner HTML of the CI runs section (R5.51): one closed <details> with a one-line summary, the figures,
+    the In progress table, the latest 20 finished runs (each opens to a waterfall) and the legend.
+    Same data, same bytes: it reads only `data`, never the clock."""
+    generated = _parse_iso(data.get('generated_at')) if data.get('generated_at') else None
+    active = [a for a in data.get('active') or [] if isinstance(a, dict)]
+    finished = [f for f in data.get('finished') or [] if isinstance(f, dict)][:20]
+    totals = [t for t in (_ci_num(f.get('total_s')) for f in finished) if t is not None]
+    waits = [w for w in (_ci_num(f.get('slot_wait_s')) for f in finished) if w]
+    fallbacks = sum(1 for f in finished if f.get('fallback') or (f.get('where') or {}).get('kind') == 'cloud')
+    failures = sum(1 for f in finished if f.get('conclusion') == 'failure')
+    passed = sum(1 for f in finished if f.get('conclusion') == 'success')
+    median, p90 = _ci_median(totals), _ci_percentile(totals, 90)
+    summary = ('%d in progress &middot; %d finished shown &middot; median %s &middot; %d fallback%s &middot; %d failure%s' % (
+        len(active), len(finished), _ci_dur(int(round(median))) if median is not None else '&ndash;',
+        fallbacks, '' if fallbacks == 1 else 's', failures, '' if failures == 1 else 's'))
+    figures = [('Median run time', _ci_dur(int(round(median))) if median is not None else '&ndash;'),
+               ('p90 run time', _ci_dur(p90) if p90 is not None else '&ndash;'),
+               ('Median slot wait', _ci_dur(int(round(_ci_median(waits)))) if waits else '&ndash;'),
+               ('Fallbacks to cloud', str(fallbacks)),
+               ('Passed', '%d of %d' % (passed, len(finished)))]
+    fig_html = '<dl class="ci-figures">%s</dl>' % ''.join('<div><dt>%s</dt><dd>%s</dd></div>' % (esc(k), v) for k, v in figures)
+
+    if active:
+        rows = ''.join(
+            '<tr><td data-label="Run">%s</td><td data-label="Why">%s</td><td data-label="Where">%s</td>'
+            '<td data-label="Started">%s</td><td data-label="Now">%s</td></tr>' % (
+                _ci_run_label(a), esc(a.get('why') or ''), _ci_where(a.get('where'))[1],
+                _ci_clock(a.get('started_at'), tz), _ci_now(a, generated)) for a in active)
+        progress = ('<h3 class="ci-h">In progress</h3><div class="table-scroll"><table class="ci-table"><thead><tr><th>Run</th><th>Why</th>'
+                    '<th>Where</th><th>Started</th><th>Now</th></tr></thead><tbody>%s</tbody></table></div>' % rows)
+    else:
+        progress = '<h3 class="ci-h">In progress</h3><p class="note">No run is in progress.</p>'
+
+    items = []
+    for f in finished:
+        mark, word, cls = CI_RESULT.get(f.get('conclusion'), CI_RESULT['cancelled'])
+        items.append(
+            '<details class="ci-run %s" data-run="%s"><summary>'
+            '<span class="ci-mark" role="img" aria-label="%s">%s</span>'
+            '<span class="ci-run-name">%s</span><span class="ci-why">%s</span>'
+            '<span class="ci-where">%s</span><span class="ci-total">%s</span><span class="ci-done">%s</span></summary>'
+            '%s</details>' % (cls, esc(f.get('run_id', '')), word, mark, _ci_run_label(f), esc(f.get('why') or ''),
+                              _ci_where(f.get('where'))[1], _ci_dur(_ci_num(f.get('total_s'))), _ci_clock(f.get('completed_at'), tz),
+                              _ci_waterfall(f)))
+    done = ('<h3 class="ci-h">Latest %d finished</h3><div class="ci-runs-list">%s</div>%s' % (len(finished), ''.join(items), _ci_legend())
+            if items else '<h3 class="ci-h">Latest finished</h3><p class="note">No finished runs yet.</p>')
+    return ('<details class="status-fold ci-runs" data-group="ci-runs"><summary><strong>%s</strong>'
+            '<span class="fold-count">%s</span></summary>\n<div class="ci-body">%s%s%s</div></details>\n'
+            % (esc(CI_RUNS_TITLE), summary, fig_html, progress, done))
+
+
+def _ci_run_label(entry: dict) -> str:
+    number = entry.get('run_number') or entry.get('run_id') or ''
+    return '<span class="ci-num">#%s</span> %s' % (esc(number), esc(entry.get('workflow') or ''))
+
+
 def _fmt_day(iso: str) -> str:
     year, month, day = iso.split('-')
     return '%02d %s' % (int(day), MONTHS[int(month) - 1])
@@ -1695,12 +1873,15 @@ def feature_links_of(manifest: dict, links=None) -> dict:
 
 
 def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, plugin_dir: str,
-                    record_dir: str, stamp_text: str, stamp_iso: str, links=None) -> str:
+                    record_dir: str, stamp_text: str, stamp_iso: str, links=None, ci_runs=None) -> str:
     """The artifact's HTML: a complete document for a feature artifact (R5.27), a fragment beginning
     with <title> for the full-progress artifact (R5.29). Same inputs, same bytes (R7.4).
 
     `links` is None for the committed render, whose links to feature files are relative (R5.30); the
-    publish copy passes {feature key: (href, path text)} (R5.31)."""
+    publish copy passes {feature key: (href, path text)} (R5.31).
+
+    `ci_runs` is the parsed .delivery/ci-runs.json (R5.51). Full Progress draws the CI runs section from it as its
+    last section; with None, or a file of the wrong shape, it draws nothing."""
     kind, entry = _kind_entry(manifest, key)
     problems = []
     title = str(entry.get('title', ''))
@@ -1758,6 +1939,8 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
         if feature_problems:
             raise ContentError(feature_problems)
     sections += [(s['title'], s['html']) for s in content['sections']]
+    if kind == 'full-progress' and ci_runs_valid(ci_runs):
+        sections.append((CI_RUNS_TITLE, ci_runs_section(ci_runs, moment.tzinfo or timezone.utc)))
     if kind == 'feature':
         if decisions:
             sections.append(('Decisions', _decisions(decisions)))

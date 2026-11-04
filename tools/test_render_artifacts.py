@@ -2929,6 +2929,138 @@ def contents_rail_toggle(fx):
     assert '.layout[data-contents="collapsed"]' in R.structure_css()
 
 
+# ------------------------------------------------------------------ CI runs section (R5.51)
+def ci_fixture(n_finished=3):
+    where = {'kind': 'pool', 'name': 'host1-pool-app1'}
+    steps = [{'job': 'unit', 'name': 'Checkout', 'start_s': 82, 'duration_s': 8, 'conclusion': 'success'},
+             {'job': 'unit', 'name': 'Unit <tests>', 'start_s': 90, 'duration_s': 500, 'conclusion': 'failure'}]
+    done = [{'run_id': 100 + i, 'run_number': 40 + i, 'workflow': 'CI', 'conclusion': ('failure' if i == 1 else 'success'),
+             'why': 'ready PR #%d' % (140 + i), 'where': dict(where), 'queued_s': 12, 'slot_wait_s': 70, 'slot_start_s': 12,
+             'total_s': 600 + 60 * i, 'completed_at': '2026-11-04T14:10:00Z', 'steps': steps} for i in range(n_finished)]
+    if n_finished > 2:
+        done[2].update({'fallback': True, 'where': {'kind': 'cloud', 'name': 'cloud-session-1'}, 'conclusion': 'cancelled'})
+    return {'generated_at': '2026-11-04T14:33:00Z', 'repo': 'owner/example-app',
+            'active': [{'run_id': 9, 'run_number': 50, 'workflow': 'CI', 'why': 'push to main', 'where': dict(where),
+                        'started_at': '2026-11-04T14:30:00Z', 'now': {'step': 'Unit tests', 'since': '2026-11-04T14:30:20Z'}},
+                       {'run_id': 10, 'run_number': 51, 'workflow': 'CI', 'why': 'agent branch DL1-x', 'where': {'kind': 'windows', 'name': 'host1-win'},
+                        'started_at': '2026-11-04T14:28:00Z', 'now': None,
+                        'slot_wait': {'since': '2026-11-04T14:28:05Z', 'fallback_in_min': 5}}],
+            'finished': done}
+
+
+def render_ci(fx, data):
+    return R.render_artifact(fx.manifest, fx.registry, fx.contents, 'full-progress', PLUGIN, fx.record, STAMP_TEXT, STAMP_ISO,
+                             links={}, ci_runs=data)
+
+
+@test
+@with_fixture
+def ci_runs_absent_draws_nothing(fx):
+    plain = fx.render('full-progress')
+    assert 'data-group="ci-runs"' not in plain and '<h2><span class="section-number">&sect; 1</span>CI runs' not in plain
+    assert render_ci(fx, None).replace('\n', '') == fx.render('full-progress', links={}).replace('\n', '')
+    for bad in ([], 'x', {'active': 3}, {'finished': 'x'}):
+        assert 'data-group="ci-runs"' not in render_ci(fx, bad), bad
+
+
+@test
+@with_fixture
+def ci_runs_never_on_a_feature_artifact(fx):
+    out = R.render_artifact(fx.manifest, fx.registry, fx.contents, 'artifacts', PLUGIN, fx.record, STAMP_TEXT, STAMP_ISO, ci_runs=ci_fixture())
+    assert 'data-group="ci-runs"' not in out
+
+
+@test
+@with_fixture
+def ci_runs_section_is_folded_with_one_summary_line(fx):
+    out = render_ci(fx, ci_fixture())
+    root = R.parse_dom(out)
+    node = R.find(root, 'details', 'ci-runs')
+    assert node is not None and 'open' not in node.attrs, 'folded by default'
+    assert R.text_of(R.find(node, 'summary')).startswith('CI runs')
+    assert '2 in progress' in out and '3 finished shown' in out and 'median 11m 00s' in out
+    assert '1 fallback ' in out and '1 failure' in out
+    assert 'CI runs' in R.text_of(R.find(root, 'nav'))
+
+
+@test
+@with_fixture
+def ci_runs_figures(fx):
+    out = render_ci(fx, ci_fixture())
+    fig = R.text_of(R.find(R.parse_dom(out), 'dl', 'ci-figures'))
+    for want in ('Median run time11m 00s', 'p90 run time12m 00s', 'Median slot wait1m 10s', 'Fallbacks to cloud1', 'Passed1 of 3'):
+        assert want in fig, (want, fig)
+
+
+@test
+@with_fixture
+def ci_runs_in_progress_table(fx):
+    root = R.parse_dom(render_ci(fx, ci_fixture()))
+    rows = R.find_all(R.find(root, 'table', 'ci-table'), 'tr')[1:]
+    assert len(rows) == 2
+    first, second = R.text_of(rows[0]), R.text_of(rows[1])
+    assert '#50 CI' in first and 'push to main' in first and 'Linux pool' in first and 'Unit tests, 2m 40s' in first, first
+    assert 'Windows' in second and 'Waiting for a slot (4m 55s so far); fallback to the cloud in 5 min' in second, second
+
+
+@test
+@with_fixture
+def ci_runs_finished_rows_and_waterfall(fx):
+    root = R.parse_dom(render_ci(fx, ci_fixture()))
+    runs = R.find_all(root, 'details', 'ci-run')
+    assert [r.attrs['data-run'] for r in runs] == ['100', '101', '102']
+    assert all('open' not in r.attrs for r in runs)
+    assert 'ci-pass' in runs[0].attrs['class'] and 'ci-fail' in runs[1].attrs['class']
+    names = [R.text_of(R.find(li, 'span', 'ci-step-name')) for li in R.find_all(runs[1], 'li', 'ci-step')]
+    assert names == ['GitHub queue', 'Slot wait', 'unit \u00b7 Checkout', 'unit \u00b7 Unit <tests>'], names
+    bars = [R.find(li, 'span', 'ci-bar').attrs['class'] for li in R.find_all(runs[1], 'li', 'ci-step')]
+    assert [b.split()[1] for b in bars] == ['ci-bar-queue', 'ci-bar-slot', 'ci-bar-step', 'ci-bar-fail'], bars
+    assert 'Slot wait, then fallback to cloud' in R.text_of(runs[2])
+    assert 'ci-tag-cloud' in R.text_of(R.find(runs[2], 'span', 'ci-where')) or R.find(runs[2], 'span', 'ci-tag-cloud') is not None
+    legend = R.text_of(R.find(root, 'p', 'ci-legend'))
+    assert legend == 'GitHub queueSlot waitJob stepFailed step'
+
+
+@test
+@with_fixture
+def ci_runs_shows_at_most_twenty_and_escapes(fx):
+    data = ci_fixture(25)
+    data['finished'][0]['why'] = '<b>x</b>'
+    out = render_ci(fx, data)
+    assert len(R.find_all(R.parse_dom(out), 'details', 'ci-run')) == 20
+    assert '<b>x</b>' not in out and '&lt;b&gt;x&lt;/b&gt;' in out and 'Unit <tests>' not in out
+    assert out == render_ci(fx, data), 'same data, same bytes'
+
+
+@test
+@with_fixture
+def ci_runs_empty_lists(fx):
+    out = render_ci(fx, {'generated_at': '2026-11-04T14:33:00Z', 'active': [], 'finished': []})
+    assert '0 in progress' in out and 'No run is in progress.' in out and 'No finished runs yet.' in out
+
+
+@test
+def ci_runs_css_uses_tokens_only():
+    css = R.structure_css()
+    block = css[css.index('CI runs section'):css.index('Release header and the timeline')]
+    assert not re.search(r'#[0-9a-fA-F]{3,8}\b|rgb\(|hsl\(', block), 'no colour value in the structure css'
+    assert 'tabular-nums' in block and '@media (max-width: 40rem)' in block
+
+
+@test
+def ci_runs_read_from_the_record_root():
+    import project_artifacts as P
+    d = tempfile.mkdtemp(prefix='ci-runs-read-')
+    try:
+        assert P.read_ci_runs(d) is None
+        write(os.path.join(d, '.delivery', 'ci-runs.json'), '{bad')
+        assert P.read_ci_runs(d) is None
+        write(os.path.join(d, '.delivery', 'ci-runs.json'), json.dumps({'active': [], 'finished': []}))
+        assert P.read_ci_runs(d) == {'active': [], 'finished': []}
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
 def main() -> int:
     passed, failed = 0, 0
     names = sys.argv[1:]            # named cases: run the tests whose name contains one of them
