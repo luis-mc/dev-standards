@@ -334,3 +334,18 @@ A writes `queued_at` and `slot_at` lines at take and a `released_at` line at fre
 ```
 
 The watcher refreshes it each tick (at most once a minute). The Full Progress renderer reads it when it exists and draws section 11; with no file it draws nothing.
+
+## 13. Setup pattern for every plugin setup (owner request, 4 Nov 2026)
+
+Every setup in dev-standards (the delivery CI setup, `claude-setup`, `docs-setup`, `design-system-setup`, `tech-stack-setup`, `auth-setup`) follows the same pattern, so a user always knows what is happening and what to do next.
+
+1. **Plan first.** Before changing anything, show one plan: what it will install, configure and write (with paths), what it changes outside the repository, what needs the user (a yes, an administrator shell, a sign-in, a web setting, a secret), and about how long it takes.
+2. **Do the heavy lifting.** After a yes, the setup runs every install and configuration it can itself. It leaves to the user only what it cannot do (an elevated shell, a setting only in a web page, a secret). Each of those has exact steps, and the setup checks it afterwards.
+3. **Say each step.** One line per step while it runs: what it is doing, then done, or failed with the reason and the fix.
+4. **Finish with a summary** in three parts: *Done* (what changed, with paths), *Left for you* (numbered, exact steps), and *What you can do now* (the commands and features now available, each with a one-line example).
+5. **Safe to run again.** A second run says what is already set and changes only what is missing.
+
+| Agent | Applies it to |
+|---|---|
+| B (DL30) | `commands/delivery-ci-setup.md` and `delivery_runner_pool.py` |
+| D (DL33) | the five skill setups above and the delivery part of `claude-setup` |

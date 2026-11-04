@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T14:08+00:00",
+  "updated": "2026-11-04T14:12+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -899,6 +899,17 @@
       "expected": "04 Nov ~17:15",
       "changed": "2026-11-04T14:08+00:00",
       "expected_basis": "5+150+15 min, cloud agent from 14:25"
+    },
+    {
+      "id": "DL33",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Setup clarity: every plugin setup plans, does the work, summarises",
+      "detail": "claude-setup, docs-setup, design-system-setup, tech-stack-setup, auth-setup follow contract section 13",
+      "expected": "04 Nov ~17:15",
+      "changed": "2026-11-04T14:12+00:00",
+      "expected_basis": "5+120+15 min, cloud agent from 14:35"
     },
     {
       "id": "DS1",
