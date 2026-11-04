@@ -780,3 +780,69 @@ class ServiceFolderTests(unittest.TestCase):
         self.assertEqual(P.service_folder('"C:\\r\\a\\bin\\RunnerService.exe"'), "C:/r/a")
         self.assertEqual(P.service_folder('C:\\r\\a\\RunnerService.exe -x'), "C:/r/a")
         self.assertEqual(P.service_folder(None), "")
+
+
+# --- DL41: the pool command (fixtures only) -------------------------------------------------------------------------------
+
+class PoolCommandTests(unittest.TestCase):
+    def run_cmd(self, action, *extra, probe=None):
+        from unittest import mock
+        import argparse
+        probe = probe or FakeProbe(dict(FILES))
+        probe.memory_gib = lambda: (32.0, 4.0)
+        probe.cpu_count = lambda: 8
+        args = argparse.Namespace(action=action, repos=None, windows_repos=None, pool="main", total_gib=None, used_gib=None,
+                                  cpus=None, docker_gib=None, largest_shard_gib=None, yes=False, yes_delete=None)
+        for k, v in zip(extra[::2], extra[1::2]):
+            setattr(args, k, v)
+        out = StringIO()
+        with mock.patch.object(P, "Probe", lambda: probe), redirect_stdout(out):
+            rc = S.cmd_pool(args, ".")
+        return rc, out.getvalue()
+
+    def test_cap_measured_without_flags(self):
+        rc, text = self.run_cmd("pool-plan")
+        self.assertEqual(rc, 0)
+        self.assertIn("Pool cap:", text)
+
+    def test_flags_override_measured(self):
+        _, a = self.run_cmd("pool-plan")
+        _, b = self.run_cmd("pool-plan", "total_gib", 64.0, "cpus", 16.0)
+        self.assertNotEqual([x for x in a.splitlines() if x.startswith("Pool cap")],
+                            [x for x in b.splitlines() if x.startswith("Pool cap")])
+
+    def test_unmeasurable_asks_for_numbers(self):
+        probe = FakeProbe(dict(FILES))
+        from unittest import mock
+        import argparse
+        probe.memory_gib = lambda: None
+        probe.cpu_count = lambda: None
+        args = argparse.Namespace(action="pool-plan", repos=None, windows_repos=None, pool="main", total_gib=None,
+                                  used_gib=None, cpus=None, docker_gib=None, largest_shard_gib=None)
+        err = StringIO()
+        from contextlib import redirect_stderr
+        with mock.patch.object(P, "Probe", lambda: probe), redirect_stderr(err):
+            self.assertEqual(S.cmd_pool(args, "."), 1)
+        self.assertIn("--total-gib", err.getvalue())
+
+    def test_derived_repos_named_in_plan(self):
+        _, text = self.run_cmd("pool-plan")
+        self.assertIn("none named, taken from GitHub", text)
+        self.assertIn("owner/example-app", text)
+
+    def test_named_repos_no_derived_line(self):
+        _, text = self.run_cmd("pool-plan", "repos", "owner/example-app")
+        self.assertNotIn("none named", text)
+
+    def test_run_prints_plan_then_summary(self):
+        _, text = self.run_cmd("pool-run")
+        self.assertLess(text.index("Plan (nothing has changed yet)"), text.index("Left for you"))
+        self.assertIn("What you can do now", text)
+
+    def test_check_uses_step_action(self):
+        from unittest import mock
+        calls = []
+        orig = P.default_check
+        with mock.patch.object(P, "default_check", lambda st, pr=None: calls.append(st["action"]) or False):
+            self.run_cmd("pool-run", "yes", True)
+        self.assertTrue(all(a != "windows-service" for a in calls))
