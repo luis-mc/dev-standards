@@ -124,6 +124,8 @@ flowchart LR
 
 **R5.11** — A release's Expected time is the end of its last phase. Without `--expected`, a write sets it from the phases; an `--expected` that differs is refused.
 
+**R5.11a** — A release has a number, `RELEASE-n`. `--release` takes the next one past the delivery ledger and the record; `--release N` sets or corrects it and refuses a number in use. A phase may cross midnight: its end rolls to the next day. When the ledger knows the number of an Item's `RELEASE-n` lead, `check` gives the exact `set-task-status <id> --release <n>` command.
+
 **R5.12** — A finished feature artifact can be retired. Its tasks and decisions are kept. Its file and content are deleted.
 
 **R5.13** — `promote-to-spec` writes a feature artifact's content to a feature spec in the luismc-docs template.

@@ -575,6 +575,32 @@ def next_release_number(tasks):
     return max([release_number(t) or 0 for t in tasks if isinstance(t, dict)], default=0) + 1
 
 
+def release_arg(text):
+    """`--release N`: a positive whole number."""
+    if not re.fullmatch(r'[1-9]\d{0,8}', str(text).strip()):
+        raise argparse.ArgumentTypeError('--release takes no value or a positive whole number, not "%s"' % text)
+    return int(text)
+
+
+def ledger_release_numbers(root):
+    """R5.45: the release numbers the delivery ledger records (`trains[].release_no`); read only, never written.
+    An empty set when there is no ledger or it cannot be read."""
+    if not root:
+        return set()
+    try:
+        with open(os.path.join(str(root), '.delivery', 'ledger.json'), encoding='utf-8') as fh:
+            raw = json.load(fh)
+    except (OSError, ValueError):
+        return set()
+    trains = raw.get('trains') if isinstance(raw, dict) else None
+    out = set()
+    for t in trains if isinstance(trains, list) else []:
+        n = t.get('release_no') if isinstance(t, dict) else None
+        if isinstance(n, int) and not isinstance(n, bool) and n > 0:
+            out.add(n)
+    return out
+
+
 def migrate_releases(registry):
     """R5.45: number the rows that still say `"release": true`, oldest `changed` first, ties by ID, after the
     highest number in use. Returns the IDs numbered; the next writing command writes them."""
@@ -1022,6 +1048,7 @@ def validate_structure(rec):
     feat_by_name = {e.get('key'): e for e in feats}
     feat_by_name.update({x.get('key'): x for x in rf if x.get('key') not in feat_by_name})    # R4.33: a retired key stays a valid owner
     seen = {}
+    ledger_numbers = ledger_release_numbers(session_root(str(rec.dir)))
     for t in tasks:
         if not isinstance(t, dict):
             f('R4.5', 'registry.json', 'a task is not an object')
@@ -1069,7 +1096,7 @@ def validate_structure(rec):
                 f('R5.34a', 'registry.json', '%s: waits_on must be one of %s' % (label, ', '.join(WAITS_ON)))
             elif isinstance(st, str) and st in statuses and st not in ('Waiting', 'On hold'):
                 f('R5.34a', 'registry.json', '%s: waits_on belongs on a Waiting or On hold row, not on a %s row' % (label, st))
-        for req, msg in release_problems(t, {x.get('id'): x for x in tasks if isinstance(x, dict)}) + started_problems(t) + release_label_problems(t):
+        for req, msg in release_problems(t, {x.get('id'): x for x in tasks if isinstance(x, dict)}) + started_problems(t) + release_label_problems(t, ledger_numbers):
             f(req, 'registry.json', '%s: %s' % (label, msg))
         ex = t.get('expected')
         if isinstance(ex, str) and isinstance(st, str) and st in statuses:
@@ -1598,6 +1625,7 @@ def parse_phases(specs, now_dt):
             raise Fail(1, '--phase "" clears the phases; give it alone')
         return []
     out = []
+    shift = 0                # whole days a phase before this one rolled over midnight (R5.40)
     for spec in specs:
         name, sep, span = str(spec).partition('=')
         name = name.strip()
@@ -1609,6 +1637,12 @@ def parse_phases(specs, now_dt):
         if not sep:
             raise Fail(1, '--phase "%s": use NAME=HH:MM-HH:MM' % spec)
         start, end = _phase_point(a, now_dt, spec), _phase_point(b, now_dt, spec)
+        timed = not any(_POINT_RE.match(x).group(1) for x in (a, b))     # HH:MM only: no date was given
+        if timed and shift:
+            start, end = start + timedelta(days=shift), end + timedelta(days=shift)
+        if timed and end < start:                    # R5.40: an end earlier than its start is the next day
+            end += timedelta(days=1)
+            shift += 1
         if end <= start:
             raise Fail(1, '--phase "%s": the end must be after the start' % spec)
         out.append({'name': name, 'start': start.isoformat(timespec='minutes'), 'end': end.isoformat(timespec='minutes')})
@@ -1696,11 +1730,15 @@ def dropped_problems(task, by_id):
 ITEM_LEAD_RE = re.compile(r'^RELEASE-(\d+)(?![\d\w])')
 
 
-def release_label_problems(task):
+def release_label_problems(task, ledger_numbers=()):
     """R5.45: [(requirement, message)] when a release's Item starts with a RELEASE-<n> that is not its stored number.
     The stored number is the name shown; the pages drop the other lead."""
     n = release_number(task)
     m = ITEM_LEAD_RE.match(str(task.get('item', ''))) if n is not None else None
+    if m and int(m.group(1)) != n and int(m.group(1)) in ledger_numbers:
+        return [('R5.45', 'Item starts with RELEASE-%s, the number the delivery ledger records, but the stored release '
+                 'number is %d, which is wrong; correct it with: set-task-status %s --release %s'
+                 % (m.group(1), n, task.get('id', '<id>'), m.group(1)))]
     if m and int(m.group(1)) != n:
         return [('R5.45', 'Item starts with RELEASE-%s but the stored release number is %d; the page shows RELEASE-%d '
                  '(correct the Item with set-task-status --item)' % (m.group(1), n, n))]
@@ -1823,12 +1861,12 @@ def phase_expected(task):
     return '%02d %s ~%02d:%02d' % (end.day, MONTHS[end.month - 1], end.hour, end.minute)
 
 
-def apply_release_fields(task, by_id, args, now_dt, expected_given=True):
+def apply_release_fields(task, by_id, args, now_dt, root=None, expected_given=True):
     """Set or clear the release fields of `task` from --release/--phase/--risk/--rides; refuse a bad result.
     R5.41: without an explicit --expected, an open release's Expected follows the end of its last phase."""
     no_release = getattr(args, 'no_release', None)
     if no_release is not None and no_release.strip():
-        if getattr(args, 'release', False) or (args.rides is not None and args.rides.strip()):
+        if getattr(args, 'release', None) or (args.rides is not None and args.rides.strip()):
             raise Fail(1, '--no-release says the task ships nothing; it cannot be given with --release or --rides')
         reason = ' '.join(no_release.split())
         if len(reason) > NO_RELEASE_MAX:
@@ -1836,8 +1874,17 @@ def apply_release_fields(task, by_id, args, now_dt, expected_given=True):
         task['no_release'] = reason
     elif no_release is not None:
         task.pop('no_release', None)
-    if getattr(args, 'release', False) and release_number(task) is None:
-        task['release'] = next_release_number(list(by_id.values()))       # R5.45: never reused
+    rel = getattr(args, 'release', None)
+    if isinstance(rel, int) and rel is not True:
+        # R5.45: an explicit number; it sets the number of a task, or corrects a stored one
+        for x in by_id.values():
+            if x is not task and release_number(x) == rel:
+                raise Fail(1, '--release %d: %s is already RELEASE-%d' % (rel, x.get('id'), rel))
+        task['release'] = rel
+    elif rel and release_number(task) is None:
+        # R5.45: the next number: past the delivery ledger when it records more, else the record's highest + 1
+        ledger = ledger_release_numbers(root)
+        task['release'] = max(next_release_number(list(by_id.values())), max(ledger, default=0) + 1)
     if args.phase is not None:
         phases = parse_phases(args.phase, now_dt)
         if phases:
@@ -1942,7 +1989,7 @@ def cmd_task_add(args):
             row['expected_basis'] = basis
         if waits_on:
             row['waits_on'] = waits_on
-        apply_release_fields(row, {t.get('id'): t for t in rec.tasks()}, args, now.dt, expected_given=expected_given)
+        apply_release_fields(row, {t.get('id'): t for t in rec.tasks()}, args, now.dt, ctx.root, expected_given=expected_given)
         apply_started(row, args, now.dt)
         reg['tasks'].append(row)
         if owner != 'project':
@@ -2016,7 +2063,7 @@ def cmd_set_task_status(args):
                 task['waits_on'] = waits_on
             else:
                 task.pop('waits_on', None)
-        apply_release_fields(task, {t.get('id'): t for t in rec.tasks()}, args, now.dt, expected_given=args.expected is not None)
+        apply_release_fields(task, {t.get('id'): t for t in rec.tasks()}, args, now.dt, ctx.root, expected_given=args.expected is not None)
         apply_started(task, args, now.dt, prev)
         owner = task['owner']
         if owner != 'project':
@@ -3025,7 +3072,8 @@ def build_parser():
     s.add_argument('--app')
     s.add_argument('--status', default='To do')
     s.add_argument('--prefix')
-    s.add_argument('--release', action='store_true', help='this task is a release; it gets the next number, RELEASE-n (R5.40, R5.45)')
+    s.add_argument('--release', nargs='?', const=True, type=release_arg, metavar='N',
+                   help='this task is a release; it gets the next number, RELEASE-n, or N when given (which also corrects a stored number) (R5.40, R5.45)')
     s.add_argument('--phase', action='append', metavar='NAME=HH:MM-HH:MM',
                    help='a release phase (agents, join, ci, merge), repeatable; "" clears them')
     s.add_argument('--risk', metavar='LABEL=MINUTES', help='the named risk of a release, for example "+1 fix round=10"; "" clears it')
@@ -3043,7 +3091,8 @@ def build_parser():
     s.add_argument('--expected')
     s.add_argument('--basis', help='what sets the estimate; "" clears it (open statuses only)')
     s.add_argument('--history')
-    s.add_argument('--release', action='store_true', help='this task is a release; it gets the next number, RELEASE-n (R5.40, R5.45)')
+    s.add_argument('--release', nargs='?', const=True, type=release_arg, metavar='N',
+                   help='this task is a release; it gets the next number, RELEASE-n, or N when given (which also corrects a stored number) (R5.40, R5.45)')
     s.add_argument('--phase', action='append', metavar='NAME=HH:MM-HH:MM',
                    help='a release phase (agents, join, ci, merge), repeatable; "" clears them')
     s.add_argument('--risk', metavar='LABEL=MINUTES', help='the named risk of a release, for example "+1 fix round=10"; "" clears it')
