@@ -737,7 +737,8 @@ def run(pl, ask, ask_delete, say=print, execute=None, check=None):
             say('  Run this in an administrator shell, then answer:')
             for line in step['printed']:
                 say('    ' + line)
-            ok, detail = (bool(check(step)), 'checked')
+            own = step['action'] == 'windows-service-remove'  # the pool module checks its own removal step
+            ok, detail = (bool((default_check if own else check)(step)), 'checked')
             detail = 'done, checked' if ok else 'not done yet. Run the lines above, then run the setup again.'
         else:
             ok, detail = execute(step)
