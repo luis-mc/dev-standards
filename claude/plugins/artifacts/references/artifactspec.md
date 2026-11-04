@@ -1227,6 +1227,29 @@ double-click.
   `feature_artifacts_split_all_complete`, `feature_artifacts_split_none_complete`
   and `feature_artifacts_split_checker_finds_faults`.
 
+- **R5.51** — Full Progress draws a foldable section `CI runs` (owner decision
+  D48) as its last section, from `.delivery/ci-runs.json` (written by the
+  delivery plugin's `ci_runs.py`, git-ignored). With no file, a file that is
+  not JSON, or one whose `active` or `finished` is not a list, the section is
+  not drawn. A feature artifact never has it. It is drawn into the publish copy
+  (R5.31) only; the committed render never reads the file, so the committed
+  render stays the same for the same record (R7.4). The section is one
+  `<details class="status-fold ci-runs" data-group="ci-runs">`, closed, whose
+  `<summary>` holds the title and one line: runs in progress, finished runs
+  shown, median run time, fallbacks, failures. Inside, in order: the figures
+  (median and p90 run time, median slot wait, fallbacks to the cloud, passed out
+  of shown); the `In progress` table `Run | Why | Where | Started | Now` (the
+  current step with its time, or `Waiting for a slot` with the minutes until
+  the fallback); `Latest 20 finished`, at most 20 `<details class="ci-run">`
+  rows, each with a result mark that is a glyph (passed, failed, cancelled),
+  run number and workflow, why, where as a tag by kind (`pool`, `windows`,
+  `hosted`, `cloud`), total time and finish time; each row opens to a waterfall
+  with one bar per step on one time scale, in order GitHub queue, slot wait
+  (`Slot wait, then fallback to cloud` for a fallback run), then every job step,
+  a failed step in the failure token; and a legend of the bar colours. Times
+  are tabular figures and in the stamp's time zone. Colours come from the design
+  tokens only. Verified by the `ci_runs_*` cases in `tools/test_render_artifacts.py`.
+
 ---
 
 ## 6. Statuses and the checklist
@@ -1816,6 +1839,7 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 | Checklists and tiles equal the registry | INV-1, R5.8 |
 | Every feature task on the full-progress artifact, linked to the feature file by a relative link | R6.5, R5.30 |
 | Section 1 of Full Progress: the in-progress and complete folds, their open state and counts; the five columns, a Last updated time and a State per feature, sort buttons, rows in the default order | R5.6, R5.39, R5.44, R5.50 |
+| The CI runs section of Full Progress: absent without the file, folded, summary, figures, In progress table, 20 finished rows with waterfalls, legend, tokens only | R5.51 |
 | Release fields: `release`, `phases`, `risk`, `rides`; Expected is the end of the last phase | R5.40, R5.41 |
 | Release numbers: positive, unique, none left `true`; `RELEASE-<n>` on every release row | R5.45 |
 | Full Progress grouped by release; release line on rows that rode one | R5.46 |
