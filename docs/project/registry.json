@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T23:42+00:00",
+  "updated": "2026-11-04T23:45+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1373,6 +1373,40 @@
       "changed": "2026-11-04T23:42+00:00",
       "rides": "DL50",
       "started": "2026-11-04T23:29+00:00"
+    },
+    {
+      "id": "DL57",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-43: peer bug fixes",
+      "detail": "Join, CI and merge of peer bug reports received after RELEASE-42 (D78).",
+      "expected": "05 Nov ~00:50",
+      "changed": "2026-11-04T23:45+00:00",
+      "release": 43,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-04T23:55+00:00",
+          "end": "2026-11-05T00:15+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-05T00:15+00:00",
+          "end": "2026-11-05T00:20+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-05T00:20+00:00",
+          "end": "2026-11-05T00:45+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-05T00:45+00:00",
+          "end": "2026-11-05T00:50+00:00"
+        }
+      ],
+      "started": "2026-11-04T23:45+00:00"
     },
     {
       "id": "DS1",
@@ -4089,6 +4123,19 @@
       "changed": "2026-11-04T23:42+00:00",
       "rides": "DL50",
       "started": "2026-11-04T23:29+00:00"
+    },
+    {
+      "id": "DS187",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "docs_check DS3: archived design-system versions are not a gap",
+      "detail": "Peer report: moving design system v1 to docs/archive/ (R2.7) leaves v2 alone and DS3 calls it a gap (R15.1); --strict CI fails. Accept a gap whose missing versions are archived.",
+      "expected": "05 Nov ~00:15",
+      "changed": "2026-11-04T23:44+00:00",
+      "expected_basis": "cloud agent ~20 min: one check, its tests, R15.1 text",
+      "rides": "DL57",
+      "started": "2026-11-04T23:45+00:00"
     },
     {
       "id": "MP1",

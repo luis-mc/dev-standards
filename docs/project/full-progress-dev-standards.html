@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-04T23:42+00:00",
+ "updated": "2026-11-04T23:45+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -2253,6 +2253,40 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "changed": "2026-11-04T23:42+00:00",
    "rides": "DL50",
    "started": "2026-11-04T23:29+00:00"
+  },
+  {
+   "id": "DL57",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Running",
+   "item": "RELEASE-43: peer bug fixes",
+   "detail": "Join, CI and merge of peer bug reports received after RELEASE-42 (D78).",
+   "expected": "05 Nov ~00:50",
+   "changed": "2026-11-04T23:45+00:00",
+   "release": 43,
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-11-04T23:55+00:00",
+     "end": "2026-11-05T00:15+00:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-11-05T00:15+00:00",
+     "end": "2026-11-05T00:20+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-11-05T00:20+00:00",
+     "end": "2026-11-05T00:45+00:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-11-05T00:45+00:00",
+     "end": "2026-11-05T00:50+00:00"
+    }
+   ],
+   "started": "2026-11-04T23:45+00:00"
   },
   {
    "id": "DS1",
@@ -4971,6 +5005,19 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "started": "2026-11-04T23:29+00:00"
   },
   {
+   "id": "DS187",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "docs_check DS3: archived design-system versions are not a gap",
+   "detail": "Peer report: moving design system v1 to docs/archive/ (R2.7) leaves v2 alone and DS3 calls it a gap (R15.1); --strict CI fails. Accept a gap whose missing versions are archived.",
+   "expected": "05 Nov ~00:15",
+   "changed": "2026-11-04T23:44+00:00",
+   "expected_basis": "cloud agent ~20 min: one check, its tests, R15.1 text",
+   "rides": "DL57",
+   "started": "2026-11-04T23:45+00:00"
+  },
+  {
    "id": "MP1",
    "owner": "models",
    "app": "luismc-project-setup",
@@ -5369,14 +5416,16 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-04T23:42+00:00">04 Nov 23:42</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T23:45+00:00">04 Nov 23:45</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
 <ul>
 <li data-glance-task="DL50"><span class="task-id">DL50</span><span class="release-name">RELEASE-42</span>fixes from both plugin reviews (DL48, DL51), DL52 <span class="glance-expected">05 Nov ~00:10</span><span class="glance-basis">8 fix agents from 23:31 ~75 min, join 10, CI 15, merge</span></li>
+<li data-glance-task="DS187"><span class="task-id">DS187</span>docs_check DS3: archived design-system versions are not a gap <span class="glance-expected">05 Nov ~00:15</span><span class="glance-basis">cloud agent ~20 min: one check, its tests, R15.1 text</span></li>
+<li data-glance-task="DL57"><span class="task-id">DL57</span><span class="release-name">RELEASE-43</span>peer bug fixes <span class="glance-expected">05 Nov ~00:50</span></li>
 </ul>
 </details>
 <details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">11 tasks</span></summary>
@@ -5408,20 +5457,28 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">320</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">11</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">320</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">11</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DL50 (fixes from both plugin reviews (DL48, DL51), DL52) expected live about 00:10." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">23:30</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">05 Nov 00:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">05 Nov 00:30</text></g>
+<div class="timeline-scroll"><svg viewBox="0 0 960 226" role="img" aria-label="Next releases: DL50 (fixes from both plugin reviews (DL48, DL51), DL52) expected live about 00:10; DL57 (peer bug fixes) expected live about 00:50." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="202"/><text x="200" y="28">23:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="202"/><text x="373.3" y="28">05 Nov 00:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="202"/><text x="546.7" y="28">05 Nov 00:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="202"/><text x="720" y="28">01:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-42 · fixes from both plugin reviews (DL48, DL51), DL52</title>RELEASE-42 · fixes from b…</text>
 <text class="rt-sub" x="0" y="77"><title>AR59, DL48, DL51, DL53, DL54, DL55, DL56, DS184, DS185, DS186, TF6</title>AR59, DL48, DL51, DL53, DL54, DL5…</text>
-<rect class="rt-bar agents" x="208.7" y="52" width="60.7" height="22"><title>agents 23:31-23:38</title></rect>
-<rect class="rt-bar join" x="269.3" y="52" width="34.7" height="22"><title>join 23:38-23:42</title></rect>
-<rect class="rt-bar ci" x="304" y="52" width="199.3" height="22"><title>PR CI 23:42-00:05</title></rect>
-<rect class="rt-bar merge" x="503.3" y="52" width="43.3" height="22"><title>merge + cleanup 00:05-00:10</title></rect>
-<polygon class="rt-expected" points="546.7,50 554.7,63 546.7,76 538.7,63"/>
-<text class="rt-live-label" x="546.7" y="92">live ~00:10</text>
-<line class="rt-now" x1="304" y1="36" x2="304" y2="148"/><text class="rt-now-label" x="304" y="161">now 23:42</text>
+<rect class="rt-bar agents" x="205.8" y="52" width="40.4" height="22"><title>agents 23:31-23:38</title></rect>
+<rect class="rt-bar join" x="246.2" y="52" width="23.1" height="22"><title>join 23:38-23:42</title></rect>
+<rect class="rt-bar ci" x="269.3" y="52" width="132.9" height="22"><title>PR CI 23:42-00:05</title></rect>
+<rect class="rt-bar merge" x="402.2" y="52" width="28.9" height="22"><title>merge + cleanup 00:05-00:10</title></rect>
+<polygon class="rt-expected" points="431.1,50 439.1,63 431.1,76 423.1,63"/>
+<text class="rt-live-label" x="431.1" y="92">live ~00:10</text>
+<text class="rt-name" x="0" y="122"><title>RELEASE-43 · peer bug fixes</title>RELEASE-43 · peer bug fix…</text>
+<text class="rt-sub" x="0" y="139"><title>DS187</title>DS187</text>
+<rect class="rt-bar agents" x="344.4" y="114" width="115.6" height="22"><title>agents 23:55-00:15</title></rect>
+<rect class="rt-bar join" x="460" y="114" width="28.9" height="22"><title>join 00:15-00:20</title></rect>
+<rect class="rt-bar ci" x="488.9" y="114" width="144.4" height="22"><title>PR CI 00:20-00:45</title></rect>
+<rect class="rt-bar merge" x="633.3" y="114" width="28.9" height="22"><title>merge + cleanup 00:45-00:50</title></rect>
+<polygon class="rt-expected" points="662.2,112 670.2,125 662.2,138 654.2,125"/>
+<text class="rt-live-label" x="662.2" y="154">live ~00:50</text>
+<line class="rt-now" x1="286.7" y1="36" x2="286.7" y2="210"/><text class="rt-now-label" x="286.7" y="223">now 23:45</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
@@ -5439,6 +5496,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DS185"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS185</span>Fix project-setup findings (DL50 F14-F30)</td><td data-label="App / service"></td><td data-label="Detail">Hook fallback, pre-commit names/renames/exec bit, questions hook, preflight, catalog ids, CI template.</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DS186"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS186</span>Fix specs, audits and agents findings (DL50 F31-F47)</td><td data-label="App / service"></td><td data-label="Detail">spec_check paths/encoding/citations/fences; audit rule conflicts with shipped specs; architect read-only.</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="TF6"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-transcript-folds.html"><span class="task-id">TF6</span>Fix transcript-folds findings (DL50 F48-F60)</a></td><td data-label="App / service"></td><td data-label="Detail">PowerShell edits, failed calls not folded, ANSI and wide-char widths, Windows path tally.</td><td data-label="Expected">04 Nov</td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold release-group" data-group="release-43" open><summary><strong>RELEASE-43 · live ~00:50</strong><span class="fold-count">2 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL57"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL57</span><span class="release-name">RELEASE-43</span>peer bug fixes</a></td><td data-label="App / service"></td><td data-label="Detail">Join, CI and merge of peer bug reports received after RELEASE-42 (D78).</td><td data-label="Expected">05 Nov ~00:50</td></tr>
+<tr data-task="DS187"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS187</span>docs_check DS3: archived design-system versions are not a gap</td><td data-label="App / service"></td><td data-label="Detail">Peer report: moving design system v1 to docs/archive/ (R2.7) leaves v2 alone and DS3 calls it a gap (R15.1); --strict CI fails. Accept a gap whose missing versions are archived.</td><td data-label="Expected">05 Nov ~00:15<span class="expected-basis">cloud agent ~20 min: one check, its tests, R15.1 text</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
@@ -5780,7 +5843,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (3)</strong><span class="fold-count">3 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897262"><time datetime="2026-11-04T23:42+00:00">04 Nov 23:42</time></td><td data-label="Tasks">DL1 to DL56</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-built">6 Built</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897265"><time datetime="2026-11-04T23:45+00:00">04 Nov 23:45</time></td><td data-label="Tasks">DL1 to DL57</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">2 Running</span><span class="status-chip status-built">6 Built</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29897262"><time datetime="2026-11-04T23:42+00:00">04 Nov 23:42</time></td><td data-label="Tasks">AR2 to AR59</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: transcript folds"><a href="feature-transcript-folds.html">Feature: Transcript folds</a></td><td data-label="Last updated" data-value="29897262"><time datetime="2026-11-04T23:42+00:00">04 Nov 23:42</time></td><td data-label="Tasks">TF1 to TF6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">Live since 13 Oct (PR #60): luismc-transcript-folds 1.0.0, installed by claude-setup 14.3.0.</td></tr>
 </tbody></table></div>
