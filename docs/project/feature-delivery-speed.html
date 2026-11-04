@@ -888,51 +888,41 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-04T22:00+00:00">04 Nov 22:00</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T22:01+00:00">04 Nov 22:01</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">04 Nov 21:56</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
-<ul>
-<li data-glance-task="DL42"><span class="task-id">DL42</span><span class="release-name">RELEASE-39</span>setup pool command fix and Full Progress display fixes <span class="glance-expected">04 Nov ~22:15</span><span class="glance-basis">CI on PR #143 from 21:56, ~15 min, then merge</span></li>
-</ul>
-</details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">16 tasks</span></summary>
 <ul>
 <li data-glance-task="DL41"><span class="task-id">DL41</span>CI setup pool command uses measured sizing and the derived repos</li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">14 tasks</span></summary>
-<ul>
+<li data-glance-task="DL42"><span class="task-id">DL42</span><span class="release-name">RELEASE-39</span>setup pool command fix and Full Progress display fixes</li>
 <li data-glance-task="DL37"><span class="task-id">DL37</span><span class="release-name">RELEASE-38</span>fixes from DL34 and DL36, and the questions Stop hook</li>
 <li data-glance-task="DL39"><span class="task-id">DL39</span>Runner hook fixes from the real runner test (DL34)</li>
 <li data-glance-task="DL40"><span class="task-id">DL40</span>Setup plan fixes from the rollout plan (DL35)</li>
 <li data-glance-task="DL38"><span class="task-id">DL38</span>CI runs section: match the approved sample</li>
 <li data-glance-task="DL35"><span class="task-id">DL35</span>Shared CI rollout plan for this machine (detect and plan, read only)</li>
 <li data-glance-task="DL34"><span class="task-id">DL34</span>Prove the shared CI hooks on one real runner job</li>
-<li data-glance-task="DL36"><span class="task-id">DL36</span>Compare the CI runs section with the approved sample and fix differences</li>
-<li data-glance-task="DL27"><span class="task-id">DL27</span>Machine-wide CI queue: shared slots across projects</li>
-<li class="glance-more">and 6 more</li>
+<li class="glance-more">and 8 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">40</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">4</div><div class="label">tasks to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">42</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">4</div><div class="label">tasks to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">5 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">4 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL42"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL42</span><span class="release-name">RELEASE-39</span>setup pool command fix and Full Progress display fixes</td><td data-label="Detail">DL41 and the three display bugs reported from a consuming project</td><td data-label="Expected">04 Nov ~22:15<span class="expected-basis">CI on PR #143 from 21:56, ~15 min, then merge</span></td></tr>
 <tr data-task="DL43"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL43</span>Stop hook DL-31 flags only future estimates</td><td data-label="Detail">Past-tense lines such as &#x27;CI failed about 2 minutes in&#x27; are not ETAs; DL-31 must match future estimates only.</td><td data-label="Expected">05 Nov ~00:00<span class="expected-basis">After RELEASE-39 merges ~22:15; one cloud agent ~60 min, then CI</span></td></tr>
 <tr data-task="DL44"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL44</span>Cloud agent setup installs the Node version from engines</td><td data-label="Detail">agent_setup.sh uses the sandbox Node 22 when the project&#x27;s engines field asks for another major; pnpm warns on every run.</td><td data-label="Expected">05 Nov ~00:00<span class="expected-basis">After RELEASE-39 merges ~22:15; one cloud agent ~60 min, then CI</span></td></tr>
 <tr data-task="DL45"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL45</span>Docs: a routine&#x27;s run_once_at must stay ahead of updates</td><td data-label="Detail">A run_once_at that passes while an update call runs never fires. Document: create, update, then run_once_at at least 3 min ahead.</td><td data-label="Expected">05 Nov ~00:00<span class="expected-basis">After RELEASE-39 merges ~22:15; one cloud agent ~60 min, then CI</span></td></tr>
 <tr data-task="DL46"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL46</span>Ledger calls a train green only when every CI run passed</td><td data-label="Detail">RELEASE-39 showed green after secret-scan passed while spec-lint still ran; the Stop hook then asked to merge.</td><td data-label="Expected">05 Nov ~00:00<span class="expected-basis">After RELEASE-39 merges ~22:15; one cloud agent ~60 min, then CI</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">1 built, 40 live</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">42 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL41"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DL41</span>CI setup pool command uses measured sizing and the derived repos<span class="release-line"><span class="release-name">RELEASE-39</span></span></td><td data-label="Detail">From DL40: delivery_ci_setup.py cmd_pool still needs total GiB by hand; its check treats every step like a service</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL41"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL41</span>CI setup pool command uses measured sizing and the derived repos<span class="release-line"><span class="release-name">RELEASE-39</span></span></td><td data-label="Detail">From DL40: delivery_ci_setup.py cmd_pool still needs total GiB by hand; its check treats every step like a service</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL42"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL42</span><span class="release-name">RELEASE-39</span>setup pool command fix and Full Progress display fixes</td><td data-label="Detail">DL41 and the three display bugs reported from a consuming project</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DL37"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL37</span><span class="release-name">RELEASE-38</span>fixes from DL34 and DL36, and the questions Stop hook</td><td data-label="Detail">RELEASE-38 merged 20:24 UTC (PR #142)</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DL39"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL39</span>Runner hook fixes from the real runner test (DL34)<span class="release-line"><span class="release-name">RELEASE-38</span></span></td><td data-label="Detail">RELEASE-38 merged 20:24 UTC (PR #142)</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DL40"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL40</span>Setup plan fixes from the rollout plan (DL35)<span class="release-line"><span class="release-name">RELEASE-38</span></span></td><td data-label="Detail">RELEASE-38 merged 20:24 UTC (PR #142)</td><td data-label="Expected">04 Nov</td></tr>

@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-04T22:00+00:00",
+ "updated": "2026-11-04T22:01+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1408,11 +1408,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "AR54",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "Built",
+   "status": "Live",
    "item": "Full Progress: release label, chart header basis, axis label overlap",
    "detail": "Reported 4 Nov from a consuming project: release label off by one, chart header shows another row's basis, time axis labels overlap",
    "expected": "04 Nov",
-   "changed": "2026-11-04T21:54+00:00",
+   "changed": "2026-11-04T22:01+00:00",
    "rides": "DL42",
    "started": "2026-11-04T21:42+00:00"
   },
@@ -1929,11 +1929,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL41",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "CI setup pool command uses measured sizing and the derived repos",
    "detail": "From DL40: delivery_ci_setup.py cmd_pool still needs total GiB by hand; its check treats every step like a service",
    "expected": "04 Nov",
-   "changed": "2026-11-04T21:52+00:00",
+   "changed": "2026-11-04T22:01+00:00",
    "rides": "DL42",
    "started": "2026-11-04T21:42+00:00"
   },
@@ -1941,12 +1941,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL42",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "RELEASE-39: setup pool command fix and Full Progress display fixes",
    "detail": "DL41 and the three display bugs reported from a consuming project",
-   "expected": "04 Nov ~22:15",
-   "changed": "2026-11-04T21:56+00:00",
-   "expected_basis": "CI on PR #143 from 21:56, ~15 min, then merge",
+   "expected": "04 Nov",
+   "changed": "2026-11-04T22:01+00:00",
    "release": 39,
    "started": "2026-11-04T21:41+00:00",
    "phases": [
@@ -5071,60 +5070,27 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-04T22:00+00:00">04 Nov 22:00</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T22:01+00:00">04 Nov 22:01</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
-<ul>
-<li data-glance-task="DL42"><span class="task-id">DL42</span><span class="release-name">RELEASE-39</span>setup pool command fix and Full Progress display fixes <span class="glance-expected">04 Nov ~22:15</span><span class="glance-basis">CI on PR #143 from 21:56, ~15 min, then merge</span></li>
-</ul>
-</details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">2 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">20 tasks</span></summary>
 <ul>
 <li data-glance-task="AR54"><span class="task-id">AR54</span>Full Progress: release label, chart header basis, axis label overlap</li>
 <li data-glance-task="DL41"><span class="task-id">DL41</span>CI setup pool command uses measured sizing and the derived repos</li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">17 tasks</span></summary>
-<ul>
+<li data-glance-task="DL42"><span class="task-id">DL42</span><span class="release-name">RELEASE-39</span>setup pool command fix and Full Progress display fixes</li>
 <li data-glance-task="DS180"><span class="task-id">DS180</span><span class="release-name">RELEASE-36</span>CIR10 build (DL16-DL26) into the delivery plugin</li>
 <li data-glance-task="DL37"><span class="task-id">DL37</span><span class="release-name">RELEASE-38</span>fixes from DL34 and DL36, and the questions Stop hook</li>
 <li data-glance-task="DL39"><span class="task-id">DL39</span>Runner hook fixes from the real runner test (DL34)</li>
 <li data-glance-task="DL40"><span class="task-id">DL40</span>Setup plan fixes from the rollout plan (DL35)</li>
 <li data-glance-task="SO6"><span class="task-id">SO6</span>Stop hook: ask every open question at once, only with AskUserQuestion (Q-1, Q-2)</li>
-<li data-glance-task="DL38"><span class="task-id">DL38</span>CI runs section: match the approved sample</li>
-<li data-glance-task="DL35"><span class="task-id">DL35</span>Shared CI rollout plan for this machine (detect and plan, read only)</li>
-<li data-glance-task="DL34"><span class="task-id">DL34</span>Prove the shared CI hooks on one real runner job</li>
-<li class="glance-more">and 9 more</li>
+<li class="glance-more">and 12 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">306</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">2</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">5</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">309</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">5</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<figure class="release-timeline">
-<figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DL42 (setup pool command fix and Full Progress display fixes) expected live about 22:15." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">21:30</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">22:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">22:30</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-39 · setup pool command fix and Full Progress display fixes</title>RELEASE-39 · setup pool c…</text>
-<text class="rt-sub" x="0" y="77"><title>AR54, DL41</title>AR54, DL41</text>
-<rect class="rt-bar agents" x="312.7" y="52" width="86.7" height="22"><title>agents 21:43-21:53</title></rect>
-<rect class="rt-bar join" x="399.3" y="52" width="26" height="22"><title>join 21:53-21:56</title></rect>
-<rect class="rt-bar ci" x="425.3" y="52" width="130" height="22"><title>PR CI 21:56-22:11</title></rect>
-<rect class="rt-bar merge" x="555.3" y="52" width="34.7" height="22"><title>merge + cleanup 22:11-22:15</title></rect>
-<polygon class="rt-expected" points="590,50 598,63 590,76 582,63"/>
-<text class="rt-live-label" x="590" y="92">live ~22:15</text>
-<line class="rt-now" x1="460" y1="36" x2="460" y2="148"/><text class="rt-now-label" x="460" y="161">now 22:00</text>
-</svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
-</figure>
-<details class="status-fold release-group" data-group="release-39" open><summary><strong>RELEASE-39 · live ~22:15</strong><span class="fold-count">3 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL42"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL42</span><span class="release-name">RELEASE-39</span>setup pool command fix and Full Progress display fixes</a></td><td data-label="App / service"></td><td data-label="Detail">DL41 and the three display bugs reported from a consuming project</td><td data-label="Expected">04 Nov ~22:15<span class="expected-basis">CI on PR #143 from 21:56, ~15 min, then merge</span></td></tr>
-<tr data-task="AR54"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR54</span>Full Progress: release label, chart header basis, axis label overlap</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Reported 4 Nov from a consuming project: release label off by one, chart header shows another row&#x27;s basis, time axis labels overlap</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="DL41"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL41</span>CI setup pool command uses measured sizing and the derived repos</a></td><td data-label="App / service"></td><td data-label="Detail">From DL40: delivery_ci_setup.py cmd_pool still needs total GiB by hand; its check treats every step like a service</td><td data-label="Expected">04 Nov</td></tr>
-</tbody></table></div>
-</details>
 <details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">5 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="AR55"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR55</span>set-task-status takes Expected from the last phase</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Passing only --phase or --basis must set Expected to the end of the last phase, not refuse the change.</td><td data-label="Expected">05 Nov ~00:00<span class="expected-basis">After RELEASE-39 merges ~22:15; one cloud agent ~60 min, then CI</span></td></tr>
@@ -5134,8 +5100,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DL46"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL46</span>Ledger calls a train green only when every CI run passed</a></td><td data-label="App / service"></td><td data-label="Detail">RELEASE-39 showed green after secret-scan passed while spec-lint still ran; the Stop hook then asked to merge.</td><td data-label="Expected">05 Nov ~00:00<span class="expected-basis">After RELEASE-39 merges ~22:15; one cloud agent ~60 min, then CI</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">308 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">311 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="AR54"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR54</span>Full Progress: release label, chart header basis, axis label overlap</a><span class="release-line"><span class="release-name">RELEASE-39</span></span></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Reported 4 Nov from a consuming project: release label off by one, chart header shows another row&#x27;s basis, time axis labels overlap</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL41"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL41</span>CI setup pool command uses measured sizing and the derived repos</a><span class="release-line"><span class="release-name">RELEASE-39</span></span></td><td data-label="App / service"></td><td data-label="Detail">From DL40: delivery_ci_setup.py cmd_pool still needs total GiB by hand; its check treats every step like a service</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL42"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL42</span><span class="release-name">RELEASE-39</span>setup pool command fix and Full Progress display fixes</a></td><td data-label="App / service"></td><td data-label="Detail">DL41 and the three display bugs reported from a consuming project</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DS179"><td data-label="Status"><span class="status-chip status-dropped">Dropped</span></td><td data-label="Item"><span class="task-id">DS179</span><span class="release-name">RELEASE-35</span>CI options in luismc-delivery (DL15)<span class="dropped-line">dropped: folded into RELEASE-34</span></td><td data-label="App / service"></td><td data-label="Detail">Joined DL15 on release/34, PR #124; fold: delivery 1.3.0, project-setup 1.3.1; merge on green (owner ~21:55)</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DS180"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS180</span><span class="release-name">RELEASE-36</span>CIR10 build (DL16-DL26) into the delivery plugin</td><td data-label="App / service"></td><td data-label="Detail">Merged in RELEASE-36 (#139, c23bb0e) 19:07</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DL37"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL37</span><span class="release-name">RELEASE-38</span>fixes from DL34 and DL36, and the questions Stop hook</a></td><td data-label="App / service"></td><td data-label="Detail">RELEASE-38 merged 20:24 UTC (PR #142)</td><td data-label="Expected">04 Nov</td></tr>
@@ -5454,8 +5423,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (2)</strong><span class="fold-count">2 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897160"><time datetime="2026-11-04T22:00+00:00">04 Nov 22:00</time></td><td data-label="Tasks">DL1 to DL46</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-built">1 Built</span><span class="status-chip status-to-do">4 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29897160"><time datetime="2026-11-04T22:00+00:00">04 Nov 22:00</time></td><td data-label="Tasks">AR2 to AR55</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897161"><time datetime="2026-11-04T22:01+00:00">04 Nov 22:01</time></td><td data-label="Tasks">DL1 to DL46</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-to-do">4 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29897161"><time datetime="2026-11-04T22:01+00:00">04 Nov 22:01</time></td><td data-label="Tasks">AR2 to AR55</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (5)</strong><span class="fold-count">5 feature artifacts</span></summary>
