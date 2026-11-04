@@ -10,4 +10,5 @@ Method (D90): a failing test first for each finding. All four reproduced on curr
 Tests: delivery suite, 583 tests, OK.
 Docs: README ledger lines updated; plugin change note and features/delivery change note (DL55) added. docs_check: only W1 (report under docs/work, branch-only by rule) and a README mapping warning remain.
 
-Branch head: ba03aef16f04d4fce01216a71325e1b202d40f58
+Branch head: 7a6af215de9f6753be5bde95e0b606e3c8f2fc0b (before this report line commit)
+READY
