@@ -130,6 +130,38 @@ DEFAULT_SHARD_TABLE = "scripts/delivery/ci-shards.json"
 DEFAULT_RESULTS_PREFIX = "ci-result"
 
 
+def machine_limits(cfg) -> dict:
+    """The machine limits a project may LOWER (D21, DL-90, DL-91), as {key: value or None}: `local_heavy`,
+    `load_limits` (memory_pct, cpu_pct) and `ci.fallback.cloud_ci_sessions`. None means the project sets none; the
+    machine config (machine_slots.machine_config) is the ceiling and wins when the project value is higher."""
+    out = {"local_heavy": None, "cloud_ci_sessions": None, "memory_pct": None, "cpu_pct": None}
+    v = cfg.get("local_heavy") if isinstance(cfg, dict) else None
+    if isinstance(v, int) and not isinstance(v, bool) and v >= 1:
+        out["local_heavy"] = v
+    ci = _section(cfg, "ci")
+    fb = ci.get("fallback") if isinstance(ci.get("fallback"), dict) else {}
+    v = fb.get("cloud_ci_sessions")
+    if isinstance(v, int) and not isinstance(v, bool) and v >= 1:
+        out["cloud_ci_sessions"] = v
+    ll = _section(cfg, "load_limits")
+    for k in ("memory_pct", "cpu_pct"):
+        v = ll.get(k)
+        if isinstance(v, (int, float)) and not isinstance(v, bool) and 1 <= v <= 100:
+            out[k] = v
+    return out
+
+
+def effective_machine_limits(cfg, machine) -> dict:
+    """The limits in force: the machine config, lowered (never raised) by the project. `machine` is a machine_config()."""
+    mine = machine_limits(cfg)
+    out = {"local_heavy": machine["local_heavy"], "cloud_ci_sessions": machine["cloud_ci_sessions"],
+           "memory_pct": machine["load_limits"]["memory_pct"], "cpu_pct": machine["load_limits"]["cpu_pct"]}
+    for k, v in mine.items():
+        if v is not None and v < out[k]:
+            out[k] = v
+    return out
+
+
 def ci_options(cfg) -> dict:
     """ci.options as {os: option} for the OS names that hold a valid option. There is no default: an OS that is
     not chosen is simply absent."""

@@ -802,12 +802,22 @@ def load_contents(rec):
     return contents, [f for fs in broken.values() for f in fs]
 
 
-def render_one(rec, key, stamp_t, stamp_i, links=None):
+def read_ci_runs(root):
+    """The parsed .delivery/ci-runs.json (written by the delivery plugin), or None when it is missing or unreadable."""
+    try:
+        return json.loads((Path(root) / '.delivery' / 'ci-runs.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return None
+
+
+def render_one(rec, key, stamp_t, stamp_i, links=None, root=None):
     """Render one artifact; `links` ({feature key: (href, path text)}) is only for the publish copy."""
     try:
         if key in rec.broken():
             raise Fail(1, 'content/%s is invalid; fix it with edit-content; nothing written' % key, rec.broken()[key])
         extra = {} if links is None else {'links': links}
+        if links is not None and root is not None and key == (rec.manifest.get('full_progress_artifact') or {}).get('key', 'full-progress'):
+            extra['ci_runs'] = read_ci_runs(root)      # R5.51: the publish copy only; the committed render never reads it
         return R.render_artifact(rec.manifest, rec.registry, rec.render_contents(), key, PLUGIN_DIR,
                                  rec.dir, stamp_t, stamp_i, **extra)
     except Fail:
@@ -2664,7 +2674,7 @@ def write_publish_copy(ctx, rec, key, e):
     if st is None:
         return None
     try:
-        html = render_one(rec, key, stamp_text_from_iso(st), st, links=feature_link_map(ctx.root, rec))
+        html = render_one(rec, key, stamp_text_from_iso(st), st, links=feature_link_map(ctx.root, rec), root=ctx.root)
     except Fail as fl:
         warn('the publish copy of %s was not written (%s); publish the committed file as it is' % (key, fl.msg))
         return None

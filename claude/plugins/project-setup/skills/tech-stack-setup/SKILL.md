@@ -60,6 +60,16 @@ can go stale in a way that can be detected.
 
 # Mode 1 — The wizard
 
+## Setup pattern — how this wizard talks to you
+
+This setup follows section 13 of `docs/features/delivery/shared-self-hosted-runners.md`.
+
+1. **Plan first.** After the consequence review (Phase 5) and before Phase 7 changes anything, show one plan: the folders, files, packages and CI files it will generate (with paths), the installs it will run (`pnpm install`, the hooks), what it changes outside the repository (new cloud projects and buckets from the provisioning ledger), what needs the owner (a yes, a sign-in, a production secret) and about how long it takes. Ask for one yes. Phase 6 questions stay.
+2. **Do the heavy lifting.** After the yes, run every install and configuration yourself: the generation steps of Phase 7, `pnpm install`, the git hooks, dev provisioning where a CLI exists, and the checks of Phase 8. Leave to the owner only what you cannot do: production secrets (run with the `!` prefix), a web-only setting, a sign-in. Give each an exact step and check it afterwards.
+3. **One line per step.** While it runs, print one line per step: what you are doing, then done, or failed with the reason and the fix.
+4. **Finish with three parts** (Phase 8): **Done** (what was generated, with paths), **Left for you** (numbered, exact steps: deferred ledger rows, profile fields to fill, production secrets), **What you can do now** (the commands and features now available, each with a one-line example: `pnpm dev` starts the apps, `pnpm test` runs the tests, `python3 scripts/delivery/branch_gate.py --no-publish` runs the branch gate, `/luismc-project-setup:auth-setup` builds authentication, `/luismc-project-setup:tech-stack-setup` in Mode 2 checks conformance).
+5. **Safe to run again.** A second run says what is already set and changes only what is missing. It never generates over existing code (Mode 2 applies).
+
 `STACKSPEC` is prescriptive enough to generate from directly. There is no
 template repository.
 
@@ -247,7 +257,7 @@ cannot drift.
 
 ## Phase 7 — Generate
 
-Build in dependency order. Each step is a precondition of the next:
+Build in dependency order. Each step is a precondition of the next: Print one line for each step as it runs.
 
 | Step | Owner |
 |---|---|
@@ -402,6 +412,11 @@ cannot run.
 
 Report: what was generated · what was deferred and why · every profile field the
 user still has to fill · every open ledger row · the Mode 2 findings.
+
+Give the report as three parts, in this order, with these headings: **Done**
+(what was generated and deferred, with paths), **Left for you** (every profile
+field and open ledger row, as numbered steps with the exact command, each
+checked afterwards), **What you can do now** (see "Setup pattern").
 
 ## Phase 9 — Ask about authentication
 

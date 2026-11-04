@@ -5,6 +5,11 @@
     delivery_ci_setup.py apply     --answers FILE|-  [--root DIR] [--no-install] [--set-variables] [--json]
     delivery_ci_setup.py checklist [--root DIR] [--json]
     delivery_ci_setup.py confirm   ITEM...  [--root DIR]
+    delivery_ci_setup.py pool-detect | pool-plan | pool-run  --repos o/a,o/b [--windows-repos o/c] [--pool NAME] [--yes] [--yes-delete NAMES]
+
+`pool-*` is the guided path for Option 1 (DL30): detect what exists, show one plan, remove old runners and build clean,
+run each step after a yes. Deleting needs `--yes-delete` naming exactly what goes. It follows contract section 13:
+plan first, one line per step, then Done / Left for you / What you can do now. Safe to run again.
 
 The command file (`commands/delivery-ci-setup.md`) asks the owner every question and writes the answers as JSON.
 There is no default at any question: `apply` refuses (exit 1, lists each missing answer) when one is absent. A
@@ -542,15 +547,107 @@ def cmd_apply(args, root, path) -> int:
     return 0
 
 
+# --- the guided path for Option 1 (DL30, D26, D44) and the section 13 pattern ---------------------------------------------
+
+def render_plan(pl, found) -> list:
+    """Section 13, part 1: one plan before anything changes. Paths, outside changes, what needs the owner, how long."""
+    from delivery_runner_pool import pool_dir
+    lines = ["Plan (nothing has changed yet):"]
+    gh = found["github"]
+    lines.append("Found: %d repositories you administer, %d runner services, %d runner folders, %d containers."
+                 % (len(gh["repos"]), len(found["services"]), len(found["folders"]), len(found["containers"])))
+    if gh.get("error"):
+        lines.append("  GitHub could not be read: %s" % gh["error"])
+    for r in gh["repos"]:
+        if r["error"]:
+            lines.append("  %s: runners not readable (%s)" % (r["repo"], r["error"]))
+    for step in pl["steps"]:
+        mark = "already set" if step["state"] == "already" else ("you run it" if step["elevated"] else
+                                                                  ("asks a second yes (deletes)" if step["delete"] else "I run it"))
+        lines.append("  - %s [%s]" % (step["title"], mark))
+    for r in pl["refused"]:
+        lines.append("  ! %s" % r["reason"])
+    lines.append("Writes in this repository: nothing. Writes on this machine: %s" % pool_dir(pl["pool"]))
+    lines.append("Changes outside the repository: GitHub runner registrations, repository variables, Docker, the machine config.")
+    lines.append("Needs you: %s." % "; ".join(pl["needs"]))
+    lines.append("About %d minutes." % pl["minutes"])
+    return lines
+
+
+def render_summary(done, left, can_do) -> list:
+    """Section 13, part 4: Done, Left for you (numbered, exact steps), What you can do now."""
+    lines = ["Done"]
+    lines += ["  - %s" % d for d in done] or ["  - nothing changed (everything was already set)"]
+    lines.append("Left for you")
+    lines += ["  %d. %s" % (i, x) for i, x in enumerate(left, 1)] or ["  nothing"]
+    lines.append("What you can do now")
+    lines += ["  - %s" % c for c in can_do]
+    return lines
+
+
+def can_do_now(pool) -> list:
+    return ["`python3 scripts/delivery_ci.py slots`: who holds each CI slot and who waits.",
+            "`gh workflow run pool-check.yml`: run one test job through pool \"%s\"." % pool,
+            "`python3 scripts/delivery_doctor.py`: check the machine, the pool and the runners.",
+            "`/delivery-ci-setup`: run again; it says what is already set and changes only what is missing."]
+
+
+def cmd_pool(args, root) -> int:
+    import delivery_runner_pool as P
+    probe = P.Probe()
+    found = P.detect(probe)
+    split = lambda v: [x for x in (v or "").split(",") if x]  # noqa: E731
+    cap = None
+    if args.total_gib:
+        cap = P.sizing(args.total_gib, args.used_gib, args.cpus or 2, args.docker_gib, args.largest_shard_gib)
+        if not cap["ok"]:
+            print("delivery_ci_setup: %s" % cap["message"], file=sys.stderr)
+            return 1
+    pl = P.plan(found, split(args.repos), split(args.windows_repos), args.pool, cap)
+    if args.action == "pool-detect":
+        print(json.dumps(found, indent=2))
+        return 0
+    if args.action == "pool-plan":
+        print("\n".join(render_plan(pl, found)))
+        return 0
+    yes_delete = set(split(args.yes_delete))
+
+    def check(step):
+        if step["action"] == "windows-service":
+            return any(step["slug"] in (x["name"] or "") for x in P.detect_services(probe))
+        r = probe.sh(["schtasks", "/Query", "/TN", "luismc-host-load"])
+        return bool(r and r[0] == 0)
+    result = P.run(pl, ask=lambda st: bool(args.yes), ask_delete=lambda st: all(n in yes_delete for n in st["names"]),
+                   execute=P.Executor(probe).run, check=check)
+    left = []
+    if result["failed"]:
+        left.append("Fix this and run the setup again: %s." % result["failed"]["title"])
+    for sid in result["left"]:
+        if not result["failed"] or sid != result["failed"]["id"]:
+            left.append("Not run yet: %s" % sid)
+    print("\n".join(render_summary(result["done"], left, can_do_now(args.pool))))
+    return 1 if result["failed"] or result["left"] else 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="delivery_ci_setup.py", description=__doc__.split("\n\n")[0])
-    ap.add_argument("action", choices=["facts", "apply", "checklist", "confirm"])
+    ap.add_argument("action", choices=["facts", "apply", "checklist", "confirm", "pool-detect", "pool-plan", "pool-run"])
     ap.add_argument("items", nargs="*", help="confirm: the item ids")
     ap.add_argument("--answers", help="apply: a JSON file of answers, or - for stdin")
     ap.add_argument("--root", default=".")
     ap.add_argument("--no-install", action="store_true")
     ap.add_argument("--set-variables", action="store_true", help="apply: run `gh variable set` for the repository variables")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--repos", help="pool-*: Linux repositories, OWNER/NAME comma separated")
+    ap.add_argument("--windows-repos", help="pool-*: repositories that test on Windows")
+    ap.add_argument("--pool", default="main")
+    ap.add_argument("--total-gib", type=float)
+    ap.add_argument("--used-gib", type=float, default=0.0)
+    ap.add_argument("--cpus", type=float)
+    ap.add_argument("--docker-gib", type=float)
+    ap.add_argument("--largest-shard-gib", type=float)
+    ap.add_argument("--yes", action="store_true", help="pool-run: the owner said yes to the plan shown (not to deletions)")
+    ap.add_argument("--yes-delete", help="pool-run: what the owner agreed to delete, named exactly, comma separated")
     args = ap.parse_args(argv)
     root = os.path.abspath(args.root)
     if not os.path.isdir(os.path.join(root, ".delivery")):
@@ -565,6 +662,8 @@ def main(argv=None) -> int:
     if args.action == "facts":
         print(json.dumps(facts(root), indent=2))
         return 0
+    if args.action.startswith("pool-"):
+        return cmd_pool(args, root)
     if args.action == "apply":
         if not args.answers:
             print("delivery_ci_setup: apply needs --answers FILE|-", file=sys.stderr)

@@ -30,6 +30,8 @@ jobs:
     # does nothing, so a nightly result always describes the default branch.
     if: ${{ github.ref_name == github.event.repository.default_branch }}
     runs-on: ${{ fromJSON(vars.NIGHTLY_RUNS_ON || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    env:
+      DELIVERY_SHARD: changed
     timeout-minutes: 5
     outputs:
       run: ${{ steps.compare.outputs.run }}
@@ -74,6 +76,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
+      DELIVERY_SHARD: integration
       # Throwaway service-container credentials, as in ci.yml.
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
     steps:
@@ -105,6 +108,8 @@ jobs:
     needs: changed
     if: ${{ needs.changed.outputs.run == 'true' }}
     runs-on: ${{ fromJSON(vars.NIGHTLY_RUNS_ON || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    env:
+      DELIVERY_SHARD: e2e
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4

@@ -67,6 +67,7 @@ def routes_for_green(pr=10, head=SHA, branch="release/29"):
 
 
 def watcher(root, sh, **kw):
+    kw.setdefault("ci_runs", False)        # the CI runs refresh has its own tests (test_watch_ci_runs.py)
     return W.Watcher(root, sh=sh, now=lambda: NOW, out=lambda *_: None, **kw)
 
 
@@ -500,7 +501,7 @@ class AgentTests(unittest.TestCase):
         root = make_root()
         seed(root, agents=[agent])
         sh = FakeShell({("git", "ls-remote"): (0, ls_out), ("gh", "api"): (1, "")})
-        W.Watcher(root, sh=sh, now=lambda: NOW, out=lambda *_: None, routine_fetcher=fetcher).run_once()
+        W.Watcher(root, sh=sh, now=lambda: NOW, out=lambda *_: None, routine_fetcher=fetcher, ci_runs=False).run_once()
         return L.load(root)["agents"][0], sh
 
     def test_branch_moved_updates_head_and_activity(self):

@@ -35,6 +35,45 @@ Option 3 runs Linux only. If the project tests on Windows, pick another option f
 6. It prints the by-hand list for your choice. Do those steps next.
 7. To change the choice later, run the command again. It changes the config only and says what the new choice still needs.
 
+### Guided shared CI on your machine (Option 1)
+
+For Option 1 the setup also offers to build shared CI on this machine for you. It follows the pattern of [Shared CI on your machine](../features/delivery/shared-self-hosted-runners.md): plan first, do everything it can, one line per step, then a summary. It is safe to run again.
+
+```mermaid
+flowchart TD
+  a[Pick Option 1] --> b[Detect: GitHub and this machine, read only]
+  b --> c[Plan: what exists, what will be removed, what will be built]
+  c --> d{Run it for you, or print the steps?}
+  d -->|print| p[By-hand list]
+  d -->|run| e[Yes for the plan]
+  e --> f[Remove old runners, with a second yes for each deletion]
+  f --> g[Machine config, host load task, pool, one agent per repository, Windows services]
+  g --> h[Variables and verify: one test job per repository]
+  p --> i[Summary]
+  h --> i[Summary: Done, Left for you, What you can do now]
+```
+
+1. **Detect.** The setup lists every repository you administer, the runners GitHub knows, runner services, runner folders, containers and the WSL limits. It only reads. A public repository is named and refused.
+2. **Plan.** You see one plan: each old runner that will be removed, the pool and its CPU and memory cap, the files it writes (under the machine folder, not your repository), what changes outside the repository, what needs you, and about how long it takes.
+3. **Yes.** Answer yes to run it. Each step prints one line while it runs.
+4. **Deletions.** Removing a runner folder, a container or its volumes needs its own yes that names what goes. A "no" stops the run and lists what is left.
+5. **Your part.** Steps that need an administrator shell (a Windows service, the scheduled task) are printed. Run them, and the setup checks them.
+6. **Verify.** Each agent must be online with its labels, then one `pool-check` run per repository takes a slot and passes.
+7. **Summary.** Three parts: *Done*, *Left for you* (numbered, exact steps) and *What you can do now*.
+
+If a step fails, the setup stops and prints what is done and what is left. Fix the cause and run `/delivery-ci-setup` again. It says "already set" for finished steps and changes only what is missing.
+
+#### What you can do after it
+
+| You want to | Do this |
+|---|---|
+| See who holds the CI slots and who waits | `python3 scripts/delivery_ci.py slots` |
+| Test one job through the pool | `gh workflow run pool-check.yml` |
+| Check the machine, the pool and every runner | `python3 scripts/delivery_doctor.py` |
+| Add a repository to the pool | Run `/delivery-ci-setup` again and name it. It adds one agent. |
+| Change a limit | Run `/delivery-ci-setup` again and give the new numbers. It writes the machine config through the machine layer. |
+| Remove a repository from the pool | Pipe a removal token into `pool-remove-agent SLUG` in the pool container. The folder stays unless you add `--delete-files`. |
+
 ### By hand
 
 Do the steps that match your option. The doctor re-checks them.

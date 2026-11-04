@@ -1,0 +1,48 @@
+# Shared CI pool (DL30). The setup writes the cap into .env (POOL_CPUS, POOL_MEM, POOL_NAME, MACHINE_DIR) and nothing else.
+# No Docker socket is mounted (D41). The machine folder is mounted at /machine so the hooks see the slots and the config.
+name: pool-${POOL_NAME:-main}
+services:
+  pool:
+    build:
+      context: .
+      args:
+        RUNNER_VERSION: ${RUNNER_VERSION:-2.321.0}
+        RUNNER_SHA256: ${RUNNER_SHA256:?set by the setup}
+    image: luismc-runner-pool:${POOL_NAME:-main}
+    restart: unless-stopped
+    stop_grace_period: 5m
+    init: false
+    cpus: ${POOL_CPUS}
+    mem_limit: ${POOL_MEM}
+    memswap_limit: ${POOL_MEM}
+    environment:
+      POOL_NAME: ${POOL_NAME:-main}
+      DELIVERY_MACHINE_DIR: /machine
+      DELIVERY_DB_HOST: db
+    volumes:
+      - agents:/agents
+      - ${MACHINE_DIR}:/machine
+      - ./agents.json:/agents.json
+    secrets:
+      - dbadmin
+    networks: [pool-net]
+    depends_on: [db]
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/dbadmin
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    secrets:
+      - dbadmin
+    networks: [pool-net]
+volumes:
+  agents:
+  dbdata:
+networks:
+  pool-net:
+    driver: bridge
+secrets:
+  dbadmin:
+    file: ./db-admin.pw

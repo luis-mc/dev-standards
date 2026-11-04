@@ -43,6 +43,16 @@ order.
 `tech-stack-setup`, and stop. That skill interviews for a dozen decisions. This
 skill must not default them.
 
+## Setup pattern — how this skill talks to you
+
+This setup follows section 13 of `docs/features/delivery/shared-self-hosted-runners.md`.
+
+1. **Plan first.** After the interview (Mode 1, step 2) and before anything is written, show one plan: the migrations, packages and endpoints it will write (with paths), the installs it will run, what it changes outside the repository (nothing), what needs the owner (a yes, the interview answers, a secret or key) and about how long it takes. Ask for one yes.
+2. **Do the heavy lifting.** After the yes, build in the order of step 3 and run the installs, the migrations and the `§27.2` test gate yourself. Leave to the owner only what you cannot do (a key or secret for production, a provider setting in a web page). Give each an exact step and check it afterwards.
+3. **One line per step.** While it runs, print one line per step: what you are doing, then done, or failed with the reason and the fix.
+4. **Finish with three parts.** **Done** (what was built, with paths, and the test gate result). **Left for you** (numbered, exact steps, the Stack Profile waivers that need a named approver). **What you can do now**: `/luismc-project-setup:auth-setup` in Mode 2 audits the implementation; the auth endpoints in `apps/api` accept sign-up and sign-in (example: call the sign-in route with the documented body); `pnpm test` runs the auth suites. Each with a one-line example.
+5. **Safe to run again.** A second run says which steps are already built and builds only what is missing. It never overwrites code you changed.
+
 ## Mode 1 — Build the auth stack
 
 `AUTHSPEC` has no generation order of its own, unlike `STACKSPEC §26`. Use this
@@ -100,7 +110,7 @@ one. Each step is a dependency of the next.
    approver (`§27` item 13). A profile that still claims no auth after this
    skill has run is out of date.
 
-7. **Run Mode 2 against what you built** and report the result. Then say what
+7. **Run Mode 2 against what you built** and report the result, using the three parts of the setup pattern: Done, Left for you, What you can do now. Then say what
    remains: default UX pages for the user and admin apps are **not** part of
    this skill.
 

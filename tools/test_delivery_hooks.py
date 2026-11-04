@@ -59,7 +59,7 @@ class Project:
         return os.path.join(self.dir, 'gh_stub.py')
 
     def run(self, script, data, env=None):
-        e = dict(os.environ, DELIVERY_NOW=NOW)
+        e = dict(os.environ, DELIVERY_NOW=NOW, DELIVERY_LOCAL_HEAVY_DIR=os.path.join(self.dir, 'local-heavy'))
         e.pop('CLAUDE_DELIVERY_HOOKS', None)
         e.update(env or {})
         data = dict({'cwd': self.dir, 'session_id': 's1'}, **data)
@@ -645,6 +645,8 @@ def dl23_unfrozen_installs():
     assert 'DL-23' in why(bash(p, 'cd app && npm install && python branch_gate.py'))
     expect_pass(bash(p, 'npm install left-pad'))              # not a gate context
     expect_pass(bash(p, 'pnpm install --frozen-lockfile && python branch_gate.py'))
+    p.close()
+    p = Project(ledger())                                      # DL-91: two installs above are still running here
     expect_pass(bash(p, 'npm ci'))
     p.close()
 
@@ -925,7 +927,7 @@ def hooks_json_wires_every_script():
     pre = h['PreToolUse'][0]
     assert pre['matcher'] == 'Bash|PowerShell|Agent|Workflow|RemoteTrigger|AskUserQuestion|Write' and 'hook_pre_tool.py' in pre['hooks'][0]['command']
     for ev in ('PostToolUse', 'PostToolUseFailure'):
-        assert h[ev][0]['matcher'] == 'Bash|Agent|RemoteTrigger|Artifact|AskUserQuestion'
+        assert h[ev][0]['matcher'] == 'Bash|PowerShell|Workflow|Agent|RemoteTrigger|Artifact|AskUserQuestion'
         assert 'hook_post_tool.py' in h[ev][0]['hooks'][0]['command']
     assert 'hook_post_tool.py' in cmds('UserPromptSubmit')[0]
     for ev in h:

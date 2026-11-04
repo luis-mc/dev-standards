@@ -1,19 +1,18 @@
 ---
-title: Shared CI on the owner's machine (design)
+title: Shared CI on your machine
 type: explanation
 ---
-# Shared CI on the owner's machine (design, DL28)
+# Shared CI on your machine
 
-The owner approved this design on 4 Nov 2026 (D48), with the CI runs section (section 11) added. Task DL27 builds it. The binding rules move into [delivery spec section 13](spec.md#13-ci-options) with change notes; this page stays as the explanation and the build contract.
+You run CI for many private repositories on one computer. This page explains how the delivery plugin makes them share that computer without overloading it: one pool for Linux jobs, one queue for the whole machine, and one guided setup that builds it.
 
-It joins two pieces of work:
+The owner approved the design on 4 Nov 2026 (D48). Tasks DL27 (machine layer, queue, pool) and DL30 (pool and guided setup) build it. The decisions behind it are D21 to D48 in `docs/project/content/delivery-speed/decisions.json`. To set it up, follow the [setup guide](../../guides/set-up-ci.md).
 
-- **Pool research** (first version of this page): one Docker container that runs a CI runner for every Linux project.
-- **DL27**: one CI queue for the whole machine, so runners of many projects cannot overload it.
+Section numbers on this page stay fixed. Code, change notes and the delivery spec cite them (for example "section 6.4").
 
-The decisions behind it are D21 to D48 in the delivery-speed record (`docs/project/content/delivery-speed/decisions.json`).
+## 1. What problem it solves
 
-## 1. What it fixes
+You have a computer that stays on. Several private repositories each want their own CI runner. Without a shared plan, each runner works alone.
 
 | # | Today | Effect |
 |---|---|---|
@@ -25,11 +24,15 @@ The decisions behind it are D21 to D48 in the delivery-speed record (`docs/proje
 | G6 | Option 4 counts a job as waiting only until it starts (`ci_fallback.py`, `shard_wait_minutes`). The gate holds a job after it starts. | A job held by the gate never starts the fallback. |
 | G7 | Each project installs its own runner its own way. | Ten projects mean ten services, ten folders and no common cap. |
 
-## 2. The picture
+In short: no common limit, no common queue, and no way to see the whole machine.
+
+## 2. How it works
+
+One picture of the machine:
 
 ```mermaid
 flowchart TB
-  subgraph pc[Owner's machine]
+  subgraph pc[Your machine]
     cfg[(machine config<br/>ProgramData)]
     slots[(CI slots: 2)]
     hostload[(host load file<br/>every 15 s)]
@@ -53,14 +56,43 @@ flowchart TB
   a1 & a2 & a3 --- db
 ```
 
-- **Linux jobs** run in one pool container, with one agent per repository (section 4).
-- **Windows jobs** run in one runner service per repository on Windows (D43).
-- **All of them** take one of the machine's **2 CI slots** (D21).
-- **Local Claude work** (tests, builds, local agents) has its own limit of **2** (D36), not the CI slots.
-- **Claude cloud sessions** that run CI, as main runner (Option 3) or fallback (Option 4), have a limit of **10 at once** (D37). They do not use this machine.
-- The 85% memory and 60% CPU check (DL-77, DL-79) still applies on top of every limit.
+| Part | What it does | Limit |
+|---|---|---|
+| **Pool container** | Runs the Linux jobs of every repository. One agent per repository, one cap for all (section 4). | One CPU and memory cap |
+| **Windows services** | One runner service per repository that tests on Windows (D43). | Shares the CI slots |
+| **CI slots** | The machine's common queue. Every runner takes a slot before a job runs (D21). | 2 at once |
+| **Local Claude work** | Tests, builds and local agents. Has its own limit, not the CI slots (D36). | 2 at once |
+| **Claude cloud sessions** | CI that runs in the cloud, as main runner (Option 3) or fallback (Option 4). They do not use this machine (D37). | 10 at once |
+| **Load check** | The 85% memory and 60% CPU check (DL-77, DL-79) still applies on top of every limit. | 85% / 60% |
+
+### A job's path
+
+```mermaid
+sequenceDiagram
+  participant G as GitHub
+  participant R as Runner (pool agent or Windows service)
+  participant Q as Machine queue
+  participant F as Fallback (Option 4)
+  G->>R: job starts
+  R->>Q: job-started hook writes a ticket
+  loop until first in line, a slot is free and load is under the limits
+    Q-->>R: wait (a wait marker is written for the shard)
+  end
+  alt a slot comes before X minutes
+    Q->>R: slot taken (lock file)
+    R->>R: the job runs
+    R->>Q: job-completed hook frees the slot and cleans _work
+  else the shard waited X minutes
+    F->>G: claims the shard and runs it elsewhere
+    Note over R,Q: when the held job later gets a slot, it sees the claim is taken,<br/>ends without work (exit 3) and frees the slot
+  end
+```
+
+Order in the queue (D30): a ready pull request's run and a run on the default branch come first. Branch and agent runs come next. Within each group it is first come, first served.
 
 ## 3. The machine layer
+
+The machine layer is the shared state every runner reads: one config, the slots, the host load and the wait markers.
 
 ### 3.1 Machine config
 
@@ -162,6 +194,15 @@ One runner service per repository on Windows, in `C:\actions-runners\<slug>\`, w
 
 ## 5. Security
 
+| Risk | What the setup does |
+|---|---|
+| A fork pull request runs code on your machine | Private repositories only. The setup refuses a public one and the doctor fails if one exists. |
+| One repository reads another's checkout | One Unix user per agent, folders `0700`. |
+| A token leaks | Tokens pass through a pipe and are never printed or written. |
+| A job takes over the host | No Docker socket in the pool. Docker in jobs is refused (D41). |
+
+Details:
+
 - **Private repositories only.** The setup refuses a self-hosted runner for a public repository. The doctor fails if one exists. A pull request from a fork could run code on the machine.
 - **Fork pull requests.** The templates run self-hosted jobs only for pushes and for pull requests from the same repository.
 - **Tokens.** Registration and removal tokens pass through a pipe and are never printed or written:
@@ -169,9 +210,9 @@ One runner service per repository on Windows, in `C:\actions-runners\<slug>\`, w
 - **Credentials.** Each agent's `.credentials` stays in its own `0700` folder. The plugin never reads it.
 - **No Docker socket** in the pool.
 
-## 6. Setup: one guided path
+## 6. What the setup does
 
-`/delivery-ci-setup`, Option 1, offers to set everything up and run it for the owner (D26, D44). Every step that changes the machine is shown first and runs only after a yes. Deleting anything needs its own yes.
+`/delivery-ci-setup`, Option 1, offers to set everything up and run it for the owner (D26, D44). Every step that changes the machine is shown first and runs only after a yes. Deleting anything needs its own yes. The setup follows the pattern of section 13: a plan first, one line per step, and a summary with *Done*, *Left for you* and *What you can do now*. Running it again is safe: it says what is already set and changes only what is missing. The step-by-step guide is [Set up CI](../../guides/set-up-ci.md).
 
 ```mermaid
 flowchart TD
@@ -235,7 +276,21 @@ A step that needs an elevated shell (a Windows service, the scheduled task, the 
 - An Option 1 project with `CI_RUNS_ON` unset **fails** (D45). It would run on hosted runners and may bill minutes.
 - **Disk** (D31): each runner's `_work` size. When the total is large, the doctor offers to clean old work folders. It cleans only after a yes, and only folders of runners with no job running.
 
-## 8. Not in this design
+## 8. Limits and what is left out
+
+Limits you will notice:
+
+| Limit | Why |
+|---|---|
+| Private repositories only | A fork pull request could run code on the machine (section 5). |
+| Linux jobs in the pool, Windows jobs in services | Windows containers are not used (D43). |
+| No Docker inside a job | No Docker socket in the pool (D41). A job that needs `services:` uses the shared database or another runner. |
+| 2 CI slots, 2 local heavy jobs | Set in the machine config; the 85% memory and 60% CPU check still applies. |
+| The pool cap must fit inside the WSL ceiling | Changing `.wslconfig` needs `wsl --shutdown`, which stops every container. |
+| One job can wait up to `max_wait_min` | Then it fails, or the fallback runs the shard elsewhere. |
+
+Left out of this design:
+
 
 - **A GitHub organization.** One organization-level runner could serve every repository, but on the Free plan private repositories lose branch protection, so it needs the Team plan. Documented here as a later variant (D38). Not built.
 - **Ephemeral runners** (D39). They need a long-lived token in the container.
@@ -253,7 +308,11 @@ A step that needs an elevated shell (a Windows service, the scheduled task, the 
 | The hourly routine cannot read the machine's queue. | The wait marker is a git branch (section 3.4), which the routine can read. |
 | `wsl --shutdown` stops running containers. | The setup runs it only when no job runs, after a yes. |
 
-## 10. Build plan (DL27)
+## How it is built
+
+This part is the build contract for the agents that implement the design. Readers who only want to use it can stop here. It keeps the original section numbers, so code and notes that cite "section 12.4" still point to the right place.
+
+### 10. Build plan (DL27)
 
 Three cloud agents, one release. Section 12 splits the files.
 
@@ -270,7 +329,7 @@ Three cloud agents, one release. Section 12 splits the files.
 
 After the release, the owner runs the setup on this machine. The first real job through the pool is watched.
 
-## 11. CI runs in Full Progress (D48)
+### 11. CI runs in Full Progress (D48)
 
 A new foldable section in every project's Full Progress page, folded by default.
 
@@ -288,9 +347,9 @@ Data:
 - Where: the job's `runner_name` and `labels`; for a cloud session, the `ci-claim` marker's holder.
 - Slot wait: the slot log (section 12.2).
 
-## 12. Interfaces between the three agents
+### 12. Interfaces between the three agents
 
-### 12.1 Agents and files
+#### 12.1 Agents and files
 
 | Agent | Task | Owns |
 |---|---|---|
@@ -300,7 +359,7 @@ Data:
 
 The delivery `README.md` is shared: each agent adds or edits only its own subsection. Each agent writes its own change notes in `docs/architecture/changes/`.
 
-### 12.2 Slot log (A writes, C reads)
+#### 12.2 Slot log (A writes, C reads)
 
 One JSON object per line in `<machine dir>/slot-log.jsonl` (`C:\ProgramData\luismc-delivery\` on Windows, `/etc/luismc-delivery/` elsewhere; `machine_slots.machine_dir()` returns it):
 
@@ -312,15 +371,15 @@ One JSON object per line in `<machine dir>/slot-log.jsonl` (`C:\ProgramData\luis
 
 A writes `queued_at` and `slot_at` lines at take and a `released_at` line at free (C joins them by `repo`, `run_id`, `run_attempt`, `job`). The file is trimmed to the last 5,000 lines.
 
-### 12.3 Pool checks for the doctor (B provides, A calls)
+#### 12.3 Pool checks for the doctor (B provides, A calls)
 
 `delivery_runner_pool.doctor_checks(root) -> list[dict]`, each `{"id": "pool.<name>", "status": "ok"|"warn"|"fail"|"skip", "detail": str}`. A's `delivery_doctor.py` `machine` check calls it when the module imports, and shows `skip` when there is no pool. B's detection also gives `delivery_runner_pool.detect(json=True)`; A does not depend on it.
 
-### 12.4 Machine config (A owns, B writes it through A's helper)
+#### 12.4 Machine config (A owns, B writes it through A's helper)
 
 `machine_slots.machine_config()` reads it; `machine_slots.write_machine_config(cfg)` writes it (B's setup calls this, never writes the file itself). Keys as in section 3.1.
 
-### 12.5 CI runs file (C)
+#### 12.5 CI runs file (C)
 
 `ci_runs.py collect --root .` writes `.delivery/ci-runs.json` (git-ignored):
 
@@ -335,7 +394,7 @@ A writes `queued_at` and `slot_at` lines at take and a `released_at` line at fre
 
 The watcher refreshes it each tick (at most once a minute). The Full Progress renderer reads it when it exists and draws section 11; with no file it draws nothing.
 
-## 13. Setup pattern for every plugin setup (owner request, 4 Nov 2026)
+### 13. Setup pattern for every plugin setup (owner request, 4 Nov 2026)
 
 Every setup in dev-standards (the delivery CI setup, `claude-setup`, `docs-setup`, `design-system-setup`, `tech-stack-setup`, `auth-setup`) follows the same pattern, so a user always knows what is happening and what to do next.
 

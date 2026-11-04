@@ -94,8 +94,20 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D46 | Runner detection: which repos are scanned? | All repos you admin | decided | 2026-11-04 |
 | delivery-speed | D47 | Where is the combined CI design written and approved? | PR #140 rewritten | decided | 2026-11-04 |
 | delivery-speed | D48 | Shared CI design: approve as is, or add to it? | Approve with an addition | decided | 2026-11-04 |
+| delivery-speed | D49 | Old commits in the public repository still hold personal and other-project names. What to do with history? | Flatten all history | decided | 2026-11-04 |
 | delivery-speed | D5 | Point 5: no online runner for a job’s labels before the ready PR opens? | Warn, don’t block | decided | 2026-10-11 |
+| delivery-speed | D50 | After flattening, old pull request refs still hold old commits. What about them? | Flatten only | decided | 2026-11-04 |
+| delivery-speed | D51 | Keep a private backup bundle of the full history before flattening? | No backup | decided | 2026-11-04 |
+| delivery-speed | D52 | Old tags and branches other than main after the flatten? | Delete all | decided | 2026-11-04 |
+| delivery-speed | D53 | Old commit SHAs in record rows after the flatten? | Strip SHAs | decided | 2026-11-04 |
+| delivery-speed | D54 | PR #140 after RELEASE-37? | Close and delete | decided | 2026-11-04 |
+| delivery-speed | D55 | Stale PRs #127, #128 and three proposal branches of another session? | Close them all | decided | 2026-11-04 |
+| delivery-speed | D56 | Run the guided shared CI setup on this machine after the release? | Plan only | decided | 2026-11-04 |
+| delivery-speed | D57 | Prove the hook env and the wait marker on a real runner job? | Test after merge | decided | 2026-11-04 |
+| delivery-speed | D58 | Old Windows runner services: printed admin commands or one UAC prompt? | Print for me | decided | 2026-11-04 |
+| delivery-speed | D59 | Runner registration token briefly on the container's command line: accept or work around? | Accept | decided | 2026-11-04 |
 | delivery-speed | D6 | Point 3: which tests run at the join when branches affect overlapping packages? | Union plus dependents | decided | 2026-10-11 |
+| delivery-speed | D60 | Hourly check-in in this session while work is open? | Yes, hourly | decided | 2026-11-04 |
 | delivery-speed | D7 | Should dev-standards adopt the delivery log in its own releases? (asked as one multi-select question) | Yes | decided | 2026-10-11 |
 | delivery-speed | D8 | Should dev-standards adopt the train freeze? (same multi-select question) | Yes | decided | 2026-10-11 |
 | delivery-speed | D9 | Point 4: how is the train freeze overridden on purpose? | Env variable, logged | decided | 2026-10-11 |

@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-artifacts]
 topics: [artifacts]
 status: live
-version: 0.1.5
+version: 0.2.0
 owner: agents
 type: reference
 code:
@@ -75,6 +75,31 @@ The commands are listed in ARTIFACTSPEC section 7. They include `init`, `feature
 
 The two pages are HTML. Section 0 of each is always "Status and checklist". It holds a stamp, a lede, tiles and the checklist. The lede says what needs the owner, or "Nothing needs you". Both pages work in light and dark themes and at phone width. The structure stylesheet is fixed. A project's design tokens are free. See ARTIFACTSPEC section 5.
 
+### CI runs section (D48)
+
+Full Progress ends with a folded section, `CI runs`. The summary line reads, for example, `2 in progress · 20 finished shown · median 11m 00s · 1 fallback · 1 failure`. Opened, it shows five figures (median and p90 run time, median slot wait, fallbacks to the cloud, passed out of shown), a table of runs in progress, and the latest 20 finished runs. A finished row opens to a waterfall: one bar per step on one time scale, in the order GitHub queue, slot wait, then each job step. A failed step is red. A legend names the bar colours. Rules: ARTIFACTSPEC R5.51.
+
+![The CI runs section, opened, in the light theme](ci-runs-section.png)
+
+The picture is made from fixture data. A live copy of the same markup, with both themes and the phone layout, is [ci-runs-mockup.html](ci-runs-mockup.html).
+
+Where the data comes from:
+
+```mermaid
+flowchart LR
+  gh[GitHub Actions API<br/>runs and jobs, step times] --> cr
+  slots[(slot-log.jsonl<br/>written by the machine layer)] --> cr
+  claims[ci-claim markers<br/>cloud fallback holder] --> cr
+  cr[ci_runs.py collect] --> file[(.delivery/ci-runs.json<br/>git-ignored)]
+  watch[delivery_watch.py<br/>every tick, at most once a minute] --> cr
+  file --> render[render_artifacts.py<br/>publish copy only]
+  render --> page[Full Progress<br/>CI runs section]
+```
+
+- The delivery plugin writes the file. The artifacts plugin only reads it.
+- The committed render never reads the file, so it does not change with every CI run. The section appears in the copy that is published.
+- With no file, the section is not drawn.
+
 ## 5. Functional requirements
 
 **R5.1** — A project has feature artifacts and exactly one full-progress artifact. Creating the first feature artifact creates Full Progress when none exists.
@@ -102,6 +127,8 @@ The two pages are HTML. Section 0 of each is always "Status and checklist". It h
 **R5.12** — A finished feature artifact can be retired. Its tasks and decisions are kept. Its file and content are deleted.
 
 **R5.13** — `promote-to-spec` writes a feature artifact's content to a feature spec in the luismc-docs template.
+
+**R5.14** — Full Progress shows a foldable `CI runs` section when `.delivery/ci-runs.json` exists, and nothing when it does not (ARTIFACTSPEC R5.51, owner decision D48).
 
 ## 6. Non-functional requirements
 
@@ -198,7 +225,7 @@ Source: `claude/plugins/artifacts/`
 | Path | Holds |
 |---|---|
 | `scripts/project_artifacts.py` | The commands |
-| `scripts/render_artifacts.py` | The renderer |
+| `scripts/render_artifacts.py` | The renderer, including the CI runs section |
 | `scripts/artifact_queue.py` | The shared queue |
 | `scripts/hook_*.py`, `hooks/hooks.json` | The four hooks |
 | `scripts/publish_hourly.py` | What the hourly cron prints |
@@ -216,6 +243,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.2.0 | 2026-11-04 | RELEASE-37 | Full Progress draws a foldable CI runs section from .delivery/ci-runs.json (R5.14, ARTIFACTSPEC R5.51, D48). | DL31 |
 | 0.1.5 | 2026-11-02 | RELEASE-34 | The artifact-prune test reads the prune script and workflow from luismc-delivery templates after the move. Behaviour is unchanged. | DL15 |
 | 0.1.4 | 2026-11-01 | RELEASE-30 | The end-of-turn hook asks about background work once per marker, and a background watcher (delivery or CI watch script) does not count as work (AR52, AR53). | AR52 |
 | 0.1.3 | 2026-11-01 | RELEASE-27 | The end-of-turn hook reads pending in process (one Python start less per turn). The session-start catch-up skips gh when no task is open. What the hooks ask for does not change. | DS168 |

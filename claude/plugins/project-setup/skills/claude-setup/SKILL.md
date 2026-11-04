@@ -586,6 +586,13 @@ file it points at exists.
 
 ## Step 3 — Present one batch summary and confirm once
 
+This is the **plan first** part of the setup pattern (section 13 of
+`docs/features/delivery/shared-self-hosted-runners.md`). Show one plan before
+any change: what it will install, configure and write (with paths), what it
+changes outside the repository, what needs the owner (a yes, an administrator
+shell, a sign-in, a web setting, a secret) and about how long it takes. Do not
+change anything before the owner says yes.
+
 Also list every offer the owner said yes to (see "Offers and enforcement"): the commands, the CI workflow file, the branch-protection step, and the setups and audits that will run.
 
 Group every queued change by target and by file. List what is being added, what
@@ -622,6 +629,12 @@ it, leave those files untouched and report them as skipped. Never quietly drop a
 piece because the rest succeeded.
 
 ## Step 4 — Apply, then verify
+
+**One line per step.** While applying, print one line per step: what you are
+doing, then done, or failed with the reason and the fix. Do every install and
+configuration you can yourself (the plugin installs, the file writes, the
+setups the owner picked). Leave to the owner only what you cannot do, each with
+exact steps and a check after.
 
 Apply what was confirmed. Then check the result. Do not assume it worked:
 
@@ -671,6 +684,13 @@ Apply what was confirmed. Then check the result. Do not assume it worked:
 
 ## Step 5 — Report
 
+**Safe to run again.** A second run says what is already set and changes only
+what is missing.
+
+Finish with three parts, in this order, under these headings: **Done**,
+**Left for you** and **What you can do now**. The paragraph below is the
+content of **Done**.
+
 Report what was applied, per target. Report what already had a value and was
 therefore left alone. That list matters, because "already set" and "just set by
 me" look identical afterwards. Report what the user declined, including any
@@ -680,7 +700,7 @@ for this project only or for all projects. Give the effort chosen for each model
 top-level `effortLevel` (added as `medium`, or the existing value left alone)
 that cloud agents fall back to. Say which of the 8 plugins were enabled for the
 project, which were installed, and which install commands the owner still has to
-run, with the marketplace name used and where it came from. Tell the owner to
+run, with the marketplace name used and where it came from (run the install yourself after the owner's yes; list a command here only when it failed). Tell the owner to
 run `/reload-plugins`. Say what was configured for docs (init applied, or the
 migrate plan shown and left unapplied), the artifacts record, and the delivery
 `caps` changes. Say whether the two transcript-folds chords were added, already there or
@@ -696,7 +716,7 @@ targets were written, note which keys the project file now shadows.
 
 ### Left for you — end of step 5
 
-Before the enforcement table, give one numbered "Left for you" list. Keep only
+Under the heading **Left for you**, before the enforcement table, give one numbered list. Keep only
 the steps that need the owner, in order. Each has its exact command or link and
 one line on why. Typical entries:
 
@@ -706,6 +726,26 @@ one line on why. Typical entries:
 4. Anything a run could not do.
 
 Do not mix done or skipped items into this list. Report those above it.
+
+### What you can do now — end of step 5
+
+Under the heading **What you can do now**, list the commands and features each
+plugin that is now enabled gives. One line each, with a one-line example. List
+only the plugins that are enabled in this project.
+
+| Plugin | What it gives now | Example |
+|---|---|---|
+| `luismc-project-setup` | `/luismc-project-setup:claude-setup`, `tech-stack-setup`, `auth-setup` | `/luismc-project-setup:claude-setup status` shows what is set |
+| `luismc-docs` | `/luismc-docs:docs-check`, `docs-index`, `docs-note`, `docs-setup`, `feature-spec-new`, `design-system-setup` | `/luismc-docs:docs-check` checks links and freshness |
+| `luismc-delivery` | the delivery guard rails and ledger, `/luismc-delivery:delivery-ci-setup` | `/luismc-delivery:delivery-ci-setup` sets up CI and runners |
+| `luismc-artifacts` | `feature-artifact-new`, `full-progress-artifact-new`, `project-artifact-check`, `task-add`, `task-status-update` | `/luismc-artifacts:task-add` adds a task to the project record |
+| `luismc-specs` | `/luismc-specs:spec-new`, `spec-check` | `/luismc-specs:spec-new` interviews you and writes a spec |
+| `luismc-audits` | `/luismc-audits:security-audit`, `compliance-audit`, `performance-audit` | `/luismc-audits:security-audit` ranks security findings |
+| `luismc-agents` | the `architect` agent for hard design calls | ask the `architect` agent to compare two designs |
+| `luismc-transcript-folds` | long diffs and shell commands fold to one line; chords `ctrl+x d` and `ctrl+x f` | press `ctrl+x d` to toggle syntax highlighting |
+
+Add the model split (Opus plans, Sonnet codes; `/model` switches the current
+session now) and, for each offer that ran, what it now enforces.
 
 ### Enforcement report — after "Left for you"
 

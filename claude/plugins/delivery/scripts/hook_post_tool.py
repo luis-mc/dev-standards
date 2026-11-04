@@ -610,6 +610,11 @@ def main() -> int:
         data = json.loads(text) if text.strip() else {}
         if isinstance(data, dict):
             try:
+                import load_guard as G  # noqa: PLC0415 - DL-91: the heavy call is over, in every project
+                G.heavy_end(data)
+            except Exception:  # noqa: BLE001
+                pass
+            try:
                 handle(data)
             except Exception as exc:  # noqa: BLE001
                 _log_failure(data, exc)

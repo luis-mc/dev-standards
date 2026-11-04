@@ -1,0 +1,17 @@
+# Verify workflow (DL30): one job that takes a machine slot, prints the runner name and passes.
+# Copy to .github/workflows/pool-check.yml. Run it with: gh workflow run pool-check.yml
+name: pool-check
+on:
+  workflow_dispatch:
+jobs:
+  check:
+    # Private repositories only (contract section 5).
+    if: github.event.repository.private == true
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON) }}
+    timeout-minutes: 15
+    steps:
+      - name: Show where this job runs
+        run: |
+          echo "runner: $RUNNER_NAME"
+          echo "os: $RUNNER_OS"
+          echo "hooks: $ACTIONS_RUNNER_HOOK_JOB_STARTED / $ACTIONS_RUNNER_HOOK_JOB_COMPLETED"

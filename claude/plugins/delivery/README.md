@@ -11,7 +11,9 @@ Delivery guard rails for a project that opts in with a `.delivery/` folder. Rule
 | `delivery_config.py validate` | checks `.delivery/config.json` against `references/config-schema.json` |
 | `delivery_doctor.py` | self-check: config valid, gh signed in, tz loads, hooks registered, ledger writable, runner load-gate hook set (DL-79) |
 | `load.py`, `load_guard.py` | machine memory/CPU measurement and the load guard (DL-77, DL-78) |
-| `runner_load_gate.py` (+ `.cmd`, `.ps1`, `.sh`) | self-hosted runner job-start hook (DL-79) |
+| `runner_load_gate.py` (+ `.cmd`, `.ps1`, `.sh`) | self-hosted runner job-start hook (DL-79, DL-90) |
+| `runner_job_done.py` (+ `.cmd`, `.ps1`, `.sh`) | self-hosted runner job-completed hook: frees the slot, empties the work folder (DL-90) |
+| `machine_slots.py` | machine config, CI slots, queue tickets, slot log (DL-90) |
 
 ## Machine load guard (DL-77, DL-78, DL-79)
 
@@ -36,6 +38,28 @@ Owner rule: **no memory above 85%, no CPU above 60%**. Run as many jobs as fit i
   `ACTIONS_RUNNER_HOOK_JOB_STARTED=/path/to/luismc-delivery/scripts/runner_load_gate.sh`, then `sudo ./svc.sh stop && sudo ./svc.sh start`. The runner in WSL/Hyper-V needs the plugin folder inside that VM.
 - **Windows runner (service)**: add the same line to the runner folder's `.env` with `...\scripts\runner_load_gate.ps1` (or `.cmd`; check your runner version accepts the extension), then restart the service (`Restart-Service "actions.runner.*"`). The runner starts a `.ps1` hook with Windows PowerShell 5.1 (when `pwsh` is absent) as exactly `C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". 'C:\actions-runner\...runner_load_gate.ps1'"`, as the service's account (often `NT AUTHORITY\NETWORK SERVICE`). Two things must hold for that account, or the script never starts and **every job fails** (the gate's fail-open path cannot run): (1) its PowerShell execution policy must allow the script. The machine default (Restricted) refuses it with a `PSSecurityException`. Set `RemoteSigned` for that account only, from an elevated shell: string value `ExecutionPolicy` = `RemoteSigned` under `HKEY_USERS\S-1-5-20\Software\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell` (`S-1-5-20` is NETWORK SERVICE; another service account has its own SID). (2) It needs read and execute on the Python install the script calls (Python must also be on its PATH). Test it exactly as the runner runs it: a scheduled task whose principal is the service account (`NT AUTHORITY\NETWORK SERVICE`) with that same Execute and Arguments, never `-ExecutionPolicy Bypass` (it passes and hides the problem). Then watch the first real job's log. The doctor reads the policy for the service account and FAILS on Restricted, AllSigned or undefined; it runs nothing and changes nothing.
 - Check with `python3 scripts/delivery_doctor.py`: the `runner` line is ok with no runner on the machine, FAIL if a runner folder (`actions-runner*`, `DELIVERY_RUNNER_DIRS`, or `runner_dirs` in the machine file) lacks the hook, or (Windows, `.ps1` hook) the service account's execution policy would refuse it.
+
+## Shared CI on one machine: the machine layer (DL-90, DL-91)
+
+One folder per machine holds the limits, the CI slots and the queue for every runner on it. Design: `docs/features/delivery/shared-self-hosted-runners.md`. Rules: spec section 13, R13.60 to R13.67.
+
+- **Machine folder** (`machine_slots.machine_dir()`): `C:\ProgramData\luismc-delivery\` on Windows, `/etc/luismc-delivery/` elsewhere, `/machine` in the pool. `DELIVERY_MACHINE_DIR` overrides it. It holds `machine.json`, `slots/`, `queue/`, `slot-log.jsonl` and `host-load.json`. Every runner account needs modify rights on it.
+- **`machine.json`** (written through `machine_slots.write_machine_config`, never by hand from setup code):
+
+  ```json
+  {"load_limits": {"memory_pct": 85, "cpu_pct": 60}, "ci_slots": 2, "local_heavy": 2, "cloud_ci_sessions": 10,
+   "slot_stale_min": 120, "runner_gate": {"max_wait_min": 30, "poll_sec": 15}, "runner_dirs": ["C:/Work/runners"]}
+  ```
+
+  A project's `.delivery/config.json` can lower `load_limits`, `local_heavy` and `ci.fallback.cloud_ci_sessions`, never raise them.
+- **Two hooks per runner**, in the runner folder's `.env`:
+  `ACTIONS_RUNNER_HOOK_JOB_STARTED=.../scripts/runner_load_gate.sh` (`.ps1`, `.cmd` on Windows) takes a queue ticket and then a slot.
+  `ACTIONS_RUNNER_HOOK_JOB_COMPLETED=.../scripts/runner_job_done.sh` frees the slot and empties the job's `_work` folder.
+- **Host load file**: schedule `python load.py --write` every 15 seconds on the host. Readers in WSL or the pool use `host-load.json` while it is under 60 seconds old.
+- **See it**: `python3 scripts/delivery_ci.py slots` shows who holds each slot, the queue and each wait. `python3 scripts/machine_slots.py free-stale` frees dead holders by hand.
+- **Workflows**: every job in the templates sets `DELIVERY_SHARD`. A held job writes the git branch `ci-wait/<sha>/<shard>`, so the Option 4 fallback counts it as waiting. The marker needs a git checkout: set `DELIVERY_MARKER_ROOT` in the runner's `.env` to a clone the runner account may push from.
+- **Local heavy work**: at most `local_heavy` (2) heavy local calls at once, counted from PreToolUse to PostToolUse (agents from the ledger). `checks_off: ["DL-91"]` turns it off.
+- **Doctor**: `delivery_doctor.py` has a `machine` check. `delivery_doctor.py clean-work` lists the `_work` folders that can be emptied; `--yes` empties those of runners with no job running.
 
 ## `.delivery/config.json`
 
@@ -133,6 +157,14 @@ CI can run in four ways (the owner's Option 1 to 4). The owner picks one for eac
 4. Option 1: list the runners in `runners`, one entry per machine. Option 3: set `ci.cloud.repo`, `ci.cloud.status_token_env` and `ci.cloud.branches`; the owner creates a statuses-only token and puts it in the cloud environment under that name.
 5. `python3 scripts/delivery_doctor.py` reports the `ci` check. For Option 1 it names each machine it found and the by-hand steps to add another.
 
+### Shared CI pool and guided setup (DL30)
+
+One Docker pool runs the Linux jobs of every private repository under one CPU and memory cap, one agent and one Unix user per repository. Windows jobs run as one service per repository. All take the machine's CI slots. Explanation: `docs/features/delivery/shared-self-hosted-runners.md`. Steps: `docs/guides/set-up-ci.md`.
+
+- Templates: `templates/runner-pool/` (Dockerfile, `compose.yaml`, `pool_supervisor.py`, `pool-add-agent`, `pool-remove-agent`, hooks, `pool-check.yml`).
+- Engine: `scripts/delivery_runner_pool.py` (`detect`, `sizing`, `plan`, `verify`, `doctor_checks`). Guided path: `delivery_ci_setup.py pool-detect | pool-plan | pool-run`, called by `/delivery-ci-setup` for Option 1.
+- A public repository is refused. Tokens pass through a pipe and are never printed. Deleting needs its own yes.
+
 ### Add a second runner (Option 1)
 
 One runner of a label is the first bottleneck. A job that waits more than X minutes (the CI watch warns at 10) means: add a runner with the same label on another machine, any machine you run. A plugin cannot do it; it needs a person on that machine. Print the steps for that machine's OS:
@@ -144,6 +176,24 @@ python3 scripts/delivery_ci.py add-runner --os linux|windows|macos --labels self
 The steps: get the token on GitHub, unpack the runner, run `config.sh` (`config.cmd` on Windows) with the same labels, install it as a service, add the machine to `runners`, run the doctor.
 
 Rules: `docs/features/delivery/spec.md` section 13. File formats: `templates/shared/scripts/delivery/CONTRACT.md`, "CI options".
+
+## CI runs for Full Progress (DL31, D48)
+
+`scripts/ci_runs.py collect --root .` writes `.delivery/ci-runs.json` (git-ignored). The artifacts plugin draws it as the `CI runs` section of Full Progress.
+
+```
+python3 scripts/ci_runs.py collect --root . [--repo owner/name] [--slot-log PATH]
+```
+
+- **Runs and steps** come from `gh api` (`actions/runs`, `actions/runs/{id}/jobs`). Finished runs are kept in the file, so only new runs cost a jobs call.
+- **Why** is the trigger: ready PR, push to the default branch, agent branch, schedule, re-run, or a fallback with its wait.
+- **Where** is the runner kind (`pool`, `windows`, `hosted`, `cloud`) and its name. For a cloud fallback the name is the holder of the `ci-claim` marker.
+- **Slot wait** comes from the machine layer's `slot-log.jsonl` (the folder of `DELIVERY_MACHINE_DIR`, else `machine_slots.machine_dir()`). A missing log means a wait of 0.
+- **Fallback in** uses `ci.fallback.after_min` in `.delivery/config.json`. Without it the file says the time is unknown.
+- `delivery_watch.py` runs the collector each tick, at most once a minute. A failure leaves the old file and never fails the tick.
+- Schema: `docs/features/delivery/shared-self-hosted-runners.md` section 12.5. One optional field is added to a finished run: `slot_start_s`, and `fallback: true` for a run that lost its claim.
+
+Test: `python3 -I -m unittest discover -s claude/plugins/delivery/tests -t claude/plugins/delivery/tests -p "test_ci_runs.py"` (fixtures in `tests/fixtures/ci_runs/`).
 
 ## Tests
 

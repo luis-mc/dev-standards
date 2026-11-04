@@ -4,12 +4,14 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.5.1
+version: 0.6.0
 owner: agents
 type: reference
 code:
   - claude/plugins/project-setup/**
   - tools/test_preflight.py
+  - tools/test_claude_setup_plugins.py
+  - tools/test_setup_pattern.py
   - tools/test_authspec_check.py
   - tools/test_spec_check.py
   - tools/test_model_profiles.py
@@ -52,6 +54,8 @@ flowchart LR
 1. `tech-stack-setup` interviews the user. After each answer, it filters the options in `assets/catalog/` so that only compatible ones remain. It shows the consequences. Then it generates the repository and a Stack Profile. The profile records the spec versions claimed.
 2. `auth-setup` runs `preflight.py` first and refuses until the stack exists. It reads the Stack Profile and interviews the user for the decisions the spec will not default. Then it builds in dependency order. Its second mode audits an existing implementation.
 3. `claude-setup` asks for project, user level or both. Project is preselected and marked (Recommended). Rules, `CLAUDE.md`, status line, output style, hook, model split and auto-compact env go to the project's `.claude/` by default. It turns on all eight plugins in the project's `enabledPlugins`, installs missing ones with `--scope project`, and adds `extraKnownMarketplaces` to the project's settings when the entry is missing. Only the transcript-folds chords stay in `~/.claude/keybindings.json`. It shows one batch plan and confirms once. Then it writes the settings, rules, hooks and status line. It never overwrites a hand-written `CLAUDE.md` or an existing settings key. It then asks every question of every offer in one grouped round: docs, design system, delivery, project record, CI, branch protection, other setups and three separate audits (security, compliance, performance). After the yes it runs the picked setups in the same session: the tech-stack-setup audit, auth-setup when repo gates exist, then each audit, holding a heavy step when memory is over 85% or CPU over 60%. For branch protection it reads the current protection, merges the dev-standards check and runs the PUT when the workflow has already run on the default branch. Otherwise it records `pending_protection: true` in `.delivery/config.json`. It never commits or pushes. Its final report ends with one numbered "Left for you" list, followed by the enforcement table, whose rows name the step that fixes them.
+
+All three skills follow the setup pattern (plan first, do the work after a yes, one line per step, a summary with Done, Left for you and What you can do now, safe to run again). See [the setup skills guide](../../guides/setup-skills.md) for a flow of each and what you can do after.
 
 ## 5. Functional requirements
 
@@ -153,6 +157,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.6.0 | 2026-11-04 | RELEASE-37 | claude-setup, tech-stack-setup and auth-setup follow the setup pattern: plan first, one line per step, and a Done, Left for you, What you can do now summary. | DL33 |
 | 0.5.1 | 2026-11-02 | RELEASE-34 | R5.2 and the delivery tooling note: the CI and delivery templates moved to luismc-delivery. tech-stack-setup calls the delivery installer at the end of its setup. No requirement ID changed. | DL15 |
 | 0.5.0 | 2026-11-02 | RELEASE-31 | claude-setup runs the picked setups and three separate audits, applies branch protection after reading current protection, and ends its report with a numbered Left for you list. | SO5 |
 | 0.4.0 | 2026-11-01 | RELEASE-28 | claude-setup defaults to project level: config files go to the project's .claude/, plugins install with --scope project, and extraKnownMarketplaces is added when missing. | SO4 |

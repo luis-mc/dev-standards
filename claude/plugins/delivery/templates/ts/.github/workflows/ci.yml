@@ -56,6 +56,8 @@ jobs:
     name: 'decide: skip a tree already tested'
     if: ${{ github.event_name == 'push' }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    env:
+      DELIVERY_SHARD: decide
     permissions:
       contents: read
       pull-requests: read
@@ -93,6 +95,8 @@ jobs:
     needs: decide
     if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    env:
+      DELIVERY_SHARD: plan
     permissions:
       contents: read
     outputs:
@@ -150,6 +154,8 @@ jobs:
     needs: decide
     if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    env:
+      DELIVERY_SHARD: verify
     permissions:
       contents: read
     steps:
@@ -293,6 +299,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
+      DELIVERY_SHARD: integration
       # Throwaway service-container credentials, not a secret. The gitleaks
       # config allowlists this exact DSN shape so it does not trip the scan.
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
@@ -365,6 +372,8 @@ jobs:
     needs: [decide, plan]
     if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && needs.plan.outputs.e2e != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    env:
+      DELIVERY_SHARD: e2e-shard-${{ matrix.shard }}
     strategy:
       fail-fast: false
       matrix:
@@ -438,6 +447,8 @@ jobs:
     needs: [decide, plan, verify, integration, e2e-shard]
     if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    env:
+      DELIVERY_SHARD: e2e
     permissions:
       contents: read
       actions: read
