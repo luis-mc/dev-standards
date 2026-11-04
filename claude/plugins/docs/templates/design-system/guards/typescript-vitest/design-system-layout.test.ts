@@ -1,14 +1,17 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { DESIGN_SYSTEM, DRAFT, NUMBERED, VERSION_NAME, enforcedVersion, repoRoot } from './design-system.ts';
+import { DESIGN_SYSTEM, DRAFT, NUMBERED, VERSION_NAME, enforcedVersion, isArchived, repoRoot } from './design-system.ts';
 
 // Layout guard (R15.1, R15.2): only version folders, README.md and approvals.json sit in docs/design-system/;
 // versions are numbered without a gap; every version holds its files.
 const FILES = ['README.md', 'CHANGES.md', 'ux-rules.md', 'components.md', 'tokens.md', 'content.md', 'review-visuals/index.html'];
 const BESIDE = ['README.md', 'approvals.json'];
 
-export const layoutProblems = (entries: readonly [string, boolean][]): string[] => {
+export const layoutProblems = (
+  entries: readonly [string, boolean][],
+  archived: (n: number) => boolean = () => false,
+): string[] => {
   const problems: string[] = [];
   for (const [name, folder] of entries) {
     if (!folder && !BESIDE.includes(name) && name !== '.gitkeep')
@@ -20,9 +23,10 @@ export const layoutProblems = (entries: readonly [string, boolean][]): string[] 
     .filter(([n, f]) => f && NUMBERED.test(n))
     .map(([n]) => Number(n.slice(1)))
     .sort((a, b) => a - b);
-  numbers.forEach((n, i) => {
-    if (n !== i + 1) problems.push(`v${n}/: versions are numbered v1, v2 ... without a gap`);
-  });
+  for (let k = 1; k <= (numbers[numbers.length - 1] ?? 0); k++) {
+    // a missing number is no gap when its folder sits in docs/archive/ (R2.7)
+    if (!numbers.includes(k) && !archived(k)) problems.push(`v${k}/: versions are numbered v1, v2 ... without a gap`);
+  }
   return problems;
 };
 
@@ -33,12 +37,13 @@ describe('the design system folder', () => {
     expect(layoutProblems([['README.md', false], [DRAFT, true], ['v1', true]])).toEqual([]);
     expect(layoutProblems([['tokens.md', false]])).toHaveLength(1);
     expect(layoutProblems([['v2', true]])).toHaveLength(1);
+    expect(layoutProblems([['v2', true]], (n) => n === 1)).toEqual([]); // v1 is in docs/archive/
     expect(layoutProblems([['1', true]])).toHaveLength(1);
   });
 
   it('holds only version folders, README.md and approvals.json', () => {
     const entries = readdirSync(dir, { withFileTypes: true }).map((e): [string, boolean] => [e.name, e.isDirectory()]);
-    expect(layoutProblems(entries)).toEqual([]);
+    expect(layoutProblems(entries, isArchived)).toEqual([]);
   });
 
   it('gives every version folder its files', () => {

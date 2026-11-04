@@ -27,6 +27,11 @@ export const versionNumbers = (root: string = repoRoot): number[] => {
     .sort((a, b) => a - b);
 };
 
+/** True when vN was moved to docs/archive/design-system-vN/ or docs/archive/design-system/vN/ (DOCSPEC R2.7, R15.1). */
+export const isArchived = (n: number, root: string = repoRoot): boolean =>
+  existsSync(join(root, 'docs', 'archive', `design-system-v${n}`)) ||
+  existsSync(join(root, 'docs', 'archive', 'design-system', `v${n}`));
+
 /** The enforced folder name: the highest number, else `next-version`. */
 export const enforcedVersion = (root: string = repoRoot): string => {
   const numbers = versionNumbers(root);

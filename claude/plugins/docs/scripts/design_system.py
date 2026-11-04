@@ -70,6 +70,12 @@ def numbers(root: Path) -> list:
     return sorted(int(m.group(1)) for p in d.iterdir() if p.is_dir() and (m := NUMBERED.match(p.name)))
 
 
+def archived(root: Path, n: int) -> bool:
+    """True when version vN was moved to docs/archive/design-system-vN/ or docs/archive/design-system/vN/ (R2.7, R15.1)."""
+    a = Path(root) / "docs" / "archive"
+    return (a / f"design-system-v{n}").is_dir() or (a / "design-system" / f"v{n}").is_dir()
+
+
 def enforced(root: Path) -> str | None:
     """The version apps follow: the highest numbered folder, else next-version (R15.3)."""
     n = numbers(root)
@@ -436,9 +442,9 @@ def check(root: Path, base: str | None = None) -> list:
             continue
         if not p.is_dir() or not (NUMBERED.match(p.name) or p.name == DRAFT):
             out.append(finding(WARN, "DS3", rel(p.name), "a version folder is v1, v2 ... or next-version; nothing else sits here (R15.1)"))
-    for i, n in enumerate(nums):
-        if n != i + 1:
-            out.append(finding(WARN, "DS3", rel(f"v{n}"), "versions are numbered v1, v2 ... without a gap (R15.1)"))
+    for k in range(1, (nums[-1] if nums else 0) + 1):
+        if k not in nums and not archived(root, k):
+            out.append(finding(WARN, "DS3", rel(f"v{k}"), "versions are numbered v1, v2 ... without a gap; an old version may sit in docs/archive/ (R15.1)"))
     if nums and not (d / DRAFT).is_dir():
         out.append(finding(WARN, "DS3", rel(DRAFT), "missing: every change goes into next-version (R15.3)"))
     appr = read_approvals(root).get("versions", {})
@@ -470,6 +476,8 @@ def check(root: Path, base: str | None = None) -> list:
                 parts = path.split("/")
                 if len(parts) > 3 and parts[3] in ONE_TIME and st[:1] == "A":
                     continue
+                if st[:1] == "D" and len(parts) > 2 and (m := NUMBERED.match(parts[2])) and archived(root, int(m.group(1))):
+                    continue  # moved to docs/archive/: an archive, not an edit (R2.7)
                 if st[:1] != "A":
                     out.append(finding(WARN, "DS2", path, f"{st[:1]}: this branch changes a numbered version; put the change into next-version (R15.5)"))
     return out
