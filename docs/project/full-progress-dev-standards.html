@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-04T23:45+00:00",
+ "updated": "2026-11-04T23:59+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1468,11 +1468,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "AR59",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "Built",
+   "status": "Live",
    "item": "Fix artifacts findings (DL48 F20-F27)",
    "detail": "Deferred publish honoured, queue writes, December dates, after-command events, catch-up, overdue.",
    "expected": "04 Nov",
-   "changed": "2026-11-04T23:42+00:00",
+   "changed": "2026-11-04T23:59+00:00",
    "rides": "DL50",
    "started": "2026-11-04T23:29+00:00"
   },
@@ -2106,11 +2106,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL48",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Review the delivery and artifacts plugins for bugs (RELEASE-41)",
    "detail": "One agent reviews both plugins, records findings as tasks; fixes ship in RELEASE-41 (D80).",
    "expected": "04 Nov",
-   "changed": "2026-11-04T23:32+00:00",
+   "changed": "2026-11-04T23:59+00:00",
    "rides": "DL50",
    "started": "2026-11-04T22:39+00:00"
   },
@@ -2152,12 +2152,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL50",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "RELEASE-42: fixes from both plugin reviews (DL48, DL51), DL52",
    "detail": "Every proven DL50 finding; merge on green (D82); last overnight round (D91).",
-   "expected": "05 Nov ~00:10",
-   "changed": "2026-11-04T23:42+00:00",
-   "expected_basis": "8 fix agents from 23:31 ~75 min, join 10, CI 15, merge",
+   "expected": "04 Nov",
+   "changed": "2026-11-04T23:59+00:00",
    "release": 42,
    "started": "2026-11-04T23:32+00:00",
    "phases": [
@@ -2187,11 +2186,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL51",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Review docs, project-setup, specs, transcript-folds, audits, agents for bugs",
    "detail": "Read-only review (D89) on branch DL50-plugin-review-2; findings become RELEASE-42 tasks; suspected ones proven first (D90).",
    "expected": "04 Nov",
-   "changed": "2026-11-04T23:32+00:00",
+   "changed": "2026-11-04T23:59+00:00",
    "rides": "DL50",
    "started": "2026-11-04T22:48+00:00"
   },
@@ -2199,22 +2198,21 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL52",
    "owner": "delivery-speed",
    "app": "",
-   "status": "To do",
+   "status": "Live",
    "item": "agent-eta accepts an agent already pushed; one row per agent",
    "detail": "A launch makes two ledger rows (trigger and session); agent-eta refuses the trigger row once its branch is pushed, so DL-30 cannot be cleared.",
-   "expected": "05 Nov ~03:40",
-   "changed": "2026-11-04T22:50+00:00",
-   "expected_basis": "RELEASE-42 with the DL50 review fixes"
+   "expected": "04 Nov",
+   "changed": "2026-11-04T23:59+00:00"
   },
   {
    "id": "DL53",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Green CI waits only for workflows that run on every PR commit",
    "detail": "DL46 regression: closed-only and path-filtered pull_request workflows never run on the head, so no release goes green; a configured ci_workflows list was ignored.",
    "expected": "04 Nov",
-   "changed": "2026-11-04T23:42+00:00",
+   "changed": "2026-11-04T23:59+00:00",
    "rides": "DL50",
    "started": "2026-11-04T23:08+00:00"
   },
@@ -2222,11 +2220,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL54",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Fix delivery hook findings (DL48 F1 F3-F8 F10, PR from another dir)",
    "detail": "Hook fallback keeps exit 2; DL-63 zone; push/PR recording; DL-91 pid; DL-32 stalled; year wrap.",
    "expected": "04 Nov",
-   "changed": "2026-11-04T23:42+00:00",
+   "changed": "2026-11-04T23:59+00:00",
    "rides": "DL50",
    "started": "2026-11-04T23:29+00:00"
   },
@@ -2234,11 +2232,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL55",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Fix delivery ledger findings (DL48 F2 F9 F11, DL52)",
    "detail": "Unreadable ledger is not replaced; agent-eta on queued/pushed/stalled rows; README flag.",
    "expected": "04 Nov",
-   "changed": "2026-11-04T23:42+00:00",
+   "changed": "2026-11-04T23:59+00:00",
    "rides": "DL50",
    "started": "2026-11-04T23:29+00:00"
   },
@@ -2246,11 +2244,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL56",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Fix delivery shared-script findings (DL48 F12-F19)",
    "detail": "ci_scope renames, session_guard quoting/draft/measure, change_notes '--' lines, heavy lock, quoted paths.",
    "expected": "04 Nov",
-   "changed": "2026-11-04T23:42+00:00",
+   "changed": "2026-11-04T23:59+00:00",
    "rides": "DL50",
    "started": "2026-11-04T23:29+00:00"
   },
@@ -4972,11 +4970,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS184",
    "owner": "project",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Fix docs plugin findings (DL50 F1-F13)",
    "detail": "New-folder map check, notes per doc, master branch, BOM, encoding, docs/work, anchors, links, fold.",
    "expected": "04 Nov",
-   "changed": "2026-11-04T23:42+00:00",
+   "changed": "2026-11-04T23:59+00:00",
    "rides": "DL50",
    "started": "2026-11-04T23:29+00:00"
   },
@@ -4984,11 +4982,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS185",
    "owner": "project",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Fix project-setup findings (DL50 F14-F30)",
    "detail": "Hook fallback, pre-commit names/renames/exec bit, questions hook, preflight, catalog ids, CI template.",
    "expected": "04 Nov",
-   "changed": "2026-11-04T23:42+00:00",
+   "changed": "2026-11-04T23:59+00:00",
    "rides": "DL50",
    "started": "2026-11-04T23:29+00:00"
   },
@@ -4996,11 +4994,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS186",
    "owner": "project",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Fix specs, audits and agents findings (DL50 F31-F47)",
    "detail": "spec_check paths/encoding/citations/fences; audit rule conflicts with shipped specs; architect read-only.",
    "expected": "04 Nov",
-   "changed": "2026-11-04T23:42+00:00",
+   "changed": "2026-11-04T23:59+00:00",
    "rides": "DL50",
    "started": "2026-11-04T23:29+00:00"
   },
@@ -5008,12 +5006,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS187",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "docs_check DS3: archived design-system versions are not a gap",
    "detail": "Peer report: moving design system v1 to docs/archive/ (R2.7) leaves v2 alone and DS3 calls it a gap (R15.1); --strict CI fails. Accept a gap whose missing versions are archived.",
-   "expected": "05 Nov ~00:15",
-   "changed": "2026-11-04T23:44+00:00",
-   "expected_basis": "cloud agent ~20 min: one check, its tests, R15.1 text",
+   "expected": "04 Nov",
+   "changed": "2026-11-04T23:47+00:00",
    "rides": "DL57",
    "started": "2026-11-04T23:45+00:00"
   },
@@ -5402,11 +5399,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "TF6",
    "owner": "transcript-folds",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Fix transcript-folds findings (DL50 F48-F60)",
    "detail": "PowerShell edits, failed calls not folded, ANSI and wide-char widths, Windows path tally.",
    "expected": "04 Nov",
-   "changed": "2026-11-04T23:42+00:00",
+   "changed": "2026-11-04T23:59+00:00",
    "rides": "DL50",
    "started": "2026-11-04T23:29+00:00"
   }
@@ -5416,101 +5413,73 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-04T23:45+00:00">04 Nov 23:45</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T23:59+00:00">04 Nov 23:59</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DL50"><span class="task-id">DL50</span><span class="release-name">RELEASE-42</span>fixes from both plugin reviews (DL48, DL51), DL52 <span class="glance-expected">05 Nov ~00:10</span><span class="glance-basis">8 fix agents from 23:31 ~75 min, join 10, CI 15, merge</span></li>
-<li data-glance-task="DS187"><span class="task-id">DS187</span>docs_check DS3: archived design-system versions are not a gap <span class="glance-expected">05 Nov ~00:15</span><span class="glance-basis">cloud agent ~20 min: one check, its tests, R15.1 text</span></li>
 <li data-glance-task="DL57"><span class="task-id">DL57</span><span class="release-name">RELEASE-43</span>peer bug fixes <span class="glance-expected">05 Nov ~00:50</span></li>
 </ul>
 </details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">11 tasks</span></summary>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DS187"><span class="task-id">DS187</span>docs_check DS3: archived design-system versions are not a gap</li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">44 tasks</span></summary>
 <ul>
 <li data-glance-task="AR59"><span class="task-id">AR59</span>Fix artifacts findings (DL48 F20-F27)</li>
+<li data-glance-task="DL48"><span class="task-id">DL48</span>Review the delivery and artifacts plugins for bugs (RELEASE-41)</li>
+<li data-glance-task="DL50"><span class="task-id">DL50</span><span class="release-name">RELEASE-42</span>fixes from both plugin reviews (DL48, DL51), DL52</li>
+<li data-glance-task="DL51"><span class="task-id">DL51</span>Review docs, project-setup, specs, transcript-folds, audits, agents for bugs</li>
+<li data-glance-task="DL52"><span class="task-id">DL52</span>agent-eta accepts an agent already pushed; one row per agent</li>
 <li data-glance-task="DL53"><span class="task-id">DL53</span>Green CI waits only for workflows that run on every PR commit</li>
 <li data-glance-task="DL54"><span class="task-id">DL54</span>Fix delivery hook findings (DL48 F1 F3-F8 F10, PR from another dir)</li>
 <li data-glance-task="DL55"><span class="task-id">DL55</span>Fix delivery ledger findings (DL48 F2 F9 F11, DL52)</li>
-<li data-glance-task="DL56"><span class="task-id">DL56</span>Fix delivery shared-script findings (DL48 F12-F19)</li>
-<li data-glance-task="DS184"><span class="task-id">DS184</span>Fix docs plugin findings (DL50 F1-F13)</li>
-<li data-glance-task="DS185"><span class="task-id">DS185</span>Fix project-setup findings (DL50 F14-F30)</li>
-<li data-glance-task="DS186"><span class="task-id">DS186</span>Fix specs, audits and agents findings (DL50 F31-F47)</li>
-<li data-glance-task="TF6"><span class="task-id">TF6</span>Fix transcript-folds findings (DL50 F48-F60)</li>
-<li data-glance-task="DL48"><span class="task-id">DL48</span>Review the delivery and artifacts plugins for bugs (RELEASE-41)</li>
-<li data-glance-task="DL51"><span class="task-id">DL51</span>Review docs, project-setup, specs, transcript-folds, audits, agents for bugs</li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">31 tasks</span></summary>
-<ul>
-<li data-glance-task="AR56"><span class="task-id">AR56</span>--phase accepts a phase that crosses midnight</li>
-<li data-glance-task="AR57"><span class="task-id">AR57</span>--release takes an explicit number and corrects a stored one</li>
-<li data-glance-task="AR58"><span class="task-id">AR58</span>R5.45 advice: name the wrong side, Item or stored number</li>
-<li data-glance-task="DL49"><span class="task-id">DL49</span><span class="release-name">RELEASE-41</span>release numbers from the ledger, phases over midnight, R5.45 advice</li>
-<li data-glance-task="AR55"><span class="task-id">AR55</span>set-task-status takes Expected from the last phase</li>
-<li data-glance-task="DL43"><span class="task-id">DL43</span>Stop hook DL-31 flags only future estimates</li>
-<li data-glance-task="DL44"><span class="task-id">DL44</span>Cloud agent setup installs the Node version from engines</li>
-<li data-glance-task="DL45"><span class="task-id">DL45</span>Docs: a routine&#x27;s run_once_at must stay ahead of updates</li>
-<li class="glance-more">and 23 more</li>
+<li class="glance-more">and 36 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">320</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">11</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">333</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 226" role="img" aria-label="Next releases: DL50 (fixes from both plugin reviews (DL48, DL51), DL52) expected live about 00:10; DL57 (peer bug fixes) expected live about 00:50." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="202"/><text x="200" y="28">23:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="202"/><text x="373.3" y="28">05 Nov 00:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="202"/><text x="546.7" y="28">05 Nov 00:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="202"/><text x="720" y="28">01:00</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-42 · fixes from both plugin reviews (DL48, DL51), DL52</title>RELEASE-42 · fixes from b…</text>
-<text class="rt-sub" x="0" y="77"><title>AR59, DL48, DL51, DL53, DL54, DL55, DL56, DS184, DS185, DS186, TF6</title>AR59, DL48, DL51, DL53, DL54, DL5…</text>
-<rect class="rt-bar agents" x="205.8" y="52" width="40.4" height="22"><title>agents 23:31-23:38</title></rect>
-<rect class="rt-bar join" x="246.2" y="52" width="23.1" height="22"><title>join 23:38-23:42</title></rect>
-<rect class="rt-bar ci" x="269.3" y="52" width="132.9" height="22"><title>PR CI 23:42-00:05</title></rect>
-<rect class="rt-bar merge" x="402.2" y="52" width="28.9" height="22"><title>merge + cleanup 00:05-00:10</title></rect>
-<polygon class="rt-expected" points="431.1,50 439.1,63 431.1,76 423.1,63"/>
-<text class="rt-live-label" x="431.1" y="92">live ~00:10</text>
-<text class="rt-name" x="0" y="122"><title>RELEASE-43 · peer bug fixes</title>RELEASE-43 · peer bug fix…</text>
-<text class="rt-sub" x="0" y="139"><title>DS187</title>DS187</text>
-<rect class="rt-bar agents" x="344.4" y="114" width="115.6" height="22"><title>agents 23:55-00:15</title></rect>
-<rect class="rt-bar join" x="460" y="114" width="28.9" height="22"><title>join 00:15-00:20</title></rect>
-<rect class="rt-bar ci" x="488.9" y="114" width="144.4" height="22"><title>PR CI 00:20-00:45</title></rect>
-<rect class="rt-bar merge" x="633.3" y="114" width="28.9" height="22"><title>merge + cleanup 00:45-00:50</title></rect>
-<polygon class="rt-expected" points="662.2,112 670.2,125 662.2,138 654.2,125"/>
-<text class="rt-live-label" x="662.2" y="154">live ~00:50</text>
-<line class="rt-now" x1="286.7" y1="36" x2="286.7" y2="210"/><text class="rt-now-label" x="286.7" y="223">now 23:45</text>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DL57 (peer bug fixes) expected live about 00:50." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">23:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">05 Nov 00:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">05 Nov 00:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">01:00</text></g>
+<text class="rt-name" x="0" y="60"><title>RELEASE-43 · peer bug fixes</title>RELEASE-43 · peer bug fix…</text>
+<text class="rt-sub" x="0" y="77"><title>DS187</title>DS187</text>
+<rect class="rt-bar agents" x="344.4" y="52" width="115.6" height="22"><title>agents 23:55-00:15</title></rect>
+<rect class="rt-bar join" x="460" y="52" width="28.9" height="22"><title>join 00:15-00:20</title></rect>
+<rect class="rt-bar ci" x="488.9" y="52" width="144.4" height="22"><title>PR CI 00:20-00:45</title></rect>
+<rect class="rt-bar merge" x="633.3" y="52" width="28.9" height="22"><title>merge + cleanup 00:45-00:50</title></rect>
+<polygon class="rt-expected" points="662.2,50 670.2,63 662.2,76 654.2,63"/>
+<text class="rt-live-label" x="662.2" y="92">live ~00:50</text>
+<line class="rt-now" x1="367.6" y1="36" x2="367.6" y2="148"/><text class="rt-now-label" x="367.6" y="161">now 23:59</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-42" open><summary><strong>RELEASE-42 · live ~00:10</strong><span class="fold-count">12 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL50"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL50</span><span class="release-name">RELEASE-42</span>fixes from both plugin reviews (DL48, DL51), DL52</a></td><td data-label="App / service"></td><td data-label="Detail">Every proven DL50 finding; merge on green (D82); last overnight round (D91).</td><td data-label="Expected">05 Nov ~00:10<span class="expected-basis">8 fix agents from 23:31 ~75 min, join 10, CI 15, merge</span></td></tr>
-<tr data-task="AR59"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR59</span>Fix artifacts findings (DL48 F20-F27)</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Deferred publish honoured, queue writes, December dates, after-command events, catch-up, overdue.</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="DL48"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL48</span>Review the delivery and artifacts plugins for bugs (RELEASE-41)</a></td><td data-label="App / service"></td><td data-label="Detail">One agent reviews both plugins, records findings as tasks; fixes ship in RELEASE-41 (D80).</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="DL51"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL51</span>Review docs, project-setup, specs, transcript-folds, audits, agents for bugs</a></td><td data-label="App / service"></td><td data-label="Detail">Read-only review (D89) on branch DL50-plugin-review-2; findings become RELEASE-42 tasks; suspected ones proven first (D90).</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="DL53"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL53</span>Green CI waits only for workflows that run on every PR commit</a></td><td data-label="App / service"></td><td data-label="Detail">DL46 regression: closed-only and path-filtered pull_request workflows never run on the head, so no release goes green; a configured ci_workflows list was ignored.</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="DL54"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL54</span>Fix delivery hook findings (DL48 F1 F3-F8 F10, PR from another dir)</a></td><td data-label="App / service"></td><td data-label="Detail">Hook fallback keeps exit 2; DL-63 zone; push/PR recording; DL-91 pid; DL-32 stalled; year wrap.</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="DL55"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL55</span>Fix delivery ledger findings (DL48 F2 F9 F11, DL52)</a></td><td data-label="App / service"></td><td data-label="Detail">Unreadable ledger is not replaced; agent-eta on queued/pushed/stalled rows; README flag.</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="DL56"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL56</span>Fix delivery shared-script findings (DL48 F12-F19)</a></td><td data-label="App / service"></td><td data-label="Detail">ci_scope renames, session_guard quoting/draft/measure, change_notes &#x27;--&#x27; lines, heavy lock, quoted paths.</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="DS184"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS184</span>Fix docs plugin findings (DL50 F1-F13)</td><td data-label="App / service"></td><td data-label="Detail">New-folder map check, notes per doc, master branch, BOM, encoding, docs/work, anchors, links, fold.</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="DS185"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS185</span>Fix project-setup findings (DL50 F14-F30)</td><td data-label="App / service"></td><td data-label="Detail">Hook fallback, pre-commit names/renames/exec bit, questions hook, preflight, catalog ids, CI template.</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="DS186"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS186</span>Fix specs, audits and agents findings (DL50 F31-F47)</td><td data-label="App / service"></td><td data-label="Detail">spec_check paths/encoding/citations/fences; audit rule conflicts with shipped specs; architect read-only.</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="TF6"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-transcript-folds.html"><span class="task-id">TF6</span>Fix transcript-folds findings (DL50 F48-F60)</a></td><td data-label="App / service"></td><td data-label="Detail">PowerShell edits, failed calls not folded, ANSI and wide-char widths, Windows path tally.</td><td data-label="Expected">04 Nov</td></tr>
-</tbody></table></div>
-</details>
 <details class="status-fold release-group" data-group="release-43" open><summary><strong>RELEASE-43 · live ~00:50</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL57"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL57</span><span class="release-name">RELEASE-43</span>peer bug fixes</a></td><td data-label="App / service"></td><td data-label="Detail">Join, CI and merge of peer bug reports received after RELEASE-42 (D78).</td><td data-label="Expected">05 Nov ~00:50</td></tr>
-<tr data-task="DS187"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS187</span>docs_check DS3: archived design-system versions are not a gap</td><td data-label="App / service"></td><td data-label="Detail">Peer report: moving design system v1 to docs/archive/ (R2.7) leaves v2 alone and DS3 calls it a gap (R15.1); --strict CI fails. Accept a gap whose missing versions are archived.</td><td data-label="Expected">05 Nov ~00:15<span class="expected-basis">cloud agent ~20 min: one check, its tests, R15.1 text</span></td></tr>
+<tr data-task="DS187"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS187</span>docs_check DS3: archived design-system versions are not a gap</td><td data-label="App / service"></td><td data-label="Detail">Peer report: moving design system v1 to docs/archive/ (R2.7) leaves v2 alone and DS3 calls it a gap (R15.1); --strict CI fails. Accept a gap whose missing versions are archived.</td><td data-label="Expected">04 Nov</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">335 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL52"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL52</span>agent-eta accepts an agent already pushed; one row per agent</a></td><td data-label="App / service"></td><td data-label="Detail">A launch makes two ledger rows (trigger and session); agent-eta refuses the trigger row once its branch is pushed, so DL-30 cannot be cleared.</td><td data-label="Expected">05 Nov ~03:40<span class="expected-basis">RELEASE-42 with the DL50 review fixes</span></td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">322 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="AR59"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR59</span>Fix artifacts findings (DL48 F20-F27)</a><span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Deferred publish honoured, queue writes, December dates, after-command events, catch-up, overdue.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL48"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL48</span>Review the delivery and artifacts plugins for bugs (RELEASE-41)</a><span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td data-label="App / service"></td><td data-label="Detail">One agent reviews both plugins, records findings as tasks; fixes ship in RELEASE-41 (D80).</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL50"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL50</span><span class="release-name">RELEASE-42</span>fixes from both plugin reviews (DL48, DL51), DL52</a></td><td data-label="App / service"></td><td data-label="Detail">Every proven DL50 finding; merge on green (D82); last overnight round (D91).</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL51"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL51</span>Review docs, project-setup, specs, transcript-folds, audits, agents for bugs</a><span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td data-label="App / service"></td><td data-label="Detail">Read-only review (D89) on branch DL50-plugin-review-2; findings become RELEASE-42 tasks; suspected ones proven first (D90).</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL52"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL52</span>agent-eta accepts an agent already pushed; one row per agent</a></td><td data-label="App / service"></td><td data-label="Detail">A launch makes two ledger rows (trigger and session); agent-eta refuses the trigger row once its branch is pushed, so DL-30 cannot be cleared.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL53"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL53</span>Green CI waits only for workflows that run on every PR commit</a><span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td data-label="App / service"></td><td data-label="Detail">DL46 regression: closed-only and path-filtered pull_request workflows never run on the head, so no release goes green; a configured ci_workflows list was ignored.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL54"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL54</span>Fix delivery hook findings (DL48 F1 F3-F8 F10, PR from another dir)</a><span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td data-label="App / service"></td><td data-label="Detail">Hook fallback keeps exit 2; DL-63 zone; push/PR recording; DL-91 pid; DL-32 stalled; year wrap.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL55"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL55</span>Fix delivery ledger findings (DL48 F2 F9 F11, DL52)</a><span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td data-label="App / service"></td><td data-label="Detail">Unreadable ledger is not replaced; agent-eta on queued/pushed/stalled rows; README flag.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL56"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL56</span>Fix delivery shared-script findings (DL48 F12-F19)</a><span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td data-label="App / service"></td><td data-label="Detail">ci_scope renames, session_guard quoting/draft/measure, change_notes &#x27;--&#x27; lines, heavy lock, quoted paths.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DS184"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS184</span>Fix docs plugin findings (DL50 F1-F13)<span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td data-label="App / service"></td><td data-label="Detail">New-folder map check, notes per doc, master branch, BOM, encoding, docs/work, anchors, links, fold.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DS185"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS185</span>Fix project-setup findings (DL50 F14-F30)<span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td data-label="App / service"></td><td data-label="Detail">Hook fallback, pre-commit names/renames/exec bit, questions hook, preflight, catalog ids, CI template.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DS186"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS186</span>Fix specs, audits and agents findings (DL50 F31-F47)<span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td data-label="App / service"></td><td data-label="Detail">spec_check paths/encoding/citations/fences; audit rule conflicts with shipped specs; architect read-only.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="TF6"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-transcript-folds.html"><span class="task-id">TF6</span>Fix transcript-folds findings (DL50 F48-F60)</a><span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td data-label="App / service"></td><td data-label="Detail">PowerShell edits, failed calls not folded, ANSI and wide-char widths, Windows path tally.</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="AR56"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR56</span>--phase accepts a phase that crosses midnight</a><span class="release-line"><span class="release-name">RELEASE-41</span></span></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">merge=23:55-00:05 is refused (end must be after start); a release near midnight cannot record its real phases. Ships in RELEASE-41.</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="AR57"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR57</span>--release takes an explicit number and corrects a stored one</a><span class="release-line"><span class="release-name">RELEASE-41</span></span></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">A real release with no release task makes every later --release number one low. Allow --release N (or the delivery ledger&#x27;s number) and fix a stored number.</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="AR58"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR58</span>R5.45 advice: name the wrong side, Item or stored number</a><span class="release-line"><span class="release-name">RELEASE-41</span></span></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">When the Item matches the delivery ledger&#x27;s release, R5.45 must say to correct the stored number (with --release N), not the Item.</td><td data-label="Expected">04 Nov</td></tr>
@@ -5841,15 +5810,15 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
-<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (3)</strong><span class="fold-count">3 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897265"><time datetime="2026-11-04T23:45+00:00">04 Nov 23:45</time></td><td data-label="Tasks">DL1 to DL57</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">2 Running</span><span class="status-chip status-built">6 Built</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29897262"><time datetime="2026-11-04T23:42+00:00">04 Nov 23:42</time></td><td data-label="Tasks">AR2 to AR59</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: transcript folds"><a href="feature-transcript-folds.html">Feature: Transcript folds</a></td><td data-label="Last updated" data-value="29897262"><time datetime="2026-11-04T23:42+00:00">04 Nov 23:42</time></td><td data-label="Tasks">TF1 to TF6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">Live since 13 Oct (PR #60): luismc-transcript-folds 1.0.0, installed by claude-setup 14.3.0.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897279"><time datetime="2026-11-04T23:59+00:00">04 Nov 23:59</time></td><td data-label="Tasks">DL1 to DL57</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (4)</strong><span class="fold-count">4 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (6)</strong><span class="fold-count">6 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
+<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29897279"><time datetime="2026-11-04T23:59+00:00">04 Nov 23:59</time></td><td data-label="Tasks">AR2 to AR59</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: transcript folds"><a href="feature-transcript-folds.html">Feature: Transcript folds</a></td><td data-label="Last updated" data-value="29897279"><time datetime="2026-11-04T23:59+00:00">04 Nov 23:59</time></td><td data-label="Tasks">TF1 to TF6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Live since 13 Oct (PR #60): luismc-transcript-folds 1.0.0, installed by claude-setup 14.3.0.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-label="Last updated" data-value="29897208"><time datetime="2026-11-04T22:48+00:00">04 Nov 22:48</time></td><td data-label="Tasks">TC1 to TC12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29897192"><time datetime="2026-11-04T22:32+00:00">04 Nov 22:32</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">claude-setup turns plugins on, but most stay silent until a config file exists and some only warn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29897090"><time datetime="2026-11-04T20:50+00:00">04 Nov 20:50</time></td><td data-label="Tasks">ST1 to ST5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
