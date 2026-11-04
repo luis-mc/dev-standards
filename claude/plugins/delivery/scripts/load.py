@@ -2,6 +2,7 @@
 """Machine load for the luismc-delivery load guard (DELIVERYSPEC DL-77, DL-78): total memory use % and CPU use %.
 
     load.py [--json]        print the current sample and the limits in force (exit 0 under, 1 over, 2 unmeasurable)
+    load.py --write         write host-load.json in the machine folder (a scheduled task runs it every 15 s)
 
 Windows: ctypes GlobalMemoryStatusEx and GetSystemTimes. Linux: /proc/meminfo and /proc/stat. macOS: vm_stat with
 sysctl hw.memsize, `top -l 2` (loadavg fallback). Standard library only, never psutil.
@@ -11,12 +12,21 @@ not wait); with no usable previous sample (none, or older than 10 min) it is the
 Windows without one it is unknown and the guard decides on memory only. The last samples are kept in a small cache file (TTL 10 s, so a burst of hooks
 costs one sample); the CPU figure is the mean of the samples of the last 30 s (at most 3), so one spike does not decide.
 
-Limits (project over machine over default): defaults memory 85, CPU 60; the machine file is
-~/.claude/luismc-delivery-machine.json {"load_limits": {"memory_pct": 85, "cpu_pct": 60}}; a project overrides in
-.delivery/config.json `load_limits`. This module only measures: it never signals, kills or reprioritises anything.
+Limits (project over machine over default): defaults memory 85, CPU 60. The machine file is machine.json in the
+machine folder (machine_slots.machine_dir(), DL-90); the old ~/.claude/luismc-delivery-machine.json is read only when
+the new file has no load_limits. A project overrides in .delivery/config.json `load_limits`, and may lower a limit
+for its own work but never raise the machine limit (D21). This module only measures: it never signals, kills or
+reprioritises anything.
+
+Host load (DL-90, G3): a reader in WSL or a container measures only its VM. When host-load.json (written on the host
+every 15 s by `--write`) is under 60 s old, readers use its figures; when it is older they use their own and say so
+(`sample()['host']` is 'stale'). Inside a container the reader also reads the cgroup v2 figures (memory.current,
+memory.max, cpu.stat) and decides on the worse of host and container.
 
 Test seams: DELIVERY_LOAD="mem,cpu" (fixed sample, no cache), DELIVERY_LOAD_CACHE (cache path),
-DELIVERY_MACHINE_CONFIG (machine file path), DELIVERY_PS (a file with `ps` output for top_processes).
+DELIVERY_MACHINE_CONFIG (old machine file path), DELIVERY_MACHINE_DIR (machine folder), DELIVERY_CGROUP_DIR (cgroup
+v2 folder, default /sys/fs/cgroup), DELIVERY_IN_CONTAINER=1|0 (force the container check), DELIVERY_PS (a file with
+`ps` output for top_processes).
 """
 import json
 import os
@@ -25,6 +35,10 @@ import subprocess
 import sys
 import tempfile
 import time
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import machine_slots as MS  # noqa: E402
 
 DEFAULT_LIMITS = {'memory_pct': 85.0, 'cpu_pct': 60.0}
 CACHE_TTL = 10.0
@@ -54,19 +68,42 @@ def _pct(value):
     return float(value)
 
 
+def _machine_limits_layer():
+    """The load_limits layer of the machine: machine.json first, the old home-folder file as the fallback."""
+    new = MS.read_config_file()
+    if isinstance(new, dict) and isinstance(new.get('load_limits'), dict):
+        return new
+    return _read(machine_file())
+
+
 def limits(project_cfg=None):
-    """{'memory_pct', 'cpu_pct'}: project config over the machine file over the defaults. A value outside 1..100 is
-    ignored (the next layer applies)."""
+    """{'memory_pct', 'cpu_pct'}: the machine over the defaults, then the project, which can only LOWER a limit
+    (a value above the machine limit is ignored). A value outside 1..100 is ignored."""
     out = dict(DEFAULT_LIMITS)
-    layers = [_read(machine_file()), project_cfg]
-    for layer in layers:
-        sect = layer.get('load_limits') if isinstance(layer, dict) else None
-        if isinstance(sect, dict):
-            for k in out:
-                v = _pct(sect.get(k))
-                if v is not None:
-                    out[k] = v
+    sect = (_machine_limits_layer() or {}).get('load_limits')
+    if isinstance(sect, dict):
+        for k in out:
+            v = _pct(sect.get(k))
+            if v is not None:
+                out[k] = v
+    proj = project_cfg.get('load_limits') if isinstance(project_cfg, dict) else None
+    if isinstance(proj, dict):
+        for k in out:
+            v = _pct(proj.get(k))
+            if v is not None and v <= out[k]:
+                out[k] = v
     return out
+
+
+def legacy_differs():
+    """Keys of load_limits on which machine.json and the old home-folder file disagree (the doctor warns). Empty
+    when either file is missing."""
+    new, old = MS.read_config_file(), _read(machine_file())
+    a = new.get('load_limits') if isinstance(new, dict) else None
+    b = old.get('load_limits') if isinstance(old, dict) else None
+    if not isinstance(a, dict) or not isinstance(b, dict):
+        return []
+    return sorted(k for k in set(a) | set(b) if a.get(k) != b.get(k))
 
 
 # --- parsers (pure; fixtures in tests) -----------------------------------------------------------
@@ -255,19 +292,144 @@ def _history():
         if isinstance(hist, list) else []
 
 
-def sample(now=None, measure=None):
-    """The load the guard decides on: {'mem', 'cpu', 'at', 'cached'}. Reuses a sample younger than CACHE_TTL; else
-    measures, stores it and smooths CPU over the recent samples. Raises when unmeasurable (callers fail open)."""
+def read_host_load(now=None):
+    """(figures, age_s) of host-load.json: figures {'mem', 'cpu'} or None when the file is missing or unreadable."""
+    data = _read(MS.host_load_path())
+    if not isinstance(data, dict):
+        return None, None
+    at = data.get('at')
+    mem, cpu = data.get('mem'), data.get('cpu')
+    if isinstance(mem, bool) or not isinstance(mem, (int, float)) or not isinstance(at, (int, float)):
+        return None, None
+    now = time.time() if now is None else now
+    out = {'mem': float(mem), 'cpu': float(cpu) if isinstance(cpu, (int, float)) and not isinstance(cpu, bool) else None}
+    return out, max(0.0, now - at)
+
+
+def write_host_load(s=None):
+    """Write host-load.json (atomic): memory %, CPU %, time. Returns the dict written."""
+    s = s or sample(own_only=True)
+    rec = {'mem': s['mem'], 'cpu': s['cpu'], 'at': time.time(), 'written_by': sys.platform}
+    folder = MS.machine_dir()
+    MS._mkdir(folder)
+    fd, tmp = tempfile.mkstemp(dir=folder, prefix='host-load.', suffix='.tmp')
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as f:
+            json.dump(rec, f)
+        if not sys.platform.startswith('win'):
+            os.chmod(tmp, 0o644)
+        os.replace(tmp, MS.host_load_path())
+    except BaseException:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+        raise
+    return rec
+
+
+def in_container():
+    env = os.environ.get('DELIVERY_IN_CONTAINER')
+    if env in ('0', '1'):
+        return env == '1'
+    return os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv')
+
+
+def parse_cpu_stat(text):
+    """usage_usec from cgroup v2 cpu.stat text."""
+    for line in text.splitlines():
+        parts = line.split()
+        if len(parts) == 2 and parts[0] == 'usage_usec':
+            return int(parts[1])
+    raise ValueError('no usage_usec')
+
+
+def parse_cpu_max(text):
+    """CPUs the cgroup may use from cpu.max text ('max 100000' or '200000 100000'); None when uncapped."""
+    parts = text.split()
+    if len(parts) >= 2 and parts[0] != 'max' and int(parts[1]) > 0:
+        return int(parts[0]) / int(parts[1])
+    return None
+
+
+def measure_container(prev=None, now=None):
+    """The container's own figures from cgroup v2: {'mem', 'cpu', 'cg'} (any may be None), or None when there is no
+    cgroup v2 folder. mem is memory.current over memory.max (None when uncapped); cpu is the usage delta since
+    `prev` (its 'cg' entry) over the CPUs the cgroup may use."""
+    base = os.environ.get('DELIVERY_CGROUP_DIR') or '/sys/fs/cgroup'
+    now = time.time() if now is None else now
+    out = {'mem': None, 'cpu': None, 'cg': None}
+    try:
+        cur = int(_read_text(os.path.join(base, 'memory.current')).strip())
+        mx = _read_text(os.path.join(base, 'memory.max')).strip()
+        if mx.isdigit() and int(mx) > 0:
+            out['mem'] = round(100.0 * cur / int(mx), 1)
+    except (OSError, ValueError):
+        pass
+    try:
+        usec = parse_cpu_stat(_read_text(os.path.join(base, 'cpu.stat')))
+        out['cg'] = {'usec': usec, 'at': now}
+        try:
+            cpus = parse_cpu_max(_read_text(os.path.join(base, 'cpu.max'))) or float(os.cpu_count() or 1)
+        except (OSError, ValueError):
+            cpus = float(os.cpu_count() or 1)
+        old = prev.get('cg') if isinstance(prev, dict) else None
+        if isinstance(old, dict) and 0 < now - old.get('at', 0) <= RAW_MAX_AGE and usec >= old.get('usec', usec):
+            out['cpu'] = min(100.0, round(100.0 * (usec - old['usec']) / 1e6 / (now - old['at']) / cpus, 1))
+    except (OSError, ValueError):
+        pass
+    return out if (out['mem'] is not None or out['cg']) else None
+
+
+def _combine(own, now):
+    """Decide on the worse of the host and the container. The host figures come from host-load.json when it is under
+    60 s old, else they are this reader's own. Adds 'host' ('file'|'own'|'stale') and 'container'."""
+    out = dict(own)
+    host, age = read_host_load(now)
+    if host is not None and age <= MS.HOST_LOAD_MAX_AGE:
+        out['mem'] = host['mem']
+        out['cpu'] = host['cpu'] if host['cpu'] is not None else own['cpu']
+        out['host'] = 'file'
+    else:
+        out['host'] = 'stale' if host is not None else 'own'
+    ctr = own.get('container')
+    if isinstance(ctr, dict):
+        if ctr.get('mem') is not None:
+            out['mem'] = max(out['mem'], ctr['mem'])
+        if ctr.get('cpu') is not None:
+            out['cpu'] = max(out['cpu'], ctr['cpu'])
+    return out
+
+
+def sample(now=None, measure=None, own_only=False):
+    """The load the guard decides on: {'mem', 'cpu', 'at', 'cached', 'host'}. Reuses a sample younger than CACHE_TTL;
+    else measures, stores it and smooths CPU over the recent samples. Then the host file and the container figures
+    are applied (see the module doc); `own_only` and a `measure` seam skip that. Raises when unmeasurable (callers
+    fail open)."""
     fixed = os.environ.get('DELIVERY_LOAD')
     if fixed:
         mem, cpu = [float(x) for x in fixed.split(',')[:2]]
         return {'mem': mem, 'cpu': cpu, 'at': time.time(), 'cached': False}
     now = time.time() if now is None else now
+    s = _own_sample(now, measure)
+    if own_only or measure is not None:
+        return s
+    return _combine(s, now)
+
+
+def _own_sample(now, measure=None):
     hist = _history()
     if hist and 0 <= now - hist[-1]['at'] < CACHE_TTL:
-        return dict(_smooth(hist, now), cached=True)
+        return dict(_smooth(hist, now), cached=True, container=hist[-1].get('container'))
     prev = next((h for h in reversed(hist) if h.get('raw')), None)
-    s = (measure or (lambda: measure_now(prev)))()
+    if measure is None:
+        def measure():
+            s = measure_now(prev)
+            if in_container():
+                ctr = measure_container(next((h for h in reversed(hist) if h.get('container', {}) and
+                                              (h.get('container') or {}).get('cg')), {}).get('container'), now)
+                if ctr:
+                    s['container'] = ctr
+            return s
+    s = measure()
     hist = [h for h in hist if 0 <= now - h['at'] <= HISTORY_WINDOW][-(HISTORY_MAX - 1):] + [dict(s, at=now)]
     tmp = None
     try:
@@ -286,7 +448,7 @@ def sample(now=None, measure=None):
             except OSError:
                 pass
         pass                                   # a cache that cannot be written only costs the next hook a sample
-    return dict(_smooth(hist, now), cached=False)
+    return dict(_smooth(hist, now), cached=False, container=s.get('container'))
 
 
 def _smooth(hist, now):
@@ -328,6 +490,14 @@ def top_processes(n=5):
 
 def main(argv=None):
     args = argv if argv is not None else sys.argv[1:]
+    if '--write' in args:
+        try:
+            rec = write_host_load()
+        except Exception as exc:  # noqa: BLE001
+            print('load: cannot write host-load.json (%s: %s)' % (type(exc).__name__, exc), file=sys.stderr)
+            return 2
+        print('host-load.json: memory %s%%, CPU %s%%' % (_n(rec['mem']), _n(rec['cpu'] if rec['cpu'] is not None else 0)))
+        return 0
     lim = limits()
     try:
         s = sample()

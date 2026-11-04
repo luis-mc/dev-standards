@@ -31,7 +31,8 @@ PWSH = '"Name","CPU","WorkingSet64"\n"chrome","50.5","4000000000"\n"node","300",
 def env(**kw):
     """Environment for a test: machine file and cache in a fresh temp folder, no fixed sample."""
     d = tempfile.mkdtemp(prefix="load-")
-    base = {"DELIVERY_MACHINE_CONFIG": os.path.join(d, "machine.json"), "DELIVERY_LOAD_CACHE": os.path.join(d, "c.json")}
+    base = {"DELIVERY_MACHINE_CONFIG": os.path.join(d, "machine.json"), "DELIVERY_LOAD_CACHE": os.path.join(d, "c.json"),
+            "DELIVERY_MACHINE_DIR": os.path.join(d, "machine"), "DELIVERY_IN_CONTAINER": "0"}
     base.update(kw)
     return mock.patch.dict(os.environ, base)
 
@@ -161,7 +162,8 @@ class Limits(unittest.TestCase):
             self.assertEqual(L.limits(), {"memory_pct": 85.0, "cpu_pct": 60.0})
             Path(os.environ["DELIVERY_MACHINE_CONFIG"]).write_text(json.dumps({"load_limits": {"memory_pct": 80, "cpu_pct": 50}}))
             self.assertEqual(L.limits(), {"memory_pct": 80.0, "cpu_pct": 50.0})
-            self.assertEqual(L.limits({"load_limits": {"cpu_pct": 70}}), {"memory_pct": 80.0, "cpu_pct": 70.0})
+            self.assertEqual(L.limits({"load_limits": {"cpu_pct": 40}}), {"memory_pct": 80.0, "cpu_pct": 40.0})
+            self.assertEqual(L.limits({"load_limits": {"cpu_pct": 70}}), {"memory_pct": 80.0, "cpu_pct": 50.0})   # D21: never raised
             self.assertEqual(L.limits({"load_limits": {"memory_pct": 0, "cpu_pct": "x"}}),
                              {"memory_pct": 80.0, "cpu_pct": 50.0})        # invalid values fall through
 
@@ -242,7 +244,7 @@ class Refusal(unittest.TestCase):
 
     def test_project_limits_and_checks_off(self):
         with env(DELIVERY_LOAD="70,70"):
-            self.assertIsNone(G.check_call(call("Bash", command="vitest"), {"load_limits": {"cpu_pct": 80}}))
+            self.assertIsNotNone(G.check_call(call("Bash", command="vitest"), {"load_limits": {"cpu_pct": 80}}))   # D21
             self.assertIsNotNone(G.check_call(call("Bash", command="vitest"), {"load_limits": {"memory_pct": 60}}))
             self.assertIsNone(G.check_call(call("Bash", command="vitest"), {"checks_off": ["DL-77"]}))
 
@@ -293,11 +295,11 @@ class Hooks(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertIn("warn mode", json.loads(out)["systemMessage"])
 
-    def test_pre_tool_project_limit_override(self):
+    def test_pre_tool_project_limit_cannot_raise(self):
         root = make_root({"load_limits": {"memory_pct": 99}})
         rc, _, _ = run_hook("hook_pre_tool.py", {"tool_name": "Bash", "cwd": str(root), "tool_input": {"command": "vitest"}},
                             DELIVERY_LOAD="95,10")
-        self.assertEqual(rc, 0)
+        self.assertEqual(rc, 2)                       # D21: a project lowers, never raises
 
     def test_session_start_and_stop_notice(self):
         root = make_root()
