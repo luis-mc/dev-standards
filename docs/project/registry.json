@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T20:12+00:00",
+  "updated": "2026-11-04T20:19+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -958,32 +958,32 @@
       "app": "",
       "status": "Running",
       "item": "RELEASE-38: fixes from DL34 and DL36, and the questions Stop hook",
-      "detail": "4 agents: DL38, SO6, DL39, DL40",
-      "expected": "04 Nov ~21:52",
-      "changed": "2026-11-04T20:12+00:00",
-      "expected_basis": "DL40 due 21:22; join 8, CI ~17 min",
+      "detail": "PR #142 CI running",
+      "expected": "04 Nov ~20:45",
+      "changed": "2026-11-04T20:19+00:00",
+      "expected_basis": "PR #142 CI started 20:19, ~20 min",
       "release": 38,
       "started": "2026-11-04T19:53+00:00",
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-04T19:53+00:00",
-          "end": "2026-11-04T21:22+00:00"
+          "end": "2026-11-04T20:17+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-04T21:22+00:00",
-          "end": "2026-11-04T21:30+00:00"
+          "start": "2026-11-04T20:18+00:00",
+          "end": "2026-11-04T20:19+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-04T21:30+00:00",
-          "end": "2026-11-04T21:47+00:00"
+          "start": "2026-11-04T20:19+00:00",
+          "end": "2026-11-04T20:40+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-04T21:47+00:00",
-          "end": "2026-11-04T21:52+00:00"
+          "start": "2026-11-04T20:40+00:00",
+          "end": "2026-11-04T20:45+00:00"
         }
       ]
     },
@@ -991,12 +991,11 @@
       "id": "DL38",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "CI runs section: match the approved sample",
-      "detail": "From DL36: tags, now chip, bar colours, jobs grouped, row layout, summary words",
-      "expected": "04 Nov ~21:05",
-      "changed": "2026-11-04T19:52+00:00",
-      "expected_basis": "cloud agent 19:55: setup 5 + work 55 + checks 10 = 70 min",
+      "detail": "joined into PR #142; waits for release CI",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T20:19+00:00",
       "rides": "DL37",
       "started": "2026-11-04T19:52+00:00"
     },
@@ -1004,12 +1003,11 @@
       "id": "DL39",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Runner hook fixes from the real runner test (DL34)",
-      "detail": ".ps1 hooks on Windows, shard from the job id, marker loads the plugin's ci_fallback, marker push credentials",
-      "expected": "04 Nov ~21:20",
-      "changed": "2026-11-04T20:09+00:00",
-      "expected_basis": "cloud agent 20:12: setup 5 + work 50 + checks 10 = 65 min",
+      "detail": "joined into PR #142; waits for release CI",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T20:19+00:00",
       "rides": "DL37",
       "started": "2026-11-04T20:09+00:00"
     },
@@ -1017,14 +1015,24 @@
       "id": "DL40",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Setup plan fixes from the rollout plan (DL35)",
-      "detail": "plan derives repos, delete flags, old service step, host-load task, WSL step, detect folders and WSL containers, auto sizing",
-      "expected": "04 Nov ~21:22",
-      "changed": "2026-11-04T20:12+00:00",
-      "expected_basis": "cloud agent 20:12 + 70 min",
+      "detail": "joined into PR #142; waits for release CI",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T20:19+00:00",
       "rides": "DL37",
       "started": "2026-11-04T20:11+00:00"
+    },
+    {
+      "id": "DL41",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "CI setup pool command uses measured sizing and the derived repos",
+      "detail": "From DL40: delivery_ci_setup.py cmd_pool still needs total GiB by hand; its check treats every step like a service",
+      "expected": "05 Nov",
+      "changed": "2026-11-04T20:19+00:00",
+      "expected_basis": "next release"
     },
     {
       "id": "DS1",
@@ -3839,12 +3847,11 @@
       "id": "SO6",
       "owner": "setup-offers",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Stop hook: ask every open question at once, only with AskUserQuestion (Q-1, Q-2)",
-      "detail": "Owner request relayed from another session 4 Nov: a user-level Stop hook installed by claude-setup",
-      "expected": "04 Nov ~21:10",
-      "changed": "2026-11-04T19:52+00:00",
-      "expected_basis": "cloud agent from 19:58: setup 5 + work 50 + checks 15 = 70 min",
+      "detail": "joined into PR #142; waits for release CI",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T20:19+00:00",
       "rides": "DL37",
       "started": "2026-11-04T19:52+00:00"
     },
