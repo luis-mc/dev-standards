@@ -2,8 +2,8 @@
 """Shared CI pool and the guided CI setup behind it (DL30, contract: docs/features/delivery/shared-self-hosted-runners.md).
 
     delivery_runner_pool.py detect  [--json]
-    delivery_runner_pool.py sizing  --total-gib N --used-gib N --cpus N [--docker-gib N] [--largest-shard-gib N]
-    delivery_runner_pool.py plan    --repos a/b,c/d [--windows-repos e/f] [--pool NAME] [--cpus N] [--mem-gib N]
+    delivery_runner_pool.py sizing  [--total-gib N --used-gib N --cpus N] [--docker-gib N] [--largest-shard-gib N]   (measured when not given)
+    delivery_runner_pool.py plan    [--repos a/b,c/d] [--windows-repos e/f] [--pool NAME]   (repositories come from detect when not given)
     delivery_runner_pool.py verify  --repos a/b --pool NAME
     delivery_runner_pool.py doctor  [--json]
 
@@ -18,6 +18,7 @@ import argparse
 import json
 import math
 import os
+import posixpath
 import re
 import secrets
 import shutil
@@ -27,6 +28,11 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+
+try:  # the load figures (DL-77); absent only on a broken install
+    import load as LOAD
+except Exception:  # noqa: BLE001
+    LOAD = None
 
 try:  # agent A's machine layer (DL32); absent on a branch that does not have it yet
     import machine_slots as MS
@@ -88,6 +94,38 @@ class Probe:
     def sleep(self, sec):
         time.sleep(sec)
 
+    def python(self):
+        return sys.executable
+
+    def cpu_count(self):
+        return os.cpu_count()
+
+    def machine_dir(self):
+        return str(MS.machine_dir()) if MS else os.environ.get('DELIVERY_MACHINE_DIR', '/etc/luismc-delivery')
+
+    def memory_gib(self):
+        """(total GiB, used GiB) of this machine, or None. Total from the OS; used = the load.py memory % of the total."""
+        total = None
+        if self.platform.startswith('win'):
+            r = self.sh(['powershell', '-NoProfile', '-Command', '(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory'])
+            if r and r[0] == 0 and r[1].strip().isdigit():
+                total = int(r[1].strip()) / 2.0 ** 30
+        elif self.platform == 'darwin':
+            r = self.sh(['sysctl', '-n', 'hw.memsize'])
+            if r and r[0] == 0 and r[1].strip().isdigit():
+                total = int(r[1].strip()) / 2.0 ** 30
+        else:
+            m = re.search(r'MemTotal:\s+(\d+)', self.read_text('/proc/meminfo') or '')
+            if m:
+                total = int(m.group(1)) / 2.0 ** 20
+        if total is None or LOAD is None:
+            return None
+        try:
+            pct = float(LOAD.measure_now()['mem'])
+        except Exception:  # noqa: BLE001
+            return None
+        return round(total, 1), round(total * pct / 100.0, 1)
+
 
 # --- detect (read only) -----------------------------------------------------------------------------------------------
 
@@ -95,6 +133,19 @@ def _flatten(data):
     if isinstance(data, list) and data and all(isinstance(x, list) for x in data):
         return [y for x in data for y in x]
     return data if isinstance(data, list) else []
+
+
+def _workflows_self_hosted(probe, repo):
+    """True when a workflow file of the repository names the label `self-hosted` (read only)."""
+    listing, _why = probe.gh_json(['api', 'repos/%s/contents/.github/workflows' % repo])
+    for f in listing if isinstance(listing, list) else []:
+        name = f.get('name') if isinstance(f, dict) else None
+        if not name or not name.endswith(('.yml', '.yaml')):
+            continue
+        r = probe.gh(['api', 'repos/%s/contents/.github/workflows/%s' % (repo, name), '-H', 'Accept: application/vnd.github.raw'])
+        if r and r[0] == 0 and 'self-hosted' in (r[1] or ''):
+            return True
+    return False
 
 
 def detect_github(probe):
@@ -108,6 +159,7 @@ def detect_github(probe):
             continue
         name = r.get('full_name')
         entry = {'repo': name, 'private': bool(r.get('private')), 'runners': [], 'error': None}
+        entry['self_hosted_workflows'] = _workflows_self_hosted(probe, name) if entry['private'] else False
         rd, why = probe.gh_json(['api', 'repos/%s/actions/runners?per_page=100' % name])
         if rd is None:
             entry['error'] = why
@@ -120,18 +172,33 @@ def detect_github(probe):
     return {'repos': repos, 'error': None}
 
 
+def _norm(path):
+    return (path or '').replace('\\', '/')
+
+
+def service_folder(image_path):
+    """The runner folder from a service's image path: `"C:\\x\\app1\\bin\\RunnerService.exe"` gives `C:/x/app1`."""
+    text = (image_path or '').strip()
+    exe = text[1:text.index('"', 1)] if text.startswith('"') and '"' in text[1:] else \
+        (text[:text.lower().index('.exe') + 4] if '.exe' in text.lower() else text.split(' ')[0])
+    d = posixpath.dirname(_norm(exe))
+    return posixpath.dirname(d) if posixpath.basename(d).lower() == 'bin' else d
+
+
 def detect_services(probe):
     out = []
     if probe.platform.startswith('win'):
         r = probe.sh(['powershell', '-NoProfile', '-Command',
-                      'Get-Service actions.runner.* | Select-Object Name,Status | ConvertTo-Json'])
+                      "Get-CimInstance Win32_Service -Filter \"Name like 'actions.runner.%'\" | "
+                      'Select-Object Name,State,PathName | ConvertTo-Json'])
         if r and r[0] == 0 and r[1].strip():
             try:
                 data = json.loads(r[1])
             except ValueError:
                 data = []
             for x in [data] if isinstance(data, dict) else data:
-                out.append({'name': x.get('Name'), 'status': str(x.get('Status')), 'kind': 'windows-service'})
+                out.append({'name': x.get('Name'), 'status': str(x.get('State', x.get('Status'))), 'kind': 'windows-service',
+                            'folder': service_folder(x.get('PathName')) or None})
     else:
         r = probe.sh(['systemctl', 'list-units', 'actions.runner.*', '--all', '--no-legend', '--plain'])
         for line in (r[1] if r and r[0] == 0 else '').splitlines():
@@ -141,37 +208,49 @@ def detect_services(probe):
     return out
 
 
-def detect_folders(probe):
-    """Runner folders, found by their `.runner` file. `.credentials` is never opened."""
-    out = []
+def detect_folders(probe, services=()):
+    """Runner folders, found by their `.runner` file, plus the folder of each runner service (from its image path).
+    `.credentials` is never opened."""
+    out, seen = [], set()
+    svc = {x['folder'] for x in services if x.get('folder')}
+    cands = []
     for base in probe.runner_dirs:
-        for d in [base] + [base.rstrip('/') + '/' + n for n in probe.listdir(base)]:
-            text = probe.read_text(d + '/.runner') if probe.isfile(d + '/.runner') else None
-            if text is None:
-                continue
-            try:
-                j = json.loads(text.lstrip('\ufeff'))
-            except ValueError:
-                j = {}
-            url = j.get('gitHubUrl') or ''
-            out.append({'path': d, 'agent_id': j.get('agentId'), 'name': j.get('agentName'),
-                        'repo': url.replace('https://github.com/', '') or None})
+        cands += [base] + [base.rstrip('/') + '/' + n for n in probe.listdir(base)]
+    cands += sorted(svc)
+    for d in cands:
+        if d in seen:
+            continue
+        seen.add(d)
+        text = probe.read_text(d + '/.runner') if probe.isfile(d + '/.runner') else None
+        if text is None and d not in svc:
+            continue
+        try:
+            j = json.loads((text or '{}').lstrip('\ufeff'))
+        except ValueError:
+            j = {}
+        url = j.get('gitHubUrl') or ''
+        out.append({'path': d, 'agent_id': j.get('agentId'), 'name': j.get('agentName'),
+                    'repo': url.replace('https://github.com/', '') or None})
     return out
 
 
 def detect_containers(probe):
+    """Containers from the Docker on this machine and, on Windows, from the Docker inside WSL (`wsl docker ...`, read only).
+    `via` is '' or 'wsl'; a container seen by both is listed once."""
     out, seen = [], set()
-    for argv, how in ((['docker', 'ps', '-a', '--filter', 'label=' + LABEL, '--format', '{{.ID}}\t{{.Names}}\t{{.Status}}'], 'label'),
-                      (['docker', 'ps', '-a', '--format', '{{.ID}}\t{{.Names}}\t{{.Command}}'], 'command')):
-        r = probe.sh(argv)
-        for line in (r[1] if r and r[0] == 0 else '').splitlines():
-            cols = line.split('\t')
-            if len(cols) < 3 or cols[0] in seen:
-                continue
-            if how == 'command' and 'Runner.Listener' not in cols[2]:
-                continue
-            seen.add(cols[0])
-            out.append({'id': cols[0], 'name': cols[1], 'detail': cols[2], 'found_by': how, 'pool': how == 'label'})
+    prefixes = [('', [])] + ([('wsl', ['wsl'])] if probe.platform.startswith('win') else [])
+    for via, pre in prefixes:
+        for argv, how in ((['docker', 'ps', '-a', '--filter', 'label=' + LABEL, '--format', '{{.ID}}\t{{.Names}}\t{{.Status}}'], 'label'),
+                          (['docker', 'ps', '-a', '--format', '{{.ID}}\t{{.Names}}\t{{.Command}}'], 'command')):
+            r = probe.sh(pre + argv)
+            for line in (r[1].replace('\x00', '') if r and r[0] == 0 else '').splitlines():
+                cols = line.rstrip('\r').split('\t')
+                if len(cols) < 3 or cols[0] in seen:
+                    continue
+                if how == 'command' and 'Runner.Listener' not in cols[2]:
+                    continue
+                seen.add(cols[0])
+                out.append({'id': cols[0], 'name': cols[1], 'detail': cols[2], 'found_by': how, 'pool': how == 'label', 'via': via})
     return out
 
 
@@ -186,11 +265,19 @@ def detect_wsl(probe):
     return out
 
 
+def detect_host(probe):
+    """This machine's figures for sizing: platform, python, machine folder, CPUs, total and used GiB (None when unmeasurable)."""
+    mem = probe.memory_gib()
+    return {'platform': probe.platform, 'python': probe.python(), 'machine_dir': probe.machine_dir(), 'cpus': probe.cpu_count(),
+            'total_gib': mem[0] if mem else None, 'used_gib': mem[1] if mem else None}
+
+
 def detect(probe=None, json=False):
     """What exists, read only. `json=True` returns the same facts as a JSON string (contract 12.3)."""
     probe = probe or Probe()
-    found = {'github': detect_github(probe), 'services': detect_services(probe), 'folders': detect_folders(probe),
-             'containers': detect_containers(probe), 'wsl': detect_wsl(probe)}
+    services = detect_services(probe)
+    found = {'github': detect_github(probe), 'services': services, 'folders': detect_folders(probe, services),
+             'containers': detect_containers(probe), 'wsl': detect_wsl(probe), 'host': detect_host(probe)}
     if json:
         import json as _json
         return _json.dumps(found, indent=2)
@@ -217,6 +304,40 @@ def sizing(total_gib, used_gib, cpus, docker_gib=None, largest_shard_gib=None, s
     return out
 
 
+def measured_sizing(found, total_gib=None, used_gib=None, cpus=None, docker_gib=None, largest_shard_gib=None):
+    """Sizing with what the owner gave and, for the rest, what detect measured (memory, CPUs, the `.wslconfig` memory as
+    Docker's ceiling). Returns the sizing dict plus `measured` (the inputs used), or None when memory cannot be measured."""
+    host = found.get('host') or {}
+    total = total_gib if total_gib is not None else host.get('total_gib')
+    used = used_gib if used_gib is not None else host.get('used_gib')
+    n = cpus if cpus is not None else host.get('cpus')
+    docker = docker_gib if docker_gib is not None else (found.get('wsl') or {}).get('memory')
+    if total is None or n is None:
+        return None
+    res = sizing(total, used or 0.0, n, docker, largest_shard_gib)
+    res['measured'] = {'total_gib': total, 'used_gib': used or 0.0, 'cpus': n, 'docker_gib': docker}
+    return res
+
+
+def derive_repos(found):
+    """(linux repos, windows repos) from detect: every private repository that has a runner or a workflow that names
+    `self-hosted`. Windows: a repository with a runner whose OS is Windows. A repository whose only runners are Windows
+    ones, with no such workflow, gets no Linux pool agent."""
+    linux, windows = [], []
+    for r in found['github']['repos']:
+        if r.get('private') is not True:
+            continue
+        runners = r['runners']
+        flagged = bool(r.get('self_hosted_workflows'))
+        if not runners and not flagged:
+            continue
+        if any(str(x.get('os')).lower() == 'windows' for x in runners):
+            windows.append(r['repo'])
+        if flagged or any(str(x.get('os')).lower() != 'windows' for x in runners):
+            linux.append(r['repo'])
+    return linux, windows
+
+
 # --- plan -------------------------------------------------------------------------------------------------------------
 
 def slug_of(repo):
@@ -238,42 +359,124 @@ def _pool_has(found, pool, repo):
     return False
 
 
-def plan(found, linux_repos, windows_repos=(), pool='main', cap=None, serial=None, limits=None):
+def _winpath(path):
+    return str(path).replace('/', '\\')
+
+
+LOOP_SCRIPT = """\
+import os
+import sys
+import time
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import load  # noqa: E402
+
+while True:  # one sample every 15 seconds; the task starts this at boot and keeps it running
+    try:
+        load.write_host_load()
+    except Exception:
+        pass
+    time.sleep(15)
+"""
+
+
+def _wsl_values(found, cap):
+    """(memory GiB, processors) to write, and whether `.wslconfig` already has at least that."""
+    w = (cap or {}).get('wsl')
+    if not w:
+        return None, False
+    cur = found.get('wsl') or {}
+    enough = cur.get('memory') is not None and cur['memory'] >= w['memory'] and \
+        cur.get('processors') is not None and cur['processors'] >= w['processors']
+    return w, enough
+
+
+def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, serial=None, limits=None):
     """The steps, in the order of contract 6.3. A public repository gets no step; it is listed in `refused`.
 
+    With no repositories given, they come from detect (`derive_repos`). With none derived either, the plan has no step
+    and says why: it never removes a runner it does not rebuild. Removals are limited to the planned repositories.
     A runner that already belongs to this pool is kept and its steps say `already` (safe to run again)."""
+    derived = not linux_repos and not windows_repos
+    if derived:
+        linux_repos, windows_repos = derive_repos(found)
+    linux_repos, windows_repos = list(linux_repos or []), list(windows_repos or [])
     private = {r['repo']: r['private'] for r in found['github']['repos']}
-    refused, keep_l, keep_w = [], [], []
-    for repo in list(linux_repos) + list(windows_repos):
+    refused = []
+    for repo in linux_repos + windows_repos:
         if private.get(repo) is not True:
             why = PRIVATE_REFUSAL % repo if repo in private else 'refused: %s is not a repository you administer' % repo
             refused.append({'repo': repo, 'reason': why})
     bad = {x['repo'] for x in refused}
     keep_l = [r for r in linux_repos if r not in bad]
     keep_w = [r for r in windows_repos if r not in bad]
+    base = {'pool': pool, 'refused': refused, 'cap': cap, 'derived': derived, 'blocked': None}
+    if not keep_l and not keep_w:
+        base.update(steps=[], minutes=0, needs=[], blocked='No repository to plan for: none was named and detect found no '
+                    'private repository with a runner or a self-hosted workflow. No runner is removed.')
+        return base
+    if cap is not None and cap.get('ok') is False:
+        base.update(steps=[], minutes=0, needs=[], blocked='Sizing refused: %s' % cap.get('message'))
+        return base
+    planned = set(keep_l) | set(keep_w)
+    host = found.get('host') or {}
+    win = str(host.get('platform', '')).startswith('win')
     steps = [_step('idle', 'Wait until no existing runner has a job', 'wait-idle')]
     for r in found['github']['repos']:
+        if r['repo'] not in planned:
+            continue
         for x in r['runners']:
             if 'pool-%s' % pool in x['labels']:
                 continue  # already part of this pool: kept
             steps.append(_step('remove:%s:%s' % (r['repo'], x['name']),
                                'Remove runner %s (%s) from %s' % (x['name'], x['os'], r['repo']), 'remove-runner',
+                               delete=True, names=['runner %s (%s) in %s on GitHub' % (x['name'], x['os'], r['repo'])],
                                repo=r['repo'], runner_id=x['id'], runner=x['name']))
+    repo_of = {f['path']: f.get('repo') for f in found['folders']}
+    for svc in found['services']:
+        if svc.get('kind') != 'windows-service':
+            continue
+        if repo_of.get(svc.get('folder')) not in planned | {None}:
+            continue
+        n = svc['name']
+        steps.append(_step('winsvc-remove:%s' % n, 'Stop and delete the Windows runner service %s' % n, 'windows-service-remove',
+                           delete=True, names=['Windows service ' + n], elevated=True, service=n,
+                           printed=['sc.exe stop "%s"' % n, 'sc.exe delete "%s"' % n]))
     for f in found['folders']:
+        if f.get('repo') not in planned | {None}:
+            continue
         steps.append(_step('delete-folder:%s' % f['path'], 'Delete the old runner folder %s' % f['path'], 'delete-folder',
                            delete=True, names=[f['path']], path=f['path']))
     for c in found['containers']:
+        if c.get('pool'):
+            continue  # the pool's own container is kept
         steps.append(_step('delete-container:%s' % c['name'], 'Stop and delete the container %s' % c['name'],
-                           'delete-container', delete=True, names=['container ' + c['name']], container=c['name']))
+                           'delete-container', delete=True, names=['container ' + c['name']], container=c['name'],
+                           via=c.get('via', '')))
     steps.append(_step('machine-config', 'Write the machine config (limits, slots) through the machine layer', 'machine-config',
                        limits=limits or {}))
-    steps.append(_step('host-load-task', 'Register the scheduled task that writes the host load file every 15 seconds',
-                       'host-load-task', elevated=True,
-                       printed=['schtasks /Create /SC MINUTE /MO 1 /TN luismc-host-load /TR "python load.py --write" /RU SYSTEM']))
+    if win:
+        py = _winpath(host.get('python') or 'python')
+        dest = host.get('machine_dir', 'C:/ProgramData/luismc-delivery').rstrip('/\\') + '/host-load'
+        loop = _winpath(dest + '/host-load-loop.py')
+        steps.append(_step('host-load-files', 'Copy load.py and a 15-second loop script to %s' % dest, 'host-load-files', dest=dest))
+        steps.append(_step('host-load-task', 'Register the scheduled task that writes the host load file every 15 seconds',
+                           'host-load-task', elevated=True,
+                           printed=['schtasks /Create /TN luismc-host-load /SC ONSTART /RU SYSTEM /RL HIGHEST /F '
+                                    '/TR "\\"%s\\" \\"%s\\""' % (py, loop),
+                                    'schtasks /Run /TN luismc-host-load']))
     if keep_l:
-        if found['wsl'].get('exists') is False or found['wsl'].get('memory') is None:
-            steps.append(_step('wslconfig', 'Write %s with the pool ceiling' % found['wsl'].get('file'), 'wslconfig',
-                               cap=cap, shutdown=False))
+        w, enough = _wsl_values(found, cap)
+        if w and (win or (found.get('wsl') or {}).get('exists')):
+            s1 = _step('wslconfig', 'Write %s with the pool ceiling (memory=%sGB, processors=%s)' % (
+                (found.get('wsl') or {}).get('file'), w['memory'], w['processors']), 'wslconfig', cap=cap)
+            if enough:
+                s1['state'] = 'already'
+            steps.append(s1)
+            if not enough:
+                steps.append(_step('wsl-restart', 'Restart WSL so the ceiling applies (only when no job runs; stops every container)',
+                                   'wsl-restart'))
         steps.append(_step('pool-files', 'Write the pool files for "%s" (compose, agents.json, .env with the cap only)' % pool,
                            'pool-files', pool=pool, cap=cap))
         steps.append(_step('pool-up', 'Build and start the pool container', 'pool-up', pool=pool))
@@ -299,10 +502,52 @@ def plan(found, linux_repos, windows_repos=(), pool='main', cap=None, serial=Non
     steps.append(_step('verify', 'Verify: each agent online with its labels, then one pool-check run per repository', 'verify',
                        repos=keep_l, pool=pool))
     n_run = sum(1 for s in steps if s['state'] == 'todo')
-    return {'pool': pool, 'steps': steps, 'refused': refused, 'cap': cap,
-            'minutes': 5 + 3 * n_run, 'needs': ['a yes for each step', 'a yes that names what is deleted']
-            + (['an administrator shell for: ' + ', '.join(s['id'] for s in steps if s['elevated'])]
-               if any(s['elevated'] for s in steps) else [])}
+    base.update(steps=steps, minutes=5 + 3 * n_run, needs=['a yes for each step', 'a yes that names what is deleted']
+                + (['an administrator shell for: ' + ', '.join(s['id'] for s in steps if s['elevated'])]
+                   if any(s['elevated'] for s in steps) else []))
+    return base
+
+
+def set_wsl_values(text, memory_gib, processors):
+    """`.wslconfig` text with memory= and processors= set inside [wsl2] (added when missing). Other lines stay."""
+    want = {'memory': '%dGB' % memory_gib, 'processors': str(processors)}
+    out, sect, done = [], None, set()
+
+    def flush():
+        if sect == 'wsl2':
+            for k in want:
+                if k not in done:
+                    out.append('%s=%s' % (k, want[k]))
+                    done.add(k)
+    for line in text.splitlines():
+        m = re.match(r'\s*\[(.+?)\]', line)
+        if m:
+            flush()
+            sect = m.group(1).strip().lower()
+            out.append(line)
+            continue
+        k = re.match(r'\s*(memory|processors)\s*=', line, re.I)
+        if sect == 'wsl2' and k:
+            key = k.group(1).lower()
+            out.append('%s=%s' % (key, want[key]))
+            done.add(key)
+        else:
+            out.append(line)
+    flush()
+    if 'memory' not in done:
+        out += ['', '[wsl2]'] + ['%s=%s' % (k, v) for k, v in want.items()]
+    return '\n'.join(out) + '\n'
+
+
+def default_check(step, probe=None):
+    """Did the owner's administrator step work? Read only. Steps it does not know are not done."""
+    probe = probe or Probe()
+    if step.get('action') == 'windows-service-remove':
+        return step['service'] not in [x['name'] for x in detect_services(probe)]
+    if step.get('action') == 'host-load-task':
+        r = probe.sh(['schtasks', '/Query', '/TN', 'luismc-host-load'])
+        return bool(r and r[0] == 0)
+    return False
 
 
 # --- run (steps 6.3) --------------------------------------------------------------------------------------------------
@@ -385,7 +630,7 @@ class Executor:
         return True, 'deleted %s' % step['path']
 
     def do_delete_container(self, step):
-        r = self.probe.sh(['docker', 'rm', '-f', step['container']])
+        r = self.probe.sh((['wsl'] if step.get('via') == 'wsl' else []) + ['docker', 'rm', '-f', step['container']])
         return (bool(r and r[0] == 0), 'container deleted' if r and r[0] == 0 else 'docker refused')
 
     def do_machine_config(self, step):
@@ -397,11 +642,33 @@ class Executor:
         return True, 'machine config written through machine_slots'
 
     def do_wslconfig(self, step):
-        cap = step.get('cap') or {}
-        w = cap.get('wsl') or {}
-        with open(self.probe.wslconfig, 'a', encoding='utf-8') as f:
-            f.write('\n[wsl2]\nmemory=%sGB\nprocessors=%s\n' % (w.get('memory', 8), w.get('processors', 2)))
-        return True, 'written. `wsl --shutdown` stops every container; run it yourself when no job runs.'
+        w = (step.get('cap') or {}).get('wsl')
+        if not w:
+            return False, 'no pool ceiling to write (sizing is missing)'
+        text = self.probe.read_text(self.probe.wslconfig)
+        if text is not None:
+            with open(self.probe.wslconfig + '.bak', 'w', encoding='utf-8') as f:
+                f.write(text)
+        with open(self.probe.wslconfig, 'w', encoding='utf-8') as f:
+            f.write(set_wsl_values(text or '', w['memory'], w['processors']))
+        return True, 'written (the old file is kept as .wslconfig.bak). It applies after WSL restarts.'
+
+    def do_wsl_restart(self, step):
+        found = detect_github(self.probe)
+        busy = [x['name'] for r in found['repos'] for x in r['runners'] if x['busy']]
+        if busy:
+            return False, 'a job runs on %s. WSL was not restarted; run the setup again when it ends.' % ', '.join(busy)
+        r = self.probe.sh(['wsl', '--shutdown'])
+        return (bool(r and r[0] == 0), 'WSL restarted' if r and r[0] == 0 else 'wsl --shutdown failed')
+
+    def do_host_load_files(self, step):
+        dest = step['dest']
+        os.makedirs(dest, exist_ok=True)
+        for name in ('load.py', 'machine_slots.py'):
+            shutil.copy2(os.path.join(HERE, name), dest)
+        with open(os.path.join(dest, 'host-load-loop.py'), 'w', encoding='utf-8') as f:
+            f.write(LOOP_SCRIPT)
+        return True, 'wrote ' + dest
 
     def do_pool_files(self, step):
         return True, 'wrote ' + write_pool_files(step['pool'], step.get('cap'))
@@ -440,7 +707,7 @@ def run(pl, ask, ask_delete, say=print, execute=None, check=None):
     prints what is left. Returns {'done': [...], 'failed': step or None, 'left': [...], 'refused': [...]}.
     """
     execute = execute or Executor().run
-    check = check or (lambda step: False)
+    check = check or default_check
     done, left, failed = [], [], None
     steps = pl['steps']
     for r in pl.get('refused', []):
@@ -578,7 +845,7 @@ def main(argv=None):
     ap.add_argument('--windows-repos', default='')
     ap.add_argument('--pool', default='main')
     ap.add_argument('--total-gib', type=float)
-    ap.add_argument('--used-gib', type=float, default=0.0)
+    ap.add_argument('--used-gib', type=float)
     ap.add_argument('--cpus', type=float)
     ap.add_argument('--docker-gib', type=float)
     ap.add_argument('--largest-shard-gib', type=float)
@@ -586,17 +853,18 @@ def main(argv=None):
     split = lambda s: [x for x in s.split(',') if x]  # noqa: E731
     if args.action == 'detect':
         print(detect(json=True) if args.json else json.dumps(detect(), indent=2))
-    elif args.action == 'sizing':
-        if args.total_gib is None or args.cpus is None:
-            print('sizing needs --total-gib and --cpus', file=sys.stderr)
-            return 1
-        res = sizing(args.total_gib, args.used_gib, args.cpus, args.docker_gib, args.largest_shard_gib)
-        print(json.dumps(res, indent=2))
-        return 0 if res['ok'] else 1
-    elif args.action == 'plan':
+    elif args.action in ('sizing', 'plan'):
         found = detect()
-        cap = sizing(args.total_gib, args.used_gib, args.cpus, args.docker_gib, args.largest_shard_gib) if args.total_gib else None
-        print(json.dumps(plan(found, split(args.repos), split(args.windows_repos), args.pool, cap), indent=2))
+        res = measured_sizing(found, args.total_gib, args.used_gib, args.cpus, args.docker_gib, args.largest_shard_gib)
+        if args.action == 'sizing':
+            if res is None:
+                print('sizing could not measure this machine; give --total-gib and --cpus', file=sys.stderr)
+                return 1
+            print(json.dumps(res, indent=2))
+            return 0 if res['ok'] else 1
+        pl = plan(found, split(args.repos), split(args.windows_repos), args.pool, res)
+        print(json.dumps(pl, indent=2))
+        return 1 if pl['blocked'] else 0
     elif args.action == 'verify':
         res = verify(Probe(), split(args.repos), args.pool, dispatch=True)
         print(json.dumps(res, indent=2))
