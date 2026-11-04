@@ -58,7 +58,19 @@ fi
 # --- 2. Context window usage % (+ token count) -------------------------------
 ctx_block=$(get_block "context_window")
 ctx_used=$(get_num "$ctx_block" "used_percentage")
-ctx_tokens=$(get_num "$ctx_block" "total_input_tokens")
+# total_input_tokens is the session's cumulative count, not the current context.
+# Use current_usage (input + cache creation + cache read) when it is present,
+# else used_percentage times the window size.
+cur_block=$(get_block "current_usage")
+ctx_tokens=""
+if [ -n "$cur_block" ]; then
+  cu_in=$(get_num "$cur_block" "input_tokens")
+  cu_cc=$(get_num "$cur_block" "cache_creation_input_tokens")
+  cu_cr=$(get_num "$cur_block" "cache_read_input_tokens")
+  if [ -n "$cu_in$cu_cc$cu_cr" ]; then
+    ctx_tokens=$(( ${cu_in:-0} + ${cu_cc:-0} + ${cu_cr:-0} ))
+  fi
+fi
 ctx_size=$(get_num "$ctx_block" "context_window_size")
 if [ -n "$ctx_used" ]; then
   ctx_color="$GREEN"
@@ -70,6 +82,9 @@ if [ -n "$ctx_used" ]; then
   fi
   ctx_fmt=$(printf '%.0f' "$ctx_used" 2>/dev/null)
   ctx_seg="Ctx ${ctx_fmt}%"
+  if [ -z "$ctx_tokens" ] && [ -n "$ctx_size" ]; then
+    ctx_tokens=$(awk -v p="$ctx_used" -v s="${ctx_size%%.*}" 'BEGIN { printf "%d", p * s / 100 }')
+  fi
   if [ -n "$ctx_tokens" ] && [ -n "$ctx_size" ]; then
     ctx_seg="${ctx_seg} ($((${ctx_tokens%%.*} / 1000))k/$((${ctx_size%%.*} / 1000))k)"
   fi

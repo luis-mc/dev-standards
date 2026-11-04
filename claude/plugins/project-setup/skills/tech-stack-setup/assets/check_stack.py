@@ -58,6 +58,34 @@ def ids(node: dict, key: str) -> set[str]:
 # Catalog self-check
 # ---------------------------------------------------------------------------
 
+def known_ids() -> dict[str, set[str]]:
+    """Every role that names a catalog technology, and its valid ids."""
+    languages = load("tech/languages.yaml")
+    hosting = load("tech/hosting.yaml")
+    data = load("tech/data.yaml")
+    frameworks = load("tech/frameworks.yaml")
+    services = load("tech/services.yaml")
+    return {
+        "language": ids(languages, "technologies"),
+        "hosting": ids(hosting, "technologies"),
+        "db_engine": ids(data, "engines"),
+        "db_host": ids(data, "hosts"),
+        "web_framework": ids(frameworks, "web"),
+        "api_framework": ids(frameworks, "api"),
+        "cache": ids(services.get("cache", {}), "technologies"),
+        "object_storage": ids(services.get("object_storage", {}), "technologies"),
+        "mail": ids(services.get("mail", {}), "technologies"),
+        "error_tracking": ids(services.get("error_tracking", {}), "technologies"),
+    }
+
+
+def listed(value) -> list:
+    """A role value as a list: a scalar is one entry, a list is each entry."""
+    if value is None:
+        return []
+    return list(value) if isinstance(value, list) else [value]
+
+
 def check_catalog() -> list[str]:
     errors: list[str] = []
 
@@ -76,18 +104,7 @@ def check_catalog() -> list[str]:
     web_ids = ids(frameworks, "web")
     api_ids = ids(frameworks, "api")
 
-    known = {
-        "language": lang_ids,
-        "hosting": host_ids,
-        "db_engine": engine_ids,
-        "db_host": dbhost_ids,
-        "web_framework": web_ids,
-        "api_framework": api_ids,
-        "cache": ids(services.get("cache", {}), "technologies"),
-        "object_storage": ids(services.get("object_storage", {}), "technologies"),
-        "mail": ids(services.get("mail", {}), "technologies"),
-        "error_tracking": ids(services.get("error_tracking", {}), "technologies"),
-    }
+    known = known_ids()
 
     # Every language must score every hosting class it could meet.
     for lang in languages.get("technologies", []):
@@ -130,6 +147,20 @@ def check_catalog() -> list[str]:
                     errors.append(
                         f"bundle '{bundle['id']}' selects unknown {role} '{v}'")
 
+    # Every id a host or framework variant names in `conflicts` must exist,
+    # or the conflict never matches (a typo makes it silently dead).
+    conflict_ok = set().union(*known.values())
+    for fw in frameworks.get("web", []):
+        for var in fw.get("variants") or []:
+            if isinstance(var, dict) and "id" in var:
+                conflict_ok.add(var["id"])
+    for host in hosting.get("technologies", []):
+        for conflict in host.get("conflicts") or []:
+            for w in conflict.get("with", []):
+                if w not in conflict_ok:
+                    errors.append(
+                        f"host '{host['id']}' conflicts with unknown id '{w}'")
+
     # Roles referenced by the entry paths must exist.
     role_ids = {r["id"] for r in roles.get("roles", [])}
     for path_id, path in (roles.get("entry_paths") or {}).items():
@@ -160,25 +191,39 @@ def check_selection(path: Path) -> tuple[list[str], list[str]]:
     data = load("tech/data.yaml")
 
     lang_id = sel.get("language")
-    host_id = sel.get("hosting")
     engine_id = sel.get("db_engine")
 
     lang = next((t for t in languages.get("technologies", [])
                  if t["id"] == lang_id), None)
-    host = next((t for t in hosting.get("technologies", [])
-                 if t["id"] == host_id), None)
     engine = next((e for e in data.get("engines", [])
                    if e["id"] == engine_id), None)
+    hosts = []
+    for host_id in listed(sel.get("hosting")):
+        host = next((t for t in hosting.get("technologies", [])
+                     if t["id"] == host_id), None)
+        if host:
+            hosts.append(host)
 
-    if lang_id and not lang:
-        errors.append(f"unknown language '{lang_id}'")
-    if host_id and not host:
-        errors.append(f"unknown hosting '{host_id}'")
-    if engine_id and not engine:
-        errors.append(f"unknown db_engine '{engine_id}'")
+    # Every role that names a catalog technology: each listed id must exist.
+    known = known_ids()
+    for role, valid in known.items():
+        for v in listed(sel.get(role)):
+            if str(v) not in valid:
+                errors.append(f"unknown {role} '{v}'")
+
+    # The API framework must belong to the language's track.
+    if lang:
+        api = next((f for f in load("tech/frameworks.yaml").get("api", [])
+                    if f.get("id") == sel.get("api_framework")), None)
+        if api and api.get("track") and api["track"] != lang["id"]:
+            errors.append(
+                f"api_framework '{api['id']}' is for track '{api['track']}', "
+                f"not language '{lang['id']}'")
 
     # The constraint that actually bites: can this language run on this host?
-    if lang and host:
+    for host in hosts:
+        if not lang:
+            break
         score = (host.get("languages") or {}).get(lang["id"])
         if score is None:
             warnings.append(
@@ -207,10 +252,10 @@ def check_selection(path: Path) -> tuple[list[str], list[str]]:
                     f"compensating control must be recorded in the Stack Profile")
 
     # Hard vendor conflicts declared on the host.
-    if host:
+    chosen = {str(x) for v in sel.values() for x in listed(v)}
+    for host in hosts:
         for conflict in host.get("conflicts") or []:
-            hit = set(conflict.get("with", [])) & set(
-                str(v) for v in sel.values())
+            hit = set(conflict.get("with", [])) & chosen
             if hit:
                 errors.append(
                     f"'{host['name']}' conflicts with {sorted(hit)}: "

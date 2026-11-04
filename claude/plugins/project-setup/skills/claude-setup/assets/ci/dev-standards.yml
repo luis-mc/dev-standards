@@ -8,11 +8,13 @@
 #   {{DEV_STANDARDS_REF}}   a tag or full commit SHA (not a branch)
 #   {{DOCS_SCRIPTS}}        path of the docs plugin scripts inside that checkout
 #   {{SPEC_CHECK}}          path of spec_check.py inside that checkout
+#   {{DEFAULT_BRANCH}}      the repository's default branch (claude-setup reads it
+#                           with `gh repo view --json defaultBranchRef`)
 name: dev-standards
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [{{DEFAULT_BRANCH}}]
 permissions:
   contents: read
 jobs:
@@ -49,7 +51,18 @@ jobs:
       - name: Design system guard tests
         if: hashFiles('scripts/design/*.test.ts') != ''
         env:
-          DESIGN_BASE: origin/${{ github.base_ref || 'main' }}
+          DESIGN_BASE: origin/${{ github.base_ref || '{{DEFAULT_BRANCH}}' }}
         run: |
-          npm ci
-          npx vitest run scripts/design
+          # Install with the package manager the lockfile names.
+          if [ -f pnpm-lock.yaml ]; then
+            corepack enable
+            pnpm install --frozen-lockfile
+            pnpm exec vitest run scripts/design
+          elif [ -f yarn.lock ]; then
+            corepack enable
+            yarn install --frozen-lockfile
+            yarn vitest run scripts/design
+          else
+            npm ci
+            npx vitest run scripts/design
+          fi

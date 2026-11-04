@@ -25,7 +25,10 @@ set -euo pipefail
 repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root"
 
-staged_files=$(git diff --cached --name-only --diff-filter=ACM)
+# quotePath=false keeps non-ASCII names readable; the loops below read one name
+# per line, so a space in a name is safe. ACMR includes renamed files (R), whose
+# content may have changed too.
+staged_files=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACMR)
 if [ -z "$staged_files" ]; then
   exit 0
 fi
@@ -72,7 +75,7 @@ fail=0
 # --- Conflict markers (DL-24) --------------------------------------------------
 # A staged line that starts with a merge conflict marker is refused. Markdown is
 # scanned too, but `=======` alone is not (it is a setext heading underline).
-for f in $staged_files; do
+while IFS= read -r f; do
   case "$f" in .githooks/*) continue ;; esac
   markers=$(git show ":$f" 2>/dev/null | grep -nE '^(<<<<<<<( |$)|>>>>>>>( |$))' || true)
   if [ -n "$markers" ]; then
@@ -80,7 +83,9 @@ for f in $staged_files; do
     echo "$markers" | sed 's/^/    /' >&2
     fail=1
   fi
-done
+done <<EOF_FILES
+$staged_files
+EOF_FILES
 
 # --- Layer 1: naming-convention patterns ------------------------------------
 # Matches an assignment/definition of DATABASE_URL, or any NAME ending in
@@ -115,7 +120,7 @@ doc_shape='[:=][[:space:]]*(\.\.\.|\$\{\{[[:space:]]*(secrets\.[A-Za-z0-9_]+|git
 # matches it, so the two layers agree wherever the file happens to live.
 ci_dsn='postgres://postgres:postgres@localhost:5432/[a-z0-9_]*'
 
-for f in $staged_files; do
+while IFS= read -r f; do
   case "$f" in
     # The hook itself, docs, and lockfiles/CI workflows that legitimately
     # reference secret *names* (e.g. `secrets.GITHUB_TOKEN` in a workflow,
@@ -131,7 +136,9 @@ for f in $staged_files; do
     echo "$matches" | sed 's/^/    /' >&2
     fail=1
   fi
-done
+done <<EOF_FILES
+$staged_files
+EOF_FILES
 
 # --- Layer 2: gitleaks, if available ---------------------------------------
 if command -v gitleaks >/dev/null 2>&1; then

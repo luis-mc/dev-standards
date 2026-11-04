@@ -22,12 +22,12 @@ Code written from a paraphrase gets these wrong.
 ## Step 0 — Preflight. Do this before anything else
 
 ```bash
-python3 ../tech-stack-setup/assets/preflight.py --require stack --for-skill auth-setup
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/tech-stack-setup/assets/preflight.py" --require stack --for-skill auth-setup
 ```
 
 **If it exits non-zero, stop and report its message verbatim. Write nothing.**
 
-It checks for `docs/architecture/stack-profile.md` (or the old `docs/specs/stack-profile.md`), `pnpm-workspace.yaml`, and a
+It checks for `docs/architecture/stack-profile.md` (or the old `docs/specs/stack-profile.md`), the track's root file (`pnpm-workspace.yaml`, `go.work` or `go.mod`, `Cargo.toml`, or a `.sln`), and a
 `packages/` or `apps/` directory. `tech-stack-setup` produces these. The Stack
 Profile is required: `AUTHSPEC §2.1` resolves the technology stack by reading
 it. Without it, this skill does not know the database, the runtime, the package
@@ -116,7 +116,7 @@ one. Each step is a dependency of the next.
 
 ## Mode 2 — Check an existing implementation
 
-1. **Preflight with `--require stack --require auth`.** If auth does not exist,
+1. **Preflight with `--require stack --require auth`**, using the step 0 script path. If auth does not exist,
    there is nothing to audit. Say it is absent and stop.
 
 2. **Work `§27.4`'s coverage map**, clause by clause. It is the spec's own

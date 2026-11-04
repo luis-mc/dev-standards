@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/effort_drift.py\" || python \"$CLAUDE_PROJECT_DIR/.claude/hooks/effort_drift.py\""
+            "command": "if command -v python3 >/dev/null 2>&1; then python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/effort_drift.py\"; else python \"$CLAUDE_PROJECT_DIR/.claude/hooks/effort_drift.py\"; fi"
           }
         ]
       }
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.claude/hooks/questions_stop.py\" || python \"$HOME/.claude/hooks/questions_stop.py\""
+            "command": "if command -v python3 >/dev/null 2>&1; then python3 \"$HOME/.claude/hooks/questions_stop.py\"; else python \"$HOME/.claude/hooks/questions_stop.py\"; fi"
           }
         ]
       }

@@ -69,6 +69,9 @@ def main():
     import test_setup_pattern  # DL33: the five setup skills follow the setup pattern
     if test_setup_pattern.main():
         errors.append("a setup skill breaks the setup pattern (see above)")
+    import test_project_setup_fixes  # DS185: regression checks for the project-setup review findings
+    if test_project_setup_fixes.main():
+        errors.append("a project-setup fix regressed (see above)")
     for e in errors:
         print("FAIL:", e)
     print(f"{len(names)} plugins checked, {len(errors)} problems")
