@@ -22,8 +22,8 @@ Hooks: `hooks.json` now uses `if command -v python3 ...; then python3 X; else py
 
 Other edits: `test_hooks.py` spy skips the new `-c` args; `docs_index.py` site link fix (F8).
 
-Tests run: `python3 -m unittest discover -s tests` in `claude/plugins/docs`: 146 tests OK. `docs_check.py --no-reference` on this repo: see last run below.
+Tests run: `python3 -m unittest discover -s tests` in `claude/plugins/docs`: 146 tests OK. `docs_check.py --no-reference` on this repo: 0 errors, 0 warnings.
 
-Branch head SHA: see the pushed branch head.
+Branch head SHA (code commit): 8f52f40c613ac039b23380a0c61847d89af3fb53.
 
 READY
