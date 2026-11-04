@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T19:53+00:00",
+  "updated": "2026-11-04T19:54+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -920,13 +920,15 @@
       "id": "DL34",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Waiting",
       "item": "Prove the shared CI hooks on one real runner job",
-      "detail": "Owner 4 Nov: after merge, one throwaway run proves DELIVERY_SHARD reaches the hook and the wait marker is written",
-      "expected": "04 Nov ~20:15",
-      "changed": "2026-11-04T19:11+00:00",
-      "expected_basis": "after the history flatten; ~30 min",
-      "no_release": "a test; fixes become their own tasks"
+      "detail": "PC memory 90-92% (limit 85%); scratch repo ready; starts when under the limit",
+      "expected": "04 Nov ~21:00",
+      "changed": "2026-11-04T19:54+00:00",
+      "expected_basis": "memory under 85%, then ~45 min",
+      "no_release": "a test; fixes become their own tasks",
+      "started": "2026-11-04T19:55+00:00",
+      "waits_on": "work"
     },
     {
       "id": "DL35",
