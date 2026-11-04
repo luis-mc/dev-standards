@@ -131,6 +131,13 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D8 | Should dev-standards adopt the train freeze? (same multi-select question) | Yes | decided | 2026-10-11 |
 | delivery-speed | D80 | Fix the two standing check warnings (setup-offers lede, stale test-cost spec) in RELEASE-40? | Fix both | decided | 2026-11-04 |
 | delivery-speed | D81 | After RELEASE-40 merges, with the backlog empty? | Review for more bugs | decided | 2026-11-04 |
+| delivery-speed | D82 | Merge and CI-failure rules for RELEASE-41 and later releases tonight? | Same rules for all tonight | decided | 2026-11-04 |
+| delivery-speed | D83 | Where does --release take its number from by default? | Ledger first, then record | decided | 2026-11-04 |
+| delivery-speed | D84 | How much of the DL48 bug review should RELEASE-41 take? | Everything found | decided | 2026-11-04 |
+| delivery-speed | D85 | After RELEASE-41 merges? | Keep reviewing | decided | 2026-11-04 |
+| delivery-speed | D86 | Update the installed plugins after each release? | Update after each release | decided | 2026-11-04 |
+| delivery-speed | D87 | Overnight check-ins? | Keep as is | decided | 2026-11-04 |
+| delivery-speed | D88 | Start AR56-AR58 and the DL48 review now rather than after RELEASE-40? | Start now | decided | 2026-11-04 |
 | delivery-speed | D9 | Point 4: how is the train freeze overridden on purpose? | Env variable, logged | decided | 2026-10-11 |
 | design-starter | D1 | Which starter should the docs plugin ship? | C+E now | decided | 2026-11-01 |
 | design-starter | D10 | What happens when a token a sample needs is missing or not a plain value? | Draw with a marked fallback | decided | 2026-11-02 |

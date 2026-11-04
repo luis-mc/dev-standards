@@ -1858,6 +1858,154 @@
    "chosen": "Review for more bugs",
    "decided": "2026-11-04",
    "owner_words": "Review for more bugs"
+  },
+  {
+   "id": "D82",
+   "question": "Merge and CI-failure rules for RELEASE-41 and later releases tonight?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL49",
+   "options": [
+    {
+     "label": "Same rules for all tonight",
+     "summary": "Merge on green; fix forward up to 3 tries, then drop the failing task."
+    },
+    {
+     "label": "RELEASE-40 only",
+     "summary": "Open the PR and stop."
+    }
+   ],
+   "chosen": "Same rules for all tonight",
+   "decided": "2026-11-04",
+   "owner_words": "Same rules for all tonight"
+  },
+  {
+   "id": "D83",
+   "question": "Where does --release take its number from by default?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL49",
+   "options": [
+    {
+     "label": "Ledger first, then record",
+     "summary": "Delivery ledger's next number, else record highest + 1; --release N overrides and corrects."
+    },
+    {
+     "label": "Explicit N only",
+     "summary": "Keep highest + 1; add --release N."
+    },
+    {
+     "label": "Always require N",
+     "summary": "--release must name the number."
+    }
+   ],
+   "chosen": "Ledger first, then record",
+   "decided": "2026-11-04",
+   "owner_words": "Ledger first, then record"
+  },
+  {
+   "id": "D84",
+   "question": "How much of the DL48 bug review should RELEASE-41 take?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL49",
+   "options": [
+    {
+     "label": "Real bugs only, rest To do",
+     "summary": "Fix confirmed bugs; record minor items."
+    },
+    {
+     "label": "Everything found",
+     "summary": "Fix every finding, up to 3 agents."
+    },
+    {
+     "label": "Report only",
+     "summary": "Record findings; ship nothing."
+    }
+   ],
+   "chosen": "Everything found",
+   "decided": "2026-11-04",
+   "owner_words": "Everything found"
+  },
+  {
+   "id": "D85",
+   "question": "After RELEASE-41 merges?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL49",
+   "options": [
+    {
+     "label": "Stop after RELEASE-41",
+     "summary": "Hourly check-in only."
+    },
+    {
+     "label": "Keep reviewing",
+     "summary": "Review docs, project-setup and specs plugins; fixes in RELEASE-42."
+    }
+   ],
+   "chosen": "Keep reviewing",
+   "decided": "2026-11-04",
+   "owner_words": "Keep reviewing"
+  },
+  {
+   "id": "D86",
+   "question": "Update the installed plugins after each release?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL49",
+   "options": [
+    {
+     "label": "Update after each release",
+     "summary": "Plugin update at project scope after each merge."
+    },
+    {
+     "label": "Leave them",
+     "summary": "Owner updates."
+    }
+   ],
+   "chosen": "Update after each release",
+   "decided": "2026-11-04",
+   "owner_words": "Update after each release"
+  },
+  {
+   "id": "D87",
+   "question": "Overnight check-ins?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL49",
+   "options": [
+    {
+     "label": "Keep as is",
+     "summary": "Hourly check-in and watcher in this session."
+    },
+    {
+     "label": "Also a cloud routine",
+     "summary": "An hourly cloud check that writes a report file."
+    }
+   ],
+   "chosen": "Keep as is",
+   "decided": "2026-11-04",
+   "owner_words": "Keep as is"
+  },
+  {
+   "id": "D88",
+   "question": "Start AR56-AR58 and the DL48 review now rather than after RELEASE-40?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL49",
+   "options": [
+    {
+     "label": "Start now",
+     "summary": "They need nothing from RELEASE-40; join after it merges."
+    },
+    {
+     "label": "Wait for RELEASE-40",
+     "summary": "Start after the merge."
+    }
+   ],
+   "chosen": "Start now",
+   "decided": "2026-11-04",
+   "owner_words": "why not start these?"
   }
  ]
 }

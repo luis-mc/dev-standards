@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-04T22:36+00:00",
+ "updated": "2026-11-04T22:41+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1420,12 +1420,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "AR55",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Built",
    "item": "set-task-status takes Expected from the last phase",
    "detail": "Passing only --phase or --basis must set Expected to the end of the last phase, not refuse the change.",
-   "expected": "04 Nov ~23:25",
-   "changed": "2026-11-04T22:34+00:00",
-   "expected_basis": "Cloud agent from 22:34, per its ETA",
+   "expected": "04 Nov",
+   "changed": "2026-11-04T22:41+00:00",
    "rides": "DL47",
    "started": "2026-11-04T22:32+00:00"
   },
@@ -1433,34 +1432,40 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "AR56",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Running",
    "item": "--phase accepts a phase that crosses midnight",
    "detail": "merge=23:55-00:05 is refused (end must be after start); a release near midnight cannot record its real phases. Ships in RELEASE-41.",
-   "expected": "05 Nov ~02:00",
-   "changed": "2026-11-04T22:35+00:00",
-   "expected_basis": "After RELEASE-40 ~23:59; with the DL48 review fixes"
+   "expected": "04 Nov ~23:50",
+   "changed": "2026-11-04T22:39+00:00",
+   "expected_basis": "Cloud agent from 22:39, ~70 min",
+   "rides": "DL49",
+   "started": "2026-11-04T22:39+00:00"
   },
   {
    "id": "AR57",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Running",
    "item": "--release takes an explicit number and corrects a stored one",
    "detail": "A real release with no release task makes every later --release number one low. Allow --release N (or the delivery ledger's number) and fix a stored number.",
-   "expected": "05 Nov ~02:00",
-   "changed": "2026-11-04T22:36+00:00",
-   "expected_basis": "RELEASE-41 after RELEASE-40 ~23:59; with DL48 and AR56"
+   "expected": "04 Nov ~23:50",
+   "changed": "2026-11-04T22:39+00:00",
+   "expected_basis": "Cloud agent from 22:39, ~70 min",
+   "rides": "DL49",
+   "started": "2026-11-04T22:39+00:00"
   },
   {
    "id": "AR58",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "To do",
+   "status": "Running",
    "item": "R5.45 advice: name the wrong side, Item or stored number",
    "detail": "When the Item matches the delivery ledger's release, R5.45 must say to correct the stored number (with --release N), not the Item.",
-   "expected": "05 Nov ~02:00",
-   "changed": "2026-11-04T22:36+00:00",
-   "expected_basis": "RELEASE-41, same agent as AR57"
+   "expected": "04 Nov ~23:50",
+   "changed": "2026-11-04T22:39+00:00",
+   "expected_basis": "Cloud agent from 22:39, ~70 min",
+   "rides": "DL49",
+   "started": "2026-11-04T22:39+00:00"
   },
   {
    "id": "DL1",
@@ -2010,12 +2015,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL43",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Stop hook DL-31 flags only future estimates",
    "detail": "Past-tense lines such as 'CI failed about 2 minutes in' are not ETAs; DL-31 must match future estimates only.",
-   "expected": "04 Nov ~23:35",
-   "changed": "2026-11-04T22:34+00:00",
-   "expected_basis": "Cloud agent from 22:34, per its ETA",
+   "expected": "04 Nov",
+   "changed": "2026-11-04T22:41+00:00",
    "rides": "DL47",
    "started": "2026-11-04T22:32+00:00"
   },
@@ -2023,12 +2027,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL44",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Cloud agent setup installs the Node version from engines",
    "detail": "agent_setup.sh uses the sandbox Node 22 when the project's engines field asks for another major; pnpm warns on every run.",
-   "expected": "04 Nov ~23:30",
-   "changed": "2026-11-04T22:34+00:00",
-   "expected_basis": "Cloud agent from 22:34, per its ETA",
+   "expected": "04 Nov",
+   "changed": "2026-11-04T22:41+00:00",
    "rides": "DL47",
    "started": "2026-11-04T22:32+00:00"
   },
@@ -2036,12 +2039,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL45",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Docs: a routine's run_once_at must stay ahead of updates",
    "detail": "A run_once_at that passes while an update call runs never fires. Document: create, update, then run_once_at at least 3 min ahead.",
-   "expected": "04 Nov ~23:30",
-   "changed": "2026-11-04T22:34+00:00",
-   "expected_basis": "Cloud agent from 22:34, per its ETA",
+   "expected": "04 Nov",
+   "changed": "2026-11-04T22:41+00:00",
    "rides": "DL47",
    "started": "2026-11-04T22:32+00:00"
   },
@@ -2049,12 +2051,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL46",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Ledger calls a train green only when every CI run passed",
    "detail": "RELEASE-39 showed green after secret-scan passed while spec-lint still ran; the Stop hook then asked to merge.",
-   "expected": "04 Nov ~23:35",
-   "changed": "2026-11-04T22:34+00:00",
-   "expected_basis": "Cloud agent from 22:34, per its ETA",
+   "expected": "04 Nov",
+   "changed": "2026-11-04T22:41+00:00",
    "rides": "DL47",
    "started": "2026-11-04T22:32+00:00"
   },
@@ -2065,30 +2066,30 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "status": "Running",
    "item": "RELEASE-40: five plugin bug fixes and two doc checks",
    "detail": "AR55, DL43-DL46, TC12 and the setup-offers lede. Cloud agents, join, PR CI, merge on green (D74).",
-   "expected": "04 Nov ~23:59",
-   "changed": "2026-11-04T22:34+00:00",
-   "expected_basis": "3 cloud agents from 22:34 ~60 min, join 5, CI 15, merge 5",
+   "expected": "04 Nov ~23:03",
+   "changed": "2026-11-04T22:41+00:00",
+   "expected_basis": "Agents done 22:38; CI on the PR ~15 min, then merge",
    "release": 40,
    "phases": [
     {
      "name": "agents",
      "start": "2026-11-04T22:34+00:00",
-     "end": "2026-11-04T23:35+00:00"
+     "end": "2026-11-04T22:40+00:00"
     },
     {
      "name": "join",
-     "start": "2026-11-04T23:35+00:00",
-     "end": "2026-11-04T23:40+00:00"
+     "start": "2026-11-04T22:40+00:00",
+     "end": "2026-11-04T22:44+00:00"
     },
     {
      "name": "ci",
-     "start": "2026-11-04T23:40+00:00",
-     "end": "2026-11-04T23:55+00:00"
+     "start": "2026-11-04T22:44+00:00",
+     "end": "2026-11-04T22:59+00:00"
     },
     {
      "name": "merge",
-     "start": "2026-11-04T23:55+00:00",
-     "end": "2026-11-04T23:59+00:00"
+     "start": "2026-11-04T22:59+00:00",
+     "end": "2026-11-04T23:03+00:00"
     }
    ],
    "started": "2026-11-04T22:32+00:00"
@@ -2097,12 +2098,27 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL48",
    "owner": "delivery-speed",
    "app": "",
-   "status": "To do",
+   "status": "Running",
    "item": "Review the delivery and artifacts plugins for bugs (RELEASE-41)",
    "detail": "One agent reviews both plugins, records findings as tasks; fixes ship in RELEASE-41 (D80).",
-   "expected": "05 Nov ~02:00",
-   "changed": "2026-11-04T22:34+00:00",
-   "expected_basis": "After RELEASE-40 ~00:00; review 45, fixes 60, CI 15"
+   "expected": "04 Nov ~23:40",
+   "changed": "2026-11-04T22:39+00:00",
+   "expected_basis": "Review agent from 22:39, ~60 min; fixes follow",
+   "rides": "DL49",
+   "started": "2026-11-04T22:39+00:00"
+  },
+  {
+   "id": "DL49",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Running",
+   "item": "RELEASE-41: release numbers, phases at midnight, bug review fixes",
+   "detail": "AR56-AR58 and every DL48 finding (D84). Join after RELEASE-40 merges; merge on green (D82).",
+   "expected": "05 Nov ~01:10",
+   "changed": "2026-11-04T22:39+00:00",
+   "expected_basis": "Review to 23:40, fix agents to ~00:45, join 5, CI 15, merge 5",
+   "release": 41,
+   "started": "2026-11-04T22:39+00:00"
   },
   {
    "id": "DS1",
@@ -5102,12 +5118,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "TC12",
    "owner": "test-cost",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Verify the test-cost spec against the code (T2)",
    "detail": "docs_check T2: code changed 4 Nov after the spec was last checked. Update the spec or mark it verified.",
-   "expected": "04 Nov ~23:30",
-   "changed": "2026-11-04T22:34+00:00",
-   "expected_basis": "Cloud agent from 22:34, per its ETA",
+   "expected": "04 Nov",
+   "changed": "2026-11-04T22:41+00:00",
    "rides": "DL47",
    "started": "2026-11-04T22:32+00:00"
   },
@@ -5172,20 +5187,29 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-04T22:36+00:00">04 Nov 22:36</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T22:41+00:00">04 Nov 22:41</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">7 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">6 tasks</span></summary>
 <ul>
-<li data-glance-task="AR55"><span class="task-id">AR55</span>set-task-status takes Expected from the last phase <span class="glance-expected">04 Nov ~23:25</span><span class="glance-basis">Cloud agent from 22:34, per its ETA</span></li>
-<li data-glance-task="DL44"><span class="task-id">DL44</span>Cloud agent setup installs the Node version from engines <span class="glance-expected">04 Nov ~23:30</span><span class="glance-basis">Cloud agent from 22:34, per its ETA</span></li>
-<li data-glance-task="DL45"><span class="task-id">DL45</span>Docs: a routine&#x27;s run_once_at must stay ahead of updates <span class="glance-expected">04 Nov ~23:30</span><span class="glance-basis">Cloud agent from 22:34, per its ETA</span></li>
-<li data-glance-task="TC12"><span class="task-id">TC12</span>Verify the test-cost spec against the code (T2) <span class="glance-expected">04 Nov ~23:30</span><span class="glance-basis">Cloud agent from 22:34, per its ETA</span></li>
-<li data-glance-task="DL43"><span class="task-id">DL43</span>Stop hook DL-31 flags only future estimates <span class="glance-expected">04 Nov ~23:35</span><span class="glance-basis">Cloud agent from 22:34, per its ETA</span></li>
-<li data-glance-task="DL46"><span class="task-id">DL46</span>Ledger calls a train green only when every CI run passed <span class="glance-expected">04 Nov ~23:35</span><span class="glance-basis">Cloud agent from 22:34, per its ETA</span></li>
-<li data-glance-task="DL47"><span class="task-id">DL47</span><span class="release-name">RELEASE-40</span>five plugin bug fixes and two doc checks <span class="glance-expected">04 Nov ~23:59</span><span class="glance-basis">3 cloud agents from 22:34 ~60 min, join 5, CI 15, merge 5</span></li>
+<li data-glance-task="DL47"><span class="task-id">DL47</span><span class="release-name">RELEASE-40</span>five plugin bug fixes and two doc checks <span class="glance-expected">04 Nov ~23:03</span><span class="glance-basis">Agents done 22:38; CI on the PR ~15 min, then merge</span></li>
+<li data-glance-task="DL48"><span class="task-id">DL48</span>Review the delivery and artifacts plugins for bugs (RELEASE-41) <span class="glance-expected">04 Nov ~23:40</span><span class="glance-basis">Review agent from 22:39, ~60 min; fixes follow</span></li>
+<li data-glance-task="AR56"><span class="task-id">AR56</span>--phase accepts a phase that crosses midnight <span class="glance-expected">04 Nov ~23:50</span><span class="glance-basis">Cloud agent from 22:39, ~70 min</span></li>
+<li data-glance-task="AR57"><span class="task-id">AR57</span>--release takes an explicit number and corrects a stored one <span class="glance-expected">04 Nov ~23:50</span><span class="glance-basis">Cloud agent from 22:39, ~70 min</span></li>
+<li data-glance-task="AR58"><span class="task-id">AR58</span>R5.45 advice: name the wrong side, Item or stored number <span class="glance-expected">04 Nov ~23:50</span><span class="glance-basis">Cloud agent from 22:39, ~70 min</span></li>
+<li data-glance-task="DL49"><span class="task-id">DL49</span><span class="release-name">RELEASE-41</span>release numbers, phases at midnight, bug review fixes <span class="glance-expected">05 Nov ~01:10</span><span class="glance-basis">Review to 23:40, fix agents to ~00:45, join 5, CI 15, merge 5</span></li>
+</ul>
+</details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">6 tasks</span></summary>
+<ul>
+<li data-glance-task="AR55"><span class="task-id">AR55</span>set-task-status takes Expected from the last phase</li>
+<li data-glance-task="DL43"><span class="task-id">DL43</span>Stop hook DL-31 flags only future estimates</li>
+<li data-glance-task="DL44"><span class="task-id">DL44</span>Cloud agent setup installs the Node version from engines</li>
+<li data-glance-task="DL45"><span class="task-id">DL45</span>Docs: a routine&#x27;s run_once_at must stay ahead of updates</li>
+<li data-glance-task="DL46"><span class="task-id">DL46</span>Ledger calls a train green only when every CI run passed</li>
+<li data-glance-task="TC12"><span class="task-id">TC12</span>Verify the test-cost spec against the code (T2)</li>
 </ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">20 tasks</span></summary>
@@ -5202,40 +5226,45 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">309</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">7</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">4</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">309</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">6</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">6</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DL47 (five plugin bug fixes and two doc checks) expected live about 23:59." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">22:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">23:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">23:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">05 Nov 00:00</text></g>
+<div class="timeline-scroll"><svg viewBox="0 0 960 226" role="img" aria-label="Next releases: DL47 (five plugin bug fixes and two doc checks) expected live about 23:03; DL49 (release numbers, phases at midnight, bug review fixes) expected live about 01:10." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="202"/><text x="200" y="28">22:30</text><line class="rt-grid" x1="286.7" y1="36" x2="286.7" y2="202"/><text x="286.7" y="28">23:00</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="202"/><text x="373.3" y="28">23:30</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="202"/><text x="460" y="28">05 Nov 00:00</text><line class="rt-grid" x1="633.3" y1="36" x2="633.3" y2="202"/><text x="633.3" y="28">01:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="202"/><text x="720" y="28">01:30</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-40 · five plugin bug fixes and two doc checks</title>RELEASE-40 · five plugin…</text>
 <text class="rt-sub" x="0" y="77"><title>AR55, DL43, DL44, DL45, DL46, TC12</title>AR55, DL43, DL44, DL45, DL46, TC12</text>
-<rect class="rt-bar agents" x="223.1" y="52" width="352.4" height="22"><title>agents 22:34-23:35</title></rect>
-<rect class="rt-bar join" x="575.6" y="52" width="28.9" height="22"><title>join 23:35-23:40</title></rect>
-<rect class="rt-bar ci" x="604.4" y="52" width="86.7" height="22"><title>PR CI 23:40-23:55</title></rect>
-<rect class="rt-bar merge" x="691.1" y="52" width="23.1" height="22"><title>merge + cleanup 23:55-23:59</title></rect>
-<polygon class="rt-expected" points="714.2,50 722.2,63 714.2,76 706.2,63"/>
-<text class="rt-live-label" x="714.2" y="92">live ~23:59</text>
-<line class="rt-now" x1="234.7" y1="36" x2="234.7" y2="148"/><text class="rt-now-label" x="234.7" y="161">now 22:36</text>
+<rect class="rt-bar agents" x="211.6" y="52" width="17.3" height="22"><title>agents 22:34-22:40</title></rect>
+<rect class="rt-bar join" x="228.9" y="52" width="11.6" height="22"><title>join 22:40-22:44</title></rect>
+<rect class="rt-bar ci" x="240.4" y="52" width="43.3" height="22"><title>PR CI 22:44-22:59</title></rect>
+<rect class="rt-bar merge" x="283.8" y="52" width="11.6" height="22"><title>merge + cleanup 22:59-23:03</title></rect>
+<polygon class="rt-expected" points="295.3,50 303.3,63 295.3,76 287.3,63"/>
+<text class="rt-live-label" x="295.3" y="92">live ~23:03</text>
+<text class="rt-name" x="0" y="122"><title>RELEASE-41 · release numbers, phases at midnight, bug review fixes</title>RELEASE-41 · release numb…</text>
+<text class="rt-sub" x="0" y="139"><title>AR56, AR57, AR58, DL48</title>AR56, AR57, AR58, DL48</text>
+<polygon class="rt-expected" points="662.2,112 670.2,125 662.2,138 654.2,125"/>
+<text class="rt-live-label" x="662.2" y="154">live ~01:10</text>
+<line class="rt-now" x1="231.8" y1="36" x2="231.8" y2="210"/><text class="rt-now-label" x="231.8" y="223">now 22:41</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-40" open><summary><strong>RELEASE-40 · live ~23:59</strong><span class="fold-count">7 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-40" open><summary><strong>RELEASE-40 · live ~23:03</strong><span class="fold-count">7 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL47"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL47</span><span class="release-name">RELEASE-40</span>five plugin bug fixes and two doc checks</a></td><td data-label="App / service"></td><td data-label="Detail">AR55, DL43-DL46, TC12 and the setup-offers lede. Cloud agents, join, PR CI, merge on green (D74).</td><td data-label="Expected">04 Nov ~23:59<span class="expected-basis">3 cloud agents from 22:34 ~60 min, join 5, CI 15, merge 5</span></td></tr>
-<tr data-task="AR55"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR55</span>set-task-status takes Expected from the last phase</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Passing only --phase or --basis must set Expected to the end of the last phase, not refuse the change.</td><td data-label="Expected">04 Nov ~23:25<span class="expected-basis">Cloud agent from 22:34, per its ETA</span></td></tr>
-<tr data-task="DL43"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL43</span>Stop hook DL-31 flags only future estimates</a></td><td data-label="App / service"></td><td data-label="Detail">Past-tense lines such as &#x27;CI failed about 2 minutes in&#x27; are not ETAs; DL-31 must match future estimates only.</td><td data-label="Expected">04 Nov ~23:35<span class="expected-basis">Cloud agent from 22:34, per its ETA</span></td></tr>
-<tr data-task="DL44"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL44</span>Cloud agent setup installs the Node version from engines</a></td><td data-label="App / service"></td><td data-label="Detail">agent_setup.sh uses the sandbox Node 22 when the project&#x27;s engines field asks for another major; pnpm warns on every run.</td><td data-label="Expected">04 Nov ~23:30<span class="expected-basis">Cloud agent from 22:34, per its ETA</span></td></tr>
-<tr data-task="DL45"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL45</span>Docs: a routine&#x27;s run_once_at must stay ahead of updates</a></td><td data-label="App / service"></td><td data-label="Detail">A run_once_at that passes while an update call runs never fires. Document: create, update, then run_once_at at least 3 min ahead.</td><td data-label="Expected">04 Nov ~23:30<span class="expected-basis">Cloud agent from 22:34, per its ETA</span></td></tr>
-<tr data-task="DL46"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL46</span>Ledger calls a train green only when every CI run passed</a></td><td data-label="App / service"></td><td data-label="Detail">RELEASE-39 showed green after secret-scan passed while spec-lint still ran; the Stop hook then asked to merge.</td><td data-label="Expected">04 Nov ~23:35<span class="expected-basis">Cloud agent from 22:34, per its ETA</span></td></tr>
-<tr data-task="TC12"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-test-and-validation-cost.html"><span class="task-id">TC12</span>Verify the test-cost spec against the code (T2)</a></td><td data-label="App / service"></td><td data-label="Detail">docs_check T2: code changed 4 Nov after the spec was last checked. Update the spec or mark it verified.</td><td data-label="Expected">04 Nov ~23:30<span class="expected-basis">Cloud agent from 22:34, per its ETA</span></td></tr>
+<tr data-task="DL47"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL47</span><span class="release-name">RELEASE-40</span>five plugin bug fixes and two doc checks</a></td><td data-label="App / service"></td><td data-label="Detail">AR55, DL43-DL46, TC12 and the setup-offers lede. Cloud agents, join, PR CI, merge on green (D74).</td><td data-label="Expected">04 Nov ~23:03<span class="expected-basis">Agents done 22:38; CI on the PR ~15 min, then merge</span></td></tr>
+<tr data-task="AR55"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR55</span>set-task-status takes Expected from the last phase</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Passing only --phase or --basis must set Expected to the end of the last phase, not refuse the change.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL43"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL43</span>Stop hook DL-31 flags only future estimates</a></td><td data-label="App / service"></td><td data-label="Detail">Past-tense lines such as &#x27;CI failed about 2 minutes in&#x27; are not ETAs; DL-31 must match future estimates only.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL44"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL44</span>Cloud agent setup installs the Node version from engines</a></td><td data-label="App / service"></td><td data-label="Detail">agent_setup.sh uses the sandbox Node 22 when the project&#x27;s engines field asks for another major; pnpm warns on every run.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL45"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL45</span>Docs: a routine&#x27;s run_once_at must stay ahead of updates</a></td><td data-label="App / service"></td><td data-label="Detail">A run_once_at that passes while an update call runs never fires. Document: create, update, then run_once_at at least 3 min ahead.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL46"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL46</span>Ledger calls a train green only when every CI run passed</a></td><td data-label="App / service"></td><td data-label="Detail">RELEASE-39 showed green after secret-scan passed while spec-lint still ran; the Stop hook then asked to merge.</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="TC12"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-test-and-validation-cost.html"><span class="task-id">TC12</span>Verify the test-cost spec against the code (T2)</a></td><td data-label="App / service"></td><td data-label="Detail">docs_check T2: code changed 4 Nov after the spec was last checked. Update the spec or mark it verified.</td><td data-label="Expected">04 Nov</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">4 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-41" open><summary><strong>RELEASE-41 · live ~01:10</strong><span class="fold-count">5 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="AR56"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR56</span>--phase accepts a phase that crosses midnight</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">merge=23:55-00:05 is refused (end must be after start); a release near midnight cannot record its real phases. Ships in RELEASE-41.</td><td data-label="Expected">05 Nov ~02:00<span class="expected-basis">After RELEASE-40 ~23:59; with the DL48 review fixes</span></td></tr>
-<tr data-task="AR57"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR57</span>--release takes an explicit number and corrects a stored one</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">A real release with no release task makes every later --release number one low. Allow --release N (or the delivery ledger&#x27;s number) and fix a stored number.</td><td data-label="Expected">05 Nov ~02:00<span class="expected-basis">RELEASE-41 after RELEASE-40 ~23:59; with DL48 and AR56</span></td></tr>
-<tr data-task="AR58"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR58</span>R5.45 advice: name the wrong side, Item or stored number</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">When the Item matches the delivery ledger&#x27;s release, R5.45 must say to correct the stored number (with --release N), not the Item.</td><td data-label="Expected">05 Nov ~02:00<span class="expected-basis">RELEASE-41, same agent as AR57</span></td></tr>
-<tr data-task="DL48"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL48</span>Review the delivery and artifacts plugins for bugs (RELEASE-41)</a></td><td data-label="App / service"></td><td data-label="Detail">One agent reviews both plugins, records findings as tasks; fixes ship in RELEASE-41 (D80).</td><td data-label="Expected">05 Nov ~02:00<span class="expected-basis">After RELEASE-40 ~00:00; review 45, fixes 60, CI 15</span></td></tr>
+<tr data-task="DL49"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL49</span><span class="release-name">RELEASE-41</span>release numbers, phases at midnight, bug review fixes</a></td><td data-label="App / service"></td><td data-label="Detail">AR56-AR58 and every DL48 finding (D84). Join after RELEASE-40 merges; merge on green (D82).</td><td data-label="Expected">05 Nov ~01:10<span class="expected-basis">Review to 23:40, fix agents to ~00:45, join 5, CI 15, merge 5</span></td></tr>
+<tr data-task="AR56"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR56</span>--phase accepts a phase that crosses midnight</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">merge=23:55-00:05 is refused (end must be after start); a release near midnight cannot record its real phases. Ships in RELEASE-41.</td><td data-label="Expected">04 Nov ~23:50<span class="expected-basis">Cloud agent from 22:39, ~70 min</span></td></tr>
+<tr data-task="AR57"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR57</span>--release takes an explicit number and corrects a stored one</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">A real release with no release task makes every later --release number one low. Allow --release N (or the delivery ledger&#x27;s number) and fix a stored number.</td><td data-label="Expected">04 Nov ~23:50<span class="expected-basis">Cloud agent from 22:39, ~70 min</span></td></tr>
+<tr data-task="AR58"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR58</span>R5.45 advice: name the wrong side, Item or stored number</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">When the Item matches the delivery ledger&#x27;s release, R5.45 must say to correct the stored number (with --release N), not the Item.</td><td data-label="Expected">04 Nov ~23:50<span class="expected-basis">Cloud agent from 22:39, ~70 min</span></td></tr>
+<tr data-task="DL48"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL48</span>Review the delivery and artifacts plugins for bugs (RELEASE-41)</a></td><td data-label="App / service"></td><td data-label="Detail">One agent reviews both plugins, records findings as tasks; fixes ship in RELEASE-41 (D80).</td><td data-label="Expected">04 Nov ~23:40<span class="expected-basis">Review agent from 22:39, ~60 min; fixes follow</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">311 tasks</span></summary>
@@ -5561,9 +5590,9 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (3)</strong><span class="fold-count">3 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29897196"><time datetime="2026-11-04T22:36+00:00">04 Nov 22:36</time></td><td data-label="Tasks">AR2 to AR58</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-to-do">3 To do</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897194"><time datetime="2026-11-04T22:34+00:00">04 Nov 22:34</time></td><td data-label="Tasks">DL1 to DL48</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">5 Running</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-label="Last updated" data-value="29897194"><time datetime="2026-11-04T22:34+00:00">04 Nov 22:34</time></td><td data-label="Tasks">TC1 to TC12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td data-label="Where it stands">All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897201"><time datetime="2026-11-04T22:41+00:00">04 Nov 22:41</time></td><td data-label="Tasks">DL1 to DL49</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">3 Running</span><span class="status-chip status-built">4 Built</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29897201"><time datetime="2026-11-04T22:41+00:00">04 Nov 22:41</time></td><td data-label="Tasks">AR2 to AR58</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">3 Running</span><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-label="Last updated" data-value="29897201"><time datetime="2026-11-04T22:41+00:00">04 Nov 22:41</time></td><td data-label="Tasks">TC1 to TC12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (4)</strong><span class="fold-count">4 feature artifacts</span></summary>
