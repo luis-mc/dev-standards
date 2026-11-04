@@ -47,7 +47,7 @@ cf3f5f73e3dadad1ca824505bdf896f1fb2115f1:claude/plugins/docs/vendor/mermaid.min.
 65566f4dac81f0f1b09eee60c1c8e6016701bcba:claude/plugins/delivery/templates/shared/scripts/delivery/publish_token.py:project-named-secret:56
 65566f4dac81f0f1b09eee60c1c8e6016701bcba:claude/plugins/delivery/templates/shared/scripts/delivery/publish_token.py:project-named-secret:61
 672b1defe0bc72d4cd00c20fd45384ab52e32653:claude/plugins/delivery/templates/runner-pool/pool_agents.py:project-database-url:119
-# 302ede1: DS185 pre-commit test fixtures (fake token values the hook must block).
-302ede1a1a054d0ed25570c4d4b0c9bcb869ba4:tools/test_project_setup_fixes.py:project-named-secret:50
-302ede1a1a054d0ed25570c4d4b0c9bcb869ba4:tools/test_project_setup_fixes.py:project-named-secret:116
-302ede1a1a054d0ed25570c4d4b0c9bcb869ba4:tools/test_project_setup_fixes.py:stripe-access-token:50
+# e302ede: DS185 pre-commit test fixtures (fake token values the hook must block).
+e302ede1a1a054d0ed25570c4d4b0c9bcb869ba4:tools/test_project_setup_fixes.py:project-named-secret:50
+e302ede1a1a054d0ed25570c4d4b0c9bcb869ba4:tools/test_project_setup_fixes.py:project-named-secret:116
+e302ede1a1a054d0ed25570c4d4b0c9bcb869ba4:tools/test_project_setup_fixes.py:stripe-access-token:50
