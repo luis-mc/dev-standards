@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-artifacts]
 topics: [artifacts]
 status: live
-version: 0.2.0
+version: 0.2.1
 owner: agents
 type: reference
 code:
@@ -243,6 +243,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.2.1 | 2026-11-04 | RELEASE-38 | CI runs section: one Where chip, Now chip, per-job waterfall rows, new summary wording. | DL38 |
 | 0.2.0 | 2026-11-04 | RELEASE-37 | Full Progress draws a foldable CI runs section from .delivery/ci-runs.json (R5.14, ARTIFACTSPEC R5.51, D48). | DL31 |
 | 0.1.5 | 2026-11-02 | RELEASE-34 | The artifact-prune test reads the prune script and workflow from luismc-delivery templates after the move. Behaviour is unchanged. | DL15 |
 | 0.1.4 | 2026-11-01 | RELEASE-30 | The end-of-turn hook asks about background work once per marker, and a background watcher (delivery or CI watch script) does not count as work (AR52, AR53). | AR52 |

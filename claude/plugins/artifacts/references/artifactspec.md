@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.19.0
+**Version:** 1.19.1
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.19.1 — 2026-11-04.**
+
+- R5.51: the CI runs section now matches the approved look. One Where chip (kind · host or OS), a Now chip with the latest real step, teal job bars, one row per job that opens to its steps, a one-line finished row, HH:MM for today, and the summary `N in progress · 20 latest · median · fallbacks · failed`.
 
 **1.19.0 — 2026-11-04.**
 
