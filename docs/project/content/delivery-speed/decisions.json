@@ -1821,19 +1821,31 @@
   },
   {
    "id": "D80",
-   "question": "Standing check warnings, and what to do after RELEASE-40?",
+   "question": "Fix the two standing check warnings (setup-offers lede, stale test-cost spec) in RELEASE-40?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL47",
+   "options": [
+    {
+     "label": "Fix both",
+     "summary": "Shorten the lede; verify the spec (TC12)."
+    },
+    {
+     "label": "Leave them",
+     "summary": "Keep the warnings."
+    }
+   ],
+   "chosen": "Fix both",
+   "decided": "2026-11-04",
+   "owner_words": "Shorten setup-offers lede, Verify test-cost spec"
+  },
+  {
+   "id": "D81",
+   "question": "After RELEASE-40 merges, with the backlog empty?",
    "asked": "2026-11-04",
    "status": "decided",
    "task": "DL48",
    "options": [
-    {
-     "label": "Shorten setup-offers lede",
-     "summary": "Cut it to two sentences."
-    },
-    {
-     "label": "Verify test-cost spec",
-     "summary": "TC12."
-    },
     {
      "label": "Stop when backlog empty",
      "summary": "Hourly check-in only."
@@ -1843,9 +1855,9 @@
      "summary": "One agent reviews delivery and artifacts; fixes in RELEASE-41."
     }
    ],
-   "chosen": "Shorten setup-offers lede; Verify test-cost spec; Review for more bugs",
+   "chosen": "Review for more bugs",
    "decided": "2026-11-04",
-   "owner_words": "Shorten setup-offers lede; Verify test-cost spec; Review for more bugs"
+   "owner_words": "Review for more bugs"
   }
  ]
 }

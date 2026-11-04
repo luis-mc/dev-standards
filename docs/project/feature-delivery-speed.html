@@ -888,7 +888,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-04T22:32+00:00">04 Nov 22:32</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T22:33+00:00">04 Nov 22:33</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">04 Nov 21:56</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
@@ -1009,6 +1009,138 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D81">
+<h3 class="decision-head"><span class="decision-id">D81</span> <span class="decision-question">After RELEASE-40 merges, with the backlog empty?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL48</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Stop when backlog empty</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Hourly check-in only.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Review for more bugs</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">One agent reviews delivery and artifacts; fixes in RELEASE-41.</p>
+<blockquote class="decision-words">&ldquo;Review for more bugs&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D80">
+<h3 class="decision-head"><span class="decision-id">D80</span> <span class="decision-question">Fix the two standing check warnings (setup-offers lede, stale test-cost spec) in RELEASE-40?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL47</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Fix both</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Shorten the lede; verify the spec (TC12).</p>
+<blockquote class="decision-words">&ldquo;Shorten setup-offers lede, Verify test-cost spec&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave them</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep the warnings.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D79">
+<h3 class="decision-head"><span class="decision-id">D79</span> <span class="decision-question">Two Full Progress bugs from a relayed report did not reproduce on main. Follow up?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL47</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Ask the peer for a row</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Ask for an anonymised registry row if it still drifts on artifacts 1.1.2.</p>
+<blockquote class="decision-words">&ldquo;Ask the peer for a row&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Consider it fixed</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Do nothing more.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D78">
+<h3 class="decision-head"><span class="decision-id">D78</span> <span class="decision-question">New bug reports relayed by a peer session tonight?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL47</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Record and ship</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Record generic tasks and launch them in the next release.</p>
+<blockquote class="decision-words">&ldquo;Record and ship&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Record only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Launch nothing until the owner is back.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D77">
+<h3 class="decision-head"><span class="decision-id">D77</span> <span class="decision-question">Another session pushes a dev-standards branch tonight?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL47</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Review, scrub, ship next release</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Check for private names and quality, give it a task, ship if green.</p>
+<blockquote class="decision-words">&ldquo;Review, scrub, ship next release&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Review and hold</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Record a task, do not merge.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ignore it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave its branches alone.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D76">
+<h3 class="decision-head"><span class="decision-id">D76</span> <span class="decision-question">RELEASE-40 PR CI fails while the owner is away?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL47</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Fix forward, up to 3 tries</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">After 3 failed tries, drop the failing task and ship the rest.</p>
+<blockquote class="decision-words">&ldquo;Fix forward, up to 3 tries&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Drop the failing task at once</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Ship the rest.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Stop and wait for me</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave the PR red.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D75">
+<h3 class="decision-head"><span class="decision-id">D75</span> <span class="decision-question">Who merges RELEASE-40 while the owner is away?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL47</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">You merge on green</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Merge when every PR check passes, then clean up.</p>
+<blockquote class="decision-words">&ldquo;You merge on green&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave it for me</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Open the PR and stop.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D74">
+<h3 class="decision-head"><span class="decision-id">D74</span> <span class="decision-question">Launch RELEASE-40 (AR55, DL43-DL46) now?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL47</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Launch all five now</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Cloud agents split by file ownership; merge on green.</p>
+<blockquote class="decision-words">&ldquo;Launch all five now&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Launch some</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Owner names which.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave them To do.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D73">
 <h3 class="decision-head"><span class="decision-id">D73</span> <span class="decision-question">Two remaining old worktrees with local branches?</span></h3>
 <p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL29</p>
