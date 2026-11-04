@@ -1,0 +1,236 @@
+{
+ "101": {
+  "jobs": [
+   {
+    "name": "unit",
+    "status": "completed",
+    "conclusion": "success",
+    "runner_name": "host1-pool-app1",
+    "labels": [
+     "self-hosted",
+     "linux",
+     "x64",
+     "pool-main"
+    ],
+    "started_at": "2026-11-04T14:00:12Z",
+    "completed_at": "2026-11-04T14:10:00Z",
+    "steps": [
+     {
+      "number": 1,
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-04T14:00:12Z",
+      "completed_at": "2026-11-04T14:01:22Z"
+     },
+     {
+      "number": 2,
+      "name": "Checkout",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-04T14:01:22Z",
+      "completed_at": "2026-11-04T14:01:30Z"
+     },
+     {
+      "number": 3,
+      "name": "Unit tests",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-04T14:01:30Z",
+      "completed_at": "2026-11-04T14:09:50Z"
+     },
+     {
+      "number": 4,
+      "name": "Post checkout",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-11-04T14:09:50Z",
+      "completed_at": "2026-11-04T14:10:00Z"
+     }
+    ]
+   }
+  ]
+ },
+ "102": {
+  "jobs": [
+   {
+    "name": "win",
+    "status": "completed",
+    "conclusion": "failure",
+    "runner_name": "host1-win-app1",
+    "labels": [
+     "self-hosted",
+     "windows",
+     "x64"
+    ],
+    "started_at": "2026-11-04T14:20:05Z",
+    "completed_at": "2026-11-04T14:22:00Z",
+    "steps": [
+     {
+      "number": 1,
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-04T14:20:05Z",
+      "completed_at": "2026-11-04T14:20:10Z"
+     },
+     {
+      "number": 2,
+      "name": "Build",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-04T14:20:10Z",
+      "completed_at": "2026-11-04T14:21:00Z"
+     },
+     {
+      "number": 3,
+      "name": "Unit tests",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-04T14:21:00Z",
+      "completed_at": "2026-11-04T14:22:00Z"
+     }
+    ]
+   }
+  ]
+ },
+ "103": {
+  "jobs": [
+   {
+    "name": "unit",
+    "status": "completed",
+    "conclusion": "cancelled",
+    "runner_name": "GitHub Actions 7",
+    "labels": [
+     "ubuntu-latest"
+    ],
+    "started_at": "2026-11-04T13:30:10Z",
+    "completed_at": "2026-11-04T13:31:00Z",
+    "steps": [
+     {
+      "number": 1,
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-04T13:30:10Z",
+      "completed_at": "2026-11-04T13:30:20Z"
+     }
+    ]
+   }
+  ]
+ },
+ "104": {
+  "jobs": [
+   {
+    "name": "unit",
+    "status": "completed",
+    "conclusion": "success",
+    "runner_name": "GitHub Actions 8",
+    "labels": [
+     "ubuntu-latest"
+    ],
+    "started_at": "2026-11-04T12:00:05Z",
+    "completed_at": "2026-11-04T12:02:00Z",
+    "steps": [
+     {
+      "number": 1,
+      "name": "Tests",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-04T12:00:06Z",
+      "completed_at": "2026-11-04T12:01:59Z"
+     }
+    ]
+   }
+  ]
+ },
+ "105": {
+  "jobs": [
+   {
+    "name": "unit",
+    "status": "completed",
+    "conclusion": "cancelled",
+    "runner_name": "host1-pool-app1",
+    "labels": [
+     "self-hosted",
+     "linux",
+     "pool-main"
+    ],
+    "started_at": "2026-11-04T11:00:10Z",
+    "completed_at": "2026-11-04T11:12:00Z",
+    "steps": [
+     {
+      "number": 1,
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "started_at": "2026-11-04T11:00:10Z",
+      "completed_at": "2026-11-04T11:12:00Z"
+     }
+    ]
+   }
+  ]
+ },
+ "201": {
+  "jobs": [
+   {
+    "name": "unit",
+    "status": "in_progress",
+    "conclusion": null,
+    "runner_name": "host1-pool-app1",
+    "labels": [
+     "self-hosted",
+     "linux",
+     "pool-main"
+    ],
+    "started_at": "2026-11-04T14:30:05Z",
+    "completed_at": null,
+    "steps": [
+     {
+      "number": 1,
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-04T14:30:05Z",
+      "completed_at": "2026-11-04T14:30:20Z"
+     },
+     {
+      "number": 2,
+      "name": "Unit tests",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-11-04T14:30:20Z",
+      "completed_at": null
+     }
+    ]
+   }
+  ]
+ },
+ "202": {
+  "jobs": [
+   {
+    "name": "unit",
+    "status": "in_progress",
+    "conclusion": null,
+    "runner_name": "host1-pool-app1",
+    "labels": [
+     "self-hosted",
+     "linux",
+     "pool-main"
+    ],
+    "started_at": "2026-11-04T14:28:05Z",
+    "completed_at": null,
+    "steps": [
+     {
+      "number": 1,
+      "name": "Set up job",
+      "status": "in_progress",
+      "conclusion": null,
+      "started_at": "2026-11-04T14:28:05Z",
+      "completed_at": null
+     }
+    ]
+   }
+  ]
+ }
+}

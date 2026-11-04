@@ -44,11 +44,13 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import delivery_ledger as L  # noqa: E402
 import delivery_config as C  # noqa: E402
+import ci_runs as CR  # noqa: E402
 
 DEFAULT_INTERVAL = 60
 DEFAULT_CHECK_MIN = 15
 WORKFLOW = "ci.yml"
 ACTIVE_CI_STATES = ("pushed", "ci")
+CI_RUNS_MIN_INTERVAL_S = 60
 RUN_FIELDS = "databaseId,status,conclusion,headSha,headBranch,event,workflowName"
 
 
@@ -97,7 +99,7 @@ DOCS_SUMMARIES = ".delivery/docs-summaries.md"
 
 class Watcher:
     def __init__(self, root, sh=None, dry_run=False, now=None, routine_fetcher=None,
-                 out=print, repo=None):
+                 out=print, repo=None, ci_runs=True):
         self.root = Path(root)
         self.sh = sh or Shell()
         self.dry = dry_run
@@ -112,6 +114,7 @@ class Watcher:
         self._guard_start_logged = False
         self._bad_ci_logged: set = set()
         self.repo = repo
+        self.ci_runs = ci_runs
         self.repo_args = ["--repo", repo] if repo else []
         self.actions: list[list[str]] = []
 
@@ -787,6 +790,22 @@ class Watcher:
             self._guard_start_logged = True      # relaunched every pass: one event, not 239 of the 500 kept
             self.mut(lambda led: L.add_event(led, "runner.guard_started", os.path.basename(script), "delivery_watch"))
 
+    def pass_ci_runs(self) -> None:
+        """D48: refresh .delivery/ci-runs.json for the Full Progress CI runs section, at most once a minute.
+        A failure leaves the old file and never fails the tick."""
+        if self.dry or not self.ci_runs:
+            return
+        path = self.root / CR.OUT_REL
+        try:
+            if time.time() - path.stat().st_mtime < CI_RUNS_MIN_INTERVAL_S:
+                return
+        except OSError:
+            pass
+        col = CR.Collector(self.root, repo=self.repo, sh=self.sh, now=self.now)
+        doc = col.collect()
+        if doc is not None:
+            col.write(doc)
+
     def heartbeat(self, started: str) -> None:
         pid, at = os.getpid(), L.iso(self.now())
 
@@ -798,7 +817,7 @@ class Watcher:
     def run_once(self, started: str | None = None) -> list[list[str]]:
         self.actions = []
         for step in (self.pass_agents, self.pass_checks, self.pass_trains, self.pass_other_runs, self.pass_installs, self.pass_runners,
-                     self.pass_runner_guard):
+                     self.pass_runner_guard, self.pass_ci_runs):
             try:
                 step()
             except Exception as exc:  # noqa: BLE001 - one failing pass never stops the others

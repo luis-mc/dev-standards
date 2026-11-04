@@ -1,0 +1,6 @@
+{"repo": "owner/example-app", "run_id": 101, "run_attempt": 1, "job": "unit", "shard": "unit-1", "queued_at": "2026-11-04T14:00:12Z", "slot_at": "2026-11-04T14:01:22Z", "slot": 1, "runner": "host1-pool-app1"}
+{"repo": "owner/example-app", "run_id": 101, "run_attempt": 1, "job": "unit", "released_at": "2026-11-04T14:10:00Z", "outcome": "ran"}
+{"repo": "owner/example-app", "run_id": 105, "run_attempt": 1, "job": "unit", "shard": "unit-1", "queued_at": "2026-11-04T11:00:10Z", "slot_at": "2026-11-04T11:12:00Z", "outcome": "claim-lost"}
+{"repo": "owner/example-app", "run_id": 202, "run_attempt": 1, "job": "unit", "shard": "unit-1", "queued_at": "2026-11-04T14:28:05Z"}
+{"repo": "owner/other", "run_id": 101, "run_attempt": 1, "job": "unit", "queued_at": "2026-11-04T01:00:00Z", "slot_at": "2026-11-04T02:00:00Z"}
+not json

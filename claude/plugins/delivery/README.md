@@ -177,6 +177,24 @@ The steps: get the token on GitHub, unpack the runner, run `config.sh` (`config.
 
 Rules: `docs/features/delivery/spec.md` section 13. File formats: `templates/shared/scripts/delivery/CONTRACT.md`, "CI options".
 
+## CI runs for Full Progress (DL31, D48)
+
+`scripts/ci_runs.py collect --root .` writes `.delivery/ci-runs.json` (git-ignored). The artifacts plugin draws it as the `CI runs` section of Full Progress.
+
+```
+python3 scripts/ci_runs.py collect --root . [--repo owner/name] [--slot-log PATH]
+```
+
+- **Runs and steps** come from `gh api` (`actions/runs`, `actions/runs/{id}/jobs`). Finished runs are kept in the file, so only new runs cost a jobs call.
+- **Why** is the trigger: ready PR, push to the default branch, agent branch, schedule, re-run, or a fallback with its wait.
+- **Where** is the runner kind (`pool`, `windows`, `hosted`, `cloud`) and its name. For a cloud fallback the name is the holder of the `ci-claim` marker.
+- **Slot wait** comes from the machine layer's `slot-log.jsonl` (the folder of `DELIVERY_MACHINE_DIR`, else `machine_slots.machine_dir()`). A missing log means a wait of 0.
+- **Fallback in** uses `ci.fallback.after_min` in `.delivery/config.json`. Without it the file says the time is unknown.
+- `delivery_watch.py` runs the collector each tick, at most once a minute. A failure leaves the old file and never fails the tick.
+- Schema: `docs/features/delivery/shared-self-hosted-runners.md` section 12.5. One optional field is added to a finished run: `slot_start_s`, and `fallback: true` for a run that lost its claim.
+
+Test: `python3 -I -m unittest discover -s claude/plugins/delivery/tests -t claude/plugins/delivery/tests -p "test_ci_runs.py"` (fixtures in `tests/fixtures/ci_runs/`).
+
 ## Tests
 
 ```
