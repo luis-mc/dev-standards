@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T22:34+00:00",
+  "updated": "2026-11-04T22:35+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -548,6 +548,17 @@
       "expected_basis": "Cloud agent from 22:34, per its ETA",
       "rides": "DL47",
       "started": "2026-11-04T22:32+00:00"
+    },
+    {
+      "id": "AR56",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "--phase accepts a phase that crosses midnight",
+      "detail": "merge=23:55-00:05 is refused (end must be after start); a release near midnight cannot record its real phases. Ships in RELEASE-41.",
+      "expected": "05 Nov ~02:00",
+      "changed": "2026-11-04T22:35+00:00",
+      "expected_basis": "After RELEASE-40 ~23:59; with the DL48 review fixes"
     },
     {
       "id": "DL1",
