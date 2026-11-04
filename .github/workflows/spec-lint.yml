@@ -623,6 +623,10 @@ jobs:
       - name: Prove the artifact commands and checks still hold
         run: python3 -I tools/test_project_artifacts.py
 
+      # Each review finding fixed in AR59 keeps a test that failed before the fix.
+      - name: Prove the AR59 artifact fixes still hold
+        run: python3 -I tools/test_artifacts_ar59.py
+
       # The hooks only queue and never write the record, and every one does
       # nothing in a project without a manifest. The end-of-turn hook must also
       # let a turn end after three blocks, or a session that cannot publish
