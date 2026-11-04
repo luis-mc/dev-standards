@@ -753,7 +753,7 @@
           "recommended": true
         },
         {
-          "label": "The moobable session",
+          "label": "The other session",
           "summary": "It keeps PR #140."
         }
       ],
@@ -1013,7 +1013,7 @@
     },
     {
       "id": "D44",
-      "question": "Runner pool: what happens to runners that already exist (e.g. comics-ci-runner)?",
+      "question": "Runner pool: what happens to runners that already exist (e.g. an existing runner container)?",
       "asked": "2026-11-04",
       "status": "decided",
       "task": "DL28",

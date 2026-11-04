@@ -8,7 +8,7 @@ The owner approved this design on 4 Nov 2026 (D48), with the CI runs section (se
 
 It joins two pieces of work:
 
-- **MB63** (first version of this page): one Docker container that runs a CI runner for every Linux project.
+- **Pool research** (first version of this page): one Docker container that runs a CI runner for every Linux project.
 - **DL27**: one CI queue for the whole machine, so runners of many projects cannot overload it.
 
 The decisions behind it are D21 to D48 in the delivery-speed record (`docs/project/content/delivery-speed/decisions.json`).
@@ -106,7 +106,7 @@ One file for the machine, readable by every runner account:
 - A Windows scheduled task runs `load.py --write` every 15 seconds. It writes `C:\ProgramData\luismc-delivery\host-load.json` (memory %, CPU %, time).
 - The hook inside WSL or the pool reads that file. When it is older than 60 seconds, the hook uses its own figures and logs that.
 - The hook in the pool also reads the container's own cap (`/sys/fs/cgroup/memory.current`, `memory.max`, `cpu.stat`). A job starts only when both the host and the pool are under the limits.
-- This fixes G3, and MB63's question 12.
+- This fixes G3.
 
 ### 3.4 Slot wait starts the fallback
 
@@ -218,7 +218,7 @@ When a step fails, the setup stops, says what is done and what is not, and print
 
 A step that needs an elevated shell (a Windows service, the scheduled task, the `NETWORK SERVICE` execution policy) is printed for the owner to run. The setup then checks it.
 
-### 6.4 Sizing (from MB63)
+### 6.4 Sizing
 
 - Memory room = total memory × 85% − memory in use now.
 - CPU room = logical CPUs × 60%.
@@ -307,7 +307,7 @@ One JSON object per line in `<machine dir>/slot-log.jsonl` (`C:\ProgramData\luis
 ```json
 {"repo": "owner/name", "run_id": 123, "run_attempt": 1, "job": "unit", "shard": "unit-1",
  "queued_at": "2026-11-04T14:02:00Z", "slot_at": "2026-11-04T14:03:10Z", "released_at": "2026-11-04T14:12:40Z",
- "slot": 1, "runner": "GameRoomPC-pool-moobable", "outcome": "ran|claim-lost|stale-freed"}
+ "slot": 1, "runner": "host1-pool-app1", "outcome": "ran|claim-lost|stale-freed"}
 ```
 
 A writes `queued_at` and `slot_at` lines at take and a `released_at` line at free (C joins them by `repo`, `run_id`, `run_attempt`, `job`). The file is trimmed to the last 5,000 lines.

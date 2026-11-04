@@ -30,7 +30,7 @@ Status: READY
 - Not run: GitHub CI, mutation passes.
 
 ## Owner answers (31 Oct 2026) and what changed
-1. **join.py copy**: comics-organizer takes the new join.py together with its docs move. Nothing to do in this repo.
+1. **join.py copy**: a consuming project takes the new join.py together with its docs move. Nothing to do in this repo.
 2. **PR body**, 3. **report path**, 4. **stack-profile path**: done on the follow-up branch `claude/DOC8-docs-paths` (draft PR on top of this branch); see `docs/agents/reports/DOC8.md`.
 5. **promote-to-spec, improved before merge** (this branch):
    - Mapping by heading, not by position: `classify()` sends a page section to the template section its heading names: why/problem/goals to 2, what/overview to 1, how it works/steps/flow to 3, screens/visuals/mock-ups to 4, functional requirements to 5, non-functional/performance/security/privacy/limits to 6, design/data model/interfaces to 7, failure modes to 8, tests to 9, not built yet to 11, code map to 12; "for users" to 3 and "for developers" to 7. A heading that matches none goes under 3 with its own heading and is listed in the output (`unmapped`). The lede is section 1; decided decisions are the section 10 table.

@@ -89,7 +89,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D41 | Runner pool: Docker inside jobs? | Refuse it | decided | 2026-11-04 |
 | delivery-speed | D42 | Runner pool: where do the pool's files live? | Plugin folder on the PC | decided | 2026-11-04 |
 | delivery-speed | D43 | Runner pool: how are Windows jobs handled? | Services per repo, PC slots | decided | 2026-11-04 |
-| delivery-speed | D44 | Runner pool: what happens to runners that already exist (e.g. comics-ci-runner)? | Delete and recreate clean | decided | 2026-11-04 |
+| delivery-speed | D44 | Runner pool: what happens to runners that already exist (e.g. an existing runner container)? | Delete and recreate clean | decided | 2026-11-04 |
 | delivery-speed | D45 | Doctor: Option 1 project with CI_RUNS_ON unset? | Fail | decided | 2026-11-04 |
 | delivery-speed | D46 | Runner detection: which repos are scanned? | All repos you admin | decided | 2026-11-04 |
 | delivery-speed | D47 | Where is the combined CI design written and approved? | PR #140 rewritten | decided | 2026-11-04 |

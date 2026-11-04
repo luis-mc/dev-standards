@@ -466,7 +466,7 @@ class Co688Tests(unittest.TestCase):
         cmd = ("cd {r} && cat > {r}/pr134.md <<'EOF'\nbody line\nEOF\n"
                "gh pr create --base master --head release/134 --title 'RELEASE-134' --body-file {r}/pr134.md 2>&1 | tail -1; "
                "python -c \"print('pr', None)\"; date +%H:%M").format(r=repo)
-        H.handle(bash(cmd, "https://github.com/luis-mc/comics-organizer/pull/849", cwd=str(root)), root)
+        H.handle(bash(cmd, "https://github.com/owner/example-app/pull/849", cwd=str(root)), root)
         t = self.led(root)["trains"][0]
         self.assertEqual(t["pr"], 849)
         self.assertEqual(t["ci"]["head_sha"], _git(repo, "rev-parse", "release/134"))
@@ -595,7 +595,7 @@ class Co688Tests(unittest.TestCase):
     def test_windows_command_shapes(self):
         P = ["git", "push", "origin", "release/135"]
         for cmd, argv_head, where in (
-            (r"cd C:/GitHub/comics-organizer && gh pr create --draft --head release/135", ["gh", "pr", "create"], "C:/GitHub/comics-organizer"),
+            (r"cd C:/GitHub/example-app && gh pr create --draft --head release/135", ["gh", "pr", "create"], "C:/GitHub/example-app"),
             (r'cd "C:\Users\Luis\x y" && git push origin release/135', P, r"C:\Users\Luis\x y"),
             (r"cd C:\Users\tmp\new && git push origin release/135", P, r"C:\Users\tmp\new"),
             (r"cd 'C:\Users\Luis\x y'; git push origin release/135", P, r"C:\Users\Luis\x y"),
@@ -604,7 +604,7 @@ class Co688Tests(unittest.TestCase):
             (r"Set-Location C:\GitHub\x; git push origin release/135", P, r"C:\GitHub\x"),
             (r'Set-Location -Path "C:\a b"; git push', ["git", "push"], r"C:\a b"),
             (r'& "C:\Program Files\Git\bin\git.exe" push origin release/135', [r"C:\Program Files\Git\bin\git.exe", "push", "origin", "release/135"], "C:/start"),
-            (r'cd C:/ComicsWork/worktrees/rec134; gh pr create --draft --title "a; b"', ["gh", "pr", "create", "--draft", "--title", "a; b"], "C:/ComicsWork/worktrees/rec134"),
+            (r'cd C:/Work/worktrees/rec134; gh pr create --draft --title "a; b"', ["gh", "pr", "create", "--draft", "--title", "a; b"], "C:/Work/worktrees/rec134"),
             (r"cd C:\Users\Luis\n && git push origin release/135 &", P, r"C:\Users\Luis\n"),
         ):
             argv, cwd = H.split_commands_cwd(cmd, "C:/start")[-1]
