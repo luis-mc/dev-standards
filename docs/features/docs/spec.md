@@ -49,6 +49,8 @@ flowchart LR
 4. `docs-note` adds one change note per task. The release fold turns the notes into a version row.
 5. `docs-check` runs on every branch gate. The hooks only remind.
 
+`docs-setup` and `design-system-setup` follow the setup pattern (plan first, do the work after a yes, one line per step, a summary with Done, Left for you and What you can do now, safe to run again). See [the setup skills guide](../../guides/setup-skills.md) for a flow of each.
+
 Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note`. Scripts: `docs_setup.py`, `docs_index.py`, `docs_fold.py`, `docs_check.py`, `docs_work.py`, `docs_lib.py`, `hook_stop.py`, `hook_session_start.py`.
 
 ## 5. Functional requirements
