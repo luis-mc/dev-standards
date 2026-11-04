@@ -47,6 +47,7 @@ the split, and all are needed:
 | `settings.json` `modelSettings.<Sonnet ID>.effortLevel` | the Sonnet effort for the session itself; subagent effort comes from the rule file, because the docs do not say this entry reaches subagents |
 | `.claude/rules/agents-and-integration.md` | the behaviour — the main loop hands implementation to subagents instead of writing it itself, and passes the chosen `effort` on each Agent call |
 | `.claude/hooks/effort_drift.py` | the warning when a model has no saved effort (see "The alias-drift warning") |
+| `~/.claude/hooks/questions_stop.py` | the Stop hook that enforces Q-1 and Q-2, user level only (see "The questions Stop hook") |
 
 Settings alone pick only models and effort. Without the rule, the Opus session
 still writes all the code itself, and the Sonnet default is rarely used. The
@@ -236,7 +237,8 @@ Make it executable after copying: `chmod +x <target>/statusline.sh`.
 
 If the file does not exist, copy the template as-is. For a user target, drop
 the template's `enabledPlugins` block first (only a project target enables the
-plugins), then add the user-level pieces described in "The transcript-folds
+plugins). For a project target also drop the template's `hooks.Stop` entry: the
+questions Stop hook is user level only. Then add the user-level pieces described in "The transcript-folds
 pieces".
 
 If it exists, queue only the keys that are **missing**. Never change a key that
@@ -255,6 +257,7 @@ The keys, and what each is for:
 | `modelSettings.<Sonnet ID>.effortLevel` | the step 1 answer, `"medium"` or `"high"` | the Sonnet effort for the session itself (subagents: see the rule file below) |
 | `effortLevel` | `"medium"` | the effort for sessions whose model has no `modelSettings` entry, such as cloud agents, which run Opus; the per-model entries beat it |
 | `hooks.SessionStart` | the drift-hook entry, see path note below | runs `hooks/effort_drift.py` at session start |
+| `hooks.Stop` | the questions-hook entry (user target only), see "The questions Stop hook" | runs `hooks/questions_stop.py` when Claude stops |
 | `enabledPlugins."<plugin>@<marketplace>"` for each of the 8 plugins: `luismc-agents`, `luismc-artifacts`, `luismc-audits`, `luismc-delivery`, `luismc-docs`, `luismc-project-setup`, `luismc-specs`, `luismc-transcript-folds` | `true`, project target only (transcript-folds included); marketplace as found below; the plugin list is read from `.claude-plugin/marketplace.json` (see "All plugins") | turns on every plugin of the marketplace for the project (artifacts: ARTIFACTSPEC R10.1; delivery: DELIVERYSPEC D2, it supplies the hooks that enforce the rule tags) |
 | `extraKnownMarketplaces.<marketplace>` | `{"source": {"source": "github", "repo": "luis-mc/dev-standards"}}`, project target only, only when the key is missing; use the marketplace name and source found below | lets the project's `claude plugin install --scope project` find the marketplace (see "Marketplace entry") |
 
@@ -448,6 +451,51 @@ error.
 edit is drift. Python 3, standard library only. Create the `hooks/` directory
 when absent. No `chmod` is needed, because the registered command runs it
 through `python3`. See "The alias-drift warning" below for what it does.
+
+### The questions Stop hook — user target only
+
+Q-1 and Q-2 say: gather every open question and ask them in one
+AskUserQuestion batch, never as plain text. `hooks/questions_stop.py` checks
+that at every Stop. It is installed at **user level only**, so it applies in
+every project. A project target never gets it.
+
+Plan these two steps for the user target, on every run, and list them in step 3
+under "writes outside the repo":
+
+1. **Copy `assets/.claude/hooks/questions_stop.py` to
+   `~/.claude/hooks/questions_stop.py`.** Overwrite unconditionally, like
+   `effort_drift.py`. Create `hooks/` when absent.
+2. **Add one Stop hook to `~/.claude/settings.json`**, with the command
+   `python3 "$HOME/.claude/hooks/questions_stop.py" || python "$HOME/.claude/hooks/questions_stop.py"`.
+   Append it to `hooks.Stop`. Never remove or change another Stop hook (the
+   delivery plugin has one, and so may the owner). Add nothing when a Stop
+   entry already runs `questions_stop.py`.
+
+The hook blocks (exit 2, reason on stderr) when the final reply ends with a
+question to the owner or lists options to pick from, or says questions are
+parked or will be asked later, and the turn made no AskUserQuestion call. It
+lets a park through while agents of the wave still run (Q-5: a running agent in
+`.delivery/ledger.json`). It never blocks when `stop_hook_active` is true,
+ignores code blocks, inline code and quoted lines, and fails open on any error.
+
+```mermaid
+flowchart TD
+  S[Stop] --> A{stop_hook_active or off?}
+  A -- yes --> OK[allow]
+  A -- no --> B{AskUserQuestion in turn?}
+  B -- yes --> OK
+  B -- no --> C{plain question or options at end?}
+  C -- yes --> X[block: ask in one batch]
+  C -- no --> D{says parked or later?}
+  D -- no --> OK
+  D -- yes --> E{agents still run?}
+  E -- yes --> OK
+  E -- no --> X
+```
+
+Turn it off with `CLAUDE_QUESTIONS_STOP=off` in the settings `env` block or the
+shell, or `"questionsStop": "off"` in `~/.claude/settings.json`. Tell the owner
+this in the report.
 
 ### `rules/agents-and-integration.md` — overwrite unconditionally
 
@@ -661,6 +709,7 @@ Apply what was confirmed. Then check the result. Do not assume it worked:
   `hooks.SessionStart` holds the command for that target (project form
   with `$CLAUDE_PROJECT_DIR`, user form with `$HOME`), once, next to any
   hooks that were already there.
+- When the user target was applied, `~/.claude/hooks/questions_stop.py` is identical to the asset and `~/.claude/settings.json` `hooks.Stop` runs it once, next to every Stop hook that was there before. A project `settings.json` has no `questions_stop.py` entry.
 - A project target's `enabledPlugins` holds `luismc-delivery@<marketplace>`, `.delivery/config.json` parses as JSON with none of the `_` keys, `.gitignore` ignores `.delivery/`, every applied target has `rules/delivery-timing.md` identical to the template, and no `hooks.Stop` entry naming `no-tomorrow.mjs` remains unless the removal was declined.
 - A project target's `enabledPlugins` holds an entry for every plugin in the
   marketplace file (`true`, or the owner's existing value), next to every entry
@@ -709,7 +758,8 @@ there. Say that every missing plugin, `luismc-transcript-folds` included, is
 installed with `claude plugin install <name>@<marketplace> --scope project`, and
 that the chords and the plugins take effect after `/reload-plugins` or a restart. Report
 anything removed (the old `model-delegation.md`), and whether the project has
-`scripts/delivery/`, which the rule file cites. Say whether `.delivery/config.json`
+`scripts/delivery/`, which the rule file cites. Say whether the questions Stop hook was installed at user level, and that
+`CLAUDE_QUESTIONS_STOP=off` turns it off. Say whether `.delivery/config.json`
 was written or already present, whether the `no-tomorrow.mjs` entry was removed
 or declined, and give the memory-to-rule table for the orchestrator. If both
 targets were written, note which keys the project file now shadows.
