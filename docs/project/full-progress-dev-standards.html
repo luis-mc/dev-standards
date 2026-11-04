@@ -806,7 +806,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-04T19:11+00:00",
+ "updated": "2026-11-04T19:15+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1623,8 +1623,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "status": "Running",
    "item": "Machine-wide CI queue: shared slots across projects",
    "detail": "DL-90 proposal: machine config in ProgramData, ci_slots with job-start/complete hooks, WSL host load file, session work takes slots, doctor machine check; D22-D28 decided, slot count D21 open",
-   "expected": "04 Nov ~19:42",
-   "changed": "2026-11-04T18:48+00:00",
+   "expected": "04 Nov ~19:25",
+   "changed": "2026-11-04T19:15+00:00",
    "expected_basis": "rides RELEASE-37",
    "rides": "DL29",
    "started": "2026-11-04T14:14+00:00"
@@ -1647,10 +1647,10 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "app": "",
    "status": "Running",
    "item": "RELEASE: shared CI (machine queue, Linux pool, CI runs section)",
-   "detail": "PR #141: secret-scan false positive fixed locally; pushes after spec-lint",
-   "expected": "04 Nov ~19:42",
-   "changed": "2026-11-04T18:48+00:00",
-   "expected_basis": "spec-lint ends ~19:12, then fix push + CI ~25 min",
+   "detail": "PR #141: fixed secret-scan hit, suite declaration, DL-91 rule order; CI run 3",
+   "expected": "04 Nov ~19:25",
+   "changed": "2026-11-04T19:15+00:00",
+   "expected_basis": "3rd CI run started 19:14; spec-lint ~4 min",
    "release": 37,
    "started": "2026-11-04T14:14+00:00",
    "phases": [
@@ -1666,13 +1666,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
     },
     {
      "name": "ci",
-     "start": "2026-11-04T18:47+00:00",
-     "end": "2026-11-04T19:37+00:00"
+     "start": "2026-11-04T19:14+00:00",
+     "end": "2026-11-04T19:20+00:00"
     },
     {
      "name": "merge",
-     "start": "2026-11-04T19:37+00:00",
-     "end": "2026-11-04T19:42+00:00"
+     "start": "2026-11-04T19:20+00:00",
+     "end": "2026-11-04T19:25+00:00"
     }
    ]
   },
@@ -4792,15 +4792,15 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-04T19:11+00:00">04 Nov 19:11</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T19:15+00:00">04 Nov 19:15</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
 <details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
 <ul>
-<li data-glance-task="DL27"><span class="task-id">DL27</span>Machine-wide CI queue: shared slots across projects <span class="glance-expected">04 Nov ~19:42</span><span class="glance-basis">rides RELEASE-37</span></li>
-<li data-glance-task="DL29"><span class="task-id">DL29</span><span class="release-name">RELEASE-37</span>RELEASE: shared CI (machine queue, Linux pool, CI runs section) <span class="glance-expected">04 Nov ~19:42</span><span class="glance-basis">spec-lint ends ~19:12, then fix push + CI ~25 min</span></li>
+<li data-glance-task="DL27"><span class="task-id">DL27</span>Machine-wide CI queue: shared slots across projects <span class="glance-expected">04 Nov ~19:25</span><span class="glance-basis">rides RELEASE-37</span></li>
+<li data-glance-task="DL29"><span class="task-id">DL29</span><span class="release-name">RELEASE-37</span>RELEASE: shared CI (machine queue, Linux pool, CI runs section) <span class="glance-expected">04 Nov ~19:25</span><span class="glance-basis">3rd CI run started 19:14; spec-lint ~4 min</span></li>
 </ul>
 </details>
 <details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">4 tasks</span></summary>
@@ -4811,17 +4811,9 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL33"><span class="task-id">DL33</span>Setup clarity: every plugin setup plans, does the work, summarises</li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">14 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">1 task</span></summary>
 <ul>
 <li data-glance-task="DL28"><span class="task-id">DL28</span>Combined CI design: machine queue + runner pool (PR #140)</li>
-<li data-glance-task="DL16"><span class="task-id">DL16</span>CI wait fix: report-only jobs skipped</li>
-<li data-glance-task="DL17"><span class="task-id">DL17</span>CIR10 S1: Option 1-4 names, any-machine wording, add-a-runner guide</li>
-<li data-glance-task="DL18"><span class="task-id">DL18</span>CIR10 S2: template order, one job per family, report-only as a step</li>
-<li data-glance-task="DL19"><span class="task-id">DL19</span>CIR10 S3: shard-table guard, balanced timings, shard sizing</li>
-<li data-glance-task="DL20"><span class="task-id">DL20</span>CIR10 S4: inputs key and pass records: skip unchanged shards</li>
-<li data-glance-task="DL21"><span class="task-id">DL21</span>CIR10 S5: speed probe, scaled budgets, ci.limits, db per worker</li>
-<li data-glance-task="DL22"><span class="task-id">DL22</span>CIR10 S6: guided /delivery-ci-setup for Options 1-3 and doctor</li>
-<li class="glance-more">and 6 more</li>
 </ul>
 </details>
 </div>
@@ -4829,36 +4821,36 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (~20:30 · after the runner test; ~15 min)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 446" role="img" aria-label="Next releases: DL29 (RELEASE: shared CI (machine queue, Linux pool, CI runs section)) expected live about 19:42. Other work (no release): DS183 (Close stale PRs #127 #128 #140, delete their branches and worktree) To do, expected about 19:35; DS182 (Flatten the public history to one commit; delete old tags and branches) To do, expected about 20:00; DL34 (Prove the shared CI hooks on one real runner job) To do, expected about 20:15; DL35 (Shared CI rollout plan for this machine (detect and plan, read only)) To do, expected about 20:30." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="422"/><text x="200" y="28">17:00</text><line class="rt-grid" x1="274.3" y1="36" x2="274.3" y2="422"/><text x="274.3" y="28">17:30</text><line class="rt-grid" x1="348.6" y1="36" x2="348.6" y2="422"/><text x="348.6" y="28">18:00</text><line class="rt-grid" x1="422.9" y1="36" x2="422.9" y2="422"/><text x="422.9" y="28">18:30</text><line class="rt-grid" x1="497.1" y1="36" x2="497.1" y2="422"/><text x="497.1" y="28">19:00</text><line class="rt-grid" x1="571.4" y1="36" x2="571.4" y2="422"/><text x="571.4" y="28">19:30</text><line class="rt-grid" x1="645.7" y1="36" x2="645.7" y2="422"/><text x="645.7" y="28">20:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="422"/><text x="720" y="28">20:30</text></g>
+<div class="timeline-scroll"><svg viewBox="0 0 960 446" role="img" aria-label="Next releases: DL29 (RELEASE: shared CI (machine queue, Linux pool, CI runs section)) expected live about 19:25. Other work (no release): DS183 (Close stale PRs #127 #128 #140, delete their branches and worktree) To do, expected about 19:35; DS182 (Flatten the public history to one commit; delete old tags and branches) To do, expected about 20:00; DL34 (Prove the shared CI hooks on one real runner job) To do, expected about 20:15; DL35 (Shared CI rollout plan for this machine (detect and plan, read only)) To do, expected about 20:30." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="422"/><text x="200" y="28">17:00</text><line class="rt-grid" x1="274.3" y1="36" x2="274.3" y2="422"/><text x="274.3" y="28">17:30</text><line class="rt-grid" x1="348.6" y1="36" x2="348.6" y2="422"/><text x="348.6" y="28">18:00</text><line class="rt-grid" x1="422.9" y1="36" x2="422.9" y2="422"/><text x="422.9" y="28">18:30</text><line class="rt-grid" x1="497.1" y1="36" x2="497.1" y2="422"/><text x="497.1" y="28">19:00</text><line class="rt-grid" x1="571.4" y1="36" x2="571.4" y2="422"/><text x="571.4" y="28">19:30</text><line class="rt-grid" x1="645.7" y1="36" x2="645.7" y2="422"/><text x="645.7" y="28">20:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="422"/><text x="720" y="28">20:30</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-37 · RELEASE: shared CI (machine queue, Linux pool, CI runs section)</title>RELEASE-37 · RELEASE: sha…</text>
 <text class="rt-sub" x="0" y="77"><title>DL27, DL30, DL31, DL32, DL33</title>DL27, DL30, DL31, DL32, DL33</text>
 <rect class="rt-bar agents" x="232.2" y="52" width="49.5" height="22"><title>agents 17:13-17:33</title></rect>
 <rect class="rt-bar join" x="460" y="52" width="5" height="22"><title>join 18:45-18:47</title></rect>
-<rect class="rt-bar ci" x="465" y="52" width="123.8" height="22"><title>PR CI 18:47-19:37</title></rect>
-<rect class="rt-bar merge" x="588.8" y="52" width="12.4" height="22"><title>merge + cleanup 19:37-19:42</title></rect>
-<polygon class="rt-expected" points="601.1,50 609.1,63 601.1,76 593.1,63"/>
-<text class="rt-live-label" x="601.1" y="92">live ~19:42</text>
+<rect class="rt-bar ci" x="531.8" y="52" width="14.9" height="22"><title>PR CI 19:14-19:20</title></rect>
+<rect class="rt-bar merge" x="546.7" y="52" width="12.4" height="22"><title>merge + cleanup 19:20-19:25</title></rect>
+<polygon class="rt-expected" points="559,50 567,63 559,76 551,63"/>
+<text class="rt-live-label" x="559" y="92">live ~19:25</text>
 <text class="rt-strip-title" x="0" y="122">Other work (no release)</text>
 <text class="rt-name" x="0" y="156"><title>DS183 · Close stale PRs #127 #128 #140, delete their branches and worktree</title>DS183 · Close stale PRs #…</text>
-<rect class="rt-other status-to-do" x="524.4" y="151" width="59.4" height="16"><title>To do 19:11-19:35</title></rect>
-<text class="rt-other-label" x="524.4" y="184">~19:35 · after RELEASE-37 merges ~19:26; ~5 min</text>
+<rect class="rt-other status-to-do" x="534.3" y="151" width="49.5" height="16"><title>To do 19:15-19:35</title></rect>
+<text class="rt-other-label" x="534.3" y="184">~19:35 · after RELEASE-37 merges ~19:26; ~5 min</text>
 <text class="rt-name" x="0" y="218"><title>DS182 · Flatten the public history to one commit; delete old tags and branches</title>DS182 · Flatten the publi…</text>
-<rect class="rt-other status-to-do" x="524.4" y="213" width="121.3" height="16"><title>To do 19:11-20:00</title></rect>
-<text class="rt-other-label" x="524.4" y="246">~20:00 · after RELEASE-37 merges ~19:26; ~30 min</text>
+<rect class="rt-other status-to-do" x="534.3" y="213" width="111.4" height="16"><title>To do 19:15-20:00</title></rect>
+<text class="rt-other-label" x="534.3" y="246">~20:00 · after RELEASE-37 merges ~19:26; ~30 min</text>
 <text class="rt-name" x="0" y="280"><title>DL34 · Prove the shared CI hooks on one real runner job</title>DL34 · Prove the shared C…</text>
-<rect class="rt-other status-to-do" x="524.4" y="275" width="158.5" height="16"><title>To do 19:11-20:15</title></rect>
-<text class="rt-other-label" x="524.4" y="308">~20:15 · after the history flatten; ~30 min</text>
+<rect class="rt-other status-to-do" x="534.3" y="275" width="148.6" height="16"><title>To do 19:15-20:15</title></rect>
+<text class="rt-other-label" x="534.3" y="308">~20:15 · after the history flatten; ~30 min</text>
 <text class="rt-name" x="0" y="342"><title>DL35 · Shared CI rollout plan for this machine (detect and plan, read only)</title>DL35 · Shared CI rollout…</text>
-<rect class="rt-other status-to-do" x="524.4" y="337" width="195.6" height="16"><title>To do 19:11-20:30</title></rect>
-<text class="rt-other-label" x="524.4" y="370">~20:30 · after the runner test; ~15 min</text>
-<line class="rt-now" x1="524.4" y1="36" x2="524.4" y2="430"/><text class="rt-now-label" x="524.4" y="443">now 19:11</text>
+<rect class="rt-other status-to-do" x="534.3" y="337" width="185.7" height="16"><title>To do 19:15-20:30</title></rect>
+<text class="rt-other-label" x="534.3" y="370">~20:30 · after the runner test; ~15 min</text>
+<line class="rt-now" x1="534.3" y1="36" x2="534.3" y2="430"/><text class="rt-now-label" x="534.3" y="443">now 19:15</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days. Under Other work (no release), a bar runs from the start to its Expected, coloured by status; a red outline means it is past its Expected.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-37" open><summary><strong>RELEASE-37 · live ~19:42</strong><span class="fold-count">6 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-37" open><summary><strong>RELEASE-37 · live ~19:25</strong><span class="fold-count">6 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL29"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL29</span><span class="release-name">RELEASE-37</span>RELEASE: shared CI (machine queue, Linux pool, CI runs section)</a></td><td data-label="App / service"></td><td data-label="Detail">PR #141: secret-scan false positive fixed locally; pushes after spec-lint</td><td data-label="Expected">04 Nov ~19:42<span class="expected-basis">spec-lint ends ~19:12, then fix push + CI ~25 min</span></td></tr>
-<tr data-task="DL27"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL27</span>Machine-wide CI queue: shared slots across projects</a></td><td data-label="App / service"></td><td data-label="Detail">DL-90 proposal: machine config in ProgramData, ci_slots with job-start/complete hooks, WSL host load file, session work takes slots, doctor machine check; D22-D28 decided, slot count D21 open</td><td data-label="Expected">04 Nov ~19:42<span class="expected-basis">rides RELEASE-37</span></td></tr>
+<tr data-task="DL29"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL29</span><span class="release-name">RELEASE-37</span>RELEASE: shared CI (machine queue, Linux pool, CI runs section)</a></td><td data-label="App / service"></td><td data-label="Detail">PR #141: fixed secret-scan hit, suite declaration, DL-91 rule order; CI run 3</td><td data-label="Expected">04 Nov ~19:25<span class="expected-basis">3rd CI run started 19:14; spec-lint ~4 min</span></td></tr>
+<tr data-task="DL27"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL27</span>Machine-wide CI queue: shared slots across projects</a></td><td data-label="App / service"></td><td data-label="Detail">DL-90 proposal: machine config in ProgramData, ci_slots with job-start/complete hooks, WSL host load file, session work takes slots, doctor machine check; D22-D28 decided, slot count D21 open</td><td data-label="Expected">04 Nov ~19:25<span class="expected-basis">rides RELEASE-37</span></td></tr>
 <tr data-task="DL30"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL30</span>Linux runner pool and guided setup: detect, remove, build clean</a></td><td data-label="App / service"></td><td data-label="Detail">joined into PR #141; waits for release CI</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DL31"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL31</span>CI runs section in Full Progress</a></td><td data-label="App / service"></td><td data-label="Detail">joined into PR #141; waits for release CI</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DL32"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL32</span>Machine layer: config, CI slots, hooks, host load, fallback, limits, doctor</a></td><td data-label="App / service"></td><td data-label="Detail">joined into PR #141; waits for release CI</td><td data-label="Expected">04 Nov</td></tr>
@@ -5177,7 +5169,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29896991"><time datetime="2026-11-04T19:11+00:00">04 Nov 19:11</time></td><td data-label="Tasks">DL1 to DL35</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">2 Running</span><span class="status-chip status-built">4 Built</span><span class="status-chip status-to-do">2 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29896995"><time datetime="2026-11-04T19:15+00:00">04 Nov 19:15</time></td><td data-label="Tasks">DL1 to DL35</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">2 Running</span><span class="status-chip status-built">4 Built</span><span class="status-chip status-to-do">2 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (6)</strong><span class="fold-count">6 feature artifacts</span></summary>

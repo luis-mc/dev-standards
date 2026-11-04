@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T19:11+00:00",
+  "updated": "2026-11-04T19:15+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -817,8 +817,8 @@
       "status": "Running",
       "item": "Machine-wide CI queue: shared slots across projects",
       "detail": "DL-90 proposal: machine config in ProgramData, ci_slots with job-start/complete hooks, WSL host load file, session work takes slots, doctor machine check; D22-D28 decided, slot count D21 open",
-      "expected": "04 Nov ~19:42",
-      "changed": "2026-11-04T18:48+00:00",
+      "expected": "04 Nov ~19:25",
+      "changed": "2026-11-04T19:15+00:00",
       "expected_basis": "rides RELEASE-37",
       "rides": "DL29",
       "started": "2026-11-04T14:14+00:00"
@@ -841,10 +841,10 @@
       "app": "",
       "status": "Running",
       "item": "RELEASE: shared CI (machine queue, Linux pool, CI runs section)",
-      "detail": "PR #141: secret-scan false positive fixed locally; pushes after spec-lint",
-      "expected": "04 Nov ~19:42",
-      "changed": "2026-11-04T18:48+00:00",
-      "expected_basis": "spec-lint ends ~19:12, then fix push + CI ~25 min",
+      "detail": "PR #141: fixed secret-scan hit, suite declaration, DL-91 rule order; CI run 3",
+      "expected": "04 Nov ~19:25",
+      "changed": "2026-11-04T19:15+00:00",
+      "expected_basis": "3rd CI run started 19:14; spec-lint ~4 min",
       "release": 37,
       "started": "2026-11-04T14:14+00:00",
       "phases": [
@@ -860,13 +860,13 @@
         },
         {
           "name": "ci",
-          "start": "2026-11-04T18:47+00:00",
-          "end": "2026-11-04T19:37+00:00"
+          "start": "2026-11-04T19:14+00:00",
+          "end": "2026-11-04T19:20+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-04T19:37+00:00",
-          "end": "2026-11-04T19:42+00:00"
+          "start": "2026-11-04T19:20+00:00",
+          "end": "2026-11-04T19:25+00:00"
         }
       ]
     },
