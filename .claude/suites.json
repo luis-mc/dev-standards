@@ -11,6 +11,7 @@
     {"name": "delivery-ci", "full": "python tools/test_delivery_ci.py", "cases": "", "measure": false},
     {"name": "project-artifacts", "full": "python tools/test_project_artifacts.py", "cases": "python tools/test_project_artifacts.py {cases}", "measure": false},
     {"name": "project-artifacts-hooks", "full": "python tools/test_project_artifacts_hooks.py", "cases": "", "measure": false},
+    {"name": "project-setup-fixes", "full": "python tools/test_project_setup_fixes.py", "cases": ""},
     {"name": "artifacts-ar59", "full": "python tools/test_artifacts_ar59.py", "cases": ""},
     {"name": "render-artifacts", "full": "python tools/test_render_artifacts.py", "cases": ""},
     {"name": "artifact-prune", "full": "python tools/test_artifact_prune.py", "cases": ""},

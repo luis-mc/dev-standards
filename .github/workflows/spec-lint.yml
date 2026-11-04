@@ -594,6 +594,10 @@ jobs:
 
       # DS122: claude-setup turns on every marketplace plugin; a plugin added
       # to the marketplace but missing from its settings template or table fails.
+      # check_stack.py (run by the DS185 fix tests) needs PyYAML.
+      - name: Install PyYAML
+        run: python3 -m pip install --quiet pyyaml==6.0.2
+
       - name: Prove claude-setup names every marketplace plugin
         run: python3 tools/test_claude_setup_plugins.py
 
