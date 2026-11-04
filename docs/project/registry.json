@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T22:48+00:00",
+  "updated": "2026-11-04T22:50+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1263,6 +1263,17 @@
       "expected_basis": "Review agent from 22:47, ~75 min",
       "rides": "DL50",
       "started": "2026-11-04T22:48+00:00"
+    },
+    {
+      "id": "DL52",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "agent-eta accepts an agent already pushed; one row per agent",
+      "detail": "A launch makes two ledger rows (trigger and session); agent-eta refuses the trigger row once its branch is pushed, so DL-30 cannot be cleared.",
+      "expected": "05 Nov ~03:40",
+      "changed": "2026-11-04T22:50+00:00",
+      "expected_basis": "RELEASE-42 with the DL50 review fixes"
     },
     {
       "id": "DS1",
