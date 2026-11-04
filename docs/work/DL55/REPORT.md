@@ -9,3 +9,7 @@ Method (D90): a failing test first for each finding. All four reproduced on curr
 
 Tests: delivery suite, 583 tests, OK.
 Docs: README ledger lines updated; change note added. No feature spec text named agent-eta, so no `docs_fold` note.
+
+Branch head: ba03aef16f04d4fce01216a71325e1b202d40f58
+
+READY
