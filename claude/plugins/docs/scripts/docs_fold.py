@@ -118,7 +118,7 @@ def add_row(text: str, row: str) -> str:
         return "\n".join(lines + ["", "## Versions", "", "Written by the release fold. Do not edit by hand.", "", HEADER, SEP, row]) + "\n"
     # find the table separator after the heading
     for j in range(idx + 1, len(lines)):
-        if re.match(r"^\|\s*-{2,}", lines[j]):
+        if re.match(r"^\|?\s*:?-{2,}", lines[j]):
             lines.insert(j + 1, row)
             return "\n".join(lines) + "\n"
         if lines[j].startswith("## "):

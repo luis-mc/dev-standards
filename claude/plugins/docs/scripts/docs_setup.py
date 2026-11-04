@@ -196,7 +196,7 @@ def rewrite_links(root: Path, moves: list[dict], dry: bool = False) -> list[str]
             return m.group(0) if nt == t else m.group(0).replace(t, nt, 1)
 
         # protect code fences
-        parts = re.split(r"(```.*?```|~~~.*?~~~)", text, flags=re.S)
+        parts = re.split(r"(```.*?```|~~~.*?~~~|`[^`\n]*`)", text, flags=re.S)
         for i in range(0, len(parts), 2):
             seg = D.LINK_RE.sub(md_sub, parts[i])
             seg = re.sub(r"\!\[[^\]\n]*\]\(([^)\s]+)[^)]*\)", md_sub, seg)
@@ -257,6 +257,15 @@ def write_if_absent(root: Path, rel: str, content: str, created: list[str], skip
     f.parent.mkdir(parents=True, exist_ok=True)
     f.write_text(content, encoding="utf-8")
     created.append(rel)
+
+
+def detect_default_branch(root: Path) -> str | None:
+    """origin/HEAD when set, else the current branch; None when git says nothing."""
+    r = D.git(root, "symbolic-ref", "--short", "-q", "refs/remotes/origin/HEAD")
+    if r.returncode == 0 and r.stdout.strip().startswith("origin/"):
+        return r.stdout.strip()[len("origin/"):]
+    r = D.git(root, "symbolic-ref", "--short", "-q", "HEAD")
+    return r.stdout.strip() or None if r.returncode == 0 else None
 
 
 def init_layout(root: Path, cfg_in: dict | None = None, apply: bool = True) -> tuple[list[str], list[str]]:
@@ -366,6 +375,9 @@ def main(argv=None) -> int:
             extra["apps"] = a.app
         if a.topic:
             extra["topics"] = a.topic
+        branch = detect_default_branch(root)
+        if branch:
+            extra["default_branch"] = branch
         if a.apply:
             created, skipped = init_layout(root, extra)
             print("created:" if created else "nothing to create")

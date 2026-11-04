@@ -29,6 +29,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
+from urllib.parse import quote, unquote
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import docs_lib as D  # noqa: E402
@@ -418,9 +419,10 @@ def build_site(root: Path, cfg: dict, c: dict, mermaid: str | None) -> list[str]
             path, frag = D.split_target(t)
             if not path:
                 return t
+            path = unquote(path)
             tgt = os.path.normpath(os.path.join(src_dir, path)).replace("\\", "/")
             if tgt.endswith(".md") and tgt.startswith("docs/"):
-                return D.relpath(tgt[len("docs/"):-3] + ".html", os.path.dirname(out_rel)) + frag
+                return quote(D.relpath(tgt[len("docs/"):-3] + ".html", os.path.dirname(out_rel))) + frag
             if tgt.startswith("docs/"):
                 # non-markdown asset: copy next to the page's output
                 dst = site / tgt[len("docs/"):]
@@ -429,7 +431,7 @@ def build_site(root: Path, cfg: dict, c: dict, mermaid: str | None) -> list[str]
                     dst.parent.mkdir(parents=True, exist_ok=True)
                     if not dst.exists():
                         shutil.copyfile(src, dst)
-                    return D.relpath(tgt[len("docs/"):], os.path.dirname(out_rel)) + frag
+                    return quote(D.relpath(tgt[len("docs/"):], os.path.dirname(out_rel))) + frag
             return t
 
         meta = ""

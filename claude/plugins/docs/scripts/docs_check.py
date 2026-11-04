@@ -32,6 +32,7 @@ import json
 import os
 import re
 import subprocess
+from urllib.parse import unquote
 import sys
 from pathlib import Path
 
@@ -143,6 +144,7 @@ def check_links(root: Path) -> list[Finding]:
             if D.is_external(t) and not t.startswith("#"):
                 continue
             path, frag = D.split_target(t)
+            path, frag = unquote(path), unquote(frag)
             if not path:
                 target_rel = rel
             else:
@@ -233,7 +235,7 @@ def check_reference(root: Path, g: dict) -> list[Finding]:
     # docs/docs.json is code: say which command runs before it runs (stderr keeps --json clean).
     print(f"docs_check: running generated_reference `{name}` from docs/docs.json: {cmd}", file=sys.stderr)
     try:
-        r = subprocess.run(cmd, shell=True, cwd=str(root), capture_output=True, text=True, timeout=300)
+        r = subprocess.run(cmd, shell=True, cwd=str(root), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
     except subprocess.TimeoutExpired:
         return [f(ERR, "G2", outp, f"`{cmd}` timed out")]
     if r.returncode != 0:
@@ -269,7 +271,12 @@ def check_map(root: Path, cfg: dict, base: str | None) -> list[Finding]:
                     hit.setdefault(d, []).append(path)
     for doc, paths in sorted(hit.items()):
         base_dir = os.path.dirname(doc)
-        touched = any(c == doc or c.startswith(base_dir + "/changes/") or (c.startswith(base_dir + "/changes/" + Path(doc).stem + "/")) for c in docs_changed)
+        # a feature spec owns <dir>/changes/; any other doc owns <area>/changes/<stem>/
+        if doc.startswith("docs/features/") and doc.endswith("/spec.md"):
+            notes = base_dir + "/changes/"
+        else:
+            notes = base_dir + "/changes/" + Path(doc).stem + "/"
+        touched = any(c == doc or c.startswith(notes) for c in docs_changed)
         if not touched:
             out.append(f(ERR, "M1", doc, f"mapped code changed ({paths[0]}{' and ' + str(len(paths) - 1) + ' more' if len(paths) > 1 else ''}) but the doc, a change note or `Docs: none, <reason>` in a commit message did not"))
     roots = cfg.get("code_roots") or []
@@ -329,6 +336,8 @@ def run_checks(root: Path, base: str | None, reference: bool = True) -> list[Fin
     res += check_sources(root)
     res += check_versions(root, cfg)
     res += check_generated(root, cfg, reference)
+    if not base:
+        res.append(f(WARN, "M1", "docs/docs.json", f"no base ref found (tried origin/{cfg['default_branch']} and {cfg['default_branch']}): the map check (M1) and the work guard (W1) were skipped. Set default_branch in docs/docs.json or pass --base"))
     res += check_map(root, cfg, base)
     res += check_work_guard(root, base)
     res += check_freshness(root, cfg)

@@ -136,7 +136,11 @@ def format_value(v) -> str:
         return "[" + ", ".join(str(x) for x in v) + "]"
     if isinstance(v, bool):
         return "true" if v else "false"
-    return str(v)
+    s = str(v)
+    if " #" in s or ": " in s or s[:1] in ("[", '"', "'"):
+        # the reader knows no escapes: pick the quote the text does not hold
+        return "'" + s + "'" if '"' in s and "'" not in s else '"' + s + '"'
+    return s
 
 
 def set_front_matter(text: str, updates: dict, order: tuple = FRONT_REQUIRED) -> str:
@@ -189,7 +193,7 @@ def has_config(root: Path) -> bool:
 
 # -------------------------------------------------------------------- files
 def read(p: Path) -> str:
-    return p.read_text(encoding="utf-8", errors="replace")
+    return p.read_text(encoding="utf-8", errors="replace").lstrip("\ufeff")
 
 
 def posix(p) -> str:
@@ -287,7 +291,7 @@ def strip_code(text: str) -> str:
 
 
 def heading_slug(h: str) -> str:
-    h = re.sub(r"[`*_]", "", h.strip().lower())
+    h = re.sub(r"[`*]", "", h.strip().lower())
     h = re.sub(r"[^\w\s-]", "", h)
     return re.sub(r"\s+", "-", h)
 
@@ -311,7 +315,7 @@ def relpath(target: str, from_dir: str) -> str:
 
 # ----------------------------------------------------------------------- git
 def git(root: Path, *args, check=False) -> subprocess.CompletedProcess:
-    return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, check=check)
+    return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True, encoding="utf-8", errors="replace", check=check)
 
 
 def is_git(root: Path) -> bool:
@@ -327,11 +331,11 @@ def changed_files(root: Path, base: str | None) -> list[str]:
     files: set[str] = set()
     if base:
         # `base...HEAD` diffs against the merge-base in one call.
-        r = git(root, "diff", "--name-only", "--diff-filter=ACMRD", f"{base}...HEAD")
+        r = git(root, "-c", "core.quotePath=false", "diff", "--name-only", "--diff-filter=ACMRD", f"{base}...HEAD")
         if r.returncode != 0:  # no merge-base: compare with base itself, as before
-            r = git(root, "diff", "--name-only", "--diff-filter=ACMRD", base, "HEAD")
+            r = git(root, "-c", "core.quotePath=false", "diff", "--name-only", "--diff-filter=ACMRD", base, "HEAD")
         files.update(x for x in r.stdout.split("\n") if x)
-    r = git(root, "status", "--porcelain")
+    r = git(root, "-c", "core.quotePath=false", "status", "--porcelain", "-uall")
     for line in r.stdout.split("\n"):
         if len(line) > 3:
             name = line[3:]
@@ -344,7 +348,7 @@ def changed_files(root: Path, base: str | None) -> list[str]:
 def added_files(root: Path, base: str) -> list[str]:
     mb = git(root, "merge-base", base, "HEAD")
     ref = mb.stdout.strip() if mb.returncode == 0 and mb.stdout.strip() else base
-    r = git(root, "diff", "--name-only", "--diff-filter=A", ref, "HEAD")
+    r = git(root, "-c", "core.quotePath=false", "diff", "--name-only", "--diff-filter=A", ref, "HEAD")
     return [x for x in r.stdout.split("\n") if x]
 
 
