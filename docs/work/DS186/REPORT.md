@@ -25,12 +25,12 @@ Branch: DS186-specs-audits-agents-fixes (from origin/main). Findings F31-F47.
 
 ## Tests
 - `tools/test_spec_check.py`: added 5 unit cases (F33, F34 x2, F39, F40) and 6 command-line cases (F31, F32 x2, F41, F42, explicit missing external). The full file is a heavy suite and the session guard blocks a local full run. I ran a copy against the old script (14/24, the 10 new cases fail) and the new script (24/24).
-- spec_check.py on the shipped STACKSPEC and AUTHSPEC and on the two edited feature specs: see the run in the session; 0 errors expected.
+- spec_check.py on the shipped STACKSPEC and AUTHSPEC and on the two edited feature specs: STACKSPEC and AUTHSPEC: 0 errors. The two feature specs show one error, `R4.9a is cited but never defined` (docs/features/specs/spec.md:58). It is the same on origin/main, so not from this branch.
 - Full run left to CI: `gh workflow run spec-lint.yml --ref DS186-specs-audits-agents-fixes -f areas=specs,docs`.
 - docs_check: M1 errors for audits, models, project-setup mapping are cleared by `Docs: none` lines in the commit message.
 
 Docs: change notes DS186-specs/audits/agents.md; features/specs and features/agents specs edited.
 
-Branch head SHA: see below (set after push).
+Branch head SHA: b06b8c9c98983e57f294c86f5467948b6d6e1a7b (code commit; the report commit follows it).
 
 READY
