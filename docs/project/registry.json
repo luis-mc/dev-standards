@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T23:27+00:00",
+  "updated": "2026-11-04T23:32+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -583,6 +583,19 @@
       "changed": "2026-11-04T23:27+00:00",
       "rides": "DL49",
       "started": "2026-11-04T22:39+00:00"
+    },
+    {
+      "id": "AR59",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "Fix artifacts findings (DL48 F20-F27)",
+      "detail": "Deferred publish honoured, queue writes, December dates, after-command events, catch-up, overdue.",
+      "expected": "05 Nov ~00:45",
+      "changed": "2026-11-04T23:29+00:00",
+      "expected_basis": "Fix agent from 23:35, ~70 min",
+      "rides": "DL50",
+      "started": "2026-11-04T23:29+00:00"
     },
     {
       "id": "DL1",
@@ -1214,12 +1227,11 @@
       "id": "DL48",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Review the delivery and artifacts plugins for bugs (RELEASE-41)",
       "detail": "One agent reviews both plugins, records findings as tasks; fixes ship in RELEASE-41 (D80).",
-      "expected": "04 Nov ~23:40",
-      "changed": "2026-11-04T22:51+00:00",
-      "expected_basis": "Review agent from 22:39, ~60 min; fixes ride RELEASE-42",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T23:32+00:00",
       "rides": "DL50",
       "started": "2026-11-04T22:39+00:00"
     },
@@ -1261,24 +1273,24 @@
       "id": "DL50",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "RELEASE-42: fixes from both plugin reviews (DL48, DL51), DL52",
       "detail": "Every proven DL50 finding; merge on green (D82); last overnight round (D91).",
-      "expected": "05 Nov ~02:00",
-      "changed": "2026-11-04T22:51+00:00",
-      "expected_basis": "Reviews ~23:40 and ~00:05, fixes ~60, CI 15, merge",
-      "release": 42
+      "expected": "05 Nov ~01:15",
+      "changed": "2026-11-04T23:32+00:00",
+      "expected_basis": "8 fix agents from 23:31 ~75 min, join 10, CI 15, merge",
+      "release": 42,
+      "started": "2026-11-04T23:32+00:00"
     },
     {
       "id": "DL51",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Review docs, project-setup, specs, transcript-folds, audits, agents for bugs",
       "detail": "Read-only review (D89) on branch DL50-plugin-review-2; findings become RELEASE-42 tasks; suspected ones proven first (D90).",
-      "expected": "05 Nov ~00:05",
-      "changed": "2026-11-04T22:48+00:00",
-      "expected_basis": "Review agent from 22:47, ~75 min",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T23:32+00:00",
       "rides": "DL50",
       "started": "2026-11-04T22:48+00:00"
     },
@@ -1305,6 +1317,45 @@
       "expected_basis": "Fix by the orchestrator ~20 min, then CI ~15",
       "rides": "DL50",
       "started": "2026-11-04T23:08+00:00"
+    },
+    {
+      "id": "DL54",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Fix delivery hook findings (DL48 F1 F3-F8 F10, PR from another dir)",
+      "detail": "Hook fallback keeps exit 2; DL-63 zone; push/PR recording; DL-91 pid; DL-32 stalled; year wrap.",
+      "expected": "05 Nov ~00:45",
+      "changed": "2026-11-04T23:29+00:00",
+      "expected_basis": "Fix agent from 23:35, ~70 min",
+      "rides": "DL50",
+      "started": "2026-11-04T23:29+00:00"
+    },
+    {
+      "id": "DL55",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Fix delivery ledger findings (DL48 F2 F9 F11, DL52)",
+      "detail": "Unreadable ledger is not replaced; agent-eta on queued/pushed/stalled rows; README flag.",
+      "expected": "05 Nov ~00:45",
+      "changed": "2026-11-04T23:29+00:00",
+      "expected_basis": "Fix agent from 23:35, ~70 min",
+      "rides": "DL50",
+      "started": "2026-11-04T23:29+00:00"
+    },
+    {
+      "id": "DL56",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Fix delivery shared-script findings (DL48 F12-F19)",
+      "detail": "ci_scope renames, session_guard quoting/draft/measure, change_notes '--' lines, heavy lock, quoted paths.",
+      "expected": "05 Nov ~00:45",
+      "changed": "2026-11-04T23:29+00:00",
+      "expected_basis": "Fix agent from 23:35, ~70 min",
+      "rides": "DL50",
+      "started": "2026-11-04T23:29+00:00"
     },
     {
       "id": "DS1",
@@ -3987,6 +4038,45 @@
       "no_release": "cleanup"
     },
     {
+      "id": "DS184",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Fix docs plugin findings (DL50 F1-F13)",
+      "detail": "New-folder map check, notes per doc, master branch, BOM, encoding, docs/work, anchors, links, fold.",
+      "expected": "05 Nov ~00:45",
+      "changed": "2026-11-04T23:29+00:00",
+      "expected_basis": "Fix agent from 23:35, ~70 min",
+      "rides": "DL50",
+      "started": "2026-11-04T23:29+00:00"
+    },
+    {
+      "id": "DS185",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Fix project-setup findings (DL50 F14-F30)",
+      "detail": "Hook fallback, pre-commit names/renames/exec bit, questions hook, preflight, catalog ids, CI template.",
+      "expected": "05 Nov ~00:45",
+      "changed": "2026-11-04T23:29+00:00",
+      "expected_basis": "Fix agent from 23:35, ~70 min",
+      "rides": "DL50",
+      "started": "2026-11-04T23:29+00:00"
+    },
+    {
+      "id": "DS186",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Fix specs, audits and agents findings (DL50 F31-F47)",
+      "detail": "spec_check paths/encoding/citations/fences; audit rule conflicts with shipped specs; architect read-only.",
+      "expected": "05 Nov ~00:45",
+      "changed": "2026-11-04T23:29+00:00",
+      "expected_basis": "Fix agent from 23:35, ~70 min",
+      "rides": "DL50",
+      "started": "2026-11-04T23:29+00:00"
+    },
+    {
       "id": "MP1",
       "owner": "models",
       "app": "luismc-project-setup",
@@ -4366,6 +4456,19 @@
       "expected": "13 Oct",
       "changed": "2026-10-13T23:27+01:00",
       "no_release": "machine setup, ships nothing"
+    },
+    {
+      "id": "TF6",
+      "owner": "transcript-folds",
+      "app": "",
+      "status": "Running",
+      "item": "Fix transcript-folds findings (DL50 F48-F60)",
+      "detail": "PowerShell edits, failed calls not folded, ANSI and wide-char widths, Windows path tally.",
+      "expected": "05 Nov ~00:45",
+      "changed": "2026-11-04T23:29+00:00",
+      "expected_basis": "Fix agent from 23:35, ~70 min",
+      "rides": "DL50",
+      "started": "2026-11-04T23:29+00:00"
     }
   ]
 }

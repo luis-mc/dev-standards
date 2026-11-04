@@ -888,16 +888,26 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Decisions</a><a href="#s3"><b>3</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Transcript folds</h1><p>Long diffs and finished shell commands fold to one line in the transcript, toggled with ctrl+x d and ctrl+x f; claude-setup installs it on every machine.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-04T20:50+00:00">04 Nov 20:50</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T23:29+00:00">04 Nov 23:29</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">04 Nov 23:28</a> (Lisbon)</p>
 <p class="lede">Live since 13 Oct (PR #60): luismc-transcript-folds 1.0.0, installed by claude-setup 14.3.0.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="TF6"><span class="task-id">TF6</span>Fix transcript-folds findings (DL50 F48-F60) <span class="glance-expected">05 Nov ~00:45</span><span class="glance-basis">Fix agent from 23:35, ~70 min</span></li>
+</ul>
+</details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">5</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">5</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="TF6"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">TF6</span>Fix transcript-folds findings (DL50 F48-F60)<span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td data-label="Detail">PowerShell edits, failed calls not folded, ANSI and wide-char widths, Windows path tally.</td><td data-label="Expected">05 Nov ~00:45<span class="expected-basis">Fix agent from 23:35, ~70 min</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">5 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="TF5"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">TF5</span>Install on this machine; hide-diffs removal<span class="no-release-line">ships nothing: machine setup, ships nothing</span></td><td data-label="Detail">luismc-transcript-folds installed (user scope), luismc-project-setup updated to 14.3.0, plugins reloaded. hide-diffs is installed with local scope in another project; the owner removes it there (claude plugin uninstall hide-diffs@gixxy22-plugins --scope local).</td><td data-label="Expected">13 Oct</td></tr>
