@@ -572,9 +572,9 @@ def test_release_expected_is_the_end_of_the_last_phase(env):
     rel = ok.out.strip()
     # moving the Expected away from the phases is refused too, and so is a phase change that leaves it behind
     r = p.run('set-task-status', rel, 'Running', '--expected', '10 Oct ~19:00')
-    assert r.code == 1 and 'last phase' in r.err, r.all
-    r = p.run('set-task-status', rel, 'Running', '--phase', 'agents=17:30-18:20')
-    assert r.code == 1 and '~18:20' in r.err, r.all
+    assert r.code == 1 and 'last phase' in r.err and '~18:00' in r.err, r.all
+    p.ok('set-task-status', rel, 'Running', '--phase', 'agents=17:30-18:20')
+    assert p.task(rel)['expected'].startswith('10 Oct ~18:20'), p.task(rel)['expected']
     p.ok('set-task-status', rel, 'Running', '--phase', 'agents=17:30-18:20', '--expected', '10 Oct ~18:20')
     # a closed release is not held to it (Expected is then the date it happened)
     p.ok('set-task-status', rel, 'Live')

@@ -2486,6 +2486,51 @@ def sc_agent_setup(t: T, shared: Path) -> None:
             t.has("idempotent: skips the download", r.err, "already installed")
             t.eq("idempotent: setup runs again", [x[0] for x in box.ran(True)], ["setup"])
 
+        # DL44: engines.node in package.json picks the lowest satisfying Node major
+        if exe == "gitleaks":
+            node_log = box.root / "node-installer.log"
+            fake = box.root / "fake-node" / "bin"
+            fake.mkdir(parents=True)
+            fnode = fake / "node"
+            fnode.write_text("#!/bin/sh\necho 24.0.0\n", newline="\n")
+            fnode.chmod(0o755)
+            installer = box.root / "node-installer.sh"
+            installer.write_text('#!/bin/sh\necho "$1" >> "%s"\necho "%s"\n' % (node_log.as_posix(), fake.as_posix()), newline="\n")
+            installer.chmod(0o755)
+            nenv = {**env, "DELIVERY_NODE_INSTALLER": installer.as_posix()}
+            stub22 = box.root / "node22"
+            stub22.mkdir()
+            n22 = stub22 / "node"
+            n22.write_text("#!/bin/sh\n[ \"$1\" = -p ] && echo 22 || echo 22.1.0\n", newline="\n")
+            n22.chmod(0o755)
+            nenv["PATH"] = stub22.as_posix() + os.pathsep + env["PATH"]
+            pkg = box.work / "package.json"
+
+            def node_run(engines):
+                node_log.unlink(missing_ok=True)
+                if engines is None:
+                    pkg.unlink(missing_ok=True)
+                else:
+                    pkg.write_text(json.dumps({"name": "app1", "engines": engines}) + "\n")
+                r = run([bash, sh.as_posix()], cwd=box.work, extra_env=nenv)
+                got = node_log.read_text().split() if node_log.exists() else []
+                return r, got
+
+            r, got = node_run({"node": ">=24 <25"})
+            t.eq("engines >=24 <25 on Node 22: exit 0", r.code, 0)
+            t.eq("... installs Node 24", got, ["24"])
+            t.has("... prints one line saying what it did", r.err, "now using Node 24")
+            r, got = node_run({"node": ">=22"})
+            t.eq("engines >=22 on Node 22: nothing installed", got, [])
+            r, got = node_run({"node": "^20.9.0 || >=26"})
+            t.eq("engines ^20.9.0 || >=26 on Node 22: installs 26", got, ["26"])
+            r, got = node_run({"npm": ">=10"})
+            t.eq("no engines.node: nothing installed", got, [])
+            r, got = node_run(None)
+            t.eq("no package.json: nothing installed", got, [])
+            t.eq("... exit 0", r.code, 0)
+            pkg.unlink(missing_ok=True)
+
         # the PATH hint is a shell path: through cygpath when there is one (Git Bash)
         # (a cygpath function from BASH_ENV, so it wins over any real cygpath on PATH)
         cyg_env = box.root / "cygpath.env"

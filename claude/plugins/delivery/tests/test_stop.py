@@ -37,6 +37,19 @@ class EtaTests(unittest.TestCase):
         self.assertEqual(keys("- Ready 16:40. The CI run takes about 25 minutes."), [])
         self.assertTrue(keys("- Ready soon.\n- The rewrite takes about 25 minutes."))
 
+    def test_past_events_are_not_flagged(self):
+        for text in ("CI then failed about 2 minutes in.", "The CI run started about 1 minute ago.",
+                     "The suite finished in about 4 minutes.", "The build ran in 12 min and passed.",
+                     "- Spec lint failed about 40 seconds in, then I pushed a fix about 3 min later."):
+            self.assertEqual(keys(text), [], text)
+
+    def test_future_estimates_are_still_flagged(self):
+        for text in ("CI started; it should finish in about 5 minutes.", "The run will be done in ~10 min.",
+                     "Expected in about 20 minutes.", "About 8 min left on the CI run.",
+                     "ETA ~15 min.", "CI started; it should be ready in 6 min.",
+                     "The merge is due in 30 minutes."):
+            self.assertTrue(keys(text), text)
+
     def test_tomorrow_is_still_flagged(self):
         self.assertTrue([k for k, _ in S.check_eta_text("The rest lands tomorrow.")])
 

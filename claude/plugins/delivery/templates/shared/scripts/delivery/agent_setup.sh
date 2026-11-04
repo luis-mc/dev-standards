@@ -10,11 +10,19 @@
 #                              installed into
 #                              $DELIVERY_BIN (default ~/.local/bin)
 #   3. git hooks               core.hooksPath -> .githooks, if unset
+#   3b. Node                   when package.json has engines.node and the active Node
+#                              major does not satisfy it, activate the lowest major
+#                              that does (volta, fnm or nvm if present; else the
+#                              official tarball, SHA-256 checked against the official
+#                              SHASUMS256.txt). No package.json or no engines: skipped.
 #   4. gate.json "setup"       each command, from the repository root
 #
 # Idempotent: a step already satisfied is skipped. Environment:
 #   DELIVERY_BIN                  install directory for downloaded tools
 #   DELIVERY_GITLEAKS_BASE_URL    release download base URL (mirrors, tests)
+#   DELIVERY_NODE_INSTALLER       command run as '<cmd> <major>': installs that Node major
+#                                 and prints its bin directory (tests inject it)
+#   DELIVERY_NODE_BASE_URL        Node download base URL (default https://nodejs.org/dist)
 #   DELIVERY_DRY_RUN=1            print what would be downloaded, change nothing
 #
 # Exit: 0 ready, 2 could not prepare the machine.
@@ -184,6 +192,115 @@ cd "$root"
 
 if [ -d .githooks ] && [ -z "$(git config --get core.hooksPath 2>/dev/null || true)" ]; then
   git config core.hooksPath .githooks && say "git hooks: core.hooksPath -> .githooks"
+fi
+
+# --- 3b. Node for package.json engines.node ---------------------------------
+# Lowest major that satisfies engines.node (">=24 <25" -> 24); empty when there is
+# no package.json, no engines.node, or the active Node already satisfies it.
+node_wanted=$("$py" -I -c '
+import json, re, sys
+try:
+    rng = json.load(open("package.json"))["engines"]["node"]
+except Exception:
+    sys.exit(0)
+act = int(sys.argv[1] or 0)
+
+def ver(t):
+    p = (re.findall(r"\d+", t) + ["0", "0"])[:3]
+    return tuple(int(x) for x in p)
+
+def ok(v, comp):
+    m = re.match(r"^(>=|<=|>|<|=|\^|~)?\s*v?(\d+|[xX*])?(?:\.(\d+|[xX*]))?(?:\.(\d+|[xX*]))?", comp)
+    if not m or m.group(2) in (None, "x", "X", "*"):
+        return True
+    op, parts = m.group(1) or "=", [m.group(i) for i in (2, 3, 4)]
+    n = sum(1 for x in parts if x and x not in "xX*")
+    lo = ver(".".join(x for x in parts if x and x not in "xX*"))
+    if op == ">=": return v >= lo
+    if op == ">":  return v >= (lo[0], lo[1], lo[2] + 1) if n == 3 else v[:n] > lo[:n]
+    if op == "<=": return v[:n] <= lo[:n]
+    if op == "<":  return v[:n] < lo[:n]
+    if op == "^":  return v >= lo and v[0] == lo[0] if lo[0] else v[:2] == lo[:2] and v >= lo
+    if op == "~":  return v >= lo and v[:max(n, 1) if n < 2 else 2] == lo[:max(n, 1) if n < 2 else 2]
+    return v[:n] == lo[:n]
+
+def sat(v):
+    for alt in rng.split("||"):
+        comps = re.sub(r"(>=|<=|>|<|=|\^|~)\s+", r"\1", alt.strip()).split()
+        if all(ok(v, c) for c in comps):
+            return True
+    return False
+
+def major_ok(m):
+    return any(sat((m, a, b)) for a, b in ((0, 0), (0, 1), (999, 999)))
+
+if major_ok(act):
+    sys.exit(0)
+for m in range(act + 1 if act else 0, 100):
+    if major_ok(m):
+        print(m)
+        break
+' "$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || true)" 2>/dev/null || true)
+
+node_install_default() {  # $1 = major; prints the bin directory
+  local m=$1 d
+  if command -v volta >/dev/null 2>&1; then
+    volta install "node@$m" >&2 && { echo "${VOLTA_HOME:-$HOME/.volta}/bin"; return 0; }
+  fi
+  if command -v fnm >/dev/null 2>&1; then
+    fnm install "$m" >&2 && d=$(fnm exec --using="$m" node -p 'process.execPath' 2>/dev/null) && { dirname "$d"; return 0; }
+  fi
+  if [ -s "${NVM_DIR:-$HOME/.nvm}/nvm.sh" ]; then
+    d=$(bash -c '. "${NVM_DIR:-$HOME/.nvm}/nvm.sh" >/dev/null; nvm install "$1" >&2 && nvm which "$1"' _ "$m") && [ -n "$d" ] && { dirname "$d"; return 0; }
+  fi
+  node_install_tarball "$m"
+}
+
+node_install_tarball() {  # $1 = major; official tarball, SHA-256 from the official SHASUMS256.txt
+  local m=$1 plat cpu work
+  case "$(uname -s)" in Linux) plat=linux ;; Darwin) plat=darwin ;; *) return 1 ;; esac
+  case "$(uname -m)" in x86_64|amd64) cpu=x64 ;; aarch64|arm64) cpu=arm64 ;; *) return 1 ;; esac
+  work=$(mktemp -d)
+  "$py" -I - "${DELIVERY_NODE_BASE_URL:-https://nodejs.org/dist}" "$m" "$plat-$cpu" "$(dirname "$bin_dir")/node" "$work" <<'PY'
+import hashlib, os, re, sys, tarfile, urllib.request
+base, major, plat, dest, work = sys.argv[1:6]
+base = base.rstrip("/")
+def fetch(url):
+    with urllib.request.urlopen(url, timeout=300) as r:
+        return r.read()
+sums = fetch("%s/latest-v%s.x/SHASUMS256.txt" % (base, major)).decode()
+m = re.search(r"^([0-9a-f]{64})\s+(node-v(\d+\.\d+\.\d+)-%s\.tar\.xz)$" % re.escape(plat), sums, re.M)
+if not m:
+    sys.exit("agent_setup: no Node %s tarball for %s in SHASUMS256.txt" % (major, plat))
+want, name, full = m.groups()
+data = fetch("%s/v%s/%s" % (base, full, name))
+if hashlib.sha256(data).hexdigest() != want:
+    sys.exit("agent_setup: checksum mismatch for %s; nothing installed" % name)
+tmp = os.path.join(work, name)
+open(tmp, "wb").write(data)
+os.makedirs(dest, exist_ok=True)
+with tarfile.open(tmp, "r:xz") as t:
+    t.extractall(dest, filter="data")
+print(os.path.join(dest, name[:-len(".tar.xz")], "bin"))
+PY
+  local rc=$?
+  rm -rf "$work"
+  return $rc
+}
+
+if [ -n "$node_wanted" ]; then
+  say "node: package.json engines.node needs Node $node_wanted"
+  if [ -n "${DELIVERY_NODE_INSTALLER:-}" ]; then
+    node_bin=$("$DELIVERY_NODE_INSTALLER" "$node_wanted") || node_bin=
+  else
+    node_bin=$(node_install_default "$node_wanted") || node_bin=
+  fi
+  if [ -n "$node_bin" ] && [ -d "$node_bin" ]; then
+    export PATH="$node_bin:$PATH"
+    say "node: active Node was $(node -p 'process.versions.node' 2>/dev/null || echo none) -> now using Node $node_wanted from $node_bin (add to PATH in new shells)"
+  else
+    say "node: could not install Node $node_wanted; continuing with the active Node"
+  fi
 fi
 
 setup_cmds=$("$py" -I -c '

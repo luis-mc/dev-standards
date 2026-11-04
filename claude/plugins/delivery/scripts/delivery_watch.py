@@ -74,6 +74,39 @@ class Shell:
             return None
 
 
+OK_CONCLUSIONS = ("success", "skipped")      # a skipped run counts as success (DL-03)
+_ON_PR_RE = re.compile(r"\bpull_request(?:_target)?\b")
+
+
+def pr_workflows(root) -> list:
+    """The workflow files under .github/workflows that run on pull_request (DL-03). A workflow that runs only
+    on push (to main, a tag, a schedule) is not in the list: nothing waits for it."""
+    out = []
+    d = Path(root) / ".github" / "workflows"
+    try:
+        files = sorted(p for p in d.iterdir() if p.suffix in (".yml", ".yaml"))
+    except OSError:
+        return out
+    for p in files:
+        try:
+            lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        block, inside = [], False
+        for ln in lines:
+            m = re.match(r"""^["']?on["']?\s*:(.*)$""", ln)
+            if m:
+                inside = True
+                block.append(m.group(1))
+            elif inside and (not ln.strip() or ln[:1] in " \t#-"):
+                block.append(ln.split("#")[0])
+            elif inside:
+                break
+        if _ON_PR_RE.search("\n".join(block)):
+            out.append(p.name)
+    return out
+
+
 def ci_state_from_runs(runs: list[dict], required: list[str] | None = None) -> str:
     """queued (a required workflow has no run yet), running, success or failure for the runs of one commit.
     Success needs every required workflow's latest run completed with conclusion success (DL-03); a sibling
@@ -87,7 +120,7 @@ def ci_state_from_runs(runs: list[dict], required: list[str] | None = None) -> s
     mine = [latest[w] for w in required if w in latest]
     if any(r.get("status") != "completed" for r in mine):
         return "running"
-    if any(r.get("conclusion") != "success" for r in mine):
+    if any(r.get("conclusion") not in OK_CONCLUSIONS for r in mine):
         return "failure"
     if len(mine) < len(required):
         return "queued" if not mine else "running"
@@ -418,7 +451,12 @@ class Watcher:
         opts = C.ci_options(self.cfg)
         if opts and all(v == "cloud" for v in opts.values()):
             return []
-        return C.ci_workflows(self.cfg)
+        need = list(C.ci_workflows(self.cfg))
+        found = pr_workflows(self.root)
+        if found and not (C._section(self.cfg, "watcher").get("ci_workflows")):
+            need = []                       # nothing configured: the default ci.yml is only a guess
+        # every workflow the repo triggers on pull_request must have a finished run too (DL-03)
+        return need + [w for w in found if w not in need]
 
     def statuses_for_commit(self, sha: str, contexts: list):
         """Option c results as run-shaped rows, one per posted context; None when gh failed. A context with no status

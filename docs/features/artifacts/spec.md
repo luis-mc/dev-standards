@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-artifacts]
 topics: [artifacts]
 status: live
-version: 0.2.2
+version: 0.2.3
 owner: agents
 type: reference
 code:
@@ -122,7 +122,7 @@ flowchart LR
 
 **R5.10** — Full Progress is published at least every 60 minutes while the project has a record.
 
-**R5.11** — A release's Expected time is the end of its last phase. A mismatch is refused.
+**R5.11** — A release's Expected time is the end of its last phase. Without `--expected`, a write sets it from the phases; an `--expected` that differs is refused.
 
 **R5.12** — A finished feature artifact can be retired. Its tasks and decisions are kept. Its file and content are deleted.
 
@@ -243,6 +243,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.2.3 | 2026-11-04 | RELEASE-40 | A release's Expected follows its last phase when --expected is not given (R5.11). | AR55 |
 | 0.2.2 | 2026-11-04 | RELEASE-39 | Full Progress names a release by its stored number; the release timeline axis labels no longer overlap. | AR54 |
 | 0.2.1 | 2026-11-04 | RELEASE-38 | CI runs section: one Where chip, Now chip, per-job waterfall rows, new summary wording. | DL38 |
 | 0.2.0 | 2026-11-04 | RELEASE-37 | Full Progress draws a foldable CI runs section from .delivery/ci-runs.json (R5.14, ARTIFACTSPEC R5.51, D48). | DL31 |
