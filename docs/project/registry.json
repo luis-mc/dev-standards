@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T21:42+00:00",
+  "updated": "2026-11-04T21:52+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1039,12 +1039,11 @@
       "id": "DL41",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "CI setup pool command uses measured sizing and the derived repos",
       "detail": "From DL40: delivery_ci_setup.py cmd_pool still needs total GiB by hand; its check treats every step like a service",
-      "expected": "04 Nov ~22:35",
-      "changed": "2026-11-04T21:42+00:00",
-      "expected_basis": "cloud agent 21:45: setup 5 + work 35 + checks 10",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T21:52+00:00",
       "rides": "DL42",
       "started": "2026-11-04T21:42+00:00"
     },
