@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T21:55+00:00",
+  "updated": "2026-11-04T21:56+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1053,31 +1053,31 @@
       "status": "Running",
       "item": "RELEASE-39: setup pool command fix and Full Progress display fixes",
       "detail": "DL41 and the three display bugs reported from a consuming project",
-      "expected": "04 Nov ~23:15",
-      "changed": "2026-11-04T21:42+00:00",
-      "expected_basis": "agents 65 min from 21:45, join 5, CI ~15",
+      "expected": "04 Nov ~22:15",
+      "changed": "2026-11-04T21:56+00:00",
+      "expected_basis": "CI on PR #143 from 21:56, ~15 min, then merge",
       "release": 39,
       "started": "2026-11-04T21:41+00:00",
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-04T21:45+00:00",
-          "end": "2026-11-04T22:50+00:00"
+          "start": "2026-11-04T21:43+00:00",
+          "end": "2026-11-04T21:53+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-04T22:50+00:00",
-          "end": "2026-11-04T22:55+00:00"
+          "start": "2026-11-04T21:53+00:00",
+          "end": "2026-11-04T21:56+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-04T22:55+00:00",
-          "end": "2026-11-04T23:10+00:00"
+          "start": "2026-11-04T21:56+00:00",
+          "end": "2026-11-04T22:11+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-04T23:10+00:00",
-          "end": "2026-11-04T23:15+00:00"
+          "start": "2026-11-04T22:11+00:00",
+          "end": "2026-11-04T22:15+00:00"
         }
       ]
     },
