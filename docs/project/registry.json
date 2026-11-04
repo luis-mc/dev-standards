@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T22:32+00:00",
+  "updated": "2026-11-04T22:34+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -543,9 +543,9 @@
       "status": "Running",
       "item": "set-task-status takes Expected from the last phase",
       "detail": "Passing only --phase or --basis must set Expected to the end of the last phase, not refuse the change.",
-      "expected": "04 Nov ~23:00",
-      "changed": "2026-11-04T22:32+00:00",
-      "expected_basis": "Cloud agent A from 22:10, ~50 min",
+      "expected": "04 Nov ~23:25",
+      "changed": "2026-11-04T22:34+00:00",
+      "expected_basis": "Cloud agent from 22:34, per its ETA",
       "rides": "DL47",
       "started": "2026-11-04T22:32+00:00"
     },
@@ -1100,9 +1100,9 @@
       "status": "Running",
       "item": "Stop hook DL-31 flags only future estimates",
       "detail": "Past-tense lines such as 'CI failed about 2 minutes in' are not ETAs; DL-31 must match future estimates only.",
-      "expected": "04 Nov ~23:10",
-      "changed": "2026-11-04T22:32+00:00",
-      "expected_basis": "Cloud agent B from 22:10, ~60 min with DL46",
+      "expected": "04 Nov ~23:35",
+      "changed": "2026-11-04T22:34+00:00",
+      "expected_basis": "Cloud agent from 22:34, per its ETA",
       "rides": "DL47",
       "started": "2026-11-04T22:32+00:00"
     },
@@ -1113,9 +1113,9 @@
       "status": "Running",
       "item": "Cloud agent setup installs the Node version from engines",
       "detail": "agent_setup.sh uses the sandbox Node 22 when the project's engines field asks for another major; pnpm warns on every run.",
-      "expected": "04 Nov ~23:05",
-      "changed": "2026-11-04T22:32+00:00",
-      "expected_basis": "Cloud agent C from 22:10, ~55 min",
+      "expected": "04 Nov ~23:30",
+      "changed": "2026-11-04T22:34+00:00",
+      "expected_basis": "Cloud agent from 22:34, per its ETA",
       "rides": "DL47",
       "started": "2026-11-04T22:32+00:00"
     },
@@ -1126,9 +1126,9 @@
       "status": "Running",
       "item": "Docs: a routine's run_once_at must stay ahead of updates",
       "detail": "A run_once_at that passes while an update call runs never fires. Document: create, update, then run_once_at at least 3 min ahead.",
-      "expected": "04 Nov ~23:05",
-      "changed": "2026-11-04T22:32+00:00",
-      "expected_basis": "Cloud agent C from 22:10, ~55 min",
+      "expected": "04 Nov ~23:30",
+      "changed": "2026-11-04T22:34+00:00",
+      "expected_basis": "Cloud agent from 22:34, per its ETA",
       "rides": "DL47",
       "started": "2026-11-04T22:32+00:00"
     },
@@ -1139,9 +1139,9 @@
       "status": "Running",
       "item": "Ledger calls a train green only when every CI run passed",
       "detail": "RELEASE-39 showed green after secret-scan passed while spec-lint still ran; the Stop hook then asked to merge.",
-      "expected": "04 Nov ~23:10",
-      "changed": "2026-11-04T22:32+00:00",
-      "expected_basis": "Cloud agent B from 22:10, ~60 min with DL43",
+      "expected": "04 Nov ~23:35",
+      "changed": "2026-11-04T22:34+00:00",
+      "expected_basis": "Cloud agent from 22:34, per its ETA",
       "rides": "DL47",
       "started": "2026-11-04T22:32+00:00"
     },
@@ -1152,30 +1152,30 @@
       "status": "Running",
       "item": "RELEASE-40: five plugin bug fixes and two doc checks",
       "detail": "AR55, DL43-DL46, TC12 and the setup-offers lede. Cloud agents, join, PR CI, merge on green (D74).",
-      "expected": "04 Nov ~23:35",
-      "changed": "2026-11-04T22:32+00:00",
-      "expected_basis": "3 cloud agents ~60 min, join 5, CI ~15, merge 5",
+      "expected": "04 Nov ~23:59",
+      "changed": "2026-11-04T22:34+00:00",
+      "expected_basis": "3 cloud agents from 22:34 ~60 min, join 5, CI 15, merge 5",
       "release": 40,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-04T22:10+00:00",
-          "end": "2026-11-04T23:10+00:00"
+          "start": "2026-11-04T22:34+00:00",
+          "end": "2026-11-04T23:35+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-04T23:10+00:00",
-          "end": "2026-11-04T23:15+00:00"
+          "start": "2026-11-04T23:35+00:00",
+          "end": "2026-11-04T23:40+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-04T23:15+00:00",
-          "end": "2026-11-04T23:30+00:00"
+          "start": "2026-11-04T23:40+00:00",
+          "end": "2026-11-04T23:55+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-04T23:30+00:00",
-          "end": "2026-11-04T23:35+00:00"
+          "start": "2026-11-04T23:55+00:00",
+          "end": "2026-11-04T23:59+00:00"
         }
       ],
       "started": "2026-11-04T22:32+00:00"
@@ -1187,9 +1187,9 @@
       "status": "To do",
       "item": "Review the delivery and artifacts plugins for bugs (RELEASE-41)",
       "detail": "One agent reviews both plugins, records findings as tasks; fixes ship in RELEASE-41 (D80).",
-      "expected": "05 Nov ~01:30",
-      "changed": "2026-11-04T22:32+00:00",
-      "expected_basis": "After RELEASE-40 ~23:35; review ~45 min, fixes ~60, CI ~15"
+      "expected": "05 Nov ~02:00",
+      "changed": "2026-11-04T22:34+00:00",
+      "expected_basis": "After RELEASE-40 ~00:00; review 45, fixes 60, CI 15"
     },
     {
       "id": "DS1",
@@ -4192,9 +4192,9 @@
       "status": "Running",
       "item": "Verify the test-cost spec against the code (T2)",
       "detail": "docs_check T2: code changed 4 Nov after the spec was last checked. Update the spec or mark it verified.",
-      "expected": "04 Nov ~23:05",
-      "changed": "2026-11-04T22:32+00:00",
-      "expected_basis": "Cloud agent C from 22:10, ~55 min",
+      "expected": "04 Nov ~23:30",
+      "changed": "2026-11-04T22:34+00:00",
+      "expected_basis": "Cloud agent from 22:34, per its ETA",
       "rides": "DL47",
       "started": "2026-11-04T22:32+00:00"
     },
