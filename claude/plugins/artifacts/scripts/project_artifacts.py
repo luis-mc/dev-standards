@@ -1069,7 +1069,7 @@ def validate_structure(rec):
                 f('R5.34a', 'registry.json', '%s: waits_on must be one of %s' % (label, ', '.join(WAITS_ON)))
             elif isinstance(st, str) and st in statuses and st not in ('Waiting', 'On hold'):
                 f('R5.34a', 'registry.json', '%s: waits_on belongs on a Waiting or On hold row, not on a %s row' % (label, st))
-        for req, msg in release_problems(t, {x.get('id'): x for x in tasks if isinstance(x, dict)}) + started_problems(t):
+        for req, msg in release_problems(t, {x.get('id'): x for x in tasks if isinstance(x, dict)}) + started_problems(t) + release_label_problems(t):
             f(req, 'registry.json', '%s: %s' % (label, msg))
         ex = t.get('expected')
         if isinstance(ex, str) and isinstance(st, str) and st in statuses:
@@ -1691,6 +1691,20 @@ def dropped_problems(task, by_id):
     elif is_release(task):
         out.append(('R5.49', 'a dropped release names the release that took its cargo: dropped_into'))
     return out
+
+
+ITEM_LEAD_RE = re.compile(r'^RELEASE-(\d+)(?![\d\w])')
+
+
+def release_label_problems(task):
+    """R5.45: [(requirement, message)] when a release's Item starts with a RELEASE-<n> that is not its stored number.
+    The stored number is the name shown; the pages drop the other lead."""
+    n = release_number(task)
+    m = ITEM_LEAD_RE.match(str(task.get('item', ''))) if n is not None else None
+    if m and int(m.group(1)) != n:
+        return [('R5.45', 'Item starts with RELEASE-%s but the stored release number is %d; the page shows RELEASE-%d '
+                 '(correct the Item with set-task-status --item)' % (m.group(1), n, n))]
+    return []
 
 
 def release_problems(task, by_id):

@@ -633,6 +633,35 @@ def test_release_numbers_are_assigned_and_never_reused(env):
 
 
 @case
+def test_release_number_follows_the_stored_number(env):
+    """R5.45: a dropped release keeps its number, the next --release is highest + 1, the page names the stored
+    number, and check reports an Item whose RELEASE-<n> lead disagrees with it."""
+    p = env.baseline()
+    r = p.ok('task-add', '--owner', 'project', '--item', 'Second', '--detail', 'd', '--expected', '14 Oct', '--release')
+    second = r.out.strip()
+    p.ok('set-task-status', second, 'Dropped', '--into', 'DS1', '--reason', 'folded')
+    r = p.run('task-add', '--owner', 'project', '--item', 'RELEASE-1: stale lead', '--detail', 'd', '--expected', '15 Oct', '--release')
+    assert r.code == 1 and 'R5.45' in r.err and 'RELEASE-3' in r.err, r.all        # a new write cannot disagree
+    r = p.ok('task-add', '--owner', 'project', '--item', 'Third', '--detail', 'd', '--expected', '15 Oct', '--release')
+    third = r.out.strip()
+    assert p.task(third)['release'] == 3 and p.task(second)['release'] == 2
+    # an older record whose Item still leads with another number: check says so, the page shows the stored number
+    other = p.clone_again('stale-lead')
+    rp = other / 'docs' / 'artifacts' / 'registry.json'
+    reg = json.loads(rp.read_text(encoding='utf-8'))
+    for t in reg['tasks']:
+        if t['id'] == third:
+            t['item'] = 'RELEASE-1: stale lead'
+    rp.write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
+    c = p.run('check')
+    assert 'R5.45' in c.all and 'RELEASE-1' in c.all and third in c.all, c.all
+    p.ok('set-task-status', third, 'To do', '--item', 'Third')
+    fp = p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
+    assert '<span class="release-name">RELEASE-3</span>Third' in fp
+    assert p.run('check').code == 0
+
+
+@case
 def test_rides_accepts_the_release_name(env):
     """R5.45: --rides takes RELEASE-<n> and stores the release's task ID; an unknown number is refused."""
     p = env.baseline()

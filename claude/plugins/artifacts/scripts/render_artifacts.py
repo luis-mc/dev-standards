@@ -75,13 +75,16 @@ def release_name(task) -> str:
     return 'RELEASE-%d' % n if n is not None else 'RELEASE'
 
 
+RELEASE_LEAD_RE = re.compile(r'^RELEASE-\d+(?![\d\w])(?:\s*[:·]\s*|\s+|$)')
+
+
 def shown_item(task) -> str:
     """R5.45: the Item of a release row without its own `RELEASE-<n>` lead (optionally followed by `:` or ` · `),
     so the number shows once; any other item is returned as it is."""
     item = str(task.get('item', ''))
     if release_number(task) is None:
         return item
-    m = re.match(r'^%s(?:\s*[:·]\s*|\s+|$)' % re.escape(release_name(task)), item)
+    m = RELEASE_LEAD_RE.match(item)       # any older lead goes: the stored number is the one name shown
     rest = item[m.end():] if m else item
     return rest if m and rest else item
 
@@ -1219,6 +1222,23 @@ TL_ROW, TL_TOP = 62, 52
 TL_WIDTH = 960                   # the design width of the drawing, in SVG units (R5.43)
 
 
+TL_CHAR, TL_PAD = 6.5, 10        # a label's width per character at 11px, and the empty space kept between two labels
+
+
+def thin_ticks(ticks: list, x, label) -> list:
+    """Axis ticks to label: the first and last always; one between only when its text does not touch the last kept
+    label or the last one (text width from the label length, plus TL_PAD)."""
+    if len(ticks) <= 2:
+        return list(ticks)
+    room = lambda a, b: (len(label(a)) + len(label(b))) * TL_CHAR / 2 + TL_PAD
+    kept = [ticks[0]]
+    for m in ticks[1:-1]:
+        if x(m) - x(kept[-1]) >= room(kept[-1], m) and x(ticks[-1]) - x(m) >= room(m, ticks[-1]):
+            kept.append(m)
+    kept.append(ticks[-1])
+    return kept
+
+
 def _n(value) -> str:
     return ('%.1f' % value).rstrip('0').rstrip('.')
 
@@ -1403,14 +1423,19 @@ def release_timeline(tasks: list, ref: datetime, label: str) -> str:
     if today:
         step = 30 if t1 - t0 <= 240 else 60
         m = -(-t0 // step) * step
+        ticks = []
         while m <= t1:
-            tick = _hhmm(m)
+            ticks.append(m)
+            m += step
+        def tick_text(m):
             if m % 1440 == 0 or (m - step) % 1440 == 0:       # R5.42a: midnight and the first tick after it carry the date
                 day = ref.date() + timedelta(days=int(m // 1440))
-                tick = '%02d %s %s' % (day.day, MONTHS[day.month - 1], tick)
+                return '%02d %s %s' % (day.day, MONTHS[day.month - 1], _hhmm(m))
+            return _hhmm(m)
+        for m in thin_ticks(ticks, x, tick_text):
+            tick = tick_text(m)
             grid.append('<line class="rt-grid" x1="%s" y1="36" x2="%s" y2="%d"/><text x="%s" y="28">%s</text>'
                         % (_n(x(m)), _n(x(m)), height - 24, _n(x(m)), tick))
-            m += step
     for day in days:
         grid.append('<line class="rt-grid" x1="%d" y1="36" x2="%d" y2="%d"/><text x="%d" y="28">%02d %s</text>'
                     % (slot(day), slot(day), height - 24, slot(day), day.day, MONTHS[day.month - 1]))

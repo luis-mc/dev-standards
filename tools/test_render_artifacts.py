@@ -2475,11 +2475,75 @@ def release_number_is_shown_once(fx):
     c = release('DS53', 'RELEASE-3', '13 Oct', status='To do')
     d = release('DS54', 'RELEASE-40 cargo', '14 Oct', status='To do', number=4)
     registry = with_releases(fx, a, b, c, d)
-    assert [R.shown_item(t) for t in registry['tasks'][-4:]] == ['DL12 release', 'Timeline', 'RELEASE-3', 'RELEASE-40 cargo']
+    assert [R.shown_item(t) for t in registry['tasks'][-4:]] == ['DL12 release', 'Timeline', 'RELEASE-3', 'cargo']
     out = fx.render('full-progress', registry=registry)
     names = [R.text_of(n, skip=lambda x: x.tag == 'title') for n in R.find_all(timeline_of(out), 'text', 'rt-name')]
     assert names[:2] == ['RELEASE-1 · DL12 release', 'RELEASE-2 · Timeline'], names
     assert '<span class="release-name">RELEASE-1</span>DL12 release' in out and '</span>RELEASE-1: DL12' not in out and '(RELEASE-1: DL12' not in out
+    assert fx.check(out, 'full-progress', registry=registry) == []
+
+
+@test
+@with_fixture
+def release_label_is_the_stored_number(fx):
+    """R5.45: every label and group header names the stored number; an Item lead for another number is dropped."""
+    rows = [release('DS58', 'RELEASE-8: first', '10 Oct ~18:00', status='Live', number=8),
+            release('DS59', 'RELEASE-8: made with the old counter', '10 Oct ~19:00', number=9,
+                    phases=[phase('agents', '18:51', '19:01'), phase('join', '19:17', '19:30')]),
+            release('DS60', 'Third', '10 Oct ~21:00', number=10, phases=[phase('agents', '18:51', '19:01')]),
+            release('DS61', 'Fourth', '11 Oct', status='To do', number=11)]
+    registry = with_releases(fx, *rows)
+    out = fx.render('full-progress', registry=registry)
+    heads = re.findall(r'<strong>(RELEASE-[^<]*)</strong>', out)
+    assert [h.split(' ')[0] for h in heads] == ['RELEASE-9', 'RELEASE-10', 'RELEASE-11'], heads
+    assert '</span>RELEASE-8' not in out and '(RELEASE-8' not in out and '<span class="release-name">RELEASE-9</span>made with the old counter' in out
+    names = [R.text_of(n, skip=lambda x: x.tag == 'title') for n in R.find_all(timeline_of(out), 'text', 'rt-name')]
+    assert 'RELEASE-9 · made with the…' in names and not any('RELEASE-8' in n for n in names), names
+    assert fx.check(out, 'full-progress', registry=registry) == []
+
+
+@test
+@with_fixture
+def release_timeline_uses_each_rows_own_basis(fx):
+    """R6.10: the strip under Other work and the release rows read their own row's fields, not a neighbour's."""
+    a = release('DS51', 'A', '10 Oct ~18:00', risk={'label': '+1 fix round', 'minutes': 10},
+                phases=[phase('agents', '17:30', '17:45')])
+    b = release('DS52', 'B', '10 Oct ~20:00', risk={'label': 'slow CI', 'minutes': 20},
+                phases=[phase('agents', '19:00', '19:30')])
+    registry = with_releases(fx, a, b)
+    for t in registry['tasks']:
+        if t['id'] == 'DS51':
+            t['expected_basis'] = 'basis of A'
+        if t['id'] == 'DS52':
+            t['expected_basis'] = 'basis of B'
+    out = fx.render('full-progress', registry=registry)
+    fig = timeline_of(out)
+    risks = [R.text_of(n) for n in R.find_all(fig, 'text', 'rt-risk-label')]
+    assert risks[0].startswith('+1 fix round') and risks[1].startswith('slow CI'), risks
+    assert 'basis of A' not in R.text_of(fig) and 'basis of B' not in R.text_of(fig)
+    assert fx.check(out, 'full-progress', registry=registry) == []
+
+
+@test
+@with_fixture
+def axis_labels_keep_a_gap(fx):
+    """R5.42: close phases (join 18:51-19:01, agents 19:17-22:35) leave no overlapping axis labels; the first and last stay."""
+    a = release('DS51', 'Close', '10 Oct ~22:35',
+                phases=[phase('join', '18:51', '19:01'), phase('agents', '19:17', '22:35')])
+    registry = with_releases(fx, a)
+    out = fx.render('full-progress', registry=registry)
+    fig = timeline_of(out)
+    axis = R.find(fig, 'g', 'rt-axis')
+    labels = [R.text_of(n) for n in R.find_all(axis, 'text')]
+    assert labels[0] == '19:00' and labels[-1] == '23:00', labels
+    # every pair of neighbouring labels sits further apart than their text is wide
+    raw = re.findall(r'<text x="([\d.]+)" y="28">([^<]*)</text>', out)
+    for (x0, t0), (x1, t1) in zip(raw, raw[1:]):
+        assert float(x1) - float(x0) >= (len(t0) + len(t1)) * R.TL_CHAR / 2, raw
+    # a crowded axis is thinned, never emptied
+    x = lambda m: m * 0.5
+    kept = R.thin_ticks(list(range(0, 300, 30)), x, lambda m: '%02d:%02d' % (m // 60, m % 60))
+    assert kept[0] == 0 and kept[-1] == 270 and len(kept) < 10, kept
     assert fx.check(out, 'full-progress', registry=registry) == []
 
 
