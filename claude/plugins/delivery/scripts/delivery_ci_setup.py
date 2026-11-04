@@ -307,7 +307,7 @@ def by_hand_items(cfg) -> list:
                             "title": "On %s set the load ceilings and the runner hook" % r["name"],
                             "steps": ["In ~/.claude/luismc-delivery-machine.json on %s set \"load_limits\": {\"memory_pct\": %s, \"cpu_pct\": %s}."
                                       % (r["name"], lim.get("memory_pct", "N"), lim.get("cpu_pct", "N")),
-                                      "Set ACTIONS_RUNNER_HOOK_JOB_STARTED to scripts/runner_load_gate in the runner's .env (README, 'CI runner gate'), then restart the runner."]})
+                                      "Set ACTIONS_RUNNER_HOOK_JOB_STARTED to scripts/runner_load_gate.ps1 (Windows; the runner rejects .cmd) or scripts/runner_load_gate.sh (Linux, macOS) in the runner's .env, and ACTIONS_RUNNER_HOOK_JOB_COMPLETED to the matching runner_job_done wrapper (README, 'CI runner gate'), then restart the runner."]})
         if ci.get("serial") is True:
             out.append({"id": "var:CI_SERIAL", "option": 1, "check": "var", "name": "CI_SERIAL", "value": "true",
                         "title": "Set the repository variable CI_SERIAL to true (ready-PR runs queue one at a time)",

@@ -757,6 +757,139 @@ class DoctorMachine(unittest.TestCase):
                 self.assertEqual(os.listdir(r / "_work"), [])
 
 
+class ShardAndMarker(unittest.TestCase):
+    """DL39: shard precedence, the plugin's own ci_fallback, a log line for every skipped marker, the .ps1 hooks."""
+
+    def test_shard_is_delivery_shard_else_job_key(self):
+        self.assertEqual(MS.shard_from_env({"DELIVERY_SHARD": "x", "GITHUB_JOB": "verify"}), "x")
+        self.assertEqual(MS.shard_from_env({"GITHUB_JOB": "verify"}), "verify")
+        self.assertEqual(MS.shard_from_env({"DELIVERY_SHARD": "", "GITHUB_JOB": "verify"}), "verify")
+        self.assertEqual(MS.shard_from_env({}), "")
+        self.assertEqual(MS.ident_from_env({"GITHUB_JOB": "verify"})["shard"], "verify")
+        self.assertEqual(MS.ident_from_env({"GITHUB_JOB": "verify", "DELIVERY_SHARD": "s"})["shard"], "s")
+
+    def marker(self, env, **kw):
+        lines = []
+        import runner_load_gate as RLG
+        with mock.patch.object(RLG, "_marker_root", return_value=kw.get("root")):
+            m = RLG.Marker(env=env, log=lines.append)
+        m.start()
+        return m, lines
+
+    def test_marker_uses_the_job_key_as_shard(self):
+        m, _ = self.marker({"GITHUB_SHA": "abc", "GITHUB_JOB": "verify"})
+        self.assertEqual(m.shard, "verify")
+
+    def test_skip_reasons_are_logged(self):
+        for env, root, word in (({"GITHUB_JOB": "j"}, None, "sha"), ({"GITHUB_SHA": "a"}, None, "shard"),
+                                ({"GITHUB_SHA": "a", "GITHUB_JOB": "j"}, None, "checkout")):
+            m, lines = self.marker(env, root=root)
+            self.assertIsNone(m.mod)
+            self.assertEqual(len(lines), 1)
+            self.assertIn("no ci-wait marker", lines[0])
+            self.assertIn(word, lines[0])
+
+    def test_no_module_is_logged(self):
+        import runner_load_gate as RLG
+        with mock.patch.object(RLG, "_fallback", return_value=None):
+            m, lines = self.marker({"GITHUB_SHA": "a", "GITHUB_JOB": "j"}, root="/x")
+        self.assertIn("ci_fallback.py could not be loaded", lines[0])
+
+    def test_plugin_copy_is_used_when_the_workspace_is_empty(self):
+        import runner_load_gate as RLG
+        ws = tempfile.mkdtemp(prefix="ws-")                       # a kept .git, nothing else (after the job-done hook)
+        os.makedirs(os.path.join(ws, ".git"))
+        self.assertTrue(os.path.isfile(RLG.plugin_fallback_path()))
+        mod = RLG._fallback(ws)
+        self.assertIsNotNone(mod)
+        self.assertTrue(hasattr(mod, "mark_wait"))
+        mod2 = RLG._fallback(tempfile.mkdtemp(prefix="ws-"))
+        self.assertTrue(hasattr(mod2, "claim_taken"))
+        # the checkout's own copy wins when it exists
+        d = os.path.join(ws, "scripts", "delivery")
+        os.makedirs(d)
+        with open(os.path.join(d, "ci_fallback.py"), "w") as f:
+            f.write("MARK = 'own'\ndef mark_wait(*a): return True\n")
+        self.assertEqual(RLG._fallback(ws).MARK, "own")
+
+    def test_failed_push_is_logged(self):
+        import runner_load_gate as RLG
+        fake = mock.Mock()
+        fake.mark_wait.return_value = False
+        with mock.patch.object(RLG, "_fallback", return_value=fake):
+            m, lines = self.marker({"GITHUB_SHA": "a", "GITHUB_JOB": "j"}, root="/x")
+        self.assertFalse(m.on)
+        self.assertIn("not written", lines[0])
+        self.assertIn("credentials", lines[0])
+
+    def test_no_cmd_wrappers_ship(self):
+        for n in ("runner_load_gate", "runner_job_done"):
+            self.assertFalse(Path(SCRIPTS, n + ".cmd").exists())
+            self.assertTrue(Path(SCRIPTS, n + ".ps1").exists())
+            self.assertTrue(Path(SCRIPTS, n + ".sh").exists())
+
+
+class DoctorHookAndPush(unittest.TestCase):
+    def runner(self, env_text, checkout=False):
+        r = Path(tempfile.mkdtemp(prefix="actions-runner-"))
+        (r / ".runner").write_text(json.dumps({"agentName": "host1-r1"}))
+        (r / ".env").write_text(env_text)
+        if checkout:
+            (r / "_work" / "app1" / "app1" / ".git").mkdir(parents=True)
+        return r
+
+    def items(self, r):
+        with machine(DELIVERY_RUNNER_DIRS=str(r)):
+            MS.write_machine_config({})
+            with mock.patch.object(D.H, "gh", return_value=(0, "[]")):
+                return {i["id"]: i for i in D.machine_items(make_root(), {"ci": {"options": {"linux": "self-hosted"}}})}
+
+    def test_cmd_hook_fails_with_the_fix(self):
+        r = self.runner("ACTIONS_RUNNER_HOOK_JOB_STARTED=C:/p/scripts/runner_load_gate.cmd\n"
+                        "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=C:/p/scripts/runner_job_done.cmd\n")
+        it = self.items(r)["machine.hooks:%s" % r]
+        self.assertEqual(it["status"], "fail")
+        self.assertIn(".cmd", it["detail"])
+        self.assertIn("runner_load_gate.ps1", it["detail"])
+        self.assertIn("runner_job_done.ps1", it["detail"])
+
+    def test_ps1_hook_is_not_flagged_as_cmd(self):
+        r = self.runner("ACTIONS_RUNNER_HOOK_JOB_STARTED=/p/runner_load_gate.sh\nACTIONS_RUNNER_HOOK_JOB_COMPLETED=/p/runner_job_done.sh\n")
+        self.assertEqual(self.items(r)["machine.hooks:%s" % r]["status"], "ok")
+
+    def test_push_probe_without_checkout_is_ok(self):
+        r = self.runner("")
+        self.assertEqual(self.items(r)["machine.push:%s" % r]["status"], "ok")
+
+    def probe(self, rc, stderr=""):
+        r = self.runner("", checkout=True)
+
+        def fake(argv, **kw):
+            if argv[:2] == ["git", "rev-parse"]:
+                return mock.Mock(returncode=0, stdout="a" * 40 + "\n", stderr="")
+            self.assertIn("--dry-run", argv)
+            self.assertIn("refs/heads/ci-wait/", argv[-1])
+            return mock.Mock(returncode=rc, stdout="", stderr=stderr)
+        with mock.patch("subprocess.run", side_effect=fake):
+            return D._push_probe(str(r))
+
+    def test_push_probe_ok(self):
+        self.assertTrue(self.probe(0)[0])
+
+    def test_push_probe_warns_with_the_fix_and_no_token(self):
+        ok, detail = self.probe(128, "fatal: could not read Username for 'https://github.com'")
+        self.assertFalse(ok)
+        self.assertIn("fine-grained token", detail)
+        self.assertIn("contents write", detail)
+        self.assertIn("pool", detail)
+
+    def test_push_failure_is_a_warning_item(self):
+        r = self.runner("", checkout=True)
+        with mock.patch.object(D, "_push_probe", return_value=(False, "dry-run push failed. Store a fine-grained token")):
+            it = self.items(r)["machine.push:%s" % r]
+        self.assertEqual(it["status"], "warn")
+
+
 class Templates(unittest.TestCase):
     def test_every_ci_job_sets_delivery_shard(self):
         import re
@@ -771,6 +904,8 @@ class Templates(unittest.TestCase):
                 if "runs-on:" in block and "CI_RUNS_ON" in block:
                     count += 1
                     self.assertIn("DELIVERY_SHARD:", block, "%s job %s" % (path, m.group(1)))
+                    # the hook sees only the job key: the shard value must be the key (F2)
+                    self.assertRegex(block, r"(?m)^\s*DELIVERY_SHARD: %s\s*$" % re.escape(m.group(1)), "%s job %s" % (path, m.group(1)))
         self.assertGreater(count, 20)
 
 

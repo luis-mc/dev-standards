@@ -146,7 +146,9 @@ One file for the machine, readable by every runner account:
 - `shard_wait_minutes` counts a shard as waiting while a wait marker exists and no claim does.
 - After X minutes (`after_min`), the fallback claims the shard and runs it elsewhere (Option 4, first claim wins).
 - When the held job later gets its slot, it sees the claim is taken. It ends without work (exit 3, "claim lost") and frees the slot.
-- The hook needs the shard name. The workflow templates pass it to the hook in an environment variable set on the job (`DELIVERY_SHARD`).
+- The hook needs the shard name. A job-level `env:` value does not reach the job-started hook, but the hook gets the job key (`GITHUB_JOB`). The shard is `DELIVERY_SHARD` when the hook sees it (the runner's `.env`), else the job key. The workflow templates name each sharded job's key after its shard, and the fallback uses the same name for `ci-wait` and `ci-claim`. Matrix legs share one key.
+- The hook loads `ci_fallback.py` from the checkout, else from the plugin's own copy (the job-completed hook empties the workspace). It logs one line whenever it writes no marker, and why.
+- The marker is pushed with the runner account's git credentials. The doctor tries a dry-run push and warns when the account has none.
 - This fixes G6.
 
 ### 3.5 Local Claude work
@@ -319,7 +321,7 @@ Three cloud agents, one release. Section 12 splits the files.
 | Area | Files |
 |---|---|
 | Machine config and load | `scripts/load.py`, `references/config-schema.json` |
-| Slots and hooks | `scripts/runner_load_gate.py` (+ `.ps1`, `.sh`, `.cmd`), new `scripts/runner_job_done.py` (+ wrappers), new `scripts/machine_slots.py` |
+| Slots and hooks | `scripts/runner_load_gate.py` (+ `.ps1`, `.sh`; no `.cmd`, the runner rejects it), new `scripts/runner_job_done.py` (+ wrappers), new `scripts/machine_slots.py` |
 | Fallback | `templates/shared/scripts/delivery/ci_fallback.py`, the workflow templates (`DELIVERY_SHARD`) |
 | Local and cloud limits | `scripts/load_guard.py`, `scripts/hook_pre_tool.py`, `scripts/hook_post_tool.py`, the cloud launcher |
 | Pool | new `templates/runner-pool/` (Dockerfile, compose, supervisor, add and remove agent, hooks, `pool-check.yml`), new `scripts/delivery_runner_pool.py` (detect, plan, run, verify) |

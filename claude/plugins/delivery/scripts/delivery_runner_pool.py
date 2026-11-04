@@ -288,7 +288,7 @@ def plan(found, linux_repos, windows_repos=(), pool='main', cap=None, serial=Non
                            repo=repo, slug=slug, elevated=True,
                            printed=['cd C:/actions-runners/%s' % slug,
                                     './config.cmd --url https://github.com/%s --token <TOKEN> --name host1-%s --labels self-hosted,windows --runasservice' % (repo, slug),
-                                    'Set ACTIONS_RUNNER_HOOK_JOB_STARTED and ACTIONS_RUNNER_HOOK_JOB_COMPLETED in C:/actions-runners/%s/.env' % slug]))
+                                    'Set ACTIONS_RUNNER_HOOK_JOB_STARTED=<plugin>/scripts/runner_load_gate.ps1 and ACTIONS_RUNNER_HOOK_JOB_COMPLETED=<plugin>/scripts/runner_job_done.ps1 in C:/actions-runners/%s/.env (the runner rejects .cmd hooks)' % slug]))
     for repo in keep_l:
         value = json.dumps(['self-hosted', 'linux', 'pool-%s' % pool])
         steps.append(_step('var:CI_RUNS_ON:%s' % repo, 'Set CI_RUNS_ON for %s' % repo, 'set-variable', repo=repo,

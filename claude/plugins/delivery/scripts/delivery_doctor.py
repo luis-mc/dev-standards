@@ -28,7 +28,9 @@ Eight checks, each `ok` or `FAIL` with the fix:
   machine  (DL-90, D45, D31) the shared CI machine layer, when any OS is Option 1 or the machine folder exists: machine.json
            exists and is readable (a difference with the old ~/.claude file is a warning naming the keys); every runner
            folder has both hooks (ACTIONS_RUNNER_HOOK_JOB_STARTED -> runner_load_gate, ..._COMPLETED -> runner_job_done;
-           on Windows a .ps1 hook passes the execution policy check); no slot is stale and no queue ticket is older than
+           on Windows a .ps1 hook passes the execution policy check, a hook ending in .cmd FAILS: the runner rejects it);
+           a dry-run push of a ci-wait test ref from each runner's kept checkout WARNs when it fails (the runner account
+           needs git credentials); no slot is stale and no queue ticket is older than
            `slot_stale_min`; host-load.json is under 60 s old; the pool checks of delivery_runner_pool.doctor_checks(root)
            when that module imports (else skip); an Option 1 project with the repository variable CI_RUNS_ON unset FAILS
            (it would run on hosted runners and may bill minutes); the size of every runner's _work folder (a large total
@@ -414,6 +416,50 @@ def _dir_size(path):
     return total
 
 
+def _kept_checkout(runner_dir):
+    """The git checkout a runner keeps for the ci-wait marker: DELIVERY_MARKER_ROOT in its .env, else the first
+    _work/<name>/<name> folder with a .git. None when there is none."""
+    root = _env_value(runner_dir, "DELIVERY_MARKER_ROOT")
+    if root and os.path.exists(os.path.join(root.strip("\"'"), ".git")):
+        return root.strip("\"'")
+    work = os.path.join(runner_dir, "_work")
+    try:
+        for a in sorted(os.listdir(work)):
+            for b in sorted(os.listdir(os.path.join(work, a))) if os.path.isdir(os.path.join(work, a)) else []:
+                cand = os.path.join(work, a, b)
+                if os.path.exists(os.path.join(cand, ".git")):
+                    return cand
+    except OSError:
+        pass
+    return None
+
+
+def _push_probe(runner_dir):
+    """None when the runner has no kept checkout, else (ok, detail): a dry-run push of a ci-wait test ref from it.
+    A dry run contacts the remote and needs the same credentials as the real push; it writes nothing. It runs as the
+    account of the doctor, which may differ from the runner account. No token is read or printed."""
+    import subprocess
+    root = _kept_checkout(runner_dir)
+    if not root:
+        return None
+    fix = ("Store a fine-grained token for the runner account with contents write on the repository (git credential "
+           "manager for that account), or use the runner pool. Without it the ci-wait marker cannot be written.")
+    remote = _env_value(runner_dir, "DELIVERY_MARKER_REMOTE") or "origin"
+    try:
+        head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True, text=True, timeout=20)
+        if head.returncode != 0 or not head.stdout.strip():
+            return False, "the checkout %s has no commit to push (%s)" % (root, fix)
+        env = dict(os.environ, GIT_TERMINAL_PROMPT="0")
+        r = subprocess.run(["git", "push", "--dry-run", remote, "%s:refs/heads/ci-wait/doctor-check/probe" % head.stdout.strip()],
+                           cwd=root, capture_output=True, text=True, timeout=60, env=env)
+    except (OSError, subprocess.SubprocessError) as exc:
+        return False, "dry-run push from %s could not run (%s). %s" % (root, type(exc).__name__, fix)
+    if r.returncode == 0:
+        return True, "dry-run push of a ci-wait test ref from %s works" % root
+    last = (r.stderr or r.stdout or "").strip().splitlines()[-1:] or ["no output"]
+    return False, "dry-run push from %s failed (%s). %s" % (root, last[0][:160], fix)
+
+
 def _runner_name(runner_dir):
     try:
         with open(os.path.join(runner_dir, ".runner"), encoding="utf-8-sig") as f:
@@ -451,7 +497,10 @@ def machine_items(root, cfg):
         missing, policy = [], []
         for var, script in ((HOOK_VAR, "runner_load_gate"), (DONE_VAR, "runner_job_done")):
             v = _env_value(d, var)
-            if not (v and script in v):
+            if v and script in v and v.strip("\"'").lower().endswith(".cmd"):
+                policy.append("%s ends in .cmd: the runner rejects it (\"not a valid path to a script\") and every job fails. "
+                              "Set it to the %s.ps1 wrapper (Windows) or %s.sh, then restart the runner" % (var, script, script))
+            elif not (v and script in v):
                 missing.append("%s=...%s" % (var, script))
             elif _is_windows() and v.strip("\"'").lower().endswith(".ps1"):
                 problem = _execution_policy_problem(d)
@@ -464,6 +513,12 @@ def machine_items(root, cfg):
             items.append(_item("machine.hooks:" + d, "ok", "runner %s has both hooks" % d))
     if not dirs:
         items.append(_item("machine.hooks", "ok", "no runner folder found on this machine"))
+    for d in dirs:
+        probe = _push_probe(d)
+        if probe is None:
+            items.append(_item("machine.push:" + d, "ok", "runner %s has no kept checkout yet (the first job makes one)" % d))
+        else:
+            items.append(_item("machine.push:" + d, "ok" if probe[0] else "warn", probe[1]))
     now = __import__("time").time()
     stale = [s for s in MS.status(mcfg, now)["slots"] if not s["free"] and s.get("stale")]
     old_tickets = []
