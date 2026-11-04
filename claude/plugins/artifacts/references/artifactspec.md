@@ -1045,10 +1045,12 @@ double-click.
 
   A phase `name` is `agents`, `join`, `ci` or `merge` (merge and cleanup), at
   most once each; `start` and `end` are ISO times with an offset, `end` after
-  `start`. `risk` is one named risk: a `label` of at most 40 characters and
+  `start`. With `--phase NAME=HH:MM-HH:MM`, an end earlier than its start is the
+  next day (`ci=23:48-00:28`), and the phases given after it continue on that
+  day, so give them in time order; an end equal to its start is refused. `risk` is one named risk: a `label` of at most 40 characters and
   whole `minutes` of at least 1. `rides` is the ID of a release task, which must
   exist and be a release. Phases and risk belong to a release row only. The
-  commands set them: `task-add` and `set-task-status` take `--release`,
+  commands set them: `task-add` and `set-task-status` take `--release [N]`,
   `--phase NAME=HH:MM-HH:MM` (today, in the project's zone) or
   `--phase "NAME=DD Mon HH:MM-DD Mon HH:MM"`, repeatable and replacing all
   phases, `--phase ""` to clear them, `--risk "LABEL=MINUTES"` (`--risk ""`
@@ -1091,7 +1093,8 @@ double-click.
   next day, drawn at `23:57`, keeps its phase bars and its Expected diamond on
   the axis; it never falls back to a bare day slot. `check` finds a timed
   release within 24 hours drawn in a day slot (R5.42a). Verified by
-  `timeline_crosses_midnight` and `check_finds_a_timed_release_in_a_day_slot`.
+  `timeline_crosses_midnight`, `timeline_phase_spans_midnight` (one phase running
+  across midnight) and `check_finds_a_timed_release_in_a_day_slot`.
 - **R5.42b** — The release timeline carries a second strip, **Other work (no
   release)**, below the release rows and in the same figure, so it shares the
   axis, the axis break and the phone-width scroll. It has one row per task that
@@ -1136,9 +1139,12 @@ double-click.
   positive integer unique among all releases of the registry, Live ones
   included; the release is named `RELEASE-<n>` wherever it is shown. `--release`
   on `task-add` or `set-task-status` gives a task that is not yet a release the
-  next number (the highest number in the registry plus one, 1 when none) and
-  leaves an existing number alone; numbers are never reused or changed, like task
-  IDs (R4.5). `--rides` takes a release's task ID or its name `RELEASE-<n>`;
+  next number: one past the highest of the registry and of the delivery ledger
+  (`.delivery/ledger.json`, `trains[].release_no`; read, never written), 1 when
+  there is neither, and leaves an existing number alone. `--release N` sets
+  number N, and on a task that already has a number it corrects the stored one;
+  a number another release task uses is refused. Numbers are otherwise never
+  reused or changed, like task IDs (R4.5). `--rides` takes a release's task ID or its name `RELEASE-<n>`;
   `rides` always stores the task ID. An older record's `"release": true` rows
   are numbered by the migration (§4.7) in order of `changed`, oldest first, ties
   by ID; `check` reports a `release` that is not a positive integer, a repeated
@@ -1153,10 +1159,14 @@ double-click.
   and `check` compares the item as shown. The stored number is the only name a
   release is shown by, in the Item, the group header, the timeline and the
   `dropped: folded into` line. An Item that starts with a different `RELEASE-<m>`
-  has that lead left out of the text shown, and `check` reports it (R5.45); a
-  writing command refuses a change that would leave such a lead. Dropped releases keep
+  has that lead left out of the text shown, and `check` reports it (R5.45); when the
+  delivery ledger records that lead's number, the report says the stored number is
+  wrong and gives the command `set-task-status <id> --release <n>`, otherwise it
+  names both values and says to correct the Item; a writing command refuses a change that would leave such a lead. Dropped releases keep
   their number, so the next number stays the highest plus one. Verified by `release_number_is_shown_once`,
   `test_release_numbers_are_assigned_and_never_reused`,
+  `test_release_number_follows_the_delivery_ledger`, `test_release_label_advice_uses_the_ledger`,
+  `test_phase_crossing_midnight`,
   `test_rides_accepts_the_release_name`, `test_migration_numbers_old_releases`
   and the R5.45 fixtures of `test_check_fixtures`.
 - **R5.46** — The full-progress checklist is grouped by release, in this order,
