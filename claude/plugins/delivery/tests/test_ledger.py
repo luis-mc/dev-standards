@@ -369,3 +369,74 @@ class ExpiryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DL55LedgerFixTests(unittest.TestCase):
+    def _agent(self, **kw):
+        row = {"id": "a1", "task": "T1", "state": "queued", "started": L.iso(), "eta": None}
+        row.update(kw)
+        return row
+
+    def test_f2_unreadable_ledger_is_kept_and_not_replaced(self):
+        root = make_root()
+        L.update(root, lambda led: L.new_train(led, "release/1"))
+        path = L.ledger_path(root)
+        broken = path.read_text().replace('"trains": [', '"trains": [,', 1)
+        path.write_text(broken)
+        with self.assertRaises(L.LedgerError):
+            L.update(root, lambda led: L.add_event(led, "x"))
+        self.assertEqual(path.read_text(), broken)
+        copies = [p for p in path.parent.iterdir() if p.name.startswith("ledger.json.broken-")]
+        self.assertEqual(len(copies), 1)
+        self.assertEqual(copies[0].read_text(), broken)
+
+    def test_f2_missing_ledger_still_starts_empty(self):
+        root = make_root()
+        L.update(root, lambda led: L.new_train(led, "release/1"))
+        self.assertEqual(len(L.load(root)["trains"]), 1)
+
+    def test_f9_agent_eta_accepts_every_open_state(self):
+        for state in ("queued", "running", "pushed", "stalled"):
+            root = make_root()
+            L.update(root, lambda led: led["agents"].append(self._agent(state=state)))
+            code = L.main(["--root", str(root), "agent-eta", "a1", "--setup", "5", "--work", "20", "--checks", "5"])
+            self.assertEqual(code, 0, state)
+            self.assertEqual(L.load(root)["agents"][0]["eta"]["total_min"], 30)
+
+    def test_f9_agent_eta_refuses_done_agent(self):
+        root = make_root()
+        L.update(root, lambda led: led["agents"].append(self._agent(state="done")))
+        code = L.main(["--root", str(root), "agent-eta", "a1", "--setup", "5", "--work", "20", "--checks", "5"])
+        self.assertEqual(code, 1)
+
+    def test_f11_root_after_subcommand(self):
+        root = make_root()
+        L.update(root, lambda led: led["agents"].append(self._agent()))
+        code = L.main(["agent-eta", "a1", "--setup", "5", "--work", "20", "--checks", "5", "--root", str(root)])
+        self.assertEqual(code, 0)
+        self.assertIsNotNone(L.load(root)["agents"][0]["eta"])
+
+    def test_dl52_two_ids_merge_into_one_row_and_either_id_works(self):
+        root = make_root()
+
+        def add(led):
+            led["agents"].append(self._agent(id="trig_1", task="T2", branch="T2-x", where="cloud", state="running"))
+            led["agents"].append(self._agent(id="cse_9", task="T2", branch="T2-x", where="cloud", state="running",
+                                             head_sha="abc"))
+        L.update(root, add)
+        L.update(root, lambda led: None)
+        agents = L.load(root)["agents"]
+        self.assertEqual(len(agents), 1)
+        self.assertEqual(agents[0]["head_sha"], "abc")
+        for key in ("trig_1", "cse_9"):
+            code = L.main(["--root", str(root), "agent-eta", key, "--setup", "1", "--work", "2", "--checks", "3"])
+            self.assertEqual(code, 0, key)
+
+    def test_dl52_different_branches_stay_apart(self):
+        root = make_root()
+
+        def add(led):
+            led["agents"].append(self._agent(id="trig_1", task="T2", branch="T2-x", state="running"))
+            led["agents"].append(self._agent(id="cse_9", task="T2", branch="T2-y", state="running"))
+        L.update(root, add)
+        self.assertEqual(len(L.load(root)["agents"]), 2)
