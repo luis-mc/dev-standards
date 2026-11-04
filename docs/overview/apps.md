@@ -31,7 +31,7 @@ Features: [audits](../features/audits/spec.md).
 
 Turns delivery rules into checks. Hooks and a background watcher read a per-repository ledger and enforce releases, CI, agent launches, owner questions and attribution. It also covers the speed of delivery and the cost of tests.
 
-Features: [delivery](../features/delivery/spec.md), [delivery-speed](../features/delivery-speed/spec.md), [test-cost](../features/test-cost/spec.md).
+Features: [delivery](../features/delivery/spec.md), [shared CI on your machine](../features/delivery/shared-self-hosted-runners.md), [delivery-speed](../features/delivery-speed/spec.md), [test-cost](../features/test-cost/spec.md).
 
 ## luismc-docs
 
