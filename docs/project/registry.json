@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T19:54+00:00",
+  "updated": "2026-11-04T20:12+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -920,27 +920,25 @@
       "id": "DL34",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Waiting",
+      "status": "Live",
       "item": "Prove the shared CI hooks on one real runner job",
-      "detail": "PC memory 90-92% (limit 85%); scratch repo ready; starts when under the limit",
-      "expected": "04 Nov ~21:00",
-      "changed": "2026-11-04T19:54+00:00",
-      "expected_basis": "memory under 85%, then ~45 min",
+      "detail": "real runner: queue, slot wait 150 s, release work; 4 findings: .cmd hooks invalid, job env not in hook, marker loader, marker credentials; fixes DL39",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T20:09+00:00",
       "no_release": "a test; fixes become their own tasks",
-      "started": "2026-11-04T19:55+00:00",
-      "waits_on": "work"
+      "started": "2026-11-04T19:55+00:00"
     },
     {
       "id": "DL35",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Live",
       "item": "Shared CI rollout plan for this machine (detect and plan, read only)",
-      "detail": "Owner 4 Nov: plan only; show what the setup would change",
-      "expected": "04 Nov ~20:30",
-      "changed": "2026-11-04T19:11+00:00",
-      "expected_basis": "after the runner test; ~15 min",
-      "no_release": "read-only study"
+      "detail": "read-only detect and plan on this machine; 6 gaps found (plan defaults, delete flags, old service, host-load task, WSL step, detect misses); fixes DL40",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T20:11+00:00",
+      "no_release": "read-only study",
+      "started": "2026-11-04T20:11+00:00"
     },
     {
       "id": "DL36",
@@ -960,34 +958,34 @@
       "app": "",
       "status": "Running",
       "item": "RELEASE-38: fixes from DL34 and DL36, and the questions Stop hook",
-      "detail": "agents DL38 and SO6 running; DL34 next on a private scratch repo",
-      "expected": "04 Nov ~21:35",
-      "changed": "2026-11-04T19:53+00:00",
-      "expected_basis": "agents due 21:03; DL34 fixes may join; CI ~20 min",
+      "detail": "4 agents: DL38, SO6, DL39, DL40",
+      "expected": "04 Nov ~21:52",
+      "changed": "2026-11-04T20:12+00:00",
+      "expected_basis": "DL40 due 21:22; join 8, CI ~17 min",
       "release": 38,
+      "started": "2026-11-04T19:53+00:00",
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-04T19:53+00:00",
-          "end": "2026-11-04T21:03+00:00"
+          "end": "2026-11-04T21:22+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-04T21:03+00:00",
-          "end": "2026-11-04T21:10+00:00"
-        },
-        {
-          "name": "ci",
-          "start": "2026-11-04T21:10+00:00",
+          "start": "2026-11-04T21:22+00:00",
           "end": "2026-11-04T21:30+00:00"
         },
         {
-          "name": "merge",
+          "name": "ci",
           "start": "2026-11-04T21:30+00:00",
-          "end": "2026-11-04T21:35+00:00"
+          "end": "2026-11-04T21:47+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-04T21:47+00:00",
+          "end": "2026-11-04T21:52+00:00"
         }
-      ],
-      "started": "2026-11-04T19:53+00:00"
+      ]
     },
     {
       "id": "DL38",
@@ -1001,6 +999,32 @@
       "expected_basis": "cloud agent 19:55: setup 5 + work 55 + checks 10 = 70 min",
       "rides": "DL37",
       "started": "2026-11-04T19:52+00:00"
+    },
+    {
+      "id": "DL39",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Runner hook fixes from the real runner test (DL34)",
+      "detail": ".ps1 hooks on Windows, shard from the job id, marker loads the plugin's ci_fallback, marker push credentials",
+      "expected": "04 Nov ~21:20",
+      "changed": "2026-11-04T20:09+00:00",
+      "expected_basis": "cloud agent 20:12: setup 5 + work 50 + checks 10 = 65 min",
+      "rides": "DL37",
+      "started": "2026-11-04T20:09+00:00"
+    },
+    {
+      "id": "DL40",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Setup plan fixes from the rollout plan (DL35)",
+      "detail": "plan derives repos, delete flags, old service step, host-load task, WSL step, detect folders and WSL containers, auto sizing",
+      "expected": "04 Nov ~21:22",
+      "changed": "2026-11-04T20:12+00:00",
+      "expected_basis": "cloud agent 20:12 + 70 min",
+      "rides": "DL37",
+      "started": "2026-11-04T20:11+00:00"
     },
     {
       "id": "DS1",

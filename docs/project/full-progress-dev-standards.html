@@ -867,7 +867,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-04T19:54+00:00",
+ "updated": "2026-11-04T20:12+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1787,27 +1787,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL34",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Waiting",
+   "status": "Live",
    "item": "Prove the shared CI hooks on one real runner job",
-   "detail": "PC memory 90-92% (limit 85%); scratch repo ready; starts when under the limit",
-   "expected": "04 Nov ~21:00",
-   "changed": "2026-11-04T19:54+00:00",
-   "expected_basis": "memory under 85%, then ~45 min",
+   "detail": "real runner: queue, slot wait 150 s, release work; 4 findings: .cmd hooks invalid, job env not in hook, marker loader, marker credentials; fixes DL39",
+   "expected": "04 Nov",
+   "changed": "2026-11-04T20:09+00:00",
    "no_release": "a test; fixes become their own tasks",
-   "started": "2026-11-04T19:55+00:00",
-   "waits_on": "work"
+   "started": "2026-11-04T19:55+00:00"
   },
   {
    "id": "DL35",
    "owner": "delivery-speed",
    "app": "",
-   "status": "To do",
+   "status": "Live",
    "item": "Shared CI rollout plan for this machine (detect and plan, read only)",
-   "detail": "Owner 4 Nov: plan only; show what the setup would change",
-   "expected": "04 Nov ~20:30",
-   "changed": "2026-11-04T19:11+00:00",
-   "expected_basis": "after the runner test; ~15 min",
-   "no_release": "read-only study"
+   "detail": "read-only detect and plan on this machine; 6 gaps found (plan defaults, delete flags, old service, host-load task, WSL step, detect misses); fixes DL40",
+   "expected": "04 Nov",
+   "changed": "2026-11-04T20:11+00:00",
+   "no_release": "read-only study",
+   "started": "2026-11-04T20:11+00:00"
   },
   {
    "id": "DL36",
@@ -1827,34 +1825,34 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "app": "",
    "status": "Running",
    "item": "RELEASE-38: fixes from DL34 and DL36, and the questions Stop hook",
-   "detail": "agents DL38 and SO6 running; DL34 next on a private scratch repo",
-   "expected": "04 Nov ~21:35",
-   "changed": "2026-11-04T19:53+00:00",
-   "expected_basis": "agents due 21:03; DL34 fixes may join; CI ~20 min",
+   "detail": "4 agents: DL38, SO6, DL39, DL40",
+   "expected": "04 Nov ~21:52",
+   "changed": "2026-11-04T20:12+00:00",
+   "expected_basis": "DL40 due 21:22; join 8, CI ~17 min",
    "release": 38,
+   "started": "2026-11-04T19:53+00:00",
    "phases": [
     {
      "name": "agents",
      "start": "2026-11-04T19:53+00:00",
-     "end": "2026-11-04T21:03+00:00"
+     "end": "2026-11-04T21:22+00:00"
     },
     {
      "name": "join",
-     "start": "2026-11-04T21:03+00:00",
-     "end": "2026-11-04T21:10+00:00"
-    },
-    {
-     "name": "ci",
-     "start": "2026-11-04T21:10+00:00",
+     "start": "2026-11-04T21:22+00:00",
      "end": "2026-11-04T21:30+00:00"
     },
     {
-     "name": "merge",
+     "name": "ci",
      "start": "2026-11-04T21:30+00:00",
-     "end": "2026-11-04T21:35+00:00"
+     "end": "2026-11-04T21:47+00:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-11-04T21:47+00:00",
+     "end": "2026-11-04T21:52+00:00"
     }
-   ],
-   "started": "2026-11-04T19:53+00:00"
+   ]
   },
   {
    "id": "DL38",
@@ -1868,6 +1866,32 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "expected_basis": "cloud agent 19:55: setup 5 + work 55 + checks 10 = 70 min",
    "rides": "DL37",
    "started": "2026-11-04T19:52+00:00"
+  },
+  {
+   "id": "DL39",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Running",
+   "item": "Runner hook fixes from the real runner test (DL34)",
+   "detail": ".ps1 hooks on Windows, shard from the job id, marker loads the plugin's ci_fallback, marker push credentials",
+   "expected": "04 Nov ~21:20",
+   "changed": "2026-11-04T20:09+00:00",
+   "expected_basis": "cloud agent 20:12: setup 5 + work 50 + checks 10 = 65 min",
+   "rides": "DL37",
+   "started": "2026-11-04T20:09+00:00"
+  },
+  {
+   "id": "DL40",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Running",
+   "item": "Setup plan fixes from the rollout plan (DL35)",
+   "detail": "plan derives repos, delete flags, old service step, host-load task, WSL step, detect folders and WSL containers, auto sizing",
+   "expected": "04 Nov ~21:22",
+   "changed": "2026-11-04T20:12+00:00",
+   "expected_basis": "cloud agent 20:12 + 70 min",
+   "rides": "DL37",
+   "started": "2026-11-04T20:11+00:00"
   },
   {
    "id": "DS1",
@@ -4925,76 +4949,64 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-04T19:54+00:00">04 Nov 19:54</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T20:12+00:00">04 Nov 20:12</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">5 tasks</span></summary>
 <ul>
 <li data-glance-task="DL38"><span class="task-id">DL38</span>CI runs section: match the approved sample <span class="glance-expected">04 Nov ~21:05</span><span class="glance-basis">cloud agent 19:55: setup 5 + work 55 + checks 10 = 70 min</span></li>
 <li data-glance-task="SO6"><span class="task-id">SO6</span>Stop hook: ask every open question at once, only with AskUserQuestion (Q-1, Q-2) <span class="glance-expected">04 Nov ~21:10</span><span class="glance-basis">cloud agent from 19:58: setup 5 + work 50 + checks 15 = 70 min</span></li>
-<li data-glance-task="DL37"><span class="task-id">DL37</span><span class="release-name">RELEASE-38</span>fixes from DL34 and DL36, and the questions Stop hook <span class="glance-expected">04 Nov ~21:35</span><span class="glance-basis">agents due 21:03; DL34 fixes may join; CI ~20 min</span></li>
+<li data-glance-task="DL39"><span class="task-id">DL39</span>Runner hook fixes from the real runner test (DL34) <span class="glance-expected">04 Nov ~21:20</span><span class="glance-basis">cloud agent 20:12: setup 5 + work 50 + checks 10 = 65 min</span></li>
+<li data-glance-task="DL40"><span class="task-id">DL40</span>Setup plan fixes from the rollout plan (DL35) <span class="glance-expected">04 Nov ~21:22</span><span class="glance-basis">cloud agent 20:12 + 70 min</span></li>
+<li data-glance-task="DL37"><span class="task-id">DL37</span><span class="release-name">RELEASE-38</span>fixes from DL34 and DL36, and the questions Stop hook <span class="glance-expected">04 Nov ~21:52</span><span class="glance-basis">DL40 due 21:22; join 8, CI ~17 min</span></li>
 </ul>
 </details>
-<details class="glance-group glance-waiting" data-glance="waiting" open><summary><span class="glance-label">Waiting for other work</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">11 tasks</span></summary>
 <ul>
-<li data-glance-task="DL34"><span class="task-id">DL34</span><span class="glance-dep">memory under 85%, then ~45 min</span> Prove the shared CI hooks on one real runner job <span class="glance-expected">04 Nov ~21:00</span></li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">9 tasks</span></summary>
-<ul>
+<li data-glance-task="DL35"><span class="task-id">DL35</span>Shared CI rollout plan for this machine (detect and plan, read only)</li>
+<li data-glance-task="DL34"><span class="task-id">DL34</span>Prove the shared CI hooks on one real runner job</li>
 <li data-glance-task="DL36"><span class="task-id">DL36</span>Compare the CI runs section with the approved sample and fix differences</li>
 <li data-glance-task="DL27"><span class="task-id">DL27</span>Machine-wide CI queue: shared slots across projects</li>
 <li data-glance-task="DL29"><span class="task-id">DL29</span><span class="release-name">RELEASE-37</span>RELEASE: shared CI (machine queue, Linux pool, CI runs section)</li>
 <li data-glance-task="DL30"><span class="task-id">DL30</span>Linux runner pool and guided setup: detect, remove, build clean</li>
 <li data-glance-task="DL31"><span class="task-id">DL31</span>CI runs section in Full Progress</li>
 <li data-glance-task="DL32"><span class="task-id">DL32</span>Machine layer: config, CI slots, hooks, host load, fallback, limits, doctor</li>
-<li data-glance-task="DL33"><span class="task-id">DL33</span>Setup clarity: every plugin setup plans, does the work, summarises</li>
-<li data-glance-task="DS183"><span class="task-id">DS183</span>Close stale PRs #127 #128 #140, delete their branches and worktree</li>
-<li class="glance-more">and 1 more</li>
+<li class="glance-more">and 3 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">299</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">301</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">5</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
-<figcaption>Next releases (~21:00 · memory under 85%, then ~45 min)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 322" role="img" aria-label="Next releases: DL37 (fixes from DL34 and DL36, and the questions Stop hook) expected live about 21:35. Other work (no release): DL35 (Shared CI rollout plan for this machine (detect and plan, read only)) To do, expected about 20:30; DL34 (Prove the shared CI hooks on one real runner job) Waiting, expected about 21:00." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="298"/><text x="200" y="28">19:30</text><line class="rt-grid" x1="304" y1="36" x2="304" y2="298"/><text x="304" y="28">20:00</text><line class="rt-grid" x1="408" y1="36" x2="408" y2="298"/><text x="408" y="28">20:30</text><line class="rt-grid" x1="512" y1="36" x2="512" y2="298"/><text x="512" y="28">21:00</text><line class="rt-grid" x1="616" y1="36" x2="616" y2="298"/><text x="616" y="28">21:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="298"/><text x="720" y="28">22:00</text></g>
+<figcaption>Next releases (Lisbon)</figcaption>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DL37 (fixes from DL34 and DL36, and the questions Stop hook) expected live about 21:52." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">19:30</text><line class="rt-grid" x1="304" y1="36" x2="304" y2="140"/><text x="304" y="28">20:00</text><line class="rt-grid" x1="408" y1="36" x2="408" y2="140"/><text x="408" y="28">20:30</text><line class="rt-grid" x1="512" y1="36" x2="512" y2="140"/><text x="512" y="28">21:00</text><line class="rt-grid" x1="616" y1="36" x2="616" y2="140"/><text x="616" y="28">21:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">22:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-38 · fixes from DL34 and DL36, and the questions Stop hook</title>RELEASE-38 · fixes from D…</text>
-<text class="rt-sub" x="0" y="77"><title>DL38, SO6</title>DL38, SO6</text>
-<rect class="rt-bar agents" x="279.7" y="52" width="242.7" height="22"><title>agents 19:53-21:03</title></rect>
-<rect class="rt-bar join" x="522.4" y="52" width="24.3" height="22"><title>join 21:03-21:10</title></rect>
-<rect class="rt-bar ci" x="546.7" y="52" width="69.3" height="22"><title>PR CI 21:10-21:30</title></rect>
-<rect class="rt-bar merge" x="616" y="52" width="17.3" height="22"><title>merge + cleanup 21:30-21:35</title></rect>
-<polygon class="rt-expected" points="633.3,50 641.3,63 633.3,76 625.3,63"/>
-<text class="rt-live-label" x="633.3" y="92">live ~21:35</text>
-<text class="rt-strip-title" x="0" y="122">Other work (no release)</text>
-<text class="rt-name" x="0" y="156"><title>DL35 · Shared CI rollout plan for this machine (detect and plan, read only)</title>DL35 · Shared CI rollout…</text>
-<rect class="rt-other status-to-do" x="283.2" y="151" width="124.8" height="16"><title>To do 19:54-20:30</title></rect>
-<text class="rt-other-label" x="283.2" y="184">~20:30 · after the runner test; ~15 min</text>
-<text class="rt-name" x="0" y="218"><title>DL34 · Prove the shared CI hooks on one real runner job</title>DL34 · Prove the shared C…</text>
-<rect class="rt-other status-waiting" x="286.7" y="213" width="225.3" height="16"><title>Waiting 19:55-21:00</title></rect>
-<text class="rt-other-label" x="286.7" y="246">~21:00 · memory under 85%, then ~45 min</text>
-<line class="rt-now" x1="283.2" y1="36" x2="283.2" y2="306"/><text class="rt-now-label" x="283.2" y="319">now 19:54</text>
+<text class="rt-sub" x="0" y="77"><title>DL38, DL39, DL40, SO6</title>DL38, DL39, DL40, SO6</text>
+<rect class="rt-bar agents" x="279.7" y="52" width="308.5" height="22"><title>agents 19:53-21:22</title></rect>
+<rect class="rt-bar join" x="588.3" y="52" width="27.7" height="22"><title>join 21:22-21:30</title></rect>
+<rect class="rt-bar ci" x="616" y="52" width="58.9" height="22"><title>PR CI 21:30-21:47</title></rect>
+<rect class="rt-bar merge" x="674.9" y="52" width="17.3" height="22"><title>merge + cleanup 21:47-21:52</title></rect>
+<polygon class="rt-expected" points="692.3,50 700.3,63 692.3,76 684.3,63"/>
+<text class="rt-live-label" x="692.3" y="92">live ~21:52</text>
+<line class="rt-now" x1="345.6" y1="36" x2="345.6" y2="148"/><text class="rt-now-label" x="345.6" y="161">now 20:12</text>
 </svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days. Under Other work (no release), a bar runs from the start to its Expected, coloured by status; a red outline means it is past its Expected.</p>
+<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-38" open><summary><strong>RELEASE-38 · live ~21:35</strong><span class="fold-count">3 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-38" open><summary><strong>RELEASE-38 · live ~21:52</strong><span class="fold-count">5 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL37"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL37</span><span class="release-name">RELEASE-38</span>fixes from DL34 and DL36, and the questions Stop hook</a></td><td data-label="App / service"></td><td data-label="Detail">agents DL38 and SO6 running; DL34 next on a private scratch repo</td><td data-label="Expected">04 Nov ~21:35<span class="expected-basis">agents due 21:03; DL34 fixes may join; CI ~20 min</span></td></tr>
+<tr data-task="DL37"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL37</span><span class="release-name">RELEASE-38</span>fixes from DL34 and DL36, and the questions Stop hook</a></td><td data-label="App / service"></td><td data-label="Detail">4 agents: DL38, SO6, DL39, DL40</td><td data-label="Expected">04 Nov ~21:52<span class="expected-basis">DL40 due 21:22; join 8, CI ~17 min</span></td></tr>
 <tr data-task="DL38"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL38</span>CI runs section: match the approved sample</a></td><td data-label="App / service"></td><td data-label="Detail">From DL36: tags, now chip, bar colours, jobs grouped, row layout, summary words</td><td data-label="Expected">04 Nov ~21:05<span class="expected-basis">cloud agent 19:55: setup 5 + work 55 + checks 10 = 70 min</span></td></tr>
+<tr data-task="DL39"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL39</span>Runner hook fixes from the real runner test (DL34)</a></td><td data-label="App / service"></td><td data-label="Detail">.ps1 hooks on Windows, shard from the job id, marker loads the plugin&#x27;s ci_fallback, marker push credentials</td><td data-label="Expected">04 Nov ~21:20<span class="expected-basis">cloud agent 20:12: setup 5 + work 50 + checks 10 = 65 min</span></td></tr>
+<tr data-task="DL40"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL40</span>Setup plan fixes from the rollout plan (DL35)</a></td><td data-label="App / service"></td><td data-label="Detail">plan derives repos, delete flags, old service step, host-load task, WSL step, detect folders and WSL containers, auto sizing</td><td data-label="Expected">04 Nov ~21:22<span class="expected-basis">cloud agent 20:12 + 70 min</span></td></tr>
 <tr data-task="SO6"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO6</span>Stop hook: ask every open question at once, only with AskUserQuestion (Q-1, Q-2)</a></td><td data-label="App / service"></td><td data-label="Detail">Owner request relayed from another session 4 Nov: a user-level Stop hook installed by claude-setup</td><td data-label="Expected">04 Nov ~21:10<span class="expected-basis">cloud agent from 19:58: setup 5 + work 50 + checks 15 = 70 min</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">2 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">303 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL35"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL35</span>Shared CI rollout plan for this machine (detect and plan, read only)</a><span class="no-release-line">ships nothing: read-only study</span></td><td data-label="App / service"></td><td data-label="Detail">Owner 4 Nov: plan only; show what the setup would change</td><td data-label="Expected">04 Nov ~20:30<span class="expected-basis">after the runner test; ~15 min</span></td></tr>
-<tr data-task="DL34"><td data-label="Status"><span class="status-chip status-waiting">Waiting</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL34</span>Prove the shared CI hooks on one real runner job</a><span class="no-release-line">ships nothing: a test; fixes become their own tasks</span></td><td data-label="App / service"></td><td data-label="Detail">PC memory 90-92% (limit 85%); scratch repo ready; starts when under the limit</td><td data-label="Expected">04 Nov ~21:00<span class="expected-basis">memory under 85%, then ~45 min</span></td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">301 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL35"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL35</span>Shared CI rollout plan for this machine (detect and plan, read only)</a><span class="no-release-line">ships nothing: read-only study</span></td><td data-label="App / service"></td><td data-label="Detail">read-only detect and plan on this machine; 6 gaps found (plan defaults, delete flags, old service, host-load task, WSL step, detect misses); fixes DL40</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL34"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL34</span>Prove the shared CI hooks on one real runner job</a><span class="no-release-line">ships nothing: a test; fixes become their own tasks</span></td><td data-label="App / service"></td><td data-label="Detail">real runner: queue, slot wait 150 s, release work; 4 findings: .cmd hooks invalid, job env not in hook, marker loader, marker credentials; fixes DL39</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DL36"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL36</span>Compare the CI runs section with the approved sample and fix differences</a><span class="no-release-line">ships nothing: comparison; fixes ride RELEASE-38</span></td><td data-label="App / service"></td><td data-label="Detail">6 differences found; fixes are DL38 (RELEASE-38)</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DL27"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL27</span>Machine-wide CI queue: shared slots across projects</a><span class="release-line"><span class="release-name">RELEASE-37</span></span></td><td data-label="App / service"></td><td data-label="Detail">RELEASE-37 merged 19:25 UTC (PR #141)</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DL29"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL29</span><span class="release-name">RELEASE-37</span>RELEASE: shared CI (machine queue, Linux pool, CI runs section)</a></td><td data-label="App / service"></td><td data-label="Detail">RELEASE-37 merged 19:25 UTC (PR #141)</td><td data-label="Expected">04 Nov</td></tr>
@@ -5306,7 +5318,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (2)</strong><span class="fold-count">2 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897034"><time datetime="2026-11-04T19:54+00:00">04 Nov 19:54</time></td><td data-label="Tasks">DL1 to DL38</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">2 Running</span><span class="status-chip status-waiting">1 Waiting</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897052"><time datetime="2026-11-04T20:12+00:00">04 Nov 20:12</time></td><td data-label="Tasks">DL1 to DL40</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">4 Running</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29897032"><time datetime="2026-11-04T19:52+00:00">04 Nov 19:52</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td data-label="Where it stands">On 01 Nov the owner ran claude-setup in an existing project and could not tell whether the docs, design-system and delivery plugins were enforced.</td></tr>
 </tbody></table></div>
 </details>
