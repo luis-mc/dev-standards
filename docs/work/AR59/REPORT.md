@@ -14,7 +14,7 @@ Each finding had a failing test first (all 9 new tests fail on main, pass now): 
 
 Tests run: test_artifacts_ar59 9/9; test_project_artifacts 139 passed, 1 skipped; test_render_artifacts 163/163; test_project_artifacts_hooks 101/101; test_artifact_prune 23/23. E2E: none for these files (no screen changed).
 
-Change note: docs/architecture/changes/AR59-artifacts-fixes.md. No spec text changed.
+Change notes: docs/architecture/changes/AR59-artifacts-fixes.md and docs/features/artifacts/changes/AR59.md. No spec text changed. docs_check: only W1 (report under docs/work, expected on a branch) and a warning that tools/test_artifacts_ar59.py is not listed in a spec `code:` (the spec is not mine to edit).
 
 Branch head: see the last commit on origin/AR59-artifacts-fixes.
 
