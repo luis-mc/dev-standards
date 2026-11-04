@@ -1,18 +1,29 @@
 #!/usr/bin/env python3
-"""Self-hosted runner gate (DELIVERYSPEC DL-79): hold a CI job until the machine is under its load limits.
+"""Self-hosted runner gate (DELIVERYSPEC DL-79, DL-90): hold a CI job for the machine queue, a free slot and the load.
 
     runner_load_gate.py [--max-wait-min N] [--poll-sec N] [--on-timeout fail|run] [--log FILE]
 
-Set it as the runner's ACTIONS_RUNNER_HOOK_JOB_STARTED hook (README: install on Windows service and Linux). It polls the
-machine every 15 s (load.py limits: project-less, so machine file over defaults) until memory and CPU are under
-their limits, then exits 0 and the job starts. After the maximum wait (default 30 min) it exits 1 (`--on-timeout fail`,
-the default: the job fails with a clear log line and can be re-run; `run` lets the job go anyway). It never kills,
-suspends or lowers the priority of anything, and it fails open (exit 0, logged) when the machine cannot be measured.
+Set it as the runner's ACTIONS_RUNNER_HOOK_JOB_STARTED hook (README: install on Windows service and Linux). With the
+machine layer set up (machine.json or the slots folder in the machine folder, machine_slots.py) it does this:
+
+  1. takes a queue ticket (a ready pull request and a default-branch run first, then first come first served);
+  2. waits until its ticket is first in line AND a CI slot is free AND memory and CPU are under the limits
+     (load.py: host figures, plus the container's own cap in the pool), freeing stale slots on the way;
+  3. takes the slot (create-new lock file, atomic), removes the ticket and lets the job run;
+  4. while it waits it keeps the ci-wait marker of the shard (git branch ci-wait/<sha>/<shard>, DELIVERY_SHARD): the
+     fallback counts the shard as waiting. If the fallback claimed the shard meanwhile, the hook frees the slot and
+     exits 3 (claim lost, the job ends without work).
+
+Without the machine layer it is the DL-79 gate: poll the load every 15 s until it is under the limits. After the maximum
+wait (default 30 min) it exits 1 (`--on-timeout fail`: the job fails with a clear log line and can be re-run; `run`
+lets the job go without a slot). It never kills, suspends or lowers the priority of anything, and it fails open (exit 0,
+logged) when the machine cannot be measured or the machine folder cannot be written.
 
 Settings, first found wins: flag, env (DELIVERY_GATE_MAX_WAIT_MIN, DELIVERY_GATE_POLL_SEC, DELIVERY_GATE_ON_TIMEOUT,
-DELIVERY_GATE_LOG), `runner_gate` {max_wait_min, poll_sec, on_timeout} in the machine file
-(~/.claude/luismc-delivery-machine.json), defaults. Log: ~/.claude/luismc-delivery-runner-gate.log (and stdout, which
-the runner shows in the job's "Set up job" step). Standard library only.
+DELIVERY_GATE_LOG), `runner_gate` {max_wait_min, poll_sec, on_timeout} in machine.json (the old
+~/.claude/luismc-delivery-machine.json when machine.json has none), defaults. Log: <machine folder>/runner-gate.log
+when writable, else ~/.claude/luismc-delivery-runner-gate.log (and stdout, which the runner shows in the job's
+"Set up job" step). Standard library only.
 """
 import argparse
 import os
@@ -23,12 +34,14 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import load as L  # noqa: E402
+import machine_slots as MS  # noqa: E402
 
 DEFAULTS = {'max_wait_min': 30.0, 'poll_sec': 15.0, 'on_timeout': 'fail'}
 
 
 def settings(args=None):
-    machine = L._read(L.machine_file())
+    new = MS.read_config_file()
+    machine = new if isinstance(new, dict) and isinstance(new.get('runner_gate'), dict) else L._read(L.machine_file())
     sect = machine.get('runner_gate') if isinstance(machine, dict) and isinstance(machine.get('runner_gate'), dict) \
         else {}
     out = dict(DEFAULTS)
@@ -51,8 +64,17 @@ def settings(args=None):
 
 
 def log_file(args=None):
-    return (getattr(args, 'log', None) or os.environ.get('DELIVERY_GATE_LOG')
-            or os.path.join(os.path.expanduser('~'), '.claude', 'luismc-delivery-runner-gate.log'))
+    explicit = getattr(args, 'log', None) or os.environ.get('DELIVERY_GATE_LOG')
+    if explicit:
+        return explicit
+    if layer_ready() and os.access(MS.machine_dir(), os.W_OK):
+        return os.path.join(MS.machine_dir(), 'runner-gate.log')
+    return os.path.join(os.path.expanduser('~'), '.claude', 'luismc-delivery-runner-gate.log')
+
+
+def layer_ready():
+    """True when the machine layer is set up here: machine.json or the slots folder exists."""
+    return os.path.exists(MS.config_path()) or os.path.isdir(MS.slots_dir())
 
 
 def wait(lim, cfg, sample=None, sleep=time.sleep, clock=time.monotonic, log=print):
@@ -92,6 +114,146 @@ def wait(lim, cfg, sample=None, sleep=time.sleep, clock=time.monotonic, log=prin
         sleep(cfg['poll_sec'])
 
 
+# --- the queue and the slot (DL-90) ----------------------------------------------------------------
+
+def _marker_root():
+    """A git checkout the wait marker can be pushed from: DELIVERY_MARKER_ROOT, else the job's workspace when it has
+    one (a persistent runner keeps the checkout of the last job). None when there is none."""
+    for cand in (os.environ.get('DELIVERY_MARKER_ROOT'), os.environ.get('GITHUB_WORKSPACE')):
+        if cand and os.path.exists(os.path.join(cand, '.git')):
+            return cand
+    return None
+
+
+def _fallback(root):
+    """The project's ci_fallback module (scripts/delivery/ci_fallback.py in the checkout), or None."""
+    path = os.path.join(root, 'scripts', 'delivery', 'ci_fallback.py')
+    if not os.path.isfile(path):
+        return None
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('ci_fallback_of_project', path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.path.insert(0, os.path.dirname(path))
+    try:
+        spec.loader.exec_module(mod)
+    except Exception:  # noqa: BLE001
+        return None
+    finally:
+        sys.path.pop(0)
+    return mod
+
+
+class Marker:
+    """The ci-wait marker of this job's shard. Every call fails open: no checkout, no shard, no git means no marker."""
+
+    def __init__(self, env=None, log=print):
+        env = os.environ if env is None else env
+        self.sha, self.shard = env.get('GITHUB_SHA') or '', env.get('DELIVERY_SHARD') or ''
+        self.holder = 'runner-' + (env.get('RUNNER_NAME') or 'host')
+        self.log = log
+        self.mod = None
+        self.root = None
+        self.remote = env.get('DELIVERY_MARKER_REMOTE') or 'origin'
+        if self.sha and self.shard:
+            self.root = _marker_root()
+            self.mod = _fallback(self.root) if self.root else None
+        self.on = False
+
+    def start(self):
+        if not self.mod:
+            return
+        try:
+            self.on = bool(self.mod.mark_wait(self.root, self.remote, self.sha, self.shard, self.holder))
+        except Exception as exc:  # noqa: BLE001
+            self.log('runner gate: could not write the ci-wait marker (%s: %s)' % (type(exc).__name__, exc))
+
+    def stop(self):
+        if self.mod and self.on:
+            try:
+                self.mod.clear_wait(self.root, self.remote, self.sha, self.shard)
+            except Exception:  # noqa: BLE001
+                pass
+            self.on = False
+
+    def claim_lost(self):
+        if not self.mod:
+            return False
+        try:
+            return bool(self.mod.claim_taken(self.root, self.remote, self.sha, self.shard))
+        except Exception:  # noqa: BLE001
+            return False
+
+
+def queue_wait(lim, cfg, ident, sample=None, sleep=time.sleep, clock=time.monotonic, log=print, marker=None,
+               priority=None):
+    """Take a ticket and wait for: first in line, a free slot, load under the limits. Then take the slot. Returns
+    (code, lock): 0 go (lock is the slot record, or None when `on_timeout` is run or the load cannot be measured),
+    1 timed out, 3 the fallback claimed the shard while this job was held (the slot is already freed again)."""
+    sample = sample or L.sample
+    mcfg = MS.machine_config()
+    started = clock()
+    deadline = started + cfg['max_wait_min'] * 60.0
+    ticket = MS.enqueue(ident, priority)
+    queued_ts = ticket['queued_ts']
+    log('runner gate: ticket %s (priority %d) for %s run %s job %s'
+        % (ticket['file'], ticket['priority'], ident['repo'], ident['run_id'], ident['job']))
+    marker = marker or Marker(log=log)
+    waited = False
+    last = ''
+    try:
+        while True:
+            for f in MS.free_stale(mcfg):
+                log('runner gate: freed slot %d (%s): held by %s run %s job %s'
+                    % (f['slot'], f['reason'], f['holder'].get('repo'), f['holder'].get('run_id'),
+                       f['holder'].get('job')))
+            why = []
+            q = MS.queue_list(mcfg)
+            if not q or q[0].get('file') != ticket['file']:
+                why.append('%d ahead in the queue' % max(0, next((i for i, t in enumerate(q)
+                                                                    if t.get('file') == ticket['file']), len(q))))
+            if MS.free_count(mcfg) == 0:
+                why.append('no free slot (all %d busy)' % mcfg['ci_slots'])
+            if not why:
+                try:
+                    s = sample()
+                    why += L.over(s, lim)
+                except Exception as exc:  # noqa: BLE001
+                    log('runner gate: cannot measure the machine (%s: %s); taking a slot without a load check'
+                        % (type(exc).__name__, exc))
+            if not why:
+                lock = MS.take_slot(ident, mcfg, queued_ts=queued_ts)
+                if lock is not None:
+                    marker.stop()
+                    if marker.claim_lost():
+                        MS.free_slot(lock, 'claim-lost')
+                        log('runner gate: claim lost: the fallback claimed shard %s while the job was held; '
+                            'ending without work, slot %d freed' % (ident['shard'], lock['slot']))
+                        return 3, None
+                    log('runner gate: slot %d taken after %.0f s; starting the job' % (lock['slot'], clock() - started))
+                    return 0, lock
+                why.append('lost the race for the slot')
+            text = '; '.join(why)
+            if not waited:
+                waited = True
+                marker.start()
+                log('runner gate: holding the job (%s); polling every %.0f s for up to %.0f min'
+                    % (text, cfg['poll_sec'], cfg['max_wait_min']))
+            elif text != last:
+                log('runner gate: still holding (%s)' % text)
+            last = text
+            if clock() + cfg['poll_sec'] > deadline:
+                marker.stop()
+                log('runner gate: TIMED OUT after %.0f s (%s; top processes %s). %s'
+                    % (clock() - started, text, L.top_processes(),
+                       'Failing the job so it can be re-run when the machine is quiet.' if cfg['on_timeout'] == 'fail'
+                       else 'on_timeout=run: starting the job without a slot.'))
+                return (1 if cfg['on_timeout'] == 'fail' else 0), None
+            sleep(cfg['poll_sec'])
+    finally:
+        MS.dequeue(ticket)
+        marker.stop()
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog='runner_load_gate.py', description=__doc__.split('\n\n')[0])
     ap.add_argument('--max-wait-min', dest='max_wait_min', type=float)
@@ -110,7 +272,16 @@ def main(argv=None):
                 f.write(line + '\n')
         except OSError:
             pass
-    return wait(L.limits(), settings(args), log=log)
+    if not layer_ready():
+        return wait(L.limits(), settings(args), log=log)
+    lim = L.limits()
+    try:
+        code, _ = queue_wait(lim, settings(args), MS.ident_from_env(), log=log)
+    except OSError as exc:
+        log('runner gate: the machine folder %s cannot be used (%s); falling back to the load check only'
+            % (MS.machine_dir(), exc))
+        return wait(L.limits(), settings(args), log=log)
+    return code
 
 
 if __name__ == '__main__':

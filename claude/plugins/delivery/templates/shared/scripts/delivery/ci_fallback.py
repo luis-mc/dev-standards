@@ -18,11 +18,13 @@ Config (`.delivery/config.json`):
 Markers (branches on the remote, created by a push that creates them; a second create is refused by git):
     ci-claim/<sha>/<shard>/<attempt>    who runs the shard (first claim wins, nobody is pre-empted)
     ci-posted/<sha>/<shard>/<attempt>   who posted the one status of that attempt (never two)
+    ci-wait/<sha>/<shard>               a runner job of the shard is held for a machine slot (DL-90): the shard
+                                        counts as waiting until the fallback claims it
 Counters live in `fallback-counter.json` on the records branch.
 
 Public functions (all return plain dicts, lists, bools or None; none prints):
     fallback_settings(cfg)                          -> dict
-    shard_wait_minutes(jobs, now, run_status="")    -> float | None
+    shard_wait_minutes(jobs, now, run_status="", wait_marker=None, claimed=False) -> float | None
     fallback_decision(settings, os_name, waited_min, offline=False) -> dict
     claim_ref(sha, shard, attempt)                  -> str
     claim(root, remote, sha, shard, attempt, holder, now=None) -> bool
@@ -33,6 +35,8 @@ Public functions (all return plain dicts, lists, bools or None; none prints):
     reserve(root, remote, settings, now, kind, est_minutes=0) -> dict
     settle(root, remote, settings, now, kind, reserved_minutes, actual_minutes) -> None
     fallback_gate(root, remote, cfg, os_name, waited_min, offline, now, timeout_min) -> dict
+    mark_wait / clear_wait / read_wait / claim_taken (the ci-wait marker, DL-90)
+    cloud_ci_sessions / cloud_ci_limit (the cloud CI session limit, DL-91)
 Exit codes of the CLI: 0 done, 1 refused, 2 error, 3 claim lost (not an error: end without work).
 """
 from __future__ import annotations
@@ -53,6 +57,9 @@ import cloud_status as CS  # noqa: E402  (post_status, status_payload, token_fro
 
 CLAIM_PREFIX = "ci-claim"
 POSTED_PREFIX = "ci-posted"
+WAIT_PREFIX = "ci-wait"
+DEFAULT_CLOUD_CI_SESSIONS = 10
+CLOUD_SESSION_MAX_AGE_MIN = 180
 DEFAULT_RECORDS_BRANCH = "ci-pass-records"
 COUNTER_FILE = "fallback-counter.json"
 ATTEMPT_CAP = 2
@@ -178,14 +185,22 @@ def fallback_settings(cfg: dict) -> dict:
 
 # --- wait and decision -----------------------------------------------------------------------------------------
 
-def shard_wait_minutes(jobs: list, now, run_status: str = ""):
+def shard_wait_minutes(jobs: list, now, run_status: str = "", wait_marker=None, claimed: bool = False):
     """Minutes the shard has waited for a RUNNER, or None when it is not waiting (answer 5). `jobs` are the
     Actions job dicts of one shard (status, created_at, started_at). A job counts only while status is `queued`
     and started_at is empty. A run in status pending/waiting (the CI_SERIAL queue) or with no jobs yet returns
-    None. If any job of the shard has started, the shard has a runner: None. Otherwise the oldest wait."""
+    None. If any job of the shard has started, the shard has a runner: None.
+
+    G6 (DL-90): a job held for a machine slot has started on GitHub, but it has no runner yet. `wait_marker` is the
+    `ci-wait` marker of the shard (a dict with `at`, or an ISO string, or None). While it exists and the shard has no
+    claim (`claimed` is False) the shard counts as waiting, from the time on the marker. Otherwise the oldest wait."""
+    now = _utc(_now(now))
+    if wait_marker and not claimed:
+        at = _parse(wait_marker.get("at") if isinstance(wait_marker, dict) else wait_marker)
+        if at is not None:
+            return max(0.0, (now - _utc(at)).total_seconds() / 60.0)
     if run_status in ("pending", "waiting", "requested") or not jobs:
         return None
-    now = _utc(_now(now))
     waits = []
     for j in jobs:
         if not isinstance(j, dict):
@@ -240,6 +255,84 @@ def claim(root: str, remote: str, sha: str, shard: str, attempt: int, holder: st
 def read_claim(root: str, remote: str, sha: str, shard: str, attempt: int):
     """{"holder", "sha", "shard", "attempt", "at"} of an existing claim, or None."""
     return _read_branch(root, remote, claim_ref(sha, shard, attempt))
+
+
+def wait_ref(sha: str, shard: str) -> str:
+    """The branch name of a wait marker: ci-wait/<sha>/<shard>."""
+    return "%s/%s/%s" % (WAIT_PREFIX, sha, shard)
+
+
+def mark_wait(root: str, remote: str, sha: str, shard: str, holder: str, now=None) -> bool:
+    """Write the wait marker of a held job (DL-90). Same method as a claim: a push that creates the branch. True when
+    the marker exists after the call (made now, or made by an earlier try of the same shard)."""
+    if _create_branch(root, remote, wait_ref(sha, shard), {
+            "holder": holder, "sha": sha, "shard": shard, "at": _iso(_now(now))}):
+        return True
+    return bool(_ls(root, remote, wait_ref(sha, shard)))
+
+
+def read_wait(root: str, remote: str, sha: str, shard: str):
+    """{"holder", "sha", "shard", "at"} of the wait marker, or None."""
+    return _read_branch(root, remote, wait_ref(sha, shard))
+
+
+def clear_wait(root: str, remote: str, sha: str, shard: str) -> None:
+    """Delete the wait marker (the job got its slot, or gave up). Best effort."""
+    _delete_branch(root, remote, wait_ref(sha, shard))
+
+
+def claim_taken(root: str, remote: str, sha: str, shard: str) -> bool:
+    """True when any claim exists for the shard: a held job that finds this ends with exit 3 (claim lost)."""
+    return bool(_attempts(root, remote, sha, shard))
+
+
+def _machine_file_candidates():
+    env = os.environ.get("DELIVERY_MACHINE_DIR")
+    if env:
+        return [os.path.join(env, "machine.json")]
+    if sys.platform.startswith("win"):
+        return [os.path.join(os.environ.get("PROGRAMDATA") or "C:\\ProgramData", "luismc-delivery", "machine.json")]
+    return ["/etc/luismc-delivery/machine.json"]
+
+
+def cloud_ci_limit(cfg: dict) -> int:
+    """Claude cloud sessions that may run CI at once (D34, D37): `cloud_ci_sessions` of the machine file (default 10).
+    The project's `ci.fallback.cloud_ci_sessions` may lower it, never raise it."""
+    limit = DEFAULT_CLOUD_CI_SESSIONS
+    for path in _machine_file_candidates():
+        try:
+            with open(path, encoding="utf-8") as f:
+                v = json.load(f).get("cloud_ci_sessions")
+            if isinstance(v, int) and not isinstance(v, bool) and v >= 1:
+                limit = v
+        except (OSError, ValueError, AttributeError):
+            pass
+    ci = cfg.get("ci") if isinstance(cfg, dict) and isinstance(cfg.get("ci"), dict) else {}
+    fb = ci.get("fallback") if isinstance(ci.get("fallback"), dict) else {}
+    mine = fb.get("cloud_ci_sessions")
+    if isinstance(mine, int) and not isinstance(mine, bool) and 1 <= mine < limit:
+        limit = mine
+    return limit
+
+
+def cloud_ci_sessions(root: str, remote: str, now=None, max_age_min: float = CLOUD_SESSION_MAX_AGE_MIN) -> int:
+    """Cloud sessions that run CI now (section 3.6): claims held by a cloud holder with no `ci-posted` marker. A claim
+    older than `max_age_min` is not counted (a session that died without a post must not hold a place for ever)."""
+    claims = _ls(root, remote, "%s/*/*/*" % CLAIM_PREFIX)
+    posted = set(n[len(POSTED_PREFIX) + 1:] for n in _ls(root, remote, "%s/*/*/*" % POSTED_PREFIX))
+    now = _utc(_now(now))
+    count = 0
+    for name in claims:
+        if name[len(CLAIM_PREFIX) + 1:] in posted:
+            continue
+        rec = _read_branch(root, remote, name) or {}
+        if "cloud" not in str(rec.get("holder") or "").lower():
+            continue
+        at = _parse(rec.get("at"))
+        if at is not None and (now - _utc(at)).total_seconds() / 60.0 > max_age_min:
+            continue
+        count += 1
+    return count
 
 
 def next_attempt(root: str, remote: str, sha: str, shard: str, cap: int = ATTEMPT_CAP):
@@ -439,7 +532,7 @@ def fallback_gate(root: str, remote: str, cfg: dict, os_name: str, waited_min, o
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="ci_fallback.py", description=__doc__.split("\n\n")[0])
-    ap.add_argument("action", choices=["claim", "post", "reap", "gate"])
+    ap.add_argument("action", choices=["claim", "post", "reap", "gate", "wait", "unwait", "held", "cloud-count"])
     ap.add_argument("--root", default=".")
     ap.add_argument("--remote", default="origin")
     ap.add_argument("--sha")
@@ -466,9 +559,27 @@ def main(argv=None) -> int:
             tmo = a.timeout_min if a.timeout_min else 60.0
             print(json.dumps(fallback_gate(root, a.remote, cfg, a.os_name, a.waited, a.offline, None, tmo)))
             return 0
+        if a.action == "cloud-count":
+            n = cloud_ci_sessions(root, a.remote)
+            print(json.dumps({"cloud_ci_sessions": n, "limit": cloud_ci_limit(cfg)}))
+            return 0
         if not (a.sha and a.shard):
             print("ci_fallback: %s needs --sha and --shard" % a.action, file=sys.stderr)
             return 2
+        if a.action == "wait":
+            ok = mark_wait(root, a.remote, a.sha, a.shard, a.holder or "runner-gate")
+            print(json.dumps({"waiting": ok}))
+            return 0 if ok else 2
+        if a.action == "unwait":
+            clear_wait(root, a.remote, a.sha, a.shard)
+            return 0
+        if a.action == "held":
+            # a held job asks, after its slot: did the fallback claim the shard meanwhile? exit 3 = claim lost
+            if claim_taken(root, a.remote, a.sha, a.shard):
+                print("ci_fallback: claim lost: the fallback holds this shard; end without work")
+                return 3
+            print(json.dumps({"claim_lost": False}))
+            return 0
         if a.action == "claim":
             if not a.holder:
                 print("ci_fallback: claim needs --holder", file=sys.stderr)
