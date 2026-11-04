@@ -349,8 +349,10 @@ Install the pre-push hook so a project's existing check survives:
 - If `core.hooksPath` is unset, copy into `.githooks/` and set it: `git config core.hooksPath .githooks`; say so in the repo's setup notes.
 
 Mark
-`agent_setup.sh` and the hooks (`pre-push`, `commit-msg`) executable (`git update-index --chmod=+x`). Otherwise a
-checkout on another machine cannot run them. Copy `.gitattributes` before the
+`agent_setup.sh` and every hook (`pre-commit`, `pre-push`, `commit-msg`) executable. Run
+`chmod +x` on each file first (git ignores a hook whose file is not executable, and
+that includes the secret scan in `pre-commit`), then `git update-index --chmod=+x`
+once they are staged. Otherwise a checkout on another machine cannot run them. Copy `.gitattributes` before the
 first commit, so those files are never stored with CRLF. If the repo already has
 one, append the four lines. Do not replace it.
 

@@ -54,6 +54,9 @@ class Requirement:
 STACK_PROFILE_PATHS = ["docs/architecture/stack-profile.md",
                        "docs/specs/stack-profile.md"]
 
+WORKSPACE_MARKERS = ["pnpm-workspace.yaml", "go.work", "go.mod", "Cargo.toml",
+                     "*.sln", "*.slnx"]
+
 REQUIREMENTS: dict[str, Requirement] = {
     "stack": Requirement(
         name="stack",
@@ -65,9 +68,10 @@ REQUIREMENTS: dict[str, Requirement] = {
         # to completion rather than partway.
         # STACKSPEC §18 puts it at docs/architecture/stack-profile.md; a repo
         # not yet moved keeps it at docs/specs/stack-profile.md, still accepted.
-        paths=["pnpm-workspace.yaml"],
-        one_of=[STACK_PROFILE_PATHS],
-        any_paths=["packages", "apps"],
+        # The root file depends on the track (R5.2): pnpm for TypeScript,
+        # go.work or go.mod for Go, Cargo.toml for Rust, a .sln for .NET.
+        one_of=[STACK_PROFILE_PATHS, WORKSPACE_MARKERS],
+        any_paths=["packages", "apps", "crates", "src"],
     ),
     "auth": Requirement(
         name="auth",
@@ -89,14 +93,24 @@ def repo_root() -> Path | None:
     return Path(out.stdout.strip())
 
 
+def _exists(root: Path, p: str) -> bool:
+    """A path under root; a `*` in the name matches like a glob."""
+    if "*" in p:
+        return any(root.glob(p))
+    return (root / p).exists()
+
+
 def check(req: Requirement, root: Path) -> list[str]:
     """Every unmet condition in `req`, as human-readable strings."""
     missing = [p for p in req.paths if not (root / p).exists()]
     out = [f"{p} is missing" for p in missing]
     for group in req.one_of:
-        if not any((root / p).exists() for p in group):
-            out.append(f"{group[0]} is missing (an older repo may still have "
-                       f"{', '.join(group[1:])})")
+        if not any(_exists(root, p) for p in group):
+            if group is STACK_PROFILE_PATHS:
+                out.append(f"{group[0]} is missing (an older repo may still have "
+                           f"{', '.join(group[1:])})")
+            else:
+                out.append("none of " + ", ".join(group) + " exists")
     if req.any_paths and not any((root / p).exists() for p in req.any_paths):
         out.append("none of " + ", ".join(req.any_paths) + " exists")
     return out

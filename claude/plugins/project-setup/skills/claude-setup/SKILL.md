@@ -135,7 +135,7 @@ AskUserQuestion allows at most 4 options per question, so split a list of more
 than four options into more questions.
 
 1. **Enforce** (multi-select): docs, design system, delivery, project record.
-2. **Delivery mode**: `Warn first (Recommended)` listed first, preselected; `Block now` second. It sets `enforcement.mode` in `.delivery/config.json` only when that file is created in this run. Never change an existing file.
+2. **Delivery mode**: `Warn first (Recommended)` listed first, preselected; `Block now` second. It sets `enforcement.mode` in `.delivery/config.json` only when that file is created in this run. The template carries `warn`: write `block` only when the owner picked `Block now`. Never change an existing file.
 3. **CI**: write `.github/workflows/dev-standards.yml` (from `assets/ci/dev-standards.yml`), which runs `docs_check.py --strict`, the design guard tests when present, and spec-check.
 4. **Branch protection**: make the dev-standards check required on the default branch? Yes or no.
 5. **Other setups** (multi-select, all off by default): a `tech-stack-setup` audit, `auth-setup`.
@@ -150,7 +150,7 @@ the owner. Steps only the owner can do go to the "Left for you" list.
 - **design system** — run `/luismc-docs:design-system-setup`: `init`, `guards`, style reading, review gallery. Then tell the owner how to open the gallery, what to look at and how to approve (the approval command or the words to say). Promotion to v1 only with the owner's approval date and evidence.
 - **delivery** — `.delivery/config.json` (add if missing, with the chosen `enforcement.mode`), then `delivery_doctor.py`.
 - **project record** — `.claude/artifacts.json` with `record_dir` `docs/project`.
-- **CI** — copy `assets/ci/dev-standards.yml` to `.github/workflows/dev-standards.yml` and fill the placeholders. The workflow finds `docs_check.py` and `spec_check.py` through a pinned checkout of the dev-standards repo into `.dev-standards-tools/` (`{{DEV_STANDARDS_REPO}}`, `{{DEV_STANDARDS_REF}}`, `{{DOCS_SCRIPTS}}`, `{{SPEC_CHECK}}`). Ask the owner for the repo and a tag or commit if they cannot be read from the marketplace. Never overwrite an existing workflow file.
+- **CI** — copy `assets/ci/dev-standards.yml` to `.github/workflows/dev-standards.yml` and fill the placeholders. The workflow finds `docs_check.py` and `spec_check.py` through a pinned checkout of the dev-standards repo into `.dev-standards-tools/` (`{{DEV_STANDARDS_REPO}}`, `{{DEV_STANDARDS_REF}}`, `{{DOCS_SCRIPTS}}`, `{{SPEC_CHECK}}`). Fill `{{DEFAULT_BRANCH}}` from `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name` (ask the owner when `gh` cannot tell); the workflow's push trigger and design-guard base use it. Ask the owner for the repo and a tag or commit if they cannot be read from the marketplace. Never overwrite an existing workflow file.
 - **branch protection** — after a yes, check whether the workflow has run on the default branch: `gh run list --workflow dev-standards.yml --branch <default>`.
   - If it has run: read the current protection first with `gh api repos/<owner>/<repo>/branches/<default>/protection`. Merge the `checks` job of the `dev-standards` workflow into `required_status_checks` and keep all existing protection. Then run `gh api -X PUT repos/<owner>/<repo>/branches/<default>/protection --input -` with the merged body.
   - If it has not run yet: record the yes in `.delivery/config.json` as `pending_protection: true`. Add it only if the file is created this run or the key is missing. Never change other keys. `claude-setup status` or the next run applies it once the check exists.
@@ -232,6 +232,12 @@ because `jq` is not guaranteed on PATH. It parses the statusline JSON with
 `grep`/`sed`. Do not "simplify" that to `jq` when copying.
 
 Make it executable after copying: `chmod +x <target>/statusline.sh`.
+
+For a project target, make sure the repository's `.gitattributes` has a rule that
+keeps `.claude/*.sh` in LF, for example `.claude/*.sh text eol=lf`. A CRLF
+checkout (Windows, `core.autocrlf=true`) breaks the script and the status line
+goes blank. Append the line when no existing rule covers the file; never replace
+the file. Create `.gitattributes` when it is absent.
 
 ### `settings.json` — add whole if absent, field-level if present
 
