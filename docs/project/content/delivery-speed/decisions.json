@@ -1686,6 +1686,166 @@
    "chosen": "Check content, then remove",
    "decided": "2026-11-04",
    "owner_words": "Check content, then remove"
+  },
+  {
+   "id": "D74",
+   "question": "Launch RELEASE-40 (AR55, DL43-DL46) now?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL47",
+   "options": [
+    {
+     "label": "Launch all five now",
+     "summary": "Cloud agents split by file ownership; merge on green."
+    },
+    {
+     "label": "Launch some",
+     "summary": "Owner names which."
+    },
+    {
+     "label": "Later",
+     "summary": "Leave them To do."
+    }
+   ],
+   "chosen": "Launch all five now",
+   "decided": "2026-11-04",
+   "owner_words": "Launch all five now"
+  },
+  {
+   "id": "D75",
+   "question": "Who merges RELEASE-40 while the owner is away?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL47",
+   "options": [
+    {
+     "label": "You merge on green",
+     "summary": "Merge when every PR check passes, then clean up."
+    },
+    {
+     "label": "Leave it for me",
+     "summary": "Open the PR and stop."
+    }
+   ],
+   "chosen": "You merge on green",
+   "decided": "2026-11-04",
+   "owner_words": "You merge on green"
+  },
+  {
+   "id": "D76",
+   "question": "RELEASE-40 PR CI fails while the owner is away?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL47",
+   "options": [
+    {
+     "label": "Fix forward, up to 3 tries",
+     "summary": "After 3 failed tries, drop the failing task and ship the rest."
+    },
+    {
+     "label": "Drop the failing task at once",
+     "summary": "Ship the rest."
+    },
+    {
+     "label": "Stop and wait for me",
+     "summary": "Leave the PR red."
+    }
+   ],
+   "chosen": "Fix forward, up to 3 tries",
+   "decided": "2026-11-04",
+   "owner_words": "Fix forward, up to 3 tries"
+  },
+  {
+   "id": "D77",
+   "question": "Another session pushes a dev-standards branch tonight?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL47",
+   "options": [
+    {
+     "label": "Review, scrub, ship next release",
+     "summary": "Check for private names and quality, give it a task, ship if green."
+    },
+    {
+     "label": "Review and hold",
+     "summary": "Record a task, do not merge."
+    },
+    {
+     "label": "Ignore it",
+     "summary": "Leave its branches alone."
+    }
+   ],
+   "chosen": "Review, scrub, ship next release",
+   "decided": "2026-11-04",
+   "owner_words": "Review, scrub, ship next release"
+  },
+  {
+   "id": "D78",
+   "question": "New bug reports relayed by a peer session tonight?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL47",
+   "options": [
+    {
+     "label": "Record and ship",
+     "summary": "Record generic tasks and launch them in the next release."
+    },
+    {
+     "label": "Record only",
+     "summary": "Launch nothing until the owner is back."
+    }
+   ],
+   "chosen": "Record and ship",
+   "decided": "2026-11-04",
+   "owner_words": "Record and ship"
+  },
+  {
+   "id": "D79",
+   "question": "Two Full Progress bugs from a relayed report did not reproduce on main. Follow up?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL47",
+   "options": [
+    {
+     "label": "Ask the peer for a row",
+     "summary": "Ask for an anonymised registry row if it still drifts on artifacts 1.1.2."
+    },
+    {
+     "label": "Consider it fixed",
+     "summary": "Do nothing more."
+    }
+   ],
+   "chosen": "Ask the peer for a row",
+   "decided": "2026-11-04",
+   "owner_words": "Ask the peer for a row"
+  },
+  {
+   "id": "D80",
+   "question": "Standing check warnings, and what to do after RELEASE-40?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL48",
+   "options": [
+    {
+     "label": "Shorten setup-offers lede",
+     "summary": "Cut it to two sentences."
+    },
+    {
+     "label": "Verify test-cost spec",
+     "summary": "TC12."
+    },
+    {
+     "label": "Stop when backlog empty",
+     "summary": "Hourly check-in only."
+    },
+    {
+     "label": "Review for more bugs",
+     "summary": "One agent reviews delivery and artifacts; fixes in RELEASE-41."
+    }
+   ],
+   "chosen": "Shorten setup-offers lede; Verify test-cost spec; Review for more bugs",
+   "decided": "2026-11-04",
+   "owner_words": "Shorten setup-offers lede; Verify test-cost spec; Review for more bugs"
   }
  ]
 }

@@ -122,7 +122,14 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D71 | Questions Stop hook (ask all questions at once, only in the wizard) at user level? | Update and install | decided | 2026-11-04 |
 | delivery-speed | D72 | When to build DL41 (setup pool command uses measured sizing)? | Now, RELEASE-39 | decided | 2026-11-04 |
 | delivery-speed | D73 | Two remaining old worktrees with local branches? | Check content, then remove | decided | 2026-11-04 |
+| delivery-speed | D74 | Launch RELEASE-40 (AR55, DL43-DL46) now? | Launch all five now | decided | 2026-11-04 |
+| delivery-speed | D75 | Who merges RELEASE-40 while the owner is away? | You merge on green | decided | 2026-11-04 |
+| delivery-speed | D76 | RELEASE-40 PR CI fails while the owner is away? | Fix forward, up to 3 tries | decided | 2026-11-04 |
+| delivery-speed | D77 | Another session pushes a dev-standards branch tonight? | Review, scrub, ship next release | decided | 2026-11-04 |
+| delivery-speed | D78 | New bug reports relayed by a peer session tonight? | Record and ship | decided | 2026-11-04 |
+| delivery-speed | D79 | Two Full Progress bugs from a relayed report did not reproduce on main. Follow up? | Ask the peer for a row | decided | 2026-11-04 |
 | delivery-speed | D8 | Should dev-standards adopt the train freeze? (same multi-select question) | Yes | decided | 2026-10-11 |
+| delivery-speed | D80 | Standing check warnings, and what to do after RELEASE-40? | Shorten setup-offers lede; Verify test-cost spec; Review for more bugs | decided | 2026-11-04 |
 | delivery-speed | D9 | Point 4: how is the train freeze overridden on purpose? | Env variable, logged | decided | 2026-10-11 |
 | design-starter | D1 | Which starter should the docs plugin ship? | C+E now | decided | 2026-11-01 |
 | design-starter | D10 | What happens when a token a sample needs is missing or not a plain value? | Draw with a marked fallback | decided | 2026-11-02 |
