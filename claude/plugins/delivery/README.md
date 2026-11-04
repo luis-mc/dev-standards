@@ -157,6 +157,14 @@ CI can run in four ways (the owner's Option 1 to 4). The owner picks one for eac
 4. Option 1: list the runners in `runners`, one entry per machine. Option 3: set `ci.cloud.repo`, `ci.cloud.status_token_env` and `ci.cloud.branches`; the owner creates a statuses-only token and puts it in the cloud environment under that name.
 5. `python3 scripts/delivery_doctor.py` reports the `ci` check. For Option 1 it names each machine it found and the by-hand steps to add another.
 
+### Shared CI pool and guided setup (DL30)
+
+One Docker pool runs the Linux jobs of every private repository under one CPU and memory cap, one agent and one Unix user per repository. Windows jobs run as one service per repository. All take the machine's CI slots. Explanation: `docs/features/delivery/shared-self-hosted-runners.md`. Steps: `docs/guides/set-up-ci.md`.
+
+- Templates: `templates/runner-pool/` (Dockerfile, `compose.yaml`, `pool_supervisor.py`, `pool-add-agent`, `pool-remove-agent`, hooks, `pool-check.yml`).
+- Engine: `scripts/delivery_runner_pool.py` (`detect`, `sizing`, `plan`, `verify`, `doctor_checks`). Guided path: `delivery_ci_setup.py pool-detect | pool-plan | pool-run`, called by `/delivery-ci-setup` for Option 1.
+- A public repository is refused. Tokens pass through a pipe and are never printed. Deleting needs its own yes.
+
 ### Add a second runner (Option 1)
 
 One runner of a label is the first bottleneck. A job that waits more than X minutes (the CI watch warns at 10) means: add a runner with the same label on another machine, any machine you run. A plugin cannot do it; it needs a person on that machine. Print the steps for that machine's OS:

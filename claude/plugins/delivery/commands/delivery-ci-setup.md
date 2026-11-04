@@ -37,6 +37,17 @@ For each OS the product tests on (linux, windows, macos), ask: "Which option for
 
 **Option 4 (only for an OS answered Option 1; ask whether the owner wants it).** Per such OS, which fallback: `cloud` (Linux only) or `github-hosted`. X: after how many minutes of waiting for a runner the fallback may start (10 is only an example; only runner waits count). Optional caps, each answered by a number or "none" (`null`): `max_shards_per_day` and `max_minutes_per_month` (hosted minutes). Say plainly: without caps nothing but GitHub's spending limit stops the cost, and that limit is a by-hand step. Say that unattended, a fallback may start up to an hour late (the hourly routine is the only watcher when no session is open). For `cloud`: the URL of the routine's API trigger and the NAME of the variable that holds its token. The answers go in the `fallback` section; the engine writes `ci.fallback`. Optional `limits` (`browser_workers`, `integration_workers`, `memory_gib` per option) go to `ci.limits`.
 
+## 3a. Option 1: offer the guided path (D26, D44)
+
+When an OS is answered Option 1 (and the repositories are private), offer: "I can set up shared CI on this machine for you: one pool for Linux jobs, one service per repository for Windows jobs, and one common limit of CI slots. Do you want that, or the by-hand list?" This follows contract section 13: plan first, do every install and configuration you can, one line per step, finish with Done / Left for you / What you can do now.
+
+1. **Detect** (read only): `python3 <plugin>/scripts/delivery_ci_setup.py pool-detect --root <project>`. It lists every repository the owner administers, runner services, runner folders, containers and `.wslconfig`.
+2. **Show the plan**: `pool-plan --repos OWNER/A,OWNER/B [--windows-repos OWNER/C] --total-gib N --used-gib N --cpus N`. It lists every old runner that will be removed (start clean), the machine config, the pool cap (`sizing`, contract 6.4), the repository variables, and what needs the owner. Public repositories are refused. Show it as printed and ask: "Run it for you, or print the steps for you to run?"
+3. **Run** only after a yes: `pool-run ... --yes`. Each step prints one line. A deletion (a runner folder, a container, a volume) needs its own yes that names what goes: ask, then pass the exact names in `--yes-delete`. Steps that need an administrator shell are printed for the owner; the engine checks them afterwards.
+4. **Hand over** the engine's three parts as printed: Done, Left for you, What you can do now. If a step failed, say what is done and what is left. Running again is safe: set steps say "already set".
+
+The owner can say no to the guided path. Then print the by-hand list as in section 5.
+
 ## 4. Write the answers and run the engine
 
 Write the answers as JSON in the shape documented in the engine's header, to a scratch file, then run:
