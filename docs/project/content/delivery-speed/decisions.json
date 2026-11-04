@@ -1394,6 +1394,30 @@
    "chosen": "Yes, hourly",
    "decided": "2026-11-04",
    "owner_words": "Yes, hourly"
+  },
+  {
+   "id": "D61",
+   "question": "Final check before flattening the public history (D49-D53): go ahead?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL29",
+   "options": [
+    {
+     "label": "Yes, flatten",
+     "summary": "Run it after RELEASE-37 merges."
+    },
+    {
+     "label": "Wait for me",
+     "summary": "Prepare, stop before the force-push."
+    },
+    {
+     "label": "Cancel",
+     "summary": "Leave history as it is; drop the task."
+    }
+   ],
+   "chosen": "Cancel",
+   "decided": "2026-11-04",
+   "owner_words": "Cancel"
   }
  ]
 }

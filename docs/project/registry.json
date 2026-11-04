@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T19:15+00:00",
+  "updated": "2026-11-04T19:24+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3603,13 +3603,13 @@
       "id": "DS182",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Dropped",
       "item": "Flatten the public history to one commit; delete old tags and branches",
       "detail": "Owner 4 Nov: after RELEASE-37, flat all history. No backup; old PR refs accepted; strip SHAs from record rows",
-      "expected": "04 Nov ~20:00",
-      "changed": "2026-11-04T19:11+00:00",
-      "expected_basis": "after RELEASE-37 merges ~19:26; ~30 min",
-      "no_release": "repository maintenance, ships no plugin change"
+      "expected": "04 Nov",
+      "changed": "2026-11-04T19:24+00:00",
+      "no_release": "repository maintenance, ships no plugin change",
+      "dropped_reason": "owner cancelled the history flatten on 4 Nov (final check)"
     },
     {
       "id": "DS183",
