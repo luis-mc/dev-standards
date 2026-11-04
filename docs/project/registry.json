@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T14:14+00:00",
+  "updated": "2026-11-04T17:15+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -842,33 +842,33 @@
       "status": "Running",
       "item": "RELEASE: shared CI (machine queue, Linux pool, CI runs section)",
       "detail": "DL27 build: DL29 machine layer, DL30 pool and setup, DL31 CI runs in Full Progress",
-      "expected": "04 Nov ~17:55",
-      "changed": "2026-11-04T14:14+00:00",
-      "expected_basis": "slowest agent DL32 ready 17:05; join 20 min; release CI 25 min",
+      "expected": "04 Nov ~20:54",
+      "changed": "2026-11-04T17:15+00:00",
+      "expected_basis": "3 agents rerun 17:13; DL32 170 min, join 20, CI 25",
       "release": 37,
+      "started": "2026-11-04T14:14+00:00",
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-04T14:14+00:00",
-          "end": "2026-11-04T17:05+00:00"
+          "start": "2026-11-04T17:13+00:00",
+          "end": "2026-11-04T20:04+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-04T17:05+00:00",
-          "end": "2026-11-04T17:25+00:00"
+          "start": "2026-11-04T20:04+00:00",
+          "end": "2026-11-04T20:24+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-04T17:25+00:00",
-          "end": "2026-11-04T17:50+00:00"
+          "start": "2026-11-04T20:24+00:00",
+          "end": "2026-11-04T20:49+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-04T17:50+00:00",
-          "end": "2026-11-04T17:55+00:00"
+          "start": "2026-11-04T20:49+00:00",
+          "end": "2026-11-04T20:54+00:00"
         }
-      ],
-      "started": "2026-11-04T14:14+00:00"
+      ]
     },
     {
       "id": "DL30",
@@ -876,10 +876,10 @@
       "app": "",
       "status": "Running",
       "item": "Linux runner pool and guided setup: detect, remove, build clean",
-      "detail": "templates/runner-pool, delivery_runner_pool.py, delivery_ci_setup.py, setup command, set-up-CI guide",
-      "expected": "04 Nov ~16:55",
-      "changed": "2026-11-04T14:14+00:00",
-      "expected_basis": "cloud agent from 14:14: setup 5 + work 140 + checks 15 min",
+      "detail": "rerun 17:13 UTC; first run could not push (routine had no repository source)",
+      "expected": "04 Nov ~19:54",
+      "changed": "2026-11-04T17:14+00:00",
+      "expected_basis": "rerun 17:13 + 160 min",
       "rides": "DL29",
       "started": "2026-11-04T14:14+00:00"
     },
@@ -889,10 +889,10 @@
       "app": "",
       "status": "Running",
       "item": "CI runs section in Full Progress",
-      "detail": "ci_runs.py collector, watcher refresh, Full Progress renderer, artifactspec, artifacts feature spec",
-      "expected": "04 Nov ~16:00",
-      "changed": "2026-11-04T14:14+00:00",
-      "expected_basis": "cloud agent from 14:14: setup 5 + work 90 + checks 10 min",
+      "detail": "rerun 17:13 UTC; first run could not push (routine had no repository source)",
+      "expected": "04 Nov ~18:59",
+      "changed": "2026-11-04T17:14+00:00",
+      "expected_basis": "rerun 17:13 + 105 min",
       "rides": "DL29",
       "started": "2026-11-04T14:14+00:00"
     },
@@ -902,10 +902,10 @@
       "app": "",
       "status": "Running",
       "item": "Machine layer: config, CI slots, hooks, host load, fallback, limits, doctor",
-      "detail": "load.py, machine_slots.py, runner gate and job-done hooks, ci_fallback, load guard, doctor, spec section 13, DELIVERYSPEC",
-      "expected": "04 Nov ~17:05",
-      "changed": "2026-11-04T14:14+00:00",
-      "expected_basis": "cloud agent from 14:14: setup 5 + work 150 + checks 15 min",
+      "detail": "rerun 17:13 UTC; first run could not push (routine had no repository source)",
+      "expected": "04 Nov ~20:04",
+      "changed": "2026-11-04T17:14+00:00",
+      "expected_basis": "rerun 17:13 + 170 min",
       "rides": "DL29",
       "started": "2026-11-04T14:14+00:00"
     },
@@ -913,12 +913,11 @@
       "id": "DL33",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Setup clarity: every plugin setup plans, does the work, summarises",
-      "detail": "claude-setup, docs-setup, design-system-setup, tech-stack-setup, auth-setup follow contract section 13",
-      "expected": "04 Nov ~16:35",
-      "changed": "2026-11-04T14:14+00:00",
-      "expected_basis": "cloud agent from 14:14: setup 5 + work 120 + checks 15 min",
+      "detail": "branch ready, waits for the join",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T17:14+00:00",
       "rides": "DL29",
       "started": "2026-11-04T14:14+00:00"
     },
