@@ -150,7 +150,7 @@ def detect_folders(probe):
             if text is None:
                 continue
             try:
-                j = json.loads(text)
+                j = json.loads(text.lstrip('\ufeff'))
             except ValueError:
                 j = {}
             url = j.get('gitHubUrl') or ''
