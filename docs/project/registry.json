@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T13:20+00:00",
+  "updated": "2026-11-04T13:24+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -825,12 +825,12 @@
       "id": "DL28",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Needs you",
       "item": "Combined CI design: machine queue + runner pool (PR #140)",
       "detail": "Rewrite PR #140 doc into one design from decisions D21-D47; owner approves on the PR, then DL27 builds it",
-      "expected": "04 Nov ~14:20",
-      "changed": "2026-11-04T13:20+00:00",
-      "expected_basis": "design writing ~60 min from 13:20",
+      "expected": "04 Nov ~15:00",
+      "changed": "2026-11-04T13:24+00:00",
+      "expected_basis": "owner reads and approves the design on PR #140",
       "no_release": "design doc for owner approval; the build ships under DL27",
       "started": "2026-11-04T13:20+00:00"
     },
