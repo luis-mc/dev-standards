@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T22:35+00:00",
+  "updated": "2026-11-04T22:36+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -559,6 +559,28 @@
       "expected": "05 Nov ~02:00",
       "changed": "2026-11-04T22:35+00:00",
       "expected_basis": "After RELEASE-40 ~23:59; with the DL48 review fixes"
+    },
+    {
+      "id": "AR57",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "--release takes an explicit number and corrects a stored one",
+      "detail": "A real release with no release task makes every later --release number one low. Allow --release N (or the delivery ledger's number) and fix a stored number.",
+      "expected": "05 Nov ~02:00",
+      "changed": "2026-11-04T22:36+00:00",
+      "expected_basis": "RELEASE-41 after RELEASE-40 ~23:59; with DL48 and AR56"
+    },
+    {
+      "id": "AR58",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "R5.45 advice: name the wrong side, Item or stored number",
+      "detail": "When the Item matches the delivery ledger's release, R5.45 must say to correct the stored number (with --release N), not the Item.",
+      "expected": "05 Nov ~02:00",
+      "changed": "2026-11-04T22:36+00:00",
+      "expected_basis": "RELEASE-41, same agent as AR57"
     },
     {
       "id": "DL1",
