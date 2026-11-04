@@ -21,7 +21,7 @@
 - Not seen: the approved sample page (not in the repo). Built from the brief's wording.
 
 ## What I ran
-- delivery unit tests (415 incl. 15 + 5 new): OK. `tools/test_render_artifacts.py`: 156 passed. `test_project_artifacts_hooks`: 101 passed. `test_artifact_prune`: 23 passed. `test_project_artifacts`: see final message.
+- delivery unit tests (415 incl. 15 + 5 new): OK. `tools/test_render_artifacts.py`: 156 passed. `test_project_artifacts_hooks`: 101 passed. `test_artifact_prune`: 23 passed. `test_project_artifacts`: 135 passed, 0 failed, 1 skipped (after fixing the publish-copy root; the new publish-copy case is inside it).
 - change_notes check: ok. spec_check on artifactspec.md: 0 errors, 1 warning (same as main).
 - docs_index build + docs_check: only W1 (docs/work, expected on a task branch). Generated files not committed.
 - No e2e specs exist for this page; the render tests are the check. Screenshots at 1100 px light and 390 px dark looked right, no sideways scroll.
