@@ -561,12 +561,24 @@ def render_plan(pl, found) -> list:
     for r in gh["repos"]:
         if r["error"]:
             lines.append("  %s: runners not readable (%s)" % (r["repo"], r["error"]))
+    cap = pl.get("cap")
+    if cap and cap.get("ok"):
+        m = cap.get("measured") or {}
+        lines.append("Pool cap: %s GiB memory, %s CPUs (%s)." % (cap["mem_gib"], cap["cpus"],
+                     "measured on this machine unless you gave a number" if m else "from the numbers you gave"))
+    if pl.get("derived") and not pl.get("blocked"):
+        import delivery_runner_pool as P
+        lin, win = P.derive_repos(found)
+        lines.append("Repositories (none named, taken from GitHub): Linux: %s; Windows: %s."
+                     % (", ".join(lin) or "none", ", ".join(win) or "none"))
     for step in pl["steps"]:
         mark = "already set" if step["state"] == "already" else ("you run it" if step["elevated"] else
                                                                   ("asks a second yes (deletes)" if step["delete"] else "I run it"))
         lines.append("  - %s [%s]" % (step["title"], mark))
     for r in pl["refused"]:
         lines.append("  ! %s" % r["reason"])
+    if pl.get("blocked"):
+        lines.append("  ! %s" % pl["blocked"])
     lines.append("Writes in this repository: nothing. Writes on this machine: %s" % pool_dir(pl["pool"]))
     lines.append("Changes outside the repository: GitHub runner registrations, repository variables, Docker, the machine config.")
     lines.append("Needs you: %s." % "; ".join(pl["needs"]))
@@ -597,26 +609,30 @@ def cmd_pool(args, root) -> int:
     probe = P.Probe()
     found = P.detect(probe)
     split = lambda v: [x for x in (v or "").split(",") if x]  # noqa: E731
-    cap = None
-    if args.total_gib:
-        cap = P.sizing(args.total_gib, args.used_gib, args.cpus or 2, args.docker_gib, args.largest_shard_gib)
-        if not cap["ok"]:
-            print("delivery_ci_setup: %s" % cap["message"], file=sys.stderr)
-            return 1
-    pl = P.plan(found, split(args.repos), split(args.windows_repos), args.pool, cap)
     if args.action == "pool-detect":
         print(json.dumps(found, indent=2))
         return 0
+    cap = P.measured_sizing(found, args.total_gib, args.used_gib, args.cpus, args.docker_gib, args.largest_shard_gib)
+    if cap is None:
+        print("delivery_ci_setup: this machine's memory or CPUs could not be measured. Give --total-gib and --cpus.",
+              file=sys.stderr)
+        return 1
+    if not cap["ok"]:
+        print("delivery_ci_setup: %s" % cap["message"], file=sys.stderr)
+        return 1
+    pl = P.plan(found, split(args.repos), split(args.windows_repos), args.pool, cap)
+    print("\n".join(render_plan(pl, found)))
     if args.action == "pool-plan":
-        print("\n".join(render_plan(pl, found)))
         return 0
+    if pl.get("blocked"):
+        return 1
     yes_delete = set(split(args.yes_delete))
 
     def check(step):
+        """The step's own check: a service step looks for the service; the rest use the pool module's check."""
         if step["action"] == "windows-service":
             return any(step["slug"] in (x["name"] or "") for x in P.detect_services(probe))
-        r = probe.sh(["schtasks", "/Query", "/TN", "luismc-host-load"])
-        return bool(r and r[0] == 0)
+        return P.default_check(step, probe)
     result = P.run(pl, ask=lambda st: bool(args.yes), ask_delete=lambda st: all(n in yes_delete for n in st["names"]),
                    execute=P.Executor(probe).run, check=check)
     left = []
@@ -642,7 +658,7 @@ def main(argv=None) -> int:
     ap.add_argument("--windows-repos", help="pool-*: repositories that test on Windows")
     ap.add_argument("--pool", default="main")
     ap.add_argument("--total-gib", type=float)
-    ap.add_argument("--used-gib", type=float, default=0.0)
+    ap.add_argument("--used-gib", type=float)
     ap.add_argument("--cpus", type=float)
     ap.add_argument("--docker-gib", type=float)
     ap.add_argument("--largest-shard-gib", type=float)
