@@ -122,7 +122,7 @@ flowchart LR
 
 **R5.10** — Full Progress is published at least every 60 minutes while the project has a record.
 
-**R5.11** — A release's Expected time is the end of its last phase. A mismatch is refused.
+**R5.11** — A release's Expected time is the end of its last phase. Without `--expected`, a write sets it from the phases; an `--expected` that differs is refused.
 
 **R5.12** — A finished feature artifact can be retired. Its tasks and decisions are kept. Its file and content are deleted.
 

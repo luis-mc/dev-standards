@@ -1810,8 +1810,22 @@ def apply_dropped_fields(task, by_id, args):
             task.pop('dropped_reason', None)
 
 
-def apply_release_fields(task, by_id, args, now_dt):
-    """Set or clear the release fields of `task` from --release/--phase/--risk/--rides; refuse a bad result."""
+def phase_expected(task):
+    """R5.41: `DD Mon ~HH:MM`, the end of the task's last stored phase (the date rolls past midnight), or None."""
+    ends = []
+    for p in task.get('phases') or []:
+        e = parse_iso(p.get('end')) if isinstance(p, dict) else None
+        if e is not None:
+            ends.append(e)
+    if not ends:
+        return None
+    end = max(ends)
+    return '%02d %s ~%02d:%02d' % (end.day, MONTHS[end.month - 1], end.hour, end.minute)
+
+
+def apply_release_fields(task, by_id, args, now_dt, expected_given=True):
+    """Set or clear the release fields of `task` from --release/--phase/--risk/--rides; refuse a bad result.
+    R5.41: without an explicit --expected, an open release's Expected follows the end of its last phase."""
     no_release = getattr(args, 'no_release', None)
     if no_release is not None and no_release.strip():
         if getattr(args, 'release', False) or (args.rides is not None and args.rides.strip()):
@@ -1842,6 +1856,11 @@ def apply_release_fields(task, by_id, args, now_dt):
         else:
             task.pop('rides', None)
     apply_dropped_fields(task, by_id, args)
+    if not expected_given and task.get('status') in OPEN_STATUSES and isinstance(task.get('expected'), str):
+        want = phase_expected(task) if is_release(task) else None
+        if want is not None:
+            note = task['expected'].partition(';')[2].strip()
+            task['expected'] = want + ('; ' + note if note else '')
     problems = release_problems(task, by_id)
     if problems:
         raise Fail(1, '%s: %s' % (task.get('id', 'new task'), '; '.join(m for _, m in problems)))
@@ -1866,6 +1885,11 @@ def clean_waits_on(text):
 def cmd_task_add(args):
     ctx = make_ctx(args)
     status = require_status(args.status)
+    expected_given = args.expected is not None
+    if not expected_given:
+        if not (getattr(args, 'release', False) and args.phase and any(str(x).strip() for x in args.phase)):
+            raise Fail(1, '--expected is required (only a --release task with --phase may leave it out: Expected is then the end of the last phase)')
+        args.expected = 'pending'
     waits_on = clean_waits_on(args.waits_on) if args.waits_on is not None else ''
     if waits_on and status not in ('Waiting', 'On hold'):
         warn('--waits-on ignored: only a Waiting or On hold row waits')
@@ -1918,7 +1942,7 @@ def cmd_task_add(args):
             row['expected_basis'] = basis
         if waits_on:
             row['waits_on'] = waits_on
-        apply_release_fields(row, {t.get('id'): t for t in rec.tasks()}, args, now.dt)
+        apply_release_fields(row, {t.get('id'): t for t in rec.tasks()}, args, now.dt, expected_given=expected_given)
         apply_started(row, args, now.dt)
         reg['tasks'].append(row)
         if owner != 'project':
@@ -1992,7 +2016,7 @@ def cmd_set_task_status(args):
                 task['waits_on'] = waits_on
             else:
                 task.pop('waits_on', None)
-        apply_release_fields(task, {t.get('id'): t for t in rec.tasks()}, args, now.dt)
+        apply_release_fields(task, {t.get('id'): t for t in rec.tasks()}, args, now.dt, expected_given=args.expected is not None)
         apply_started(task, args, now.dt, prev)
         owner = task['owner']
         if owner != 'project':
@@ -2996,7 +3020,7 @@ def build_parser():
     s.add_argument('--owner', required=True, help='a feature key, or project')
     s.add_argument('--item', required=True)
     s.add_argument('--detail', required=True)
-    s.add_argument('--expected', required=True)
+    s.add_argument('--expected', help='DD Mon [~HH:MM]; optional on a release with --phase, where it is the end of the last phase (R5.41)')
     s.add_argument('--basis', help='what sets the estimate, at most 80 characters (open statuses only)')
     s.add_argument('--app')
     s.add_argument('--status', default='To do')
