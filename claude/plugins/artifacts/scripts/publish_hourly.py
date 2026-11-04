@@ -31,12 +31,14 @@ def read_json(path):
 def reasons(manifest, tasks, now=None):
     """Why Full Progress should be published now; [] when nothing is due."""
     out = []
+    if H.is_deferred(manifest, now):     # R9.7: nothing is asked while the publish is deferred
+        return []
     if H.published_at(manifest) is None:
         return ['Full Progress has not been published yet']
     mins = H.hourly_due(manifest, now)
     if mins is not None:
         out.append('Full Progress was last published %d minutes ago (hourly fail-safe, limit %d)' % (mins, H.STALE_MINUTES))
-    for t in H.release_changes(tasks, manifest):
+    for t in H.release_changes(tasks, manifest, now):
         out.append('release task %s changed (%s) after the last publish' % (t.get('id'), t.get('status')))
     return out
 

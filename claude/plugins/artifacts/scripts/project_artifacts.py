@@ -1611,10 +1611,18 @@ def _phase_point(text, now_dt, spec, flag='--phase'):
         raise Fail(1, '%s "%s": "%s" is not HH:MM or DD Mon HH:MM' % (flag, spec, text.strip()))
     day = int(m.group(1)) if m.group(1) else now_dt.day
     month = MONTHS.index(m.group(2)) + 1 if m.group(2) else now_dt.month
-    try:
-        return datetime(now_dt.year, month, day, int(m.group(3)), int(m.group(4)), tzinfo=now_dt.tzinfo)
-    except ValueError:
-        raise Fail(1, '%s "%s": %s %s is not a date' % (flag, spec, day, MONTHS[month - 1]))
+    best = None
+    years = (now_dt.year - 1, now_dt.year, now_dt.year + 1) if m.group(1) else (now_dt.year,)
+    for year in years:      # F22: a "DD Mon" date takes the year nearest now
+        try:
+            cand = datetime(year, month, day, int(m.group(3)), int(m.group(4)), tzinfo=now_dt.tzinfo)
+        except ValueError:
+            continue
+        if best is None or abs(cand - now_dt) < abs(best - now_dt):
+            best = cand
+    if best is not None:
+        return best
+    raise Fail(1, '%s "%s": %s %s is not a date' % (flag, spec, day, MONTHS[month - 1]))
 
 
 def parse_phases(specs, now_dt):

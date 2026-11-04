@@ -399,12 +399,11 @@ def exit_code(data):
     return 0
 
 
-def segment_tokens(segment):
-    seg = segment.replace('\\', '/').strip().lstrip('({ ')
-    try:
-        tokens = shlex.split(seg)
-    except ValueError:
-        tokens = seg.split()
+def strip_prefix(tokens):
+    """Drop leading wrappers, env assignments and python launchers from one command's tokens."""
+    tokens = [t for t in tokens]
+    while tokens and tokens[0] in ('{', '!'):
+        tokens.pop(0)
     while tokens:
         t = tokens[0]
         if re.match(r'^[A-Za-z_][A-Za-z0-9_]*=', t) or t in WRAPPERS:
@@ -416,6 +415,51 @@ def segment_tokens(segment):
         else:
             break
     return tokens
+
+
+def segment_tokens(segment):
+    seg = segment.replace('\\', '/').strip().lstrip('({ ')
+    try:
+        tokens = shlex.split(seg)
+    except ValueError:
+        tokens = seg.split()
+    return strip_prefix(tokens)
+
+
+OPERATORS = ('&&', '||', ';', '|', '&', '\n')
+
+
+def split_segments(command):
+    """[(tokens, operator after it or '')] for a command line. Quoted text stays inside its token, so an
+    operator inside quotes never splits (F23). An unbalanced quote falls back to the plain split."""
+    text = command.replace('\\', '/')
+    try:
+        lex = shlex.shlex(text, posix=True, punctuation_chars=';&|()\n')
+        lex.whitespace_split = True
+        lex.whitespace = ' \t\r'
+        raw = list(lex)
+    except ValueError:
+        raw = []
+        for part in re.split(r'(&&|\|\||[;|&\n])', text):
+            raw.extend([part] if part in OPERATORS else part.split())
+    out, cur = [], []
+    for tok in raw:
+        if tok in OPERATORS:
+            out.append((cur, tok))
+            cur = []
+        elif tok in ('(', ')'):
+            continue
+        else:
+            cur.append(tok)
+    out.append((cur, ''))
+    return out
+
+
+def trusted_code(code):
+    return code is not NOT_TRUSTED
+
+
+NOT_TRUSTED = object()
 
 
 def classify_segment(tokens, code):
@@ -433,9 +477,9 @@ def classify_segment(tokens, code):
             if '--auto' in tokens or '--disable-auto' in tokens:
                 return []   # merge is only scheduled, not done
             return [(MERGED, 'gh pr merge')]
-        if sub == ('run', 'watch'):
+        if sub == ('run', 'watch') and trusted_code(code):
             return [('Failed', 'gh run watch failed')] if code else [('Waiting', 'gh run watch passed')]
-    if head == 'ci_watch.py':
+    if head == 'ci_watch.py' and trusted_code(code):
         return [('Failed', 'ci_watch failed')] if code else [('Waiting', 'ci_watch passed')]
     if code == 0:
         if head == 'vercel' and ('--prod' in tokens or '--production' in tokens):
@@ -450,9 +494,15 @@ def classify_segment(tokens, code):
 
 
 def classify(command, code):
+    """Events for a command line. The exit code speaks for a segment only when it is the last one or every
+    operator after it is && (F23); a quoted operator never splits."""
     found = []
-    for seg in SEPARATORS.split(command):
-        for item in classify_segment(segment_tokens(seg), code):
+    segments = split_segments(command)
+    for i, (tokens, _op) in enumerate(segments):
+        later = [op for _t, op in segments[i:] if op]
+        trusted = all(op == '&&' for op in later)
+        seg_code = code if trusted else NOT_TRUSTED
+        for item in classify_segment(strip_prefix(tokens), seg_code):
             if item not in found:
                 found.append(item)
     return found

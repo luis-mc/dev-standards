@@ -1496,7 +1496,7 @@ def hooks_json_registers_the_three_hooks():
         assert groups, event
         cmds = [h['command'] for g in groups for h in g['hooks'] if h.get('type') == 'command']
         assert cmds and all('${CLAUDE_PLUGIN_ROOT}/scripts/' + script in c for c in cmds), (event, cmds)
-        assert all(c.startswith('python3 ') and ' || python ' in c for c in cmds), cmds
+        assert all(c.startswith('if command -v python3 ') and '; else python ' in c and '||' not in c for c in cmds), cmds
         assert os.path.isfile(os.path.join(SCRIPTS, script)), script
     # R8.8: Agent and Task start background work, so PostToolUse also covers them
     assert [g.get('matcher') for g in cfg['hooks']['PostToolUse']] == ['Bash|Agent|Task']

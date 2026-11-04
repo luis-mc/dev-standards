@@ -117,6 +117,8 @@ def catch_up(root, manifest):
             outcomes = outcomes_by_task(prs)
             for task in open_tasks:
                 kinds = outcomes.get(task.get('id'), set())
+                if 'merged' in kinds and 'open' in kinds:
+                    continue      # F24: a newer pull request is still open, so the task is not finished
                 if 'merged' in kinds:
                     append_event(root, task['id'], merged_status, 'pull request merged')
                 elif kinds == {'closed'}:
