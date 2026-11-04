@@ -54,10 +54,10 @@ flowchart TD
 ```
 
 1. **Detect.** The setup lists every repository you administer, the runners GitHub knows, runner services, runner folders, containers and the WSL limits. It only reads. A public repository is named and refused.
-2. **Plan.** You see one plan: each old runner that will be removed, the pool and its CPU and memory cap, the files it writes (under the machine folder, not your repository), what changes outside the repository, what needs you, and about how long it takes.
+2. **Plan.** You see one plan: each old runner that will be removed, the pool and its CPU and memory cap, the files it writes (under the machine folder, not your repository), what changes outside the repository, what needs you, and about how long it takes. If you name no repository, the plan takes every private repository that has a runner or a workflow with `self-hosted`. If it finds none, it plans nothing and removes nothing. The cap is measured on your machine; you only give numbers to override it.
 3. **Yes.** Answer yes to run it. Each step prints one line while it runs.
-4. **Deletions.** Removing a runner folder, a container or its volumes needs its own yes that names what goes. A "no" stops the run and lists what is left.
-5. **Your part.** Steps that need an administrator shell (a Windows service, the scheduled task) are printed. Run them, and the setup checks them.
+4. **Deletions.** Removing a runner from GitHub, a Windows runner service, a runner folder, a container or its volumes needs its own yes that names what goes. A "no" stops the run and lists what is left.
+5. **Your part.** Steps that need an administrator shell are printed: stopping and deleting an old Windows runner service, creating the new Windows service, and the scheduled task for the host load file. Run them, and the setup checks them. The task starts at boot and runs a loop that writes the file every 15 seconds, because a scheduled task cannot repeat faster than once a minute.
 6. **Verify.** Each agent must be online with its labels, then one `pool-check` run per repository takes a slot and passes.
 7. **Summary.** Three parts: *Done*, *Left for you* (numbered, exact steps) and *What you can do now*.
 
@@ -85,7 +85,10 @@ Do the steps that match your option. The doctor re-checks them.
 5. **Token (Option 3 and a cloud fallback).** Create a fine-grained token with only `commit statuses: write`. Put it in the cloud environment under the variable name you gave. Do not put it in a file.
 6. **Ruleset: "Any source".** Required checks are commit statuses. In the repository ruleset, set each required check to accept **Any source**. The doctor cannot see or change this. If you skip it, the checks stay missing.
 7. **Cloud access (Option 3 and a cloud fallback).** Give the cloud sessions access to the repository.
-8. Run `python3 claude/plugins/delivery/scripts/delivery_doctor.py` and fix what it names.
+8. **Runner hooks (Option 1 and 4).** In each runner folder's `.env` set `ACTIONS_RUNNER_HOOK_JOB_STARTED` to `scripts/runner_load_gate.ps1` and `ACTIONS_RUNNER_HOOK_JOB_COMPLETED` to `scripts/runner_job_done.ps1` on Windows (`.sh` on Linux and macOS). The runner accepts only `.sh`, `.ps1` and `.js`: a `.cmd` hook fails every job with "not a valid path to a script". The doctor fails a `.cmd` hook.
+9. **Shard names.** The hook sees the job key, not the job's `env:`. Name each job's key after its shard in `ci-shards.json` (the templates do). Set `DELIVERY_SHARD` in the runner's `.env` only to override. Matrix legs share the key of their job.
+10. **Git credentials for the runner account (Option 4).** The wait marker is pushed from the kept checkout with the runner account's git credentials. A service account such as `NETWORK SERVICE` has none. Store a fine-grained token for that account with contents write on the repository, or use the runner pool. The doctor tries a dry-run push from each runner's checkout and warns when it fails.
+11. Run `python3 claude/plugins/delivery/scripts/delivery_doctor.py` and fix what it names.
 
 ## Good to know
 
@@ -94,6 +97,11 @@ Do the steps that match your option. The doctor re-checks them.
 - **The first claim wins.** If the main runner frees up while the fallback runs, the fallback finishes. Nothing is pre-empted, and only one status is posted.
 - **Windows.** Cloud sessions cannot run Windows tests. Use Option 1, or Option 2 for the small Windows-only set.
 - **A Linux-built installer** is a CI check only. The shipped installer is built on Windows.
+
+## Security
+
+- **The wait marker needs a push.** The token for it has contents write on one repository and nothing else. Keep it in the credential store of the runner account. Never put it in a file in the repository, in `.env`, or in a log. The doctor and the hooks never print it.
+- **Hooks run as the runner account.** Give that account read and execute rights on the plugin folder and on Python, and nothing more.
 
 ## Check it worked
 

@@ -124,6 +124,9 @@
     "tools/test_project_artifacts_hooks.py": [
       "docs/features/artifacts/spec.md"
     ],
+    "tools/test_questions_stop.py": [
+      "docs/features/project-setup/spec.md"
+    ],
     "tools/test_render_artifacts.py": [
       "docs/features/artifacts/spec.md"
     ],

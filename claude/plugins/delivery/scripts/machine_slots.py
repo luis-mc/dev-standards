@@ -191,12 +191,20 @@ def _int(value):
         return None
 
 
+def shard_from_env(env=None):
+    """The shard of a job as the hooks see it: DELIVERY_SHARD when the hook has it (the runner's own .env; a job-level
+    `env:` value never reaches the job-started hook), else the job key GITHUB_JOB. The workflow names each sharded
+    job's key after its shard, so both give the shard name the fallback uses."""
+    env = os.environ if env is None else env
+    return env.get('DELIVERY_SHARD') or env.get('GITHUB_JOB') or ''
+
+
 def ident_from_env(env=None):
     """What identifies a job, from the environment the runner gives every hook."""
     env = os.environ if env is None else env
     return {'repo': env.get('GITHUB_REPOSITORY') or '', 'run_id': _int(env.get('GITHUB_RUN_ID')),
             'run_attempt': _int(env.get('GITHUB_RUN_ATTEMPT')) or 1, 'job': env.get('GITHUB_JOB') or '',
-            'shard': env.get('DELIVERY_SHARD') or '', 'runner': env.get('RUNNER_NAME') or socket.gethostname()}
+            'shard': shard_from_env(env), 'runner': env.get('RUNNER_NAME') or socket.gethostname()}
 
 
 def priority_from_event(env=None):

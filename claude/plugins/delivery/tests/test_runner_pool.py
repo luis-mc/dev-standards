@@ -511,3 +511,272 @@ class SummaryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# --- DL40: setup and plan fixes (fixtures only: no Docker, no network) --------------------------------------------------
+
+WIN_SERVICE = json.dumps({"Name": "actions.runner.owner-example-app.host1-app1", "State": "Running",
+                          "PathName": '"C:\\Work\\runners\\winapp\\bin\\RunnerService.exe"'})
+WIN_FILES = {
+    "C:/Work/runners/winapp/.runner": '{"agentId": 7, "agentName": "host1-old", "gitHubUrl": "https://github.com/owner/example-app"}',
+    "C:/Users/u1/.wslconfig": "[wsl2]\nmemory=12GB\nprocessors=6\n",
+}
+
+
+class WinProbe(FakeProbe):
+    """A Windows host: one runner service, Docker only inside WSL, memory known."""
+    platform = "win32"
+
+    def __init__(self, files=None, mem=(32.0, 10.0), cpus=16):
+        super().__init__(files)
+        self.runner_dirs = []
+        self.mem, self.cpus = mem, cpus
+
+    def sh(self, argv, input=None, timeout=60):
+        self.calls.append((argv, input))
+        if argv[0] == "powershell":
+            return 0, WIN_SERVICE
+        if argv[0] == "docker":
+            return None  # not on the Windows PATH
+        if argv[:2] == ["wsl", "docker"] and "label=" + P.LABEL in argv:
+            return 0, ""
+        if argv[:2] == ["wsl", "docker"]:
+            return 0, 'c1\tlinux-runner\t"./bin/Runner.Listener run"\n'
+        return 0, ""
+
+    def python(self):
+        return "C:/Python/python.exe"
+
+    def cpu_count(self):
+        return self.cpus
+
+    def machine_dir(self):
+        return "C:/ProgramData/luismc-delivery"
+
+    def memory_gib(self):
+        return self.mem
+
+
+class P1DeriveTests(unittest.TestCase):
+    def setUp(self):
+        self.found = P.detect(FakeProbe(dict(FILES)))
+
+    def test_no_repos_derives_private_repos_with_a_runner(self):
+        pl = P.plan(self.found, [], [])
+        self.assertTrue(pl["derived"])
+        self.assertIn("agent:owner/example-app", [s["id"] for s in pl["steps"]])
+        self.assertFalse([s for s in pl["steps"] if s.get("repo") == "owner/public-app"])
+
+    def test_workflow_with_self_hosted_label_counts(self):
+        self.found["github"]["repos"][2]["private"] = True
+        self.found["github"]["repos"][2]["self_hosted_workflows"] = True
+        self.found["github"]["repos"][2]["runners"] = []
+        self.assertIn("owner/locked", P.derive_repos(self.found)[0])
+
+    def test_windows_repos_come_from_windows_runners(self):
+        lin, win = P.derive_repos(self.found)
+        self.assertEqual(win, ["owner/example-app"])
+        self.assertEqual(lin, ["owner/example-app"])
+
+    def test_nothing_derived_refuses_to_plan_removals(self):
+        for r in self.found["github"]["repos"]:
+            r["runners"] = []
+        pl = P.plan(self.found, [], [])
+        self.assertEqual(pl["steps"], [])
+        self.assertIn("No runner is removed", pl["blocked"])
+
+    def test_workflow_scan_reads_only_private_repos(self):
+        probe = FakeProbe(dict(FILES))
+        gh = probe.gh
+        calls = []
+        probe.gh = lambda a, input=None: (calls.append(a), gh(a, input))[1]
+        P.detect(probe)
+        self.assertTrue(all("owner/public-app" not in " ".join(a) or "workflows" not in " ".join(a) for a in calls))
+
+    def test_removals_only_for_planned_repos(self):
+        self.found["github"]["repos"][2]["runners"] = [{"id": 9, "name": "other", "os": "Linux", "status": "online",
+                                                       "busy": False, "labels": []}]
+        pl = P.plan(self.found, ["owner/example-app"])
+        self.assertFalse([s for s in pl["steps"] if s["id"].startswith("remove:owner/locked")])
+
+
+class P2DeleteMarkTests(unittest.TestCase):
+    def test_runner_removal_is_a_deletion_naming_the_runner(self):
+        pl = P.plan(P.detect(FakeProbe(dict(FILES))), ["owner/example-app"])
+        s = next(x for x in pl["steps"] if x["action"] == "remove-runner")
+        self.assertTrue(s["delete"])
+        self.assertIn("host1-old", s["names"][0])
+
+    def test_run_asks_for_the_delete_yes_on_runner_removal(self):
+        pl = P.plan(P.detect(FakeProbe(dict(FILES))), ["owner/example-app"])
+        asked = []
+        P.run({"pool": "main", "refused": [], "steps": [x for x in pl["steps"] if x["action"] == "remove-runner"]},
+              ask=lambda s: True, ask_delete=lambda s: (asked.append(s["names"]), False)[1], say=lambda m: None)
+        self.assertTrue(asked)
+
+
+class P3WindowsServiceTests(unittest.TestCase):
+    def setUp(self):
+        self.found = P.detect(WinProbe(dict(WIN_FILES)))
+        self.pl = P.plan(self.found, ["owner/example-app"])
+
+    def test_service_step_prints_stop_and_delete_and_is_a_named_deletion(self):
+        s = next(x for x in self.pl["steps"] if x["action"] == "windows-service-remove")
+        self.assertTrue(s["elevated"] and s["delete"])
+        self.assertEqual(s["printed"], ['sc.exe stop "actions.runner.owner-example-app.host1-app1"',
+                                        'sc.exe delete "actions.runner.owner-example-app.host1-app1"'])
+        self.assertIn("Windows service actions.runner.owner-example-app.host1-app1", s["names"])
+
+    def test_service_step_comes_before_folder_delete_and_check_reads_the_service(self):
+        ids = [x["id"] for x in self.pl["steps"]]
+        self.assertLess(ids.index("winsvc-remove:actions.runner.owner-example-app.host1-app1"),
+                        ids.index("delete-folder:C:/Work/runners/winapp"))
+        step = next(x for x in self.pl["steps"] if x["action"] == "windows-service-remove")
+        self.assertFalse(P.default_check(step, WinProbe()))  # still there
+        gone = WinProbe()
+        gone.sh = lambda argv, input=None, timeout=60: (0, "")
+        self.assertTrue(P.default_check(step, gone))
+
+    def test_run_prints_then_checks_the_service_step(self):
+        step = next(x for x in self.pl["steps"] if x["action"] == "windows-service-remove")
+        said = []
+        gone = WinProbe()
+        gone.sh = lambda argv, input=None, timeout=60: (0, "")
+        orig = P.Probe
+        P.Probe = lambda: gone
+        try:
+            r = P.run({"pool": "main", "refused": [], "steps": [step]}, ask=lambda s: True, ask_delete=lambda s: True,
+                      say=said.append, check=lambda s: False)
+        finally:
+            P.Probe = orig
+        self.assertTrue(any("sc.exe delete" in m for m in said))
+        self.assertEqual(r["done"], [step["id"]])
+
+
+class P4HostLoadTaskTests(unittest.TestCase):
+    def setUp(self):
+        self.pl = P.plan(P.detect(WinProbe(dict(WIN_FILES))), ["owner/example-app"])
+
+    def test_task_uses_absolute_paths_and_runs_at_boot_not_every_minute(self):
+        t = next(x for x in self.pl["steps"] if x["id"] == "host-load-task")
+        text = " ".join(t["printed"])
+        self.assertNotIn("/SC MINUTE", text)
+        self.assertIn("/SC ONSTART", text)
+        self.assertIn('C:\\Python\\python.exe', text)
+        self.assertIn('C:\\ProgramData\\luismc-delivery\\host-load\\host-load-loop.py', text)
+        self.assertNotIn(" load.py", text)
+
+    def test_files_step_comes_first_and_the_loop_sleeps_15_seconds(self):
+        ids = [x["id"] for x in self.pl["steps"]]
+        self.assertLess(ids.index("host-load-files"), ids.index("host-load-task"))
+        self.assertIn("time.sleep(15)", P.LOOP_SCRIPT)
+
+    def test_files_handler_copies_load_and_writes_the_loop(self):
+        with tempfile.TemporaryDirectory() as d:
+            ok, _ = P.Executor(FakeProbe()).run({"action": "host-load-files", "dest": os.path.join(d, "hl")})
+            self.assertTrue(ok)
+            self.assertEqual(sorted(os.listdir(os.path.join(d, "hl")))[:2], ["host-load-loop.py", "load.py"])
+
+    def test_no_task_on_a_host_that_is_not_windows(self):
+        pl = P.plan(P.detect(FakeProbe(dict(FILES))), ["owner/example-app"])
+        self.assertFalse([x for x in pl["steps"] if x["id"].startswith("host-load")])
+
+
+class P5WslTests(unittest.TestCase):
+    def test_wsl_step_and_restart_added_when_ceiling_is_too_low(self):
+        found = P.detect(WinProbe(dict(WIN_FILES)))
+        found["wsl"]["memory"] = 4.0
+        cap = P.measured_sizing(found)
+        pl = P.plan(found, ["owner/example-app"], cap=cap)
+        ids = [x["id"] for x in pl["steps"]]
+        self.assertIn("wslconfig", ids)
+        self.assertLess(ids.index("wslconfig"), ids.index("wsl-restart"))
+        self.assertLess(ids.index("wsl-restart"), ids.index("pool-files"))
+
+    def test_enough_ceiling_is_already_set_and_no_restart(self):
+        found = P.detect(WinProbe(dict(WIN_FILES)))
+        found["wsl"]["processors"] = 12
+        pl = P.plan(found, ["owner/example-app"], cap=P.sizing(32, 10, 16, docker_gib=12))
+        self.assertEqual(next(x for x in pl["steps"] if x["id"] == "wslconfig")["state"], "already")
+        self.assertNotIn("wsl-restart", [x["id"] for x in pl["steps"]])
+
+    def test_set_wsl_values_replaces_in_section_and_keeps_other_lines(self):
+        out = P.set_wsl_values("[wsl2]\nmemory=4GB\nswap=0\n[user]\ndefault=u\n", 10, 5)
+        self.assertEqual(out, "[wsl2]\nmemory=10GB\nswap=0\nprocessors=5\n[user]\ndefault=u\n")
+        self.assertEqual(P.set_wsl_values("", 8, 4), "\n[wsl2]\nmemory=8GB\nprocessors=4\n")
+
+    def test_restart_refused_while_a_job_runs(self):
+        probe = FakeProbe(dict(FILES))
+        gj = probe.gh_json
+        probe.gh_json = lambda a: ({"runners": [{"id": 1, "name": "r", "os": "Linux", "status": "online", "busy": True,
+                                                 "labels": []}]}, None) if "runners" in " ".join(a) else gj(a)
+        ok, why = P.Executor(probe).run({"action": "wsl-restart"})
+        self.assertFalse(ok)
+        self.assertNotIn(["wsl", "--shutdown"], [c[0] for c in probe.calls])
+
+    def test_wslconfig_handler_writes_and_keeps_a_backup(self):
+        with tempfile.TemporaryDirectory() as d:
+            probe = FakeProbe()
+            probe.wslconfig = os.path.join(d, ".wslconfig")
+            probe.read_text = lambda p: Path(p).read_text() if os.path.exists(p) else None
+            Path(probe.wslconfig).write_text("[wsl2]\nmemory=4GB\n")
+            ok, _ = P.Executor(probe).run({"action": "wslconfig", "cap": {"wsl": {"memory": 10, "processors": 5}}})
+            self.assertTrue(ok)
+            self.assertIn("memory=10GB", Path(probe.wslconfig).read_text())
+            self.assertIn("memory=4GB", Path(probe.wslconfig + ".bak").read_text())
+
+
+class P6DetectTests(unittest.TestCase):
+    def setUp(self):
+        self.found = P.detect(WinProbe(dict(WIN_FILES)))
+
+    def test_service_image_path_gives_the_folder(self):
+        self.assertEqual(self.found["services"][0]["folder"], "C:/Work/runners/winapp")
+        self.assertEqual(self.found["folders"][0]["path"], "C:/Work/runners/winapp")
+        self.assertEqual(self.found["folders"][0]["repo"], "owner/example-app")
+
+    def test_service_folder_without_runner_file_is_still_listed(self):
+        found = P.detect(WinProbe({}))
+        self.assertEqual([f["path"] for f in found["folders"]], ["C:/Work/runners/winapp"])
+
+    def test_containers_inside_wsl_docker_found_read_only(self):
+        c = self.found["containers"]
+        self.assertEqual([(x["name"], x["via"]) for x in c], [("linux-runner", "wsl")])
+        self.assertTrue(all(a[0] in ("docker", "wsl") and "rm" not in a for a, _ in WinProbe().calls))
+
+    def test_delete_container_goes_through_wsl(self):
+        probe = WinProbe()
+        P.Executor(probe).run({"action": "delete-container", "container": "linux-runner", "via": "wsl"})
+        self.assertEqual(probe.calls[-1][0], ["wsl", "docker", "rm", "-f", "linux-runner"])
+
+    def test_host_figures_measured(self):
+        self.assertEqual(self.found["host"]["total_gib"], 32.0)
+        self.assertEqual(self.found["host"]["cpus"], 16)
+
+    def test_measured_sizing_gives_a_cap_without_hand_numbers(self):
+        cap = P.measured_sizing(self.found)
+        self.assertIsNotNone(cap)
+        self.assertEqual(cap["mem_gib"], 10.0)  # min(room 17.2, wsl 12) - 1 - 1
+        self.assertEqual(cap["measured"]["cpus"], 16)
+        pl = P.plan(self.found, ["owner/example-app"], cap=cap)
+        self.assertIsNotNone(pl["cap"])
+
+    def test_hand_numbers_win_over_measured(self):
+        cap = P.measured_sizing(self.found, total_gib=64, used_gib=0, cpus=8, docker_gib=40)
+        self.assertEqual(cap["measured"]["total_gib"], 64)
+
+    def test_unmeasurable_memory_gives_none(self):
+        found = P.detect(WinProbe(dict(WIN_FILES), mem=None))
+        self.assertIsNone(P.measured_sizing(found))
+
+    def test_a_refused_sizing_blocks_the_plan(self):
+        pl = P.plan(self.found, ["owner/example-app"], cap=P.sizing(8, 7, 4))
+        self.assertEqual(pl["steps"], [])
+        self.assertIn("Sizing refused", pl["blocked"])
+
+
+class ServiceFolderTests(unittest.TestCase):
+    def test_paths(self):
+        self.assertEqual(P.service_folder('"C:\\r\\a\\bin\\RunnerService.exe"'), "C:/r/a")
+        self.assertEqual(P.service_folder('C:\\r\\a\\RunnerService.exe -x'), "C:/r/a")
+        self.assertEqual(P.service_folder(None), "")

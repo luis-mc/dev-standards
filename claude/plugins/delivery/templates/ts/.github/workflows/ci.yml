@@ -373,7 +373,8 @@ jobs:
     if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && needs.plan.outputs.e2e != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
-      DELIVERY_SHARD: e2e-shard-${{ matrix.shard }}
+      # The hook sees the job key, not this value: the shard is the key. The legs share it.
+      DELIVERY_SHARD: e2e-shard
     strategy:
       fail-fast: false
       matrix:

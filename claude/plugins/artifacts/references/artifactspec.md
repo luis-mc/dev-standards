@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.19.0
+**Version:** 1.19.1
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.19.1 — 2026-11-04.**
+
+- R5.51: the CI runs section now matches the approved look. One Where chip (kind · host or OS), a Now chip with the latest real step, teal job bars, one row per job that opens to its steps, a one-line finished row, HH:MM for today, and the summary `N in progress · 20 latest · median · fallbacks · failed`.
 
 **1.19.0 — 2026-11-04.**
 
@@ -1239,18 +1243,25 @@ double-click.
   (R5.31) only; the committed render never reads the file, so the committed
   render stays the same for the same record (R7.4). The section is one
   `<details class="status-fold ci-runs" data-group="ci-runs">`, closed, whose
-  `<summary>` holds the title and one line: runs in progress, finished runs
-  shown, median run time, fallbacks, failures. Inside, in order: the figures
+  `<summary>` holds the title and one line: `N in progress · 20 latest · median Xm Ys · N fallbacks · N failed`. Inside, in order: the figures
   (median and p90 run time, median slot wait, fallbacks to the cloud, passed out
-  of shown); the `In progress` table `Run | Why | Where | Started | Now` (the
-  current step with its time, or `Waiting for a slot` with the minutes until
-  the fallback); `Latest 20 finished`, at most 20 `<details class="ci-run">`
+  of shown); the `In progress` table `Run | Why | Where | Started | Now`, where
+  `Now` is one chip: `step · elapsed` for the latest real step (never `Set up
+  job`, `Post Run ...` or `Complete job`), or an amber `waiting for a slot · 3m
+  · fallback in 7m`; `Latest 20 finished`, at most 20 `<details class="ci-run">`
   rows, each with a result mark that is a glyph (passed, failed, cancelled),
-  run number and workflow, why, where as a tag by kind (`pool`, `windows`,
-  `hosted`, `cloud`), total time and finish time; each row opens to a waterfall
-  with one bar per step on one time scale, in order GitHub queue, slot wait
-  (`Slot wait, then fallback to cloud` for a fallback run), then every job step,
-  a failed step in the failure token; and a legend of the bar colours. Times
+  the bold `#run` and workflow, a middle dot and the why on the same line, one
+  Where chip, total time and finish time. The chip reads kind, middle dot, host
+  or OS: `Linux pool · host1`, `Windows service · host1`, `GitHub-hosted ·
+  ubuntu` (OS from the runner labels, never the raw runner name), `Claude cloud
+  · fallback`; colours by kind from tokens (pool teal, Windows blue-violet,
+  hosted grey, cloud purple). Finish time is `HH:MM` for the day of the file's
+  `generated_at`, else `DD Mon HH:MM`. Each row opens to a waterfall on one
+  time scale: GitHub queue (grey), slot wait (amber; `Slot wait, then fallback
+  to cloud` for a fallback run), then one row per job with its own bar (teal; the
+  failure token when a step failed). Each job is a `<details>` that opens to its
+  steps, so every step stays reachable; step labels stay on one line with the
+  full name in `title`; and a legend of the bar colours. Times
   are tabular figures and in the stamp's time zone. Colours come from the design
   tokens only. Verified by the `ci_runs_*` cases in `tools/test_render_artifacts.py`.
 
