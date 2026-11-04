@@ -60,6 +60,7 @@ class Rec:
     def __init__(self, caps_ok=True, ready=True, settled=False):
         self.cloud, self.hosted, self.out, self.reserved, self.released, self.gated = [], [], [], [], [], []
         self.caps_ok, self.ready, self.settled = caps_ok, ready, settled
+        self.cloud_busy, self.markers, self.claims = 0, {}, set()   # DL-90, DL-91
 
     def gate(self, st, os_name, waited):
         self.gated.append(os_name)
@@ -72,7 +73,9 @@ class Rec:
                   reserve=lambda sha, sh: self.reserved.append(sh) or True,
                   release=lambda sha, sh: self.released.append(sh),
                   settled=lambda sha, sh, prefix: self.settled,
-                  ready_pr=lambda sha: self.ready, gate=self.gate, is_hosted=lambda l: "ubuntu-latest" in l)
+                  ready_pr=lambda sha: self.ready, gate=self.gate, is_hosted=lambda l: "ubuntu-latest" in l,
+                  cloud_sessions=lambda: self.cloud_busy, wait_marker=lambda sha, sh: self.markers.get(sh),
+                  claimed=lambda sha, sh: sh in self.claims)
         kw.update(over)
         return F.Deps("/nowhere", "origin", "o/r", **kw)
 
@@ -102,6 +105,34 @@ class Hook(unittest.TestCase):
         self.assertEqual(len(rec.reserved), 2)
         self.assertEqual(len(rec.gated), 2)  # caps are counted once per started shard
         self.assertEqual(len([l for l in rec.out if "started" in l]), 2)
+
+    def test_cloud_limit_never_starts_an_extra_session(self):    # DL-91: 10 cloud CI sessions at most
+        rec = Rec()
+        rec.cloud_busy = 9
+        got = self.go(rec, SPEC_TWO_LATE)
+        self.assertEqual(rec.cloud, ["int-linux"])      # one place left: the first shard (sorted) starts, the second waits
+        self.assertEqual(len(got), 1)
+        self.assertTrue(any("limit 10" in l for l in rec.out))
+        rec.cloud_busy = 10
+        self.assertEqual(self.go(Rec(), SPEC_TWO_LATE, cloud_sessions=lambda: 10), [])
+
+    def test_cloud_limit_does_not_hold_hosted_fallback(self):
+        rec = Rec()
+        rec.cloud_busy = 10
+        self.go(rec, SPEC_TWO_LATE, settings("github-hosted"))
+        self.assertEqual(sorted(rec.hosted), ["int-linux", "unit-linux"])
+
+    def test_held_job_with_a_wait_marker_counts_as_waiting(self):     # DL-90, G6
+        rec = Rec()
+        started = [("unit (linux)", "in_progress", 12, ["self-hosted", "linux"])]
+        self.assertEqual(self.go(rec, started), [])                     # started on GitHub, no marker: not waiting
+        rec.markers["unit-linux"] = {"at": iso(12)}
+        got = self.go(rec, started)
+        self.assertEqual([g["shard"] for g in got], ["unit-linux"])
+        rec2 = Rec()
+        rec2.markers["unit-linux"] = {"at": iso(12)}
+        rec2.claims.add("unit-linux")                                   # claimed: the marker no longer counts
+        self.assertEqual(self.go(rec2, started), [])
 
     def test_only_shards_over_x_launch(self):
         rec = Rec()

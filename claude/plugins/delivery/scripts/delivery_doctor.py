@@ -3,7 +3,7 @@
 
     delivery_doctor.py [self-check] [--root DIR] [--json]
 
-Seven checks, each `ok` or `FAIL` with the fix:
+Eight checks, each `ok` or `FAIL` with the fix:
   config   .delivery/config.json passes delivery_config.py validate (no errors; a missing file is fine)
   gh       `gh auth status` succeeds (the watcher and the hooks need a signed-in gh; DELIVERY_GH replaces gh in tests)
   tz       the configured `tz` loads through zoneinfo; if tzdata is missing this FAILS instead of quietly using UTC
@@ -25,6 +25,15 @@ Seven checks, each `ok` or `FAIL` with the fix:
            list that the setup printed (delivery_ci_setup.py `by_hand_items`): runner online with its labels, repository
            variables, larger runner, token variable, ruleset 'Any source'. An item it cannot read (billing, a remote
            machine, the cloud environment) FAILS until `delivery_ci_setup.py confirm ITEM`.
+  machine  (DL-90, D45, D31) the shared CI machine layer, when any OS is Option 1 or the machine folder exists: machine.json
+           exists and is readable (a difference with the old ~/.claude file is a warning naming the keys); every runner
+           folder has both hooks (ACTIONS_RUNNER_HOOK_JOB_STARTED -> runner_load_gate, ..._COMPLETED -> runner_job_done;
+           on Windows a .ps1 hook passes the execution policy check); no slot is stale and no queue ticket is older than
+           `slot_stale_min`; host-load.json is under 60 s old; the pool checks of delivery_runner_pool.doctor_checks(root)
+           when that module imports (else skip); an Option 1 project with the repository variable CI_RUNS_ON unset FAILS
+           (it would run on hosted runners and may bill minutes); the size of every runner's _work folder (a large total
+           is a warning; `delivery_doctor.py clean-work` lists, `--yes` cleans runners with no job running).
+           The JSON output carries the single items (id, status ok|warn|fail|skip, detail) as `items`.
 Exit 0 all ok, 1 at least one FAIL, 2 no .delivery/ folder. Standard library only.
 """
 from __future__ import annotations
@@ -42,6 +51,7 @@ sys.path.insert(0, HERE)
 import delivery_ci_setup as SETUP  # noqa: E402
 import delivery_config as C  # noqa: E402
 import hooklib as H  # noqa: E402
+import machine_slots as MS  # noqa: E402
 
 PLUGIN = os.path.dirname(HERE)
 HOOK_SCRIPTS = ("hook_pre_tool.py", "hook_post_tool.py", "hook_stop.py", "hook_session_start.py")
@@ -125,9 +135,10 @@ def _runner_dirs():
     import glob
     import load as L
     dirs = [d for d in os.environ.get("DELIVERY_RUNNER_DIRS", "").split(os.pathsep) if d]
+    dirs += MS.machine_config()["runner_dirs"]
     machine = L._read(L.machine_file())
     if isinstance(machine, dict) and isinstance(machine.get("runner_dirs"), list):
-        dirs += [d for d in machine["runner_dirs"] if isinstance(d, str)]
+        dirs += [d for d in machine["runner_dirs"] if isinstance(d, str) and d not in dirs]
     if not dirs:
         for base in (os.path.expanduser("~"), "C:\\", "/opt", "/srv"):
             dirs += glob.glob(os.path.join(base, "actions-runner*"))
@@ -371,28 +382,216 @@ def check_ci(root, cfg):
     return True, "; ".join([summary, *notes])
 
 
+# --- machine layer (DL-90) --------------------------------------------------------------------------
+
+DONE_VAR = "ACTIONS_RUNNER_HOOK_JOB_COMPLETED"
+WORK_WARN_GB = 20.0
+
+
+def _item(id_, status, detail):
+    return {"id": id_, "status": status, "detail": detail}
+
+
+def _env_value(runner_dir, name):
+    try:
+        with open(os.path.join(runner_dir, ".env"), encoding="utf-8", errors="replace") as f:
+            for line in f.read().splitlines():
+                if line.strip().startswith(name + "="):
+                    return line.split("=", 1)[1].strip()
+    except OSError:
+        pass
+    return None
+
+
+def _dir_size(path):
+    total = 0
+    for base, _dirs, files in os.walk(path):
+        for n in files:
+            try:
+                total += os.lstat(os.path.join(base, n)).st_size
+            except OSError:
+                pass
+    return total
+
+
+def _runner_name(runner_dir):
+    try:
+        with open(os.path.join(runner_dir, ".runner"), encoding="utf-8-sig") as f:
+            return json.load(f).get("agentName")
+    except (OSError, ValueError, AttributeError):
+        return None
+
+
+def machine_items(root, cfg):
+    """The single results of the machine check: [{'id', 'status', 'detail'}]."""
+    import load as L
+    opts = C.ci_options(cfg)
+    dirs = _runner_dirs()
+    folder = MS.machine_dir()
+    used = "self-hosted" in opts.values() or os.path.exists(MS.config_path()) or os.path.isdir(MS.slots_dir())
+    if not used:
+        return [_item("machine.config", "skip", "no Option 1 project and no machine folder: the machine layer is not used")]
+    items = []
+    mcfg = MS.machine_config()
+    path = MS.config_path()
+    if not os.path.exists(path):
+        items.append(_item("machine.config", "fail", "%s is missing. Run /delivery-ci-setup (it writes the machine config); "
+                                                    "runners then use the default limits only." % path))
+    elif not os.access(path, os.R_OK):
+        items.append(_item("machine.config", "fail", "%s cannot be read by this account: runners run as other accounts and "
+                                                    "would not see the limits. Grant read rights." % path))
+    else:
+        items.append(_item("machine.config", "ok", "%s: %d CI slot(s), local_heavy %d, cloud_ci_sessions %d, stale after %d min"
+                           % (path, mcfg["ci_slots"], mcfg["local_heavy"], mcfg["cloud_ci_sessions"], mcfg["slot_stale_min"])))
+        diff = L.legacy_differs()
+        if diff:
+            items.append(_item("machine.legacy", "warn", "machine.json and the old ~/.claude/luismc-delivery-machine.json differ "
+                                                         "in load_limits: %s. machine.json wins; remove the old file." % ", ".join(diff)))
+    for d in dirs:
+        missing, policy = [], []
+        for var, script in ((HOOK_VAR, "runner_load_gate"), (DONE_VAR, "runner_job_done")):
+            v = _env_value(d, var)
+            if not (v and script in v):
+                missing.append("%s=...%s" % (var, script))
+            elif _is_windows() and v.strip("\"'").lower().endswith(".ps1"):
+                problem = _execution_policy_problem(d)
+                if problem and problem[0]:
+                    policy.append(problem[1])
+        if missing or policy:
+            items.append(_item("machine.hooks:" + d, "fail", "; ".join(
+                (["runner %s lacks %s" % (d, ", ".join(missing))] if missing else []) + policy)))
+        else:
+            items.append(_item("machine.hooks:" + d, "ok", "runner %s has both hooks" % d))
+    if not dirs:
+        items.append(_item("machine.hooks", "ok", "no runner folder found on this machine"))
+    now = __import__("time").time()
+    stale = [s for s in MS.status(mcfg, now)["slots"] if not s["free"] and s.get("stale")]
+    old_tickets = []
+    try:
+        for n in sorted(os.listdir(MS.queue_dir())):
+            rec = MS._read_json(os.path.join(MS.queue_dir(), n)) if n.endswith(".json") else None
+            if rec and now - (rec.get("queued_ts") or now) > mcfg["slot_stale_min"] * 60:
+                old_tickets.append(n)
+    except OSError:
+        pass
+    if stale or old_tickets:
+        items.append(_item("machine.slots", "fail", "; ".join(
+            ["slot %d held by %s run %s for %d min (stale: its process is gone or it is over %d min)"
+             % (s["slot"], s.get("repo"), s.get("run_id"), s["age_s"] // 60, mcfg["slot_stale_min"]) for s in stale]
+            + ["queue ticket %s is older than %d min" % (n, mcfg["slot_stale_min"]) for n in old_tickets])
+            + " (the next gate frees them, or run machine_slots.py free-stale)"))
+    else:
+        items.append(_item("machine.slots", "ok", "no stale slot, no old ticket"))
+    host, age = L.read_host_load()
+    if host is None:
+        items.append(_item("machine.hostload", "warn", "no host-load.json in %s: readers in WSL or the pool use their own "
+                                                       "figures. Register the scheduled task (load.py --write)." % folder))
+    elif age > MS.HOST_LOAD_MAX_AGE:
+        items.append(_item("machine.hostload", "fail", "host-load.json is %d s old (limit %d s): the scheduled task that runs "
+                                                       "load.py --write every 15 s is not running." % (age, MS.HOST_LOAD_MAX_AGE)))
+    else:
+        items.append(_item("machine.hostload", "ok", "host-load.json is %d s old" % age))
+    try:
+        import delivery_runner_pool as POOL  # noqa: PLC0415 - built on another branch (DL30)
+    except ImportError:
+        items.append(_item("pool", "skip", "delivery_runner_pool is not installed"))
+    else:
+        try:
+            for r in POOL.doctor_checks(root):
+                if isinstance(r, dict) and r.get("id"):
+                    items.append(_item(str(r["id"]), r.get("status") if r.get("status") in ("ok", "warn", "fail", "skip")
+                                       else "warn", str(r.get("detail") or "")))
+        except Exception as exc:  # noqa: BLE001
+            items.append(_item("pool", "fail", "pool checks crashed (%s: %s)" % (type(exc).__name__, exc)))
+    if "self-hosted" in opts.values():
+        r = H.gh(root, ["variable", "list", "--json", "name,value"])
+        data = None
+        if r is not None and r[0] == 0:
+            try:
+                data = json.loads(r[1] or "[]")
+            except ValueError:
+                data = None
+        if data is None:
+            items.append(_item("machine.runs_on", "warn", "cannot read the repository variables (gh not signed in or no rights): "
+                                                          "check CI_RUNS_ON by hand"))
+        elif not any(isinstance(v, dict) and v.get("name") == "CI_RUNS_ON" and str(v.get("value") or "").strip() for v in data):
+            items.append(_item("machine.runs_on", "fail", "an OS is Option 1 but the repository variable CI_RUNS_ON is unset: jobs "
+                                                          "would run on GitHub-hosted runners and may bill minutes. Run "
+                                                          "/delivery-ci-setup, or `gh variable set CI_RUNS_ON --body '[\"self-hosted\",\"linux\"]'`."))
+        else:
+            items.append(_item("machine.runs_on", "ok", "CI_RUNS_ON is set"))
+    sizes = [(d, _dir_size(os.path.join(d, "_work"))) for d in dirs if os.path.isdir(os.path.join(d, "_work"))]
+    total = sum(sz for _, sz in sizes) / 1e9
+    if sizes:
+        text = "%.1f GB in the _work folders (%s)" % (total, ", ".join("%s %.1f GB" % (d, sz / 1e9) for d, sz in sizes))
+        if total > WORK_WARN_GB:
+            items.append(_item("machine.disk", "warn", text + ". Offer: `delivery_doctor.py clean-work` lists what can go; "
+                                                         "`--yes` cleans runners with no job running."))
+        else:
+            items.append(_item("machine.disk", "ok", text))
+    return items
+
+
+def check_machine(root, cfg):
+    items = machine_items(root, cfg)
+    ok = not any(i["status"] == "fail" for i in items)
+    detail = "; ".join("%s %s: %s" % (i["status"], i["id"], i["detail"]) for i in items if i["status"] != "ok") or \
+        "; ".join(i["detail"] for i in items)
+    return ok, detail, items
+
+
+def clean_work(yes=False, out=print):
+    """Empty the _work folder of every runner with no job running. Without `yes` it only lists. Returns the folders."""
+    busy = {s.get("runner") for s in MS.status()["slots"] if not s["free"]}
+    done = []
+    for d in _runner_dirs():
+        work = os.path.join(d, "_work")
+        if not os.path.isdir(work):
+            continue
+        name = _runner_name(d)
+        if name in busy:
+            out("skip %s: runner %s has a job running" % (work, name))
+            continue
+        out("%s %s (%.1f GB)" % ("cleaning" if yes else "would clean", work, _dir_size(work) / 1e9))
+        if yes:
+            import runner_job_done as RJD
+            RJD.empty_folder(work)
+        done.append(work)
+    return done
+
+
 CHECKS = (("config", check_config), ("gh", check_gh), ("tz", check_tz), ("hooks", check_hooks), ("ledger", check_ledger),
-          ("runner", check_runner), ("ci", check_ci))
+          ("runner", check_runner), ("ci", check_ci), ("machine", check_machine))
 
 
 def run_checks(root):
     cfg = H.load_config(root)
     out = []
     for name, fn in CHECKS:
+        items = None
         try:
-            ok, detail = fn(root, cfg)
+            res = fn(root, cfg)
+            ok, detail = res[0], res[1]
+            items = res[2] if len(res) > 2 else None
         except Exception as exc:  # noqa: BLE001 - a crashing check is a failing check
             ok, detail = False, "check crashed (%s: %s)" % (type(exc).__name__, exc)
-        out.append({"check": name, "ok": ok, "detail": detail})
+        row = {"check": name, "ok": ok, "detail": detail}
+        if items is not None:
+            row["items"] = items
+        out.append(row)
     return out
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="delivery_doctor.py", description=__doc__.split("\n\n")[0])
-    ap.add_argument("action", nargs="?", default="self-check", choices=["self-check"])
+    ap.add_argument("action", nargs="?", default="self-check", choices=["self-check", "clean-work"])
+    ap.add_argument("--yes", action="store_true", help="clean-work: delete, after the owner said yes")
     ap.add_argument("--root", help="repository root (default: nearest folder up with .delivery/)")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
+    if args.action == "clean-work":
+        clean_work(args.yes)
+        return 0
     root = os.path.abspath(args.root) if args.root else H.find_root({})
     if not root or not os.path.isdir(os.path.join(root, ".delivery")):
         print("delivery_doctor: no .delivery/ folder found", file=sys.stderr)

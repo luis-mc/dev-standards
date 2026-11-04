@@ -38,6 +38,8 @@ jobs:
   prune:
     name: prune build artifacts
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    env:
+      DELIVERY_SHARD: prune
     timeout-minutes: 10
     permissions:
       contents: read

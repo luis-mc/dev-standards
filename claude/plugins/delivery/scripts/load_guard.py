@@ -13,23 +13,35 @@ thousands of files and was the crash trigger of 23 Oct), anything started in the
 Agent launch (no remote/cloud isolation) and a Workflow are heavy. RemoteTrigger and Agent with isolation remote/cloud
 run elsewhere and are never refused. Everything else (git, gh, ls, cat, grep, rtk-wrapped reads, python one-liners) is
 light and never refused.
+
+Local heavy limit (DL-91, D36): at most `local_heavy` (machine config, default 2; a project may lower it) heavy calls run
+at once on this machine, across sessions. A heavy foreground command (Bash, PowerShell, Workflow) is counted from its
+PreToolUse to its PostToolUse (a small file per call in the local-heavy folder, see heavy_dir); a local agent is counted
+from the delivery ledger. At the limit a new heavy call is refused with the list of what runs. Local work does not take
+CI slots (D23); the load check above covers both.
 """
 import copy
+import hashlib
 import io
 import json
 import os
 import re
+import socket
 import sys
+import time
 from contextlib import redirect_stdout
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import hooklib as H  # noqa: E402
 import load as L  # noqa: E402
+import machine_slots as MS  # noqa: E402
 
 CHECK_ID = 'DL-77'
+LOCAL_CHECK_ID = 'DL-91'
 SHELL_TOOLS = ('Bash', 'PowerShell')
 GUARDED_TOOLS = SHELL_TOOLS + ('Agent', 'Workflow')
+TRACKED_TOOLS = SHELL_TOOLS + ('Workflow',)   # DL-91: counted from PreToolUse to PostToolUse (agents: the ledger)
 
 RUNNERS = {'vitest', 'jest', 'pytest', 'py.test', 'playwright', 'mocha', 'cypress', 'ffmpeg', 'msbuild', 'turbo',
            'nx', 'xcodebuild', 'gradle', 'gradlew', 'tox', 'nox'}
@@ -166,6 +178,119 @@ def classify(tool, tool_input, cfg=None):
     return False, ''
 
 
+# --- local heavy work in flight (DL-91) --------------------------------------------------------
+
+def heavy_dir():
+    """Where in-flight heavy calls are kept: DELIVERY_LOCAL_HEAVY_DIR, else local-heavy in the machine folder when that
+    can be written, else ~/.claude/luismc-delivery-local-heavy."""
+    env = os.environ.get('DELIVERY_LOCAL_HEAVY_DIR')
+    if env:
+        return env
+    mdir = MS.machine_dir()
+    if os.path.isdir(mdir) and os.access(mdir, os.W_OK):
+        return os.path.join(mdir, 'local-heavy')
+    return os.path.join(os.path.expanduser('~'), '.claude', 'luismc-delivery-local-heavy')
+
+
+def _heavy_key(data):
+    ti = data.get('tool_input') if isinstance(data.get('tool_input'), dict) else {}
+    raw = data.get('tool_use_id')
+    if isinstance(raw, str) and re.fullmatch(r'[\w.\-]{1,100}', raw):
+        return raw
+    text = '%s|%s|%s' % (data.get('session_id'), data.get('tool_name'), json.dumps(ti, sort_keys=True))
+    return hashlib.sha1(text.encode('utf-8', 'replace')).hexdigest()[:20]
+
+
+def heavy_running(cfg=None, now=None):
+    """The foreground heavy calls in flight: [{'key', 'label', 'at'}]. An entry whose process is gone (same host), or
+    older than slot_stale_min, is dropped."""
+    now = time.time() if now is None else now
+    stale = MS.machine_config()['slot_stale_min'] * 60
+    out = []
+    folder = heavy_dir()
+    try:
+        names = sorted(os.listdir(folder))
+    except OSError:
+        return []
+    for name in names:
+        if not name.endswith('.json'):
+            continue
+        path = os.path.join(folder, name)
+        rec = MS._read_json(path)
+        if rec is None:
+            continue
+        if MS._holder_gone(rec) or now - (rec.get('ts') or now) > stale:
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
+            continue
+        out.append({'key': name[:-5], 'label': rec.get('label') or '?', 'at': rec.get('ts')})
+    return out
+
+
+def heavy_begin(data, cfg=None):
+    """Count this call as heavy work in flight (PreToolUse, after the call is allowed). No-op for a light call. Never
+    raises."""
+    try:
+        tool = data.get('tool_name')
+        if tool not in TRACKED_TOOLS or not H.check_on(cfg or {}, LOCAL_CHECK_ID):
+            return False
+        heavy, label = classify(tool, data.get('tool_input'), cfg)
+        if not heavy:
+            return False
+        folder = heavy_dir()
+        MS._mkdir(folder)
+        rec = {'label': label, 'ts': time.time(), 'pid': os.getppid(), 'host': socket.gethostname(),
+               'session': data.get('session_id')}
+        path = os.path.join(folder, _heavy_key(data) + '.json')
+        tmp = MS._write_tmp(folder, rec, '.new-')
+        os.replace(tmp, path)
+        return True
+    except Exception as exc:  # noqa: BLE001 - tracking must never stop a tool call
+        H.warn('local heavy tracking skipped (%s: %s)' % (type(exc).__name__, exc))
+        return False
+
+
+def heavy_end(data):
+    """Drop this call from the heavy work in flight (PostToolUse and PostToolUseFailure). Never raises."""
+    try:
+        if data.get('tool_name') not in TRACKED_TOOLS:
+            return False
+        os.unlink(os.path.join(heavy_dir(), _heavy_key(data) + '.json'))
+        return True
+    except OSError:
+        return False
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def local_heavy_limit(cfg=None):
+    """local_heavy of the machine config; a project may lower it with `local_heavy`, never raise it."""
+    limit = MS.machine_config()['local_heavy']
+    mine = (cfg or {}).get('local_heavy')
+    if isinstance(mine, int) and not isinstance(mine, bool) and 1 <= mine < limit:
+        limit = mine
+    return limit
+
+
+def local_running(cfg=None, ledger=None):
+    """[(kind, label)] of the heavy local work now: foreground calls and, from the ledger, local agents."""
+    out = [('command', h['label']) for h in heavy_running(cfg)]
+    if isinstance(ledger, dict):
+        for a in H.running_agents(ledger, 'local'):
+            out.append(('agent', str(a.get('task') or a.get('id') or 'agent')))
+    return out
+
+
+def local_refusal(running, limit, label):
+    names = ', '.join('%s: %s' % r for r in running)
+    return ('DL-91 local heavy work is at its limit (%d of %d running: %s), so new heavy work is held: not starting %s. '
+            'What to do: wait for one to finish, or launch it in the cloud; nothing is killed or slowed. Limit: '
+            'local_heavy in the machine config (%s) or .delivery/config.json (a project can only lower it).'
+            % (len(running), limit, names or 'unknown', label, MS.config_path()))
+
+
 def project_cfg(root):
     return H.load_config(root) if root else copy.deepcopy(H.DEFAULTS)
 
@@ -200,13 +325,24 @@ def refusal(s, lim, exceeded, label):
             % (describe(s, lim), '; '.join(exceeded), label, running_heavy_text()))
 
 
-def check_call(data, cfg):
-    """None when the call may go on, else the refusal text. Fails open (warning on stderr) when unmeasurable."""
+def check_call(data, cfg, ledger=None):
+    """None when the call may go on, else the refusal text. Fails open (warning on stderr) when unmeasurable.
+    `ledger` (the project's, when it has one) lets the DL-91 count include running local agents."""
     tool = data.get('tool_name')
-    if tool not in GUARDED_TOOLS or not H.check_on(cfg, CHECK_ID):
+    if tool not in GUARDED_TOOLS:
         return None
     heavy, label = classify(tool, data.get('tool_input'), cfg)
     if not heavy:
+        return None
+    if H.check_on(cfg, LOCAL_CHECK_ID):
+        try:
+            limit = local_heavy_limit(cfg)
+            running = local_running(cfg, ledger)
+            if len(running) >= limit:
+                return local_refusal(running, limit, label)
+        except Exception as exc:  # noqa: BLE001
+            H.warn('local heavy limit skipped (%s: %s)' % (type(exc).__name__, exc))
+    if not H.check_on(cfg, CHECK_ID):
         return None
     try:
         s, lim, exceeded = state(cfg)

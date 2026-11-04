@@ -158,12 +158,15 @@ def job_shard(job_name: str, shards: list[dict]):
 
 
 def waiting_shards(runs: list[dict], shards: list[dict], repo: str | None, now: float,
-                   gh_json, is_hosted=None) -> list[dict]:
+                   gh_json, is_hosted=None, wait_marker=None, claimed=None) -> list[dict]:
     """Shards that wait for a runner now: [{"shard", "wait_min"}].
 
     The core measures the wait (`ci_fallback.shard_wait_minutes`): only a `queued` job counts, a run held back
     by the one-at-a-time setting has none, and a shard with any started job has its runner. A job with a
-    GitHub-hosted label is the platform's wait and is left out here."""
+    GitHub-hosted label is the platform's wait and is left out here.
+
+    DL-90 (G6): `wait_marker(shard_id)` gives the `ci-wait` marker of a shard whose job is held for a machine slot, and
+    `claimed(shard_id)` says whether a claim exists. A marker without a claim counts as waiting, from its time."""
     base = "repos/%s" % repo if repo else "repos/{owner}/{repo}"
     jobs_of: dict[str, tuple[dict, list[dict], str]] = {}
     for run in runs:
@@ -182,7 +185,11 @@ def waiting_shards(runs: list[dict], shards: list[dict], repo: str | None, now: 
                 jobs_of.setdefault(shard["id"], (shard, [], str(run.get("status") or "")))[1].append(job)
     out = []
     for shard, jobs, run_status in jobs_of.values():
-        wait = ci_fallback.shard_wait_minutes(jobs, datetime.fromtimestamp(now, timezone.utc), run_status)
+        sid = shard["id"]
+        marker = wait_marker(sid) if wait_marker else None
+        wait = ci_fallback.shard_wait_minutes(jobs, datetime.fromtimestamp(now, timezone.utc), run_status,
+                                              wait_marker=marker,
+                                              claimed=bool(marker and claimed and claimed(sid)))
         if wait is not None:
             out.append({"shard": shard, "wait_min": wait})
     return out
@@ -254,7 +261,11 @@ class Deps:
         self.reserve = over.get("reserve") or (lambda sha, shard: reserve_launch(root, remote, sha, shard))
         self.release = over.get("release") or (lambda sha, shard: release_launch(root, remote, sha, shard))
         self.settled = over.get("settled") or self._settled
+        self.cloud_sessions = over.get("cloud_sessions") or (
+            lambda: ci_fallback.cloud_ci_sessions(root, remote, datetime.fromtimestamp(self.now(), timezone.utc)))
         self.ready_pr = over.get("ready_pr") or self._ready_pr
+        self.wait_marker = over.get("wait_marker") or self._wait_marker
+        self.claimed = over.get("claimed") or self._claimed
         self.gate = over.get("gate") or self._gate  # caps: counts the shard before it starts
         self.out = over.get("out") or (lambda line: print(line, flush=True))
         self.state: dict = over.get("state") if over.get("state") is not None else {}
@@ -274,6 +285,18 @@ class Deps:
         """A claim or a result already exists for this shard."""
         return (remote_has(self.root, self.remote, "%s/%s/%s/*" % (CLAIM_PREFIX, sha, shard))
                 or remote_has(self.root, self.remote, "%s/%s/%s" % (prefix, sha, shard)))
+
+    def _wait_marker(self, sha: str, shard: str):
+        try:
+            return ci_fallback.read_wait(self.root, self.remote, sha, shard)
+        except Exception:  # noqa: BLE001 - no marker is the old behaviour
+            return None
+
+    def _claimed(self, sha: str, shard: str) -> bool:
+        try:
+            return ci_fallback.claim_taken(self.root, self.remote, sha, shard)
+        except Exception:  # noqa: BLE001
+            return False
 
     def _ready_pr(self, sha: str) -> bool:
         base = "repos/%s" % self.repo if self.repo else "repos/{owner}/{repo}"
@@ -300,7 +323,9 @@ def check_and_launch(sha: str, runs: list[dict], deps: Deps, st: dict | None = N
         if force is not None:
             waiting = [{"shard": s, "wait_min": float(st["core"]["after_min"])} for s in force]
         else:
-            waiting = waiting_shards(runs, shards, deps.repo, deps.now(), deps.gh_json, deps.is_hosted)
+            waiting = waiting_shards(runs, shards, deps.repo, deps.now(), deps.gh_json, deps.is_hosted,
+                                     wait_marker=lambda sid: deps.wait_marker(sha, sid),
+                                     claimed=lambda sid: deps.claimed(sha, sid))
         return _launch(sha, waiting, deps, st, scoped=force is None)
     except Exception as exc:  # noqa: BLE001 - the fallback must never break the watch
         deps.out("ci_watch: fallback skipped (%s: %s)" % (type(exc).__name__, exc))
@@ -335,6 +360,18 @@ def _launch(sha: str, waiting: list[dict], deps: Deps, st: dict, scoped: bool = 
         if deps.settled(sha, sid, st["prefix"]):
             launched.add((sha, sid))
             continue
+        if kind == "cloud":  # DL-91: never an 11th cloud CI session; wait and retry on the next poll
+            limit = ci_fallback.cloud_ci_limit(st["cfg"])
+            try:
+                busy = int(deps.cloud_sessions()) + deps.state.get("cloud_started", 0)
+            except Exception as exc:  # noqa: BLE001 - an unreadable count must not stop the fallback
+                busy = 0
+                deps.out("ci_watch: could not count cloud CI sessions (%s)" % exc)
+            if busy >= limit:
+                if (sha, "cloud-limit") not in warned:
+                    warned.add((sha, "cloud-limit"))
+                    deps.out("ci_watch: %d cloud CI sessions run (limit %d); shard %s waits" % (busy, limit, sid))
+                continue
         if not deps.reserve(sha, sid):
             launched.add((sha, sid))  # someone else reserved it (or git refused): not ours to start
             continue
@@ -353,6 +390,8 @@ def _launch(sha: str, waiting: list[dict], deps: Deps, st: dict, scoped: bool = 
             deps.out("ci_watch: WARNING: fallback launch (%s) failed for shard %s: %s" % (kind, sid, exc))
             continue
         launched.add((sha, sid))
+        if kind == "cloud":
+            deps.state["cloud_started"] = deps.state.get("cloud_started", 0) + 1
         deps.out("ci_watch: fallback (%s) started for shard %s after %d min of waiting"
                  % (kind, sid, int(w["wait_min"])))
         out.append({"shard": sid, "kind": kind, "wait_min": w["wait_min"]})

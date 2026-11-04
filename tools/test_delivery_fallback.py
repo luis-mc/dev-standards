@@ -108,6 +108,15 @@ class SettingsAndWaitTests(unittest.TestCase):
         old = dict(q, created_at="2026-11-03T09:30:00Z")
         self.assertEqual(F.shard_wait_minutes([q, old], T0), 30.0)
 
+    def test_wait_marker_without_claim_counts_as_waiting(self):       # DL-90, G6
+        run = {"status": "in_progress", "started_at": "2026-11-03T09:50:00Z"}
+        marker = {"at": "2026-11-03T09:45:00Z"}
+        self.assertEqual(F.shard_wait_minutes([run], T0, wait_marker=marker), 15.0)
+        self.assertEqual(F.shard_wait_minutes([run], T0, wait_marker="2026-11-03T09:45:00Z"), 15.0)
+        self.assertIsNone(F.shard_wait_minutes([run], T0, wait_marker=marker, claimed=True))
+        self.assertIsNone(F.shard_wait_minutes([run], T0, wait_marker=None))
+        self.assertIsNone(F.shard_wait_minutes([run], T0, wait_marker={"at": "not a time"}))
+
     def test_decision(self):
         s = F.fallback_settings(cfg(after_min_if_offline=2))
         self.assertFalse(F.fallback_decision(s, "linux", 9.9)["start"])
@@ -292,6 +301,52 @@ class CapTests(Base):
         c = cfg(max_shards_per_day=1)
         self.assertFalse(self.gate(c, waited=3)["start"])
         self.assertTrue(self.gate(c, waited=15)["start"])
+
+
+class WaitMarkerTests(Base):
+    """DL-90: the ci-wait marker of a held job, and the claim-lost exit of a held job."""
+
+    def test_marker_roundtrip_and_clear(self):
+        w = self.clones["main"]
+        self.assertTrue(F.mark_wait(w, "origin", SHA, SHARD, "runner-host1", T0))
+        self.assertTrue(F.mark_wait(w, "origin", SHA, SHARD, "runner-host1", T0))        # a second try is fine
+        rec = F.read_wait(self.clones["watcher"], "origin", SHA, SHARD)
+        self.assertEqual((rec["holder"], rec["shard"]), ("runner-host1", SHARD))
+        self.assertIsNotNone(F._parse(rec["at"]))
+        F.clear_wait(w, "origin", SHA, SHARD)
+        self.assertIsNone(F.read_wait(self.clones["watcher"], "origin", SHA, SHARD))
+
+    def test_claim_taken_and_held_exit_3(self):
+        self.assertFalse(F.claim_taken(self.clones["main"], "origin", SHA, SHARD))
+        out = []
+        with mock.patch("builtins.print", side_effect=lambda *a, **k: out.append(" ".join(map(str, a)))):
+            held = ("--root", self.clones["main"], "held", "--sha", SHA, "--shard", SHARD)
+            self.assertEqual(F.main(list(held)), 0)
+            self.claim("fallback")
+            self.assertTrue(F.claim_taken(self.clones["main"], "origin", SHA, SHARD))
+            self.assertEqual(F.main(list(held)), 3)
+        self.assertIn("claim lost", "\n".join(out))
+
+    def test_cloud_sessions_count_unposted_cloud_claims(self):
+        a, b = self.clones["main"], self.clones["fallback"]
+        self.assertEqual(F.cloud_ci_sessions(a, "origin", T0), 0)
+        F.claim(a, "origin", SHA, SHARD, 1, "fallback-cloud", T0)
+        F.claim(a, "origin", SHA, "s2", 1, "fallback-cloud", T0)
+        F.claim(a, "origin", SHA, "s3", 1, "runner-host1", T0)                           # not a cloud session
+        self.assertEqual(F.cloud_ci_sessions(b, "origin", T0), 2)
+        F.post_checked(a, "origin", "o/r", "tok", result("success"), SHA, SHARD, 1, "fallback-cloud")
+        self.assertEqual(F.cloud_ci_sessions(b, "origin", T0), 1)
+        later = T0 + timedelta(hours=4)
+        self.assertEqual(F.cloud_ci_sessions(b, "origin", later), 0)                     # a dead session stops counting
+
+    def test_cloud_limit_machine_file_and_project_can_only_lower(self):
+        d = tempfile.mkdtemp(prefix="mach-")
+        with mock.patch.dict(os.environ, {"DELIVERY_MACHINE_DIR": d}):
+            self.assertEqual(F.cloud_ci_limit({}), 10)
+            Path(d, "machine.json").write_text(json.dumps({"cloud_ci_sessions": 6}))
+            self.assertEqual(F.cloud_ci_limit({}), 6)
+            self.assertEqual(F.cloud_ci_limit({"ci": {"fallback": {"cloud_ci_sessions": 3}}}), 3)
+            self.assertEqual(F.cloud_ci_limit({"ci": {"fallback": {"cloud_ci_sessions": 20}}}), 6)
 
 
 class CliTests(Base):

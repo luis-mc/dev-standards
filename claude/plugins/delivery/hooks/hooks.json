@@ -15,7 +15,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Bash|Agent|RemoteTrigger|Artifact|AskUserQuestion",
+        "matcher": "Bash|PowerShell|Workflow|Agent|RemoteTrigger|Artifact|AskUserQuestion",
         "hooks": [
           {
             "type": "command",
@@ -27,7 +27,7 @@
     ],
     "PostToolUseFailure": [
       {
-        "matcher": "Bash|Agent|RemoteTrigger|Artifact|AskUserQuestion",
+        "matcher": "Bash|PowerShell|Workflow|Agent|RemoteTrigger|Artifact|AskUserQuestion",
         "hooks": [
           {
             "type": "command",

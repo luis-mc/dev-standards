@@ -474,6 +474,7 @@
             },
             "after_min": {"type": "number", "minimum": 0, "description": "X: minutes a shard waits for a runner before the fallback may start. No default."},
             "after_min_if_offline": {"type": "number", "minimum": 0, "description": "X when no online runner carries the labels. Absent means the same as after_min."},
+            "cloud_ci_sessions": {"type": "integer", "minimum": 1, "description": "DL-91: Claude cloud sessions that may run CI at once for this project. It can only lower the machine limit `cloud_ci_sessions` of machine.json (default 10), never raise it."},
             "only_for": {"type": "string", "enum": ["all"], "description": "Which runs may use the fallback. Only `all` (every run)."},
             "max_shards_per_day": {"description": "Optional cap on fallback shards per UTC day: a whole number, or null for no cap."},
             "max_minutes_per_month": {"description": "Optional cap on hosted fallback minutes per UTC month: a number, or null for no cap."},
@@ -568,9 +569,14 @@
         }
       }
     },
+    "local_heavy": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "DL-91: how many heavy local calls (tests, builds, installs, local agents) may run at once for this project. It can only lower the machine limit `local_heavy` of machine.json (default 2), never raise it."
+    },
     "load_limits": {
       "type": "object",
-      "description": "DL-77: machine load limits for this project; over the machine file ~/.claude/luismc-delivery-machine.json, over the defaults (memory 85, CPU 60). Values are percent, 1..100.",
+      "description": "DL-77: machine load limits for this project. It can only lower the machine limits (machine.json in the machine folder, DL-90; the old ~/.claude/luismc-delivery-machine.json when machine.json has none), never raise them. Defaults memory 85, CPU 60. Values are percent, 1..100.",
       "properties": {
         "memory_pct": {
           "type": "number",
