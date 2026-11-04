@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T18:48+00:00",
+  "updated": "2026-11-04T19:11+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -917,6 +917,30 @@
       "changed": "2026-11-04T18:47+00:00",
       "rides": "DL29",
       "started": "2026-11-04T14:14+00:00"
+    },
+    {
+      "id": "DL34",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Prove the shared CI hooks on one real runner job",
+      "detail": "Owner 4 Nov: after merge, one throwaway run proves DELIVERY_SHARD reaches the hook and the wait marker is written",
+      "expected": "04 Nov ~20:15",
+      "changed": "2026-11-04T19:11+00:00",
+      "expected_basis": "after the history flatten; ~30 min",
+      "no_release": "a test; fixes become their own tasks"
+    },
+    {
+      "id": "DL35",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Shared CI rollout plan for this machine (detect and plan, read only)",
+      "detail": "Owner 4 Nov: plan only; show what the setup would change",
+      "expected": "04 Nov ~20:30",
+      "changed": "2026-11-04T19:11+00:00",
+      "expected_basis": "after the runner test; ~15 min",
+      "no_release": "read-only study"
     },
     {
       "id": "DS1",
@@ -3574,6 +3598,30 @@
       "changed": "2026-11-03T19:13+00:00",
       "rides": "DS180",
       "started": "2026-11-03T16:41+00:00"
+    },
+    {
+      "id": "DS182",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Flatten the public history to one commit; delete old tags and branches",
+      "detail": "Owner 4 Nov: after RELEASE-37, flat all history. No backup; old PR refs accepted; strip SHAs from record rows",
+      "expected": "04 Nov ~20:00",
+      "changed": "2026-11-04T19:11+00:00",
+      "expected_basis": "after RELEASE-37 merges ~19:26; ~30 min",
+      "no_release": "repository maintenance, ships no plugin change"
+    },
+    {
+      "id": "DS183",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Close stale PRs #127 #128 #140, delete their branches and worktree",
+      "detail": "Owner 4 Nov: close #140 and the other session's stale PRs and branches",
+      "expected": "04 Nov ~19:35",
+      "changed": "2026-11-04T19:11+00:00",
+      "expected_basis": "after RELEASE-37 merges ~19:26; ~5 min",
+      "no_release": "cleanup"
     },
     {
       "id": "MP1",
