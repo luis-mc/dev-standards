@@ -16,6 +16,7 @@ code:
   - tools/test_spec_check.py
   - tools/test_model_profiles.py
   - tools/test_rule_tags.py
+  - tools/test_questions_stop.py
 last_verified: 2026-11-01
 ---
 # Project setup (luismc-project-setup)
@@ -83,6 +84,8 @@ All three skills follow the setup pattern (plan first, do the work after a yes, 
 
 **R5.12** — The shipped STACKSPEC and AUTHSPEC have valid heading numbers, requirement IDs and references, and AUTHSPEC passes its own content checks.
 
+**R5.13** — At user level, `claude-setup` installs `~/.claude/hooks/questions_stop.py` and adds it to `hooks.Stop` in `~/.claude/settings.json`, without removing another hook. The hook blocks a stop when the final reply asks the owner a question in plain text, lists options to pick, or says questions are parked, and the turn made no AskUserQuestion call. It enforces Q-1 and Q-2.
+
 ## 6. Non-functional requirements
 
 **R6.1** — `claude-setup` asks which target before reading or writing, and applies one batch after one confirmation.
@@ -110,6 +113,23 @@ flowchart TB
 
 - The catalog is data, not requirements. STACKSPEC defines a `CHOICE` level. A choice is reported as recorded or unrecorded, never as violating.
 - The shared delivery tooling (scripts and workflows in `luismc-delivery` `templates/`) is written into each generated repository by the delivery installer; the git hooks, linters and guards in `assets/tooling/` are copied by `tech-stack-setup`. Its rules and tests belong to [delivery](../delivery/spec.md) and [delivery-speed](../delivery-speed/spec.md). This page does not repeat them.
+- The questions Stop hook (R5.13) never loops (`stop_hook_active` allows), ignores code blocks, inline code and quoted lines, lets a park through while agents of the wave still run (Q-5, a running agent in `.delivery/ledger.json`), and fails open on any error. Turn it off with `CLAUDE_QUESTIONS_STOP=off` (shell or settings `env` block) or `"questionsStop": "off"` in `~/.claude/settings.json`.
+
+```mermaid
+flowchart TD
+  S[Stop] --> A{stop_hook_active or off?}
+  A -- yes --> OK[allow]
+  A -- no --> B{AskUserQuestion in turn?}
+  B -- yes --> OK
+  B -- no --> C{plain question or options at end?}
+  C -- yes --> X[block: ask in one batch]
+  C -- no --> D{says parked or later?}
+  D -- no --> OK
+  D -- yes --> E{agents still run?}
+  E -- yes --> OK
+  E -- no --> X
+```
+
 - The per-skill model table, the effort-drift hook and how profiles are applied belong to [models](../models/spec.md).
 
 ## 8. Failure modes
@@ -126,6 +146,7 @@ flowchart TB
 | R5.6, R5.7 | `tools/test_preflight.py` |
 | R5.10, R6.2 | `tools/test_model_profiles.py` |
 | R5.11 | `tools/test_rule_tags.py` |
+| R5.13 | `tools/test_questions_stop.py` (the hook on recorded inputs and its wiring) |
 | R5.12 | `tools/test_spec_check.py`, `tools/test_authspec_check.py` |
 | R5.1 to R5.5, R5.8, R5.9, R6.1 | not covered by a test yet; see section 11 |
 
@@ -149,6 +170,7 @@ Source: claude/plugins/project-setup/skills/tech-stack-setup/assets/catalog/role
 Source: claude/plugins/project-setup/skills/auth-setup/SKILL.md
 Source: claude/plugins/project-setup/skills/claude-setup/SKILL.md
 Source: claude/plugins/project-setup/skills/claude-setup/assets/model-profiles.json
+Source: claude/plugins/project-setup/skills/claude-setup/assets/.claude/hooks/questions_stop.py
 Source: claude/plugins/project-setup/.claude-plugin/plugin.json
 
 ## Versions
