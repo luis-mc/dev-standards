@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T19:43+00:00",
+  "updated": "2026-11-04T19:53+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -944,25 +944,61 @@
       "id": "DL36",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Live",
       "item": "Compare the CI runs section with the approved sample and fix differences",
-      "detail": "Owner 4 Nov: DL31 built from the brief; compare with the plan page sample and fix",
-      "expected": "04 Nov ~20:15",
-      "changed": "2026-11-04T19:30+00:00",
-      "expected_basis": "starts 19:35; ~40 min",
-      "no_release": "may ride the next release if it changes code"
+      "detail": "6 differences found; fixes are DL38 (RELEASE-38)",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T19:52+00:00",
+      "no_release": "comparison; fixes ride RELEASE-38",
+      "started": "2026-11-04T19:45+00:00"
     },
     {
       "id": "DL37",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "RELEASE-38: fixes from DL34 and DL36, and the questions Stop hook",
-      "detail": "Owner 4 Nov: one release for the DL34 and DL36 fixes; plus the Q-1/Q-2 Stop hook",
-      "expected": "04 Nov ~22:30",
-      "changed": "2026-11-04T19:43+00:00",
-      "expected_basis": "after DL34 and DL36 (~20:45), agents ~60 min, CI ~25 min",
-      "release": 38
+      "detail": "agents DL38 and SO6 running; DL34 next on a private scratch repo",
+      "expected": "04 Nov ~21:35",
+      "changed": "2026-11-04T19:53+00:00",
+      "expected_basis": "agents due 21:03; DL34 fixes may join; CI ~20 min",
+      "release": 38,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-04T19:53+00:00",
+          "end": "2026-11-04T21:03+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-04T21:03+00:00",
+          "end": "2026-11-04T21:10+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-04T21:10+00:00",
+          "end": "2026-11-04T21:30+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-04T21:30+00:00",
+          "end": "2026-11-04T21:35+00:00"
+        }
+      ],
+      "started": "2026-11-04T19:53+00:00"
+    },
+    {
+      "id": "DL38",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "CI runs section: match the approved sample",
+      "detail": "From DL36: tags, now chip, bar colours, jobs grouped, row layout, summary words",
+      "expected": "04 Nov ~21:05",
+      "changed": "2026-11-04T19:52+00:00",
+      "expected_basis": "cloud agent 19:55: setup 5 + work 55 + checks 10 = 70 min",
+      "rides": "DL37",
+      "started": "2026-11-04T19:52+00:00"
     },
     {
       "id": "DS1",
@@ -3777,13 +3813,14 @@
       "id": "SO6",
       "owner": "setup-offers",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Stop hook: ask every open question at once, only with AskUserQuestion (Q-1, Q-2)",
       "detail": "Owner request relayed from another session 4 Nov: a user-level Stop hook installed by claude-setup",
-      "expected": "04 Nov ~22:30",
-      "changed": "2026-11-04T19:43+00:00",
-      "expected_basis": "rides RELEASE-38",
-      "rides": "DL37"
+      "expected": "04 Nov ~21:10",
+      "changed": "2026-11-04T19:52+00:00",
+      "expected_basis": "cloud agent from 19:58: setup 5 + work 50 + checks 15 = 70 min",
+      "rides": "DL37",
+      "started": "2026-11-04T19:52+00:00"
     },
     {
       "id": "ST1",
