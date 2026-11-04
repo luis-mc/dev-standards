@@ -680,7 +680,8 @@ class DoctorMachine(unittest.TestCase):
             self.assertTrue(ok, detail)
             self.assertEqual((by["machine.config"]["status"], by["machine.slots"]["status"], by["machine.hostload"]["status"],
                               by["machine.runs_on"]["status"]), ("ok", "ok", "ok", "ok"))
-            self.assertEqual(by["pool"]["status"], "skip")                          # no pool module on this branch
+            pool = [i for i in items if i["id"] == "pool" or i["id"].startswith("pool.")]
+            self.assertTrue(pool and all(i["status"] == "skip" for i in pool), pool)  # no pool on this machine
             lock = MS.take_slot(ident("a"))
             rec = json.loads(Path(MS.slot_path(lock["slot"])).read_text())
             rec["pid"] = dead_pid()
