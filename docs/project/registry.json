@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T14:12+00:00",
+  "updated": "2026-11-04T14:14+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -814,12 +814,14 @@
       "id": "DL27",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Machine-wide CI queue: shared slots across projects",
       "detail": "DL-90 proposal: machine config in ProgramData, ci_slots with job-start/complete hooks, WSL host load file, session work takes slots, doctor machine check; D22-D28 decided, slot count D21 open",
-      "expected": "04 Nov ~17:00",
-      "changed": "2026-11-04T13:20+00:00",
-      "expected_basis": "starts after owner approves the DL28 design (~14:20), then agent ~2 h"
+      "expected": "04 Nov ~17:55",
+      "changed": "2026-11-04T14:14+00:00",
+      "expected_basis": "parent of DL30-DL33; done when RELEASE-37 merges ~17:55",
+      "rides": "DL29",
+      "started": "2026-11-04T14:14+00:00"
     },
     {
       "id": "DL28",
@@ -837,79 +839,88 @@
       "id": "DL29",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "RELEASE: shared CI (machine queue, Linux pool, CI runs section)",
       "detail": "DL27 build: DL29 machine layer, DL30 pool and setup, DL31 CI runs in Full Progress",
-      "expected": "04 Nov ~18:05",
-      "changed": "2026-11-04T14:07+00:00",
-      "expected_basis": "3 cloud agents to 17:15, join 20 min, release CI 25 min",
+      "expected": "04 Nov ~17:55",
+      "changed": "2026-11-04T14:14+00:00",
+      "expected_basis": "slowest agent DL32 ready 17:05; join 20 min; release CI 25 min",
       "release": 37,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-04T14:25+00:00",
-          "end": "2026-11-04T17:15+00:00"
+          "start": "2026-11-04T14:14+00:00",
+          "end": "2026-11-04T17:05+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-04T17:15+00:00",
-          "end": "2026-11-04T17:35+00:00"
+          "start": "2026-11-04T17:05+00:00",
+          "end": "2026-11-04T17:25+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-04T17:35+00:00",
-          "end": "2026-11-04T18:00+00:00"
+          "start": "2026-11-04T17:25+00:00",
+          "end": "2026-11-04T17:50+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-04T18:00+00:00",
-          "end": "2026-11-04T18:05+00:00"
+          "start": "2026-11-04T17:50+00:00",
+          "end": "2026-11-04T17:55+00:00"
         }
-      ]
+      ],
+      "started": "2026-11-04T14:14+00:00"
     },
     {
       "id": "DL30",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Linux runner pool and guided setup: detect, remove, build clean",
       "detail": "templates/runner-pool, delivery_runner_pool.py, delivery_ci_setup.py, setup command, set-up-CI guide",
-      "expected": "04 Nov ~17:15",
-      "changed": "2026-11-04T14:08+00:00",
-      "expected_basis": "5+140+15 min, cloud agent from 14:25"
+      "expected": "04 Nov ~16:55",
+      "changed": "2026-11-04T14:14+00:00",
+      "expected_basis": "cloud agent from 14:14: setup 5 + work 140 + checks 15 min",
+      "rides": "DL29",
+      "started": "2026-11-04T14:14+00:00"
     },
     {
       "id": "DL31",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "CI runs section in Full Progress",
       "detail": "ci_runs.py collector, watcher refresh, Full Progress renderer, artifactspec, artifacts feature spec",
-      "expected": "04 Nov ~17:15",
-      "changed": "2026-11-04T14:08+00:00",
-      "expected_basis": "5+90+10 min, cloud agent from 14:25"
+      "expected": "04 Nov ~16:00",
+      "changed": "2026-11-04T14:14+00:00",
+      "expected_basis": "cloud agent from 14:14: setup 5 + work 90 + checks 10 min",
+      "rides": "DL29",
+      "started": "2026-11-04T14:14+00:00"
     },
     {
       "id": "DL32",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Machine layer: config, CI slots, hooks, host load, fallback, limits, doctor",
       "detail": "load.py, machine_slots.py, runner gate and job-done hooks, ci_fallback, load guard, doctor, spec section 13, DELIVERYSPEC",
-      "expected": "04 Nov ~17:15",
-      "changed": "2026-11-04T14:08+00:00",
-      "expected_basis": "5+150+15 min, cloud agent from 14:25"
+      "expected": "04 Nov ~17:05",
+      "changed": "2026-11-04T14:14+00:00",
+      "expected_basis": "cloud agent from 14:14: setup 5 + work 150 + checks 15 min",
+      "rides": "DL29",
+      "started": "2026-11-04T14:14+00:00"
     },
     {
       "id": "DL33",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Setup clarity: every plugin setup plans, does the work, summarises",
       "detail": "claude-setup, docs-setup, design-system-setup, tech-stack-setup, auth-setup follow contract section 13",
-      "expected": "04 Nov ~17:15",
-      "changed": "2026-11-04T14:12+00:00",
-      "expected_basis": "5+120+15 min, cloud agent from 14:35"
+      "expected": "04 Nov ~16:35",
+      "changed": "2026-11-04T14:14+00:00",
+      "expected_basis": "cloud agent from 14:14: setup 5 + work 120 + checks 15 min",
+      "rides": "DL29",
+      "started": "2026-11-04T14:14+00:00"
     },
     {
       "id": "DS1",
