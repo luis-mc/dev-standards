@@ -1606,6 +1606,86 @@
    "chosen": "Check and remove",
    "decided": "2026-11-04",
    "owner_words": "Check and remove"
+  },
+  {
+   "id": "D70",
+   "question": "Private scratch repo used for the real runner test, now that the test is done?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL34",
+   "options": [
+    {
+     "label": "Delete it",
+     "summary": "Delete the scratch repo; the findings are in the record."
+    },
+    {
+     "label": "Keep it",
+     "summary": "Keep it for later runner tests."
+    }
+   ],
+   "chosen": "Delete it",
+   "decided": "2026-11-04",
+   "owner_words": "Delete it"
+  },
+  {
+   "id": "D71",
+   "question": "Questions Stop hook (ask all questions at once, only in the wizard) at user level?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL42",
+   "options": [
+    {
+     "label": "Update and install",
+     "summary": "Update the plugins and install the hook in the user settings now."
+    },
+    {
+     "label": "Wait",
+     "summary": "Install it with the next claude-setup run."
+    }
+   ],
+   "chosen": "Update and install",
+   "decided": "2026-11-04",
+   "owner_words": "Update and install"
+  },
+  {
+   "id": "D72",
+   "question": "When to build DL41 (setup pool command uses measured sizing)?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL41",
+   "options": [
+    {
+     "label": "Now, RELEASE-39",
+     "summary": "Build it now and ship it in RELEASE-39."
+    },
+    {
+     "label": "Later",
+     "summary": "Leave it in To do."
+    }
+   ],
+   "chosen": "Now, RELEASE-39",
+   "decided": "2026-11-04",
+   "owner_words": "Now, RELEASE-39"
+  },
+  {
+   "id": "D73",
+   "question": "Two remaining old worktrees with local branches?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL29",
+   "options": [
+    {
+     "label": "Check content, then remove",
+     "summary": "Remove each once its content is on main."
+    },
+    {
+     "label": "Leave them",
+     "summary": "Keep them."
+    }
+   ],
+   "chosen": "Check content, then remove",
+   "decided": "2026-11-04",
+   "owner_words": "Check content, then remove"
   }
  ]
 }

@@ -118,6 +118,10 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D68 | How do fixes from DL34 and DL36 ship? | One RELEASE-38 | decided | 2026-11-04 |
 | delivery-speed | D69 | Seven old worktrees from past releases on this machine? | Check and remove | decided | 2026-11-04 |
 | delivery-speed | D7 | Should dev-standards adopt the delivery log in its own releases? (asked as one multi-select question) | Yes | decided | 2026-10-11 |
+| delivery-speed | D70 | Private scratch repo used for the real runner test, now that the test is done? | Delete it | decided | 2026-11-04 |
+| delivery-speed | D71 | Questions Stop hook (ask all questions at once, only in the wizard) at user level? | Update and install | decided | 2026-11-04 |
+| delivery-speed | D72 | When to build DL41 (setup pool command uses measured sizing)? | Now, RELEASE-39 | decided | 2026-11-04 |
+| delivery-speed | D73 | Two remaining old worktrees with local branches? | Check content, then remove | decided | 2026-11-04 |
 | delivery-speed | D8 | Should dev-standards adopt the train freeze? (same multi-select question) | Yes | decided | 2026-10-11 |
 | delivery-speed | D9 | Point 4: how is the train freeze overridden on purpose? | Env variable, logged | decided | 2026-10-11 |
 | design-starter | D1 | Which starter should the docs plugin ship? | C+E now | decided | 2026-11-01 |
