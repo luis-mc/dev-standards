@@ -32,7 +32,8 @@ def env(**kw):
     """Environment for a test: machine file and cache in a fresh temp folder, no fixed sample."""
     d = tempfile.mkdtemp(prefix="load-")
     base = {"DELIVERY_MACHINE_CONFIG": os.path.join(d, "machine.json"), "DELIVERY_LOAD_CACHE": os.path.join(d, "c.json"),
-            "DELIVERY_MACHINE_DIR": os.path.join(d, "machine"), "DELIVERY_IN_CONTAINER": "0"}
+            "DELIVERY_MACHINE_DIR": os.path.join(d, "machine"), "DELIVERY_IN_CONTAINER": "0",
+            "DELIVERY_LOCAL_HEAVY_DIR": os.path.join(d, "heavy")}
     base.update(kw)
     return mock.patch.dict(os.environ, base)
 

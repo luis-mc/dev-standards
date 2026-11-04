@@ -520,7 +520,8 @@ def main():
     data = H.read_input()
     root = H.find_root(data)
     # DL-77: the load guard protects the machine, so it runs in every project, with or without .delivery/
-    held = G.check_call(data, G.project_cfg(root))
+    ledger0 = H.load_ledger(root) if root else None
+    held = G.check_call(data, G.project_cfg(root), ledger0)
     if held:
         if root and H.C.enforcement(H.load_config(root))['mode'] == 'warn':
             print(json.dumps({'systemMessage': 'luismc-delivery (warn mode, call allowed): ' + held}))
@@ -530,11 +531,13 @@ def main():
             print(held, file=sys.stderr)
             return 2
     if not root:
+        G.heavy_begin(data, G.project_cfg(root))
         return 0
     cfg = H.load_config(root)
-    ledger = H.load_ledger(root)
+    ledger = ledger0
     at = H.now()
     tool = data.get('tool_name')
+    denied = False
     try:
         if tool in ('Bash', 'PowerShell'):
             check_bash(root, cfg, ledger, data, at)
@@ -552,9 +555,12 @@ def main():
         if H.C.enforcement(cfg)['mode'] == 'warn':      # enforcement.mode warn: say it, let the call through
             print(json.dumps({'systemMessage': 'luismc-delivery (warn mode, call allowed): ' + str(d)}))
         else:
+            denied = True
             H.log_block(root, cfg, 'pre-tool', str(d))
             print(json.dumps({'hookSpecificOutput': {'hookEventName': 'PreToolUse', 'permissionDecision': 'deny',
                                                      'permissionDecisionReason': str(d)}}))
+    if not denied:
+        G.heavy_begin(data, cfg)                         # DL-91: counted until its PostToolUse
     return 0
 
 
