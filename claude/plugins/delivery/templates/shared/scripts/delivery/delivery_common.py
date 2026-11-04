@@ -202,10 +202,18 @@ def remote_of(ref: str, default: str = "origin", cwd: Path | str | None = None) 
 
 def dirty_paths(root: Path) -> list[str]:
     """Modified, staged or untracked paths, ignoring the .delivery/ results dir."""
-    out = git(["status", "--porcelain", "--untracked-files=normal"], cwd=root)
+    out = run_git(["status", "--porcelain", "-z", "--untracked-files=normal"], cwd=root).stdout
     paths = []
-    for line in out.splitlines():
-        path = line[3:].strip().strip('"')
+    entries = out.split("\0")
+    i = 0
+    while i < len(entries):
+        entry = entries[i]
+        i += 1
+        if len(entry) < 4:
+            continue
+        if entry[0] in "RC":
+            i += 1                      # a rename or copy is followed by its source path
+        path = entry[3:]
         if path == DELIVERY_DIR or path.startswith(DELIVERY_DIR + "/"):
             continue
         if "__pycache__" in path.split("/"):  # bytecode of these very scripts

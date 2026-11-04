@@ -102,12 +102,14 @@ def decide(cfg: dict, changed: list[str] | None, event: str | None = None,
 
 
 def changed_from_git(base: str) -> list[str]:
-    r = subprocess.run(["git", "diff", "--name-only", f"{base}...HEAD"], capture_output=True, text=True)
+    # --no-renames: a moved file counts at its old and its new path. -z: real names, no quoting.
+    flags = ["git", "diff", "--name-only", "--no-renames", "-z"]
+    r = subprocess.run([*flags, f"{base}...HEAD"], capture_output=True)
     if r.returncode != 0:
-        r = subprocess.run(["git", "diff", "--name-only", base, "HEAD"], capture_output=True, text=True)
+        r = subprocess.run([*flags, base, "HEAD"], capture_output=True)
     if r.returncode != 0:
-        raise OSError(f"git diff {base} failed: {r.stderr.strip()}")
-    return [ln for ln in r.stdout.splitlines() if ln.strip()]
+        raise OSError(f"git diff {base} failed: {r.stderr.decode('utf-8', 'replace').strip()}")
+    return [p for p in r.stdout.decode("utf-8", "replace").split("\0") if p.strip()]
 
 
 def lines(res: dict) -> list[str]:

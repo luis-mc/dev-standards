@@ -394,6 +394,9 @@ jobs:
       - name: Prove the heavy-job wrapper yields to CI and always resumes the runner
         run: python3 tools/test_delivery_runner.py
 
+      - name: Prove the shared delivery script fixes (scope, guard, change notes, lock)
+        run: python3 tools/test_delivery_shared_fixes.py
+
   # DELIVERYSPEC: the luismc-delivery plugin: ledger, post-tool recorder, watcher and the hooks.
   delivery-plugin:
     name: delivery - plugin ledger, recorder, watcher and hooks
