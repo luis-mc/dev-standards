@@ -42,6 +42,12 @@ DURATION_RE = re.compile(r'\d+(?:[.,]\d+)?\s*(?:-\s*\d+\s*)?(?:min(?:ute)?s?|h(?
 # a sentence that reports a measured duration, a saving or a cost is not an estimate (DL-31)
 MEASURED_RE = re.compile(r'\b(?:took|taken|spent|saved?|saves|saving|savings|costs?|costing|cost|measured|lasted|elapsed|'
                          r'ran for|each|per|average|so far|already|was|were|had)\b', re.I)
+# a past event ("CI failed about 2 minutes in", "started about 1 minute ago") is not a forecast either, unless the
+# same sentence also looks ahead (will / should / expected / ready / due / ETA / left / until)
+PAST_RE = re.compile(r'\b(?:ago|failed|started|finished|completed|passed|crashed|stopped|ended|began|begun|ran|'
+                     r'went|came|got|did|reached|timed out|cancell?ed|merged|pushed|landed|arrived|opened|closed)\b', re.I)
+FUTURE_RE = re.compile(r"\b(?:will|should|shall|expected|expect|ready|due|ETA|left|remaining|until|to go|"
+                       r"estimate[ds]?|likely|soon|next)\b|'ll\b", re.I)
 TOMORROW_RE = re.compile(r"\btomorrow\b|\bnext round\b|\bin the morning\b|\bnext day\b|\bnext morning\b", re.I)
 PAST_MIDNIGHT_RE = re.compile(r'\b(?:past|after) midnight\b|\b0[0-5][:h][0-5]\d\b', re.I)
 FENCE_RE = re.compile(r'```.*?```', re.S)
@@ -105,6 +111,8 @@ def sentences(text):
 def is_measured(sentence):
     """True for a sentence that states past or typical durations, not a forecast: a past/saving/cost verb, or a
     list of two or more durations (\"UI coding takes about 1 h, a full check 35-50 min, and CI about 20 min\")."""
+    if PAST_RE.search(sentence) and not FUTURE_RE.search(sentence):
+        return True
     return bool(MEASURED_RE.search(sentence)) or len(DURATION_RE.findall(sentence)) >= 2
 
 
