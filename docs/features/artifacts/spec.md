@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-artifacts]
 topics: [artifacts]
 status: live
-version: 0.2.3
+version: 0.3.0
 owner: agents
 type: reference
 code:
@@ -123,6 +123,8 @@ flowchart LR
 **R5.10** — Full Progress is published at least every 60 minutes while the project has a record.
 
 **R5.11** — A release's Expected time is the end of its last phase. Without `--expected`, a write sets it from the phases; an `--expected` that differs is refused.
+
+**R5.11a** — A release has a number, `RELEASE-n`. `--release` takes the next one past the delivery ledger and the record; `--release N` sets or corrects it and refuses a number in use. A phase may cross midnight: its end rolls to the next day. When the ledger knows the number of an Item's `RELEASE-n` lead, `check` gives the exact `set-task-status <id> --release <n>` command.
 
 **R5.12** — A finished feature artifact can be retired. Its tasks and decisions are kept. Its file and content are deleted.
 
@@ -243,6 +245,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.3.0 | 2026-11-04 | RELEASE-41 | A release takes its next number past the delivery ledger; --release N sets or corrects a number; --phase accepts a phase that crosses midnight; the release-label check gives the exact fix when the ledger knows the number. | AR56 |
 | 0.2.3 | 2026-11-04 | RELEASE-40 | A release's Expected follows its last phase when --expected is not given (R5.11). | AR55 |
 | 0.2.2 | 2026-11-04 | RELEASE-39 | Full Progress names a release by its stored number; the release timeline axis labels no longer overlap. | AR54 |
 | 0.2.1 | 2026-11-04 | RELEASE-38 | CI runs section: one Where chip, Now chip, per-job waterfall rows, new summary wording. | DL38 |

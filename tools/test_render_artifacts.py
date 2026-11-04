@@ -2682,6 +2682,29 @@ def timeline_crosses_midnight(fx):
 
 @test
 @with_fixture
+def timeline_phase_spans_midnight(fx):
+    """R5.42a: a single phase that runs across midnight (23:48 to 00:28) is drawn as one bar on the crossing axis."""
+    def ph(name, a, b):
+        return {'name': name, 'start': a, 'end': b}
+    row = release('DS51', 'Spanning release', '12 Oct ~00:40',
+                  [ph('agents', '2026-10-11T23:30+01:00', '2026-10-11T23:48+01:00'), ph('ci', '2026-10-11T23:48+01:00', '2026-10-12T00:28+01:00'),
+                   ph('merge', '2026-10-12T00:28+01:00', '2026-10-12T00:40+01:00')])
+    stamp = '2026-10-11T23:20+01:00'
+    out = R.release_timeline([row], R._parse_iso(stamp), 'Lisbon')
+    fig = R.parse_dom(out)
+    bars = R.find_all(fig, 'rect', 'rt-bar')
+    assert len(bars) == 3 and R.find(fig, 'polygon', 'rt-expected') is not None
+    assert R.find(fig, 'polygon', 'rt-day') is None
+    ticks = [R.text_of(t) for t in R.find_all(R.find(fig, 'g', 'rt-axis'), 'text')]
+    assert any(t.startswith('12 Oct 00:00') for t in ticks), ticks
+    assert R.text_of(R.find(fig, 'text', 'rt-live-label')) == 'live ~00:40'
+    registry = with_releases(fx, row)
+    kw = dict(registry=registry, stamp_text='11 Oct 23:20', stamp_iso=stamp)
+    assert fx.check(fx.render('full-progress', **kw), 'full-progress', **kw) == []
+
+
+@test
+@with_fixture
 def check_finds_a_timed_release_in_a_day_slot(fx):
     """R5.42a: a timed release within 24 hours drawn as a day slot is reported."""
     registry = with_releases(fx, release('DS51', 'Soon release', '10 Oct ~16:00'))
