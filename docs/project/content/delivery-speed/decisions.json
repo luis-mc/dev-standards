@@ -1418,6 +1418,74 @@
    "chosen": "Cancel",
    "decided": "2026-11-04",
    "owner_words": "Cancel"
+  },
+  {
+   "id": "D62",
+   "question": "Flatten cancelled: anything else about personal names in old commits?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL29",
+   "options": [
+    {
+     "label": "Nothing more",
+     "summary": "Current files clean; old commits stay."
+    },
+    {
+     "label": "Make repo private",
+     "summary": "Draft the steps."
+    },
+    {
+     "label": "Targeted rewrite",
+     "summary": "Replace only the names in history."
+    }
+   ],
+   "chosen": "Nothing more",
+   "decided": "2026-11-04",
+   "owner_words": "Nothing more"
+  },
+  {
+   "id": "D63",
+   "question": "Compare the built CI runs section with the approved sample?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL36",
+   "options": [
+    {
+     "label": "Compare and fix",
+     "summary": "List differences and fix them."
+    },
+    {
+     "label": "Show me first",
+     "summary": "Owner judges."
+    },
+    {
+     "label": "Fine as built",
+     "summary": "No comparison."
+    }
+   ],
+   "chosen": "Compare and fix",
+   "decided": "2026-11-04",
+   "owner_words": "Compare and fix"
+  },
+  {
+   "id": "D64",
+   "question": "Keep the hourly check-in after RELEASE-37?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL29",
+   "options": [
+    {
+     "label": "Keep while work open",
+     "summary": "Stop when no task runs."
+    },
+    {
+     "label": "Stop after merge",
+     "summary": "Delete the cron at release."
+    }
+   ],
+   "chosen": "Keep while work open",
+   "decided": "2026-11-04",
+   "owner_words": "Keep while work open"
   }
  ]
 }

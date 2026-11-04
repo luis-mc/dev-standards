@@ -749,6 +749,67 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
   table.feature-list thead th { display: block; padding: 0; border: 0; }
   table.feature-list thead th:nth-child(n+3) { display: none; }
 }
+/* CI runs section (R5.51): tokens only, light and dark come from the page's own tokens */
+details.ci-runs > .ci-body { border: 1px solid var(--rule); border-top: 0; background: var(--surface); padding: .4rem .9rem 1rem; }
+.ci-h { font-family: var(--font-mono); font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-muted); margin: 1.2em 0 .4em; }
+.ci-figures { display: flex; flex-wrap: wrap; gap: .6rem 1.6rem; margin: .6rem 0 0; }
+.ci-figures > div { min-width: 6.5rem; }
+.ci-figures dt { font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-muted); }
+.ci-figures dd { margin: 0; font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ci-table { min-width: 38rem; }
+.ci-num, .ci-total, .ci-done, .ci-step-time { font-variant-numeric: tabular-nums; }
+.ci-tag { display: inline-block; padding: .05em .55em; border: 1px solid var(--rule-strong); font-family: var(--font-mono); font-size: .7rem; line-height: 1.5; white-space: nowrap; }
+.ci-tag-pool { background: var(--live); color: var(--on-live); border-color: var(--live); }
+.ci-tag-windows { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
+.ci-tag-hosted { background: var(--surface-2); color: var(--ink); }
+.ci-tag-cloud { background: var(--running-bg); color: var(--ink); border-color: var(--running-mark); }
+.ci-where-name { margin-left: .45em; color: var(--ink-muted); font-size: .8rem; overflow-wrap: anywhere; }
+.ci-runs-list { border: 1px solid var(--rule); }
+details.ci-run + details.ci-run { border-top: 1px solid var(--rule); }
+details.ci-run > summary {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(7rem, 1.1fr) minmax(8rem, 1.6fr) minmax(10rem, 1.6fr) 5rem 7.5rem;
+  gap: .3rem .8rem;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: .45rem .7rem;
+  cursor: pointer;
+  list-style: none;
+}
+details.ci-run > summary::-webkit-details-marker { display: none; }
+details.ci-run > summary:hover { background: var(--surface-2); }
+details.ci-run > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.ci-total, .ci-done { text-align: right; }
+.ci-mark { font-weight: 700; text-align: center; }
+.ci-pass .ci-mark { color: var(--live); }
+.ci-fail .ci-mark { color: var(--failed); }
+.ci-cancel .ci-mark { color: var(--ink-muted); }
+.ci-waterfall { list-style: none; margin: 0; padding: .3rem .8rem .8rem 2.4rem; }
+.ci-step { display: grid; grid-template-columns: minmax(7rem, 14rem) minmax(0, 1fr) 4.5rem; gap: .6rem; align-items: center; min-height: 1.5rem; font-size: .82rem; }
+.ci-step-name { overflow-wrap: anywhere; }
+.ci-step-time { text-align: right; color: var(--ink-muted); }
+.ci-track { position: relative; height: .7rem; background: var(--surface-2); border: 1px solid var(--rule); }
+.ci-bar { position: absolute; top: 0; bottom: 0; }
+.ci-bar-queue, .ci-swatch.ci-bar-queue { background: var(--rule-strong); }
+.ci-bar-slot, .ci-swatch.ci-bar-slot { background: var(--running-mark); }
+.ci-bar-step, .ci-swatch.ci-bar-step { background: var(--signal); }
+.ci-bar-fail, .ci-swatch.ci-bar-fail { background: var(--failed); }
+.ci-legend { display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; margin: .7rem 0 0; font-size: .8rem; color: var(--ink-muted); }
+.ci-swatch { display: inline-block; width: .9rem; height: .6rem; margin-right: .4em; vertical-align: baseline; }
+@media (max-width: 40rem) {
+  details.ci-run > summary { grid-template-columns: 1.6rem minmax(0, 1fr) auto; }
+  details.ci-run > summary .ci-why, details.ci-run > summary .ci-where { grid-column: 2 / -1; }
+  details.ci-run > summary .ci-total { grid-column: 2; text-align: left; }
+  details.ci-run > summary .ci-done { grid-column: 3; }
+  .ci-waterfall { padding-left: .8rem; }
+  .ci-step { grid-template-columns: minmax(0, 1fr) 4rem; }
+  .ci-step .ci-track { grid-column: 1 / -1; grid-row: 2; }
+  .ci-table td { display: block; padding: .2rem .7rem; border: 0; }
+  .ci-table td::before { content: attr(data-label); display: block; font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase; color: var(--ink-muted); }
+  .ci-table thead { display: none; }
+  .ci-table { min-width: 0; }
+  .ci-table tr { display: block; border-bottom: 1px solid var(--rule); padding: .3rem 0; }
+}
 /* Release header and the timeline never push the page sideways */
 details.status-fold > summary { min-width: 0; overflow-wrap: anywhere; }
 details.status-fold > summary strong { min-width: 0; }
@@ -814,18 +875,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-02T21:23+00:00">02 Nov 21:23</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T19:30+00:00">04 Nov 19:30</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">04 Nov 19:15</a> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">2 tasks</span></summary>
-<ul>
-<li data-glance-task="AR52"><span class="task-id">AR52</span>Background marker clears when the work ends</li>
-<li data-glance-task="AR53"><span class="task-id">AR53</span>Watcher start does not arm the background check</li>
-</ul>
 </details>
 </div>
 <div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">51</div><div class="label">tasks live</div></div></div>
