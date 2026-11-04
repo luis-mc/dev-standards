@@ -138,7 +138,10 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D86 | Update the installed plugins after each release? | Update after each release | decided | 2026-11-04 |
 | delivery-speed | D87 | Overnight check-ins? | Keep as is | decided | 2026-11-04 |
 | delivery-speed | D88 | Start AR56-AR58 and the DL48 review now rather than after RELEASE-40? | Start now | decided | 2026-11-04 |
+| delivery-speed | D89 | Which plugins does the RELEASE-42 bug review cover? | docs, project-setup, specs | decided | 2026-11-04 |
 | delivery-speed | D9 | Point 4: how is the train freeze overridden on purpose? | Env variable, logged | decided | 2026-10-11 |
+| delivery-speed | D90 | Fix suspected (unproven) review findings? | Prove first, fix if real | decided | 2026-11-04 |
+| delivery-speed | D91 | When do the overnight review rounds stop? | After RELEASE-42 | decided | 2026-11-04 |
 | design-starter | D1 | Which starter should the docs plugin ship? | C+E now | decided | 2026-11-01 |
 | design-starter | D10 | What happens when a token a sample needs is missing or not a plain value? | Draw with a marked fallback | decided | 2026-11-02 |
 | design-starter | D11 | Which bar do the contrast marks use? | WCAG 2.2 AA | decided | 2026-11-02 |

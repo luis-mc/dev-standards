@@ -2006,6 +2006,78 @@
    "chosen": "Start now",
    "decided": "2026-11-04",
    "owner_words": "why not start these?"
+  },
+  {
+   "id": "D89",
+   "question": "Which plugins does the RELEASE-42 bug review cover?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL51",
+   "options": [
+    {
+     "label": "docs, project-setup, specs",
+     "summary": "Scripts and hooks that run every session."
+    },
+    {
+     "label": "transcript-folds",
+     "summary": "The folds plugin."
+    },
+    {
+     "label": "audits and agents",
+     "summary": "Prompt-only plugins."
+    }
+   ],
+   "chosen": "docs, project-setup, specs",
+   "decided": "2026-11-04",
+   "owner_words": "docs, project-setup, specs; transcript-folds; audits and agents (all three)"
+  },
+  {
+   "id": "D90",
+   "question": "Fix suspected (unproven) review findings?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL51",
+   "options": [
+    {
+     "label": "Prove first, fix if real",
+     "summary": "Write a failing test first; record not reproduced otherwise."
+    },
+    {
+     "label": "Fix all anyway",
+     "summary": "Apply every fix."
+    },
+    {
+     "label": "Confirmed only",
+     "summary": "Leave suspected ones To do."
+    }
+   ],
+   "chosen": "Prove first, fix if real",
+   "decided": "2026-11-04",
+   "owner_words": "Prove first, fix if real"
+  },
+  {
+   "id": "D91",
+   "question": "When do the overnight review rounds stop?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL50",
+   "options": [
+    {
+     "label": "After RELEASE-42",
+     "summary": "About 03:40 UTC; then the hourly check-in only."
+    },
+    {
+     "label": "When a review finds nothing",
+     "summary": "Keep going."
+    },
+    {
+     "label": "At a clock time",
+     "summary": "Owner names it."
+    }
+   ],
+   "chosen": "After RELEASE-42",
+   "decided": "2026-11-04",
+   "owner_words": "After RELEASE-42"
   }
  ]
 }
