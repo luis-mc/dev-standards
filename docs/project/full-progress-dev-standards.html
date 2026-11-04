@@ -754,16 +754,22 @@ details.ci-runs > .ci-body { border: 1px solid var(--rule); border-top: 0; backg
 .ci-table { min-width: 38rem; }
 .ci-num, .ci-total, .ci-done, .ci-step-time { font-variant-numeric: tabular-nums; }
 .ci-tag { display: inline-block; padding: .05em .55em; border: 1px solid var(--rule-strong); font-family: var(--font-mono); font-size: .7rem; line-height: 1.5; white-space: nowrap; }
-.ci-tag-pool { background: var(--live); color: var(--on-live); border-color: var(--live); }
+details.ci-runs { --ci-teal: color-mix(in srgb, var(--live) 70%, var(--signal)); --ci-purple: color-mix(in srgb, var(--signal) 55%, var(--failed)); }
+.ci-tag-pool { background: var(--ci-teal); color: var(--on-live); border-color: var(--ci-teal); }
 .ci-tag-windows { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
 .ci-tag-hosted { background: var(--surface-2); color: var(--ink); }
-.ci-tag-cloud { background: var(--running-bg); color: var(--ink); border-color: var(--running-mark); }
-.ci-where-name { margin-left: .45em; color: var(--ink-muted); font-size: .8rem; overflow-wrap: anywhere; }
+.ci-tag-cloud { background: var(--ci-purple); color: var(--on-signal); border-color: var(--ci-purple); }
+.ci-chip { display: inline-block; padding: .05em .55em; border: 1px solid var(--rule-strong); background: var(--surface-2); font-family: var(--font-mono); font-size: .75rem; line-height: 1.5; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+.ci-chip-run { background: var(--ci-teal); color: var(--on-live); border-color: var(--ci-teal); }
+.ci-chip-wait { background: var(--running-bg); color: var(--ink); border-color: var(--running-mark); }
+.ci-line { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ci-run-name { font-weight: 700; }
+.ci-why { color: var(--ink-muted); }
 .ci-runs-list { border: 1px solid var(--rule); }
 details.ci-run + details.ci-run { border-top: 1px solid var(--rule); }
 details.ci-run > summary {
   display: grid;
-  grid-template-columns: 1.6rem minmax(7rem, 1.1fr) minmax(8rem, 1.6fr) minmax(10rem, 1.6fr) 5rem 7.5rem;
+  grid-template-columns: 1.6rem minmax(0, 1fr) auto 5rem 7.5rem;
   gap: .3rem .8rem;
   align-items: center;
   min-height: 2.75rem;
@@ -781,19 +787,26 @@ details.ci-run > summary:focus-visible { outline: 2px solid var(--focus); outlin
 .ci-cancel .ci-mark { color: var(--ink-muted); }
 .ci-waterfall { list-style: none; margin: 0; padding: .3rem .8rem .8rem 2.4rem; }
 .ci-step { display: grid; grid-template-columns: minmax(7rem, 14rem) minmax(0, 1fr) 4.5rem; gap: .6rem; align-items: center; min-height: 1.5rem; font-size: .82rem; }
-.ci-step-name { overflow-wrap: anywhere; }
+.ci-step-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ci-job-fold > summary { cursor: pointer; list-style: none; }
+.ci-job-fold > summary::-webkit-details-marker { display: none; }
+.ci-job-fold > summary .ci-step-name::before { content: "\25B8"; display: inline-block; width: 1em; color: var(--ink-muted); }
+.ci-job-fold[open] > summary .ci-step-name::before { content: "\25BE"; }
+.ci-job-fold > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.ci-steps { list-style: none; margin: 0; padding: 0 0 .3rem 1.2rem; }
 .ci-step-time { text-align: right; color: var(--ink-muted); }
 .ci-track { position: relative; height: .7rem; background: var(--surface-2); border: 1px solid var(--rule); }
 .ci-bar { position: absolute; top: 0; bottom: 0; }
 .ci-bar-queue, .ci-swatch.ci-bar-queue { background: var(--rule-strong); }
 .ci-bar-slot, .ci-swatch.ci-bar-slot { background: var(--running-mark); }
-.ci-bar-step, .ci-swatch.ci-bar-step { background: var(--signal); }
+.ci-bar-step, .ci-swatch.ci-bar-step { background: var(--ci-teal); }
 .ci-bar-fail, .ci-swatch.ci-bar-fail { background: var(--failed); }
 .ci-legend { display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; margin: .7rem 0 0; font-size: .8rem; color: var(--ink-muted); }
 .ci-swatch { display: inline-block; width: .9rem; height: .6rem; margin-right: .4em; vertical-align: baseline; }
 @media (max-width: 40rem) {
   details.ci-run > summary { grid-template-columns: 1.6rem minmax(0, 1fr) auto; }
-  details.ci-run > summary .ci-why, details.ci-run > summary .ci-where { grid-column: 2 / -1; }
+  details.ci-run > summary .ci-line { grid-column: 2 / -1; white-space: normal; }
+  details.ci-run > summary .ci-where { grid-column: 2 / -1; }
   details.ci-run > summary .ci-total { grid-column: 2; text-align: left; }
   details.ci-run > summary .ci-done { grid-column: 3; }
   .ci-waterfall { padding-left: .8rem; }
@@ -867,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-04T20:19+00:00",
+ "updated": "2026-11-04T20:51+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1823,12 +1836,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL37",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "RELEASE-38: fixes from DL34 and DL36, and the questions Stop hook",
-   "detail": "PR #142 CI running",
-   "expected": "04 Nov ~20:45",
-   "changed": "2026-11-04T20:19+00:00",
-   "expected_basis": "PR #142 CI started 20:19, ~20 min",
+   "detail": "RELEASE-38 merged 20:24 UTC (PR #142)",
+   "expected": "04 Nov",
+   "changed": "2026-11-04T20:51+00:00",
    "release": 38,
    "started": "2026-11-04T19:53+00:00",
    "phases": [
@@ -1858,11 +1870,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL38",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "CI runs section: match the approved sample",
-   "detail": "joined into PR #142; waits for release CI",
+   "detail": "RELEASE-38 merged 20:24 UTC (PR #142)",
    "expected": "04 Nov",
-   "changed": "2026-11-04T20:19+00:00",
+   "changed": "2026-11-04T20:50+00:00",
    "rides": "DL37",
    "started": "2026-11-04T19:52+00:00"
   },
@@ -1870,11 +1882,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL39",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Runner hook fixes from the real runner test (DL34)",
-   "detail": "joined into PR #142; waits for release CI",
+   "detail": "RELEASE-38 merged 20:24 UTC (PR #142)",
    "expected": "04 Nov",
-   "changed": "2026-11-04T20:19+00:00",
+   "changed": "2026-11-04T20:51+00:00",
    "rides": "DL37",
    "started": "2026-11-04T20:09+00:00"
   },
@@ -1882,11 +1894,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL40",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Setup plan fixes from the rollout plan (DL35)",
-   "detail": "joined into PR #142; waits for release CI",
+   "detail": "RELEASE-38 merged 20:24 UTC (PR #142)",
    "expected": "04 Nov",
-   "changed": "2026-11-04T20:19+00:00",
+   "changed": "2026-11-04T20:51+00:00",
    "rides": "DL37",
    "started": "2026-11-04T20:11+00:00"
   },
@@ -4714,11 +4726,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "SO6",
    "owner": "setup-offers",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Stop hook: ask every open question at once, only with AskUserQuestion (Q-1, Q-2)",
-   "detail": "joined into PR #142; waits for release CI",
+   "detail": "RELEASE-38 merged 20:24 UTC (PR #142)",
    "expected": "04 Nov",
-   "changed": "2026-11-04T20:19+00:00",
+   "changed": "2026-11-04T20:51+00:00",
    "rides": "DL37",
    "started": "2026-11-04T19:52+00:00"
   },
@@ -4956,71 +4968,39 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-04T20:19+00:00">04 Nov 20:19</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T20:51+00:00">04 Nov 20:51</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">16 tasks</span></summary>
 <ul>
-<li data-glance-task="DL37"><span class="task-id">DL37</span><span class="release-name">RELEASE-38</span>fixes from DL34 and DL36, and the questions Stop hook <span class="glance-expected">04 Nov ~20:45</span><span class="glance-basis">PR #142 CI started 20:19, ~20 min</span></li>
-</ul>
-</details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">4 tasks</span></summary>
-<ul>
-<li data-glance-task="DL38"><span class="task-id">DL38</span>CI runs section: match the approved sample</li>
+<li data-glance-task="DL37"><span class="task-id">DL37</span><span class="release-name">RELEASE-38</span>fixes from DL34 and DL36, and the questions Stop hook</li>
 <li data-glance-task="DL39"><span class="task-id">DL39</span>Runner hook fixes from the real runner test (DL34)</li>
 <li data-glance-task="DL40"><span class="task-id">DL40</span>Setup plan fixes from the rollout plan (DL35)</li>
 <li data-glance-task="SO6"><span class="task-id">SO6</span>Stop hook: ask every open question at once, only with AskUserQuestion (Q-1, Q-2)</li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">11 tasks</span></summary>
-<ul>
+<li data-glance-task="DL38"><span class="task-id">DL38</span>CI runs section: match the approved sample</li>
 <li data-glance-task="DL35"><span class="task-id">DL35</span>Shared CI rollout plan for this machine (detect and plan, read only)</li>
 <li data-glance-task="DL34"><span class="task-id">DL34</span>Prove the shared CI hooks on one real runner job</li>
 <li data-glance-task="DL36"><span class="task-id">DL36</span>Compare the CI runs section with the approved sample and fix differences</li>
-<li data-glance-task="DL27"><span class="task-id">DL27</span>Machine-wide CI queue: shared slots across projects</li>
-<li data-glance-task="DL29"><span class="task-id">DL29</span><span class="release-name">RELEASE-37</span>RELEASE: shared CI (machine queue, Linux pool, CI runs section)</li>
-<li data-glance-task="DL30"><span class="task-id">DL30</span>Linux runner pool and guided setup: detect, remove, build clean</li>
-<li data-glance-task="DL31"><span class="task-id">DL31</span>CI runs section in Full Progress</li>
-<li data-glance-task="DL32"><span class="task-id">DL32</span>Machine layer: config, CI slots, hooks, host load, fallback, limits, doctor</li>
-<li class="glance-more">and 3 more</li>
+<li class="glance-more">and 8 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">301</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">4</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">306</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<figure class="release-timeline">
-<figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DL37 (fixes from DL34 and DL36, and the questions Stop hook) expected live about 20:45." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">19:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">20:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">20:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">21:00</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-38 · fixes from DL34 and DL36, and the questions Stop hook</title>RELEASE-38 · fixes from D…</text>
-<text class="rt-sub" x="0" y="77"><title>DL38, DL39, DL40, SO6</title>DL38, DL39, DL40, SO6</text>
-<rect class="rt-bar agents" x="332.9" y="52" width="138.7" height="22"><title>agents 19:53-20:17</title></rect>
-<rect class="rt-bar join" x="477.3" y="52" width="5.8" height="22"><title>join 20:18-20:19</title></rect>
-<rect class="rt-bar ci" x="483.1" y="52" width="121.3" height="22"><title>PR CI 20:19-20:40</title></rect>
-<rect class="rt-bar merge" x="604.4" y="52" width="28.9" height="22"><title>merge + cleanup 20:40-20:45</title></rect>
-<polygon class="rt-expected" points="633.3,50 641.3,63 633.3,76 625.3,63"/>
-<text class="rt-live-label" x="633.3" y="92">live ~20:45</text>
-<line class="rt-now" x1="483.1" y1="36" x2="483.1" y2="148"/><text class="rt-now-label" x="483.1" y="161">now 20:19</text>
-</svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
-</figure>
-<details class="status-fold release-group" data-group="release-38" open><summary><strong>RELEASE-38 · live ~20:45</strong><span class="fold-count">5 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL37"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL37</span><span class="release-name">RELEASE-38</span>fixes from DL34 and DL36, and the questions Stop hook</a></td><td data-label="App / service"></td><td data-label="Detail">PR #142 CI running</td><td data-label="Expected">04 Nov ~20:45<span class="expected-basis">PR #142 CI started 20:19, ~20 min</span></td></tr>
-<tr data-task="DL38"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL38</span>CI runs section: match the approved sample</a></td><td data-label="App / service"></td><td data-label="Detail">joined into PR #142; waits for release CI</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="DL39"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL39</span>Runner hook fixes from the real runner test (DL34)</a></td><td data-label="App / service"></td><td data-label="Detail">joined into PR #142; waits for release CI</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="DL40"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL40</span>Setup plan fixes from the rollout plan (DL35)</a></td><td data-label="App / service"></td><td data-label="Detail">joined into PR #142; waits for release CI</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="SO6"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO6</span>Stop hook: ask every open question at once, only with AskUserQuestion (Q-1, Q-2)</a></td><td data-label="App / service"></td><td data-label="Detail">joined into PR #142; waits for release CI</td><td data-label="Expected">04 Nov</td></tr>
-</tbody></table></div>
-</details>
 <details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL41"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL41</span>CI setup pool command uses measured sizing and the derived repos</a></td><td data-label="App / service"></td><td data-label="Detail">From DL40: delivery_ci_setup.py cmd_pool still needs total GiB by hand; its check treats every step like a service</td><td data-label="Expected">05 Nov<span class="expected-basis">next release</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">303 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">308 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL37"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL37</span><span class="release-name">RELEASE-38</span>fixes from DL34 and DL36, and the questions Stop hook</a></td><td data-label="App / service"></td><td data-label="Detail">RELEASE-38 merged 20:24 UTC (PR #142)</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL39"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL39</span>Runner hook fixes from the real runner test (DL34)</a><span class="release-line"><span class="release-name">RELEASE-38</span></span></td><td data-label="App / service"></td><td data-label="Detail">RELEASE-38 merged 20:24 UTC (PR #142)</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL40"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL40</span>Setup plan fixes from the rollout plan (DL35)</a><span class="release-line"><span class="release-name">RELEASE-38</span></span></td><td data-label="App / service"></td><td data-label="Detail">RELEASE-38 merged 20:24 UTC (PR #142)</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="SO6"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO6</span>Stop hook: ask every open question at once, only with AskUserQuestion (Q-1, Q-2)</a><span class="release-line"><span class="release-name">RELEASE-38</span></span></td><td data-label="App / service"></td><td data-label="Detail">RELEASE-38 merged 20:24 UTC (PR #142)</td><td data-label="Expected">04 Nov</td></tr>
+<tr data-task="DL38"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL38</span>CI runs section: match the approved sample</a><span class="release-line"><span class="release-name">RELEASE-38</span></span></td><td data-label="App / service"></td><td data-label="Detail">RELEASE-38 merged 20:24 UTC (PR #142)</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DL35"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL35</span>Shared CI rollout plan for this machine (detect and plan, read only)</a><span class="no-release-line">ships nothing: read-only study</span></td><td data-label="App / service"></td><td data-label="Detail">read-only detect and plan on this machine; 6 gaps found (plan defaults, delete flags, old service, host-load task, WSL step, detect misses); fixes DL40</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DL34"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL34</span>Prove the shared CI hooks on one real runner job</a><span class="no-release-line">ships nothing: a test; fixes become their own tasks</span></td><td data-label="App / service"></td><td data-label="Detail">real runner: queue, slot wait 150 s, release work; 4 findings: .cmd hooks invalid, job env not in hook, marker loader, marker credentials; fixes DL39</td><td data-label="Expected">04 Nov</td></tr>
 <tr data-task="DL36"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL36</span>Compare the CI runs section with the approved sample and fix differences</a><span class="no-release-line">ships nothing: comparison; fixes ride RELEASE-38</span></td><td data-label="App / service"></td><td data-label="Detail">6 differences found; fixes are DL38 (RELEASE-38)</td><td data-label="Expected">04 Nov</td></tr>
@@ -5332,19 +5312,19 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
-<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (2)</strong><span class="fold-count">2 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29897059"><time datetime="2026-11-04T20:19+00:00">04 Nov 20:19</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">On 01 Nov the owner ran claude-setup in an existing project and could not tell whether the docs, design-system and delivery plugins were enforced.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897059"><time datetime="2026-11-04T20:19+00:00">04 Nov 20:19</time></td><td data-label="Tasks">DL1 to DL41</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-built">3 Built</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897091"><time datetime="2026-11-04T20:51+00:00">04 Nov 20:51</time></td><td data-label="Tasks">DL1 to DL41</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (5)</strong><span class="fold-count">5 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (6)</strong><span class="fold-count">6 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29897010"><time datetime="2026-11-04T19:30+00:00">04 Nov 19:30</time></td><td data-label="Tasks">ST1 to ST5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-label="Last updated" data-value="29897010"><time datetime="2026-11-04T19:30+00:00">04 Nov 19:30</time></td><td data-label="Tasks">MP1 to MP7, DS2 to DS5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29897010"><time datetime="2026-11-04T19:30+00:00">04 Nov 19:30</time></td><td data-label="Tasks">AR2 to AR53</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-label="Last updated" data-value="29897010"><time datetime="2026-11-04T19:30+00:00">04 Nov 19:30</time></td><td data-label="Tasks">TC1 to TC11</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: transcript folds"><a href="feature-transcript-folds.html">Feature: Transcript folds</a></td><td data-label="Last updated" data-value="29897010"><time datetime="2026-11-04T19:30+00:00">04 Nov 19:30</time></td><td data-label="Tasks">TF1 to TF5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Live since 13 Oct (PR #60): luismc-transcript-folds 1.0.0, installed by claude-setup 14.3.0.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29897091"><time datetime="2026-11-04T20:51+00:00">04 Nov 20:51</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">On 01 Nov the owner ran claude-setup in an existing project and could not tell whether the docs, design-system and delivery plugins were enforced.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29897090"><time datetime="2026-11-04T20:50+00:00">04 Nov 20:50</time></td><td data-label="Tasks">ST1 to ST5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-label="Last updated" data-value="29897090"><time datetime="2026-11-04T20:50+00:00">04 Nov 20:50</time></td><td data-label="Tasks">MP1 to MP7, DS2 to DS5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29897090"><time datetime="2026-11-04T20:50+00:00">04 Nov 20:50</time></td><td data-label="Tasks">AR2 to AR53</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-label="Last updated" data-value="29897090"><time datetime="2026-11-04T20:50+00:00">04 Nov 20:50</time></td><td data-label="Tasks">TC1 to TC11</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: transcript folds"><a href="feature-transcript-folds.html">Feature: Transcript folds</a></td><td data-label="Last updated" data-value="29897090"><time datetime="2026-11-04T20:50+00:00">04 Nov 20:50</time></td><td data-label="Tasks">TF1 to TF5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Live since 13 Oct (PR #60): luismc-transcript-folds 1.0.0, installed by claude-setup 14.3.0.</td></tr>
 </tbody></table></div>
 </details>
 </section>
