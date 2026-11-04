@@ -451,6 +451,661 @@
       "chosen": "Both",
       "decided": "2026-11-02",
       "owner_words": "Both"
+    },
+    {
+      "id": "D21",
+      "question": "Machine-wide CI load control: how many CI jobs may run on this PC at once, across all repos (ci_slots)?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "options": [
+        {
+          "label": "2 slots",
+          "summary": "About 12 jobs an hour; one Windows and one Linux job at once.",
+          "recommended": true
+        },
+        {
+          "label": "1 slot",
+          "summary": "About 6 jobs an hour; safest, slowest."
+        },
+        {
+          "label": "3 slots",
+          "summary": "About 18 jobs an hour."
+        },
+        {
+          "label": "4 slots",
+          "summary": "About 24 jobs an hour; more risk of slowdowns."
+        }
+      ],
+      "task": "DL27",
+      "chosen": "2 slots",
+      "decided": "2026-11-04",
+      "owner_words": "2 slots (after asking how 10 projects would work)"
+    },
+    {
+      "id": "D22",
+      "question": "Machine-wide CI load control: how does a runner inside WSL see the Windows host's load?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Host load file",
+          "summary": "A Windows scheduled task writes host load every 15 s; the WSL hook reads it, falls back to its own reading when stale.",
+          "recommended": true
+        },
+        {
+          "label": "WSL memory cap only",
+          "summary": "No host view; cap the VM in .wslconfig and rely on shared slots."
+        },
+        {
+          "label": "No WSL runners",
+          "summary": "Only Windows runners on this PC."
+        }
+      ],
+      "chosen": "Host load file",
+      "decided": "2026-11-04",
+      "owner_words": "Host load file",
+      "task": "DL27"
+    },
+    {
+      "id": "D23",
+      "question": "Machine-wide CI queue: should LOCAL Claude Code work on this PC (tests, builds, local agents) take the PC's CI slots?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Own limit, not CI slots",
+          "summary": "Local heavy Claude work gets its own count; CI keeps its slots; the load check covers both.",
+          "recommended": true
+        },
+        {
+          "label": "Share the CI slots",
+          "summary": "One queue: a local test run waits for a free CI slot."
+        },
+        {
+          "label": "Load check only",
+          "summary": "No count for local work."
+        }
+      ],
+      "chosen": "Own limit, not CI slots",
+      "decided": "2026-11-04",
+      "owner_words": "claude session don't use the pc resources so why share the same slots? maybe add a different limit to claude sessions (then, asked again with local and cloud split: Own limit, not CI slots)",
+      "task": "DL27"
+    },
+    {
+      "id": "D24",
+      "question": "Machine-wide CI load control: should CI jobs run at below-normal CPU priority?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "options": [
+        {
+          "label": "No, keep the rule",
+          "summary": "Slots and the load check are the only controls.",
+          "recommended": true
+        },
+        {
+          "label": "Yes, below normal",
+          "summary": "Runner services run jobs at below-normal priority; changes DL-79."
+        }
+      ],
+      "chosen": "No, keep the rule",
+      "decided": "2026-11-04",
+      "owner_words": "No, keep the rule",
+      "task": "DL27"
+    },
+    {
+      "id": "D25",
+      "question": "Machine-wide CI load control: when a crashed job keeps its slot, free it after how long?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "options": [
+        {
+          "label": "2 hours",
+          "summary": "Longer than any CI job today.",
+          "recommended": true
+        },
+        {
+          "label": "Job timeout",
+          "summary": "Each workflow's timeout-minutes."
+        },
+        {
+          "label": "6 hours",
+          "summary": "Very safe for long jobs."
+        }
+      ],
+      "chosen": "2 hours",
+      "decided": "2026-11-04",
+      "owner_words": "2 hours",
+      "task": "DL27"
+    },
+    {
+      "id": "D26",
+      "question": "Machine-wide CI load control: how does /delivery-ci-setup install the hooks and machine config?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Run it with permission",
+          "summary": "Shows each change, runs it after a yes, then runs the doctor.",
+          "recommended": true
+        },
+        {
+          "label": "Print steps only",
+          "summary": "The owner runs every step."
+        }
+      ],
+      "chosen": "Run it with permission",
+      "decided": "2026-11-04",
+      "owner_words": "Run it with permission",
+      "task": "DL27"
+    },
+    {
+      "id": "D27",
+      "question": "Machine-wide CI load control: where is it specified?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Delivery spec section 13",
+          "summary": "New requirements in the CI options section, DL-90 in DELIVERYSPEC.",
+          "recommended": true
+        },
+        {
+          "label": "New feature spec",
+          "summary": "Its own feature folder."
+        }
+      ],
+      "chosen": "Delivery spec section 13",
+      "decided": "2026-11-04",
+      "owner_words": "Delivery spec section 13",
+      "task": "DL27"
+    },
+    {
+      "id": "D28",
+      "question": "Machine-wide CI load control: when is it built?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Build now",
+          "summary": "Record the task and launch one cloud agent today.",
+          "recommended": true
+        },
+        {
+          "label": "Record only",
+          "summary": "Add the task as To do."
+        },
+        {
+          "label": "Fix G2 only now",
+          "summary": "Ship only the config-path fix now."
+        }
+      ],
+      "chosen": "Build now",
+      "decided": "2026-11-04",
+      "owner_words": "Build now",
+      "task": "DL27"
+    },
+    {
+      "id": "D29",
+      "question": "Machine-wide CI queue: what happens to a job that waits too long for a slot?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL27",
+      "options": [
+        {
+          "label": "Fall back after X min",
+          "summary": "Slot-wait counts as waiting for Option 4; after X minutes the job runs on the project's fallback.",
+          "recommended": true
+        },
+        {
+          "label": "Wait longer, then fail",
+          "summary": "Raise the max wait, then fail the job."
+        },
+        {
+          "label": "Wait with no limit",
+          "summary": "Wait until a slot frees, up to the workflow timeout."
+        }
+      ],
+      "chosen": "Fall back after X min",
+      "decided": "2026-11-04",
+      "owner_words": "Fall back after X min"
+    },
+    {
+      "id": "D30",
+      "question": "Machine-wide CI queue: in what order do waiting jobs get a slot?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL27",
+      "options": [
+        {
+          "label": "Ready-PR jobs first",
+          "summary": "Release runs go ahead of branch and agent runs; first come within each group.",
+          "recommended": true
+        },
+        {
+          "label": "First come, first served",
+          "summary": "Strict arrival order."
+        },
+        {
+          "label": "Round-robin by project",
+          "summary": "Projects take turns."
+        }
+      ],
+      "chosen": "Ready-PR jobs first",
+      "decided": "2026-11-04",
+      "owner_words": "Ready-PR jobs first"
+    },
+    {
+      "id": "D31",
+      "question": "Machine-wide CI queue: should the doctor's machine check report runner disk use and offer cleanup?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL27",
+      "options": [
+        {
+          "label": "Report and offer cleanup",
+          "summary": "Lists work folder sizes; cleans only with permission and when no job runs.",
+          "recommended": true
+        },
+        {
+          "label": "Report only",
+          "summary": "Lists sizes, never cleans."
+        },
+        {
+          "label": "Leave it out",
+          "summary": "No disk checks."
+        }
+      ],
+      "chosen": "Report and offer cleanup",
+      "decided": "2026-11-04",
+      "owner_words": "Report and offer cleanup"
+    },
+    {
+      "id": "D32",
+      "question": "Machine-wide CI queue: ship the limits-file path fix (G2) and slot-wait-counts-for-fallback fix (G6) inside DL27?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL27",
+      "options": [
+        {
+          "label": "Yes, in DL27",
+          "summary": "Config moves to ProgramData; slot-wait counts as waiting for Option 4.",
+          "recommended": true
+        },
+        {
+          "label": "Separate quick task first",
+          "summary": "Ship G2 and G6 alone now."
+        }
+      ],
+      "chosen": "Yes, in DL27",
+      "decided": "2026-11-04",
+      "owner_words": "Yes, in DL27"
+    },
+    {
+      "id": "D33",
+      "question": "Who owns dev-standards draft PR #140 (shared runner pool research) from here?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL27",
+      "options": [
+        {
+          "label": "This session",
+          "summary": "The dev-standards session rebases it, answers its open questions, removes the attribution footer.",
+          "recommended": true
+        },
+        {
+          "label": "The moobable session",
+          "summary": "It keeps PR #140."
+        }
+      ],
+      "chosen": "This session",
+      "decided": "2026-11-04",
+      "owner_words": "This session"
+    },
+    {
+      "id": "D34",
+      "question": "Should Claude cloud sessions running CI (Option 3 main or Option 4 fallback) have a limit on how many run at once?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL27",
+      "options": [
+        {
+          "label": "Yes, one limit for both roles",
+          "summary": "One number for main and fallback cloud CI sessions; counts toward the cloud agents cap.",
+          "recommended": true
+        },
+        {
+          "label": "Yes, separate limits",
+          "summary": "One number per role."
+        },
+        {
+          "label": "No, daily caps only",
+          "summary": "Keep per-day caps."
+        }
+      ],
+      "chosen": "Yes, one limit for both roles",
+      "decided": "2026-11-04",
+      "owner_words": "Yes, one limit for both roles"
+    },
+    {
+      "id": "D35",
+      "question": "How do DL27 (PC-wide CI queue) and PR #140 (Docker runner pool) combine?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL28",
+      "options": [
+        {
+          "label": "DL27 first, pool on top",
+          "summary": "Build DL27 now; the pool follows and takes DL27's slots.",
+          "recommended": true
+        },
+        {
+          "label": "One combined design first",
+          "summary": "Hold the build; one design for both, answer PR #140's questions, then build together."
+        },
+        {
+          "label": "Pool only",
+          "summary": "Only the Docker pool."
+        },
+        {
+          "label": "DL27 only",
+          "summary": "No pool container."
+        }
+      ],
+      "chosen": "One combined design first",
+      "decided": "2026-11-04",
+      "owner_words": "One combined design first"
+    },
+    {
+      "id": "D36",
+      "question": "How many heavy local Claude jobs may run at once on this PC (own limit, separate from CI slots)?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL27",
+      "options": [
+        {
+          "label": "2 at once",
+          "summary": "With 2 CI slots, at most 4 heavy jobs on the PC.",
+          "recommended": true
+        },
+        {
+          "label": "1 at once",
+          "summary": "Safest."
+        },
+        {
+          "label": "3 at once",
+          "summary": "Matches the max-3-local-agents rule."
+        }
+      ],
+      "chosen": "2 at once",
+      "decided": "2026-11-04",
+      "owner_words": "2 at once"
+    },
+    {
+      "id": "D37",
+      "question": "How many Claude cloud sessions may run CI at once (main and fallback together)?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL27",
+      "options": [
+        {
+          "label": "10 at once",
+          "summary": "Leaves 40 of 50 cloud slots for build agents.",
+          "recommended": true
+        },
+        {
+          "label": "5 at once",
+          "summary": "Lower plan usage."
+        },
+        {
+          "label": "20 at once",
+          "summary": "Faster CI under load."
+        }
+      ],
+      "chosen": "10 at once",
+      "decided": "2026-11-04",
+      "owner_words": "10 at once"
+    },
+    {
+      "id": "D38",
+      "question": "Runner pool: offer the GitHub organization variant?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL28",
+      "options": [
+        {
+          "label": "Personal account only",
+          "summary": "One runner per repo inside the pool.",
+          "recommended": true
+        },
+        {
+          "label": "Offer org as a later variant",
+          "summary": "Design for personal now; document the org path."
+        },
+        {
+          "label": "Design for an org now",
+          "summary": "Move repos into a Team org."
+        }
+      ],
+      "chosen": "Offer org as a later variant",
+      "decided": "2026-11-04",
+      "owner_words": "Offer org as a later variant"
+    },
+    {
+      "id": "D39",
+      "question": "Runner pool: persistent or ephemeral runners?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL27",
+      "options": [
+        {
+          "label": "Persistent only",
+          "summary": "No long-lived token in the container; after-job hook wipes the work folder.",
+          "recommended": true
+        },
+        {
+          "label": "Persistent now, ephemeral later",
+          "summary": "Room for just-in-time runners."
+        },
+        {
+          "label": "Ephemeral",
+          "summary": "Fresh runner per job; token that can create runners in the container."
+        }
+      ],
+      "chosen": "Persistent only",
+      "decided": "2026-11-04",
+      "owner_words": "Persistent only"
+    },
+    {
+      "id": "D40",
+      "question": "Runner pool: how are test databases offered?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL27",
+      "options": [
+        {
+          "label": "One shared DB sidecar",
+          "summary": "One database container; a database and login per repo.",
+          "recommended": true
+        },
+        {
+          "label": "One sidecar per repo",
+          "summary": "More memory."
+        },
+        {
+          "label": "None",
+          "summary": "Jobs needing a DB run elsewhere."
+        }
+      ],
+      "chosen": "One shared DB sidecar",
+      "decided": "2026-11-04",
+      "owner_words": "One shared DB sidecar"
+    },
+    {
+      "id": "D41",
+      "question": "Runner pool: Docker inside jobs?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL27",
+      "options": [
+        {
+          "label": "Refuse it",
+          "summary": "No Docker in pool jobs.",
+          "recommended": true
+        },
+        {
+          "label": "Rootless Docker-in-Docker later",
+          "summary": "Refuse now, room later."
+        },
+        {
+          "label": "Mount the socket",
+          "summary": "Every job can control all containers."
+        }
+      ],
+      "chosen": "Refuse it",
+      "decided": "2026-11-04",
+      "owner_words": "Refuse it"
+    },
+    {
+      "id": "D42",
+      "question": "Runner pool: where do the pool's files live?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL27",
+      "options": [
+        {
+          "label": "Plugin folder on the PC",
+          "summary": "C:\\ProgramData\\luismc-delivery\\pools\\<name>\\.",
+          "recommended": true
+        },
+        {
+          "label": "A repo you pick",
+          "summary": "Versioned in git."
+        }
+      ],
+      "chosen": "Plugin folder on the PC",
+      "decided": "2026-11-04",
+      "owner_words": "Plugin folder on the PC"
+    },
+    {
+      "id": "D43",
+      "question": "Runner pool: how are Windows jobs handled?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL27",
+      "options": [
+        {
+          "label": "Services per repo, PC slots",
+          "summary": "One Windows service per repo, taking the same PC slots.",
+          "recommended": true
+        },
+        {
+          "label": "Look at Windows containers later",
+          "summary": "Services now."
+        },
+        {
+          "label": "Windows jobs off this PC",
+          "summary": "GitHub-hosted."
+        }
+      ],
+      "chosen": "Services per repo, PC slots",
+      "decided": "2026-11-04",
+      "owner_words": "Services per repo, PC slots"
+    },
+    {
+      "id": "D44",
+      "question": "Runner pool: what happens to runners that already exist (e.g. comics-ci-runner)?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL28",
+      "options": [
+        {
+          "label": "Setup runs migration with permission",
+          "summary": "Turn the existing container into the pool.",
+          "recommended": true
+        },
+        {
+          "label": "Print steps only",
+          "summary": "Owner runs each step."
+        },
+        {
+          "label": "Leave it alone",
+          "summary": "New pool; old container stays."
+        },
+        {
+          "label": "Delete and recreate clean",
+          "summary": "Remove existing runners; the setup builds everything from the start, run for the owner where possible."
+        }
+      ],
+      "chosen": "Delete and recreate clean",
+      "decided": "2026-11-04",
+      "owner_words": "existing runners get deleted and everything is created clean from the start; you provide all instructions to do it, or do it yourself if possible. setting all of this automatically should be offered by the delivery plugin during setup so user is up and runnign quickly"
+    },
+    {
+      "id": "D45",
+      "question": "Doctor: Option 1 project with CI_RUNS_ON unset?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL27",
+      "options": [
+        {
+          "label": "Fail",
+          "summary": "Fails until CI_RUNS_ON is set.",
+          "recommended": true
+        },
+        {
+          "label": "Warn",
+          "summary": "Warning only."
+        }
+      ],
+      "chosen": "Fail",
+      "decided": "2026-11-04",
+      "owner_words": "Fail"
+    },
+    {
+      "id": "D46",
+      "question": "Runner detection: which repos are scanned?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL27",
+      "options": [
+        {
+          "label": "All repos you admin",
+          "summary": "Every admin repo plus a local scan.",
+          "recommended": true
+        },
+        {
+          "label": "Only repos you name",
+          "summary": "Asks each time."
+        },
+        {
+          "label": "This PC only",
+          "summary": "No API listing."
+        }
+      ],
+      "chosen": "All repos you admin",
+      "decided": "2026-11-04",
+      "owner_words": "All repos you admin"
+    },
+    {
+      "id": "D47",
+      "question": "Where is the combined CI design written and approved?",
+      "asked": "2026-11-04",
+      "status": "decided",
+      "task": "DL28",
+      "options": [
+        {
+          "label": "PR #140 rewritten",
+          "summary": "Rebase PR #140, one combined design doc, owner approves there.",
+          "recommended": true
+        },
+        {
+          "label": "Straight into spec section 13",
+          "summary": "Rules into the delivery spec on a branch."
+        }
+      ],
+      "chosen": "PR #140 rewritten",
+      "decided": "2026-11-04",
+      "owner_words": "PR #140 rewritten"
     }
   ]
 }
