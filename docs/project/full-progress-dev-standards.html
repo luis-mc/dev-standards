@@ -806,7 +806,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-03T19:13+00:00",
+ "updated": "2026-11-04T13:20+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1615,6 +1615,30 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "changed": "2026-11-03T19:13+00:00",
    "started": "2026-11-03T15:00+00:00",
    "rides": "DS180"
+  },
+  {
+   "id": "DL27",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "Machine-wide CI queue: shared slots across projects",
+   "detail": "DL-90 proposal: machine config in ProgramData, ci_slots with job-start/complete hooks, WSL host load file, session work takes slots, doctor machine check; D22-D28 decided, slot count D21 open",
+   "expected": "04 Nov ~17:00",
+   "changed": "2026-11-04T13:20+00:00",
+   "expected_basis": "starts after owner approves the DL28 design (~14:20), then agent ~2 h"
+  },
+  {
+   "id": "DL28",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Running",
+   "item": "Combined CI design: machine queue + runner pool (PR #140)",
+   "detail": "Rewrite PR #140 doc into one design from decisions D21-D47; owner approves on the PR, then DL27 builds it",
+   "expected": "04 Nov ~14:20",
+   "changed": "2026-11-04T13:20+00:00",
+   "expected_basis": "design writing ~60 min from 13:20",
+   "no_release": "design doc for owner approval; the build ships under DL27",
+   "started": "2026-11-04T13:20+00:00"
   },
   {
    "id": "DS1",
@@ -4636,12 +4660,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-03T19:13+00:00">03 Nov 19:13</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T13:20+00:00">04 Nov 13:20</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">20 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL28"><span class="task-id">DL28</span>Combined CI design: machine queue + runner pool (PR #140) <span class="glance-expected">04 Nov ~14:20</span><span class="glance-basis">design writing ~60 min from 13:20</span></li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">13 tasks</span></summary>
 <ul>
 <li data-glance-task="DL16"><span class="task-id">DL16</span>CI wait fix: report-only jobs skipped</li>
 <li data-glance-task="DL17"><span class="task-id">DL17</span>CIR10 S1: Option 1-4 names, any-machine wording, add-a-runner guide</li>
@@ -4651,12 +4680,29 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL21"><span class="task-id">DL21</span>CIR10 S5: speed probe, scaled budgets, ci.limits, db per worker</li>
 <li data-glance-task="DL22"><span class="task-id">DL22</span>CIR10 S6: guided /delivery-ci-setup for Options 1-3 and doctor</li>
 <li data-glance-task="DL23"><span class="task-id">DL23</span>CIR10 S7: Option 4 core: wait, claim, status poster, reaper, caps</li>
-<li class="glance-more">and 12 more</li>
+<li class="glance-more">and 5 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">290</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">1</div><div class="label">task dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">290</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">1</div><div class="label">task dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<figure class="release-timeline">
+<figcaption>Next releases (~14:20 · design writing ~60 min from 13:20)</figcaption>
+<div class="timeline-scroll"><svg viewBox="0 0 960 198" role="img" aria-label="Other work (no release): DL28 (Combined CI design: machine queue + runner pool (PR #140)) Running, expected about 14:20." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="174"/><text x="200" y="28">13:00</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="174"/><text x="373.3" y="28">13:30</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="174"/><text x="546.7" y="28">14:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="174"/><text x="720" y="28">14:30</text></g>
+<text class="rt-strip-title" x="0" y="60">Other work (no release)</text>
+<text class="rt-name" x="0" y="94"><title>DL28 · Combined CI design: machine queue + runner pool (PR #140)</title>DL28 · Combined CI design…</text>
+<rect class="rt-other status-running" x="315.6" y="89" width="346.7" height="16"><title>Running 13:20-14:20</title></rect>
+<text class="rt-other-label" x="315.6" y="122">~14:20 · design writing ~60 min from 13:20</text>
+<line class="rt-now" x1="315.6" y1="36" x2="315.6" y2="182"/><text class="rt-now-label" x="315.6" y="195">now 13:20</text>
+</svg></div>
+<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days. Under Other work (no release), a bar runs from the start to its Expected, coloured by status; a red outline means it is past its Expected.</p>
+</figure>
+<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">2 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL28"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL28</span>Combined CI design: machine queue + runner pool (PR #140)</a><span class="no-release-line">ships nothing: design doc for owner approval; the build ships under DL27</span></td><td data-label="App / service"></td><td data-label="Detail">Rewrite PR #140 doc into one design from decisions D21-D47; owner approves on the PR, then DL27 builds it</td><td data-label="Expected">04 Nov ~14:20<span class="expected-basis">design writing ~60 min from 13:20</span></td></tr>
+<tr data-task="DL27"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL27</span>Machine-wide CI queue: shared slots across projects</a></td><td data-label="App / service"></td><td data-label="Detail">DL-90 proposal: machine config in ProgramData, ci_slots with job-start/complete hooks, WSL host load file, session work takes slots, doctor machine check; D22-D28 decided, slot count D21 open</td><td data-label="Expected">04 Nov ~17:00<span class="expected-basis">starts after owner approves the DL28 design (~14:20), then agent ~2 h</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">291 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL16"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL16</span>CI wait fix: report-only jobs skipped</a><span class="release-line"><span class="release-name">RELEASE-36</span></span></td><td data-label="App / service"></td><td data-label="Detail">Merged in RELEASE-36 (#139, c23bb0e) 19:07</td><td data-label="Expected">03 Nov</td></tr>
@@ -4958,12 +5004,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
-<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (0)</strong><span class="fold-count">0 feature artifacts</span></summary>
-<p class="feature-none">No feature artifacts in progress.</p>
-</details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29895553"><time datetime="2026-11-03T19:13+00:00">03 Nov 19:13</time></td><td data-label="Tasks">DL1 to DL26</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29896640"><time datetime="2026-11-04T13:20+00:00">04 Nov 13:20</time></td><td data-label="Tasks">DL1 to DL28</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (6)</strong><span class="fold-count">6 feature artifacts</span></summary>
+<div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
 <tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29894267"><time datetime="2026-11-02T21:47+00:00">02 Nov 21:47</time></td><td data-label="Tasks">ST1 to ST5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29894243"><time datetime="2026-11-02T21:23+00:00">02 Nov 21:23</time></td><td data-label="Tasks">SO1 to SO5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">On 01 Nov the owner ran claude-setup in an existing project and could not tell whether the docs, design-system and delivery plugins were enforced.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-label="Last updated" data-value="29894243"><time datetime="2026-11-02T21:23+00:00">02 Nov 21:23</time></td><td data-label="Tasks">MP1 to MP7, DS2 to DS5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>

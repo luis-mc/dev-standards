@@ -814,14 +814,19 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-03T19:13+00:00">03 Nov 19:13</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T13:20+00:00">04 Nov 13:20</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">04 Nov 12:29</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">13 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL28"><span class="task-id">DL28</span>Combined CI design: machine queue + runner pool (PR #140) <span class="glance-expected">04 Nov ~14:20</span><span class="glance-basis">design writing ~60 min from 13:20</span></li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">11 tasks</span></summary>
 <ul>
 <li data-glance-task="DL16"><span class="task-id">DL16</span>CI wait fix: report-only jobs skipped</li>
 <li data-glance-task="DL17"><span class="task-id">DL17</span>CIR10 S1: Option 1-4 names, any-machine wording, add-a-runner guide</li>
@@ -831,12 +836,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL21"><span class="task-id">DL21</span>CIR10 S5: speed probe, scaled budgets, ci.limits, db per worker</li>
 <li data-glance-task="DL22"><span class="task-id">DL22</span>CIR10 S6: guided /delivery-ci-setup for Options 1-3 and doctor</li>
 <li data-glance-task="DL23"><span class="task-id">DL23</span>CIR10 S7: Option 4 core: wait, claim, status poster, reaper, caps</li>
-<li class="glance-more">and 5 more</li>
+<li class="glance-more">and 3 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">26</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">26</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">2 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL28"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL28</span>Combined CI design: machine queue + runner pool (PR #140)<span class="no-release-line">ships nothing: design doc for owner approval; the build ships under DL27</span></td><td data-label="Detail">Rewrite PR #140 doc into one design from decisions D21-D47; owner approves on the PR, then DL27 builds it</td><td data-label="Expected">04 Nov ~14:20<span class="expected-basis">design writing ~60 min from 13:20</span></td></tr>
+<tr data-task="DL27"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL27</span>Machine-wide CI queue: shared slots across projects</td><td data-label="Detail">DL-90 proposal: machine config in ProgramData, ci_slots with job-start/complete hooks, WSL host load file, session work takes slots, doctor machine check; D22-D28 decided, slot count D21 open</td><td data-label="Expected">04 Nov ~17:00<span class="expected-basis">starts after owner approves the DL28 design (~14:20), then agent ~2 h</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">26 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL16"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL16</span>CI wait fix: report-only jobs skipped<span class="release-line"><span class="release-name">RELEASE-36</span></span></td><td data-label="Detail">Merged in RELEASE-36 (#139, c23bb0e) 19:07</td><td data-label="Expected">03 Nov</td></tr>
@@ -900,6 +911,499 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D47">
+<h3 class="decision-head"><span class="decision-id">D47</span> <span class="decision-question">Where is the combined CI design written and approved?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL28</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">PR #140 rewritten</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Rebase PR #140, one combined design doc, owner approves there.</p>
+<blockquote class="decision-words">&ldquo;PR #140 rewritten&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Straight into spec section 13</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Rules into the delivery spec on a branch.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D46">
+<h3 class="decision-head"><span class="decision-id">D46</span> <span class="decision-question">Runner detection: which repos are scanned?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">All repos you admin</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Every admin repo plus a local scan.</p>
+<blockquote class="decision-words">&ldquo;All repos you admin&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Only repos you name</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Asks each time.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">This PC only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No API listing.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D45">
+<h3 class="decision-head"><span class="decision-id">D45</span> <span class="decision-question">Doctor: Option 1 project with CI_RUNS_ON unset?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Fail</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Fails until CI_RUNS_ON is set.</p>
+<blockquote class="decision-words">&ldquo;Fail&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Warn</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Warning only.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D44">
+<h3 class="decision-head"><span class="decision-id">D44</span> <span class="decision-question">Runner pool: what happens to runners that already exist (e.g. comics-ci-runner)?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL28</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Setup runs migration with permission</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Turn the existing container into the pool.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Print steps only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Owner runs each step.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave it alone</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">New pool; old container stays.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Delete and recreate clean</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Remove existing runners; the setup builds everything from the start, run for the owner where possible.</p>
+<blockquote class="decision-words">&ldquo;existing runners get deleted and everything is created clean from the start; you provide all instructions to do it, or do it yourself if possible. setting all of this automatically should be offered by the delivery plugin during setup so user is up and runnign quickly&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D43">
+<h3 class="decision-head"><span class="decision-id">D43</span> <span class="decision-question">Runner pool: how are Windows jobs handled?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Services per repo, PC slots</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">One Windows service per repo, taking the same PC slots.</p>
+<blockquote class="decision-words">&ldquo;Services per repo, PC slots&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Look at Windows containers later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Services now.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Windows jobs off this PC</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">GitHub-hosted.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D42">
+<h3 class="decision-head"><span class="decision-id">D42</span> <span class="decision-question">Runner pool: where do the pool&#x27;s files live?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Plugin folder on the PC</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">C:\ProgramData\luismc-delivery\pools\&lt;name&gt;\.</p>
+<blockquote class="decision-words">&ldquo;Plugin folder on the PC&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">A repo you pick</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Versioned in git.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D41">
+<h3 class="decision-head"><span class="decision-id">D41</span> <span class="decision-question">Runner pool: Docker inside jobs?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Refuse it</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">No Docker in pool jobs.</p>
+<blockquote class="decision-words">&ldquo;Refuse it&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Rootless Docker-in-Docker later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Refuse now, room later.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Mount the socket</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Every job can control all containers.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D40">
+<h3 class="decision-head"><span class="decision-id">D40</span> <span class="decision-question">Runner pool: how are test databases offered?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One shared DB sidecar</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">One database container; a database and login per repo.</p>
+<blockquote class="decision-words">&ldquo;One shared DB sidecar&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">One sidecar per repo</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">More memory.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">None</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Jobs needing a DB run elsewhere.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D39">
+<h3 class="decision-head"><span class="decision-id">D39</span> <span class="decision-question">Runner pool: persistent or ephemeral runners?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Persistent only</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">No long-lived token in the container; after-job hook wipes the work folder.</p>
+<blockquote class="decision-words">&ldquo;Persistent only&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Persistent now, ephemeral later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Room for just-in-time runners.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ephemeral</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Fresh runner per job; token that can create runners in the container.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D38">
+<h3 class="decision-head"><span class="decision-id">D38</span> <span class="decision-question">Runner pool: offer the GitHub organization variant?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL28</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Personal account only</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One runner per repo inside the pool.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Offer org as a later variant</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Design for personal now; document the org path.</p>
+<blockquote class="decision-words">&ldquo;Offer org as a later variant&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Design for an org now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Move repos into a Team org.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D37">
+<h3 class="decision-head"><span class="decision-id">D37</span> <span class="decision-question">How many Claude cloud sessions may run CI at once (main and fallback together)?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">10 at once</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Leaves 40 of 50 cloud slots for build agents.</p>
+<blockquote class="decision-words">&ldquo;10 at once&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">5 at once</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Lower plan usage.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">20 at once</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Faster CI under load.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D36">
+<h3 class="decision-head"><span class="decision-id">D36</span> <span class="decision-question">How many heavy local Claude jobs may run at once on this PC (own limit, separate from CI slots)?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">2 at once</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">With 2 CI slots, at most 4 heavy jobs on the PC.</p>
+<blockquote class="decision-words">&ldquo;2 at once&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">1 at once</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Safest.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">3 at once</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Matches the max-3-local-agents rule.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D35">
+<h3 class="decision-head"><span class="decision-id">D35</span> <span class="decision-question">How do DL27 (PC-wide CI queue) and PR #140 (Docker runner pool) combine?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL28</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">DL27 first, pool on top</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Build DL27 now; the pool follows and takes DL27&#x27;s slots.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One combined design first</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Hold the build; one design for both, answer PR #140&#x27;s questions, then build together.</p>
+<blockquote class="decision-words">&ldquo;One combined design first&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Pool only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Only the Docker pool.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">DL27 only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No pool container.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D34">
+<h3 class="decision-head"><span class="decision-id">D34</span> <span class="decision-question">Should Claude cloud sessions running CI (Option 3 main or Option 4 fallback) have a limit on how many run at once?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, one limit for both roles</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">One number for main and fallback cloud CI sessions; counts toward the cloud agents cap.</p>
+<blockquote class="decision-words">&ldquo;Yes, one limit for both roles&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Yes, separate limits</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One number per role.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No, daily caps only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep per-day caps.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D33">
+<h3 class="decision-head"><span class="decision-id">D33</span> <span class="decision-question">Who owns dev-standards draft PR #140 (shared runner pool research) from here?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">This session</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">The dev-standards session rebases it, answers its open questions, removes the attribution footer.</p>
+<blockquote class="decision-words">&ldquo;This session&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">The moobable session</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">It keeps PR #140.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D32">
+<h3 class="decision-head"><span class="decision-id">D32</span> <span class="decision-question">Machine-wide CI queue: ship the limits-file path fix (G2) and slot-wait-counts-for-fallback fix (G6) inside DL27?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, in DL27</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Config moves to ProgramData; slot-wait counts as waiting for Option 4.</p>
+<blockquote class="decision-words">&ldquo;Yes, in DL27&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Separate quick task first</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Ship G2 and G6 alone now.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D31">
+<h3 class="decision-head"><span class="decision-id">D31</span> <span class="decision-question">Machine-wide CI queue: should the doctor&#x27;s machine check report runner disk use and offer cleanup?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Report and offer cleanup</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Lists work folder sizes; cleans only with permission and when no job runs.</p>
+<blockquote class="decision-words">&ldquo;Report and offer cleanup&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Report only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Lists sizes, never cleans.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave it out</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No disk checks.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D30">
+<h3 class="decision-head"><span class="decision-id">D30</span> <span class="decision-question">Machine-wide CI queue: in what order do waiting jobs get a slot?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Ready-PR jobs first</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Release runs go ahead of branch and agent runs; first come within each group.</p>
+<blockquote class="decision-words">&ldquo;Ready-PR jobs first&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">First come, first served</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Strict arrival order.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Round-robin by project</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Projects take turns.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D29">
+<h3 class="decision-head"><span class="decision-id">D29</span> <span class="decision-question">Machine-wide CI queue: what happens to a job that waits too long for a slot?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Fall back after X min</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Slot-wait counts as waiting for Option 4; after X minutes the job runs on the project&#x27;s fallback.</p>
+<blockquote class="decision-words">&ldquo;Fall back after X min&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Wait longer, then fail</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Raise the max wait, then fail the job.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Wait with no limit</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Wait until a slot frees, up to the workflow timeout.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D28">
+<h3 class="decision-head"><span class="decision-id">D28</span> <span class="decision-question">Machine-wide CI load control: when is it built?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Build now</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Record the task and launch one cloud agent today.</p>
+<blockquote class="decision-words">&ldquo;Build now&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Record only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Add the task as To do.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Fix G2 only now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Ship only the config-path fix now.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D27">
+<h3 class="decision-head"><span class="decision-id">D27</span> <span class="decision-question">Machine-wide CI load control: where is it specified?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Delivery spec section 13</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">New requirements in the CI options section, DL-90 in DELIVERYSPEC.</p>
+<blockquote class="decision-words">&ldquo;Delivery spec section 13&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">New feature spec</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Its own feature folder.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D26">
+<h3 class="decision-head"><span class="decision-id">D26</span> <span class="decision-question">Machine-wide CI load control: how does /delivery-ci-setup install the hooks and machine config?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Run it with permission</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Shows each change, runs it after a yes, then runs the doctor.</p>
+<blockquote class="decision-words">&ldquo;Run it with permission&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Print steps only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">The owner runs every step.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D25">
+<h3 class="decision-head"><span class="decision-id">D25</span> <span class="decision-question">Machine-wide CI load control: when a crashed job keeps its slot, free it after how long?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">2 hours</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Longer than any CI job today.</p>
+<blockquote class="decision-words">&ldquo;2 hours&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Job timeout</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Each workflow&#x27;s timeout-minutes.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">6 hours</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Very safe for long jobs.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D24">
+<h3 class="decision-head"><span class="decision-id">D24</span> <span class="decision-question">Machine-wide CI load control: should CI jobs run at below-normal CPU priority?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">No, keep the rule</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Slots and the load check are the only controls.</p>
+<blockquote class="decision-words">&ldquo;No, keep the rule&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Yes, below normal</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Runner services run jobs at below-normal priority; changes DL-79.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D23">
+<h3 class="decision-head"><span class="decision-id">D23</span> <span class="decision-question">Machine-wide CI queue: should LOCAL Claude Code work on this PC (tests, builds, local agents) take the PC&#x27;s CI slots?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Own limit, not CI slots</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Local heavy Claude work gets its own count; CI keeps its slots; the load check covers both.</p>
+<blockquote class="decision-words">&ldquo;claude session don&#x27;t use the pc resources so why share the same slots? maybe add a different limit to claude sessions (then, asked again with local and cloud split: Own limit, not CI slots)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Share the CI slots</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One queue: a local test run waits for a free CI slot.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Load check only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No count for local work.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D22">
+<h3 class="decision-head"><span class="decision-id">D22</span> <span class="decision-question">Machine-wide CI load control: how does a runner inside WSL see the Windows host&#x27;s load?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Host load file</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">A Windows scheduled task writes host load every 15 s; the WSL hook reads it, falls back to its own reading when stale.</p>
+<blockquote class="decision-words">&ldquo;Host load file&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">WSL memory cap only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No host view; cap the VM in .wslconfig and rely on shared slots.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No WSL runners</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Only Windows runners on this PC.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D21">
+<h3 class="decision-head"><span class="decision-id">D21</span> <span class="decision-question">Machine-wide CI load control: how many CI jobs may run on this PC at once, across all repos (ci_slots)?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL27</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">2 slots</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">About 12 jobs an hour; one Windows and one Linux job at once.</p>
+<blockquote class="decision-words">&ldquo;2 slots (after asking how 10 projects would work)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">1 slot</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">About 6 jobs an hour; safest, slowest.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">3 slots</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">About 18 jobs an hour.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">4 slots</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">About 24 jobs an hour; more risk of slowdowns.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D20">
 <h3 class="decision-head"><span class="decision-id">D20</span> <span class="decision-question">How does a finished cloud agent row become done in the ledger?</span></h3>
 <p class="decision-meta">Asked 02 Nov · Decided 02 Nov · Task DL14</p>

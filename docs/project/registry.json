@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-03T19:13+00:00",
+  "updated": "2026-11-04T13:20+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -809,6 +809,30 @@
       "changed": "2026-11-03T19:13+00:00",
       "started": "2026-11-03T15:00+00:00",
       "rides": "DS180"
+    },
+    {
+      "id": "DL27",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Machine-wide CI queue: shared slots across projects",
+      "detail": "DL-90 proposal: machine config in ProgramData, ci_slots with job-start/complete hooks, WSL host load file, session work takes slots, doctor machine check; D22-D28 decided, slot count D21 open",
+      "expected": "04 Nov ~17:00",
+      "changed": "2026-11-04T13:20+00:00",
+      "expected_basis": "starts after owner approves the DL28 design (~14:20), then agent ~2 h"
+    },
+    {
+      "id": "DL28",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Combined CI design: machine queue + runner pool (PR #140)",
+      "detail": "Rewrite PR #140 doc into one design from decisions D21-D47; owner approves on the PR, then DL27 builds it",
+      "expected": "04 Nov ~14:20",
+      "changed": "2026-11-04T13:20+00:00",
+      "expected_basis": "design writing ~60 min from 13:20",
+      "no_release": "design doc for owner approval; the build ships under DL27",
+      "started": "2026-11-04T13:20+00:00"
     },
     {
       "id": "DS1",
