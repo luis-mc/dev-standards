@@ -10,7 +10,7 @@ machine layer set up (machine.json or the slots folder in the machine folder, ma
   2. waits until its ticket is first in line AND a CI slot is free AND memory and CPU are under the limits
      (load.py: host figures, plus the container's own cap in the pool), freeing stale slots on the way;
   3. takes the slot (create-new lock file, atomic), removes the ticket and lets the job run;
-  4. while it waits it keeps the ci-wait marker of the shard (git branch ci-wait/<sha>/<shard>, DELIVERY_SHARD): the
+  4. while it waits it keeps the ci-wait marker of the shard (git branch ci-wait/<sha>/<shard>; the shard is DELIVERY_SHARD when the hook sees it, else the job key): the
      fallback counts the shard as waiting. If the fallback claimed the shard meanwhile, the hook frees the slot and
      exits 3 (claim lost, the job ends without work).
 
@@ -118,18 +118,20 @@ def wait(lim, cfg, sample=None, sleep=time.sleep, clock=time.monotonic, log=prin
 
 def _marker_root():
     """A git checkout the wait marker can be pushed from: DELIVERY_MARKER_ROOT, else the job's workspace when it has
-    one (a persistent runner keeps the checkout of the last job). None when there is none."""
+    one (a persistent runner keeps the .git of the last job). None when there is none."""
     for cand in (os.environ.get('DELIVERY_MARKER_ROOT'), os.environ.get('GITHUB_WORKSPACE')):
         if cand and os.path.exists(os.path.join(cand, '.git')):
             return cand
     return None
 
 
-def _fallback(root):
-    """The project's ci_fallback module (scripts/delivery/ci_fallback.py in the checkout), or None."""
-    path = os.path.join(root, 'scripts', 'delivery', 'ci_fallback.py')
-    if not os.path.isfile(path):
-        return None
+def plugin_fallback_path():
+    """The plugin's own copy of ci_fallback.py, found relative to this script."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(os.path.dirname(here), 'templates', 'shared', 'scripts', 'delivery', 'ci_fallback.py')
+
+
+def _load_module(path):
     import importlib.util
     spec = importlib.util.spec_from_file_location('ci_fallback_of_project', path)
     mod = importlib.util.module_from_spec(spec)
@@ -143,27 +145,55 @@ def _fallback(root):
     return mod
 
 
+def _fallback(root):
+    """The ci_fallback module: the checkout's scripts/delivery/ci_fallback.py when it has one, else the plugin's own copy
+    (the job-completed hook empties the workspace, so the next job often has none). None when neither loads."""
+    for path in (os.path.join(root, 'scripts', 'delivery', 'ci_fallback.py'), plugin_fallback_path()):
+        if os.path.isfile(path):
+            mod = _load_module(path)
+            if mod is not None:
+                return mod
+    return None
+
+
 class Marker:
-    """The ci-wait marker of this job's shard. Every call fails open: no checkout, no shard, no git means no marker."""
+    """The ci-wait marker of this job's shard. Every call fails open: no checkout, no shard, no git means no marker.
+    Whenever there is no marker, one log line says why (`skipped`)."""
 
     def __init__(self, env=None, log=print):
         env = os.environ if env is None else env
-        self.sha, self.shard = env.get('GITHUB_SHA') or '', env.get('DELIVERY_SHARD') or ''
+        self.sha, self.shard = env.get('GITHUB_SHA') or '', MS.shard_from_env(env)
         self.holder = 'runner-' + (env.get('RUNNER_NAME') or 'host')
         self.log = log
         self.mod = None
         self.root = None
+        self.skipped = ''
         self.remote = env.get('DELIVERY_MARKER_REMOTE') or 'origin'
-        if self.sha and self.shard:
+        if not self.sha:
+            self.skipped = 'no commit sha (GITHUB_SHA is empty)'
+        elif not self.shard:
+            self.skipped = 'no shard (neither DELIVERY_SHARD nor GITHUB_JOB is set)'
+        else:
             self.root = _marker_root()
-            self.mod = _fallback(self.root) if self.root else None
+            if not self.root:
+                self.skipped = ('no git checkout to push from (no .git in DELIVERY_MARKER_ROOT or GITHUB_WORKSPACE; '
+                                'set DELIVERY_MARKER_ROOT in the runner .env)')
+            else:
+                self.mod = _fallback(self.root)
+                if not self.mod:
+                    self.skipped = 'ci_fallback.py could not be loaded (not in the checkout and not in the plugin)'
         self.on = False
 
     def start(self):
         if not self.mod:
+            self.log('runner gate: no ci-wait marker written: %s' % self.skipped)
             return
         try:
             self.on = bool(self.mod.mark_wait(self.root, self.remote, self.sha, self.shard, self.holder))
+            if not self.on:
+                self.log('runner gate: the ci-wait marker for shard %s was not written (git push to %s failed; the '
+                         'runner account may have no git credentials: see the guide, Set up CI)'
+                         % (self.shard, self.remote))
         except Exception as exc:  # noqa: BLE001
             self.log('runner gate: could not write the ci-wait marker (%s: %s)' % (type(exc).__name__, exc))
 
