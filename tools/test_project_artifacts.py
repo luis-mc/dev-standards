@@ -593,7 +593,7 @@ def test_release_refusals(env):
         (add + ['--phase', 'agents=17:30-18:00'], '--release'),
         (add + ['--risk', 'x=5'], '--release'),
         (add + ['--release', '--phase', 'deploy=17:30-18:00'], 'one of agents, join, ci, merge'),
-        (add + ['--release', '--phase', 'agents=18:00-17:30'], 'after the start'),
+        (add + ['--release', '--phase', 'agents=18:00-18:00'], 'after the start'),
         (add + ['--release', '--phase', 'agents=17:30-17:45', '--phase', 'agents=17:45-18:00'], 'twice'),
         (add + ['--release', '--phase', 'agents=17:30'], 'NAME=HH:MM-HH:MM'),
         (add + ['--release', '--phase', 'agents=25:00-26:00'], 'HH:MM'),
@@ -630,6 +630,84 @@ def test_release_numbers_are_assigned_and_never_reused(env):
     fp = p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
     assert '<span class="release-name">RELEASE-4</span>' in fp
     assert p.run('check').code == 0
+
+
+def _write_ledger(p, numbers):
+    d = p.clone / '.delivery'
+    d.mkdir(exist_ok=True)
+    trains = [{'id': 'T%d' % n, 'release_no': n, 'state': 'live'} for n in numbers]
+    (d / 'ledger.json').write_text(json.dumps({'schema': 1, 'trains': trains}), encoding='utf-8')
+
+
+@case
+def test_release_number_follows_the_delivery_ledger(env):
+    """R5.45: --release takes the next number past the delivery ledger; without a ledger, the record's highest + 1;
+    --release N sets a number and corrects a stored one; a number another release uses is refused."""
+    p = env.baseline()
+    add = ('task-add', '--owner', 'project', '--detail', 'd', '--expected', '14 Oct')
+    # no ledger: the record's highest + 1 (RELEASE-1 exists)
+    r = p.ok(*add, '--item', 'No ledger', '--release')
+    assert p.task(r.out.strip())['release'] == 2
+    # a ledger ahead of the record: one past the ledger
+    _write_ledger(p, [1, 2, 7])
+    r = p.ok(*add, '--item', 'Ledger ahead', '--release')
+    ahead = r.out.strip()
+    assert p.task(ahead)['release'] == 8, p.task(ahead)
+    assert json.loads((p.clone / '.delivery' / 'ledger.json').read_text())['trains'][-1]['release_no'] == 7, 'never written'
+    # an explicit number on a new task
+    r = p.ok(*add, '--item', 'Explicit', '--release', '20')
+    assert p.task(r.out.strip())['release'] == 20
+    # correcting a stored number
+    p.ok('set-task-status', ahead, 'Running', '--release', '9')
+    assert p.task(ahead)['release'] == 9
+    # a number another release uses is refused, nothing written
+    before = p.head()
+    r = p.run('set-task-status', ahead, 'Running', '--release', '1')
+    assert r.code == 1 and 'already RELEASE-1' in r.err and p.head() == before, r.all
+    r = p.run(*add, '--item', 'Dup', '--release', '20')
+    assert r.code == 1 and 'already RELEASE-20' in r.err, r.all
+    assert p.run('check').code == 0
+
+
+@case
+def test_release_label_advice_uses_the_ledger(env):
+    """R5.45: an Item whose RELEASE-<n> is a number the ledger records gets the exact correction command; otherwise
+    the advice names both values."""
+    p = env.baseline()
+    r = p.ok('task-add', '--owner', 'project', '--item', 'Second', '--detail', 'd', '--expected', '14 Oct', '--release')
+    second = r.out.strip()
+    other = p.clone_again('ledger-lead')
+    rp = other / 'docs' / 'artifacts' / 'registry.json'
+    reg = json.loads(rp.read_text(encoding='utf-8'))
+    for t in reg['tasks']:
+        if t['id'] == second:
+            t['item'] = 'RELEASE-3: real number'
+    rp.write_text(json.dumps(reg, indent=2) + '\n', encoding='utf-8')
+    c = p.run('check')
+    assert 'RELEASE-3' in c.all and 'correct the Item' in c.all and '--release 3' not in c.all, c.all
+    _write_ledger(p, [1, 3])
+    c = p.run('check')
+    assert 'set-task-status %s --release 3' % second in c.all, c.all
+    p.ok('set-task-status', second, 'To do', '--release', '3')
+    assert p.task(second)['release'] == 3
+    assert p.run('check').code == 0
+
+
+@case
+def test_phase_crossing_midnight(env):
+    """R5.40: an end earlier than its start is the next day; later phases continue in order; Expected is the end of
+    the last phase."""
+    p = env.baseline()
+    r = p.ok('task-add', '--owner', 'project', '--item', 'Late', '--detail', 'd', '--expected', '11 Oct ~00:40', '--release',
+             '--phase', 'agents=23:30-23:48', '--phase', 'ci=23:48-00:28', '--phase', 'merge=00:28-00:40')
+    t = p.task(r.out.strip())
+    assert [(x['name'], x['start'], x['end']) for x in t['phases']] == [
+        ('agents', '2026-10-10T23:30+01:00', '2026-10-10T23:48+01:00'),
+        ('ci', '2026-10-10T23:48+01:00', '2026-10-11T00:28+01:00'),
+        ('merge', '2026-10-11T00:28+01:00', '2026-10-11T00:40+01:00')], t['phases']
+    assert p.run('check').code == 0
+    r = p.run('set-task-status', t['id'], 'Running', '--phase', 'ci=23:48-23:48')
+    assert r.code == 1 and 'after the start' in r.err, r.all
 
 
 @case
