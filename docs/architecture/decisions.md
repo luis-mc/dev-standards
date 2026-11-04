@@ -108,6 +108,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D59 | Runner registration token briefly on the container's command line: accept or work around? | Accept | decided | 2026-11-04 |
 | delivery-speed | D6 | Point 3: which tests run at the join when branches affect overlapping packages? | Union plus dependents | decided | 2026-10-11 |
 | delivery-speed | D60 | Hourly check-in in this session while work is open? | Yes, hourly | decided | 2026-11-04 |
+| delivery-speed | D61 | Final check before flattening the public history (D49-D53): go ahead? | Cancel | decided | 2026-11-04 |
 | delivery-speed | D7 | Should dev-standards adopt the delivery log in its own releases? (asked as one multi-select question) | Yes | decided | 2026-10-11 |
 | delivery-speed | D8 | Should dev-standards adopt the train freeze? (same multi-select question) | Yes | decided | 2026-10-11 |
 | delivery-speed | D9 | Point 4: how is the train freeze overridden on purpose? | Env variable, logged | decided | 2026-10-11 |
