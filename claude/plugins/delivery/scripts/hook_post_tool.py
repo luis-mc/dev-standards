@@ -307,14 +307,34 @@ def _backgrounded_ref(argv, cwd) -> str:
     return "%s %s" % (branch or current_branch(cwd) or (argv[3] if len(argv) > 3 and not argv[3].startswith("-") else "?"), verb)
 
 
-def _rec_push(led, cfg, argv, cwd, failed, now):
-    args = [a for a in argv[argv.index("push") + 1:] if not a.startswith("-")]
+def _push_branches(argv, cwd):
+    """Branch names a `git push` writes. None when it deletes (--delete, -d, or a `:name` refspec): not a push.
+    A source of HEAD or @ is the current branch of the command's directory (DL54 F4)."""
+    rest = argv[argv.index("push") + 1:]
+    if any(a == "--delete" or a == "-d" or (a.startswith("-") and not a.startswith("--") and "d" in a[1:] and
+                                           not a.startswith("-o")) for a in rest):
+        return None
+    args = [a for a in rest if not a.startswith("-")]
     branches = []
     for a in args[1:]:  # args[0] is the remote
-        branches.append(a.split(":")[-1].replace("refs/heads/", "").lstrip("+"))
+        src, _, dst = a.lstrip("+").partition(":")
+        if _ and not src:
+            return None     # `:name` deletes the remote branch
+        name = (dst or src).replace("refs/heads/", "")
+        if name in ("HEAD", "@") or (not dst and src in ("HEAD", "@")):
+            name = current_branch(cwd) or ""
+        if name:
+            branches.append(name)
     if not branches:
         cur = current_branch(cwd)
         branches = [cur] if cur else []
+    return branches
+
+
+def _rec_push(led, cfg, argv, cwd, failed, now):
+    branches = _push_branches(argv, cwd)
+    if branches is None:
+        return
     for b in branches:
         if not is_train_branch(led, cfg, b):
             continue
@@ -578,7 +598,7 @@ def handle(data: dict, root=None) -> bool:
         return True
 
     def fn(led):
-        if tool == "Bash":
+        if tool in ("Bash", "PowerShell"):
             rec_bash(led, data, cfg, failed, now)
         elif failed:
             L.add_event(led, "tool.failed", tool, "hook_post_tool", now)
@@ -591,7 +611,7 @@ def handle(data: dict, root=None) -> bool:
         elif tool == "AskUserQuestion":
             rec_question(led, data, cfg, now)
 
-    if tool not in ("Bash", "Agent", "Task", "RemoteTrigger", "Artifact", "AskUserQuestion"):
+    if tool not in ("Bash", "PowerShell", "Agent", "Task", "RemoteTrigger", "Artifact", "AskUserQuestion"):
         return False
     try:
         L.update(root, fn, wait=3)

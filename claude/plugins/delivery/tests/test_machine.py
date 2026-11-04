@@ -2,6 +2,7 @@
 the local heavy limit. Every test uses its own machine folder; nothing touches the real one."""
 import json
 import os
+import socket
 import subprocess
 import sys
 import tempfile
@@ -594,7 +595,9 @@ class LocalHeavy(unittest.TestCase):
             G.heavy_begin(dict(call("Bash", command="vitest"), tool_use_id="t1"), {})
             path = os.path.join(G.heavy_dir(), "t1.json")
             rec = json.loads(Path(path).read_text())
-            rec["pid"] = dead_pid()
+            self.assertNotIn("pid", rec)        # DL54 F7: a new record has no pid; heavy_end or the stale limit ends it
+            rec["pid"] = dead_pid()             # a record from an older version carries pid and host
+            rec["host"] = socket.gethostname()
             Path(path).write_text(json.dumps(rec))
             self.assertEqual(G.heavy_running(), [])
             self.assertFalse(os.path.exists(path))

@@ -322,7 +322,7 @@ def check_agents(ledger, cfg, at):
             out.append(('DL-30:' + str(a.get('id')), 'DL-30 agent %s was launched without an ETA breakdown. Record it '
                         'with: delivery_ledger.py agent-eta %s --setup N --work N --checks N --basis "<files touched>" '
                         '(minutes from the files touched, with the basis).' % (name, a.get('id') or name)))
-        if a.get('state') != 'running':
+        if a.get('state') not in ('running', 'stalled', 'pushed'):    # DL54 F8: the watcher sets stalled / pushed
             continue
         since = a.get('last_checked') or a.get('started')
         age = H.minutes_since(since, at)
@@ -330,7 +330,7 @@ def check_agents(ledger, cfg, at):
         overdue = due is not None and due <= at and (H.parse_ts(a.get('last_checked')) or due) <= due
         cloud_late = a.get('where') == 'cloud' and (due is not None or eta.get('total_min')) and \
             _past_eta(a, eta, due, at)
-        stalled = a.get('stalled') is True       # DS33: the watcher flags it when it checks
+        stalled = a.get('stalled') is True or a.get('state') == 'stalled'       # DS33: the watcher flags it when it checks
         if cloud_late:
             trig = a.get('trigger_id') or (a.get('id') if str(a.get('id', '')).startswith('trig_') else None)
             out.append(('DL-32:' + str(a.get('id')), 'DL-32 cloud agent %s is past its ETA and its branch gave no done '
@@ -480,26 +480,48 @@ def check_watcher(ledger, cfg, at):
              % (', '.join(items[:4]), cfg['watcher_min']))]
 
 
-def parse_expected(text, at):
-    """A registry 'expected' as an aware datetime (end of day for a bare date); None when not a date."""
+def parse_expected(text, at, tz=None):
+    """A registry 'expected' as an aware datetime (end of day for a bare date); None when not a date.
+    A date or time without a zone is read in `tz` (the owner zone, R6.6; UTC when None). `~HH:MM` is a time."""
     if not isinstance(text, str):
         return None
     t = H.parse_ts(text.strip())
     if t is not None:
         return t if 'T' in text else t + timedelta(days=1)
-    m = re.search(r'\b(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?(?:\s+(\d{4}))?(?:[ ,]+(\d{1,2}):(\d{2}))?', text)
+    m = re.search(r'\b(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?(?:\s+(\d{4}))?(?:[ ,]+~?(\d{1,2}):(\d{2}))?', text)
     if not m or m.group(2).lower() not in MONTHS:
         return None
-    year = int(m.group(3)) if m.group(3) else at.year
+    tz = tz or at.tzinfo
+    local = at.astimezone(tz)
+    month, day = MONTHS[m.group(2).lower()], int(m.group(1))
+
+    def build(year):
+        d = datetime(year, month, day, tzinfo=tz)
+        if m.group(4):
+            return d.replace(hour=int(m.group(4)), minute=int(m.group(5)))
+        return d + timedelta(days=1)
+
+    if m.group(3):
+        try:
+            return build(int(m.group(3)))
+        except (ValueError, OverflowError):
+            return None
+    # no year: the year that puts the date nearest to now (30 Dec + `2 Jan` is next year)
+    options = []
+    for y in (local.year - 1, local.year, local.year + 1):
+        try:
+            options.append(build(y))
+        except (ValueError, OverflowError):    # 29 Feb in a common year
+            pass
+    return min(options, key=lambda d: abs(d - at)) if options else None
+
+
+def _owner_tz(cfg):
     try:
-        d = datetime(year, MONTHS[m.group(2).lower()], int(m.group(1)), tzinfo=at.tzinfo)
-    except ValueError:
+        from zoneinfo import ZoneInfo
+        return ZoneInfo(cfg.get('tz') or 'UTC')
+    except Exception:  # noqa: BLE001 - no tzdata or a bad name: read in UTC
         return None
-    if not m.group(3) and d - at > timedelta(days=180):
-        d = d.replace(year=year - 1)
-    if m.group(4):
-        return d.replace(hour=int(m.group(4)), minute=int(m.group(5)))
-    return d + timedelta(days=1)
 
 
 def check_registry(root, cfg, at):
@@ -511,7 +533,7 @@ def check_registry(root, cfg, at):
     for t in tasks:
         if not isinstance(t, dict) or t.get('status') not in cfg['registry_open']:
             continue
-        exp = parse_expected(t.get('expected'), at)
+        exp = parse_expected(t.get('expected'), at, _owner_tz(cfg))
         if exp is not None and exp <= at:
             out.append(('DL-63:' + str(t.get('id')), 'DL-63 row %s (%s) is %s with Expected "%s" in the past. Close it if '
                         'it shipped, or set a new real Expected time (task-status-update / task-add), then publish Full Progress.'
