@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T21:56+00:00",
+  "updated": "2026-11-04T22:00+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -535,6 +535,17 @@
       "changed": "2026-11-04T21:54+00:00",
       "rides": "DL42",
       "started": "2026-11-04T21:42+00:00"
+    },
+    {
+      "id": "AR55",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "set-task-status takes Expected from the last phase",
+      "detail": "Passing only --phase or --basis must set Expected to the end of the last phase, not refuse the change.",
+      "expected": "05 Nov ~00:00",
+      "changed": "2026-11-04T22:00+00:00",
+      "expected_basis": "After RELEASE-39 merges ~22:15; one cloud agent ~60 min, then CI"
     },
     {
       "id": "DL1",
@@ -1080,6 +1091,50 @@
           "end": "2026-11-04T22:15+00:00"
         }
       ]
+    },
+    {
+      "id": "DL43",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Stop hook DL-31 flags only future estimates",
+      "detail": "Past-tense lines such as 'CI failed about 2 minutes in' are not ETAs; DL-31 must match future estimates only.",
+      "expected": "05 Nov ~00:00",
+      "changed": "2026-11-04T22:00+00:00",
+      "expected_basis": "After RELEASE-39 merges ~22:15; one cloud agent ~60 min, then CI"
+    },
+    {
+      "id": "DL44",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Cloud agent setup installs the Node version from engines",
+      "detail": "agent_setup.sh uses the sandbox Node 22 when the project's engines field asks for another major; pnpm warns on every run.",
+      "expected": "05 Nov ~00:00",
+      "changed": "2026-11-04T22:00+00:00",
+      "expected_basis": "After RELEASE-39 merges ~22:15; one cloud agent ~60 min, then CI"
+    },
+    {
+      "id": "DL45",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Docs: a routine's run_once_at must stay ahead of updates",
+      "detail": "A run_once_at that passes while an update call runs never fires. Document: create, update, then run_once_at at least 3 min ahead.",
+      "expected": "05 Nov ~00:00",
+      "changed": "2026-11-04T22:00+00:00",
+      "expected_basis": "After RELEASE-39 merges ~22:15; one cloud agent ~60 min, then CI"
+    },
+    {
+      "id": "DL46",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Ledger calls a train green only when every CI run passed",
+      "detail": "RELEASE-39 showed green after secret-scan passed while spec-lint still ran; the Stop hook then asked to merge.",
+      "expected": "05 Nov ~00:00",
+      "changed": "2026-11-04T22:00+00:00",
+      "expected_basis": "After RELEASE-39 merges ~22:15; one cloud agent ~60 min, then CI"
     },
     {
       "id": "DS1",
