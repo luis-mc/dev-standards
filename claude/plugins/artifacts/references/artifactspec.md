@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.19.1
+**Version:** 1.19.2
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.19.2 — 2026-11-04.**
+
+- Full Progress shows a release by its stored number only: an Item that leads with another `RELEASE-<n>` loses that lead on the page and `check` reports it (R5.45). The release timeline thins its axis labels so they do not overlap (R5.42).
 
 **1.19.1 — 2026-11-04.**
 
