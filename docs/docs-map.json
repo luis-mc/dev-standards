@@ -95,6 +95,9 @@
     "tools/test_ci_areas.py": [
       "docs/features/test-cost/spec.md"
     ],
+    "tools/test_claude_setup_plugins.py": [
+      "docs/features/project-setup/spec.md"
+    ],
     "tools/test_delivery_*.py": [
       "docs/features/delivery-speed/spec.md",
       "docs/features/delivery/spec.md"
@@ -125,6 +128,9 @@
       "docs/features/artifacts/spec.md"
     ],
     "tools/test_rule_tags.py": [
+      "docs/features/project-setup/spec.md"
+    ],
+    "tools/test_setup_pattern.py": [
       "docs/features/project-setup/spec.md"
     ],
     "tools/test_spec_check.py": [

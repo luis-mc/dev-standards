@@ -88,7 +88,7 @@
 - [Project artifacts](docs/features/artifacts/spec.md)
 - [Audit skills (luismc-audits)](docs/features/audits/spec.md)
 - [Delivery speed](docs/features/delivery-speed/spec.md)
-- [Shared CI on the owner's machine (design)](docs/features/delivery/shared-self-hosted-runners.md)
+- [Shared CI on your machine](docs/features/delivery/shared-self-hosted-runners.md)
 - [Delivery guard rails](docs/features/delivery/spec.md)
 - [Documentation standard plugin (luismc-docs)](docs/features/docs/spec.md)
 - [Model and effort profiles](docs/features/models/spec.md)
@@ -101,6 +101,7 @@
 
 - [Set up the CI fallback and try it on a test repository](docs/guides/ci-fallback-test-run.md)
 - [Set up CI for a project](docs/guides/set-up-ci.md)
+- [What the setup skills do and what you can do after](docs/guides/setup-skills.md)
 - [Upgrade a project to STACKSPEC 8](docs/guides/upgrade-stackspec-8.md)
 
 ## overview

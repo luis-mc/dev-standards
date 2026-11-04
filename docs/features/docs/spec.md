@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 0.5.0
+version: 0.6.0
 owner: agents
 type: reference
 code:
@@ -160,6 +160,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.6.0 | 2026-11-04 | RELEASE-37 | docs-setup and design-system-setup follow the setup pattern: plan first, one line per step, and a Done, Left for you, What you can do now summary. | DL33 |
 | 0.5.0 | 2026-11-02 | RELEASE-33 | The docs plugin rebuilds a stale next-version design-system gallery at session start and at Stop. | ST5 |
 | 0.4.0 | 2026-11-02 | RELEASE-32 | The design-system gallery draws swatches with contrast, type, spacing, radius and every starter component, light and dark; an older gallery script makes next-version stale (DS4). | ST4 |
 | 0.3.0 | 2026-11-01 | RELEASE-29 | The starter design system adds the wizard end (Review, the work, Done), generic components, rules UX-30 to UX-42 and more token kinds; Check is retired. | ST3 |
