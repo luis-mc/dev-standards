@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T22:50+00:00",
+  "updated": "2026-11-04T23:02+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -552,12 +552,11 @@
       "id": "AR56",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "--phase accepts a phase that crosses midnight",
       "detail": "merge=23:55-00:05 is refused (end must be after start); a release near midnight cannot record its real phases. Ships in RELEASE-41.",
-      "expected": "04 Nov ~23:50",
-      "changed": "2026-11-04T22:39+00:00",
-      "expected_basis": "Cloud agent from 22:39, ~70 min",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T22:51+00:00",
       "rides": "DL49",
       "started": "2026-11-04T22:39+00:00"
     },
@@ -565,12 +564,11 @@
       "id": "AR57",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "--release takes an explicit number and corrects a stored one",
       "detail": "A real release with no release task makes every later --release number one low. Allow --release N (or the delivery ledger's number) and fix a stored number.",
-      "expected": "04 Nov ~23:50",
-      "changed": "2026-11-04T22:39+00:00",
-      "expected_basis": "Cloud agent from 22:39, ~70 min",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T22:51+00:00",
       "rides": "DL49",
       "started": "2026-11-04T22:39+00:00"
     },
@@ -578,12 +576,11 @@
       "id": "AR58",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "R5.45 advice: name the wrong side, Item or stored number",
       "detail": "When the Item matches the delivery ledger's release, R5.45 must say to correct the stored number (with --release N), not the Item.",
-      "expected": "04 Nov ~23:50",
-      "changed": "2026-11-04T22:39+00:00",
-      "expected_basis": "Cloud agent from 22:39, ~70 min",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T22:51+00:00",
       "rides": "DL49",
       "started": "2026-11-04T22:39+00:00"
     },
@@ -1221,9 +1218,9 @@
       "item": "Review the delivery and artifacts plugins for bugs (RELEASE-41)",
       "detail": "One agent reviews both plugins, records findings as tasks; fixes ship in RELEASE-41 (D80).",
       "expected": "04 Nov ~23:40",
-      "changed": "2026-11-04T22:39+00:00",
-      "expected_basis": "Review agent from 22:39, ~60 min; fixes follow",
-      "rides": "DL49",
+      "changed": "2026-11-04T22:51+00:00",
+      "expected_basis": "Review agent from 22:39, ~60 min; fixes ride RELEASE-42",
+      "rides": "DL50",
       "started": "2026-11-04T22:39+00:00"
     },
     {
@@ -1231,24 +1228,46 @@
       "owner": "delivery-speed",
       "app": "",
       "status": "Running",
-      "item": "RELEASE-41: release numbers, phases at midnight, bug review fixes",
+      "item": "RELEASE-41: release numbers from the ledger, phases over midnight, R5.45 advice",
       "detail": "AR56-AR58 and every DL48 finding (D84). Join after RELEASE-40 merges; merge on green (D82).",
-      "expected": "05 Nov ~01:10",
-      "changed": "2026-11-04T22:39+00:00",
-      "expected_basis": "Review to 23:40, fix agents to ~00:45, join 5, CI 15, merge 5",
+      "expected": "04 Nov ~23:19",
+      "changed": "2026-11-04T23:02+00:00",
+      "expected_basis": "Join had a merge conflict (fixed); CI from ~23:01, ~15 min",
       "release": 41,
-      "started": "2026-11-04T22:39+00:00"
+      "started": "2026-11-04T22:39+00:00",
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-04T22:39+00:00",
+          "end": "2026-11-04T22:50+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-04T22:51+00:00",
+          "end": "2026-11-04T23:00+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-04T23:01+00:00",
+          "end": "2026-11-04T23:16+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-04T23:16+00:00",
+          "end": "2026-11-04T23:19+00:00"
+        }
+      ]
     },
     {
       "id": "DL50",
       "owner": "delivery-speed",
       "app": "",
       "status": "To do",
-      "item": "RELEASE-42: fixes from the six-plugin review",
+      "item": "RELEASE-42: fixes from both plugin reviews (DL48, DL51), DL52",
       "detail": "Every proven DL50 finding; merge on green (D82); last overnight round (D91).",
-      "expected": "05 Nov ~03:40",
-      "changed": "2026-11-04T22:48+00:00",
-      "expected_basis": "Review to ~00:05, fixes ~60, join after RELEASE-41 ~01:10, CI 15",
+      "expected": "05 Nov ~02:00",
+      "changed": "2026-11-04T22:51+00:00",
+      "expected_basis": "Reviews ~23:40 and ~00:05, fixes ~60, CI 15, merge",
       "release": 42
     },
     {

@@ -1,5 +1,13 @@
 [
   {
+    "date": "04 Nov 23:02",
+    "change": "DL49 item changed from \"RELEASE-41: release numbers, phases at midnight, bug review fixes\" to \"RELEASE-41: release numbers from the ledger, phases over midnight, R5.45 advice\""
+  },
+  {
+    "date": "04 Nov 22:51",
+    "change": "DL50 item changed from \"RELEASE-42: fixes from the six-plugin review\" to \"RELEASE-42: fixes from both plugin reviews (DL48, DL51), DL52\""
+  },
+  {
     "date": "02 Nov 19:49",
     "change": "RELEASE-32 live 19:49, CI green on 040345d"
   },
