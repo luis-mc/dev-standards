@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.5.2
+version: 0.5.3
 owner: agents
 type: reference
 code:
@@ -366,6 +366,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.5.3 | 2026-11-04 | RELEASE-40 | DL-31 flags forecasts only, not past events. DL-03: green needs a finished run of every pull_request workflow; skipped counts as success; push-only workflows are not waited on.<br>agent_setup.sh activates the lowest Node major that satisfies package.json engines.node, and prints one line about it. New guide: run work in cloud routines (DL45). | DL43, DL44 |
 | 0.5.2 | 2026-11-04 | RELEASE-39 | The pool setup command measures the pool cap, derives repositories when none are named, and checks each step with its own check. | DL41 |
 | 0.5.1 | 2026-11-04 | RELEASE-38 | Windows runner hooks use the .ps1 wrappers (the runner rejects .cmd); the shard of a job is DELIVERY_SHARD in the hook, else the job key; the ci-wait marker loads the plugin's own ci_fallback when the workspace has none and logs why it is skipped; the doctor fails a .cmd hook and warns when the runner account cannot push.<br>Setup plan: repositories come from detect; runner removal is a named deletion; a detected Windows runner service gets a print-then-check step; the host load task runs a 15-second loop with absolute paths; the WSL ceiling step is added; detect finds the Windows runner folder and containers inside WSL Docker; sizing is measured. | DL39, DL40 |
 | 0.5.0 | 2026-11-04 | RELEASE-37 | Shared CI on your machine: the feature page is rewritten for readers (problem, picture, job path, setup, limits, security). The guided Option 1 setup builds a Linux pool and Windows services on one machine.<br>New ci_runs.py collect writes .delivery/ci-runs.json for the Full Progress CI runs section; delivery_watch.py refreshes it each tick (D48, contract section 11 and 12.5).<br>Section 13 gains R13.60 to R13.67: the machine config, CI slots and one queue, the job-completed hook and stale slots, the host load file, the slot wait that starts the fallback, the local heavy limit, the cloud CI session limit and the doctor machine check. | DL30, DL31, DL32 |

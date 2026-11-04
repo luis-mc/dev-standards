@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.19.2
+**Version:** 1.19.3
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.19.3 — 2026-11-04.**
+
+- `set-task-status` and `task-add --release` no longer refuse a release when only `--phase`, `--basis` or a status is given: Expected follows the end of the last phase (the date rolls past midnight). An explicit `--expected` that contradicts the phases is still refused, and the message names the right value.
 
 **1.19.2 — 2026-11-04.**
 
