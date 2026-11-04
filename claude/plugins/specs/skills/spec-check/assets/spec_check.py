@@ -149,7 +149,13 @@ EXTERNAL_SPECS = {
 # wrapped in, short enough that a document name earlier in the sentence does
 # not capture an unrelated later reference.
 _DOC_LOOKBEHIND = 24
-_DOC_NAME_RE = re.compile(r"([A-Z][A-Z0-9_]{2,})[\s`(\[]*$")
+_DOC_NAME_RE = re.compile(r"([A-Z][A-Z0-9_]{2,})[\s`(\[§]*$")
+
+
+# What may sit between two section marks of one citation: `, `, ` and `, ` or `.
+# The previous mark and number are matched so the document name can be carried.
+_LIST_TAIL_RE = re.compile(
+    r"§\s?\d+(?:\.\d+)*[a-z]?(?:\s*(?:,|and|or)\s*)$")
 
 
 def _cited_document(line: str, at: int) -> str | None:
@@ -159,8 +165,16 @@ def _cited_document(line: str, at: int) -> str | None:
     `` `STACKSPEC §17.4` ``, `(STACKSPEC §9)` — by ignoring the punctuation
     between the name and the section mark.
     """
-    m = _DOC_NAME_RE.search(line[max(0, at - _DOC_LOOKBEHIND):at])
-    return m.group(1) if m else None
+    before = line[max(0, at - _DOC_LOOKBEHIND):at]
+    m = _DOC_NAME_RE.search(before)
+    if m:
+        return m.group(1)
+    # `DOC §9, §10`, `DOC §9 and §10`, `DOC §§9-10`: the name is carried over
+    # the list or the doubled mark, so every number resolves against DOC.
+    prev = _LIST_TAIL_RE.search(line[:at])
+    if prev:
+        return _cited_document(line, prev.start())
+    return None
 
 
 @dataclass
@@ -206,6 +220,18 @@ def _num_key(number: str) -> list:
     return key
 
 
+def _find_open(text: str, cursor: int) -> int:
+    """Index of the next `<!--` that is not inside an inline code span."""
+    while True:
+        start = text.find("<!--", cursor)
+        if start < 0:
+            return -1
+        # An odd number of backticks before it means it sits in a code span.
+        if text.count("`", 0, start) % 2 == 0:
+            return start
+        cursor = start + 4
+
+
 def strip_html_comments(lines: list[str]) -> list[str]:
     """Blank out `<!-- ... -->` spans, preserving line numbering.
 
@@ -225,7 +251,7 @@ def strip_html_comments(lines: list[str]) -> list[str]:
         result = []
         while cursor < len(text):
             if not inside:
-                start = text.find("<!--", cursor)
+                start = _find_open(text, cursor)
                 if start < 0:
                     result.append(text[cursor:])
                     break
@@ -240,9 +266,32 @@ def strip_html_comments(lines: list[str]) -> list[str]:
     return out
 
 
+def _fence_flags(lines: list[str]) -> list[bool]:
+    """True for each line inside (or opening or closing) a ``` or ~~~ fence.
+
+    Citations in a fence are still scanned; only headings and definitions are
+    skipped, because an example layout is not part of the document's outline.
+    """
+    flags, marker = [], None
+    for raw in lines:
+        t = raw.lstrip()
+        if marker is None:
+            if t.startswith("```") or t.startswith("~~~"):
+                marker = t[:3]
+                flags.append(True)
+                continue
+            flags.append(False)
+        else:
+            flags.append(True)
+            if t.startswith(marker):
+                marker = None
+    return flags
+
+
 class Spec:
     def __init__(self, text: str, externals: dict[str, set[str]] | None = None):
         self.lines = strip_html_comments(text.splitlines())
+        self.in_fence = _fence_flags(self.lines)
         self.headings = self._parse_headings()
         self.numbers = {h.number for h in self.headings}
         self.definitions = self._parse_definitions()
@@ -253,6 +302,8 @@ class Spec:
     def _parse_headings(self) -> list[Heading]:
         out = []
         for idx, raw in enumerate(self.lines, start=1):
+            if self.in_fence[idx - 1]:
+                continue
             m = HEADING_RE.match(raw)
             if m:
                 out.append(Heading(m.group(2), len(m.group(1)), m.group(3), idx))
@@ -261,6 +312,8 @@ class Spec:
     def _parse_definitions(self) -> list[Definition]:
         out = []
         for idx, raw in enumerate(self.lines, start=1):
+            if self.in_fence[idx - 1]:
+                continue
             for m in DEF_RE.finditer(raw):
                 out.append(Definition(m.group(1), int(m.group(2)),
                                       int(m.group(3)), m.group(4), idx))
@@ -276,11 +329,12 @@ class Spec:
                 owner[ln] = h.number
         return owner
 
-    def resolves(self, number: str) -> bool:
-        if number in self.numbers:
+    def resolves(self, number: str, numbers: set[str] | None = None) -> bool:
+        numbers = self.numbers if numbers is None else numbers
+        if number in numbers:
             return True
         # §24.2a resolves to 24.2 when no lettered heading exists.
-        return number.rstrip(_LETTERS) in self.numbers
+        return number.rstrip(_LETTERS) in numbers
 
     def defined_idents(self) -> set[str]:
         return {d.ident for d in self.definitions}
@@ -444,7 +498,7 @@ def check_references(spec: Spec) -> list[Finding]:
             # called PII — so an unknown prefix falls through to the internal
             # path below rather than being trusted as a document name.
             if doc is not None and doc in spec.externals:
-                if ref not in spec.externals[doc]:
+                if not spec.resolves(ref, spec.externals[doc]):
                     out.append(Finding("references", ERROR, idx,
                                        f"{doc} §{ref} does not resolve to a "
                                        f"heading in {doc}"))
@@ -513,6 +567,22 @@ def run(spec: Spec, only: str | None) -> list[tuple[str, str, str, list[Finding]
     return results
 
 
+_HERE = Path(__file__).resolve()
+
+
+def _read(path: Path) -> str:
+    # utf-8-sig drops a BOM, which Windows editors add.
+    return path.read_text(encoding="utf-8-sig")
+
+
+def _expand(paths: list[Path]) -> list[Path]:
+    """A directory argument stands for the *.md files under it."""
+    out: list[Path] = []
+    for p in paths:
+        out.extend(sorted(p.rglob("*.md")) if p.is_dir() else [p])
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         description="Numbering and internal-reference checker for the specs.")
@@ -533,28 +603,43 @@ def main() -> int:
                          f"Defaults: {', '.join(EXTERNAL_SPECS)}")
     args = ap.parse_args()
 
-    specs = args.specs or [Path(p) for p in DEFAULT_SPECS]
+    specs = _expand(args.specs or [Path(p) for p in DEFAULT_SPECS])
 
     # Resolve the external registry once; every spec checked shares it.
-    external_paths = dict(EXTERNAL_SPECS)
+    # A default that is not on disk (any run outside the dev-standards tree) is
+    # skipped with a note. Only an explicit --external that is missing is fatal.
+    external_paths = {n: Path(p) for n, p in EXTERNAL_SPECS.items()}
+    explicit: set[str] = set()
     for item in args.external:
         if "=" not in item:
             print(f"spec_check: --external expects NAME=PATH, got {item!r}",
                   file=sys.stderr)
             return 2
         name, _, path = item.partition("=")
-        external_paths[name.strip()] = path.strip()
+        external_paths[name.strip()] = Path(path.strip())
+        explicit.add(name.strip())
 
     externals: dict[str, set[str]] = {}
-    for name, path in external_paths.items():
-        p = Path(path)
-        if not p.exists():
+    for name, p in external_paths.items():
+        if not p.is_file() and name not in explicit:
+            alt = _HERE.parents[6] / p if len(_HERE.parents) > 6 else p
+            if alt.is_file():
+                p = alt
+            else:
+                print(f"spec_check: note: default external {name} not found "
+                      f"at {p}; skipped", file=sys.stderr)
+                continue
+        if not p.is_file():
             # Registered but unreadable is worse than unregistered: every
             # citation of it would silently resolve locally. Fail instead.
             print(f"spec_check: external {name} -> {p} does not exist",
                   file=sys.stderr)
             return 2
-        externals[name] = {h.number for h in Spec(p.read_text(encoding="utf-8")).headings}
+        try:
+            externals[name] = {h.number for h in Spec(_read(p)).headings}
+        except (OSError, UnicodeDecodeError) as exc:
+            print(f"spec_check: could not read {p}: {exc}", file=sys.stderr)
+            return 2
 
     reports = []
     for path in specs:
@@ -562,8 +647,8 @@ def main() -> int:
             print(f"spec_check: {path} does not exist", file=sys.stderr)
             return 2
         try:
-            spec = Spec(path.read_text(encoding="utf-8"), externals)
-        except OSError as exc:
+            spec = Spec(_read(path), externals)
+        except (OSError, UnicodeDecodeError) as exc:
             print(f"spec_check: could not read {path}: {exc}", file=sys.stderr)
             return 2
         reports.append((path, spec, run(spec, args.only)))

@@ -1,5 +1,5 @@
 ---
-description: Comprehensive regulatory and architectural security review of the current repo matching Elite Security Architect standards (NIST SP 800-53 Rev 5, FedRAMP High, DoD IL6, SOC 2, ISO 27001/27040, NIS2). Produces severity-ranked, compliance-mapped findings. Does not auto-fix. Use when the user asks for a security audit, compliance review, or invokes /luismc-audits:security-audit.
+description: Comprehensive regulatory and architectural security review of the current repo matching Elite Security Architect standards (NIST SP 800-53 Rev 5, FedRAMP High, SOC 2, ISO 27001/27040, NIS2). Produces severity-ranked, compliance-mapped findings. Does not auto-fix. Use when the user asks for a security audit, security review, or invokes /luismc-audits:security-audit.
 model: opus
 effort: medium
 ---
@@ -19,14 +19,16 @@ Run a rigorous, multi-framework compliance and threat-modeling audit across the 
 
 Classify findings strictly by this architectural impact schema:
 
-- **P0 (Critical) — High-Impact Exploit or Compliance Breach:** Remotely exploitable without authentication, breaks tenant/user isolation, compromises cryptographic keys, or directly violates **DoD IL6 / FedRAMP High** boundary rules (e.g., clear-text secrets in git history, complete AuthN bypass, unauthenticated raw data egress).
+- **P0 (Critical) — High-Impact Exploit or Compliance Breach:** Remotely exploitable without authentication, breaks tenant/user isolation, compromises cryptographic keys, or directly violates the boundary rules of a framework the project declares (e.g., **FedRAMP High**) (e.g., clear-text secrets in git history, complete AuthN bypass, unauthenticated raw data egress).
 - **P1 (High) — Conditional Exploitation or Regulatory Deficit:** Exploitable with specific preconditions (authenticated session, race conditions, local network presence), or breaches explicit statutory mandates from **NIS2 / ISO 27001** (e.g., missing multi-tenant validation on data mutations, weak hashing/ciphers).
 - **P2 (Medium) — Defense-in-Depth Gap:** Weakened or missing structural controls that need a multi-step chain of events to exploit, or missing **SOC 2 Type II / ISO 27040** best practices (e.g., lack of data-at-rest encryption for sensitive fields, inadequate rate limiting).
+
+A finding that rests only on a named framework (FedRAMP High, DoD IL6) counts only when the project declares that framework. Otherwise rate it by exploitability.
 - **P3 (Low) — Hardening & Hygiene Opportunity:** Standard code hardening or best-practice deviations with no immediate exploit vector or regulatory penalty.
 
 ## Compliance Checklist
 
-### 1. Cryptographic Isolation & Data Sovereignty (DoD IL6 / FedRAMP High / NIST SP 800-53)
+### 1. Cryptographic Isolation & Data Sovereignty (FedRAMP High / NIST SP 800-53)
 - **Boundary Leakage:** Ensure clear logical separation between tenants, environments, or data classification zones. Verify that cross-boundary spillage is structurally impossible.
 - **Zero-Trust Access Control:** Validate that authorization checks (`AuthZ`) are computed statelessly at every single API, route, or server-side component endpoint. Client-side state hiding must never be trusted.
 - **Session Mutation Hardening:** Ensure session tokens and JWTs enforce strong cryptographic signatures and strict expiration windows. Ensure they explicitly block algorithm confusion (e.g., rejecting `alg: none`).
@@ -48,7 +50,7 @@ Classify findings strictly by this architectural impact schema:
 ### 5. Specialized Tech Stack Controls (PostgreSQL, Redis, Drizzle ORM)
 - **Drizzle RLS & Tenant Scoping (FedRAMP High):** Audit all Drizzle query builders (`db.select`, `db.update`, `db.delete`). Confirm that EVERY multi-tenant table mutation explicitly binds a `tenant_id` or `user_id` conditional clause, or verifies that native PostgreSQL Row-Level Security (RLS) is enabled on the schema.
 - **Redis State Validation (SOC 2 Type II):** Trace Redis client hooks (`redis.get`, `redis.hget`). Ensure that data extracted from Redis caches or session stores is strictly validated against a compile-time schema runtime (e.g., Zod) before properties are passed to authentication contexts.
-- **Data Erasure Execution (ISO 27040):** Verify that when a delete path is called via Drizzle, sensitive columns are cryptographically sanitized, or a database `VACUUM` strategy is considered for hard-purges of local data fragments.
+- **Data Erasure Execution (ISO 27040):** Verify that when a delete path is called via Drizzle, sensitive columns are cryptographically sanitized (the principal's data-encryption key is destroyed, including in backups), or the deleted data expires from backups and the write-ahead log within a documented window. `VACUUM` alone does not erase data and is not accepted.
 
 ## Output Formatting
 

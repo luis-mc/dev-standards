@@ -57,7 +57,7 @@ flowchart LR
 
 **R5.5** — Statutory citations (numbers of 100 and above) and lettered insertions (`R4.9a`) are not reported.
 
-**R5.6** — Exit status is 0 when clean, 1 with findings, and 2 when a file cannot be parsed. It accepts several paths, `--only`, `--strict` and `--json`.
+**R5.6** — Exit status is 0 when clean, 1 with findings, and 2 when a file cannot be parsed. It accepts several paths, `--only`, `--strict` and `--json`. A directory path stands for the `*.md` files under it. STACKSPEC and AUTHSPEC are registered by default and found next to the script; a default that is not on disk is skipped with a note, and only an explicit `--external` that is missing exits 2. A byte-order mark is ignored, and headings inside a fenced block are not headings.
 
 **R5.7** — `spec-new` writes IDed, testable requirements to a numbering discipline that `spec-check` accepts, and stops once the spec is written.
 

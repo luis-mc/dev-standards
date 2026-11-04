@@ -28,7 +28,7 @@ Classify findings strictly by regulatory exposure, statutory liability, and oper
 ## Universal Compliance Checklist
 
 ### 1. Data Subject Rights & Cryptographic Erasure (GDPR / CCPA / CPRA)
-- **Verified Right to Erasure (Soft-Delete Avoidance):** Audit deletion code paths. Ensure account removal performs an absolute purge or cryptographic erasure across all persistent layers. Pure soft-deletes violate GDPR Article 17 when they leave plaintext PII/PHI recoverable in primary DBs, block storage, or logs (e.g., toggling an `is_deleted` flag or appending a `deleted_at` timestamp).
+- **Verified Right to Erasure (Soft-Delete Avoidance):** Audit deletion code paths. Ensure account removal erases personal data across all persistent layers, by purge or cryptographic erasure. Pure soft-deletes violate GDPR Article 17 when they leave plaintext PII/PHI recoverable in primary DBs, block storage, or logs after the erasure window (e.g., toggling an `is_deleted` flag with the data still readable). Compliant: a bounded grace period (AUTHSPEC §15.4), tombstone rows that hold no personal data, and retained audit records with no personal data (AUTHSPEC R15.13).
 - **Complete Portability / Right to Access:** Verify that user data export routines programmatically compile and return the user's complete digital footprint (including access logs, telemetry records, and nested relational metadata), not just basic profile rows.
 - **Right to Rectification Workflow:** Audit data modification pathways. Verify that users can correct, update, or rectify their own PII/PHI natively through authenticated server gates. Flag architectures that force manual admin intervention to update basic user profiles without a corresponding, transparent audit trail.
 
@@ -36,14 +36,13 @@ Classify findings strictly by regulatory exposure, statutory liability, and oper
 - **Server-Side Consent Enforcement:** Audit application route middleware and API controllers. Validate that the server verifies acceptance of Terms of Service (ToS) or Privacy Policies before it processes or stores downstream data. A client-side checked state with no backend verification is non-compliant.
 - **ePrivacy Tracking & Cookie Gating:** Identify any integration points with analytics, telemetry, or behavioral tracking SDKs. Verify that these external tracking scripts stay dark and completely blocked until a valid, server-recorded affirmative consent state exists.
 - **Granular Re-Consent Triggers:** Scan authentication and middleware architectures for explicit legal-version tracking blocks. If privacy policies or data-processing terms change, the code must programmatically restrict access until re-consent is recorded.
-Use code with caution.
 
 ### 3. Non-Repudiation Audit Trails & Logging (SOC 2 Type II / NIS2 / NIST SP 800-53)
 - **Administrative Access Non-Repudiation:** Audit all privilege-heavy API controllers and admin panel interfaces. Ensure every high-value event (viewing cross-tenant PII/PHI, exporting user collections, mutating roles, or altering global settings) generates an immutable audit trail that captures the exact Actor, Action, Target, and Timestamp.
 - **Tamper-Resistant Infrastructure:** Verify that the system audit logging mechanism is structurally isolated or directed to append-only ingestion pipelines. Local application code must be incapable of modifying or purging historically written audit logs.
 - **PII Leakage in Logging Systems:** Scan system exceptions, console log lines, and debug hooks. System loggers must programmatically strip, mask, or hash PII, tokens, session cookies, credit card numbers, or internal memory dumps before writing to persistent disk storage.
 
-### 4. Session Architecture & Boundary Hardening (FedRAMP High / DoD IL6)
+### 4. Session Architecture & Boundary Hardening (FedRAMP High; applies when the project declares it)
 - **Absolute & Idle Session Timeouts:** Audit session wrappers and authentication cookies. Ensure privileged interfaces (admin dashboards, billing views, security configurations) enforce strict, short idle timeouts and maximum absolute session lifespans.
 - **Role-Based Access Control (RBAC) Integrity:** Trace API endpoints and mutations. Access to data objects must be programmatically scoped using strict server-side RBAC or Attribute-Based Access Control (ABAC), so that a generic administrative role cannot bypass horizontal multi-tenant partition boundaries.
 - **Data Residency & Localization:** Ensure cloud-regional storage routing logic is structurally sound. Code paths must strictly prevent cross-border data transfers when they handle data sets bounded by strict geographic localization laws (e.g., EU-only computing boundaries).
@@ -53,11 +52,10 @@ Use code with caution.
 - **Programmatic Retention Schedules:** Verify that the application has active, automated clean-up workers, cron processes, or database time-to-live (TTL) configurations. The application structurally drops or anonymizes data once its legal or operational retention window closes.
 - **Vendor/Third-Party Data Flow Alignment:** Map all outgoing webhook vectors, API aggregators, and middleware pipelines. Cross-reference third-party data transmissions against the application's stated disclosure clauses. Ensure no undocumented leakage to unvetted processors occurs.
 
-### 6. Accessibility & Structural Interface Compliance (WCAG 2.2 AAA / Section 508)
+### 6. Accessibility & Structural Interface Compliance (WCAG 2.2 AA / Section 508)
 - **Keyboard Navigation & Interactive Focus:** Audit critical layout routes (authentication screens, checkout funnels, primary workspaces). Ensure users can complete all interactions natively with keyboard mapping alone. Verify that no focus traps exist.
 - **Semantic ARIA Structuring:** Scan frontend components for interactive fields, buttons, and visual illustrations. Ensure proper use of semantic HTML layout structures and descriptive ARIA labels, so screen readers can read everything.
-- **Contrast Ratios & Visual Validation:** Ensure status indicators, error banners, and functional actions enforce standard WCAG contrast ratios, so visually impaired users can read them.
-- **Contrast Ratios on Critical UI:** Verify that error messages, form validation alerts, status badges, and primary action buttons enforce standard WCAG contrast boundaries, so visually impaired users can read them.
+- **Contrast Ratios:** Verify that status indicators, error messages, form validation alerts, status badges, and primary action buttons meet WCAG 2.2 AA contrast, so visually impaired users can read them. AAA contrast applies only where a project spec requires it (AUTHSPEC R21.1 names those elements).
 
 ## Output Formatting
 
