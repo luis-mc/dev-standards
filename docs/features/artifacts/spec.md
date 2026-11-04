@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-artifacts]
 topics: [artifacts]
 status: live
-version: 0.3.0
+version: 0.3.1
 owner: agents
 type: reference
 code:
@@ -245,6 +245,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.3.1 | 2026-11-04 | RELEASE-42 | Hooks and helpers fixed after the plugin review: deferred publishes are not asked for, queue writes are locked, DD Mon dates take the nearest year, after-command parsing reads quotes and exit codes correctly, merged catch-up respects open PRs, far-past Expected is not overdue, 29 Feb parses. | AR59 |
 | 0.3.0 | 2026-11-04 | RELEASE-41 | A release takes its next number past the delivery ledger; --release N sets or corrects a number; --phase accepts a phase that crosses midnight; the release-label check gives the exact fix when the ledger knows the number. | AR56 |
 | 0.2.3 | 2026-11-04 | RELEASE-40 | A release's Expected follows its last phase when --expected is not given (R5.11). | AR55 |
 | 0.2.2 | 2026-11-04 | RELEASE-39 | Full Progress names a release by its stored number; the release timeline axis labels no longer overlap. | AR54 |

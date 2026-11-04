@@ -1,5 +1,0 @@
----
-plugin: claude/plugins/project-setup/.claude-plugin/plugin.json
-change: patch
----
-Fixes from the plugin review (F14 to F30). The Stop and drift hook commands now use `if command -v python3 ...; else python ...; fi`, so an exit 2 block is kept. The questions Stop hook no longer blocks "no open questions", the word "parked", or a list of changed files. The pre-commit hook scans files with spaces, non-ASCII names and renames, and tech-stack-setup now marks every hook executable. The commit-msg hook reads only the top-level `no_attribution` key. preflight accepts Go, Rust and .NET repos, and auth-setup calls it by plugin path. check_stack checks list values, every role id and the API framework track, and the Blazor Server conflict id is fixed. The CI template takes a default branch and installs with the repo's package manager. claude-setup adds an LF rule for the status line script, the delivery template starts in warn mode, and the status line shows the current context size. F26 (empty arrays on bash 3.2) was not reproduced here and is unchanged.

@@ -4,7 +4,7 @@ title: Transcript folds
 apps: [luismc-transcript-folds, luismc-project-setup]
 topics: [transcripts, hooks]
 status: live
-version: 0.2.0
+version: 0.2.1
 owner: agents
 type: reference
 code:
@@ -163,5 +163,6 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.2.1 | 2026-11-04 | RELEASE-42 | Errored shell calls fold to their first error line (failure table); the documented test command runs on Node 22. | TF6 |
 | 0.2.0 | 2026-11-01 | RELEASE-28 | claude-setup now turns on transcript-folds in the project's enabledPlugins and installs it with --scope project. Only the two chords stay in ~/.claude/keybindings.json. | SO4 |
 | 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. | DS143 |
