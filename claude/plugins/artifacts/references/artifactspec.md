@@ -1058,8 +1058,12 @@ double-click.
   `test_release_refusals` and the release fixtures of `test_check_fixtures`.
 - **R5.41** — A release's Expected is the sum of its phases: when a release in
   an open status has phases, its Expected (before any `; note`) must equal
-  `DD Mon ~HH:MM`, the end of its last phase to the minute. A writing command
-  that would leave a mismatch is refused, and `check` reports one (R5.41). There
+  `DD Mon ~HH:MM`, the end of its last phase to the minute. When a writing command
+  gives `--phase` or changes the status or `--basis` without `--expected`, Expected is
+  set to the end of the last stored phase (the date rolls past midnight; a `; note` is
+  kept), and `task-add --release --phase` may leave `--expected` out. A command that
+  passes an `--expected` which differs from the phases is refused, naming the right
+  value, and `check` reports a mismatch (R5.41). There
   is no silent padding. A margin for what may go wrong is named as the
   release's `risk` and is not added to Expected. Verified by `test_release_expected_is_the_end_of_the_last_phase`,
   `rule_file_carries_the_release_rule` and the R5.41 fixture of `test_check_fixtures`.
