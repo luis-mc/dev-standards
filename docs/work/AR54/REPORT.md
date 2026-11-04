@@ -19,4 +19,6 @@ Branch: AR54-full-progress-display
 - python3 -I tools/test_render_artifacts.py: 162 passed, 0 failed.
 - python3 -I tools/test_project_artifacts.py release: 11 passed (before the final full run).
 - change_notes.py check: ok. docs_check.py: only the expected D9 error (this report lives on the branch).
-- Full project_artifacts run: see below.
+- python3 -I tools/test_project_artifacts.py (full): 136 passed, 0 failed, 1 skipped.
+
+READY
