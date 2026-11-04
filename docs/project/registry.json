@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T17:15+00:00",
+  "updated": "2026-11-04T19:15+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -817,9 +817,9 @@
       "status": "Running",
       "item": "Machine-wide CI queue: shared slots across projects",
       "detail": "DL-90 proposal: machine config in ProgramData, ci_slots with job-start/complete hooks, WSL host load file, session work takes slots, doctor machine check; D22-D28 decided, slot count D21 open",
-      "expected": "04 Nov ~17:55",
-      "changed": "2026-11-04T14:14+00:00",
-      "expected_basis": "parent of DL30-DL33; done when RELEASE-37 merges ~17:55",
+      "expected": "04 Nov ~19:25",
+      "changed": "2026-11-04T19:15+00:00",
+      "expected_basis": "rides RELEASE-37",
       "rides": "DL29",
       "started": "2026-11-04T14:14+00:00"
     },
@@ -841,32 +841,32 @@
       "app": "",
       "status": "Running",
       "item": "RELEASE: shared CI (machine queue, Linux pool, CI runs section)",
-      "detail": "DL27 build: DL29 machine layer, DL30 pool and setup, DL31 CI runs in Full Progress",
-      "expected": "04 Nov ~20:54",
-      "changed": "2026-11-04T17:15+00:00",
-      "expected_basis": "3 agents rerun 17:13; DL32 170 min, join 20, CI 25",
+      "detail": "PR #141: fixed secret-scan hit, suite declaration, DL-91 rule order; CI run 3",
+      "expected": "04 Nov ~19:25",
+      "changed": "2026-11-04T19:15+00:00",
+      "expected_basis": "3rd CI run started 19:14; spec-lint ~4 min",
       "release": 37,
       "started": "2026-11-04T14:14+00:00",
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-04T17:13+00:00",
-          "end": "2026-11-04T20:04+00:00"
+          "end": "2026-11-04T17:33+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-04T20:04+00:00",
-          "end": "2026-11-04T20:24+00:00"
+          "start": "2026-11-04T18:45+00:00",
+          "end": "2026-11-04T18:47+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-04T20:24+00:00",
-          "end": "2026-11-04T20:49+00:00"
+          "start": "2026-11-04T19:14+00:00",
+          "end": "2026-11-04T19:20+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-04T20:49+00:00",
-          "end": "2026-11-04T20:54+00:00"
+          "start": "2026-11-04T19:20+00:00",
+          "end": "2026-11-04T19:25+00:00"
         }
       ]
     },
@@ -874,12 +874,11 @@
       "id": "DL30",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Linux runner pool and guided setup: detect, remove, build clean",
-      "detail": "rerun 17:13 UTC; first run could not push (routine had no repository source)",
-      "expected": "04 Nov ~19:54",
-      "changed": "2026-11-04T17:14+00:00",
-      "expected_basis": "rerun 17:13 + 160 min",
+      "detail": "joined into PR #141; waits for release CI",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T18:47+00:00",
       "rides": "DL29",
       "started": "2026-11-04T14:14+00:00"
     },
@@ -887,12 +886,11 @@
       "id": "DL31",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "CI runs section in Full Progress",
-      "detail": "rerun 17:13 UTC; first run could not push (routine had no repository source)",
-      "expected": "04 Nov ~18:59",
-      "changed": "2026-11-04T17:14+00:00",
-      "expected_basis": "rerun 17:13 + 105 min",
+      "detail": "joined into PR #141; waits for release CI",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T18:47+00:00",
       "rides": "DL29",
       "started": "2026-11-04T14:14+00:00"
     },
@@ -900,12 +898,11 @@
       "id": "DL32",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Machine layer: config, CI slots, hooks, host load, fallback, limits, doctor",
-      "detail": "rerun 17:13 UTC; first run could not push (routine had no repository source)",
-      "expected": "04 Nov ~20:04",
-      "changed": "2026-11-04T17:14+00:00",
-      "expected_basis": "rerun 17:13 + 170 min",
+      "detail": "joined into PR #141; waits for release CI",
+      "expected": "04 Nov",
+      "changed": "2026-11-04T18:47+00:00",
       "rides": "DL29",
       "started": "2026-11-04T14:14+00:00"
     },
@@ -915,11 +912,35 @@
       "app": "",
       "status": "Built",
       "item": "Setup clarity: every plugin setup plans, does the work, summarises",
-      "detail": "branch ready, waits for the join",
+      "detail": "joined into PR #141; waits for release CI",
       "expected": "04 Nov",
-      "changed": "2026-11-04T17:14+00:00",
+      "changed": "2026-11-04T18:47+00:00",
       "rides": "DL29",
       "started": "2026-11-04T14:14+00:00"
+    },
+    {
+      "id": "DL34",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Prove the shared CI hooks on one real runner job",
+      "detail": "Owner 4 Nov: after merge, one throwaway run proves DELIVERY_SHARD reaches the hook and the wait marker is written",
+      "expected": "04 Nov ~20:15",
+      "changed": "2026-11-04T19:11+00:00",
+      "expected_basis": "after the history flatten; ~30 min",
+      "no_release": "a test; fixes become their own tasks"
+    },
+    {
+      "id": "DL35",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Shared CI rollout plan for this machine (detect and plan, read only)",
+      "detail": "Owner 4 Nov: plan only; show what the setup would change",
+      "expected": "04 Nov ~20:30",
+      "changed": "2026-11-04T19:11+00:00",
+      "expected_basis": "after the runner test; ~15 min",
+      "no_release": "read-only study"
     },
     {
       "id": "DS1",
@@ -3577,6 +3598,30 @@
       "changed": "2026-11-03T19:13+00:00",
       "rides": "DS180",
       "started": "2026-11-03T16:41+00:00"
+    },
+    {
+      "id": "DS182",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Flatten the public history to one commit; delete old tags and branches",
+      "detail": "Owner 4 Nov: after RELEASE-37, flat all history. No backup; old PR refs accepted; strip SHAs from record rows",
+      "expected": "04 Nov ~20:00",
+      "changed": "2026-11-04T19:11+00:00",
+      "expected_basis": "after RELEASE-37 merges ~19:26; ~30 min",
+      "no_release": "repository maintenance, ships no plugin change"
+    },
+    {
+      "id": "DS183",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Close stale PRs #127 #128 #140, delete their branches and worktree",
+      "detail": "Owner 4 Nov: close #140 and the other session's stale PRs and branches",
+      "expected": "04 Nov ~19:35",
+      "changed": "2026-11-04T19:11+00:00",
+      "expected_basis": "after RELEASE-37 merges ~19:26; ~5 min",
+      "no_release": "cleanup"
     },
     {
       "id": "MP1",
