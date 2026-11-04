@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.19.3
+**Version:** 1.20.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.20.0 — 2026-11-04.**
+
+- `--release` takes the next number past the delivery ledger (read only), `--release N` sets or corrects a number and refuses one in use, `--phase` accepts a phase that crosses midnight, and the R5.45 check gives the exact `--release` command when the ledger shows the Item's number is the real one (R5.40, R5.42a, R5.45).
 
 **1.19.3 — 2026-11-04.**
 
