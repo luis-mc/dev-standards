@@ -10,4 +10,4 @@ Status: in progress. Branch DL30-runner-pool.
 5. docs, README subsection, change notes
 
 ## Steps done
-- (none yet)
+- templates/runner-pool/ written (Dockerfile, compose, supervisor, pool_agents, hooks, pool-check.yml)
