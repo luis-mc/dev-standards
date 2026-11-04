@@ -131,8 +131,8 @@
           §0, §1, §3, §7 is correct.
 
       Verify with the `spec-check` skill, which ships the checker alongside
-      it in the luismc-specs plugin: `python3 assets/spec_check.py <this-file>`
-      from that skill's directory. It
+      it in the luismc-specs plugin: `python3 "${CLAUDE_PLUGIN_ROOT}/skills/spec-check/assets/spec_check.py" <this-file>`
+      from the project root. It
       checks every rule above and reports gaps separately from errors, because
       only the author knows whether a gap was deliberate. Pass --external
       NAME=path for each document this spec cites by name.

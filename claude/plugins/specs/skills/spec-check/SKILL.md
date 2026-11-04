@@ -13,15 +13,15 @@ skill writes specs to a numbering discipline, and this one proves the discipline
 held. Both ship in the `luismc-specs` plugin.
 
 ```bash
-python3 assets/spec_check.py specs/mine.md
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/spec-check/assets/spec_check.py" specs/mine.md
 ```
 
-`assets/spec_check.py` sits alongside this file. It uses only the standard
+Run it from the project root: the script path is absolute and the spec path is relative to the project. `assets/spec_check.py` sits alongside this file. It uses only the standard
 library, so there is nothing to install.
 
 Exit `0` means clean. Exit `1` means findings. Exit `2` means the file could not
-be parsed. It takes any number of paths, so a repo's whole `specs/` directory can
-go in one run.
+be parsed. It takes any number of paths. A directory argument stands for the `*.md` files
+under it, so a repo's whole `specs/` directory can go in one run.
 
 ## Citing another document
 
@@ -30,7 +30,7 @@ its name: `STACKSPEC §4.2`. Register every document you cite. Otherwise its
 references are skipped, not checked:
 
 ```bash
-python3 assets/spec_check.py specs/mine.md \
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/spec-check/assets/spec_check.py" specs/mine.md \
   --external STACKSPEC=<plugin>/skills/tech-stack-setup/references/invariants.md \
   --external AUTHSPEC=<plugin>/skills/auth-setup/references/authentication.md
 ```

@@ -50,7 +50,7 @@ Classify findings strictly by runtime impact, traffic scale, and compute complex
 - **Volatile Store Overheads:** Trace connection pools to key-value or caching microservices. Check whether the code awaits multiple sequential cache commands line by line instead of using batched pipelines, multi-gets, or concurrent execution arrays.
 
 ### 4. API Performance Requirements & SLA Hardening
-- **Time to First Byte (TTFB) & Latency Budgets:** Audit route handlers to ensure P95 latency targets are met. Core read APIs must return within <100ms; write operations must return within <250ms. Any endpoint that exceeds these limits must be flagged for background worker offloading or aggressive caching.
+- **Time to First Byte (TTFB) & Latency Budgets:** Audit route handlers to ensure P95 latency targets are met. Use the project's declared budgets; by default STACKSPEC §14 applies (typical read endpoint p95 ≤ 200 ms). Any endpoint that exceeds its budget must be flagged for background worker offloading or aggressive caching.
 - **Over-Fetching & Payload Budgeting:** Restrict maximum raw JSON or data payloads to <50KB per request. Ensure API contracts omit unnecessary object graphs, metadata fields, or deeply nested relational data arrays that the client-side consumer does not immediately render.
 - **Network Chattiness Constraints:** Flag client-side interaction loops that trigger repetitive, sequential API requests where a single consolidated or batched query payload would cut network round-trip overhead.
 - **Compression and Serialization:** Ensure text responses larger than 1KB enforce server-side compression (`gzip`/`brotli`). Identify loops that block the main thread with massive data serialization operations that could be offloaded.

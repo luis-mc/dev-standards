@@ -119,6 +119,24 @@ CASES = [
      BASE + "\nMUST NOT contain PII (§1).\n", None),
     ("unregistered prefix that also fails internally is hinted",
      BASE + "\nSee PII §47.2 for detail.\n", "preceded by 'PII'"),
+
+    # DS186: F33 lettered outbound citation falls back like an internal one.
+    ("F33 lettered outbound resolves",
+     BASE + "\nPer OTHERSPEC §5.1a here.\n", None, {"OTHERSPEC": {"5.1"}}),
+    # DS186: F34 the second number of a list is checked against the same document.
+    ("F34 list second ref is outbound",
+     BASE + "\nSee OTHERSPEC §9, §1 here.\n",
+     "OTHERSPEC §1 does not resolve", {"OTHERSPEC": {"9"}}),
+    ("F34 doubled mark is outbound",
+     BASE + "\nSee OTHERSPEC §§1 here.\n",
+     "OTHERSPEC §1 does not resolve", {"OTHERSPEC": {"9"}}),
+    # DS186: F39 a heading inside a fence is not a heading.
+    ("F39 fenced heading ignored",
+     BASE + "\n```markdown\n## 1. Example\n```\n", None),
+    # DS186: F40 `<!--` in inline code does not open a comment.
+    ("F40 comment marker in code",
+     BASE + "\nOpen with `<!--` here.\n\n### 9.1 Orphan\n",
+     "has no parent heading 9"),
 ]
 
 fails = 0
@@ -136,6 +154,42 @@ for case in CASES:
         detail = "fired" if ok else f"DID NOT FIRE (got: {blob or 'nothing'})"
     print(f"{'PASS' if ok else 'FAIL'}  {name:36} {detail}")
     fails += not ok
+
+# DS186: command-line cases (F31, F32, F41, F42). Each runs the script from a
+# directory that is not the repo root.
+import subprocess, tempfile
+CLI = TOOLS.parent / "claude/plugins/specs/skills/spec-check/assets/spec_check.py"
+
+
+def cli(name, files, args, want_code, want_text):
+    global fails
+    with tempfile.TemporaryDirectory() as d:
+        for fname, data in files.items():
+            fp = pathlib.Path(d) / fname
+            fp.parent.mkdir(parents=True, exist_ok=True)
+            fp.write_bytes(data)
+        r = subprocess.run([sys.executable, str(CLI), *args], cwd=d,
+                           capture_output=True, text=True, encoding="utf-8")
+    out = r.stdout + r.stderr
+    ok = r.returncode == want_code and want_text in out and "Traceback" not in out
+    print(f"{'PASS' if ok else 'FAIL'}  {name:36} exit={r.returncode}")
+    if not ok:
+        print(out)
+    fails += not ok
+
+
+GOOD = "## 1. Intro\n\nSee STACKSPEC §1.\n".encode()
+cli("F31 runs outside the repo root", {"t.md": GOOD}, ["t.md"], 0, "0 error(s)")
+cli("F32 non-UTF-8 spec exits 2", {"l.md": b"## 1. Intro caf\xe9\n"},
+    ["l.md"], 2, "could not read")
+cli("F32 non-UTF-8 external exits 2", {"l.md": b"## 1. Intro caf\xe9\n", "a.md": GOOD},
+    ["--external", "OTHER=l.md", "a.md"], 2, "could not read")
+cli("F41 BOM is ignored", {"b.md": b"\xef\xbb\xbf## 1. Intro\n### 1.1 Sub\nSee \xc2\xa71.\n"},
+    ["b.md"], 0, "0 error(s)")
+cli("F42 directory expands to *.md", {"s/a.md": GOOD, "s/b.md": GOOD},
+    ["s"], 0, "b.md")
+cli("explicit missing external is fatal", {"t.md": GOOD},
+    ["--external", "NOPE=missing.md", "t.md"], 2, "does not exist")
 
 print(f"\n{len(CASES) - fails}/{len(CASES)} cases behaved as specified")
 sys.exit(1 if fails else 0)
