@@ -25,6 +25,6 @@ Status: done.
 - Change note: docs/architecture/changes/DL54-delivery-hook-fixes.md. No spec text changed.
 - Files outside my list touched: claude/plugins/delivery/tests/test_machine.py (one old test encoded the dead-pid drop).
 
-branch head SHA: see the last commit on origin/DL54-delivery-hook-fixes
+Code head SHA: 549e679e63d4afcacab6abf402ac0cca6ebf5107 (the branch head is the commit that adds this line).
 
 READY
