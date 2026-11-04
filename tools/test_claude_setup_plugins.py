@@ -46,6 +46,12 @@ def main():
         errors.append("SKILL.md does not say picked setups are run")
     if "Left for you" not in skill:
         errors.append("SKILL.md lacks the Left for you list")
+    for h in ("**Done**", "**What you can do now**"):
+        if h not in skill:
+            errors.append(f"SKILL.md lacks the summary heading {h}")
+    for ph in ("plan first", "one line per step", "safe to run again"):
+        if ph not in skill.lower():
+            errors.append(f"SKILL.md lacks the setup pattern rule '{ph}'")
     read_at = skill.find("read the current protection first")
     put_at = skill.find("gh api -X PUT repos/<owner>/<repo>/branches/<default>/protection")
     if read_at < 0 or put_at < 0 or read_at > put_at:
@@ -59,6 +65,10 @@ def main():
         errors.append("workflow template assets/ci/dev-standards.yml is missing")
     elif "docs_check.py\" --strict" not in tpl.read_text():
         errors.append("workflow template does not run docs_check.py --strict")
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+    import test_setup_pattern  # DL33: the five setup skills follow the setup pattern
+    if test_setup_pattern.main():
+        errors.append("a setup skill breaks the setup pattern (see above)")
     for e in errors:
         print("FAIL:", e)
     print(f"{len(names)} plugins checked, {len(errors)} problems")

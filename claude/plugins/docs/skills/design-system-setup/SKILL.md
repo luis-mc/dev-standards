@@ -9,6 +9,16 @@ effort: medium
 
 Runs `scripts/design_system.py` from the `luismc-docs` plugin (DOCSPEC section 15). Every command is a dry run until `--apply`.
 
+## How this setup talks to you (setup pattern)
+
+This setup follows section 13 of `docs/features/delivery/shared-self-hosted-runners.md`.
+
+1. **Plan first.** Run `status` and `styles`, then show one plan: the folders and files `init` will create under `docs/design-system/` and `scripts/design/` (with paths), the starter tokens it may replace with the project's own values, the test runner file it will edit to include the guard tests, that nothing is written outside the repository, what needs the owner (a yes, the choice to use the found style values, the approval of a version) and about how long it takes (a few minutes). Ask for one yes.
+2. **Do the heavy lifting.** After the yes, run these yourself: `init --apply`, `guards --apply`, the `CONFIG` edit at the top of `design-system-follow.test.ts` (source roots, extensions, token files, taken from the `styles` output), the edit that makes the test runner include `scripts/design/*.test.ts`, `visuals` and `check`. Leave to the owner only what you cannot do: approving a version (`promote`, `approve-implementation`), which needs their date and evidence, and the commit and push. Give each an exact step and check it afterwards.
+3. **One line per step.** While it runs, print one line per step: what you are doing, then done, or failed with the reason and the fix.
+4. **Finish with three parts.** **Done** (what changed, with paths). **Left for you** (numbered, exact steps: how to open `next-version/review-visuals/index.html`, what to look at, the `promote` command with the approval words). **What you can do now**: `design_system.py status` (see versions and approvals), `design_system.py visuals` (rebuild the gallery after a token change), `design_system.py check` (run the DS1-DS5 findings), the guard tests (run them with the project's test runner), and `promote` once the owner approves. Give each one line with an example.
+5. **Safe to run again.** A second run says what exists (`init` never overwrites) and changes only what is missing.
+
 ```bash
 S="${CLAUDE_PLUGIN_ROOT}/scripts/design_system.py"
 python3 "$S" init --apply                  # docs/design-system/: README, approvals.json, next-version/ (never overwrites)
@@ -41,7 +51,7 @@ python3 "$S" approve-implementation v1 --approved-on 2026-11-20 --evidence "chat
 
 ## Guard tests
 
-`guards` copies `design-system.ts` (finds the enforced version, computes the digest) and three tests: layout, freeze (digest and branch diff against `DESIGN_BASE`, default `origin/main`) and follow (retired words, rule table and citations, raw colours). Edit `CONFIG` at the top of `design-system-follow.test.ts` (source roots, extensions, token files). Make the test runner include `scripts/design/*.test.ts`. Other stacks: port the same three checks; the digest algorithm is in R15.5.
+`guards` copies `design-system.ts` (finds the enforced version, computes the digest) and three tests: layout, freeze (digest and branch diff against `DESIGN_BASE`, default `origin/main`) and follow (retired words, rule table and citations, raw colours). Edit `CONFIG` at the top of `design-system-follow.test.ts` yourself (source roots, extensions, token files), and make the test runner include `scripts/design/*.test.ts`, after the owner's yes to the plan. Other stacks: port the same three checks; the digest algorithm is in R15.5.
 
 ## Existing design system elsewhere
 
