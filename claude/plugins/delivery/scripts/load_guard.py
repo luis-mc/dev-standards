@@ -325,23 +325,39 @@ def refusal(s, lim, exceeded, label):
             % (describe(s, lim), '; '.join(exceeded), label, running_heavy_text()))
 
 
-def check_call(data, cfg, ledger=None):
+def check_local(data, cfg, ledger=None):
+    """DL-91 only: None when the local heavy limit leaves room for this call, else the refusal text. Fails open.
+    The pre-tool hook runs it after the project rules, so their more specific refusal is shown first."""
+    tool = data.get('tool_name')
+    if tool not in GUARDED_TOOLS or not H.check_on(cfg, LOCAL_CHECK_ID):
+        return None
+    heavy, label = classify(tool, data.get('tool_input'), cfg)
+    if not heavy:
+        return None
+    try:
+        limit = local_heavy_limit(cfg)
+        running = local_running(cfg, ledger)
+        if len(running) >= limit:
+            return local_refusal(running, limit, label)
+    except Exception as exc:  # noqa: BLE001
+        H.warn('local heavy limit skipped (%s: %s)' % (type(exc).__name__, exc))
+    return None
+
+
+def check_call(data, cfg, ledger=None, local=True):
     """None when the call may go on, else the refusal text. Fails open (warning on stderr) when unmeasurable.
-    `ledger` (the project's, when it has one) lets the DL-91 count include running local agents."""
+    `ledger` (the project's, when it has one) lets the DL-91 count include running local agents. `local=False` leaves
+    the DL-91 limit out (the pre-tool hook checks it after the project rules with check_local)."""
     tool = data.get('tool_name')
     if tool not in GUARDED_TOOLS:
         return None
     heavy, label = classify(tool, data.get('tool_input'), cfg)
     if not heavy:
         return None
-    if H.check_on(cfg, LOCAL_CHECK_ID):
-        try:
-            limit = local_heavy_limit(cfg)
-            running = local_running(cfg, ledger)
-            if len(running) >= limit:
-                return local_refusal(running, limit, label)
-        except Exception as exc:  # noqa: BLE001
-            H.warn('local heavy limit skipped (%s: %s)' % (type(exc).__name__, exc))
+    if local:
+        held = check_local(data, cfg, ledger)
+        if held:
+            return held
     if not H.check_on(cfg, CHECK_ID):
         return None
     try:

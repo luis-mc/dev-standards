@@ -521,7 +521,7 @@ def main():
     root = H.find_root(data)
     # DL-77: the load guard protects the machine, so it runs in every project, with or without .delivery/
     ledger0 = H.load_ledger(root) if root else None
-    held = G.check_call(data, G.project_cfg(root), ledger0)
+    held = G.check_call(data, G.project_cfg(root), ledger0, local=False)
     if held:
         if root and H.C.enforcement(H.load_config(root))['mode'] == 'warn':
             print(json.dumps({'systemMessage': 'luismc-delivery (warn mode, call allowed): ' + held}))
@@ -531,6 +531,10 @@ def main():
             print(held, file=sys.stderr)
             return 2
     if not root:
+        held = G.check_local(data, G.project_cfg(root), ledger0)
+        if held:
+            print(held, file=sys.stderr)
+            return 2
         G.heavy_begin(data, G.project_cfg(root))
         return 0
     cfg = H.load_config(root)
@@ -560,6 +564,14 @@ def main():
             print(json.dumps({'hookSpecificOutput': {'hookEventName': 'PreToolUse', 'permissionDecision': 'deny',
                                                      'permissionDecisionReason': str(d)}}))
     if not denied:
+        held = G.check_local(data, G.project_cfg(root), ledger)   # DL-91 last: a project rule's refusal is more specific
+        if held:
+            if H.C.enforcement(cfg)['mode'] == 'warn':
+                print(json.dumps({'systemMessage': 'luismc-delivery (warn mode, call allowed): ' + held}))
+            else:
+                H.log_block(root, cfg, 'pre-tool', held)
+                print(held, file=sys.stderr)
+                return 2
         G.heavy_begin(data, cfg)                         # DL-91: counted until its PostToolUse
     return 0
 
