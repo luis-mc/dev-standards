@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T19:30+00:00",
+  "updated": "2026-11-04T19:43+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -951,6 +951,18 @@
       "changed": "2026-11-04T19:30+00:00",
       "expected_basis": "starts 19:35; ~40 min",
       "no_release": "may ride the next release if it changes code"
+    },
+    {
+      "id": "DL37",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-38: fixes from DL34 and DL36, and the questions Stop hook",
+      "detail": "Owner 4 Nov: one release for the DL34 and DL36 fixes; plus the Q-1/Q-2 Stop hook",
+      "expected": "04 Nov ~22:30",
+      "changed": "2026-11-04T19:43+00:00",
+      "expected_basis": "after DL34 and DL36 (~20:45), agents ~60 min, CI ~25 min",
+      "release": 38
     },
     {
       "id": "DS1",
@@ -3760,6 +3772,18 @@
       "changed": "2026-11-02T15:59+00:00",
       "rides": "DS175",
       "started": "2026-11-02T15:16+00:00"
+    },
+    {
+      "id": "SO6",
+      "owner": "setup-offers",
+      "app": "",
+      "status": "To do",
+      "item": "Stop hook: ask every open question at once, only with AskUserQuestion (Q-1, Q-2)",
+      "detail": "Owner request relayed from another session 4 Nov: a user-level Stop hook installed by claude-setup",
+      "expected": "04 Nov ~22:30",
+      "changed": "2026-11-04T19:43+00:00",
+      "expected_basis": "rides RELEASE-38",
+      "rides": "DL37"
     },
     {
       "id": "ST1",

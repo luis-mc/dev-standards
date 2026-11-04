@@ -1486,6 +1486,126 @@
    "chosen": "Keep while work open",
    "decided": "2026-11-04",
    "owner_words": "Keep while work open"
+  },
+  {
+   "id": "D65",
+   "question": "Allow self-hosted runners on public repos, with which safeguards?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL34",
+   "options": [
+    {
+     "label": "Approval for outside PRs",
+     "summary": "Require approval for outside collaborators."
+    },
+    {
+     "label": "Fork PRs go to cloud",
+     "summary": "Fork PRs never run on the machine."
+    },
+    {
+     "label": "Pool only, no Windows",
+     "summary": "Public repos use only the Linux pool."
+    },
+    {
+     "label": "No safeguards",
+     "summary": "Doctor warns only."
+    },
+    {
+     "label": "Keep refusing",
+     "summary": "The design keeps refusing public repositories."
+    }
+   ],
+   "chosen": "Keep refusing",
+   "decided": "2026-11-04",
+   "owner_words": "ignore the change"
+  },
+  {
+   "id": "D66",
+   "question": "Where does the real runner test (DL34) run, since dev-standards is public?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL34",
+   "options": [
+    {
+     "label": "New private scratch repo",
+     "summary": "Temporary private repo and runner, removed after."
+    },
+    {
+     "label": "An existing private repo",
+     "summary": "A temporary branch there."
+    },
+    {
+     "label": "Skip DL34",
+     "summary": "Prove it during the rollout."
+    }
+   ],
+   "chosen": "New private scratch repo",
+   "decided": "2026-11-04",
+   "owner_words": "New private scratch repo"
+  },
+  {
+   "id": "D67",
+   "question": "Update the installed dev-standards plugins on this machine now?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL34",
+   "options": [
+    {
+     "label": "Update now",
+     "summary": "Marketplace update and per-plugin update."
+    },
+    {
+     "label": "You update",
+     "summary": "Owner runs the command."
+    },
+    {
+     "label": "Not yet",
+     "summary": "Run scripts from the repo."
+    }
+   ],
+   "chosen": "Update now",
+   "decided": "2026-11-04",
+   "owner_words": "Update now"
+  },
+  {
+   "id": "D68",
+   "question": "How do fixes from DL34 and DL36 ship?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL37",
+   "options": [
+    {
+     "label": "One RELEASE-38",
+     "summary": "Collect them into one small release."
+    },
+    {
+     "label": "Each on its own",
+     "summary": "One release per fix."
+    }
+   ],
+   "chosen": "One RELEASE-38",
+   "decided": "2026-11-04",
+   "owner_words": "One RELEASE-38"
+  },
+  {
+   "id": "D69",
+   "question": "Seven old worktrees from past releases on this machine?",
+   "asked": "2026-11-04",
+   "status": "decided",
+   "task": "DL29",
+   "options": [
+    {
+     "label": "Check and remove",
+     "summary": "Remove those with no unsaved or unmerged work."
+    },
+    {
+     "label": "Leave them",
+     "summary": "Keep them."
+    }
+   ],
+   "chosen": "Check and remove",
+   "decided": "2026-11-04",
+   "owner_words": "Check and remove"
   }
  ]
 }

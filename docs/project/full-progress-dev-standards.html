@@ -867,7 +867,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-04T19:30+00:00",
+ "updated": "2026-11-04T19:43+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1818,6 +1818,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "changed": "2026-11-04T19:30+00:00",
    "expected_basis": "starts 19:35; ~40 min",
    "no_release": "may ride the next release if it changes code"
+  },
+  {
+   "id": "DL37",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "RELEASE-38: fixes from DL34 and DL36, and the questions Stop hook",
+   "detail": "Owner 4 Nov: one release for the DL34 and DL36 fixes; plus the Q-1/Q-2 Stop hook",
+   "expected": "04 Nov ~22:30",
+   "changed": "2026-11-04T19:43+00:00",
+   "expected_basis": "after DL34 and DL36 (~20:45), agents ~60 min, CI ~25 min",
+   "release": 38
   },
   {
    "id": "DS1",
@@ -4629,6 +4641,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "started": "2026-11-02T15:16+00:00"
   },
   {
+   "id": "SO6",
+   "owner": "setup-offers",
+   "app": "",
+   "status": "To do",
+   "item": "Stop hook: ask every open question at once, only with AskUserQuestion (Q-1, Q-2)",
+   "detail": "Owner request relayed from another session 4 Nov: a user-level Stop hook installed by claude-setup",
+   "expected": "04 Nov ~22:30",
+   "changed": "2026-11-04T19:43+00:00",
+   "expected_basis": "rides RELEASE-38",
+   "rides": "DL37"
+  },
+  {
    "id": "ST1",
    "owner": "design-starter",
    "app": "luismc-docs",
@@ -4862,7 +4886,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-04T19:31+00:00">04 Nov 19:31</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T19:43+00:00">04 Nov 19:43</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
@@ -4880,25 +4904,35 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">298</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">3</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">298</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">5</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (~20:30 · after the runner test; ~15 min)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 322" role="img" aria-label="Other work (no release): DL34 (Prove the shared CI hooks on one real runner job) To do, expected about 20:15; DL36 (Compare the CI runs section with the approved sample and fix differences) To do, expected about 20:15; DL35 (Shared CI rollout plan for this machine (detect and plan, read only)) To do, expected about 20:30." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="298"/><text x="200" y="28">19:30</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="298"/><text x="460" y="28">20:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="298"/><text x="720" y="28">20:30</text></g>
-<text class="rt-strip-title" x="0" y="60">Other work (no release)</text>
-<text class="rt-name" x="0" y="94"><title>DL34 · Prove the shared CI hooks on one real runner job</title>DL34 · Prove the shared C…</text>
-<rect class="rt-other status-to-do" x="208.7" y="89" width="381.3" height="16"><title>To do 19:31-20:15</title></rect>
-<text class="rt-other-label" x="208.7" y="122">~20:15 · after the history flatten; ~30 min</text>
-<text class="rt-name" x="0" y="156"><title>DL36 · Compare the CI runs section with the approved sample and fix differences</title>DL36 · Compare the CI run…</text>
-<rect class="rt-other status-to-do" x="208.7" y="151" width="381.3" height="16"><title>To do 19:31-20:15</title></rect>
-<text class="rt-other-label" x="208.7" y="184">~20:15 · starts 19:35; ~40 min</text>
-<text class="rt-name" x="0" y="218"><title>DL35 · Shared CI rollout plan for this machine (detect and plan, read only)</title>DL35 · Shared CI rollout…</text>
-<rect class="rt-other status-to-do" x="208.7" y="213" width="511.3" height="16"><title>To do 19:31-20:30</title></rect>
-<text class="rt-other-label" x="208.7" y="246">~20:30 · after the runner test; ~15 min</text>
-<line class="rt-now" x1="208.7" y1="36" x2="208.7" y2="306"/><text class="rt-now-label" x="208.7" y="319">now 19:31</text>
+<div class="timeline-scroll"><svg viewBox="0 0 960 384" role="img" aria-label="Next releases: DL37 (fixes from DL34 and DL36, and the questions Stop hook) expected live about 22:30. Other work (no release): DL34 (Prove the shared CI hooks on one real runner job) To do, expected about 20:15; DL36 (Compare the CI runs section with the approved sample and fix differences) To do, expected about 20:15; DL35 (Shared CI rollout plan for this machine (detect and plan, read only)) To do, expected about 20:30." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="360"/><text x="200" y="28">19:30</text><line class="rt-grid" x1="286.7" y1="36" x2="286.7" y2="360"/><text x="286.7" y="28">20:00</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="360"/><text x="373.3" y="28">20:30</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="360"/><text x="460" y="28">21:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="360"/><text x="546.7" y="28">21:30</text><line class="rt-grid" x1="633.3" y1="36" x2="633.3" y2="360"/><text x="633.3" y="28">22:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="360"/><text x="720" y="28">22:30</text></g>
+<text class="rt-name" x="0" y="60"><title>RELEASE-38 · fixes from DL34 and DL36, and the questions Stop hook</title>RELEASE-38 · fixes from D…</text>
+<text class="rt-sub" x="0" y="77"><title>SO6</title>SO6</text>
+<polygon class="rt-expected" points="720,50 728,63 720,76 712,63"/>
+<text class="rt-live-label" x="720" y="92">live ~22:30</text>
+<text class="rt-strip-title" x="0" y="122">Other work (no release)</text>
+<text class="rt-name" x="0" y="156"><title>DL34 · Prove the shared CI hooks on one real runner job</title>DL34 · Prove the shared C…</text>
+<rect class="rt-other status-to-do" x="237.6" y="151" width="92.4" height="16"><title>To do 19:43-20:15</title></rect>
+<text class="rt-other-label" x="237.6" y="184">~20:15 · after the history flatten; ~30 min</text>
+<text class="rt-name" x="0" y="218"><title>DL36 · Compare the CI runs section with the approved sample and fix differences</title>DL36 · Compare the CI run…</text>
+<rect class="rt-other status-to-do" x="237.6" y="213" width="92.4" height="16"><title>To do 19:43-20:15</title></rect>
+<text class="rt-other-label" x="237.6" y="246">~20:15 · starts 19:35; ~40 min</text>
+<text class="rt-name" x="0" y="280"><title>DL35 · Shared CI rollout plan for this machine (detect and plan, read only)</title>DL35 · Shared CI rollout…</text>
+<rect class="rt-other status-to-do" x="237.6" y="275" width="135.8" height="16"><title>To do 19:43-20:30</title></rect>
+<text class="rt-other-label" x="237.6" y="308">~20:30 · after the runner test; ~15 min</text>
+<line class="rt-now" x1="237.6" y1="36" x2="237.6" y2="368"/><text class="rt-now-label" x="237.6" y="381">now 19:43</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days. Under Other work (no release), a bar runs from the start to its Expected, coloured by status; a red outline means it is past its Expected.</p>
 </figure>
+<details class="status-fold release-group" data-group="release-38" open><summary><strong>RELEASE-38 · live ~22:30</strong><span class="fold-count">2 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL37"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL37</span><span class="release-name">RELEASE-38</span>fixes from DL34 and DL36, and the questions Stop hook</a></td><td data-label="App / service"></td><td data-label="Detail">Owner 4 Nov: one release for the DL34 and DL36 fixes; plus the Q-1/Q-2 Stop hook</td><td data-label="Expected">04 Nov ~22:30<span class="expected-basis">after DL34 and DL36 (~20:45), agents ~60 min, CI ~25 min</span></td></tr>
+<tr data-task="SO6"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO6</span>Stop hook: ask every open question at once, only with AskUserQuestion (Q-1, Q-2)</a></td><td data-label="App / service"></td><td data-label="Detail">Owner request relayed from another session 4 Nov: a user-level Stop hook installed by claude-setup</td><td data-label="Expected">04 Nov ~22:30<span class="expected-basis">rides RELEASE-38</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">3 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL34"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL34</span>Prove the shared CI hooks on one real runner job</a><span class="no-release-line">ships nothing: a test; fixes become their own tasks</span></td><td data-label="App / service"></td><td data-label="Detail">Owner 4 Nov: after merge, one throwaway run proves DELIVERY_SHARD reaches the hook and the wait marker is written</td><td data-label="Expected">04 Nov ~20:15<span class="expected-basis">after the history flatten; ~30 min</span></td></tr>
@@ -5216,14 +5250,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
-<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
+<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (2)</strong><span class="fold-count">2 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897011"><time datetime="2026-11-04T19:31+00:00">04 Nov 19:31</time></td><td data-label="Tasks">DL1 to DL36</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-to-do">3 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29897023"><time datetime="2026-11-04T19:43+00:00">04 Nov 19:43</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">On 01 Nov the owner ran claude-setup in an existing project and could not tell whether the docs, design-system and delivery plugins were enforced.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897023"><time datetime="2026-11-04T19:43+00:00">04 Nov 19:43</time></td><td data-label="Tasks">DL1 to DL37</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-to-do">4 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (6)</strong><span class="fold-count">6 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (5)</strong><span class="fold-count">5 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29897010"><time datetime="2026-11-04T19:30+00:00">04 Nov 19:30</time></td><td data-label="Tasks">SO1 to SO5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">On 01 Nov the owner ran claude-setup in an existing project and could not tell whether the docs, design-system and delivery plugins were enforced.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29897010"><time datetime="2026-11-04T19:30+00:00">04 Nov 19:30</time></td><td data-label="Tasks">ST1 to ST5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-label="Last updated" data-value="29897010"><time datetime="2026-11-04T19:30+00:00">04 Nov 19:30</time></td><td data-label="Tasks">MP1 to MP7, DS2 to DS5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29897010"><time datetime="2026-11-04T19:30+00:00">04 Nov 19:30</time></td><td data-label="Tasks">AR2 to AR53</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>

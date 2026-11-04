@@ -875,7 +875,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-04T19:31+00:00">04 Nov 19:31</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-04T19:43+00:00">04 Nov 19:43</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">04 Nov 19:31</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
@@ -894,13 +894,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">33</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">3</div><div class="label">tasks to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">33</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">4</div><div class="label">tasks to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">3 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">4 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL34"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL34</span>Prove the shared CI hooks on one real runner job<span class="no-release-line">ships nothing: a test; fixes become their own tasks</span></td><td data-label="Detail">Owner 4 Nov: after merge, one throwaway run proves DELIVERY_SHARD reaches the hook and the wait marker is written</td><td data-label="Expected">04 Nov ~20:15<span class="expected-basis">after the history flatten; ~30 min</span></td></tr>
 <tr data-task="DL36"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL36</span>Compare the CI runs section with the approved sample and fix differences<span class="no-release-line">ships nothing: may ride the next release if it changes code</span></td><td data-label="Detail">Owner 4 Nov: DL31 built from the brief; compare with the plan page sample and fix</td><td data-label="Expected">04 Nov ~20:15<span class="expected-basis">starts 19:35; ~40 min</span></td></tr>
 <tr data-task="DL35"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL35</span>Shared CI rollout plan for this machine (detect and plan, read only)<span class="no-release-line">ships nothing: read-only study</span></td><td data-label="Detail">Owner 4 Nov: plan only; show what the setup would change</td><td data-label="Expected">04 Nov ~20:30<span class="expected-basis">after the runner test; ~15 min</span></td></tr>
+<tr data-task="DL37"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL37</span><span class="release-name">RELEASE-38</span>fixes from DL34 and DL36, and the questions Stop hook</td><td data-label="Detail">Owner 4 Nov: one release for the DL34 and DL36 fixes; plus the Q-1/Q-2 Stop hook</td><td data-label="Expected">04 Nov ~22:30<span class="expected-basis">after DL34 and DL36 (~20:45), agents ~60 min, CI ~25 min</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">33 tasks</span></summary>
@@ -973,6 +974,101 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D69">
+<h3 class="decision-head"><span class="decision-id">D69</span> <span class="decision-question">Seven old worktrees from past releases on this machine?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL29</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Check and remove</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Remove those with no unsaved or unmerged work.</p>
+<blockquote class="decision-words">&ldquo;Check and remove&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave them</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep them.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D68">
+<h3 class="decision-head"><span class="decision-id">D68</span> <span class="decision-question">How do fixes from DL34 and DL36 ship?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL37</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One RELEASE-38</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Collect them into one small release.</p>
+<blockquote class="decision-words">&ldquo;One RELEASE-38&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Each on its own</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One release per fix.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D67">
+<h3 class="decision-head"><span class="decision-id">D67</span> <span class="decision-question">Update the installed dev-standards plugins on this machine now?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL34</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Update now</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Marketplace update and per-plugin update.</p>
+<blockquote class="decision-words">&ldquo;Update now&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">You update</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Owner runs the command.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Not yet</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Run scripts from the repo.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D66">
+<h3 class="decision-head"><span class="decision-id">D66</span> <span class="decision-question">Where does the real runner test (DL34) run, since dev-standards is public?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL34</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">New private scratch repo</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">Temporary private repo and runner, removed after.</p>
+<blockquote class="decision-words">&ldquo;New private scratch repo&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">An existing private repo</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">A temporary branch there.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Skip DL34</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Prove it during the rollout.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D65">
+<h3 class="decision-head"><span class="decision-id">D65</span> <span class="decision-question">Allow self-hosted runners on public repos, with which safeguards?</span></h3>
+<p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL34</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Approval for outside PRs</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Require approval for outside collaborators.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Fork PRs go to cloud</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Fork PRs never run on the machine.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Pool only, no Windows</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Public repos use only the Linux pool.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No safeguards</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Doctor warns only.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Keep refusing</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 04 Nov</span></div>
+<p class="decision-summary">The design keeps refusing public repositories.</p>
+<blockquote class="decision-words">&ldquo;ignore the change&rdquo;</blockquote>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D64">
 <h3 class="decision-head"><span class="decision-id">D64</span> <span class="decision-question">Keep the hourly check-in after RELEASE-37?</span></h3>
 <p class="decision-meta">Asked 04 Nov · Decided 04 Nov · Task DL29</p>

@@ -112,6 +112,11 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D62 | Flatten cancelled: anything else about personal names in old commits? | Nothing more | decided | 2026-11-04 |
 | delivery-speed | D63 | Compare the built CI runs section with the approved sample? | Compare and fix | decided | 2026-11-04 |
 | delivery-speed | D64 | Keep the hourly check-in after RELEASE-37? | Keep while work open | decided | 2026-11-04 |
+| delivery-speed | D65 | Allow self-hosted runners on public repos, with which safeguards? | Keep refusing | decided | 2026-11-04 |
+| delivery-speed | D66 | Where does the real runner test (DL34) run, since dev-standards is public? | New private scratch repo | decided | 2026-11-04 |
+| delivery-speed | D67 | Update the installed dev-standards plugins on this machine now? | Update now | decided | 2026-11-04 |
+| delivery-speed | D68 | How do fixes from DL34 and DL36 ship? | One RELEASE-38 | decided | 2026-11-04 |
+| delivery-speed | D69 | Seven old worktrees from past releases on this machine? | Check and remove | decided | 2026-11-04 |
 | delivery-speed | D7 | Should dev-standards adopt the delivery log in its own releases? (asked as one multi-select question) | Yes | decided | 2026-10-11 |
 | delivery-speed | D8 | Should dev-standards adopt the train freeze? (same multi-select question) | Yes | decided | 2026-10-11 |
 | delivery-speed | D9 | Point 4: how is the train freeze overridden on purpose? | Env variable, logged | decided | 2026-10-11 |
