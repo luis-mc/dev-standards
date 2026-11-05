@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.5.0
+version: 0.5.1
 owner: agents
 type: explanation
 code:
@@ -164,6 +164,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.5.1 | 2026-11-05 | RELEASE-47 | The join rebuilds the next-version design-system gallery and commits it when a joined branch changed that folder. | DU4 |
 | 0.5.0 | 2026-11-05 | RELEASE-45 | change_notes.py check fails a diff that adds an entry to, or raises a count in, a design-system known-breach list that already exists at the base (known_lists, default scripts/design/*.known.json). | DSY99 |
 | 0.4.1 | 2026-11-04 | RELEASE-37 | The CI workflow templates set DELIVERY_SHARD on every job, and a job held for a machine slot counts as waiting for the Option 4 fallback (delivery spec R13.64). | DL32 |
 | 0.4.0 | 2026-11-03 | RELEASE-36 | The ts CI template writes the run times as the last step of its last job instead of a job of its own.<br>CI templates run cheap checks first, keep one job per suite family and make report-only work a step of the last job; guard tests cover it (R5.10).<br>Speed probe and scaled(ms) for timing budgets (refuse above scale 3), ci.limits in the config, and a database-per-worker template (R5.10 to R5.12).<br>artifact_prune.py gains --hold and smoke_packaged.py gains an installer rollback check (Windows learnings); no change to the speed rules. | DL16, DL18, DL21, DL25 |
