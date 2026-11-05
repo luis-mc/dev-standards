@@ -86,6 +86,9 @@
     "tools/ci_areas.py": [
       "docs/features/test-cost/spec.md"
     ],
+    "tools/fixtures/vitest_shim/*.mjs": [
+      "docs/features/docs/spec.md"
+    ],
     "tools/spec_check.py": [
       "docs/features/specs/spec.md"
     ],
@@ -110,6 +113,9 @@
     ],
     "tools/test_delivery_gate.py": [
       "docs/features/test-cost/spec.md"
+    ],
+    "tools/test_ds_enforcement.py": [
+      "docs/features/docs/spec.md"
     ],
     "tools/test_model_profiles.py": [
       "docs/features/agents/spec.md",

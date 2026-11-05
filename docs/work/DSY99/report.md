@@ -44,7 +44,7 @@ CODE DONE
 
 Status: started 5 Nov. Local commits only on DSY99-ds-enforcement-kit; nothing pushed or published.
 
-- DSY145: in progress
+- DSY145: done (commit 90a4f2ec): layout.known.json and wizard-behaviour.known.json beside no-app-css.known.json; dom-layout.ts and wizard-behaviour.ts read them; README, SKILL, design-gate.md updated; tests in tools/test_ds_enforcement.py (27 passed, 0 failed).
 - DSY146: not started
-- DSY147: not started
+- DSY147: done: shim and test_ds_enforcement.py mapped in the code list of docs/features/docs/spec.md, docs-map.json regenerated; docs_check shows no M1.
 - DSY148: not started
