@@ -1,6 +1,6 @@
 {
   "title": "Feature: Design-system updates from real projects",
   "hero": "UX patterns that two real projects added after the starter was written, checked against their code and proposed for the luismc-docs design-system starter.",
-  "lede": "Proposal for review. Nothing is implemented. 35 changes are proposed and 9 are left out, each checked against the source and the starter. Six decisions are open for the owner.",
+  "lede": "Decided on 5 Nov: all 35 proposals go in; the owner chose every recommended option (D1-D6). Work starts after DS189 and DSY99 merge. 9 changes are left out.",
   "extra_css": ""
 }

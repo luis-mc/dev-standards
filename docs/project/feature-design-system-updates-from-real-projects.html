@@ -888,27 +888,34 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>How it was checked</a><a href="#s3"><b>3</b>Proposed UX rules</a><a href="#s4"><b>4</b>Proposed components, tokens and words</a><a href="#s5"><b>5</b>Proposed plugin fixes and guard templates</a><a href="#s6"><b>6</b>Left out</a><a href="#s7"><b>7</b>Plan</a><a href="#s8"><b>8</b>Decisions</a><a href="#s9"><b>9</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Design-system updates from real projects</h1><p>UX patterns that two real projects added after the starter was written, checked against their code and proposed for the luismc-docs design-system starter.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-05T12:54+00:00">05 Nov 12:54</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-05T13:45+00:00">05 Nov 13:45</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">05 Nov 12:29</a> (Lisbon)</p>
-<p class="lede">Proposal for review. Nothing is implemented. 35 changes are proposed and 9 are left out, each checked against the source and the starter. Six decisions are open for the owner.</p>
+<p class="lede">Decided on 5 Nov: all 35 proposals go in; the owner chose every recommended option (D1-D6). Work starts after DS189 and DSY99 merge. 9 changes are left out.</p>
 <div class="at-a-glance">
-<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">7 tasks</span></summary>
+<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
+<p class="glance-none">Nothing needs you.</p>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DU1"><span class="task-id">DU1</span><span class="glance-dep">repo study ~1 h + peer replies; started 12:45</span> Study UX changes in two real projects and propose starter updates <span class="glance-expected">05 Nov ~15:00</span></li>
-<li data-glance-decision="D1"><span class="task-id">D1</span>Which of the 35 proposals go into the starter?</li>
-<li data-glance-decision="D2"><span class="task-id">D2</span>What about Project A&#x27;s draft items (card frame, two-level section header, settings that save by themselves)?</li>
-<li data-glance-decision="D3"><span class="task-id">D3</span>How should DS4 (stale gallery) behave on branches?</li>
-<li data-glance-decision="D4"><span class="task-id">D4</span>May a frozen version take link-only edits after files move?</li>
-<li data-glance-decision="D5"><span class="task-id">D5</span>Should the starter ask for 7:1 contrast for body text in the dark theme?</li>
-<li data-glance-decision="D6"><span class="task-id">D6</span>When does the work start?</li>
+<li data-glance-task="DU1"><span class="task-id">DU1</span>Study UX changes in two real projects and propose starter updates</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-needs-you"><div class="count">1</div><div class="label">task needs you</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">1</div><div class="label">task live</div></div><div class="status-count-tile status-to-do"><div class="count">6</div><div class="label">tasks to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="you" open><summary><strong>Needs you, failed or on hold</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">6 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DU1"><td data-label="Status"><span class="status-chip status-needs-you">Needs you</span></td><td data-label="Item"><span class="task-id">DU1</span>Study UX changes in two real projects and propose starter updates<span class="no-release-line">ships nothing: study and proposal only</span></td><td data-label="Detail">Study done: 35 proposals checked against both projects and the starter, 9 left out, plan in 6 tasks. Waits on owner decisions D1-D6 on the feature page.</td><td data-label="Expected">05 Nov ~15:00<span class="expected-basis">repo study ~1 h + peer replies; started 12:45</span></td></tr>
+<tr data-task="DU2"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DU2</span>Starter rules and words: R1-R16, W1</td><td data-label="Detail">ux-rules.md, content.md, CHANGES.md of the luismc-docs starter. New rule IDs follow DS189&#x27;s. Change note naming the docs plugin.json.</td><td data-label="Expected">06 Nov; after DS189 merges<span class="expected-basis">DS189 merge, then ~40 min cloud agent</span></td></tr>
+<tr data-task="DU3"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DU3</span>Starter components and tokens: C1-C5, T1-T5, R17</td><td data-label="Detail">components.md, tokens.md of the starter (incl. 7:1 named as an option, D5). Runs beside the rules task. Change note naming the docs plugin.json.</td><td data-label="Expected">06 Nov; after DS189 merges<span class="expected-basis">DS189 merge, then ~45 min cloud agent</span></td></tr>
+<tr data-task="DU4"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DU4</span>Docs plugin fixes F1-F5</td><td data-label="Detail">Lone -- accepted by docs scripts; DS4 warns only on the default branch, join and promote rebuild the gallery (D3); link-only edits to frozen versions with DOCSPEC R15.5 note (D4); CHANGES.md example line; README &#x27;What the apps do not follow yet&#x27;.</td><td data-label="Expected">06 Nov; after DSY99 merges<span class="expected-basis">DSY99 merge, then ~50 min cloud agent</span></td></tr>
+<tr data-task="DU5"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DU5</span>Guard templates: raw controls (G1) and contrast (G2)</td><td data-label="Detail">New TypeScript+Vitest templates in the enforcement kit folder, each with an allowlist or known-gaps list that only shrinks; run in this repo&#x27;s CI fixture (DS188).</td><td data-label="Expected">06 Nov; after DSY99 merges<span class="expected-basis">DSY99 merge, then ~50 min cloud agent</span></td></tr>
+<tr data-task="DU6"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DU6</span>Gallery draws the filter bar, change review and new token kinds</td><td data-label="Detail">gallery_draw.py and gallery_tokens.py; bumps the gallery script version.</td><td data-label="Expected">06 Nov; after the components task<span class="expected-basis">components task, then ~30 min</span></td></tr>
+<tr data-task="DU7"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DU7</span>Join and release the design-system updates</td><td data-label="Detail">Light join of the five branches, ready PR, CI, merge, luismc-docs version fold. Gets its RELEASE number when it starts.</td><td data-label="Expected">06 Nov; after DU2-DU6<span class="expected-basis">last task, then ~30 min</span></td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">1 task</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DU1"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DU1</span>Study UX changes in two real projects and propose starter updates<span class="no-release-line">ships nothing: study and proposal only</span></td><td data-label="Detail">Study done: 35 proposals checked against both projects and the starter, 9 left out. Owner chose every recommended option (D1-D6) on 5 Nov. Work is DU2-DU7.</td><td data-label="Expected">05 Nov</td></tr>
 </tbody></table></div>
 </details>
 </section>
@@ -990,8 +997,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <thead><tr><th>#</th><th>Proposal</th><th>Evidence</th><th>Change</th></tr></thead>
 <tbody>
 <tr><td>F1</td><td><b>The docs scripts accept a lone <code>--</code></b>, which package-manager scripts pass through.</td><td>Reproduced (see How it was checked)</td><td>Drop a leading <code>--</code> before argparse in <code>docs_fold.py</code> and the other docs scripts; one test</td></tr>
-<tr><td>F2</td><td><b>Less DS4 noise on branches.</b></td><td>Every draft edit warns; cloud runs have no hook to rebuild</td><td>Open decision D3</td></tr>
-<tr><td>F3</td><td><b>Link-only edits to frozen versions.</b> An edit that changes only link targets, each to an existing file, is allowed.</td><td>Project B needed it after moving files</td><td>Open decision D4. Needs a DOCSPEC R15.5 change, a <code>design_system.py</code> check and the freeze guard template</td></tr>
+<tr><td>F2</td><td><b>Less DS4 noise on branches.</b></td><td>Every draft edit warns; cloud runs have no hook to rebuild</td><td>Decided (D3): branches may leave the draft gallery stale; join and promote rebuild it; DS4 warns only on the default branch</td></tr>
+<tr><td>F3</td><td><b>Link-only edits to frozen versions.</b> An edit that changes only link targets, each to an existing file, is allowed.</td><td>Project B needed it after moving files</td><td>Decided yes (D4). Needs a DOCSPEC R15.5 change, a <code>design_system.py</code> check and the freeze guard template</td></tr>
 <tr><td>F4</td><td><b>A new draft's CHANGES.md shows where entries go</b>: one commented example line after the header.</td><td>An agent in Project A inserted lines in the wrong place</td><td><code>cmd_promote</code> and the template</td></tr>
 <tr><td>F5</td><td><b>The version README has "What the apps do not follow yet"</b>: the changes still to build.</td><td>Project B uses it in every version from v4</td><td>Template README</td></tr>
 <tr><td>G1</td><td><b>Raw-control guard template</b>: no raw button, input, select or text area in app code; shared components only; an allowlist file per app that starts empty.</td><td>Project A, approved, in use in both of its apps</td><td>New template in DSY99's kit folder, after DSY99</td></tr>
@@ -1007,8 +1014,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr><td>Project B's plan, comparison and second-copy screens, its product words, and its update and publish wording (U14 words, U15)</td><td>Product domain. The generic part is C4.</td></tr>
 <tr><td>Dialog and sheet as one component</td><td>Already in work as DS189.</td></tr>
 <tr><td>No app CSS (U19), DOM layout kit (U20), wizard harness, design edit hook, brief checklist</td><td>In DSY99. U19 and U20 are also not yet approved in Project B.</td></tr>
-<tr><td>Project A's draft items: card frame, two-level section header, settings that save by themselves</td><td>Not yet approved in Project A. Open decision D2.</td></tr>
-<tr><td>Dark theme body text at 7:1</td><td>A style choice above WCAG AA. Open decision D5.</td></tr>
+<tr><td>Project A's draft items: card frame, two-level section header, settings that save by themselves</td><td>Not yet approved in Project A. Wait for its approval (D2).</td></tr>
+<tr><td>Dark theme body text at 7:1</td><td>A style choice above WCAG AA. AA stays the rule; tokens.md names 7:1 as an option (D5).</td></tr>
 <tr><td>A self-updating app says every step, with Testing and Rolled back</td><td>Only apps that update themselves need it.</td></tr>
 <tr><td>A helper to import old approvals</td><td>R15.8 already says how, by hand. Rare.</td></tr>
 <tr><td>A gallery copy-forward check</td><td><code>promote</code> already rebuilds the gallery; the problem came from hand copies.</td></tr>
@@ -1016,7 +1023,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </table>
 </section>
 <section id="s7"><h2><span class="section-number">&sect; 7</span>Plan</h2>
-<p>Nothing starts before the owner answers the open decisions. The plan has five work tasks plus one release. Each task owns its own files, so tasks that run at the same time never touch the same file.</p>
+<p>The owner answered D1 to D6 on 5 Nov. Tasks DU2 to DU7 hold this plan. The plan has five work tasks plus one release. Each task owns its own files, so tasks that run at the same time never touch the same file.</p>
 <table>
 <thead><tr><th>Task</th><th>Holds</th><th>Files it owns</th><th>Waits for</th><th>Size</th></tr></thead>
 <tbody>
@@ -1028,7 +1035,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr><td>6. Join and release</td><td>One release of <code>luismc-docs</code></td><td>join, CI, merge, version fold</td><td>Tasks 1 to 5</td><td>about 30 min after the last task</td></tr>
 </tbody>
 </table>
-<p>Every branch adds a change note that names <code>claude/plugins/docs/.claude-plugin/plugin.json</code>. Task 3 also adds a DOCSPEC note if D4 is yes. No branch edits a version line.</p>
+<p>Every branch adds a change note that names <code>claude/plugins/docs/.claude-plugin/plugin.json</code>. Task 3 also adds a DOCSPEC note for R15.5 (D4). No branch edits a version line.</p>
 <p>A project that already has a design system gets nothing by itself. The starter changes reach a project only through <code>init</code> on a new project, or when the project copies the rules into its own <code>next-version</code> and its owner approves them.</p>
 <h3>Risks</h3>
 <ul>
@@ -1038,98 +1045,104 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s8"><h2><span class="section-number">&sect; 8</span>Decisions</h2>
 <div class="decision-list">
-<article class="decision decision-open" data-decision="D6">
-<h3 class="decision-head"><span class="decision-id">D6</span> <span class="decision-question">When does the work start?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
-<p class="decision-meta">Asked 05 Nov · Task DU1</p>
+<article class="decision decision-decided" data-decision="D6">
+<h3 class="decision-head"><span class="decision-id">D6</span> <span class="decision-question">When does the work start?</span></h3>
+<p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DU1</p>
 <div class="decision-options">
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">After DS189 and DSY99</span> <span class="decision-tag">Recommended</span></div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">After DS189 and DSY99</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 05 Nov</span></div>
 <p class="decision-summary">Tasks 1 and 2 after DS189 merges; tasks 3 and 4 after DSY99 merges.</p>
+<blockquote class="decision-words">&ldquo;After DS189 and DSY99 (Recommended)&rdquo;</blockquote>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Start tasks 3 and 4 now</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Start tasks 3 and 4 now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Take over the kit folder from main without waiting for DSY99.</p>
 </div>
 </div>
 </article>
-<article class="decision decision-open" data-decision="D5">
-<h3 class="decision-head"><span class="decision-id">D5</span> <span class="decision-question">Should the starter ask for 7:1 contrast for body text in the dark theme?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
-<p class="decision-meta">Asked 05 Nov · Task DU1</p>
+<article class="decision decision-decided" data-decision="D5">
+<h3 class="decision-head"><span class="decision-id">D5</span> <span class="decision-question">Should the starter ask for 7:1 contrast for body text in the dark theme?</span></h3>
+<p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DU1</p>
 <div class="decision-options">
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Keep AA, mention 7:1</span> <span class="decision-tag">Recommended</span></div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Keep AA, mention 7:1</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 05 Nov</span></div>
 <p class="decision-summary">WCAG 2.2 AA stays the rule; tokens.md names 7:1 as a choice.</p>
+<blockquote class="decision-words">&ldquo;Keep AA, mention 7:1 (Recommended)&rdquo;</blockquote>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Require 7:1 in dark</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Require 7:1 in dark</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Body text and status text on tint reach 7:1 in the dark theme.</p>
 </div>
 </div>
 </article>
-<article class="decision decision-open" data-decision="D4">
-<h3 class="decision-head"><span class="decision-id">D4</span> <span class="decision-question">May a frozen version take link-only edits after files move?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
-<p class="decision-meta">Asked 05 Nov · Task DU1</p>
+<article class="decision decision-decided" data-decision="D4">
+<h3 class="decision-head"><span class="decision-id">D4</span> <span class="decision-question">May a frozen version take link-only edits after files move?</span></h3>
+<p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DU1</p>
 <div class="decision-options">
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Yes, link targets only</span> <span class="decision-tag">Recommended</span></div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, link targets only</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 05 Nov</span></div>
 <p class="decision-summary">Allowed when every change is a link target that points at an existing file; the check proves it and the digest is taken again.</p>
+<blockquote class="decision-words">&ldquo;Yes, links only (Recommended)&rdquo;</blockquote>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">No, stay strict</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No, stay strict</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">A move leaves old links in frozen versions.</p>
 </div>
 </div>
 </article>
-<article class="decision decision-open" data-decision="D3">
-<h3 class="decision-head"><span class="decision-id">D3</span> <span class="decision-question">How should DS4 (stale gallery) behave on branches?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
-<p class="decision-meta">Asked 05 Nov · Task DU1</p>
+<article class="decision decision-decided" data-decision="D3">
+<h3 class="decision-head"><span class="decision-id">D3</span> <span class="decision-question">How should DS4 (stale gallery) behave on branches?</span></h3>
+<p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DU1</p>
 <div class="decision-options">
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Rebuild at join and promote</span> <span class="decision-tag">Recommended</span></div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Rebuild at join and promote</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 05 Nov</span></div>
 <p class="decision-summary">Branches may leave the draft gallery stale; the join and promote rebuild it; DS4 only warns on the default branch.</p>
+<blockquote class="decision-words">&ldquo;Rebuild at join/promote (Recommended)&rdquo;</blockquote>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Keep the warning</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep the warning</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Every branch rebuilds the gallery itself.</p>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Information only</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Information only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">DS4 becomes a note for next-version and stays a warning for the current version.</p>
 </div>
 </div>
 </article>
-<article class="decision decision-open" data-decision="D2">
-<h3 class="decision-head"><span class="decision-id">D2</span> <span class="decision-question">What about Project A&#x27;s draft items (card frame, two-level section header, settings that save by themselves)?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
-<p class="decision-meta">Asked 05 Nov · Task DU1</p>
+<article class="decision decision-decided" data-decision="D2">
+<h3 class="decision-head"><span class="decision-id">D2</span> <span class="decision-question">What about Project A&#x27;s draft items (card frame, two-level section header, settings that save by themselves)?</span></h3>
+<p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DU1</p>
 <div class="decision-options">
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Wait for its approval</span> <span class="decision-tag">Recommended</span></div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Wait for its approval</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 05 Nov</span></div>
 <p class="decision-summary">Add them in a later round once Project A approves its next version.</p>
+<blockquote class="decision-words">&ldquo;Wait for approval (Recommended)&rdquo;</blockquote>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Add now</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Add now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Add them as starter items to keep, change or delete.</p>
 </div>
 </div>
 </article>
-<article class="decision decision-open" data-decision="D1">
-<h3 class="decision-head"><span class="decision-id">D1</span> <span class="decision-question">Which of the 35 proposals go into the starter?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
-<p class="decision-meta">Asked 05 Nov · Task DU1</p>
+<article class="decision decision-decided" data-decision="D1">
+<h3 class="decision-head"><span class="decision-id">D1</span> <span class="decision-question">Which of the 35 proposals go into the starter?</span></h3>
+<p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DU1</p>
 <div class="decision-options">
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">All 35</span> <span class="decision-tag">Recommended</span></div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">All 35</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 05 Nov</span></div>
 <p class="decision-summary">Rules, components, tokens, words, plugin fixes and guard templates.</p>
+<blockquote class="decision-words">&ldquo;All 35 (Recommended)&rdquo;</blockquote>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Only those approved in a version</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Only those approved in a version</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Drops R14 and C3, which come from owner decisions not yet in a numbered version.</p>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Starter content only</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Starter content only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Rules, components, tokens and words now; plugin fixes and guards later.</p>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Pick per row</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Pick per row</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">The owner marks each row.</p>
 </div>
 </div>

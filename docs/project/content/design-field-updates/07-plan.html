@@ -1,5 +1,5 @@
 <!-- title: Plan -->
-<p>Nothing starts before the owner answers the open decisions. The plan has five work tasks plus one release. Each task owns its own files, so tasks that run at the same time never touch the same file.</p>
+<p>The owner answered D1 to D6 on 5 Nov. Tasks DU2 to DU7 hold this plan. The plan has five work tasks plus one release. Each task owns its own files, so tasks that run at the same time never touch the same file.</p>
 <table>
 <thead><tr><th>Task</th><th>Holds</th><th>Files it owns</th><th>Waits for</th><th>Size</th></tr></thead>
 <tbody>
@@ -11,7 +11,7 @@
 <tr><td>6. Join and release</td><td>One release of <code>luismc-docs</code></td><td>join, CI, merge, version fold</td><td>Tasks 1 to 5</td><td>about 30 min after the last task</td></tr>
 </tbody>
 </table>
-<p>Every branch adds a change note that names <code>claude/plugins/docs/.claude-plugin/plugin.json</code>. Task 3 also adds a DOCSPEC note if D4 is yes. No branch edits a version line.</p>
+<p>Every branch adds a change note that names <code>claude/plugins/docs/.claude-plugin/plugin.json</code>. Task 3 also adds a DOCSPEC note for R15.5 (D4). No branch edits a version line.</p>
 <p>A project that already has a design system gets nothing by itself. The starter changes reach a project only through <code>init</code> on a new project, or when the project copies the rules into its own <code>next-version</code> and its owner approves them.</p>
 <h3>Risks</h3>
 <ul>

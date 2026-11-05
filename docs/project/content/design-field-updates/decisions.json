@@ -4,70 +4,139 @@
       "id": "D1",
       "question": "Which of the 35 proposals go into the starter?",
       "asked": "2026-11-05",
-      "status": "open",
+      "status": "decided",
       "task": "DU1",
       "options": [
-        {"label": "All 35", "summary": "Rules, components, tokens, words, plugin fixes and guard templates.", "recommended": true},
-        {"label": "Only those approved in a version", "summary": "Drops R14 and C3, which come from owner decisions not yet in a numbered version."},
-        {"label": "Starter content only", "summary": "Rules, components, tokens and words now; plugin fixes and guards later."},
-        {"label": "Pick per row", "summary": "The owner marks each row."}
-      ]
+        {
+          "label": "All 35",
+          "summary": "Rules, components, tokens, words, plugin fixes and guard templates.",
+          "recommended": true
+        },
+        {
+          "label": "Only those approved in a version",
+          "summary": "Drops R14 and C3, which come from owner decisions not yet in a numbered version."
+        },
+        {
+          "label": "Starter content only",
+          "summary": "Rules, components, tokens and words now; plugin fixes and guards later."
+        },
+        {
+          "label": "Pick per row",
+          "summary": "The owner marks each row."
+        }
+      ],
+      "chosen": "All 35",
+      "decided": "2026-11-05",
+      "owner_words": "All 35 (Recommended)"
     },
     {
       "id": "D2",
       "question": "What about Project A's draft items (card frame, two-level section header, settings that save by themselves)?",
       "asked": "2026-11-05",
-      "status": "open",
+      "status": "decided",
       "task": "DU1",
       "options": [
-        {"label": "Wait for its approval", "summary": "Add them in a later round once Project A approves its next version.", "recommended": true},
-        {"label": "Add now", "summary": "Add them as starter items to keep, change or delete."}
-      ]
+        {
+          "label": "Wait for its approval",
+          "summary": "Add them in a later round once Project A approves its next version.",
+          "recommended": true
+        },
+        {
+          "label": "Add now",
+          "summary": "Add them as starter items to keep, change or delete."
+        }
+      ],
+      "chosen": "Wait for its approval",
+      "decided": "2026-11-05",
+      "owner_words": "Wait for approval (Recommended)"
     },
     {
       "id": "D3",
       "question": "How should DS4 (stale gallery) behave on branches?",
       "asked": "2026-11-05",
-      "status": "open",
+      "status": "decided",
       "task": "DU1",
       "options": [
-        {"label": "Rebuild at join and promote", "summary": "Branches may leave the draft gallery stale; the join and promote rebuild it; DS4 only warns on the default branch.", "recommended": true},
-        {"label": "Keep the warning", "summary": "Every branch rebuilds the gallery itself."},
-        {"label": "Information only", "summary": "DS4 becomes a note for next-version and stays a warning for the current version."}
-      ]
+        {
+          "label": "Rebuild at join and promote",
+          "summary": "Branches may leave the draft gallery stale; the join and promote rebuild it; DS4 only warns on the default branch.",
+          "recommended": true
+        },
+        {
+          "label": "Keep the warning",
+          "summary": "Every branch rebuilds the gallery itself."
+        },
+        {
+          "label": "Information only",
+          "summary": "DS4 becomes a note for next-version and stays a warning for the current version."
+        }
+      ],
+      "chosen": "Rebuild at join and promote",
+      "decided": "2026-11-05",
+      "owner_words": "Rebuild at join/promote (Recommended)"
     },
     {
       "id": "D4",
       "question": "May a frozen version take link-only edits after files move?",
       "asked": "2026-11-05",
-      "status": "open",
+      "status": "decided",
       "task": "DU1",
       "options": [
-        {"label": "Yes, link targets only", "summary": "Allowed when every change is a link target that points at an existing file; the check proves it and the digest is taken again.", "recommended": true},
-        {"label": "No, stay strict", "summary": "A move leaves old links in frozen versions."}
-      ]
+        {
+          "label": "Yes, link targets only",
+          "summary": "Allowed when every change is a link target that points at an existing file; the check proves it and the digest is taken again.",
+          "recommended": true
+        },
+        {
+          "label": "No, stay strict",
+          "summary": "A move leaves old links in frozen versions."
+        }
+      ],
+      "chosen": "Yes, link targets only",
+      "decided": "2026-11-05",
+      "owner_words": "Yes, links only (Recommended)"
     },
     {
       "id": "D5",
       "question": "Should the starter ask for 7:1 contrast for body text in the dark theme?",
       "asked": "2026-11-05",
-      "status": "open",
+      "status": "decided",
       "task": "DU1",
       "options": [
-        {"label": "Keep AA, mention 7:1", "summary": "WCAG 2.2 AA stays the rule; tokens.md names 7:1 as a choice.", "recommended": true},
-        {"label": "Require 7:1 in dark", "summary": "Body text and status text on tint reach 7:1 in the dark theme."}
-      ]
+        {
+          "label": "Keep AA, mention 7:1",
+          "summary": "WCAG 2.2 AA stays the rule; tokens.md names 7:1 as a choice.",
+          "recommended": true
+        },
+        {
+          "label": "Require 7:1 in dark",
+          "summary": "Body text and status text on tint reach 7:1 in the dark theme."
+        }
+      ],
+      "chosen": "Keep AA, mention 7:1",
+      "decided": "2026-11-05",
+      "owner_words": "Keep AA, mention 7:1 (Recommended)"
     },
     {
       "id": "D6",
       "question": "When does the work start?",
       "asked": "2026-11-05",
-      "status": "open",
+      "status": "decided",
       "task": "DU1",
       "options": [
-        {"label": "After DS189 and DSY99", "summary": "Tasks 1 and 2 after DS189 merges; tasks 3 and 4 after DSY99 merges.", "recommended": true},
-        {"label": "Start tasks 3 and 4 now", "summary": "Take over the kit folder from main without waiting for DSY99."}
-      ]
+        {
+          "label": "After DS189 and DSY99",
+          "summary": "Tasks 1 and 2 after DS189 merges; tasks 3 and 4 after DSY99 merges.",
+          "recommended": true
+        },
+        {
+          "label": "Start tasks 3 and 4 now",
+          "summary": "Take over the kit folder from main without waiting for DSY99."
+        }
+      ],
+      "chosen": "After DS189 and DSY99",
+      "decided": "2026-11-05",
+      "owner_words": "After DS189 and DSY99 (Recommended)"
     }
   ]
 }
