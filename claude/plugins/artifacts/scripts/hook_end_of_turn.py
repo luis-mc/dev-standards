@@ -16,12 +16,13 @@ turn end and prints a systemMessage instead (R8.4), so a session that cannot
 publish never loops. It never commits or pushes (AR50): it only reads the record (INV-4).
 
 It also checks the plan rows of a report written in the turn (owner decision D238): a report under docs/work/
-named like plan, audit, report or findings (`*.md`, written in the last 2 hours and not yet found clean) whose
+named like plan, audit, report or findings (`*.md`, changed after the turn start that hook_turn_start.py stamped on
+UserPromptSubmit, D246; without a stamp, changed in the last 2 hours; and not yet found clean) whose
 numbered rows have no task in the registry (the row key `<tag>#<id>` in a task's item or detail, see
 plan_rows_check.py) blocks the stop and lists the `task-add` lines. It reads the registry only.
 
 Per-session state: <repo>/.claude/artifacts-stop-state.json, shaped
-{session_id: {"blocks": n, "last": <hash of what was pending>,
+{"turn:<session_id>": {"start": <epoch>}, session_id: {"blocks": n, "last": <hash of what was pending>,
 "background": {"started": <time>, ...}}}.
 
 Seam for tests: CLAUDE_ARTIFACTS_SCRIPT overrides the path of project_artifacts.py.
@@ -55,7 +56,7 @@ try:
 except ImportError:      # a broken install: the plan-rows check is skipped
     PRC = None
 PLAN_REPORT_RE = re.compile(r'(^|[-_ ])(plan|audit|report|findings)[^/]*[.]md$', re.I)
-PLAN_WINDOW = 2 * 3600   # a report counts as written in this turn when it changed in the last 2 hours
+PLAN_WINDOW = 2 * 3600   # without a turn-start stamp a report counts as written in this turn when it changed in the last 2 hours
 BACKGROUND_NOTE = 'work started in the background with no Running task'
 MIGRATION_NOTE = 'the artifact record needs migrating (run render)'
 
@@ -177,8 +178,16 @@ def freshness(root, manifest, artifacts):
     return stale, H.overdue_tasks(tasks, manifest)
 
 
-def plan_report_files(root):
-    """(relative path, absolute path, mtime) of the report-like Markdown files under docs/work/, newest window only."""
+def turn_start(state, sid):
+    """The epoch time hook_turn_start.py stamped for this session's turn; None when there is no usable stamp."""
+    entry = state.get('turn:' + sid)
+    start = entry.get('start') if isinstance(entry, dict) else None
+    return float(start) if isinstance(start, (int, float)) and not isinstance(start, bool) else None
+
+
+def plan_report_files(root, since=None):
+    """(relative path, absolute path, mtime) of the report-like Markdown files under docs/work/ changed since
+    `since` (the turn start); with no stamp, only those changed in the last PLAN_WINDOW seconds."""
     found = []
     base = os.path.join(root, 'docs', 'work')
     now = time.time()
@@ -191,7 +200,7 @@ def plan_report_files(root):
                 mtime = os.path.getmtime(full)
             except OSError:
                 continue
-            if now - mtime <= PLAN_WINDOW:
+            if (mtime >= since) if since is not None else (now - mtime <= PLAN_WINDOW):
                 found.append((os.path.relpath(full, root).replace(os.sep, '/'), full, mtime))
     return sorted(found)
 
@@ -202,11 +211,11 @@ def plan_untasked(root, manifest, sid):
     nothing is wrong or anything cannot be read (fail open)."""
     if PRC is None:
         return []
-    files = plan_report_files(root)
-    if not files:
-        return []
     state_path = os.path.join(root, STATE_NAME)
     state = read_state(state_path)
+    files = plan_report_files(root, turn_start(state, sid))
+    if not files:
+        return []
     seen = state.get('plan:' + sid) if isinstance(state.get('plan:' + sid), dict) else {}
     todo = [f for f in files if seen.get(f[0]) != f[2]]
     if not todo:

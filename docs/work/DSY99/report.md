@@ -45,6 +45,6 @@ CODE DONE
 Status: started 5 Nov. Local commits only on DSY99-ds-enforcement-kit; nothing pushed or published.
 
 - DSY145: done (commit 90a4f2ec): layout.known.json and wizard-behaviour.known.json beside no-app-css.known.json; dom-layout.ts and wizard-behaviour.ts read them; README, SKILL, design-gate.md updated; tests in tools/test_ds_enforcement.py (27 passed, 0 failed).
-- DSY146: not started
+- DSY146: done: new artifacts hook_turn_start.py (UserPromptSubmit, stamps `turn:<session>` in .claude/artifacts-stop-state.json), wired in artifacts hooks.json; hook_end_of_turn.py plan check only looks at reports changed after the stamp (2 h fallback without one); change note docs/features/artifacts/changes/DSY146.md; 3 new tests in tools/test_ds_enforcement.py (30 passed, 0 failed); tools/test_project_artifacts_hooks.py 101 passed, 0 failed (full run, about 6 min).
 - DSY147: done: shim and test_ds_enforcement.py mapped in the code list of docs/features/docs/spec.md, docs-map.json regenerated; docs_check shows no M1.
 - DSY148: not started

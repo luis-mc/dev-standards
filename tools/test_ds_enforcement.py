@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import traceback
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -580,6 +581,65 @@ def the_stop_hook_ignores_briefs_old_reports_and_unreadable_registries():
         assert S.plan_untasked(d, {}, 's1') != []
         os.remove(os.path.join(d, 'docs', 'artifacts', 'registry.json'))
         assert S.plan_untasked(d, {}, 's2') == []  # unreadable registry: fail open
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+@test
+def a_report_of_an_earlier_turn_does_not_block_and_one_of_this_turn_does():
+    S = stop_module()
+    d = plan_project([])
+    try:
+        rep = os.path.join(d, 'docs', 'work', 'P1', 'plan.md')
+        now = time.time()
+        os.utime(rep, (now - 600, now - 600))        # written 10 minutes ago, within the old 2 h window
+        os.makedirs(os.path.join(d, '.claude'), exist_ok=True)
+        with open(os.path.join(d, S.STATE_NAME), 'w', encoding='utf-8') as f:
+            json.dump({'turn:s1': {'start': now - 60}}, f)
+        assert S.plan_untasked(d, {}, 's1') == []   # an earlier turn: not looked at
+        assert S.plan_untasked(d, {}, 's2') != []   # another session has no stamp: the 2 h fallback sees it
+        os.utime(rep, (now, now))                    # changed in this turn
+        rows = S.plan_untasked(d, {}, 's1')
+        assert sorted(r['key'] for r in rows) == ['P1#1', 'P1#2', 'P1#3', 'P1#B07'], rows
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+@test
+def without_a_turn_stamp_the_two_hour_window_still_applies():
+    S = stop_module()
+    d = plan_project([])
+    try:
+        rep = os.path.join(d, 'docs', 'work', 'P1', 'plan.md')
+        assert S.turn_start({}, 's1') is None
+        assert S.turn_start({'turn:s1': {'start': 'x'}}, 's1') is None
+        assert S.turn_start({'turn:s1': {'start': True}}, 's1') is None
+        assert S.plan_untasked(d, {}, 's1') != []
+        old = time.time() - 3 * 3600
+        os.utime(rep, (old, old))
+        assert S.plan_untasked(d, {}, 's1') == []
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+@test
+def the_turn_start_hook_stamps_the_session_and_is_wired_on_user_prompt_submit():
+    hooks = json.load(open(os.path.join(PLUGINS, 'artifacts', 'hooks', 'hooks.json'), encoding='utf-8'))
+    cmds = [h['command'] for g in hooks['hooks']['UserPromptSubmit'] for h in g['hooks']]
+    assert any('hook_turn_start.py' in c for c in cmds), cmds
+    d = plan_project([])
+    try:
+        git(d, 'init', '-q', '-b', 'main')
+        script = os.path.join(PLUGINS, 'artifacts', 'scripts', 'hook_turn_start.py')
+        before = time.time()
+        r = subprocess.run([sys.executable, '-I', script], input=json.dumps({'session_id': 's9', 'cwd': d}),
+                           capture_output=True, text=True, cwd=d)
+        assert r.returncode == 0, r.stderr
+        state = json.load(open(os.path.join(d, '.claude', 'artifacts-stop-state.json'), encoding='utf-8'))
+        assert before - 1 <= state['turn:s9']['start'] <= time.time() + 1, state
+        r = subprocess.run([sys.executable, '-I', script], input=json.dumps({'session_id': 's9', 'cwd': d}),
+                           capture_output=True, text=True, cwd=d, env=dict(os.environ, CLAUDE_ARTIFACTS_HOOKS='off'))
+        assert r.returncode == 0 and r.stdout == ''
     finally:
         shutil.rmtree(d, ignore_errors=True)
 
