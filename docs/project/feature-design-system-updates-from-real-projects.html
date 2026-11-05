@@ -885,19 +885,19 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 </head>
 <body>
-<div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>How it was checked</a><a href="#s3"><b>3</b>Proposed UX rules</a><a href="#s4"><b>4</b>Proposed components, tokens and words</a><a href="#s5"><b>5</b>Proposed plugin fixes and guard templates</a><a href="#s6"><b>6</b>Left out</a><a href="#s7"><b>7</b>Plan</a><a href="#s8"><b>8</b>Decisions</a><a href="#s9"><b>9</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
+<div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>How it was checked</a><a href="#s3"><b>3</b>Proposed UX rules</a><a href="#s4"><b>4</b>Proposed components, tokens and words</a><a href="#s5"><b>5</b>Proposed plugin fixes and guard templates</a><a href="#s6"><b>6</b>Left out</a><a href="#s7"><b>7</b>Plan</a><a href="#s8"><b>8</b>DSY99 review (enforcement kit)</a><a href="#s9"><b>9</b>Decisions</a><a href="#s10"><b>10</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Design-system updates from real projects</h1><p>UX patterns that two real projects added after the starter was written, checked against their code and proposed for the luismc-docs design-system starter.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-05T14:05+00:00">05 Nov 14:05</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-05T14:10+00:00">05 Nov 14:10</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">05 Nov 14:05</a> (Lisbon)</p>
 <p class="lede">Decided on 5 Nov: all 35 proposals go in; the owner chose every recommended option (D1-D6). Work starts after DS189 and DSY99 merge. 9 changes are left out.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-waiting" data-glance="waiting" open><summary><span class="glance-label">Waiting for other work</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DU8"><span class="task-id">DU8</span><span class="glance-dep">DSY99 done ~14:20 (peer estimate) + ~25 min review</span> Review DSY99 handoff together with DU2-DU7 <span class="glance-expected">05 Nov ~14:45</span></li>
+<li data-glance-task="DU8"><span class="task-id">DU8</span>Review DSY99 handoff together with DU2-DU7 <span class="glance-expected">05 Nov ~14:50</span><span class="glance-basis">handoff 14:05, review ~45 min</span></li>
 </ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">1 task</span></summary>
@@ -906,11 +906,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">1</div><div class="label">task live</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-to-do"><div class="count">6</div><div class="label">tasks to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">1</div><div class="label">task live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">6</div><div class="label">tasks to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">7 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DU8"><td data-label="Status"><span class="status-chip status-waiting">Waiting</span></td><td data-label="Item"><span class="task-id">DU8</span>Review DSY99 handoff together with DU2-DU7<span class="no-release-line">ships nothing: review only</span></td><td data-label="Detail">Wait for the session building DSY99 (design-system enforcement kit) to send its handoff here, then review it with the DU proposals as one set: overlaps, order, conflicts with design_system.py, DOCSPEC 15 and the starter. Then present to the owner.</td><td data-label="Expected">05 Nov ~14:45<span class="expected-basis">DSY99 done ~14:20 (peer estimate) + ~25 min review</span></td></tr>
+<tr data-task="DU8"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DU8</span>Review DSY99 handoff together with DU2-DU7<span class="no-release-line">ships nothing: review only</span></td><td data-label="Detail">Wait for the session building DSY99 (design-system enforcement kit) to send its handoff here, then review it with the DU proposals as one set: overlaps, order, conflicts with design_system.py, DOCSPEC 15 and the starter. Then present to the owner.</td><td data-label="Expected">05 Nov ~14:50<span class="expected-basis">handoff 14:05, review ~45 min</span></td></tr>
 <tr data-task="DU2"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DU2</span>Starter rules and words: R1-R16, W1</td><td data-label="Detail">ux-rules.md, content.md, CHANGES.md of the luismc-docs starter. New rule IDs follow DS189&#x27;s. Change note naming the docs plugin.json.</td><td data-label="Expected">06 Nov; after DS189 merges<span class="expected-basis">DS189 merge, then ~40 min cloud agent</span></td></tr>
 <tr data-task="DU3"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DU3</span>Starter components and tokens: C1-C5, T1-T5, R17</td><td data-label="Detail">components.md, tokens.md of the starter (incl. 7:1 named as an option, D5). Runs beside the rules task. Change note naming the docs plugin.json.</td><td data-label="Expected">06 Nov; after DS189 merges<span class="expected-basis">DS189 merge, then ~45 min cloud agent</span></td></tr>
 <tr data-task="DU4"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DU4</span>Docs plugin fixes F1-F5</td><td data-label="Detail">Lone -- accepted by docs scripts; DS4 warns only on the default branch, join and promote rebuild the gallery (D3); link-only edits to frozen versions with DOCSPEC R15.5 note (D4); CHANGES.md example line; README &#x27;What the apps do not follow yet&#x27;.</td><td data-label="Expected">06 Nov; after DSY99 merges<span class="expected-basis">DSY99 merge, then ~50 min cloud agent</span></td></tr>
@@ -1007,8 +1007,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr><td>F3</td><td><b>Link-only edits to frozen versions.</b> An edit that changes only link targets, each to an existing file, is allowed.</td><td>Project B needed it after moving files</td><td>Decided yes (D4). Needs a DOCSPEC R15.5 change, a <code>design_system.py</code> check and the freeze guard template</td></tr>
 <tr><td>F4</td><td><b>A new draft's CHANGES.md shows where entries go</b>: one commented example line after the header.</td><td>An agent in Project A inserted lines in the wrong place</td><td><code>cmd_promote</code> and the template</td></tr>
 <tr><td>F5</td><td><b>The version README has "What the apps do not follow yet"</b>: the changes still to build.</td><td>Project B uses it in every version from v4</td><td>Template README</td></tr>
-<tr><td>G1</td><td><b>Raw-control guard template</b>: no raw button, input, select or text area in app code; shared components only; an allowlist file per app that starts empty.</td><td>Project A, approved, in use in both of its apps</td><td>New template in DSY99's kit folder, after DSY99</td></tr>
-<tr><td>G2</td><td><b>Contrast guard template</b>: every text and fill token pair meets WCAG 2.2 AA in every theme, with a named list of known gaps that may only shrink.</td><td>Project A's contrast test guards its pairing and theme rules</td><td>New template, after DSY99</td></tr>
+<tr><td>G1</td><td><b>Raw-control guard template</b>: no raw button, input, select or text area in app code; shared components only; an allowlist file per app that starts empty.</td><td>Project A, approved, in use in both of its apps</td><td>New kit template with a <code>*.known.json</code> list, after DSY99</td></tr>
+<tr><td>G2</td><td><b>Contrast guard template</b>: every text and fill token pair meets WCAG 2.2 AA in every theme, with a named list of known gaps that may only shrink.</td><td>Project A's contrast test guards its pairing and theme rules</td><td>New kit template with a <code>*.known.json</code> list, after DSY99</td></tr>
 </tbody>
 </table>
 </section>
@@ -1049,7 +1049,40 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li>Rule IDs collide if task 1 starts before DS189 merges.</li>
 </ul>
 </section>
-<section id="s8"><h2><span class="section-number">&sect; 8</span>Decisions</h2>
+<section id="s8"><h2><span class="section-number">&sect; 8</span>DSY99 review (enforcement kit)</h2>
+<p>DSY99 is a local branch, head <code>17530413</code>, 47 files, +2612/-16. It adds the design-system enforcement kit to luismc-docs, a design edit hook to luismc-delivery, and a plan-rows Stop check to luismc-artifacts. It was handed over on 5 Nov at 14:05 and reviewed here.</p>
+<h3>What was checked</h3>
+<table>
+<thead><tr><th>Check</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td>Merge onto <code>main</code> (24 commits ahead of its base)</td><td>Clean, no conflicts (<code>git merge-tree</code>).</td></tr>
+<tr><td>Privacy: no other project, machine, user or path</td><td>Clean.</td></tr>
+<tr><td>No version lines and no plugin <code>"version"</code> edited</td><td>Clean.</td></tr>
+<tr><td>Plugins never run git writes</td><td>Clean.</td></tr>
+<tr><td><code>tools/test_ds_enforcement.py</code> from a scratch copy</td><td>30 passed, 0 failed, as reported.</td></tr>
+<tr><td>Spec lines</td><td>DOCSPEC R15.9 (kit optional, known lists only shrink) and DELIVERYSPEC DL-92 (required check). Consistent with section 15.</td></tr>
+</tbody>
+</table>
+<h3>Findings</h3>
+<table>
+<thead><tr><th>#</th><th>Finding</th><th>How it was shown</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>K1 high</td><td><b>The design edit hook approves the first breach.</b> It returns <code>permissionDecision: "allow"</code>, which skips the user's normal permission prompt for that edit.</td><td>Ran the hook on a test edit; the first breach came back as allow</td><td>Return no permission decision on the first breach, only the warning as context.</td></tr>
+<tr><td>K2 high</td><td><b>The design edit hook judges the whole new text, not what the edit adds.</b> An edit that only renames a variable next to an existing <code>&lt;button&gt;</code> counts as a breach, and the second such edit in a turn is denied. Cleaning up legacy screens, the work the known lists plan, gets blocked.</td><td>Two edits that changed <code>{count}</code> to <code>{total}</code> beside an existing button: warn, then deny</td><td>Count each pattern in the old text (Edit: <code>old_string</code>; Write: the file on disk) and judge only an increase. Leave test files out.</td></tr>
+<tr><td>K3 medium</td><td><b>The plan-rows Stop check reads ordinary agent reports as plans.</b> Any <code>docs/work/*report*.md</code> with a numbered list blocks the end of the turn until each line is a task. DSY99's own report lists 4 finished items and is flagged 4 times.</td><td>Ran <code>plan_rows_check.py</code> on DSY99's reports</td><td>Read only rows under a plan, proposal or findings heading, or only files named plan, audit or findings.</td></tr>
+<tr><td>K4 join</td><td><code>docs/work/DSY99*</code> (3 files) must be stripped; <code>docs/docs-map.json</code> is generated and is rebuilt at the join.</td><td>File list</td><td>The join does both.</td></tr>
+</tbody>
+</table>
+<h3>How DSY99 changes the DU plan</h3>
+<ul>
+<li><b>R13</b> (wizard behaviour belongs to the shared wizard) uses the kit's wizard harness as its guard. R11 and R12 use the harness's ten state names.</li>
+<li><b>G1 and G2</b> become kit templates with <code>*.known.json</code> lists, so DL-92's growth guard covers them. G1 is the gate behind the edit hook's "hand-made button" warning.</li>
+<li><b>F3</b> (link-only edits) changes R15.5's text. Any new requirement takes R15.10.</li>
+<li><b>DU4</b> builds on DSY99's <code>design_system.py</code> (the new <code>brief</code> command and the kit-in-plan default).</li>
+<li>DU agents' reports go through the plan-rows check, so K3 should be fixed before DU2 to DU6 start.</li>
+</ul>
+</section>
+<section id="s9"><h2><span class="section-number">&sect; 9</span>Decisions</h2>
 <div class="decision-list">
 <article class="decision decision-decided" data-decision="D6">
 <h3 class="decision-head"><span class="decision-id">D6</span> <span class="decision-question">When does the work start?</span></h3>
@@ -1155,7 +1188,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </article>
 </div>
 </section>
-<section id="s9"><h2><span class="section-number">&sect; 9</span>History</h2>
+<section id="s10"><h2><span class="section-number">&sect; 10</span>History</h2>
 <div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
 <tr><td>05 Nov 12:46</td><td>Feature artifact created.</td></tr>
 </tbody></table></div>
