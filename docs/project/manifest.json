@@ -12,9 +12,9 @@
     "title": "Full Progress: dev-standards",
     "url": "https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv",
     "file": "full-progress-dev-standards.html",
-    "published_sha256": "e56afac0b3654b9441dfec07298d5f674938312499dfa13cab89fec0bde0b860",
-    "published_at": "2026-11-05T08:43+00:00",
-    "published_fingerprint": "e1f75c54537b7e8f801393e448bbe99e7009cfe3d280e6e09163b4a2f8d2b70a"
+    "published_sha256": "647e745e4da62b637e57ba3c84dd4fd1cc0fed9e4d89a42f28cf0bfcbf1ee10f",
+    "published_at": "2026-11-05T09:13+00:00",
+    "published_fingerprint": "1fb4818ce4715a0969d7147aa20d08a72565d0bb997ebaca60a95d221b3aa8b9"
   },
   "feature_artifacts": [
     {
@@ -99,7 +99,7 @@
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-11-05T09:12+00:00",
+  "updated": "2026-11-05T09:13+00:00",
   "retired": [],
   "deleted": [
     {
