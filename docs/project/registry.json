@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T23:18+00:00",
+  "updated": "2026-11-05T23:22+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1607,6 +1607,31 @@
       "changed": "2026-11-05T23:18+00:00",
       "rides": "DL66",
       "started": "2026-11-05T23:00+00:00"
+    },
+    {
+      "id": "DL68",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE: pool Playwright version",
+      "detail": "Join, CI and merge for DL69 (Playwright version detection for the pool image), luismc-delivery 1.7.1.",
+      "expected": "06 Nov ~00:15",
+      "changed": "2026-11-05T23:22+00:00",
+      "expected_basis": "DL69 agent to ~00:05, join 4, CI 4, merge",
+      "release": 50
+    },
+    {
+      "id": "DL69",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Runner-pool: Playwright version from lockfiles, flag, newer pin",
+      "detail": "The pool image pins Playwright 1.49.1 for install-deps; repos on newer Playwright may need more libs. plan reads the highest Playwright version from agent repos' lockfiles, --playwright-version overrides, fallback pin raised to 1.62.1.",
+      "expected": "06 Nov ~00:05",
+      "changed": "2026-11-05T23:22+00:00",
+      "expected_basis": "cloud agent: setup 5 + work 25 + checks 10 = 40 min",
+      "rides": "DL68",
+      "started": "2026-11-05T23:22+00:00"
     },
     {
       "id": "DS1",

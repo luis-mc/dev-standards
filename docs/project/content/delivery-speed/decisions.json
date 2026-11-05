@@ -2187,6 +2187,31 @@
       "decided": "2026-11-05",
       "task": "DL67",
       "owner_words": "Option + warning (Recommended)"
+    },
+    {
+      "id": "D97",
+      "question": "Pool browsers option: how should the pool choose the Playwright version for install-deps?",
+      "asked": "2026-11-05",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Detect + flag + new pin",
+          "summary": "Read the highest Playwright version from agent repos' lockfiles; --playwright-version overrides; raise the fallback pin.",
+          "recommended": true
+        },
+        {
+          "label": "Flag + new pin",
+          "summary": "--playwright-version and a newer pin; no detection."
+        },
+        {
+          "label": "New pin only",
+          "summary": "Raise the pinned version only."
+        }
+      ],
+      "chosen": "Detect + flag + new pin",
+      "decided": "2026-11-05",
+      "task": "DL69",
+      "owner_words": "Detect + flag + new pin (Recommended)"
     }
   ]
 }
