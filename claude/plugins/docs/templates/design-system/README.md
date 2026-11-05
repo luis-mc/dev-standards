@@ -12,7 +12,7 @@ This folder is the **only home of the project's UX rules, tokens, components and
 
 ## What every version folder holds
 
-- `README.md`: the status (draft, or approved with the approval line) and what the version is.
+- `README.md`: the status (draft, or approved with the approval line), what the version is, and the section 'What the apps do not follow yet' (one line per change the apps still have to build). Keep that section current until the implementation is approved.
 - `CHANGES.md`: the change list from the version before, one entry per change (`- C1: what changed (file; source)`).
 - `ux-rules.md`: numbered rules with IDs (`UX-1` ...); each rule names the guard that proves it. `init` starts it with a generic, project-neutral starter set to keep, change or delete before v1 is approved.
 - `components.md`: numbered sections, one per shared component (export path, what it is for, guard).
@@ -25,7 +25,7 @@ This folder is the **only home of the project's UX rules, tokens, components and
 
 - **Only the owner approves a version**, and its implementation. Nobody else, and no script, does.
 - The approval is recorded by `design_system.py promote --approved-by ... --approved-on ... --evidence ...`: it needs all three.
-- A numbered folder is **read-only once approved**; the digest in `approvals.json` and the guard tests flag any edit. Two one-time additions are allowed afterwards: `audit/` (what each app must change) and `visual/` (real screenshots once the implementation is live).
+- A numbered folder is **read-only once approved**; the digest in `approvals.json` and the guard tests flag any edit. A link-only edit after files move is accepted with `design_system.py relink vN --apply`. Two one-time additions are allowed afterwards: `audit/` (what each app must change) and `visual/` (real screenshots once the implementation is live).
 - **Every change, even a typo, goes into `next-version`.**
 
 ## Order of work

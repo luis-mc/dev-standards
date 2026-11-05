@@ -61,6 +61,9 @@ def main(argv=None) -> int:
     ap.add_argument("--base", default=None)
     ap.add_argument("--dir", default="docs/work/reports")
     ap.add_argument("--apply", action="store_true")
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if "--" in argv:  # a package-manager script passes a lone -- through: drop it
+        argv.remove("--")
     a = ap.parse_args(argv)
     root = D.repo_root(a.root)
     cfg = D.load_config(root)

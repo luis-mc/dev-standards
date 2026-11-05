@@ -9,3 +9,4 @@ One entry per change, `- C<n>: what changed (file; source)`.
 - C5: components 21 to 33 added: search bar, check box row, slider, time axis list, page jump map, live log, activity strip, dates and numbers, table export, picture card, chart, shared component rules, other shared parts (components.md; the reference design system)
 - C6: tokens added: row heights, tone shapes, focus, z-order, density, loop duration, ease-in-out (tokens.md; the reference design system)
 - C7: wizard step names, and more date and time formats, added (content.md; the reference design system)
+<!-- - C1: what changed (file; source) -->

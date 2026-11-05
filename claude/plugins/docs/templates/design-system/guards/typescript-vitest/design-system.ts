@@ -8,7 +8,7 @@
  */
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 export const DESIGN_SYSTEM = 'docs/design-system';
 export const DRAFT = 'next-version';
@@ -59,4 +59,39 @@ export const treeDigest = (folder: string): string => {
         `${rel} ${createHash('sha256').update(normalised(readFileSync(join(folder, rel)))).digest('hex')}`,
     );
   return createHash('sha256').update(lines.join('\n')).digest('hex');
+};
+
+// Link-only edits (R15.5): after files move, an approved version may change link targets and nothing else.
+const LINK = /(\]\()([^)\s]+)|(<a\b[^>]*?\bhref=")([^"]*)|(`)([^`\s]*\/[^`\s]*)(?=`)/g;
+
+const maskLinks = (line: string): { masked: string; targets: { kind: string; target: string }[] } => {
+  const targets: { kind: string; target: string }[] = [];
+  const masked = line.replace(LINK, (_m, a, b, c, d, e, f) => {
+    if (a) { targets.push({ kind: 'md', target: b }); return `${a}\0`; }
+    if (c) { targets.push({ kind: 'href', target: d }); return `${c}\0`; }
+    targets.push({ kind: 'tick', target: f }); return `${e}\0`;
+  });
+  return { masked, targets };
+};
+
+const targetExists = (root: string, fileRel: string, kind: string, target: string): boolean => {
+  const t0 = target.split('#')[0]!.split('?')[0]!;
+  if (t0 === '' || /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(t0)) return true; // an anchor or an outside link
+  const t = kind === 'tick' ? t0 : decodeURI(t0);
+  return existsSync(kind === 'tick' || t.startsWith('/') ? join(root, t) : join(root, dirname(fileRel), t));
+};
+
+/** True when every changed line differs only in link targets and each new target exists. */
+export const isLinkOnlyChange = (oldText: string, newText: string, fileRel: string, root: string = repoRoot): boolean => {
+  const a = oldText.replaceAll('\r\n', '\n').split('\n');
+  const b = newText.replaceAll('\r\n', '\n').split('\n');
+  if (a.length !== b.length) return false;
+  return a.every((x, i) => {
+    const y = b[i]!;
+    if (x === y) return true;
+    const mx = maskLinks(x);
+    const my = maskLinks(y);
+    if (mx.masked !== my.masked || mx.targets.length !== my.targets.length) return false;
+    return my.targets.every((n, j) => n.target === mx.targets[j]!.target || targetExists(root, fileRel, n.kind, n.target));
+  });
 };

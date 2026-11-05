@@ -88,7 +88,7 @@ class DesignSystemTests(unittest.TestCase):
         self.assertEqual(rec["digest"], S.tree_digest(ds / "v1"))
         # next-version recreated as a writable copy with a draft status and an empty change list
         self.assertIn("draft", r(d, "docs/design-system/next-version/README.md"))
-        self.assertNotIn("- C1", r(d, "docs/design-system/next-version/CHANGES.md"))
+        self.assertNotRegex(r(d, "docs/design-system/next-version/CHANGES.md"), r"(?m)^- C1")
         self.assertEqual(r(d, "docs/design-system/next-version/tokens.md"), r(d, "docs/design-system/v1/tokens.md"))
         self.assertTrue(os.access(ds / "next-version/tokens.md", os.W_OK))
         self.assertFalse((ds / "v1/tokens.md").stat().st_mode & stat.S_IWUSR)

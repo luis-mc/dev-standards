@@ -191,6 +191,9 @@ def main(argv=None) -> int:
     f.add_argument("--date", default=None)
     f.add_argument("--dry-run", action="store_true")
     f.add_argument("--root", default=None)
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if "--" in argv:  # a package-manager script passes a lone -- through: drop it
+        argv.remove("--")
     a = ap.parse_args(argv)
     root = D.repo_root(a.root)
 
