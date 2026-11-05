@@ -846,3 +846,245 @@ class PoolCommandTests(unittest.TestCase):
         with mock.patch.object(P, "default_check", lambda st, pr=None: calls.append(st["action"]) or False):
             self.run_cmd("pool-run", "yes", True)
         self.assertTrue(all(a != "windows-service" for a in calls))
+
+
+class DL63HostLoadCheckTests(unittest.TestCase):
+    STEP = {"action": "host-load-task"}
+
+    def probe(self, schtasks, age):
+        p = FakeProbe()
+        p.sh = lambda argv, input=None, timeout=60: schtasks
+        p.host_load = lambda: (({"mem": 40.0, "cpu": 10.0}, age) if age is not None else (None, None))
+        return p
+
+    def test_denied_query_with_a_fresh_file_passes(self):
+        self.assertTrue(P.default_check(self.STEP, self.probe((1, ""), 12.0)))
+
+    def test_denied_query_with_a_stale_or_missing_file_is_not_done(self):
+        self.assertFalse(P.default_check(self.STEP, self.probe((1, ""), 300.0)))
+        self.assertFalse(P.default_check(self.STEP, self.probe((1, ""), None)))
+        self.assertFalse(P.default_check(self.STEP, self.probe(None, None)))
+
+    def test_a_good_query_passes_first(self):
+        self.assertTrue(P.default_check(self.STEP, self.probe((0, "TaskName"), None)))
+
+
+class DL63RunnerVersionTests(unittest.TestCase):
+    def probe(self, data):
+        p = FakeProbe()
+        p.gh_json = lambda args: (data, None) if data is not None else (None, "gh cannot run")
+        return p
+
+    @staticmethod
+    def release(v, sha="a" * 64):
+        return {"tag_name": "v" + v, "assets": [{"name": "actions-runner-linux-x64-%s.tar.gz" % v, "digest": "sha256:" + sha}]}
+
+    def test_latest_release_and_digest_are_used(self):
+        self.assertEqual(P.resolve_runner(self.probe(self.release("2.400.1"))), ("2.400.1", "a" * 64, "latest release"))
+
+    def test_fallback_when_the_api_cannot_be_reached_or_has_no_digest(self):
+        for data in (None, {"tag_name": "v2.400.1", "assets": []}, {"tag_name": "v2.100.0", "assets": []}):
+            v, sha, _ = P.resolve_runner(self.probe(data))
+            self.assertEqual((v, sha), (P.RUNNER_VERSION, P.RUNNER_SHA256))
+
+    def test_pinned_fallback_is_above_the_floor_and_templates_match(self):
+        self.assertIsNone(P.below_floor(P.RUNNER_VERSION))
+        self.assertIn("2.329.0", P.below_floor("2.321.0"))
+        self.assertIn("ARG RUNNER_VERSION=" + P.RUNNER_VERSION, (POOL / "Dockerfile").read_text())
+        self.assertIn(":-" + P.RUNNER_VERSION + "}", (POOL / "compose.yaml").read_text())
+
+    def test_runner_sha_works_with_the_chosen_version_and_the_fallback(self):
+        self.assertEqual(P.runner_sha(self.probe(self.release("2.400.1", "b" * 64)), "2.400.1"), "b" * 64)
+        self.assertEqual(P.runner_sha(self.probe(None)), P.RUNNER_SHA256)
+        self.assertIsNone(P.runner_sha(self.probe(None), "2.400.1"))
+
+    def test_pool_files_write_the_version_to_env(self):
+        with tempfile.TemporaryDirectory() as d:
+            dest = os.path.join(d, "pools", "main")
+            P.write_pool_files("main", {"cpus": 2.0, "mem_gib": 6.0}, dest=dest, runner_version="2.400.1")
+            self.assertIn("RUNNER_VERSION=2.400.1", Path(dest, ".env").read_text())
+
+    def test_pool_up_refuses_a_version_below_the_floor(self):
+        probe = FakeProbe()
+        probe.read_text = lambda path: "RUNNER_VERSION=2.321.0\n"
+        ok, why = P.Executor(probe).run({"action": "pool-up", "pool": "main"})
+        self.assertFalse(ok)
+        self.assertIn("below 2.329.0", why)
+
+
+class DL63SizingTests(unittest.TestCase):
+    def found(self, used, vm, pool_gib=0.0, others=(), other_gib=0.0, wsl=12.0):
+        class Pr(WinProbe):
+            def memory_gib(s):
+                return (32.0, used)
+
+            def wsl_vm_gib(s):
+                return vm
+
+            def container_gib(s):
+                return {"pool": pool_gib, "other": other_gib, "others": list(others)}
+        f = P.detect(Pr(dict(WIN_FILES)))
+        f["wsl"]["memory"] = wsl
+        return f
+
+    def test_a_rerun_with_the_pool_running_gives_the_same_cap(self):
+        first = P.measured_sizing(self.found(used=10.0, vm=0.0))
+        # the pool and WSL now run: the VM holds 9 GiB, which must not count as used
+        second = P.measured_sizing(self.found(used=19.0, vm=9.0))
+        self.assertEqual(first["mem_gib"], second["mem_gib"])
+        self.assertEqual(first["wsl"], second["wsl"])
+
+    def test_without_a_vm_the_pool_containers_are_left_out(self):
+        a = self.found(used=10.0, vm=0.0)
+        b = self.found(used=14.0, vm=0.0, pool_gib=4.0)
+        self.assertEqual(a["host"]["used_gib"], b["host"]["used_gib"])
+
+    def test_wsl_memory_never_drops_below_current_when_other_containers_run(self):
+        cap = P.measured_sizing(self.found(used=20.0, vm=0.0, others=["old-runner"], other_gib=3.0, wsl=14.0))
+        self.assertGreaterEqual(cap["wsl"]["memory"], 14)
+        self.assertGreaterEqual(cap["wsl"]["memory"], 3 + cap["mem_gib"] + 2)
+
+    def test_pool_cap_leaves_room_for_other_containers(self):
+        alone = P.sizing(32, 5, 16, docker_gib=12)
+        shared = P.sizing(32, 5, 16, docker_gib=12, other_gib=4.0, others_run=True, wsl_current=12)
+        self.assertEqual(shared["mem_gib"], alone["mem_gib"] - 4)
+
+    def test_container_gib_splits_pool_from_others(self):
+        p = FakeProbe()
+
+        def sh(argv, input=None, timeout=60):
+            if argv[1] == "ps":
+                return 0, "pool-main-pool-1\t1\nold-runner\t\n"
+            return 0, "pool-main-pool-1\t2GiB / 8GiB\nold-runner\t512MiB / 8GiB\n"
+        p.sh = sh
+        out = p.container_gib()
+        self.assertEqual((out["pool"], out["other"], out["others"]), (2.0, 0.5, ["old-runner"]))
+
+    def test_plan_shows_old_and_new_values(self):
+        found = self.found(used=10.0, vm=0.0, wsl=4.0)
+        found["pool_env"] = {"POOL_MEM": "1.0g", "POOL_CPUS": "2.0"}
+        pl = P.plan(found, ["owner/example-app"], cap=P.measured_sizing(found))
+        titles = {s["id"]: s["title"] for s in pl["steps"]}
+        self.assertIn("memory 4GB ->", titles["wslconfig"])
+        self.assertIn("processors 6 ->", titles["wslconfig"])
+        self.assertIn("POOL_MEM 1.0g ->", titles["pool-files"])
+        self.assertIn("POOL_CPUS 2.0 ->", titles["pool-files"])
+
+    def test_wslconfig_handler_reports_old_and_new(self):
+        with tempfile.TemporaryDirectory() as d:
+            probe = FakeProbe()
+            probe.wslconfig = os.path.join(d, ".wslconfig")
+            probe.read_text = lambda p: Path(p).read_text() if os.path.exists(p) else None
+            Path(probe.wslconfig).write_text("[wsl2]\nmemory=4GB\nprocessors=2\n")
+            ok, why = P.Executor(probe).run({"action": "wslconfig", "cap": {"wsl": {"memory": 10, "processors": 5}}})
+            self.assertIn("memory 4GB -> 10GB", why)
+            self.assertIn("processors 2 -> 5", why)
+
+
+class DL63PoolAgentTests(unittest.TestCase):
+    def setUp(self):
+        self.d = tempfile.mkdtemp()
+        self.file = os.path.join(self.d, "agents.json")
+        self.calls = []
+
+    def run_(self, argv, **kw):
+        self.calls.append((argv, kw))
+        return R()
+
+    def test_role_and_database_are_two_separate_psql_calls_in_order(self):
+        A.create_db("app1", self.d, "r-app1", self.run_)
+        psql = [(a, k) for a, k in self.calls if a[0] == "psql"]
+        self.assertEqual(len(psql), 2)
+        role, db = psql[0][1]["input"], psql[1][1]["input"]
+        self.assertIn("CREATE ROLE", role)
+        self.assertNotIn("CREATE DATABASE", role)
+        self.assertIn("CREATE DATABASE", db)
+        self.assertNotIn("CREATE ROLE", db)
+        self.assertIn("NOT EXISTS", db)
+        self.assertIn("IF EXISTS", role)
+        self.assertNotIn("-c", psql[0][0] + psql[1][0])
+
+    def test_rerun_with_runner_file_skips_config_and_finishes_the_rest(self):
+        os.makedirs(os.path.join(self.d, "app1"))
+        Path(self.d, "app1", ".runner").write_text("{}")
+        msg = A.add_agent("app1", "owner/example-app", "T", "main", True, self.file, self.d, self.run_)
+        self.assertIn("added", msg)
+        self.assertFalse([a for a, _ in self.calls if "./config.sh" in a])
+        self.assertEqual(len([a for a, _ in self.calls if a[0] == "psql"]), 2)
+        self.assertTrue(os.path.exists(os.path.join(self.d, "app1", "db.env")))
+        self.assertEqual(json.loads(Path(self.file).read_text())["agents"][0]["slug"], "app1")
+
+    def test_failed_database_step_names_the_step(self):
+        def bad(argv, **kw):
+            return R(1, "boom") if argv[0] == "psql" else R()
+        with self.assertRaises(A.PoolError) as cm:
+            A.add_agent("app1", "owner/example-app", "T", "main", True, self.file, self.d, bad)
+        self.assertIn("database setup", str(cm.exception))
+        self.assertFalse(os.path.exists(self.file) and json.loads(Path(self.file).read_text())["agents"])
+
+
+class DockerCpuCapTests(unittest.TestCase):
+    def test_cap_stays_below_docker_cpus(self):
+        self.assertEqual(P.cap_cpus(19.0, 19), 18)
+        self.assertEqual(P.cap_cpus(5.0, 2), 1)
+        self.assertEqual(P.cap_cpus(3.0, 19), 3.0)
+
+    def test_sizing_caps_at_ncpu_minus_one(self):
+        self.assertEqual(P.sizing(64, 0, 32, docker_cpus=2)["cpus"], 1)
+        self.assertEqual(P.sizing(64, 0, 40, docker_cpus=19)["cpus"], 18)
+
+    def test_ncpu_comes_from_docker_then_wslconfig_then_host(self):
+        class Docker(FakeProbe):
+            def sh(self, argv, input=None, timeout=60):
+                return (0, "19\n") if argv[:2] == ["docker", "info"] else (1, "")
+        self.assertEqual(P.docker_ncpu(Docker()), 19)
+        probe = FakeProbe({"C:/Users/u1/.wslconfig": "[wsl2]\nprocessors=6\n"})
+        probe.sh = lambda argv, input=None, timeout=60: None
+        self.assertEqual(P.docker_ncpu(probe), 6)
+        bare = FakeProbe()
+        bare.sh = lambda argv, input=None, timeout=60: None
+        bare.cpu_count = lambda: 4
+        self.assertEqual(P.docker_ncpu(bare), 4)
+
+    def test_pool_files_cap_follows_docker(self):
+        class Docker(FakeProbe):
+            def sh(self, argv, input=None, timeout=60):
+                return (0, "19\n") if argv[:2] == ["docker", "info"] else (0, "")
+        seen = {}
+        orig = P.write_pool_files
+        P.write_pool_files = lambda pool, cap, runner_version=None, **k: seen.update(cap=cap) or "dest"
+        try:
+            ok, _ = P.Executor(Docker()).run(P._step("f", "F", "pool-files", pool="main", cap={"cpus": 19.0, "mem_gib": 6.0}))
+        finally:
+            P.write_pool_files = orig
+        self.assertTrue(ok)
+        self.assertEqual(seen["cap"]["cpus"], 18)
+
+
+class RunsOnWarningTests(unittest.TestCase):
+    def run_step(self, files, repo_path):
+        probe = FakeProbe(files)
+        return P.Executor(probe).run(P._step("v", "V", "set-variable", repo="owner/example-app", name="CI_RUNS_ON",
+                                             value="[]", repo_path=repo_path))
+
+    def test_lists_workflows_that_do_not_read_it(self):
+        with tempfile.TemporaryDirectory() as d:
+            wf = os.path.join(d, ".github", "workflows")
+            os.makedirs(wf)
+            Path(wf, "ci.yml").write_text("jobs:\n  a:\n    runs-on: ubuntu-latest\n")
+            Path(wf, "e2e.yml").write_text("jobs:\n  a:\n    runs-on: ubuntu-latest\n")
+            Path(wf, "cleanup.yml").write_text("jobs:\n  a:\n    runs-on: ${{ vars.CI_RUNS_ON }}\n")
+            probe = P.Probe()
+            ex = P.Executor(probe)
+            probe.gh = lambda args, input=None: (0, "")
+            ok, text = ex.run(P._step("v", "V", "set-variable", repo="owner/example-app", name="CI_RUNS_ON",
+                                      value="[]", repo_path=d))
+        self.assertTrue(ok)
+        self.assertIn("do not read it: ci.yml, e2e.yml.", text)
+        self.assertNotIn("cleanup.yml", text)
+        self.assertIn("vars.CI_RUNS_ON || 'ubuntu-latest'", text)
+
+    def test_no_local_checkout_skips_with_a_note(self):
+        ok, text = self.run_step({}, None)
+        self.assertTrue(ok)
+        self.assertIn("not checked out here", text)

@@ -33,6 +33,53 @@ def load_agents(path):
     return out
 
 
+def _log(msg):
+    print('pool_supervisor: ' + msg, flush=True)
+
+
+def _user_exists(user):
+    import pwd  # Linux only; imported here so the module loads on Windows test hosts
+    try:
+        pwd.getpwnam(user)
+        return True
+    except KeyError:
+        return False
+
+
+def _group_exists(name):
+    try:
+        import grp
+        grp.getgrnam(name)
+        return True
+    except (KeyError, ImportError):
+        return False
+
+
+def ensure_user(agent, base, run=None, exists=_user_exists, group_exists=_group_exists, stat=os.stat, log=_log):
+    """Make sure the agent's system user exists (a rebuilt container loses /etc/passwd; /agents survives).
+
+    The uid and gid come from the owner of /agents/<slug>. Returns True when the user exists afterwards.
+    A missing folder logs one line and returns False.
+    """
+    user, slug = agent['user'], agent['slug']
+    if exists(user):
+        return True
+    run = run or (lambda argv: subprocess.run(argv, check=False).returncode)
+    folder = os.path.join(base, slug)
+    try:
+        st = stat(folder)
+    except OSError:
+        log('skip %s: folder %s is missing' % (user, folder))
+        return False
+    if not group_exists(user):
+        run(['groupadd', '--system', '--gid', str(st.st_gid), user])
+    rc = run(['useradd', '--system', '--uid', str(st.st_uid), '--gid', str(st.st_gid),
+              '--home-dir', folder, '--shell', '/usr/sbin/nologin', user])
+    if rc not in (0, None):
+        log('could not create user %s (exit %s)' % (user, rc))
+    return rc in (0, None)
+
+
 def popen_spawn(agent, base):
     """Start one agent as its own user. The runner's own run.sh handles its job and exits when told to stop."""
     folder = os.path.join(base, agent['slug'])
@@ -41,8 +88,10 @@ def popen_spawn(agent, base):
 
 
 class Supervisor:
-    def __init__(self, agents_file, base='/agents', spawn=None, clock=time.monotonic):
+    def __init__(self, agents_file, base='/agents', spawn=None, clock=time.monotonic, ensure=None):
         self.agents_file, self.base = agents_file, base
+        self.ensure = ensure or (lambda a: True)  # main() passes ensure_user
+        self.warned = set()  # slugs already logged as having no user
         self.spawn = spawn or (lambda a: popen_spawn(a, base))
         self.clock = clock
         self.state = {}  # slug -> {proc, started, fails, next}
@@ -68,6 +117,14 @@ class Supervisor:
                 st['next'] = now + min(BACKOFF_MAX, BACKOFF_MIN * (2 ** max(0, st['fails'] - 1)))
                 st['proc'] = None
             if now >= st['next']:
+                if not self.ensure(agent):
+                    if slug not in self.warned:
+                        self.warned.add(slug)
+                        _log('user %s does not exist; will retry with back-off' % agent['user'])
+                    st['fails'] += 1
+                    st['next'] = now + min(BACKOFF_MAX, BACKOFF_MIN * (2 ** max(0, st['fails'] - 1)))
+                    continue
+                self.warned.discard(slug)
                 st['proc'] = self.spawn(agent)
                 st['started'] = now
 
@@ -95,7 +152,9 @@ def main(argv=None):
     ap.add_argument('--base', default='/agents')
     ap.add_argument('--grace-sec', type=float, default=290.0)
     args = ap.parse_args(argv)
-    sup = Supervisor(args.agents, args.base)
+    for agent in load_agents(args.agents):
+        ensure_user(agent, args.base)
+    sup = Supervisor(args.agents, args.base, ensure=lambda a: ensure_user(a, args.base))
     done = []
     signal.signal(signal.SIGTERM, lambda *_: done.append(1))
     signal.signal(signal.SIGINT, lambda *_: done.append(1))

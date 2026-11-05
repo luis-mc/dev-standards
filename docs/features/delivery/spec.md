@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.6.1
+version: 0.6.2
 owner: agents
 type: reference
 code:
@@ -367,6 +367,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.6.2 | 2026-11-05 | RELEASE-48 | Runner pool: host load task check by file age, latest runner version with a floor and a pinned fallback, two-call database setup that can be rerun, and a stable memory cap that shows old -> new values. | DL63 |
 | 0.6.1 | 2026-11-05 | RELEASE-47 | The join rebuilds the next-version design-system gallery and commits it when a joined branch changed that folder. | DU4 |
 | 0.6.0 | 2026-11-05 | RELEASE-45 | Design-gate reference (kit as a required check, DL-92), the edit-time design hook wired in hooks.json (warn once per turn, then deny), design_system config keys in the schema, and a known-list growth check in change_notes.py. | DSY99 |
 | 0.5.4 | 2026-11-04 | RELEASE-42 | A release waits only for the configured CI workflows, or for those that run on every pull-request commit.<br>Ledger writes keep an unreadable ledger instead of replacing it; agent-eta accepts any open agent by either id; --root works after the subcommand; duplicate agent rows merge. | DL53, DL55 |
