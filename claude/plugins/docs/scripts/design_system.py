@@ -10,6 +10,8 @@
   design_system.py approve-implementation VERSION --approved-on DATE --evidence TEXT [--apply]
   design_system.py guards --stack typescript-vitest [--dest DIR] [--apply]
                                                       copy the guard-test templates for a stack
+                                                      (--stack typescript-vitest-kit: the enforcement kit: no app CSS scan,
+                                                      DOM layout checker, wizard behaviour harness; each with a ratchet list)
   design_system.py styles [--json]                    read-only: list the project's style files and CSS custom properties
 
 Layout (R15.1): docs/design-system/{README.md, approvals.json, next-version/, v1/, v2/ ...}.
@@ -46,7 +48,7 @@ STATUS_RE = re.compile(r"<!-- status:start -->.*?<!-- status:end -->", re.S)
 ENTRY_RE = re.compile(r"^- C\d+\b", re.M)
 ORDER_RE = re.compile(r"^#{1,6}\s*order of work\b", re.I | re.M)
 RULE_ID_RE = re.compile(r"^\|\s*(UX-\d+)\s*\|", re.M)
-GUARD_STACKS = {"typescript-vitest": "typescript-vitest"}
+GUARD_STACKS = {"typescript-vitest": "typescript-vitest", "typescript-vitest-kit": "typescript-vitest-kit"}
 ERR, WARN = "error", "warning"
 
 

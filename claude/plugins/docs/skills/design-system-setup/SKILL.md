@@ -53,6 +53,16 @@ python3 "$S" approve-implementation v1 --approved-on 2026-11-20 --evidence "chat
 
 `guards` copies `design-system.ts` (finds the enforced version, computes the digest) and three tests: layout, freeze (digest and branch diff against `DESIGN_BASE`, default `origin/main`) and follow (retired words, rule table and citations, raw colours). Edit `CONFIG` at the top of `design-system-follow.test.ts` yourself (source roots, extensions, token files), and make the test runner include `scripts/design/*.test.ts`, after the owner's yes to the plan. Other stacks: port the same three checks; the digest algorithm is in R15.5.
 
+## Enforcement kit (optional, after the owner's yes)
+
+For a project whose apps must follow the design system, not only cite it. `guards --stack typescript-vitest-kit --apply` copies three guards into `scripts/design/`. Each has a self-test and a ratchet list: a new breach fails, and a listed breach that is gone but still listed fails, so the list only shrinks. No screenshot comparison anywhere.
+
+1. **No app CSS** (`no-app-css-scan.ts`, `no-app-css.test.ts`, `no-app-css.known.json`): app folders carry no stylesheet, no CSS-in-JS, no `style=` with layout or colour, no class the shared UI package does not define. Edit `CONFIG` (app folders, the shared UI folder) and `TASK_ID`. First run: put today's breaches in the known list, each with the task that removes it.
+2. **DOM layout** (`dom-layout.ts`, `dom-layout-judge.test.ts`, `dom-layout-example.spec.ts`): at 360, 393 and 1300 px, no sideways overflow, gaps on the spacing scale, aligned left edges, stacked buttons of one width, the primary action in view. Copy the example spec per app and list its screens; known breaches go in `KNOWN_LAYOUT_BREACHES`.
+3. **Wizard behaviour** (`wizard-behaviour.ts`, `wizard-behaviour.test.ts`): one driver per wizard renders it in each state and reads a snapshot from the DOM. The rules: later steps not pressable, exactly one primary, a disabled primary shows its reason, Stop when the job can stop, Done never empty, a button with an open request is disabled. Breaches go in `WIZARD_BEHAVIOUR_TO_FIX`, which only shrinks.
+
+Then: make the project's test runner include the three, and make them a required check (the delivery plugin's `references/design-gate.md`). The UI brief and pull request checklist is `templates/design-system/ui-brief-checklist.md`: paste it into the project's brief and PR templates. Never import another project's known lists.
+
 ## Existing design system elsewhere
 
 Move it to `docs/design-system/` with `git mv`, rewrite links and guard paths in one task (R15.8), add the earlier approvals to `approvals.json` by hand, then run `check`.
