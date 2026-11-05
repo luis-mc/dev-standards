@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T16:22+00:00",
+  "updated": "2026-11-05T16:24+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1458,10 +1458,10 @@
       "app": "",
       "status": "Running",
       "item": "Runner pool on Windows: 4 bugs block setup (SHA, CPU headroom, CRLF, runner dir)",
-      "detail": "Peer reports, all confirmed. (1) runner_sha(): notes regex misses '<!-- BEGIN SHA linux-x64 -->hash'; match the markers. (2) sizing(): processors = ceil(cpu) equals a whole cap; keep 1 above. (3) templates/runner-pool/* reach Windows caches as CRLF (no eol=lf in .gitattributes), so pool-add-agent fails in Linux; add eol=lf and write LF in write_pool_files. (4) pool_agents.py runs config.sh as r-SLUG in root-owned /opt/runner; copy the runner to /agents/SLUG, chown, run there. Blocks a real project's pool setup.",
-      "expected": "05 Nov ~17:16",
-      "changed": "2026-11-05T16:16+00:00",
-      "expected_basis": "cloud agent from 16:16: setup 5 + work 45 + checks 10",
+      "detail": "Agent READY 16:18: SHA from the release-note markers; WSL processors at least 1 above the pool CPUs; LF for pool files (.gitattributes + copy); each agent runs its own runner copy. Memory 7 vs 10 GB: two separate measurements, not a bug. Branch CI from 16:23.",
+      "expected": "05 Nov ~16:33",
+      "changed": "2026-11-05T16:24+00:00",
+      "expected_basis": "branch CI started 16:23, about 10 min",
       "rides": "DL61",
       "started": "2026-11-05T16:16+00:00"
     },
@@ -1472,30 +1472,30 @@
       "status": "Running",
       "item": "Release the runner-pool Windows fixes and the word rewording",
       "detail": "Light join of DL60-runner-pool-windows and DU12-reword-hint-word, ready PR, CI, merge; luismc-delivery and luismc-docs version fold. A real project's pool setup waits on it.",
-      "expected": "05 Nov ~17:41",
-      "changed": "2026-11-05T16:16+00:00",
-      "expected_basis": "DL60 cloud agent 60 min from 16:16, join 10, CI 10, merge 5",
+      "expected": "05 Nov ~16:58",
+      "changed": "2026-11-05T16:24+00:00",
+      "expected_basis": "DL60 done 16:18; its branch CI from 16:23 about 10 min, join 10, CI 10, merge 5",
       "release": 46,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-05T16:16+00:00",
-          "end": "2026-11-05T17:16+00:00"
+          "end": "2026-11-05T16:33+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-05T17:16+00:00",
-          "end": "2026-11-05T17:26+00:00"
+          "start": "2026-11-05T16:33+00:00",
+          "end": "2026-11-05T16:43+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-05T17:26+00:00",
-          "end": "2026-11-05T17:36+00:00"
+          "start": "2026-11-05T16:43+00:00",
+          "end": "2026-11-05T16:53+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-05T17:36+00:00",
-          "end": "2026-11-05T17:41+00:00"
+          "start": "2026-11-05T16:53+00:00",
+          "end": "2026-11-05T16:58+00:00"
         }
       ],
       "risk": {
