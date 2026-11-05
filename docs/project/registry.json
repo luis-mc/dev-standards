@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T16:16+00:00",
+  "updated": "2026-11-05T16:18+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4416,9 +4416,9 @@
       "status": "Running",
       "item": "Reword a word on main that hints at another project (3 places)",
       "detail": "Owner D11: old artifacts decision (content/artifacts/decisions.json D-option labels) says another project's look; test_design_system.py:225 and test_ci_speedups.py:555 use a neutral placeholder list. Starts after RELEASE-45 merges.",
-      "expected": "05 Nov ~16:40",
-      "changed": "2026-11-05T16:16+00:00",
-      "expected_basis": "this session, from 16:17, about 20 min",
+      "expected": "05 Nov ~16:28",
+      "changed": "2026-11-05T16:18+00:00",
+      "expected_basis": "code done 16:18; branch CI started 16:18, about 10 min",
       "rides": "DL61",
       "started": "2026-11-05T16:17+00:00"
     },
