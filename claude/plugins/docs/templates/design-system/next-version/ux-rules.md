@@ -60,7 +60,7 @@ Every rule has an ID. A feature spec and the code cite the ID (`design system UX
 | UX-51 | **One shape per kind of card.** Same height, no small variant, long names stop at two lines. A state is said in words, never a bare colour frame. | none yet |
 | UX-52 | **An overview only shows and links.** It has no command buttons. Each command lives in one place. Settings hold configuration only. | none yet |
 | UX-53 | **"x ago" keeps ageing while the page stays open.** It reads one shared clock that pauses while the page is hidden and catches up when shown. | none yet |
-| UX-54 | **A wizard's behaviour belongs to the shared wizard.** Current step, locks, Stop, busy and Done live in one part. A page passes data only. Guard: the kit's wizard harness (`guards/typescript-vitest-kit/wizard-behaviour.ts`). | guards/typescript-vitest-kit/wizard-behaviour.ts |
+| UX-54 | **A wizard's behaviour belongs to the shared wizard.** Current step, locks, Stop, busy and Done live in one part. A page passes data only. With the enforcement kit installed, its wizard harness (`scripts/design/wizard-behaviour.ts`) proves it; write that path in the Guard column then. | none yet |
 | UX-55 | **A theme changes token values only, never a component.** A theme may change one named accent slot. | none yet |
 <!-- rule-table:end -->
 
