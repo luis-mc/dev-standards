@@ -1,5 +1,9 @@
 [
   {
+    "date": "05 Nov 15:33",
+    "change": "DL60 item changed from \"Runner pool: read the runner SHA-256 from the release notes' SHA markers\" to \"Runner pool: SHA from the release notes' markers; CPU headroom below WSL\""
+  },
+  {
     "date": "04 Nov 23:02",
     "change": "DL49 item changed from \"RELEASE-41: release numbers, phases at midnight, bug review fixes\" to \"RELEASE-41: release numbers from the ledger, phases over midnight, R5.45 advice\""
   },

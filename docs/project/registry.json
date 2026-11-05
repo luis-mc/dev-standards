@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T15:32+00:00",
+  "updated": "2026-11-05T15:33+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1457,11 +1457,11 @@
       "owner": "delivery-speed",
       "app": "",
       "status": "To do",
-      "item": "Runner pool: read the runner SHA-256 from the release notes' SHA markers",
-      "detail": "Peer report, confirmed here: delivery_runner_pool.py runner_sha() falls back to the notes regex name[^0-9a-f]{0,40}([0-9a-f]{64}), which never matches '<!-- BEGIN SHA linux-x64 -->hash' (the gap holds x64 and hex letters), so pool-up fails when the asset has no digest. Fix: match the BEGIN/END SHA markers, else name.{0,80}?hash; add a test. Also check: plan printed .wslconfig memory=7GB but the step wrote 10GB (not yet reproduced).",
-      "expected": "05 Nov ~16:30",
-      "changed": "2026-11-05T15:32+00:00",
-      "expected_basis": "after DU12; about 30 min with test"
+      "item": "Runner pool: SHA from the release notes' markers; CPU headroom below WSL",
+      "detail": "Peer reports, both confirmed in delivery_runner_pool.py. (1) runner_sha(): notes regex name[^0-9a-f]{0,40}hash never matches '<!-- BEGIN SHA linux-x64 -->hash'; match the BEGIN/END SHA markers, else name.{0,80}?hash. (2) sizing(): wsl processors = ceil(cpu), so a whole-number cap (19.0) equals processors=19 and Docker refuses it; keep processors at least 1 above the cap. Tests for both. Also check: plan said memory=7GB, step wrote 10GB (not reproduced).",
+      "expected": "05 Nov ~16:40",
+      "changed": "2026-11-05T15:33+00:00",
+      "expected_basis": "after DU12 at 16:00; about 40 min with tests"
     },
     {
       "id": "DS1",
