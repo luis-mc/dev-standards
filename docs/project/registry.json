@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T22:41+00:00",
+  "updated": "2026-11-05T22:46+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1506,12 +1506,11 @@
       "id": "DL62",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: runner-pool fixes 5-8",
       "detail": "Join, CI and merge for the runner-pool fixes (host-load check, runner version, create_db, memory cap).",
-      "expected": "05 Nov ~23:05",
-      "changed": "2026-11-05T22:41+00:00",
-      "expected_basis": "PR #153 CI started 22:41, ~20 min, then merge",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T22:46+00:00",
       "release": 48,
       "phases": [
         {
@@ -1536,11 +1535,11 @@
       "id": "DL63",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Runner-pool fixes: host-load check, runner version, create_db, memory cap",
       "detail": "Bugs 5-8 from a Windows pool run on delivery 1.6.2: schtasks query denied unelevated; runner 2.321.0 below GitHub floor; CREATE ROLE+DATABASE in one transaction and add_agent not resumable; memory cap shrinks each rerun and lowers .wslconfig under other runners.",
       "expected": "05 Nov",
-      "changed": "2026-11-05T22:27+00:00",
+      "changed": "2026-11-05T22:45+00:00",
       "rides": "DL62",
       "started": "2026-11-05T21:34+00:00"
     },
@@ -1548,11 +1547,11 @@
       "id": "DL64",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Runner-pool: recreate agent users at container start",
       "detail": "Bug 9: useradd r-<slug> is lost when the pool container is recreated (only /agents is a volume); supervisor loops on 'runuser: user does not exist'. Recreate users from agents.json at start with uid/gid from /agents/<slug>.",
       "expected": "05 Nov",
-      "changed": "2026-11-05T22:27+00:00",
+      "changed": "2026-11-05T22:45+00:00",
       "rides": "DL62",
       "started": "2026-11-05T21:40+00:00"
     },
@@ -1560,11 +1559,11 @@
       "id": "DL65",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Runner-pool: CPU cap below VM count; warn when CI ignores CI_RUNS_ON",
       "detail": "Bug 10: POOL_CPUS equal to the VM's CPU count is rejected by Docker; cap at NCPU-1 or docker info NCPU. Also warn when the repo's main CI workflows do not read vars.CI_RUNS_ON. Runs on top of DL63.",
       "expected": "05 Nov",
-      "changed": "2026-11-05T22:39+00:00",
+      "changed": "2026-11-05T22:45+00:00",
       "rides": "DL62",
       "started": "2026-11-05T22:27+00:00"
     },
