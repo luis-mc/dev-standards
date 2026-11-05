@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T00:02+00:00",
+  "updated": "2026-11-05T00:04+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1405,6 +1405,19 @@
         }
       ],
       "started": "2026-11-04T23:45+00:00"
+    },
+    {
+      "id": "DL58",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Overnight merge watcher and hourly check-in",
+      "detail": "delivery_watch.py runs from main's code and the hourly cron checks for peer bug reports (D77, D78, D87) until the owner returns.",
+      "expected": "05 Nov ~07:00",
+      "changed": "2026-11-05T00:04+00:00",
+      "expected_basis": "runs until the owner returns at 07:00",
+      "no_release": "watching only; ships nothing",
+      "started": "2026-11-05T00:00+00:00"
     },
     {
       "id": "DS1",
