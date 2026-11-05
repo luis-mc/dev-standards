@@ -353,6 +353,9 @@ def main(argv=None) -> int:
     ap.add_argument("--strict", action="store_true")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--no-reference", action="store_true", help="skip generated_reference commands (they run shell commands from docs/docs.json; review it first)")
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if "--" in argv:  # a package-manager script passes a lone -- through: drop it
+        argv.remove("--")
     a = ap.parse_args(argv)
     root = D.repo_root(a.root)
     if not (root / "docs").is_dir():

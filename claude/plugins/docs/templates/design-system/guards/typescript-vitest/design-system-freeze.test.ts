@@ -2,11 +2,12 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { DESIGN_SYSTEM, NUMBERED, ONE_TIME, isArchived, repoRoot, treeDigest, versionNumbers } from './design-system.ts';
+import { DESIGN_SYSTEM, NUMBERED, ONE_TIME, isArchived, isLinkOnlyChange, repoRoot, treeDigest, versionNumbers } from './design-system.ts';
 
 // Freeze guard (R15.4, R15.5): an approved version is read-only, and design changes touch only next-version.
 // Two checks: the digest recorded at approval (approvals.json) still matches the folder, and the branch's diff
-// against its base (DESIGN_BASE, default origin/main) changes no numbered folder except the one-time audit/ and visual/.
+// against its base (DESIGN_BASE, default origin/main) changes no numbered folder except the one-time audit/ and visual/,
+// and link-only edits (every changed line differs only in link targets, each new target exists) after files move.
 
 export interface Change {
   status: string; // git status letter: A, M, D, R, C, T
@@ -18,6 +19,7 @@ export const freezeProblems = (
   changes: readonly Change[],
   known: readonly string[] = [],
   archived: readonly string[] = [],
+  linkOnly: (path: string) => boolean = () => false,
 ): string[] => {
   const problems: string[] = [];
   const pattern = new RegExp(`^${DESIGN_SYSTEM}/(v[1-9]\\d*)/(.*)$`);
@@ -28,6 +30,7 @@ export const freezeProblems = (
     const rest = m[2]!;
     const oneTime = (ONE_TIME as readonly string[]).includes(rest.split('/')[0]!);
     if (status === 'D' && archived.includes(version)) continue; // moved to docs/archive/: an archive, not an edit
+    if (status === 'M' && linkOnly(path)) continue; // a link-only edit after files moved
     const promotion = status === 'A' && known.includes(version); // a new version folder, approved in approvals.json
     if (!(status === 'A' && oneTime) && !promotion)
       problems.push(`${path} (${status}): ${version} is approved and read-only; put the change into next-version`);
@@ -58,6 +61,8 @@ describe('an approved design-system version is read-only', () => {
     expect(freezeProblems([p('A', 'notes.md')])).toHaveLength(1);
     expect(freezeProblems([p('A', 'README.md')], ['v1'])).toEqual([]); // the promotion itself
     expect(freezeProblems([p('D', 'tokens.md')], ['v1'], ['v1'])).toEqual([]); // v1 moved to docs/archive/
+    expect(freezeProblems([p('M', 'README.md')], [], [], () => true)).toEqual([]); // a link-only edit
+    expect(freezeProblems([p('A', 'README.md')], [], [], () => true)).toHaveLength(1);
     expect(freezeProblems([{ status: 'M', path: `${DESIGN_SYSTEM}/next-version/tokens.md` }])).toEqual([]);
   });
 
@@ -87,6 +92,10 @@ describe('an approved design-system version is read-only', () => {
         changes,
         Object.keys(recorded()),
         Object.keys(recorded()).filter((v) => isArchived(Number(v.slice(1)))),
+        (path) => {
+          const old = git('show', `${mb}:${path}`);
+          return old !== null && existsSync(join(repoRoot, path)) && isLinkOnlyChange(old, readFileSync(join(repoRoot, path), 'utf8'), path);
+        },
       )).toEqual([]);
   });
 });

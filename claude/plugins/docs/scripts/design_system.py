@@ -8,6 +8,9 @@
   design_system.py promote --approved-by WHO --approved-on DATE --evidence TEXT [--apply]
                                                       next-version -> the next numbered folder, only with a recorded approval
   design_system.py approve-implementation VERSION --approved-on DATE --evidence TEXT [--apply]
+  design_system.py relink VERSION [--base REF] [--apply]
+                                                      accept a link-only edit of an approved version (files moved): every changed
+                                                      line differs only in link targets and each new target exists; records the new digest
   design_system.py guards --stack typescript-vitest [--dest DIR] [--apply]
                                                       copy the guard-test templates for a stack
                                                       (--stack typescript-vitest-kit: the enforcement kit: no app CSS scan,
@@ -52,6 +55,7 @@ ORDER_RE = re.compile(r"^#{1,6}\s*order of work\b", re.I | re.M)
 RULE_ID_RE = re.compile(r"^\|\s*(UX-\d+)\s*\|", re.M)
 GUARD_STACKS = {"typescript-vitest": "typescript-vitest", "typescript-vitest-kit": "typescript-vitest-kit"}
 ERR, WARN = "error", "warning"
+CHANGES_HEAD = "# Changes from {name}\n\nOne entry per change, `- C<n>: what changed (file; source)`.\n\n<!-- - C1: what changed (file; source) -->\n"
 
 
 def finding(sev, code, path, msg):
@@ -414,13 +418,134 @@ def visuals_fresh(folder: Path) -> bool:
     return gallery_state(folder) == "fresh"
 
 
+def on_task_branch(root: Path) -> bool:
+    """True when HEAD is a branch other than the default branch (docs.json `default_branch`, else main). No git: False."""
+    try:
+        cur = D.git(root, "rev-parse", "--abbrev-ref", "HEAD")
+    except OSError:
+        return False
+    name = cur.stdout.strip() if cur.returncode == 0 else ""
+    return bool(name) and name != "HEAD" and name != D.load_config(Path(root))["default_branch"]
+
+
 def gallery_info(root: Path) -> list:
-    """Information only: numbered versions whose gallery was built by an older script. They are frozen; nothing to rebuild."""
+    """Information only: numbered versions whose gallery was built by an older script (frozen, nothing to rebuild),
+    and next-version's stale gallery on a task branch (the join rebuilds it)."""
     out = []
+    d = ds_dir(root) / DRAFT
+    if (d / "ux-rules.md").is_file() and on_task_branch(root) and gallery_state(d) != "fresh":
+        out.append("next-version: gallery is stale (information only on a task branch; the join rebuilds it, or run design_system.py visuals)")
     for n in numbers(root):
         if gallery_state(ds_dir(root) / f"v{n}") == "script":
             out.append(f"v{n}: gallery built by an older gallery script (frozen, information only; next-version is rebuilt, not v{n})")
     return out
+
+
+# ------------------------------------------------------------------ relink (R15.5)
+LINK_RE = re.compile(r'(\]\()([^)\s]+)|(<a\b[^>]*?\bhref=")([^"]*)|(`)([^`\s]*/[^`\s]*)(?=`)')
+
+
+def _mask_links(line: str):
+    """(line with every link target replaced by a mark, the targets as [(kind, target)]). Kinds: md, href, tick."""
+    found = []
+
+    def sub(m):
+        if m.group(1):
+            found.append(("md", m.group(2)))
+            return m.group(1) + "\0"
+        if m.group(3):
+            found.append(("href", m.group(4)))
+            return m.group(3) + "\0"
+        found.append(("tick", m.group(6)))
+        return m.group(5) + "\0"
+
+    return LINK_RE.sub(sub, line), found
+
+
+def _target_exists(root: Path, file_rel: str, kind: str, target: str) -> bool:
+    from urllib.parse import unquote
+    t = target.split("#", 1)[0].split("?", 1)[0]
+    if not t or re.match(r"^(?:[a-z][a-z0-9+.-]*:|//)", t, re.I):
+        return True  # an anchor or an outside link: not a file in this repo
+    t = unquote(t) if kind != "tick" else t
+    if kind == "tick" or t.startswith("/"):
+        return (Path(root) / t.lstrip("/")).exists()
+    return (Path(root) / Path(file_rel).parent / t).exists()
+
+
+def link_only_change(root: Path, file_rel: str, old: str, new: str):
+    """(ok, problems). ok when every changed line differs only in link targets and each new target exists."""
+    a, b = _norm(old.encode()).decode().split("\n"), _norm(new.encode()).decode().split("\n")
+    if len(a) != len(b):
+        return False, ["the number of lines changed"]
+    bad = []
+    for i, (x, y) in enumerate(zip(a, b), 1):
+        if x == y:
+            continue
+        mx, tx = _mask_links(x)
+        my, ty = _mask_links(y)
+        if mx != my or len(tx) != len(ty):
+            bad.append(f"line {i} changes more than link targets")
+            continue
+        for (_k, old_t), (kind, new_t) in zip(tx, ty):
+            if old_t != new_t and not _target_exists(Path(root), file_rel, kind, new_t):
+                bad.append(f"line {i}: the target {new_t} does not exist")
+    return not bad, bad
+
+
+def _git_text(root: Path, ref: str, rel: str):
+    r = D.git(root, "show", f"{ref}:{rel}")
+    return r.stdout if r.returncode == 0 else None
+
+
+def cmd_relink(root: Path, a) -> int:
+    name = a.version or ""
+    folder = ds_dir(root) / name
+    appr = read_approvals(root)
+    rec = appr.get("versions", {}).get(name)
+    if not NUMBERED.match(name) or not folder.is_dir() or not rec or not rec.get("approved"):
+        print(f"refused: {name or 'a version'} is not an approved numbered version", file=sys.stderr)
+        return 2
+    base = a.base or "HEAD"
+    r = D.git(root, "diff", "--no-renames", "--name-status", base, "--", f"{DS_REL}/{name}/")
+    if r.returncode != 0:
+        print("refused: cannot read the change with git", file=sys.stderr)
+        return 2
+    files, problems = [], []
+    for ln in r.stdout.splitlines():
+        st, _, path = ln.partition("\t")
+        if path.split("/")[3:4] and path.split("/")[3] in ONE_TIME:
+            continue
+        if st[:1] != "M":
+            problems.append(f"{path}: {st[:1]}: only edits of existing files are link-only")
+            continue
+        old = _git_text(root, base, path)
+        ok, why = link_only_change(root, path, old or "", (root / path).read_text(encoding="utf-8"))
+        files.append(path)
+        problems += [f"{path}: {w}" for w in why]
+    if problems:
+        for p in problems:
+            print("refused:", p, file=sys.stderr)
+        return 2
+    if not files:
+        print("nothing to relink: no file of " + name + " differs from " + base)
+        return 0
+    print(f"{'relink' if a.apply else 'would relink'}: {name}: {len(files)} file(s) changed only in link targets, every new target exists")
+    for f in files:
+        print("  ", f)
+    if not a.apply:
+        print("dry run: add --apply")
+        return 0
+    rec["digest"] = tree_digest(folder)
+    rec.setdefault("relinked", []).append({"date": today(), "files": [f.split("/", 3)[3] for f in files]})
+    write_approvals(root, appr)
+    print(f"done: new digest of {name} recorded in approvals.json")
+    return 0
+
+
+def _link_only_on_base(root: Path, base: str, rel: str) -> bool:
+    old, p = _git_text(root, base, rel), Path(root) / rel
+    return old is not None and p.is_file() and link_only_change(root, rel, old, p.read_text(encoding="utf-8"))[0]
 
 
 # ------------------------------------------------------------------ checks
@@ -462,7 +587,11 @@ def check(root: Path, base: str | None = None) -> list:
             out.append(finding(WARN, "DS5", rel(name, "ux-rules.md"), f"rule ID {rid} appears twice (R15.2)"))
         if (folder / "ux-rules.md").is_file() and name in (DRAFT, f"v{nums[-1]}" if nums else DRAFT):
             state = gallery_state(folder)
-            if state in ("missing", "source"):
+            if name == DRAFT and state != "fresh" and on_task_branch(root):
+                pass  # D3: information only on a task branch (gallery_info); the join rebuilds it
+            elif state == "source" and NUMBERED.match(name) and appr.get(name, {}).get("relinked"):
+                pass  # a relinked version is frozen: its gallery cannot be rebuilt, and only link targets changed (R15.5)
+            elif state in ("missing", "source"):
                 out.append(finding(WARN, "DS4", rel(name, "review-visuals/index.html"), "missing or older than the version's files: run design_system.py visuals"))
             elif state == "script" and name == DRAFT:  # a numbered version is frozen: older script is information only (gallery_info)
                 out.append(finding(WARN, "DS4", rel(name, "review-visuals/index.html"), "built by an older gallery script, run design_system.py visuals"))
@@ -482,6 +611,8 @@ def check(root: Path, base: str | None = None) -> list:
                     continue
                 if st[:1] == "D" and len(parts) > 2 and (m := NUMBERED.match(parts[2])) and archived(root, int(m.group(1))):
                     continue  # moved to docs/archive/: an archive, not an edit (R2.7)
+                if st[:1] == "M" and _link_only_on_base(root, base, path):
+                    continue  # a link-only edit after files moved is allowed (R15.5)
                 if st[:1] != "A":
                     out.append(finding(WARN, "DS2", path, f"{st[:1]}: this branch changes a numbered version; put the change into next-version (R15.5)"))
     return out
@@ -650,7 +781,7 @@ def cmd_promote(root: Path, a) -> int:
     shutil.copytree(folder, draft, ignore=shutil.ignore_patterns(*ONE_TIME))
     _set_writable(draft, True)
     _replace_status(draft / "README.md", f"**Status:** draft. Not approved. Created on {today()} as a full copy of `{name}`; the apps follow `{name}` until the owner approves this draft.")
-    (draft / "CHANGES.md").write_text("# Changes from " + name + "\n\nOne entry per change, `- C<n>: what changed (file; source)`.\n\n", encoding="utf-8")
+    (draft / "CHANGES.md").write_text(CHANGES_HEAD.format(name=name), encoding="utf-8")
     build_visuals(draft)
     _set_writable(folder, False)
     print(f"done: {name} approved and read-only; next-version recreated. Next: an audit of what each app must change, then the owner approves the implementation (approve-implementation).")
@@ -739,7 +870,7 @@ def cmd_brief(root: Path, apply: bool) -> int:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", choices=["init", "status", "check", "visuals", "promote", "approve-implementation", "guards", "styles", "brief"])
+    ap.add_argument("command", choices=["init", "status", "check", "visuals", "promote", "approve-implementation", "guards", "styles", "brief", "relink"])
     ap.add_argument("version", nargs="?")
     ap.add_argument("--root", default=None)
     ap.add_argument("--apply", action="store_true")
@@ -750,6 +881,9 @@ def main(argv=None) -> int:
     ap.add_argument("--stack", default="typescript-vitest", choices=sorted(GUARD_STACKS))
     ap.add_argument("--dest", default="scripts/design")
     ap.add_argument("--base", default=None)
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if "--" in argv:  # a package-manager script passes a lone -- through: drop it
+        argv.remove("--")
     a = ap.parse_args(argv)
     root = D.repo_root(a.root)
     if a.command == "init":
@@ -781,6 +915,8 @@ def main(argv=None) -> int:
         return 0
     if a.command == "promote":
         return cmd_promote(root, a)
+    if a.command == "relink":
+        return cmd_relink(root, a)
     if a.command == "approve-implementation":
         a.version = a.version or ""
         return cmd_approve_impl(root, a)

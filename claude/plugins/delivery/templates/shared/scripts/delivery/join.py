@@ -68,18 +68,50 @@ def write_join_result(root: Path, joined: list[str], stopped_at: str | None, con
 DOCS_SUMMARIES_PATH = ".delivery/docs-summaries.md"
 
 
-def find_docs_work(home: str | None = None) -> Path | None:
-    """The luismc-docs `docs_work.py`: $LUISMC_DOCS_WORK, else the newest plugin cache copy, else the marketplace checkout."""
+def find_docs_script(name: str, home: str | None = None) -> Path | None:
+    """A luismc-docs script: next to $LUISMC_DOCS_WORK, else the newest plugin cache copy, else the marketplace checkout."""
     env = os.environ.get("LUISMC_DOCS_WORK")
     if env:
-        return Path(env) if Path(env).is_file() else None
+        found_env = Path(env).parent / name
+        return found_env if found_env.is_file() else None
     home = home or os.path.expanduser("~")
-    found = glob.glob(os.path.join(home, ".claude", "plugins", "cache", "*", "luismc-docs", "*", "scripts", "docs_work.py"))
+    found = glob.glob(os.path.join(home, ".claude", "plugins", "cache", "*", "luismc-docs", "*", "scripts", name))
     found.sort(key=lambda f: [int(x) if x.isdigit() else 0 for x in f.split(os.sep)[-3].split(".")])
     if found:
         return Path(found[-1])
-    market = glob.glob(os.path.join(home, ".claude", "plugins", "marketplaces", "*", "claude", "plugins", "docs", "scripts", "docs_work.py"))
+    market = glob.glob(os.path.join(home, ".claude", "plugins", "marketplaces", "*", "claude", "plugins", "docs", "scripts", name))
     return Path(market[0]) if market else None
+
+
+def find_docs_work(home: str | None = None) -> Path | None:
+    """The luismc-docs `docs_work.py`."""
+    return find_docs_script("docs_work.py", home)
+
+
+DRAFT_DIR = "docs/design-system/next-version"
+
+
+def rebuild_draft_gallery(root: Path, start: str) -> dict:
+    """The join rebuilds the next-version review gallery when a joined branch changed that folder, and commits it.
+    Skips cleanly (with a reason) when nothing changed there or the docs plugin is missing."""
+    changed = dc.run_git(["diff", "--name-only", start, "HEAD", "--", DRAFT_DIR + "/"], cwd=root, check=False)
+    if changed.returncode != 0 or not changed.stdout.strip():
+        return {"rebuilt": False, "reason": "next-version unchanged"}
+    script = find_docs_script("design_system.py")
+    if script is None:
+        print("join: luismc-docs is not installed; the next-version gallery was not rebuilt", flush=True)
+        return {"rebuilt": False, "reason": "luismc-docs not present"}
+    done = subprocess.run([sys.executable, str(script), "--root", str(root), "visuals", "next-version"],
+                          capture_output=True, text=True, cwd=root)
+    if done.returncode != 0:
+        dc.eprint("join: design_system.py visuals failed (exit %d); going on: %s" % (done.returncode, (done.stderr or done.stdout).strip()))
+        return {"rebuilt": False, "reason": "visuals failed"}
+    dc.run_git(["add", "--", DRAFT_DIR], cwd=root, check=False)
+    if dc.run_git(["diff", "--cached", "--quiet"], cwd=root, check=False).returncode != 0:
+        dc.run_git(["commit", "-q", "-m", "Rebuild the next-version design-system gallery"], cwd=root, check=False, env=dc.git_env())
+        print("join: rebuilt the next-version design-system gallery", flush=True)
+        return {"rebuilt": True}
+    return {"rebuilt": False, "reason": "gallery already current"}
 
 
 def strip_temporary_docs(root: Path) -> dict:
@@ -252,6 +284,7 @@ def main(argv: list[str] | None = None) -> int:
     print("join: %s at %s" % (into, dc.rev("HEAD", root)[:10]))
 
     ci_gate = args.ci_gate or bool(cfg.get("ci_gate"))
+    join_start = dc.rev("HEAD", root)
     joined: list[str] = []
     for branch in args.branches:
         verdict = gate_verify.verify(branch, integ_ref, remote, allow_older_base=True, root=root) if gated else None
@@ -312,7 +345,9 @@ def main(argv: list[str] | None = None) -> int:
     write_join_result(root, joined, None, [])
 
     docs = strip_temporary_docs(root)
-    docs_extra: dict = {"docs": {k: v for k, v in docs.items() if k != "summaries"}, "docs_summaries": docs["summaries"]}
+    gallery = rebuild_draft_gallery(root, join_start) if join_start else {"rebuilt": False, "reason": "no start"}
+    docs_extra: dict = {"docs": {k: v for k, v in docs.items() if k != "summaries"}, "docs_summaries": docs["summaries"],
+                        "gallery": gallery}
     if docs["summaries"]:
         out = root / DOCS_SUMMARIES_PATH
         out.parent.mkdir(parents=True, exist_ok=True)
