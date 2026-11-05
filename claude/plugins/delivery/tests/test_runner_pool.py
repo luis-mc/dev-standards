@@ -1088,3 +1088,67 @@ class RunsOnWarningTests(unittest.TestCase):
         ok, text = self.run_step({}, None)
         self.assertTrue(ok)
         self.assertIn("not checked out here", text)
+
+
+class BrowsersTests(unittest.TestCase):
+    def test_chromium_goes_to_env_and_the_build(self):
+        with tempfile.TemporaryDirectory() as d:
+            dest = os.path.join(d, "pools", "main")
+            P.write_pool_files("main", {"cpus": 2.0, "mem_gib": 6.0}, dest=dest, browsers="chromium")
+            self.assertIn("POOL_BROWSERS=chromium", Path(dest, ".env").read_text())
+        self.assertIn("POOL_BROWSERS: ${POOL_BROWSERS:-none}", (POOL / "compose.yaml").read_text())
+
+    def test_default_is_none(self):
+        with tempfile.TemporaryDirectory() as d:
+            dest = os.path.join(d, "pools", "main")
+            P.write_pool_files("main", {"cpus": 2.0, "mem_gib": 6.0}, dest=dest)
+            self.assertIn("POOL_BROWSERS=none", Path(dest, ".env").read_text())
+            P.write_pool_files("main", {"cpus": 2.0, "mem_gib": 6.0}, dest=dest, browsers="firefox")
+            self.assertIn("POOL_BROWSERS=none", Path(dest, ".env").read_text())
+        self.assertIn("ARG POOL_BROWSERS=none", (POOL / "Dockerfile").read_text())
+
+    def test_pool_up_passes_the_build_arg(self):
+        probe = FakeProbe()
+        probe.read_text = lambda path: "RUNNER_VERSION=2.400.1\nPOOL_BROWSERS=chromium\n"
+        seen = {}
+        orig = P.subprocess.run
+        P.subprocess.run = lambda argv, **k: seen.update(env=k.get("env")) or type("R", (), {"returncode": 0, "stderr": ""})()
+        orig_sha = P.runner_sha
+        P.runner_sha = lambda probe, version=None: "a" * 64
+        try:
+            ok, _ = P.Executor(probe).run({"action": "pool-up", "pool": "main"})
+        finally:
+            P.subprocess.run = orig
+            P.runner_sha = orig_sha
+        self.assertTrue(ok)
+        self.assertEqual(seen["env"]["POOL_BROWSERS"], "chromium")
+
+    def test_plan_step_text_says_what_the_image_holds(self):
+        found = P.detect(FakeProbe(dict(FILES)))
+        chromium = next(s for s in P.plan(found, ["owner/example-app"], browsers="chromium")["steps"] if s["id"] == "pool-files")
+        self.assertIn("Chromium system libraries", chromium["title"])
+        self.assertIn("300-400 MB", chromium["title"])
+        plain = next(s for s in P.plan(found, ["owner/example-app"])["steps"] if s["id"] == "pool-files")
+        self.assertIn("no Chromium libraries", plain["title"])
+
+    def test_dockerfile_has_the_conditional_install_deps_line(self):
+        df = (POOL / "Dockerfile").read_text()
+        self.assertIn('"$POOL_BROWSERS" = "chromium"', df)
+        self.assertIn("playwright@${PLAYWRIGHT_VERSION} install-deps chromium", df)
+        self.assertEqual(df.count("ARG PLAYWRIGHT_VERSION="), 1)
+
+    def test_warning_lists_workflows_that_need_root(self):
+        with tempfile.TemporaryDirectory() as d:
+            wf = os.path.join(d, ".github", "workflows")
+            os.makedirs(wf)
+            Path(wf, "e2e.yml").write_text("jobs:\n  a:\n    runs-on: ${{ vars.CI_RUNS_ON }}\n    steps:\n      - run: npx playwright install --with-deps chromium\n")
+            Path(wf, "deps.yml").write_text("jobs:\n  a:\n    runs-on: ${{ vars.CI_RUNS_ON }}\n    steps:\n      - run: sudo apt-get install -y jq\n")
+            Path(wf, "clean.yml").write_text("jobs:\n  a:\n    runs-on: ${{ vars.CI_RUNS_ON }}\n    steps:\n      - run: npx playwright install chromium\n")
+            probe = P.Probe()
+            probe.gh = lambda args, input=None: (0, "")
+            ok, text = P.Executor(probe).run(P._step("v", "V", "set-variable", repo="owner/example-app", name="CI_RUNS_ON",
+                                                     value="[]", repo_path=d))
+        self.assertTrue(ok)
+        self.assertIn("need root to install packages, which pool jobs do not have: deps.yml, e2e.yml.", text)
+        self.assertNotIn("clean.yml", text)
+        self.assertIn("browsers: chromium", text)

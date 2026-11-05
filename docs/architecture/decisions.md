@@ -146,6 +146,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D93 | Change the user-level questions Stop hook to the if/else python fallback? | Change it | decided | 2026-11-05 |
 | delivery-speed | D94 | How are the TypeScript design-system guard templates tested? | Add a CI job | decided | 2026-11-05 |
 | delivery-speed | D95 | Should the SessionStart effort_drift.py hook use the same if/else python fallback as the Stop hook? | Change it | decided | 2026-11-05 |
+| delivery-speed | D96 | Runner-pool issue 11: Playwright e2e jobs cannot run on the pool (no Chromium libs, no sudo). How should luismc-delivery handle it? | Option + warning | decided | 2026-11-05 |
 | design-field-updates | D1 | Which of the 35 proposals go into the starter? | All 35 | decided | 2026-11-05 |
 | design-field-updates | D10 | K1: what does the first design breach do? | Warn only | decided | 2026-11-05 |
 | design-field-updates | D11 | What to do with a word on main that hints at another project's name (3 places)? | Reword all 3 | decided | 2026-11-05 |
