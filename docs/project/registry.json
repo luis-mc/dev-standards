@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T13:45+00:00",
+  "updated": "2026-11-05T14:05+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4283,6 +4283,19 @@
       "expected": "06 Nov; after DU2-DU6",
       "changed": "2026-11-05T13:45+00:00",
       "expected_basis": "last task, then ~30 min"
+    },
+    {
+      "id": "DU8",
+      "owner": "design-field-updates",
+      "app": "luismc-docs",
+      "status": "Waiting",
+      "item": "Review DSY99 handoff together with DU2-DU7",
+      "detail": "Wait for the session building DSY99 (design-system enforcement kit) to send its handoff here, then review it with the DU proposals as one set: overlaps, order, conflicts with design_system.py, DOCSPEC 15 and the starter. Then present to the owner.",
+      "expected": "05 Nov ~14:45",
+      "changed": "2026-11-05T14:05+00:00",
+      "expected_basis": "DSY99 done ~14:20 (peer estimate) + ~25 min review",
+      "waits_on": "work",
+      "no_release": "review only"
     },
     {
       "id": "MP1",
