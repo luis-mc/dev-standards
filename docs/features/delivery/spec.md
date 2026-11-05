@@ -13,6 +13,7 @@ code:
   - claude/plugins/delivery/commands/*.md
   - claude/plugins/delivery/.claude-plugin/plugin.json
   - claude/plugins/delivery/references/*.json
+  - claude/plugins/delivery/references/design-gate.md
   - claude/plugins/delivery/templates/shared/scripts/delivery/*.py
   - claude/plugins/delivery/templates/**
   - claude/plugins/delivery/templates/shared/scripts/delivery/CONTRACT.md

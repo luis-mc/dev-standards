@@ -1,0 +1,4 @@
+{
+  "comment": "The known breaches of the wizard behaviour guard (wizard-behaviour.ts). A RATCHET: the list only shrinks. Each entry: wizard, state (a wizard state or \"*\"), rule and the task that removes it. Remove an entry when its breach is gone; the guard fails for a listed breach that no longer happens and for any breach not listed. Never add an entry: fix the code instead.",
+  "entries": []
+}

@@ -1,0 +1,4 @@
+{
+  "comment": "The known breaches of the no-app-CSS guard (no-app-css.test.ts). A RATCHET: the list only shrinks. Remove an entry (or lower its count) when the breach is gone; the guard fails if a listed breach is gone but still listed, and for any breach not listed. Never add an entry or raise a count: fix the code with shared UI parts instead. Each entry names the task that removes it.",
+  "entries": []
+}

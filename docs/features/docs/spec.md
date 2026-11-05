@@ -9,6 +9,8 @@ owner: agents
 type: reference
 code:
   - claude/plugins/docs/**
+  - tools/fixtures/vitest_shim/*.mjs
+  - tools/test_ds_enforcement.py
 last_verified: 2026-11-01
 ---
 # Documentation standard plugin (luismc-docs)

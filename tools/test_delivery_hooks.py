@@ -59,8 +59,14 @@ class Project:
         return os.path.join(self.dir, 'gh_stub.py')
 
     def run(self, script, data, env=None):
-        e = dict(os.environ, DELIVERY_NOW=NOW, DELIVERY_LOCAL_HEAVY_DIR=os.path.join(self.dir, 'local-heavy'))
-        e.pop('CLAUDE_DELIVERY_HOOKS', None)
+        # Hermetic: no reading of this machine. The load guard (DL-77, DL-78) would otherwise judge the real memory and
+        # CPU of the PC and the machine file in ~/.claude, so a busy PC made unrelated tests fail (DSY148).
+        e = dict(os.environ, DELIVERY_NOW=NOW, DELIVERY_LOCAL_HEAVY_DIR=os.path.join(self.dir, 'local-heavy'),
+                 DELIVERY_LOAD='10,10', DELIVERY_MACHINE_CONFIG=os.path.join(self.dir, 'machine-none.json'),
+                 DELIVERY_LOAD_CACHE=os.path.join(self.dir, 'load-cache.json'), PYTHONUTF8='1')
+        for k in ('CLAUDE_DELIVERY_HOOKS', 'DELIVERY_FREE_GB', 'DELIVERY_GH', 'DELIVERY_PS', 'DELIVERY_IN_CONTAINER',
+                  'DELIVERY_CGROUP_DIR'):
+            e.pop(k, None)
         e.update(env or {})
         data = dict({'cwd': self.dir, 'session_id': 's1'}, **data)
         p = subprocess.run([sys.executable, '-I', os.path.join(SCRIPTS, script)], input=json.dumps(data).encode(),
