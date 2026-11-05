@@ -92,7 +92,7 @@ class DesignSystemTests(unittest.TestCase):
         self.assertEqual(rec["digest"], S.tree_digest(ds / "v1"))
         # next-version recreated as a writable copy with a draft status and an empty change list
         self.assertIn("draft", r(d, "docs/design-system/next-version/README.md"))
-        self.assertNotIn("- C1", r(d, "docs/design-system/next-version/CHANGES.md"))
+        self.assertNotRegex(r(d, "docs/design-system/next-version/CHANGES.md"), r"(?m)^- C1")
         self.assertEqual(r(d, "docs/design-system/next-version/tokens.md"), r(d, "docs/design-system/v1/tokens.md"))
         self.assertTrue(os.access(ds / "next-version/tokens.md", os.W_OK))
         self.assertFalse((ds / "v1/tokens.md").stat().st_mode & stat.S_IWUSR)
@@ -392,6 +392,17 @@ class GalleryTests(unittest.TestCase):
         self.assertEqual(re.findall(r'(?:src|href)="https?:', html), [])
         self.assertNotIn("<script", html)
         self.assertNotIn("@import", html)
+
+    def test_gallery_shows_fill_pair_border_widths_and_change_review(self):
+        base = "templates/design-system/next-version/"
+        html = gallery_html(r(S.PLUGIN, base + "tokens.md"), r(S.PLUGIN, base + "components.md"))
+        self.assertIn("on-done on done", html)
+        self.assertRegex(html, r"on-done on done[^<]*<span class=\"cr pass\">")
+        self.assertIn("Border widths", html)
+        for n, w in (("thin", "1px"), ("medium", "2px"), ("thick", "3px"), ("double", "6px")):
+            self.assertIn(f">{n} {w}<", html)
+        self.assertIn('id="component-34"', html)
+        self.assertIn("Apply 12 changes", html)
 
     def test_older_or_missing_script_stamp_is_stale_for_next_version(self):  # D12 DS4
         d = ds_repo()

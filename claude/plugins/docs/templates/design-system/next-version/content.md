@@ -66,6 +66,19 @@ A wizard that changes something ends with three steps (UX-30).
 
 A step that only reads before Review is named by what it reads ("Reading files", "Reading folders"). It changes nothing. It is never called "Checking".
 
+## Wizard state words
+
+Each word is used for one thing in a wizard (UX-30).
+
+| Word | When to use it |
+|---|---|
+| Stop | Work is running and the user ends it. |
+| Stopping | Stop was pressed and the work has not ended yet. |
+| Pause | The work holds its place and can go on later. |
+| Try again | A failed action is repeated. It repeats that action only. |
+| Start again | The wizard has ended (Done or Stopped) and the user begins a new run. |
+| Put back | Undo what the run changed, when that can be undone. |
+
 ## Message wording
 
 A message is one or two short sentences in plain words. It names the thing, never a code or a path.

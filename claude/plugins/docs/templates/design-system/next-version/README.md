@@ -16,3 +16,7 @@ This draft is a full, project-neutral starter design system. It holds UX rules, 
 4. Read [content.md](content.md). Change the action words to the project's words.
 5. Add a `CHANGES.md` entry for each change. Rebuild the gallery with `design_system.py visuals`.
 6. Show the gallery to the owner. Promote only with the owner's recorded approval.
+
+## What the apps do not follow yet
+
+The changes of this version that the apps still have to build. One line per change, `- C<n>: what the apps must do`. Empty for a new version.

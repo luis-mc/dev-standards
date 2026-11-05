@@ -365,6 +365,9 @@ def main(argv=None) -> int:
     ap.add_argument("--app", action="append", default=None, help="init: an app name (repeatable)")
     ap.add_argument("--topic", action="append", default=None, help="init: a topic name (repeatable)")
     ap.add_argument("--json", action="store_true")
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if "--" in argv:  # a package-manager script passes a lone -- through: drop it
+        argv.remove("--")
     a = ap.parse_args(argv)
     root = D.repo_root(a.root)
     cfg = D.load_config(root)

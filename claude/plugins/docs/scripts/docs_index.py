@@ -562,6 +562,9 @@ def main(argv=None) -> int:
     ap.add_argument("command", choices=["build", "check", "fetch-mermaid"])
     ap.add_argument("--root", default=None)
     ap.add_argument("--mermaid", default=None, help="path to a mermaid.min.js to vendor")
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if "--" in argv:  # a package-manager script passes a lone -- through: drop it
+        argv.remove("--")
     a = ap.parse_args(argv)
     root = D.repo_root(a.root)
     if a.command == "check":
