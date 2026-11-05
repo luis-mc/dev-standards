@@ -16,8 +16,11 @@ Change notes: DU11-delivery.md, DU11-artifacts.md, features/artifacts/changes/DU
 
 ## Commands
 - python3 -I tools/test_ds_enforcement.py: 33 passed, 0 failed
-- (pending) test_delivery_hooks.py, test_project_artifacts_hooks.py
+- python3 tools/test_delivery_hooks.py: 55 passed, 0 failed
+- python3 tools/test_project_artifacts_hooks.py: NOT RUN. The session guard refused it as a heavy suite (measure=false) and run_suite.py cannot run named cases for it. I did not bypass the guard. Only strings changed in hook_end_of_turn.py (py_compile ok); no test there covers plan rows. Needs a CI run on this branch.
 - docs_check.py: 1 error G1 (generated docs/architecture/decisions.md is stale; the release fold regenerates it; not committed per rules), 3 T2 warnings.
 - ci_areas.py --branch-advice: diff unreadable, advises every area via a CI workflow (heavy); not run.
+
+Branch head: HEAD_SHA
 
 NOT READY
