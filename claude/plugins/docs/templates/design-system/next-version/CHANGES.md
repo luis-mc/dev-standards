@@ -10,3 +10,4 @@ One entry per change, `- C<n>: what changed (file; source)`.
 - C6: tokens added: row heights, tone shapes, focus, z-order, density, loop duration, ease-in-out (tokens.md; the reference design system)
 - C7: wizard step names, and more date and time formats, added (content.md; the reference design system)
 - C8: Dialog and sheet (component 9) made a full entry: three forms by width and purpose, anatomy, sizes, tokens, behaviour, accessibility and when not to use it. UX-43 to UX-48 added for it (components.md, ux-rules.md; owner decision, 05 Nov)
+- C9: UX-49 to UX-55 added (page scroll, no hover-only controls, one card shape, overview without commands, ageing times, shared wizard behaviour, themes change tokens only); UX-4, UX-13, UX-28, UX-29, UX-30, UX-34, UX-38 and UX-42 extended; wizard state words added (ux-rules.md, content.md; design-system updates, DU2)
