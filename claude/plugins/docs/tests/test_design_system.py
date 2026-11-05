@@ -393,6 +393,17 @@ class GalleryTests(unittest.TestCase):
         self.assertNotIn("<script", html)
         self.assertNotIn("@import", html)
 
+    def test_gallery_shows_fill_pair_border_widths_and_change_review(self):
+        base = "templates/design-system/next-version/"
+        html = gallery_html(r(S.PLUGIN, base + "tokens.md"), r(S.PLUGIN, base + "components.md"))
+        self.assertIn("on-done on done", html)
+        self.assertRegex(html, r"on-done on done[^<]*<span class=\"cr pass\">")
+        self.assertIn("Border widths", html)
+        for n, w in (("thin", "1px"), ("medium", "2px"), ("thick", "3px"), ("double", "6px")):
+            self.assertIn(f">{n} {w}<", html)
+        self.assertIn('id="component-34"', html)
+        self.assertIn("Apply 12 changes", html)
+
     def test_older_or_missing_script_stamp_is_stale_for_next_version(self):  # D12 DS4
         d = ds_repo()
         f = d / "docs/design-system/next-version/review-visuals/index.html"
