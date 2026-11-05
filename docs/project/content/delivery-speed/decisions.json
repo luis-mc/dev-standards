@@ -2078,6 +2078,86 @@
    "chosen": "After RELEASE-42",
    "decided": "2026-11-04",
    "owner_words": "After RELEASE-42"
+  },
+  {
+   "id": "D92",
+   "question": "What happens to the overnight watcher now the owner is back?",
+   "asked": "2026-11-05",
+   "status": "decided",
+   "task": "DL58",
+   "options": [
+    {
+     "label": "Stop it now",
+     "summary": "Stop watcher and hourly cron; DL58 Live."
+    },
+    {
+     "label": "Keep it running",
+     "summary": "Keep watching for peer reports."
+    }
+   ],
+   "chosen": "Stop it now",
+   "decided": "2026-11-05",
+   "owner_words": "Stop it now"
+  },
+  {
+   "id": "D93",
+   "question": "Change the user-level questions Stop hook to the if/else python fallback?",
+   "asked": "2026-11-05",
+   "status": "decided",
+   "task": "DL58",
+   "options": [
+    {
+     "label": "Change it",
+     "summary": "Edit only that command in the user settings."
+    },
+    {
+     "label": "Leave it",
+     "summary": "Owner changes it."
+    }
+   ],
+   "chosen": "Change it",
+   "decided": "2026-11-05",
+   "owner_words": "Change it"
+  },
+  {
+   "id": "D94",
+   "question": "How are the TypeScript design-system guard templates tested?",
+   "asked": "2026-11-05",
+   "status": "decided",
+   "task": "DS187",
+   "options": [
+    {
+     "label": "Add a CI job",
+     "summary": "Run them against a fixture repo in this repo's CI."
+    },
+    {
+     "label": "Rely on projects",
+     "summary": "Projects that copy them run them."
+    }
+   ],
+   "chosen": "Add a CI job",
+   "decided": "2026-11-05",
+   "owner_words": "Add a CI job"
+  },
+  {
+   "id": "D95",
+   "question": "Should the SessionStart effort_drift.py hook use the same if/else python fallback as the Stop hook?",
+   "asked": "2026-11-05",
+   "status": "decided",
+   "task": "DS187",
+   "options": [
+    {
+     "label": "Change it",
+     "summary": "Use the if/else form; the script never runs twice."
+    },
+    {
+     "label": "Leave it",
+     "summary": "Keep the || form; a failing script may run twice."
+    }
+   ],
+   "chosen": "Change it",
+   "decided": "2026-11-05",
+   "owner_words": "Change it (Recommended)"
   }
  ]
 }

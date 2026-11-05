@@ -1,0 +1,32 @@
+<!-- title: DSY99 review (enforcement kit) -->
+<p>DSY99 is a local branch, head <code>17530413</code>, 47 files, +2612/-16. It adds the design-system enforcement kit to luismc-docs, a design edit hook to luismc-delivery, and a plan-rows Stop check to luismc-artifacts. It was handed over on 5 Nov at 14:05 and reviewed here.</p>
+<h3>What was checked</h3>
+<table>
+<thead><tr><th>Check</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td>Merge onto <code>main</code> (24 commits ahead of its base)</td><td>Clean, no conflicts (<code>git merge-tree</code>).</td></tr>
+<tr><td>Privacy: no other project, machine, user or path</td><td>Clean.</td></tr>
+<tr><td>No version lines and no plugin <code>"version"</code> edited</td><td>Clean.</td></tr>
+<tr><td>Plugins never run git writes</td><td>Clean.</td></tr>
+<tr><td><code>tools/test_ds_enforcement.py</code> from a scratch copy</td><td>30 passed, 0 failed, as reported.</td></tr>
+<tr><td>Spec lines</td><td>DOCSPEC R15.9 (kit optional, known lists only shrink) and DELIVERYSPEC DL-92 (required check). Consistent with section 15.</td></tr>
+</tbody>
+</table>
+<h3>Findings</h3>
+<table>
+<thead><tr><th>#</th><th>Finding</th><th>How it was shown</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>K1 high</td><td><b>The design edit hook approves the first breach.</b> It returns <code>permissionDecision: "allow"</code>, which skips the user's normal permission prompt for that edit.</td><td>Ran the hook on a test edit; the first breach came back as allow</td><td>Return no permission decision on the first breach, only the warning as context.</td></tr>
+<tr><td>K2 high</td><td><b>The design edit hook judges the whole new text, not what the edit adds.</b> An edit that only renames a variable next to an existing <code>&lt;button&gt;</code> counts as a breach, and the second such edit in a turn is denied. Cleaning up legacy screens, the work the known lists plan, gets blocked.</td><td>Two edits that changed <code>{count}</code> to <code>{total}</code> beside an existing button: warn, then deny</td><td>Count each pattern in the old text (Edit: <code>old_string</code>; Write: the file on disk) and judge only an increase. Leave test files out.</td></tr>
+<tr><td>K3 medium</td><td><b>The plan-rows Stop check reads ordinary agent reports as plans.</b> Any <code>docs/work/*report*.md</code> with a numbered list blocks the end of the turn until each line is a task. DSY99's own report lists 4 finished items and is flagged 4 times.</td><td>Ran <code>plan_rows_check.py</code> on DSY99's reports</td><td>Read only rows under a plan, proposal or findings heading, or only files named plan, audit or findings.</td></tr>
+<tr><td>K4 join</td><td><code>docs/work/DSY99*</code> (3 files) must be stripped; <code>docs/docs-map.json</code> is generated and is rebuilt at the join.</td><td>File list</td><td>The join does both.</td></tr>
+</tbody>
+</table>
+<h3>How DSY99 changes the DU plan</h3>
+<ul>
+<li><b>R13</b> (wizard behaviour belongs to the shared wizard) uses the kit's wizard harness as its guard. R11 and R12 use the harness's ten state names.</li>
+<li><b>G1 and G2</b> become kit templates with <code>*.known.json</code> lists, so DL-92's growth guard covers them. G1 is the gate behind the edit hook's "hand-made button" warning.</li>
+<li><b>F3</b> (link-only edits) changes R15.5's text. Any new requirement takes R15.10.</li>
+<li><b>DU4</b> builds on DSY99's <code>design_system.py</code> (the new <code>brief</code> command and the kit-in-plan default).</li>
+<li>DU agents' reports go through the plan-rows check, so K3 should be fixed before DU2 to DU6 start.</li>
+</ul>

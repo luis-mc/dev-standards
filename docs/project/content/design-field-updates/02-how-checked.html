@@ -1,0 +1,20 @@
+<!-- title: How it was checked -->
+<ol>
+<li><b>Asked each project's session</b> for its UX changes, where they live, why, and whether they are generic. Both answered.</li>
+<li><b>Read each project's design system</b> from its default branch on the remote (the local checkouts were days behind): every version README and CHANGES list since the starter was written, and the rule tables.</li>
+<li><b>Compared each change with the starter</b> by searching the starter's rules, components, tokens, content words and guard templates.</li>
+<li><b>Tested each claim about the plugin</b> in the plugin's code. The results are below.</li>
+</ol>
+<table>
+<thead><tr><th>Claim from a session</th><th>How it was tested</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td><code>docs:note -- --doc ...</code> fails</td><td>Ran <code>docs_fold.py note -- --doc features/x --task T1 --text t</code> in a scratch repo</td><td><b>Confirmed.</b> argparse reports <code>--doc, --task, --text</code> missing. pnpm passes the <code>--</code> through. Proposal F1.</td></tr>
+<tr><td>DS4 warns on every draft edit</td><td>Read <code>design_system.py</code> check, lines 459 to 464</td><td><b>Confirmed.</b> Any edit to <code>next-version</code> makes the gallery stale. The Stop hook rebuild (ST5) does not run in cloud sessions without plugin hooks. Proposal F2.</td></tr>
+<tr><td>The approval digest drifts when the approval line is written</td><td>Read <code>cmd_promote</code></td><td><b>Not a plugin bug.</b> <code>promote</code> writes the status line first, then takes the digest. The drift came from versions promoted by hand. No change.</td></tr>
+<tr><td>Rule tables need a check that the named guard file exists</td><td>Read the follow guard template</td><td><b>Already there.</b> <code>design-system-follow.test.ts</code> checks each guard path exists. No change.</td></tr>
+<tr><td>Moving an existing design system needs a documented path</td><td>Read DOCSPEC R15.8</td><td><b>Already documented</b> (approvals added by hand with original dates). A helper command is optional (left out).</td></tr>
+<tr><td>Frozen versions need link-only edits</td><td>Read R15.5 and the freeze guard</td><td><b>Missing.</b> Any edit fails the digest. Project B's owner allowed link-only edits on 31 Oct. Proposal F3, an open decision.</td></tr>
+<tr><td>The template's dialog and sheet entry is too thin</td><td>Read components.md section 9 and the registry</td><td><b>Already in work as DS189</b> (Running, cloud). Not repeated here; this plan waits for it.</td></tr>
+</tbody>
+</table>
+<p><b>Overlap found.</b> A branch named <code>DSY99-ds-enforcement-kit</code>, started from Project B's session, is changing this repository's design-system guards. It adds a no-app-CSS scan, a DOM layout kit at 360, 393 and 1300 px, a wizard behaviour harness, a design edit hook and a brief checklist. It is local only and is not in this repository's task record. Its owner answers are D231 to D243. This plan does not repeat its work, and it waits for that branch.</p>

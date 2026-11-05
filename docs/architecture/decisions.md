@@ -142,6 +142,9 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D9 | Point 4: how is the train freeze overridden on purpose? | Env variable, logged | decided | 2026-10-11 |
 | delivery-speed | D90 | Fix suspected (unproven) review findings? | Prove first, fix if real | decided | 2026-11-04 |
 | delivery-speed | D91 | When do the overnight review rounds stop? | After RELEASE-42 | decided | 2026-11-04 |
+| delivery-speed | D92 | What happens to the overnight watcher now the owner is back? | Stop it now | decided | 2026-11-05 |
+| delivery-speed | D93 | Change the user-level questions Stop hook to the if/else python fallback? | Change it | decided | 2026-11-05 |
+| delivery-speed | D94 | How are the TypeScript design-system guard templates tested? | Add a CI job | decided | 2026-11-05 |
 | design-starter | D1 | Which starter should the docs plugin ship? | C+E now | decided | 2026-11-01 |
 | design-starter | D10 | What happens when a token a sample needs is missing or not a plain value? | Draw with a marked fallback | decided | 2026-11-02 |
 | design-starter | D11 | Which bar do the contrast marks use? | WCAG 2.2 AA | decided | 2026-11-02 |

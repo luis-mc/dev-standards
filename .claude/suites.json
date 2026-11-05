@@ -34,6 +34,7 @@
     {"name": "rule-tags", "full": "python tools/test_rule_tags.py", "cases": ""},
     {"name": "session-guard", "full": "python tools/test_session_guard.py", "cases": "python tools/test_session_guard.py {cases}"},
     {"name": "smoke-packaged", "full": "python tools/test_smoke_packaged.py", "full_args": ["--no-mutants"], "cases": "python tools/test_smoke_packaged.py --no-mutants -k {cases}"},
+    {"name": "ds-guard-templates", "full": "python tools/test_ds_guard_templates.py", "cases": "", "measure": false},
     {"name": "spec-check", "full": "python tools/test_spec_check.py", "cases": ""}
   ]
 }

@@ -12,9 +12,9 @@
     "title": "Full Progress: dev-standards",
     "url": "https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv",
     "file": "full-progress-dev-standards.html",
-    "published_sha256": "a8690f6ae623ce9eb547337c74c36d6e61dc1512ae460f602b65ad10d0509ce9",
-    "published_at": "2026-11-05T02:18+00:00",
-    "published_fingerprint": "d3d869b6339673f409d493a41dde23b42f803bf0203e83d477e9e03f5b65eefd"
+    "published_sha256": "8f4f6dc460878c107749e66f04290f333512ada388d8746c0bbbe7bbb5af8b4a",
+    "published_at": "2026-11-05T14:05+00:00",
+    "published_fingerprint": "77e3bf9c75782cc534468b2c879628b1256bbf105bb1b830a3b2ca407314f0a7"
   },
   "feature_artifacts": [
     {
@@ -25,7 +25,7 @@
       "apps": [
         "luismc-artifacts"
       ],
-      "updated": "2026-11-04T23:59+00:00"
+      "updated": "2026-11-05T12:46+00:00"
     },
     {
       "key": "models",
@@ -35,7 +35,7 @@
       "apps": [
         "luismc-project-setup"
       ],
-      "updated": "2026-11-04T20:50+00:00"
+      "updated": "2026-11-05T12:46+00:00"
     },
     {
       "key": "test-cost",
@@ -47,7 +47,7 @@
         "delivery scripts",
         "luismc-artifacts"
       ],
-      "updated": "2026-11-04T22:48+00:00"
+      "updated": "2026-11-05T12:46+00:00"
     },
     {
       "key": "delivery-speed",
@@ -59,7 +59,7 @@
         "STACKSPEC",
         "tech-stack-setup"
       ],
-      "updated": "2026-11-05T00:04+00:00"
+      "updated": "2026-11-05T12:46+00:00"
     },
     {
       "key": "transcript-folds",
@@ -70,7 +70,7 @@
         "luismc-transcript-folds",
         "luismc-project-setup"
       ],
-      "updated": "2026-11-04T23:59+00:00"
+      "updated": "2026-11-05T12:46+00:00"
     },
     {
       "key": "setup-offers",
@@ -83,7 +83,7 @@
         "luismc-delivery",
         "luismc-artifacts"
       ],
-      "updated": "2026-11-04T22:32+00:00"
+      "updated": "2026-11-05T12:46+00:00"
     },
     {
       "key": "design-starter",
@@ -93,13 +93,23 @@
       "apps": [
         "luismc-docs"
       ],
-      "updated": "2026-11-04T20:50+00:00"
+      "updated": "2026-11-05T12:46+00:00"
+    },
+    {
+      "key": "design-field-updates",
+      "title": "Feature: Design-system updates from real projects",
+      "file": "feature-design-system-updates-from-real-projects.html",
+      "prefix": "DU",
+      "apps": [
+        "luismc-docs"
+      ],
+      "updated": "2026-11-05T14:10+00:00"
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-11-05T02:18+00:00",
+  "updated": "2026-11-05T14:10+00:00",
   "retired": [],
   "deleted": [
     {

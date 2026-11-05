@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-05T00:04+00:00",
+ "updated": "2026-11-05T14:07+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -2290,14 +2290,47 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL58",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "Overnight merge watcher and hourly check-in",
    "detail": "delivery_watch.py runs from main's code and the hourly cron checks for peer bug reports (D77, D78, D87) until the owner returns.",
-   "expected": "05 Nov ~07:00",
-   "changed": "2026-11-05T00:04+00:00",
-   "expected_basis": "runs until the owner returns at 07:00",
+   "expected": "05 Nov",
+   "changed": "2026-11-05T09:12+00:00",
    "no_release": "watching only; ships nothing",
    "started": "2026-11-05T00:00+00:00"
+  },
+  {
+   "id": "DL59",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Live",
+   "item": "RELEASE-44: guard template CI",
+   "detail": "Join, CI and merge of DS188 (D94).",
+   "expected": "05 Nov",
+   "changed": "2026-11-05T09:21+00:00",
+   "release": 44,
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-11-05T09:15+00:00",
+     "end": "2026-11-05T09:55+00:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-11-05T09:55+00:00",
+     "end": "2026-11-05T10:00+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-11-05T10:00+00:00",
+     "end": "2026-11-05T10:15+00:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-11-05T10:15+00:00",
+     "end": "2026-11-05T10:20+00:00"
+    }
+   ],
+   "started": "2026-11-05T09:12+00:00"
   },
   {
    "id": "DS1",
@@ -5028,6 +5061,123 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "started": "2026-11-04T23:45+00:00"
   },
   {
+   "id": "DS188",
+   "owner": "project",
+   "app": "",
+   "status": "Live",
+   "item": "CI runs the TypeScript design-system guard templates",
+   "detail": "D94: run the typescript-vitest guard templates against a fixture repo in this repo's CI, including an archived-version case (DS187).",
+   "expected": "05 Nov",
+   "changed": "2026-11-05T09:21+00:00",
+   "rides": "DL59",
+   "started": "2026-11-05T09:15+00:00"
+  },
+  {
+   "id": "DS189",
+   "owner": "project",
+   "app": "",
+   "status": "Waiting",
+   "item": "Sheet component in luismc-docs design-system template",
+   "detail": "Moobable D10 (05 Nov): owner wants the shared Sheet (bottom sheet on phone; dialog/popover at wider widths, focus trap, focus return) in the design-system template components, ux-rules and guard notes.",
+   "expected": "06 Nov",
+   "changed": "2026-11-05T13:27+00:00",
+   "expected_basis": "draft PR #149 ready; rides the next dev-standards train",
+   "no_release": "plugin template docs; ships with next plugin release",
+   "started": "2026-11-05T12:43+00:00",
+   "waits_on": "work"
+  },
+  {
+   "id": "DU1",
+   "owner": "design-field-updates",
+   "app": "luismc-docs",
+   "status": "Live",
+   "item": "Study UX changes in two real projects and propose starter updates",
+   "detail": "Study done: 35 proposals checked against both projects and the starter, 9 left out. Owner chose every recommended option (D1-D6) on 5 Nov. Work is DU2-DU7.",
+   "expected": "05 Nov",
+   "changed": "2026-11-05T13:45+00:00",
+   "no_release": "study and proposal only",
+   "started": "2026-11-05T12:45+00:00"
+  },
+  {
+   "id": "DU2",
+   "owner": "design-field-updates",
+   "app": "luismc-docs",
+   "status": "To do",
+   "item": "Starter rules and words: R1-R16, W1",
+   "detail": "ux-rules.md, content.md, CHANGES.md of the luismc-docs starter. New rule IDs follow DS189's. Change note naming the docs plugin.json.",
+   "expected": "06 Nov; after DS189 merges",
+   "changed": "2026-11-05T13:45+00:00",
+   "expected_basis": "DS189 merge, then ~40 min cloud agent"
+  },
+  {
+   "id": "DU3",
+   "owner": "design-field-updates",
+   "app": "luismc-docs",
+   "status": "To do",
+   "item": "Starter components and tokens: C1-C5, T1-T5, R17",
+   "detail": "components.md, tokens.md of the starter (incl. 7:1 named as an option, D5). Runs beside the rules task. Change note naming the docs plugin.json.",
+   "expected": "06 Nov; after DS189 merges",
+   "changed": "2026-11-05T13:45+00:00",
+   "expected_basis": "DS189 merge, then ~45 min cloud agent"
+  },
+  {
+   "id": "DU4",
+   "owner": "design-field-updates",
+   "app": "luismc-docs",
+   "status": "To do",
+   "item": "Docs plugin fixes F1-F5",
+   "detail": "Lone -- accepted by docs scripts; DS4 warns only on the default branch, join and promote rebuild the gallery (D3); link-only edits to frozen versions with DOCSPEC R15.5 note (D4); CHANGES.md example line; README 'What the apps do not follow yet'.",
+   "expected": "06 Nov; after DSY99 merges",
+   "changed": "2026-11-05T13:45+00:00",
+   "expected_basis": "DSY99 merge, then ~50 min cloud agent"
+  },
+  {
+   "id": "DU5",
+   "owner": "design-field-updates",
+   "app": "luismc-docs",
+   "status": "To do",
+   "item": "Guard templates: raw controls (G1) and contrast (G2)",
+   "detail": "New TypeScript+Vitest templates in the enforcement kit folder, each with an allowlist or known-gaps list that only shrinks; run in this repo's CI fixture (DS188).",
+   "expected": "06 Nov; after DSY99 merges",
+   "changed": "2026-11-05T13:45+00:00",
+   "expected_basis": "DSY99 merge, then ~50 min cloud agent"
+  },
+  {
+   "id": "DU6",
+   "owner": "design-field-updates",
+   "app": "luismc-docs",
+   "status": "To do",
+   "item": "Gallery draws the filter bar, change review and new token kinds",
+   "detail": "gallery_draw.py and gallery_tokens.py; bumps the gallery script version.",
+   "expected": "06 Nov; after the components task",
+   "changed": "2026-11-05T13:45+00:00",
+   "expected_basis": "components task, then ~30 min"
+  },
+  {
+   "id": "DU7",
+   "owner": "design-field-updates",
+   "app": "luismc-docs",
+   "status": "To do",
+   "item": "Join and release the design-system updates",
+   "detail": "Light join of the five branches, ready PR, CI, merge, luismc-docs version fold. Gets its RELEASE number when it starts.",
+   "expected": "06 Nov; after DU2-DU6",
+   "changed": "2026-11-05T13:45+00:00",
+   "expected_basis": "last task, then ~30 min"
+  },
+  {
+   "id": "DU8",
+   "owner": "design-field-updates",
+   "app": "luismc-docs",
+   "status": "Running",
+   "item": "Review DSY99 handoff together with DU2-DU7",
+   "detail": "Wait for the session building DSY99 (design-system enforcement kit) to send its handoff here, then review it with the DU proposals as one set: overlaps, order, conflicts with design_system.py, DOCSPEC 15 and the starter. Then present to the owner.",
+   "expected": "05 Nov ~14:50",
+   "changed": "2026-11-05T14:07+00:00",
+   "expected_basis": "handoff 14:05, review ~45 min",
+   "no_release": "review only",
+   "started": "2026-11-05T14:05+00:00"
+  },
+  {
    "id": "MP1",
    "owner": "models",
    "app": "luismc-project-setup",
@@ -5426,50 +5576,69 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-05T00:04+00:00">05 Nov 00:04</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-05T14:10+00:00">05 Nov 14:10</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
 <details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DL58"><span class="task-id">DL58</span>Overnight merge watcher and hourly check-in <span class="glance-expected">05 Nov ~07:00</span><span class="glance-basis">runs until the owner returns at 07:00</span></li>
+<li data-glance-task="DU8"><span class="task-id">DU8</span>Review DSY99 handoff together with DU2-DU7 <span class="glance-expected">05 Nov ~14:50</span><span class="glance-basis">handoff 14:05, review ~45 min</span></li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">46 tasks</span></summary>
+<details class="glance-group glance-waiting" data-glance="waiting" open><summary><span class="glance-label">Waiting for other work</span><span class="fold-count">1 task</span></summary>
 <ul>
+<li data-glance-task="DS189"><span class="task-id">DS189</span><span class="glance-dep">draft PR #149 ready; rides the next dev-standards train</span> Sheet component in luismc-docs design-system template <span class="glance-expected">06 Nov</span></li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">49 tasks</span></summary>
+<ul>
+<li data-glance-task="DU1"><span class="task-id">DU1</span>Study UX changes in two real projects and propose starter updates</li>
+<li data-glance-task="DL59"><span class="task-id">DL59</span><span class="release-name">RELEASE-44</span>guard template CI</li>
+<li data-glance-task="DS188"><span class="task-id">DS188</span>CI runs the TypeScript design-system guard templates</li>
+<li data-glance-task="DL58"><span class="task-id">DL58</span>Overnight merge watcher and hourly check-in</li>
 <li data-glance-task="DL57"><span class="task-id">DL57</span><span class="release-name">RELEASE-43</span>peer bug fixes</li>
 <li data-glance-task="DS187"><span class="task-id">DS187</span>docs_check DS3: archived design-system versions are not a gap</li>
 <li data-glance-task="AR59"><span class="task-id">AR59</span>Fix artifacts findings (DL48 F20-F27)</li>
 <li data-glance-task="DL48"><span class="task-id">DL48</span>Review the delivery and artifacts plugins for bugs (RELEASE-41)</li>
-<li data-glance-task="DL50"><span class="task-id">DL50</span><span class="release-name">RELEASE-42</span>fixes from both plugin reviews (DL48, DL51), DL52</li>
-<li data-glance-task="DL51"><span class="task-id">DL51</span>Review docs, project-setup, specs, transcript-folds, audits, agents for bugs</li>
-<li data-glance-task="DL52"><span class="task-id">DL52</span>agent-eta accepts an agent already pushed; one row per agent</li>
-<li data-glance-task="DL53"><span class="task-id">DL53</span>Green CI waits only for workflows that run on every PR commit</li>
-<li class="glance-more">and 38 more</li>
+<li class="glance-more">and 41 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">335</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">339</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-to-do"><div class="count">6</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
-<figcaption>Next releases (~07:00 · runs until the owner returns at 07:00)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 198" role="img" aria-label="Other work (no release): DL58 (Overnight merge watcher and hourly check-in) Running, expected about 07:00." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="174"/><text x="200" y="28">05 Nov 00:00</text><line class="rt-grid" x1="348.6" y1="36" x2="348.6" y2="174"/><text x="348.6" y="28">02:00</text><line class="rt-grid" x1="422.9" y1="36" x2="422.9" y2="174"/><text x="422.9" y="28">03:00</text><line class="rt-grid" x1="497.1" y1="36" x2="497.1" y2="174"/><text x="497.1" y="28">04:00</text><line class="rt-grid" x1="571.4" y1="36" x2="571.4" y2="174"/><text x="571.4" y="28">05:00</text><line class="rt-grid" x1="645.7" y1="36" x2="645.7" y2="174"/><text x="645.7" y="28">06:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="174"/><text x="720" y="28">07:00</text></g>
+<figcaption>Next releases (~14:50 · handoff 14:05, review ~45 min)</figcaption>
+<div class="timeline-scroll"><svg viewBox="0 0 960 260" role="img" aria-label="Other work (no release): DU8 (Review DSY99 handoff together with DU2-DU7) Running, expected about 14:50; DS189 (Sheet component in luismc-docs design-system template) Waiting, expected 06 Nov." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="236"/><text x="200" y="28">14:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="236"/><text x="460" y="28">14:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="236"/><text x="720" y="28">15:00</text><line class="rt-grid" x1="820" y1="36" x2="820" y2="236"/><text x="820" y="28">06 Nov</text><path class="rt-break" d="M738 30 l8 -8 M750 30 l8 -8"/></g>
 <text class="rt-strip-title" x="0" y="60">Other work (no release)</text>
-<text class="rt-name" x="0" y="94"><title>DL58 · Overnight merge watcher and hourly check-in</title>DL58 · Overnight merge wa…</text>
-<rect class="rt-other status-running" x="200" y="89" width="520" height="16"><title>Running 00:00-07:00</title></rect>
-<text class="rt-other-label" x="200" y="122">~07:00 · runs until the owner returns at 07:00</text>
-<line class="rt-now" x1="205" y1="36" x2="205" y2="182"/><text class="rt-now-label" x="205" y="195">now 00:04</text>
+<text class="rt-name" x="0" y="94"><title>DU8 · Review DSY99 handoff together with DU2-DU7</title>DU8 · Review DSY99 handof…</text>
+<rect class="rt-other status-running" x="243.3" y="89" width="390" height="16"><title>Running 14:05-14:50</title></rect>
+<text class="rt-other-label" x="243.3" y="122">~14:50 · handoff 14:05, review ~45 min</text>
+<text class="rt-name" x="0" y="156"><title>DS189 · Sheet component in luismc-docs design-system template</title>DS189 · Sheet component i…</text>
+<polygon class="rt-day" points="820,148 828,161 820,174 812,161"/><text class="rt-day-label" x="836" y="165">06 Nov</text>
+<text class="rt-other-label" x="812" y="188">draft PR #149 ready; rides the next dev-standards train</text>
+<line class="rt-now" x1="286.7" y1="36" x2="286.7" y2="244"/><text class="rt-now-label" x="286.7" y="257">now 14:10</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days. Under Other work (no release), a bar runs from the start to its Expected, coloured by status; a red outline means it is past its Expected.</p>
 </figure>
-<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">8 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL58"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL58</span>Overnight merge watcher and hourly check-in</a><span class="no-release-line">ships nothing: watching only; ships nothing</span></td><td data-label="App / service"></td><td data-label="Detail">delivery_watch.py runs from main&#x27;s code and the hourly cron checks for peer bug reports (D77, D78, D87) until the owner returns.</td><td data-label="Expected">05 Nov ~07:00<span class="expected-basis">runs until the owner returns at 07:00</span></td></tr>
+<tr data-task="DU8"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU8</span>Review DSY99 handoff together with DU2-DU7</a><span class="no-release-line">ships nothing: review only</span></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Wait for the session building DSY99 (design-system enforcement kit) to send its handoff here, then review it with the DU proposals as one set: overlaps, order, conflicts with design_system.py, DOCSPEC 15 and the starter. Then present to the owner.</td><td data-label="Expected">05 Nov ~14:50<span class="expected-basis">handoff 14:05, review ~45 min</span></td></tr>
+<tr data-task="DS189"><td data-label="Status"><span class="status-chip status-waiting">Waiting</span></td><td data-label="Item"><span class="task-id">DS189</span>Sheet component in luismc-docs design-system template<span class="no-release-line">ships nothing: plugin template docs; ships with next plugin release</span></td><td data-label="App / service"></td><td data-label="Detail">Moobable D10 (05 Nov): owner wants the shared Sheet (bottom sheet on phone; dialog/popover at wider widths, focus trap, focus return) in the design-system template components, ux-rules and guard notes.</td><td data-label="Expected">06 Nov<span class="expected-basis">draft PR #149 ready; rides the next dev-standards train</span></td></tr>
+<tr data-task="DU2"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU2</span>Starter rules and words: R1-R16, W1</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">ux-rules.md, content.md, CHANGES.md of the luismc-docs starter. New rule IDs follow DS189&#x27;s. Change note naming the docs plugin.json.</td><td data-label="Expected">06 Nov; after DS189 merges<span class="expected-basis">DS189 merge, then ~40 min cloud agent</span></td></tr>
+<tr data-task="DU3"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU3</span>Starter components and tokens: C1-C5, T1-T5, R17</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">components.md, tokens.md of the starter (incl. 7:1 named as an option, D5). Runs beside the rules task. Change note naming the docs plugin.json.</td><td data-label="Expected">06 Nov; after DS189 merges<span class="expected-basis">DS189 merge, then ~45 min cloud agent</span></td></tr>
+<tr data-task="DU4"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU4</span>Docs plugin fixes F1-F5</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Lone -- accepted by docs scripts; DS4 warns only on the default branch, join and promote rebuild the gallery (D3); link-only edits to frozen versions with DOCSPEC R15.5 note (D4); CHANGES.md example line; README &#x27;What the apps do not follow yet&#x27;.</td><td data-label="Expected">06 Nov; after DSY99 merges<span class="expected-basis">DSY99 merge, then ~50 min cloud agent</span></td></tr>
+<tr data-task="DU5"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU5</span>Guard templates: raw controls (G1) and contrast (G2)</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">New TypeScript+Vitest templates in the enforcement kit folder, each with an allowlist or known-gaps list that only shrinks; run in this repo&#x27;s CI fixture (DS188).</td><td data-label="Expected">06 Nov; after DSY99 merges<span class="expected-basis">DSY99 merge, then ~50 min cloud agent</span></td></tr>
+<tr data-task="DU6"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU6</span>Gallery draws the filter bar, change review and new token kinds</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">gallery_draw.py and gallery_tokens.py; bumps the gallery script version.</td><td data-label="Expected">06 Nov; after the components task<span class="expected-basis">components task, then ~30 min</span></td></tr>
+<tr data-task="DU7"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU7</span>Join and release the design-system updates</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Light join of the five branches, ready PR, CI, merge, luismc-docs version fold. Gets its RELEASE number when it starts.</td><td data-label="Expected">06 Nov; after DU2-DU6<span class="expected-basis">last task, then ~30 min</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">337 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">341 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DU1"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU1</span>Study UX changes in two real projects and propose starter updates</a><span class="no-release-line">ships nothing: study and proposal only</span></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Study done: 35 proposals checked against both projects and the starter, 9 left out. Owner chose every recommended option (D1-D6) on 5 Nov. Work is DU2-DU7.</td><td data-label="Expected">05 Nov</td></tr>
+<tr data-task="DL59"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL59</span><span class="release-name">RELEASE-44</span>guard template CI</a></td><td data-label="App / service"></td><td data-label="Detail">Join, CI and merge of DS188 (D94).</td><td data-label="Expected">05 Nov</td></tr>
+<tr data-task="DS188"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS188</span>CI runs the TypeScript design-system guard templates<span class="release-line"><span class="release-name">RELEASE-44</span></span></td><td data-label="App / service"></td><td data-label="Detail">D94: run the typescript-vitest guard templates against a fixture repo in this repo&#x27;s CI, including an archived-version case (DS187).</td><td data-label="Expected">05 Nov</td></tr>
+<tr data-task="DL58"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL58</span>Overnight merge watcher and hourly check-in</a><span class="no-release-line">ships nothing: watching only; ships nothing</span></td><td data-label="App / service"></td><td data-label="Detail">delivery_watch.py runs from main&#x27;s code and the hourly cron checks for peer bug reports (D77, D78, D87) until the owner returns.</td><td data-label="Expected">05 Nov</td></tr>
 <tr data-task="DL57"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL57</span><span class="release-name">RELEASE-43</span>peer bug fixes</a></td><td data-label="App / service"></td><td data-label="Detail">Join, CI and merge of peer bug reports received after RELEASE-42 (D78).</td><td data-label="Expected">05 Nov</td></tr>
 <tr data-task="DS187"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS187</span>docs_check DS3: archived design-system versions are not a gap<span class="release-line"><span class="release-name">RELEASE-43</span></span></td><td data-label="App / service"></td><td data-label="Detail">Peer report: moving design system v1 to docs/archive/ (R2.7) leaves v2 alone and DS3 calls it a gap (R15.1); --strict CI fails. Accept a gap whose missing versions are archived.</td><td data-label="Expected">05 Nov</td></tr>
 <tr data-task="AR59"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR59</span>Fix artifacts findings (DL48 F20-F27)</a><span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Deferred publish honoured, queue writes, December dates, after-command events, catch-up, overdue.</td><td data-label="Expected">04 Nov</td></tr>
@@ -5817,17 +5986,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29897284"><time datetime="2026-11-05T00:04+00:00">05 Nov 00:04</time></td><td data-label="Tasks">DL1 to DL58</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: design-system updates from real projects"><a href="feature-design-system-updates-from-real-projects.html">Feature: Design-system updates from real projects</a></td><td data-label="Last updated" data-value="29898130"><time datetime="2026-11-05T14:10+00:00">05 Nov 14:10</time></td><td data-label="Tasks">DU1 to DU8</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-to-do">6 To do</span></span></td><td data-label="Where it stands">Decided on 5 Nov: all 35 proposals go in; the owner chose every recommended option (D1-D6).</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (6)</strong><span class="fold-count">6 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29897279"><time datetime="2026-11-04T23:59+00:00">04 Nov 23:59</time></td><td data-label="Tasks">AR2 to AR59</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: transcript folds"><a href="feature-transcript-folds.html">Feature: Transcript folds</a></td><td data-label="Last updated" data-value="29897279"><time datetime="2026-11-04T23:59+00:00">04 Nov 23:59</time></td><td data-label="Tasks">TF1 to TF6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Live since 13 Oct (PR #60): luismc-transcript-folds 1.0.0, installed by claude-setup 14.3.0.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-label="Last updated" data-value="29897208"><time datetime="2026-11-04T22:48+00:00">04 Nov 22:48</time></td><td data-label="Tasks">TC1 to TC12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29897192"><time datetime="2026-11-04T22:32+00:00">04 Nov 22:32</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">claude-setup turns plugins on, but most stay silent until a config file exists and some only warn.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29897090"><time datetime="2026-11-04T20:50+00:00">04 Nov 20:50</time></td><td data-label="Tasks">ST1 to ST5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-label="Last updated" data-value="29897090"><time datetime="2026-11-04T20:50+00:00">04 Nov 20:50</time></td><td data-label="Tasks">MP1 to MP7, DS2 to DS5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">claude-setup turns plugins on, but most stay silent until a config file exists and some only warn.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">DL1 to DL59</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">ST1 to ST5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">MP1 to MP7, DS2 to DS5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">AR2 to AR59</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">TC1 to TC12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: transcript folds"><a href="feature-transcript-folds.html">Feature: Transcript folds</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">TF1 to TF6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Live since 13 Oct (PR #60): luismc-transcript-folds 1.0.0, installed by claude-setup 14.3.0.</td></tr>
 </tbody></table></div>
 </details>
 </section>

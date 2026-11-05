@@ -14,6 +14,7 @@ rendered HTML by hand.
 | Feature: Transcript folds | `feature-transcript-folds.html` | a file in the repository, open it in a browser; never published |
 | Feature: claude-setup offers and enforcement | `feature-claude-setup-offers-and-enforcement.html` | a file in the repository, open it in a browser; never published |
 | Feature: Design-system starter | `feature-design-system-starter.html` | a file in the repository, open it in a browser; never published |
+| Feature: Design-system updates from real projects | `feature-design-system-updates-from-real-projects.html` | a file in the repository, open it in a browser; never published |
 
 A feature artifact is a standalone HTML file: open it in a browser, no server needed. It is
 never published. Only the full-progress artifact is a claude.ai artifact; it links to the
