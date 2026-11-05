@@ -64,17 +64,17 @@
       "status": "decided",
       "options": [
         {
-          "label": "Neutral, comic optional",
-          "summary": "A plain neutral theme by default; the current comic look ships as a theme a project can choose.",
+          "label": "Neutral, the other look optional",
+          "summary": "A plain neutral theme by default; the other project's current look ships as a theme a project can choose.",
           "recommended": true
         },
         {
-          "label": "Comic for every project",
-          "summary": "The comic look from another project becomes the default everywhere."
+          "label": "That look for every project",
+          "summary": "The look from another project becomes the default everywhere."
         },
         {
           "label": "Each project’s own design, else a default",
-          "summary": "Look and feel taken from the project it belongs to (scan its design files or web pages); a project with no design gets a default design file shipped in the plugin. The other project’s comic look is ignored."
+          "summary": "Look and feel taken from the project it belongs to (scan its design files or web pages); a project with no design gets a default design file shipped in the plugin. The other project’s look is ignored."
         }
       ],
       "chosen": "Each project’s own design, else a default",

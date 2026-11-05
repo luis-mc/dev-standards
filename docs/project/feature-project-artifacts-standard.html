@@ -888,7 +888,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-05T16:16+00:00">05 Nov 16:16</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">05 Nov 15:33</a> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</p>
 <div class="at-a-glance">
@@ -1400,16 +1400,16 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
 <p class="decision-meta">Asked 10 Oct · Decided 10 Oct</p>
 <div class="decision-options">
 <div class="decision-option decision-muted">
-<div class="decision-option-head"><span class="decision-label">Neutral, comic optional</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
-<p class="decision-summary">A plain neutral theme by default; the current comic look ships as a theme a project can choose.</p>
+<div class="decision-option-head"><span class="decision-label">Neutral, the other look optional</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">A plain neutral theme by default; the other project&#x27;s current look ships as a theme a project can choose.</p>
 </div>
 <div class="decision-option decision-muted">
-<div class="decision-option-head"><span class="decision-label">Comic for every project</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
-<p class="decision-summary">The comic look from another project becomes the default everywhere.</p>
+<div class="decision-option-head"><span class="decision-label">That look for every project</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">The look from another project becomes the default everywhere.</p>
 </div>
 <div class="decision-option decision-chosen">
 <div class="decision-option-head"><span class="decision-label">Each project’s own design, else a default</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Oct</span></div>
-<p class="decision-summary">Look and feel taken from the project it belongs to (scan its design files or web pages); a project with no design gets a default design file shipped in the plugin. The other project’s comic look is ignored.</p>
+<p class="decision-summary">Look and feel taken from the project it belongs to (scan its design files or web pages); a project with no design gets a default design file shipped in the plugin. The other project’s look is ignored.</p>
 <blockquote class="decision-words">&ldquo;ignore the [another project] look; all artificts should have a look &amp; feel based on the project they belong too ([…]); if project has no design, then put together a default design file in this plugin; and since dev-standards proejct has no design since its just for plugins, the create the default design and its file now, and apply it to existing artifacts&rdquo;</blockquote>
 </div>
 </div>
