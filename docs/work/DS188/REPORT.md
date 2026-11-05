@@ -20,3 +20,6 @@ None found. The RELEASE-43 changes (isArchived, archived versions in layout and 
 - `python3 tools/test_session_guard.py this_repo`: pass.
 - Not run: full ci-areas suite (heavy, left to CI); the workflow itself (not dispatched here).
 
+- Branch head: e9c7656 (before this report line)
+
+READY
