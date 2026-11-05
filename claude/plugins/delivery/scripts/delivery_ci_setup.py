@@ -388,13 +388,13 @@ def check_item(root, cfg, item) -> tuple:
         else:
             name = item["id"].split(":", 1)[1]
             mine = [r for r in data["runners"] if isinstance(r, dict) and r.get("name") == name]
-            have = {l.get("name") for r in mine for l in r.get("labels", []) if isinstance(l, dict)}
+            have = {str(l.get("name")).lower() for r in mine for l in r.get("labels", []) if isinstance(l, dict)}  # GitHub labels are case-insensitive
             if not mine:
                 state, detail = "open", "no runner named %s is registered" % name
             elif not any(r.get("status") == "online" for r in mine):
                 state, detail = "open", "runner %s is registered but offline" % name
-            elif not set(item["labels"]) <= have:
-                state, detail = "open", "runner %s lacks the labels %s" % (name, ", ".join(sorted(set(item["labels"]) - have)))
+            elif not {x.lower() for x in item["labels"]} <= have:
+                state, detail = "open", "runner %s lacks the labels %s" % (name, ", ".join(sorted(x for x in item["labels"] if x.lower() not in have)))
             else:
                 state, detail = "ok", "runner %s is online with its labels" % name
     elif kind == "var":
@@ -403,7 +403,7 @@ def check_item(root, cfg, item) -> tuple:
             state, detail = "unknown", "gh cannot run"
         elif r[0] != 0:
             state, detail = "open", "%s is not set" % item["name"]
-        elif r[1].strip() == item["value"]:
+        elif r[1].strip().lower() == item["value"].lower():  # label case does not matter to GitHub
             state, detail = "ok", "%s is set" % item["name"]
         else:
             state, detail = "open", "%s is %s, expected %s" % (item["name"], r[1].strip(), item["value"])
