@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T15:25+00:00",
+  "updated": "2026-11-05T15:27+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4357,6 +4357,17 @@
       "changed": "2026-11-05T15:11+00:00",
       "rides": "DU9",
       "started": "2026-11-05T15:00+00:00"
+    },
+    {
+      "id": "DU12",
+      "owner": "design-field-updates",
+      "app": "luismc-docs",
+      "status": "To do",
+      "item": "Reword a word on main that hints at another project (3 places)",
+      "detail": "Owner D11: old artifacts decision (content/artifacts/decisions.json D-option labels) says another project's look; test_design_system.py:225 and test_ci_speedups.py:555 use a neutral placeholder list. Starts after RELEASE-45 merges.",
+      "expected": "05 Nov ~16:00",
+      "changed": "2026-11-05T15:27+00:00",
+      "expected_basis": "after RELEASE-45 merge 15:37, about 20 min"
     },
     {
       "id": "MP1",
