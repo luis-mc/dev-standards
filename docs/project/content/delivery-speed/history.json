@@ -1,5 +1,9 @@
 [
   {
+    "date": "05 Nov 15:38",
+    "change": "DL60 item changed from \"Runner pool: SHA from the release notes' markers; CPU headroom below WSL\" to \"Runner pool on Windows: 4 bugs block setup (SHA, CPU headroom, CRLF, runner dir)\""
+  },
+  {
     "date": "05 Nov 15:33",
     "change": "DL60 item changed from \"Runner pool: read the runner SHA-256 from the release notes' SHA markers\" to \"Runner pool: SHA from the release notes' markers; CPU headroom below WSL\""
   },

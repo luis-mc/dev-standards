@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T15:33+00:00",
+  "updated": "2026-11-05T15:38+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1457,11 +1457,11 @@
       "owner": "delivery-speed",
       "app": "",
       "status": "To do",
-      "item": "Runner pool: SHA from the release notes' markers; CPU headroom below WSL",
-      "detail": "Peer reports, both confirmed in delivery_runner_pool.py. (1) runner_sha(): notes regex name[^0-9a-f]{0,40}hash never matches '<!-- BEGIN SHA linux-x64 -->hash'; match the BEGIN/END SHA markers, else name.{0,80}?hash. (2) sizing(): wsl processors = ceil(cpu), so a whole-number cap (19.0) equals processors=19 and Docker refuses it; keep processors at least 1 above the cap. Tests for both. Also check: plan said memory=7GB, step wrote 10GB (not reproduced).",
-      "expected": "05 Nov ~16:40",
-      "changed": "2026-11-05T15:33+00:00",
-      "expected_basis": "after DU12 at 16:00; about 40 min with tests"
+      "item": "Runner pool on Windows: 4 bugs block setup (SHA, CPU headroom, CRLF, runner dir)",
+      "detail": "Peer reports, all confirmed. (1) runner_sha(): notes regex misses '<!-- BEGIN SHA linux-x64 -->hash'; match the markers. (2) sizing(): processors = ceil(cpu) equals a whole cap; keep 1 above. (3) templates/runner-pool/* reach Windows caches as CRLF (no eol=lf in .gitattributes), so pool-add-agent fails in Linux; add eol=lf and write LF in write_pool_files. (4) pool_agents.py runs config.sh as r-SLUG in root-owned /opt/runner; copy the runner to /agents/SLUG, chown, run there. Blocks a real project's pool setup.",
+      "expected": "05 Nov ~16:50",
+      "changed": "2026-11-05T15:38+00:00",
+      "expected_basis": "not started; one cloud agent about 60 min"
     },
     {
       "id": "DS1",
