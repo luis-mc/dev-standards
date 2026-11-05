@@ -260,7 +260,7 @@ flowchart TD
 5. **Pool.** Write the pool files, `docker compose up -d --build`, add one agent per Linux repository with the token pipe.
 6. **Windows services.** One per repository that tests on Windows, with both hooks in its `.env`.
 7. **Variables.** `gh variable set CI_RUNS_ON` (and `CI_SERIAL` when chosen) per repository. The step also warns, and still passes, about workflows that call `sudo`, `apt-get`, `apt install`, `playwright install --with-deps` or `install-deps`: they need root, which pool jobs do not have. Keep them on hosted runners, or set `browsers: chromium` and use `playwright install chromium` without `--with-deps`.
-8. **Verify.** For each repository: the agent is online with its labels, then one run of `pool-check.yml` that takes a slot, prints the runner name and passes. The doctor runs last.
+8. **Verify.** For each repository: the agent is online with its labels, then one run of `pool-check.yml` that takes a slot, prints the runner name, checks that the image has `libatomic.so.1` (pnpm needs it) and the tools common actions assume (git, curl, jq, unzip, zip, xz, python3), and passes. The doctor runs last.
 
 When a step fails, the setup stops, says what is done and what is not, and prints the remaining steps.
 

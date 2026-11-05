@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.7.1
+version: 0.7.2
 owner: agents
 type: reference
 code:
@@ -367,6 +367,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.7.2 | 2026-11-05 | RELEASE-51 | The pool image installs libatomic1, xz-utils, unzip, zip and jq; pool-check checks them. | DL71 |
 | 0.7.1 | 2026-11-05 | RELEASE-50 | Runner pool: the Chromium libraries match the project's Playwright version (flag, lockfile, or pin 1.62.1). | DL69 |
 | 0.7.0 | 2026-11-05 | RELEASE-49 | Pool image option browsers (none or chromium) adds the Chromium system libraries; the CI_RUNS_ON check warns about workflows that need root. Detail in shared-self-hosted-runners section 4.1. | DL67 |
 | 0.6.2 | 2026-11-05 | RELEASE-48 | Runner pool: host load task check by file age, latest runner version with a floor and a pinned fallback, two-call database setup that can be rerun, and a stable memory cap that shows old -> new values. | DL63 |

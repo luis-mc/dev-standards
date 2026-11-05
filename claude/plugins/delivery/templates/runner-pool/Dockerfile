@@ -7,8 +7,10 @@ ARG POOL_BROWSERS=none
 ARG PLAYWRIGHT_VERSION=1.62.1
 LABEL dev.luismc.runner-pool="1"
 ENV DEBIAN_FRONTEND=noninteractive
+# libatomic1: pnpm's standalone binary (@pnpm/exe) needs it. xz-utils, unzip, zip, jq: common actions assume them, as on hosted runners (DL71).
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates curl git tini python3 sudo util-linux postgresql-client libicu74 \
+    libatomic1 xz-utils unzip zip jq \
  && rm -rf /var/lib/apt/lists/*
 # The runner tarball is checked by SHA-256. The build fails when RUNNER_SHA256 is empty or does not match.
 RUN test -n "$RUNNER_SHA256" \
