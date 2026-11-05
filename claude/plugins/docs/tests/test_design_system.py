@@ -139,6 +139,44 @@ class DesignSystemTests(unittest.TestCase):
         res = S.check(d, "main")
         self.assertTrue(any(x["path"].endswith("v1/tokens.md") and x["message"].startswith("M:") for x in res))
 
+    def _archived_repo(self, where="docs/archive/design-system-v1"):
+        d = ds_repo()
+        S.cmd_promote(d, args())
+        w(d, "docs/design-system/next-version/CHANGES.md", "# c\n\n- C1: new colour (tokens.md; owner)\n")
+        S.cmd_promote(d, args(approved_on="2026-11-09"))
+        git(d, "add", "-A")
+        git(d, "commit", "-q", "-m", "ds")
+        git(d, "checkout", "-q", "-b", "feat")
+        (d / where).parent.mkdir(parents=True, exist_ok=True)
+        v1 = d / "docs/design-system/v1"
+        for f in v1.rglob("*"):
+            unlock(f)
+        unlock(v1)
+        os.rename(v1, d / where)
+        return d
+
+    def test_archived_version_is_not_a_gap(self):  # R15.1 R2.7
+        for where in ("docs/archive/design-system-v1", "docs/archive/design-system/v1"):
+            d = self._archived_repo(where)
+            self.assertEqual([x for x in S.check(d) if "gap" in x["message"]], [], where)
+            self.assertEqual(S.enforced(d), "v2")
+
+    def test_gap_without_archive_still_warns(self):  # R15.1
+        d = self._archived_repo()
+        os.rename(d / "docs/archive/design-system-v1", d / "docs/archive/other")
+        self.assertTrue(any("gap" in x["message"] for x in S.check(d)))
+
+    def test_approval_of_archived_version_is_no_error(self):  # R15.4
+        d = self._archived_repo()
+        self.assertIn("v1", S.read_approvals(d)["versions"])
+        self.assertEqual(S.check(d), [])
+
+    def test_branch_archiving_a_version_is_not_an_edit(self):  # R15.5 R2.7
+        d = self._archived_repo()
+        git(d, "add", "-A")
+        git(d, "commit", "-qm", "archive v1")
+        self.assertEqual([x for x in S.check(d, "main") if x["code"] == "DS2"], [])
+
     def test_check_readme_order_of_work_and_layout(self):  # R15.2 R15.7
         d = ds_repo()
         w(d, "docs/design-system/README.md", "# DS\n")

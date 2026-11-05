@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { DESIGN_SYSTEM, NUMBERED, ONE_TIME, repoRoot, treeDigest, versionNumbers } from './design-system.ts';
+import { DESIGN_SYSTEM, NUMBERED, ONE_TIME, isArchived, repoRoot, treeDigest, versionNumbers } from './design-system.ts';
 
 // Freeze guard (R15.4, R15.5): an approved version is read-only, and design changes touch only next-version.
 // Two checks: the digest recorded at approval (approvals.json) still matches the folder, and the branch's diff
@@ -14,7 +14,11 @@ export interface Change {
 }
 
 /** What breaks the freeze. `known` lists the numbered versions that approvals.json records. */
-export const freezeProblems = (changes: readonly Change[], known: readonly string[] = []): string[] => {
+export const freezeProblems = (
+  changes: readonly Change[],
+  known: readonly string[] = [],
+  archived: readonly string[] = [],
+): string[] => {
   const problems: string[] = [];
   const pattern = new RegExp(`^${DESIGN_SYSTEM}/(v[1-9]\\d*)/(.*)$`);
   for (const { status, path } of changes) {
@@ -23,6 +27,7 @@ export const freezeProblems = (changes: readonly Change[], known: readonly strin
     const version = m[1]!;
     const rest = m[2]!;
     const oneTime = (ONE_TIME as readonly string[]).includes(rest.split('/')[0]!);
+    if (status === 'D' && archived.includes(version)) continue; // moved to docs/archive/: an archive, not an edit
     const promotion = status === 'A' && known.includes(version); // a new version folder, approved in approvals.json
     if (!(status === 'A' && oneTime) && !promotion)
       problems.push(`${path} (${status}): ${version} is approved and read-only; put the change into next-version`);
@@ -52,6 +57,7 @@ describe('an approved design-system version is read-only', () => {
     expect(freezeProblems([p('D', 'tokens.md')])).toHaveLength(1);
     expect(freezeProblems([p('A', 'notes.md')])).toHaveLength(1);
     expect(freezeProblems([p('A', 'README.md')], ['v1'])).toEqual([]); // the promotion itself
+    expect(freezeProblems([p('D', 'tokens.md')], ['v1'], ['v1'])).toEqual([]); // v1 moved to docs/archive/
     expect(freezeProblems([{ status: 'M', path: `${DESIGN_SYSTEM}/next-version/tokens.md` }])).toEqual([]);
   });
 
@@ -77,6 +83,10 @@ describe('an approved design-system version is read-only', () => {
         return { status: status[0]!, path };
       })
       .filter((c) => NUMBERED.test(c.path.split('/')[2] ?? ''));
-    expect(freezeProblems(changes, Object.keys(recorded()))).toEqual([]);
+    expect(freezeProblems(
+        changes,
+        Object.keys(recorded()),
+        Object.keys(recorded()).filter((v) => isArchived(Number(v.slice(1)))),
+      )).toEqual([]);
   });
 });
