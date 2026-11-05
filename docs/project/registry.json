@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T09:12+00:00",
+  "updated": "2026-11-05T09:21+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1422,11 +1422,11 @@
       "id": "DL59",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-44: guard template CI",
       "detail": "Join, CI and merge of DS188 (D94).",
-      "expected": "05 Nov ~10:20",
-      "changed": "2026-11-05T09:12+00:00",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T09:21+00:00",
       "release": 44,
       "phases": [
         {
@@ -4184,12 +4184,11 @@
       "id": "DS188",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "CI runs the TypeScript design-system guard templates",
       "detail": "D94: run the typescript-vitest guard templates against a fixture repo in this repo's CI, including an archived-version case (DS187).",
-      "expected": "05 Nov ~09:55",
-      "changed": "2026-11-05T09:12+00:00",
-      "expected_basis": "cloud agent ~40 min: fixture, vitest job, CI wiring",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T09:21+00:00",
       "rides": "DL59",
       "started": "2026-11-05T09:15+00:00"
     },
