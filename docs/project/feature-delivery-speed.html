@@ -889,7 +889,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
 <p class="last-update">Last update: <time datetime="2026-11-05T09:21+00:00">05 Nov 09:21</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">05 Nov 09:21</a> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">05 Nov 10:36</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
@@ -1007,6 +1007,21 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D95">
+<h3 class="decision-head"><span class="decision-id">D95</span> <span class="decision-question">Should the SessionStart effort_drift.py hook use the same if/else python fallback as the Stop hook?</span></h3>
+<p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DS187</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Change it</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 05 Nov</span></div>
+<p class="decision-summary">Use the if/else form; the script never runs twice.</p>
+<blockquote class="decision-words">&ldquo;Change it (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep the || form; a failing script may run twice.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D94">
 <h3 class="decision-head"><span class="decision-id">D94</span> <span class="decision-question">How are the TypeScript design-system guard templates tested?</span></h3>
 <p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DS187</p>
