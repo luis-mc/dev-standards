@@ -12,6 +12,8 @@
                                                       copy the guard-test templates for a stack
                                                       (--stack typescript-vitest-kit: the enforcement kit: no app CSS scan,
                                                       DOM layout checker, wizard behaviour harness; each with a ratchet list)
+  design_system.py brief [--apply]                    write or refresh the UI brief checklist (a marked block) in AGENTS.md
+                                                      and .github/pull_request_template.md; safe to run again
   design_system.py styles [--json]                    read-only: list the project's style files and CSS custom properties
 
 Layout (R15.1): docs/design-system/{README.md, approvals.json, next-version/, v1/, v2/ ...}.
@@ -694,9 +696,50 @@ def cmd_guards(root: Path, a) -> int:
     return 0
 
 
+BRIEF_START = "<!-- design-system-checklist:start -->"
+BRIEF_END = "<!-- design-system-checklist:end -->"
+BRIEF_FILES = ("AGENTS.md", ".github/pull_request_template.md")
+BRIEF_BLOCK_RE = re.compile(re.escape(BRIEF_START) + r".*?" + re.escape(BRIEF_END), re.S)
+
+
+def brief_block() -> str:
+    """The marked checklist block: the template without its leading instruction comment."""
+    body = (PLUGIN / "templates" / "ui-brief-checklist.md").read_text(encoding="utf-8")
+    body = re.sub(r"\A\s*<!--.*?-->\s*", "", body, count=1, flags=re.S).strip()
+    return BRIEF_START + "\n" + body + "\n" + BRIEF_END
+
+
+def brief_update(text: str, block: str) -> str:
+    """`text` with the marked block written (appended when absent) or refreshed (replaced in place). Pure."""
+    if BRIEF_BLOCK_RE.search(text):
+        return BRIEF_BLOCK_RE.sub(lambda _m: block, text, count=1)
+    if not text:
+        return block + "\n"
+    return text.rstrip("\n") + "\n\n" + block + "\n"
+
+
+def cmd_brief(root: Path, apply: bool) -> int:
+    block = brief_block()
+    for rel in BRIEF_FILES:
+        path = root / rel
+        old = path.read_text(encoding="utf-8") if path.is_file() else ""
+        new = brief_update(old, block)
+        if new == old:
+            print("  ok     ", rel, "(checklist is current)")
+            continue
+        verb = "refresh" if BRIEF_START in old else "write"
+        print(("  " + verb + "  ") if apply else ("  would " + verb + " "), rel)
+        if apply:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(new, encoding="utf-8", newline="\n")
+    if not apply:
+        print("dry run: add --apply")
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", choices=["init", "status", "check", "visuals", "promote", "approve-implementation", "guards", "styles"])
+    ap.add_argument("command", choices=["init", "status", "check", "visuals", "promote", "approve-implementation", "guards", "styles", "brief"])
     ap.add_argument("version", nargs="?")
     ap.add_argument("--root", default=None)
     ap.add_argument("--apply", action="store_true")
@@ -713,6 +756,8 @@ def main(argv=None) -> int:
         return cmd_init(root, a.apply)
     if a.command == "status":
         return cmd_status(root)
+    if a.command == "brief":
+        return cmd_brief(root, a.apply)
     if a.command == "styles":
         return cmd_styles(root, a.json)
     if a.command == "check":

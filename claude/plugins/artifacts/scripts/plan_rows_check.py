@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan-to-tasks check (DRAFT, not wired into a hook).
+"""Plan-to-tasks check. Run by hand, and by the Stop hook (hook_end_of_turn.py) for a report written in the turn.
 
 Every numbered plan row and every audit finding listed in an agent's report must become a tracked task in
 the project's task registry, in the same turn. No periodic audit: this check runs on the report that was

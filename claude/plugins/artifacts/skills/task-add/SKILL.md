@@ -83,7 +83,7 @@ exit, read the message, fix the cause and rerun.
 
 A numbered plan row, or an audit finding, in an agent report is work. In the same turn it is a task, not a line in a file. After a report with such rows is written, run
 `python "${CLAUDE_PLUGIN_ROOT}/scripts/plan_rows_check.py" <report.md> [--commands]`.
-It lists each row that no task mentions (it reads the registry; it writes nothing). Add one task per listed row with `task-add`, and put the row key (for example `PLAN7#3`) in the detail so the next run finds it. A row the owner drops gets a Dropped task or a line in the report saying why. There is no periodic audit: the check runs on the report just written.
+It lists each row that no task mentions (it reads the registry; it writes nothing). Add one task per listed row with `task-add`, and put the row key (for example `PLAN7#3`) in the detail so the next run finds it. A row the owner drops gets a Dropped task or a line in the report saying why. The task key is `<tag>#<id>` (owner decision D238): the tag is the report's folder name for `plan.md`, `audit.md` and `report.md` in a folder, else the file name; the id is the row's number or ID (`3`, `B07`). Put it in the task detail, for example `DSY97#3: One engine for wizards`. There is no periodic audit, but the Stop hook of this plugin runs the same check for any report under `docs/work/` named like plan, audit, report or findings that changed in the last 2 hours: it blocks the end of the turn while rows are untasked and prints a `task-add` line for each (after 3 blocks with no change it lets the turn end, like its other checks). Move a row you drop under a "Not proposed" heading with the reason.
 
 ## Old claude.ai pages
 

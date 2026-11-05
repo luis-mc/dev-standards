@@ -12,6 +12,7 @@
  *  3. `judgeWizard(id, state, problems, WIZARD_BEHAVIOUR_TO_FIX)` is the ratchet: a problem not on the table
  *     fails; a table row that no longer happens fails; so the table only shrinks to empty.
  */
+/** The nine states every wizard MUST be driven through (owner decision D237). A project may add states, never drop one. */
 export const WIZARD_STATES = [
   'first-run',
   'planning',
@@ -23,7 +24,9 @@ export const WIZARD_STATES = [
   'done',
   'done-after-reload',
 ] as const;
-export type WizardState = (typeof WIZARD_STATES)[number];
+export type RequiredWizardState = (typeof WIZARD_STATES)[number];
+/** A required state, or a state the project added to a driver's `states`. */
+export type WizardState = RequiredWizardState | (string & {});
 
 export type WizardRule =
   | 'later-step-pressable'
@@ -124,11 +127,18 @@ export function judgeWizard(
 /** A wizard driver: renders the wizard in a state and reads a snapshot from the DOM. */
 export interface WizardDriver {
   readonly id: string;
+  /** States the project ADDS to the nine required ones. Listing fewer than the nine is a failure, not a shortcut. */
   readonly states?: readonly WizardState[];
   open(state: WizardState): Promise<WizardSnapshot>;
 }
 
-/** Run every driver through its states; every problem and stale row, as lines. Empty means green. */
+/** The required states a driver's own `states` list leaves out (empty when it lists none: all nine run). */
+export function droppedStates(d: WizardDriver): string[] {
+  if (!d.states) return [];
+  return WIZARD_STATES.filter((s) => !d.states?.includes(s));
+}
+
+/** Run every driver through the nine required states and the ones it adds; every problem and stale row, as lines. Empty means green. */
 export async function judgeAll(
   drivers: readonly WizardDriver[],
   table: readonly WizardToFix[] = WIZARD_BEHAVIOUR_TO_FIX,
@@ -136,7 +146,8 @@ export async function judgeAll(
   const lines: string[] = [];
   for (const d of drivers) {
     const seenStar = new Set<WizardRule>();
-    const states = d.states ?? WIZARD_STATES;
+    for (const dropped of droppedStates(d)) lines.push(`${d.id}: required state "${dropped}" is missing from the driver's states: a project may add states, never drop one`);
+    const states = [...WIZARD_STATES, ...(d.states ?? []).filter((s) => !(WIZARD_STATES as readonly string[]).includes(s))];
     for (const state of states) {
       const problems = checkWizard(await d.open(state));
       const r = judgeWizard(d.id, state, problems, table);

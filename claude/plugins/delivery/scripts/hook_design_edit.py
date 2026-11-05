@@ -1,25 +1,30 @@
 #!/usr/bin/env python3
-"""PostToolUse edit-time design-system warning (DRAFT, not wired in hooks/hooks.json).
+"""PreToolUse edit-time design-system guard for Edit, MultiEdit and Write (owner decision D231).
 
-When an Edit, MultiEdit or Write puts CSS or a hand-made button, table, tab row or progress bar into app code,
-this prints one warning to the session: use the shared UI part instead. It only warns. It never blocks, never
-writes a file and always exits 0 (every error is one line on stderr).
+When an edit would put CSS or a hand-made button, table, tab row or progress bar into app code, the first such
+edit in a turn is allowed with a warning (use the shared UI part instead); a repeat in the same turn is denied.
+It writes no project file and every error is one line on stderr (the edit then goes through).
+
+A turn is the time between two user prompts (or stops). The hook counts breaches per session in a small state
+file in the temp folder (override the folder with CLAUDE_DESIGN_EDIT_STATE_DIR) and clears the count when it
+is run for UserPromptSubmit or Stop (both are wired in hooks.json).
 
 Active only in a project that has docs/design-system/ and only for files under the app paths. Defaults:
-app paths `apps/`, shared UI paths `packages/ui/` (a file under a shared path is never warned about).
-Override in .delivery/config.json:  "design_system": {"app_paths": ["apps/"], "shared_paths": ["packages/ui/"]}
+app paths `apps/`, shared UI paths `packages/ui/` (a file under a shared path is never judged).
+Set them in .delivery/config.json (schema: design_system.app_paths, design_system.shared_paths):
+    "design_system": {"app_paths": ["apps/"], "shared_paths": ["packages/ui/"]}
 
-It is the early warning. The no-app-CSS scan and the other kit tests are the gate (references/design-gate.md).
+It is the early guard. The no-app-CSS scan and the other kit tests are the gate (references/design-gate.md).
 Disable: CLAUDE_DELIVERY_HOOKS=off. Standard library only.
-
-Wire it (see the proposal) with a PostToolUse entry, matcher "Edit|MultiEdit|Write".
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
 import sys
+import tempfile
 from pathlib import Path
 
 STYLE_FILE_RE = re.compile(r"\.(css|scss|sass|less)$", re.I)
@@ -124,14 +129,57 @@ def decide(data: dict) -> str | None:
     )
 
 
+def state_file(session: str) -> Path:
+    base = Path(os.environ.get("CLAUDE_DESIGN_EDIT_STATE_DIR") or tempfile.gettempdir())
+    return base / ("luismc-design-edit-%s.json" % hashlib.sha1((session or "none").encode("utf-8")).hexdigest()[:16])
+
+
+def read_count(session: str) -> int:
+    try:
+        return int(json.loads(state_file(session).read_text(encoding="utf-8")).get("breaches", 0))
+    except (OSError, ValueError, AttributeError, TypeError):
+        return 0
+
+
+def write_count(session: str, n: int) -> None:
+    f = state_file(session)
+    try:
+        if n <= 0:
+            f.unlink(missing_ok=True)
+        else:
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_text(json.dumps({"breaches": n}), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def respond(data: dict) -> dict | None:
+    """The hook output for one input, or None to let the tool run unannounced. Counts breaches per turn."""
+    event = data.get("hook_event_name", "PreToolUse")
+    session = str(data.get("session_id", ""))
+    if event in ("UserPromptSubmit", "Stop", "SessionStart"):
+        write_count(session, 0)  # a new turn: the count starts again
+        return None
+    message = decide(data)
+    if not message:
+        return None
+    n = read_count(session)
+    write_count(session, n + 1)
+    if n == 0:
+        return {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "allow",
+                                       "additionalContext": "Warning (first breach this turn; a repeat is denied). " + message}}
+    return {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
+                                   "permissionDecisionReason": "Denied (repeat breach this turn). " + message}}
+
+
 def main() -> int:
     if os.environ.get("CLAUDE_DELIVERY_HOOKS", "").lower() == "off":
         return 0
     try:
         data = json.loads(sys.stdin.read() or "{}")
-        message = decide(data)
-        if message:
-            print(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": message}}))
+        out = respond(data)
+        if out:
+            print(json.dumps(out))
     except Exception as e:  # noqa: BLE001
         print(f"luismc-delivery: design edit hook: {e}", file=sys.stderr)
     return 0

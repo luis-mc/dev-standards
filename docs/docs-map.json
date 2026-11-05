@@ -34,6 +34,9 @@
     "claude/plugins/delivery/references/*.json": [
       "docs/features/delivery/spec.md"
     ],
+    "claude/plugins/delivery/references/design-gate.md": [
+      "docs/features/delivery/spec.md"
+    ],
     "claude/plugins/delivery/scripts/*.py": [
       "docs/features/delivery/spec.md"
     ],

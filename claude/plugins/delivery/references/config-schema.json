@@ -32,6 +32,22 @@
       "description": "IANA zone of the owner (e.g. Europe/Lisbon). Must load through zoneinfo; if it cannot (no tzdata) validate and delivery_doctor.py fail, and hooks warn on stderr before falling back to UTC.",
       "default": "UTC"
     },
+    "design_system": {
+      "type": "object",
+      "description": "Design-system enforcement (owner decisions D231, D232). Read by hook_design_edit.py, which acts only in a project that has docs/design-system/. design-system-setup asks for both lists and writes them here.",
+      "properties": {
+        "app_paths": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "[^ ]"},
+          "description": "Folders (relative to the repository root, with a trailing slash, for example apps/) whose code must carry no CSS and no hand-made parts. Default: apps/."
+        },
+        "shared_paths": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "[^ ]"},
+          "description": "Folders of the shared UI package, where the looks and the parts live; never judged. Default: packages/ui/."
+        }
+      }
+    },
     "base": {
       "type": "string",
       "description": "Default branch (default main)."

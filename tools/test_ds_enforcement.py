@@ -66,7 +66,7 @@ def kit_is_copied_by_the_guards_command():
         assert DS.main(['guards', '--stack', 'typescript-vitest-kit', '--root', d, '--apply']) == 0
         for n in ('no-app-css-scan.ts', 'no-app-css.test.ts', 'no-app-css.known.json', 'dom-layout.ts',
                   'dom-layout-judge.test.ts', 'dom-layout-example.spec.ts', 'wizard-behaviour.ts',
-                  'wizard-behaviour.test.ts'):
+                  'wizard-behaviour.test.ts', 'README.md'):
             assert os.path.isfile(os.path.join(d, 'scripts', 'design', n)), n
     finally:
         shutil.rmtree(d, ignore_errors=True)
@@ -196,10 +196,12 @@ def hook_reads_app_paths_from_the_config_and_prints_json():
         assert HOOK.decide(edit(d, 'web/a.tsx', '<button>')) is not None
         assert HOOK.decide(edit(d, 'apps/web/src/a.tsx', '<button>')) is None  # no longer an app path
         r = subprocess.run([sys.executable, '-I', os.path.join(PLUGINS, 'delivery', 'scripts', 'hook_design_edit.py')],
-                           input=json.dumps(edit(d, 'web/a.tsx', '<button>')), capture_output=True, text=True)
+                           input=json.dumps(dict(edit(d, 'web/a.tsx', '<button>'), session_id='cfg')), capture_output=True, text=True,
+                           env=dict(os.environ, CLAUDE_DESIGN_EDIT_STATE_DIR=d))
         assert r.returncode == 0
         out = json.loads(r.stdout)
-        assert out['hookSpecificOutput']['hookEventName'] == 'PostToolUse'
+        assert out['hookSpecificOutput']['hookEventName'] == 'PreToolUse'
+        assert out['hookSpecificOutput']['permissionDecision'] == 'allow'  # first breach: a warning
         r = subprocess.run([sys.executable, '-I', os.path.join(PLUGINS, 'delivery', 'scripts', 'hook_design_edit.py')],
                            input='not json', capture_output=True, text=True)
         assert r.returncode == 0 and r.stdout == ''  # never blocks, never crashes
@@ -282,9 +284,286 @@ def plan_rows_all_tasked_pass_and_a_bad_registry_is_a_usage_error():
 # --- wiring ----------------------------------------------------------------------------
 
 @test
-def the_hook_is_a_draft_and_not_wired():
-    hooks = open(os.path.join(PLUGINS, 'delivery', 'hooks', 'hooks.json'), encoding='utf-8').read()
-    assert 'hook_design_edit' not in hooks
+def the_edit_hook_is_wired_for_pre_tool_use_and_resets_each_turn():
+    hooks = json.load(open(os.path.join(PLUGINS, 'delivery', 'hooks', 'hooks.json'), encoding='utf-8'))['hooks']
+    pre = [h for h in hooks['PreToolUse'] if 'hook_design_edit' in json.dumps(h)]
+    assert len(pre) == 1 and pre[0]['matcher'] == 'Edit|MultiEdit|Write'
+    assert not any('hook_design_edit' in json.dumps(h) for h in hooks['PostToolUse'])
+    for ev in ('UserPromptSubmit', 'Stop'):
+        assert any('hook_design_edit' in json.dumps(h) for h in hooks[ev]), ev
+
+
+@test
+def hook_first_breach_warns_and_a_repeat_in_the_same_turn_denies():
+    d = project_with_ds()
+    st = tempfile.mkdtemp()
+    os.environ['CLAUDE_DESIGN_EDIT_STATE_DIR'] = st
+    try:
+        bad = edit(d, 'apps/web/src/a.tsx', '<button>Go</button>')
+        bad['session_id'] = 's1'
+        first = HOOK.respond(dict(bad))['hookSpecificOutput']
+        assert first['permissionDecision'] == 'allow' and 'Warning' in first['additionalContext']
+        second = HOOK.respond(dict(bad))['hookSpecificOutput']
+        assert second['permissionDecision'] == 'deny' and 'repeat' in second['permissionDecisionReason']
+        clean = edit(d, 'apps/web/src/a.tsx', '<Button/>')
+        clean['session_id'] = 's1'
+        assert HOOK.respond(dict(clean)) is None  # clean edits never count
+        other = dict(bad, session_id='s2')
+        assert HOOK.respond(other)['hookSpecificOutput']['permissionDecision'] == 'allow'  # another session
+        # a new turn (prompt or stop) clears the count
+        assert HOOK.respond({'hook_event_name': 'UserPromptSubmit', 'session_id': 's1'}) is None
+        assert HOOK.respond(dict(bad))['hookSpecificOutput']['permissionDecision'] == 'allow'
+        assert HOOK.respond(dict(bad))['hookSpecificOutput']['permissionDecision'] == 'deny'
+        assert HOOK.respond({'hook_event_name': 'Stop', 'session_id': 's1'}) is None
+        assert HOOK.respond(dict(bad))['hookSpecificOutput']['permissionDecision'] == 'allow'
+    finally:
+        os.environ.pop('CLAUDE_DESIGN_EDIT_STATE_DIR', None)
+        shutil.rmtree(d, ignore_errors=True)
+        shutil.rmtree(st, ignore_errors=True)
+
+
+@test
+def hook_denies_through_the_process_with_json_on_stdout():
+    d = project_with_ds()
+    st = tempfile.mkdtemp()
+    try:
+        env = dict(os.environ, CLAUDE_DESIGN_EDIT_STATE_DIR=st)
+        payload = dict(edit(d, 'apps/web/src/a.tsx', '<table>'), session_id='p1')
+        script = os.path.join(PLUGINS, 'delivery', 'scripts', 'hook_design_edit.py')
+        outs = [subprocess.run([sys.executable, '-I', script], input=json.dumps(payload), capture_output=True, text=True, env=env)
+                for _ in range(2)]
+        assert [json.loads(o.stdout)['hookSpecificOutput']['permissionDecision'] for o in outs] == ['allow', 'deny']
+        assert all(o.returncode == 0 for o in outs)
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+        shutil.rmtree(st, ignore_errors=True)
+
+
+@test
+def config_schema_types_the_design_system_paths():
+    sys.path.insert(0, os.path.join(PLUGINS, 'delivery', 'scripts'))
+    import delivery_config as C
+    assert C.validate_config({'design_system': {'app_paths': ['apps/'], 'shared_paths': ['packages/ui/']}}) == ([], [])
+    errors, _ = C.validate_config({'design_system': {'app_paths': 'apps/', 'shared_paths': ['']}})
+    assert len(errors) == 2, errors
+    errors, warnings = C.validate_config({'design_system': {'app_path': ['x']}})
+    assert errors == [] and any('app_path' in w for w in warnings)  # a misspelt key warns
+
+
+# --- brief checklist block ---------------------------------------------------------------
+
+@test
+def brief_writes_a_marked_block_and_is_idempotent():
+    d = tempfile.mkdtemp()
+    try:
+        open(os.path.join(d, 'AGENTS.md'), 'w', encoding='utf-8', newline='').write('# Agents\n\nRules.\n')
+        assert DS.main(['brief', '--root', d]) == 0  # dry run
+        assert open(os.path.join(d, 'AGENTS.md'), encoding='utf-8', newline='').read() == '# Agents\n\nRules.\n'
+        assert not os.path.exists(os.path.join(d, '.github'))
+        assert DS.main(['brief', '--root', d, '--apply']) == 0
+        agents = open(os.path.join(d, 'AGENTS.md'), encoding='utf-8', newline='').read()
+        pr = open(os.path.join(d, '.github', 'pull_request_template.md'), encoding='utf-8', newline='').read()
+        for text in (agents, pr):
+            assert text.count(DS.BRIEF_START) == 1 and text.count(DS.BRIEF_END) == 1
+            assert 'Design system checklist' in text and 'Paste into the UI task brief' not in text
+        assert agents.startswith('# Agents\n\nRules.\n\n')
+        assert DS.main(['brief', '--root', d, '--apply']) == 0
+        assert open(os.path.join(d, 'AGENTS.md'), encoding='utf-8', newline='').read() == agents  # second run: no change
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+@test
+def brief_refreshes_a_stale_block_and_keeps_the_text_around_it():
+    block = DS.brief_block()
+    stale = 'before\n\n' + DS.BRIEF_START + '\nold text\n' + DS.BRIEF_END + '\n\nafter\n'
+    fresh = DS.brief_update(stale, block)
+    assert fresh == 'before\n\n' + block + '\n\nafter\n'
+    assert DS.brief_update(fresh, block) == fresh
+
+
+# --- known list growth (change_notes.py) ---------------------------------------------------
+
+CN_DIR = os.path.join(PLUGINS, 'delivery', 'templates', 'shared', 'scripts', 'delivery')
+
+
+def git(d, *args):
+    env = dict(os.environ, GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM='1')
+    return subprocess.run(['git', '-c', 'user.name=t', '-c', 'user.email=t@example.com', '-c', 'commit.gpgsign=false',
+                           '-c', 'core.autocrlf=false'] + list(args), cwd=d, capture_output=True, text=True, env=env)
+
+
+def known_repo(entries_main):
+    d = tempfile.mkdtemp()
+    git(d, 'init', '-q', '-b', 'main')
+    os.makedirs(os.path.join(d, 'scripts', 'delivery'))
+    for n in ('delivery_common.py', 'change_notes.py'):
+        shutil.copyfile(os.path.join(CN_DIR, n), os.path.join(d, 'scripts', 'delivery', n))
+    json.dump({'specs': ['docs/specs/*.md']}, open(os.path.join(d, 'notes.json'), 'w'))
+    os.makedirs(os.path.join(d, 'scripts', 'design'))
+    if entries_main is not None:
+        write_known(d, entries_main)
+    git(d, 'add', '-A')
+    git(d, 'commit', '-q', '-m', 'base')
+    git(d, 'checkout', '-q', '-b', 't1-work')
+    return d
+
+
+def write_known(d, entries):
+    json.dump({'entries': entries}, open(os.path.join(d, 'scripts', 'design', 'no-app-css.known.json'), 'w'))
+
+
+def run_notes(d):
+    r = subprocess.run([sys.executable, os.path.join(d, 'scripts', 'delivery', 'change_notes.py'), 'check',
+                        '--config', 'notes.json', '--base-ref', 'main'], cwd=d, capture_output=True, text=True,
+                       env=dict(os.environ, PYTHONDONTWRITEBYTECODE='1'))
+    return r.returncode, r.stdout + r.stderr
+
+
+def commit_all(d):
+    git(d, 'add', '-A')
+    git(d, 'commit', '-q', '-m', 'work')
+
+
+A = {'file': 'apps/a.css', 'kind': 'stylesheet', 'count': 2, 'task': 'T1'}
+B = {'file': 'apps/b.css', 'kind': 'stylesheet', 'count': 1, 'task': 'T2'}
+
+
+@test
+def a_diff_that_adds_a_known_list_entry_or_raises_a_count_fails():
+    d = known_repo([A])
+    try:
+        write_known(d, [A, B])
+        commit_all(d)
+        rc, out = run_notes(d)
+        assert rc == 1 and 'apps/b.css' in out and 'only shrinks' in out, out
+        write_known(d, [dict(A, count=3)])
+        commit_all(d)
+        rc, out = run_notes(d)
+        assert rc == 1 and 'raised' in out, out
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+@test
+def shrinking_a_known_list_and_the_install_change_pass():
+    d = known_repo([A, B])
+    try:
+        write_known(d, [dict(A, count=1)])  # lower a count, drop an entry
+        commit_all(d)
+        rc, out = run_notes(d)
+        assert rc == 0, out
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    d = known_repo(None)  # the list is new at the base: this branch installs it with today's breaches
+    try:
+        write_known(d, [A, B])
+        commit_all(d)
+        rc, out = run_notes(d)
+        assert rc == 0, out
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+@test
+def the_known_list_globs_are_configurable():
+    d = known_repo([A])
+    try:
+        json.dump({'specs': ['docs/specs/*.md'], 'known_lists': ['other/*.json']}, open(os.path.join(d, 'notes.json'), 'w'))
+        git(d, 'add', '-A')
+        git(d, 'commit', '-q', '-m', 'config')
+        git(d, 'branch', '-f', 'main', 'HEAD')
+        write_known(d, [A, B])
+        commit_all(d)
+        rc, out = run_notes(d)
+        assert rc == 0, out  # no longer a known list
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+# --- plan rows in the Stop hook ---------------------------------------------------------------
+
+def stop_module():
+    sys.path.insert(0, os.path.join(PLUGINS, 'artifacts', 'scripts'))
+    return load(os.path.join(PLUGINS, 'artifacts', 'scripts', 'hook_end_of_turn.py'), 'hook_end_of_turn')
+
+
+def plan_project(tasks, name='plan.md', folder='P1'):
+    d = tempfile.mkdtemp()
+    os.makedirs(os.path.join(d, 'docs', 'artifacts'))
+    json.dump({'spec': 'x', 'tasks': tasks}, open(os.path.join(d, 'docs', 'artifacts', 'registry.json'), 'w'))
+    os.makedirs(os.path.join(d, 'docs', 'work', folder))
+    open(os.path.join(d, 'docs', 'work', folder, name), 'w', encoding='utf-8').write(PLAN)
+    return d
+
+
+@test
+def the_stop_hook_finds_untasked_rows_of_a_fresh_report_and_remembers_clean_ones():
+    S = stop_module()
+    d = plan_project([{'id': 'T1', 'item': 'x', 'detail': 'P1#1 P1#2'}])
+    try:
+        rows = S.plan_untasked(d, {}, 's1')
+        keys = sorted(r['key'] for r in rows)
+        assert keys == ['P1#3', 'P1#B07'], keys
+        assert all(r['report'] == 'docs/work/P1/plan.md' for r in rows)
+        reason = S.build_plan_reason('/x/project_artifacts.py', rows)
+        assert 'P1#3' in reason and 'task-add' in reason and '<tag>#<id>' in reason
+        assert S.fingerprint([], [], plan=rows) != S.fingerprint([], [])
+        assert 'P1#3' in S.describe([], [], plan=rows)
+        # tasking every row makes the next stop clean; the clean report is remembered in the stop state
+        json.dump({'spec': 'x', 'tasks': [{'id': 'T%d' % i, 'item': 'x', 'detail': k}
+                                          for i, k in enumerate(['P1#1', 'P1#2', 'P1#3', 'P1#B07'])]},
+                  open(os.path.join(d, 'docs', 'artifacts', 'registry.json'), 'w'))
+        assert S.plan_untasked(d, {}, 's1') == []
+        state = json.load(open(os.path.join(d, S.STATE_NAME), encoding='utf-8'))
+        assert 'docs/work/P1/plan.md' in state['plan:s1']
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+@test
+def the_stop_hook_ignores_briefs_old_reports_and_unreadable_registries():
+    S = stop_module()
+    d = plan_project([], name='BRIEF.md')
+    try:
+        assert S.plan_untasked(d, {}, 's1') == []  # a brief is not a report
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    d = plan_project([])
+    try:
+        old = os.path.join(d, 'docs', 'work', 'P1', 'plan.md')
+        os.utime(old, (1, 1))  # written long ago, not in this turn
+        assert S.plan_untasked(d, {}, 's1') == []
+        os.utime(old, None)
+        assert S.plan_untasked(d, {}, 's1') != []
+        os.remove(os.path.join(d, 'docs', 'artifacts', 'registry.json'))
+        assert S.plan_untasked(d, {}, 's2') == []  # unreadable registry: fail open
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+# --- wizard states are required in the shipped harness ----------------------------------------
+
+@test
+def the_harness_source_requires_the_nine_states_and_the_readme_names_the_stack():
+    src = open(os.path.join(KIT, 'wizard-behaviour.ts'), encoding='utf-8').read()
+    for s in ('first-run', 'planning', 'ready-to-review', 'running', 'paused', 'stopped', 'failed', 'done', 'done-after-reload'):
+        assert "'%s'" % s in src, s
+    assert 'never drop one' in src and 'droppedStates' in src
+    readme = open(os.path.join(KIT, 'README.md'), encoding='utf-8').read()
+    assert 'TypeScript with Vitest only' in readme
+
+
+@test
+def the_delivery_spec_maps_the_gate_reference_and_the_specs_carry_the_new_ids():
+    spec = open(os.path.join(REPO, 'docs', 'features', 'delivery', 'spec.md'), encoding='utf-8').read()
+    assert 'claude/plugins/delivery/references/design-gate.md' in spec
+    assert '| DL-92 |' in open(os.path.join(REPO, 'docs', 'architecture', 'DELIVERYSPEC.md'), encoding='utf-8').read()
+    assert '**R15.9**' in open(os.path.join(PLUGINS, 'docs', 'references', 'docspec.md'), encoding='utf-8').read()
+    changes = os.path.join(REPO, 'docs', 'architecture', 'changes')
+    notes = {n: open(os.path.join(changes, n), encoding='utf-8').read() for n in os.listdir(changes) if n.startswith('DSY99-')}
+    assert any('spec: claude/plugins/docs/references/docspec.md' in v for v in notes.values())
+    assert any('spec: docs/architecture/DELIVERYSPEC.md' in v for v in notes.values())
 
 
 def main():

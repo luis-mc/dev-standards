@@ -2,4 +2,4 @@
 change: minor
 task: DSY99
 ---
-Draft: design-system enforcement kit templates (no app CSS scan, DOM layout checker, wizard behaviour harness) and a UI brief checklist.
+Design-system enforcement kit templates (TypeScript and Vitest only; no app CSS scan, DOM layout checker, wizard harness with nine required states), a UI brief checklist written by design_system.py brief, and R15.9.

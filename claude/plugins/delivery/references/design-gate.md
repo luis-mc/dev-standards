@@ -1,4 +1,4 @@
-# Design-system enforcement as a required check (draft)
+# Design-system enforcement as a required check (DL-92)
 
 For a project that uses the `luismc-docs` design system and has copied the enforcement kit (`design_system.py guards --stack typescript-vitest-kit --apply`). The kit has three tests: no app CSS, DOM layout at 360, 393 and 1300 px, wizard behaviour. Each has a known list that only shrinks.
 
@@ -36,10 +36,11 @@ The kit's tests are ordinary tests of the project, so they run in whichever CI o
 
 On Option 3 (statuses-only token), the cloud session posts one status per shard; name the kit's shard `design-kit` and list it in the ruleset's required contexts.
 
-## 3. Ratchet rules (what a reviewer checks)
+## 3. Edit-time hook and ratchet rules (what a reviewer checks)
 
+- `hook_design_edit.py` (PreToolUse on Edit, MultiEdit and Write) warns on the first edit in a turn that adds CSS or a hand-made part under `design_system.app_paths` (default `apps/`) and denies a repeat in the same turn. Paths outside `design_system.shared_paths` (default `packages/ui/`) only. It is the early guard; the tests above are the gate.
 - A known list (`no-app-css.known.json`, `KNOWN_LAYOUT_BREACHES`, `WIZARD_BEHAVIOUR_TO_FIX`) may lose entries in any change. It may gain an entry only in the change that first installs the kit, and every entry names the task that removes it.
-- A diff that adds or raises an entry elsewhere fails review. `change_notes.py` style checks can enforce this: a changed known list whose line count grew, outside the install change, is a finding (open question in the proposal).
+- A diff that adds or raises an entry elsewhere fails. `change_notes.py check` enforces it for the JSON list (`known_lists`, default `scripts/design/*.known.json`): a list that exists at the base and gains an entry or a higher `count` is an offence; a list that is new at the base is the install change and passes. `KNOWN_LAYOUT_BREACHES` and `WIZARD_BEHAVIOUR_TO_FIX` are TypeScript constants: a reviewer checks those until they move into JSON lists (follow-up DSY99-F1).
 - Weakening a check to pass (a looser tolerance, a skipped state, a wider selector) is a design-system change and follows the order of work in `docs/design-system/README.md`.
 
 ## 4. What this does not do

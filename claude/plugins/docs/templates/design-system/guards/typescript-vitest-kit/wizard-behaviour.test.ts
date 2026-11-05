@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   checkWizard,
+  droppedStates,
   judgeAll,
   judgeWizard,
   WIZARD_BEHAVIOUR_TO_FIX,
@@ -69,6 +70,47 @@ describe('wizard behaviour', () => {
     it('wants a busy button disabled', () => {
       const b = good.buttons.map((x, i) => (i === 0 ? { ...x, disabled: false } : x));
       expect(rules({ ...good, buttons: b })).toContain('busy-not-disabled');
+    });
+  });
+
+  describe('the nine required states', () => {
+    const clean = (state: string): WizardSnapshot => ({
+      state,
+      steps: [],
+      buttons: [{ label: 'Go', primary: true, disabled: false }],
+      job: { canStop: false, canPause: false },
+      done: { text: 'ok', counts: 1 },
+    });
+    it('are exactly the nine of the owner list', () => {
+      expect([...WIZARD_STATES]).toEqual([
+        'first-run', 'planning', 'ready-to-review', 'running', 'paused', 'stopped', 'failed', 'done', 'done-after-reload',
+      ]);
+    });
+    it('a driver that lists fewer states fails and names the dropped ones', async () => {
+      const driver: WizardDriver = { id: 'w', states: ['first-run', 'done'], open: (s) => Promise.resolve(clean(s)) };
+      expect(droppedStates(driver)).toHaveLength(7);
+      const lines = await judgeAll([driver], []);
+      expect(lines).toHaveLength(7);
+      expect(lines[0]).toContain('never drop one');
+    });
+    it('a driver may add a state and is then driven through ten', async () => {
+      const seen: string[] = [];
+      const driver: WizardDriver = {
+        id: 'w',
+        states: [...WIZARD_STATES, 'needs-login'],
+        open: (s) => {
+          seen.push(s);
+          return Promise.resolve(clean(s));
+        },
+      };
+      expect(await judgeAll([driver], [])).toEqual([]);
+      expect(seen).toHaveLength(10);
+    });
+    it('a driver with no states list runs all nine', async () => {
+      const seen: string[] = [];
+      const driver: WizardDriver = { id: 'w', open: (s) => { seen.push(s); return Promise.resolve(clean(s)); } };
+      expect(await judgeAll([driver], [])).toEqual([]);
+      expect(seen).toHaveLength(9);
     });
   });
 
