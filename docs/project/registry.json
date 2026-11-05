@@ -4275,9 +4275,9 @@
       "status": "To do",
       "item": "Starter rules and words: R1-R16, W1",
       "detail": "ux-rules.md, content.md, CHANGES.md of the luismc-docs starter. New rule IDs follow DS189's. Change note naming the docs plugin.json.",
-      "expected": "05 Nov ~18:26",
-      "changed": "2026-11-05T16:21+00:00",
-      "expected_basis": "after RELEASE-46 merge at 17:41 (DS189), then about 45 min"
+      "expected": "05 Nov ~17:43",
+      "changed": "2026-11-05T16:24+00:00",
+      "expected_basis": "starts at RELEASE-46 merge 16:58 (DS189), then about 45 min"
     },
     {
       "id": "DU3",
@@ -4286,9 +4286,9 @@
       "status": "To do",
       "item": "Starter components and tokens: C1-C5, T1-T5, R17",
       "detail": "components.md, tokens.md of the starter (incl. 7:1 named as an option, D5). Runs beside the rules task. Change note naming the docs plugin.json.",
-      "expected": "05 Nov ~18:26",
-      "changed": "2026-11-05T16:21+00:00",
-      "expected_basis": "after RELEASE-46 merge at 17:41 (DS189), then about 45 min"
+      "expected": "05 Nov ~17:43",
+      "changed": "2026-11-05T16:24+00:00",
+      "expected_basis": "starts at RELEASE-46 merge 16:58 (DS189), then about 45 min"
     },
     {
       "id": "DU4",
@@ -4323,9 +4323,9 @@
       "status": "To do",
       "item": "Gallery draws the filter bar, change review and new token kinds",
       "detail": "gallery_draw.py and gallery_tokens.py; bumps the gallery script version.",
-      "expected": "05 Nov ~18:56",
-      "changed": "2026-11-05T16:21+00:00",
-      "expected_basis": "after DU3 at 18:26, then about 30 min"
+      "expected": "05 Nov ~18:13",
+      "changed": "2026-11-05T16:24+00:00",
+      "expected_basis": "starts when DU3 ends 17:43, then about 30 min"
     },
     {
       "id": "DU7",
@@ -4334,30 +4334,30 @@
       "status": "Running",
       "item": "Join and release the design-system updates",
       "detail": "Light join of the five branches, ready PR, CI, merge, luismc-docs version fold. Gets its RELEASE number when it starts.",
-      "expected": "05 Nov ~19:21; after DU2-DU6",
-      "changed": "2026-11-05T16:21+00:00",
-      "expected_basis": "DU4, DU5 from 16:21; DU2, DU3 after RELEASE-46 at 17:41 + about 45; DU6 + 30",
+      "expected": "05 Nov ~18:38; after DU2-DU6",
+      "changed": "2026-11-05T16:24+00:00",
+      "expected_basis": "DU2, DU3 from 16:58 about 45; DU6 from 17:43 about 30; join 10, CI 10, merge 5",
       "release": 47,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-05T16:21+00:00",
-          "end": "2026-11-05T18:56+00:00"
+          "end": "2026-11-05T18:13+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-05T18:56+00:00",
-          "end": "2026-11-05T19:06+00:00"
+          "start": "2026-11-05T18:13+00:00",
+          "end": "2026-11-05T18:23+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-05T19:06+00:00",
-          "end": "2026-11-05T19:16+00:00"
+          "start": "2026-11-05T18:23+00:00",
+          "end": "2026-11-05T18:33+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-05T19:16+00:00",
-          "end": "2026-11-05T19:21+00:00"
+          "start": "2026-11-05T18:33+00:00",
+          "end": "2026-11-05T18:38+00:00"
         }
       ],
       "risk": {
