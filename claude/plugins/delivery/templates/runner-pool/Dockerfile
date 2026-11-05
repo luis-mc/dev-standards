@@ -20,10 +20,17 @@ RUN test -n "$RUNNER_SHA256" \
  && /opt/runner/bin/installdependencies.sh
 # Opt-in (POOL_BROWSERS=chromium): the Chromium system libraries, installed here as root because job users have no sudo.
 # The browser itself stays per job: `playwright install chromium` without --with-deps.
+# Playwright needs Node 20 or newer and Ubuntu 24.04 ships Node 18, so this step uses the official Node LTS tarball,
+# checked by SHA-256 like the runner, only to run install-deps, and removes it afterwards (DL76).
+ARG NODE_VERSION=22.23.4
+ARG NODE_SHA256=1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce
 RUN if [ "$POOL_BROWSERS" = "chromium" ]; then \
-      apt-get update && apt-get install -y --no-install-recommends nodejs npm \
-      && npx -y playwright@${PLAYWRIGHT_VERSION} install-deps chromium \
-      && rm -rf /var/lib/apt/lists/* /root/.npm; \
+      curl -fsSL -o /tmp/node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
+      && echo "${NODE_SHA256}  /tmp/node.tar.xz" | sha256sum -c - \
+      && mkdir -p /opt/node-build && tar -xJf /tmp/node.tar.xz -C /opt/node-build --strip-components=1 && rm /tmp/node.tar.xz \
+      && apt-get update \
+      && PATH="/opt/node-build/bin:$PATH" npx -y playwright@${PLAYWRIGHT_VERSION} install-deps chromium \
+      && rm -rf /opt/node-build /var/lib/apt/lists/* /root/.npm; \
     fi
 COPY pool_supervisor.py pool_agents.py /opt/pool/
 COPY pool-add-agent pool-remove-agent /usr/local/bin/

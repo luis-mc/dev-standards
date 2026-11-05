@@ -1137,6 +1137,17 @@ class BrowsersTests(unittest.TestCase):
         self.assertIn("playwright@${PLAYWRIGHT_VERSION} install-deps chromium", df)
         self.assertEqual(df.count("ARG PLAYWRIGHT_VERSION="), 1)
 
+    def test_browser_step_uses_a_checked_node_20_or_newer(self):
+        """DL76: Ubuntu 24.04's apt Node is 18, too old for Playwright; the step uses a checked Node tarball."""
+        import re
+        df = (POOL / "Dockerfile").read_text()
+        self.assertNotIn("install -y --no-install-recommends nodejs npm", df)
+        major = int(re.search(r"ARG NODE_VERSION=(\d+)\.", df).group(1))
+        self.assertGreaterEqual(major, 20)
+        self.assertRegex(df, r"ARG NODE_SHA256=[0-9a-f]{64}")
+        self.assertIn('echo "${NODE_SHA256}  /tmp/node.tar.xz" | sha256sum -c -', df)
+        self.assertIn("rm -rf /opt/node-build", df)
+
     def test_warning_lists_workflows_that_need_root(self):
         with tempfile.TemporaryDirectory() as d:
             wf = os.path.join(d, ".github", "workflows")
