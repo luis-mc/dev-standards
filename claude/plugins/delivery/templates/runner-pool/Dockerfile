@@ -2,6 +2,9 @@
 FROM ubuntu:24.04
 ARG RUNNER_VERSION=2.338.2
 ARG RUNNER_SHA256
+ARG POOL_BROWSERS=none
+# The one place the Playwright version for the system libraries is pinned (DL67).
+ARG PLAYWRIGHT_VERSION=1.49.1
 LABEL dev.luismc.runner-pool="1"
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
@@ -13,6 +16,13 @@ RUN test -n "$RUNNER_SHA256" \
  && echo "${RUNNER_SHA256}  /tmp/runner.tgz" | sha256sum -c - \
  && mkdir -p /opt/runner && tar -xzf /tmp/runner.tgz -C /opt/runner && rm /tmp/runner.tgz \
  && /opt/runner/bin/installdependencies.sh
+# Opt-in (POOL_BROWSERS=chromium): the Chromium system libraries, installed here as root because job users have no sudo.
+# The browser itself stays per job: `playwright install chromium` without --with-deps.
+RUN if [ "$POOL_BROWSERS" = "chromium" ]; then \
+      apt-get update && apt-get install -y --no-install-recommends nodejs npm \
+      && npx -y playwright@${PLAYWRIGHT_VERSION} install-deps chromium \
+      && rm -rf /var/lib/apt/lists/* /root/.npm; \
+    fi
 COPY pool_supervisor.py pool_agents.py /opt/pool/
 COPY pool-add-agent pool-remove-agent /usr/local/bin/
 COPY hooks/ /opt/delivery/hooks/

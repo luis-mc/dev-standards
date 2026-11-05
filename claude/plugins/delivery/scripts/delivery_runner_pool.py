@@ -3,7 +3,7 @@
 
     delivery_runner_pool.py detect  [--json]
     delivery_runner_pool.py sizing  [--total-gib N --used-gib N --cpus N] [--docker-gib N] [--largest-shard-gib N]   (measured when not given)
-    delivery_runner_pool.py plan    [--repos a/b,c/d] [--windows-repos e/f] [--pool NAME]   (repositories come from detect when not given)
+    delivery_runner_pool.py plan    [--repos a/b,c/d] [--windows-repos e/f] [--pool NAME] [--browsers none|chromium]   (repositories come from detect when not given)
     delivery_runner_pool.py verify  --repos a/b --pool NAME
     delivery_runner_pool.py doctor  [--json]
 
@@ -45,6 +45,8 @@ MEM_PCT, CPU_PCT = 85, 60
 VM_GIB, SIDECAR_GIB = 1.0, 1.0
 MIN_RUNNER_VERSION = '2.329.0'  # GitHub refuses to register a runner below this
 RUNNER_VERSION = '2.338.2'  # the pinned fallback, used when the release API cannot be reached
+ROOT_NEEDS = re.compile(r'\bsudo\b|\bapt-get\b|\bapt\s+install\b|--with-deps|install-deps')  # a step that needs root
+BROWSERS = ('none', 'chromium')  # the image option POOL_BROWSERS (DL67); none is the default
 RUNNER_SHA256 = 'baebf204307bac6193480852732f0aba2ae97b6c5597c244f4d5558390147c40'  # its linux-x64 tarball
 HOST_LOAD_FRESH_S = 60
 PRIVATE_REFUSAL = 'refused: %s is a public repository. A self-hosted runner there could run code from a fork pull request on your machine.'
@@ -507,7 +509,16 @@ def _wsl_values(found, cap):
     return w, enough
 
 
-def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, serial=None, limits=None, repo_path=None):
+def browsers_note(browsers):
+    """One plain sentence for the plan: what the image holds for browsers."""
+    if browsers == 'chromium':
+        return ('The image includes the Chromium system libraries and is larger (about 300-400 MB). '
+                'Jobs install the browser itself with `playwright install chromium`.')
+    return 'The image has no Chromium libraries. Set browsers: chromium to add them (about 300-400 MB more).'
+
+
+def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, serial=None, limits=None, repo_path=None,
+         browsers='none'):
     """The steps, in the order of contract 6.3. A public repository gets no step; it is listed in `refused`.
 
     With no repositories given, they come from detect (`derive_repos`). With none derived either, the plan has no step
@@ -595,10 +606,12 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
                 steps.append(_step('wsl-restart', 'Restart WSL so the ceiling applies (only when no job runs; stops every container)',
                                    'wsl-restart'))
         old = found.get('pool_env') or {}
+        browsers = browsers if browsers in BROWSERS else 'none'
         steps.append(_step('pool-files', 'Write the pool files for "%s" (compose, agents.json, .env: POOL_MEM %s -> %sg, '
-                           'POOL_CPUS %s -> %s)' % (pool, old.get('POOL_MEM') or 'unset', (cap or {}).get('mem_gib', 4),
-                                                    old.get('POOL_CPUS') or 'unset', (cap or {}).get('cpus', 1)),
-                           'pool-files', pool=pool, cap=cap))
+                           'POOL_CPUS %s -> %s, POOL_BROWSERS %s). %s' % (
+                               pool, old.get('POOL_MEM') or 'unset', (cap or {}).get('mem_gib', 4),
+                               old.get('POOL_CPUS') or 'unset', (cap or {}).get('cpus', 1), browsers, browsers_note(browsers)),
+                           'pool-files', pool=pool, cap=cap, browsers=browsers))
         steps.append(_step('pool-up', 'Build and start the pool container', 'pool-up', pool=pool))
         for repo in keep_l:
             s = _step('agent:%s' % repo, 'Add one pool agent for %s' % repo, 'add-agent', repo=repo, pool=pool, slug=slug_of(repo))
@@ -734,7 +747,7 @@ def copy_lf(src, dst):
     shutil.copymode(src, dst)
 
 
-def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None):
+def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None, browsers='none'):
     """Write the pool folder. `.env` holds the cap and the machine dir only (D42); the database password is a 0600 file."""
     dest = dest or pool_dir(pool)
     os.makedirs(dest, exist_ok=True)
@@ -755,9 +768,9 @@ def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None):
         if os.path.isfile(src):
             copy_lf(src, os.path.join(deliv, name))
     with open(os.path.join(dest, '.env'), 'w', encoding='utf-8') as f:
-        f.write('POOL_NAME=%s\nPOOL_CPUS=%s\nPOOL_MEM=%sg\nMACHINE_DIR=%s\nRUNNER_VERSION=%s\n' % (
+        f.write('POOL_NAME=%s\nPOOL_CPUS=%s\nPOOL_MEM=%sg\nMACHINE_DIR=%s\nRUNNER_VERSION=%s\nPOOL_BROWSERS=%s\n' % (
             pool, (cap or {}).get('cpus', 1), (cap or {}).get('mem_gib', 4), os.path.dirname(os.path.dirname(dest)),
-            runner_version or RUNNER_VERSION))
+            runner_version or RUNNER_VERSION, browsers if browsers in BROWSERS else 'none'))
     agents = os.path.join(dest, 'agents.json')
     if not os.path.exists(agents):
         with open(agents, 'w', encoding='utf-8') as f:
@@ -846,7 +859,7 @@ class Executor:
         cap = dict(step.get('cap') or {})
         if cap.get('cpus') is not None:
             cap['cpus'] = cap_cpus(cap['cpus'], docker_ncpu(self.probe))
-        dest = write_pool_files(step['pool'], cap, runner_version=version)
+        dest = write_pool_files(step['pool'], cap, runner_version=version, browsers=step.get('browsers') or 'none')
         return True, 'wrote %s (runner %s, %s)' % (dest, version, source)
 
     def do_pool_up(self, step):
@@ -856,7 +869,8 @@ class Executor:
         sha = runner_sha(self.probe, version)
         if not sha:
             return False, 'could not read the SHA-256 of the runner release; the image is not built without it'
-        env = dict(os.environ, RUNNER_SHA256=sha, RUNNER_VERSION=version)
+        browsers = read_pool_env(self.probe, step['pool']).get('POOL_BROWSERS') or 'none'
+        env = dict(os.environ, RUNNER_SHA256=sha, RUNNER_VERSION=version, POOL_BROWSERS=browsers)
         p = subprocess.run(['docker', 'compose', 'up', '-d', '--build'], cwd=pool_dir(step['pool']), env=env,
                            capture_output=True, text=True)
         return p.returncode == 0, 'pool is up' if p.returncode == 0 else (p.stderr.strip()[-300:] or 'docker compose failed')
@@ -891,10 +905,15 @@ class Executor:
             text = self.probe.read_text(os.path.join(folder, n)) or ''
             if 'runs-on:' in text and 'vars.CI_RUNS_ON' not in text:
                 missing.append(n)
+        root = [n for n in names if ROOT_NEEDS.search(self.probe.read_text(os.path.join(folder, n)) or '')]
+        note = ''
+        if root:
+            note = (" These workflows need root to install packages, which pool jobs do not have: %s. Keep them on hosted "
+                    "runners, or set browsers: chromium and use playwright install chromium without --with-deps." % ', '.join(root))
         if not missing:
-            return 'Every workflow with runs-on reads it.'
+            return 'Every workflow with runs-on reads it.' + note
         return ("Warning: CI_RUNS_ON is set, but these workflows do not read it: %s. "
-                "Use runs-on: ${{ vars.CI_RUNS_ON || 'ubuntu-latest' }}." % ', '.join(missing))
+                "Use runs-on: ${{ vars.CI_RUNS_ON || 'ubuntu-latest' }}." % ', '.join(missing)) + note
 
     def do_verify(self, step):
         res = verify(self.probe, step['repos'], step['pool'])
@@ -1047,6 +1066,7 @@ def main(argv=None):
     ap.add_argument('--repos', default='')
     ap.add_argument('--windows-repos', default='')
     ap.add_argument('--pool', default='main')
+    ap.add_argument('--browsers', choices=BROWSERS, default='none', help='add the Chromium system libraries to the pool image')
     ap.add_argument('--repo-path', default=None, help='the local checkout of the repository (to check its workflows for CI_RUNS_ON)')
     ap.add_argument('--total-gib', type=float)
     ap.add_argument('--used-gib', type=float)
@@ -1067,7 +1087,7 @@ def main(argv=None):
                 return 1
             print(json.dumps(res, indent=2))
             return 0 if res['ok'] else 1
-        pl = plan(found, split(args.repos), split(args.windows_repos), args.pool, res, repo_path=args.repo_path)
+        pl = plan(found, split(args.repos), split(args.windows_repos), args.pool, res, repo_path=args.repo_path, browsers=args.browsers)
         print(json.dumps(pl, indent=2))
         return 1 if pl['blocked'] else 0
     elif args.action == 'verify':

@@ -180,6 +180,7 @@ One Docker container with one CPU and memory cap. Inside it, one runner agent pe
 | Cap | `cpus`, `mem_limit` (= `memswap_limit`) on the container. Proposed by the setup from the machine (section 6). |
 | Slots | The pool's hooks take the machine's CI slots (section 3.2). The pool has no separate slot count. |
 | Database | One shared database sidecar on the pool's private network. Each repository gets its own database and login (D40). |
+| Browsers | Opt-in `browsers` setting: `none` (default) or `chromium`, from `plan --browsers`. It is written to the pool `.env` as `POOL_BROWSERS` and passed to the build as an argument. With `chromium` the build installs Playwright's Chromium system libraries as root (`npx playwright@<pinned> install-deps chromium`, version pinned in one `ARG`). The image is then about 300-400 MB larger. The plan step says which one applies. Jobs install the browser itself with `playwright install chromium`, without `--with-deps`, because job users have no sudo. |
 | Docker in jobs | Refused (D41). No Docker socket in the pool. A job that needs `services:` or a container action uses the sidecar or another runner. |
 | Updates | Runner auto-update stays on. |
 | Restart | `restart: unless-stopped`, a stop grace period of a few minutes. |
@@ -258,7 +259,7 @@ flowchart TD
 4. **WSL ceiling.** Write `.wslconfig` (`memory=`, `processors=` from sizing; the old file is kept as `.wslconfig.bak`; nothing is written when it already has at least that much). The step text shows old -> new for memory and processors, and for `POOL_MEM` and `POOL_CPUS` in the pool `.env`. While other runners or containers run in WSL, the memory is never written below its current value, nor below what they use plus the pool cap. Then `wsl --shutdown` only after a yes and only when no runner is busy.
 5. **Pool.** Write the pool files, `docker compose up -d --build`, add one agent per Linux repository with the token pipe.
 6. **Windows services.** One per repository that tests on Windows, with both hooks in its `.env`.
-7. **Variables.** `gh variable set CI_RUNS_ON` (and `CI_SERIAL` when chosen) per repository.
+7. **Variables.** `gh variable set CI_RUNS_ON` (and `CI_SERIAL` when chosen) per repository. The step also warns, and still passes, about workflows that call `sudo`, `apt-get`, `apt install`, `playwright install --with-deps` or `install-deps`: they need root, which pool jobs do not have. Keep them on hosted runners, or set `browsers: chromium` and use `playwright install chromium` without `--with-deps`.
 8. **Verify.** For each repository: the agent is online with its labels, then one run of `pool-check.yml` that takes a slot, prints the runner name and passes. The doctor runs last.
 
 When a step fails, the setup stops, says what is done and what is not, and prints the remaining steps.
