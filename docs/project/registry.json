@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T22:39+00:00",
+  "updated": "2026-11-05T22:41+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1509,25 +1509,25 @@
       "status": "Running",
       "item": "RELEASE: runner-pool fixes 5-8",
       "detail": "Join, CI and merge for the runner-pool fixes (host-load check, runner version, create_db, memory cap).",
-      "expected": "05 Nov ~23:15",
-      "changed": "2026-11-05T22:39+00:00",
-      "expected_basis": "join from 22:40 ~10 min, CI ~15 min, merge",
+      "expected": "05 Nov ~23:05",
+      "changed": "2026-11-05T22:41+00:00",
+      "expected_basis": "PR #153 CI started 22:41, ~20 min, then merge",
       "release": 48,
       "phases": [
         {
           "name": "join",
           "start": "2026-11-05T22:40+00:00",
-          "end": "2026-11-05T22:50+00:00"
+          "end": "2026-11-05T22:41+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-05T22:50+00:00",
-          "end": "2026-11-05T23:10+00:00"
+          "start": "2026-11-05T22:41+00:00",
+          "end": "2026-11-05T23:01+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-05T23:10+00:00",
-          "end": "2026-11-05T23:15+00:00"
+          "start": "2026-11-05T23:01+00:00",
+          "end": "2026-11-05T23:05+00:00"
         }
       ],
       "started": "2026-11-05T22:39+00:00"
