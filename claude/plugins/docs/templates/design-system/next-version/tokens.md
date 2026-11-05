@@ -11,7 +11,7 @@ Use tokens and nothing else: no raw colour, size or font in a screen. The values
 - The light values are the default.
 - The dark values apply under `@media (prefers-color-scheme: dark)` and under `[data-theme=dark]`. The attribute wins over the system setting.
 - A token has the same name in every theme. Only its value changes.
-- Text and its background meet WCAG 2.2 AA contrast in every theme (UX-17): at least 4.5:1 for text, 3:1 for large text and for borders of controls.
+- Text and its background meet WCAG 2.2 AA contrast in every theme (UX-17): at least 4.5:1 for text, 3:1 for large text and for borders of controls. WCAG 2.2 AA stays the rule. A project may choose 7:1 for body text in the dark theme.
 
 ```css
 :root { --ds-color-page: #f6f7f9; }
@@ -45,6 +45,29 @@ Use tokens and nothing else: no raw colour, size or font in a screen. The values
 
 A tone is never shown by colour alone (UX-26). It always has a word or an icon too.
 
+### Text on a fill
+
+Text on a fill comes in pairs. Every fill role has its own `on-` text token. A fill and its text are always set together, and never mixed with another pair. The kit's contrast guard reads these pairs.
+
+- A solid fill is `--ds-color-X` with its text `--ds-color-on-X`.
+- A tint fill is `--ds-color-X-tint` with its text `--ds-color-on-X-tint`.
+- The `-bg` tokens above have the value of the tint. Keep them until every screen uses the tint pair.
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--ds-color-on-done` | `#ffffff` | `#101418` | text on a solid Done fill |
+| `--ds-color-done-tint` | `#e6f4ea` | `#14301f` | a quiet Done fill |
+| `--ds-color-on-done-tint` | `#146c2e` | `#7fd99b` | text on the Done tint |
+| `--ds-color-on-note` | `#ffffff` | `#101418` | text on a solid Note fill |
+| `--ds-color-note-tint` | `#e8f1fb` | `#15283c` | a quiet Note fill |
+| `--ds-color-on-note-tint` | `#1f5fa8` | `#8dc1f5` | text on the Note tint |
+| `--ds-color-on-needs-you` | `#ffffff` | `#101418` | text on a solid Needs you fill |
+| `--ds-color-needs-you-tint` | `#fff4dc` | `#3a2c0f` | a quiet Needs you fill |
+| `--ds-color-on-needs-you-tint` | `#8a5300` | `#f2c46d` | text on the Needs you tint |
+| `--ds-color-on-problem` | `#ffffff` | `#101418` | text on a solid Problem fill |
+| `--ds-color-problem-tint` | `#fdecea` | `#3d1815` | a quiet Problem fill |
+| `--ds-color-on-problem-tint` | `#b3261e` | `#f5a29b` | text on the Problem tint |
+
 ## Type families
 
 System font stacks only. Nothing is bundled and nothing is loaded from the network.
@@ -69,18 +92,26 @@ System font stacks only. Nothing is bundled and nothing is loaded from the netwo
 
 ## Type roles
 
-| Role | Size | Weight | Family |
-|---|---|---|---|
-| Page title | `--ds-size-6` | 700 | `--ds-font-body` |
-| Section title | `--ds-size-5` | 600 | `--ds-font-body` |
-| Subtitle | `--ds-size-4` | 400 | `--ds-font-body` |
-| Body | `--ds-size-3` | 400 | `--ds-font-body` |
-| Label | `--ds-size-3` | 600 | `--ds-font-body` |
-| Button | `--ds-size-3` | 600 | `--ds-font-body` |
-| Secondary | `--ds-size-2` | 400 | `--ds-font-body` |
-| Hint | `--ds-size-2` | 400 | `--ds-font-body` |
-| Badge | `--ds-size-1` | 600 | `--ds-font-body` |
-| Code | `--ds-size-2` | 400 | `--ds-font-mono` |
+Each role names its weight. The ceiling is the heaviest weight the role may use. A role never goes above its ceiling, and no role uses a weight outside the weight tokens.
+
+| Token | Value |
+|---|---|
+| `--ds-weight-regular` | `400` |
+| `--ds-weight-semibold` | `600` |
+| `--ds-weight-bold` | `700` |
+
+| Role | Size | Weight | Ceiling | Family |
+|---|---|---|---|---|
+| Page title | `--ds-size-6` | 700 | 700 | `--ds-font-body` |
+| Section title | `--ds-size-5` | 600 | 600 | `--ds-font-body` |
+| Subtitle | `--ds-size-4` | 400 | 400 | `--ds-font-body` |
+| Body | `--ds-size-3` | 400 | 600 | `--ds-font-body` |
+| Label | `--ds-size-3` | 600 | 600 | `--ds-font-body` |
+| Button | `--ds-size-3` | 600 | 600 | `--ds-font-body` |
+| Secondary | `--ds-size-2` | 400 | 600 | `--ds-font-body` |
+| Hint | `--ds-size-2` | 400 | 400 | `--ds-font-body` |
+| Badge | `--ds-size-1` | 600 | 600 | `--ds-font-body` |
+| Code | `--ds-size-2` | 400 | 400 | `--ds-font-mono` |
 
 ## Spacing
 
@@ -136,6 +167,40 @@ CSS cannot read a custom property inside a media query. Write these values in th
 | `--ds-width-field-medium` | `20rem` | medium box (UX-23) |
 | `--ds-width-field-full` | `100%` | full box (UX-23) |
 
+### Per width
+
+These tokens take a different value at each width. The gutter is the space at the side of the page. The padding is the space above and below the content. Write the changes in a media query (see Breakpoints).
+
+| Token | Below `--ds-bp-sm` | `--ds-bp-sm` and up | `--ds-bp-lg` and up | Use |
+|---|---|---|---|---|
+| `--ds-page-gutter` | `16px` | `24px` | `48px` | space at the side of the page |
+| `--ds-page-padding` | `16px` | `24px` | `32px` | space above and below the page content |
+
+### Frame widths
+
+| Token | Value | Use |
+|---|---|---|
+| `--ds-frame-narrow` | `40rem` | a page of one form or one column of text |
+| `--ds-frame-wide` | `72rem` | a page of cards, tables or lists |
+
+### Control heights
+
+| Token | Value | Use |
+|---|---|---|
+| `--ds-control-height` | `44px` | a button, a field and a select. Never below `--ds-target-min` |
+| `--ds-control-height-large` | `52px` | the one primary action on a small screen |
+
+## Border widths
+
+The list is closed. A screen uses one of these and no other width.
+
+| Token | Value | Use |
+|---|---|---|
+| `--ds-border-thin` | `1px` | control borders, dividers, rules between rows (`--ds-hairline`) |
+| `--ds-border-medium` | `2px` | the Note edge; a chosen tile |
+| `--ds-border-thick` | `3px` | the focus ring; the Done and Needs you edges |
+| `--ds-border-double` | `6px` | the Problem edge, always a double line |
+
 ## Motion
 
 | Token | Value | Use |
@@ -144,6 +209,10 @@ CSS cannot read a custom property inside a media query. Write these values in th
 | `--ds-duration-base` | `200ms` | open and close |
 | `--ds-duration-slow` | `400ms` | sheets, page changes |
 | `--ds-duration-loop` | `1200ms` | one turn of a looping bar or spinner |
+| `--ds-duration-reduced` | `0ms` | every duration under reduced motion |
+| `--ds-duration-screen` | `300ms` | a screen entering |
+| `--ds-duration-progress` | `300ms` | the fill of a progress bar moving to a new value |
+| `--ds-duration-toast` | `5000ms` | how long a passing message stays |
 | `--ds-ease` | `cubic-bezier(0.2, 0, 0, 1)` | all movement |
 | `--ds-ease-in-out` | `cubic-bezier(0.42, 0, 0.58, 1)` | movement that starts and ends at rest |
 
