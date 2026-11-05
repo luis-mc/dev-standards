@@ -148,6 +148,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D95 | Should the SessionStart effort_drift.py hook use the same if/else python fallback as the Stop hook? | Change it | decided | 2026-11-05 |
 | design-field-updates | D1 | Which of the 35 proposals go into the starter? | All 35 | decided | 2026-11-05 |
 | design-field-updates | D10 | K1: what does the first design breach do? | Warn only | decided | 2026-11-05 |
+| design-field-updates | D11 | What to do with a word on main that hints at another project's name (3 places)? | Reword all 3 | decided | 2026-11-05 |
 | design-field-updates | D2 | What about Project A's draft items (card frame, two-level section header, settings that save by themselves)? | Wait for its approval | decided | 2026-11-05 |
 | design-field-updates | D3 | How should DS4 (stale gallery) behave on branches? | Rebuild at join and promote | decided | 2026-11-05 |
 | design-field-updates | D4 | May a frozen version take link-only edits after files move? | Yes, link targets only | decided | 2026-11-05 |

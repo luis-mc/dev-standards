@@ -7,3 +7,4 @@
 claude/plugins/delivery/templates/**/scripts/delivery/* text eol=lf
 # Vendored files are checked by SHA-256 (DS161): keep their bytes exact on every OS.
 claude/plugins/docs/vendor/* -text
+claude/plugins/delivery/templates/runner-pool/** text eol=lf
