@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T23:35+00:00",
+  "updated": "2026-11-05T23:46+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1648,6 +1648,47 @@
       "changed": "2026-11-05T23:34+00:00",
       "rides": "DL68",
       "started": "2026-11-05T23:22+00:00"
+    },
+    {
+      "id": "DL70",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "RELEASE: pool image base libraries",
+      "detail": "Join, CI and merge for DL71 (libatomic1 and common tool packages in the pool image, pool-check proves node + pnpm), luismc-delivery 1.7.2.",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T23:46+00:00",
+      "release": 51,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-11-05T23:37+00:00",
+          "end": "2026-11-05T23:45+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-05T23:45+00:00",
+          "end": "2026-11-05T23:50+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-05T23:50+00:00",
+          "end": "2026-11-05T23:55+00:00"
+        }
+      ],
+      "started": "2026-11-05T23:36+00:00"
+    },
+    {
+      "id": "DL71",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Runner-pool image: libatomic1 and common tools; pool-check runs pnpm",
+      "detail": "Bug 12: pnpm (@pnpm/exe) fails on the pool, libatomic.so.1 missing in ubuntu:24.04. Add libatomic1, xz-utils, unzip, zip, jq to the base image; pool-check.yml also runs setup-node + pnpm/action-setup + pnpm --version. Trivial edit, done in-session.",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T23:46+00:00",
+      "rides": "DL70",
+      "started": "2026-11-05T23:36+00:00"
     },
     {
       "id": "DS1",
