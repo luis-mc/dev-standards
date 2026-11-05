@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T16:18+00:00",
+  "updated": "2026-11-05T16:22+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4248,15 +4248,13 @@
       "id": "DS189",
       "owner": "project",
       "app": "",
-      "status": "Waiting",
+      "status": "Built",
       "item": "Sheet component in luismc-docs design-system template",
       "detail": "A real project's owner decision (05 Nov): owner wants the shared Sheet (bottom sheet on phone; dialog/popover at wider widths, focus trap, focus return) in the design-system template components, ux-rules and guard notes.",
-      "expected": "06 Nov",
-      "changed": "2026-11-05T15:25+00:00",
-      "expected_basis": "draft PR #149 ready; rides the next dev-standards train",
-      "no_release": "plugin template docs; ships with next plugin release",
+      "expected": "05 Nov ~17:41",
+      "changed": "2026-11-05T16:21+00:00",
       "started": "2026-11-05T12:43+00:00",
-      "waits_on": "work"
+      "rides": "DL61"
     },
     {
       "id": "DU1",
@@ -4277,9 +4275,9 @@
       "status": "To do",
       "item": "Starter rules and words: R1-R16, W1",
       "detail": "ux-rules.md, content.md, CHANGES.md of the luismc-docs starter. New rule IDs follow DS189's. Change note naming the docs plugin.json.",
-      "expected": "06 Nov; after DS189 merges",
-      "changed": "2026-11-05T15:25+00:00",
-      "expected_basis": "DS189 merge, then about 40 min cloud agent"
+      "expected": "05 Nov ~18:26",
+      "changed": "2026-11-05T16:21+00:00",
+      "expected_basis": "after RELEASE-46 merge at 17:41 (DS189), then about 45 min"
     },
     {
       "id": "DU3",
@@ -4288,31 +4286,35 @@
       "status": "To do",
       "item": "Starter components and tokens: C1-C5, T1-T5, R17",
       "detail": "components.md, tokens.md of the starter (incl. 7:1 named as an option, D5). Runs beside the rules task. Change note naming the docs plugin.json.",
-      "expected": "06 Nov; after DS189 merges",
-      "changed": "2026-11-05T15:25+00:00",
-      "expected_basis": "DS189 merge, then about 45 min cloud agent"
+      "expected": "05 Nov ~18:26",
+      "changed": "2026-11-05T16:21+00:00",
+      "expected_basis": "after RELEASE-46 merge at 17:41 (DS189), then about 45 min"
     },
     {
       "id": "DU4",
       "owner": "design-field-updates",
       "app": "luismc-docs",
-      "status": "To do",
+      "status": "Running",
       "item": "Docs plugin fixes F1-F5",
       "detail": "Lone -- accepted by docs scripts; DS4 warns only on the default branch, join and promote rebuild the gallery (D3); link-only edits to frozen versions with DOCSPEC R15.5 note (D4); CHANGES.md example line; README 'What the apps do not follow yet'.",
-      "expected": "06 Nov; after DSY99 merges",
-      "changed": "2026-11-05T15:25+00:00",
-      "expected_basis": "DSY99 merge, then about 50 min cloud agent"
+      "expected": "05 Nov ~17:16",
+      "changed": "2026-11-05T16:21+00:00",
+      "expected_basis": "cloud agent from 16:21: setup 5 + work 40 + checks 10",
+      "rides": "DU7",
+      "started": "2026-11-05T16:21+00:00"
     },
     {
       "id": "DU5",
       "owner": "design-field-updates",
       "app": "luismc-docs",
-      "status": "To do",
+      "status": "Running",
       "item": "Guard templates: raw controls (G1) and contrast (G2)",
       "detail": "New TypeScript+Vitest templates in the enforcement kit folder, each with an allowlist or known-gaps list that only shrinks; run in this repo's CI fixture (DS188).",
-      "expected": "06 Nov; after DSY99 merges",
-      "changed": "2026-11-05T15:25+00:00",
-      "expected_basis": "DSY99 merge, then about 50 min cloud agent"
+      "expected": "05 Nov ~17:16",
+      "changed": "2026-11-05T16:21+00:00",
+      "expected_basis": "cloud agent from 16:21: setup 5 + work 40 + checks 10",
+      "rides": "DU7",
+      "started": "2026-11-05T16:21+00:00"
     },
     {
       "id": "DU6",
@@ -4321,20 +4323,48 @@
       "status": "To do",
       "item": "Gallery draws the filter bar, change review and new token kinds",
       "detail": "gallery_draw.py and gallery_tokens.py; bumps the gallery script version.",
-      "expected": "06 Nov; after the components task",
-      "changed": "2026-11-05T15:25+00:00",
-      "expected_basis": "components task, then about 30 min"
+      "expected": "05 Nov ~18:56",
+      "changed": "2026-11-05T16:21+00:00",
+      "expected_basis": "after DU3 at 18:26, then about 30 min"
     },
     {
       "id": "DU7",
       "owner": "design-field-updates",
       "app": "luismc-docs",
-      "status": "To do",
+      "status": "Running",
       "item": "Join and release the design-system updates",
       "detail": "Light join of the five branches, ready PR, CI, merge, luismc-docs version fold. Gets its RELEASE number when it starts.",
-      "expected": "06 Nov; after DU2-DU6",
-      "changed": "2026-11-05T15:25+00:00",
-      "expected_basis": "last task, then about 30 min"
+      "expected": "05 Nov ~19:21; after DU2-DU6",
+      "changed": "2026-11-05T16:21+00:00",
+      "expected_basis": "DU4, DU5 from 16:21; DU2, DU3 after RELEASE-46 at 17:41 + about 45; DU6 + 30",
+      "release": 47,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-05T16:21+00:00",
+          "end": "2026-11-05T18:56+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-05T18:56+00:00",
+          "end": "2026-11-05T19:06+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-05T19:06+00:00",
+          "end": "2026-11-05T19:16+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-05T19:16+00:00",
+          "end": "2026-11-05T19:21+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 20
+      },
+      "started": "2026-11-05T16:21+00:00"
     },
     {
       "id": "DU8",
@@ -4413,12 +4443,11 @@
       "id": "DU12",
       "owner": "design-field-updates",
       "app": "luismc-docs",
-      "status": "Running",
+      "status": "Built",
       "item": "Reword a word on main that hints at another project (3 places)",
-      "detail": "Owner D11: old artifacts decision (content/artifacts/decisions.json D-option labels) says another project's look; test_design_system.py:225 and test_ci_speedups.py:555 use a neutral placeholder list. Starts after RELEASE-45 merges.",
-      "expected": "05 Nov ~16:28",
-      "changed": "2026-11-05T16:18+00:00",
-      "expected_basis": "code done 16:18; branch CI started 16:18, about 10 min",
+      "detail": "Owner D11: old artifacts decision reworded on main; two tests check other projects' names by hash. Branch CI green but for the join-cleared stale generated file.",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T16:22+00:00",
       "rides": "DL61",
       "started": "2026-11-05T16:17+00:00"
     },
