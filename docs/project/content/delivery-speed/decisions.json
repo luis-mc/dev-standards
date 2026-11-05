@@ -2138,6 +2138,26 @@
    "chosen": "Add a CI job",
    "decided": "2026-11-05",
    "owner_words": "Add a CI job"
+  },
+  {
+   "id": "D95",
+   "question": "Should the SessionStart effort_drift.py hook use the same if/else python fallback as the Stop hook?",
+   "asked": "2026-11-05",
+   "status": "decided",
+   "task": "DS187",
+   "options": [
+    {
+     "label": "Change it",
+     "summary": "Use the if/else form; the script never runs twice."
+    },
+    {
+     "label": "Leave it",
+     "summary": "Keep the || form; a failing script may run twice."
+    }
+   ],
+   "chosen": "Change it",
+   "decided": "2026-11-05",
+   "owner_words": "Change it (Recommended)"
   }
  ]
 }
