@@ -670,6 +670,10 @@ jobs:
         with:
           python-version: '3.13'
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
       # luismc-docs: the scripts are standard library only; the tests build
       # small git repositories in temporary folders and need only git.
       - name: Prove the docs scripts still hold
@@ -677,3 +681,8 @@ jobs:
 
       - name: DOCSPEC numbering and references
         run: python3 tools/spec_check.py claude/plugins/docs/references/docspec.md
+
+      # The TypeScript guard templates run for real: fixture projects are built with
+      # design_system.py, vitest (exact version, temp dir only) runs the four files.
+      - name: Run the design-system guard templates
+        run: python3 -I tools/test_ds_guard_templates.py
