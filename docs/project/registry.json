@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T22:46+00:00",
+  "updated": "2026-11-05T23:00+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1566,6 +1566,31 @@
       "changed": "2026-11-05T22:45+00:00",
       "rides": "DL62",
       "started": "2026-11-05T22:27+00:00"
+    },
+    {
+      "id": "DL66",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE: runner-pool browsers option",
+      "detail": "Join, CI and merge for DL67 (pool browsers: chromium option and the sudo/apt workflow warning), luismc-delivery 1.6.4.",
+      "expected": "05 Nov ~23:55",
+      "changed": "2026-11-05T23:00+00:00",
+      "expected_basis": "DL67 agent to ~23:45, join 5, CI 5, merge",
+      "release": 49
+    },
+    {
+      "id": "DL67",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Runner-pool: opt-in Chromium libs in the image; warn on sudo/apt workflows",
+      "detail": "Issue 11: Playwright jobs fail on the pool (no Chromium system libs, job user has no sudo). Add pool setting browsers: chromium that installs Playwright's Chromium deps at image build; the CI_RUNS_ON check warns about workflows calling sudo, apt-get or playwright install --with-deps.",
+      "expected": "05 Nov ~23:45",
+      "changed": "2026-11-05T23:00+00:00",
+      "expected_basis": "cloud agent: setup 5 + work 30 + checks 10 = 45 min",
+      "rides": "DL66",
+      "started": "2026-11-05T23:00+00:00"
     },
     {
       "id": "DS1",

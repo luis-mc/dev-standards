@@ -888,14 +888,19 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-05T22:46+00:00">05 Nov 22:46</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-05T23:01+00:00">05 Nov 23:01</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">05 Nov 22:46</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">23 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL67"><span class="task-id">DL67</span>Runner-pool: opt-in Chromium libs in the image; warn on sudo/apt workflows <span class="glance-expected">05 Nov ~23:45</span><span class="glance-basis">cloud agent: setup 5 + work 30 + checks 10 = 45 min</span></li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">18 tasks</span></summary>
 <ul>
 <li data-glance-task="DL62"><span class="task-id">DL62</span><span class="release-name">RELEASE-48</span>RELEASE: runner-pool fixes 5-8</li>
 <li data-glance-task="DL63"><span class="task-id">DL63</span>Runner-pool fixes: host-load check, runner version, create_db, memory cap</li>
@@ -905,12 +910,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL61"><span class="task-id">DL61</span><span class="release-name">RELEASE-46</span>Release the runner-pool Windows fixes and the word rewording</li>
 <li data-glance-task="DL59"><span class="task-id">DL59</span><span class="release-name">RELEASE-44</span>guard template CI</li>
 <li data-glance-task="DL58"><span class="task-id">DL58</span>Overnight merge watcher and hourly check-in</li>
-<li class="glance-more">and 15 more</li>
+<li class="glance-more">and 10 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">65</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">65</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">2 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL67"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL67</span>Runner-pool: opt-in Chromium libs in the image; warn on sudo/apt workflows<span class="release-line"><span class="release-name">RELEASE-49</span></span></td><td data-label="Detail">Issue 11: Playwright jobs fail on the pool (no Chromium system libs, job user has no sudo). Add pool setting browsers: chromium that installs Playwright&#x27;s Chromium deps at image build; the CI_RUNS_ON check warns about workflows calling sudo, apt-get or playwright install --with-deps.</td><td data-label="Expected">05 Nov ~23:45<span class="expected-basis">cloud agent: setup 5 + work 30 + checks 10 = 45 min</span></td></tr>
+<tr data-task="DL66"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL66</span><span class="release-name">RELEASE-49</span>RELEASE: runner-pool browsers option</td><td data-label="Detail">Join, CI and merge for DL67 (pool browsers: chromium option and the sudo/apt workflow warning), luismc-delivery 1.6.4.</td><td data-label="Expected">05 Nov ~23:55<span class="expected-basis">DL67 agent to ~23:45, join 5, CI 5, merge</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">65 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL62"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL62</span><span class="release-name">RELEASE-48</span>RELEASE: runner-pool fixes 5-8</td><td data-label="Detail">Join, CI and merge for the runner-pool fixes (host-load check, runner version, create_db, memory cap).</td><td data-label="Expected">05 Nov</td></tr>
@@ -1013,6 +1024,29 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D96">
+<h3 class="decision-head"><span class="decision-id">D96</span> <span class="decision-question">Runner-pool issue 11: Playwright e2e jobs cannot run on the pool (no Chromium libs, no sudo). How should luismc-delivery handle it?</span></h3>
+<p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DL67</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Option + warning</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 05 Nov</span></div>
+<p class="decision-summary">Opt-in pool setting browsers: chromium installs Chromium&#x27;s system libs at image build; the CI_RUNS_ON check warns about workflows that call sudo, apt-get or playwright install --with-deps.</p>
+<blockquote class="decision-words">&ldquo;Option + warning (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Warning only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No image change; warn so those workflows stay on hosted runners.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Image option only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Add the browsers option without the warning.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Not now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Record a To do task only.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D95">
 <h3 class="decision-head"><span class="decision-id">D95</span> <span class="decision-question">Should the SessionStart effort_drift.py hook use the same if/else python fallback as the Stop hook?</span></h3>
 <p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DS187</p>
