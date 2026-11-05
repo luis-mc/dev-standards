@@ -11,7 +11,6 @@ running job can finish. Standard library only.
 import argparse
 import json
 import os
-import pwd
 import signal
 import subprocess
 import sys
@@ -39,6 +38,7 @@ def _log(msg):
 
 
 def _user_exists(user):
+    import pwd  # Linux only; imported here so the module loads on Windows test hosts
     try:
         pwd.getpwnam(user)
         return True
