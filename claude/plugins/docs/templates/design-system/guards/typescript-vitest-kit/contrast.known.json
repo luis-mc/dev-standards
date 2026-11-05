@@ -1,0 +1,4 @@
+{
+  "comment": "The known gaps of the contrast guard (contrast.test.ts). A RATCHET: the list only shrinks. Each entry: theme, fill (token name), text (token name) and ratio (the measured contrast, two decimals; null when the pair cannot be judged). Remove an entry when its pair passes; the guard fails for a listed gap that is gone, for a gap not listed, and for a listed gap whose ratio got worse. Never add an entry: fix the token instead.",
+  "entries": []
+}

@@ -68,7 +68,8 @@ def kit_is_copied_by_the_guards_command():
         for n in ('no-app-css-scan.ts', 'no-app-css.test.ts', 'no-app-css.known.json', 'layout.known.json',
                   'wizard-behaviour.known.json', 'dom-layout.ts',
                   'dom-layout-judge.test.ts', 'dom-layout-example.spec.ts', 'wizard-behaviour.ts',
-                  'wizard-behaviour.test.ts', 'README.md'):
+                  'wizard-behaviour.test.ts', 'raw-controls-scan.ts', 'raw-controls.test.ts',
+                  'raw-controls.known.json', 'contrast.ts', 'contrast.test.ts', 'contrast.known.json', 'README.md'):
             assert os.path.isfile(os.path.join(d, 'scripts', 'design', n)), n
     finally:
         shutil.rmtree(d, ignore_errors=True)
@@ -92,7 +93,7 @@ def new_files_name_no_other_project():
 def known_list_starts_empty_and_is_valid_json():
     data = json.load(open(os.path.join(KIT, 'no-app-css.known.json'), encoding='utf-8'))
     assert data['entries'] == []
-    for n in ('layout.known.json', 'wizard-behaviour.known.json'):
+    for n in ('layout.known.json', 'wizard-behaviour.known.json', 'raw-controls.known.json', 'contrast.known.json'):
         d2 = json.load(open(os.path.join(KIT, n), encoding='utf-8'))
         assert d2['entries'] == [], n
 
@@ -115,7 +116,8 @@ def kit_self_tests_pass_under_node():
     try:
         dest = os.path.join(d, 'scripts', 'design')
         shutil.copytree(KIT, dest)
-        names = ['no-app-css.test.ts', 'dom-layout-judge.test.ts', 'wizard-behaviour.test.ts']
+        names = ['no-app-css.test.ts', 'dom-layout-judge.test.ts', 'wizard-behaviour.test.ts',
+                 'raw-controls.test.ts', 'contrast.test.ts']
         r = subprocess.run(['node', SHIM] + names, cwd=dest, capture_output=True, text=True, timeout=120)
         assert r.returncode == 0, r.stdout + r.stderr
         assert ' 0 failed' in r.stdout, r.stdout
