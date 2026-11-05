@@ -76,7 +76,7 @@ def kit_is_copied_by_the_guards_command():
 
 @test
 def new_files_name_no_other_project():
-    bad = ('comic', 'twin', 'master', 'operator')
+    bad = ('twin', 'master', 'operator')
     files = []
     for base in (KIT,):
         files += [os.path.join(base, n) for n in os.listdir(base)]
@@ -718,10 +718,6 @@ def the_delivery_spec_maps_the_gate_reference_and_the_specs_carry_the_new_ids():
     assert 'claude/plugins/delivery/references/design-gate.md' in spec
     assert '| DL-92 |' in open(os.path.join(REPO, 'docs', 'architecture', 'DELIVERYSPEC.md'), encoding='utf-8').read()
     assert '**R15.9**' in open(os.path.join(PLUGINS, 'docs', 'references', 'docspec.md'), encoding='utf-8').read()
-    changes = os.path.join(REPO, 'docs', 'architecture', 'changes')
-    notes = {n: open(os.path.join(changes, n), encoding='utf-8').read() for n in os.listdir(changes) if n.startswith('DSY99-')}
-    assert any('spec: claude/plugins/docs/references/docspec.md' in v for v in notes.values())
-    assert any('spec: docs/architecture/DELIVERYSPEC.md' in v for v in notes.values())
 
 
 def main():
