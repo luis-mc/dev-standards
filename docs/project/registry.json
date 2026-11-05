@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T22:27+00:00",
+  "updated": "2026-11-05T22:39+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1506,13 +1506,31 @@
       "id": "DL62",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "RELEASE: runner-pool fixes 5-8",
       "detail": "Join, CI and merge for the runner-pool fixes (host-load check, runner version, create_db, memory cap).",
-      "expected": "05 Nov ~23:40",
-      "changed": "2026-11-05T21:41+00:00",
-      "expected_basis": "DL65 after DL63 to ~23:05, join 15, CI 15, merge",
-      "release": 48
+      "expected": "05 Nov ~23:15",
+      "changed": "2026-11-05T22:39+00:00",
+      "expected_basis": "join from 22:40 ~10 min, CI ~15 min, merge",
+      "release": 48,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-11-05T22:40+00:00",
+          "end": "2026-11-05T22:50+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-05T22:50+00:00",
+          "end": "2026-11-05T23:10+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-05T23:10+00:00",
+          "end": "2026-11-05T23:15+00:00"
+        }
+      ],
+      "started": "2026-11-05T22:39+00:00"
     },
     {
       "id": "DL63",
@@ -1542,12 +1560,11 @@
       "id": "DL65",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Runner-pool: CPU cap below VM count; warn when CI ignores CI_RUNS_ON",
       "detail": "Bug 10: POOL_CPUS equal to the VM's CPU count is rejected by Docker; cap at NCPU-1 or docker info NCPU. Also warn when the repo's main CI workflows do not read vars.CI_RUNS_ON. Runs on top of DL63.",
-      "expected": "05 Nov ~23:07",
-      "changed": "2026-11-05T22:27+00:00",
-      "expected_basis": "cloud agent started 22:27, setup 5 + work 25 + checks 10",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T22:39+00:00",
       "rides": "DL62",
       "started": "2026-11-05T22:27+00:00"
     },
