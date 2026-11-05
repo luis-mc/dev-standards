@@ -888,36 +888,27 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>How it was checked</a><a href="#s3"><b>3</b>Proposed UX rules</a><a href="#s4"><b>4</b>Proposed components, tokens and words</a><a href="#s5"><b>5</b>Proposed plugin fixes and guard templates</a><a href="#s6"><b>6</b>Left out</a><a href="#s7"><b>7</b>Plan</a><a href="#s8"><b>8</b>DSY99 review (enforcement kit)</a><a href="#s9"><b>9</b>Decisions</a><a href="#s10"><b>10</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Design-system updates from real projects</h1><p>UX patterns that two real projects added after the starter was written, checked against their code and proposed for the luismc-docs design-system starter.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-05T15:27+00:00">05 Nov 15:27</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-05T15:30+00:00">05 Nov 15:30</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">05 Nov 15:16</a> (Lisbon)</p>
 <p class="lede">Decided on 5 Nov: all 35 proposals go in; the owner chose every recommended option (D1-D6). Work starts after DS189 and DSY99 merge. 9 changes are left out.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">5 tasks</span></summary>
 <ul>
-<li data-glance-task="DU9"><span class="task-id">DU9</span><span class="release-name">RELEASE-45</span>Release the design-system enforcement kit with K1-K3 fixes <span class="glance-expected">05 Nov ~15:37</span><span class="glance-basis">two fix rounds; PR CI restarted 15:22, about 10 min; merge 5</span></li>
-</ul>
-</details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">2 tasks</span></summary>
-<ul>
+<li data-glance-task="DU9"><span class="task-id">DU9</span><span class="release-name">RELEASE-45</span>Release the design-system enforcement kit with K1-K3 fixes</li>
 <li data-glance-task="DU10"><span class="task-id">DU10</span>Enforcement kit (DSY99 branch) brought into dev-standards</li>
 <li data-glance-task="DU11"><span class="task-id">DU11</span>Fix K1-K3 on the enforcement kit</li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">2 tasks</span></summary>
-<ul>
 <li data-glance-task="DU8"><span class="task-id">DU8</span>Review DSY99 handoff together with DU2-DU7</li>
 <li data-glance-task="DU1"><span class="task-id">DU1</span>Study UX changes in two real projects and propose starter updates</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">2</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">2</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">7</div><div class="label">tasks to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">5</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">7</div><div class="label">tasks to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">8 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">7 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DU9"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DU9</span><span class="release-name">RELEASE-45</span>Release the design-system enforcement kit with K1-K3 fixes</td><td data-label="Detail">Light join of DU11-enforcement-kit-fixes (DSY99 commits + fixes) on DU9-integration, ready PR #150, CI, merge; luismc-docs, luismc-delivery and luismc-artifacts version fold.</td><td data-label="Expected">05 Nov ~15:37<span class="expected-basis">two fix rounds; PR CI restarted 15:22, about 10 min; merge 5</span></td></tr>
 <tr data-task="DU12"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DU12</span>Reword a word on main that hints at another project (3 places)</td><td data-label="Detail">Owner D11: old artifacts decision (content/artifacts/decisions.json D-option labels) says another project&#x27;s look; test_design_system.py:225 and test_ci_speedups.py:555 use a neutral placeholder list. Starts after RELEASE-45 merges.</td><td data-label="Expected">05 Nov ~16:00<span class="expected-basis">after RELEASE-45 merge 15:37, about 20 min</span></td></tr>
 <tr data-task="DU2"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DU2</span>Starter rules and words: R1-R16, W1</td><td data-label="Detail">ux-rules.md, content.md, CHANGES.md of the luismc-docs starter. New rule IDs follow DS189&#x27;s. Change note naming the docs plugin.json.</td><td data-label="Expected">06 Nov; after DS189 merges<span class="expected-basis">DS189 merge, then about 40 min cloud agent</span></td></tr>
 <tr data-task="DU3"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DU3</span>Starter components and tokens: C1-C5, T1-T5, R17</td><td data-label="Detail">components.md, tokens.md of the starter (incl. 7:1 named as an option, D5). Runs beside the rules task. Change note naming the docs plugin.json.</td><td data-label="Expected">06 Nov; after DS189 merges<span class="expected-basis">DS189 merge, then about 45 min cloud agent</span></td></tr>
@@ -927,10 +918,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DU7"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DU7</span>Join and release the design-system updates</td><td data-label="Detail">Light join of the five branches, ready PR, CI, merge, luismc-docs version fold. Gets its RELEASE number when it starts.</td><td data-label="Expected">06 Nov; after DU2-DU6<span class="expected-basis">last task, then about 30 min</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">2 built, 2 live</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">5 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DU10"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DU10</span>Enforcement kit (DSY99 branch) brought into dev-standards<span class="release-line"><span class="release-name">RELEASE-45</span></span></td><td data-label="Detail">No-app-CSS scan, DOM layout kit, wizard harness (10 states), design edit hook, plan-rows Stop check, brief command, DOCSPEC R15.9, DELIVERYSPEC DL-92. Built in another session (owner D203-D248), handed over here (D249). Head 17530413, 30 tests pass.</td><td data-label="Expected">05 Nov ~15:31</td></tr>
-<tr data-task="DU11"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DU11</span>Fix K1-K3 on the enforcement kit<span class="release-line"><span class="release-name">RELEASE-45</span></span></td><td data-label="Detail">K1-K3 fixed and verified; branch CI green but for join-cleared docs items; joined into PR #150.</td><td data-label="Expected">05 Nov</td></tr>
+<tr data-task="DU9"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DU9</span><span class="release-name">RELEASE-45</span>Release the design-system enforcement kit with K1-K3 fixes</td><td data-label="Detail">RELEASE-45 merged (PR #150, 15:27 UTC): luismc-docs 1.5.0, luismc-delivery 1.6.0, luismc-artifacts 1.3.0, DOCSPEC 1.6.0, DELIVERYSPEC 1.5.0; installed here and smoke-tested; branches and worktrees removed.</td><td data-label="Expected">05 Nov</td></tr>
+<tr data-task="DU10"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DU10</span>Enforcement kit (DSY99 branch) brought into dev-standards<span class="release-line"><span class="release-name">RELEASE-45</span></span></td><td data-label="Detail">No-app-CSS scan, DOM layout kit, wizard harness (10 states), design edit hook, plan-rows Stop check, brief command, DOCSPEC R15.9, DELIVERYSPEC DL-92. Built in another session (owner D203-D248), handed over here (D249). Head 17530413, 30 tests pass.</td><td data-label="Expected">05 Nov</td></tr>
+<tr data-task="DU11"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DU11</span>Fix K1-K3 on the enforcement kit<span class="release-line"><span class="release-name">RELEASE-45</span></span></td><td data-label="Detail">K1-K3 fixed and verified; branch CI green but for join-cleared docs items; joined into PR #150.</td><td data-label="Expected">05 Nov</td></tr>
 <tr data-task="DU8"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DU8</span>Review DSY99 handoff together with DU2-DU7<span class="no-release-line">ships nothing: review only</span></td><td data-label="Detail">DSY99 reviewed (merges clean, 30 tests pass, K1-K4 found). Owner D7-D10 on 5 Nov.</td><td data-label="Expected">05 Nov</td></tr>
 <tr data-task="DU1"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DU1</span>Study UX changes in two real projects and propose starter updates<span class="no-release-line">ships nothing: study and proposal only</span></td><td data-label="Detail">Study done: 35 proposals checked against both projects and the starter, 9 left out. Owner chose every recommended option (D1-D6) on 5 Nov. Work is DU2-DU7.</td><td data-label="Expected">05 Nov</td></tr>
 </tbody></table></div>
@@ -1097,6 +1089,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s9"><h2><span class="section-number">&sect; 9</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D11">
+<h3 class="decision-head"><span class="decision-id">D11</span> <span class="decision-question">What to do with a word on main that hints at another project&#x27;s name (3 places)?</span></h3>
+<p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DU12</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Reword all 3</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 05 Nov</span></div>
+<p class="decision-summary">Old artifacts decision says another project&#x27;s look; two tests use a neutral placeholder list.</p>
+<blockquote class="decision-words">&ldquo;Reword all 3 (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Only the decision text</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave the two test word lists.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave them</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No change.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D10">
 <h3 class="decision-head"><span class="decision-id">D10</span> <span class="decision-question">K1: what does the first design breach do?</span></h3>
 <p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DU8</p>

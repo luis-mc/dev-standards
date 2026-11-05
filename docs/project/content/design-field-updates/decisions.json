@@ -229,6 +229,31 @@
       "chosen": "Warn only",
       "decided": "2026-11-05",
       "owner_words": "Warn only (Recommended)"
+    },
+    {
+      "id": "D11",
+      "question": "What to do with a word on main that hints at another project's name (3 places)?",
+      "asked": "2026-11-05",
+      "status": "decided",
+      "task": "DU12",
+      "options": [
+        {
+          "label": "Reword all 3",
+          "summary": "Old artifacts decision says another project's look; two tests use a neutral placeholder list.",
+          "recommended": true
+        },
+        {
+          "label": "Only the decision text",
+          "summary": "Leave the two test word lists."
+        },
+        {
+          "label": "Leave them",
+          "summary": "No change."
+        }
+      ],
+      "chosen": "Reword all 3",
+      "decided": "2026-11-05",
+      "owner_words": "Reword all 3 (Recommended)"
     }
   ]
 }
