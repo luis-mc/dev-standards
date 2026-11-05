@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T15:30+00:00",
+  "updated": "2026-11-05T15:32+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1451,6 +1451,17 @@
         }
       ],
       "started": "2026-11-05T09:12+00:00"
+    },
+    {
+      "id": "DL60",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Runner pool: read the runner SHA-256 from the release notes' SHA markers",
+      "detail": "Peer report, confirmed here: delivery_runner_pool.py runner_sha() falls back to the notes regex name[^0-9a-f]{0,40}([0-9a-f]{64}), which never matches '<!-- BEGIN SHA linux-x64 -->hash' (the gap holds x64 and hex letters), so pool-up fails when the asset has no digest. Fix: match the BEGIN/END SHA markers, else name.{0,80}?hash; add a test. Also check: plan printed .wslconfig memory=7GB but the step wrote 10GB (not yet reproduced).",
+      "expected": "05 Nov ~16:30",
+      "changed": "2026-11-05T15:32+00:00",
+      "expected_basis": "after DU12; about 30 min with test"
     },
     {
       "id": "DS1",
