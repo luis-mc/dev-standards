@@ -79,6 +79,12 @@ exit, read the message, fix the cause and rerun.
 5. **Tell the owner** the new task ID, and that its branch name must start with
    it (`<ID>-short-name`).
 
+## Plan rows and audit findings
+
+A numbered plan row, or an audit finding, in an agent report is work. In the same turn it is a task, not a line in a file. After a report with such rows is written, run
+`python "${CLAUDE_PLUGIN_ROOT}/scripts/plan_rows_check.py" <report.md> [--commands]`.
+It lists each row that no task mentions (it reads the registry; it writes nothing). Add one task per listed row with `task-add`, and put the row key (for example `PLAN7#3`) in the detail so the next run finds it. A row the owner drops gets a Dropped task or a line in the report saying why. There is no periodic audit: the check runs on the report just written.
+
 ## Old claude.ai pages
 
 If `pending` lists `retired` pages (old claude.ai pages of feature artifacts),

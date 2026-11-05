@@ -61,7 +61,7 @@ For a project whose apps must follow the design system, not only cite it. `guard
 2. **DOM layout** (`dom-layout.ts`, `dom-layout-judge.test.ts`, `dom-layout-example.spec.ts`): at 360, 393 and 1300 px, no sideways overflow, gaps on the spacing scale, aligned left edges, stacked buttons of one width, the primary action in view. Copy the example spec per app and list its screens; known breaches go in `KNOWN_LAYOUT_BREACHES`.
 3. **Wizard behaviour** (`wizard-behaviour.ts`, `wizard-behaviour.test.ts`): one driver per wizard renders it in each state and reads a snapshot from the DOM. The rules: later steps not pressable, exactly one primary, a disabled primary shows its reason, Stop when the job can stop, Done never empty, a button with an open request is disabled. Breaches go in `WIZARD_BEHAVIOUR_TO_FIX`, which only shrinks.
 
-Then: make the project's test runner include the three, and make them a required check (the delivery plugin's `references/design-gate.md`). The UI brief and pull request checklist is `templates/design-system/ui-brief-checklist.md`: paste it into the project's brief and PR templates. Never import another project's known lists.
+Then: make the project's test runner include the three, and make them a required check (the delivery plugin's `references/design-gate.md`). The UI brief and pull request checklist is `templates/ui-brief-checklist.md`: paste it into the project's brief and PR templates. Never import another project's known lists.
 
 ## Existing design system elsewhere
 
