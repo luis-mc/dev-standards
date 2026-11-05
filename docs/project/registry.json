@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T23:22+00:00",
+  "updated": "2026-11-05T23:35+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1612,24 +1612,40 @@
       "id": "DL68",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Live",
       "item": "RELEASE: pool Playwright version",
       "detail": "Join, CI and merge for DL69 (Playwright version detection for the pool image), luismc-delivery 1.7.1.",
-      "expected": "06 Nov ~00:15",
-      "changed": "2026-11-05T23:22+00:00",
-      "expected_basis": "DL69 agent to ~00:05, join 4, CI 4, merge",
-      "release": 50
+      "expected": "05 Nov",
+      "changed": "2026-11-05T23:35+00:00",
+      "release": 50,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-11-05T23:28+00:00",
+          "end": "2026-11-05T23:32+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-05T23:32+00:00",
+          "end": "2026-11-05T23:36+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-05T23:36+00:00",
+          "end": "2026-11-05T23:38+00:00"
+        }
+      ],
+      "started": "2026-11-05T23:27+00:00"
     },
     {
       "id": "DL69",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Runner-pool: Playwright version from lockfiles, flag, newer pin",
       "detail": "The pool image pins Playwright 1.49.1 for install-deps; repos on newer Playwright may need more libs. plan reads the highest Playwright version from agent repos' lockfiles, --playwright-version overrides, fallback pin raised to 1.62.1.",
-      "expected": "06 Nov ~00:05",
-      "changed": "2026-11-05T23:22+00:00",
-      "expected_basis": "cloud agent: setup 5 + work 25 + checks 10 = 40 min",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T23:34+00:00",
       "rides": "DL68",
       "started": "2026-11-05T23:22+00:00"
     },
