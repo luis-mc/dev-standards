@@ -215,10 +215,57 @@ def hook_reads_app_paths_from_the_config_and_prints_json():
         assert r.returncode == 0
         out = json.loads(r.stdout)
         assert out['hookSpecificOutput']['hookEventName'] == 'PreToolUse'
-        assert out['hookSpecificOutput']['permissionDecision'] == 'allow'  # first breach: a warning
+        assert 'permissionDecision' not in out['hookSpecificOutput']  # first breach: a warning only
+        assert 'additionalContext' in out['hookSpecificOutput']
         r = subprocess.run([sys.executable, '-I', os.path.join(PLUGINS, 'delivery', 'scripts', 'hook_design_edit.py')],
                            input='not json', capture_output=True, text=True)
         assert r.returncode == 0 and r.stdout == ''  # never blocks, never crashes
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+@test
+def hook_first_breach_has_no_permission_decision_and_repeat_is_denied():
+    d = project_with_ds()
+    st = tempfile.mkdtemp()
+    try:
+        os.environ['CLAUDE_DESIGN_EDIT_STATE_DIR'] = st
+        data = dict(edit(d, 'apps/web/src/a.tsx', '<table>'), session_id='k1')
+        first = HOOK.respond(data)['hookSpecificOutput']
+        assert 'permissionDecision' not in first and first['hookEventName'] == 'PreToolUse' and 'additionalContext' in first
+        assert HOOK.respond(data)['hookSpecificOutput']['permissionDecision'] == 'deny'
+    finally:
+        os.environ.pop('CLAUDE_DESIGN_EDIT_STATE_DIR', None)
+        shutil.rmtree(d, ignore_errors=True)
+        shutil.rmtree(st, ignore_errors=True)
+
+
+@test
+def hook_judges_what_an_edit_adds_not_the_whole_text():
+    d = project_with_ds()
+    try:
+        old = '<button onClick={a}>Save</button> {count}'
+        new = '<button onClick={a}>Save</button> {total}'
+        data = edit(d, 'apps/web/src/a.tsx', new)
+        data['tool_input']['old_string'] = old
+        assert HOOK.decide(data) is None  # a rename next to an old button
+        data['tool_input']['new_string'] = new + ' <button>Two</button>'
+        assert HOOK.decide(data)  # a new button still warns
+        multi = {'tool_name': 'MultiEdit', 'cwd': d, 'tool_input': {'file_path': os.path.join(d, 'apps/web/src/a.tsx'),
+                 'edits': [{'old_string': old, 'new_string': new}]}}
+        assert HOOK.decide(multi) is None
+        # Write over an existing file: only the increase counts
+        f = os.path.join(d, 'apps/web/src/b.tsx')
+        open(f, 'w').write('<table></table>')
+        assert HOOK.decide(edit(d, 'apps/web/src/b.tsx', '<table></table> x', 'Write')) is None
+        assert HOOK.decide(edit(d, 'apps/web/src/b.tsx', '<table></table><table></table>', 'Write'))
+        # test files never warn
+        for rel in ('apps/web/src/a.test.tsx', 'apps/web/src/a.spec.ts', 'apps/web/__tests__/a.tsx', 'apps/web/tests/a.tsx'):
+            assert HOOK.decide(edit(d, rel, '<button>x</button>')) is None, rel
+        # an Edit to an existing stylesheet does not warn; a new one does
+        open(os.path.join(d, 'apps/web/src/x.css'), 'w').write('.a{}')
+        assert HOOK.decide(edit(d, 'apps/web/src/x.css', '.a{color:red}')) is None
+        assert HOOK.decide(edit(d, 'apps/web/src/y.css', '.a{}', 'Write'))
     finally:
         shutil.rmtree(d, ignore_errors=True)
 
@@ -253,6 +300,15 @@ def plan_rows_are_found_with_keys_and_skipped_sections():
     assert keys.count('P1#1') == 1  # a repeated id counts once
     assert 'P1#B07' in keys and 'P1#3' in keys
     assert rows[0]['text'] == 'One engine for wizards'
+
+
+@test
+def plan_rows_count_only_under_plan_like_headings():
+    status = "# Report\n\n## Done\n\n1. Lint kit ...: done.\n2. Tests: done.\n3. Docs: done.\n4. Hook: done.\n"
+    assert ROWS.find_rows(status, 'R') == []
+    prop = "## Proposed changes\n\n1. One\n2. Two\n\n### Detail\n\n3. Not a row\n\n## Not proposed\n\n4. Dropped\n"
+    assert [r['key'] for r in ROWS.find_rows(prop, 'R')] == ['R#1', 'R#2']
+    assert [r['key'] for r in ROWS.find_rows("### findings (audit)\n\n| B07 | x |\n", 'R')] == ['R#B07']
 
 
 @test
@@ -316,20 +372,20 @@ def hook_first_breach_warns_and_a_repeat_in_the_same_turn_denies():
         bad = edit(d, 'apps/web/src/a.tsx', '<button>Go</button>')
         bad['session_id'] = 's1'
         first = HOOK.respond(dict(bad))['hookSpecificOutput']
-        assert first['permissionDecision'] == 'allow' and 'Warning' in first['additionalContext']
+        assert 'permissionDecision' not in first and 'Warning' in first['additionalContext']
         second = HOOK.respond(dict(bad))['hookSpecificOutput']
         assert second['permissionDecision'] == 'deny' and 'repeat' in second['permissionDecisionReason']
         clean = edit(d, 'apps/web/src/a.tsx', '<Button/>')
         clean['session_id'] = 's1'
         assert HOOK.respond(dict(clean)) is None  # clean edits never count
         other = dict(bad, session_id='s2')
-        assert HOOK.respond(other)['hookSpecificOutput']['permissionDecision'] == 'allow'  # another session
+        assert HOOK.respond(other)['hookSpecificOutput'].get('permissionDecision') is None  # another session
         # a new turn (prompt or stop) clears the count
         assert HOOK.respond({'hook_event_name': 'UserPromptSubmit', 'session_id': 's1'}) is None
-        assert HOOK.respond(dict(bad))['hookSpecificOutput']['permissionDecision'] == 'allow'
+        assert HOOK.respond(dict(bad))['hookSpecificOutput'].get('permissionDecision') is None
         assert HOOK.respond(dict(bad))['hookSpecificOutput']['permissionDecision'] == 'deny'
         assert HOOK.respond({'hook_event_name': 'Stop', 'session_id': 's1'}) is None
-        assert HOOK.respond(dict(bad))['hookSpecificOutput']['permissionDecision'] == 'allow'
+        assert HOOK.respond(dict(bad))['hookSpecificOutput'].get('permissionDecision') is None
     finally:
         os.environ.pop('CLAUDE_DESIGN_EDIT_STATE_DIR', None)
         shutil.rmtree(d, ignore_errors=True)
@@ -346,7 +402,7 @@ def hook_denies_through_the_process_with_json_on_stdout():
         script = os.path.join(PLUGINS, 'delivery', 'scripts', 'hook_design_edit.py')
         outs = [subprocess.run([sys.executable, '-I', script], input=json.dumps(payload), capture_output=True, text=True, env=env)
                 for _ in range(2)]
-        assert [json.loads(o.stdout)['hookSpecificOutput']['permissionDecision'] for o in outs] == ['allow', 'deny']
+        assert [json.loads(o.stdout)['hookSpecificOutput'].get('permissionDecision') for o in outs] == [None, 'deny']
         assert all(o.returncode == 0 for o in outs)
     finally:
         shutil.rmtree(d, ignore_errors=True)

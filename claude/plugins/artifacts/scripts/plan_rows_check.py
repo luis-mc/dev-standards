@@ -7,7 +7,9 @@ just written. It reads; it never writes the registry (only task-add does) and ne
 
     plan_rows_check.py REPORT.md [REPORT.md ...] [--registry PATH] [--tag TAG] [--json] [--commands]
 
-How a row is found (Markdown only):
+How a row is found (Markdown only). A row counts only when it sits under a heading (any level) whose text
+starts with Plan, Proposed, Proposals or Findings (case-insensitive). Any other heading ends that section, so a
+status list under "Done" or "Summary" is not a plan. A heading "Not proposed" never counts.
   - a table row whose first cell is a number or an ID such as `3`, `B07` or `WB1`
         | 3 | Change ... | files | hours | ... |
   - a numbered list item `1. text` or `1) text`
@@ -18,8 +20,7 @@ A row is tasked when the item or the detail of a registry task contains its key 
 `DSY97#3` in the detail). So the rule when you task a row is: put the key in the task detail.
 
 Exit 0 when every row is tasked; 1 when some are not (the keys are listed, with --commands a task-add line for
-each); 2 on a usage error. Rows of a table or list in a section titled like "not proposed", "out of scope" or
-"what stays" are skipped. Standard library only.
+each); 2 on a usage error. Rows outside a Plan, Proposed, Proposals or Findings section are skipped. Standard library only.
 """
 from __future__ import annotations
 
@@ -33,6 +34,7 @@ ROW_ID = r"(?:\d{1,3}|[A-Z]{1,6}\d{1,4})"
 TABLE_ROW_RE = re.compile(r"^\|\s*(" + ROW_ID + r")\s*\|\s*(.+?)\s*\|?\s*$")
 LIST_ROW_RE = re.compile(r"^\s{0,3}(\d{1,3})[.)]\s+(.+)$")
 HEADING_RE = re.compile(r"^#{1,6}\s*(.+?)\s*$")
+PLAN_SECTION_RE = re.compile(r"^(plan|proposed|proposals|findings)", re.I)
 SKIP_SECTION_RE = re.compile(r"not proposed|out of scope|what stays|non-goals?|rejected", re.I)
 GENERIC_NAMES = {"plan", "audit", "report", "findings", "readme"}
 
@@ -45,15 +47,16 @@ def tag_for(path: Path) -> str:
 
 
 def find_rows(text: str, tag: str) -> list[dict]:
-    """The numbered rows of one report: key, id, text."""
+    """The numbered rows of one report under a Plan, Proposed, Proposals or Findings heading: key, id, text."""
     rows: list[dict] = []
-    skipping = False
+    active = False
     for line in text.splitlines():
         h = HEADING_RE.match(line)
         if h:
-            skipping = bool(SKIP_SECTION_RE.search(h.group(1)))
+            title = h.group(1).strip()
+            active = bool(PLAN_SECTION_RE.match(title)) and not SKIP_SECTION_RE.search(title)
             continue
-        if skipping:
+        if not active:
             continue
         m = TABLE_ROW_RE.match(line) or LIST_ROW_RE.match(line)
         if m:

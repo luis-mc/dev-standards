@@ -18,7 +18,7 @@ publish never loops. It never commits or pushes (AR50): it only reads the record
 It also checks the plan rows of a report written in the turn (owner decision D238): a report under docs/work/
 named like plan, audit, report or findings (`*.md`, changed after the turn start that hook_turn_start.py stamped on
 UserPromptSubmit, D246; without a stamp, changed in the last 2 hours; and not yet found clean) whose
-numbered rows have no task in the registry (the row key `<tag>#<id>` in a task's item or detail, see
+numbered rows under a Plan, Proposed, Proposals or Findings heading have no task in the registry (the row key `<tag>#<id>` in a task's item or detail, see
 plan_rows_check.py) blocks the stop and lists the `task-add` lines. It reads the registry only.
 
 Per-session state: <repo>/.claude/artifacts-stop-state.json, shaped
@@ -246,7 +246,7 @@ def plan_untasked(root, manifest, sid):
 
 def build_plan_reason(script, rows):
     py = 'python "%s"' % script
-    out = ['Numbered rows of a report written this turn have no task. Task each one now, in this turn, with its '
+    out = ['Numbered rows under a Plan, Proposed, Proposals or Findings heading of a report written this turn have no task. Task each one now, in this turn, with its '
            'key in the task detail (the key is <tag>#<id>), or move the row under a "Not proposed" heading with a reason:']
     for r in rows:
         out.append('- %s (%s): %s. Run: %s %s' % (r['key'], r['report'], r['text'][:100], py, PRC.task_add_line(r)))
