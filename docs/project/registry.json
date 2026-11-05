@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T16:37+00:00",
+  "updated": "2026-11-05T17:22+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4273,9 +4273,9 @@
       "status": "Running",
       "item": "Starter rules and words: R1-R16, W1",
       "detail": "ux-rules.md, content.md, CHANGES.md of the luismc-docs starter. New rule IDs follow DS189's. Change note naming the docs plugin.json.",
-      "expected": "05 Nov ~17:26",
-      "changed": "2026-11-05T16:37+00:00",
-      "expected_basis": "cloud agent from 16:36, about 50 min",
+      "expected": "05 Nov ~17:47",
+      "changed": "2026-11-05T17:22+00:00",
+      "expected_basis": "READY 16:37; branch CI from 17:22, about 25 min",
       "rides": "DU7",
       "started": "2026-11-05T16:36+00:00"
     },
@@ -4283,12 +4283,11 @@
       "id": "DU3",
       "owner": "design-field-updates",
       "app": "luismc-docs",
-      "status": "Running",
+      "status": "Built",
       "item": "Starter components and tokens: C1-C5, T1-T5, R17",
-      "detail": "components.md, tokens.md of the starter (incl. 7:1 named as an option, D5). Runs beside the rules task. Change note naming the docs plugin.json.",
-      "expected": "05 Nov ~17:31",
-      "changed": "2026-11-05T16:37+00:00",
-      "expected_basis": "cloud agent from 16:36, about 55 min",
+      "detail": "Components C1-C5, R17 and tokens T1-T5, 7:1 note. Its one failing test (no drawing for component 34) is fixed in DU6, which branches from it.",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T17:22+00:00",
       "rides": "DU7",
       "started": "2026-11-05T16:36+00:00"
     },
@@ -4296,12 +4295,11 @@
       "id": "DU4",
       "owner": "design-field-updates",
       "app": "luismc-docs",
-      "status": "Running",
+      "status": "Built",
       "item": "Docs plugin fixes F1-F5",
       "detail": "Lone -- accepted by docs scripts; DS4 warns only on the default branch, join and promote rebuild the gallery (D3); link-only edits to frozen versions with DOCSPEC R15.5 note (D4); CHANGES.md example line; README 'What the apps do not follow yet'.",
-      "expected": "05 Nov ~17:01",
-      "changed": "2026-11-05T16:37+00:00",
-      "expected_basis": "READY 16:26; branch CI from 16:36, about 25 min",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T17:20+00:00",
       "rides": "DU7",
       "started": "2026-11-05T16:21+00:00"
     },
@@ -4309,12 +4307,11 @@
       "id": "DU5",
       "owner": "design-field-updates",
       "app": "luismc-docs",
-      "status": "Running",
+      "status": "Built",
       "item": "Guard templates: raw controls (G1) and contrast (G2)",
       "detail": "New TypeScript+Vitest templates in the enforcement kit folder, each with an allowlist or known-gaps list that only shrinks; run in this repo's CI fixture (DS188).",
-      "expected": "05 Nov ~17:01",
-      "changed": "2026-11-05T16:37+00:00",
-      "expected_basis": "READY 16:23; branch CI from 16:36, about 25 min",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T17:20+00:00",
       "rides": "DU7",
       "started": "2026-11-05T16:21+00:00"
     },
@@ -4322,12 +4319,14 @@
       "id": "DU6",
       "owner": "design-field-updates",
       "app": "luismc-docs",
-      "status": "To do",
+      "status": "Running",
       "item": "Gallery draws the filter bar, change review and new token kinds",
       "detail": "gallery_draw.py and gallery_tokens.py; bumps the gallery script version.",
-      "expected": "05 Nov ~18:01",
-      "changed": "2026-11-05T16:37+00:00",
-      "expected_basis": "starts at DU3 done 17:31, about 30 min"
+      "expected": "05 Nov ~18:02",
+      "changed": "2026-11-05T17:22+00:00",
+      "expected_basis": "cloud agent from 17:22, about 40 min",
+      "rides": "DU7",
+      "started": "2026-11-05T17:22+00:00"
     },
     {
       "id": "DU7",
@@ -4337,18 +4336,18 @@
       "item": "Join and release the design-system updates",
       "detail": "Light join of the five branches, ready PR, CI, merge, luismc-docs version fold. Gets its RELEASE number when it starts.",
       "expected": "05 Nov ~18:40",
-      "changed": "2026-11-05T16:37+00:00",
-      "expected_basis": "after DU6 18:01; join 9 + CI 25 + merge 5",
+      "changed": "2026-11-05T17:22+00:00",
+      "expected_basis": "after DU6 18:02; join 8 + CI 25 + merge 5",
       "release": 47,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-05T16:21+00:00",
-          "end": "2026-11-05T18:01+00:00"
+          "end": "2026-11-05T18:02+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-05T18:01+00:00",
+          "start": "2026-11-05T18:02+00:00",
           "end": "2026-11-05T18:10+00:00"
         },
         {
