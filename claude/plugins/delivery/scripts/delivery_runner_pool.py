@@ -292,8 +292,14 @@ def sizing(total_gib, used_gib, cpus, docker_gib=None, largest_shard_gib=None, s
     ceiling = room if docker_gib is None else min(room, docker_gib)
     mem = math.floor((ceiling - sidecar_gib - vm_gib) * 2) / 2.0
     cpu = max(1.0, math.floor(cpus * CPU_PCT / 100.0 * 2) / 2.0)
+    host_cpus = int(cpus)
+    procs = int(math.floor(cpu)) + 1  # headroom: Docker refuses a CPU limit equal to the VM's CPUs
+    if procs > host_cpus:
+        cpu = max(1.0, cpu - 1)
+        procs = int(math.floor(cpu)) + 1
+    procs = max(1, min(procs, host_cpus))
     out = {'mem_gib': mem, 'cpus': cpu, 'memory_room_gib': round(room, 1), 'ok': True, 'message': '',
-           'wsl': {'memory': int(math.ceil(mem + sidecar_gib + vm_gib)), 'processors': int(math.ceil(cpu))}}
+           'wsl': {'memory': int(math.ceil(mem + sidecar_gib + vm_gib)), 'processors': procs}}
     if mem <= 0:
         out.update(ok=False, message='No memory is left for the pool (room %.1f GiB). Close other programs or raise the '
                                      'WSL memory in .wslconfig, then run the setup again.' % room)
@@ -562,13 +568,25 @@ def runner_sha(probe, version=RUNNER_VERSION):
         d = a.get('digest') or ''
         if a.get('name') == name and d.startswith('sha256:'):
             return d[7:]
-    m = re.search(r'%s[^0-9a-f]{0,40}([0-9a-f]{64})' % re.escape(name), data.get('body') or '')
+    body = data.get('body') or ''
+    m = re.search(r'<!-- BEGIN SHA linux-x64 -->([0-9a-f]{64})<!-- END SHA linux-x64 -->', body)
+    if not m:
+        m = re.search(r'%s.{0,80}?([0-9a-f]{64})' % re.escape(name), body)
     return m.group(1) if m else None
 
 
 def pool_dir(pool):
     base = MS.machine_dir() if MS else os.environ.get('DELIVERY_MACHINE_DIR', '/etc/luismc-delivery')
     return os.path.join(str(base), 'pools', pool)
+
+
+def copy_lf(src, dst):
+    """Copy a text file with LF line endings, whatever the source has (the pool runs Linux). Keeps the file mode."""
+    with open(src, 'rb') as f:
+        data = f.read().replace(b'\r\n', b'\n')
+    with open(dst, 'wb') as f:
+        f.write(data)
+    shutil.copymode(src, dst)
 
 
 def write_pool_files(pool, cap, dest=None, copy_from=None):
@@ -578,14 +596,19 @@ def write_pool_files(pool, cap, dest=None, copy_from=None):
     for name in os.listdir(TEMPLATES):
         src = os.path.join(TEMPLATES, name)
         if os.path.isfile(src) and name != 'pool-check.yml':
-            shutil.copy2(src, os.path.join(dest, name))
-    shutil.copytree(os.path.join(TEMPLATES, 'hooks'), os.path.join(dest, 'hooks'), dirs_exist_ok=True)
+            copy_lf(src, os.path.join(dest, name))
+    hooks_dest = os.path.join(dest, 'hooks')
+    os.makedirs(hooks_dest, exist_ok=True)
+    for name in os.listdir(os.path.join(TEMPLATES, 'hooks')):
+        src = os.path.join(TEMPLATES, 'hooks', name)
+        if os.path.isfile(src):
+            copy_lf(src, os.path.join(hooks_dest, name))
     deliv = os.path.join(dest, 'delivery')
     os.makedirs(deliv, exist_ok=True)
     for name in ('runner_load_gate.py', 'runner_job_done.py', 'load.py', 'machine_slots.py'):
         src = os.path.join(copy_from or HERE, name)
         if os.path.isfile(src):
-            shutil.copy2(src, deliv)
+            copy_lf(src, os.path.join(deliv, name))
     with open(os.path.join(dest, '.env'), 'w', encoding='utf-8') as f:
         f.write('POOL_NAME=%s\nPOOL_CPUS=%s\nPOOL_MEM=%sg\nMACHINE_DIR=%s\n' % (
             pool, (cap or {}).get('cpus', 1), (cap or {}).get('mem_gib', 4), os.path.dirname(os.path.dirname(dest))))

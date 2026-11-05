@@ -667,6 +667,97 @@ def runners_config_and_cli():
 
 
 
+# --- DL60: runner pool on Windows ---------------------------------------------------------------------------------------
+PLUGIN = REPO / "claude/plugins/delivery"
+sys.path.insert(0, str(PLUGIN / "scripts"))
+sys.path.insert(0, str(PLUGIN / "templates/runner-pool"))
+import delivery_runner_pool as pool_mod  # noqa: E402
+import pool_agents as pool_agents  # noqa: E402
+
+
+class _GhProbe:
+    def __init__(self, body):
+        self.body = body
+
+    def gh_json(self, args):
+        return {"assets": [{"name": "x"}], "body": self.body}, ""
+
+
+@scenario
+def dl60_runner_sha_reads_the_marked_release_note():
+    sha = "ba46ba7ce3a4d7236b16fbe44419fb453bc08f866b24f04d549ec89f1722a29e"
+    body = ("- actions-runner-linux-x64-2.321.0.tar.gz <!-- BEGIN SHA linux-x64 -->%s<!-- END SHA linux-x64 -->" % sha)
+    assert pool_mod.runner_sha(_GhProbe(body), "2.321.0") == sha
+    plain = "actions-runner-linux-x64-2.321.0.tar.gz  sha256: %s" % sha
+    assert pool_mod.runner_sha(_GhProbe(plain), "2.321.0") == sha
+
+
+@scenario
+def dl60_processors_leave_headroom_over_the_pool_cpus():
+    r = pool_mod.sizing(64, 0, 32, docker_gib=40)
+    assert r["cpus"] == 19.0 and r["wsl"]["processors"] == 20, r
+    r = pool_mod.sizing(64, 0, 2, docker_gib=40)
+    assert r["wsl"]["processors"] <= 2 and r["cpus"] >= 1.0
+    for n in range(1, 65):
+        r = pool_mod.sizing(64, 0, n, docker_gib=40)
+        assert r["wsl"]["processors"] <= n and (n == 1 or r["wsl"]["processors"] > r["cpus"]), (n, r)
+
+
+@scenario
+def dl60_pool_files_are_written_with_lf():
+    src = TMP / "tpl"
+    (src / "hooks").mkdir(parents=True)
+    (src / "pool-add-agent").write_bytes(b"#!/bin/sh\r\nexec x\r\n")
+    os.chmod(src / "pool-add-agent", 0o755)
+    (src / "hooks" / "h.sh").write_bytes(b"#!/bin/sh\r\n")
+    (src / "Dockerfile").write_bytes(b"FROM x\r\n")
+    gate = TMP / "gate"
+    gate.mkdir(exist_ok=True)
+    (gate / "load.py").write_bytes(b"a = 1\r\n")
+    old = pool_mod.TEMPLATES
+    pool_mod.TEMPLATES = str(src)
+    try:
+        dest = pool_mod.write_pool_files("p", {"cpus": 2, "mem_gib": 4}, dest=str(TMP / "pooldest"), copy_from=str(gate))
+    finally:
+        pool_mod.TEMPLATES = old
+    for rel in ("pool-add-agent", "hooks/h.sh", "Dockerfile", "delivery/load.py"):
+        assert b"\r" not in (Path(dest) / rel).read_bytes(), rel
+    assert os.access(Path(dest) / "pool-add-agent", os.X_OK)
+
+
+@scenario
+def dl60_each_agent_runs_in_its_own_copy_of_the_runner():
+    base = TMP / "agents"
+    base.mkdir(exist_ok=True)
+    calls = []
+
+    class R:
+        returncode, stdout, stderr = 0, "", ""
+
+    def fake(argv, **kw):
+        calls.append((argv, kw.get("cwd")))
+        return R()
+
+    f = str(TMP / "agents.json")
+    orig = pool_agents.create_db
+    pool_agents.create_db = lambda *a, **k: None
+    try:
+        pool_agents.add_agent("app1", "owner/example-app", "tok", "main", True, f, str(base), run=fake)
+        folder = str(base / "app1")
+        argvs = [c[0] for c in calls]
+        cp = ["cp", "-a", "/opt/runner/.", folder]
+        assert cp in argvs
+        assert argvs.index(cp) < argvs.index(["chown", "-R", "r-app1:r-app1", folder])
+        cfg = [c for c in calls if "./config.sh" in c[0]][0]
+        assert cfg[0][:4] == ["runuser", "-u", "r-app1", "--"] and cfg[1] == folder
+        assert not any("/opt/runner/config.sh" in a for a in argvs)
+        calls.clear()
+        pool_agents.remove_agent("app1", "tok", f, str(base), run=fake)
+        assert calls[0][0][:5] == ["runuser", "-u", "r-app1", "--", "./config.sh"] and calls[0][1] == folder
+    finally:
+        pool_agents.create_db = orig
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("-k", default="")
