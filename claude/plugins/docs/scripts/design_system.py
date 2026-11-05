@@ -197,7 +197,7 @@ def md_to_html(text: str) -> str:
     return "\n".join(out)
 
 
-GALLERY_SCRIPT_VERSION = 1  # bump whenever the drawing changes (R15.2); an older stamp makes next-version's gallery stale (DS4)
+GALLERY_SCRIPT_VERSION = 2  # bump whenever the drawing changes (R15.2); an older stamp makes next-version's gallery stale (DS4)
 GALLERY_CSS = (
     ":root{--bg:#fff;--fg:#1b1f24;--mute:#59636e;--line:#d0d7de;--code:#f2f4f6}"
     "@media(prefers-color-scheme:dark){:root{--bg:#14171a;--fg:#e6e9ec;--mute:#9aa4af;--line:#363c43;--code:#1f2429}}"
@@ -308,6 +308,7 @@ def _token_samples(toks, gaps, failures) -> list:
 
     out.append(("type", "Type", "<h2>Type</h2>" + sample(type_fn, "type roles")))
     out.append(("spacing", "Spacing and radius", "<h2>Spacing, radius and shadow</h2>" + sample(space_fn, "spacing") + sample(radius_fn, "radius") + sample(shadow_fn, "shadows")))
+    out += G.token_kind_samples(toks, gaps, failures)
     return out
 
 

@@ -65,7 +65,8 @@ class Tokens:
     def __init__(self, text: str = ""):
         self.prefix = "--ds-"
         self.values: dict = {}
-        self.roles: dict = {}   # role name -> {'size': token, 'weight': str, 'family': token}
+        self.roles: dict = {}   # role name -> {'size': token, 'weight': str, 'ceiling': str, 'family': token}
+        self.widths: dict = {}  # per-width token -> [(column title, value)]
         self.edges: dict = {}   # tone name -> edge text, e.g. '3px solid'
         self._parse(text or "")
 
@@ -94,9 +95,12 @@ class Tokens:
             if head[0] == "token":
                 self._token_table(head, rows[1:])
             elif head[0] == "role":
+                ci = head.index("ceiling") if "ceiling" in head else None
+                fi = head.index("family") if "family" in head else 3
                 for r in rows[1:]:
-                    if len(r) >= 4:
-                        self.roles[r[0]] = {"size": r[1], "weight": r[2], "family": r[3]}
+                    if len(r) >= 4 and fi < len(r):
+                        ceil = r[ci] if ci is not None and ci < len(r) else ""
+                        self.roles[r[0]] = {"size": r[1], "weight": r[2], "ceiling": ceil, "family": r[fi]}
             elif head[0] == "tone" and len(head) >= 2 and head[1] == "edge":
                 for r in rows[1:]:
                     if len(r) >= 2:
@@ -110,6 +114,10 @@ class Tokens:
             return None
         li, di, ui = col(LIGHT_HEADS), col(DARK_HEADS), col(("use",))
         if li is None:
+            if ui is not None and len(head) > 2:  # a per-width table: one value column per width
+                for r in rows:
+                    if r and r[0].startswith("--") and r[0] not in self.widths:
+                        self.widths[r[0]] = [(head[k], r[k]) for k in range(1, min(ui, len(r)))]
             return
         for r in rows:
             if not r or not r[0].startswith("--") or r[0] in self.values:
@@ -130,3 +138,17 @@ class Tokens:
 
     def has_dark(self) -> bool:
         return any(is_hex(v["dark"]) for v in self.values.values() if v["dark"])
+
+    def fill_pairs(self) -> list:
+        """[(text short name, fill short name)] for each on-fill and on-tint pair, e.g. ('color-on-done', 'color-done')."""
+        out = []
+        for n in self.values:
+            short = n[len(self.prefix):]
+            m = re.fullmatch(r"color-on-(.+)", short)
+            if m and ("color-" + m.group(1)) in {k[len(self.prefix):] for k in self.values}:
+                out.append((short, "color-" + m.group(1)))
+        return out
+
+    def with_prefix(self, start: str) -> list:
+        """[(short name, light value, use)] of every token whose short name starts with `start`."""
+        return [(n[len(self.prefix):], v["light"], v["use"]) for n, v in self.values.items() if n.startswith(self.prefix + start)]

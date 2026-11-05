@@ -222,7 +222,36 @@ def d_pager(d):
 
 
 def d_list_toolbar(d):
-    return f'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">{d.field("Search", "12rem")}{d.field("Sort: Name", "8rem")}{d.muted("42 items")}</div>'
+    line = f"1px solid {d.col('color-border')}"
+    chip = lambda s: (f'<span style="padding:6px {d.size("space-3", "12px")};border:{line};border-radius:{d.size("radius-round", "999px")};'  # noqa: E731
+                      f'background:{d.col("color-surface")}">{s} ✕</span>')
+    top = (f'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">{d.field("Search", "12rem")}{d.btn("Filter (2)", "secondary")}'
+           f'<label style="display:flex;align-items:center;gap:8px">{d.muted("Sort by")}{d.field("Name", "7rem")}</label>{d.muted("42 items")}</div>')
+    chips = (f'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">{chip("Photos")}{chip("2015")}'
+             f'<a href="#clear" style="color:{d.col("color-primary")}">Clear all</a></div>')
+    sheet = d.card(f'{d.title("Filter", "size-4")}<p>Type: Photos, 2015</p>{d.btn("Show 12 items")}', "margin-top:8px;max-width:20rem")
+    return top + chips + d.muted("Filters open in a sheet that ends with the count") + sheet
+
+
+def d_change_review(d):
+    r1, rows = d.size("radius-1", "4px"), []
+    count = lambda label, n, on=False: (f'<button type="button" style="min-height:{d.size("target-min", "44px")};padding:0 {d.size("space-3", "12px")};'  # noqa: E731
+                                        f'border:1px solid {d.col("color-border")};border-radius:{r1};font:600 {d.size("size-2")} {d.fam()};'
+                                        f'background:{d.col("color-primary") if on else d.col("color-surface")};color:{d.col("color-on-primary") if on else d.col("color-text")}">{label} {n}</button>')
+    bar = f'<div style="display:flex;gap:8px;flex-wrap:wrap">{count("All", 14, True)}{count("New", 8)}{count("Changed", 4)}{count("Conflict", 2)}</div>'
+    kinds = (("done", "+ New", "solid"), ("note", "~ Changed", "solid"), ("needs-you", "! Conflict", "dashed"))
+    chips = "".join(f'<span style="padding:4px {d.size("space-2", "8px")};border-radius:{d.size("radius-round", "999px")};background:{d.col("color-" + k + "-bg")};'
+                    f'color:{d.col("color-" + k)};font:600 {d.size("size-1")} {d.fam()}">{w} · {n}</span>' for (k, w, _), n in zip(kinds, (8, 4, 2)))
+    for key, word, line_style, name, ticked, why in (("done", "+ New", "solid", "Holiday photos", True, ""), ("note", "~ Changed", "solid", "Receipts", True, ""),
+                                                    ("needs-you", "! Conflict", "dashed", "Tax 2015", False, "A file with this name is already there. Choose it to replace that file.")):
+        rows.append(f'<div style="display:flex;gap:12px;align-items:flex-start;min-height:{d.size("row", "56px")};padding:{d.size("space-2", "8px")} 0;'
+                    f'border-bottom:{d.size("hairline", "1px")} {line_style} {d.col("color-" + key)}"><input type="checkbox" {"checked" if ticked else ""} aria-label="{esc(name)}">'
+                    f'<div><strong>{name}</strong><br>{d.muted(why) if why else ""}</div>'
+                    f'<span style="margin-left:auto;color:{d.col("color-" + key)};font-weight:600">{word}</span></div>')
+    sticky = (f'<div style="margin-top:12px;padding:{d.size("space-3", "12px")};background:{d.col("color-surface")};border-top:1px solid {d.col("color-divider")};'
+              f'box-shadow:{d.shadow("shadow-2")}">{d.btn("Apply 12 changes")}</div>')
+    return (bar + f'<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">{chips}</div>' + "".join(rows) + sticky
+            + d.mark("color-needs-you", "color-needs-you-bg"))
 
 
 def d_segmented(d):
@@ -360,7 +389,7 @@ def d_other_parts(d):
 DRAWINGS = {
     "page header": d_page_header, "top menu and breadcrumbs": d_top_menu, "tabs": d_tabs, "wizard": d_wizard,
     "sticky action bar": d_action_bar, "action rows": d_action_rows, "buttons": d_buttons,
-    "card, card grid and facts list": d_card, "dialog and sheet": d_dialog, "pager": d_pager, "list toolbar": d_list_toolbar,
+    "card, card grid and facts list": d_card, "dialog and sheet": d_dialog, "pager": d_pager, "list toolbar": d_list_toolbar, "change review": d_change_review,
     "segmented choices and filter chips": d_segmented, "one-choice list": d_one_choice, "form field family": d_form,
     "tables and list rows": d_tables, "progress bar": d_progress, "badges and counts": d_badges, "messages and banner": d_messages,
     "empty, failed and error states": d_states, "selection bar": d_selection_bar, "search bar and find layout": d_search,
@@ -420,3 +449,59 @@ def panels(toks: T.Tokens, fn, gaps: dict, failures: list, what: str) -> str:
         cells.append(f'<div class="theme"><p class="meta">{th}</p>{wrap(d, inner)}</div>')
     labels = "".join(f'<p class="gap">token missing: {esc(m if m.startswith(("tone edge", "role ")) else toks.name(m))}</p>' for m in missing)
     return f'<div class="pair">{"".join(cells)}</div>{labels}'
+
+
+# ------------------------------------------------------------------ token kinds that are not colour swatches or plain sizes
+def _pair_fn(toks):
+    def fn(d):
+        out = []
+        for text, fill in toks.fill_pairs():
+            out.append(f'<span style="display:inline-block;margin:0 8px 8px 0;padding:6px {d.size("space-3", "12px")};border-radius:{d.size("radius-1", "4px")};'
+                       f'border:1px solid {d.col("color-divider")};background:{d.col(fill)};color:{d.col(text)};font-weight:600">'
+                       f'Aa {esc(text[len("color-"):])} on {esc(fill[len("color-"):])} {d.mark(text, fill, 4.5, text + " on " + fill)}</span>')
+        return "".join(out) or '<p class="meta">No on-fill pairs found.</p>'
+    return fn
+
+
+def token_kind_samples(toks: T.Tokens, gaps: dict, failures: list) -> list:
+    """Drawn sections for text-on-fill pairs, motion, per-width tokens, border widths and weights. Returns [(id, label, html)]."""
+    pre = toks.prefix
+    sec = []
+    sec.append(("fills", "Text on a fill", "<h2>Text on a fill</h2><p class='meta'>Each sample is text on its own fill, with its contrast ratio. The -bg tokens equal the tint.</p>"
+                + panels(toks, _pair_fn(toks), gaps, failures, "text on a fill")))
+
+    def table(head, rows):
+        return ("<table><thead><tr>" + "".join(f"<th>{esc(h)}</th>" for h in head) + "</tr></thead><tbody>"
+                + "".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in rows) + "</tbody></table>")
+
+    motion = [(f"<code>{esc(pre + n)}</code>", esc(v), esc(u)) for n, v, u in toks.with_prefix("duration-")]
+    widths = [(f"<code>{esc(n)}</code>", *[f"{esc(c)}: {esc(v)}" for c, v in cols]) for n, cols in toks.widths.items()]
+    wcols = max((len(w) for w in widths), default=1)
+    widths = [w + ("",) * (wcols - len(w)) for w in widths]
+    frames = [(f"<code>{esc(pre + n)}</code>", esc(v), esc(u)) for n, v, u in toks.with_prefix("frame-") + toks.with_prefix("control-height")]
+    weights = [(f"<code>{esc(pre + n)}</code>", esc(v), f'<span style="font-weight:{esc(v)}">Sample text</span>') for n, v, _ in toks.with_prefix("weight-")]
+
+    def border_fn(d):
+        return '<div class="demo">' + "".join(
+            f'<div style="background:{d.col("color-surface")};color:{d.col("color-text")};width:96px;height:48px;'
+            f'border:{d.size(n, "1px")} {"double" if n.endswith("double") else "solid"} {d.col("color-border")}">{esc(n[len("border-"):])} {esc(v)}</div>'
+            for n, v, _ in toks.with_prefix("border-")) + "</div>"
+
+    def role_fn(d):
+        out = []
+        for role, r in toks.roles.items():
+            wt = r["weight"] if r["weight"].isdigit() else "400"
+            ceil = r.get("ceiling", "")
+            bad = ceil.isdigit() and wt.isdigit() and int(wt) > int(ceil)
+            out.append(f'<div style="font-weight:{wt};color:{d.col("color-text")}">{esc(role)} · weight {esc(wt)}, ceiling {esc(ceil or "none")}'
+                       f'{" ✕ above its ceiling" if bad else ""}</div>')
+            if bad:
+                d.checks.append((f"role {role} weight {wt} above ceiling {ceil}", 0.0, 1.0, False))
+        return "".join(out)
+
+    sec.append(("motion", "Motion", "<h2>Motion</h2>" + (table(("Token", "Value", "Use"), motion) if motion else "<p class='meta'>No duration tokens found.</p>")))
+    sec.append(("per-width", "Per width", "<h2>Per width and sizes</h2>" + (table(("Token",) + tuple(f"Width {i + 1}" for i in range(wcols)), widths) if widths else "<p class='meta'>No per-width tokens found.</p>")
+                + (table(("Token", "Value", "Use"), frames) if frames else "")))
+    sec.append(("borders", "Border widths", "<h2>Border widths</h2>" + panels(toks, border_fn, gaps, failures, "border widths")))
+    sec.append(("weights", "Weights", "<h2>Weight per type role</h2>" + (table(("Token", "Value", "Sample"), weights) if weights else "") + panels(toks, role_fn, gaps, failures, "weights")))
+    return sec
