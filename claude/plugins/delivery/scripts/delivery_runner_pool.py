@@ -43,7 +43,10 @@ LABEL = 'dev.luismc.runner-pool'
 TEMPLATES = os.path.join(os.path.dirname(HERE), 'templates', 'runner-pool')
 MEM_PCT, CPU_PCT = 85, 60
 VM_GIB, SIDECAR_GIB = 1.0, 1.0
-RUNNER_VERSION = '2.321.0'
+MIN_RUNNER_VERSION = '2.329.0'  # GitHub refuses to register a runner below this
+RUNNER_VERSION = '2.338.2'  # the pinned fallback, used when the release API cannot be reached
+RUNNER_SHA256 = 'baebf204307bac6193480852732f0aba2ae97b6c5597c244f4d5558390147c40'  # its linux-x64 tarball
+HOST_LOAD_FRESH_S = 60
 PRIVATE_REFUSAL = 'refused: %s is a public repository. A self-hosted runner there could run code from a fork pull request on your machine.'
 
 
@@ -125,6 +128,53 @@ class Probe:
         except Exception:  # noqa: BLE001
             return None
         return round(total, 1), round(total * pct / 100.0, 1)
+
+    def host_load(self):
+        """(figures, age in seconds) of the host-load file, or (None, None)."""
+        if LOAD is None:
+            return None, None
+        try:
+            return LOAD.read_host_load()
+        except Exception:  # noqa: BLE001
+            return None, None
+
+    def wsl_vm_gib(self):
+        """Memory held by the WSL VM (vmmem / vmmemWSL) in GiB; 0.0 when there is none or it cannot be read."""
+        if not self.platform.startswith('win'):
+            return 0.0
+        r = self.sh(['powershell', '-NoProfile', '-Command',
+                     "(Get-Process -Name vmmem,vmmemWSL -ErrorAction SilentlyContinue | Measure-Object WorkingSet64 -Sum).Sum"])
+        text = r[1].strip() if r and r[0] == 0 else ''
+        return round(int(text) / 2.0 ** 30, 1) if text.isdigit() else 0.0
+
+    def container_gib(self):
+        """{'pool': GiB used by this pool's containers, 'other': GiB used by other containers, 'others': [names]}.
+        Reads `docker ps` and `docker stats` (inside WSL on Windows). Zeros when Docker cannot be read."""
+        pre = ['wsl'] if self.platform.startswith('win') else []
+        names = self.sh(pre + ['docker', 'ps', '--format', '{{.Names}}\t{{.Label "' + LABEL + '"}}'])
+        stats = self.sh(pre + ['docker', 'stats', '--no-stream', '--format', '{{.Name}}\t{{.MemUsage}}'])
+        out = {'pool': 0.0, 'other': 0.0, 'others': []}
+        if not names or names[0] != 0:
+            return out
+        mine = {}
+        for line in names[1].replace('\x00', '').splitlines():
+            cols = line.rstrip('\r').split('\t')
+            if cols and cols[0]:
+                mine[cols[0]] = len(cols) > 1 and cols[1].strip() != ''
+        used = {}
+        for line in (stats[1].replace('\x00', '') if stats and stats[0] == 0 else '').splitlines():
+            cols = line.rstrip('\r').split('\t')
+            m = re.match(r'\s*([0-9.]+)\s*([KMG]i?B|B)', cols[1]) if len(cols) > 1 else None
+            if m:
+                used[cols[0]] = float(m.group(1)) * {'B': 1.0, 'K': 2.0 ** 10, 'M': 2.0 ** 20, 'G': 2.0 ** 30}[m.group(2)[0]] / 2.0 ** 30
+        for name, is_pool in mine.items():
+            if is_pool:
+                out['pool'] += used.get(name, 0.0)
+            else:
+                out['other'] += used.get(name, 0.0)
+                out['others'].append(name)
+        out['pool'], out['other'] = round(out['pool'], 1), round(out['other'], 1)
+        return out
 
 
 # --- detect (read only) -----------------------------------------------------------------------------------------------
@@ -268,8 +318,15 @@ def detect_wsl(probe):
 def detect_host(probe):
     """This machine's figures for sizing: platform, python, machine folder, CPUs, total and used GiB (None when unmeasurable)."""
     mem = probe.memory_gib()
+    vm, box = probe.wsl_vm_gib(), probe.container_gib()
+    used = mem[1] if mem else None
+    if used is not None:
+        # The WSL VM holds the pool and every other container: leave it out of "used". With no VM (native Linux), leave
+        # out the pool's own containers instead. A rerun then sees the same figure as the first run.
+        used = round(max(0.0, used - (vm if vm > 0 else box['pool'])), 1)
     return {'platform': probe.platform, 'python': probe.python(), 'machine_dir': probe.machine_dir(), 'cpus': probe.cpu_count(),
-            'total_gib': mem[0] if mem else None, 'used_gib': mem[1] if mem else None}
+            'total_gib': mem[0] if mem else None, 'used_gib': used, 'wsl_vm_gib': vm,
+            'other_containers_gib': box['other'], 'other_containers': box['others']}
 
 
 def detect(probe=None, json=False):
@@ -286,10 +343,15 @@ def detect(probe=None, json=False):
 
 # --- sizing (section 6.4) ---------------------------------------------------------------------------------------------
 
-def sizing(total_gib, used_gib, cpus, docker_gib=None, largest_shard_gib=None, sidecar_gib=SIDECAR_GIB, vm_gib=VM_GIB):
-    """Pool cap = the smaller of the memory room and Docker's ceiling, minus the sidecar and the VM. CPU = 60% of the CPUs."""
+def sizing(total_gib, used_gib, cpus, docker_gib=None, largest_shard_gib=None, sidecar_gib=SIDECAR_GIB, vm_gib=VM_GIB,
+           other_gib=0.0, others_run=False, wsl_current=None):
+    """Pool cap = the smaller of the memory room and Docker's ceiling, minus the sidecar and the VM. CPU = 60% of the CPUs.
+
+    `used_gib` is what non-WSL processes use (the WSL VM and the pool's containers are not in it), so a rerun gives the
+    same cap. When other containers run in WSL (`others_run`), the pool leaves them `other_gib` and the WSL memory written
+    is never below `wsl_current` nor below what they use plus this pool's cap."""
     room = total_gib * MEM_PCT / 100.0 - used_gib
-    ceiling = room if docker_gib is None else min(room, docker_gib)
+    ceiling = room if docker_gib is None else min(room, docker_gib - (other_gib if others_run else 0.0))
     mem = math.floor((ceiling - sidecar_gib - vm_gib) * 2) / 2.0
     cpu = max(1.0, math.floor(cpus * CPU_PCT / 100.0 * 2) / 2.0)
     host_cpus = int(cpus)
@@ -298,8 +360,13 @@ def sizing(total_gib, used_gib, cpus, docker_gib=None, largest_shard_gib=None, s
         cpu = max(1.0, cpu - 1)
         procs = int(math.floor(cpu)) + 1
     procs = max(1, min(procs, host_cpus))
+    wsl_mem = int(math.ceil(mem + sidecar_gib + vm_gib))
+    if others_run:
+        if wsl_current is not None:
+            wsl_mem = max(wsl_mem, int(math.ceil(wsl_current)))
+        wsl_mem = max(wsl_mem, int(math.ceil(other_gib + mem + sidecar_gib + vm_gib)))
     out = {'mem_gib': mem, 'cpus': cpu, 'memory_room_gib': round(room, 1), 'ok': True, 'message': '',
-           'wsl': {'memory': int(math.ceil(mem + sidecar_gib + vm_gib)), 'processors': procs}}
+           'wsl': {'memory': wsl_mem, 'processors': procs}}
     if mem <= 0:
         out.update(ok=False, message='No memory is left for the pool (room %.1f GiB). Close other programs or raise the '
                                      'WSL memory in .wslconfig, then run the setup again.' % room)
@@ -320,8 +387,11 @@ def measured_sizing(found, total_gib=None, used_gib=None, cpus=None, docker_gib=
     docker = docker_gib if docker_gib is not None else (found.get('wsl') or {}).get('memory')
     if total is None or n is None:
         return None
-    res = sizing(total, used or 0.0, n, docker, largest_shard_gib)
-    res['measured'] = {'total_gib': total, 'used_gib': used or 0.0, 'cpus': n, 'docker_gib': docker}
+    others = host.get('other_containers') or []
+    res = sizing(total, used or 0.0, n, docker, largest_shard_gib, other_gib=host.get('other_containers_gib') or 0.0,
+                 others_run=bool(others), wsl_current=(found.get('wsl') or {}).get('memory'))
+    res['measured'] = {'total_gib': total, 'used_gib': used or 0.0, 'cpus': n, 'docker_gib': docker,
+                       'other_containers_gib': host.get('other_containers_gib') or 0.0}
     return res
 
 
@@ -385,6 +455,20 @@ while True:  # one sample every 15 seconds; the task starts this at boot and kee
         pass
     time.sleep(15)
 """
+
+
+def _gb(value):
+    return 'unset' if value is None else '%sGB' % (int(value) if float(value) == int(value) else value)
+
+
+def read_pool_env(probe, pool):
+    """The KEY=value lines of the pool's .env (empty when there is none)."""
+    out = {}
+    for line in (probe.read_text(os.path.join(pool_dir(pool), '.env')) or '').splitlines():
+        k, sep, v = line.partition('=')
+        if sep:
+            out[k.strip()] = v.strip()
+    return out
 
 
 def _wsl_values(found, cap):
@@ -475,15 +559,20 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
     if keep_l:
         w, enough = _wsl_values(found, cap)
         if w and (win or (found.get('wsl') or {}).get('exists')):
-            s1 = _step('wslconfig', 'Write %s with the pool ceiling (memory=%sGB, processors=%s)' % (
-                (found.get('wsl') or {}).get('file'), w['memory'], w['processors']), 'wslconfig', cap=cap)
+            cur = found.get('wsl') or {}
+            s1 = _step('wslconfig', 'Write %s with the pool ceiling (memory %s -> %sGB, processors %s -> %s; the old file is kept as .bak)' % (
+                cur.get('file'), _gb(cur.get('memory')), w['memory'], cur.get('processors') or 'unset', w['processors']),
+                'wslconfig', cap=cap)
             if enough:
                 s1['state'] = 'already'
             steps.append(s1)
             if not enough:
                 steps.append(_step('wsl-restart', 'Restart WSL so the ceiling applies (only when no job runs; stops every container)',
                                    'wsl-restart'))
-        steps.append(_step('pool-files', 'Write the pool files for "%s" (compose, agents.json, .env with the cap only)' % pool,
+        old = found.get('pool_env') or {}
+        steps.append(_step('pool-files', 'Write the pool files for "%s" (compose, agents.json, .env: POOL_MEM %s -> %sg, '
+                           'POOL_CPUS %s -> %s)' % (pool, old.get('POOL_MEM') or 'unset', (cap or {}).get('mem_gib', 4),
+                                                    old.get('POOL_CPUS') or 'unset', (cap or {}).get('cpus', 1)),
                            'pool-files', pool=pool, cap=cap))
         steps.append(_step('pool-up', 'Build and start the pool container', 'pool-up', pool=pool))
         for repo in keep_l:
@@ -552,17 +641,48 @@ def default_check(step, probe=None):
         return step['service'] not in [x['name'] for x in detect_services(probe)]
     if step.get('action') == 'host-load-task':
         r = probe.sh(['schtasks', '/Query', '/TN', 'luismc-host-load'])
-        return bool(r and r[0] == 0)
+        if r and r[0] == 0:
+            return True
+        # An unelevated query of a SYSTEM task is "Access is denied": unknown, not failed. A fresh host-load file proves it runs.
+        _figures, age = probe.host_load()
+        return age is not None and age < HOST_LOAD_FRESH_S
     return False
 
 
 # --- run (steps 6.3) --------------------------------------------------------------------------------------------------
 
+def version_tuple(version):
+    return tuple(int(x) for x in re.findall(r'\d+', version or '')[:3])
+
+
+def resolve_runner(probe):
+    """(version, sha256, source) of the runner to build: the latest actions/runner release, else the pinned fallback.
+    A release below the floor is never used."""
+    data, _why = probe.gh_json(['api', 'repos/actions/runner/releases/latest'])
+    tag = data.get('tag_name') if isinstance(data, dict) else None
+    version = tag[1:] if isinstance(tag, str) and tag.startswith('v') else None
+    if version and re.fullmatch(r'\d+\.\d+\.\d+', version) and version_tuple(version) >= version_tuple(MIN_RUNNER_VERSION):
+        name = 'actions-runner-linux-x64-%s.tar.gz' % version
+        for a in data.get('assets', []):
+            d = a.get('digest') or ''
+            if a.get('name') == name and d.startswith('sha256:') and re.fullmatch(r'[0-9a-f]{64}', d[7:]):
+                return version, d[7:], 'latest release'
+    return RUNNER_VERSION, RUNNER_SHA256, 'pinned fallback (the release API could not be read)'
+
+
+def below_floor(version):
+    """A plain refusal text when `version` is below the floor, else None."""
+    if version_tuple(version) < version_tuple(MIN_RUNNER_VERSION):
+        return ('refused: runner %s is below %s, the oldest version GitHub still lets register. '
+                'Run the setup again to pick a newer one.' % (version, MIN_RUNNER_VERSION))
+    return None
+
+
 def runner_sha(probe, version=RUNNER_VERSION):
     """SHA-256 of the Linux runner tarball from the release (asset digest, else the release notes)."""
     data, _why = probe.gh_json(['api', 'repos/actions/runner/releases/tags/v%s' % version])
     if not isinstance(data, dict):
-        return None
+        return RUNNER_SHA256 if version == RUNNER_VERSION else None
     name = 'actions-runner-linux-x64-%s.tar.gz' % version
     for a in data.get('assets', []):
         d = a.get('digest') or ''
@@ -589,7 +709,7 @@ def copy_lf(src, dst):
     shutil.copymode(src, dst)
 
 
-def write_pool_files(pool, cap, dest=None, copy_from=None):
+def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None):
     """Write the pool folder. `.env` holds the cap and the machine dir only (D42); the database password is a 0600 file."""
     dest = dest or pool_dir(pool)
     os.makedirs(dest, exist_ok=True)
@@ -610,8 +730,9 @@ def write_pool_files(pool, cap, dest=None, copy_from=None):
         if os.path.isfile(src):
             copy_lf(src, os.path.join(deliv, name))
     with open(os.path.join(dest, '.env'), 'w', encoding='utf-8') as f:
-        f.write('POOL_NAME=%s\nPOOL_CPUS=%s\nPOOL_MEM=%sg\nMACHINE_DIR=%s\n' % (
-            pool, (cap or {}).get('cpus', 1), (cap or {}).get('mem_gib', 4), os.path.dirname(os.path.dirname(dest))))
+        f.write('POOL_NAME=%s\nPOOL_CPUS=%s\nPOOL_MEM=%sg\nMACHINE_DIR=%s\nRUNNER_VERSION=%s\n' % (
+            pool, (cap or {}).get('cpus', 1), (cap or {}).get('mem_gib', 4), os.path.dirname(os.path.dirname(dest)),
+            runner_version or RUNNER_VERSION))
     agents = os.path.join(dest, 'agents.json')
     if not os.path.exists(agents):
         with open(agents, 'w', encoding='utf-8') as f:
@@ -669,12 +790,14 @@ class Executor:
         if not w:
             return False, 'no pool ceiling to write (sizing is missing)'
         text = self.probe.read_text(self.probe.wslconfig)
+        old = detect_wsl(self.probe)
         if text is not None:
             with open(self.probe.wslconfig + '.bak', 'w', encoding='utf-8') as f:
                 f.write(text)
         with open(self.probe.wslconfig, 'w', encoding='utf-8') as f:
             f.write(set_wsl_values(text or '', w['memory'], w['processors']))
-        return True, 'written (the old file is kept as .wslconfig.bak). It applies after WSL restarts.'
+        return True, ('written: memory %s -> %sGB, processors %s -> %s (the old file is kept as .wslconfig.bak). '
+                      'It applies after WSL restarts.' % (_gb(old['memory']), w['memory'], old['processors'] or 'unset', w['processors']))
 
     def do_wsl_restart(self, step):
         found = detect_github(self.probe)
@@ -694,13 +817,18 @@ class Executor:
         return True, 'wrote ' + dest
 
     def do_pool_files(self, step):
-        return True, 'wrote ' + write_pool_files(step['pool'], step.get('cap'))
+        version, _sha, source = resolve_runner(self.probe)
+        dest = write_pool_files(step['pool'], step.get('cap'), runner_version=version)
+        return True, 'wrote %s (runner %s, %s)' % (dest, version, source)
 
     def do_pool_up(self, step):
-        sha = runner_sha(self.probe)
+        version = read_pool_env(self.probe, step['pool']).get('RUNNER_VERSION') or RUNNER_VERSION
+        if below_floor(version):
+            return False, below_floor(version)
+        sha = runner_sha(self.probe, version)
         if not sha:
             return False, 'could not read the SHA-256 of the runner release; the image is not built without it'
-        env = dict(os.environ, RUNNER_SHA256=sha)
+        env = dict(os.environ, RUNNER_SHA256=sha, RUNNER_VERSION=version)
         p = subprocess.run(['docker', 'compose', 'up', '-d', '--build'], cwd=pool_dir(step['pool']), env=env,
                            capture_output=True, text=True)
         return p.returncode == 0, 'pool is up' if p.returncode == 0 else (p.stderr.strip()[-300:] or 'docker compose failed')
@@ -879,6 +1007,7 @@ def main(argv=None):
         print(detect(json=True) if args.json else json.dumps(detect(), indent=2))
     elif args.action in ('sizing', 'plan'):
         found = detect()
+        found['pool_env'] = read_pool_env(Probe(), args.pool)
         res = measured_sizing(found, args.total_gib, args.used_gib, args.cpus, args.docker_gib, args.largest_shard_gib)
         if args.action == 'sizing':
             if res is None:

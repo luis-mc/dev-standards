@@ -86,9 +86,10 @@ def add_agent(slug, repo, token, pool, private, agents_file='/agents.json', base
     labels = labels_for(pool, slug)
     cfg = ['runuser', '-u', user, '--', './config.sh', '--unattended', '--url', 'https://github.com/' + repo,
            '--token', token, '--name', '%s-%s' % (pool, slug), '--labels', ','.join(labels), '--work', '_work', '--replace']
-    r = run(cfg, cwd=folder)
-    if r.returncode != 0:
-        raise PoolError('runner registration failed: %s' % redact((r.stderr or r.stdout).strip(), token))
+    if not os.path.exists(os.path.join(folder, '.runner')):  # a rerun after a failed step keeps the registration
+        r = run(cfg, cwd=folder)
+        if r.returncode != 0:
+            raise PoolError('runner registration failed: %s' % redact((r.stderr or r.stdout).strip(), token))
     with open(os.path.join(folder, '.env'), 'w', encoding='utf-8') as f:
         f.write('ACTIONS_RUNNER_HOOK_JOB_STARTED=%s\nACTIONS_RUNNER_HOOK_JOB_COMPLETED=%s\nDELIVERY_MACHINE_DIR=/machine\n'
                 % (HOOK_STARTED, HOOK_DONE))
@@ -107,15 +108,24 @@ def create_db(slug, folder, user, run):
     """One database and one login for this repository on the shared sidecar (D40). The password goes only to a 0600 file."""
     db, login, password = new_db_login(slug)
     host = os.environ.get('DELIVERY_DB_HOST', 'db')
-    sql = "CREATE ROLE %s LOGIN PASSWORD '%s'; CREATE DATABASE %s OWNER %s;" % (login, password, db, login)
     try:
         with open('/run/secrets/dbadmin', encoding='utf-8') as f:
             admin = f.read().strip()
     except OSError:
         admin = ''
-    r = run(['psql', '-h', host, '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', sql], env=dict(os.environ, PGPASSWORD=admin))
-    if r.returncode != 0:
-        raise PoolError('database setup failed: %s' % redact((r.stderr or '').strip(), password))
+    env = dict(os.environ, PGPASSWORD=admin)
+    psql = ['psql', '-h', host, '-U', 'postgres', '-v', 'ON_ERROR_STOP=1', '-f', '-']
+    # CREATE DATABASE cannot run in a transaction block, so the role and the database are two separate calls.
+    # Each skips what exists; a role that exists gets the new password, so db.env stays right on a rerun.
+    role_sql = ("DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '%s') THEN "
+                "ALTER ROLE %s LOGIN PASSWORD '%s'; ELSE CREATE ROLE %s LOGIN PASSWORD '%s'; END IF; END $$;"
+                % (login, login, password, login, password))
+    db_sql = ("SELECT 'CREATE DATABASE %s OWNER %s' WHERE NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = '%s')\\gexec\n"
+              % (db, login, db))
+    for what, sql in (('login', role_sql), ('database', db_sql)):
+        r = run(psql, env=env, input=sql)
+        if r.returncode != 0:
+            raise PoolError('database setup (%s) failed: %s' % (what, redact((r.stderr or '').strip(), password)))
     path = os.path.join(folder, 'db.env')
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, 'w', encoding='utf-8') as f:
