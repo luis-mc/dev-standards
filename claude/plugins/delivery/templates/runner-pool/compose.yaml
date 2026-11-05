@@ -1,4 +1,4 @@
-# Shared CI pool (DL30). The setup writes the cap into .env (POOL_CPUS, POOL_MEM, POOL_NAME, MACHINE_DIR, RUNNER_VERSION, POOL_BROWSERS) and nothing else.
+# Shared CI pool (DL30). The setup writes the cap into .env (POOL_CPUS, POOL_MEM, POOL_NAME, MACHINE_DIR, RUNNER_VERSION, POOL_BROWSERS, PLAYWRIGHT_VERSION) and nothing else.
 # No Docker socket is mounted (D41). The machine folder is mounted at /machine so the hooks see the slots and the config.
 name: pool-${POOL_NAME:-main}
 services:
@@ -9,6 +9,7 @@ services:
         RUNNER_VERSION: ${RUNNER_VERSION:-2.338.2}
         RUNNER_SHA256: ${RUNNER_SHA256:?set by the setup}
         POOL_BROWSERS: ${POOL_BROWSERS:-none}
+        PLAYWRIGHT_VERSION: ${PLAYWRIGHT_VERSION:-1.62.1}
     image: luismc-runner-pool:${POOL_NAME:-main}
     restart: unless-stopped
     stop_grace_period: 5m

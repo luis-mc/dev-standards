@@ -4,7 +4,7 @@ ARG RUNNER_VERSION=2.338.2
 ARG RUNNER_SHA256
 ARG POOL_BROWSERS=none
 # The one place the Playwright version for the system libraries is pinned (DL67).
-ARG PLAYWRIGHT_VERSION=1.49.1
+ARG PLAYWRIGHT_VERSION=1.62.1
 LABEL dev.luismc.runner-pool="1"
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \

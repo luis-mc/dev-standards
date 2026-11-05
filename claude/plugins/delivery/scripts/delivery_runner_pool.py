@@ -3,7 +3,7 @@
 
     delivery_runner_pool.py detect  [--json]
     delivery_runner_pool.py sizing  [--total-gib N --used-gib N --cpus N] [--docker-gib N] [--largest-shard-gib N]   (measured when not given)
-    delivery_runner_pool.py plan    [--repos a/b,c/d] [--windows-repos e/f] [--pool NAME] [--browsers none|chromium]   (repositories come from detect when not given)
+    delivery_runner_pool.py plan    [--repos a/b,c/d] [--windows-repos e/f] [--pool NAME] [--browsers none|chromium] [--playwright-version X.Y.Z] [--repo-path DIR]   (repositories come from detect when not given)
     delivery_runner_pool.py verify  --repos a/b --pool NAME
     delivery_runner_pool.py doctor  [--json]
 
@@ -47,6 +47,8 @@ MIN_RUNNER_VERSION = '2.329.0'  # GitHub refuses to register a runner below this
 RUNNER_VERSION = '2.338.2'  # the pinned fallback, used when the release API cannot be reached
 ROOT_NEEDS = re.compile(r'\bsudo\b|\bapt-get\b|\bapt\s+install\b|--with-deps|install-deps')  # a step that needs root
 BROWSERS = ('none', 'chromium')  # the image option POOL_BROWSERS (DL67); none is the default
+PLAYWRIGHT_VERSION = '1.62.1'  # the pinned fallback for the Chromium system libraries (DL69); keep the Dockerfile and compose defaults equal
+LOCKFILES = ('pnpm-lock.yaml', 'package-lock.json', 'yarn.lock')
 RUNNER_SHA256 = 'baebf204307bac6193480852732f0aba2ae97b6c5597c244f4d5558390147c40'  # its linux-x64 tarball
 HOST_LOAD_FRESH_S = 60
 PRIVATE_REFUSAL = 'refused: %s is a public repository. A self-hosted runner there could run code from a fork pull request on your machine.'
@@ -509,6 +511,82 @@ def _wsl_values(found, cap):
     return w, enough
 
 
+def _pw_tuple(version):
+    return tuple(int(x) for x in version.split('.'))
+
+
+def valid_playwright_version(version):
+    return bool(version) and re.fullmatch(r'\d+\.\d+\.\d+', version) is not None
+
+
+_PNPM_PW = re.compile(r"(?:^|[\s'\"/])(?:@playwright/test|playwright)(?:@|/)(\d+\.\d+\.\d+)(?=[\s:'\"(_]|$)", re.M)
+_YARN_HEAD = re.compile(r'(?:^|[\s"])(?:@playwright/test|playwright)@')
+_YARN_VERSION = re.compile(r'^\s+version:?\s+"?(\d+\.\d+\.\d+)"?\s*$')
+
+
+def playwright_in_pnpm(text):
+    """The resolved Playwright versions in a pnpm-lock.yaml (v5, v6 and v9 key styles)."""
+    return sorted(set(_PNPM_PW.findall(text or '')), key=_pw_tuple)
+
+
+def playwright_in_npm(text):
+    """The resolved versions in a package-lock.json (lockfile v1, v2 and v3)."""
+    try:
+        data = json.loads(text or 'null')
+    except ValueError:
+        return []
+    found = set()
+    if isinstance(data, dict):
+        for key, entry in (data.get('packages') or {}).items():
+            if key.endswith(('node_modules/@playwright/test', 'node_modules/playwright')) and isinstance(entry, dict):
+                found.add(entry.get('version'))
+        for name, entry in (data.get('dependencies') or {}).items():
+            if name in ('@playwright/test', 'playwright') and isinstance(entry, dict):
+                found.add(entry.get('version'))
+    return sorted((v for v in found if valid_playwright_version(v)), key=_pw_tuple)
+
+
+def playwright_in_yarn(text):
+    """The resolved versions in a yarn.lock (classic and berry)."""
+    found, in_block = set(), False
+    for line in (text or '').splitlines():
+        if line and not line[0].isspace() and not line.startswith('#'):
+            in_block = bool(_YARN_HEAD.search(line))
+        elif in_block:
+            m = _YARN_VERSION.match(line)
+            if m:
+                found.add(m.group(1))
+                in_block = False
+    return sorted(found, key=_pw_tuple)
+
+
+_PW_READERS = {'pnpm-lock.yaml': playwright_in_pnpm, 'package-lock.json': playwright_in_npm, 'yarn.lock': playwright_in_yarn}
+
+
+def detect_playwright(probe, repo_paths):
+    """The highest Playwright version found in the lockfiles of the local checkouts: (version, file) or (None, None)."""
+    best, where = None, None
+    for path in repo_paths or []:
+        for name in LOCKFILES:
+            file = os.path.join(path, name)
+            versions = _PW_READERS[name](probe.read_text(file))
+            if versions and (best is None or _pw_tuple(versions[-1]) > _pw_tuple(best)):
+                best, where = versions[-1], file
+    return best, where
+
+
+def resolve_playwright(probe, browsers, flag=None, repo_paths=None):
+    """(version, source text). Order: the flag, then the lockfiles, then the pin. None for browsers other than chromium."""
+    if browsers != 'chromium':
+        return None, None
+    if flag:
+        return flag, 'flag'
+    version, file = detect_playwright(probe, repo_paths)
+    if version:
+        return version, 'detected from %s' % file
+    return PLAYWRIGHT_VERSION, 'pinned'
+
+
 def browsers_note(browsers):
     """One plain sentence for the plan: what the image holds for browsers."""
     if browsers == 'chromium':
@@ -518,7 +596,7 @@ def browsers_note(browsers):
 
 
 def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, serial=None, limits=None, repo_path=None,
-         browsers='none'):
+         browsers='none', playwright_version=None, repo_paths=None, probe=None):
     """The steps, in the order of contract 6.3. A public repository gets no step; it is listed in `refused`.
 
     With no repositories given, they come from detect (`derive_repos`). With none derived either, the plan has no step
@@ -607,11 +685,13 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
                                    'wsl-restart'))
         old = found.get('pool_env') or {}
         browsers = browsers if browsers in BROWSERS else 'none'
+        pw, pw_source = resolve_playwright(probe or Probe(), browsers, playwright_version, repo_paths or ([repo_path] if repo_path else []))
+        pw_text = ' Playwright %s (%s).' % (pw, pw_source) if pw else ''
         steps.append(_step('pool-files', 'Write the pool files for "%s" (compose, agents.json, .env: POOL_MEM %s -> %sg, '
-                           'POOL_CPUS %s -> %s, POOL_BROWSERS %s). %s' % (
+                           'POOL_CPUS %s -> %s, POOL_BROWSERS %s). %s%s' % (
                                pool, old.get('POOL_MEM') or 'unset', (cap or {}).get('mem_gib', 4),
-                               old.get('POOL_CPUS') or 'unset', (cap or {}).get('cpus', 1), browsers, browsers_note(browsers)),
-                           'pool-files', pool=pool, cap=cap, browsers=browsers))
+                               old.get('POOL_CPUS') or 'unset', (cap or {}).get('cpus', 1), browsers, browsers_note(browsers), pw_text),
+                           'pool-files', pool=pool, cap=cap, browsers=browsers, playwright_version=pw))
         steps.append(_step('pool-up', 'Build and start the pool container', 'pool-up', pool=pool))
         for repo in keep_l:
             s = _step('agent:%s' % repo, 'Add one pool agent for %s' % repo, 'add-agent', repo=repo, pool=pool, slug=slug_of(repo))
@@ -747,7 +827,8 @@ def copy_lf(src, dst):
     shutil.copymode(src, dst)
 
 
-def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None, browsers='none'):
+def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None, browsers='none',
+                     playwright_version=None):
     """Write the pool folder. `.env` holds the cap and the machine dir only (D42); the database password is a 0600 file."""
     dest = dest or pool_dir(pool)
     os.makedirs(dest, exist_ok=True)
@@ -768,9 +849,10 @@ def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None, 
         if os.path.isfile(src):
             copy_lf(src, os.path.join(deliv, name))
     with open(os.path.join(dest, '.env'), 'w', encoding='utf-8') as f:
-        f.write('POOL_NAME=%s\nPOOL_CPUS=%s\nPOOL_MEM=%sg\nMACHINE_DIR=%s\nRUNNER_VERSION=%s\nPOOL_BROWSERS=%s\n' % (
+        f.write('POOL_NAME=%s\nPOOL_CPUS=%s\nPOOL_MEM=%sg\nMACHINE_DIR=%s\nRUNNER_VERSION=%s\nPOOL_BROWSERS=%s\nPLAYWRIGHT_VERSION=%s\n' % (
             pool, (cap or {}).get('cpus', 1), (cap or {}).get('mem_gib', 4), os.path.dirname(os.path.dirname(dest)),
-            runner_version or RUNNER_VERSION, browsers if browsers in BROWSERS else 'none'))
+            runner_version or RUNNER_VERSION, browsers if browsers in BROWSERS else 'none',
+            playwright_version if valid_playwright_version(playwright_version) else PLAYWRIGHT_VERSION))
     agents = os.path.join(dest, 'agents.json')
     if not os.path.exists(agents):
         with open(agents, 'w', encoding='utf-8') as f:
@@ -859,8 +941,12 @@ class Executor:
         cap = dict(step.get('cap') or {})
         if cap.get('cpus') is not None:
             cap['cpus'] = cap_cpus(cap['cpus'], docker_ncpu(self.probe))
-        dest = write_pool_files(step['pool'], cap, runner_version=version, browsers=step.get('browsers') or 'none')
-        return True, 'wrote %s (runner %s, %s)' % (dest, version, source)
+        dest = write_pool_files(step['pool'], cap, runner_version=version, browsers=step.get('browsers') or 'none',
+                                playwright_version=step.get('playwright_version'))
+        text = 'wrote %s (runner %s, %s)' % (dest, version, source)
+        if step.get('browsers') == 'chromium':
+            text += '; Playwright %s' % (step.get('playwright_version') or PLAYWRIGHT_VERSION)
+        return True, text
 
     def do_pool_up(self, step):
         version = read_pool_env(self.probe, step['pool']).get('RUNNER_VERSION') or RUNNER_VERSION
@@ -870,7 +956,9 @@ class Executor:
         if not sha:
             return False, 'could not read the SHA-256 of the runner release; the image is not built without it'
         browsers = read_pool_env(self.probe, step['pool']).get('POOL_BROWSERS') or 'none'
-        env = dict(os.environ, RUNNER_SHA256=sha, RUNNER_VERSION=version, POOL_BROWSERS=browsers)
+        pw = read_pool_env(self.probe, step['pool']).get('PLAYWRIGHT_VERSION')
+        pw = pw if valid_playwright_version(pw) else PLAYWRIGHT_VERSION
+        env = dict(os.environ, RUNNER_SHA256=sha, RUNNER_VERSION=version, POOL_BROWSERS=browsers, PLAYWRIGHT_VERSION=pw)
         p = subprocess.run(['docker', 'compose', 'up', '-d', '--build'], cwd=pool_dir(step['pool']), env=env,
                            capture_output=True, text=True)
         return p.returncode == 0, 'pool is up' if p.returncode == 0 else (p.stderr.strip()[-300:] or 'docker compose failed')
@@ -1067,7 +1155,9 @@ def main(argv=None):
     ap.add_argument('--windows-repos', default='')
     ap.add_argument('--pool', default='main')
     ap.add_argument('--browsers', choices=BROWSERS, default='none', help='add the Chromium system libraries to the pool image')
-    ap.add_argument('--repo-path', default=None, help='the local checkout of the repository (to check its workflows for CI_RUNS_ON)')
+    ap.add_argument('--repo-path', action='append', default=None,
+                    help='a local checkout of an agent repository (workflows checked for CI_RUNS_ON; lockfiles read for the Playwright version); repeatable')
+    ap.add_argument('--playwright-version', default=None, help='X.Y.Z; overrides the version found in the lockfiles (chromium only)')
     ap.add_argument('--total-gib', type=float)
     ap.add_argument('--used-gib', type=float)
     ap.add_argument('--cpus', type=float)
@@ -1087,7 +1177,11 @@ def main(argv=None):
                 return 1
             print(json.dumps(res, indent=2))
             return 0 if res['ok'] else 1
-        pl = plan(found, split(args.repos), split(args.windows_repos), args.pool, res, repo_path=args.repo_path, browsers=args.browsers)
+        if args.playwright_version and not valid_playwright_version(args.playwright_version):
+            print('--playwright-version must look like 1.62.1', file=sys.stderr)
+            return 2
+        pl = plan(found, split(args.repos), split(args.windows_repos), args.pool, res, repo_path=(args.repo_path or [None])[0],
+                  browsers=args.browsers, playwright_version=args.playwright_version, repo_paths=args.repo_path or [], probe=Probe())
         print(json.dumps(pl, indent=2))
         return 1 if pl['blocked'] else 0
     elif args.action == 'verify':

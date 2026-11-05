@@ -1152,3 +1152,95 @@ class BrowsersTests(unittest.TestCase):
         self.assertIn("need root to install packages, which pool jobs do not have: deps.yml, e2e.yml.", text)
         self.assertNotIn("clean.yml", text)
         self.assertIn("browsers: chromium", text)
+
+
+PNPM_V9 = "packages:\n\n  '@playwright/test@1.55.0':\n    resolution: {integrity: x}\n\n  playwright-core@1.55.0:\n    resolution: {integrity: y}\n\n  playwright@1.55.0:\n    resolution: {integrity: z}\n"
+PNPM_V6 = "packages:\n\n  /@playwright/test@1.49.1:\n    resolution: {integrity: x}\n"
+NPM_V3 = json.dumps({"lockfileVersion": 3, "packages": {"": {}, "node_modules/@playwright/test": {"version": "1.62.1"},
+                                                         "node_modules/playwright-core": {"version": "9.9.9"}}})
+NPM_V1 = json.dumps({"lockfileVersion": 1, "dependencies": {"@playwright/test": {"version": "1.40.0"}}})
+YARN_V1 = '"@playwright/test@^1.40.0", "@playwright/test@^1.41.0":\n  version "1.41.2"\n  resolved "x"\n\nleft-pad@^1.0.0:\n  version "9.9.9"\n'
+YARN_BERRY = '"@playwright/test@npm:^1.50.0":\n  version: 1.50.1\n  resolution: "@playwright/test@npm:1.50.1"\n'
+
+
+class PlaywrightVersionTests(unittest.TestCase):
+    def files(self, **by_path):
+        return FakeProbe({path: text for path, text in by_path.items()})
+
+    def test_each_lockfile_format(self):
+        self.assertEqual(P.playwright_in_pnpm(PNPM_V9), ["1.55.0"])
+        self.assertEqual(P.playwright_in_pnpm(PNPM_V6), ["1.49.1"])
+        self.assertEqual(P.playwright_in_npm(NPM_V3), ["1.62.1"])
+        self.assertEqual(P.playwright_in_npm(NPM_V1), ["1.40.0"])
+        self.assertEqual(P.playwright_in_yarn(YARN_V1), ["1.41.2"])
+        self.assertEqual(P.playwright_in_yarn(YARN_BERRY), ["1.50.1"])
+        self.assertEqual(P.playwright_in_npm("not json"), [])
+        self.assertEqual(P.playwright_in_pnpm(None), [])
+
+    def test_highest_wins_across_repos_and_files(self):
+        probe = self.files(**{"C:/Work/a/pnpm-lock.yaml": PNPM_V6, "C:/Work/b/yarn.lock": YARN_BERRY, "C:/Work/b/package-lock.json": NPM_V1})
+        self.assertEqual(P.detect_playwright(probe, ["C:/Work/a", "C:/Work/b"]), ("1.50.1", os.path.join("C:/Work/b", "yarn.lock")))
+        self.assertEqual(P.detect_playwright(self.files(**{"C:/Work/a/package-lock.json": NPM_V3, "C:/Work/b/pnpm-lock.yaml": PNPM_V9}),
+                                             ["C:/Work/a", "C:/Work/b"])[0], "1.62.1")
+
+    def test_ten_is_higher_than_nine(self):
+        probe = self.files(**{"C:/Work/a/pnpm-lock.yaml": PNPM_V6.replace("1.49.1", "1.9.0"), "C:/Work/b/pnpm-lock.yaml": PNPM_V6.replace("1.49.1", "1.10.0")})
+        self.assertEqual(P.detect_playwright(probe, ["C:/Work/a", "C:/Work/b"])[0], "1.10.0")
+
+    def test_order_flag_then_detected_then_pin(self):
+        probe = self.files(**{"C:/Work/a/pnpm-lock.yaml": PNPM_V9})
+        self.assertEqual(P.resolve_playwright(probe, "chromium", "1.70.0", ["C:/Work/a"]), ("1.70.0", "flag"))
+        version, source = P.resolve_playwright(probe, "chromium", None, ["C:/Work/a"])
+        self.assertEqual(version, "1.55.0")
+        self.assertTrue(source.startswith("detected from "))
+        self.assertIn("pnpm-lock.yaml", source)
+        self.assertEqual(P.resolve_playwright(probe, "chromium", None, []), (P.PLAYWRIGHT_VERSION, "pinned"))
+        self.assertEqual(P.resolve_playwright(probe, "none", "1.70.0", ["C:/Work/a"]), (None, None))
+
+    def test_pin_is_the_same_everywhere(self):
+        self.assertEqual(P.PLAYWRIGHT_VERSION, "1.62.1")
+        self.assertIn("ARG PLAYWRIGHT_VERSION=1.62.1", (POOL / "Dockerfile").read_text())
+        self.assertIn("PLAYWRIGHT_VERSION: ${PLAYWRIGHT_VERSION:-1.62.1}", (POOL / "compose.yaml").read_text())
+
+    def test_plan_step_names_version_and_source(self):
+        found = P.detect(FakeProbe(dict(FILES)))
+        probe = self.files(**{"C:/Work/a/pnpm-lock.yaml": PNPM_V9})
+        step = lambda **k: next(s for s in P.plan(found, ["owner/example-app"], probe=probe, **k)["steps"] if s["id"] == "pool-files")
+        s = step(browsers="chromium", repo_paths=["C:/Work/a"])
+        self.assertEqual(s["playwright_version"], "1.55.0")
+        self.assertIn("Playwright 1.55.0 (detected from", s["title"])
+        s = step(browsers="chromium", repo_paths=["C:/Work/a"], playwright_version="1.60.0")
+        self.assertIn("Playwright 1.60.0 (flag)", s["title"])
+        s = step(browsers="chromium")
+        self.assertIn("Playwright 1.62.1 (pinned)", s["title"])
+        self.assertNotIn("Playwright", step()["title"])
+
+    def test_env_and_build_arg_carry_the_version(self):
+        with tempfile.TemporaryDirectory() as d:
+            dest = os.path.join(d, "pools", "main")
+            P.write_pool_files("main", {"cpus": 2.0, "mem_gib": 6.0}, dest=dest, browsers="chromium", playwright_version="1.55.0")
+            self.assertIn("PLAYWRIGHT_VERSION=1.55.0", Path(dest, ".env").read_text())
+            P.write_pool_files("main", {"cpus": 2.0, "mem_gib": 6.0}, dest=dest, playwright_version="bad")
+            self.assertIn("PLAYWRIGHT_VERSION=1.62.1", Path(dest, ".env").read_text())
+        probe = FakeProbe()
+        probe.read_text = lambda path: "RUNNER_VERSION=2.400.1\nPOOL_BROWSERS=chromium\nPLAYWRIGHT_VERSION=1.55.0\n"
+        seen = {}
+        orig, orig_sha = P.subprocess.run, P.runner_sha
+        P.subprocess.run = lambda argv, **k: seen.update(env=k.get("env")) or type("R", (), {"returncode": 0, "stderr": ""})()
+        P.runner_sha = lambda probe, version=None: "a" * 64
+        try:
+            ok, _ = P.Executor(probe).run({"action": "pool-up", "pool": "main"})
+        finally:
+            P.subprocess.run, P.runner_sha = orig, orig_sha
+        self.assertTrue(ok)
+        self.assertEqual(seen["env"]["PLAYWRIGHT_VERSION"], "1.55.0")
+
+    def test_flag_form_is_checked(self):
+        for bad in ("1.62", "v1.62.1", "1.62.1-beta", ""):
+            self.assertFalse(P.valid_playwright_version(bad))
+        self.assertTrue(P.valid_playwright_version("1.62.1"))
+        err = StringIO()
+        from contextlib import redirect_stderr
+        with redirect_stderr(err), redirect_stdout(StringIO()):
+            rc = P.main(["plan", "--browsers", "chromium", "--playwright-version", "1.62", "--total-gib", "16", "--cpus", "8"])
+        self.assertEqual(rc, 2)
