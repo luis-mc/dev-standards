@@ -62,10 +62,73 @@ One numbered section per shared component. A part that nearly fits is extended w
 
 ## 9. Dialog and sheet
 
-- **Used for:** the one question card that asks first (Cancel left, the action right). A sheet is the same card sliding in on a small screen.
+- **Used for:** one overlay component with three forms, chosen by screen width and by purpose (UX-43). On a small screen it is a bottom sheet. On a wider screen it is a centred dialog when it changes data, or an anchored popover when it only changes the view. The one question card that asks first (Cancel left, the action right) is the dialog form (UX-9).
 - **Source:** `src/ui/dialog`
-- **Rules:** UX-9, UX-17, UX-16, UX-35.
+- **Rules:** UX-9, UX-17, UX-16, UX-35, UX-43, UX-44, UX-45, UX-46, UX-47, UX-48.
 - **Guard:** none yet.
+
+### Forms
+
+| Form | When | Behaviour |
+|---|---|---|
+| Bottom sheet | Below `--ds-bp-sm` (600px), for both purposes | Slides up from the bottom edge. Full width. The page behind is dimmed. |
+| Dialog | At `--ds-bp-sm` and wider, when it changes data (a question, a form, a confirm) | Centred. The page behind is dimmed. It is modal. |
+| Popover | At `--ds-bp-sm` and wider, when it only changes the view (a filter, a sort, a display choice) | Anchored to its opener. No dimming. It closes on a click outside. |
+
+A small-screen popover is a bottom sheet, so a thumb always reaches it. One component renders all three; a screen never builds its own overlay (UX-2).
+
+### Anatomy
+
+1. **Handle.** A short bar at the top edge of a bottom sheet that can be dragged down to close it. A dialog and a popover have none. A sheet without a drag has none either. The handle is decoration: the close button is the real control (UX-17).
+2. **Header.** The title (a section title, one line) and a close button (at least `--ds-target-min` square, labelled "Close"). The title is what the overlay is named by.
+3. **Body.** The content. It is the only part that scrolls. The header and footer stay in view.
+4. **Footer.** The one primary action on the right, and Cancel on the left (UX-4, UX-24). A view-only popover has no footer: its choices apply at once, and the close button ends it.
+
+### Sizes
+
+| Size | Width | Use |
+|---|---|---|
+| Sheet | the full screen width, at most 90% of the screen height | small screens |
+| Small dialog | `28rem` | a question with a short line |
+| Medium dialog | `40rem` | a form |
+| Popover | the width of its content, at most `20rem` | a few view choices |
+
+The body scrolls when the content is taller than the space. The overlay never grows past the screen (UX-16).
+
+### Tokens
+
+- Surface: `--ds-color-surface`. Dimmed page: a `--ds-color-text` layer at a low opacity. Edge: `--ds-color-divider` and `--ds-hairline`.
+- Corners: `--ds-radius-3`. Shadow: `--ds-shadow-3`.
+- Gaps: `--ds-space-4` inside the header, body and footer; `--ds-space-3` between footer buttons.
+- Z-order: `--ds-z-overlay` for the dimmed page, `--ds-z-dialog` for the overlay, `--ds-z-menu` for a popover.
+- Motion: `--ds-duration-slow` for a sheet, `--ds-duration-base` for a dialog or popover, with `--ds-ease`.
+- Focus ring: `--ds-focus-width`, `--ds-focus-offset`, `--ds-color-focus`.
+
+### Behaviour
+
+- **Focus trap.** While a modal form is open, Tab and Shift+Tab move only between controls inside it. The page behind is inert.
+- **Escape closes.** Escape closes every form and counts as Cancel. A form with unsaved input asks first.
+- **Focus in and out.** On open, focus goes to the safe choice: the first field of a form, or Cancel in a question. On close, focus returns to the opener (UX-35). If the opener is gone, focus goes to the page's heading.
+- **Scroll lock.** While a modal form is open, the page behind does not scroll, and it does not jump when the lock starts or ends. A popover does not lock.
+- **Outside click.** A click on the dimmed page closes a popover. It closes a sheet or dialog only when nothing is entered.
+- **Motion.** A sheet slides up and a dialog fades in, both short (UX-36). Under `prefers-reduced-motion` the overlay appears and goes at once (UX-17).
+
+### Accessibility
+
+- The overlay has `role="dialog"`. A question that needs an answer before anything else uses `role="alertdialog"`.
+- A modal form has `aria-modal="true"`. A popover is not modal and does not set it.
+- It is labelled by its title (`aria-labelledby`). A line of explanation is its description (`aria-describedby`).
+- The close button has a text name. The handle is hidden from assistive technology.
+- Contrast and the focus ring follow UX-17 in every theme.
+
+### When not to use it
+
+- To tell the user something: use a message or the banner (component 18).
+- For a guided flow of steps: use a wizard (component 4).
+- For content the page needs to work: put it on the page (UX-14). An overlay is for a short, focused task.
+- For a long form or a task of several steps: use a page.
+- For a list of actions at the end of a card: use buttons in the card (UX-37).
+- For one more overlay on top of an overlay: change the first one instead. Never stack them.
 
 ## 10. Pager
 
