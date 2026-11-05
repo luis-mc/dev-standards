@@ -49,6 +49,12 @@ Every rule has an ID. A feature spec and the code cite the ID (`design system UX
 | UX-40 | **Use a slider only for a number on a range.** It has a visible name and shows its value in words. It works with arrow keys, and its hit area is at least 44 px. A choice of a few named answers uses UX-22 instead. | none yet |
 | UX-41 | **Show, don't only tell.** Use a picture where it helps: a chart for numbers over time, a bar for anything that runs. A picture supports the words beside it, never replaces the next action, and has a text equivalent (UX-17). | none yet |
 | UX-42 | **An action bar puts its reason above the buttons.** While it works, the primary stays in place and says that it is running. | none yet |
+| UX-43 | **One overlay, three forms.** A small screen gets a bottom sheet. A wider screen gets a centred dialog when the overlay changes data, or an anchored popover when it only changes the view. A screen never builds its own. | none yet |
+| UX-44 | **An overlay has a title, a close button and one primary.** The title names it. The close button is at least 44 px. The footer holds Cancel on the left and the one primary action on the right. Only the body scrolls. | none yet |
+| UX-45 | **A modal overlay traps focus and locks the page.** Tab stays inside it, the page behind is inert and does not scroll, and the page does not jump when the lock starts or ends. | none yet |
+| UX-46 | **Escape closes an overlay.** It counts as Cancel. An overlay with unsaved input asks first (UX-9). A click outside closes a popover. | none yet |
+| UX-47 | **An overlay is named for assistive technology.** It has role dialog, is labelled by its title, and sets aria-modal when it is modal. | none yet |
+| UX-48 | **An overlay is never stacked on an overlay.** One opens at a time. A second step replaces the first, or becomes a page. | none yet |
 <!-- rule-table:end -->
 
 ## How to add a rule
