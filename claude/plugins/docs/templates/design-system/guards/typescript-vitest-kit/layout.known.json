@@ -1,0 +1,4 @@
+{
+  "comment": "The known breaches of the DOM layout guard (dom-layout.ts). A RATCHET: the list only shrinks. Each entry: screen, width (360, 393, 1300 or \"*\"), rule (overflow, gap, left-edge, button-width, primary-in-view) and the task that removes it. Remove an entry when its breach is gone; the guard fails for a listed breach that no longer happens and for any breach not listed. Never add an entry: fix the code with shared UI parts instead.",
+  "entries": []
+}

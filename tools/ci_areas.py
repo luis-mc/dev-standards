@@ -149,6 +149,10 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"\.claude-plugin/marketplace\.json", frozenset({"profiles"})),
     # transcript-folds (its .claude-plugin/ manifest is matched above: nothing heavy)
     (r"claude/plugins/transcript-folds/.*", frozenset({"transcript-folds"})),
+    # the design-system enforcement kit test (docs job) also covers these two scripts
+    (r"claude/plugins/delivery/scripts/hook_design_edit\.py", frozenset({"delivery", "docs"})),
+    (r"claude/plugins/artifacts/scripts/plan_rows_check\.py", frozenset({"artifacts", "docs"})),
+    (r"tools/test_ds_enforcement\.py", frozenset({"docs"})),
     # docs (SKILL.md and the manifest are matched above)
     (r"claude/plugins/docs/references/.*", frozenset({"specs", "docs"})),
     (r"claude/plugins/docs/.*", frozenset({"docs"})),

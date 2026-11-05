@@ -15,8 +15,14 @@ consecutive blocks in one session with no change in what is pending it lets the
 turn end and prints a systemMessage instead (R8.4), so a session that cannot
 publish never loops. It never commits or pushes (AR50): it only reads the record (INV-4).
 
+It also checks the plan rows of a report written in the turn (owner decision D238): a report under docs/work/
+named like plan, audit, report or findings (`*.md`, changed after the turn start that hook_turn_start.py stamped on
+UserPromptSubmit, D246; without a stamp, changed in the last 2 hours; and not yet found clean) whose
+numbered rows under a Plan, Proposed, Proposals or Findings heading have no task in the registry (the row key `<tag>#<id>` in a task's item or detail, see
+plan_rows_check.py) blocks the stop and lists the `task-add` lines. It reads the registry only.
+
 Per-session state: <repo>/.claude/artifacts-stop-state.json, shaped
-{session_id: {"blocks": n, "last": <hash of what was pending>,
+{"turn:<session_id>": {"start": <epoch>}, session_id: {"blocks": n, "last": <hash of what was pending>,
 "background": {"started": <time>, ...}}}.
 
 Seam for tests: CLAUDE_ARTIFACTS_SCRIPT overrides the path of project_artifacts.py.
@@ -27,7 +33,9 @@ import hashlib
 import io
 import json
 import os
+import re
 import sys
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -43,6 +51,12 @@ try:
     import artifact_hourly as H
 except ImportError:      # a broken install: the hourly and overdue checks are skipped
     H = None
+try:
+    import plan_rows_check as PRC
+except ImportError:      # a broken install: the plan-rows check is skipped
+    PRC = None
+PLAN_REPORT_RE = re.compile(r'(^|[-_ ])(plan|audit|report|findings)[^/]*[.]md$', re.I)
+PLAN_WINDOW = 2 * 3600   # without a turn-start stamp a report counts as written in this turn when it changed in the last 2 hours
 BACKGROUND_NOTE = 'work started in the background with no Running task'
 MIGRATION_NOTE = 'the artifact record needs migrating (run render)'
 
@@ -164,18 +178,94 @@ def freshness(root, manifest, artifacts):
     return stale, H.overdue_tasks(tasks, manifest)
 
 
-def fingerprint(artifacts, queue, background=False, migration=False, stale=(), overdue=()):
+def turn_start(state, sid):
+    """The epoch time hook_turn_start.py stamped for this session's turn; None when there is no usable stamp."""
+    entry = state.get('turn:' + sid)
+    start = entry.get('start') if isinstance(entry, dict) else None
+    return float(start) if isinstance(start, (int, float)) and not isinstance(start, bool) else None
+
+
+def plan_report_files(root, since=None):
+    """(relative path, absolute path, mtime) of the report-like Markdown files under docs/work/ changed since
+    `since` (the turn start); with no stamp, only those changed in the last PLAN_WINDOW seconds."""
+    found = []
+    base = os.path.join(root, 'docs', 'work')
+    now = time.time()
+    for folder, _dirs, names in os.walk(base):
+        for n in names:
+            if not PLAN_REPORT_RE.search(n) or n.upper() == 'BRIEF.MD':
+                continue
+            full = os.path.join(folder, n)
+            try:
+                mtime = os.path.getmtime(full)
+            except OSError:
+                continue
+            if (mtime >= since) if since is not None else (now - mtime <= PLAN_WINDOW):
+                found.append((os.path.relpath(full, root).replace(os.sep, '/'), full, mtime))
+    return sorted(found)
+
+
+def plan_untasked(root, manifest, sid):
+    """Rows of the reports written in this turn that no task carries: a list of row dicts (with a 'report' key).
+    Reports found clean are remembered per session and file mtime, so they are not read again. [] when
+    nothing is wrong or anything cannot be read (fail open)."""
+    if PRC is None:
+        return []
+    state_path = os.path.join(root, STATE_NAME)
+    state = read_state(state_path)
+    files = plan_report_files(root, turn_start(state, sid))
+    if not files:
+        return []
+    seen = state.get('plan:' + sid) if isinstance(state.get('plan:' + sid), dict) else {}
+    todo = [f for f in files if seen.get(f[0]) != f[2]]
+    if not todo:
+        return []
+    tasks = registry_tasks(root, manifest)
+    if tasks is None:
+        return []
+    missing = []
+    changed = False
+    for rel, full, mtime in todo:
+        try:
+            with open(full, encoding='utf-8') as f:
+                rows = PRC.find_rows(f.read(), PRC.tag_for(PRC.Path(rel)))
+        except OSError:
+            continue
+        bad = PRC.untasked(rows, tasks)
+        if bad:
+            missing.extend(dict(r, report=rel) for r in bad)
+        else:
+            seen[rel] = mtime
+            changed = True
+    if changed:
+        state.pop('plan:' + sid, None)
+        state['plan:' + sid] = seen
+        write_state(state_path, state)
+    return missing
+
+
+def build_plan_reason(script, rows):
+    py = 'python "%s"' % script
+    out = ['Numbered rows under a Plan, Proposed, Proposals or Findings heading of a report written this turn have no task. Task each one now, in this turn, with its '
+           'key in the task detail (the key is <tag>#<id>), or move the row under a "Not proposed" heading with a reason:']
+    for r in rows:
+        out.append('- %s (%s): %s. Run: %s %s' % (r['key'], r['report'], r['text'][:100], py, PRC.task_add_line(r)))
+    return chr(10).join(out)
+
+
+def fingerprint(artifacts, queue, background=False, migration=False, stale=(), overdue=(), plan=()):
     """Stable hash of what is pending (keys and queued changes, not wording)."""
     parts = sorted([['artifact', str(a.get('key'))] for a in artifacts]
                    + [['event', str(e.get('id')), str(e.get('suggested_status'))] for e in queue]
                    + ([['background']] if background else [])
                    + ([['migration']] if migration else [])
                    + [['stale', 'hourly' if r.startswith('Full Progress') else r.split()[2]] for r in stale]
-                   + [['overdue', str(t.get('id')), str(t.get('expected'))] for t, _w in overdue])
+                   + [['overdue', str(t.get('id')), str(t.get('expected'))] for t, _w in overdue]
+                   + [['plan', str(r.get('key'))] for r in plan])
     return hashlib.sha256(json.dumps(parts).encode('utf-8')).hexdigest()[:16]
 
 
-def describe(artifacts, queue, background=False, migration=False, stale=(), overdue=()):
+def describe(artifacts, queue, background=False, migration=False, stale=(), overdue=(), plan=()):
     """One line per pending item, for the systemMessage."""
     lines = ['%s (%s)' % (a.get('title') or a.get('key'), a.get('file', '')) for a in artifacts]
     lines += ['%s -> %s' % (e.get('id'), e.get('suggested_status')) for e in queue]
@@ -185,6 +275,7 @@ def describe(artifacts, queue, background=False, migration=False, stale=(), over
         lines.append(MIGRATION_NOTE)
     lines += list(stale)
     lines += [H.overdue_text(t) for t, _w in overdue]
+    lines += ['plan row %s has no task' % r.get('key') for r in plan]
     return '; '.join(lines)
 
 
@@ -314,6 +405,11 @@ def main():
         stale, overdue = [], []
     state_path = os.path.join(root, STATE_NAME)
     sid = str(data.get('session_id') or 'default')
+    try:
+        plan = plan_untasked(root, manifest, sid)
+    except Exception as exc:
+        warn('plan-rows check skipped (%s: %s)' % (type(exc).__name__, exc))
+        plan = []
     state = read_state(state_path)
     entry = state.get(sid) if isinstance(state.get(sid), dict) else {}
     marker = entry.get('background') if isinstance(entry.get('background'), dict) else None
@@ -349,7 +445,7 @@ def main():
         warn('deferred publish not listed (%s: %s)' % (type(exc).__name__, exc))
         told_deferred = ''
     told = '\n'.join(part for part in (told, told_deferred) if part)
-    if not artifacts and not queue and not background and not migration and not stale and not overdue:
+    if not artifacts and not queue and not background and not migration and not stale and not overdue and not plan:
         state = read_state(state_path)
         if sid in state:
             del state[sid]
@@ -358,7 +454,7 @@ def main():
             print(json.dumps({'systemMessage': told}))
         return 0
     state = read_state(state_path)
-    digest = fingerprint(artifacts, queue, background, migration, stale, overdue)
+    digest = fingerprint(artifacts, queue, background, migration, stale, overdue, plan)
     blocks = entry.get('blocks', 0) if entry.get('last') == digest else 0
     if not isinstance(blocks, int):
         blocks = 0
@@ -370,7 +466,7 @@ def main():
         print(json.dumps({'systemMessage': '\n'.join(filter(None, [(
             'luismc-artifacts: letting the turn end after %d blocks with no change. Still unpublished, '
             'unapplied, unrecorded or unmigrated: %s. Run `pending` in the next session.'
-            % (BLOCK_LIMIT, describe(artifacts, queue, background, migration, stale, overdue))), told]))}))
+            % (BLOCK_LIMIT, describe(artifacts, queue, background, migration, stale, overdue, plan))), told]))}))
         return 0
     state.pop(sid, None)   # keeps the most recently used session last
     new = {'blocks': blocks + 1, 'last': digest}
@@ -389,6 +485,8 @@ def main():
         parts.append(build_overdue_reason(script, overdue))
     if background:
         parts.append(build_background_reason(script))
+    if plan:
+        parts.append(build_plan_reason(script, plan))
     out = {'decision': 'block', 'reason': '\n\n'.join(parts)}
     if told:
         out['systemMessage'] = told

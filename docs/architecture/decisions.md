@@ -145,6 +145,17 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D92 | What happens to the overnight watcher now the owner is back? | Stop it now | decided | 2026-11-05 |
 | delivery-speed | D93 | Change the user-level questions Stop hook to the if/else python fallback? | Change it | decided | 2026-11-05 |
 | delivery-speed | D94 | How are the TypeScript design-system guard templates tested? | Add a CI job | decided | 2026-11-05 |
+| delivery-speed | D95 | Should the SessionStart effort_drift.py hook use the same if/else python fallback as the Stop hook? | Change it | decided | 2026-11-05 |
+| design-field-updates | D1 | Which of the 35 proposals go into the starter? | All 35 | decided | 2026-11-05 |
+| design-field-updates | D10 | K1: what does the first design breach do? | Warn only | decided | 2026-11-05 |
+| design-field-updates | D2 | What about Project A's draft items (card frame, two-level section header, settings that save by themselves)? | Wait for its approval | decided | 2026-11-05 |
+| design-field-updates | D3 | How should DS4 (stale gallery) behave on branches? | Rebuild at join and promote | decided | 2026-11-05 |
+| design-field-updates | D4 | May a frozen version take link-only edits after files move? | Yes, link targets only | decided | 2026-11-05 |
+| design-field-updates | D5 | Should the starter ask for 7:1 contrast for body text in the dark theme? | Keep AA, mention 7:1 | decided | 2026-11-05 |
+| design-field-updates | D6 | When does the work start? | After DS189 and DSY99 | decided | 2026-11-05 |
+| design-field-updates | D7 | How should DSY99 land? | Fix here, then release | decided | 2026-11-05 |
+| design-field-updates | D8 | How do DSY99 and DU2-DU7 ship? | Two releases | decided | 2026-11-05 |
+| design-field-updates | D9 | K3: what counts as a plan row? | Rows under plan headings | decided | 2026-11-05 |
 | design-starter | D1 | Which starter should the docs plugin ship? | C+E now | decided | 2026-11-01 |
 | design-starter | D10 | What happens when a token a sample needs is missing or not a plain value? | Draw with a marked fallback | decided | 2026-11-02 |
 | design-starter | D11 | Which bar do the contrast marks use? | WCAG 2.2 AA | decided | 2026-11-02 |

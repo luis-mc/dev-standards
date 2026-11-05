@@ -1,5 +1,5 @@
 {
-  "description": "luismc-artifacts: queue status events after commands, note background work, keep Full Progress published (once, at the end of a turn) and background work recorded, deliver the rule, migrate the old record worktree and catch up at session start; no hook commits, pushes or runs any git or gh write (ARTIFACTSPEC 1.10.0, section 8)",
+  "description": "luismc-artifacts: queue status events after commands, note background work, stamp the turn start, keep Full Progress published (once, at the end of a turn) and background work recorded, deliver the rule, migrate the old record worktree and catch up at session start; no hook commits, pushes or runs any git or gh write (ARTIFACTSPEC 1.10.0, section 8)",
   "hooks": {
     "PostToolUse": [
       {
@@ -32,6 +32,17 @@
             "type": "command",
             "command": "if command -v python3 >/dev/null 2>&1; then python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_end_of_turn.py\"; else python \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_end_of_turn.py\"; fi",
             "timeout": 180
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v python3 >/dev/null 2>&1; then python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_turn_start.py\"; else python \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_turn_start.py\"; fi",
+            "timeout": 10
           }
         ]
       }

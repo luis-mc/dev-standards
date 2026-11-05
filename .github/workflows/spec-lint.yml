@@ -686,3 +686,8 @@ jobs:
       # design_system.py, vitest (exact version, temp dir only) runs the four files.
       - name: Run the design-system guard templates
         run: python3 -I tools/test_ds_guard_templates.py
+
+      # The enforcement kit: its Python checks, the design edit hook, the plan-rows
+      # check, and the kit's TypeScript self-tests under the Node shim (Node 24 above).
+      - name: Prove the design-system enforcement kit still holds
+        run: python3 -I tools/test_ds_enforcement.py

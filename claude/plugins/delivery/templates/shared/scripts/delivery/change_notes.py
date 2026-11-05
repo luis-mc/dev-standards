@@ -44,7 +44,13 @@ spec path -> heading overriding that for one spec; "" means the spec has no chan
 log, so only its version is guarded and bumped), "plugins" (globs of plugin
 manifests whose "version" is guarded; default none), "release_branches" (globs;
 default *-integration and release/*), "default_branch" (default main),
-"plugin_notes_required" (default false), "plugin_note_exempt" (globs; default none).
+"plugin_notes_required" (default false), "plugin_note_exempt" (globs; default none),
+"known_lists" (globs of known-breach lists that only shrink; default scripts/design/*.known.json).
+
+Known lists (owner decision D235): a JSON file with "entries" (objects, each optionally with a numeric
+"count", default 1). check fails a branch diff that adds an entry or raises a count in such a file that already
+exists at the base. A file new at the base is the kit's install change and is accepted as it is; removing
+entries and lowering counts is always fine.
 
 Python 3.11+, standard library only. Exit: 0 ok, 1 offences found, 2 usage or
 configuration error.
@@ -54,6 +60,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import fnmatch
+import json
 import re
 import sys
 from pathlib import Path
@@ -67,6 +74,7 @@ KINDS = ("patch", "minor", "major")
 PLUGIN_VERSION_RE = re.compile(r'^(\s*"version"\s*:\s*")(\d+)\.(\d+)\.(\d+)(".*)$')
 VERSION_RE = re.compile(r"^(\*\*Version:\*\*\s*)(\d+)\.(\d+)\.(\d+)(.*)$")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
+KNOWN_LISTS = ("scripts/design/*.known.json",)
 HUNK_RE = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 
 
@@ -119,6 +127,8 @@ def load_config(root: Path, config: str | None) -> dict:
         cfg = dc.load_gate(root)
         where = dc.GATE_JSON_PATH
     cfg["plugins"] = dc._str_list(cfg, "plugins", where)
+    cfg.setdefault("known_lists", list(KNOWN_LISTS))
+    cfg["known_lists"] = dc._str_list(cfg, "known_lists", where)
     notes_dir = cfg.setdefault("notes_dir", NOTES_DIR)
     if not isinstance(notes_dir, str) or not notes_dir.strip("/") or notes_dir.startswith("/") or ".." in notes_dir.split("/"):
         raise dc.DeliveryError("%s: 'notes_dir' must be a relative folder inside the repository" % where)
@@ -143,6 +153,52 @@ def is_spec(path: str, cfg: dict) -> bool:
     if path.startswith(cfg["notes_dir"] + "/"):
         return False
     return any(glob_to_re(g).match(path) for g in cfg["specs"])
+
+
+def is_known_list(path: str, cfg: dict) -> bool:
+    return any(glob_to_re(g).match(path) for g in cfg["known_lists"])
+
+
+def known_weights(text: str | None) -> dict[str, int] | None:
+    """entry (JSON without its count) -> count, for the text of a known list; None when it cannot be read."""
+    if text is None:
+        return {}
+    try:
+        data = json.loads(text)
+        entries = data["entries"]
+        weights: dict[str, int] = {}
+        for e in entries:
+            count = e.get("count", 1)
+            key = json.dumps({k: v for k, v in e.items() if k != "count"}, sort_keys=True, ensure_ascii=False)
+            weights[key] = weights.get(key, 0) + (count if isinstance(count, (int, float)) and not isinstance(count, bool) else 1)
+        return weights
+    except (ValueError, KeyError, TypeError, AttributeError):
+        return None
+
+
+def known_list_offences(root: Path, base: str, path: str, new: str = "HEAD") -> list[str]:
+    """Entries a branch adds to, or counts it raises in, a known list that exists at the base (it only shrinks)."""
+    old_lines = show(root, base, path)
+    if old_lines is None:  # new at the base: the install change
+        return []
+    if new:
+        new_lines = show(root, new, path)
+    else:
+        p = dc.run_git(["show", ":" + path], cwd=root, check=False)
+        new_lines = p.stdout.splitlines() if p.returncode == 0 else None
+    if new_lines is None:  # deleted
+        return []
+    before = known_weights(chr(10).join(old_lines))
+    after = known_weights(chr(10).join(new_lines))
+    if after is None:
+        return ["%s: the known list is not valid JSON with an \"entries\" array" % path]
+    found = []
+    for key, n in sorted(after.items()):
+        was = (before or {}).get(key, 0)
+        if n > was:
+            found.append("%s: known-list entry %s %s (count %s -> %s): a known list only shrinks. Fix the code, or make this the kit's install change"
+                         % (path, key, "added" if was == 0 else "raised", was, n))
+    return found
 
 
 def plugin_dir(manifest: str) -> str:
@@ -329,7 +385,7 @@ def read_notes(root: Path, cfg: dict) -> tuple[list[Note], list[str]]:
 # --------------------------------------------------------------------------
 
 def path_offences(root: Path, cfg: dict, base: str, new: str, path: str) -> list[str]:
-    """What one changed path breaks: a CHANGELOG file, a spec's version or change log, a plugin's version.
+    """What one changed path breaks: a CHANGELOG file, a spec's version or change log, a plugin's version, a known list that grew.
     `new` is the ref the change ends at, or "" for the index (the staged changes)."""
     if re.match(r"(?i)^changelog", path.rsplit("/", 1)[-1]):
         return ["%s: a changelog file is changed" % path]
@@ -337,6 +393,8 @@ def path_offences(root: Path, cfg: dict, base: str, new: str, path: str) -> list
         return spec_offences(root, base, path, heading_for(cfg, path), new)
     if is_plugin(path, cfg):
         return plugin_offences(root, base, path, new)
+    if is_known_list(path, cfg):
+        return known_list_offences(root, base, path, new)
     return []
 
 
