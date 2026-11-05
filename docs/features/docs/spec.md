@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 0.7.0
+version: 0.8.0
 owner: agents
 type: reference
 code:
@@ -162,6 +162,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.8.0 | 2026-11-05 | RELEASE-46 | The design-system template has a full Dialog and sheet component and rules UX-43 to UX-48. | DS189 |
 | 0.7.0 | 2026-11-05 | RELEASE-45 | Design-system enforcement kit templates (TypeScript and Vitest only; no app CSS scan, DOM layout checker, wizard harness with ten required states), a UI brief checklist written by design_system.py brief, and R15.9. | DSY99 |
 | 0.6.2 | 2026-11-05 | RELEASE-43 | Design system versions moved to docs/archive/ are not a numbering gap. | DS187 |
 | 0.6.1 | 2026-11-04 | RELEASE-42 | Review fixes: new files listed one by one, UTF-8 git output, BOM ignored, own-doc notes only clear M1, real default branch recorded, no-base warning, real approval dates. | DS184 |
