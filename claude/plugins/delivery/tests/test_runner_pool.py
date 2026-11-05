@@ -1244,3 +1244,15 @@ class PlaywrightVersionTests(unittest.TestCase):
         with redirect_stderr(err), redirect_stdout(StringIO()):
             rc = P.main(["plan", "--browsers", "chromium", "--playwright-version", "1.62", "--total-gib", "16", "--cpus", "8"])
         self.assertEqual(rc, 2)
+
+
+class BaseImageTests(unittest.TestCase):
+    """DL71: pnpm's standalone binary needs libatomic1; pool-check proves the image has it."""
+
+    def test_dockerfile_installs_libatomic_and_common_tools(self):
+        df = (POOL / "Dockerfile").read_text()
+        for pkg in ("libatomic1", "xz-utils", "unzip", "zip", "jq"):
+            self.assertIn(pkg, df)
+
+    def test_pool_check_checks_libatomic(self):
+        self.assertIn("libatomic.so.1", (POOL / "pool-check.yml").read_text())

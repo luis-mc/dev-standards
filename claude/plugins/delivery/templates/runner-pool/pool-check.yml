@@ -15,3 +15,8 @@ jobs:
           echo "runner: $RUNNER_NAME"
           echo "os: $RUNNER_OS"
           echo "hooks: $ACTIONS_RUNNER_HOOK_JOB_STARTED / $ACTIONS_RUNNER_HOOK_JOB_COMPLETED"
+      - name: Check the libraries and tools common actions assume
+        run: |
+          ldconfig -p | grep -q libatomic.so.1 || { echo "libatomic.so.1 is missing: pnpm will not start"; exit 1; }
+          for t in git curl jq unzip zip xz python3; do command -v "$t" >/dev/null || { echo "$t is missing"; exit 1; }; done
+          echo "image libraries and tools: ok"
