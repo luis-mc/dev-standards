@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T18:52+00:00",
+  "updated": "2026-11-05T21:34+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1501,6 +1501,31 @@
         "minutes": 20
       },
       "started": "2026-11-05T16:16+00:00"
+    },
+    {
+      "id": "DL62",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE: runner-pool fixes 5-8",
+      "detail": "Join, CI and merge for the runner-pool fixes (host-load check, runner version, create_db, memory cap).",
+      "expected": "05 Nov ~23:15",
+      "changed": "2026-11-05T21:34+00:00",
+      "expected_basis": "agent to ~22:25, join 15 min, CI 15 min, merge",
+      "release": 48
+    },
+    {
+      "id": "DL63",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Runner-pool fixes: host-load check, runner version, create_db, memory cap",
+      "detail": "Bugs 5-8 from a Windows pool run on delivery 1.6.2: schtasks query denied unelevated; runner 2.321.0 below GitHub floor; CREATE ROLE+DATABASE in one transaction and add_agent not resumable; memory cap shrinks each rerun and lowers .wslconfig under other runners.",
+      "expected": "05 Nov ~22:25",
+      "changed": "2026-11-05T21:34+00:00",
+      "expected_basis": "cloud agent: setup 5 + work 35 + checks 10 = 50 min",
+      "rides": "DL62",
+      "started": "2026-11-05T21:34+00:00"
     },
     {
       "id": "DS1",
