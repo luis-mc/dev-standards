@@ -44,6 +44,8 @@ TRACKS = ("ts", "go", "rust", "dotnet")
 PROGRAM = r'''
 import os, subprocess, sys, time
 mode, pidfile = sys.argv[1], sys.argv[2]
+# record our own pid before anything is printed: the smoke may stop the tree as soon as a worker is ready
+open(pidfile, "a").write(str(os.getpid()) + "\n")
 worker = "import os, sys, time\nopen(sys.argv[1], 'a').write(str(os.getpid()) + '\\n')\n" \
          "print('worker-queue ready', flush=True)\ntime.sleep(60)\n"
 if mode == "exit":
@@ -56,7 +58,6 @@ if mode == "all":
     subprocess.Popen([sys.executable, "-c", worker.replace("worker-queue", "worker-mail"), pidfile])
 elif mode == "noisy":
     print("worker-mail failed to start: connection refused", flush=True)
-open(pidfile, "a").write(str(os.getpid()) + "\n")
 if mode == "crash-after":
     time.sleep(1)
     sys.exit(1)
