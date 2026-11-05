@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T14:58+00:00",
+  "updated": "2026-11-05T15:05+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4303,30 +4303,30 @@
       "status": "Running",
       "item": "Release the design-system enforcement kit with K1-K3 fixes",
       "detail": "Light join of DU9-enforcement-kit (DSY99 commits + fixes), ready PR, CI, merge; luismc-docs, luismc-delivery and luismc-artifacts version fold.",
-      "expected": "05 Nov ~16:12",
-      "changed": "2026-11-05T14:58+00:00",
-      "expected_basis": "fix agent 50 min from 14:57, join 10, CI 10, merge 5",
+      "expected": "05 Nov ~15:39",
+      "changed": "2026-11-05T15:05+00:00",
+      "expected_basis": "branch CI from 15:04 about 10 min, join 10, CI 10, merge 5",
       "release": 45,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-05T14:57+00:00",
-          "end": "2026-11-05T15:47+00:00"
+          "end": "2026-11-05T15:14+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-05T15:47+00:00",
-          "end": "2026-11-05T15:57+00:00"
+          "start": "2026-11-05T15:14+00:00",
+          "end": "2026-11-05T15:24+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-05T15:57+00:00",
-          "end": "2026-11-05T16:07+00:00"
+          "start": "2026-11-05T15:24+00:00",
+          "end": "2026-11-05T15:34+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-05T16:07+00:00",
-          "end": "2026-11-05T16:12+00:00"
+          "start": "2026-11-05T15:34+00:00",
+          "end": "2026-11-05T15:39+00:00"
         }
       ],
       "risk": {
@@ -4353,9 +4353,9 @@
       "status": "Running",
       "item": "Fix K1-K3 on the enforcement kit",
       "detail": "K1 first breach warns with no permission decision (D10); K2 judge only what an edit adds, skip test files; K3 plan rows only under Plan/Proposed/Proposals/Findings headings (D9). Branch DU11-enforcement-kit-fixes, one cloud agent.",
-      "expected": "05 Nov ~15:47",
-      "changed": "2026-11-05T14:58+00:00",
-      "expected_basis": "cloud agent from 14:57: setup 5 + work 35 + checks 10",
+      "expected": "05 Nov ~15:14",
+      "changed": "2026-11-05T15:05+00:00",
+      "expected_basis": "code done 15:00; branch CI started 15:04, about 10 min",
       "rides": "DU9",
       "started": "2026-11-05T15:00+00:00"
     },
