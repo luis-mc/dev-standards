@@ -13,7 +13,7 @@
     "url": "https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv",
     "file": "full-progress-dev-standards.html",
     "published_sha256": "18ccc93445254163ca9160d97a701bf9f8114cabf82de49099bb890c47bd4e6b",
-    "published_at": "2026-11-05T10:36+00:00",
+    "published_at": "2026-11-05T12:29+00:00",
     "published_fingerprint": "9c9f6ca0b683aa4795d968232e6c12265136ffde7121b648e0ac5f8cdf99279f"
   },
   "feature_artifacts": [
@@ -25,7 +25,7 @@
       "apps": [
         "luismc-artifacts"
       ],
-      "updated": "2026-11-04T23:59+00:00"
+      "updated": "2026-11-05T12:46+00:00"
     },
     {
       "key": "models",
@@ -35,7 +35,7 @@
       "apps": [
         "luismc-project-setup"
       ],
-      "updated": "2026-11-04T20:50+00:00"
+      "updated": "2026-11-05T12:46+00:00"
     },
     {
       "key": "test-cost",
@@ -47,7 +47,7 @@
         "delivery scripts",
         "luismc-artifacts"
       ],
-      "updated": "2026-11-04T22:48+00:00"
+      "updated": "2026-11-05T12:46+00:00"
     },
     {
       "key": "delivery-speed",
@@ -59,7 +59,7 @@
         "STACKSPEC",
         "tech-stack-setup"
       ],
-      "updated": "2026-11-05T09:21+00:00"
+      "updated": "2026-11-05T12:46+00:00"
     },
     {
       "key": "transcript-folds",
@@ -70,7 +70,7 @@
         "luismc-transcript-folds",
         "luismc-project-setup"
       ],
-      "updated": "2026-11-04T23:59+00:00"
+      "updated": "2026-11-05T12:46+00:00"
     },
     {
       "key": "setup-offers",
@@ -83,7 +83,7 @@
         "luismc-delivery",
         "luismc-artifacts"
       ],
-      "updated": "2026-11-04T22:32+00:00"
+      "updated": "2026-11-05T12:46+00:00"
     },
     {
       "key": "design-starter",
@@ -93,13 +93,23 @@
       "apps": [
         "luismc-docs"
       ],
-      "updated": "2026-11-04T20:50+00:00"
+      "updated": "2026-11-05T12:46+00:00"
+    },
+    {
+      "key": "design-field-updates",
+      "title": "Feature: Design-system updates from real projects",
+      "file": "feature-design-system-updates-from-real-projects.html",
+      "prefix": "DU",
+      "apps": [
+        "luismc-docs"
+      ],
+      "updated": "2026-11-05T12:54+00:00"
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-11-05T10:36+00:00",
+  "updated": "2026-11-05T12:54+00:00",
   "retired": [],
   "deleted": [
     {

@@ -1,0 +1,20 @@
+<!-- title: Plan -->
+<p>Nothing starts before the owner answers the open decisions. The plan has five work tasks plus one release. Each task owns its own files, so tasks that run at the same time never touch the same file.</p>
+<table>
+<thead><tr><th>Task</th><th>Holds</th><th>Files it owns</th><th>Waits for</th><th>Size</th></tr></thead>
+<tbody>
+<tr><td>1. Rules and words</td><td>R1 to R16, W1</td><td>starter <code>ux-rules.md</code>, <code>content.md</code>, <code>CHANGES.md</code></td><td>DS189 merged (it adds rules at the end of the table, and new IDs follow its IDs)</td><td>about 40 min, one cloud agent</td></tr>
+<tr><td>2. Components and tokens</td><td>C1 to C5, T1 to T5, R17</td><td>starter <code>components.md</code>, <code>tokens.md</code></td><td>DS189 merged (it rewrites components section 9)</td><td>about 45 min, one cloud agent, in parallel with task 1</td></tr>
+<tr><td>3. Plugin fixes</td><td>F1 to F5 as decided</td><td><code>docs_fold.py</code> and the other docs scripts' argument parsing, <code>design_system.py</code>, starter README, freeze guard template, DOCSPEC R15.5</td><td>DSY99 merged (it edits <code>design_system.py</code> and DOCSPEC section 15)</td><td>about 50 min, one cloud agent</td></tr>
+<tr><td>4. Guard templates</td><td>G1, G2</td><td>new files in the kit folder; the CI fixture that runs the templates (DS188)</td><td>DSY99 merged (it creates the kit folder)</td><td>about 50 min, one cloud agent, in parallel with task 3</td></tr>
+<tr><td>5. Gallery</td><td>Draw C3 and C4 and the new token kinds</td><td><code>gallery_draw.py</code>, <code>gallery_tokens.py</code></td><td>Task 2</td><td>about 30 min</td></tr>
+<tr><td>6. Join and release</td><td>One release of <code>luismc-docs</code></td><td>join, CI, merge, version fold</td><td>Tasks 1 to 5</td><td>about 30 min after the last task</td></tr>
+</tbody>
+</table>
+<p>Every branch adds a change note that names <code>claude/plugins/docs/.claude-plugin/plugin.json</code>. Task 3 also adds a DOCSPEC note if D4 is yes. No branch edits a version line.</p>
+<p>A project that already has a design system gets nothing by itself. The starter changes reach a project only through <code>init</code> on a new project, or when the project copies the rules into its own <code>next-version</code> and its owner approves them.</p>
+<h3>Risks</h3>
+<ul>
+<li>DSY99 is local and outside this repository's task record. If it never lands, tasks 3 and 4 start from <code>main</code> and take the kit folder over.</li>
+<li>Rule IDs collide if task 1 starts before DS189 merges.</li>
+</ul>

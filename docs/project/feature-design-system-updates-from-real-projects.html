@@ -1,0 +1,1206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feature: Design-system updates from real projects</title>
+<meta name="artifact-kind" content="feature-artifact">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Public+Sans:wght@400;500;600;700&amp;display=swap">
+<style id="design-tokens">/*
+  Default design for project artifacts.
+
+  Layout concept: Spec sheet: a contents rail on the left, numbered sections, the status checklist first.
+
+  Fonts (load with a link element in the head):
+  https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600;700&display=swap
+
+  This file holds tokens only. Structure lives in templates/project-artifact.css.
+*/
+:root {
+  --font-display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;
+  --font-display-stretch: 87.5%;
+  --font-body: 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, Menlo, monospace;
+
+  --paper: #F5F6F8;
+  --surface: #FFFFFF;
+  --surface-2: #ECEEF2;
+  --ink: #141A23;
+  --ink-muted: #556070;
+  --rule: #D5DAE1;
+  --rule-strong: #9AA4B2;
+  --signal: #2D46C8;
+  --on-signal: #FFFFFF;
+  --live: #17784A;
+  --on-live: #FFFFFF;
+  --done-bg: #DCEFE4;
+  --running-bg: #FBEBC8;
+  --running-mark: #B26A00;
+  --waiting-bg: #DDE6FA;
+  --failed: #C0352B;
+  --on-failed: #FFFFFF;
+  --focus: #2D46C8;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F141B;
+    --surface: #161D27;
+    --surface-2: #1E2733;
+    --ink: #E7EBF0;
+    --ink-muted: #9AA5B4;
+    --rule: #2A3442;
+    --rule-strong: #4A5668;
+    --signal: #8EA2FF;
+    --on-signal: #0F141B;
+    --live: #4CC38A;
+    --on-live: #0F141B;
+    --done-bg: #173326;
+    --running-bg: #3A2C0E;
+    --running-mark: #F0B54A;
+    --waiting-bg: #1B2A4A;
+    --failed: #F07167;
+    --on-failed: #0F141B;
+    --focus: #8EA2FF;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #0F141B;
+  --surface: #161D27;
+  --surface-2: #1E2733;
+  --ink: #E7EBF0;
+  --ink-muted: #9AA5B4;
+  --rule: #2A3442;
+  --rule-strong: #4A5668;
+  --signal: #8EA2FF;
+  --on-signal: #0F141B;
+  --live: #4CC38A;
+  --on-live: #0F141B;
+  --done-bg: #173326;
+  --running-bg: #3A2C0E;
+  --running-mark: #F0B54A;
+  --waiting-bg: #1B2A4A;
+  --failed: #F07167;
+  --on-failed: #0F141B;
+  --focus: #8EA2FF;
+  color-scheme: dark;
+}
+</style>
+<style id="structure-css">/*
+  Structure stylesheet for project artifacts.
+  Fixed for every project. It uses design tokens only and never holds a colour.
+  Tokens come from the project's design file, or design/default-design.css.
+*/
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 4rem; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  gap: 0 2.5rem;
+  max-width: 76rem;
+  margin: 0 auto;
+  padding-inline: 1.25rem;
+}
+
+/* Contents rail */
+nav.contents {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  align-self: start;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding-block: 1.5rem;
+}
+.contents-title {
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--ink-muted);
+  margin-bottom: .6rem;
+}
+nav.contents a {
+  display: block;
+  text-decoration: none;
+  color: var(--ink);
+  padding: .3em .6em;
+  border-left: 2px solid transparent;
+}
+nav.contents a b {
+  display: inline-block;
+  min-width: 2em;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+nav.contents a.current {
+  border-left-color: var(--signal);
+  background: var(--surface-2);
+}
+.theme-toggle {
+  margin-top: 1rem;
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  padding: .35em .7em;
+  cursor: pointer;
+}
+
+main { min-width: 0; padding-bottom: 5rem; }
+
+/* Header */
+header.artifact-header {
+  padding-block: 2rem 1.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+.artifact-kind {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  font-size: .78rem;
+  letter-spacing: .08em;
+  color: var(--ink-muted);
+}
+h1 {
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.05;
+  text-wrap: balance;
+  margin: .2em 0 .4em;
+}
+header.artifact-header p { max-width: 46em; font-size: 1.08rem; }
+.artifact-meta {
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  color: var(--ink-muted);
+}
+
+/* Sections */
+section { padding-top: 2.5rem; }
+h2 {
+  display: flex;
+  gap: .6em;
+  align-items: baseline;
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 700;
+  font-size: 1.65rem;
+  text-wrap: balance;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: .3em;
+  margin: 0 0 .8em;
+}
+.section-number {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: .95rem;
+  color: var(--signal);
+}
+h3 {
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-top: 1.8em;
+}
+
+p.last-update {
+  font-family: var(--font-mono);
+  font-size: .85rem;
+  color: var(--ink-muted);
+}
+p.last-update time { color: var(--ink); font-weight: 600; }
+p.lede { font-size: 1.12rem; font-weight: 500; max-width: 48em; }
+
+/* Status count tiles */
+.status-count-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+  gap: .75rem;
+  margin: 1.2em 0;
+}
+.status-count-tile {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--rule-strong);
+  padding: .7em .9em;
+}
+.status-count-tile .count {
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 800;
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.status-count-tile .label { font-size: .82rem; color: var(--ink-muted); }
+.status-count-tile.status-live { border-top-color: var(--live); }
+.status-count-tile.status-built { border-top-color: var(--live); }
+.status-count-tile.status-running { border-top-color: var(--running-mark); }
+.status-count-tile.status-needs-you { border-top-color: var(--signal); }
+.status-count-tile.status-waiting { border-top-color: var(--rule-strong); }
+.status-count-tile.status-to-do { border-top-color: var(--rule-strong); }
+.status-count-tile.status-on-hold { border-top-color: var(--rule-strong); border-top-style: dashed; }
+.status-count-tile.status-failed { border-top-color: var(--failed); }
+.status-count-tile.status-dropped { border-top-color: var(--rule-strong); border-top-style: dotted; }
+
+/* At a glance (section 0): one labelled row per kind, items one per line */
+.at-a-glance {
+  margin: 1.2em 0;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  max-width: 60em;
+}
+.glance-group {
+  display: block;
+  padding: 0 0 .5em;
+  border-top: 1px solid var(--rule);
+  border-left: 4px solid var(--rule-strong);
+}
+.glance-group:first-child { border-top: 0; }
+.glance-label {
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+/* the summary is the shared fold header of R6.12; inside the bordered block it drops its own box */
+details.glance-group > summary { border: 0; background: transparent; }
+details.glance-group > summary:hover { background: var(--surface-2); }
+.glance-group ul { list-style: none; margin: 0; padding: .1em .9em .2em 2.2rem; min-width: 0; }
+.glance-group li { padding: .1em 0; overflow-wrap: anywhere; }
+.glance-group p { margin: 0; padding: .1em .9em .2em 2.2rem; color: var(--ink-muted); }
+.glance-expected { font-size: .85rem; color: var(--ink-muted); margin-left: .5em; }
+.glance-more { color: var(--ink-muted); font-size: .88rem; }
+.glance-dep { font-size: .85rem; color: var(--ink-muted); margin: 0 .5em; }
+.glance-dep::after { content: ' \2192'; }
+.glance-basis { display: block; font-size: .72rem; line-height: 1.3; color: var(--ink-muted); }
+.glance-you { border-left-color: var(--signal); }
+.glance-you .glance-label { color: var(--ink); }
+.glance-you:has(li) { background: var(--waiting-bg); border-left-width: 6px; }
+.glance-you:has(li) .glance-label { color: var(--signal); }
+.glance-running { border-left-color: var(--running-mark); }
+.glance-running li { background: var(--running-bg); padding-inline: .4em; margin-block: .15em; }
+.glance-built { border-left-color: var(--live); }
+.glance-waiting { border-left-color: var(--rule-strong); border-left-style: dashed; }
+.glance-live { border-left-color: var(--live); }
+
+/* Status chips */
+.status-chip {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding: .12em .5em;
+  border: 1px solid var(--rule-strong);
+  white-space: nowrap;
+  color: var(--ink);
+  background: var(--surface);
+}
+.status-chip.status-live { background: var(--live); color: var(--on-live); border-color: var(--live); }
+.status-chip.status-built { background: var(--done-bg); }
+.status-chip.status-running { background: var(--running-bg); border-left: 3px solid var(--running-mark); }
+.status-chip.status-needs-you { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
+.status-chip.status-waiting { background: var(--waiting-bg); }
+.status-chip.status-to-do { background: var(--surface-2); }
+.status-chip.status-on-hold { background: var(--surface-2); border-style: dashed; }
+.status-chip.status-dropped { background: var(--surface-2); color: var(--ink-muted); border-style: dotted; text-decoration: line-through; }
+.status-chip.status-failed { background: var(--failed); color: var(--on-failed); border-color: var(--failed); }
+
+/* Tables */
+.table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  margin: .9em 0;
+}
+.table-scroll table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 34rem;
+  font-size: .9rem;
+  font-variant-numeric: tabular-nums;
+}
+.table-scroll th {
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink-muted);
+  background: var(--surface-2);
+  text-align: left;
+  padding: .55em .7em;
+  border-bottom: 1px solid var(--rule);
+}
+.table-scroll td {
+  padding: .55em .7em;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  line-height: 1.4;
+}
+table.status-checklist td:first-child { white-space: nowrap; }
+table.status-checklist td code { white-space: nowrap; overflow-wrap: normal; }
+/* Collapsible checklist groups (R6.12): native <details>, no script; the heading sits in the <summary> */
+details.status-fold { margin: 1.1em 0 0; }
+details.glance-group > summary,
+details.status-fold > summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .3em .7em;
+  min-height: 2.75rem;
+  padding: .6em .7em;
+  cursor: pointer;
+  list-style: none;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: .74rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink-muted);
+}
+details.glance-group > summary::-webkit-details-marker,
+details.status-fold > summary::-webkit-details-marker { display: none; }
+details.glance-group > summary::before,
+details.status-fold > summary::before {
+  content: "";
+  flex: none;
+  width: .5rem;
+  height: .5rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+}
+details.glance-group[open] > summary::before,
+details.status-fold[open] > summary::before { transform: rotate(45deg); }
+details.glance-group > summary:hover,
+details.status-fold > summary:hover { background: var(--surface-2); }
+details.glance-group > summary:focus-visible,
+details.status-fold > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+details.glance-group > summary .fold-count,
+details.status-fold > summary .fold-count { margin-left: auto; text-transform: none; letter-spacing: 0; font-size: .72rem; }
+details.status-fold > .table-scroll { margin-top: 0; border-top: 0; }
+details.status-fold > details.earlier { margin: .6em .7em; }
+table.status-checklist { table-layout: fixed; }
+table.status-checklist col.col-status { width: 7.5rem; }
+table.status-checklist col.col-item { width: 30%; }
+table.status-checklist col.col-app { width: 8.5rem; }
+table.status-checklist col.col-expected { width: 9.5rem; }
+table.status-checklist td { overflow-wrap: anywhere; }
+@media print {
+  details.status-fold > summary::before, details.glance-group > summary::before { display: none; }
+  details.glance-group::details-content, details.status-fold::details-content, details.earlier::details-content { content-visibility: visible; display: block; }
+}
+table.history-table td:first-child { font-family: var(--font-mono); white-space: nowrap; }
+
+/* Earlier fold: Live rows older than the fold age, closed by default */
+details.earlier { margin: .9em 0; }
+details.earlier > summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--ink-muted);
+  padding: .5em 0;
+}
+details.earlier > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+details.earlier[open] > summary { margin-bottom: .2em; }
+
+.task-id {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: .82em;
+  margin-right: .4em;
+  color: var(--ink-muted);
+}
+a .task-id { color: inherit; }
+
+/* What sets the Expected estimate (R6.10): a small muted line under the value */
+.expected-basis {
+  display: block;
+  font-size: .72rem;
+  line-height: 1.3;
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+
+/* The publish copy's button that copies a feature file's file:/// address (R5.31) */
+.copy-link {
+  margin-left: .5rem;
+  padding: .1rem .5rem;
+  font: inherit;
+  font-size: .72rem;
+  line-height: 1.4;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.copy-link:hover, .copy-link:focus-visible { color: var(--signal); border-color: var(--signal); }
+
+/* Section 1 sort headers (R5.39) */
+.sort-header {
+  padding: 0;
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  text-align: inherit;
+  cursor: pointer;
+}
+.sort-header:hover, .sort-header:focus-visible { color: var(--signal); }
+.sort-arrow { display: inline-block; min-width: 1ch; }
+
+/* A feature page's line under its stamp (R5.38) */
+.full-progress-published { margin: .2rem 0 0; font-size: .85rem; color: var(--ink-muted); }
+
+/* The address itself, shown only when the clipboard refuses, to copy by hand */
+.local-path {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: .7rem;
+  line-height: 1.3;
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+/* Links and focus */
+a { color: var(--signal); text-underline-offset: .15em; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Code */
+code, kbd {
+  font-family: var(--font-mono);
+  font-size: .86em;
+  background: var(--surface-2);
+  padding: .05em .3em;
+  border: 1px solid var(--rule);
+  overflow-wrap: anywhere;
+}
+pre {
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  line-height: 1.4;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: .9em 1em;
+  overflow-x: auto;
+  white-space: pre;
+}
+pre code { background: none; border: 0; padding: 0; overflow-wrap: normal; }
+
+.note { font-size: .85rem; color: var(--ink-muted); }
+ul, ol { padding-left: 1.3em; }
+li { margin: .25em 0; }
+
+/* Flow of steps */
+.flow-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: stretch;
+  margin: 1em 0;
+}
+.flow-step {
+  flex: 1 1 9rem;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: .6em .75em;
+  font-size: .88rem;
+}
+.flow-step b {
+  display: block;
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 700;
+  font-size: 1rem;
+}
+.flow-step small {
+  display: block;
+  color: var(--ink-muted);
+  line-height: 1.3;
+  margin-top: .2em;
+}
+.flow-step.key-step { border-color: var(--signal); border-width: 2px; }
+.flow-arrow {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+}
+
+/* Decisions: the options the owner was shown, side by side, the chosen one marked */
+.decision-list { margin: 1em 0; }
+.decision {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: 1rem;
+  margin: 0 0 1.2rem;
+}
+.decision-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .7rem;
+  align-items: baseline;
+  margin: 0;
+  font-size: 1.12rem;
+}
+.decision-id {
+  font-family: var(--font-mono);
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+.decision-question { flex: 1 1 14rem; min-width: 0; overflow-wrap: anywhere; }
+.decision-meta {
+  font-family: var(--font-mono);
+  font-size: .76rem;
+  color: var(--ink-muted);
+  margin: .4em 0 .8em;
+}
+.decision-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: .75rem;
+}
+.decision-option {
+  min-width: 0;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: .8rem .9rem;
+}
+.decision-option.decision-chosen {
+  background: var(--surface);
+  border: 3px solid var(--signal);
+  padding: calc(.8rem - 2px) calc(.9rem - 2px);
+}
+.decision-option.decision-muted { background: var(--surface-2); color: var(--ink-muted); }
+.decision-option-head { display: flex; flex-wrap: wrap; gap: .35rem .5rem; align-items: baseline; }
+.decision-label {
+  font-family: var(--font-display);
+  font-stretch: var(--font-display-stretch);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.decision-chip, .decision-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding: .1em .45em;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+  background: var(--surface);
+}
+.decision-chip-chosen { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
+.decision-chip-muted { background: var(--surface-2); border-style: dashed; color: var(--ink-muted); }
+.decision-tag { border-color: var(--signal); }
+.decision-summary { margin: .5em 0 0; }
+.decision-preview { margin-top: .7em; max-width: 100%; overflow-x: auto; }
+.decision-image { display: block; max-width: 100%; height: auto; border: 1px solid var(--rule); }
+.decision-words {
+  margin: .8em 0 0;
+  padding-left: .8em;
+  border-left: 3px solid var(--signal);
+  font-style: italic;
+  color: var(--ink);
+}
+details.decision-replaced { padding: .6rem 1rem; }
+details.decision-replaced > summary { cursor: pointer; color: var(--ink-muted); }
+details.decision-replaced > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+details.decision-replaced[open] > summary { margin-bottom: .6em; }
+.decision-replaced-by {
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+/* Phone width */
+@media (max-width: 40rem) {
+  .decision-options { grid-template-columns: 1fr; }
+  .decision { padding: .8rem; }
+}
+@media (max-width: 56rem) {
+  .layout, .layout[data-contents="collapsed"] { display: block; padding-inline: 1rem; }
+  nav.contents {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding: .5rem 0;
+    margin-bottom: .5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .contents-title, nav.contents .contents-toggle { display: none; }
+  nav.contents .contents-links, .layout[data-contents="collapsed"] nav.contents .contents-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+  }
+  nav.contents a {
+    display: inline-block;
+    min-width: 0;
+    border: 1px solid var(--rule);
+    border-left-width: 1px;
+  }
+  nav.contents a.current { border-color: var(--signal); }
+  .theme-toggle, .layout[data-contents="collapsed"] .theme-toggle { display: inline-block; margin-top: .5rem; }
+}
+
+/* Contents rail toggle (wide screens): folds the rail to a thin strip and gives the page the full width */
+.contents-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .4em;
+  margin-bottom: .8rem;
+  min-height: 2rem;
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--rule-strong);
+  cursor: pointer;
+}
+.contents-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.contents-toggle-icon { font-size: 1.1rem; line-height: 1; }
+@media (min-width: 56.01rem) {
+  .layout[data-contents="collapsed"] { grid-template-columns: 2.75rem minmax(0, 1fr); gap: 0 1rem; max-width: none; }
+  .layout[data-contents="collapsed"] .contents-title,
+  .layout[data-contents="collapsed"] .contents-links,
+  .layout[data-contents="collapsed"] .theme-toggle { display: none; }
+  .layout[data-contents="collapsed"] .contents-toggle { padding-inline: .5em; }
+  .layout[data-contents="collapsed"] .contents-toggle-label {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+}
+
+/* Narrow boxes: a task row is a card. The box is measured, not the screen, so the open rail at 900 px stacks too. */
+.table-scroll { container-type: inline-size; }
+@container (max-width: 46rem) {
+  .table-scroll table { min-width: 0; display: block; }
+  table.status-checklist colgroup, table.status-checklist thead { display: none; }
+  table.status-checklist tbody, table.feature-list tbody { display: block; }
+  table.status-checklist tr, table.feature-list tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: .3rem .7rem;
+    padding: .7rem .8rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  table.status-checklist td, table.feature-list td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    grid-column: 1 / -1;
+  }
+  table.status-checklist td:empty, table.feature-list td:empty { display: none; }
+  table.status-checklist td:nth-child(1) { grid-column: 1; white-space: nowrap; }
+  table.status-checklist td:nth-child(2) { grid-column: 2; font-weight: 600; }
+  table.status-checklist td code { white-space: normal; overflow-wrap: anywhere; }
+  table.status-checklist td:nth-child(n+3)::before, table.feature-list td:nth-child(n+2)::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--font-mono);
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--ink-muted);
+  }
+  table.status-checklist .release-line::before { content: "Rides "; }
+  table.feature-list td:nth-child(1) { font-weight: 600; }
+  table.feature-list thead { display: block; background: var(--surface-2); border-bottom: 1px solid var(--rule); }
+  table.feature-list thead tr { display: flex; flex-wrap: wrap; gap: .2rem .8rem; padding: .3rem .8rem; border: 0; }
+  table.feature-list thead th { display: block; padding: 0; border: 0; }
+  table.feature-list thead th:nth-child(n+3) { display: none; }
+}
+/* CI runs section (R5.51): tokens only, light and dark come from the page's own tokens */
+details.ci-runs > .ci-body { border: 1px solid var(--rule); border-top: 0; background: var(--surface); padding: .4rem .9rem 1rem; }
+.ci-h { font-family: var(--font-mono); font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-muted); margin: 1.2em 0 .4em; }
+.ci-figures { display: flex; flex-wrap: wrap; gap: .6rem 1.6rem; margin: .6rem 0 0; }
+.ci-figures > div { min-width: 6.5rem; }
+.ci-figures dt { font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-muted); }
+.ci-figures dd { margin: 0; font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ci-table { min-width: 38rem; }
+.ci-num, .ci-total, .ci-done, .ci-step-time { font-variant-numeric: tabular-nums; }
+.ci-tag { display: inline-block; padding: .05em .55em; border: 1px solid var(--rule-strong); font-family: var(--font-mono); font-size: .7rem; line-height: 1.5; white-space: nowrap; }
+details.ci-runs { --ci-teal: color-mix(in srgb, var(--live) 70%, var(--signal)); --ci-purple: color-mix(in srgb, var(--signal) 55%, var(--failed)); }
+.ci-tag-pool { background: var(--ci-teal); color: var(--on-live); border-color: var(--ci-teal); }
+.ci-tag-windows { background: var(--signal); color: var(--on-signal); border-color: var(--signal); }
+.ci-tag-hosted { background: var(--surface-2); color: var(--ink); }
+.ci-tag-cloud { background: var(--ci-purple); color: var(--on-signal); border-color: var(--ci-purple); }
+.ci-chip { display: inline-block; padding: .05em .55em; border: 1px solid var(--rule-strong); background: var(--surface-2); font-family: var(--font-mono); font-size: .75rem; line-height: 1.5; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+.ci-chip-run { background: var(--ci-teal); color: var(--on-live); border-color: var(--ci-teal); }
+.ci-chip-wait { background: var(--running-bg); color: var(--ink); border-color: var(--running-mark); }
+.ci-line { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ci-run-name { font-weight: 700; }
+.ci-why { color: var(--ink-muted); }
+.ci-runs-list { border: 1px solid var(--rule); }
+details.ci-run + details.ci-run { border-top: 1px solid var(--rule); }
+details.ci-run > summary {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr) auto 5rem 7.5rem;
+  gap: .3rem .8rem;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: .45rem .7rem;
+  cursor: pointer;
+  list-style: none;
+}
+details.ci-run > summary::-webkit-details-marker { display: none; }
+details.ci-run > summary:hover { background: var(--surface-2); }
+details.ci-run > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.ci-total, .ci-done { text-align: right; }
+.ci-mark { font-weight: 700; text-align: center; }
+.ci-pass .ci-mark { color: var(--live); }
+.ci-fail .ci-mark { color: var(--failed); }
+.ci-cancel .ci-mark { color: var(--ink-muted); }
+.ci-waterfall { list-style: none; margin: 0; padding: .3rem .8rem .8rem 2.4rem; }
+.ci-step { display: grid; grid-template-columns: minmax(7rem, 14rem) minmax(0, 1fr) 4.5rem; gap: .6rem; align-items: center; min-height: 1.5rem; font-size: .82rem; }
+.ci-step-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ci-job-fold > summary { cursor: pointer; list-style: none; }
+.ci-job-fold > summary::-webkit-details-marker { display: none; }
+.ci-job-fold > summary .ci-step-name::before { content: "\25B8"; display: inline-block; width: 1em; color: var(--ink-muted); }
+.ci-job-fold[open] > summary .ci-step-name::before { content: "\25BE"; }
+.ci-job-fold > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.ci-steps { list-style: none; margin: 0; padding: 0 0 .3rem 1.2rem; }
+.ci-step-time { text-align: right; color: var(--ink-muted); }
+.ci-track { position: relative; height: .7rem; background: var(--surface-2); border: 1px solid var(--rule); }
+.ci-bar { position: absolute; top: 0; bottom: 0; }
+.ci-bar-queue, .ci-swatch.ci-bar-queue { background: var(--rule-strong); }
+.ci-bar-slot, .ci-swatch.ci-bar-slot { background: var(--running-mark); }
+.ci-bar-step, .ci-swatch.ci-bar-step { background: var(--ci-teal); }
+.ci-bar-fail, .ci-swatch.ci-bar-fail { background: var(--failed); }
+.ci-legend { display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; margin: .7rem 0 0; font-size: .8rem; color: var(--ink-muted); }
+.ci-swatch { display: inline-block; width: .9rem; height: .6rem; margin-right: .4em; vertical-align: baseline; }
+@media (max-width: 40rem) {
+  details.ci-run > summary { grid-template-columns: 1.6rem minmax(0, 1fr) auto; }
+  details.ci-run > summary .ci-line { grid-column: 2 / -1; white-space: normal; }
+  details.ci-run > summary .ci-where { grid-column: 2 / -1; }
+  details.ci-run > summary .ci-total { grid-column: 2; text-align: left; }
+  details.ci-run > summary .ci-done { grid-column: 3; }
+  .ci-waterfall { padding-left: .8rem; }
+  .ci-step { grid-template-columns: minmax(0, 1fr) 4rem; }
+  .ci-step .ci-track { grid-column: 1 / -1; grid-row: 2; }
+  .ci-table td { display: block; padding: .2rem .7rem; border: 0; }
+  .ci-table td::before { content: attr(data-label); display: block; font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase; color: var(--ink-muted); }
+  .ci-table thead { display: none; }
+  .ci-table { min-width: 0; }
+  .ci-table tr { display: block; border-bottom: 1px solid var(--rule); padding: .3rem 0; }
+}
+/* Release header and the timeline never push the page sideways */
+details.status-fold > summary { min-width: 0; overflow-wrap: anywhere; }
+details.status-fold > summary strong { min-width: 0; }
+.release-timeline { max-width: 100%; }
+.timeline-scroll { max-width: 100%; }
+
+/* Release timeline (R5.40 to R5.43) and the State column (R5.44) */
+.release-timeline { margin: 0 0 1rem; padding: .75rem 1rem; background: var(--surface); border: 1px solid var(--rule); }
+.release-timeline figcaption {
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: .4rem;
+}
+.timeline-scroll { overflow-x: auto; }
+.release-timeline svg { width: 100%; height: auto; display: block; font-family: var(--font-body); }
+.release-timeline .rt-axis { font-size: 11px; fill: var(--ink-muted); text-anchor: middle; }
+.release-timeline .rt-grid { stroke: var(--rule); }
+.release-timeline .rt-break { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; }
+.release-timeline .rt-name { font-size: 13px; font-weight: 600; fill: var(--ink); }
+.release-timeline .rt-sub { font-size: 11px; fill: var(--ink-muted); }
+.release-timeline .rt-bar.agents { fill: var(--running-mark); }
+.release-timeline .rt-bar.join { fill: var(--signal); }
+.release-timeline .rt-bar.ci { fill: var(--live); }
+.release-timeline .rt-bar.merge { fill: var(--ink); }
+.release-timeline .rt-risk { fill: var(--rule-strong); opacity: .55; }
+.release-timeline .rt-worst { fill: var(--paper); stroke: var(--ink-muted); stroke-width: 1.5; }
+.release-timeline .rt-expected { fill: var(--ink); }
+.release-timeline .rt-day { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.release-timeline .rt-day-label { font-size: 12px; fill: var(--ink); }
+.release-timeline .rt-live-label { font-size: 12px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
+.release-timeline .rt-risk-label { font-size: 10.5px; fill: var(--ink-muted); }
+.release-timeline .rt-now { stroke: var(--failed); stroke-width: 2; }
+.release-timeline .rt-now-label { font-size: 11px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
+.release-timeline .rt-strip-title { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
+.release-timeline .rt-other-label { font-size: 11px; fill: var(--ink-muted); }
+.release-timeline .rt-other.status-running { fill: var(--running-mark); }
+.release-timeline .rt-other.status-waiting { fill: var(--rule-strong); }
+.release-timeline .rt-other.status-needs-you { fill: var(--signal); }
+.release-timeline .rt-other.status-to-do { fill: var(--ink-muted); }
+.release-timeline .rt-other.overdue, .release-timeline .rt-day.overdue { stroke: var(--failed); stroke-width: 2; }
+.timeline-legend { font-size: .85rem; color: var(--ink-muted); margin: .5rem 0 0; }
+.rt-swatch { display: inline-block; width: 10px; height: 10px; vertical-align: middle; margin: 0 4px 0 2px; }
+.rt-swatch.agents { background: var(--running-mark); }
+.rt-swatch.join { background: var(--signal); }
+.rt-swatch.ci { background: var(--live); }
+.rt-swatch.merge { background: var(--ink); }
+.state-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* Release names and the checklist grouped by release (R5.45, R5.46) */
+.release-name { font-family: var(--font-mono); font-weight: 600; font-size: .82em; margin-right: .4em; color: var(--signal); }
+a .release-name { color: var(--signal); }
+.release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
+.release-line .release-name { margin-right: 0; }
+.dropped-line, .no-release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
+details.status-fold.release-group > summary { color: var(--ink); }
+</style>
+<style id="extra-css"></style>
+</head>
+<body>
+<div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>How it was checked</a><a href="#s3"><b>3</b>Proposed UX rules</a><a href="#s4"><b>4</b>Proposed components, tokens and words</a><a href="#s5"><b>5</b>Proposed plugin fixes and guard templates</a><a href="#s6"><b>6</b>Left out</a><a href="#s7"><b>7</b>Plan</a><a href="#s8"><b>8</b>Decisions</a><a href="#s9"><b>9</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
+<header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Design-system updates from real projects</h1><p>UX patterns that two real projects added after the starter was written, checked against their code and proposed for the luismc-docs design-system starter.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
+<section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
+<p class="last-update">Last update: <time datetime="2026-11-05T12:54+00:00">05 Nov 12:54</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">05 Nov 12:29</a> (Lisbon)</p>
+<p class="lede">Proposal for review. Nothing is implemented. 35 changes are proposed and 9 are left out, each checked against the source and the starter. Six decisions are open for the owner.</p>
+<div class="at-a-glance">
+<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">7 tasks</span></summary>
+<ul>
+<li data-glance-task="DU1"><span class="task-id">DU1</span><span class="glance-dep">repo study ~1 h + peer replies; started 12:45</span> Study UX changes in two real projects and propose starter updates <span class="glance-expected">05 Nov ~15:00</span></li>
+<li data-glance-decision="D1"><span class="task-id">D1</span>Which of the 35 proposals go into the starter?</li>
+<li data-glance-decision="D2"><span class="task-id">D2</span>What about Project A&#x27;s draft items (card frame, two-level section header, settings that save by themselves)?</li>
+<li data-glance-decision="D3"><span class="task-id">D3</span>How should DS4 (stale gallery) behave on branches?</li>
+<li data-glance-decision="D4"><span class="task-id">D4</span>May a frozen version take link-only edits after files move?</li>
+<li data-glance-decision="D5"><span class="task-id">D5</span>Should the starter ask for 7:1 contrast for body text in the dark theme?</li>
+<li data-glance-decision="D6"><span class="task-id">D6</span>When does the work start?</li>
+</ul>
+</details>
+</div>
+<div class="status-count-tiles"><div class="status-count-tile status-needs-you"><div class="count">1</div><div class="label">task needs you</div></div></div>
+<p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="you" open><summary><strong>Needs you, failed or on hold</strong><span class="fold-count">1 task</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DU1"><td data-label="Status"><span class="status-chip status-needs-you">Needs you</span></td><td data-label="Item"><span class="task-id">DU1</span>Study UX changes in two real projects and propose starter updates<span class="no-release-line">ships nothing: study and proposal only</span></td><td data-label="Detail">Study done: 35 proposals checked against both projects and the starter, 9 left out, plan in 6 tasks. Waits on owner decisions D1-D6 on the feature page.</td><td data-label="Expected">05 Nov ~15:00<span class="expected-basis">repo study ~1 h + peer replies; started 12:45</span></td></tr>
+</tbody></table></div>
+</details>
+</section>
+<section id="s1"><h2><span class="section-number">&sect; 1</span>What and why</h2>
+<p>The starter design system in <code>luismc-docs</code> was written on 1 Nov (ST2, ST3) from a reference design system at its v4 draft. Since then two real projects kept working on their own design systems:</p>
+<ul>
+<li><b>Project A</b> approved its v2 on 4 Nov (36 changes) and has more changes in its draft.</li>
+<li><b>Project B</b> went from v4 to v9 between 1 and 4 Nov (rules U8 to U18, components 39 to 43) and has U19 and U20 in its draft.</li>
+</ul>
+<p>Many of these changes are generic. Any product would want them. This page lists them, says how each was checked, and proposes where each goes in the starter. Product-specific parts stay out (DOCSPEC R15.6).</p>
+<p>Neither project is named here. The page says "Project A" and "Project B".</p>
+</section>
+<section id="s2"><h2><span class="section-number">&sect; 2</span>How it was checked</h2>
+<ol>
+<li><b>Asked each project's session</b> for its UX changes, where they live, why, and whether they are generic. Both answered.</li>
+<li><b>Read each project's design system</b> from its default branch on the remote (the local checkouts were days behind): every version README and CHANGES list since the starter was written, and the rule tables.</li>
+<li><b>Compared each change with the starter</b> by searching the starter's rules, components, tokens, content words and guard templates.</li>
+<li><b>Tested each claim about the plugin</b> in the plugin's code. The results are below.</li>
+</ol>
+<table>
+<thead><tr><th>Claim from a session</th><th>How it was tested</th><th>Result</th></tr></thead>
+<tbody>
+<tr><td><code>docs:note -- --doc ...</code> fails</td><td>Ran <code>docs_fold.py note -- --doc features/x --task T1 --text t</code> in a scratch repo</td><td><b>Confirmed.</b> argparse reports <code>--doc, --task, --text</code> missing. pnpm passes the <code>--</code> through. Proposal F1.</td></tr>
+<tr><td>DS4 warns on every draft edit</td><td>Read <code>design_system.py</code> check, lines 459 to 464</td><td><b>Confirmed.</b> Any edit to <code>next-version</code> makes the gallery stale. The Stop hook rebuild (ST5) does not run in cloud sessions without plugin hooks. Proposal F2.</td></tr>
+<tr><td>The approval digest drifts when the approval line is written</td><td>Read <code>cmd_promote</code></td><td><b>Not a plugin bug.</b> <code>promote</code> writes the status line first, then takes the digest. The drift came from versions promoted by hand. No change.</td></tr>
+<tr><td>Rule tables need a check that the named guard file exists</td><td>Read the follow guard template</td><td><b>Already there.</b> <code>design-system-follow.test.ts</code> checks each guard path exists. No change.</td></tr>
+<tr><td>Moving an existing design system needs a documented path</td><td>Read DOCSPEC R15.8</td><td><b>Already documented</b> (approvals added by hand with original dates). A helper command is optional (left out).</td></tr>
+<tr><td>Frozen versions need link-only edits</td><td>Read R15.5 and the freeze guard</td><td><b>Missing.</b> Any edit fails the digest. Project B's owner allowed link-only edits on 31 Oct. Proposal F3, an open decision.</td></tr>
+<tr><td>The template's dialog and sheet entry is too thin</td><td>Read components.md section 9 and the registry</td><td><b>Already in work as DS189</b> (Running, cloud). Not repeated here; this plan waits for it.</td></tr>
+</tbody>
+</table>
+<p><b>Overlap found.</b> A branch named <code>DSY99-ds-enforcement-kit</code>, started from Project B's session, is changing this repository's design-system guards. It adds a no-app-CSS scan, a DOM layout kit at 360, 393 and 1300 px, a wizard behaviour harness, a design edit hook and a brief checklist. It is local only and is not in this repository's task record. Its owner answers are D231 to D243. This plan does not repeat its work, and it waits for that branch.</p>
+</section>
+<section id="s3"><h2><span class="section-number">&sect; 3</span>Proposed UX rules</h2>
+<p>New rules take the next free IDs after DS189's new rules land. Extended rules keep their IDs and get clearer words. "Approved" means the source project's owner approved it in a numbered version.</p>
+<table>
+<thead><tr><th>#</th><th>Proposal</th><th>Starter today</th><th>Source</th><th>Change</th></tr></thead>
+<tbody>
+<tr><td>R1</td><td><b>The page scrolls, never a box inside it.</b> A frame is as tall as its section. Long lists use the pager. Only a wide table may scroll sideways inside its frame.</td><td>UX-16 covers sideways scroll of the page only</td><td>B, U16, approved v9</td><td>New rule</td></tr>
+<tr><td>R2</td><td><b>An action on a choice names the work and its count</b> ("Rename 12 files"). With nothing chosen it is disabled and says what to do ("Tick the files to rename").</td><td>UX-4 (labelled by what it does), UX-38 (blocked actions say why)</td><td>B, N3, approved v5</td><td>Extend UX-4</td></tr>
+<tr><td>R3</td><td><b>Nothing is shown only on hover.</b> A menu or control is drawn at every width and for every pointer, mouse or touch.</td><td>None</td><td>B, N1, approved v5</td><td>New rule</td></tr>
+<tr><td>R4</td><td><b>One shape per kind of card.</b> Same height, no small variant, long names stop at two lines. A state is said in words, never a bare colour frame.</td><td>UX-1 and UX-26 in general terms</td><td>B, N7, approved v5</td><td>New rule</td></tr>
+<tr><td>R5</td><td><b>An overview only shows and links.</b> It has no command buttons. Each command lives in one place. Settings hold configuration only.</td><td>None</td><td>B, U8, approved v6</td><td>New rule</td></tr>
+<tr><td>R6</td><td><b>Background work never locks a step.</b> A job that runs by itself shows as a line inside the step. The strip and the page read one progress value.</td><td>UX-19 and UX-34 (one source of truth)</td><td>B, U9, approved v6</td><td>Extend UX-34</td></tr>
+<tr><td>R7</td><td><b>A wait on an outside limit says why and until when</b> ("waits for the service's hourly limit until 08:34"). A count never sits still without a reason.</td><td>UX-29 (a wait names what is happening)</td><td>B, U11, approved v6</td><td>Extend UX-29</td></tr>
+<tr><td>R8</td><td><b>"x ago" keeps ageing</b> while the page stays open, from one shared clock that pauses while the page is hidden and catches up when shown.</td><td>content.md gives the format only</td><td>B, U12, approved v6</td><td>New rule</td></tr>
+<tr><td>R9</td><td><b>A fault in the page's own code is not a lost connection.</b> It says "This page hit a fault." with the real error under Details.</td><td>UX-28 (could not load says what, why, next)</td><td>B, U13, approved v6</td><td>Extend UX-28</td></tr>
+<tr><td>R10</td><td><b>A wait is said once, in one line, from one function.</b> No rows of locked buttons.</td><td>UX-38</td><td>B, U14, approved v7</td><td>Extend UX-38</td></tr>
+<tr><td>R11</td><td><b>The work step of a wizard</b> shows the item in hand, n of N and the time left, never a bare wait. It has no Back. A stored "running" with no live run reads Paused.</td><td>UX-30 (work step shows live progress)</td><td>B, U10, approved v6</td><td>Extend UX-30</td></tr>
+<tr><td>R12</td><td><b>Start again ends a wizard.</b> Done and Stopped show Start again as the one primary. Only Start again begins a new run. Earlier steps are read-only.</td><td>UX-30 says nothing after Done</td><td>B, C34, approved v9</td><td>Extend UX-30</td></tr>
+<tr><td>R13</td><td><b>A wizard's behaviour belongs to the shared wizard.</b> Current step, locks, Stop, busy and Done live in one part. A page passes data only.</td><td>Wizard component, no rule</td><td>B, U17, approved v9</td><td>New rule; its guard is DSY99's wizard harness</td></tr>
+<tr><td>R14</td><td><b>Every button that sends a request stays busy until the answer.</b> The busy state comes from the server's answer, not a timer.</td><td>UX-13 covers buttons that start work</td><td>B, owner decision of 5 Nov</td><td>Extend UX-13</td></tr>
+<tr><td>R15</td><td><b>A sticky foot never covers the content.</b> Its height is reserved, so the last row ends above it on every screen size.</td><td>Sticky action bar component, no rule</td><td>B, N4, approved v5</td><td>Extend UX-42</td></tr>
+<tr><td>R16</td><td><b>A theme changes token values only, never a component.</b> A theme may change one named accent slot.</td><td>tokens.md "Add a named theme" implies it</td><td>A, UX-27, approved v2</td><td>New rule</td></tr>
+<tr><td>R17</td><td><b>Emoji are never functional icons.</b> They may mark a celebration.</td><td>One icon set; nothing on emoji</td><td>A, UX-25, approved v1</td><td>One line in components 33 (other shared parts)</td></tr>
+</tbody>
+</table>
+</section>
+<section id="s4"><h2><span class="section-number">&sect; 4</span>Proposed components, tokens and words</h2>
+<table>
+<thead><tr><th>#</th><th>Proposal</th><th>Starter today</th><th>Source</th><th>Change</th></tr></thead>
+<tbody>
+<tr><td>C1</td><td><b>Tabs keep their panels mounted</b>, so a tab keeps its state when the user comes back.</td><td>Tabs component</td><td>A, UX-15, approved</td><td>One line in Tabs</td></tr>
+<tr><td>C2</td><td><b>The pager takes a noun</b> ("Files 1-24 of 32").</td><td>Pager component</td><td>B, N5, approved v5</td><td>One line in Pager</td></tr>
+<tr><td>C3</td><td><b>Filter bar</b>: search, a Filter button with its count, a labelled Sort that is always visible, active filters as chips with Clear all, filters in a sheet that ends "Show N items". Not sticky.</td><td>Search bar (UX-31), list toolbar</td><td>A, owner decision</td><td>Extend the list toolbar</td></tr>
+<tr><td>C4</td><td><b>Change review</b>: a summary bar whose counts filter, change chips with counts, changed parts marked by more than colour, conflicts never ticked by default and explained, one sticky action with the count.</td><td>None</td><td>B, C28, approved v7</td><td>New component</td></tr>
+<tr><td>C5</td><td><b>Each component has a Looks line.</b> "How to add a component" asks for five lines (Used for, Looks, Source, Rules, Guard) and no values.</td><td>Four lines</td><td>A, C17, approved v2</td><td>Template change</td></tr>
+<tr><td>T1</td><td><b>Text on a fill comes in pairs.</b> Every fill role has its <code>on-</code> text token. Every tint fill is a <code>tint</code> and <code>on-tint</code> pair.</td><td>Only <code>on-primary</code></td><td>A, UX-2 and UX-4, approved</td><td>Tokens</td></tr>
+<tr><td>T2</td><td><b>More motion tokens</b>: reduced duration, screen enter, progress fill, toast time.</td><td>fast, base, slow, loop, ease</td><td>A, C16, approved v2</td><td>Tokens</td></tr>
+<tr><td>T3</td><td><b>Tokens per width</b>: page gutter and padding per breakpoint, frame widths, control heights.</td><td>Breakpoints only</td><td>A, C12, approved v2</td><td>Tokens</td></tr>
+<tr><td>T4</td><td><b>Border widths are a closed list</b>, each with its uses. No other widths.</td><td>Tone edges only</td><td>A, C30, approved v2</td><td>Tokens</td></tr>
+<tr><td>T5</td><td><b>Each type role names its weight</b>, with a ceiling per role.</td><td>Type roles without weight limits</td><td>A, C10, approved v2</td><td>Tokens</td></tr>
+<tr><td>W1</td><td><b>One word table for wizard states</b>: Stop, Stopping, Pause, Try again (repeats a failed action only), Start again, Put back.</td><td>Action words exist; these are missing</td><td>B, U18, approved v9</td><td>content.md</td></tr>
+</tbody>
+</table>
+</section>
+<section id="s5"><h2><span class="section-number">&sect; 5</span>Proposed plugin fixes and guard templates</h2>
+<table>
+<thead><tr><th>#</th><th>Proposal</th><th>Evidence</th><th>Change</th></tr></thead>
+<tbody>
+<tr><td>F1</td><td><b>The docs scripts accept a lone <code>--</code></b>, which package-manager scripts pass through.</td><td>Reproduced (see How it was checked)</td><td>Drop a leading <code>--</code> before argparse in <code>docs_fold.py</code> and the other docs scripts; one test</td></tr>
+<tr><td>F2</td><td><b>Less DS4 noise on branches.</b></td><td>Every draft edit warns; cloud runs have no hook to rebuild</td><td>Open decision D3</td></tr>
+<tr><td>F3</td><td><b>Link-only edits to frozen versions.</b> An edit that changes only link targets, each to an existing file, is allowed.</td><td>Project B needed it after moving files</td><td>Open decision D4. Needs a DOCSPEC R15.5 change, a <code>design_system.py</code> check and the freeze guard template</td></tr>
+<tr><td>F4</td><td><b>A new draft's CHANGES.md shows where entries go</b>: one commented example line after the header.</td><td>An agent in Project A inserted lines in the wrong place</td><td><code>cmd_promote</code> and the template</td></tr>
+<tr><td>F5</td><td><b>The version README has "What the apps do not follow yet"</b>: the changes still to build.</td><td>Project B uses it in every version from v4</td><td>Template README</td></tr>
+<tr><td>G1</td><td><b>Raw-control guard template</b>: no raw button, input, select or text area in app code; shared components only; an allowlist file per app that starts empty.</td><td>Project A, approved, in use in both of its apps</td><td>New template in DSY99's kit folder, after DSY99</td></tr>
+<tr><td>G2</td><td><b>Contrast guard template</b>: every text and fill token pair meets WCAG 2.2 AA in every theme, with a named list of known gaps that may only shrink.</td><td>Project A's contrast test guards its pairing and theme rules</td><td>New template, after DSY99</td></tr>
+</tbody>
+</table>
+</section>
+<section id="s6"><h2><span class="section-number">&sect; 6</span>Left out</h2>
+<table>
+<thead><tr><th>Left out</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Project A's look: palette, fonts, zero radius, no shadow, uppercase chrome, border widths by number, its own panels and strips, its admin scheme</td><td>One product's style. The principles behind T4 and T5 are kept.</td></tr>
+<tr><td>Project B's plan, comparison and second-copy screens, its product words, and its update and publish wording (U14 words, U15)</td><td>Product domain. The generic part is C4.</td></tr>
+<tr><td>Dialog and sheet as one component</td><td>Already in work as DS189.</td></tr>
+<tr><td>No app CSS (U19), DOM layout kit (U20), wizard harness, design edit hook, brief checklist</td><td>In DSY99. U19 and U20 are also not yet approved in Project B.</td></tr>
+<tr><td>Project A's draft items: card frame, two-level section header, settings that save by themselves</td><td>Not yet approved in Project A. Open decision D2.</td></tr>
+<tr><td>Dark theme body text at 7:1</td><td>A style choice above WCAG AA. Open decision D5.</td></tr>
+<tr><td>A self-updating app says every step, with Testing and Rolled back</td><td>Only apps that update themselves need it.</td></tr>
+<tr><td>A helper to import old approvals</td><td>R15.8 already says how, by hand. Rare.</td></tr>
+<tr><td>A gallery copy-forward check</td><td><code>promote</code> already rebuilds the gallery; the problem came from hand copies.</td></tr>
+</tbody>
+</table>
+</section>
+<section id="s7"><h2><span class="section-number">&sect; 7</span>Plan</h2>
+<p>Nothing starts before the owner answers the open decisions. The plan has five work tasks plus one release. Each task owns its own files, so tasks that run at the same time never touch the same file.</p>
+<table>
+<thead><tr><th>Task</th><th>Holds</th><th>Files it owns</th><th>Waits for</th><th>Size</th></tr></thead>
+<tbody>
+<tr><td>1. Rules and words</td><td>R1 to R16, W1</td><td>starter <code>ux-rules.md</code>, <code>content.md</code>, <code>CHANGES.md</code></td><td>DS189 merged (it adds rules at the end of the table, and new IDs follow its IDs)</td><td>about 40 min, one cloud agent</td></tr>
+<tr><td>2. Components and tokens</td><td>C1 to C5, T1 to T5, R17</td><td>starter <code>components.md</code>, <code>tokens.md</code></td><td>DS189 merged (it rewrites components section 9)</td><td>about 45 min, one cloud agent, in parallel with task 1</td></tr>
+<tr><td>3. Plugin fixes</td><td>F1 to F5 as decided</td><td><code>docs_fold.py</code> and the other docs scripts' argument parsing, <code>design_system.py</code>, starter README, freeze guard template, DOCSPEC R15.5</td><td>DSY99 merged (it edits <code>design_system.py</code> and DOCSPEC section 15)</td><td>about 50 min, one cloud agent</td></tr>
+<tr><td>4. Guard templates</td><td>G1, G2</td><td>new files in the kit folder; the CI fixture that runs the templates (DS188)</td><td>DSY99 merged (it creates the kit folder)</td><td>about 50 min, one cloud agent, in parallel with task 3</td></tr>
+<tr><td>5. Gallery</td><td>Draw C3 and C4 and the new token kinds</td><td><code>gallery_draw.py</code>, <code>gallery_tokens.py</code></td><td>Task 2</td><td>about 30 min</td></tr>
+<tr><td>6. Join and release</td><td>One release of <code>luismc-docs</code></td><td>join, CI, merge, version fold</td><td>Tasks 1 to 5</td><td>about 30 min after the last task</td></tr>
+</tbody>
+</table>
+<p>Every branch adds a change note that names <code>claude/plugins/docs/.claude-plugin/plugin.json</code>. Task 3 also adds a DOCSPEC note if D4 is yes. No branch edits a version line.</p>
+<p>A project that already has a design system gets nothing by itself. The starter changes reach a project only through <code>init</code> on a new project, or when the project copies the rules into its own <code>next-version</code> and its owner approves them.</p>
+<h3>Risks</h3>
+<ul>
+<li>DSY99 is local and outside this repository's task record. If it never lands, tasks 3 and 4 start from <code>main</code> and take the kit folder over.</li>
+<li>Rule IDs collide if task 1 starts before DS189 merges.</li>
+</ul>
+</section>
+<section id="s8"><h2><span class="section-number">&sect; 8</span>Decisions</h2>
+<div class="decision-list">
+<article class="decision decision-open" data-decision="D6">
+<h3 class="decision-head"><span class="decision-id">D6</span> <span class="decision-question">When does the work start?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
+<p class="decision-meta">Asked 05 Nov · Task DU1</p>
+<div class="decision-options">
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">After DS189 and DSY99</span> <span class="decision-tag">Recommended</span></div>
+<p class="decision-summary">Tasks 1 and 2 after DS189 merges; tasks 3 and 4 after DSY99 merges.</p>
+</div>
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Start tasks 3 and 4 now</span></div>
+<p class="decision-summary">Take over the kit folder from main without waiting for DSY99.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-open" data-decision="D5">
+<h3 class="decision-head"><span class="decision-id">D5</span> <span class="decision-question">Should the starter ask for 7:1 contrast for body text in the dark theme?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
+<p class="decision-meta">Asked 05 Nov · Task DU1</p>
+<div class="decision-options">
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Keep AA, mention 7:1</span> <span class="decision-tag">Recommended</span></div>
+<p class="decision-summary">WCAG 2.2 AA stays the rule; tokens.md names 7:1 as a choice.</p>
+</div>
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Require 7:1 in dark</span></div>
+<p class="decision-summary">Body text and status text on tint reach 7:1 in the dark theme.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-open" data-decision="D4">
+<h3 class="decision-head"><span class="decision-id">D4</span> <span class="decision-question">May a frozen version take link-only edits after files move?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
+<p class="decision-meta">Asked 05 Nov · Task DU1</p>
+<div class="decision-options">
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Yes, link targets only</span> <span class="decision-tag">Recommended</span></div>
+<p class="decision-summary">Allowed when every change is a link target that points at an existing file; the check proves it and the digest is taken again.</p>
+</div>
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">No, stay strict</span></div>
+<p class="decision-summary">A move leaves old links in frozen versions.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-open" data-decision="D3">
+<h3 class="decision-head"><span class="decision-id">D3</span> <span class="decision-question">How should DS4 (stale gallery) behave on branches?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
+<p class="decision-meta">Asked 05 Nov · Task DU1</p>
+<div class="decision-options">
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Rebuild at join and promote</span> <span class="decision-tag">Recommended</span></div>
+<p class="decision-summary">Branches may leave the draft gallery stale; the join and promote rebuild it; DS4 only warns on the default branch.</p>
+</div>
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Keep the warning</span></div>
+<p class="decision-summary">Every branch rebuilds the gallery itself.</p>
+</div>
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Information only</span></div>
+<p class="decision-summary">DS4 becomes a note for next-version and stays a warning for the current version.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-open" data-decision="D2">
+<h3 class="decision-head"><span class="decision-id">D2</span> <span class="decision-question">What about Project A&#x27;s draft items (card frame, two-level section header, settings that save by themselves)?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
+<p class="decision-meta">Asked 05 Nov · Task DU1</p>
+<div class="decision-options">
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Wait for its approval</span> <span class="decision-tag">Recommended</span></div>
+<p class="decision-summary">Add them in a later round once Project A approves its next version.</p>
+</div>
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Add now</span></div>
+<p class="decision-summary">Add them as starter items to keep, change or delete.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-open" data-decision="D1">
+<h3 class="decision-head"><span class="decision-id">D1</span> <span class="decision-question">Which of the 35 proposals go into the starter?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
+<p class="decision-meta">Asked 05 Nov · Task DU1</p>
+<div class="decision-options">
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">All 35</span> <span class="decision-tag">Recommended</span></div>
+<p class="decision-summary">Rules, components, tokens, words, plugin fixes and guard templates.</p>
+</div>
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Only those approved in a version</span></div>
+<p class="decision-summary">Drops R14 and C3, which come from owner decisions not yet in a numbered version.</p>
+</div>
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Starter content only</span></div>
+<p class="decision-summary">Rules, components, tokens and words now; plugin fixes and guards later.</p>
+</div>
+<div class="decision-option">
+<div class="decision-option-head"><span class="decision-label">Pick per row</span></div>
+<p class="decision-summary">The owner marks each row.</p>
+</div>
+</div>
+</article>
+</div>
+</section>
+<section id="s9"><h2><span class="section-number">&sect; 9</span>History</h2>
+<div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
+<tr><td>05 Nov 12:46</td><td>Feature artifact created.</td></tr>
+</tbody></table></div>
+</section>
+</main></div>
+<script>
+(function () {
+  try {
+    var root = document.documentElement;
+    var toggle = document.getElementById('theme-toggle');
+    if (toggle) {
+      toggle.addEventListener('click', function () {
+        var dark = root.getAttribute('data-theme') === 'dark' ||
+          (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        root.setAttribute('data-theme', dark ? 'light' : 'dark');
+      });
+    }
+    // The contents rail folds to a thin rail on wide screens; the choice is kept per viewer and storage may be refused.
+    var layout = document.querySelector('.layout');
+    var railButton = document.getElementById('contents-toggle');
+    if (layout && railButton) {
+      var setRail = function (collapsed, save) {
+        if (collapsed) layout.setAttribute('data-contents', 'collapsed');
+        else layout.removeAttribute('data-contents');
+        railButton.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        railButton.querySelector('.contents-toggle-label').textContent = collapsed ? 'Show contents' : 'Hide contents';
+        railButton.querySelector('.contents-toggle-icon').innerHTML = collapsed ? '&rsaquo;' : '&lsaquo;';
+        if (save) {
+          try { window.localStorage.setItem('contents-rail', collapsed ? 'collapsed' : 'open'); } catch (error) {}
+        }
+      };
+      var remembered = null;
+      try { remembered = window.localStorage.getItem('contents-rail'); } catch (error) {}
+      if (remembered === 'collapsed') setRail(true, false);
+      railButton.addEventListener('click', function () {
+        setRail(railButton.getAttribute('aria-expanded') === 'true', true);
+      });
+    }
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.contents a'));
+    var sections = links.map(function (link) {
+      return document.getElementById(link.getAttribute('href').slice(1));
+    });
+    function markCurrent() {
+      var index = 0;
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i] && sections[i].getBoundingClientRect().top <= 120) index = i;
+      }
+      links.forEach(function (link, i) {
+        var isCurrent = i === index;
+        link.classList.toggle('current', isCurrent);
+        if (isCurrent) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      });
+      var row = document.querySelector('nav.contents .contents-links');
+      var current = links[index];
+      if (row && current && row.scrollWidth > row.clientWidth && getComputedStyle(row).display === 'flex') {
+        row.scrollLeft = current.offsetLeft - row.clientWidth / 2 + current.offsetWidth / 2;
+      }
+    }
+    window.addEventListener('scroll', markCurrent, { passive: true });
+    window.addEventListener('resize', markCurrent);
+    markCurrent();
+  } catch (error) {}
+})();
+</script>
+</body>
+</html>

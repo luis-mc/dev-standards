@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T09:21+00:00",
+  "updated": "2026-11-05T12:54+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4191,6 +4191,32 @@
       "changed": "2026-11-05T09:21+00:00",
       "rides": "DL59",
       "started": "2026-11-05T09:15+00:00"
+    },
+    {
+      "id": "DS189",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Sheet component in luismc-docs design-system template",
+      "detail": "Moobable D10 (05 Nov): owner wants the shared Sheet (bottom sheet on phone; dialog/popover at wider widths, focus trap, focus return) in the design-system template components, ux-rules and guard notes.",
+      "expected": "05 Nov ~14:00",
+      "changed": "2026-11-05T12:43+00:00",
+      "expected_basis": "cloud agent from 12:45, ~40 min",
+      "no_release": "plugin template docs; ships with next plugin release",
+      "started": "2026-11-05T12:43+00:00"
+    },
+    {
+      "id": "DU1",
+      "owner": "design-field-updates",
+      "app": "luismc-docs",
+      "status": "Needs you",
+      "item": "Study UX changes in two real projects and propose starter updates",
+      "detail": "Study done: 35 proposals checked against both projects and the starter, 9 left out, plan in 6 tasks. Waits on owner decisions D1-D6 on the feature page.",
+      "expected": "05 Nov ~15:00",
+      "changed": "2026-11-05T12:54+00:00",
+      "expected_basis": "repo study ~1 h + peer replies; started 12:45",
+      "no_release": "study and proposal only",
+      "started": "2026-11-05T12:45+00:00"
     },
     {
       "id": "MP1",

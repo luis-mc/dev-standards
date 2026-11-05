@@ -1,0 +1,24 @@
+<!-- title: Proposed UX rules -->
+<p>New rules take the next free IDs after DS189's new rules land. Extended rules keep their IDs and get clearer words. "Approved" means the source project's owner approved it in a numbered version.</p>
+<table>
+<thead><tr><th>#</th><th>Proposal</th><th>Starter today</th><th>Source</th><th>Change</th></tr></thead>
+<tbody>
+<tr><td>R1</td><td><b>The page scrolls, never a box inside it.</b> A frame is as tall as its section. Long lists use the pager. Only a wide table may scroll sideways inside its frame.</td><td>UX-16 covers sideways scroll of the page only</td><td>B, U16, approved v9</td><td>New rule</td></tr>
+<tr><td>R2</td><td><b>An action on a choice names the work and its count</b> ("Rename 12 files"). With nothing chosen it is disabled and says what to do ("Tick the files to rename").</td><td>UX-4 (labelled by what it does), UX-38 (blocked actions say why)</td><td>B, N3, approved v5</td><td>Extend UX-4</td></tr>
+<tr><td>R3</td><td><b>Nothing is shown only on hover.</b> A menu or control is drawn at every width and for every pointer, mouse or touch.</td><td>None</td><td>B, N1, approved v5</td><td>New rule</td></tr>
+<tr><td>R4</td><td><b>One shape per kind of card.</b> Same height, no small variant, long names stop at two lines. A state is said in words, never a bare colour frame.</td><td>UX-1 and UX-26 in general terms</td><td>B, N7, approved v5</td><td>New rule</td></tr>
+<tr><td>R5</td><td><b>An overview only shows and links.</b> It has no command buttons. Each command lives in one place. Settings hold configuration only.</td><td>None</td><td>B, U8, approved v6</td><td>New rule</td></tr>
+<tr><td>R6</td><td><b>Background work never locks a step.</b> A job that runs by itself shows as a line inside the step. The strip and the page read one progress value.</td><td>UX-19 and UX-34 (one source of truth)</td><td>B, U9, approved v6</td><td>Extend UX-34</td></tr>
+<tr><td>R7</td><td><b>A wait on an outside limit says why and until when</b> ("waits for the service's hourly limit until 08:34"). A count never sits still without a reason.</td><td>UX-29 (a wait names what is happening)</td><td>B, U11, approved v6</td><td>Extend UX-29</td></tr>
+<tr><td>R8</td><td><b>"x ago" keeps ageing</b> while the page stays open, from one shared clock that pauses while the page is hidden and catches up when shown.</td><td>content.md gives the format only</td><td>B, U12, approved v6</td><td>New rule</td></tr>
+<tr><td>R9</td><td><b>A fault in the page's own code is not a lost connection.</b> It says "This page hit a fault." with the real error under Details.</td><td>UX-28 (could not load says what, why, next)</td><td>B, U13, approved v6</td><td>Extend UX-28</td></tr>
+<tr><td>R10</td><td><b>A wait is said once, in one line, from one function.</b> No rows of locked buttons.</td><td>UX-38</td><td>B, U14, approved v7</td><td>Extend UX-38</td></tr>
+<tr><td>R11</td><td><b>The work step of a wizard</b> shows the item in hand, n of N and the time left, never a bare wait. It has no Back. A stored "running" with no live run reads Paused.</td><td>UX-30 (work step shows live progress)</td><td>B, U10, approved v6</td><td>Extend UX-30</td></tr>
+<tr><td>R12</td><td><b>Start again ends a wizard.</b> Done and Stopped show Start again as the one primary. Only Start again begins a new run. Earlier steps are read-only.</td><td>UX-30 says nothing after Done</td><td>B, C34, approved v9</td><td>Extend UX-30</td></tr>
+<tr><td>R13</td><td><b>A wizard's behaviour belongs to the shared wizard.</b> Current step, locks, Stop, busy and Done live in one part. A page passes data only.</td><td>Wizard component, no rule</td><td>B, U17, approved v9</td><td>New rule; its guard is DSY99's wizard harness</td></tr>
+<tr><td>R14</td><td><b>Every button that sends a request stays busy until the answer.</b> The busy state comes from the server's answer, not a timer.</td><td>UX-13 covers buttons that start work</td><td>B, owner decision of 5 Nov</td><td>Extend UX-13</td></tr>
+<tr><td>R15</td><td><b>A sticky foot never covers the content.</b> Its height is reserved, so the last row ends above it on every screen size.</td><td>Sticky action bar component, no rule</td><td>B, N4, approved v5</td><td>Extend UX-42</td></tr>
+<tr><td>R16</td><td><b>A theme changes token values only, never a component.</b> A theme may change one named accent slot.</td><td>tokens.md "Add a named theme" implies it</td><td>A, UX-27, approved v2</td><td>New rule</td></tr>
+<tr><td>R17</td><td><b>Emoji are never functional icons.</b> They may mark a celebration.</td><td>One icon set; nothing on emoji</td><td>A, UX-25, approved v1</td><td>One line in components 33 (other shared parts)</td></tr>
+</tbody>
+</table>
