@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T07:18+00:00",
+  "updated": "2026-11-05T08:42+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1413,9 +1413,9 @@
       "status": "Running",
       "item": "Overnight merge watcher and hourly check-in",
       "detail": "delivery_watch.py runs from main's code and the hourly cron checks for peer bug reports (D77, D78, D87) until the owner returns.",
-      "expected": "05 Nov ~09:00",
-      "changed": "2026-11-05T07:18+00:00",
-      "expected_basis": "runs until the owner checks in; not back at 07:00",
+      "expected": "05 Nov ~12:00",
+      "changed": "2026-11-05T08:42+00:00",
+      "expected_basis": "runs until the owner says stop; no answer yet",
       "no_release": "watching only; ships nothing",
       "started": "2026-11-05T00:00+00:00"
     },
