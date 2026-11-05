@@ -6,7 +6,7 @@ services:
     build:
       context: .
       args:
-        RUNNER_VERSION: ${RUNNER_VERSION:-2.321.0}
+        RUNNER_VERSION: ${RUNNER_VERSION:-2.338.2}
         RUNNER_SHA256: ${RUNNER_SHA256:?set by the setup}
     image: luismc-runner-pool:${POOL_NAME:-main}
     restart: unless-stopped

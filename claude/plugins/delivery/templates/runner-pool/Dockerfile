@@ -1,6 +1,6 @@
 # Shared CI pool image (DL30). One image, one agent per repository, started by pool_supervisor.py.
 FROM ubuntu:24.04
-ARG RUNNER_VERSION=2.321.0
+ARG RUNNER_VERSION=2.338.2
 ARG RUNNER_SHA256
 LABEL dev.luismc.runner-pool="1"
 ENV DEBIAN_FRONTEND=noninteractive

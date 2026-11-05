@@ -173,7 +173,7 @@ One Docker container with one CPU and memory cap. Inside it, one runner agent pe
 
 | Part | Choice |
 |---|---|
-| Image | One Linux image: the runner tarball checked by SHA-256, git, the runner's own dependencies. Workflows install their own toolchains. Label `dev.luismc.runner-pool`. |
+| Image | One Linux image: the runner tarball (latest release, floor 2.329.0, pinned fallback 2.338.2; version in the pool `.env`) checked by SHA-256, git, the runner's own dependencies. Workflows install their own toolchains. Label `dev.luismc.runner-pool`. |
 | Agents | One folder per repository, `agents/<slug>/`, each with its own `.runner`, `.credentials` and `_work`. Persistent agents only (D39). |
 | Users | Each agent runs as its own Unix user (`r-<slug>`), folders `0700`. One repository's job cannot read another's checkout or credentials. |
 | Start | `tini`, then `pool_supervisor.py` (standard-library Python, owned by the plugin). It reads `agents.json`, starts each agent as its user, restarts a dead one with back-off, and on stop lets running jobs finish. |
@@ -254,8 +254,8 @@ flowchart TD
 
 1. **Wait for idle.** Each existing runner finishes its job. Nothing is stopped mid-job.
 2. **Remove old runners.** For each one: remove its registration (`config remove` with a removal token through a pipe, or `DELETE /repos/{o}/{r}/actions/runners/{id}`). Then stop and delete its service or container. A container's volumes are deleted only after a separate yes that names them. A test database the owner wants to keep is backed up first.
-3. **Machine layer.** Write `machine.json`, create the slot and queue folders, register the host load scheduled task. On Windows the task is one entry that starts at boot and runs a small loop script, because `schtasks` cannot repeat faster than every minute. The setup first copies `load.py`, `machine_slots.py` and `host-load-loop.py` (writes the host load file, sleeps 15 s, repeats) into `<machine folder>/host-load/`; the printed `schtasks /Create /SC ONSTART /RU SYSTEM` line uses absolute paths to `python` and that loop script, so a SYSTEM task can find them.
-4. **WSL ceiling.** Write `.wslconfig` (`memory=`, `processors=` from sizing; the old file is kept as `.wslconfig.bak`; nothing is written when it already has at least that much). Then `wsl --shutdown` only after a yes and only when no runner is busy.
+3. **Machine layer.** Write `machine.json`, create the slot and queue folders, register the host load scheduled task. On Windows the task is one entry that starts at boot and runs a small loop script, because `schtasks` cannot repeat faster than every minute. The setup first copies `load.py`, `machine_slots.py` and `host-load-loop.py` (writes the host load file, sleeps 15 s, repeats) into `<machine folder>/host-load/`; the printed `schtasks /Create /SC ONSTART /RU SYSTEM` line uses absolute paths to `python` and that loop script, so a SYSTEM task can find them. The setup checks the task with `schtasks /Query`. An unelevated query of a SYSTEM task is "Access is denied"; the step then passes when the host load file is under 60 seconds old.
+4. **WSL ceiling.** Write `.wslconfig` (`memory=`, `processors=` from sizing; the old file is kept as `.wslconfig.bak`; nothing is written when it already has at least that much). The step text shows old -> new for memory and processors, and for `POOL_MEM` and `POOL_CPUS` in the pool `.env`. While other runners or containers run in WSL, the memory is never written below its current value, nor below what they use plus the pool cap. Then `wsl --shutdown` only after a yes and only when no runner is busy.
 5. **Pool.** Write the pool files, `docker compose up -d --build`, add one agent per Linux repository with the token pipe.
 6. **Windows services.** One per repository that tests on Windows, with both hooks in its `.env`.
 7. **Variables.** `gh variable set CI_RUNS_ON` (and `CI_SERIAL` when chosen) per repository.
@@ -267,7 +267,7 @@ A step that needs an elevated shell (a Windows service, removing a Windows servi
 
 ### 6.4 Sizing
 
-- Memory room = total memory × 85% − memory in use now.
+- Memory room = total memory × 85% − memory in use now. "In use" leaves out the WSL VM (`vmmem`, `vmmemWSL`) and this pool's own containers, so a rerun on an unchanged host gives the same cap.
 - CPU room = logical CPUs × 60%.
 - Pool cap = the smaller of the room and Docker's ceiling, minus the sidecar and 1 GB for the VM.
 - The setup refuses a cap below the largest Linux shard's `memory_gib`, and says what to change.
