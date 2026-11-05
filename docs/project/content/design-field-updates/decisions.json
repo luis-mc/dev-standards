@@ -137,6 +137,98 @@
       "chosen": "After DS189 and DSY99",
       "decided": "2026-11-05",
       "owner_words": "After DS189 and DSY99 (Recommended)"
+    },
+    {
+      "id": "D7",
+      "question": "How should DSY99 land?",
+      "asked": "2026-11-05",
+      "status": "decided",
+      "task": "DU8",
+      "options": [
+        {
+          "label": "Fix here, then release",
+          "summary": "Push the branch here, fix K1-K3 with one cloud agent, release it on its own.",
+          "recommended": true
+        },
+        {
+          "label": "Comics session fixes",
+          "summary": "Send K1-K3 back to the session that built it."
+        },
+        {
+          "label": "Land as is, fix after",
+          "summary": "Release now, fix in a follow-up."
+        }
+      ],
+      "chosen": "Fix here, then release",
+      "decided": "2026-11-05",
+      "owner_words": "Fix here, then release (Recommended)"
+    },
+    {
+      "id": "D8",
+      "question": "How do DSY99 and DU2-DU7 ship?",
+      "asked": "2026-11-05",
+      "status": "decided",
+      "task": "DU8",
+      "options": [
+        {
+          "label": "Two releases",
+          "summary": "DSY99 with its fixes first; DU2-DU7 second.",
+          "recommended": true
+        },
+        {
+          "label": "One release",
+          "summary": "Everything ships together."
+        }
+      ],
+      "chosen": "Two releases",
+      "decided": "2026-11-05",
+      "owner_words": "Two releases (Recommended)"
+    },
+    {
+      "id": "D9",
+      "question": "K3: what counts as a plan row?",
+      "asked": "2026-11-05",
+      "status": "decided",
+      "task": "DU8",
+      "options": [
+        {
+          "label": "Rows under plan headings",
+          "summary": "Only rows under a Plan, Proposed, Proposals or Findings heading.",
+          "recommended": true
+        },
+        {
+          "label": "Only plan-named files",
+          "summary": "Only files named plan, audit or findings."
+        },
+        {
+          "label": "Warn, never block",
+          "summary": "Same matching, the hook only warns."
+        }
+      ],
+      "chosen": "Rows under plan headings",
+      "decided": "2026-11-05",
+      "owner_words": "Rows under plan headings (Recommended)"
+    },
+    {
+      "id": "D10",
+      "question": "K1: what does the first design breach do?",
+      "asked": "2026-11-05",
+      "status": "decided",
+      "task": "DU8",
+      "options": [
+        {
+          "label": "Warn only",
+          "summary": "No permission decision; the warning reaches the agent as context.",
+          "recommended": true
+        },
+        {
+          "label": "Ask you",
+          "summary": "Return ask, so the owner sees a prompt."
+        }
+      ],
+      "chosen": "Warn only",
+      "decided": "2026-11-05",
+      "owner_words": "Warn only (Recommended)"
     }
   ]
 }

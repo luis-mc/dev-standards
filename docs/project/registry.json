@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T14:07+00:00",
+  "updated": "2026-11-05T14:56+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4288,14 +4288,76 @@
       "id": "DU8",
       "owner": "design-field-updates",
       "app": "luismc-docs",
-      "status": "Running",
+      "status": "Live",
       "item": "Review DSY99 handoff together with DU2-DU7",
-      "detail": "Wait for the session building DSY99 (design-system enforcement kit) to send its handoff here, then review it with the DU proposals as one set: overlaps, order, conflicts with design_system.py, DOCSPEC 15 and the starter. Then present to the owner.",
-      "expected": "05 Nov ~14:50",
-      "changed": "2026-11-05T14:07+00:00",
-      "expected_basis": "handoff 14:05, review ~45 min",
+      "detail": "DSY99 reviewed (merges clean, 30 tests pass, K1-K4 found). Owner D7-D10 on 5 Nov.",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T14:56+00:00",
       "no_release": "review only",
       "started": "2026-11-05T14:05+00:00"
+    },
+    {
+      "id": "DU9",
+      "owner": "design-field-updates",
+      "app": "luismc-docs",
+      "status": "Running",
+      "item": "Release the design-system enforcement kit with K1-K3 fixes",
+      "detail": "Light join of DU9-enforcement-kit (DSY99 commits + fixes), ready PR, CI, merge; luismc-docs, luismc-delivery and luismc-artifacts version fold.",
+      "expected": "05 Nov ~16:15",
+      "changed": "2026-11-05T14:56+00:00",
+      "expected_basis": "fix agent 50 min from 15:00, join 10, CI ~4-10, merge 5",
+      "release": 45,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-05T15:00+00:00",
+          "end": "2026-11-05T15:50+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-05T15:50+00:00",
+          "end": "2026-11-05T16:00+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-05T16:00+00:00",
+          "end": "2026-11-05T16:10+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-05T16:10+00:00",
+          "end": "2026-11-05T16:15+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 20
+      },
+      "started": "2026-11-05T15:00+00:00"
+    },
+    {
+      "id": "DU10",
+      "owner": "design-field-updates",
+      "app": "luismc-docs",
+      "status": "Built",
+      "item": "Enforcement kit (DSY99 branch) brought into dev-standards",
+      "detail": "No-app-CSS scan, DOM layout kit, wizard harness (10 states), design edit hook, plan-rows Stop check, brief command, DOCSPEC R15.9, DELIVERYSPEC DL-92. Built in another session (owner D203-D248), handed over here (D249). Head 17530413, 30 tests pass.",
+      "expected": "05 Nov ~16:15",
+      "changed": "2026-11-05T14:56+00:00",
+      "rides": "DU9"
+    },
+    {
+      "id": "DU11",
+      "owner": "design-field-updates",
+      "app": "luismc-docs",
+      "status": "Running",
+      "item": "Fix K1-K3 on the enforcement kit",
+      "detail": "K1 first breach warns with no permission decision (D10); K2 judge only what an edit adds, skip test files; K3 plan rows only under Plan/Proposed/Proposals/Findings headings (D9). Branch DU11-enforcement-kit-fixes, one cloud agent.",
+      "expected": "05 Nov ~15:50",
+      "changed": "2026-11-05T14:56+00:00",
+      "expected_basis": "cloud agent from 15:00: setup 5 + work 35 + checks 10",
+      "rides": "DU9",
+      "started": "2026-11-05T15:00+00:00"
     },
     {
       "id": "MP1",
