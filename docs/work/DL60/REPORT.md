@@ -14,8 +14,11 @@ Branch: DL60-runner-pool-windows
 - `python3 tools/test_delivery_runner.py -k dl60`: all passed. The full file was not run: a local hook refuses this heavy suite; CI runs it.
 - `python3 -m unittest test_runner_pool` (in claude/plugins/delivery/tests): 79 OK.
 - `python3 tools/ci_areas.py --branch-advice`: "unreadable diff, treat as every area -> gh workflow run spec-lint.yml ..." Not run (heavy; left to CI).
-- `python3 claude/plugins/docs/scripts/docs_check.py`: see the run output in the commit step.
+- `python3 claude/plugins/docs/scripts/docs_check.py`: 2 errors left, both not from this branch's code: G1 (generated decisions.md is stale, a generated file I must not edit) and W1 (a report under docs/work/ is expected on a task branch; strip before the join). M1 passes with the `Docs: none` commit message.
 
 ## Docs
 Change note added. No feature spec describes pool sizing or agent folders: `Docs: none` in the commit message.
+
+Code commit: 546574cfc6bb7cc64a7dce669d6297c760a72385 (the branch head is this report commit on top).
+
 READY
