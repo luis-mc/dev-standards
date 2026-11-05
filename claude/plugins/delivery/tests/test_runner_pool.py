@@ -1021,3 +1021,70 @@ class DL63PoolAgentTests(unittest.TestCase):
             A.add_agent("app1", "owner/example-app", "T", "main", True, self.file, self.d, bad)
         self.assertIn("database setup", str(cm.exception))
         self.assertFalse(os.path.exists(self.file) and json.loads(Path(self.file).read_text())["agents"])
+
+
+class DockerCpuCapTests(unittest.TestCase):
+    def test_cap_stays_below_docker_cpus(self):
+        self.assertEqual(P.cap_cpus(19.0, 19), 18)
+        self.assertEqual(P.cap_cpus(5.0, 2), 1)
+        self.assertEqual(P.cap_cpus(3.0, 19), 3.0)
+
+    def test_sizing_caps_at_ncpu_minus_one(self):
+        self.assertEqual(P.sizing(64, 0, 32, docker_cpus=2)["cpus"], 1)
+        self.assertEqual(P.sizing(64, 0, 40, docker_cpus=19)["cpus"], 18)
+
+    def test_ncpu_comes_from_docker_then_wslconfig_then_host(self):
+        class Docker(FakeProbe):
+            def sh(self, argv, input=None, timeout=60):
+                return (0, "19\n") if argv[:2] == ["docker", "info"] else (1, "")
+        self.assertEqual(P.docker_ncpu(Docker()), 19)
+        probe = FakeProbe({"C:/Users/u1/.wslconfig": "[wsl2]\nprocessors=6\n"})
+        probe.sh = lambda argv, input=None, timeout=60: None
+        self.assertEqual(P.docker_ncpu(probe), 6)
+        bare = FakeProbe()
+        bare.sh = lambda argv, input=None, timeout=60: None
+        bare.cpu_count = lambda: 4
+        self.assertEqual(P.docker_ncpu(bare), 4)
+
+    def test_pool_files_cap_follows_docker(self):
+        class Docker(FakeProbe):
+            def sh(self, argv, input=None, timeout=60):
+                return (0, "19\n") if argv[:2] == ["docker", "info"] else (0, "")
+        seen = {}
+        orig = P.write_pool_files
+        P.write_pool_files = lambda pool, cap, runner_version=None, **k: seen.update(cap=cap) or "dest"
+        try:
+            ok, _ = P.Executor(Docker()).run(P._step("f", "F", "pool-files", pool="main", cap={"cpus": 19.0, "mem_gib": 6.0}))
+        finally:
+            P.write_pool_files = orig
+        self.assertTrue(ok)
+        self.assertEqual(seen["cap"]["cpus"], 18)
+
+
+class RunsOnWarningTests(unittest.TestCase):
+    def run_step(self, files, repo_path):
+        probe = FakeProbe(files)
+        return P.Executor(probe).run(P._step("v", "V", "set-variable", repo="owner/example-app", name="CI_RUNS_ON",
+                                             value="[]", repo_path=repo_path))
+
+    def test_lists_workflows_that_do_not_read_it(self):
+        with tempfile.TemporaryDirectory() as d:
+            wf = os.path.join(d, ".github", "workflows")
+            os.makedirs(wf)
+            Path(wf, "ci.yml").write_text("jobs:\n  a:\n    runs-on: ubuntu-latest\n")
+            Path(wf, "e2e.yml").write_text("jobs:\n  a:\n    runs-on: ubuntu-latest\n")
+            Path(wf, "cleanup.yml").write_text("jobs:\n  a:\n    runs-on: ${{ vars.CI_RUNS_ON }}\n")
+            probe = P.Probe()
+            ex = P.Executor(probe)
+            probe.gh = lambda args, input=None: (0, "")
+            ok, text = ex.run(P._step("v", "V", "set-variable", repo="owner/example-app", name="CI_RUNS_ON",
+                                      value="[]", repo_path=d))
+        self.assertTrue(ok)
+        self.assertIn("do not read it: ci.yml, e2e.yml.", text)
+        self.assertNotIn("cleanup.yml", text)
+        self.assertIn("vars.CI_RUNS_ON || 'ubuntu-latest'", text)
+
+    def test_no_local_checkout_skips_with_a_note(self):
+        ok, text = self.run_step({}, None)
+        self.assertTrue(ok)
+        self.assertIn("not checked out here", text)

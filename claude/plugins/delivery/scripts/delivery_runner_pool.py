@@ -147,6 +147,13 @@ class Probe:
         text = r[1].strip() if r and r[0] == 0 else ''
         return round(int(text) / 2.0 ** 30, 1) if text.isdigit() else 0.0
 
+    def docker_cpus(self):
+        """CPUs Docker sees (`docker info --format {{.NCPU}}`, inside WSL on Windows), or None when Docker cannot be read."""
+        pre = ['wsl'] if self.platform.startswith('win') else []
+        r = self.sh(pre + ['docker', 'info', '--format', '{{.NCPU}}'])
+        text = r[1].replace('\x00', '').strip() if r and r[0] == 0 else ''
+        return int(text) if text.isdigit() and int(text) > 0 else None
+
     def container_gib(self):
         """{'pool': GiB used by this pool's containers, 'other': GiB used by other containers, 'others': [names]}.
         Reads `docker ps` and `docker stats` (inside WSL on Windows). Zeros when Docker cannot be read."""
@@ -324,7 +331,7 @@ def detect_host(probe):
         # The WSL VM holds the pool and every other container: leave it out of "used". With no VM (native Linux), leave
         # out the pool's own containers instead. A rerun then sees the same figure as the first run.
         used = round(max(0.0, used - (vm if vm > 0 else box['pool'])), 1)
-    return {'platform': probe.platform, 'python': probe.python(), 'machine_dir': probe.machine_dir(), 'cpus': probe.cpu_count(),
+    return {'platform': probe.platform, 'python': probe.python(), 'machine_dir': probe.machine_dir(), 'cpus': probe.cpu_count(), 'docker_cpus': docker_ncpu(probe),
             'total_gib': mem[0] if mem else None, 'used_gib': used, 'wsl_vm_gib': vm,
             'other_containers_gib': box['other'], 'other_containers': box['others']}
 
@@ -341,10 +348,26 @@ def detect(probe=None, json=False):
     return found
 
 
+def docker_ncpu(probe):
+    """CPUs Docker sees: `docker info` when Docker runs, else the `.wslconfig` processors value, else the host CPUs."""
+    n = probe.docker_cpus()
+    if n:
+        return n
+    procs = detect_wsl(probe).get('processors')
+    return procs or probe.cpu_count()
+
+
+def cap_cpus(requested, ncpu):
+    """Docker refuses a CPU limit equal to the CPUs it sees, so the cap stays at NCPU - 1 (never below 1)."""
+    if not ncpu:
+        return requested
+    return max(1, min(requested, int(ncpu) - 1))
+
+
 # --- sizing (section 6.4) ---------------------------------------------------------------------------------------------
 
 def sizing(total_gib, used_gib, cpus, docker_gib=None, largest_shard_gib=None, sidecar_gib=SIDECAR_GIB, vm_gib=VM_GIB,
-           other_gib=0.0, others_run=False, wsl_current=None):
+           other_gib=0.0, others_run=False, wsl_current=None, docker_cpus=None):
     """Pool cap = the smaller of the memory room and Docker's ceiling, minus the sidecar and the VM. CPU = 60% of the CPUs.
 
     `used_gib` is what non-WSL processes use (the WSL VM and the pool's containers are not in it), so a rerun gives the
@@ -360,6 +383,7 @@ def sizing(total_gib, used_gib, cpus, docker_gib=None, largest_shard_gib=None, s
         cpu = max(1.0, cpu - 1)
         procs = int(math.floor(cpu)) + 1
     procs = max(1, min(procs, host_cpus))
+    cpu = cap_cpus(cpu, docker_cpus)
     wsl_mem = int(math.ceil(mem + sidecar_gib + vm_gib))
     if others_run:
         if wsl_current is not None:
@@ -389,7 +413,8 @@ def measured_sizing(found, total_gib=None, used_gib=None, cpus=None, docker_gib=
         return None
     others = host.get('other_containers') or []
     res = sizing(total, used or 0.0, n, docker, largest_shard_gib, other_gib=host.get('other_containers_gib') or 0.0,
-                 others_run=bool(others), wsl_current=(found.get('wsl') or {}).get('memory'))
+                 others_run=bool(others), wsl_current=(found.get('wsl') or {}).get('memory'),
+                 docker_cpus=host.get('docker_cpus'))
     res['measured'] = {'total_gib': total, 'used_gib': used or 0.0, 'cpus': n, 'docker_gib': docker,
                        'other_containers_gib': host.get('other_containers_gib') or 0.0}
     return res
@@ -482,7 +507,7 @@ def _wsl_values(found, cap):
     return w, enough
 
 
-def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, serial=None, limits=None):
+def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, serial=None, limits=None, repo_path=None):
     """The steps, in the order of contract 6.3. A public repository gets no step; it is listed in `refused`.
 
     With no repositories given, they come from detect (`derive_repos`). With none derived either, the plan has no step
@@ -590,7 +615,7 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
     for repo in keep_l:
         value = json.dumps(['self-hosted', 'linux', 'pool-%s' % pool])
         steps.append(_step('var:CI_RUNS_ON:%s' % repo, 'Set CI_RUNS_ON for %s' % repo, 'set-variable', repo=repo,
-                           name='CI_RUNS_ON', value=value))
+                           name='CI_RUNS_ON', value=value, repo_path=repo_path))
         if serial is not None:
             steps.append(_step('var:CI_SERIAL:%s' % repo, 'Set CI_SERIAL for %s' % repo, 'set-variable', repo=repo,
                                name='CI_SERIAL', value='true' if serial else 'false'))
@@ -818,7 +843,10 @@ class Executor:
 
     def do_pool_files(self, step):
         version, _sha, source = resolve_runner(self.probe)
-        dest = write_pool_files(step['pool'], step.get('cap'), runner_version=version)
+        cap = dict(step.get('cap') or {})
+        if cap.get('cpus') is not None:
+            cap['cpus'] = cap_cpus(cap['cpus'], docker_ncpu(self.probe))
+        dest = write_pool_files(step['pool'], cap, runner_version=version)
         return True, 'wrote %s (runner %s, %s)' % (dest, version, source)
 
     def do_pool_up(self, step):
@@ -843,7 +871,30 @@ class Executor:
 
     def do_set_variable(self, step):
         r = self.probe.gh(['variable', 'set', step['name'], '--repo', step['repo'], '--body', step['value']])
-        return (bool(r and r[0] == 0), '%s set' % step['name'] if r and r[0] == 0 else 'gh refused')
+        if not (r and r[0] == 0):
+            return False, 'gh refused'
+        text = '%s set' % step['name']
+        if step['name'] == 'CI_RUNS_ON':
+            text += '. ' + self.runs_on_note(step.get('repo_path'))
+        return True, text
+
+    def runs_on_note(self, repo_path):
+        """A plain note on which workflows of the local checkout do not read `vars.CI_RUNS_ON`."""
+        if not repo_path:
+            return 'The workflows were not checked: the repository is not checked out here.'
+        folder = os.path.join(repo_path, '.github', 'workflows')
+        names = [n for n in self.probe.listdir(folder) if n.endswith(('.yml', '.yaml'))]
+        if not names:
+            return 'The workflows were not checked: no .github/workflows folder in %s.' % repo_path
+        missing = []
+        for n in names:
+            text = self.probe.read_text(os.path.join(folder, n)) or ''
+            if 'runs-on:' in text and 'vars.CI_RUNS_ON' not in text:
+                missing.append(n)
+        if not missing:
+            return 'Every workflow with runs-on reads it.'
+        return ("Warning: CI_RUNS_ON is set, but these workflows do not read it: %s. "
+                "Use runs-on: ${{ vars.CI_RUNS_ON || 'ubuntu-latest' }}." % ', '.join(missing))
 
     def do_verify(self, step):
         res = verify(self.probe, step['repos'], step['pool'])
@@ -996,6 +1047,7 @@ def main(argv=None):
     ap.add_argument('--repos', default='')
     ap.add_argument('--windows-repos', default='')
     ap.add_argument('--pool', default='main')
+    ap.add_argument('--repo-path', default=None, help='the local checkout of the repository (to check its workflows for CI_RUNS_ON)')
     ap.add_argument('--total-gib', type=float)
     ap.add_argument('--used-gib', type=float)
     ap.add_argument('--cpus', type=float)
@@ -1015,7 +1067,7 @@ def main(argv=None):
                 return 1
             print(json.dumps(res, indent=2))
             return 0 if res['ok'] else 1
-        pl = plan(found, split(args.repos), split(args.windows_repos), args.pool, res)
+        pl = plan(found, split(args.repos), split(args.windows_repos), args.pool, res, repo_path=args.repo_path)
         print(json.dumps(pl, indent=2))
         return 1 if pl['blocked'] else 0
     elif args.action == 'verify':
