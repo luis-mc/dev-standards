@@ -21,6 +21,6 @@ Change notes: DU11-delivery.md, DU11-artifacts.md, features/artifacts/changes/DU
 - docs_check.py: 1 error G1 (generated docs/architecture/decisions.md is stale; the release fold regenerates it; not committed per rules), 3 T2 warnings.
 - ci_areas.py --branch-advice: diff unreadable, advises every area via a CI workflow (heavy); not run.
 
-Branch head: HEAD_SHA
+Branch head: code at previous commit; see git log (report commit 66897ff follows)
 
 NOT READY
