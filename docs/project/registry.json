@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T16:28+00:00",
+  "updated": "2026-11-05T16:37+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1456,11 +1456,11 @@
       "id": "DL60",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Runner pool on Windows: 4 bugs block setup (SHA, CPU headroom, CRLF, runner dir)",
       "detail": "Four runner-pool fixes, agent READY 16:18, branch CI green but for join-cleared items; in PR #151.",
       "expected": "05 Nov",
-      "changed": "2026-11-05T16:28+00:00",
+      "changed": "2026-11-05T16:33+00:00",
       "rides": "DL61",
       "started": "2026-11-05T16:16+00:00"
     },
@@ -1468,12 +1468,11 @@
       "id": "DL61",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release the runner-pool Windows fixes and the word rewording",
       "detail": "RELEASE-46: DL60, DS189, DU12 joined on DL61-integration; ready PR #151; delivery 1.6.1, docs 1.6.0.",
-      "expected": "05 Nov ~16:43",
-      "changed": "2026-11-05T16:28+00:00",
-      "expected_basis": "PR #151 CI started 16:28, about 10 min; merge 5",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T16:33+00:00",
       "release": 46,
       "phases": [
         {
@@ -4247,11 +4246,11 @@
       "id": "DS189",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Sheet component in luismc-docs design-system template",
       "detail": "A real project's owner decision (05 Nov): owner wants the shared Sheet (bottom sheet on phone; dialog/popover at wider widths, focus trap, focus return) in the design-system template components, ux-rules and guard notes.",
-      "expected": "05 Nov ~17:41",
-      "changed": "2026-11-05T16:21+00:00",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T16:33+00:00",
       "started": "2026-11-05T12:43+00:00",
       "rides": "DL61"
     },
@@ -4271,23 +4270,27 @@
       "id": "DU2",
       "owner": "design-field-updates",
       "app": "luismc-docs",
-      "status": "To do",
+      "status": "Running",
       "item": "Starter rules and words: R1-R16, W1",
       "detail": "ux-rules.md, content.md, CHANGES.md of the luismc-docs starter. New rule IDs follow DS189's. Change note naming the docs plugin.json.",
-      "expected": "05 Nov ~17:28",
-      "changed": "2026-11-05T16:28+00:00",
-      "expected_basis": "starts at RELEASE-46 merge 16:43 (DS189), then about 45 min"
+      "expected": "05 Nov ~17:26",
+      "changed": "2026-11-05T16:37+00:00",
+      "expected_basis": "cloud agent from 16:36, about 50 min",
+      "rides": "DU7",
+      "started": "2026-11-05T16:36+00:00"
     },
     {
       "id": "DU3",
       "owner": "design-field-updates",
       "app": "luismc-docs",
-      "status": "To do",
+      "status": "Running",
       "item": "Starter components and tokens: C1-C5, T1-T5, R17",
       "detail": "components.md, tokens.md of the starter (incl. 7:1 named as an option, D5). Runs beside the rules task. Change note naming the docs plugin.json.",
-      "expected": "05 Nov ~17:28",
-      "changed": "2026-11-05T16:28+00:00",
-      "expected_basis": "starts at RELEASE-46 merge 16:43 (DS189), then about 45 min"
+      "expected": "05 Nov ~17:31",
+      "changed": "2026-11-05T16:37+00:00",
+      "expected_basis": "cloud agent from 16:36, about 55 min",
+      "rides": "DU7",
+      "started": "2026-11-05T16:36+00:00"
     },
     {
       "id": "DU4",
@@ -4296,9 +4299,9 @@
       "status": "Running",
       "item": "Docs plugin fixes F1-F5",
       "detail": "Lone -- accepted by docs scripts; DS4 warns only on the default branch, join and promote rebuild the gallery (D3); link-only edits to frozen versions with DOCSPEC R15.5 note (D4); CHANGES.md example line; README 'What the apps do not follow yet'.",
-      "expected": "05 Nov ~17:16",
-      "changed": "2026-11-05T16:21+00:00",
-      "expected_basis": "cloud agent from 16:21: setup 5 + work 40 + checks 10",
+      "expected": "05 Nov ~17:01",
+      "changed": "2026-11-05T16:37+00:00",
+      "expected_basis": "READY 16:26; branch CI from 16:36, about 25 min",
       "rides": "DU7",
       "started": "2026-11-05T16:21+00:00"
     },
@@ -4309,9 +4312,9 @@
       "status": "Running",
       "item": "Guard templates: raw controls (G1) and contrast (G2)",
       "detail": "New TypeScript+Vitest templates in the enforcement kit folder, each with an allowlist or known-gaps list that only shrinks; run in this repo's CI fixture (DS188).",
-      "expected": "05 Nov ~17:16",
-      "changed": "2026-11-05T16:21+00:00",
-      "expected_basis": "cloud agent from 16:21: setup 5 + work 40 + checks 10",
+      "expected": "05 Nov ~17:01",
+      "changed": "2026-11-05T16:37+00:00",
+      "expected_basis": "READY 16:23; branch CI from 16:36, about 25 min",
       "rides": "DU7",
       "started": "2026-11-05T16:21+00:00"
     },
@@ -4322,9 +4325,9 @@
       "status": "To do",
       "item": "Gallery draws the filter bar, change review and new token kinds",
       "detail": "gallery_draw.py and gallery_tokens.py; bumps the gallery script version.",
-      "expected": "05 Nov ~17:58",
-      "changed": "2026-11-05T16:28+00:00",
-      "expected_basis": "starts when DU3 ends 17:28, then about 30 min"
+      "expected": "05 Nov ~18:01",
+      "changed": "2026-11-05T16:37+00:00",
+      "expected_basis": "starts at DU3 done 17:31, about 30 min"
     },
     {
       "id": "DU7",
@@ -4333,30 +4336,30 @@
       "status": "Running",
       "item": "Join and release the design-system updates",
       "detail": "Light join of the five branches, ready PR, CI, merge, luismc-docs version fold. Gets its RELEASE number when it starts.",
-      "expected": "05 Nov ~18:23; after DU2-DU6",
-      "changed": "2026-11-05T16:28+00:00",
-      "expected_basis": "DU2, DU3 from 16:43 about 45; DU6 from 17:28 about 30; join 10, CI 10, merge 5",
+      "expected": "05 Nov ~18:40",
+      "changed": "2026-11-05T16:37+00:00",
+      "expected_basis": "after DU6 18:01; join 9 + CI 25 + merge 5",
       "release": 47,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-05T16:21+00:00",
-          "end": "2026-11-05T17:58+00:00"
+          "end": "2026-11-05T18:01+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-05T17:58+00:00",
-          "end": "2026-11-05T18:08+00:00"
+          "start": "2026-11-05T18:01+00:00",
+          "end": "2026-11-05T18:10+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-05T18:08+00:00",
-          "end": "2026-11-05T18:18+00:00"
+          "start": "2026-11-05T18:10+00:00",
+          "end": "2026-11-05T18:35+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-05T18:18+00:00",
-          "end": "2026-11-05T18:23+00:00"
+          "start": "2026-11-05T18:35+00:00",
+          "end": "2026-11-05T18:40+00:00"
         }
       ],
       "risk": {
@@ -4442,11 +4445,11 @@
       "id": "DU12",
       "owner": "design-field-updates",
       "app": "luismc-docs",
-      "status": "Built",
+      "status": "Live",
       "item": "Reword a word on main that hints at another project (3 places)",
       "detail": "Owner D11: old artifacts decision reworded on main; two tests check other projects' names by hash. Branch CI green but for the join-cleared stale generated file.",
       "expected": "05 Nov",
-      "changed": "2026-11-05T16:22+00:00",
+      "changed": "2026-11-05T16:33+00:00",
       "rides": "DL61",
       "started": "2026-11-05T16:17+00:00"
     },

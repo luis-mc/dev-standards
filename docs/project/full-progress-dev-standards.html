@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-05T16:28+00:00",
+ "updated": "2026-11-05T16:37+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -2336,11 +2336,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL60",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Runner pool on Windows: 4 bugs block setup (SHA, CPU headroom, CRLF, runner dir)",
    "detail": "Four runner-pool fixes, agent READY 16:18, branch CI green but for join-cleared items; in PR #151.",
    "expected": "05 Nov",
-   "changed": "2026-11-05T16:28+00:00",
+   "changed": "2026-11-05T16:33+00:00",
    "rides": "DL61",
    "started": "2026-11-05T16:16+00:00"
   },
@@ -2348,12 +2348,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL61",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "Release the runner-pool Windows fixes and the word rewording",
    "detail": "RELEASE-46: DL60, DS189, DU12 joined on DL61-integration; ready PR #151; delivery 1.6.1, docs 1.6.0.",
-   "expected": "05 Nov ~16:43",
-   "changed": "2026-11-05T16:28+00:00",
-   "expected_basis": "PR #151 CI started 16:28, about 10 min; merge 5",
+   "expected": "05 Nov",
+   "changed": "2026-11-05T16:33+00:00",
    "release": 46,
    "phases": [
     {
@@ -5127,11 +5126,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS189",
    "owner": "project",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Sheet component in luismc-docs design-system template",
    "detail": "A real project's owner decision (05 Nov): owner wants the shared Sheet (bottom sheet on phone; dialog/popover at wider widths, focus trap, focus return) in the design-system template components, ux-rules and guard notes.",
-   "expected": "05 Nov ~17:41",
-   "changed": "2026-11-05T16:21+00:00",
+   "expected": "05 Nov",
+   "changed": "2026-11-05T16:33+00:00",
    "started": "2026-11-05T12:43+00:00",
    "rides": "DL61"
   },
@@ -5151,23 +5150,27 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DU2",
    "owner": "design-field-updates",
    "app": "luismc-docs",
-   "status": "To do",
+   "status": "Running",
    "item": "Starter rules and words: R1-R16, W1",
    "detail": "ux-rules.md, content.md, CHANGES.md of the luismc-docs starter. New rule IDs follow DS189's. Change note naming the docs plugin.json.",
-   "expected": "05 Nov ~17:28",
-   "changed": "2026-11-05T16:28+00:00",
-   "expected_basis": "starts at RELEASE-46 merge 16:43 (DS189), then about 45 min"
+   "expected": "05 Nov ~17:26",
+   "changed": "2026-11-05T16:37+00:00",
+   "expected_basis": "cloud agent from 16:36, about 50 min",
+   "rides": "DU7",
+   "started": "2026-11-05T16:36+00:00"
   },
   {
    "id": "DU3",
    "owner": "design-field-updates",
    "app": "luismc-docs",
-   "status": "To do",
+   "status": "Running",
    "item": "Starter components and tokens: C1-C5, T1-T5, R17",
    "detail": "components.md, tokens.md of the starter (incl. 7:1 named as an option, D5). Runs beside the rules task. Change note naming the docs plugin.json.",
-   "expected": "05 Nov ~17:28",
-   "changed": "2026-11-05T16:28+00:00",
-   "expected_basis": "starts at RELEASE-46 merge 16:43 (DS189), then about 45 min"
+   "expected": "05 Nov ~17:31",
+   "changed": "2026-11-05T16:37+00:00",
+   "expected_basis": "cloud agent from 16:36, about 55 min",
+   "rides": "DU7",
+   "started": "2026-11-05T16:36+00:00"
   },
   {
    "id": "DU4",
@@ -5176,9 +5179,9 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "status": "Running",
    "item": "Docs plugin fixes F1-F5",
    "detail": "Lone -- accepted by docs scripts; DS4 warns only on the default branch, join and promote rebuild the gallery (D3); link-only edits to frozen versions with DOCSPEC R15.5 note (D4); CHANGES.md example line; README 'What the apps do not follow yet'.",
-   "expected": "05 Nov ~17:16",
-   "changed": "2026-11-05T16:21+00:00",
-   "expected_basis": "cloud agent from 16:21: setup 5 + work 40 + checks 10",
+   "expected": "05 Nov ~17:01",
+   "changed": "2026-11-05T16:37+00:00",
+   "expected_basis": "READY 16:26; branch CI from 16:36, about 25 min",
    "rides": "DU7",
    "started": "2026-11-05T16:21+00:00"
   },
@@ -5189,9 +5192,9 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "status": "Running",
    "item": "Guard templates: raw controls (G1) and contrast (G2)",
    "detail": "New TypeScript+Vitest templates in the enforcement kit folder, each with an allowlist or known-gaps list that only shrinks; run in this repo's CI fixture (DS188).",
-   "expected": "05 Nov ~17:16",
-   "changed": "2026-11-05T16:21+00:00",
-   "expected_basis": "cloud agent from 16:21: setup 5 + work 40 + checks 10",
+   "expected": "05 Nov ~17:01",
+   "changed": "2026-11-05T16:37+00:00",
+   "expected_basis": "READY 16:23; branch CI from 16:36, about 25 min",
    "rides": "DU7",
    "started": "2026-11-05T16:21+00:00"
   },
@@ -5202,9 +5205,9 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "status": "To do",
    "item": "Gallery draws the filter bar, change review and new token kinds",
    "detail": "gallery_draw.py and gallery_tokens.py; bumps the gallery script version.",
-   "expected": "05 Nov ~17:58",
-   "changed": "2026-11-05T16:28+00:00",
-   "expected_basis": "starts when DU3 ends 17:28, then about 30 min"
+   "expected": "05 Nov ~18:01",
+   "changed": "2026-11-05T16:37+00:00",
+   "expected_basis": "starts at DU3 done 17:31, about 30 min"
   },
   {
    "id": "DU7",
@@ -5213,30 +5216,30 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "status": "Running",
    "item": "Join and release the design-system updates",
    "detail": "Light join of the five branches, ready PR, CI, merge, luismc-docs version fold. Gets its RELEASE number when it starts.",
-   "expected": "05 Nov ~18:23; after DU2-DU6",
-   "changed": "2026-11-05T16:28+00:00",
-   "expected_basis": "DU2, DU3 from 16:43 about 45; DU6 from 17:28 about 30; join 10, CI 10, merge 5",
+   "expected": "05 Nov ~18:40",
+   "changed": "2026-11-05T16:37+00:00",
+   "expected_basis": "after DU6 18:01; join 9 + CI 25 + merge 5",
    "release": 47,
    "phases": [
     {
      "name": "agents",
      "start": "2026-11-05T16:21+00:00",
-     "end": "2026-11-05T17:58+00:00"
+     "end": "2026-11-05T18:01+00:00"
     },
     {
      "name": "join",
-     "start": "2026-11-05T17:58+00:00",
-     "end": "2026-11-05T18:08+00:00"
+     "start": "2026-11-05T18:01+00:00",
+     "end": "2026-11-05T18:10+00:00"
     },
     {
      "name": "ci",
-     "start": "2026-11-05T18:08+00:00",
-     "end": "2026-11-05T18:18+00:00"
+     "start": "2026-11-05T18:10+00:00",
+     "end": "2026-11-05T18:35+00:00"
     },
     {
      "name": "merge",
-     "start": "2026-11-05T18:18+00:00",
-     "end": "2026-11-05T18:23+00:00"
+     "start": "2026-11-05T18:35+00:00",
+     "end": "2026-11-05T18:40+00:00"
     }
    ],
    "risk": {
@@ -5322,11 +5325,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DU12",
    "owner": "design-field-updates",
    "app": "luismc-docs",
-   "status": "Built",
+   "status": "Live",
    "item": "Reword a word on main that hints at another project (3 places)",
    "detail": "Owner D11: old artifacts decision reworded on main; two tests check other projects' names by hash. Branch CI green but for the join-cleared stale generated file.",
    "expected": "05 Nov",
-   "changed": "2026-11-05T16:22+00:00",
+   "changed": "2026-11-05T16:33+00:00",
    "rides": "DL61",
    "started": "2026-11-05T16:17+00:00"
   },
@@ -5729,95 +5732,74 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-05T16:28+00:00">05 Nov 16:28</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-05T16:37+00:00">05 Nov 16:37</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">4 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">5 tasks</span></summary>
 <ul>
-<li data-glance-task="DL61"><span class="task-id">DL61</span><span class="release-name">RELEASE-46</span>Release the runner-pool Windows fixes and the word rewording <span class="glance-expected">05 Nov ~16:43</span><span class="glance-basis">PR #151 CI started 16:28, about 10 min; merge 5</span></li>
-<li data-glance-task="DU4"><span class="task-id">DU4</span>Docs plugin fixes F1-F5 <span class="glance-expected">05 Nov ~17:16</span><span class="glance-basis">cloud agent from 16:21: setup 5 + work 40 + checks 10</span></li>
-<li data-glance-task="DU5"><span class="task-id">DU5</span>Guard templates: raw controls (G1) and contrast (G2) <span class="glance-expected">05 Nov ~17:16</span><span class="glance-basis">cloud agent from 16:21: setup 5 + work 40 + checks 10</span></li>
-<li data-glance-task="DU7"><span class="task-id">DU7</span><span class="release-name">RELEASE-47</span>Join and release the design-system updates <span class="glance-expected">05 Nov ~18:23; after DU2-DU6</span><span class="glance-basis">DU2, DU3 from 16:43 about 45; DU6 from 17:28 about 30; join 10, CI 10, merge 5</span></li>
+<li data-glance-task="DU4"><span class="task-id">DU4</span>Docs plugin fixes F1-F5 <span class="glance-expected">05 Nov ~17:01</span><span class="glance-basis">READY 16:26; branch CI from 16:36, about 25 min</span></li>
+<li data-glance-task="DU5"><span class="task-id">DU5</span>Guard templates: raw controls (G1) and contrast (G2) <span class="glance-expected">05 Nov ~17:01</span><span class="glance-basis">READY 16:23; branch CI from 16:36, about 25 min</span></li>
+<li data-glance-task="DU2"><span class="task-id">DU2</span>Starter rules and words: R1-R16, W1 <span class="glance-expected">05 Nov ~17:26</span><span class="glance-basis">cloud agent from 16:36, about 50 min</span></li>
+<li data-glance-task="DU3"><span class="task-id">DU3</span>Starter components and tokens: C1-C5, T1-T5, R17 <span class="glance-expected">05 Nov ~17:31</span><span class="glance-basis">cloud agent from 16:36, about 55 min</span></li>
+<li data-glance-task="DU7"><span class="task-id">DU7</span><span class="release-name">RELEASE-47</span>Join and release the design-system updates <span class="glance-expected">05 Nov ~18:40</span><span class="glance-basis">after DU6 18:01; join 9 + CI 25 + merge 5</span></li>
 </ul>
 </details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">3 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">57 tasks</span></summary>
 <ul>
 <li data-glance-task="DL60"><span class="task-id">DL60</span>Runner pool on Windows: 4 bugs block setup (SHA, CPU headroom, CRLF, runner dir)</li>
-<li data-glance-task="DU12"><span class="task-id">DU12</span>Reword a word on main that hints at another project (3 places)</li>
+<li data-glance-task="DL61"><span class="task-id">DL61</span><span class="release-name">RELEASE-46</span>Release the runner-pool Windows fixes and the word rewording</li>
 <li data-glance-task="DS189"><span class="task-id">DS189</span>Sheet component in luismc-docs design-system template</li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">53 tasks</span></summary>
-<ul>
+<li data-glance-task="DU12"><span class="task-id">DU12</span>Reword a word on main that hints at another project (3 places)</li>
 <li data-glance-task="DU9"><span class="task-id">DU9</span><span class="release-name">RELEASE-45</span>Release the design-system enforcement kit with K1-K3 fixes</li>
 <li data-glance-task="DU10"><span class="task-id">DU10</span>Enforcement kit (DSY99 branch) brought into dev-standards</li>
 <li data-glance-task="DU11"><span class="task-id">DU11</span>Fix K1-K3 on the enforcement kit</li>
 <li data-glance-task="DU8"><span class="task-id">DU8</span>Review DSY99 handoff together with DU2-DU7</li>
-<li data-glance-task="DU1"><span class="task-id">DU1</span>Study UX changes in two real projects and propose starter updates</li>
-<li data-glance-task="DL59"><span class="task-id">DL59</span><span class="release-name">RELEASE-44</span>guard template CI</li>
-<li data-glance-task="DS188"><span class="task-id">DS188</span>CI runs the TypeScript design-system guard templates</li>
-<li data-glance-task="DL58"><span class="task-id">DL58</span>Overnight merge watcher and hourly check-in</li>
-<li class="glance-more">and 45 more</li>
+<li class="glance-more">and 49 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">343</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">3</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">4</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">3</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">347</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">5</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 226" role="img" aria-label="Next releases: DL61 (Release the runner-pool Windows fixes and the word rewording) expected live about 16:43, worst case 17:03; DU7 (Join and release the design-system updates) expected live about 18:23, worst case 18:43." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="202"/><text x="200" y="28">16:00</text><line class="rt-grid" x1="286.7" y1="36" x2="286.7" y2="202"/><text x="286.7" y="28">16:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="202"/><text x="373.3" y="28">17:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="202"/><text x="460" y="28">17:30</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="202"/><text x="546.7" y="28">18:00</text><line class="rt-grid" x1="633.3" y1="36" x2="633.3" y2="202"/><text x="633.3" y="28">18:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="202"/><text x="720" y="28">19:00</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-46 · Release the runner-pool Windows fixes and the word rewording</title>RELEASE-46 · Release the…</text>
-<text class="rt-sub" x="0" y="77"><title>DL60, DS189, DU12</title>DL60, DS189, DU12</text>
-<rect class="rt-bar agents" x="246.2" y="52" width="20.2" height="22"><title>agents 16:16-16:23</title></rect>
-<rect class="rt-bar join" x="266.4" y="52" width="14.4" height="22"><title>join 16:23-16:28</title></rect>
-<rect class="rt-bar ci" x="280.9" y="52" width="28.9" height="22"><title>PR CI 16:28-16:38</title></rect>
-<rect class="rt-bar merge" x="309.8" y="52" width="14.4" height="22"><title>merge + cleanup 16:38-16:43</title></rect>
-<rect class="rt-risk" x="324.2" y="58" width="57.8" height="10"><title>+1 fix round</title></rect>
-<polygon class="rt-worst" points="382,51 389,63 382,75 375,63"/>
-<text class="rt-risk-label" x="393" y="67">+1 fix round → worst ~17:03</text>
-<polygon class="rt-expected" points="324.2,50 332.2,63 324.2,76 316.2,63"/>
-<text class="rt-live-label" x="324.2" y="92">live ~16:43</text>
-<text class="rt-name" x="0" y="122"><title>RELEASE-47 · Join and release the design-system updates</title>RELEASE-47 · Join and rel…</text>
-<text class="rt-sub" x="0" y="139"><title>DU4, DU5</title>DU4, DU5</text>
-<rect class="rt-bar agents" x="260.7" y="114" width="280.2" height="22"><title>agents 16:21-17:58</title></rect>
-<rect class="rt-bar join" x="540.9" y="114" width="28.9" height="22"><title>join 17:58-18:08</title></rect>
-<rect class="rt-bar ci" x="569.8" y="114" width="28.9" height="22"><title>PR CI 18:08-18:18</title></rect>
-<rect class="rt-bar merge" x="598.7" y="114" width="14.4" height="22"><title>merge + cleanup 18:18-18:23</title></rect>
-<rect class="rt-risk" x="613.1" y="120" width="57.8" height="10"><title>+1 fix round</title></rect>
-<polygon class="rt-worst" points="670.9,113 677.9,125 670.9,137 663.9,125"/>
-<text class="rt-risk-label" x="681.9" y="129">+1 fix round → worst ~18:43</text>
-<polygon class="rt-expected" points="613.1,112 621.1,125 613.1,138 605.1,125"/>
-<text class="rt-live-label" x="613.1" y="154">live ~18:23</text>
-<line class="rt-now" x1="280.9" y1="36" x2="280.9" y2="210"/><text class="rt-now-label" x="280.9" y="223">now 16:28</text>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DU7 (Join and release the design-system updates) expected live about 18:40, worst case 19:00." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">16:00</text><line class="rt-grid" x1="286.7" y1="36" x2="286.7" y2="140"/><text x="286.7" y="28">16:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">17:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">17:30</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">18:00</text><line class="rt-grid" x1="633.3" y1="36" x2="633.3" y2="140"/><text x="633.3" y="28">18:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">19:00</text></g>
+<text class="rt-name" x="0" y="60"><title>RELEASE-47 · Join and release the design-system updates</title>RELEASE-47 · Join and rel…</text>
+<text class="rt-sub" x="0" y="77"><title>DU2, DU3, DU4, DU5</title>DU2, DU3, DU4, DU5</text>
+<rect class="rt-bar agents" x="260.7" y="52" width="288.9" height="22"><title>agents 16:21-18:01</title></rect>
+<rect class="rt-bar join" x="549.6" y="52" width="26" height="22"><title>join 18:01-18:10</title></rect>
+<rect class="rt-bar ci" x="575.6" y="52" width="72.2" height="22"><title>PR CI 18:10-18:35</title></rect>
+<rect class="rt-bar merge" x="647.8" y="52" width="14.4" height="22"><title>merge + cleanup 18:35-18:40</title></rect>
+<rect class="rt-risk" x="662.2" y="58" width="57.8" height="10"><title>+1 fix round</title></rect>
+<polygon class="rt-worst" points="720,51 727,63 720,75 713,63"/>
+<text class="rt-risk-label" x="731" y="67">+1 fix round → worst ~19:00</text>
+<polygon class="rt-expected" points="662.2,50 670.2,63 662.2,76 654.2,63"/>
+<text class="rt-live-label" x="662.2" y="92">live ~18:40</text>
+<line class="rt-now" x1="306.9" y1="36" x2="306.9" y2="148"/><text class="rt-now-label" x="306.9" y="161">now 16:37</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-46" open><summary><strong>RELEASE-46 · live ~16:43 · worst ~17:03</strong><span class="fold-count">4 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-47" open><summary><strong>RELEASE-47 · live ~18:40 · worst ~19:00</strong><span class="fold-count">5 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL61"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL61</span><span class="release-name">RELEASE-46</span>Release the runner-pool Windows fixes and the word rewording</a></td><td data-label="App / service"></td><td data-label="Detail">RELEASE-46: DL60, DS189, DU12 joined on DL61-integration; ready PR #151; delivery 1.6.1, docs 1.6.0.</td><td data-label="Expected">05 Nov ~16:43<span class="expected-basis">PR #151 CI started 16:28, about 10 min; merge 5</span></td></tr>
-<tr data-task="DL60"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL60</span>Runner pool on Windows: 4 bugs block setup (SHA, CPU headroom, CRLF, runner dir)</a></td><td data-label="App / service"></td><td data-label="Detail">Four runner-pool fixes, agent READY 16:18, branch CI green but for join-cleared items; in PR #151.</td><td data-label="Expected">05 Nov</td></tr>
-<tr data-task="DS189"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS189</span>Sheet component in luismc-docs design-system template</td><td data-label="App / service"></td><td data-label="Detail">A real project&#x27;s owner decision (05 Nov): owner wants the shared Sheet (bottom sheet on phone; dialog/popover at wider widths, focus trap, focus return) in the design-system template components, ux-rules and guard notes.</td><td data-label="Expected">05 Nov ~17:41</td></tr>
-<tr data-task="DU12"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU12</span>Reword a word on main that hints at another project (3 places)</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Owner D11: old artifacts decision reworded on main; two tests check other projects&#x27; names by hash. Branch CI green but for the join-cleared stale generated file.</td><td data-label="Expected">05 Nov</td></tr>
+<tr data-task="DU7"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU7</span><span class="release-name">RELEASE-47</span>Join and release the design-system updates</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Light join of the five branches, ready PR, CI, merge, luismc-docs version fold. Gets its RELEASE number when it starts.</td><td data-label="Expected">05 Nov ~18:40<span class="expected-basis">after DU6 18:01; join 9 + CI 25 + merge 5</span></td></tr>
+<tr data-task="DU2"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU2</span>Starter rules and words: R1-R16, W1</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">ux-rules.md, content.md, CHANGES.md of the luismc-docs starter. New rule IDs follow DS189&#x27;s. Change note naming the docs plugin.json.</td><td data-label="Expected">05 Nov ~17:26<span class="expected-basis">cloud agent from 16:36, about 50 min</span></td></tr>
+<tr data-task="DU3"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU3</span>Starter components and tokens: C1-C5, T1-T5, R17</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">components.md, tokens.md of the starter (incl. 7:1 named as an option, D5). Runs beside the rules task. Change note naming the docs plugin.json.</td><td data-label="Expected">05 Nov ~17:31<span class="expected-basis">cloud agent from 16:36, about 55 min</span></td></tr>
+<tr data-task="DU4"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU4</span>Docs plugin fixes F1-F5</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Lone -- accepted by docs scripts; DS4 warns only on the default branch, join and promote rebuild the gallery (D3); link-only edits to frozen versions with DOCSPEC R15.5 note (D4); CHANGES.md example line; README &#x27;What the apps do not follow yet&#x27;.</td><td data-label="Expected">05 Nov ~17:01<span class="expected-basis">READY 16:26; branch CI from 16:36, about 25 min</span></td></tr>
+<tr data-task="DU5"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU5</span>Guard templates: raw controls (G1) and contrast (G2)</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">New TypeScript+Vitest templates in the enforcement kit folder, each with an allowlist or known-gaps list that only shrinks; run in this repo&#x27;s CI fixture (DS188).</td><td data-label="Expected">05 Nov ~17:01<span class="expected-basis">READY 16:23; branch CI from 16:36, about 25 min</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold release-group" data-group="release-47" open><summary><strong>RELEASE-47 · live ~18:23 · worst ~18:43</strong><span class="fold-count">3 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DU7"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU7</span><span class="release-name">RELEASE-47</span>Join and release the design-system updates</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Light join of the five branches, ready PR, CI, merge, luismc-docs version fold. Gets its RELEASE number when it starts.</td><td data-label="Expected">05 Nov ~18:23; after DU2-DU6<span class="expected-basis">DU2, DU3 from 16:43 about 45; DU6 from 17:28 about 30; join 10, CI 10, merge 5</span></td></tr>
-<tr data-task="DU4"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU4</span>Docs plugin fixes F1-F5</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Lone -- accepted by docs scripts; DS4 warns only on the default branch, join and promote rebuild the gallery (D3); link-only edits to frozen versions with DOCSPEC R15.5 note (D4); CHANGES.md example line; README &#x27;What the apps do not follow yet&#x27;.</td><td data-label="Expected">05 Nov ~17:16<span class="expected-basis">cloud agent from 16:21: setup 5 + work 40 + checks 10</span></td></tr>
-<tr data-task="DU5"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU5</span>Guard templates: raw controls (G1) and contrast (G2)</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">New TypeScript+Vitest templates in the enforcement kit folder, each with an allowlist or known-gaps list that only shrinks; run in this repo&#x27;s CI fixture (DS188).</td><td data-label="Expected">05 Nov ~17:16<span class="expected-basis">cloud agent from 16:21: setup 5 + work 40 + checks 10</span></td></tr>
+<tr data-task="DU6"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU6</span>Gallery draws the filter bar, change review and new token kinds</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">gallery_draw.py and gallery_tokens.py; bumps the gallery script version.</td><td data-label="Expected">05 Nov ~18:01<span class="expected-basis">starts at DU3 done 17:31, about 30 min</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">3 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">349 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DU2"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU2</span>Starter rules and words: R1-R16, W1</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">ux-rules.md, content.md, CHANGES.md of the luismc-docs starter. New rule IDs follow DS189&#x27;s. Change note naming the docs plugin.json.</td><td data-label="Expected">05 Nov ~17:28<span class="expected-basis">starts at RELEASE-46 merge 16:43 (DS189), then about 45 min</span></td></tr>
-<tr data-task="DU3"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU3</span>Starter components and tokens: C1-C5, T1-T5, R17</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">components.md, tokens.md of the starter (incl. 7:1 named as an option, D5). Runs beside the rules task. Change note naming the docs plugin.json.</td><td data-label="Expected">05 Nov ~17:28<span class="expected-basis">starts at RELEASE-46 merge 16:43 (DS189), then about 45 min</span></td></tr>
-<tr data-task="DU6"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU6</span>Gallery draws the filter bar, change review and new token kinds</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">gallery_draw.py and gallery_tokens.py; bumps the gallery script version.</td><td data-label="Expected">05 Nov ~17:58<span class="expected-basis">starts when DU3 ends 17:28, then about 30 min</span></td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">345 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL60"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL60</span>Runner pool on Windows: 4 bugs block setup (SHA, CPU headroom, CRLF, runner dir)</a><span class="release-line"><span class="release-name">RELEASE-46</span></span></td><td data-label="App / service"></td><td data-label="Detail">Four runner-pool fixes, agent READY 16:18, branch CI green but for join-cleared items; in PR #151.</td><td data-label="Expected">05 Nov</td></tr>
+<tr data-task="DL61"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL61</span><span class="release-name">RELEASE-46</span>Release the runner-pool Windows fixes and the word rewording</a></td><td data-label="App / service"></td><td data-label="Detail">RELEASE-46: DL60, DS189, DU12 joined on DL61-integration; ready PR #151; delivery 1.6.1, docs 1.6.0.</td><td data-label="Expected">05 Nov</td></tr>
+<tr data-task="DS189"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS189</span>Sheet component in luismc-docs design-system template<span class="release-line"><span class="release-name">RELEASE-46</span></span></td><td data-label="App / service"></td><td data-label="Detail">A real project&#x27;s owner decision (05 Nov): owner wants the shared Sheet (bottom sheet on phone; dialog/popover at wider widths, focus trap, focus return) in the design-system template components, ux-rules and guard notes.</td><td data-label="Expected">05 Nov</td></tr>
+<tr data-task="DU12"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU12</span>Reword a word on main that hints at another project (3 places)</a><span class="release-line"><span class="release-name">RELEASE-46</span></span></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">Owner D11: old artifacts decision reworded on main; two tests check other projects&#x27; names by hash. Branch CI green but for the join-cleared stale generated file.</td><td data-label="Expected">05 Nov</td></tr>
 <tr data-task="DU9"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU9</span><span class="release-name">RELEASE-45</span>Release the design-system enforcement kit with K1-K3 fixes</a></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">RELEASE-45 merged (PR #150, 15:27 UTC): luismc-docs 1.5.0, luismc-delivery 1.6.0, luismc-artifacts 1.3.0, DOCSPEC 1.6.0, DELIVERYSPEC 1.5.0; installed here and smoke-tested; branches and worktrees removed.</td><td data-label="Expected">05 Nov</td></tr>
 <tr data-task="DU10"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU10</span>Enforcement kit (DSY99 branch) brought into dev-standards</a><span class="release-line"><span class="release-name">RELEASE-45</span></span></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">No-app-CSS scan, DOM layout kit, wizard harness (10 states), design edit hook, plan-rows Stop check, brief command, DOCSPEC R15.9, DELIVERYSPEC DL-92. Built in another session (owner D203-D248), handed over here (D249). Head 17530413, 30 tests pass.</td><td data-label="Expected">05 Nov</td></tr>
 <tr data-task="DU11"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-design-system-updates-from-real-projects.html"><span class="task-id">DU11</span>Fix K1-K3 on the enforcement kit</a><span class="release-line"><span class="release-name">RELEASE-45</span></span></td><td data-label="App / service"><code>luismc-docs</code></td><td data-label="Detail">K1-K3 fixed and verified; branch CI green but for join-cleared docs items; joined into PR #150.</td><td data-label="Expected">05 Nov</td></tr>
@@ -6171,14 +6153,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
-<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (2)</strong><span class="fold-count">2 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29898268"><time datetime="2026-11-05T16:28+00:00">05 Nov 16:28</time></td><td data-label="Tasks">DL1 to DL61</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: design-system updates from real projects"><a href="feature-design-system-updates-from-real-projects.html">Feature: Design-system updates from real projects</a></td><td data-label="Last updated" data-value="29898268"><time datetime="2026-11-05T16:28+00:00">05 Nov 16:28</time></td><td data-label="Tasks">DU1 to DU12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">3 Running</span><span class="status-chip status-built">1 Built</span><span class="status-chip status-to-do">3 To do</span></span></td><td data-label="Where it stands">Decided on 5 Nov: all 35 proposals go in; the owner chose every recommended option (D1-D6).</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: design-system updates from real projects"><a href="feature-design-system-updates-from-real-projects.html">Feature: Design-system updates from real projects</a></td><td data-label="Last updated" data-value="29898277"><time datetime="2026-11-05T16:37+00:00">05 Nov 16:37</time></td><td data-label="Tasks">DU1 to DU12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">5 Running</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Decided on 5 Nov: all 35 proposals go in; the owner chose every recommended option (D1-D6).</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (6)</strong><span class="fold-count">6 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29898273"><time datetime="2026-11-05T16:33+00:00">05 Nov 16:33</time></td><td data-label="Tasks">DL1 to DL61</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29898256"><time datetime="2026-11-05T16:16+00:00">05 Nov 16:16</time></td><td data-label="Tasks">AR2 to AR59</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">claude-setup turns plugins on, but most stay silent until a config file exists and some only warn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">ST1 to ST5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
