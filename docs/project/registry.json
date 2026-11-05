@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T08:42+00:00",
+  "updated": "2026-11-05T09:12+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1410,14 +1410,47 @@
       "id": "DL58",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Overnight merge watcher and hourly check-in",
       "detail": "delivery_watch.py runs from main's code and the hourly cron checks for peer bug reports (D77, D78, D87) until the owner returns.",
-      "expected": "05 Nov ~12:00",
-      "changed": "2026-11-05T08:42+00:00",
-      "expected_basis": "runs until the owner says stop; no answer yet",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T09:12+00:00",
       "no_release": "watching only; ships nothing",
       "started": "2026-11-05T00:00+00:00"
+    },
+    {
+      "id": "DL59",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-44: guard template CI",
+      "detail": "Join, CI and merge of DS188 (D94).",
+      "expected": "05 Nov ~10:20",
+      "changed": "2026-11-05T09:12+00:00",
+      "release": 44,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-05T09:15+00:00",
+          "end": "2026-11-05T09:55+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-05T09:55+00:00",
+          "end": "2026-11-05T10:00+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-05T10:00+00:00",
+          "end": "2026-11-05T10:15+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-05T10:15+00:00",
+          "end": "2026-11-05T10:20+00:00"
+        }
+      ],
+      "started": "2026-11-05T09:12+00:00"
     },
     {
       "id": "DS1",
@@ -4146,6 +4179,19 @@
       "changed": "2026-11-05T00:02+00:00",
       "rides": "DL57",
       "started": "2026-11-04T23:45+00:00"
+    },
+    {
+      "id": "DS188",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "CI runs the TypeScript design-system guard templates",
+      "detail": "D94: run the typescript-vitest guard templates against a fixture repo in this repo's CI, including an archived-version case (DS187).",
+      "expected": "05 Nov ~09:55",
+      "changed": "2026-11-05T09:12+00:00",
+      "expected_basis": "cloud agent ~40 min: fixture, vitest job, CI wiring",
+      "rides": "DL59",
+      "started": "2026-11-05T09:15+00:00"
     },
     {
       "id": "MP1",
