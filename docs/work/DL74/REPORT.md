@@ -13,3 +13,6 @@ Tests:
 - `python3 tools/ci_areas.py --branch-advice`: diff unreadable before commit, advises a spec-lint run in CI; not run here.
 - `python3 claude/plugins/docs/scripts/docs_check.py`: 0 errors, 0 warnings.
 
+Branch head: 346cea372ad3cec57c1cf48b2a9bc0e8d3e7a518 (before this report line)
+
+READY
