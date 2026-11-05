@@ -39,3 +39,12 @@ Status: done, committed locally on DSY99-ds-enforcement-kit. Nothing pushed or p
 Tests: `python -I tools/test_ds_enforcement.py` 25 passed, 0 failed (includes the TS self-tests under the Node shim: 20 passed, 0 failed). `docs_check.py`: only the known W1 error (docs/work files) and warnings as before. `spec_check` on docspec.md: see commit run.
 
 CODE DONE
+
+## Follow-ups DSY145-DSY148
+
+Status: started 5 Nov. Local commits only on DSY99-ds-enforcement-kit; nothing pushed or published.
+
+- DSY145: in progress
+- DSY146: not started
+- DSY147: not started
+- DSY148: not started

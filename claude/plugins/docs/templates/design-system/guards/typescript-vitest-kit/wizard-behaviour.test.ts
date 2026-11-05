@@ -15,7 +15,7 @@ import {
 // 1. DRIVERS: one driver per wizard. `open(state)` renders the wizard in that state and reads a snapshot from
 //    the DOM (Testing Library for components; a page script against a stubbed server for script pages).
 //    Fill the list below; each new wizard adds a driver in the same change.
-// 2. The table `WIZARD_BEHAVIOUR_TO_FIX` (wizard-behaviour.ts) lists today's breaches and only shrinks.
+// 2. The table `WIZARD_BEHAVIOUR_TO_FIX`, read from wizard-behaviour.known.json, lists today's breaches and only shrinks.
 // The rest of this file is the harness's own self-test: it plants each breach and expects it to be found.
 const DRIVERS: WizardDriver[] = [];
 

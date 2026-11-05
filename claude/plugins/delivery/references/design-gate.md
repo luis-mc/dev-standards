@@ -39,8 +39,8 @@ On Option 3 (statuses-only token), the cloud session posts one status per shard;
 ## 3. Edit-time hook and ratchet rules (what a reviewer checks)
 
 - `hook_design_edit.py` (PreToolUse on Edit, MultiEdit and Write) warns on the first edit in a turn that adds CSS or a hand-made part under `design_system.app_paths` (default `apps/`) and denies a repeat in the same turn. Paths outside `design_system.shared_paths` (default `packages/ui/`) only. It is the early guard; the tests above are the gate.
-- A known list (`no-app-css.known.json`, `KNOWN_LAYOUT_BREACHES`, `WIZARD_BEHAVIOUR_TO_FIX`) may lose entries in any change. It may gain an entry only in the change that first installs the kit, and every entry names the task that removes it.
-- A diff that adds or raises an entry elsewhere fails. `change_notes.py check` enforces it for the JSON list (`known_lists`, default `scripts/design/*.known.json`): a list that exists at the base and gains an entry or a higher `count` is an offence; a list that is new at the base is the install change and passes. `KNOWN_LAYOUT_BREACHES` and `WIZARD_BEHAVIOUR_TO_FIX` are TypeScript constants: a reviewer checks those until they move into JSON lists (follow-up DSY99-F1).
+- A known list (`no-app-css.known.json`, `layout.known.json`, `wizard-behaviour.known.json`) may lose entries in any change. It may gain an entry only in the change that first installs the kit, and every entry names the task that removes it.
+- A diff that adds or raises an entry elsewhere fails. `change_notes.py check` enforces it for all three JSON lists (`known_lists`, default `scripts/design/*.known.json`): a list that exists at the base and gains an entry or a higher `count` is an offence; a list that is new at the base is the install change and passes. The kit's tests read all three lists from `scripts/design/`.
 - Weakening a check to pass (a looser tolerance, a skipped state, a wider selector) is a design-system change and follows the order of work in `docs/design-system/README.md`.
 
 ## 4. What this does not do

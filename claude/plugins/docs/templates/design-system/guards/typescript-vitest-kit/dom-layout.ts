@@ -9,13 +9,16 @@
  *  5. where a rule asks for it, the primary action is in view without scrolling.
  *
  * Use `expectDomLayout(page, 'library page', { known: KNOWN_LAYOUT_BREACHES, primary: '...' })` in a spec.
- * A screen that breaks a rule today is on `KNOWN_LAYOUT_BREACHES` with the task that fixes it. It is a RATCHET:
+ * A screen that breaks a rule today is in `layout.known.json` (loaded as `KNOWN_LAYOUT_BREACHES`) with the task that fixes it. It is a RATCHET:
  * a breach not on the list fails (never weaken a check to pass), and a listed breach that no longer happens
  * fails until its entry is removed, so the list only shrinks.
  *
  * Adjust to the project: the group and button selectors (set `data-layout-group` on a group in the shared UI
  * package, or pass `groups`), and the name of the spacing custom properties (`spaceVar`).
  */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 export const LAYOUT_WIDTHS = [
   { width: 360, height: 780 },
   { width: 393, height: 852 },
@@ -32,8 +35,10 @@ export interface KnownLayoutBreach {
   readonly task: string;
 }
 
-/** The known list (ratchet: remove an entry when its breach is fixed; never add one to pass). */
-export const KNOWN_LAYOUT_BREACHES: readonly KnownLayoutBreach[] = [];
+/** The known list, read from `layout.known.json` (ratchet: remove an entry when its breach is fixed; never add one to pass). */
+export const KNOWN_LAYOUT_BREACHES: readonly KnownLayoutBreach[] = (
+  JSON.parse(readFileSync(join(import.meta.dirname, 'layout.known.json'), 'utf8')) as { entries: KnownLayoutBreach[] }
+).entries;
 
 export interface DomLayoutOptions {
   /** Selector of the groups whose children are checked. */
@@ -197,7 +202,7 @@ export function judgeLayout(
     .map((p) => `${screen} at ${p.width} px [${p.rule}]: ${p.text}`);
   const stale = mine
     .filter((k) => !found.some((p) => matches(k, p)))
-    .map((k) => `${screen}: known ${k.rule} breach at ${k.width} px (${k.task}) no longer happens: remove it from KNOWN_LAYOUT_BREACHES`);
+    .map((k) => `${screen}: known ${k.rule} breach at ${k.width} px (${k.task}) no longer happens: remove it from layout.known.json`);
   return { unknown, stale };
 }
 

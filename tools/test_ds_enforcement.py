@@ -64,7 +64,8 @@ def kit_is_copied_by_the_guards_command():
         assert DS.main(['guards', '--stack', 'typescript-vitest-kit', '--root', d]) == 0
         assert not os.path.exists(os.path.join(d, 'scripts', 'design'))  # dry run
         assert DS.main(['guards', '--stack', 'typescript-vitest-kit', '--root', d, '--apply']) == 0
-        for n in ('no-app-css-scan.ts', 'no-app-css.test.ts', 'no-app-css.known.json', 'dom-layout.ts',
+        for n in ('no-app-css-scan.ts', 'no-app-css.test.ts', 'no-app-css.known.json', 'layout.known.json',
+                  'wizard-behaviour.known.json', 'dom-layout.ts',
                   'dom-layout-judge.test.ts', 'dom-layout-example.spec.ts', 'wizard-behaviour.ts',
                   'wizard-behaviour.test.ts', 'README.md'):
             assert os.path.isfile(os.path.join(d, 'scripts', 'design', n)), n
@@ -90,6 +91,18 @@ def new_files_name_no_other_project():
 def known_list_starts_empty_and_is_valid_json():
     data = json.load(open(os.path.join(KIT, 'no-app-css.known.json'), encoding='utf-8'))
     assert data['entries'] == []
+    for n in ('layout.known.json', 'wizard-behaviour.known.json'):
+        d2 = json.load(open(os.path.join(KIT, n), encoding='utf-8'))
+        assert d2['entries'] == [], n
+
+
+@test
+def breach_constants_are_read_from_json_not_typed_in_ts():
+    for ts, const, js in (('dom-layout.ts', 'KNOWN_LAYOUT_BREACHES', 'layout.known.json'),
+                          ('wizard-behaviour.ts', 'WIZARD_BEHAVIOUR_TO_FIX', 'wizard-behaviour.known.json')):
+        t = open(os.path.join(KIT, ts), encoding='utf-8').read()
+        assert js in t and 'readFileSync' in t, ts
+        assert not re.search(r'export const %s[^=]*=\s*\[' % const, t), ts
 
 
 @test
@@ -409,8 +422,8 @@ def known_repo(entries_main):
     return d
 
 
-def write_known(d, entries):
-    json.dump({'entries': entries}, open(os.path.join(d, 'scripts', 'design', 'no-app-css.known.json'), 'w'))
+def write_known(d, entries, name='no-app-css.known.json'):
+    json.dump({'entries': entries}, open(os.path.join(d, 'scripts', 'design', name), 'w'))
 
 
 def run_notes(d):
@@ -443,6 +456,35 @@ def a_diff_that_adds_a_known_list_entry_or_raises_a_count_fails():
         assert rc == 1 and 'raised' in out, out
     finally:
         shutil.rmtree(d, ignore_errors=True)
+
+
+LB = {'screen': 'home', 'width': 360, 'rule': 'gap', 'task': 'T3'}
+WB = {'wizard': 'import', 'state': 'running', 'rule': 'busy-not-disabled', 'task': 'T4'}
+
+
+@test
+def the_growth_guard_covers_the_layout_and_wizard_lists():
+    for name, entry in (('layout.known.json', LB), ('wizard-behaviour.known.json', WB)):
+        d = known_repo(None)
+        try:
+            write_known(d, [entry], name)  # the install change: new at the base
+            git(d, 'add', '-A')
+            git(d, 'commit', '-q', '-m', 'base2')
+            git(d, 'branch', '-f', 'main', 'HEAD')
+            write_known(d, [entry, dict(entry, task='T9')], name)  # a raised (new) entry
+            commit_all(d)
+            rc, out = run_notes(d)
+            assert rc == 1 and name in out and 'only shrinks' in out, (name, out)
+            write_known(d, [dict(entry, count=2)], name)  # a raised count
+            commit_all(d)
+            rc, out = run_notes(d)
+            assert rc == 1 and name in out, (name, out)
+            write_known(d, [], name)  # shrinking passes
+            commit_all(d)
+            rc, out = run_notes(d)
+            assert rc == 0, (name, out)
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
 
 
 @test

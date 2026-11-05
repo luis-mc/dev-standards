@@ -12,6 +12,9 @@
  *  3. `judgeWizard(id, state, problems, WIZARD_BEHAVIOUR_TO_FIX)` is the ratchet: a problem not on the table
  *     fails; a table row that no longer happens fails; so the table only shrinks to empty.
  */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 /** The ten states every wizard MUST be driven through (owner decisions D237 and D244). A project may add states, never drop one. */
 export const WIZARD_STATES = [
   'loading',
@@ -119,8 +122,10 @@ export interface WizardToFix {
   readonly task: string;
 }
 
-/** The shrinking table (ratchet): remove a row when its breach is fixed; never add a row to pass. */
-export const WIZARD_BEHAVIOUR_TO_FIX: readonly WizardToFix[] = [];
+/** The shrinking table, read from `wizard-behaviour.known.json` (ratchet): remove a row when its breach is fixed; never add a row to pass. */
+export const WIZARD_BEHAVIOUR_TO_FIX: readonly WizardToFix[] = (
+  JSON.parse(readFileSync(join(import.meta.dirname, 'wizard-behaviour.known.json'), 'utf8')) as { entries: WizardToFix[] }
+).entries;
 
 /** Split the problems of one wizard in one state into unknown ones (fail) and stale rows (fail). */
 export function judgeWizard(
@@ -137,7 +142,7 @@ export function judgeWizard(
   // `judgeAll`; a per-state row is stale when it does not happen in its own state.
   const stale = mine
     .filter((r) => r.state === state && !problems.some((p) => p.rule === r.rule))
-    .map((r) => `${wizard} [${state}]: known ${r.rule} (${r.task}) no longer happens: remove it from WIZARD_BEHAVIOUR_TO_FIX`);
+    .map((r) => `${wizard} [${state}]: known ${r.rule} (${r.task}) no longer happens: remove it from wizard-behaviour.known.json`);
   return { unknown, stale };
 }
 
@@ -173,7 +178,7 @@ export async function judgeAll(
     }
     for (const row of table)
       if (row.wizard === d.id && row.state === '*' && !seenStar.has(row.rule))
-        lines.push(`${d.id}: known ${row.rule} (${row.task}) no longer happens in any state: remove it from WIZARD_BEHAVIOUR_TO_FIX`);
+        lines.push(`${d.id}: known ${row.rule} (${row.task}) no longer happens in any state: remove it from wizard-behaviour.known.json`);
   }
   return lines;
 }
