@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-04T23:59+00:00",
+  "updated": "2026-11-05T00:02+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1376,11 +1376,11 @@
       "id": "DL57",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-43: peer bug fixes",
       "detail": "Join, CI and merge of peer bug reports received after RELEASE-42 (D78).",
-      "expected": "05 Nov ~00:50",
-      "changed": "2026-11-04T23:45+00:00",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T00:02+00:00",
       "release": 43,
       "phases": [
         {
@@ -4126,11 +4126,11 @@
       "id": "DS187",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "docs_check DS3: archived design-system versions are not a gap",
       "detail": "Peer report: moving design system v1 to docs/archive/ (R2.7) leaves v2 alone and DS3 calls it a gap (R15.1); --strict CI fails. Accept a gap whose missing versions are archived.",
-      "expected": "04 Nov",
-      "changed": "2026-11-04T23:47+00:00",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T00:02+00:00",
       "rides": "DL57",
       "started": "2026-11-04T23:45+00:00"
     },
