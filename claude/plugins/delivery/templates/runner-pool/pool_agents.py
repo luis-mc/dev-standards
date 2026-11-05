@@ -5,7 +5,8 @@
       | docker exec -i POOL pool-add-agent SLUG OWNER/REPO --private --pool NAME
 
 The token is read from stdin (one line). It is never printed, never written to a file, and removed from any
-error text. The agent runs as its own user `r-SLUG` in `/agents/SLUG` (mode 0700). `.credentials` is never read.
+error text. The agent runs as its own user `r-SLUG` in `/agents/SLUG` (mode 0700), a copy of the runner in
+`/opt/runner`, which stays read-only. `.credentials` is never read.
 A repository that is not asserted private (`--private`) is refused (contract section 5). Standard library only.
 """
 import argparse
@@ -18,6 +19,7 @@ import sys
 
 SLUG = re.compile(r'^[a-z0-9][a-z0-9-]{0,30}$')
 REPO = re.compile(r'^[^/\s]+/[^/\s]+$')
+RUNNER_SRC = '/opt/runner'  # pristine copy, read-only; each agent gets its own copy
 HOOK_STARTED = '/opt/delivery/hooks/job-started.sh'
 HOOK_DONE = '/opt/delivery/hooks/job-completed.sh'
 
@@ -75,13 +77,14 @@ def add_agent(slug, repo, token, pool, private, agents_file='/agents.json', base
         return 'already added: %s' % slug  # safe to run again
     os.makedirs(folder, mode=0o700, exist_ok=True)
     steps = [['useradd', '--system', '--home-dir', folder, '--shell', '/usr/sbin/nologin', user],
+             ['cp', '-a', RUNNER_SRC + '/.', folder],
              ['chown', '-R', '%s:%s' % (user, user), folder], ['chmod', '0700', folder]]
     for argv in steps:
         r = run(argv)
         if r.returncode not in (0, 9):  # 9 = user exists
             raise PoolError('%s failed: %s' % (argv[0], redact(r.stderr.strip(), token)))
     labels = labels_for(pool, slug)
-    cfg = ['runuser', '-u', user, '--', '/opt/runner/config.sh', '--unattended', '--url', 'https://github.com/' + repo,
+    cfg = ['runuser', '-u', user, '--', './config.sh', '--unattended', '--url', 'https://github.com/' + repo,
            '--token', token, '--name', '%s-%s' % (pool, slug), '--labels', ','.join(labels), '--work', '_work', '--replace']
     r = run(cfg, cwd=folder)
     if r.returncode != 0:
@@ -126,7 +129,7 @@ def remove_agent(slug, token, agents_file='/agents.json', base='/agents', run=sh
     if not mine:
         return 'not in the pool: %s' % slug  # safe to run again
     folder = os.path.join(base, slug)
-    r = run(['runuser', '-u', mine[0]['user'], '--', '/opt/runner/config.sh', 'remove', '--token', token], cwd=folder)
+    r = run(['runuser', '-u', mine[0]['user'], '--', './config.sh', 'remove', '--token', token], cwd=folder)
     if r.returncode != 0:
         raise PoolError('runner removal failed: %s' % redact((r.stderr or r.stdout).strip(), token))
     data['agents'] = [a for a in data['agents'] if a.get('slug') != slug]
