@@ -1,4 +1,5 @@
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -10,6 +11,9 @@ import design_system as S
 import gallery_draw as GD
 import gallery_tokens as GT
 import docs_check as C
+
+# sha256[:16] of words that name other projects (kept out of this public repository by hash)
+NAME_HASHES = {"7e002e1ba02e628e", "6039f6746952536c"}
 
 
 def ds_repo():
@@ -222,8 +226,11 @@ class DesignSystemTests(unittest.TestCase):
         for p in S.TEMPLATES.rglob("*"):
             if p.is_file():
                 t = p.read_text(encoding="utf-8").lower()
-                for bad in ("comic", "twin", "master", "operator"):
+                for bad in ("twin", "master", "operator"):
                     self.assertNotIn(bad, t, f"{p.name}: {bad}")
+                # other projects' names are checked by hash, so this public test does not spell them
+                words = {hashlib.sha256(w.encode()).hexdigest()[:16] for w in re.findall(r"[a-z]+", t)}
+                self.assertFalse(words & NAME_HASHES, f"{p.name}: a word from another project")
 
     def test_starter_is_full_and_marked(self):  # R15.6
         d = ds_repo()

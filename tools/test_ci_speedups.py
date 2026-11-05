@@ -19,6 +19,7 @@ Run:  python3 tools/test_ci_speedups.py
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -552,7 +553,9 @@ def scope_rules_are_configurable_and_never_name_a_project():
         rc, _, err = run(SCOPE, ["--config", str(Path(d) / "missing.json"), "a"])
         check(rc == 2, "a missing config exits 2 (the workflow then runs everything)")
     text = SCOPE.read_text(encoding="utf-8") + TS_SCOPE.read_text(encoding="utf-8")
-    check("comics" not in text.lower(), "no project names in the generic scope rules")
+    names = {"7e002e1ba02e628e", "6039f6746952536c"}  # sha256[:16] of other projects' names, not spelled here
+    found = {hashlib.sha256(w.encode()).hexdigest()[:16] for w in re.findall(r"[a-z]+", text.lower())}
+    check(not (found & names), "no project names in the generic scope rules")
 
 
 @test
