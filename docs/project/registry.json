@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T17:22+00:00",
+  "updated": "2026-11-05T18:31+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4270,12 +4270,11 @@
       "id": "DU2",
       "owner": "design-field-updates",
       "app": "luismc-docs",
-      "status": "Running",
+      "status": "Built",
       "item": "Starter rules and words: R1-R16, W1",
-      "detail": "ux-rules.md, content.md, CHANGES.md of the luismc-docs starter. New rule IDs follow DS189's. Change note naming the docs plugin.json.",
-      "expected": "05 Nov ~17:47",
-      "changed": "2026-11-05T17:22+00:00",
-      "expected_basis": "READY 16:37; branch CI from 17:22, about 25 min",
+      "detail": "Starter rules UX-49 to UX-55, extended rules and wizard words. At the join, UX-54's Guard cell became none yet: the kit is optional, so the starter cannot name its file.",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T18:31+00:00",
       "rides": "DU7",
       "started": "2026-11-05T16:36+00:00"
     },
@@ -4319,12 +4318,11 @@
       "id": "DU6",
       "owner": "design-field-updates",
       "app": "luismc-docs",
-      "status": "Running",
+      "status": "Built",
       "item": "Gallery draws the filter bar, change review and new token kinds",
       "detail": "gallery_draw.py and gallery_tokens.py; bumps the gallery script version.",
-      "expected": "05 Nov ~18:02",
-      "changed": "2026-11-05T17:22+00:00",
-      "expected_basis": "cloud agent from 17:22, about 40 min",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T18:31+00:00",
       "rides": "DU7",
       "started": "2026-11-05T17:22+00:00"
     },
@@ -4335,30 +4333,30 @@
       "status": "Running",
       "item": "Join and release the design-system updates",
       "detail": "Light join of the five branches, ready PR, CI, merge, luismc-docs version fold. Gets its RELEASE number when it starts.",
-      "expected": "05 Nov ~18:40",
-      "changed": "2026-11-05T17:22+00:00",
-      "expected_basis": "after DU6 18:02; join 8 + CI 25 + merge 5",
+      "expected": "05 Nov ~19:12",
+      "changed": "2026-11-05T18:31+00:00",
+      "expected_basis": "join pushed about 18:45; ready PR CI about 25 min",
       "release": 47,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-05T16:21+00:00",
-          "end": "2026-11-05T18:02+00:00"
+          "end": "2026-11-05T17:24+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-05T18:02+00:00",
-          "end": "2026-11-05T18:10+00:00"
+          "start": "2026-11-05T18:27+00:00",
+          "end": "2026-11-05T18:45+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-05T18:10+00:00",
-          "end": "2026-11-05T18:35+00:00"
+          "start": "2026-11-05T18:45+00:00",
+          "end": "2026-11-05T19:10+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-05T18:35+00:00",
-          "end": "2026-11-05T18:40+00:00"
+          "start": "2026-11-05T19:10+00:00",
+          "end": "2026-11-05T19:12+00:00"
         }
       ],
       "risk": {
