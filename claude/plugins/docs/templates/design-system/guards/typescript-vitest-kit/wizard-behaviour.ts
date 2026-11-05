@@ -12,8 +12,9 @@
  *  3. `judgeWizard(id, state, problems, WIZARD_BEHAVIOUR_TO_FIX)` is the ratchet: a problem not on the table
  *     fails; a table row that no longer happens fails; so the table only shrinks to empty.
  */
-/** The nine states every wizard MUST be driven through (owner decision D237). A project may add states, never drop one. */
+/** The ten states every wizard MUST be driven through (owner decisions D237 and D244). A project may add states, never drop one. */
 export const WIZARD_STATES = [
+  'loading',
   'first-run',
   'planning',
   'ready-to-review',
@@ -35,7 +36,12 @@ export type WizardRule =
   | 'stop-missing'
   | 'pause-missing'
   | 'done-empty'
-  | 'busy-not-disabled';
+  | 'busy-not-disabled'
+  | 'loading-action-hidden'
+  | 'loading-action-live'
+  | 'loading-wait-not-once'
+  | 'loading-back-missing'
+  | 'loading-done-shown';
 
 export interface WizardStep {
   readonly name: string;
@@ -53,7 +59,7 @@ export interface WizardButton {
   readonly reason?: string;
   /** Its request is open right now (the driver clicked it and the stubbed server has not answered). */
   readonly requestOpen?: boolean;
-  readonly role?: 'stop' | 'pause' | 'other';
+  readonly role?: 'stop' | 'pause' | 'back' | 'other';
 }
 
 export interface WizardSnapshot {
@@ -64,6 +70,8 @@ export interface WizardSnapshot {
   readonly job: { readonly canStop: boolean; readonly canPause: boolean };
   /** What the Done step shows; only read in the done states. */
   readonly done?: { readonly text: string; readonly counts: number };
+  /** How many lines say the step data is still being read (read in the loading state: exactly one wanted). */
+  readonly waitLines?: number;
 }
 
 export interface WizardProblem {
@@ -91,6 +99,15 @@ export function checkWizard(s: WizardSnapshot): WizardProblem[] {
     add('done-empty', 'Done shows no result (text and counts are needed)');
   for (const b of s.buttons)
     if (b.requestOpen && !b.disabled) add('busy-not-disabled', `"${b.label}" starts a request and is still pressable while it runs`);
+  if (s.state === 'loading') {
+    // The step own data is still being read: actions stay, locked; one wait line; Back free; no Done text.
+    if (primaries.length === 0) add('loading-action-hidden', 'the primary action is hidden while loading (it must be shown, locked)');
+    for (const b of s.buttons)
+      if (b.role !== 'back' && !b.disabled) add('loading-action-live', `"${b.label}" is pressable while the data of the step is still loading (lock it)`);
+    if (s.waitLines !== 1) add('loading-wait-not-once', `the wait is said ${s.waitLines ?? 0} times (exactly one line wanted)`);
+    if (!s.buttons.some((b) => b.role === 'back' && !b.disabled)) add('loading-back-missing', 'Back is missing or locked while loading');
+    if (s.done?.text.trim()) add('loading-done-shown', 'Done text shows while the step is still loading');
+  }
   return out;
 }
 
@@ -127,18 +144,18 @@ export function judgeWizard(
 /** A wizard driver: renders the wizard in a state and reads a snapshot from the DOM. */
 export interface WizardDriver {
   readonly id: string;
-  /** States the project ADDS to the nine required ones. Listing fewer than the nine is a failure, not a shortcut. */
+  /** States the project ADDS to the ten required ones. Listing fewer than the ten is a failure, not a shortcut. */
   readonly states?: readonly WizardState[];
   open(state: WizardState): Promise<WizardSnapshot>;
 }
 
-/** The required states a driver's own `states` list leaves out (empty when it lists none: all nine run). */
+/** The required states a driver's own `states` list leaves out (empty when it lists none: all ten run). */
 export function droppedStates(d: WizardDriver): string[] {
   if (!d.states) return [];
   return WIZARD_STATES.filter((s) => !d.states?.includes(s));
 }
 
-/** Run every driver through the nine required states and the ones it adds; every problem and stale row, as lines. Empty means green. */
+/** Run every driver through the ten required states and the ones it adds; every problem and stale row, as lines. Empty means green. */
 export async function judgeAll(
   drivers: readonly WizardDriver[],
   table: readonly WizardToFix[] = WIZARD_BEHAVIOUR_TO_FIX,

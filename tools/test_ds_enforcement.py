@@ -545,9 +545,9 @@ def the_stop_hook_ignores_briefs_old_reports_and_unreadable_registries():
 # --- wizard states are required in the shipped harness ----------------------------------------
 
 @test
-def the_harness_source_requires_the_nine_states_and_the_readme_names_the_stack():
+def the_harness_source_requires_the_ten_states_and_the_readme_names_the_stack():
     src = open(os.path.join(KIT, 'wizard-behaviour.ts'), encoding='utf-8').read()
-    for s in ('first-run', 'planning', 'ready-to-review', 'running', 'paused', 'stopped', 'failed', 'done', 'done-after-reload'):
+    for s in ('loading', 'first-run', 'planning', 'ready-to-review', 'running', 'paused', 'stopped', 'failed', 'done', 'done-after-reload'):
         assert "'%s'" % s in src, s
     assert 'never drop one' in src and 'droppedStates' in src
     readme = open(os.path.join(KIT, 'README.md'), encoding='utf-8').read()

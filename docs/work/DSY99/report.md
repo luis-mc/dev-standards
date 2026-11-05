@@ -25,3 +25,17 @@ Follow-ups:
 Tests: `python -I tools/test_ds_enforcement.py` 25 passed, 0 failed. `tools/test_rule_tags.py` passed. `docs_check.py`: only W1 as above. `spec_check` on docspec and DELIVERYSPEC: 0 errors.
 
 CODE DONE
+
+## D244 loading state
+
+Status: done, committed locally on DSY99-ds-enforcement-kit. Nothing pushed or published.
+
+- `wizard-behaviour.ts`: `WIZARD_STATES` now has ten states, `loading` first (D237 + D244); doc comment, `states` comment, `droppedStates` and `judgeAll` comments say ten. `droppedStates` still fails a driver that omits any required state (now 8 dropped for a two-state list).
+- New judge in `checkWizard` for state `loading`: rules `loading-action-hidden` (no primary shown), `loading-action-live` (any non-Back button pressable), `loading-wait-not-once` (`waitLines` must be 1), `loading-back-missing` (Back, role `back`, present and free), `loading-done-shown` (no Done text). The existing disabled-primary-reason rule still applies. Snapshot gained `waitLines?`; button role gained `back`.
+- Self-tests: new `loading state (D244)` block (passes locked primary + Back free; fails live primary; fails hidden primary; fails locked Back, wait twice, Done text); the ten-state tests updated (counts 8 dropped, 11 with an added state, 10 default).
+- Docs: kit README, design-system-setup SKILL, DOCSPEC R15.9 text, DSY99 change notes (docspec, kit-docs, feature note) now say ten states. `references/design-gate.md` does not list the states: unchanged. No version headers touched.
+- `tools/test_ds_enforcement.py`: the source check now expects ten states including `loading`.
+
+Tests: `python -I tools/test_ds_enforcement.py` 25 passed, 0 failed (includes the TS self-tests under the Node shim: 20 passed, 0 failed). `docs_check.py`: only the known W1 error (docs/work files) and warnings as before. `spec_check` on docspec.md: see commit run.
+
+CODE DONE

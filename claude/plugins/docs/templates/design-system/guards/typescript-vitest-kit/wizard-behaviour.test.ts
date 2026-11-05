@@ -73,27 +73,68 @@ describe('wizard behaviour', () => {
     });
   });
 
-  describe('the nine required states', () => {
-    const clean = (state: string): WizardSnapshot => ({
-      state,
-      steps: [],
-      buttons: [{ label: 'Go', primary: true, disabled: false }],
+  describe('the loading state (D244)', () => {
+    const loading: WizardSnapshot = {
+      state: 'loading',
+      steps: [{ name: 'Choose', standing: 'now', pressable: true }],
+      buttons: [
+        { label: 'Next', primary: true, disabled: true, reason: 'Loading your files' },
+        { label: 'Back', primary: false, disabled: false, role: 'back' },
+      ],
       job: { canStop: false, canPause: false },
-      done: { text: 'ok', counts: 1 },
+      waitLines: 1,
+    };
+    const rules = (s: WizardSnapshot): string[] => checkWizard(s).map((p) => p.rule);
+    it('passes a locked primary with Back free', () => expect(rules(loading)).toEqual([]));
+    it('fails a live primary while loading', () => {
+      const b = loading.buttons.map((x, i) => (i === 0 ? { ...x, disabled: false } : x));
+      expect(rules({ ...loading, buttons: b })).toEqual(['loading-action-live']);
     });
-    it('are exactly the nine of the owner list', () => {
+    it('fails a hidden primary', () => {
+      const b = loading.buttons.filter((x) => !x.primary);
+      expect(rules({ ...loading, buttons: b })).toContain('loading-action-hidden');
+    });
+    it('fails a locked Back, a wait said twice and Done text', () => {
+      const b = loading.buttons.map((x) => (x.role === 'back' ? { ...x, disabled: true } : x));
+      expect(rules({ ...loading, buttons: b })).toContain('loading-back-missing');
+      expect(rules({ ...loading, waitLines: 2 })).toEqual(['loading-wait-not-once']);
+      expect(rules({ ...loading, done: { text: '3 done', counts: 3 } })).toEqual(['loading-done-shown']);
+    });
+  });
+
+  describe('the ten required states', () => {
+    const clean = (state: string): WizardSnapshot =>
+      state === 'loading'
+        ? {
+            state,
+            steps: [],
+            buttons: [
+              { label: 'Go', primary: true, disabled: true, reason: 'Loading' },
+              { label: 'Back', primary: false, disabled: false, role: 'back' },
+            ],
+            job: { canStop: false, canPause: false },
+            waitLines: 1,
+          }
+        : {
+            state,
+            steps: [],
+            buttons: [{ label: 'Go', primary: true, disabled: false }],
+            job: { canStop: false, canPause: false },
+            done: { text: 'ok', counts: 1 },
+          };
+    it('are exactly the ten of the owner list', () => {
       expect([...WIZARD_STATES]).toEqual([
-        'first-run', 'planning', 'ready-to-review', 'running', 'paused', 'stopped', 'failed', 'done', 'done-after-reload',
+        'loading', 'first-run', 'planning', 'ready-to-review', 'running', 'paused', 'stopped', 'failed', 'done', 'done-after-reload',
       ]);
     });
     it('a driver that lists fewer states fails and names the dropped ones', async () => {
       const driver: WizardDriver = { id: 'w', states: ['first-run', 'done'], open: (s) => Promise.resolve(clean(s)) };
-      expect(droppedStates(driver)).toHaveLength(7);
+      expect(droppedStates(driver)).toHaveLength(8);
       const lines = await judgeAll([driver], []);
-      expect(lines).toHaveLength(7);
+      expect(lines).toHaveLength(8);
       expect(lines[0]).toContain('never drop one');
     });
-    it('a driver may add a state and is then driven through ten', async () => {
+    it('a driver may add a state and is then driven through eleven', async () => {
       const seen: string[] = [];
       const driver: WizardDriver = {
         id: 'w',
@@ -104,13 +145,13 @@ describe('wizard behaviour', () => {
         },
       };
       expect(await judgeAll([driver], [])).toEqual([]);
-      expect(seen).toHaveLength(10);
+      expect(seen).toHaveLength(11);
     });
-    it('a driver with no states list runs all nine', async () => {
+    it('a driver with no states list runs all ten', async () => {
       const seen: string[] = [];
       const driver: WizardDriver = { id: 'w', open: (s) => { seen.push(s); return Promise.resolve(clean(s)); } };
       expect(await judgeAll([driver], [])).toEqual([]);
-      expect(seen).toHaveLength(9);
+      expect(seen).toHaveLength(10);
     });
   });
 
@@ -125,13 +166,25 @@ describe('wizard behaviour', () => {
       expect(judgeWizard('w', 'running', [], [row]).stale).toHaveLength(1);
     });
     it('a star row covers every state and goes stale when no state has the problem', async () => {
-      const clean = (state: (typeof WIZARD_STATES)[number]): WizardSnapshot => ({
-        state,
-        steps: [],
-        buttons: [{ label: 'Go', primary: true, disabled: false }],
-        job: { canStop: false, canPause: false },
-        done: { text: 'ok', counts: 1 },
-      });
+      const clean = (state: (typeof WIZARD_STATES)[number]): WizardSnapshot =>
+        state === 'loading'
+        ? {
+            state,
+            steps: [],
+            buttons: [
+              { label: 'Go', primary: true, disabled: true, reason: 'Loading' },
+              { label: 'Back', primary: false, disabled: false, role: 'back' },
+            ],
+            job: { canStop: false, canPause: false },
+            waitLines: 1,
+          }
+        : {
+            state,
+            steps: [],
+            buttons: [{ label: 'Go', primary: true, disabled: false }],
+            job: { canStop: false, canPause: false },
+            done: { text: 'ok', counts: 1 },
+          };
       const driver: WizardDriver = { id: 'w', open: (s) => Promise.resolve(clean(s)) };
       const star: WizardToFix = { wizard: 'w', state: '*', rule: 'stop-missing', task: 'T1' };
       const lines = await judgeAll([driver], [star]);
