@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T16:24+00:00",
+  "updated": "2026-11-05T16:28+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1456,12 +1456,11 @@
       "id": "DL60",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Runner pool on Windows: 4 bugs block setup (SHA, CPU headroom, CRLF, runner dir)",
-      "detail": "Agent READY 16:18: SHA from the release-note markers; WSL processors at least 1 above the pool CPUs; LF for pool files (.gitattributes + copy); each agent runs its own runner copy. Memory 7 vs 10 GB: two separate measurements, not a bug. Branch CI from 16:23.",
-      "expected": "05 Nov ~16:33",
-      "changed": "2026-11-05T16:24+00:00",
-      "expected_basis": "branch CI started 16:23, about 10 min",
+      "detail": "Four runner-pool fixes, agent READY 16:18, branch CI green but for join-cleared items; in PR #151.",
+      "expected": "05 Nov",
+      "changed": "2026-11-05T16:28+00:00",
       "rides": "DL61",
       "started": "2026-11-05T16:16+00:00"
     },
@@ -1471,31 +1470,31 @@
       "app": "",
       "status": "Running",
       "item": "Release the runner-pool Windows fixes and the word rewording",
-      "detail": "Light join of DL60-runner-pool-windows and DU12-reword-hint-word, ready PR, CI, merge; luismc-delivery and luismc-docs version fold. A real project's pool setup waits on it.",
-      "expected": "05 Nov ~16:58",
-      "changed": "2026-11-05T16:24+00:00",
-      "expected_basis": "DL60 done 16:18; its branch CI from 16:23 about 10 min, join 10, CI 10, merge 5",
+      "detail": "RELEASE-46: DL60, DS189, DU12 joined on DL61-integration; ready PR #151; delivery 1.6.1, docs 1.6.0.",
+      "expected": "05 Nov ~16:43",
+      "changed": "2026-11-05T16:28+00:00",
+      "expected_basis": "PR #151 CI started 16:28, about 10 min; merge 5",
       "release": 46,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-05T16:16+00:00",
-          "end": "2026-11-05T16:33+00:00"
+          "end": "2026-11-05T16:23+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-05T16:33+00:00",
-          "end": "2026-11-05T16:43+00:00"
+          "start": "2026-11-05T16:23+00:00",
+          "end": "2026-11-05T16:28+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-05T16:43+00:00",
-          "end": "2026-11-05T16:53+00:00"
+          "start": "2026-11-05T16:28+00:00",
+          "end": "2026-11-05T16:38+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-05T16:53+00:00",
-          "end": "2026-11-05T16:58+00:00"
+          "start": "2026-11-05T16:38+00:00",
+          "end": "2026-11-05T16:43+00:00"
         }
       ],
       "risk": {
@@ -4275,9 +4274,9 @@
       "status": "To do",
       "item": "Starter rules and words: R1-R16, W1",
       "detail": "ux-rules.md, content.md, CHANGES.md of the luismc-docs starter. New rule IDs follow DS189's. Change note naming the docs plugin.json.",
-      "expected": "05 Nov ~17:43",
-      "changed": "2026-11-05T16:24+00:00",
-      "expected_basis": "starts at RELEASE-46 merge 16:58 (DS189), then about 45 min"
+      "expected": "05 Nov ~17:28",
+      "changed": "2026-11-05T16:28+00:00",
+      "expected_basis": "starts at RELEASE-46 merge 16:43 (DS189), then about 45 min"
     },
     {
       "id": "DU3",
@@ -4286,9 +4285,9 @@
       "status": "To do",
       "item": "Starter components and tokens: C1-C5, T1-T5, R17",
       "detail": "components.md, tokens.md of the starter (incl. 7:1 named as an option, D5). Runs beside the rules task. Change note naming the docs plugin.json.",
-      "expected": "05 Nov ~17:43",
-      "changed": "2026-11-05T16:24+00:00",
-      "expected_basis": "starts at RELEASE-46 merge 16:58 (DS189), then about 45 min"
+      "expected": "05 Nov ~17:28",
+      "changed": "2026-11-05T16:28+00:00",
+      "expected_basis": "starts at RELEASE-46 merge 16:43 (DS189), then about 45 min"
     },
     {
       "id": "DU4",
@@ -4323,9 +4322,9 @@
       "status": "To do",
       "item": "Gallery draws the filter bar, change review and new token kinds",
       "detail": "gallery_draw.py and gallery_tokens.py; bumps the gallery script version.",
-      "expected": "05 Nov ~18:13",
-      "changed": "2026-11-05T16:24+00:00",
-      "expected_basis": "starts when DU3 ends 17:43, then about 30 min"
+      "expected": "05 Nov ~17:58",
+      "changed": "2026-11-05T16:28+00:00",
+      "expected_basis": "starts when DU3 ends 17:28, then about 30 min"
     },
     {
       "id": "DU7",
@@ -4334,30 +4333,30 @@
       "status": "Running",
       "item": "Join and release the design-system updates",
       "detail": "Light join of the five branches, ready PR, CI, merge, luismc-docs version fold. Gets its RELEASE number when it starts.",
-      "expected": "05 Nov ~18:38; after DU2-DU6",
-      "changed": "2026-11-05T16:24+00:00",
-      "expected_basis": "DU2, DU3 from 16:58 about 45; DU6 from 17:43 about 30; join 10, CI 10, merge 5",
+      "expected": "05 Nov ~18:23; after DU2-DU6",
+      "changed": "2026-11-05T16:28+00:00",
+      "expected_basis": "DU2, DU3 from 16:43 about 45; DU6 from 17:28 about 30; join 10, CI 10, merge 5",
       "release": 47,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-05T16:21+00:00",
-          "end": "2026-11-05T18:13+00:00"
+          "end": "2026-11-05T17:58+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-05T18:13+00:00",
-          "end": "2026-11-05T18:23+00:00"
+          "start": "2026-11-05T17:58+00:00",
+          "end": "2026-11-05T18:08+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-05T18:23+00:00",
-          "end": "2026-11-05T18:33+00:00"
+          "start": "2026-11-05T18:08+00:00",
+          "end": "2026-11-05T18:18+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-05T18:33+00:00",
-          "end": "2026-11-05T18:38+00:00"
+          "start": "2026-11-05T18:18+00:00",
+          "end": "2026-11-05T18:23+00:00"
         }
       ],
       "risk": {
