@@ -190,6 +190,10 @@ One Docker container with one CPU and memory cap. Inside it, one runner agent pe
 
 **Database in a job (D104).** Each agent's `db.env` (mode `0600`, owned by the job user) holds `DATABASE_URL`, `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` and `PGDATABASE`. A job does not load it by itself. Add one step before the steps that need the database: `- run: pool-db-env`. It masks the password and the URL in the log and appends the values to `$GITHUB_ENV`, then later steps use `PGHOST`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` or `DATABASE_URL`. Outside the pool there is no `db.env`, and the step does nothing. The default is one database per repository, and a login can connect only to its own database. A repository whose CI creates and drops its own databases needs the login to have `CREATEDB`: add the agent with `pool-add-agent <slug> <repo> --db-createdb`. That is an owner decision, because it widens what that login can do. A rerun with the flag adds `CREATEDB`; a rerun without it does not remove it. Any rerun of `pool-add-agent` for an existing agent refreshes its database settings: `db.env` gets every key, the database gets the connect isolation, and the login keeps its password, so running jobs are not cut off. Agents added before this change get the new keys this way.
 
+#### Temp files
+
+Each agent has its own `TMPDIR` (with `TMP` and `TEMP`) at `/agents/<slug>/tmp`, mode 0700, owned by the agent's user. The job-started hook empties it at each job start. Both hooks, at job start and job end, also delete the top-level `/tmp` entries the job user owns. So one job's leftovers cannot break the next, and agents cannot touch each other's files. Hosted runners give each job a fresh `/tmp`; this gives the pool the same result.
+
 ### 4.2 WSL ceiling
 
 Docker Desktop runs in the WSL2 VM. `%UserProfile%\.wslconfig` (`memory=`, `processors=`) is the outer ceiling. The pool cap must fit inside it, with room for the sidecar and the VM. The setup proposes both values. A change to `.wslconfig` needs `wsl --shutdown`, which stops every container. The setup only does that when no job runs and the owner says yes.

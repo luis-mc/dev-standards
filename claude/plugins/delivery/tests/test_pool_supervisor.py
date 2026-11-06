@@ -110,3 +110,25 @@ class ParallelPerAgentTest(unittest.TestCase):
         for call in popen.call_args_list:
             self.assertEqual(call.kwargs["env"]["CI_MAX_PARALLEL"], "2")
             self.assertEqual(call.kwargs["env"]["PATH"], "/bin")
+
+
+class PrepareTmpTest(unittest.TestCase):
+    def test_old_env_gets_only_missing_lines(self):
+        import os
+        import tempfile
+        base = tempfile.mkdtemp()
+        os.mkdir(os.path.join(base, "app1"))
+        env = Path(base, "app1", ".env")
+        env.write_text("A=1\nTEMP=/old\nDELIVERY_MACHINE_DIR=/machine")
+        calls = []
+        run = lambda argv: calls.append(argv)
+        for _ in range(2):
+            self.assertTrue(SUP.prepare_tmp(AGENT, base, run=run))
+        lines = env.read_text().splitlines()
+        tmp = os.path.join(base, "app1", "tmp")
+        self.assertEqual(lines, ["A=1", "TEMP=/old", "DELIVERY_MACHINE_DIR=/machine", "TMPDIR=" + tmp, "TMP=" + tmp])
+        self.assertEqual(os.stat(tmp).st_mode & 0o777, 0o700)
+        self.assertIn(["chown", "r-app1:r-app1", tmp], calls)
+
+    def test_missing_folder_does_not_block(self):
+        self.assertTrue(SUP.prepare_tmp(AGENT, "/nonexistent-base", run=lambda a: None))
