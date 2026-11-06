@@ -1,4 +1,5 @@
-# Shared CI pool (DL30). The setup writes the cap into .env (POOL_CPUS, POOL_MEM, POOL_NAME, MACHINE_DIR, RUNNER_VERSION, POOL_BROWSERS, PLAYWRIGHT_VERSION) and nothing else.
+# Shared CI pool (DL30). The setup writes the cap into .env (POOL_CPUS, POOL_MEM, POOL_NAME, MACHINE_DIR, RUNNER_VERSION, POOL_BROWSERS, PLAYWRIGHT_VERSION, POOL_CPUSET, POOL_CPUS_INT) and nothing else.
+# DL79: `cpus:` sets only the cgroup quota. `cpuset:` also pins the cores, so nproc and Node's availableParallelism equal the cap. CI_MAX_PARALLEL is the same number for jobs.
 # No Docker socket is mounted (D41). The machine folder is mounted at /machine so the hooks see the slots and the config.
 name: pool-${POOL_NAME:-main}
 services:
@@ -15,10 +16,12 @@ services:
     stop_grace_period: 5m
     init: false
     cpus: ${POOL_CPUS}
+    cpuset: ${POOL_CPUSET:-}
     mem_limit: ${POOL_MEM}
     memswap_limit: ${POOL_MEM}
     environment:
       POOL_NAME: ${POOL_NAME:-main}
+      CI_MAX_PARALLEL: ${POOL_CPUS_INT:-1}
       DELIVERY_MACHINE_DIR: /machine
       DELIVERY_DB_HOST: db
     volumes:

@@ -1,5 +1,6 @@
 """DL30: pool detect, plan, sizing, run, doctor checks, supervisor, add and remove agent, section 13 summary. No Docker."""
 import json
+import math
 import os
 import sys
 import tempfile
@@ -1054,7 +1055,7 @@ class DockerCpuCapTests(unittest.TestCase):
         orig = P.write_pool_files
         P.write_pool_files = lambda pool, cap, runner_version=None, **k: seen.update(cap=cap) or "dest"
         try:
-            ok, _ = P.Executor(Docker()).run(P._step("f", "F", "pool-files", pool="main", cap={"cpus": 19.0, "mem_gib": 6.0}))
+            ok, _ = P.Executor(Docker()).run(P._step("f", "F", "pool-files", pool="main", cap={"cpus": 19.0, "mem_gib": 40.0}))
         finally:
             P.write_pool_files = orig
         self.assertTrue(ok)
@@ -1362,3 +1363,48 @@ class PoolCheckTriggerTests(unittest.TestCase):
         self.assertIn("workflow_dispatch:", text)
         self.assertIn("push:", text)
         self.assertIn("- .github/workflows/pool-check.yml", text)
+
+
+class DL79MemPerCpuTests(unittest.TestCase):
+    def test_memory_limits_the_cpus(self):
+        # 8 GiB pool memory, 19 CPUs wanted -> floor(8 / 1.5) = 5
+        self.assertEqual(P.cap_mem_cpus(19.0, 8.0), 5)
+        # 32 GiB and 8 CPUs: the CPU cap wins
+        self.assertEqual(P.cap_mem_cpus(8.0, 32.0), 8)
+        self.assertEqual(P.cap_mem_cpus(8.0, 1.0), 1)
+
+    def test_sizing_applies_it_and_shows_it(self):
+        r = P.sizing(32, 0, 40, docker_gib=14)
+        self.assertEqual(r["cpus"], math.floor(r["mem_gib"] / P.MIN_GIB_PER_CPU))
+        self.assertIn("GiB per CPU", r["cpus_text"])
+
+    def test_env_has_cpuset_and_int(self):
+        with tempfile.TemporaryDirectory() as d:
+            dest = os.path.join(d, "pools", "main")
+            P.write_pool_files("main", {"cpus": 5.0, "mem_gib": 8.0}, dest=dest)
+            env = Path(dest, ".env").read_text()
+        self.assertIn("POOL_CPUSET=0-4", env)
+        self.assertIn("POOL_CPUS_INT=5", env)
+
+    def test_compose_has_cpuset_and_hint(self):
+        compose = (POOL / "compose.yaml").read_text()
+        self.assertIn("cpuset: ${POOL_CPUSET:-}", compose)
+        self.assertIn("CI_MAX_PARALLEL: ${POOL_CPUS_INT", compose)
+
+    def _doctor(self, env):
+        with tempfile.TemporaryDirectory() as d:
+            pd = Path(d, "pools", "main")
+            pd.mkdir(parents=True)
+            (pd / "compose.yaml").write_text("services: {}\n")
+            (pd / ".env").write_text(env)
+            (pd / "agents.json").write_text(json.dumps({"agents": []}))
+            res = P.doctor_checks(d, FakeProbe())
+        return {c["id"].split(".")[-1]: c for c in res}["mem-per-cpu"]
+
+    def test_doctor_warns_under_one_gib_per_cpu(self):
+        c = self._doctor("POOL_CPUS=19.0\nPOOL_MEM=8.0g\n")
+        self.assertEqual(c["status"], "warn")
+        self.assertIn("8.0", c["detail"])
+        self.assertIn("19.0", c["detail"])
+        self.assertIn("setup", c["detail"])
+        self.assertEqual(self._doctor("POOL_CPUS=4\nPOOL_MEM=8g\n")["status"], "ok")
