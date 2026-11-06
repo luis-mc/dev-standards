@@ -164,7 +164,7 @@ def sc_workers(t: T, shared: Path) -> None:
 
 def sc_stop_tree(t: T, shared: Path) -> None:
     r = Repo(shared)
-    r.declare({"start": r.start_cmd("all"), "expect": ["worker-mail ready"], "timeout_s": 20})
+    r.declare({"start": r.start_cmd("all"), "expect": ["worker-queue ready", "worker-mail ready"], "timeout_s": 20})
     res = r.smoke()
     t.check("passed", res.code == 0, res.text)
     pids = [int(x) for x in r.pids.read_text().split()] if r.pids.exists() else []
