@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-06T07:01+00:00",
+  "updated": "2026-11-06T07:03+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1854,8 +1854,8 @@
       "item": "RELEASE-57: pool gh and per-job tmp",
       "detail": "Join DL86 and DL87, fold notes (luismc-delivery 1.10.0), PR, CI, merge, install, message moobable.",
       "expected": "06 Nov ~08:15",
-      "changed": "2026-11-06T07:01+00:00",
-      "expected_basis": "agents due ~07:50, join+CI ~25 min",
+      "changed": "2026-11-06T07:03+00:00",
+      "expected_basis": "agents due 07:47, join+CI ~25 min",
       "release": 57
     },
     {
