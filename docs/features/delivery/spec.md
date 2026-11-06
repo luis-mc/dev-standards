@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.7.3
+version: 0.7.4
 owner: agents
 type: reference
 code:
@@ -367,6 +367,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.7.4 | 2026-11-06 | RELEASE-52 | Pool run fixes: agents.json saved in place on a bind mount; a rerun keeps a matching Windows runner; labels compared case-insensitively; Windows hook scripts copied to a stable runner-hooks folder with the full python path (D99).<br>pool-check also runs on a push of its own file, so it can run before it reaches the default branch. | DL74, DL77 |
 | 0.7.3 | 2026-11-05 | RELEASE-53 | The browser step uses a checked Node 22 tarball for Playwright install-deps; Ubuntu's Node 18 is too old. | DL76 |
 | 0.7.2 | 2026-11-05 | RELEASE-51 | The pool image installs libatomic1, xz-utils, unzip, zip and jq; pool-check checks them. | DL71 |
 | 0.7.1 | 2026-11-05 | RELEASE-50 | Runner pool: the Chromium libraries match the project's Playwright version (flag, lockfile, or pin 1.62.1). | DL69 |

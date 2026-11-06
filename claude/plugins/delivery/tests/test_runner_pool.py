@@ -1352,3 +1352,13 @@ class DL74Tests(unittest.TestCase):
             self.assertIn("runner_load_gate.py", text)
             printed = " ".join(next(s for s in pl["steps"] if s["action"] == "windows-service")["printed"])
             self.assertIn("C:/ProgramData/luismc-delivery/runner-hooks/runner_load_gate.ps1", printed)
+
+
+class PoolCheckTriggerTests(unittest.TestCase):
+    """DL77: pool-check runs on a push of its own file, so it can run before it reaches the default branch."""
+
+    def test_pool_check_has_dispatch_and_own_path_push(self):
+        text = (POOL / "pool-check.yml").read_text()
+        self.assertIn("workflow_dispatch:", text)
+        self.assertIn("push:", text)
+        self.assertIn("- .github/workflows/pool-check.yml", text)
