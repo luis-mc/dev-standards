@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-06T00:20+00:00",
+ "updated": "2026-11-06T00:27+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -2641,6 +2641,31 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "changed": "2026-11-06T00:20+00:00",
    "rides": "DL72",
    "started": "2026-11-06T00:14+00:00"
+  },
+  {
+   "id": "DL78",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "RELEASE: pool memory per CPU",
+   "detail": "Join, CI and merge for DL79 (pool sizing by memory per CPU, cpuset, job parallelism hint, doctor check), luismc-delivery 1.8.0.",
+   "expected": "06 Nov ~01:30",
+   "changed": "2026-11-06T00:27+00:00",
+   "expected_basis": "DL79 agent to ~01:15, join 5, CI 5, merge",
+   "release": 54
+  },
+  {
+   "id": "DL79",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Running",
+   "item": "Pool sizing: memory per CPU, cpuset, CI_MAX_PARALLEL hint, doctor check",
+   "detail": "Bug 14: POOL_CPUS=19 with POOL_MEM=8g (0.4 GB/CPU); cpus: leaves nproc at 20, so test runners fork ~100 Node workers and get OOM-killed. Cap CPUs at mem/1.5 GB, pin with cpuset so nproc matches, export CI_MAX_PARALLEL to jobs, doctor warns under 1 GB per CPU. Decision D102.",
+   "expected": "06 Nov ~01:15",
+   "changed": "2026-11-06T00:27+00:00",
+   "expected_basis": "cloud agent: setup 5 + work 30 + checks 10 = 45 min",
+   "rides": "DL78",
+   "started": "2026-11-06T00:27+00:00"
   },
   {
    "id": "DS1",
@@ -5988,10 +6013,15 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-06T00:20+00:00">06 Nov 00:20</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-06T00:27+00:00">06 Nov 00:27</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
+</details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL79"><span class="task-id">DL79</span>Pool sizing: memory per CPU, cpuset, CI_MAX_PARALLEL hint, doctor check <span class="glance-expected">06 Nov ~01:15</span><span class="glance-basis">cloud agent: setup 5 + work 30 + checks 10 = 45 min</span></li>
+</ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">34 tasks</span></summary>
 <ul>
@@ -6007,8 +6037,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">369</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">369</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<figure class="release-timeline">
+<figcaption>Next releases (Lisbon)</figcaption>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DL78 (RELEASE: pool memory per CPU) expected live about 01:30." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">06 Nov 00:00</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">06 Nov 00:30</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">01:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">01:30</text></g>
+<text class="rt-name" x="0" y="60"><title>RELEASE-54 · RELEASE: pool memory per CPU</title>RELEASE-54 · RELEASE: poo…</text>
+<text class="rt-sub" x="0" y="77"><title>DL79</title>DL79</text>
+<polygon class="rt-expected" points="720,50 728,63 720,76 712,63"/>
+<text class="rt-live-label" x="720" y="92">live ~01:30</text>
+<line class="rt-now" x1="356" y1="36" x2="356" y2="148"/><text class="rt-now-label" x="356" y="161">now 00:27</text>
+</svg></div>
+<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
+</figure>
+<details class="status-fold release-group" data-group="release-54" open><summary><strong>RELEASE-54 · live ~01:30</strong><span class="fold-count">2 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL78"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL78</span><span class="release-name">RELEASE-54</span>RELEASE: pool memory per CPU</a></td><td data-label="App / service"></td><td data-label="Detail">Join, CI and merge for DL79 (pool sizing by memory per CPU, cpuset, job parallelism hint, doctor check), luismc-delivery 1.8.0.</td><td data-label="Expected">06 Nov ~01:30<span class="expected-basis">DL79 agent to ~01:15, join 5, CI 5, merge</span></td></tr>
+<tr data-task="DL79"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL79</span>Pool sizing: memory per CPU, cpuset, CI_MAX_PARALLEL hint, doctor check</a></td><td data-label="App / service"></td><td data-label="Detail">Bug 14: POOL_CPUS=19 with POOL_MEM=8g (0.4 GB/CPU); cpus: leaves nproc at 20, so test runners fork ~100 Node workers and get OOM-killed. Cap CPUs at mem/1.5 GB, pin with cpuset so nproc matches, export CI_MAX_PARALLEL to jobs, doctor warns under 1 GB per CPU. Decision D102.</td><td data-label="Expected">06 Nov ~01:15<span class="expected-basis">cloud agent: setup 5 + work 30 + checks 10 = 45 min</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">371 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL72"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL72</span><span class="release-name">RELEASE-52</span>RELEASE: smoke-test flake and pool-run fixes</a></td><td data-label="App / service"></td><td data-label="Detail">Join, CI and merge for DL73 (packaged-program smoke test pid race) and DL74 (pool-run bugs: agents.json save, rerun removes own runner, label case, Windows hook paths), luismc-delivery 1.7.3.</td><td data-label="Expected">06 Nov</td></tr>
@@ -6390,12 +6437,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
-<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (0)</strong><span class="fold-count">0 feature artifacts</span></summary>
-<p class="feature-none">No feature artifacts in progress.</p>
-</details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (8)</strong><span class="fold-count">8 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29898740"><time datetime="2026-11-06T00:20+00:00">06 Nov 00:20</time></td><td data-label="Tasks">DL1 to DL77</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29898747"><time datetime="2026-11-06T00:27+00:00">06 Nov 00:27</time></td><td data-label="Tasks">DL1 to DL79</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
+<div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
 <tr><td data-label="Feature artifact" data-value="feature: design-system updates from real projects"><a href="feature-design-system-updates-from-real-projects.html">Feature: Design-system updates from real projects</a></td><td data-label="Last updated" data-value="29898412"><time datetime="2026-11-05T18:52+00:00">05 Nov 18:52</time></td><td data-label="Tasks">DU1 to DU12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Decided on 5 Nov: all 35 proposals go in; the owner chose every recommended option (D1-D6).</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29898256"><time datetime="2026-11-05T16:16+00:00">05 Nov 16:16</time></td><td data-label="Tasks">AR2 to AR59</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">claude-setup turns plugins on, but most stay silent until a config file exists and some only warn.</td></tr>

@@ -2304,6 +2304,31 @@
       "decided": "2026-11-06",
       "task": "DL77",
       "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning)."
+    },
+    {
+      "id": "D102",
+      "question": "Bug 14: the pool gets 19 CPUs but 8 GB (0.4 GB per CPU) and nproc shows all host cores, so parallel test runners are OOM-killed. How should the pool size and expose CPUs?",
+      "asked": "2026-11-06",
+      "status": "decided",
+      "options": [
+        {
+          "label": "All three: memory per CPU, cpuset + hint, doctor check",
+          "summary": "POOL_CPUS = min(CPU cap, floor(POOL_MEM / 1.5 GB)); compose pins cpuset 0..N-1 so nproc and availableParallelism match; the container exports CI_MAX_PARALLEL; the doctor warns under 1 GB per CPU.",
+          "recommended": true
+        },
+        {
+          "label": "Hint only",
+          "summary": "Export CI_MAX_PARALLEL; leave the cap and nproc as they are."
+        },
+        {
+          "label": "Doctor check only",
+          "summary": "Warn about low memory per CPU; change nothing else."
+        }
+      ],
+      "chosen": "All three: memory per CPU, cpuset + hint, doctor check",
+      "decided": "2026-11-06",
+      "task": "DL79",
+      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning)."
     }
   ]
 }
