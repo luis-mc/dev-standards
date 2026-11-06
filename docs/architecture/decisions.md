@@ -55,6 +55,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D10 | dev-standards is public: create a public GitHub release per train for the delivery log? | Yes, public releases | decided | 2026-10-11 |
 | delivery-speed | D100 | Bug 13: the pool image fails to build with browsers: chromium because Ubuntu 24.04's Node 18 is too old for Playwright 1.62. How should the image get Node for install-deps? | Official Node 22 LTS tarball, sha256-checked | decided | 2026-11-05 |
 | delivery-speed | D101 | pool-check.yml is workflow_dispatch only, so it cannot run before it reaches the default branch. How should a repo moving to the pool run it first? | Push trigger on its own path | decided | 2026-11-06 |
+| delivery-speed | D102 | Bug 14: the pool gets 19 CPUs but 8 GB (0.4 GB per CPU) and nproc shows all host cores, so parallel test runners are OOM-killed. How should the pool size and expose CPUs? | All three: memory per CPU, cpuset + hint, doctor check | decided | 2026-11-06 |
 | delivery-speed | D11 | Install the train freeze in this repo’s own git hooks? | Yes | decided | 2026-10-11 |
 | delivery-speed | D12 | Merge this release on green CI without asking again? | Merge on green | decided | 2026-10-11 |
 | delivery-speed | D13 | Turn hooks on here (core.hooksPath .githooks), which also activates the pre-commit secret check? | Yes, both hooks | decided | 2026-10-11 |
