@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-06T02:41+00:00",
+  "updated": "2026-11-06T02:42+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1814,13 +1814,14 @@
       "id": "DL82",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "RELEASE: pool parallelism per agent",
       "detail": "Join, CI and merge for DL83 (CI_MAX_PARALLEL split across agents, doctor memory-per-agent warning), luismc-delivery 1.8.2.",
       "expected": "06 Nov ~03:00",
-      "changed": "2026-11-06T02:08+00:00",
+      "changed": "2026-11-06T02:42+00:00",
       "expected_basis": "DL83 agent to ~02:48, join 5, CI 5, merge",
-      "release": 56
+      "release": 56,
+      "started": "2026-11-06T02:42+00:00"
     },
     {
       "id": "DL83",
