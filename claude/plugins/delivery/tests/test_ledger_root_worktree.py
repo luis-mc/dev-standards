@@ -95,5 +95,30 @@ class LinkTests(unittest.TestCase):
         self.assertTrue(all(t["pr"] is None for t in L.load(root)["trains"]))
 
 
+
+class HooklibFindRootTests(unittest.TestCase):
+    """DL90 join: hooklib.find_root (pre-tool, stop and session hooks) agrees with the ledger find_root."""
+
+    def test_worktree_resolves_to_main_checkout(self):
+        import hooklib
+        base = Path(tempfile.mkdtemp())
+        main = base / 'main'
+        (main / '.git' / 'worktrees' / 'wt').mkdir(parents=True)
+        (main / '.git' / 'worktrees' / 'wt' / 'commondir').write_text('../..', encoding='utf-8')
+        (main / '.delivery').mkdir()
+        (main / '.delivery' / 'config.json').write_text('{}', encoding='utf-8')
+        wt = base / 'wt'
+        (wt / '.delivery').mkdir(parents=True)
+        (wt / '.delivery' / 'gate-result.json').write_text('{}', encoding='utf-8')
+        (wt / '.git').write_text('gitdir: ' + (main / '.git' / 'worktrees' / 'wt').as_posix() + chr(10), encoding='utf-8')
+        self.assertEqual(Path(hooklib.find_root({'cwd': str(wt)})).resolve(), main.resolve())
+        self.assertEqual(Path(hooklib.find_root({'cwd': str(main)})).resolve(), main.resolve())
+
+    def test_no_delivery_folder_is_none(self):
+        import hooklib
+        base = Path(tempfile.mkdtemp())
+        (base / '.git').mkdir()
+        self.assertIsNone(hooklib.find_root({'cwd': str(base)}))
+
 if __name__ == "__main__":
     unittest.main()
