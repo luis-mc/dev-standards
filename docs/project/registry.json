@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-06T00:27+00:00",
+  "updated": "2026-11-06T00:51+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1766,24 +1766,23 @@
       "id": "DL78",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Live",
       "item": "RELEASE: pool memory per CPU",
       "detail": "Join, CI and merge for DL79 (pool sizing by memory per CPU, cpuset, job parallelism hint, doctor check), luismc-delivery 1.8.0.",
-      "expected": "06 Nov ~01:30",
-      "changed": "2026-11-06T00:27+00:00",
-      "expected_basis": "DL79 agent to ~01:15, join 5, CI 5, merge",
-      "release": 54
+      "expected": "06 Nov",
+      "changed": "2026-11-06T00:51+00:00",
+      "release": 54,
+      "started": "2026-11-06T00:45+00:00"
     },
     {
       "id": "DL79",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Pool sizing: memory per CPU, cpuset, CI_MAX_PARALLEL hint, doctor check",
       "detail": "Bug 14: POOL_CPUS=19 with POOL_MEM=8g (0.4 GB/CPU); cpus: leaves nproc at 20, so test runners fork ~100 Node workers and get OOM-killed. Cap CPUs at mem/1.5 GB, pin with cpuset so nproc matches, export CI_MAX_PARALLEL to jobs, doctor warns under 1 GB per CPU. Decision D102.",
-      "expected": "06 Nov ~01:15",
-      "changed": "2026-11-06T00:27+00:00",
-      "expected_basis": "cloud agent: setup 5 + work 30 + checks 10 = 45 min",
+      "expected": "06 Nov",
+      "changed": "2026-11-06T00:51+00:00",
       "rides": "DL78",
       "started": "2026-11-06T00:27+00:00"
     },
