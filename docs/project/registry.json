@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-06T02:08+00:00",
+  "updated": "2026-11-06T02:16+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1834,6 +1834,19 @@
       "expected_basis": "cloud agent started 02:08, setup 5 + work 25 + checks 10",
       "rides": "DL82",
       "started": "2026-11-06T02:08+00:00"
+    },
+    {
+      "id": "DL84",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Pool DB: PG* vars in db.env, pool-db-env helper, opt-in CREATEDB",
+      "detail": "Jobs on the pool got no database: nothing hands db.env to the job, and roles are LOGIN only while some CI creates its own databases. db.env gains PGHOST/PGPORT/PGUSER/PGPASSWORD/PGDATABASE; the image ships pool-db-env (masks values, appends to GITHUB_ENV); pool-add-agent --db-createdb grants CREATEDB (ALTER on rerun), off by default; each agent database revokes CONNECT from PUBLIC. Decision D104.",
+      "expected": "06 Nov ~03:00",
+      "changed": "2026-11-06T02:16+00:00",
+      "expected_basis": "cloud agent: setup 5 + work 30 + checks 10 = 45 min",
+      "rides": "DL82",
+      "started": "2026-11-06T02:15+00:00"
     },
     {
       "id": "DS1",
