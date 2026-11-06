@@ -450,7 +450,8 @@ class AgentTests(unittest.TestCase):
         A.add_agent("app1", "owner/example-app", "T", "main", True, self.file, self.d, self.run_)
         n = len(self.calls)
         self.assertIn("already", A.add_agent("app1", "owner/example-app", "T", "main", True, self.file, self.d, self.run_))
-        self.assertEqual(len(self.calls), n)
+        again = [c[0] for c in self.calls[n:]]
+        self.assertTrue(again and all(cmd in ("psql", "chown") for cmd in again), again)  # only the database refresh (D104)
 
     def test_add_refuses_unasserted_private(self):
         with self.assertRaises(A.PoolError) as cm:
@@ -1437,3 +1438,104 @@ class HookInterpreterTests(unittest.TestCase):
             self.assertIn("exec /usr/bin/python3 ", text, name)
             self.assertNotIn("exec python3 ", text, name)
             self.assertIn("unset PYTHONHOME PYTHONPATH LD_LIBRARY_PATH", text, name)
+
+
+class DL84DbEnvTests(unittest.TestCase):
+    """DL84: db.env has PG values, pool-db-env loads them, --db-createdb is an opt-in."""
+
+    def setUp(self):
+        self.d = tempfile.mkdtemp()
+        self.file = os.path.join(self.d, "agents.json")
+        self.sql = []
+
+    def run_(self, argv, **kw):
+        if kw.get("input"):
+            self.sql.append(kw["input"])
+        return R()
+
+    def add(self, createdb=False, slug="app1"):
+        A.add_agent(slug, "owner/example-app", "T", "main", True, self.file, self.d, self.run_, createdb=createdb)
+
+    def test_db_env_has_all_keys(self):
+        self.add()
+        keys = [l.split("=", 1)[0] for l in Path(self.d, "app1", "db.env").read_text().splitlines()]
+        self.assertEqual(keys, ["DATABASE_URL", "PGHOST", "PGPORT", "PGUSER", "PGPASSWORD", "PGDATABASE"])
+        self.assertIn("PGPORT=5432", Path(self.d, "app1", "db.env").read_text())
+
+    def test_createdb_only_with_flag(self):
+        self.add(createdb=True)
+        text = "\n".join(self.sql)
+        self.assertIn("CREATE ROLE u_app1 LOGIN CREATEDB", text)
+        self.assertIn("ALTER ROLE u_app1 LOGIN CREATEDB", text)
+        self.assertTrue(json.loads(Path(self.file).read_text())["agents"][0]["createdb"])
+        self.sql.clear()
+        self.add(slug="app2")
+        text = "\n".join(self.sql)
+        self.assertNotIn("CREATEDB", text.replace("CREATE DATABASE", ""))
+        self.assertNotIn("createdb", json.loads(Path(self.file).read_text())["agents"][1])
+
+    def test_rerun_with_flag_alters_existing_role(self):
+        self.add()
+        self.sql.clear()
+        self.add(createdb=True)
+        text = "\n".join(self.sql)
+        self.assertIn("ALTER ROLE u_app1 LOGIN CREATEDB", text)
+        self.assertTrue(json.loads(Path(self.file).read_text())["agents"][0]["createdb"])
+        self.sql.clear()
+        self.add()
+        text = "\n".join(self.sql)
+        self.assertIn("ALTER ROLE u_app1 LOGIN CREATEDB", text)  # the stored opt-in stays; a rerun never narrows it
+
+    def test_rerun_refreshes_old_db_env_and_keeps_password(self):
+        self.add()
+        env = Path(self.d, "app1", "db.env")
+        env.write_text("DATABASE_URL" + "=" + "postgresql://" + "u_app1:oldpw" + "@db/db_app1" + chr(10))  # an agent added before DL84
+        self.sql.clear()
+        self.add()
+        text = env.read_text()
+        self.assertIn("PGPASSWORD=oldpw", text)
+        self.assertIn("PGDATABASE=db_app1", text)
+        joined = "\n".join(self.sql)
+        self.assertIn("ALTER ROLE u_app1 LOGIN PASSWORD 'oldpw'", joined)
+        self.assertNotIn("CREATEDB", joined.replace("CREATE DATABASE", ""))
+        self.assertIn("REVOKE CONNECT ON DATABASE db_app1 FROM PUBLIC", joined)
+
+    def test_connect_isolation(self):
+        self.add()
+        text = "\n".join(self.sql)
+        self.assertIn("REVOKE CONNECT ON DATABASE db_app1 FROM PUBLIC", text)
+        self.assertIn("GRANT CONNECT ON DATABASE db_app1 TO u_app1", text)
+
+    def test_pool_db_env_text_and_dockerfile(self):
+        text = (POOL / "pool-db-env").read_text()
+        self.assertTrue(text.startswith("#!/bin/sh"))
+        self.assertNotIn("python", text)
+        self.assertIn("::add-mask::", text)
+        self.assertIn("PGPASSWORD|DATABASE_URL", text)
+        self.assertIn('"$GITHUB_ENV"', text)
+        self.assertIn("-f", text)
+        self.assertIn("pool-db-env", (POOL / "Dockerfile").read_text())
+
+    def test_pool_db_env_runs(self):
+        import shutil
+        import subprocess
+        sh = shutil.which("sh")
+        if not sh:
+            self.skipTest("no sh")
+        home = tempfile.mkdtemp()
+        genv = os.path.join(home, "gh_env")
+        Path(genv).write_text("")
+        script = str(POOL / "pool-db-env")
+        r = subprocess.run([sh, script], env={"HOME": home, "GITHUB_ENV": genv, "PATH": "/usr/bin:/bin"},
+                           capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0)
+        self.assertEqual(Path(genv).read_text(), "")
+        env_text = "".join("%s=%s\n" % kv for kv in (("DATABASE_URL", "postgresql://" + "u:pw" + "@h:5432/d"),
+                                                     ("PGHOST", "h"), ("PGPASSWORD", "pw")))
+        Path(home, "db.env").write_text(env_text)
+        r = subprocess.run([sh, script], env={"HOME": home, "GITHUB_ENV": genv, "PATH": "/usr/bin:/bin"},
+                           capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0)
+        self.assertIn("::add-mask::pw", r.stdout)
+        self.assertIn("::add-mask::postgresql://" + "u:pw" + "@h:5432/d", r.stdout)
+        self.assertEqual(Path(genv).read_text(), env_text)

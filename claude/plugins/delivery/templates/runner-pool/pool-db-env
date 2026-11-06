@@ -1,0 +1,26 @@
+#!/bin/sh
+# A workflow step runs `pool-db-env` to hand the repository's pool database to the job (D104).
+# It reads $HOME/db.env, masks the secrets and appends each KEY=value to $GITHUB_ENV.
+# Plain sh only, so a job that changed PATH cannot break it.
+f="${HOME:-/nonexistent}/db.env"
+if [ ! -f "$f" ]; then
+  echo "pool-db-env: no db.env in $HOME; this is not a pool job, nothing to do."
+  exit 0
+fi
+if [ -z "$GITHUB_ENV" ]; then
+  echo "pool-db-env: GITHUB_ENV is not set; run this as a workflow step." >&2
+  exit 1
+fi
+while IFS= read -r line || [ -n "$line" ]; do
+  case "$line" in ''|'#'*) continue ;; esac
+  case "${line%%=*}" in
+    PGPASSWORD|DATABASE_URL) echo "::add-mask::${line#*=}" ;;
+  esac
+done < "$f"
+while IFS= read -r line || [ -n "$line" ]; do
+  case "$line" in
+    ''|'#'*) continue ;;
+    *=*) printf '%s\n' "$line" >> "$GITHUB_ENV" ;;
+  esac
+done < "$f"
+echo "pool-db-env: database settings added to the job environment."

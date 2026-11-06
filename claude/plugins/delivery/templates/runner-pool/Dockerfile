@@ -34,10 +34,11 @@ RUN if [ "$POOL_BROWSERS" = "chromium" ]; then \
     fi
 COPY pool_supervisor.py pool_agents.py /opt/pool/
 COPY pool-add-agent pool-remove-agent /usr/local/bin/
+COPY pool-db-env /usr/local/bin/
 COPY hooks/ /opt/delivery/hooks/
 # The setup copies the machine-layer scripts (runner_load_gate.py, runner_job_done.py, load.py, machine_slots.py) here.
 COPY delivery/ /opt/delivery/
-RUN chmod +x /usr/local/bin/pool-add-agent /usr/local/bin/pool-remove-agent /opt/delivery/hooks/*.sh
+RUN chmod +x /usr/local/bin/pool-add-agent /usr/local/bin/pool-remove-agent /usr/local/bin/pool-db-env /opt/delivery/hooks/*.sh
 VOLUME ["/agents"]
 STOPSIGNAL SIGTERM
 ENTRYPOINT ["/usr/bin/tini", "--", "python3", "/opt/pool/pool_supervisor.py"]
