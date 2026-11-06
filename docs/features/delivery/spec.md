@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.9.0
+version: 0.10.0
 owner: agents
 type: reference
 code:
@@ -367,6 +367,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.10.0 | 2026-11-06 | RELEASE-57 | The runner pool image installs gh from a pinned, SHA-256-checked tarball; pool-check verifies it.<br>Pool agents get their own temp folder; the job hooks clean it and the job user's /tmp entries at job start and end (Temp files paragraph). | DL86, DL87 |
 | 0.9.0 | 2026-11-06 | RELEASE-56 | CI_MAX_PARALLEL is the pool's CPU cap divided by its agents; the doctor warns when POOL_MEM per agent is under 4 GiB.<br>Shared runner pool: jobs get their database through the pool-db-env step (db.env now has PG* values), an opt-in --db-createdb flag, per-database CONNECT isolation, and a rerun of pool-add-agent refreshes db.env for existing agents without changing the password. | DL83, DL84 |
 | 0.8.1 | 2026-11-06 | RELEASE-55 | Pool hooks run /usr/bin/python3 with the job's python variables cleared, so setup-python jobs no longer fail at Complete runner. | DL81 |
 | 0.8.0 | 2026-11-06 | RELEASE-54 | Runner pool: CPU cap follows memory (1.5 GiB per CPU), cpuset pins the cores, CI_MAX_PARALLEL hint for jobs, doctor warns under 1.0 GiB per CPU. | DL79 |

@@ -58,6 +58,8 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D102 | Bug 14: the pool gets 19 CPUs but 8 GB (0.4 GB per CPU) and nproc shows all host cores, so parallel test runners are OOM-killed. How should the pool size and expose CPUs? | All three: memory per CPU, cpuset + hint, doctor check | decided | 2026-11-06 |
 | delivery-speed | D103 | Bug 16: two agents in one pool each run jobs sized for the whole pool, so test workers are OOM-killed. How should parallelism be shared? | Split the hint per agent + doctor warning | decided | 2026-11-06 |
 | delivery-speed | D104 | Pool jobs get no working database: db.env never reaches the job, and per-repo roles are LOGIN only while some CI creates its own databases. What should the pool provide? | PG vars + pool-db-env helper + opt-in CREATEDB | decided | 2026-11-06 |
+| delivery-speed | D105 | Bug 17: the pool image has no GitHub CLI (gh), which hosted ubuntu-latest preinstalls, so workflows that call gh api or gh pr fail on the pool. How should the image install gh? | Pinned tarball + sha256 | decided | 2026-11-06 |
+| delivery-speed | D106 | Bug 18: pool jobs share one /tmp, so a previous job's leftovers (for example /tmp/gitleaks.tmp) break the next job. Some actions hard-code /tmp. What should the pool do? | TMPDIR + clean user's /tmp | decided | 2026-11-06 |
 | delivery-speed | D11 | Install the train freeze in this repo’s own git hooks? | Yes | decided | 2026-10-11 |
 | delivery-speed | D12 | Merge this release on green CI without asking again? | Merge on green | decided | 2026-10-11 |
 | delivery-speed | D13 | Turn hooks on here (core.hooksPath .githooks), which also activates the pre-commit secret check? | Yes, both hooks | decided | 2026-10-11 |
