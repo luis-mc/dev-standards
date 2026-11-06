@@ -11,3 +11,6 @@
 - `python3 claude/plugins/docs/scripts/docs_check.py`: 0 errors, 0 warnings.
 - `python3 tools/ci_areas.py --branch-advice`: "unreadable diff", advises a heavy `gh workflow run spec-lint.yml`; not run (not light, no gh here).
 
+- Branch head: see the commit after this one (code head 2242f5d3a00e91d68634a1299dec7eb2d18a8991).
+
+READY
