@@ -2283,6 +2283,27 @@
       "decided": "2026-11-05",
       "task": "DL76",
       "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning)."
+    },
+    {
+      "id": "D101",
+      "question": "pool-check.yml is workflow_dispatch only, so it cannot run before it reaches the default branch. How should a repo moving to the pool run it first?",
+      "asked": "2026-11-06",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Push trigger on its own path",
+          "summary": "Keep workflow_dispatch and add push with paths: .github/workflows/pool-check.yml, so pushing a branch that adds it runs the check there.",
+          "recommended": true
+        },
+        {
+          "label": "Note only",
+          "summary": "Tell owners to use their first CI run on the pool as the check."
+        }
+      ],
+      "chosen": "Push trigger on its own path",
+      "decided": "2026-11-06",
+      "task": "DL77",
+      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning)."
     }
   ]
 }

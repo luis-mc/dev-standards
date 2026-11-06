@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-06T00:04+00:00",
+  "updated": "2026-11-06T00:06+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1751,6 +1751,18 @@
       "changed": "2026-11-06T00:04+00:00",
       "rides": "DL75",
       "started": "2026-11-05T23:57+00:00"
+    },
+    {
+      "id": "DL77",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "pool-check runs on a push of its own file",
+      "detail": "pool-check.yml was workflow_dispatch only, so a repo moving to the pool could not run it before merging it to the default branch. Add a push trigger limited to its own path. Decision D101. In-session edit at the RELEASE-52 join.",
+      "expected": "06 Nov ~00:55",
+      "changed": "2026-11-06T00:06+00:00",
+      "expected_basis": "edit at RELEASE-52 join ~00:42, ~5 min",
+      "rides": "DL72"
     },
     {
       "id": "DS1",
