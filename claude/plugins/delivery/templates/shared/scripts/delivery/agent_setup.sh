@@ -15,6 +15,9 @@
 #                              that does (volta, fnm or nvm if present; else the
 #                              official tarball, SHA-256 checked against the official
 #                              SHASUMS256.txt). No package.json or no engines: skipped.
+#   3c. Chromium               when E2E_CHROMIUM_PATH is unset and a Chromium is preinstalled
+#                              under /opt/pw-browsers (or $PLAYWRIGHT_BROWSERS_PATH), print its
+#                              path and append an export to $CLAUDE_ENV_FILE if that is writable
 #   4. gate.json "setup"       each command, from the repository root
 #
 # Idempotent: a step already satisfied is skipped. Environment:
@@ -300,6 +303,32 @@ if [ -n "$node_wanted" ]; then
     say "node: active Node was $(node -p 'process.versions.node' 2>/dev/null || echo none) -> now using Node $node_wanted from $node_bin (add to PATH in new shells)"
   else
     say "node: could not install Node $node_wanted; continuing with the active Node"
+  fi
+fi
+
+# --- 3c. Preinstalled Chromium for the e2e step ------------------------------
+# The e2e step skips the browser download when E2E_CHROMIUM_PATH names an executable.
+# Sandboxes that block the download often ship a Chromium under /opt/pw-browsers.
+# Never fails setup: nothing found is fine.
+find_chromium() {
+  local root c
+  for root in /opt/pw-browsers ${PLAYWRIGHT_BROWSERS_PATH:+"$PLAYWRIGHT_BROWSERS_PATH"}; do
+    [ -d "$root" ] || continue
+    for c in "$root"/*/chrome-linux/chrome "$root"/*/chrome-linux64/chrome "$root"/chromium*/chrome; do
+      if [ -f "$c" ] && [ -x "$c" ]; then echo "$c"; return 0; fi
+    done
+  done
+  return 1
+}
+
+if [ -z "${E2E_CHROMIUM_PATH:-}" ]; then
+  chromium_path=$(find_chromium || true)
+  if [ -n "$chromium_path" ]; then
+    say "chromium: preinstalled browser found at $chromium_path"
+    if [ -n "${CLAUDE_ENV_FILE:-}" ] && { [ -w "$CLAUDE_ENV_FILE" ] || { [ ! -e "$CLAUDE_ENV_FILE" ] && [ -w "$(dirname "$CLAUDE_ENV_FILE")" ]; }; }; then
+      printf 'export E2E_CHROMIUM_PATH=%s\n' "$chromium_path" >> "$CLAUDE_ENV_FILE" || true
+    fi
+    say "chromium: to use it in this shell:  export E2E_CHROMIUM_PATH=$chromium_path"
   fi
 fi
 
