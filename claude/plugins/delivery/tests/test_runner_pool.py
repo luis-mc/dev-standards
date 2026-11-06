@@ -1408,3 +1408,14 @@ class DL79MemPerCpuTests(unittest.TestCase):
         self.assertIn("19.0", c["detail"])
         self.assertIn("setup", c["detail"])
         self.assertEqual(self._doctor("POOL_CPUS=4\nPOOL_MEM=8g\n")["status"], "ok")
+
+
+class HookInterpreterTests(unittest.TestCase):
+    """DL81: a job's setup-python must not change the python the pool hooks run."""
+
+    def test_hooks_and_agent_tools_use_the_image_python(self):
+        for name in ("hooks/job-started.sh", "hooks/job-completed.sh", "pool-add-agent", "pool-remove-agent"):
+            text = (POOL / name).read_text()
+            self.assertIn("exec /usr/bin/python3 ", text, name)
+            self.assertNotIn("exec python3 ", text, name)
+            self.assertIn("unset PYTHONHOME PYTHONPATH LD_LIBRARY_PATH", text, name)
