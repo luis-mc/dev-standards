@@ -451,7 +451,7 @@ class AgentTests(unittest.TestCase):
         n = len(self.calls)
         self.assertIn("already", A.add_agent("app1", "owner/example-app", "T", "main", True, self.file, self.d, self.run_))
         again = [c[0] for c in self.calls[n:]]
-        self.assertTrue(again and all(cmd in ("psql", "chown") for cmd in again), again)  # only the database refresh (D104)
+        self.assertTrue(again and all(cmd in ("psql", "chown", "chmod") for cmd in again), again)  # database refresh (D104) and temp folder (DL87)
 
     def test_add_refuses_unasserted_private(self):
         with self.assertRaises(A.PoolError) as cm:
@@ -1539,3 +1539,85 @@ class DL84DbEnvTests(unittest.TestCase):
         self.assertIn("::add-mask::pw", r.stdout)
         self.assertIn("::add-mask::postgresql://" + "u:pw" + "@h:5432/d", r.stdout)
         self.assertEqual(Path(genv).read_text(), env_text)
+
+
+class DL87AgentTmpTests(unittest.TestCase):
+    def setUp(self):
+        self.d = tempfile.mkdtemp()
+        self.file = os.path.join(self.d, "agents.json")
+        self.calls = []
+
+    def run_(self, argv, **kw):
+        self.calls.append(argv)
+        return R()
+
+    def lines(self, slug="app1"):
+        return Path(self.d, slug, ".env").read_text().splitlines()
+
+    def test_add_writes_three_lines_and_creates_the_folder(self):
+        A.add_agent("app1", "owner/example-app", "T", "main", True, self.file, self.d, self.run_)
+        tmp = os.path.join(self.d, "app1", "tmp")
+        for key in ("TMPDIR", "TMP", "TEMP"):
+            self.assertIn("%s=%s" % (key, tmp), self.lines())
+        self.assertTrue(os.path.isdir(tmp))
+        self.assertEqual(os.stat(tmp).st_mode & 0o777, 0o700)
+        self.assertIn(["chown", "r-app1:r-app1", tmp], self.calls)
+        self.assertIn(["chmod", "0700", tmp], self.calls)
+
+    def test_rerun_adds_missing_lines_once(self):
+        A.add_agent("app1", "owner/example-app", "T", "main", True, self.file, self.d, self.run_)
+        env = Path(self.d, "app1", ".env")
+        env.write_text("DELIVERY_MACHINE_DIR=/machine\nTMPDIR=/x")
+        A.add_agent("app1", "owner/example-app", "T", "main", True, self.file, self.d, self.run_)
+        A.add_agent("app1", "owner/example-app", "T", "main", True, self.file, self.d, self.run_)
+        lines = self.lines()
+        self.assertEqual(lines.count("DELIVERY_MACHINE_DIR=/machine"), 1)
+        self.assertIn("TMPDIR=/x", lines)
+        self.assertEqual(len([x for x in lines if x.startswith("TMP=")]), 1)
+        self.assertEqual(len([x for x in lines if x.startswith("TEMP=")]), 1)
+
+
+HOOKS = POOL / "hooks"
+
+
+class DL87HookTests(unittest.TestCase):
+    def test_both_hooks_clean_then_exec(self):
+        for name in ("job-started.sh", "job-completed.sh"):
+            text = (HOOKS / name).read_text()
+            self.assertIn('/agents/*', text)
+            self.assertIn('find /tmp -mindepth 1 -maxdepth 1 -user "$(id -u)" -exec rm -rf {} +', text)
+            self.assertGreaterEqual(text.count("|| true"), 2)
+            self.assertNotIn("find -L", text)
+            self.assertLess(text.index("clean_tmp\n"), text.index("exec /usr/bin/python3"))
+            self.assertTrue(text.rstrip().splitlines()[-1].startswith("exec /usr/bin/python3"))
+
+    @unittest.skipUnless(__import__("shutil").which("sh"), "sh not available")
+    def test_clean_function_empties_temp_folder_and_keeps_it(self):
+        import re
+        import subprocess
+        for name in ("job-started.sh", "job-completed.sh"):
+            text = (HOOKS / name).read_text()
+            func = re.search(r"clean_tmp\(\) \{.*?\n\}\n", text, re.S).group(0)
+            root = tempfile.mkdtemp()
+            agent_tmp, fake_tmp, outside = (os.path.join(root, n) for n in ("agents_tmp", "tmp", "outside"))
+            for p in (agent_tmp, fake_tmp, outside):
+                os.mkdir(p)
+            Path(outside, "keep").write_text("x")
+            os.mkdir(os.path.join(agent_tmp, "sub"))
+            Path(agent_tmp, "sub", "f").write_text("x")
+            Path(agent_tmp, ".hidden").write_text("x")
+            os.symlink(outside, os.path.join(agent_tmp, "link"))
+            Path(fake_tmp, "gitleaks.tmp").write_text("x")
+            func = func.replace("/agents/*", root + "/*").replace("find /tmp", "find " + fake_tmp)
+            r = subprocess.run(["sh", "-c", func + "\nclean_tmp\n"], env={"PATH": os.environ["PATH"], "TMPDIR": agent_tmp},
+                               capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertEqual(os.listdir(agent_tmp), [])
+            self.assertEqual(os.listdir(fake_tmp), [])
+            self.assertTrue(Path(outside, "keep").exists())
+            # not under /agents: left alone
+            Path(agent_tmp, "stay").write_text("x")
+            r = subprocess.run(["sh", "-c", func + "\nclean_tmp\n"], env={"PATH": os.environ["PATH"], "TMPDIR": "/nowhere"},
+                               capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0)
+            self.assertTrue(Path(agent_tmp, "stay").exists())

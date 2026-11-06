@@ -80,6 +80,30 @@ def save(path, data):
 def labels_for(pool, slug):
     return ['self-hosted', 'linux', 'x64', 'pool-%s' % pool, 'repo-%s' % slug]
 
+TMP_KEYS = ('TMPDIR', 'TMP', 'TEMP')
+
+
+def ensure_agent_tmp(folder, user, run):
+    """DL87: the agent's own temp folder (mode 0700) and TMPDIR, TMP, TEMP in its .env. Adds only missing lines."""
+    tmp = os.path.join(folder, 'tmp')
+    os.makedirs(tmp, mode=0o700, exist_ok=True)
+    run(['chown', '%s:%s' % (user, user), tmp])
+    run(['chmod', '0700', tmp])
+    path = os.path.join(folder, '.env')
+    try:
+        with open(path, encoding='utf-8') as f:
+            text = f.read()
+    except OSError:
+        text = ''
+    have = {line.split('=', 1)[0] for line in text.splitlines() if '=' in line}
+    add = ''.join('%s=%s\n' % (k, tmp) for k in TMP_KEYS if k not in have)
+    if add:
+        if text and not text.endswith('\n'):
+            text += '\n'
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(text + add)
+        run(['chown', '%s:%s' % (user, user), path])
+
 
 def sh(argv, **kw):
     """The one place a command runs. Tests replace it."""
@@ -103,6 +127,7 @@ def add_agent(slug, repo, token, pool, private, agents_file='/agents.json', base
         # A rerun refreshes the database settings (D104): db.env gets every key, the database gets the connect
         # isolation, and the login keeps its password so running jobs are not cut off. The flag only widens.
         widen = createdb and not have[0].get('createdb')
+        ensure_agent_tmp(folder_have, have[0].get('user', user), run)
         create_db(slug, folder_have, have[0].get('user', user), run, createdb or bool(have[0].get('createdb')))
         if widen:
             have[0]['createdb'] = True
@@ -127,6 +152,7 @@ def add_agent(slug, repo, token, pool, private, agents_file='/agents.json', base
     with open(os.path.join(folder, '.env'), 'w', encoding='utf-8') as f:
         f.write('ACTIONS_RUNNER_HOOK_JOB_STARTED=%s\nACTIONS_RUNNER_HOOK_JOB_COMPLETED=%s\nDELIVERY_MACHINE_DIR=/machine\n'
                 % (HOOK_STARTED, HOOK_DONE))
+    ensure_agent_tmp(folder, user, run)
     create_db(slug, folder, user, run, createdb)
     entry = {'slug': slug, 'user': user, 'repo': repo, 'private': True, 'labels': labels}
     if createdb:
