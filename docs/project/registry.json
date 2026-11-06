@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-06T02:16+00:00",
+  "updated": "2026-11-06T02:41+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1826,12 +1826,11 @@
       "id": "DL83",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Pool: CI_MAX_PARALLEL split across agents; doctor warns on memory per agent",
       "detail": "Bug 16: two agents' jobs each assume the whole POOL_CPUS/POOL_MEM and test workers get OOM-killed. The supervisor gives each agent CI_MAX_PARALLEL = max(1, POOL_CPUS_INT // agents); the doctor warns when POOL_MEM per agent is under 4 GiB. Decision D103.",
-      "expected": "06 Nov ~02:48",
-      "changed": "2026-11-06T02:08+00:00",
-      "expected_basis": "cloud agent started 02:08, setup 5 + work 25 + checks 10",
+      "expected": "06 Nov",
+      "changed": "2026-11-06T02:41+00:00",
       "rides": "DL82",
       "started": "2026-11-06T02:08+00:00"
     },
@@ -1839,12 +1838,11 @@
       "id": "DL84",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Pool DB: PG* vars in db.env, pool-db-env helper, opt-in CREATEDB",
       "detail": "Jobs on the pool got no database: nothing hands db.env to the job, and roles are LOGIN only while some CI creates its own databases. db.env gains PGHOST/PGPORT/PGUSER/PGPASSWORD/PGDATABASE; the image ships pool-db-env (masks values, appends to GITHUB_ENV); pool-add-agent --db-createdb grants CREATEDB (ALTER on rerun), off by default; each agent database revokes CONNECT from PUBLIC. Decision D104.",
-      "expected": "06 Nov ~03:00",
-      "changed": "2026-11-06T02:16+00:00",
-      "expected_basis": "cloud agent: setup 5 + work 30 + checks 10 = 45 min",
+      "expected": "06 Nov",
+      "changed": "2026-11-06T02:41+00:00",
       "rides": "DL82",
       "started": "2026-11-06T02:15+00:00"
     },
