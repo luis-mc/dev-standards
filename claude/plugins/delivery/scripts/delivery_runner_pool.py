@@ -460,8 +460,13 @@ def _pool_has(found, pool, repo):
     """True when the pool already has an online agent for this repo with the pool label."""
     for r in found['github']['repos']:
         if r['repo'] == repo:
-            return any('pool-%s' % pool in x['labels'] and x['status'] == 'online' for x in r['runners'])
+            return any(_has_label(x['labels'], 'pool-%s' % pool) and x['status'] == 'online' for x in r['runners'])
     return False
+
+
+def _has_label(labels, label):
+    """GitHub labels are case-insensitive."""
+    return label.lower() in {str(l).lower() for l in labels or []}
 
 
 def _winpath(path):
@@ -595,6 +600,53 @@ def browsers_note(browsers):
     return 'The image has no Chromium libraries. Set browsers: chromium to add them (about 300-400 MB more).'
 
 
+WIN_RUNNER_LABELS = ('self-hosted', 'windows')
+WIN_RUNNERS_DIR = 'C:/actions-runners'
+
+
+HOOK_FILES = ('runner_load_gate.py', 'runner_job_done.py', 'load.py', 'machine_slots.py')
+
+
+def hook_wrapper(python, script):
+    """A PowerShell wrapper with the full path of the python, so the runner service account needs no PATH."""
+    return ('# Runner hook for %s (written by the pool setup; a rerun refreshes it).\n'
+            "& '%s' (Join-Path $PSScriptRoot '%s') @args\n"
+            'exit $LASTEXITCODE\n' % (script, python.replace("'", "''"), script))
+
+
+def windows_hooks_dir(machine_dir):
+    return machine_dir.replace('\\', '/').rstrip('/') + '/runner-hooks'
+
+
+def windows_runner_name(slug):
+    return 'host1-%s' % slug
+
+
+def windows_runner_folder(slug):
+    return '%s/%s' % (WIN_RUNNERS_DIR, slug)
+
+
+def _wanted_windows(found, repo):
+    """The Windows runner already in the state this plan would create: same name, repository, folder and labels.
+    Returns {'runner', 'folder', 'service'} or None. Such a runner is kept, not removed."""
+    slug = slug_of(repo)
+    name, folder = windows_runner_name(slug), windows_runner_folder(slug)
+    gh = next((r for r in found['github']['repos'] if r['repo'] == repo), None)
+    runner = next((x for x in (gh or {}).get('runners', []) if x.get('name') == name
+                   and all(_has_label(x.get('labels'), l) for l in WIN_RUNNER_LABELS)), None)
+    if not runner:
+        return None
+    fold = next((f for f in found['folders'] if _norm(f['path']).lower() == folder.lower() and f.get('repo') == repo
+                 and f.get('name') == name), None)
+    if not fold:
+        return None
+    svc = next((s['name'] for s in found['services'] if s.get('kind') == 'windows-service'
+                and _norm(s.get('folder')).lower() == folder.lower()), None)
+    if not svc:
+        return None
+    return {'runner': name, 'folder': fold['path'], 'service': svc}
+
+
 def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, serial=None, limits=None, repo_path=None,
          browsers='none', playwright_version=None, repo_paths=None, probe=None):
     """The steps, in the order of contract 6.3. A public repository gets no step; it is listed in `refused`.
@@ -627,12 +679,18 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
     host = found.get('host') or {}
     win = str(host.get('platform', '')).startswith('win')
     steps = [_step('idle', 'Wait until no existing runner has a job', 'wait-idle')]
+    wanted = {r: w for r, w in ((r, _wanted_windows(found, r)) for r in keep_w) if w}
+    wanted_runners = {(r, w['runner']) for r, w in wanted.items()}
+    wanted_services = {w['service'] for w in wanted.values() if w['service']}
+    wanted_folders = {w['folder'].lower() for w in wanted.values()}
     for r in found['github']['repos']:
         if r['repo'] not in planned:
             continue
         for x in r['runners']:
-            if 'pool-%s' % pool in x['labels']:
+            if _has_label(x['labels'], 'pool-%s' % pool):
                 continue  # already part of this pool: kept
+            if (r['repo'], x['name']) in wanted_runners:
+                continue  # the Windows runner this plan would create: kept
             steps.append(_step('remove:%s:%s' % (r['repo'], x['name']),
                                'Remove runner %s (%s) from %s' % (x['name'], x['os'], r['repo']), 'remove-runner',
                                delete=True, names=['runner %s (%s) in %s on GitHub' % (x['name'], x['os'], r['repo'])],
@@ -644,11 +702,15 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
         if repo_of.get(svc.get('folder')) not in planned | {None}:
             continue
         n = svc['name']
+        if n in wanted_services:
+            continue
         steps.append(_step('winsvc-remove:%s' % n, 'Stop and delete the Windows runner service %s' % n, 'windows-service-remove',
                            delete=True, names=['Windows service ' + n], elevated=True, service=n,
                            printed=['sc.exe stop "%s"' % n, 'sc.exe delete "%s"' % n]))
     for f in found['folders']:
         if f.get('repo') not in planned | {None}:
+            continue
+        if _norm(f['path']).lower() in wanted_folders:
             continue
         steps.append(_step('delete-folder:%s' % f['path'], 'Delete the old runner folder %s' % f['path'], 'delete-folder',
                            delete=True, names=[f['path']], path=f['path']))
@@ -698,13 +760,22 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
             if _pool_has(found, pool, repo):
                 s['state'] = 'already'
             steps.append(s)
+    hooks_dir = windows_hooks_dir(host.get('machine_dir', 'C:/ProgramData/luismc-delivery'))
+    if keep_w:
+        steps.append(_step('runner-hooks', 'Copy the runner hook scripts to the stable folder %s (rewritten on every run)' % hooks_dir,
+                           'runner-hooks', dest=hooks_dir, python=host.get('python') or sys.executable))
     for repo in keep_w:
         slug = slug_of(repo)
-        steps.append(_step('winsvc:%s' % repo, 'Windows runner service for %s with both hooks' % repo, 'windows-service',
-                           repo=repo, slug=slug, elevated=True,
-                           printed=['cd C:/actions-runners/%s' % slug,
-                                    './config.cmd --url https://github.com/%s --token <TOKEN> --name host1-%s --labels self-hosted,windows --runasservice' % (repo, slug),
-                                    'Set ACTIONS_RUNNER_HOOK_JOB_STARTED=<plugin>/scripts/runner_load_gate.ps1 and ACTIONS_RUNNER_HOOK_JOB_COMPLETED=<plugin>/scripts/runner_job_done.ps1 in C:/actions-runners/%s/.env (the runner rejects .cmd hooks)' % slug]))
+        s = _step('winsvc:%s' % repo, 'Windows runner service for %s with both hooks' % repo, 'windows-service',
+                  repo=repo, slug=slug, elevated=True,
+                  printed=['cd %s' % windows_runner_folder(slug),
+                           './config.cmd --url https://github.com/%s --token <TOKEN> --name %s --labels self-hosted,windows --runasservice'
+                           % (repo, windows_runner_name(slug)),
+                           'Set ACTIONS_RUNNER_HOOK_JOB_STARTED=%s/runner_load_gate.ps1 and ACTIONS_RUNNER_HOOK_JOB_COMPLETED=%s/runner_job_done.ps1 in %s/.env (the runner rejects .cmd hooks)'
+                           % (hooks_dir, hooks_dir, windows_runner_folder(slug))])
+        if repo in wanted:
+            s['state'] = 'already'
+        steps.append(s)
     for repo in keep_l:
         value = json.dumps(['self-hosted', 'linux', 'pool-%s' % pool])
         steps.append(_step('var:CI_RUNS_ON:%s' % repo, 'Set CI_RUNS_ON for %s' % repo, 'set-variable', repo=repo,
@@ -936,6 +1007,18 @@ class Executor:
             f.write(LOOP_SCRIPT)
         return True, 'wrote ' + dest
 
+    def do_runner_hooks(self, step):
+        """D99: copy the hook scripts to a stable folder; the wrappers call the python that runs this setup."""
+        dest = step['dest']
+        os.makedirs(dest, exist_ok=True)
+        for name in HOOK_FILES:
+            shutil.copy2(os.path.join(HERE, name), dest)
+        py = _winpath(step.get('python') or sys.executable)
+        for wrapper, script in (('runner_load_gate.ps1', 'runner_load_gate.py'), ('runner_job_done.ps1', 'runner_job_done.py')):
+            with open(os.path.join(dest, wrapper), 'w', encoding='utf-8', newline='\r\n') as f:
+                f.write(hook_wrapper(py, script))
+        return True, 'wrote the hook scripts to %s (python %s)' % (dest, py)
+
     def do_pool_files(self, step):
         version, _sha, source = resolve_runner(self.probe)
         cap = dict(step.get('cap') or {})
@@ -1069,8 +1152,8 @@ def verify(probe, repos, pool, dispatch=False, polls=20, poll_sec=15):
     out = []
     for repo in repos:
         data, why = probe.gh_json(['api', 'repos/%s/actions/runners?per_page=100' % repo])
-        mine = [x for x in (data or {}).get('runners', []) if 'pool-%s' % pool in
-                [l.get('name') for l in x.get('labels', []) if isinstance(l, dict)]] if isinstance(data, dict) else []
+        mine = [x for x in (data or {}).get('runners', []) if _has_label(
+            [l.get('name') for l in x.get('labels', []) if isinstance(l, dict)], 'pool-%s' % pool)] if isinstance(data, dict) else []
         if data is None:
             out.append({'id': 'verify.%s' % repo, 'status': 'fail', 'detail': why})
         elif not mine:

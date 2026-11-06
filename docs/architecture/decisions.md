@@ -53,6 +53,8 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery | D5 | [Machine limits?](../features/delivery/spec.md) | 85% memory, 60% CPU, hold new work only (MADR 0031) | decided | 2026-10-14 |
 | delivery-speed | D1 | Rewrite the pasted delivery prompt with the review’s fixes and queue it after TC6? | Rewrite and queue | decided | 2026-10-11 |
 | delivery-speed | D10 | dev-standards is public: create a public GitHub release per train for the delivery log? | Yes, public releases | decided | 2026-10-11 |
+| delivery-speed | D100 | Bug 13: the pool image fails to build with browsers: chromium because Ubuntu 24.04's Node 18 is too old for Playwright 1.62. How should the image get Node for install-deps? | Official Node 22 LTS tarball, sha256-checked | decided | 2026-11-05 |
+| delivery-speed | D101 | pool-check.yml is workflow_dispatch only, so it cannot run before it reaches the default branch. How should a repo moving to the pool run it first? | Push trigger on its own path | decided | 2026-11-06 |
 | delivery-speed | D11 | Install the train freeze in this repo’s own git hooks? | Yes | decided | 2026-10-11 |
 | delivery-speed | D12 | Merge this release on green CI without asking again? | Merge on green | decided | 2026-10-11 |
 | delivery-speed | D13 | Turn hooks on here (core.hooksPath .githooks), which also activates the pre-commit secret check? | Yes, both hooks | decided | 2026-10-11 |
@@ -148,6 +150,8 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D95 | Should the SessionStart effort_drift.py hook use the same if/else python fallback as the Stop hook? | Change it | decided | 2026-11-05 |
 | delivery-speed | D96 | Runner-pool issue 11: Playwright e2e jobs cannot run on the pool (no Chromium libs, no sudo). How should luismc-delivery handle it? | Option + warning | decided | 2026-11-05 |
 | delivery-speed | D97 | Pool browsers option: how should the pool choose the Playwright version for install-deps? | Detect + flag + new pin | decided | 2026-11-05 |
+| delivery-speed | D98 | The packaged-program smoke test failed intermittently on PR #155 and #156 (stop_tree pid check). Track a fix? | Add a task, fix now | decided | 2026-11-05 |
+| delivery-speed | D99 | Windows runner hooks point at the versioned plugin cache and PATH python, which break on plugin updates and under NETWORK SERVICE. Where should the hooks live? | Stable machine folder, full python path | decided | 2026-11-05 |
 | design-field-updates | D1 | Which of the 35 proposals go into the starter? | All 35 | decided | 2026-11-05 |
 | design-field-updates | D10 | K1: what does the first design breach do? | Warn only | decided | 2026-11-05 |
 | design-field-updates | D11 | What to do with a word on main that hints at another project's name (3 places)? | Reword all 3 | decided | 2026-11-05 |
