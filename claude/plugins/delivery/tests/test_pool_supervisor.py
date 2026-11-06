@@ -83,3 +83,30 @@ class BackoffTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ParallelPerAgentTest(unittest.TestCase):
+    """DL83: CI_MAX_PARALLEL is the pool's CPU count divided by its agents."""
+
+    def test_division(self):
+        self.assertEqual(SUP.per_agent_parallel({"POOL_CPUS_INT": "5"}, 2), 2)
+        self.assertEqual(SUP.per_agent_parallel({"POOL_CPUS_INT": "5"}, 1), 5)
+        self.assertEqual(SUP.per_agent_parallel({"POOL_CPUS_INT": "1"}, 3), 1)
+        self.assertEqual(SUP.per_agent_parallel({"CI_MAX_PARALLEL": "6"}, 3), 2)
+
+    def test_spawned_env_has_value(self):
+        import json
+        import tempfile
+        import os
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as d:
+            f = os.path.join(d, "agents.json")
+            with open(f, "w") as fh:
+                json.dump({"agents": [{"slug": "a", "user": "ua"}, {"slug": "b", "user": "ub"}]}, fh)
+            sup = SUP.Supervisor(f, d, environ={"POOL_CPUS_INT": "5", "PATH": "/bin"})
+            with mock.patch.object(SUP.subprocess, "Popen") as popen:
+                sup.tick()
+        self.assertEqual(popen.call_count, 2)
+        for call in popen.call_args_list:
+            self.assertEqual(call.kwargs["env"]["CI_MAX_PARALLEL"], "2")
+            self.assertEqual(call.kwargs["env"]["PATH"], "/bin")
