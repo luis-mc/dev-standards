@@ -2212,6 +2212,77 @@
       "decided": "2026-11-05",
       "task": "DL69",
       "owner_words": "Detect + flag + new pin (Recommended)"
+    },
+    {
+      "id": "D98",
+      "question": "The packaged-program smoke test failed intermittently on PR #155 and #156 (stop_tree pid check). Track a fix?",
+      "asked": "2026-11-05",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Add a task, fix now",
+          "summary": "One cloud agent makes the pid check wait for the files; small release.",
+          "recommended": true
+        },
+        {
+          "label": "Add a task for later",
+          "summary": "Record a To do task; rerun failed jobs meanwhile."
+        },
+        {
+          "label": "Leave it",
+          "summary": "No task; rerun when it fails."
+        }
+      ],
+      "chosen": "Add a task, fix now",
+      "decided": "2026-11-05",
+      "task": "DL73",
+      "owner_words": "Add a task, fix now (Recommended)"
+    },
+    {
+      "id": "D99",
+      "question": "Windows runner hooks point at the versioned plugin cache and PATH python, which break on plugin updates and under NETWORK SERVICE. Where should the hooks live?",
+      "asked": "2026-11-05",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Stable machine folder, full python path",
+          "summary": "The plan copies the hook wrappers and scripts to <machine dir>/runner-hooks, writes the full path of the setup's python into the wrappers, and refreshes them on rerun.",
+          "recommended": true
+        },
+        {
+          "label": "Keep the plugin path, document it",
+          "summary": "No change; tell owners to re-point hooks after updates."
+        }
+      ],
+      "chosen": "Stable machine folder, full python path",
+      "decided": "2026-11-05",
+      "task": "DL74",
+      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning)."
+    },
+    {
+      "id": "D100",
+      "question": "Bug 13: the pool image fails to build with browsers: chromium because Ubuntu 24.04's Node 18 is too old for Playwright 1.62. How should the image get Node for install-deps?",
+      "asked": "2026-11-05",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Official Node 22 LTS tarball, sha256-checked",
+          "summary": "Download node-v22 linux-x64 from nodejs.org, check a pinned sha256 like the runner tarball, use its npx for install-deps, then remove it.",
+          "recommended": true
+        },
+        {
+          "label": "NodeSource apt repo",
+          "summary": "Add the NodeSource apt source and key, install nodejs 22."
+        },
+        {
+          "label": "Pinned apt package list",
+          "summary": "Install a fixed list of Chromium libraries with apt, no Node; the list drifts from Playwright's."
+        }
+      ],
+      "chosen": "Official Node 22 LTS tarball, sha256-checked",
+      "decided": "2026-11-05",
+      "task": "DL76",
+      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning)."
     }
   ]
 }

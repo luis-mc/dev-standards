@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-05T23:46+00:00",
+  "updated": "2026-11-06T00:04+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1689,6 +1689,68 @@
       "changed": "2026-11-05T23:46+00:00",
       "rides": "DL70",
       "started": "2026-11-05T23:36+00:00"
+    },
+    {
+      "id": "DL72",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE: smoke-test flake and pool-run fixes",
+      "detail": "Join, CI and merge for DL73 (packaged-program smoke test pid race) and DL74 (pool-run bugs: agents.json save, rerun removes own runner, label case, Windows hook paths), luismc-delivery 1.7.3.",
+      "expected": "06 Nov ~00:55",
+      "changed": "2026-11-06T00:04+00:00",
+      "expected_basis": "DL74 agent to ~00:41, join 5, CI 5, merge",
+      "release": 52
+    },
+    {
+      "id": "DL73",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Smoke test: wait for the pid file instead of racing it",
+      "detail": "tools/test_smoke_packaged.py stop_tree reads the pid file once and fails intermittently in CI (PR #155, #156) with 'the program and its workers wrote their pids'. Wait for the pids with a short deadline.",
+      "expected": "06 Nov ~00:30",
+      "changed": "2026-11-05T23:50+00:00",
+      "expected_basis": "cloud agent: setup 5 + work 20 + checks 10 = 35 min",
+      "rides": "DL72",
+      "started": "2026-11-05T23:50+00:00"
+    },
+    {
+      "id": "DL74",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Pool-run fixes: agents.json save, rerun keeps its runner, label case, hook paths",
+      "detail": "From a Windows pool-run on 1.6.3: os.replace on single-file bind mount /agents.json fails (EBUSY); a rerun plans to remove the Windows runner it asked for; labels compared case-sensitively (GitHub reports Linux/Windows); Windows hook step points at the versioned plugin cache and PATH python.",
+      "expected": "06 Nov ~00:35",
+      "changed": "2026-11-05T23:50+00:00",
+      "expected_basis": "cloud agent: setup 5 + work 30 + checks 10 = 45 min",
+      "rides": "DL72",
+      "started": "2026-11-05T23:50+00:00"
+    },
+    {
+      "id": "DL75",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "RELEASE: pool image builds with browsers: chromium",
+      "detail": "Urgent: join, CI and merge for DL76 (Node 22 for Playwright install-deps), luismc-delivery 1.7.3. A production hotfix waits on it.",
+      "expected": "06 Nov",
+      "changed": "2026-11-06T00:04+00:00",
+      "release": 53,
+      "started": "2026-11-05T23:57+00:00"
+    },
+    {
+      "id": "DL76",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Pool image: Node 22 tarball for Playwright install-deps (bug 13)",
+      "detail": "With POOL_BROWSERS=chromium the build failed: Ubuntu 24.04 ships Node 18.19, Playwright 1.62 needs Node 20+. Use the official Node 22 LTS tarball with a pinned sha256 for npx install-deps, then remove it. Decision D100.",
+      "expected": "06 Nov",
+      "changed": "2026-11-06T00:04+00:00",
+      "rides": "DL75",
+      "started": "2026-11-05T23:57+00:00"
     },
     {
       "id": "DS1",

@@ -888,31 +888,46 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-05T23:46+00:00">05 Nov 23:46</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-06T00:04+00:00">06 Nov 00:04</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">05 Nov 23:47</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">23 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
 <ul>
+<li data-glance-task="DL73"><span class="task-id">DL73</span>Smoke test: wait for the pid file instead of racing it <span class="glance-expected">06 Nov ~00:30</span><span class="glance-basis">cloud agent: setup 5 + work 20 + checks 10 = 35 min</span></li>
+<li data-glance-task="DL74"><span class="task-id">DL74</span>Pool-run fixes: agents.json save, rerun keeps its runner, label case, hook paths <span class="glance-expected">06 Nov ~00:35</span><span class="glance-basis">cloud agent: setup 5 + work 30 + checks 10 = 45 min</span></li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">16 tasks</span></summary>
+<ul>
+<li data-glance-task="DL75"><span class="task-id">DL75</span><span class="release-name">RELEASE-53</span>RELEASE: pool image builds with browsers: chromium</li>
+<li data-glance-task="DL76"><span class="task-id">DL76</span>Pool image: Node 22 tarball for Playwright install-deps (bug 13)</li>
 <li data-glance-task="DL70"><span class="task-id">DL70</span><span class="release-name">RELEASE-51</span>RELEASE: pool image base libraries</li>
 <li data-glance-task="DL71"><span class="task-id">DL71</span>Runner-pool image: libatomic1 and common tools; pool-check runs pnpm</li>
 <li data-glance-task="DL68"><span class="task-id">DL68</span><span class="release-name">RELEASE-50</span>RELEASE: pool Playwright version</li>
 <li data-glance-task="DL69"><span class="task-id">DL69</span>Runner-pool: Playwright version from lockfiles, flag, newer pin</li>
 <li data-glance-task="DL66"><span class="task-id">DL66</span><span class="release-name">RELEASE-49</span>RELEASE: runner-pool browsers option</li>
 <li data-glance-task="DL67"><span class="task-id">DL67</span>Runner-pool: opt-in Chromium libs in the image; warn on sudo/apt workflows</li>
-<li data-glance-task="DL62"><span class="task-id">DL62</span><span class="release-name">RELEASE-48</span>RELEASE: runner-pool fixes 5-8</li>
-<li data-glance-task="DL63"><span class="task-id">DL63</span>Runner-pool fixes: host-load check, runner version, create_db, memory cap</li>
-<li class="glance-more">and 15 more</li>
+<li class="glance-more">and 8 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">71</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">73</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">71 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">3 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL73"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL73</span>Smoke test: wait for the pid file instead of racing it<span class="release-line"><span class="release-name">RELEASE-52</span></span></td><td data-label="Detail">tools/test_smoke_packaged.py stop_tree reads the pid file once and fails intermittently in CI (PR #155, #156) with &#x27;the program and its workers wrote their pids&#x27;. Wait for the pids with a short deadline.</td><td data-label="Expected">06 Nov ~00:30<span class="expected-basis">cloud agent: setup 5 + work 20 + checks 10 = 35 min</span></td></tr>
+<tr data-task="DL74"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL74</span>Pool-run fixes: agents.json save, rerun keeps its runner, label case, hook paths<span class="release-line"><span class="release-name">RELEASE-52</span></span></td><td data-label="Detail">From a Windows pool-run on 1.6.3: os.replace on single-file bind mount /agents.json fails (EBUSY); a rerun plans to remove the Windows runner it asked for; labels compared case-sensitively (GitHub reports Linux/Windows); Windows hook step points at the versioned plugin cache and PATH python.</td><td data-label="Expected">06 Nov ~00:35<span class="expected-basis">cloud agent: setup 5 + work 30 + checks 10 = 45 min</span></td></tr>
+<tr data-task="DL72"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL72</span><span class="release-name">RELEASE-52</span>RELEASE: smoke-test flake and pool-run fixes</td><td data-label="Detail">Join, CI and merge for DL73 (packaged-program smoke test pid race) and DL74 (pool-run bugs: agents.json save, rerun removes own runner, label case, Windows hook paths), luismc-delivery 1.7.3.</td><td data-label="Expected">06 Nov ~00:55<span class="expected-basis">DL74 agent to ~00:41, join 5, CI 5, merge</span></td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">73 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL75"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL75</span><span class="release-name">RELEASE-53</span>RELEASE: pool image builds with browsers: chromium</td><td data-label="Detail">Urgent: join, CI and merge for DL76 (Node 22 for Playwright install-deps), luismc-delivery 1.7.3. A production hotfix waits on it.</td><td data-label="Expected">06 Nov</td></tr>
+<tr data-task="DL76"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL76</span>Pool image: Node 22 tarball for Playwright install-deps (bug 13)<span class="release-line"><span class="release-name">RELEASE-53</span></span></td><td data-label="Detail">With POOL_BROWSERS=chromium the build failed: Ubuntu 24.04 ships Node 18.19, Playwright 1.62 needs Node 20+. Use the official Node 22 LTS tarball with a pinned sha256 for npx install-deps, then remove it. Decision D100.</td><td data-label="Expected">06 Nov</td></tr>
 <tr data-task="DL70"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL70</span><span class="release-name">RELEASE-51</span>RELEASE: pool image base libraries</td><td data-label="Detail">Join, CI and merge for DL71 (libatomic1 and common tool packages in the pool image, pool-check proves node + pnpm), luismc-delivery 1.7.2.</td><td data-label="Expected">05 Nov</td></tr>
 <tr data-task="DL71"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL71</span>Runner-pool image: libatomic1 and common tools; pool-check runs pnpm<span class="release-line"><span class="release-name">RELEASE-51</span></span></td><td data-label="Detail">Bug 12: pnpm (@pnpm/exe) fails on the pool, libatomic.so.1 missing in ubuntu:24.04. Add libatomic1, xz-utils, unzip, zip, jq to the base image; pool-check.yml also runs setup-node + pnpm/action-setup + pnpm --version. Trivial edit, done in-session.</td><td data-label="Expected">05 Nov</td></tr>
 <tr data-task="DL68"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL68</span><span class="release-name">RELEASE-50</span>RELEASE: pool Playwright version</td><td data-label="Detail">Join, CI and merge for DL69 (Playwright version detection for the pool image), luismc-delivery 1.7.1.</td><td data-label="Expected">05 Nov</td></tr>
@@ -1019,6 +1034,59 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D100">
+<h3 class="decision-head"><span class="decision-id">D100</span> <span class="decision-question">Bug 13: the pool image fails to build with browsers: chromium because Ubuntu 24.04&#x27;s Node 18 is too old for Playwright 1.62. How should the image get Node for install-deps?</span></h3>
+<p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DL76</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Official Node 22 LTS tarball, sha256-checked</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 05 Nov</span></div>
+<p class="decision-summary">Download node-v22 linux-x64 from nodejs.org, check a pinned sha256 like the runner tarball, use its npx for install-deps, then remove it.</p>
+<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning).&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">NodeSource apt repo</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Add the NodeSource apt source and key, install nodejs 22.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Pinned apt package list</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Install a fixed list of Chromium libraries with apt, no Node; the list drifts from Playwright&#x27;s.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D99">
+<h3 class="decision-head"><span class="decision-id">D99</span> <span class="decision-question">Windows runner hooks point at the versioned plugin cache and PATH python, which break on plugin updates and under NETWORK SERVICE. Where should the hooks live?</span></h3>
+<p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DL74</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Stable machine folder, full python path</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 05 Nov</span></div>
+<p class="decision-summary">The plan copies the hook wrappers and scripts to &lt;machine dir&gt;/runner-hooks, writes the full path of the setup&#x27;s python into the wrappers, and refreshes them on rerun.</p>
+<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning).&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep the plugin path, document it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No change; tell owners to re-point hooks after updates.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D98">
+<h3 class="decision-head"><span class="decision-id">D98</span> <span class="decision-question">The packaged-program smoke test failed intermittently on PR #155 and #156 (stop_tree pid check). Track a fix?</span></h3>
+<p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DL73</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Add a task, fix now</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 05 Nov</span></div>
+<p class="decision-summary">One cloud agent makes the pid check wait for the files; small release.</p>
+<blockquote class="decision-words">&ldquo;Add a task, fix now (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Add a task for later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Record a To do task; rerun failed jobs meanwhile.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No task; rerun when it fails.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D97">
 <h3 class="decision-head"><span class="decision-id">D97</span> <span class="decision-question">Pool browsers option: how should the pool choose the Playwright version for install-deps?</span></h3>
 <p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DL69</p>
