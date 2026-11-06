@@ -15,6 +15,7 @@ CLI:
     delivery_ledger.py measure --train T-... --state clean|regressions|none [--report path]
     delivery_ledger.py show [--json]
     delivery_ledger.py smoke --pr N [--run ID|URL]   record the production smoke of a merged train (needs gh)
+    delivery_ledger.py link --pr N [--sha SHA] [--branch B]   link a PR to its open train by hand (needs gh)
     delivery_ledger.py cleaned --pr N                record that a merged train's branches and worktrees are gone
 
 Standard library only. Config: .delivery/config.json (tz, base, ...).
@@ -50,13 +51,64 @@ class LedgerError(Exception):
 
 # --- paths, time, config ---------------------------------------------------------------
 
+def _has_project_files(cand: Path) -> bool:
+    d = cand / DIR_NAME
+    return (d / "config.json").is_file() or (d / "ledger.json").is_file()
+
+
+def main_checkout_of(cand: Path) -> Path | None:
+    """DL90: when `cand` is a git worktree (its .git is a file naming .../worktrees/<name>), the main
+    checkout that owns it, found by file reads only; None otherwise."""
+    dot = cand / ".git"
+    try:
+        if not dot.is_file():
+            return None
+        text = dot.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+    m = re.search(r"^gitdir:\s*(.+?)\s*$", text, re.M)
+    if not m:
+        return None
+    raw = m.group(1).strip()
+    if "/worktrees/" not in raw.replace("\\", "/"):
+        return None
+    gitdir = Path(raw)
+    if not gitdir.is_absolute():
+        gitdir = cand / gitdir
+    common = None
+    try:
+        rel = (gitdir / "commondir").read_text(encoding="utf-8", errors="replace").strip()
+        if rel:
+            common = Path(rel) if os.path.isabs(rel) else gitdir / rel
+    except OSError:
+        pass
+    if common is None:
+        common = gitdir.parent.parent
+    try:
+        common = common.resolve()
+    except OSError:
+        return None
+    if common.name != ".git":
+        return None
+    return common.parent
+
+
 def find_root(start: str | os.PathLike | None = None) -> Path | None:
-    """The nearest folder up from `start` holding .delivery/ (or .git), else None."""
+    """The project folder up from `start`: the nearest one holding .delivery/ with a config.json or
+    ledger.json (DL90: a git worktree resolves to its main checkout when that one holds them), else the
+    nearest with .git, else None."""
     p = Path(start or os.getcwd()).resolve()
-    for cand in [p, *p.parents]:
+    chain = [p, *p.parents]
+    for cand in chain:
+        main = main_checkout_of(cand)
+        if main is not None and main != cand and _has_project_files(main):
+            return main
+        if _has_project_files(cand):
+            return cand
+    for cand in chain:
         if (cand / DIR_NAME).is_dir():
             return cand
-    for cand in [p, *p.parents]:
+    for cand in chain:
         if (cand / ".git").exists():
             return cand
     return None
@@ -796,6 +848,35 @@ def _cmd_cleaned(root, args, run=_run) -> int:
     return 0
 
 
+def _cmd_link(root, args, run=_run) -> int:
+    """DL90: set an open train's pr and ci.head_sha by hand, for a PR the hook did not record."""
+    info = _gh_json(["pr", "view", str(args.pr), "--json", "headRefName,headRefOid"], root, run)
+    info = info if isinstance(info, dict) else {}
+    sha = args.sha or info.get("headRefOid")
+    if not sha:
+        raise LedgerError("cannot read the head of PR %d; pass --sha" % args.pr)
+    picked = {}
+
+    def fn(led):
+        open_rows = [t for t in led.get("trains", []) if t.get("state") not in ("merged", "live", "cleaned", "abandoned")]
+        want = args.branch or info.get("headRefName")
+        rows = [t for t in open_rows if want and t.get("branch") == want]
+        if not rows and not args.branch:
+            rows = open_rows
+        if len(rows) != 1:
+            raise LedgerError("%s; pass --branch" % (
+                "no open train matches PR %d" % args.pr if not rows else
+                "more than one open train could take PR %d (%s)" % (args.pr, ", ".join(t["id"] for t in rows))))
+        t = rows[0]
+        t["pr"] = args.pr
+        t.setdefault("ci", {})["head_sha"] = sha
+        add_event(led, "train.link", "%s #%d %s" % (t["id"], args.pr, str(sha)[:7]), "delivery_ledger")
+        picked.update(id=t["id"])
+    update(root, fn)
+    print("linked train %s pr=%d sha=%s" % (picked["id"], args.pr, sha))
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--root", help="repository root (default: nearest folder with .delivery/ or .git)")
@@ -818,6 +899,10 @@ def main(argv=None) -> int:
     p = sub.add_parser("smoke")
     p.add_argument("--pr", required=True, type=int)
     p.add_argument("--run", help="a run id or URL (default: the newest smoke run on the PR's merge commit)")
+    p = sub.add_parser("link")
+    p.add_argument("--pr", required=True, type=int)
+    p.add_argument("--sha")
+    p.add_argument("--branch")
     p = sub.add_parser("cleaned")
     p.add_argument("--pr", required=True, type=int)
     p = sub.add_parser("agent-eta")
@@ -840,7 +925,7 @@ def main(argv=None) -> int:
         return 2
     try:
         return {"plan": _cmd_plan, "hold": _cmd_hold, "measure": _cmd_measure, "show": _cmd_show,
-                "agent-eta": _cmd_agent_eta, "agent-done": _cmd_agent_done, "smoke": _cmd_smoke, "cleaned": _cmd_cleaned}[args.cmd](root, args)
+                "agent-eta": _cmd_agent_eta, "agent-done": _cmd_agent_done, "smoke": _cmd_smoke, "cleaned": _cmd_cleaned, "link": _cmd_link}[args.cmd](root, args)
     except LedgerError as exc:
         print("delivery_ledger: %s" % exc, file=sys.stderr)
         return 1

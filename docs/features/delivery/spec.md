@@ -70,6 +70,8 @@ flowchart LR
 
 **R5.2** — The ledger `.delivery/ledger.json` is written only through `delivery_ledger.py`. The write is atomic, runs under a lock and carries `schema: 1`. Hooks never edit it by hand.
 
+The ledger lives in the main checkout. A command or hook run from a git worktree finds it there, because a `.delivery/` folder counts only when it holds `config.json` or `ledger.json`. `delivery_ledger.py link --pr N` links a PR to its train by hand when a record was missed.
+
 **R5.3** — The PostToolUse recorder fills the ledger from tool calls (agents, installs, publishes, questions, the owner's prompt time).
 
 **R5.4** — The Stop hook blocks a turn end for each open finding. The same finding blocks at most `enforcement.block_ceiling` times (default 3), and at most `stop_repeat_limit` turns with no ledger change. After that, the hook prints one notice. In `warn` mode it blocks nothing.
