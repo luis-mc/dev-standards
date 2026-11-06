@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-06T02:45+00:00",
+  "updated": "2026-11-06T07:01+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1845,6 +1845,44 @@
       "changed": "2026-11-06T02:45+00:00",
       "rides": "DL82",
       "started": "2026-11-06T02:15+00:00"
+    },
+    {
+      "id": "DL85",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-57: pool gh and per-job tmp",
+      "detail": "Join DL86 and DL87, fold notes (luismc-delivery 1.10.0), PR, CI, merge, install, message moobable.",
+      "expected": "06 Nov ~08:15",
+      "changed": "2026-11-06T07:01+00:00",
+      "expected_basis": "agents due ~07:50, join+CI ~25 min",
+      "release": 57
+    },
+    {
+      "id": "DL86",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "DL86: gh CLI in the pool image (bug 17)",
+      "detail": "Pinned gh 2.103.3 tarball checked by sha256 in the pool Dockerfile; pool-check.yml checks gh. D105.",
+      "expected": "06 Nov ~07:50",
+      "changed": "2026-11-06T07:01+00:00",
+      "expected_basis": "cloud agent, setup 5 + work 25 + checks 15",
+      "rides": "DL85",
+      "started": "2026-11-06T07:01+00:00"
+    },
+    {
+      "id": "DL87",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "DL87: per-agent TMPDIR and /tmp cleanup (bug 18)",
+      "detail": "Per-agent TMPDIR/TMP/TEMP under /agents/<slug>, wiped at job start; hooks delete /tmp entries owned by the job user at start and end. D106.",
+      "expected": "06 Nov ~07:50",
+      "changed": "2026-11-06T07:01+00:00",
+      "expected_basis": "cloud agent, setup 5 + work 25 + checks 15",
+      "rides": "DL85",
+      "started": "2026-11-06T07:01+00:00"
     },
     {
       "id": "DS1",

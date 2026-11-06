@@ -2257,7 +2257,7 @@
       "chosen": "Stable machine folder, full python path",
       "decided": "2026-11-05",
       "task": "DL74",
-      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning)."
+      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning). Owner reviewed it on 2026-11-06 and kept it."
     },
     {
       "id": "D100",
@@ -2282,7 +2282,7 @@
       "chosen": "Official Node 22 LTS tarball, sha256-checked",
       "decided": "2026-11-05",
       "task": "DL76",
-      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning)."
+      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning). Owner reviewed it on 2026-11-06 and kept it."
     },
     {
       "id": "D101",
@@ -2303,7 +2303,7 @@
       "chosen": "Push trigger on its own path",
       "decided": "2026-11-06",
       "task": "DL77",
-      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning)."
+      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning). Owner reviewed it on 2026-11-06 and kept it."
     },
     {
       "id": "D102",
@@ -2328,7 +2328,7 @@
       "chosen": "All three: memory per CPU, cpuset + hint, doctor check",
       "decided": "2026-11-06",
       "task": "DL79",
-      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning)."
+      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning). Owner reviewed it on 2026-11-06 and kept it."
     },
     {
       "id": "D103",
@@ -2353,7 +2353,7 @@
       "chosen": "Split the hint per agent + doctor warning",
       "decided": "2026-11-06",
       "task": "DL83",
-      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning)."
+      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning). Owner reviewed it on 2026-11-06 and kept it."
     },
     {
       "id": "D104",
@@ -2378,7 +2378,53 @@
       "chosen": "PG vars + pool-db-env helper + opt-in CREATEDB",
       "decided": "2026-11-06",
       "task": "DL84",
-      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning). Granting CREATEDB to an existing live role stays the owning project's decision."
+      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning). Granting CREATEDB to an existing live role stays the owning project's decision. Owner reviewed it on 2026-11-06 and kept it."
+    },
+    {
+      "id": "D105",
+      "question": "Bug 17: the pool image has no GitHub CLI (gh), which hosted ubuntu-latest preinstalls, so workflows that call gh api or gh pr fail on the pool. How should the image install gh?",
+      "asked": "2026-11-06",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Pinned tarball + sha256",
+          "summary": "Download a fixed gh release tarball and check a pinned sha256, like the runner and Node tarballs; pool-check.yml checks gh.",
+          "recommended": true
+        },
+        {
+          "label": "Official apt repo",
+          "summary": "Add cli.github.com's apt source and signed keyring and install gh; latest at build time, less reproducible."
+        }
+      ],
+      "chosen": "Pinned tarball + sha256",
+      "decided": "2026-11-06",
+      "task": "DL86",
+      "owner_words": "Pinned tarball + sha256 (Recommended)"
+    },
+    {
+      "id": "D106",
+      "question": "Bug 18: pool jobs share one /tmp, so a previous job's leftovers (for example /tmp/gitleaks.tmp) break the next job. Some actions hard-code /tmp. What should the pool do?",
+      "asked": "2026-11-06",
+      "status": "decided",
+      "options": [
+        {
+          "label": "TMPDIR + clean user's /tmp",
+          "summary": "Each agent gets its own TMPDIR/TMP/TEMP under /agents/<slug>, wiped at job start; the job hooks delete /tmp entries owned by the job user at start and end.",
+          "recommended": true
+        },
+        {
+          "label": "Clean user's /tmp only",
+          "summary": "Delete /tmp entries owned by the job user at job start and end; no TMPDIR change."
+        },
+        {
+          "label": "Private /tmp per agent",
+          "summary": "A separate tmpfs per agent user; strongest isolation, needs privileged container setup."
+        }
+      ],
+      "chosen": "TMPDIR + clean user's /tmp",
+      "decided": "2026-11-06",
+      "task": "DL87",
+      "owner_words": "TMPDIR + clean user's /tmp (Recommended)"
     }
   ]
 }

@@ -888,12 +888,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-06T02:45+00:00">06 Nov 02:45</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-06T07:01+00:00">06 Nov 07:01</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">06 Nov 06:27</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
+</details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
+<ul>
+<li data-glance-task="DL86"><span class="task-id">DL86</span>DL86: gh CLI in the pool image (bug 17) <span class="glance-expected">06 Nov ~07:50</span><span class="glance-basis">cloud agent, setup 5 + work 25 + checks 15</span></li>
+<li data-glance-task="DL87"><span class="task-id">DL87</span>DL87: per-agent TMPDIR and /tmp cleanup (bug 18) <span class="glance-expected">06 Nov ~07:50</span><span class="glance-basis">cloud agent, setup 5 + work 25 + checks 15</span></li>
+</ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">27 tasks</span></summary>
 <ul>
@@ -909,8 +915,15 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">84</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">84</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">3 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL86"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL86</span>DL86: gh CLI in the pool image (bug 17)<span class="release-line"><span class="release-name">RELEASE-57</span></span></td><td data-label="Detail">Pinned gh 2.103.3 tarball checked by sha256 in the pool Dockerfile; pool-check.yml checks gh. D105.</td><td data-label="Expected">06 Nov ~07:50<span class="expected-basis">cloud agent, setup 5 + work 25 + checks 15</span></td></tr>
+<tr data-task="DL87"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL87</span>DL87: per-agent TMPDIR and /tmp cleanup (bug 18)<span class="release-line"><span class="release-name">RELEASE-57</span></span></td><td data-label="Detail">Per-agent TMPDIR/TMP/TEMP under /agents/&lt;slug&gt;, wiped at job start; hooks delete /tmp entries owned by the job user at start and end. D106.</td><td data-label="Expected">06 Nov ~07:50<span class="expected-basis">cloud agent, setup 5 + work 25 + checks 15</span></td></tr>
+<tr data-task="DL85"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL85</span><span class="release-name">RELEASE-57</span>pool gh and per-job tmp</td><td data-label="Detail">Join DL86 and DL87, fold notes (luismc-delivery 1.10.0), PR, CI, merge, install, message moobable.</td><td data-label="Expected">06 Nov ~08:15<span class="expected-basis">agents due ~07:50, join+CI ~25 min</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">84 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL82"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL82</span><span class="release-name">RELEASE-56</span>RELEASE: pool parallelism per agent</td><td data-label="Detail">Join, CI and merge for DL83 (CI_MAX_PARALLEL split across agents, doctor memory-per-agent warning), luismc-delivery 1.8.2.</td><td data-label="Expected">06 Nov</td></tr>
@@ -1032,6 +1045,40 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D106">
+<h3 class="decision-head"><span class="decision-id">D106</span> <span class="decision-question">Bug 18: pool jobs share one /tmp, so a previous job&#x27;s leftovers (for example /tmp/gitleaks.tmp) break the next job. Some actions hard-code /tmp. What should the pool do?</span></h3>
+<p class="decision-meta">Asked 06 Nov · Decided 06 Nov · Task DL87</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">TMPDIR + clean user&#x27;s /tmp</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 06 Nov</span></div>
+<p class="decision-summary">Each agent gets its own TMPDIR/TMP/TEMP under /agents/&lt;slug&gt;, wiped at job start; the job hooks delete /tmp entries owned by the job user at start and end.</p>
+<blockquote class="decision-words">&ldquo;TMPDIR + clean user&#x27;s /tmp (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Clean user&#x27;s /tmp only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Delete /tmp entries owned by the job user at job start and end; no TMPDIR change.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Private /tmp per agent</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">A separate tmpfs per agent user; strongest isolation, needs privileged container setup.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D105">
+<h3 class="decision-head"><span class="decision-id">D105</span> <span class="decision-question">Bug 17: the pool image has no GitHub CLI (gh), which hosted ubuntu-latest preinstalls, so workflows that call gh api or gh pr fail on the pool. How should the image install gh?</span></h3>
+<p class="decision-meta">Asked 06 Nov · Decided 06 Nov · Task DL86</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Pinned tarball + sha256</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 06 Nov</span></div>
+<p class="decision-summary">Download a fixed gh release tarball and check a pinned sha256, like the runner and Node tarballs; pool-check.yml checks gh.</p>
+<blockquote class="decision-words">&ldquo;Pinned tarball + sha256 (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Official apt repo</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Add cli.github.com&#x27;s apt source and signed keyring and install gh; latest at build time, less reproducible.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D104">
 <h3 class="decision-head"><span class="decision-id">D104</span> <span class="decision-question">Pool jobs get no working database: db.env never reaches the job, and per-repo roles are LOGIN only while some CI creates its own databases. What should the pool provide?</span></h3>
 <p class="decision-meta">Asked 06 Nov · Decided 06 Nov · Task DL84</p>
@@ -1039,7 +1086,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="decision-option decision-chosen">
 <div class="decision-option-head"><span class="decision-label">PG vars + pool-db-env helper + opt-in CREATEDB</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 06 Nov</span></div>
 <p class="decision-summary">db.env also has PGHOST/PGPORT/PGUSER/PGPASSWORD/PGDATABASE; the image ships pool-db-env, one workflow step that masks the values and appends them to GITHUB_ENV; pool-add-agent --db-createdb grants CREATEDB (default off, ALTER on rerun); each agent database revokes CONNECT from PUBLIC.</p>
-<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning). Granting CREATEDB to an existing live role stays the owning project&#x27;s decision.&rdquo;</blockquote>
+<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning). Granting CREATEDB to an existing live role stays the owning project&#x27;s decision. Owner reviewed it on 2026-11-06 and kept it.&rdquo;</blockquote>
 </div>
 <div class="decision-option decision-muted">
 <div class="decision-option-head"><span class="decision-label">CREATEDB for every role</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
@@ -1058,7 +1105,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="decision-option decision-chosen">
 <div class="decision-option-head"><span class="decision-label">Split the hint per agent + doctor warning</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 06 Nov</span></div>
 <p class="decision-summary">The supervisor starts each agent with CI_MAX_PARALLEL = max(1, POOL_CPUS_INT // number of agents); the doctor warns when POOL_MEM per agent is under 4 GiB and says to raise POOL_MEM or use fewer agents.</p>
-<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning).&rdquo;</blockquote>
+<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning). Owner reviewed it on 2026-11-06 and kept it.&rdquo;</blockquote>
 </div>
 <div class="decision-option decision-muted">
 <div class="decision-option-head"><span class="decision-label">Load gate admits one heavy job at a time</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
@@ -1077,7 +1124,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="decision-option decision-chosen">
 <div class="decision-option-head"><span class="decision-label">All three: memory per CPU, cpuset + hint, doctor check</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 06 Nov</span></div>
 <p class="decision-summary">POOL_CPUS = min(CPU cap, floor(POOL_MEM / 1.5 GB)); compose pins cpuset 0..N-1 so nproc and availableParallelism match; the container exports CI_MAX_PARALLEL; the doctor warns under 1 GB per CPU.</p>
-<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning).&rdquo;</blockquote>
+<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning). Owner reviewed it on 2026-11-06 and kept it.&rdquo;</blockquote>
 </div>
 <div class="decision-option decision-muted">
 <div class="decision-option-head"><span class="decision-label">Hint only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
@@ -1096,7 +1143,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="decision-option decision-chosen">
 <div class="decision-option-head"><span class="decision-label">Push trigger on its own path</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 06 Nov</span></div>
 <p class="decision-summary">Keep workflow_dispatch and add push with paths: .github/workflows/pool-check.yml, so pushing a branch that adds it runs the check there.</p>
-<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning).&rdquo;</blockquote>
+<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning). Owner reviewed it on 2026-11-06 and kept it.&rdquo;</blockquote>
 </div>
 <div class="decision-option decision-muted">
 <div class="decision-option-head"><span class="decision-label">Note only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
@@ -1111,7 +1158,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="decision-option decision-chosen">
 <div class="decision-option-head"><span class="decision-label">Official Node 22 LTS tarball, sha256-checked</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 05 Nov</span></div>
 <p class="decision-summary">Download node-v22 linux-x64 from nodejs.org, check a pinned sha256 like the runner tarball, use its npx for install-deps, then remove it.</p>
-<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning).&rdquo;</blockquote>
+<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning). Owner reviewed it on 2026-11-06 and kept it.&rdquo;</blockquote>
 </div>
 <div class="decision-option decision-muted">
 <div class="decision-option-head"><span class="decision-label">NodeSource apt repo</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
@@ -1130,7 +1177,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="decision-option decision-chosen">
 <div class="decision-option-head"><span class="decision-label">Stable machine folder, full python path</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 05 Nov</span></div>
 <p class="decision-summary">The plan copies the hook wrappers and scripts to &lt;machine dir&gt;/runner-hooks, writes the full path of the setup&#x27;s python into the wrappers, and refreshes them on rerun.</p>
-<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning).&rdquo;</blockquote>
+<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning). Owner reviewed it on 2026-11-06 and kept it.&rdquo;</blockquote>
 </div>
 <div class="decision-option decision-muted">
 <div class="decision-option-head"><span class="decision-label">Keep the plugin path, document it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
