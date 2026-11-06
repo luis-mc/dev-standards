@@ -511,6 +511,28 @@ class SummaryTests(unittest.TestCase):
         self.assertIn("nothing", text)
 
 
+class DL86GhTests(unittest.TestCase):
+    def test_dockerfile_installs_pinned_gh(self):
+        import re
+        d = (POOL / "Dockerfile").read_text(encoding="utf-8")
+        self.assertRegex(d, r"ARG GH_VERSION=\d+\.\d+\.\d+")
+        self.assertRegex(d, r"ARG GH_SHA256=[0-9a-f]{64}\b")
+        self.assertIn("github.com/cli/cli/releases/download", d)
+        self.assertIn('"${GH_SHA256}  /tmp/gh.tgz" | sha256sum -c', d)
+        self.assertIn("/usr/local/bin/gh", d)
+        step = d.index("GH_SHA256=")
+        browsers = d.index('if [ "$POOL_BROWSERS" = "chromium" ]')
+        self.assertLess(step, browsers)
+        gh_run = d[step:d.index("\n# The runner tarball")]
+        self.assertNotIn("POOL_BROWSERS", gh_run)
+
+    def test_pool_check_lists_gh(self):
+        y = (POOL / "pool-check.yml").read_text(encoding="utf-8")
+        loop = [l for l in y.splitlines() if "for t in" in l][0]
+        self.assertIn(" gh;", loop)
+        self.assertIn("gh --version", y)
+
+
 if __name__ == "__main__":
     unittest.main()
 
