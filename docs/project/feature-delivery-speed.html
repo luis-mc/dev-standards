@@ -889,7 +889,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
 <p class="last-update">Last update: <time datetime="2026-11-06T00:27+00:00">06 Nov 00:27</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">06 Nov 00:21</a> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">06 Nov 00:29</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
@@ -1036,6 +1036,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D102">
+<h3 class="decision-head"><span class="decision-id">D102</span> <span class="decision-question">Bug 14: the pool gets 19 CPUs but 8 GB (0.4 GB per CPU) and nproc shows all host cores, so parallel test runners are OOM-killed. How should the pool size and expose CPUs?</span></h3>
+<p class="decision-meta">Asked 06 Nov · Decided 06 Nov · Task DL79</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">All three: memory per CPU, cpuset + hint, doctor check</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 06 Nov</span></div>
+<p class="decision-summary">POOL_CPUS = min(CPU cap, floor(POOL_MEM / 1.5 GB)); compose pins cpuset 0..N-1 so nproc and availableParallelism match; the container exports CI_MAX_PARALLEL; the doctor warns under 1 GB per CPU.</p>
+<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning).&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Hint only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Export CI_MAX_PARALLEL; leave the cap and nproc as they are.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Doctor check only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Warn about low memory per CPU; change nothing else.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D101">
 <h3 class="decision-head"><span class="decision-id">D101</span> <span class="decision-question">pool-check.yml is workflow_dispatch only, so it cannot run before it reaches the default branch. How should a repo moving to the pool run it first?</span></h3>
 <p class="decision-meta">Asked 06 Nov · Decided 06 Nov · Task DL77</p>
