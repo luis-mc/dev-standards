@@ -195,6 +195,8 @@ Docker Desktop runs in the WSL2 VM. `%UserProfile%\.wslconfig` (`memory=`, `proc
 
 One runner service per repository on Windows, in `C:\actions-runners\<slug>\`, with the same two hooks. They take the same CI slots. Windows containers are not used.
 
+The hook scripts do not run from the plugin cache, whose folder changes on every plugin update (D99). The setup copies `runner_load_gate.py`, `runner_job_done.py`, `load.py` and `machine_slots.py` to `<machine folder>/runner-hooks/` (`C:/ProgramData/luismc-delivery/runner-hooks/`) and writes the two `.ps1` wrappers there with the full path of the python that runs the setup, because the service account may have no `python` on its PATH. The printed step names that folder. A rerun refreshes the copies.
+
 ## 5. Security
 
 | Risk | What the setup does |
@@ -258,8 +260,10 @@ flowchart TD
 3. **Machine layer.** Write `machine.json`, create the slot and queue folders, register the host load scheduled task. On Windows the task is one entry that starts at boot and runs a small loop script, because `schtasks` cannot repeat faster than every minute. The setup first copies `load.py`, `machine_slots.py` and `host-load-loop.py` (writes the host load file, sleeps 15 s, repeats) into `<machine folder>/host-load/`; the printed `schtasks /Create /SC ONSTART /RU SYSTEM` line uses absolute paths to `python` and that loop script, so a SYSTEM task can find them. The setup checks the task with `schtasks /Query`. An unelevated query of a SYSTEM task is "Access is denied"; the step then passes when the host load file is under 60 seconds old.
 4. **WSL ceiling.** Write `.wslconfig` (`memory=`, `processors=` from sizing; the old file is kept as `.wslconfig.bak`; nothing is written when it already has at least that much). The step text shows old -> new for memory and processors, and for `POOL_MEM` and `POOL_CPUS` in the pool `.env`. While other runners or containers run in WSL, the memory is never written below its current value, nor below what they use plus the pool cap. Then `wsl --shutdown` only after a yes and only when no runner is busy.
 5. **Pool.** Write the pool files, `docker compose up -d --build`, add one agent per Linux repository with the token pipe.
-6. **Windows services.** One per repository that tests on Windows, with both hooks in its `.env`.
+6. **Windows services.** One per repository that tests on Windows, with both hooks in its `.env`, pointing at the `runner-hooks` folder (section 4.3). A runner whose name (`host1-<slug>`), repository, folder (`C:/actions-runners/<slug>`) and labels equal what this step would create is the wanted state: the step says *already set* and the runner, its service and its folder are not removed in step 2. Only runners that do not match are removed.
 7. **Variables.** `gh variable set CI_RUNS_ON` (and `CI_SERIAL` when chosen) per repository. The step also warns, and still passes, about workflows that call `sudo`, `apt-get`, `apt install`, `playwright install --with-deps` or `install-deps`: they need root, which pool jobs do not have. Keep them on hosted runners, or set `browsers: chromium` and use `playwright install chromium` without `--with-deps`.
+Labels are compared without regard to case everywhere (GitHub reports `Linux` for `linux`). `agents.json` is saved in place when the file is a single-file bind mount, which `os.replace` cannot replace.
+
 8. **Verify.** For each repository: the agent is online with its labels, then one run of `pool-check.yml` that takes a slot, prints the runner name, checks that the image has `libatomic.so.1` (pnpm needs it) and the tools common actions assume (git, curl, jq, unzip, zip, xz, python3), and passes. The doctor runs last.
 
 When a step fails, the setup stops, says what is done and what is not, and prints the remaining steps.

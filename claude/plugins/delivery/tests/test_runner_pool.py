@@ -1267,3 +1267,88 @@ class BaseImageTests(unittest.TestCase):
 
     def test_pool_check_checks_libatomic(self):
         self.assertIn("libatomic.so.1", (POOL / "pool-check.yml").read_text())
+
+
+def _win_found(labels=("Self-hosted", "Windows"), folder="C:/actions-runners/example-app", name="host1-example-app"):
+    return {"host": {"platform": "win32", "machine_dir": "C:/ProgramData/luismc-delivery", "python": "C:/Py/python.exe"},
+            "github": {"repos": [{"repo": "owner/example-app", "private": True, "error": None, "runners": [
+                {"id": 3, "name": name, "os": "Windows", "status": "online", "busy": False, "labels": list(labels)}]}]},
+            "services": [{"name": "actions.runner.owner-example-app.host1-app1", "kind": "windows-service", "folder": folder}],
+            "folders": [{"path": folder, "agent_id": 3, "name": name, "repo": "owner/example-app"}],
+            "containers": [], "wsl": {}, "pool_env": {}}
+
+
+class DL74Tests(unittest.TestCase):
+    def test_save_in_place_when_replace_is_busy(self):
+        import errno
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "agents.json")
+            Path(path).write_text("{}")
+            real = os.replace
+
+            def busy(a, b):
+                raise OSError(errno.EBUSY, "Device or resource busy")
+            os.replace = busy
+            try:
+                A.save(path, {"agents": [{"slug": "app1"}]})
+            finally:
+                os.replace = real
+            self.assertEqual(json.loads(Path(path).read_text()), {"agents": [{"slug": "app1"}]})
+            self.assertFalse(os.path.exists(path + ".tmp"))
+
+    def test_save_other_errors_still_raise(self):
+        import errno
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "agents.json")
+            real = os.replace
+            os.replace = lambda a, b: (_ for _ in ()).throw(OSError(errno.EACCES, "no"))
+            try:
+                with self.assertRaises(OSError):
+                    A.save(path, {"agents": []})
+            finally:
+                os.replace = real
+
+    def test_rerun_keeps_a_runner_equal_to_the_plan(self):
+        pl = P.plan(_win_found(), [], ["owner/example-app"])
+        ids = [s["id"] for s in pl["steps"]]
+        self.assertFalse([i for i in ids if i.startswith(("remove:", "winsvc-remove:", "delete-folder:"))])
+        svc = next(s for s in pl["steps"] if s["action"] == "windows-service")
+        self.assertEqual(svc["state"], "already")
+
+    def test_rerun_removes_a_stale_runner(self):
+        pl = P.plan(_win_found(folder="C:/old/app1"), [], ["owner/example-app"])
+        ids = [s["id"] for s in pl["steps"]]
+        self.assertIn("remove:owner/example-app:host1-example-app", ids)
+        self.assertIn("delete-folder:C:/old/app1", ids)
+        pl = P.plan(_win_found(labels=("self-hosted", "linux")), [], ["owner/example-app"])
+        self.assertIn("remove:owner/example-app:host1-example-app", [s["id"] for s in pl["steps"]])
+
+    def test_pool_label_case_does_not_matter(self):
+        f = {"github": {"repos": [{"repo": "o/r", "runners": [{"labels": ["Pool-Main"], "status": "online"}]}]}}
+        self.assertTrue(P._pool_has(f, "main", "o/r"))
+
+    def test_doctor_compares_runner_labels_case_insensitively(self):
+        item = {"id": "runner:main-app1", "check": "runner", "labels": ["linux", "self-hosted"]}
+        runners = {"runners": [{"name": "main-app1", "status": "online", "labels": [{"name": "Linux"}, {"name": "Self-hosted"}]}]}
+        orig = S._gh_json
+        S._gh_json = lambda root, args: (runners, None)
+        try:
+            self.assertEqual(S.check_item(None, {}, item)[0], "ok")
+        finally:
+            S._gh_json = orig
+
+    def test_hook_files_are_copied_with_the_full_python_path(self):
+        with tempfile.TemporaryDirectory() as d:
+            pl = P.plan(_win_found(), [], ["owner/example-app"])
+            step = next(s for s in pl["steps"] if s["action"] == "runner-hooks")
+            self.assertTrue(step["dest"].endswith("/runner-hooks"))
+            step = dict(step, dest=os.path.join(d, "runner-hooks"), python="C:/Py/python.exe")
+            ok, _ = P.Executor(FakeProbe()).run(step)
+            self.assertTrue(ok)
+            for n in ("runner_load_gate.py", "runner_job_done.py", "load.py", "machine_slots.py"):
+                self.assertTrue(os.path.isfile(os.path.join(d, "runner-hooks", n)), n)
+            text = Path(d, "runner-hooks", "runner_load_gate.ps1").read_text()
+            self.assertIn("C:\\Py\\python.exe", text)
+            self.assertIn("runner_load_gate.py", text)
+            printed = " ".join(next(s for s in pl["steps"] if s["action"] == "windows-service")["printed"])
+            self.assertIn("C:/ProgramData/luismc-delivery/runner-hooks/runner_load_gate.ps1", printed)

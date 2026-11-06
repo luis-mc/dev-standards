@@ -10,6 +10,7 @@ error text. The agent runs as its own user `r-SLUG` in `/agents/SLUG` (mode 0700
 A repository that is not asserted private (`--private`) is refused (contract section 5). Standard library only.
 """
 import argparse
+import errno
 import json
 import os
 import re
@@ -48,11 +49,32 @@ def load(path):
         return {'agents': []}
 
 
+def save_in_place(path, data):
+    """Write onto the same file. A single-file bind mount cannot be replaced."""
+    with open(path, 'a+', encoding='utf-8') as f:
+        f.seek(0)
+        f.truncate()
+        json.dump(data, f, indent=2)
+        f.flush()
+        os.fsync(f.fileno())
+
+
 def save(path, data):
+    if os.path.ismount(path):
+        return save_in_place(path, data)
     tmp = path + '.tmp'
     with open(tmp, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2)
-    os.replace(tmp, path)
+    try:
+        os.replace(tmp, path)
+    except OSError as exc:
+        if exc.errno not in (errno.EBUSY, errno.EXDEV):
+            raise
+        save_in_place(path, data)
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
 
 
 def labels_for(pool, slug):
