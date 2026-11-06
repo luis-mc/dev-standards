@@ -80,26 +80,53 @@ def ensure_user(agent, base, run=None, exists=_user_exists, group_exists=_group_
     return rc in (0, None)
 
 
-def popen_spawn(agent, base):
-    """Start one agent as its own user. The runner's own run.sh handles its job and exits when told to stop."""
+def per_agent_parallel(environ, n_agents):
+    """DL83: the pool's CPU count divided by its agents, at least 1. Jobs size their workers from it."""
+    raw = environ.get('POOL_CPUS_INT') or environ.get('CI_MAX_PARALLEL') or '1'
+    try:
+        cpus = int(str(raw).strip())
+    except ValueError:
+        cpus = 1
+    return max(1, cpus // max(1, n_agents))
+
+
+def popen_spawn(agent, base, env=None):
+    """Start one agent as its own user. The runner's own run.sh handles its job and exits when told to stop.
+
+    runuser keeps the environment, so the job inherits CI_MAX_PARALLEL from env.
+    """
     folder = os.path.join(base, agent['slug'])
     argv = ['runuser', '-u', agent['user'], '--', os.path.join(folder, 'run.sh')]
-    return subprocess.Popen(argv, cwd=folder)
+    return subprocess.Popen(argv, cwd=folder, env=env)
 
 
 class Supervisor:
-    def __init__(self, agents_file, base='/agents', spawn=None, clock=time.monotonic, ensure=None):
+    def __init__(self, agents_file, base='/agents', spawn=None, clock=time.monotonic, ensure=None, environ=None):
         self.agents_file, self.base = agents_file, base
+        self.environ = environ if environ is not None else os.environ
+        self.n_agents = 1
         self.ensure = ensure or (lambda a: True)  # main() passes ensure_user
         self.warned = set()  # slugs already logged as having no user
-        self.spawn = spawn or (lambda a: popen_spawn(a, base))
+        self.spawn = spawn or self._default_spawn
         self.clock = clock
         self.state = {}  # slug -> {proc, started, fails, next}
         self.stopping = False
 
+    def agent_env(self):
+        """The environment for a new agent: a copy with CI_MAX_PARALLEL set for the current agent count."""
+        env = dict(self.environ)
+        env['CI_MAX_PARALLEL'] = str(per_agent_parallel(self.environ, self.n_agents))
+        return env
+
+    def _default_spawn(self, agent):
+        env = self.agent_env()
+        _log('agent %s starts with CI_MAX_PARALLEL=%s (%d agents)' % (agent['slug'], env['CI_MAX_PARALLEL'], self.n_agents))
+        return popen_spawn(agent, self.base, env)
+
     def tick(self):
         """One pass: forget removed agents, start missing ones, restart dead ones after their back-off."""
         wanted = {a['slug']: a for a in load_agents(self.agents_file)}
+        self.n_agents = max(1, len(wanted))
         for slug in [s for s in self.state if s not in wanted]:
             self._stop_one(slug)
             del self.state[slug]

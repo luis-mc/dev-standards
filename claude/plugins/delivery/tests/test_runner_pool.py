@@ -1401,6 +1401,24 @@ class DL79MemPerCpuTests(unittest.TestCase):
             res = P.doctor_checks(d, FakeProbe())
         return {c["id"].split(".")[-1]: c for c in res}["mem-per-cpu"]
 
+    def _doctor_agents(self, env, n):
+        with tempfile.TemporaryDirectory() as d:
+            pd = Path(d, "pools", "main")
+            pd.mkdir(parents=True)
+            (pd / "compose.yaml").write_text("services: {}\n")
+            (pd / ".env").write_text(env)
+            agents = [{"slug": "a%d" % i, "user": "r-a%d" % i, "repo": "o/a%d" % i, "private": True} for i in range(n)]
+            (pd / "agents.json").write_text(json.dumps({"agents": agents}))
+            res = P.doctor_checks(d, FakeProbe())
+        return {c["id"].split(".")[-1]: c for c in res}.get("mem-per-agent")
+
+    def test_doctor_warns_under_four_gib_per_agent(self):
+        c = self._doctor_agents("POOL_CPUS=4\nPOOL_MEM=8g\n", 3)
+        self.assertEqual(c["status"], "warn")
+        for text in ("POOL_MEM", "3 agents", "fewer agents"):
+            self.assertIn(text, c["detail"])
+        self.assertEqual(self._doctor_agents("POOL_CPUS=4\nPOOL_MEM=8g\n", 1)["status"], "ok")
+
     def test_doctor_warns_under_one_gib_per_cpu(self):
         c = self._doctor("POOL_CPUS=19.0\nPOOL_MEM=8.0g\n")
         self.assertEqual(c["status"], "warn")

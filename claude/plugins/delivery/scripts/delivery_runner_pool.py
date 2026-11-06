@@ -363,6 +363,7 @@ def docker_ncpu(probe):
 
 MIN_GIB_PER_CPU = 1.5  # DL79: a pool CPU gets at least this much memory (hosted runners have about 4 GiB per core)
 WARN_GIB_PER_CPU = 1.0  # the doctor warns below this
+WARN_GIB_PER_AGENT = 4.0  # DL83: the doctor warns when POOL_MEM over the agent count is below this
 
 
 def cap_mem_cpus(cpus, mem_gib):
@@ -1230,6 +1231,7 @@ def doctor_checks(root=None, probe=None):
         has_cap = 'POOL_CPUS=' in env and 'POOL_MEM=' in env
         add('cap', 'ok' if has_cap else 'fail', 'cap set in .env' if has_cap else '.env has no POOL_CPUS and POOL_MEM')
         env_vals = dict(l.split('=', 1) for l in env.splitlines() if '=' in l and not l.startswith('#'))
+        mem_g = None
         try:
             mem_g = float(str(env_vals.get('POOL_MEM', '')).strip().rstrip('gG'))
             cpu_n = float(str(env_vals.get('POOL_CPUS', '')).strip())
@@ -1242,6 +1244,14 @@ def doctor_checks(root=None, probe=None):
                 ('POOL_MEM %sg over POOL_CPUS %s is %.1f GiB per CPU, under %.1f. Run the setup again to resize the pool.'
                  % (env_vals['POOL_MEM'].strip().rstrip('gG'), env_vals['POOL_CPUS'].strip(), ratio, WARN_GIB_PER_CPU)) if low
                 else '%.1f GiB per CPU' % ratio)
+        per_agent = mem_g / len(agents) if (mem_g is not None and agents) else None
+        if per_agent is not None:
+            low = per_agent < WARN_GIB_PER_AGENT
+            add('mem-per-agent', 'warn' if low else 'ok',
+                ('POOL_MEM %sg over %d agents is %.1f GiB each, under %.0f. Raise POOL_MEM by running the setup again on a host '
+                 'with room, or use fewer agents per pool.' % (env_vals['POOL_MEM'].strip().rstrip('gG'), len(agents), per_agent,
+                                                              WARN_GIB_PER_AGENT)) if low
+                else '%.1f GiB per agent' % per_agent)
         if agents is None:
             add('users', 'fail', 'agents.json is unreadable')
         else:
