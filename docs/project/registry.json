@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-06T00:51+00:00",
+  "updated": "2026-11-06T01:03+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1785,6 +1785,30 @@
       "changed": "2026-11-06T00:51+00:00",
       "rides": "DL78",
       "started": "2026-11-06T00:27+00:00"
+    },
+    {
+      "id": "DL80",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "RELEASE: pool hooks use the image python",
+      "detail": "Urgent: join, CI and merge for DL81 (pool hooks call /usr/bin/python3, clear job python env), luismc-delivery 1.8.1. A production hotfix's required check fails on it.",
+      "expected": "06 Nov",
+      "changed": "2026-11-06T01:03+00:00",
+      "release": 55,
+      "started": "2026-11-06T00:57+00:00"
+    },
+    {
+      "id": "DL81",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Pool hooks call /usr/bin/python3 with job python env cleared (bug 15)",
+      "detail": "actions/setup-python puts its toolcache python3 first on PATH; the job-completed hook ran bare python3 without its LD_LIBRARY_PATH and failed (libpython3.13.so.1.0 missing, exit 127), failing green jobs. Hooks and pool-add/remove-agent now call the image's /usr/bin/python3 with the job's python variables cleared.",
+      "expected": "06 Nov",
+      "changed": "2026-11-06T01:03+00:00",
+      "rides": "DL80",
+      "started": "2026-11-06T00:57+00:00"
     },
     {
       "id": "DS1",
