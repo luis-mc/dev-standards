@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.10.0
+version: 0.11.0
 owner: agents
 type: reference
 code:
@@ -70,6 +70,8 @@ flowchart LR
 
 **R5.2** — The ledger `.delivery/ledger.json` is written only through `delivery_ledger.py`. The write is atomic, runs under a lock and carries `schema: 1`. Hooks never edit it by hand.
 
+The ledger lives in the main checkout. A command or hook run from a git worktree finds it there, because a `.delivery/` folder counts only when it holds `config.json` or `ledger.json`. `delivery_ledger.py link --pr N` links a PR to its train by hand when a record was missed.
+
 **R5.3** — The PostToolUse recorder fills the ledger from tool calls (agents, installs, publishes, questions, the owner's prompt time).
 
 **R5.4** — The Stop hook blocks a turn end for each open finding. The same finding blocks at most `enforcement.block_ceiling` times (default 3), and at most `stop_repeat_limit` turns with no ledger change. After that, the hook prints one notice. In `warn` mode it blocks nothing.
@@ -93,6 +95,12 @@ flowchart LR
 **R5.13** — Shared scripts (generated into a product): `branch_gate.py` runs the gate and writes `gate-result.json`; `gate_verify.py` trusts a result only for the same head and base; `join.py` merges trusted branches and runs the quick check; `ci_watch.py` watches the runs of one head; `cleanup.py` removes merged branches; `train_freeze.py` refuses pushes to a train in CI. Exit codes are shared: 0 pass, 1 failed or untrusted, 2 usage, 3 join conflict, 4 timed out.
 
 **R5.14** — A branch that changes UI code or e2e specs runs the e2e specs of the screens it changed before it is done (DL-86). `branch_gate.py` records them in `gate-result.json` (`e2e`), `branch_gate.py --e2e-only` does it alone for an agent on the CI-gate path, `gate_verify.py` and `agent_ci.py` refuse a UI branch without a passing record for the head (DL-87), `e2e_push_check.py` in the pre-push hook refuses a push of changed e2e specs that were not run and passed (DL-88), and the launch check requires the brief to say so (DL-89).
+
+The TS template's e2e step downloads Chromium unless `E2E_CHROMIUM_PATH` points at an existing executable (DL89). `agent_setup.sh` sets it for the session when a sandbox has a Chromium preinstalled under `/opt/pw-browsers`. A project that wants this sets the path in `playwright.config`:
+
+```ts
+use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefined } },
+```
 
 ## 6. Non-functional requirements
 
@@ -367,6 +375,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.11.0 | 2026-11-06 | RELEASE-58 | The e2e step skips the Chromium download when E2E_CHROMIUM_PATH points at an existing browser; agent setup sets it when a sandbox has one preinstalled under /opt/pw-browsers.<br>The ledger lives in the main checkout and is found from a git worktree; delivery_ledger.py link --pr N links a PR to its train by hand. | DL89, DL90 |
 | 0.10.0 | 2026-11-06 | RELEASE-57 | The runner pool image installs gh from a pinned, SHA-256-checked tarball; pool-check verifies it.<br>Pool agents get their own temp folder; the job hooks clean it and the job user's /tmp entries at job start and end (Temp files paragraph). | DL86, DL87 |
 | 0.9.0 | 2026-11-06 | RELEASE-56 | CI_MAX_PARALLEL is the pool's CPU cap divided by its agents; the doctor warns when POOL_MEM per agent is under 4 GiB.<br>Shared runner pool: jobs get their database through the pool-db-env step (db.env now has PG* values), an opt-in --db-createdb flag, per-database CONNECT isolation, and a rerun of pool-add-agent refreshes db.env for existing agents without changing the password. | DL83, DL84 |
 | 0.8.1 | 2026-11-06 | RELEASE-55 | Pool hooks run /usr/bin/python3 with the job's python variables cleared, so setup-python jobs no longer fail at Complete runner. | DL81 |

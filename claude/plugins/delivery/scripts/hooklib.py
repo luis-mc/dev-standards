@@ -96,6 +96,15 @@ def find_root(data):
     project did not opt in."""
     cwd = data.get('cwd') if isinstance(data.get('cwd'), str) else None
     d = os.path.abspath(cwd if cwd and os.path.isdir(cwd) else os.getcwd())
+    # DL90: the same lookup as the ledger, so a hook run from a release worktree (whose .delivery/ holds only
+    # gate results) reaches the main checkout's ledger. The plain walk below stays as the fallback.
+    try:
+        import delivery_ledger as _L
+        found = _L.find_root(d)
+        if found is not None and os.path.isdir(os.path.join(str(found), '.delivery')):
+            return str(found)
+    except Exception:
+        pass
     while True:
         if os.path.isdir(os.path.join(d, '.delivery')):
             return d
