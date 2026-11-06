@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-06T09:29+00:00",
+  "updated": "2026-11-06T09:32+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1889,9 +1889,9 @@
       "status": "To do",
       "item": "RELEASE-58: e2e gate uses a preinstalled Chromium",
       "detail": "Join DL89, fold notes (luismc-delivery 1.11.0), PR, CI, merge, install, message moobable.",
-      "expected": "06 Nov ~10:45",
-      "changed": "2026-11-06T09:28+00:00",
-      "expected_basis": "agent due ~10:15, join+CI ~25 min",
+      "expected": "06 Nov ~10:50",
+      "changed": "2026-11-06T09:32+00:00",
+      "expected_basis": "agents due ~10:20, join+CI ~25 min",
       "release": 58
     },
     {
@@ -1906,6 +1906,19 @@
       "expected_basis": "cloud agent, setup 5 + work 25 + checks 15",
       "rides": "DL88",
       "started": "2026-11-06T09:29+00:00"
+    },
+    {
+      "id": "DL90",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "DL90: ledger found from a worktree; delivery_ledger link fallback (bug 20)",
+      "detail": "find_root resolves a git worktree to its main checkout and ignores a .delivery folder without config or ledger (the gate writes gate-result.json in worktrees), so hook records from worktrees reach the main ledger. New: delivery_ledger.py link --pr N [--sha S].",
+      "expected": "06 Nov ~10:20",
+      "changed": "2026-11-06T09:32+00:00",
+      "expected_basis": "cloud agent, setup 5 + work 25 + checks 15",
+      "rides": "DL88",
+      "started": "2026-11-06T09:32+00:00"
     },
     {
       "id": "DS1",
