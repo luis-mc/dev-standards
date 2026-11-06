@@ -79,6 +79,43 @@ def ensure_user(agent, base, run=None, exists=_user_exists, group_exists=_group_
         log('could not create user %s (exit %s)' % (user, rc))
     return rc in (0, None)
 
+TMP_KEYS = ('TMPDIR', 'TMP', 'TEMP')
+
+
+def ensure_agent_tmp(folder, user, run):
+    """DL87 (same as pool_agents.ensure_agent_tmp): the agent's own temp folder (mode 0700) and TMPDIR, TMP, TEMP in its .env. Adds only missing lines."""
+    tmp = os.path.join(folder, 'tmp')
+    os.makedirs(tmp, mode=0o700, exist_ok=True)
+    run(['chown', '%s:%s' % (user, user), tmp])
+    run(['chmod', '0700', tmp])
+    path = os.path.join(folder, '.env')
+    try:
+        with open(path, encoding='utf-8') as f:
+            text = f.read()
+    except OSError:
+        text = ''
+    have = {line.split('=', 1)[0] for line in text.splitlines() if '=' in line}
+    add = ''.join('%s=%s\n' % (k, tmp) for k in TMP_KEYS if k not in have)
+    if add:
+        if text and not text.endswith('\n'):
+            text += '\n'
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(text + add)
+        run(['chown', '%s:%s' % (user, user), path])
+
+
+def prepare_tmp(agent, base, run=None, log=_log):
+    """DL87: before a runner starts, its temp folder and .env lines are in place. Returns False if the folder is missing."""
+    folder = os.path.join(base, agent['slug'])
+    if not os.path.isdir(folder):
+        return True  # ensure_user already logged a missing folder
+    run = run or (lambda argv: subprocess.run(argv, check=False))
+    try:
+        ensure_agent_tmp(folder, agent['user'], run)
+    except OSError as exc:
+        log('could not prepare temp folder for %s: %s' % (agent['user'], exc))
+    return True
+
 
 def per_agent_parallel(environ, n_agents):
     """DL83: the pool's CPU count divided by its agents, at least 1. Jobs size their workers from it."""
@@ -181,7 +218,7 @@ def main(argv=None):
     args = ap.parse_args(argv)
     for agent in load_agents(args.agents):
         ensure_user(agent, args.base)
-    sup = Supervisor(args.agents, args.base, ensure=lambda a: ensure_user(a, args.base))
+    sup = Supervisor(args.agents, args.base, ensure=lambda a: ensure_user(a, args.base) and prepare_tmp(a, args.base))
     done = []
     signal.signal(signal.SIGTERM, lambda *_: done.append(1))
     signal.signal(signal.SIGINT, lambda *_: done.append(1))
