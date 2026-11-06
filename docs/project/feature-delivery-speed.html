@@ -888,12 +888,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-06T01:03+00:00">06 Nov 01:03</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-06T02:08+00:00">06 Nov 02:08</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">06 Nov 01:03</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
+</details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL83"><span class="task-id">DL83</span>Pool: CI_MAX_PARALLEL split across agents; doctor warns on memory per agent <span class="glance-expected">06 Nov ~02:48</span><span class="glance-basis">cloud agent started 02:08, setup 5 + work 25 + checks 10</span></li>
+</ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">24 tasks</span></summary>
 <ul>
@@ -909,8 +914,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">81</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">81</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">2 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL83"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL83</span>Pool: CI_MAX_PARALLEL split across agents; doctor warns on memory per agent<span class="release-line"><span class="release-name">RELEASE-56</span></span></td><td data-label="Detail">Bug 16: two agents&#x27; jobs each assume the whole POOL_CPUS/POOL_MEM and test workers get OOM-killed. The supervisor gives each agent CI_MAX_PARALLEL = max(1, POOL_CPUS_INT // agents); the doctor warns when POOL_MEM per agent is under 4 GiB. Decision D103.</td><td data-label="Expected">06 Nov ~02:48<span class="expected-basis">cloud agent started 02:08, setup 5 + work 25 + checks 10</span></td></tr>
+<tr data-task="DL82"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL82</span><span class="release-name">RELEASE-56</span>RELEASE: pool parallelism per agent</td><td data-label="Detail">Join, CI and merge for DL83 (CI_MAX_PARALLEL split across agents, doctor memory-per-agent warning), luismc-delivery 1.8.2.</td><td data-label="Expected">06 Nov ~03:00<span class="expected-basis">DL83 agent to ~02:48, join 5, CI 5, merge</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">81 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL80"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL80</span><span class="release-name">RELEASE-55</span>RELEASE: pool hooks use the image python</td><td data-label="Detail">Urgent: join, CI and merge for DL81 (pool hooks call /usr/bin/python3, clear job python env), luismc-delivery 1.8.1. A production hotfix&#x27;s required check fails on it.</td><td data-label="Expected">06 Nov</td></tr>
@@ -1029,6 +1040,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D103">
+<h3 class="decision-head"><span class="decision-id">D103</span> <span class="decision-question">Bug 16: two agents in one pool each run jobs sized for the whole pool, so test workers are OOM-killed. How should parallelism be shared?</span></h3>
+<p class="decision-meta">Asked 06 Nov · Decided 06 Nov · Task DL83</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Split the hint per agent + doctor warning</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 06 Nov</span></div>
+<p class="decision-summary">The supervisor starts each agent with CI_MAX_PARALLEL = max(1, POOL_CPUS_INT // number of agents); the doctor warns when POOL_MEM per agent is under 4 GiB and says to raise POOL_MEM or use fewer agents.</p>
+<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning).&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Load gate admits one heavy job at a time</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">runner_load_gate holds a second job until the first ends; safest for memory, but halves throughput and needs a notion of heavy.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Raise POOL_MEM per agent automatically</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Size memory by agents; can exceed the host ceiling.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D102">
 <h3 class="decision-head"><span class="decision-id">D102</span> <span class="decision-question">Bug 14: the pool gets 19 CPUs but 8 GB (0.4 GB per CPU) and nproc shows all host cores, so parallel test runners are OOM-killed. How should the pool size and expose CPUs?</span></h3>
 <p class="decision-meta">Asked 06 Nov · Decided 06 Nov · Task DL79</p>

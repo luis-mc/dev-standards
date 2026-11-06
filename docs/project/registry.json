@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-06T01:03+00:00",
+  "updated": "2026-11-06T02:08+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1809,6 +1809,31 @@
       "changed": "2026-11-06T01:03+00:00",
       "rides": "DL80",
       "started": "2026-11-06T00:57+00:00"
+    },
+    {
+      "id": "DL82",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE: pool parallelism per agent",
+      "detail": "Join, CI and merge for DL83 (CI_MAX_PARALLEL split across agents, doctor memory-per-agent warning), luismc-delivery 1.8.2.",
+      "expected": "06 Nov ~03:00",
+      "changed": "2026-11-06T02:08+00:00",
+      "expected_basis": "DL83 agent to ~02:48, join 5, CI 5, merge",
+      "release": 56
+    },
+    {
+      "id": "DL83",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Pool: CI_MAX_PARALLEL split across agents; doctor warns on memory per agent",
+      "detail": "Bug 16: two agents' jobs each assume the whole POOL_CPUS/POOL_MEM and test workers get OOM-killed. The supervisor gives each agent CI_MAX_PARALLEL = max(1, POOL_CPUS_INT // agents); the doctor warns when POOL_MEM per agent is under 4 GiB. Decision D103.",
+      "expected": "06 Nov ~02:48",
+      "changed": "2026-11-06T02:08+00:00",
+      "expected_basis": "cloud agent started 02:08, setup 5 + work 25 + checks 10",
+      "rides": "DL82",
+      "started": "2026-11-06T02:08+00:00"
     },
     {
       "id": "DS1",

@@ -2329,6 +2329,31 @@
       "decided": "2026-11-06",
       "task": "DL79",
       "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning)."
+    },
+    {
+      "id": "D103",
+      "question": "Bug 16: two agents in one pool each run jobs sized for the whole pool, so test workers are OOM-killed. How should parallelism be shared?",
+      "asked": "2026-11-06",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Split the hint per agent + doctor warning",
+          "summary": "The supervisor starts each agent with CI_MAX_PARALLEL = max(1, POOL_CPUS_INT // number of agents); the doctor warns when POOL_MEM per agent is under 4 GiB and says to raise POOL_MEM or use fewer agents.",
+          "recommended": true
+        },
+        {
+          "label": "Load gate admits one heavy job at a time",
+          "summary": "runner_load_gate holds a second job until the first ends; safest for memory, but halves throughput and needs a notion of heavy."
+        },
+        {
+          "label": "Raise POOL_MEM per agent automatically",
+          "summary": "Size memory by agents; can exceed the host ceiling."
+        }
+      ],
+      "chosen": "Split the hint per agent + doctor warning",
+      "decided": "2026-11-06",
+      "task": "DL83",
+      "owner_words": "Chosen by Claude overnight under the owner's standing rule (designs: take the recommended option, record it, review in the morning)."
     }
   ]
 }
