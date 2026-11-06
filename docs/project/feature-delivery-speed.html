@@ -889,7 +889,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
 <p class="last-update">Last update: <time datetime="2026-11-06T00:06+00:00">06 Nov 00:06</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">06 Nov 00:04</a> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">06 Nov 00:07</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
@@ -1035,6 +1035,21 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D101">
+<h3 class="decision-head"><span class="decision-id">D101</span> <span class="decision-question">pool-check.yml is workflow_dispatch only, so it cannot run before it reaches the default branch. How should a repo moving to the pool run it first?</span></h3>
+<p class="decision-meta">Asked 06 Nov · Decided 06 Nov · Task DL77</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Push trigger on its own path</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 06 Nov</span></div>
+<p class="decision-summary">Keep workflow_dispatch and add push with paths: .github/workflows/pool-check.yml, so pushing a branch that adds it runs the check there.</p>
+<blockquote class="decision-words">&ldquo;Chosen by Claude overnight under the owner&#x27;s standing rule (designs: take the recommended option, record it, review in the morning).&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Note only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Tell owners to use their first CI run on the pool as the check.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D100">
 <h3 class="decision-head"><span class="decision-id">D100</span> <span class="decision-question">Bug 13: the pool image fails to build with browsers: chromium because Ubuntu 24.04&#x27;s Node 18 is too old for Playwright 1.62. How should the image get Node for install-deps?</span></h3>
 <p class="decision-meta">Asked 05 Nov · Decided 05 Nov · Task DL76</p>
