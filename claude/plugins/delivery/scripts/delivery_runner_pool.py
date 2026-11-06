@@ -361,6 +361,17 @@ def docker_ncpu(probe):
     return procs or probe.cpu_count()
 
 
+MIN_GIB_PER_CPU = 1.5  # DL79: a pool CPU gets at least this much memory (hosted runners have about 4 GiB per core)
+WARN_GIB_PER_CPU = 1.0  # the doctor warns below this
+
+
+def cap_mem_cpus(cpus, mem_gib):
+    """DL79: the CPU cap never exceeds floor(memory / MIN_GIB_PER_CPU), and never goes below 1."""
+    if mem_gib is None:
+        return cpus
+    return max(1, min(cpus, math.floor(mem_gib / MIN_GIB_PER_CPU)))
+
+
 def cap_cpus(requested, ncpu):
     """Docker refuses a CPU limit equal to the CPUs it sees, so the cap stays at NCPU - 1 (never below 1)."""
     if not ncpu:
@@ -388,12 +399,14 @@ def sizing(total_gib, used_gib, cpus, docker_gib=None, largest_shard_gib=None, s
         procs = int(math.floor(cpu)) + 1
     procs = max(1, min(procs, host_cpus))
     cpu = cap_cpus(cpu, docker_cpus)
+    cpu = cap_mem_cpus(cpu, mem)
     wsl_mem = int(math.ceil(mem + sidecar_gib + vm_gib))
     if others_run:
         if wsl_current is not None:
             wsl_mem = max(wsl_mem, int(math.ceil(wsl_current)))
         wsl_mem = max(wsl_mem, int(math.ceil(other_gib + mem + sidecar_gib + vm_gib)))
     out = {'mem_gib': mem, 'cpus': cpu, 'memory_room_gib': round(room, 1), 'ok': True, 'message': '',
+           'cpus_text': 'cpus %g (%g GiB at %g GiB per CPU)' % (cpu, mem, MIN_GIB_PER_CPU),
            'wsl': {'memory': wsl_mem, 'processors': procs}}
     if mem <= 0:
         out.update(ok=False, message='No memory is left for the pool (room %.1f GiB). Close other programs or raise the '
@@ -750,9 +763,10 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
         pw, pw_source = resolve_playwright(probe or Probe(), browsers, playwright_version, repo_paths or ([repo_path] if repo_path else []))
         pw_text = ' Playwright %s (%s).' % (pw, pw_source) if pw else ''
         steps.append(_step('pool-files', 'Write the pool files for "%s" (compose, agents.json, .env: POOL_MEM %s -> %sg, '
-                           'POOL_CPUS %s -> %s, POOL_BROWSERS %s). %s%s' % (
+                           'POOL_CPUS %s -> %s, POOL_CPUSET, POOL_CPUS_INT, POOL_BROWSERS %s). %s%s%s' % (
                                pool, old.get('POOL_MEM') or 'unset', (cap or {}).get('mem_gib', 4),
-                               old.get('POOL_CPUS') or 'unset', (cap or {}).get('cpus', 1), browsers, browsers_note(browsers), pw_text),
+                               old.get('POOL_CPUS') or 'unset', (cap or {}).get('cpus', 1), browsers, browsers_note(browsers), pw_text,
+                               (' ' + cap['cpus_text'] + '.') if (cap or {}).get('cpus_text') else ''),
                            'pool-files', pool=pool, cap=cap, browsers=browsers, playwright_version=pw))
         steps.append(_step('pool-up', 'Build and start the pool container', 'pool-up', pool=pool))
         for repo in keep_l:
@@ -919,7 +933,9 @@ def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None, 
         src = os.path.join(copy_from or HERE, name)
         if os.path.isfile(src):
             copy_lf(src, os.path.join(deliv, name))
+    n_cpus = max(1, int(math.floor((cap or {}).get('cpus', 1))))
     with open(os.path.join(dest, '.env'), 'w', encoding='utf-8') as f:
+        f.write('POOL_CPUSET=0-%d\nPOOL_CPUS_INT=%d\n' % (n_cpus - 1, n_cpus))
         f.write('POOL_NAME=%s\nPOOL_CPUS=%s\nPOOL_MEM=%sg\nMACHINE_DIR=%s\nRUNNER_VERSION=%s\nPOOL_BROWSERS=%s\nPLAYWRIGHT_VERSION=%s\n' % (
             pool, (cap or {}).get('cpus', 1), (cap or {}).get('mem_gib', 4), os.path.dirname(os.path.dirname(dest)),
             runner_version or RUNNER_VERSION, browsers if browsers in BROWSERS else 'none',
@@ -1024,6 +1040,7 @@ class Executor:
         cap = dict(step.get('cap') or {})
         if cap.get('cpus') is not None:
             cap['cpus'] = cap_cpus(cap['cpus'], docker_ncpu(self.probe))
+            cap['cpus'] = cap_mem_cpus(cap['cpus'], cap.get('mem_gib'))
         dest = write_pool_files(step['pool'], cap, runner_version=version, browsers=step.get('browsers') or 'none',
                                 playwright_version=step.get('playwright_version'))
         text = 'wrote %s (runner %s, %s)' % (dest, version, source)
@@ -1212,6 +1229,19 @@ def doctor_checks(root=None, probe=None):
             'the Docker socket is mounted in the pool' if 'docker.sock' in compose else 'no Docker socket in the pool')
         has_cap = 'POOL_CPUS=' in env and 'POOL_MEM=' in env
         add('cap', 'ok' if has_cap else 'fail', 'cap set in .env' if has_cap else '.env has no POOL_CPUS and POOL_MEM')
+        env_vals = dict(l.split('=', 1) for l in env.splitlines() if '=' in l and not l.startswith('#'))
+        try:
+            mem_g = float(str(env_vals.get('POOL_MEM', '')).strip().rstrip('gG'))
+            cpu_n = float(str(env_vals.get('POOL_CPUS', '')).strip())
+            ratio = mem_g / cpu_n
+        except (ValueError, ZeroDivisionError):
+            ratio = None
+        if ratio is not None:
+            low = ratio < WARN_GIB_PER_CPU
+            add('mem-per-cpu', 'warn' if low else 'ok',
+                ('POOL_MEM %sg over POOL_CPUS %s is %.1f GiB per CPU, under %.1f. Run the setup again to resize the pool.'
+                 % (env_vals['POOL_MEM'].strip().rstrip('gG'), env_vals['POOL_CPUS'].strip(), ratio, WARN_GIB_PER_CPU)) if low
+                else '%.1f GiB per CPU' % ratio)
         if agents is None:
             add('users', 'fail', 'agents.json is unreadable')
         else:
