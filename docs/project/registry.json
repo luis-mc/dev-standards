@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-06T07:11+00:00",
+  "updated": "2026-11-06T09:29+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1881,6 +1881,31 @@
       "changed": "2026-11-06T07:11+00:00",
       "rides": "DL85",
       "started": "2026-11-06T07:01+00:00"
+    },
+    {
+      "id": "DL88",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-58: e2e gate uses a preinstalled Chromium",
+      "detail": "Join DL89, fold notes (luismc-delivery 1.11.0), PR, CI, merge, install, message moobable.",
+      "expected": "06 Nov ~10:45",
+      "changed": "2026-11-06T09:28+00:00",
+      "expected_basis": "agent due ~10:15, join+CI ~25 min",
+      "release": 58
+    },
+    {
+      "id": "DL89",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "DL89: e2e gate skips the Chromium download when one is preinstalled",
+      "detail": "gate.json e2e run/run_full skip playwright install when E2E_CHROMIUM_PATH is an existing file; agent_setup.sh finds a preinstalled Chromium and writes E2E_CHROMIUM_PATH to the session env file. D107.",
+      "expected": "06 Nov ~10:15",
+      "changed": "2026-11-06T09:29+00:00",
+      "expected_basis": "cloud agent, setup 5 + work 25 + checks 15",
+      "rides": "DL88",
+      "started": "2026-11-06T09:29+00:00"
     },
     {
       "id": "DS1",

@@ -888,14 +888,19 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-06T07:11+00:00">06 Nov 07:11</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-06T09:29+00:00">06 Nov 09:29</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">06 Nov 09:27</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">30 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL89"><span class="task-id">DL89</span>DL89: e2e gate skips the Chromium download when one is preinstalled <span class="glance-expected">06 Nov ~10:15</span><span class="glance-basis">cloud agent, setup 5 + work 25 + checks 15</span></li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">28 tasks</span></summary>
 <ul>
 <li data-glance-task="DL85"><span class="task-id">DL85</span><span class="release-name">RELEASE-57</span>pool gh and per-job tmp</li>
 <li data-glance-task="DL86"><span class="task-id">DL86</span>DL86: gh CLI in the pool image (bug 17)</li>
@@ -905,12 +910,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL84"><span class="task-id">DL84</span>Pool DB: PG* vars in db.env, pool-db-env helper, opt-in CREATEDB</li>
 <li data-glance-task="DL80"><span class="task-id">DL80</span><span class="release-name">RELEASE-55</span>RELEASE: pool hooks use the image python</li>
 <li data-glance-task="DL81"><span class="task-id">DL81</span>Pool hooks call /usr/bin/python3 with job python env cleared (bug 15)</li>
-<li class="glance-more">and 22 more</li>
+<li class="glance-more">and 20 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">87</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">87</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">2 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL89"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL89</span>DL89: e2e gate skips the Chromium download when one is preinstalled<span class="release-line"><span class="release-name">RELEASE-58</span></span></td><td data-label="Detail">gate.json e2e run/run_full skip playwright install when E2E_CHROMIUM_PATH is an existing file; agent_setup.sh finds a preinstalled Chromium and writes E2E_CHROMIUM_PATH to the session env file. D107.</td><td data-label="Expected">06 Nov ~10:15<span class="expected-basis">cloud agent, setup 5 + work 25 + checks 15</span></td></tr>
+<tr data-task="DL88"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL88</span><span class="release-name">RELEASE-58</span>e2e gate uses a preinstalled Chromium</td><td data-label="Detail">Join DL89, fold notes (luismc-delivery 1.11.0), PR, CI, merge, install, message moobable.</td><td data-label="Expected">06 Nov ~10:45<span class="expected-basis">agent due ~10:15, join+CI ~25 min</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">87 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL85"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL85</span><span class="release-name">RELEASE-57</span>pool gh and per-job tmp</td><td data-label="Detail">Join DL86 and DL87, fold notes (luismc-delivery 1.10.0), PR, CI, merge, install, message moobable.</td><td data-label="Expected">06 Nov</td></tr>
@@ -1035,6 +1046,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D107">
+<h3 class="decision-head"><span class="decision-id">D107</span> <span class="decision-question">Bug 19: the TS e2e gate step always downloads Chromium, which cloud sandboxes block. How should the template skip the download?</span></h3>
+<p class="decision-meta">Asked 06 Nov · Decided 06 Nov · Task DL89</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Guard + setup detect</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 06 Nov</span></div>
+<p class="decision-summary">gate.json skips the install when E2E_CHROMIUM_PATH points at an existing browser; agent_setup.sh detects a preinstalled Chromium and writes E2E_CHROMIUM_PATH to the session env file.</p>
+<blockquote class="decision-words">&ldquo;Guard + setup detect (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Template guard only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Only the gate.json guard; each project or sandbox sets E2E_CHROMIUM_PATH itself.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Gate script decides</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">branch_gate.py drops the install step when a browser is found; hides a step the gate file shows.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D106">
 <h3 class="decision-head"><span class="decision-id">D106</span> <span class="decision-question">Bug 18: pool jobs share one /tmp, so a previous job&#x27;s leftovers (for example /tmp/gitleaks.tmp) break the next job. Some actions hard-code /tmp. What should the pool do?</span></h3>
 <p class="decision-meta">Asked 06 Nov · Decided 06 Nov · Task DL87</p>

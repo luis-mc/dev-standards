@@ -2425,6 +2425,31 @@
       "decided": "2026-11-06",
       "task": "DL87",
       "owner_words": "TMPDIR + clean user's /tmp (Recommended)"
+    },
+    {
+      "id": "D107",
+      "question": "Bug 19: the TS e2e gate step always downloads Chromium, which cloud sandboxes block. How should the template skip the download?",
+      "asked": "2026-11-06",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Guard + setup detect",
+          "summary": "gate.json skips the install when E2E_CHROMIUM_PATH points at an existing browser; agent_setup.sh detects a preinstalled Chromium and writes E2E_CHROMIUM_PATH to the session env file.",
+          "recommended": true
+        },
+        {
+          "label": "Template guard only",
+          "summary": "Only the gate.json guard; each project or sandbox sets E2E_CHROMIUM_PATH itself."
+        },
+        {
+          "label": "Gate script decides",
+          "summary": "branch_gate.py drops the install step when a browser is found; hides a step the gate file shows."
+        }
+      ],
+      "chosen": "Guard + setup detect",
+      "decided": "2026-11-06",
+      "task": "DL89",
+      "owner_words": "Guard + setup detect (Recommended)"
     }
   ]
 }
