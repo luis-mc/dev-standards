@@ -1191,7 +1191,8 @@ double-click.
   each group omitted when empty:
   1. one group per open release (R5.42), ordered by Expected, ties by number,
      headed `RELEASE-<n> · live ~HH:MM` (the Expected's time; `live DD Mon` when
-     it has no time), with ` · worst ~HH:MM` added when the release has a risk;
+     it has no time; `not scheduled` when it has no Expected and no timed
+     phases), with ` · worst ~HH:MM` added when the release has a risk;
      its rows are the release row first, then every task riding it in the order
      of R6.2 (Running, Waiting, To do, Needs you, Failed, On hold, Built, Live),
      ties by ID;
