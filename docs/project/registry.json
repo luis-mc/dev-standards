@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-06T10:29+00:00",
+  "updated": "2026-11-07T00:16+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -595,6 +595,26 @@
       "changed": "2026-11-04T23:59+00:00",
       "rides": "DL50",
       "started": "2026-11-04T23:29+00:00"
+    },
+    {
+      "id": "AR60",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "Stop hook leaves state temp files behind",
+      "detail": "write_state in hook_after_command.py leaves .claude/artifacts-stop-state.json.<pid>.tmp when os.replace fails (Windows: target held by a concurrent hook). Remove the temp file on failure, sweep stale ones, delete the current files. Decision D19.",
+      "expected": "07 Nov",
+      "changed": "2026-11-07T00:16+00:00"
+    },
+    {
+      "id": "AR61",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "Hourly Full Progress fail-safe only while work is open",
+      "detail": "hook_end_of_turn.py freshness(): ask for the hourly publish (R9.8) only while a task is Running, Waiting or Needs you; update R9.8 in artifactspec and publish_hourly.py to match. Decision D20.",
+      "expected": "07 Nov",
+      "changed": "2026-11-07T00:16+00:00"
     },
     {
       "id": "DL1",

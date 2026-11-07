@@ -415,6 +415,48 @@
       ],
       "chosen": "Write files only, never commit or push",
       "decided": "2026-10-12"
+    },
+    {
+      "id": "D19",
+      "question": "The artifacts stop hook leaves .claude/artifacts-stop-state.json.<pid>.tmp files behind when a state write is interrupted. What should we do?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Fix and ship",
+          "summary": "write_state removes its temp file on failure and sweeps stale ones; patch release of luismc-artifacts; delete the current files.",
+          "recommended": true
+        },
+        {
+          "label": "Delete files only",
+          "summary": "Delete the current files; no plugin change."
+        },
+        {
+          "label": "Gitignore them",
+          "summary": "Add .claude/*.tmp to .gitignore; no plugin change."
+        }
+      ],
+      "chosen": "Fix and ship",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D20",
+      "question": "The end-of-turn hook asks for an hourly Full Progress publish even when no work is open. Should the hourly fail-safe (R9.8) apply only while work is open?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Only while work open",
+          "summary": "The hourly fail-safe applies only while a task is Running, Waiting or Needs you; patch release of luismc-artifacts.",
+          "recommended": true
+        },
+        {
+          "label": "Keep hourly always",
+          "summary": "No change; the page always shows a fresh time."
+        }
+      ],
+      "chosen": "Only while work open",
+      "decided": "2026-11-07"
     }
   ]
 }

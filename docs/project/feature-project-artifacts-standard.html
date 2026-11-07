@@ -888,26 +888,22 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-05T16:16+00:00">05 Nov 16:16</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-07T00:16+00:00">07 Nov 00:16</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">06 Nov 23:27</a> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">6 tasks</span></summary>
-<ul>
-<li data-glance-task="AR59"><span class="task-id">AR59</span>Fix artifacts findings (DL48 F20-F27)</li>
-<li data-glance-task="AR56"><span class="task-id">AR56</span>--phase accepts a phase that crosses midnight</li>
-<li data-glance-task="AR57"><span class="task-id">AR57</span>--release takes an explicit number and corrects a stored one</li>
-<li data-glance-task="AR58"><span class="task-id">AR58</span>R5.45 advice: name the wrong side, Item or stored number</li>
-<li data-glance-task="AR55"><span class="task-id">AR55</span>set-task-status takes Expected from the last phase</li>
-<li data-glance-task="AR54"><span class="task-id">AR54</span>Full Progress: release label, chart header basis, axis label overlap</li>
-</ul>
-</details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">57</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">57</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">2 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="AR60"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">AR60</span>Stop hook leaves state temp files behind</td><td data-label="Detail">write_state in hook_after_command.py leaves .claude/artifacts-stop-state.json.&lt;pid&gt;.tmp when os.replace fails (Windows: target held by a concurrent hook). Remove the temp file on failure, sweep stale ones, delete the current files. Decision D19.</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="AR61"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">AR61</span>Hourly Full Progress fail-safe only while work is open</td><td data-label="Detail">hook_end_of_turn.py freshness(): ask for the hourly publish (R9.8) only while a task is Running, Waiting or Needs you; update R9.8 in artifactspec and publish_hourly.py to match. Decision D20.</td><td data-label="Expected">07 Nov</td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">57 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="AR59"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR59</span>Fix artifacts findings (DL48 F20-F27)<span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td data-label="Detail">Deferred publish honoured, queue writes, December dates, after-command events, catch-up, overdue.</td><td data-label="Expected">04 Nov</td></tr>
@@ -1136,6 +1132,38 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
 </section>
 <section id="s7"><h2><span class="section-number">&sect; 7</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D20">
+<h3 class="decision-head"><span class="decision-id">D20</span> <span class="decision-question">The end-of-turn hook asks for an hourly Full Progress publish even when no work is open. Should the hourly fail-safe (R9.8) apply only while work is open?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Only while work open</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">The hourly fail-safe applies only while a task is Running, Waiting or Needs you; patch release of luismc-artifacts.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep hourly always</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No change; the page always shows a fresh time.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D19">
+<h3 class="decision-head"><span class="decision-id">D19</span> <span class="decision-question">The artifacts stop hook leaves .claude/artifacts-stop-state.json.&lt;pid&gt;.tmp files behind when a state write is interrupted. What should we do?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Fix and ship</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">write_state removes its temp file on failure and sweeps stale ones; patch release of luismc-artifacts; delete the current files.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Delete files only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Delete the current files; no plugin change.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Gitignore them</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Add .claude/*.tmp to .gitignore; no plugin change.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D18">
 <h3 class="decision-head"><span class="decision-id">D18</span> <span class="decision-question">Does the plugin commit or push the record?</span></h3>
 <p class="decision-meta">Asked 12 Oct · Decided 12 Oct</p>
