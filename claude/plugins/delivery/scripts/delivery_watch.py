@@ -54,13 +54,18 @@ CI_RUNS_MIN_INTERVAL_S = 60
 RUN_FIELDS = "databaseId,status,conclusion,headSha,headBranch,event,workflowName"
 
 
+# DL109: on Windows a console child of a process with no visible console opens its own window; every gh and git
+# call the watcher makes would flash one. CREATE_NO_WINDOW keeps them hidden.
+NO_WINDOW = {"creationflags": 0x08000000} if os.name == "nt" else {}
+
+
 class Shell:
     """The one seam for gh and git. run(argv, cwd) -> (returncode, stdout, stderr)."""
 
     def run(self, argv: list[str], cwd=None, timeout: int = 120):
         try:
             p = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, encoding="utf-8",
-                               errors="replace", timeout=timeout)
+                               errors="replace", timeout=timeout, **NO_WINDOW)
             return p.returncode, p.stdout, p.stderr
         except (OSError, subprocess.SubprocessError) as exc:
             return 127, "", str(exc)
@@ -69,7 +74,7 @@ class Shell:
         """Start a long-running child without waiting; None when it cannot start."""
         try:
             return subprocess.Popen(argv, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                                    stderr=subprocess.DEVNULL)
+                                    stderr=subprocess.DEVNULL, **NO_WINDOW)
         except OSError:
             return None
 
@@ -911,6 +916,28 @@ def _stamp(led, train_id, state, now):
         L.add_event(led, "train.%s" % state, train_id, "delivery_watch")
 
 
+def live_peer(led, interval: float, now=None, pid=None, alive=None):
+    """DL109: another delivery_watch for this root that is still running: its pid is alive, its heartbeat is newer than
+    three intervals, and its plugin version is not older than ours. A second watcher then exits."""
+    import machine_slots as M
+    alive = alive or M.pid_alive
+    pid = pid or os.getpid()
+    now = now or L.utcnow()
+    mine = L.version_key(WATCHER_VERSION)
+    for w in led.get("watchers") or []:
+        other = w.get("pid")
+        if w.get("kind") != "delivery_watch" or not isinstance(other, int) or other == pid:
+            continue
+        beat = L.parse_iso(w.get("heartbeat_at"))
+        if beat is None or (now - beat).total_seconds() > 3 * interval:
+            continue
+        if mine and L.version_key(w.get("version")) < mine:
+            continue
+        if alive(other):
+            return w
+    return None
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--root", help="repository root (default: nearest with .delivery/)")
@@ -926,6 +953,11 @@ def main(argv=None) -> int:
     w = Watcher(root, dry_run=args.dry_run, repo=args.repo)
     interval = args.interval or float(w.cfg.get("watch_interval") or w.cfg.get("watcher_interval_s") or DEFAULT_INTERVAL)
     started = L.iso()
+    if not args.once and not args.dry_run:
+        peer = live_peer(L.load(root), interval)
+        if peer:
+            print("delivery_watch: pid %s already watches %s; this one exits" % (peer.get("pid"), root), file=sys.stderr)
+            return 0
     while True:
         w.run_once(started)
         if args.once:

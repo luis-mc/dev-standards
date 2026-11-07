@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.12.3
+version: 0.12.4
 owner: agents
 type: reference
 code:
@@ -109,6 +109,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 **R5.17** — Each watcher row records the plugin `version` it started with. SessionStart stops a watcher with an older version (or none) by its recorded pid, never by name, and starts the newest. A watcher of the same version is left running. (DL98)
 
 **R5.18** — A cloud `RemoteTrigger` create sets `"mcp_connections": []` and `"clear_mcp_connections": true`, or lists the connectors the brief needs. DL-93 refuses a create body with neither. (DL100)
+
+**R5.19** — On Windows the watcher opens no console windows. SessionStart starts it on a hidden console (`CREATE_NO_WINDOW`, never `DETACHED_PROCESS`), and each `gh` and `git` call it makes passes `CREATE_NO_WINDOW`. A watcher that finds another live watcher for the same root, with a heartbeat newer than three intervals and a version not older than its own, exits. (DL109)
 
 ## 6. Non-functional requirements
 
@@ -383,6 +385,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.12.4 | 2026-11-07 | RELEASE-65 | On Windows the watcher opens no console windows, and a second watcher for the same root exits (R5.19). | DL109 |
 | 0.12.3 | 2026-11-07 | RELEASE-63 | A failed gate setup step names two causes: a stale lockfile, or an install killed for memory (exit 137, first when the code is 137). | DL105 |
 | 0.12.2 | 2026-11-07 | RELEASE-62 | A pool setup rerun keeps the cap in the pool .env (--resize to change it) and never lowers .wslconfig; pool-refresh rewrites only the runner SHA and the browser settings, then rebuilds (D118). | DL103 |
 | 0.12.1 | 2026-11-07 | RELEASE-61 | Pool setup picks POOL_BROWSERS=chromium when a served repository uses Playwright; the doctor fails when such a repository meets POOL_BROWSERS=none or an image without the browser libraries (D117). | DL101 |
