@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-07T21:30+00:00",
+  "updated": "2026-11-07T21:32+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2307,9 +2307,9 @@
       "item": "Release the watcher window fix",
       "detail": "Branch, fold notes, CI, merge, install, smoke, cleanup for the hidden-window watcher fix",
       "expected": "07 Nov ~22:05",
-      "changed": "2026-11-07T21:30+00:00",
+      "changed": "2026-11-07T21:32+00:00",
       "expected_basis": "fix ~15 min, spec-lint CI ~8 min, merge and install ~5 min",
-      "release": 64,
+      "release": 65,
       "phases": [
         {
           "name": "join",
