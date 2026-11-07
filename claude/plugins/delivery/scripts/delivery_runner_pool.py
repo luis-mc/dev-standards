@@ -618,6 +618,52 @@ def resolve_playwright(probe, browsers, flag=None, repo_paths=None):
     return PLAYWRIGHT_VERSION, 'pinned'
 
 
+PW_CONFIG = re.compile(r'^playwright\.config\.[A-Za-z]+$')
+PW_PACKAGES = ('@playwright/test', 'playwright')
+WORKSPACE_DIRS = ('packages', 'apps')
+
+
+def _package_dirs(probe, path):
+    """The repository root and its workspace packages (one level under packages/ and apps/)."""
+    dirs = [path]
+    for top in WORKSPACE_DIRS:
+        for name in probe.listdir(os.path.join(path, top)) or []:
+            dirs.append(os.path.join(path, top, name))
+    return dirs
+
+
+def playwright_use(probe, repo_path):
+    """Why a local checkout counts as using Playwright (one short text), or None (DL101, D117)."""
+    for d in _package_dirs(probe, repo_path):
+        for name in probe.listdir(d) or []:
+            if PW_CONFIG.match(name):
+                return '%s found' % os.path.join(d, name).replace('\\', '/')
+        try:
+            pkg = json.loads(probe.read_text(os.path.join(d, 'package.json')) or '{}')
+        except ValueError:
+            pkg = {}
+        deps = {}
+        if isinstance(pkg, dict):
+            for key in ('dependencies', 'devDependencies'):
+                if isinstance(pkg.get(key), dict):
+                    deps.update(pkg[key])
+        for dep in PW_PACKAGES:
+            if dep in deps:
+                return '%s lists %s' % (os.path.join(d, 'package.json').replace('\\', '/'), dep)
+    return None
+
+
+def pick_browsers(probe, browsers, repo_paths):
+    """(browsers, one line saying why). An explicit choice wins. Otherwise chromium when any served repository uses Playwright."""
+    if browsers in BROWSERS:
+        return browsers, None
+    for path in repo_paths or []:
+        why = playwright_use(probe, path)
+        if why:
+            return 'chromium', 'POOL_BROWSERS set to chromium: %s (a repository served by this pool uses Playwright).' % why
+    return 'none', None
+
+
 def browsers_note(browsers):
     """One plain sentence for the plan: what the image holds for browsers."""
     if browsers == 'chromium':
@@ -674,7 +720,7 @@ def _wanted_windows(found, repo):
 
 
 def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, serial=None, limits=None, repo_path=None,
-         browsers='none', playwright_version=None, repo_paths=None, probe=None):
+         browsers=None, playwright_version=None, repo_paths=None, probe=None):
     """The steps, in the order of contract 6.3. A public repository gets no step; it is listed in `refused`.
 
     With no repositories given, they come from detect (`derive_repos`). With none derived either, the plan has no step
@@ -772,8 +818,12 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
                 steps.append(_step('wsl-restart', 'Restart WSL so the ceiling applies (only when no job runs; stops every container)',
                                    'wsl-restart'))
         old = found.get('pool_env') or {}
-        browsers = browsers if browsers in BROWSERS else 'none'
-        pw, pw_source = resolve_playwright(probe or Probe(), browsers, playwright_version, repo_paths or ([repo_path] if repo_path else []))
+        probe = probe or Probe()
+        paths = repo_paths or ([repo_path] if repo_path else [])
+        browsers, why = pick_browsers(probe, browsers, paths)
+        if why:
+            print(why)
+        pw, pw_source = resolve_playwright(probe, browsers, playwright_version, paths)
         pw_text = ' Playwright %s (%s).' % (pw, pw_source) if pw else ''
         steps.append(_step('pool-files', 'Write the pool files for "%s" (compose, agents.json, .env: POOL_MEM %s -> %sg, '
                            'POOL_CPUS %s -> %s, POOL_CPUSET, POOL_CPUS_INT, POOL_BROWSERS %s). %s%s%s' % (
@@ -1264,7 +1314,49 @@ def _pools_dir(root):
     return os.path.join(str(base), 'pools')
 
 
-def doctor_checks(root=None, probe=None):
+def _served_playwright(probe, agents, repo_paths):
+    """The names of served repositories that use Playwright. `repo_paths` are local checkouts; a checkout is named by the
+    agent repository whose name matches its folder, else by the folder name."""
+    names = [str(a.get('repo')) for a in agents or [] if a.get('repo')]
+    found = []
+    for path in repo_paths or []:
+        if playwright_use(probe, path):
+            base = os.path.basename(os.path.normpath(str(path)))
+            found.append(next((r for r in names if r.split('/')[-1] == base), base))
+    return found
+
+
+def _browser_checks(add, probe, pool, env_vals, agents, repo_paths):
+    """DL101 (D117): a Playwright repository needs the Chromium libraries in the pool image."""
+    users = _served_playwright(probe, agents, repo_paths)
+    if not users:
+        return
+    fix = 'Set POOL_BROWSERS=chromium in the pool .env, rebuild the image, recreate the pool.'
+    if (env_vals.get('POOL_BROWSERS') or 'none').strip() == 'none':
+        add('browsers', 'fail', '%s uses Playwright but the pool .env has POOL_BROWSERS=none, so browser tests fail with a missing '
+            'shared library. %s' % (', '.join(users), fix))
+        return
+    r = probe.sh(['docker', 'ps', '--filter', 'label=' + LABEL, '--format', '{{.Names}} {{.Image}}'])
+    image = None
+    if r is not None and r[0] == 0:
+        for line in (r[1] or '').splitlines():
+            name, _, img = line.partition(' ')
+            if name in (pool, 'pool-%s' % pool) and img.strip():
+                image = img.strip()
+    if image is None:
+        add('browser-libs', 'warn', 'docker cannot be read here, so the browser libraries in the image are not checked')
+        return
+    r = probe.sh(['docker', 'run', '--rm', '--entrypoint', 'sh', image, '-c', 'ldconfig -p | grep -q libglib-2.0'], timeout=120)
+    if r is None:
+        add('browser-libs', 'warn', 'docker cannot be read here, so the browser libraries in the image are not checked')
+    elif r[0] != 0:
+        add('browser-libs', 'fail', '%s uses Playwright but the image %s lacks the browser libraries (libglib-2.0). %s'
+            % (', '.join(users), image, fix))
+    else:
+        add('browser-libs', 'ok', 'the image has the browser libraries')
+
+
+def doctor_checks(root=None, probe=None, repo_paths=None):
     """Checks of the pool for the doctor's `machine` check (contract 12.3). `root` may be a machine folder with `pools/`.
     Each: {"id": "pool.<name>", "status": "ok"|"warn"|"fail"|"skip", "detail": str}. No pool: one `skip`."""
     probe = probe or Probe()
@@ -1325,6 +1417,7 @@ def doctor_checks(root=None, probe=None):
             pub = [a.get('repo') for a in agents if a.get('private') is not True]
             add('private', 'fail' if pub else 'ok', 'agent for a repository not recorded private: %s' % ', '.join(map(str, pub))
                 if pub else 'every agent\'s repository is private')
+        _browser_checks(add, probe, n, env_vals, agents, repo_paths)
         live = live_cap(probe, n) if has_cap else None
         if live is not None:
             try:
@@ -1354,7 +1447,7 @@ def main(argv=None):
     ap.add_argument('--repos', default='')
     ap.add_argument('--windows-repos', default='')
     ap.add_argument('--pool', default='main')
-    ap.add_argument('--browsers', choices=BROWSERS, default='none', help='add the Chromium system libraries to the pool image')
+    ap.add_argument('--browsers', choices=BROWSERS, default=None, help='add the Chromium system libraries to the pool image (default: chromium when a served repository uses Playwright, else none)')
     ap.add_argument('--repo-path', action='append', default=None,
                     help='a local checkout of an agent repository (workflows checked for CI_RUNS_ON; lockfiles read for the Playwright version); repeatable')
     ap.add_argument('--playwright-version', default=None, help='X.Y.Z; overrides the version found in the lockfiles (chromium only)')

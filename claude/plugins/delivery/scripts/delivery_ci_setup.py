@@ -620,7 +620,7 @@ def cmd_pool(args, root) -> int:
     if not cap["ok"]:
         print("delivery_ci_setup: %s" % cap["message"], file=sys.stderr)
         return 1
-    pl = P.plan(found, split(args.repos), split(args.windows_repos), args.pool, cap)
+    pl = P.plan(found, split(args.repos), split(args.windows_repos), args.pool, cap, repo_paths=[root], probe=probe)
     print("\n".join(render_plan(pl, found)))
     if args.action == "pool-plan":
         return 0
