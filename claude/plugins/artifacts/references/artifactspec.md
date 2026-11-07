@@ -1582,7 +1582,10 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   true (a foreground `Agent` or `Task` call, which finishes within the turn,
   records nothing): it stamps the session's entry in
   `<repo>/.claude/artifacts-stop-state.json` (gitignored) with the time and the
-  session ID. It writes that file only, never the record (INV-4), needs no task
+  session ID. Every write of that file goes through a temp file that is removed
+  when the write fails, and temp files of it over 60 seconds old are swept; a
+  write that cannot finish is skipped with a warning, never a failed hook
+  (AR60). It writes that file only, never the record (INV-4), needs no task
   ID in the branch name, and does nothing in a project without a manifest. A
   foreground call of any of the three tools, or a call that failed, records
   nothing. A `Bash` call whose command only runs a watch script (`delivery_watch.py`
@@ -1679,7 +1682,8 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   `hooks_never_write_record` in the same file.
 
 - **R8.18** — The hook also blocks when Full Progress has a URL and (a) its
-  `published_at` is more than 60 minutes old (the hourly fail-safe, R9.8), or
+  `published_at` is more than 60 minutes old while work is open (the hourly
+  fail-safe, R9.8), or
   (b) a release task's `changed` stamp is later than `published_at` (a release
   task's status or phase changed since the last publish, R9.9), even though
   `pending` lists nothing. The reason names the cause and the three steps of
@@ -1739,8 +1743,10 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   before. Any later `mark-published` clears the deferral. Verified by
   `test_deferred_publish_does_not_block_until_the_reset` and
   `end_of_turn_reminds_once_while_deferred`.
-- **R9.8** — Full Progress is published at least every 60 minutes while the
-  project has a record (the hourly fail-safe). `pending --refresh` lists it
+- **R9.8** — Full Progress is published at least every 60 minutes while
+  work is open: while a task is Running, Waiting or Needs you (the hourly
+  fail-safe). With no open work nothing changes on the page, so the hook and
+  `publish_hourly.py` ask for no hourly publish (decision D20). `pending --refresh` lists it
   even when nothing changed (reason `refresh requested ...`) and writes a
   fresh publish copy; the end-of-turn hook asks for it (R8.18). Verified by
   `test_pending_refresh_lists_an_unchanged_full_progress`.
@@ -1748,7 +1754,7 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   same turn, not left to the hour (R8.18).
 - **R9.10** — `scripts/publish_hourly.py` prints exactly what a session's
   hourly cron does. It prints nothing when Full Progress was published less than
-  60 minutes ago and no release task changed since. Otherwise it prints the
+  60 minutes ago or no work is open (R9.8), and no release task changed since. Otherwise it prints the
   one-line reason and the three steps (`pending --json --refresh`, publish the copy
   unedited, `mark-published`). It only reads the record and never publishes.
   Verified by `test_publish_hourly_prints_what_the_cron_does_or_nothing`.

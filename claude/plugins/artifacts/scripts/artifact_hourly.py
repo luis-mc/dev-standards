@@ -14,6 +14,7 @@ from datetime import datetime, timedelta, timezone
 STALE_MINUTES = 60      # R9.8: Full Progress is published at least this often while a project is live
 FAR_PAST = timedelta(days=42)   # F25
 OPEN_STATUSES = ('Running', 'Waiting', 'To do', 'Needs you', 'On hold')
+WORK_OPEN_STATUSES = ('Running', 'Waiting', 'Needs you')     # R9.8: the hourly fail-safe applies only then
 MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 EXPECTED_RE = re.compile(r'^(0[1-9]|[12][0-9]|3[01]) (' + '|'.join(MONTHS) + r')(?: ~([01][0-9]|2[0-3]):([0-5][0-9]))?(?:; \S.*)?$')
 
@@ -61,9 +62,17 @@ def minutes_since_publish(manifest, now=None):
     return int(((now or now_instant()) - at).total_seconds() // 60)
 
 
-def hourly_due(manifest, now=None):
-    """R9.8: minutes since the last publish when that is over STALE_MINUTES, else None."""
+def work_open(tasks):
+    """R9.8 (D20): True when a task is Running, Waiting or Needs you."""
+    return any(isinstance(t, dict) and t.get('status') in WORK_OPEN_STATUSES for t in tasks or ())
+
+
+def hourly_due(manifest, now=None, tasks=None):
+    """R9.8: minutes since the last publish when that is over STALE_MINUTES and work is open, else None.
+    `tasks` None skips the open-work test (callers that have the registry pass it)."""
     if is_deferred(manifest, now):
+        return None
+    if tasks is not None and not work_open(tasks):
         return None
     mins = minutes_since_publish(manifest, now)
     return mins if mins is not None and mins > STALE_MINUTES else None

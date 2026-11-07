@@ -631,6 +631,10 @@ jobs:
       - name: Prove the AR59 artifact fixes still hold
         run: python3 -I tools/test_artifacts_ar59.py
 
+      # AR60 (state temp files) and AR61 (hourly publish only while work is open).
+      - name: Prove the AR60 and AR61 artifact fixes still hold
+        run: python3 -I tools/test_artifacts_ar60.py
+
       # The hooks only queue and never write the record, and every one does
       # nothing in a project without a manifest. The end-of-turn hook must also
       # let a turn end after three blocks, or a session that cannot publish

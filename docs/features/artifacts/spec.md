@@ -120,7 +120,7 @@ flowchart LR
 
 **R5.9** — When claude.ai refuses a publish for its daily limit, the publish is deferred until the reset, and the end-of-turn hook does not block on it.
 
-**R5.10** — Full Progress is published at least every 60 minutes while the project has a record.
+**R5.10** — Full Progress is published at least every 60 minutes while work is open (a task is Running, Waiting or Needs you).
 
 **R5.11** — A release's Expected time is the end of its last phase. Without `--expected`, a write sets it from the phases; an `--expected` that differs is refused.
 

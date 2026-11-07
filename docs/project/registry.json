@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-07T00:16+00:00",
+  "updated": "2026-11-07T00:37+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -600,21 +600,54 @@
       "id": "AR60",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Built",
       "item": "Stop hook leaves state temp files behind",
       "detail": "write_state in hook_after_command.py leaves .claude/artifacts-stop-state.json.<pid>.tmp when os.replace fails (Windows: target held by a concurrent hook). Remove the temp file on failure, sweep stale ones, delete the current files. Decision D19.",
       "expected": "07 Nov",
-      "changed": "2026-11-07T00:16+00:00"
+      "changed": "2026-11-07T00:37+00:00",
+      "rides": "AR62",
+      "started": "2026-11-07T00:19+00:00"
     },
     {
       "id": "AR61",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Built",
       "item": "Hourly Full Progress fail-safe only while work is open",
       "detail": "hook_end_of_turn.py freshness(): ask for the hourly publish (R9.8) only while a task is Running, Waiting or Needs you; update R9.8 in artifactspec and publish_hourly.py to match. Decision D20.",
       "expected": "07 Nov",
-      "changed": "2026-11-07T00:16+00:00"
+      "changed": "2026-11-07T00:37+00:00",
+      "rides": "AR62",
+      "started": "2026-11-07T00:19+00:00"
+    },
+    {
+      "id": "AR62",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "Release AR60 AR61 (luismc-artifacts patch)",
+      "detail": "Fixes on main by the session, touched suites, fold, push, CI on main, install the plugin, delete the temp files.",
+      "expected": "07 Nov ~01:40",
+      "changed": "2026-11-07T00:19+00:00",
+      "release": 59,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-07T00:20+00:00",
+          "end": "2026-11-07T00:50+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-07T00:50+00:00",
+          "end": "2026-11-07T01:20+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-07T01:20+00:00",
+          "end": "2026-11-07T01:40+00:00"
+        }
+      ],
+      "started": "2026-11-07T00:19+00:00"
     },
     {
       "id": "DL1",

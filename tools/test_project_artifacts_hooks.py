@@ -1544,7 +1544,10 @@ def at(work, when, stub=True):
 
 @test
 def stop_blocks_when_full_progress_is_over_an_hour_old():
-    work = published_repo([{'id': 'AR30', 'status': 'Live', 'expected': '14 Oct'}])
+    # R9.8 (D20): with no open work the hourly fail-safe asks for nothing
+    idle = published_repo([{'id': 'AR30', 'status': 'Live', 'expected': '14 Oct'}])
+    assert parse_stop(stop(idle, at(idle, '2026-10-14T11:10:00+01:00'))[1]) == {}
+    work = published_repo([{'id': 'AR30', 'status': 'Running', 'expected': '14 Oct ~23:00'}])
     res = parse_stop(stop(work, at(work, '2026-10-14T10:30:00+01:00'))[1])
     assert res == {}, res                                       # 30 minutes: fine
     res = parse_stop(stop(work, at(work, '2026-10-14T11:10:00+01:00'))[1])        # 70 minutes

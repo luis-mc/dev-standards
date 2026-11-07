@@ -169,7 +169,7 @@ def freshness(root, manifest, artifacts):
     tasks = registry_tasks(root, manifest) or []
     stale = []
     if not artifacts:       # pending already lists it: the publish below covers these too
-        mins = H.hourly_due(manifest)
+        mins = H.hourly_due(manifest, tasks=tasks)
         if mins is not None:
             stale.append('Full Progress was last published %d minutes ago (hourly fail-safe, limit %d)'
                          % (mins, H.STALE_MINUTES))

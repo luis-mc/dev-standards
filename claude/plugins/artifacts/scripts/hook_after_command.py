@@ -168,10 +168,58 @@ def write_state(path, state):
             del state[k]
     os.makedirs(os.path.dirname(path), exist_ok=True)
     tmp = '%s.%d.tmp' % (path, os.getpid())
-    with open(tmp, 'w', encoding='utf-8', newline='\n') as f:
-        json.dump(state, f, indent=1)
-        f.write('\n')
-    os.replace(tmp, path)
+    try:
+        with open(tmp, 'w', encoding='utf-8', newline='\n') as f:
+            json.dump(state, f, indent=1)
+            f.write('\n')
+        for attempt in range(REPLACE_TRIES):
+            try:
+                os.replace(tmp, path)
+                break
+            except PermissionError:     # Windows: another hook holds the target for a moment
+                if attempt == REPLACE_TRIES - 1:
+                    raise
+                time.sleep(REPLACE_WAIT)
+    except OSError as exc:              # AR60: a state write never fails the hook; the next write catches up
+        remove_quietly(tmp)
+        warn('could not save %s (%s); skipped this time' % (os.path.basename(path), exc))
+    except BaseException:
+        remove_quietly(tmp)             # AR60: never leave the temp file behind
+        raise
+    finally:
+        sweep_stale_temps(path)
+
+
+REPLACE_TRIES = 5
+REPLACE_WAIT = 0.05
+STALE_TEMP_SECONDS = 60
+
+
+def remove_quietly(path):
+    try:
+        os.remove(path)
+    except OSError:
+        pass
+
+
+def sweep_stale_temps(path):
+    """AR60: remove `<path>.<pid>.tmp` files over STALE_TEMP_SECONDS old, left by a write that was killed."""
+    folder, base = os.path.split(path)
+    pattern = re.compile(re.escape(base) + r'\.\d+\.tmp$')
+    now = time.time()
+    try:
+        names = os.listdir(folder)
+    except OSError:
+        return
+    for name in names:
+        if not pattern.match(name):
+            continue
+        full = os.path.join(folder, name)
+        try:
+            if now - os.path.getmtime(full) > STALE_TEMP_SECONDS:
+                os.remove(full)
+        except OSError:
+            pass
 
 
 def hook_root(data):

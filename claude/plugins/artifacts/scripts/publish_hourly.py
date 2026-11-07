@@ -35,7 +35,7 @@ def reasons(manifest, tasks, now=None):
         return []
     if H.published_at(manifest) is None:
         return ['Full Progress has not been published yet']
-    mins = H.hourly_due(manifest, now)
+    mins = H.hourly_due(manifest, now, tasks)
     if mins is not None:
         out.append('Full Progress was last published %d minutes ago (hourly fail-safe, limit %d)' % (mins, H.STALE_MINUTES))
     for t in H.release_changes(tasks, manifest, now):
