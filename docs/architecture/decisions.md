@@ -77,6 +77,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D114 | B11: a routine created without mcp_connections gets every connector. What fix? | Template + hook refuses | decided | 2026-11-07 |
 | delivery-speed | D115 | B5: one cloud launch has a trigger id and a run session id. How to track it? | Link, one agent | decided | 2026-11-07 |
 | delivery-speed | D116 | B4 and B7: report a memory kill as such in ci_watch.py, and stop an older-version watcher at SessionStart? | Yes, both as described | decided | 2026-11-07 |
+| delivery-speed | D117 | B13: the pool got no browsers for a project whose CI runs Playwright. How should setup pick browsers? (Picked overnight; for morning review.) | Detect Playwright + doctor check | decided | 2026-11-07 |
 | delivery-speed | D12 | Merge this release on green CI without asking again? | Merge on green | decided | 2026-10-11 |
 | delivery-speed | D13 | Turn hooks on here (core.hooksPath .githooks), which also activates the pre-commit secret check? | Yes, both hooks | decided | 2026-10-11 |
 | delivery-speed | D14 | How should the runner load gate be reinstalled, now that PowerShell refuses unsigned scripts for the runner's account? | Runner account only | decided | 2026-10-26 |
