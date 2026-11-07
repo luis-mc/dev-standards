@@ -2633,6 +2633,29 @@
       ],
       "chosen": "Yes, both as described",
       "decided": "2026-11-07"
+    },
+    {
+      "id": "D117",
+      "question": "B13: the pool .env got POOL_BROWSERS=none for a project whose CI runs Playwright, so every browser test failed. How should the setup choose browsers? (Picked overnight under the owner's rules; for morning review.)",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Detect Playwright + doctor check",
+          "summary": "Setup sets POOL_BROWSERS=chromium when a repo in the pool has a Playwright config or dependency; the doctor fails when a repo uses Playwright and the image lacks browser libraries.",
+          "recommended": true
+        },
+        {
+          "label": "Always install Chromium",
+          "summary": "Every pool image carries Chromium libraries; larger image, no detection."
+        },
+        {
+          "label": "Ask at setup",
+          "summary": "The setup asks the owner; doctor check only."
+        }
+      ],
+      "chosen": "Detect Playwright + doctor check",
+      "decided": "2026-11-07"
     }
   ]
 }
