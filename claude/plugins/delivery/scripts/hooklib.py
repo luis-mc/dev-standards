@@ -169,6 +169,11 @@ def load_ledger(root):
                 'events'):
         v = ledger.get(key)
         ledger[key] = [x for x in v if isinstance(x, dict)] if isinstance(v, list) else []
+    try:                          # DL96: one launch with a trig_ and a cse_ row reads as one agent
+        import delivery_ledger as _L
+        _L.merge_agent_rows(ledger)
+    except Exception:             # a broken adapter never stops a hook
+        pass
     return ledger
 
 

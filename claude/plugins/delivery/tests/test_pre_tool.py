@@ -124,13 +124,13 @@ class RemoteTriggerActionTests(unittest.TestCase):
         self.root = make_root()
 
     def launch(self, action, model=True, cfg=None):
-        body = {"session_context": {"effort_level": "medium"}, "events": [{"data": {"message": {"content": "```delivery\ntask: X1\n```\nDo it (no UI change)"}}}]}
+        body = {"clear_mcp_connections": True, "session_context": {"effort_level": "medium"}, "events": [{"data": {"message": {"content": "```delivery\ntask: X1\n```\nDo it (no UI change)"}}}]}
         if model:
             body["session_context"]["model"] = "sonnet"
         return run(self.root, "RemoteTrigger", {"action": action, "body": body}, cfg=cfg)
 
     def brief(self, text, cfg=None):
-        body = {"session_context": {"effort_level": "medium", "model": "sonnet"},
+        body = {"clear_mcp_connections": True, "session_context": {"effort_level": "medium", "model": "sonnet"},
                 "events": [{"data": {"message": {"content": "```delivery\ntask: X1\n```\n" + text}}}]}
         return run(self.root, "RemoteTrigger", {"action": "create", "body": body}, cfg=cfg)
 

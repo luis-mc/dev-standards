@@ -337,6 +337,21 @@ def brief_text(tool_input):
     return '\n'.join(v for k, v in walk(tool_input) if isinstance(v, str))
 
 
+def cloud_create_connectors_ok(ti):
+    """DL-93: a cloud create names its connectors. True when the body sets clear_mcp_connections: true, or lists
+    connectors in mcp_connections (the brief needs them). Without either the account's connectors attach."""
+    body = ti.get('body')
+    if isinstance(body, str):
+        try:
+            body = json.loads(body)
+        except ValueError:
+            body = {}
+    pairs = list(walk(body if isinstance(body, (dict, list)) else {}))
+    if any(k == 'clear_mcp_connections' and v is True for k, v in pairs):
+        return True
+    return any(k == 'mcp_connections' and isinstance(v, list) and v for k, v in pairs)
+
+
 E2E_BRIEF_MARKER = ('e2e specs', 'no ui change')   # DL-89: any one in the brief satisfies the check
 
 
@@ -409,6 +424,10 @@ def check_launch(cfg, ledger, data, where):
         action = str(ti.get('action') or '').lower()
         if action not in ('create', 'run') or not isinstance(ti.get('body') or ti.get('prompt'), (dict, str)):  # update, list, get, list_runs, get_run_log and a bare run of a stored trigger are not launches
             return
+    if where == 'cloud' and action == 'create' and H.check_on(cfg, 'DL-93') and not cloud_create_connectors_ok(ti):
+        deny('DL-93 this create body would attach all of the account\'s connectors. Set "mcp_connections": [] and '
+             '"clear_mcp_connections": true in the body (or list the connectors the brief needs in mcp_connections), '
+             'then create the routine.')
     text = brief_text(ti)
     block = delivery_block(text)
     if H.check_on(cfg, 'DL-11'):

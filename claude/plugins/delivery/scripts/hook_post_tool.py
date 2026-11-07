@@ -476,6 +476,15 @@ def rec_agent(led, data, cfg, now, where="local") -> None:
     if ident is None:
         m = re.search(r"\b(trig_\w+|agent[_-]?id[:= ]+\w+|cse_\w+)", text)
         ident = m.group(1) if m else None
+    if where == "cloud":
+        # DL96: a run (cse_...) of a launch we already know is the same agent: link the id, add no second row
+        known = [i for i in set(re.findall(r"\b(?:trig|cse)_\w+", text)) | {ident, inp.get("trigger_id")}
+                 if isinstance(i, str) and i]
+        for existing in led["agents"]:
+            if isinstance(existing, dict) and existing.get("state") not in L._AGENT_DONE and set(known) & set(L.agent_ids(existing)):
+                for i in known:
+                    L.link_run_id(existing, i)
+                return
     if where == "cloud" and ident is None:
         tid = inp.get("trigger_id")
         refused = bool(re.search(r"\b(?:HTTP\s*)?[45]\d\d\b|error|rate.?limit|refused|denied|too many", text, re.I))
