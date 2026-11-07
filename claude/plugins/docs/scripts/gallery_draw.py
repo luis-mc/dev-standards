@@ -386,6 +386,73 @@ def d_other_parts(d):
               f'<input type="checkbox"> <div>Holiday photos<br>{d.muted("412 files")}</div><span style="margin-left:auto">›</span></div>')
 
 
+def _key(d, label: str, on: bool = False, extra: str = "") -> str:
+    """One square pressable key of a picker, at least the touch target."""
+    h = d.size("target-min", "44px")
+    st = (f"background:{d.col('color-primary')};color:{d.col('color-on-primary')};border:0" if on else
+          f"background:{d.col('color-surface')};color:{d.col('color-text')};border:1px solid {d.col('color-border')}")
+    return (f'<span style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:{h};min-height:{h};'
+            f'border-radius:{d.size("radius-1", "4px")};font-variant-numeric:tabular-nums;{st};{extra}">{esc(label)}</span>')
+
+
+def d_date_picker(d):
+    head = (f'<div style="{d.text_style("size-3", 600)}">Date of birth</div>'
+            f'<div style="border-bottom:{d.size("hairline", "1px")} solid {d.col("color-divider")};padding-bottom:4px">14 March 2009</div>')
+    nav = (f'<div style="display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap">{_key(d, "‹")}'
+           f'{d.field("March ▾", "7rem")}{d.field("2009 ▾", "5rem")}{_key(d, "›")}</div>')
+    week = "".join(f'<span style="width:{d.size("target-min", "44px")};text-align:center">{w}</span>' for w in "MTWTFSS")
+    days = []
+    for i in range(37):  # six blanks, then 31 days
+        n = i - 6 + 1  # March 2009 starts on a Sunday: six blanks in a Monday week
+        if n < 1 or n > 31:
+            days.append(f'<span style="min-width:{d.size("target-min", "44px")}"></span>')
+        elif n == 14:
+            days.append(_key(d, str(n), True))
+        elif n == 20:
+            days.append(_key(d, str(n), extra=f"border:{d.size('focus-width', '3px')} solid {d.col('color-text')}"))
+        else:
+            days.append(_key(d, str(n)))
+    grid = (f'<div style="display:grid;grid-template-columns:repeat(7,{d.size("target-min", "44px")});gap:2px;overflow-x:auto">'
+            f'{week}{"".join(days)}</div>')
+    typed = (f'<div style="margin-top:8px">{d.muted("Or type the date")}{d.field("14/03/2009", "10rem")}</div>'
+             + d.mark("color-on-primary", "color-primary", 4.5, "chosen day"))
+    return head + nav + grid + typed
+
+
+def _time_columns(d, values: list, unit_words: list) -> str:
+    big = f"font-size:{d.size('size-6')};font-weight:600;font-variant-numeric:tabular-nums"
+    cols = []
+    for i, (v, w) in enumerate(zip(values, unit_words)):
+        if i:
+            cols.append(f'<span style="{big};align-self:center">:</span>')
+        cols.append(f'<div style="display:flex;flex-direction:column;align-items:center;gap:4px">{_key(d, "▲")}'
+                    f'<span role="spinbutton" aria-label="{w}" style="{big}">{v}</span>{_key(d, "▼")}{d.muted(w)}</div>')
+    return f'<div style="display:flex;gap:8px;align-items:flex-start;margin:6px 0 10px">{"".join(cols)}</div>'
+
+
+def d_time_picker(d):
+    out = []
+    for label, vals, words in (("Hour setting (h)", ["07"], ["Hours"]),
+                               ("Reminder (hm)", ["07", "30"], ["Hours", "Minutes"]),
+                               ("Rest (hms)", ["00", "01", "30"], ["Hours", "Minutes", "Seconds"])):
+        out.append(f'<div style="{d.text_style("size-3", 600)}">{label}</div>' + _time_columns(d, vals, words))
+    chips = "".join(_key(d, c, c == "01:30", f"border-radius:{d.size('radius-round', '999px')};padding:0 {d.size('space-3', '12px')}")
+                    for c in ("00:30", "01:00", "01:30", "02:00"))
+    return "".join(out) + f'<div>{d.muted("Quick picks")}</div><div style="display:flex;gap:8px;flex-wrap:wrap">{chips}</div>'
+
+
+def d_number_keypad(d):
+    value = (f'<div style="{d.text_style("size-3", 600)}">Weight</div>'
+             f'<div style="display:flex;align-items:baseline;gap:6px;border:1px solid {d.col("color-border")};border-radius:{d.size("radius-1", "4px")};'
+             f'padding:{d.size("space-2", "8px")} {d.size("space-3", "12px")};margin:4px 0 8px;background:{d.col("color-surface")}">'
+             f'<span style="font-size:{d.size("size-6")};font-weight:600;font-variant-numeric:tabular-nums">72.5</span>{d.muted("kg")}</div>')
+    keys = "".join(_key(d, k, extra="width:100%") for k in ("1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "⌫"))
+    grid = f'<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;max-width:16rem">{keys}</div>'
+    acts = (f'<div style="margin:6px 0">{d.muted("The highest is 300.")}</div>'
+            f'<div style="display:flex;gap:8px;flex-wrap:wrap">{d.btn("Clear", "quiet")}{d.btn("Cancel", "secondary")}{d.btn("Done")}</div>')
+    return value + grid + acts
+
+
 DRAWINGS = {
     "page header": d_page_header, "top menu and breadcrumbs": d_top_menu, "tabs": d_tabs, "wizard": d_wizard,
     "sticky action bar": d_action_bar, "action rows": d_action_rows, "buttons": d_buttons,
@@ -397,6 +464,8 @@ DRAWINGS = {
     "live log": d_live_log, "activity strip": d_activity, "dates, times and numbers": d_dates, "table export": d_export,
     "picture card, grid and rail": d_picture_card, "chart with a text alternative": d_chart,
     "shared component rules": d_shared_rules, "other shared parts": d_other_parts,
+    # Opt-in component templates (design_system.py components).
+    "date picker": d_date_picker, "time picker": d_time_picker, "number keypad": d_number_keypad,
 }
 # Sections that state rules and have no part of their own. They are drawn as an annotated sample of what the rule governs.
 RULE_SECTIONS = {"shared component rules"}

@@ -1,5 +1,6 @@
 """Opt-in shared component templates (DOCSPEC R15.10): design_system.py components."""
 import re
+from pathlib import Path
 import unittest
 
 from _helpers import *  # noqa
@@ -117,6 +118,159 @@ class ComponentTemplateTests(unittest.TestCase):
             self.assertTrue(block.startswith("## {{N}}. "), name)
         for f in S.COMPONENT_SHARED:
             self.assertTrue((SRC / f).is_file(), f)
+
+    def test_spec_sections_cite_ux56(self):
+        rules = (S.TEMPLATES / "next-version" / "ux-rules.md").read_text(encoding="utf-8")
+        self.assertRegex(rules, r"(?m)^\| UX-56 \| \*\*Dates use the date picker, times use the time picker")
+        for name in S.COMPONENTS:
+            block = (SRC / "spec" / f"{name}.md").read_text(encoding="utf-8")
+            rules_line = next(x for x in block.splitlines() if x.startswith("- **Rules:**"))
+            self.assertIn("UX-56", rules_line, name)
+            self.assertIn("raw-inputs.test.ts", block, name)
+
+
+class ComponentWordsTests(unittest.TestCase):
+    def content(self, d):
+        return (d / "docs/design-system/next-version/content.md").read_text(encoding="utf-8")
+
+    def test_words_of_each_spec_block_are_read(self):
+        for name in S.COMPONENTS:
+            words = S.component_words((SRC / "spec" / f"{name}.md").read_text(encoding="utf-8"))
+            self.assertGreaterEqual(len(words), 5, name)
+        self.assertIn("Previous month", S.component_words((SRC / "spec/date-picker.md").read_text(encoding="utf-8")))
+
+    def test_apply_appends_words_once_with_no_duplicates(self):
+        d = ds_repo()
+        before = self.content(d)
+        self.assertEqual(S.main(["components", "--root", str(d), "--apply"]), 0)
+        text = self.content(d)
+        self.assertTrue(text.startswith(before.rstrip("\n")))  # appended, nothing above changed
+        self.assertEqual(text.count(S.WORDS_HEAD), 1)
+        self.assertIn("| Previous month | Date picker |", text)
+        self.assertIn("| More {unit} | Time picker |", text)
+        self.assertIn("| Delete last digit | Number keypad |", text)
+        # Clear, Cancel and Done are already in the action vocabulary: no second row
+        for w in ("Clear", "Cancel", "Done"):
+            row = r"^\| " + w + r" \|"
+            self.assertEqual(len(re.findall(row, text, re.M)), len(re.findall(row, before, re.M)), w)
+        table = text.split(S.WORDS_HEAD)[1]
+        rows = re.findall(r"^\| ([^|]+?) \|", table, re.M)
+        self.assertEqual(len(rows), len(set(rows)))
+        self.assertEqual(S.main(["components", "--root", str(d), "--apply"]), 0)
+        self.assertEqual(self.content(d), text)
+
+    def test_a_later_component_adds_rows_to_the_same_table(self):
+        d = ds_repo()
+        self.assertEqual(S.main(["components", "--root", str(d), "--only", "date-picker", "--apply"]), 0)
+        (d / "docs/design-system/next-version/content.md").write_text(
+            self.content(d) + "\n## Project words\n\n| Word | Meaning |\n|---|---|\n| Hours | kept by the project |\n", encoding="utf-8")
+        self.assertEqual(S.main(["components", "--root", str(d), "--only", "time-picker", "--apply"]), 0)
+        text = self.content(d)
+        self.assertEqual(text.count(S.WORDS_HEAD), 1)
+        table = text.split(S.WORDS_HEAD)[1].split("## Project words")[0]
+        self.assertIn("| Minutes | Time picker |", table)
+        self.assertNotIn("| Hours | Time picker |", text)  # already in a table of the file
+        self.assertIn("| Hours | kept by the project |", text.split("## Project words")[1])
+
+    def test_dry_run_leaves_content_alone(self):
+        d = ds_repo()
+        before = self.content(d)
+        self.assertEqual(S.main(["components", "--root", str(d)]), 0)
+        self.assertEqual(self.content(d), before)
+
+    def test_content_words_add_is_pure_and_idempotent(self):
+        text, got = S.content_words_add("# Content\n", "X", ["A", "B", "A"])
+        self.assertEqual(got, ["A", "B"])
+        self.assertEqual(S.content_words_add(text, "X", ["A", "B"]), (text, []))
+
+
+class ComponentGalleryTests(unittest.TestCase):
+    def test_the_three_components_are_drawn(self):
+        import gallery_draw as GD
+        import gallery_tokens as GT
+        for title in ("date picker", "time picker", "number keypad"):
+            self.assertIn(title, GD.DRAWINGS)
+        d = ds_repo()
+        self.assertEqual(S.main(["components", "--root", str(d), "--apply"]), 0)
+        html = (d / "docs/design-system/next-version/review-visuals/index.html").read_text(encoding="utf-8")
+        not_drawn = html.split("Not drawn")[1].split("</section>")[0]
+        for title in ("Date picker", "Time picker", "Number keypad"):
+            self.assertNotIn(title, not_drawn)
+        self.assertIn("every component section has a drawing", not_drawn)
+        self.assertEqual(html.count('class="cr fail"'), 0)
+        tokens = GT.Tokens((S.TEMPLATES / "next-version" / "tokens.md").read_text(encoding="utf-8"))
+        tp = GD.d_time_picker(GD.Draw(tokens))
+        for unit in ("(h)", "(hm)", "(hms)", "Seconds"):
+            self.assertIn(unit, tp)
+        for fn in (GD.d_date_picker, GD.d_time_picker, GD.d_number_keypad):
+            draw = GD.Draw(tokens)
+            fn(draw)
+            self.assertEqual(draw.missing, [], fn.__name__)  # every token it reads is in the starter
+        self.assertIn(">31<", GD.d_date_picker(GD.Draw(tokens)))
+
+
+class RawInputsGuardTests(unittest.TestCase):
+    """The raw-inputs guard template (UX-56) runs under the Node vitest shim when Node 22.6+ is there."""
+    KIT = S.TEMPLATES / "guards" / "typescript-vitest-kit"
+    SHIM = Path(__file__).resolve().parents[4] / "tools" / "fixtures" / "vitest_shim" / "run.mjs"
+
+    def node_ok(self):
+        import shutil
+        import subprocess
+        if not shutil.which("node") or not self.SHIM.is_file():
+            return False
+        out = subprocess.run(["node", "--version"], capture_output=True, text=True).stdout
+        m = re.match(r"v(\d+)\.(\d+)", out)
+        return bool(m) and (int(m.group(1)), int(m.group(2))) >= (22, 6)
+
+    def test_files_and_empty_allowlist(self):
+        import json
+        for n in ("raw-inputs-scan.ts", "raw-inputs.test.ts", "raw-inputs.known.json"):
+            self.assertTrue((self.KIT / n).is_file(), n)
+        data = json.loads((self.KIT / "raw-inputs.known.json").read_text(encoding="utf-8"))
+        self.assertEqual(data["entries"], [])
+        scan = (self.KIT / "raw-inputs-scan.ts").read_text(encoding="utf-8")
+        for t in ("'date'", "'time'", "'datetime-local'", "'number'"):
+            self.assertIn(t, scan)
+
+    def _run(self, files: dict, known: list):
+        import json
+        import shutil
+        import subprocess
+        import tempfile
+        d = Path(tempfile.mkdtemp(prefix="raw-inputs-"))
+        try:
+            dest = d / "scripts" / "design"
+            shutil.copytree(self.KIT, dest)
+            (dest / "raw-inputs.known.json").write_text(json.dumps({"entries": known}), encoding="utf-8")
+            for rel, text in files.items():
+                (d / rel).parent.mkdir(parents=True, exist_ok=True)
+                (d / rel).write_text(text, encoding="utf-8")
+            return subprocess.run(["node", str(self.SHIM), "raw-inputs.test.ts"], cwd=dest,
+                                  capture_output=True, text=True, timeout=120)
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+
+    def test_guard_catches_each_banned_type_and_honours_the_allowlist(self):
+        if not self.node_ok():
+            self.skipTest("Node 22.6 or later not found")
+        clean = self._run({"apps/web/a.tsx": '<input type="text" />'}, [])
+        self.assertEqual(clean.returncode, 0, clean.stdout + clean.stderr)
+        self.assertIn(" 0 failed", clean.stdout)
+        for t in ("date", "time", "datetime-local", "number"):
+            src = {"apps/web/src/a.tsx": f'<input type="{t}" />'}
+            bad = self._run(src, [])
+            self.assertNotEqual(bad.returncode, 0, t)
+            self.assertIn("apps/web/src/a.tsx: 1 new type=", bad.stdout + bad.stderr, t)
+            self.assertIn(t, bad.stdout.split("1 new type=")[1][:20], t)
+            ok = self._run(src, [{"file": "apps/web/src/a.tsx", "type": t, "count": 1}])
+            self.assertEqual(ok.returncode, 0, t + ok.stdout + ok.stderr)
+        # a listed breach that is gone fails: the allowlist only shrinks
+        stale = self._run({"apps/web/src/a.tsx": "<DatePicker />"}, [{"file": "apps/web/src/a.tsx", "type": "date", "count": 1}])
+        self.assertNotEqual(stale.returncode, 0)
+        # a test file is not judged
+        tests = self._run({"apps/web/src/a.test.tsx": '<input type="date" />'}, [])
+        self.assertEqual(tests.returncode, 0, tests.stdout)
 
 
 if __name__ == "__main__":
