@@ -31,6 +31,7 @@
     {"name": "questions-stop", "full": "python tools/test_questions_stop.py", "cases": ""},
     {"name": "setup-pattern", "full": "python tools/test_setup_pattern.py", "cases": ""},
     {"name": "convert-interim-record", "full": "python tools/test_convert_interim_record.py", "cases": ""},
+    {"name": "plugin-smoke", "full": "python tools/test_plugin_smoke.py", "cases": ""},
     {"name": "model-profiles", "full": "python tools/test_model_profiles.py", "cases": ""},
     {"name": "preflight", "full": "python tools/test_preflight.py", "cases": ""},
     {"name": "rule-tags", "full": "python tools/test_rule_tags.py", "cases": ""},

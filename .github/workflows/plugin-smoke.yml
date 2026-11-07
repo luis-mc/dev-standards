@@ -1,0 +1,26 @@
+name: Plugin smoke
+
+# The DL-18 smoke for this repository: it deploys nothing, so the smoke checks
+# that every shipped plugin still loads (manifest, hook scripts, scripts, skills).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Smoke every plugin
+        run: python tools/plugin_smoke.py
