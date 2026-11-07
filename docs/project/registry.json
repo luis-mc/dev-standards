@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-07T16:34+00:00",
+  "updated": "2026-11-07T16:40+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -693,11 +693,11 @@
       "id": "AR66",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Built",
+      "status": "Live",
       "item": "task-add --release with a RELEASE: item (R5.46)",
       "detail": "An item starting 'RELEASE:' gave a release group label with a trailing space, so R5.46 refused the change. Agent finished 15:50, tests and branch CI artifacts jobs passed; join must map its new test in a doc code: list (M1).",
       "expected": "07 Nov",
-      "changed": "2026-11-07T16:31+00:00",
+      "changed": "2026-11-07T16:40+00:00",
       "rides": "DL107",
       "started": "2026-11-07T15:43+00:00"
     },
@@ -2245,11 +2245,11 @@
       "id": "DL105",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Gate text names exit 137; pool tests portable",
       "detail": "branch_gate.py and the DL-23 hook text name memory (exit 137) beside a stale lockfile; floor-bound pool test fixtures fixed; pool tests pass on Windows",
       "expected": "07 Nov",
-      "changed": "2026-11-07T15:49+00:00",
+      "changed": "2026-11-07T16:40+00:00",
       "rides": "DL107",
       "started": "2026-11-07T15:43+00:00"
     },
@@ -2257,11 +2257,11 @@
       "id": "DL106",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Plugin smoke workflow for DL-18",
       "detail": "A post-merge workflow checks the plugins from main (imports, --help, key commands) and is the smoke run DL-18 records here",
       "expected": "07 Nov",
-      "changed": "2026-11-07T15:51+00:00",
+      "changed": "2026-11-07T16:40+00:00",
       "rides": "DL107",
       "started": "2026-11-07T15:43+00:00"
     },
@@ -2269,13 +2269,12 @@
       "id": "DL107",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "luismc-delivery and luismc-artifacts patch release",
       "detail": "Join DL105 DL106 AR66, fold notes, CI, merge, install, smoke and cleanup",
-      "expected": "07 Nov ~17:10",
-      "changed": "2026-11-07T16:34+00:00",
+      "expected": "07 Nov",
+      "changed": "2026-11-07T16:40+00:00",
       "release": 63,
-      "expected_basis": "PR #169 CI started 16:33; full run ~25 min",
       "phases": [
         {
           "name": "agents",
