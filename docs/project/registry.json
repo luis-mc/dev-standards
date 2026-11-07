@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-07T15:40+00:00",
+  "updated": "2026-11-07T15:43+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -693,11 +693,14 @@
       "id": "AR66",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Running",
       "item": "task-add --release with a RELEASE: item (R5.46)",
       "detail": "An item starting 'RELEASE:' gave a release group label with a trailing space, so R5.46 refused the change",
-      "expected": "",
-      "changed": "2026-11-07T15:39+00:00"
+      "expected": "07 Nov ~16:28",
+      "changed": "2026-11-07T15:43+00:00",
+      "expected_basis": "cloud agent from 15:43, 45 min",
+      "rides": "DL107",
+      "started": "2026-11-07T15:43+00:00"
     },
     {
       "id": "DL1",
@@ -2243,32 +2246,66 @@
       "id": "DL105",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Gate text names exit 137; pool tests portable",
       "detail": "branch_gate.py and the DL-23 hook text name memory (exit 137) beside a stale lockfile; floor-bound pool test fixtures fixed; pool tests pass on Windows",
-      "expected": "",
-      "changed": "2026-11-07T15:39+00:00"
+      "expected": "07 Nov ~16:36",
+      "changed": "2026-11-07T15:43+00:00",
+      "expected_basis": "cloud agent from 15:41, 55 min",
+      "rides": "DL107",
+      "started": "2026-11-07T15:43+00:00"
     },
     {
       "id": "DL106",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Plugin smoke workflow for DL-18",
       "detail": "A post-merge workflow checks the plugins from main (imports, --help, key commands) and is the smoke run DL-18 records here",
-      "expected": "",
-      "changed": "2026-11-07T15:39+00:00"
+      "expected": "07 Nov ~16:32",
+      "changed": "2026-11-07T15:43+00:00",
+      "expected_basis": "cloud agent from 15:42, 50 min",
+      "rides": "DL107",
+      "started": "2026-11-07T15:43+00:00"
     },
     {
       "id": "DL107",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "luismc-delivery and luismc-artifacts patch release",
       "detail": "Join DL105 DL106 AR66, fold notes, CI, merge, install, smoke and cleanup",
-      "expected": "07 Nov ~16:00",
-      "changed": "2026-11-07T15:40+00:00",
-      "release": 63
+      "expected": "07 Nov ~17:30",
+      "changed": "2026-11-07T15:43+00:00",
+      "release": 63,
+      "expected_basis": "3 cloud agents, then join and full CI",
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-07T15:41+00:00",
+          "end": "2026-11-07T16:36+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-07T16:36+00:00",
+          "end": "2026-11-07T16:50+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-07T16:50+00:00",
+          "end": "2026-11-07T17:20+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-07T17:20+00:00",
+          "end": "2026-11-07T17:30+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 20
+      },
+      "started": "2026-11-07T15:43+00:00"
     },
     {
       "id": "DS1",
