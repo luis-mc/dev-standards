@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-07T21:32+00:00",
+  "updated": "2026-11-07T21:40+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2303,12 +2303,11 @@
       "id": "DL108",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release the watcher window fix",
       "detail": "Branch, fold notes, CI, merge, install, smoke, cleanup for the hidden-window watcher fix",
-      "expected": "07 Nov ~22:05",
-      "changed": "2026-11-07T21:32+00:00",
-      "expected_basis": "fix ~15 min, spec-lint CI ~8 min, merge and install ~5 min",
+      "expected": "07 Nov",
+      "changed": "2026-11-07T21:40+00:00",
       "release": 65,
       "phases": [
         {
@@ -2333,12 +2332,11 @@
       "id": "DL109",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Watcher opens no console windows",
       "detail": "delivery_watch gh/git calls pass CREATE_NO_WINDOW on Windows; the session hook starts no second watcher for a root",
-      "expected": "07 Nov ~21:45",
-      "changed": "2026-11-07T21:30+00:00",
-      "expected_basis": "two small edits and a unit test, ~15 min",
+      "expected": "07 Nov",
+      "changed": "2026-11-07T21:40+00:00",
       "rides": "DL108",
       "started": "2026-11-07T21:30+00:00"
     },
