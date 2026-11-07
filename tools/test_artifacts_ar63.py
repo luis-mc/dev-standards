@@ -79,6 +79,14 @@ def ar65_to_do_and_on_hold_need_no_expected():
 
 
 @case
+def ar65_a_phased_to_do_release_still_takes_expected_from_its_phases():
+    p = ENV.baseline()
+    tid = p.ok('task-add', '--owner', 'artifacts', '--item', 'R', '--detail', 'd', '--release',
+               '--phase', 'ci=10:00-11:00', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-12T09:00:00+01:00'}).out.strip()
+    assert p.task(tid)['expected'].startswith('12 Oct ~11:00'), p.task(tid)
+
+
+@case
 def ar65_running_and_waiting_need_an_expected():
     p = ENV.baseline()
     a = p.ok('task-add', '--owner', 'artifacts', '--item', 'No date', '--detail', 'd').out.strip()

@@ -1959,7 +1959,8 @@ def cmd_task_add(args):
     status = require_status(args.status)
     args.expected = normalise_expected(args.expected)
     expected_given = args.expected is not None
-    if not expected_given and status in ('To do', 'On hold'):
+    phased_release = getattr(args, 'release', False) and args.phase and any(str(x).strip() for x in args.phase)
+    if not expected_given and status in ('To do', 'On hold') and not phased_release:
         args.expected = ''           # R6.6: Expected is optional here; it shows as "Not scheduled"
         expected_given = True
     if not expected_given:
