@@ -15,6 +15,10 @@
                                                       copy the guard-test templates for a stack
                                                       (--stack typescript-vitest-kit: the enforcement kit: no app CSS scan,
                                                       DOM layout checker, wizard behaviour harness; each with a ratchet list)
+  design_system.py components [--only date-picker,time-picker,number-keypad] [--stack react-typescript] [--dest DIR] [--apply]
+                                                      opt-in shared component templates: copy the chosen components (code, CSS on
+                                                      tokens, tests) to DIR (default src/ui/pickers) and add their sections to
+                                                      next-version/components.md with a CHANGES.md entry; never overwrites
   design_system.py brief [--apply]                    write or refresh the UI brief checklist (a marked block) in AGENTS.md
                                                       and .github/pull_request_template.md; safe to run again
   design_system.py styles [--json]                    read-only: list the project's style files and CSS custom properties
@@ -54,6 +58,19 @@ ENTRY_RE = re.compile(r"^- C\d+\b", re.M)
 ORDER_RE = re.compile(r"^#{1,6}\s*order of work\b", re.I | re.M)
 RULE_ID_RE = re.compile(r"^\|\s*(UX-\d+)\s*\|", re.M)
 GUARD_STACKS = {"typescript-vitest": "typescript-vitest", "typescript-vitest-kit": "typescript-vitest-kit"}
+# Opt-in shared component templates (R15.10): templates/design-system/components/<stack>/.
+COMPONENT_STACKS = {"react-typescript": "react-typescript"}
+COMPONENTS = {
+    "date-picker": ("Date picker", ("DatePicker.tsx", "date-picker-logic.ts", "date-picker.css", "DatePicker.test.tsx")),
+    "time-picker": ("Time picker", ("TimePicker.tsx", "time-picker-logic.ts", "time-picker.css", "TimePicker.test.tsx")),
+    "number-keypad": ("Number keypad", ("NumberKeypad.tsx", "number-keypad-logic.ts", "number-keypad.css", "NumberKeypad.test.tsx")),
+}
+COMPONENT_SHARED = ("PickerIcon.tsx", "picker-base.css", "test-dom.ts")
+COMPONENT_DEST = "src/ui/pickers"
+COMPONENT_MARK = "<!-- luismc-docs component: {name} -->"
+SECTION_NUM_RE = re.compile(r"^## (\d+)\.", re.M)
+ADD_HEAD_RE = re.compile(r"^## How to add a component\b", re.M)
+CHANGE_NUM_RE = re.compile(r"^- C(\d+)\b", re.M)
 ERR, WARN = "error", "warning"
 CHANGES_HEAD = "# Changes from {name}\n\nOne entry per change, `- C<n>: what changed (file; source)`.\n\n<!-- - C1: what changed (file; source) -->\n"
 
@@ -674,7 +691,7 @@ def cmd_init(root: Path, apply: bool) -> int:
         if not src.is_file():
             continue
         rel = src.relative_to(TEMPLATES)
-        if rel.parts[0] == "guards":
+        if rel.parts[0] in ("guards", "components"):
             continue
         dest = ds_dir(root) / rel
         if dest.exists():
@@ -808,8 +825,12 @@ def cmd_approve_impl(root: Path, a) -> int:
 
 
 def cmd_guards(root: Path, a) -> int:
-    src = TEMPLATES / "guards" / GUARD_STACKS[a.stack]
-    dest = root / a.dest
+    stack = a.stack or "typescript-vitest"
+    if stack not in GUARD_STACKS:
+        print(f"guards: no guard templates for stack {stack} (choose from {', '.join(GUARD_STACKS)})", file=sys.stderr)
+        return 2
+    src = TEMPLATES / "guards" / GUARD_STACKS[stack]
+    dest = root / (a.dest or "scripts/design")
     n = 0
     for f in sorted(src.rglob("*")):
         if not f.is_file():
@@ -825,6 +846,94 @@ def cmd_guards(root: Path, a) -> int:
             shutil.copyfile(f, target)
     if not a.apply:
         print("dry run: add --apply")
+    return 0
+
+
+def component_names(only: str | None) -> list:
+    """The chosen component names, in the catalogue order; all of them when `only` is empty."""
+    if not only:
+        return list(COMPONENTS)
+    asked = [x.strip() for x in only.split(",") if x.strip()]
+    unknown = [x for x in asked if x not in COMPONENTS]
+    if unknown:
+        raise ValueError(f"unknown component(s): {', '.join(unknown)} (choose from {', '.join(COMPONENTS)})")
+    return [n for n in COMPONENTS if n in asked]
+
+
+def components_insert(text: str, name: str, block: str, source: str):
+    """`text` (components.md) with the component's section added under the next number, before
+    "How to add a component" when it is there. Returns (text, number), number None when the section
+    is already there (marked). Pure."""
+    mark = COMPONENT_MARK.format(name=name)
+    if mark in text:
+        return text, None
+    n = max((int(x) for x in SECTION_NUM_RE.findall(text)), default=0) + 1
+    section = mark + "\n" + block.replace("{{N}}", str(n)).replace("{{SOURCE}}", source).strip() + "\n"
+    m = ADD_HEAD_RE.search(text)
+    if m:
+        head = text[: m.start()].rstrip("\n")
+        return head + "\n\n" + section + "\n" + text[m.start():], n
+    return text.rstrip("\n") + "\n\n" + section, n
+
+
+def changes_add(text: str, line: str) -> str:
+    """CHANGES.md with `- C<next>: line` appended. Pure."""
+    n = max((int(x) for x in CHANGE_NUM_RE.findall(text)), default=0) + 1
+    return text.rstrip("\n") + f"\n- C{n}: {line}\n"
+
+
+def cmd_components(root: Path, a) -> int:
+    try:
+        names = component_names(a.only)
+    except ValueError as e:
+        print(e, file=sys.stderr)
+        return 2
+    stack = a.stack or "react-typescript"
+    if stack not in COMPONENT_STACKS:
+        print(f"components: no templates for stack {stack} (choose from {', '.join(COMPONENT_STACKS)})", file=sys.stderr)
+        return 2
+    src = TEMPLATES / "components" / COMPONENT_STACKS[stack]
+    dest_rel = (a.dest or COMPONENT_DEST).strip("/")
+    dest = root / dest_rel
+    files = list(COMPONENT_SHARED) + [f for n in names for f in COMPONENTS[n][1]]
+    for f in files:
+        target = dest / f
+        if target.exists():
+            print("  kept   ", target.relative_to(root).as_posix())
+            continue
+        print(("  write  " if a.apply else "  would  "), target.relative_to(root).as_posix())
+        if a.apply:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(src / f, target)
+    draft = ds_dir(root) / DRAFT
+    spec = draft / "components.md"
+    if not spec.is_file():
+        print(f"  skip    spec sections: no {DS_REL}/{DRAFT}/components.md (run init first)")
+    else:
+        text = spec.read_text(encoding="utf-8")
+        added = []
+        for n in names:
+            block = (src / "spec" / f"{n}.md").read_text(encoding="utf-8")
+            text, num = components_insert(text, n, block, dest_rel)
+            if num is None:
+                print(f"  kept    {spec.relative_to(root).as_posix()}: {COMPONENTS[n][0]} section is there")
+                continue
+            added.append(n)
+            print(("  write  " if a.apply else "  would  ") + f" {spec.relative_to(root).as_posix()}: section {num}. {COMPONENTS[n][0]}")
+        if added and a.apply:
+            spec.write_text(text, encoding="utf-8", newline="\n")
+            changes = draft / "CHANGES.md"
+            ctext = changes.read_text(encoding="utf-8") if changes.is_file() else ""
+            words = ", ".join(COMPONENTS[n][0] for n in added)
+            changes.write_text(changes_add(ctext, f"Added {words} from the luismc-docs component templates "
+                                                  f"(components.md; design_system.py components)."),
+                               encoding="utf-8", newline="\n")
+            build_visuals(draft)
+    if not a.apply:
+        print("dry run: add --apply")
+    else:
+        print(f"next: include {dest_rel}/picker-base.css and each component's CSS in the shared UI stylesheet; "
+              "the tests need vitest, jsdom, react and react-dom")
     return 0
 
 
@@ -871,7 +980,7 @@ def cmd_brief(root: Path, apply: bool) -> int:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", choices=["init", "status", "check", "visuals", "promote", "approve-implementation", "guards", "styles", "brief", "relink"])
+    ap.add_argument("command", choices=["init", "status", "check", "visuals", "promote", "approve-implementation", "guards", "styles", "brief", "relink", "components"])
     ap.add_argument("version", nargs="?")
     ap.add_argument("--root", default=None)
     ap.add_argument("--apply", action="store_true")
@@ -879,8 +988,10 @@ def main(argv=None) -> int:
     ap.add_argument("--approved-by")
     ap.add_argument("--approved-on")
     ap.add_argument("--evidence")
-    ap.add_argument("--stack", default="typescript-vitest", choices=sorted(GUARD_STACKS))
-    ap.add_argument("--dest", default="scripts/design")
+    ap.add_argument("--stack", default=None, choices=sorted(set(GUARD_STACKS) | set(COMPONENT_STACKS)),
+                    help="guards: default typescript-vitest; components: default react-typescript")
+    ap.add_argument("--dest", default=None, help="guards: default scripts/design; components: default src/ui/pickers")
+    ap.add_argument("--only", default=None, help="components: comma-separated date-picker,time-picker,number-keypad (default all)")
     ap.add_argument("--base", default=None)
     argv = list(sys.argv[1:] if argv is None else argv)
     if "--" in argv:  # a package-manager script passes a lone -- through: drop it
@@ -893,6 +1004,8 @@ def main(argv=None) -> int:
         return cmd_status(root)
     if a.command == "brief":
         return cmd_brief(root, a.apply)
+    if a.command == "components":
+        return cmd_components(root, a)
     if a.command == "styles":
         return cmd_styles(root, a.json)
     if a.command == "check":

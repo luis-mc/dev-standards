@@ -137,6 +137,11 @@ describe('DatePicker', () => {
     expect(m.container.querySelector('[role="alert"]')).toBeNull();
   });
 
+  it('shows the value through the project formatter when one is given', () => {
+    m = mount(<DatePicker label="Day" value="2009-03-14" onChange={() => {}} formatValue={(iso) => `on ${iso}`} />);
+    expect(m.container.querySelector('.ds-datepicker__value')!.textContent).toBe('on 2009-03-14');
+  });
+
   it('Escape cancels', () => {
     const onCancel = vi.fn();
     m = mount(<DatePicker label="Day" value="2009-03-14" onChange={() => {}} onCancel={onCancel} />);

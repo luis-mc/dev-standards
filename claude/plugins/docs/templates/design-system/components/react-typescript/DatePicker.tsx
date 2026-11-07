@@ -51,11 +51,14 @@ export interface DatePickerProps {
   weekStart?: WeekStart;
   /** The day shown and focused when there is no value. Default: today. */
   initialFocus?: string;
+  /** How the chosen day is shown in the header. Default: the locale's long date ("14 March 2009").
+   * Pass the project's one date formatter here so the picker matches every other screen. */
+  formatValue?: (iso: string) => string;
   labels?: Partial<DatePickerLabels>;
 }
 
 export function DatePicker({
-  label, value, onChange, onCancel, min, max, locale, weekStart = 1, initialFocus, labels,
+  label, value, onChange, onCancel, min, max, locale, weekStart = 1, initialFocus, formatValue, labels,
 }: DatePickerProps) {
   const words = { ...DEFAULT_DATE_PICKER_LABELS, ...labels };
   const id = useId();
@@ -154,7 +157,7 @@ export function DatePicker({
     <div className="ds-datepicker" role="group" aria-labelledby={labelId} onKeyDown={onRootKey}>
       <div className="ds-datepicker__header">
         <span id={labelId} className="ds-datepicker__label">{label}</span>
-        <span className="ds-datepicker__value" aria-live="polite">{selectedDay ? formatLong(selectedDay, locale) : ''}</span>
+        <span className="ds-datepicker__value" aria-live="polite">{selectedDay ? (formatValue ? formatValue(toIso(selectedDay)) : formatLong(selectedDay, locale)) : ''}</span>
       </div>
 
       <div className="ds-datepicker__nav">
