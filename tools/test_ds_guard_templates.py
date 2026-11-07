@@ -11,6 +11,8 @@ Cases:
             freeze guards pass (the freeze case diffs against the commit
             that still held v1).
   gap       v1 missing and not archived: the layout guard fails, and only it.
+  components  the opt-in picker templates (design_system.py components --apply): their
+            vitest tests (jsdom) pass and tsc --noEmit is clean (R15.10).
 
 Run:  python3 tools/test_ds_guard_templates.py
 """
@@ -24,6 +26,9 @@ import tempfile
 from pathlib import Path
 
 VITEST = "3.2.4"
+# The component templates' test stack, exact versions.
+COMPONENT_DEPS = {"vitest": VITEST, "jsdom": "26.1.0", "react": "19.1.0", "react-dom": "19.1.0",
+                  "typescript": "5.8.3", "@types/react": "19.1.8", "@types/react-dom": "19.1.6"}
 ROOT = Path(__file__).resolve().parent.parent
 PLUGIN = ROOT / "claude" / "plugins" / "docs"
 SCRIPT = PLUGIN / "scripts" / "design_system.py"
@@ -119,6 +124,26 @@ def expect(label, result, want_fail: dict[str, str] | None):
     return ok
 
 
+def components_case(tmp: Path) -> bool:
+    proj = tmp / "components"
+    proj.mkdir()
+    run(["git", "init", "-q"], proj)
+    ds(proj, "init", "--apply")
+    ds(proj, "components", "--apply")
+    (proj / "package.json").write_text(json.dumps({
+        "name": "app2", "private": True, "type": "module", "devDependencies": COMPONENT_DEPS}, indent=2))
+    (proj / "tsconfig.json").write_text(json.dumps({"compilerOptions": {
+        "target": "ES2022", "module": "ESNext", "moduleResolution": "bundler", "jsx": "react-jsx",
+        "strict": True, "noEmit": True, "skipLibCheck": True, "types": [],
+        "lib": ["ES2022", "DOM", "DOM.Iterable"]}, "include": ["src"]}, indent=2))
+    install(proj, None)
+    ok = expect("component templates: keyboard, value and limits", vitest(proj), None)
+    tsc = run(["npx", "tsc", "-p", "."], proj, check=False)
+    print(f"{'PASS' if tsc.returncode == 0 else 'FAIL'}: component templates typecheck"
+          + ("" if tsc.returncode == 0 else f"\n{tsc.stdout}{tsc.stderr}"))
+    return ok and tsc.returncode == 0
+
+
 def main() -> int:
     if not shutil.which("node") or not shutil.which("npm"):
         print("FAIL: node and npm are required")
@@ -150,6 +175,8 @@ def main() -> int:
         install(gap, clean)
         ok &= expect("v1 missing and not archived fails the layout guard", vitest(gap, "no-such-ref"),
                      {"design-system-layout.test.ts": "holds only version folders"})
+
+        ok &= components_case(tmp)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     print("OK" if ok else "NOT OK")
