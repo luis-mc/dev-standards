@@ -83,6 +83,10 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.13** — The Stop hook prints a warning, never a block, when mapped code changed without docs. The SessionStart hook adds the docs rule. Both do nothing without `docs/docs.json`. Both fail open on error (DOCSPEC R8.7).
 
+**R5.14** — `design_system.py components` copies the opt-in React and TypeScript templates (`DatePicker`, `TimePicker` with units `h`, `hm` or `hms`, `NumberKeypad`) with their unit tests, never overwrites a file, and adds one numbered section per component to `next-version/components.md` with one `CHANGES.md` entry. It adds each component's words to the "Component words" table of `content.md`, with no duplicates. A rerun adds nothing. The gallery draws the three components. The templates use tokens only, and their tests pass and typecheck in a fresh project (DOCSPEC R15.10).
+
+**R5.15** — The design-system starter has rule UX-56: dates use the date picker, times the time picker, and the number keypad only counts, measures and codes; never a native date, time or number input. The enforcement kit has a raw-inputs guard that fails on `type="date"`, `"time"`, `"datetime-local"` and `"number"` and honours its known list (DOCSPEC R15.11).
+
 ## 6. Non-functional requirements
 
 **R6.1** — The scripts use only the Python standard library and run on Python 3.9 or later (DOCSPEC R12.4).
@@ -126,6 +130,8 @@ Settings live in the project's `docs/docs.json` (DOCSPEC R12.3). The plugin work
 | R5.10, R5.11 | `claude/plugins/docs/tests/test_check.py` |
 | R5.12 | `claude/plugins/docs/tests/test_work.py` |
 | R5.13 | `claude/plugins/docs/tests/test_hooks.py` |
+| R5.14 | `claude/plugins/docs/tests/test_components.py`, `tools/test_ds_guard_templates.py` |
+| R5.15 | `claude/plugins/docs/tests/test_components.py`, `tools/test_ds_guard_templates.py` |
 | R6.1, R6.2 | `claude/plugins/docs/tests/test_lib.py` |
 
 Run: `python3 -I -m unittest discover -s claude/plugins/docs/tests`.

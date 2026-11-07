@@ -1,0 +1,70 @@
+/* NumberKeypad (luismc-docs template). Design tokens only. Needs picker-base.css. */
+.ds-keypad {
+  display: grid;
+  gap: var(--ds-space-3);
+  max-inline-size: var(--ds-width-field-medium);
+  font-family: var(--ds-font-body);
+  color: var(--ds-color-text);
+}
+.ds-keypad__display {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--ds-space-2);
+  min-block-size: var(--ds-control-height-large);
+  padding: var(--ds-space-3);
+  background: var(--ds-color-surface);
+  border: var(--ds-border-medium) solid var(--ds-color-border);
+  border-radius: var(--ds-radius-1);
+}
+.ds-keypad__digits {
+  font-size: var(--ds-size-6);
+  font-weight: var(--ds-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+.ds-keypad__display[data-kind='code'] .ds-keypad__digits { font-family: var(--ds-font-mono); }
+.ds-keypad__unit {
+  font-size: var(--ds-size-3);
+  color: var(--ds-color-text-muted);
+}
+.ds-keypad__keys {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--ds-space-1);
+}
+.ds-keypad__key {
+  min-block-size: var(--ds-control-height-large);
+  font-size: var(--ds-size-5);
+  font-weight: var(--ds-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+.ds-keypad__key:active {
+  background: var(--ds-color-text);
+  color: var(--ds-color-surface);
+}
+.ds-keypad__key--action { font-size: var(--ds-size-3); }
+.ds-keypad__reason {
+  margin: var(--ds-space-0);
+  min-block-size: calc(var(--ds-line-height) * 1em);
+  font-size: var(--ds-size-2);
+  color: var(--ds-color-text-muted);
+}
+.ds-keypad__actions {
+  display: flex;
+  gap: var(--ds-space-3);
+}
+.ds-keypad__action {
+  flex: 1 1 0;
+  padding-inline: var(--ds-space-3);
+  font-weight: var(--ds-weight-semibold);
+}
+.ds-keypad__action--quiet { border-color: transparent; }
+.ds-keypad__action--primary {
+  background: var(--ds-color-primary);
+  color: var(--ds-color-on-primary);
+  border-color: var(--ds-color-primary);
+}
+.ds-keypad__action--primary:disabled {
+  background: var(--ds-color-surface);
+  color: var(--ds-color-text-muted);
+}
