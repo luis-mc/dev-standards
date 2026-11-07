@@ -136,6 +136,8 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"\.claude/(settings|suites)\.json", frozenset({"specs"})),
     # rule files shipped to projects: tools/test_rule_tags.py (specs) checks their tags
     (r"tools/test_rule_tags\.py", frozenset({"specs"})),
+    # the plugin smoke (DL-18 for this repository) and its test run in the profiles job
+    (r"tools/(plugin_smoke|test_plugin_smoke)\.py", frozenset({"profiles"})),
     (r"claude/plugins/artifacts/rules/.*", frozenset({"specs", "artifacts"})),
     (re.escape(PS) + r"/claude-setup/assets/\.claude/rules/.*", frozenset({"specs", "profiles"})),
     # profiles (SKILL.md anywhere under the plugins, before the area folders)
