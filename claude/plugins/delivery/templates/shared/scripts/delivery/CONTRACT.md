@@ -190,7 +190,7 @@ timed out. A script never exits 0 when it could not decide.
   (`pnpm install --frozen-lockfile`, `go mod download` with `-mod=readonly`
   builds, `cargo fetch --locked`, `dotnet restore --locked-mode`).
   `branch_gate.py` runs them, in order, as its first step, named `setup`; a
-  stale lockfile fails there. `agent_setup.sh` and `join.py` run the same
+  stale lockfile fails there, and so does an install killed for memory (exit code 137; the fix is a larger pool cap or fewer parallel jobs). `agent_setup.sh` and `join.py` run the same
   commands. Never a non-frozen install: a branch that changes dependencies
   commits the regenerated lockfile.
 - `timeout_minutes` (optional, integer >= 1, default 30): the wall-clock limit
@@ -287,7 +287,7 @@ branch_gate.py [--base-ref REF] [--full] [--only a,b] [--skip a,b] [--no-publish
 
 - **Setup first.** Runs `gate.json`'s `setup` commands as the step `setup`
   before any other. When it fails, every other step is `skip` with reason
-  `setup failed`, and the summary says a stale lockfile is the usual cause.
+  `setup failed`, and the summary names the two usual causes: a stale lockfile, or an install killed for memory (exit code 137 comes first).
   `--no-setup` skips it and makes the run partial (never trusted), for repeated
   local runs.
 - **Fail fast.** Stops at the first failed step; the steps after it are `skip`

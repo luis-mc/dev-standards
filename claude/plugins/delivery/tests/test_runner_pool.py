@@ -8,6 +8,7 @@ import unittest
 from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
+from unittest import mock
 
 from _helpers import make_root  # noqa: F401  (sets sys.path to the scripts folder)
 import delivery_runner_pool as P
@@ -32,6 +33,11 @@ RUNNERS = {
          "labels": [{"name": "self-hosted"}, {"name": "pool-main"}]}]},
     "owner/public-app": {"runners": []},
 }
+
+
+def _is_fake_path(path):
+    """DL105: only the made-up Windows paths of these tests are fake. A real temp folder on drive C: is not."""
+    return str(path).replace("\\", "/").startswith(("C:/Work", "C:/Users/u1"))
 
 
 class FakeProbe(P.Probe):
@@ -69,15 +75,15 @@ class FakeProbe(P.Probe):
 
     def read_text(self, path):
         p = path.replace("\\", "/")
-        return self.files[p] if p in self.files else (super().read_text(path) if not p.startswith("C:") else None)
+        return self.files[p] if p in self.files else (super().read_text(path) if not _is_fake_path(p) else None)
 
     def listdir(self, path):
         pre = path.rstrip("/") + "/"
         mine = sorted({k[len(pre):].split("/")[0] for k in self.files if k.startswith(pre)})
-        return mine or (super().listdir(path) if not path.startswith("C:") else [])
+        return mine or (super().listdir(path) if not _is_fake_path(path) else [])
 
     def isfile(self, path):
-        return path.replace("\\", "/") in self.files or (not path.startswith("C:") and os.path.isfile(path))
+        return path.replace("\\", "/") in self.files or (not _is_fake_path(path) and os.path.isfile(path))
 
     def sleep(self, sec):
         self.slept += 1
@@ -126,6 +132,7 @@ class SizingTests(unittest.TestCase):
         self.assertEqual((r["mem_gib"], r["cpus"]), (15.0, 9.5))
         self.assertTrue(r["ok"])
 
+    @mock.patch.object(P, "MIN_POOL_GIB", 0.0)  # DL105: the subject is the Docker ceiling, not the pool floor
     def test_docker_ceiling_wins_when_smaller(self):
         self.assertEqual(P.sizing(64, 4, 8, docker_gib=8)["mem_gib"], 6.0)
 
@@ -313,7 +320,8 @@ class PoolFilesTests(unittest.TestCase):
             self.assertIn("POOL_CPUS=2.0", env)
             self.assertIn("POOL_MEM=6.0g", env)
             self.assertNotIn("PASSWORD", env.upper())
-            self.assertEqual(os.stat(os.path.join(dest, "db-admin.pw")).st_mode & 0o077, 0)
+            if os.name != "nt":  # DL105: POSIX modes do not exist on Windows
+                self.assertEqual(os.stat(os.path.join(dest, "db-admin.pw")).st_mode & 0o077, 0)
             self.assertTrue(os.path.exists(os.path.join(dest, "pool_supervisor.py")))
             self.assertFalse(os.path.exists(os.path.join(dest, "pool-check.yml")))
 
@@ -444,7 +452,8 @@ class AgentTests(unittest.TestCase):
         self.assertIn("HOOK_JOB_STARTED", env)
         self.assertIn("HOOK_JOB_COMPLETED", env)
         self.assertNotIn("TOK999", env + Path(self.file).read_text() + msg)
-        self.assertEqual(os.stat(os.path.join(self.d, "app1", "db.env")).st_mode & 0o077, 0)
+        if os.name != "nt":  # DL105: POSIX modes do not exist on Windows
+            self.assertEqual(os.stat(os.path.join(self.d, "app1", "db.env")).st_mode & 0o077, 0)
 
     def test_add_is_safe_to_repeat(self):
         A.add_agent("app1", "owner/example-app", "T", "main", True, self.file, self.d, self.run_)
@@ -968,6 +977,7 @@ class DL63SizingTests(unittest.TestCase):
         self.assertGreaterEqual(cap["wsl"]["memory"], 14)
         self.assertGreaterEqual(cap["wsl"]["memory"], 3 + cap["mem_gib"] + 2)
 
+    @mock.patch.object(P, "MIN_POOL_GIB", 0.0)  # DL105: the subject is the room for other containers, not the pool floor
     def test_pool_cap_leaves_room_for_other_containers(self):
         alone = P.sizing(32, 5, 16, docker_gib=12)
         shared = P.sizing(32, 5, 16, docker_gib=12, other_gib=4.0, others_run=True, wsl_current=12)
@@ -1582,7 +1592,8 @@ class DL87AgentTmpTests(unittest.TestCase):
         for key in ("TMPDIR", "TMP", "TEMP"):
             self.assertIn("%s=%s" % (key, tmp), self.lines())
         self.assertTrue(os.path.isdir(tmp))
-        self.assertEqual(os.stat(tmp).st_mode & 0o777, 0o700)
+        if os.name != "nt":  # DL105: POSIX modes do not exist on Windows
+            self.assertEqual(os.stat(tmp).st_mode & 0o777, 0o700)
         self.assertIn(["chown", "r-app1:r-app1", tmp], self.calls)
         self.assertIn(["chmod", "0700", tmp], self.calls)
 
@@ -1628,7 +1639,10 @@ class DL87HookTests(unittest.TestCase):
             os.mkdir(os.path.join(agent_tmp, "sub"))
             Path(agent_tmp, "sub", "f").write_text("x")
             Path(agent_tmp, ".hidden").write_text("x")
-            os.symlink(outside, os.path.join(agent_tmp, "link"))
+            try:
+                os.symlink(outside, os.path.join(agent_tmp, "link"))
+            except OSError as exc:  # DL105: Windows without the symlink privilege
+                self.skipTest("cannot make symlinks here: %s" % exc)
             Path(fake_tmp, "gitleaks.tmp").write_text("x")
             func = func.replace("/agents/*", root + "/*").replace("find /tmp", "find " + fake_tmp)
             r = subprocess.run(["sh", "-c", func + "\nclean_tmp\n"], env={"PATH": os.environ["PATH"], "TMPDIR": agent_tmp},
