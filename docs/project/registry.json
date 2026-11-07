@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-07T01:05+00:00",
+  "updated": "2026-11-07T01:26+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2156,11 +2156,11 @@
       "id": "DL101",
       "owner": "delivery-speed",
       "app": "luismc-delivery",
-      "status": "Running",
+      "status": "Built",
       "item": "B13 pool browsers follow Playwright use",
       "detail": "Setup sets POOL_BROWSERS=chromium when a repo in the pool runs Playwright; doctor fails when a repo uses Playwright and the image has no browser libs. Reported by a consuming project. Starts after RELEASE-60 merges (same files).",
-      "expected": "07 Nov ~01:55",
-      "changed": "2026-11-07T01:05+00:00",
+      "expected": "07 Nov",
+      "changed": "2026-11-07T01:26+00:00",
       "rides": "DL102",
       "started": "2026-11-07T01:05+00:00"
     },
@@ -2170,25 +2170,25 @@
       "app": "luismc-delivery",
       "status": "Running",
       "item": "Release B13 fix (luismc-delivery patch)",
-      "detail": "One cloud agent, join, CI, install, cleanup, message the reporting session.",
-      "expected": "07 Nov ~02:20",
-      "changed": "2026-11-07T01:05+00:00",
+      "detail": "PR open 01:28, CI running; merge on green, install, cleanup, message the reporting session.",
+      "expected": "07 Nov ~01:45",
+      "changed": "2026-11-07T01:26+00:00",
       "release": 61,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-07T01:08+00:00",
-          "end": "2026-11-07T01:55+00:00"
+          "start": "2026-11-07T01:06+00:00",
+          "end": "2026-11-07T01:12+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-07T01:55+00:00",
-          "end": "2026-11-07T02:00+00:00"
+          "start": "2026-11-07T01:25+00:00",
+          "end": "2026-11-07T01:28+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-07T02:00+00:00",
-          "end": "2026-11-07T02:20+00:00"
+          "start": "2026-11-07T01:28+00:00",
+          "end": "2026-11-07T01:45+00:00"
         }
       ],
       "started": "2026-11-07T01:05+00:00"
