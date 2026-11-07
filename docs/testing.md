@@ -7,3 +7,5 @@ The shipped agents rule ("Agents test only what they touch") applies here too. H
 - **Heavy** (the `delivery` or `artifacts` area): a 1-2 minute local smoke (`-k <scenario>` of what you changed, `--no-mutants`), then `gh workflow run spec-lint.yml --ref <branch> -f areas=<areas>` and watch it with `python claude/plugins/delivery/templates/shared/scripts/delivery/ci_watch.py <sha> --workflow spec-lint.yml`.
 - **The ready PR** runs only the areas its diff touches, with the mutation passes only when the delivery scripts or their suites change. `nightly.yml` runs every area with mutants on `main`.
 - Suites, areas and the path map: `tools/ci_areas.py`. Measurements behind these choices: `docs/project/feature-test-and-validation-cost.html`.
+
+**Plugin smoke.** dev-standards deploys nothing, so the `Plugin smoke` workflow (`.github/workflows/plugin-smoke.yml`, run on every push to `main`) is its DL-18 smoke. It runs `python tools/plugin_smoke.py`, which checks each plugin under `claude/plugins/`: the manifest, the hook scripts, that scripts compile and answer `--help`, and the skill front matter. `.delivery/config.json` names it in `smoke_workflow`.

@@ -838,11 +838,13 @@ def _release_heading(task: dict, ref: datetime, tasks: list) -> str:
         text = 'live ~%s' % _hhmm(row['exp_min'])
     elif match:
         text = 'live %s %s' % (match.group(1), match.group(2))
+    elif str(task.get('expected', '')).strip():
+        text = 'live %s' % str(task.get('expected', '')).strip()
     else:
-        text = 'live %s' % task.get('expected', '')
+        text = NOT_SCHEDULED.lower()     # AR66: no Expected and no timed phases
     if row is not None and row['worst'] is not None:
         text += ' · worst ~%s' % _hhmm(row['worst'])
-    return '%s · %s' % (release_name(task), text)
+    return ' '.join(('%s · %s' % (release_name(task), text)).split())
 
 
 def release_groups(tasks: list, ref: datetime) -> list:
@@ -2521,7 +2523,8 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
     expected_groups = group_tasks([t for t in mine if t.get('status') in STATUSES], ref, kind)
     group_of_task = {t['id']: gkey for gkey, _, shown, _ in expected_groups for t in shown}
     shown_wanted = [(g, t) for g, t, shown, old in expected_groups if shown or old]
-    shown_found = [(m[0], m[1]) for m in group_marks]
+    shown_found = [(m[0], _norm(m[1])) for m in group_marks]
+    shown_wanted = [(g, _norm(t)) for g, t in shown_wanted]
     if shown_found != shown_wanted:
         add(greq, 'the checklist groups are %s; the registry needs %s, in that order' % (
             [t for _, t in shown_found], [t for _, t in shown_wanted]))

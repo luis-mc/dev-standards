@@ -31,7 +31,7 @@
 - One deploy per merge; smoke-test production; fix forward on a new branch. <!-- check: DL-18 -->
 - No preview deploys for agent branches. Never merge mid-round to "see it deployed". <!-- check: DL-19 -->
 - Never `vercel env rm` to narrow targets; after an env change re-list Production. <!-- check: DL-20 -->
-- A gate that fails at `setup` means a stale lockfile: regenerate and commit it, never install unfrozen. <!-- check: DL-23 -->
+- A gate that fails at `setup` means a stale lockfile (regenerate and commit it) or an install killed for memory (exit 137: larger pool cap or fewer parallel jobs). Never install unfrozen. <!-- check: DL-23 -->
 - After the ready PR merges, run `scripts/delivery/cleanup.py --pr <N>`: it removes the train's branches, gate-result refs and worktrees. Leave nothing behind. <!-- check: DL-14 -->
 - Build artifacts on GitHub (installers such as MSI, bundles, reports): keep only the newest of each name. Give each kind a stable name; `artifact-prune.yml` deletes the older ones after every run. <!-- check: DL-22 -->
 

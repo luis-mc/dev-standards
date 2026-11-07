@@ -888,20 +888,16 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-07T15:43+00:00">07 Nov 15:43</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">07 Nov 15:51</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-07T16:40+00:00">07 Nov 16:40</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">07 Nov 16:41</a> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">7 tasks</span></summary>
 <ul>
-<li data-glance-task="AR66"><span class="task-id">AR66</span>task-add --release with a RELEASE: item (R5.46) <span class="glance-expected">07 Nov ~16:28</span><span class="glance-basis">cloud agent from 15:43, 45 min</span></li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">6 tasks</span></summary>
-<ul>
+<li data-glance-task="AR66"><span class="task-id">AR66</span>task-add --release with a RELEASE: item (R5.46)</li>
 <li data-glance-task="AR60"><span class="task-id">AR60</span>Stop hook leaves state temp files behind</li>
 <li data-glance-task="AR61"><span class="task-id">AR61</span>Hourly Full Progress fail-safe only while work is open</li>
 <li data-glance-task="AR62"><span class="task-id">AR62</span><span class="release-name">RELEASE-59</span>Release AR60 AR61 B9 B10 B12 (luismc-artifacts patch)</li>
@@ -911,15 +907,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">63</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">64</div><div class="label">tasks live</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">64 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="AR66"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">AR66</span>task-add --release with a RELEASE: item (R5.46)<span class="release-line"><span class="release-name">RELEASE-63</span></span></td><td data-label="Detail">An item starting &#x27;RELEASE:&#x27; gave a release group label with a trailing space, so R5.46 refused the change</td><td data-label="Expected">07 Nov ~16:28<span class="expected-basis">cloud agent from 15:43, 45 min</span></td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">63 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="AR66"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR66</span>task-add --release with a RELEASE: item (R5.46)<span class="release-line"><span class="release-name">RELEASE-63</span></span></td><td data-label="Detail">An item starting &#x27;RELEASE:&#x27; gave a release group label with a trailing space, so R5.46 refused the change. Agent finished 15:50, tests and branch CI artifacts jobs passed; join must map its new test in a doc code: list (M1).</td><td data-label="Expected">07 Nov</td></tr>
 <tr data-task="AR60"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR60</span>Stop hook leaves state temp files behind<span class="release-line"><span class="release-name">RELEASE-59</span></span></td><td data-label="Detail">write_state in hook_after_command.py leaves .claude/artifacts-stop-state.json.&lt;pid&gt;.tmp when os.replace fails (Windows: target held by a concurrent hook). Remove the temp file on failure, sweep stale ones, delete the current files. Decision D19.</td><td data-label="Expected">07 Nov</td></tr>
 <tr data-task="AR61"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR61</span>Hourly Full Progress fail-safe only while work is open<span class="release-line"><span class="release-name">RELEASE-59</span></span></td><td data-label="Detail">hook_end_of_turn.py freshness(): ask for the hourly publish (R9.8) only while a task is Running, Waiting or Needs you; update R9.8 in artifactspec and publish_hourly.py to match. Decision D20.</td><td data-label="Expected">07 Nov</td></tr>
 <tr data-task="AR62"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR62</span><span class="release-name">RELEASE-59</span>Release AR60 AR61 B9 B10 B12 (luismc-artifacts patch)</td><td data-label="Detail">RELEASE-59 merged (PR #164, 2af8a83) 00:56: luismc-artifacts 1.3.1, ARTIFACTSPEC 1.20.1; installed here and smoke-tested; branches removed.</td><td data-label="Expected">07 Nov</td></tr>

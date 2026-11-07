@@ -149,7 +149,7 @@ def verify(
         reasons.append("the gate timed out")
     steps = result.get("steps") if isinstance(result.get("steps"), list) else []
     if any(isinstance(s, dict) and s.get("name") == dc.SETUP_STEP and s.get("outcome") != "pass" for s in steps):
-        reasons.append("setup did not pass (a stale lockfile is the usual cause)")
+        reasons.append("setup did not pass (a stale lockfile, or an install killed for memory: exit code 137, is the usual cause)")
     required = result.get("required_steps")
     if not isinstance(required, list):  # a result written before required_steps: lint and types, where it has them
         required = [n for n in dc.DEFAULT_REQUIRED_STEPS]

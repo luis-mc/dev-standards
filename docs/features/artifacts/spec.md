@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-artifacts]
 topics: [artifacts]
 status: live
-version: 0.4.1
+version: 0.4.2
 owner: agents
 type: reference
 code:
@@ -249,6 +249,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.4.2 | 2026-11-07 | RELEASE-63 | A release with no Expected and no timed phases is headed RELEASE-<n> · not scheduled (R5.46). | AR66 |
 | 0.4.1 | 2026-11-07 | RELEASE-59 | The stop hook no longer leaves state temp files behind.<br>The hourly Full Progress publish applies only while work is open (Running, Waiting or Needs you).<br>the mark-published refusal names the steps in order and the hook says to change statuses before pending<br>--expected accepts DD Mon HH:MM and stores DD Mon ~HH:MM<br>Expected is optional on To do and On hold and shows Not scheduled; Running and Waiting need one | AR60, AR61, AR63, AR64, AR65 |
 | 0.4.0 | 2026-11-05 | RELEASE-45 | A UserPromptSubmit hook (hook_turn_start.py) stamps the turn start per session; the Stop hook plan-rows check looks only at reports under docs/work/ changed after that stamp, and falls back to the 2-hour window when there is none.<br>plan_rows_check.py lists plan rows and audit findings that have no task; the task key is `<tag>#<id>` in the task detail; the Stop hook runs the check for a report written in the turn and blocks the end of the turn while rows are untasked.<br>The plan-rows check counts a numbered row only under a heading that starts with Plan, Proposed, Proposals or Findings. | DSY146, DSY99, DU11 |
 | 0.3.1 | 2026-11-04 | RELEASE-42 | Hooks and helpers fixed after the plugin review: deferred publishes are not asked for, queue writes are locked, DD Mon dates take the nearest year, after-command parsing reads quotes and exit codes correctly, merged catch-up respects open PRs, far-past Expected is not overdue, 29 Feb parses. | AR59 |

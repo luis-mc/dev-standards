@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-07T15:51+00:00",
+ "updated": "2026-11-07T16:40+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1573,12 +1573,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "AR66",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Live",
    "item": "task-add --release with a RELEASE: item (R5.46)",
-   "detail": "An item starting 'RELEASE:' gave a release group label with a trailing space, so R5.46 refused the change",
-   "expected": "07 Nov ~16:28",
-   "changed": "2026-11-07T15:43+00:00",
-   "expected_basis": "cloud agent from 15:43, 45 min",
+   "detail": "An item starting 'RELEASE:' gave a release group label with a trailing space, so R5.46 refused the change. Agent finished 15:50, tests and branch CI artifacts jobs passed; join must map its new test in a doc code: list (M1).",
+   "expected": "07 Nov",
+   "changed": "2026-11-07T16:40+00:00",
    "rides": "DL107",
    "started": "2026-11-07T15:43+00:00"
   },
@@ -3126,11 +3125,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL105",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Gate text names exit 137; pool tests portable",
    "detail": "branch_gate.py and the DL-23 hook text name memory (exit 137) beside a stale lockfile; floor-bound pool test fixtures fixed; pool tests pass on Windows",
    "expected": "07 Nov",
-   "changed": "2026-11-07T15:49+00:00",
+   "changed": "2026-11-07T16:40+00:00",
    "rides": "DL107",
    "started": "2026-11-07T15:43+00:00"
   },
@@ -3138,11 +3137,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL106",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Plugin smoke workflow for DL-18",
    "detail": "A post-merge workflow checks the plugins from main (imports, --help, key commands) and is the smoke run DL-18 records here",
    "expected": "07 Nov",
-   "changed": "2026-11-07T15:51+00:00",
+   "changed": "2026-11-07T16:40+00:00",
    "rides": "DL107",
    "started": "2026-11-07T15:43+00:00"
   },
@@ -3150,39 +3149,34 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL107",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "luismc-delivery and luismc-artifacts patch release",
    "detail": "Join DL105 DL106 AR66, fold notes, CI, merge, install, smoke and cleanup",
-   "expected": "07 Nov ~17:30",
-   "changed": "2026-11-07T15:43+00:00",
+   "expected": "07 Nov",
+   "changed": "2026-11-07T16:40+00:00",
    "release": 63,
-   "expected_basis": "3 cloud agents, then join and full CI",
    "phases": [
     {
      "name": "agents",
      "start": "2026-11-07T15:41+00:00",
-     "end": "2026-11-07T16:36+00:00"
+     "end": "2026-11-07T16:31+00:00"
     },
     {
      "name": "join",
-     "start": "2026-11-07T16:36+00:00",
-     "end": "2026-11-07T16:50+00:00"
+     "start": "2026-11-07T16:31+00:00",
+     "end": "2026-11-07T16:33+00:00"
     },
     {
      "name": "ci",
-     "start": "2026-11-07T16:50+00:00",
-     "end": "2026-11-07T17:20+00:00"
+     "start": "2026-11-07T16:33+00:00",
+     "end": "2026-11-07T17:00+00:00"
     },
     {
      "name": "merge",
-     "start": "2026-11-07T17:20+00:00",
-     "end": "2026-11-07T17:30+00:00"
+     "start": "2026-11-07T17:00+00:00",
+     "end": "2026-11-07T17:10+00:00"
     }
    ],
-   "risk": {
-    "label": "+1 fix round",
-    "minutes": 20
-   },
    "started": "2026-11-07T15:43+00:00"
   },
   {
@@ -6531,67 +6525,33 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-07T15:51+00:00">07 Nov 15:51</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-07T16:40+00:00">07 Nov 16:40</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">24 tasks</span></summary>
 <ul>
-<li data-glance-task="AR66"><span class="task-id">AR66</span>task-add --release with a RELEASE: item (R5.46) <span class="glance-expected">07 Nov ~16:28</span><span class="glance-basis">cloud agent from 15:43, 45 min</span></li>
-<li data-glance-task="DL107"><span class="task-id">DL107</span><span class="release-name">RELEASE-63</span>luismc-delivery and luismc-artifacts patch release <span class="glance-expected">07 Nov ~17:30</span><span class="glance-basis">3 cloud agents, then join and full CI</span></li>
-</ul>
-</details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">2 tasks</span></summary>
-<ul>
-<li data-glance-task="DL106"><span class="task-id">DL106</span>Plugin smoke workflow for DL-18</li>
+<li data-glance-task="AR66"><span class="task-id">AR66</span>task-add --release with a RELEASE: item (R5.46)</li>
 <li data-glance-task="DL105"><span class="task-id">DL105</span>Gate text names exit 137; pool tests portable</li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">20 tasks</span></summary>
-<ul>
+<li data-glance-task="DL106"><span class="task-id">DL106</span>Plugin smoke workflow for DL-18</li>
+<li data-glance-task="DL107"><span class="task-id">DL107</span><span class="release-name">RELEASE-63</span>luismc-delivery and luismc-artifacts patch release</li>
 <li data-glance-task="DL103"><span class="task-id">DL103</span>pool-plan keeps the owner&#x27;s pool cap (B14)</li>
 <li data-glance-task="DL104"><span class="task-id">DL104</span><span class="release-name">RELEASE-62</span>luismc-delivery 1.12.2 (B14)</li>
 <li data-glance-task="DL101"><span class="task-id">DL101</span>B13 pool browsers follow Playwright use</li>
 <li data-glance-task="DL102"><span class="task-id">DL102</span><span class="release-name">RELEASE-61</span>Release B13 fix (luismc-delivery patch)</li>
-<li data-glance-task="DL91"><span class="task-id">DL91</span><span class="release-name">RELEASE-60</span>Release delivery bug fixes B1-B8 B11 (luismc-delivery)</li>
-<li data-glance-task="DL92"><span class="task-id">DL92</span>B1 pool .env gets RUNNER_SHA256</li>
-<li data-glance-task="DL93"><span class="task-id">DL93</span>B2 pool cap change applied</li>
-<li data-glance-task="DL94"><span class="task-id">DL94</span>B3 pool sizing floor</li>
-<li class="glance-more">and 12 more</li>
+<li class="glance-more">and 16 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">402</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">2</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">406</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<figure class="release-timeline">
-<figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DL107 (luismc-delivery and luismc-artifacts patch release) expected live about 17:30, worst case 17:50." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">15:30</text><line class="rt-grid" x1="304" y1="36" x2="304" y2="140"/><text x="304" y="28">16:00</text><line class="rt-grid" x1="408" y1="36" x2="408" y2="140"/><text x="408" y="28">16:30</text><line class="rt-grid" x1="512" y1="36" x2="512" y2="140"/><text x="512" y="28">17:00</text><line class="rt-grid" x1="616" y1="36" x2="616" y2="140"/><text x="616" y="28">17:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">18:00</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-63 · luismc-delivery and luismc-artifacts patch release</title>RELEASE-63 · luismc-deliv…</text>
-<text class="rt-sub" x="0" y="77"><title>AR66, DL105, DL106</title>AR66, DL105, DL106</text>
-<rect class="rt-bar agents" x="238.1" y="52" width="190.7" height="22"><title>agents 15:41-16:36</title></rect>
-<rect class="rt-bar join" x="428.8" y="52" width="48.5" height="22"><title>join 16:36-16:50</title></rect>
-<rect class="rt-bar ci" x="477.3" y="52" width="104" height="22"><title>PR CI 16:50-17:20</title></rect>
-<rect class="rt-bar merge" x="581.3" y="52" width="34.7" height="22"><title>merge + cleanup 17:20-17:30</title></rect>
-<rect class="rt-risk" x="616" y="58" width="69.3" height="10"><title>+1 fix round</title></rect>
-<polygon class="rt-worst" points="685.3,51 692.3,63 685.3,75 678.3,63"/>
-<text class="rt-risk-label" x="696.3" y="67">+1 fix round → worst ~17:50</text>
-<polygon class="rt-expected" points="616,50 624,63 616,76 608,63"/>
-<text class="rt-live-label" x="616" y="92">live ~17:30</text>
-<line class="rt-now" x1="272.8" y1="36" x2="272.8" y2="148"/><text class="rt-now-label" x="272.8" y="161">now 15:51</text>
-</svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
-</figure>
-<details class="status-fold release-group" data-group="release-63" open><summary><strong>RELEASE-63 · live ~17:30 · worst ~17:50</strong><span class="fold-count">4 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">408 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL107"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL107</span><span class="release-name">RELEASE-63</span>luismc-delivery and luismc-artifacts patch release</a></td><td data-label="App / service"></td><td data-label="Detail">Join DL105 DL106 AR66, fold notes, CI, merge, install, smoke and cleanup</td><td data-label="Expected">07 Nov ~17:30<span class="expected-basis">3 cloud agents, then join and full CI</span></td></tr>
-<tr data-task="AR66"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR66</span>task-add --release with a RELEASE: item (R5.46)</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">An item starting &#x27;RELEASE:&#x27; gave a release group label with a trailing space, so R5.46 refused the change</td><td data-label="Expected">07 Nov ~16:28<span class="expected-basis">cloud agent from 15:43, 45 min</span></td></tr>
-<tr data-task="DL105"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL105</span>Gate text names exit 137; pool tests portable</a></td><td data-label="App / service"></td><td data-label="Detail">branch_gate.py and the DL-23 hook text name memory (exit 137) beside a stale lockfile; floor-bound pool test fixtures fixed; pool tests pass on Windows</td><td data-label="Expected">07 Nov</td></tr>
-<tr data-task="DL106"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL106</span>Plugin smoke workflow for DL-18</a></td><td data-label="App / service"></td><td data-label="Detail">A post-merge workflow checks the plugins from main (imports, --help, key commands) and is the smoke run DL-18 records here</td><td data-label="Expected">07 Nov</td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">404 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="AR66"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR66</span>task-add --release with a RELEASE: item (R5.46)</a><span class="release-line"><span class="release-name">RELEASE-63</span></span></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">An item starting &#x27;RELEASE:&#x27; gave a release group label with a trailing space, so R5.46 refused the change. Agent finished 15:50, tests and branch CI artifacts jobs passed; join must map its new test in a doc code: list (M1).</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="DL105"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL105</span>Gate text names exit 137; pool tests portable</a><span class="release-line"><span class="release-name">RELEASE-63</span></span></td><td data-label="App / service"></td><td data-label="Detail">branch_gate.py and the DL-23 hook text name memory (exit 137) beside a stale lockfile; floor-bound pool test fixtures fixed; pool tests pass on Windows</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="DL106"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL106</span>Plugin smoke workflow for DL-18</a><span class="release-line"><span class="release-name">RELEASE-63</span></span></td><td data-label="App / service"></td><td data-label="Detail">A post-merge workflow checks the plugins from main (imports, --help, key commands) and is the smoke run DL-18 records here</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="DL107"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL107</span><span class="release-name">RELEASE-63</span>luismc-delivery and luismc-artifacts patch release</a></td><td data-label="App / service"></td><td data-label="Detail">Join DL105 DL106 AR66, fold notes, CI, merge, install, smoke and cleanup</td><td data-label="Expected">07 Nov</td></tr>
 <tr data-task="DL103"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL103</span>pool-plan keeps the owner&#x27;s pool cap (B14)</a><span class="release-line"><span class="release-name">RELEASE-62</span></span></td><td data-label="App / service"></td><td data-label="Detail">pool-plan read no .env, so it planned 4 GiB/2 CPUs over the owner&#x27;s 8.5 GiB/4 and could lower .wslconfig; adds pool-refresh for SHA and browsers only</td><td data-label="Expected">07 Nov</td></tr>
 <tr data-task="DL104"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL104</span><span class="release-name">RELEASE-62</span>luismc-delivery 1.12.2 (B14)</a></td><td data-label="App / service"></td><td data-label="Detail">Branch, CI, merge, install, smoke and cleanup for the pool cap fix</td><td data-label="Expected">07 Nov</td></tr>
 <tr data-task="DL101"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL101</span>B13 pool browsers follow Playwright use</a><span class="release-line"><span class="release-name">RELEASE-61</span></span></td><td data-label="App / service"><code>luismc-delivery</code></td><td data-label="Detail">Setup sets POOL_BROWSERS=chromium when a repo in the pool runs Playwright; doctor fails when a repo uses Playwright and the image has no browser libs. Reported by a consuming project. Starts after RELEASE-60 merges (same files).</td><td data-label="Expected">07 Nov</td></tr>
@@ -7004,14 +6964,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
-<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (2)</strong><span class="fold-count">2 feature artifacts</span></summary>
-<div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29901111"><time datetime="2026-11-07T15:51+00:00">07 Nov 15:51</time></td><td data-label="Tasks">DL1 to DL107</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-built">2 Built</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29901103"><time datetime="2026-11-07T15:43+00:00">07 Nov 15:43</time></td><td data-label="Tasks">AR2 to AR66</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
-</tbody></table></div>
+<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (0)</strong><span class="fold-count">0 feature artifacts</span></summary>
+<p class="feature-none">No feature artifacts in progress.</p>
 </details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (6)</strong><span class="fold-count">6 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (8)</strong><span class="fold-count">8 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29901160"><time datetime="2026-11-07T16:40+00:00">07 Nov 16:40</time></td><td data-label="Tasks">DL1 to DL107</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29901160"><time datetime="2026-11-07T16:40+00:00">07 Nov 16:40</time></td><td data-label="Tasks">AR2 to AR66</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: design-system updates from real projects"><a href="feature-design-system-updates-from-real-projects.html">Feature: Design-system updates from real projects</a></td><td data-label="Last updated" data-value="29898412"><time datetime="2026-11-05T18:52+00:00">05 Nov 18:52</time></td><td data-label="Tasks">DU1 to DU12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Decided on 5 Nov: all 35 proposals go in; the owner chose every recommended option (D1-D6).</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">claude-setup turns plugins on, but most stay silent until a config file exists and some only warn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">ST1 to ST5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
