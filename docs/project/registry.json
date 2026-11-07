@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-07T15:43+00:00",
+  "updated": "2026-11-07T15:49+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2246,12 +2246,11 @@
       "id": "DL105",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Gate text names exit 137; pool tests portable",
       "detail": "branch_gate.py and the DL-23 hook text name memory (exit 137) beside a stale lockfile; floor-bound pool test fixtures fixed; pool tests pass on Windows",
-      "expected": "07 Nov ~16:36",
-      "changed": "2026-11-07T15:43+00:00",
-      "expected_basis": "cloud agent from 15:41, 55 min",
+      "expected": "07 Nov",
+      "changed": "2026-11-07T15:49+00:00",
       "rides": "DL107",
       "started": "2026-11-07T15:43+00:00"
     },
@@ -2262,9 +2261,9 @@
       "status": "Running",
       "item": "Plugin smoke workflow for DL-18",
       "detail": "A post-merge workflow checks the plugins from main (imports, --help, key commands) and is the smoke run DL-18 records here",
-      "expected": "07 Nov ~16:32",
-      "changed": "2026-11-07T15:43+00:00",
-      "expected_basis": "cloud agent from 15:42, 50 min",
+      "expected": "07 Nov ~16:40",
+      "changed": "2026-11-07T15:49+00:00",
+      "expected_basis": "join fix: description-only skill check, config moved local",
       "rides": "DL107",
       "started": "2026-11-07T15:43+00:00"
     },

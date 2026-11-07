@@ -2878,6 +2878,25 @@
       ],
       "chosen": "Comply each time",
       "decided": "2026-11-07"
+    },
+    {
+      "id": "D128",
+      "question": "Plugin smoke: 6 skills have no name: in front matter (Claude Code uses the folder name). Require it or not? (Picked by me; for owner review.)",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Require description only",
+          "summary": "name is optional; the folder name stands in, as Claude Code does.",
+          "recommended": true
+        },
+        {
+          "label": "Add name to the 6 skills",
+          "summary": "Edit the audits and project-setup skills; the check keeps requiring name."
+        }
+      ],
+      "chosen": "Require description only",
+      "decided": "2026-11-07"
     }
   ]
 }
