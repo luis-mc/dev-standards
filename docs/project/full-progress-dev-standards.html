@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-07T00:39+00:00",
+ "updated": "2026-11-07T00:52+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1506,25 +1506,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "app": "luismc-artifacts",
    "status": "Running",
    "item": "Release AR60 AR61 B9 B10 B12 (luismc-artifacts patch)",
-   "detail": "Fixes on main by the session, touched suites, fold, push, CI on main, install the plugin, delete the temp files.",
-   "expected": "07 Nov ~02:30",
-   "changed": "2026-11-07T00:38+00:00",
+   "detail": "PR #164 open 00:58, CI running; merge on green, then install and cleanup.",
+   "expected": "07 Nov ~01:30",
+   "changed": "2026-11-07T00:52+00:00",
    "release": 59,
    "phases": [
     {
      "name": "agents",
-     "start": "2026-11-07T00:45+00:00",
-     "end": "2026-11-07T01:50+00:00"
+     "start": "2026-11-07T00:40+00:00",
+     "end": "2026-11-07T00:44+00:00"
     },
     {
      "name": "join",
-     "start": "2026-11-07T01:50+00:00",
-     "end": "2026-11-07T02:00+00:00"
+     "start": "2026-11-07T00:50+00:00",
+     "end": "2026-11-07T00:58+00:00"
     },
     {
      "name": "ci",
-     "start": "2026-11-07T02:00+00:00",
-     "end": "2026-11-07T02:30+00:00"
+     "start": "2026-11-07T00:58+00:00",
+     "end": "2026-11-07T01:30+00:00"
     }
    ],
    "started": "2026-11-07T00:19+00:00",
@@ -1537,11 +1537,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "AR63",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Built",
    "item": "B9 mark-published names the publish steps",
    "detail": "Refusal names pending --json --refresh, publish, mark again; end-of-turn hook says to run pending after the last status change. Decision D21. Cloud agent.",
-   "expected": "07 Nov ~01:50",
-   "changed": "2026-11-07T00:38+00:00",
+   "expected": "07 Nov",
+   "changed": "2026-11-07T00:52+00:00",
    "rides": "AR62",
    "started": "2026-11-07T00:38+00:00"
   },
@@ -1549,11 +1549,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "AR64",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Built",
    "item": "B10 --expected accepts DD Mon HH:MM",
    "detail": "Accepted and stored as DD Mon ~HH:MM; R6.6 updated. Decision D22. Cloud agent.",
-   "expected": "07 Nov ~01:50",
-   "changed": "2026-11-07T00:38+00:00",
+   "expected": "07 Nov",
+   "changed": "2026-11-07T00:52+00:00",
    "rides": "AR62",
    "started": "2026-11-07T00:38+00:00"
   },
@@ -1561,11 +1561,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "AR65",
    "owner": "artifacts",
    "app": "luismc-artifacts",
-   "status": "Running",
+   "status": "Built",
    "item": "B12 To do without Expected",
    "detail": "Expected optional for To do and On hold (Not scheduled), required from Running or Waiting. Decision D23. Cloud agent.",
-   "expected": "07 Nov ~01:50",
-   "changed": "2026-11-07T00:38+00:00",
+   "expected": "07 Nov",
+   "changed": "2026-11-07T00:52+00:00",
    "rides": "AR62",
    "started": "2026-11-07T00:38+00:00"
   },
@@ -3028,7 +3028,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "B11 cloud launch sets no connectors",
    "detail": "Template create body clears connectors; launch hook refuses a create without it unless the brief names connectors. D114. Cloud agent.",
    "expected": "07 Nov ~02:15",
-   "changed": "2026-11-07T00:39+00:00",
+   "changed": "2026-11-07T00:52+00:00",
    "rides": "DL91",
    "started": "2026-11-07T00:39+00:00"
   },
@@ -6378,16 +6378,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-07T00:39+00:00">07 Nov 00:39</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-07T00:52+00:00">07 Nov 00:52</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">14 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">11 tasks</span></summary>
 <ul>
-<li data-glance-task="AR63"><span class="task-id">AR63</span>B9 mark-published names the publish steps <span class="glance-expected">07 Nov ~01:50</span></li>
-<li data-glance-task="AR64"><span class="task-id">AR64</span>B10 --expected accepts DD Mon HH:MM <span class="glance-expected">07 Nov ~01:50</span></li>
-<li data-glance-task="AR65"><span class="task-id">AR65</span>B12 To do without Expected <span class="glance-expected">07 Nov ~01:50</span></li>
+<li data-glance-task="AR62"><span class="task-id">AR62</span><span class="release-name">RELEASE-59</span>Release AR60 AR61 B9 B10 B12 (luismc-artifacts patch) <span class="glance-expected">07 Nov ~01:30</span></li>
 <li data-glance-task="DL92"><span class="task-id">DL92</span>B1 pool .env gets RUNNER_SHA256 <span class="glance-expected">07 Nov ~02:15</span></li>
 <li data-glance-task="DL93"><span class="task-id">DL93</span>B2 pool cap change applied <span class="glance-expected">07 Nov ~02:15</span></li>
 <li data-glance-task="DL94"><span class="task-id">DL94</span>B3 pool sizing floor <span class="glance-expected">07 Nov ~02:15</span></li>
@@ -6397,17 +6395,19 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL98"><span class="task-id">DL98</span>B7 SessionStart replaces an old watcher <span class="glance-expected">07 Nov ~02:15</span></li>
 <li data-glance-task="DL99"><span class="task-id">DL99</span>B8 join.py keeps fresh agent branches <span class="glance-expected">07 Nov ~02:15</span></li>
 <li data-glance-task="DL100"><span class="task-id">DL100</span>B11 cloud launch sets no connectors <span class="glance-expected">07 Nov ~02:15</span></li>
-<li data-glance-task="AR62"><span class="task-id">AR62</span><span class="release-name">RELEASE-59</span>Release AR60 AR61 B9 B10 B12 (luismc-artifacts patch) <span class="glance-expected">07 Nov ~02:30</span></li>
 <li data-glance-task="DL91"><span class="task-id">DL91</span><span class="release-name">RELEASE-60</span>Release delivery bug fixes B1-B8 B11 (luismc-delivery) <span class="glance-expected">07 Nov ~03:00</span></li>
 </ul>
 </details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">2 tasks</span></summary>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">5 tasks</span></summary>
 <ul>
+<li data-glance-task="AR63"><span class="task-id">AR63</span>B9 mark-published names the publish steps</li>
+<li data-glance-task="AR64"><span class="task-id">AR64</span>B10 --expected accepts DD Mon HH:MM</li>
+<li data-glance-task="AR65"><span class="task-id">AR65</span>B12 To do without Expected</li>
 <li data-glance-task="AR60"><span class="task-id">AR60</span>Stop hook leaves state temp files behind</li>
 <li data-glance-task="AR61"><span class="task-id">AR61</span>Hourly Full Progress fail-safe only while work is open</li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">13 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">11 tasks</span></summary>
 <ul>
 <li data-glance-task="DL88"><span class="task-id">DL88</span><span class="release-name">RELEASE-58</span>e2e gate uses a preinstalled Chromium</li>
 <li data-glance-task="DL89"><span class="task-id">DL89</span>DL89: e2e gate skips the Chromium download when one is preinstalled</li>
@@ -6417,25 +6417,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL87"><span class="task-id">DL87</span>DL87: per-agent TMPDIR and /tmp cleanup (bug 18)</li>
 <li data-glance-task="DL82"><span class="task-id">DL82</span><span class="release-name">RELEASE-56</span>RELEASE: pool parallelism per agent</li>
 <li data-glance-task="DL83"><span class="task-id">DL83</span>Pool: CI_MAX_PARALLEL split across agents; doctor warns on memory per agent</li>
-<li class="glance-more">and 5 more</li>
+<li class="glance-more">and 3 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">382</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">2</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">14</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">382</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">5</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">11</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 226" role="img" aria-label="Next releases: AR62 (Release AR60 AR61 B9 B10 B12 (luismc-artifacts patch)) expected live about 02:30, worst case 03:10; DL91 (Release delivery bug fixes B1-B8 B11 (luismc-delivery)) expected live about 03:00, worst case 03:40." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="202"/><text x="200" y="28">07 Nov 00:30</text><line class="rt-grid" x1="274.3" y1="36" x2="274.3" y2="202"/><text x="274.3" y="28">01:00</text><line class="rt-grid" x1="348.6" y1="36" x2="348.6" y2="202"/><text x="348.6" y="28">01:30</text><line class="rt-grid" x1="422.9" y1="36" x2="422.9" y2="202"/><text x="422.9" y="28">02:00</text><line class="rt-grid" x1="497.1" y1="36" x2="497.1" y2="202"/><text x="497.1" y="28">02:30</text><line class="rt-grid" x1="571.4" y1="36" x2="571.4" y2="202"/><text x="571.4" y="28">03:00</text><line class="rt-grid" x1="645.7" y1="36" x2="645.7" y2="202"/><text x="645.7" y="28">03:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="202"/><text x="720" y="28">04:00</text></g>
+<div class="timeline-scroll"><svg viewBox="0 0 960 226" role="img" aria-label="Next releases: AR62 (Release AR60 AR61 B9 B10 B12 (luismc-artifacts patch)) expected live about 01:30, worst case 02:10; DL91 (Release delivery bug fixes B1-B8 B11 (luismc-delivery)) expected live about 03:00, worst case 03:40." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="202"/><text x="200" y="28">07 Nov 00:30</text><line class="rt-grid" x1="274.3" y1="36" x2="274.3" y2="202"/><text x="274.3" y="28">01:00</text><line class="rt-grid" x1="348.6" y1="36" x2="348.6" y2="202"/><text x="348.6" y="28">01:30</text><line class="rt-grid" x1="422.9" y1="36" x2="422.9" y2="202"/><text x="422.9" y="28">02:00</text><line class="rt-grid" x1="497.1" y1="36" x2="497.1" y2="202"/><text x="497.1" y="28">02:30</text><line class="rt-grid" x1="571.4" y1="36" x2="571.4" y2="202"/><text x="571.4" y="28">03:00</text><line class="rt-grid" x1="645.7" y1="36" x2="645.7" y2="202"/><text x="645.7" y="28">03:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="202"/><text x="720" y="28">04:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-59 · Release AR60 AR61 B9 B10 B12 (luismc-artifacts patch)</title>RELEASE-59 · Release AR60…</text>
 <text class="rt-sub" x="0" y="77"><title>AR60, AR61, AR63, AR64, AR65</title>AR60, AR61, AR63, AR64, AR65</text>
-<rect class="rt-bar agents" x="237.1" y="52" width="161" height="22"><title>agents 00:45-01:50</title></rect>
-<rect class="rt-bar join" x="398.1" y="52" width="24.8" height="22"><title>join 01:50-02:00</title></rect>
-<rect class="rt-bar ci" x="422.9" y="52" width="74.3" height="22"><title>PR CI 02:00-02:30</title></rect>
-<rect class="rt-risk" x="497.1" y="58" width="99" height="10"><title>agent retry</title></rect>
-<polygon class="rt-worst" points="596.2,51 603.2,63 596.2,75 589.2,63"/>
-<text class="rt-risk-label" x="607.2" y="67">agent retry → worst ~03:10</text>
-<polygon class="rt-expected" points="497.1,50 505.1,63 497.1,76 489.1,63"/>
-<text class="rt-live-label" x="497.1" y="92">live ~02:30</text>
+<rect class="rt-bar agents" x="224.8" y="52" width="9.9" height="22"><title>agents 00:40-00:44</title></rect>
+<rect class="rt-bar join" x="249.5" y="52" width="19.8" height="22"><title>join 00:50-00:58</title></rect>
+<rect class="rt-bar ci" x="269.3" y="52" width="79.2" height="22"><title>PR CI 00:58-01:30</title></rect>
+<rect class="rt-risk" x="348.6" y="58" width="99" height="10"><title>agent retry</title></rect>
+<polygon class="rt-worst" points="447.6,51 454.6,63 447.6,75 440.6,63"/>
+<text class="rt-risk-label" x="458.6" y="67">agent retry → worst ~02:10</text>
+<polygon class="rt-expected" points="348.6,50 356.6,63 348.6,76 340.6,63"/>
+<text class="rt-live-label" x="348.6" y="92">live ~01:30</text>
 <text class="rt-name" x="0" y="122"><title>RELEASE-60 · Release delivery bug fixes B1-B8 B11 (luismc-delivery)</title>RELEASE-60 · Release deli…</text>
 <text class="rt-sub" x="0" y="139"><title>DL92, DL93, DL94, DL95, DL96, DL97, DL98, DL99, DL100</title>DL92, DL93, DL94, DL95, DL96, DL9…</text>
 <rect class="rt-bar agents" x="249.5" y="114" width="210.5" height="22"><title>agents 00:50-02:15</title></rect>
@@ -6446,18 +6446,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <text class="rt-risk-label" x="681.5" y="129">agent retry → worst ~03:40</text>
 <polygon class="rt-expected" points="571.4,112 579.4,125 571.4,138 563.4,125"/>
 <text class="rt-live-label" x="571.4" y="154">live ~03:00</text>
-<line class="rt-now" x1="222.3" y1="36" x2="222.3" y2="210"/><text class="rt-now-label" x="222.3" y="223">now 00:39</text>
+<line class="rt-now" x1="254.5" y1="36" x2="254.5" y2="210"/><text class="rt-now-label" x="254.5" y="223">now 00:52</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-59" open><summary><strong>RELEASE-59 · live ~02:30 · worst ~03:10</strong><span class="fold-count">6 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-59" open><summary><strong>RELEASE-59 · live ~01:30 · worst ~02:10</strong><span class="fold-count">6 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="AR62"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR62</span><span class="release-name">RELEASE-59</span>Release AR60 AR61 B9 B10 B12 (luismc-artifacts patch)</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Fixes on main by the session, touched suites, fold, push, CI on main, install the plugin, delete the temp files.</td><td data-label="Expected">07 Nov ~02:30</td></tr>
-<tr data-task="AR63"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR63</span>B9 mark-published names the publish steps</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Refusal names pending --json --refresh, publish, mark again; end-of-turn hook says to run pending after the last status change. Decision D21. Cloud agent.</td><td data-label="Expected">07 Nov ~01:50</td></tr>
-<tr data-task="AR64"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR64</span>B10 --expected accepts DD Mon HH:MM</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Accepted and stored as DD Mon ~HH:MM; R6.6 updated. Decision D22. Cloud agent.</td><td data-label="Expected">07 Nov ~01:50</td></tr>
-<tr data-task="AR65"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR65</span>B12 To do without Expected</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Expected optional for To do and On hold (Not scheduled), required from Running or Waiting. Decision D23. Cloud agent.</td><td data-label="Expected">07 Nov ~01:50</td></tr>
+<tr data-task="AR62"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR62</span><span class="release-name">RELEASE-59</span>Release AR60 AR61 B9 B10 B12 (luismc-artifacts patch)</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">PR #164 open 00:58, CI running; merge on green, then install and cleanup.</td><td data-label="Expected">07 Nov ~01:30</td></tr>
 <tr data-task="AR60"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR60</span>Stop hook leaves state temp files behind</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">write_state in hook_after_command.py leaves .claude/artifacts-stop-state.json.&lt;pid&gt;.tmp when os.replace fails (Windows: target held by a concurrent hook). Remove the temp file on failure, sweep stale ones, delete the current files. Decision D19.</td><td data-label="Expected">07 Nov</td></tr>
 <tr data-task="AR61"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR61</span>Hourly Full Progress fail-safe only while work is open</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">hook_end_of_turn.py freshness(): ask for the hourly publish (R9.8) only while a task is Running, Waiting or Needs you; update R9.8 in artifactspec and publish_hourly.py to match. Decision D20.</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="AR63"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR63</span>B9 mark-published names the publish steps</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Refusal names pending --json --refresh, publish, mark again; end-of-turn hook says to run pending after the last status change. Decision D21. Cloud agent.</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="AR64"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR64</span>B10 --expected accepts DD Mon HH:MM</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Accepted and stored as DD Mon ~HH:MM; R6.6 updated. Decision D22. Cloud agent.</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="AR65"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR65</span>B12 To do without Expected</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">Expected optional for To do and On hold (Not scheduled), required from Running or Waiting. Decision D23. Cloud agent.</td><td data-label="Expected">07 Nov</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold release-group" data-group="release-60" open><summary><strong>RELEASE-60 · live ~03:00 · worst ~03:40</strong><span class="fold-count">10 tasks</span></summary>
@@ -6870,8 +6870,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (2)</strong><span class="fold-count">2 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29900199"><time datetime="2026-11-07T00:39+00:00">07 Nov 00:39</time></td><td data-label="Tasks">DL1 to DL100</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">10 Running</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29900198"><time datetime="2026-11-07T00:38+00:00">07 Nov 00:38</time></td><td data-label="Tasks">AR2 to AR65</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">4 Running</span><span class="status-chip status-built">2 Built</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29900212"><time datetime="2026-11-07T00:52+00:00">07 Nov 00:52</time></td><td data-label="Tasks">DL1 to DL100</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">10 Running</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29900212"><time datetime="2026-11-07T00:52+00:00">07 Nov 00:52</time></td><td data-label="Tasks">AR2 to AR65</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-built">5 Built</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (6)</strong><span class="fold-count">6 feature artifacts</span></summary>
