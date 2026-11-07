@@ -38,7 +38,13 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | artifacts | D16 | How should the plugin handle the 200-publishes-a-day limit? | Defer + publish less | decided | 2026-10-12 |
 | artifacts | D17 | Start AR47 and AR48 now as the next release? | Now | decided | 2026-10-12 |
 | artifacts | D18 | Does the plugin commit or push the record? | Write files only, never commit or push | decided | 2026-10-12 |
+| artifacts | D19 | The artifacts stop hook leaves .claude/artifacts-stop-state.json.<pid>.tmp files behind when a state write is interrupted. What should we do? | Fix and ship | decided | 2026-11-07 |
 | artifacts | D2 | Do branch names start with the task ID? | Yes, task ID first | decided | 2026-10-10 |
+| artifacts | D20 | The end-of-turn hook asks for an hourly Full Progress publish even when no work is open. Should the hourly fail-safe (R9.8) apply only while work is open? | Only while work open | decided | 2026-11-07 |
+| artifacts | D21 | B9: after a status change, mark-published refuses a copy older than the record until pending --refresh and a second publish. How to fix? | Refuse early, name steps | decided | 2026-11-07 |
+| artifacts | D22 | B10: --expected "DD Mon HH:MM" without ~ is refused (R6.6). What should happen? | Accept, store with ~ | decided | 2026-11-07 |
+| artifacts | D23 | B12: task-add needs --expected even for a To do task with no schedule. What should change? | To do may omit Expected | decided | 2026-11-07 |
+| artifacts | D24 | AR60: when the stop state write still fails after its retries, what should the hook do? | Warn and go on | decided | 2026-11-07 |
 | artifacts | D3 | How do changes made outside a session reach the artifacts? | Next session start | decided | 2026-10-10 |
 | artifacts | D4 | What look do artifacts get? | Each project’s own design, else a default | decided | 2026-10-10 |
 | artifacts | D5 | An App / service column on the full-progress artifact? | Yes, full-progress only | decided | 2026-10-10 |
@@ -61,7 +67,16 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D105 | Bug 17: the pool image has no GitHub CLI (gh), which hosted ubuntu-latest preinstalls, so workflows that call gh api or gh pr fail on the pool. How should the image install gh? | Pinned tarball + sha256 | decided | 2026-11-06 |
 | delivery-speed | D106 | Bug 18: pool jobs share one /tmp, so a previous job's leftovers (for example /tmp/gitleaks.tmp) break the next job. Some actions hard-code /tmp. What should the pool do? | TMPDIR + clean user's /tmp | decided | 2026-11-06 |
 | delivery-speed | D107 | Bug 19: the TS e2e gate step always downloads Chromium, which cloud sandboxes block. How should the template skip the download? | Guard + setup detect | decided | 2026-11-06 |
+| delivery-speed | D108 | Bugs from a consuming project: who writes the fixes? | Cloud agents, pool local | decided | 2026-11-07 |
+| delivery-speed | D109 | B1: compose.yaml requires RUNNER_SHA256 but the setup never writes it to the pool .env. Which fix? | Write to .env + doctor | decided | 2026-11-07 |
 | delivery-speed | D11 | Install the train freeze in this repo’s own git hooks? | Yes | decided | 2026-10-11 |
+| delivery-speed | D110 | B2: a changed pool cap is written to .env but the container is never recreated. What should the step do? | Recreate when idle | decided | 2026-11-07 |
+| delivery-speed | D111 | B3: what floor should the pool setup refuse to go below? | 4 GiB / 2 CPUs | decided | 2026-11-07 |
+| delivery-speed | D112 | B6: how should DL-31 accept an ETA that waits on a person? | "~HH:MM if <action> by HH:MM" | decided | 2026-11-07 |
+| delivery-speed | D113 | B8: which branches should join cleanup skip? | Both guards | decided | 2026-11-07 |
+| delivery-speed | D114 | B11: a routine created without mcp_connections gets every connector. What fix? | Template + hook refuses | decided | 2026-11-07 |
+| delivery-speed | D115 | B5: one cloud launch has a trigger id and a run session id. How to track it? | Link, one agent | decided | 2026-11-07 |
+| delivery-speed | D116 | B4 and B7: report a memory kill as such in ci_watch.py, and stop an older-version watcher at SessionStart? | Yes, both as described | decided | 2026-11-07 |
 | delivery-speed | D12 | Merge this release on green CI without asking again? | Merge on green | decided | 2026-10-11 |
 | delivery-speed | D13 | Turn hooks on here (core.hooksPath .githooks), which also activates the pre-commit secret check? | Yes, both hooks | decided | 2026-10-11 |
 | delivery-speed | D14 | How should the runner load gate be reinstalled, now that PowerShell refuses unsigned scripts for the runner's account? | Runner account only | decided | 2026-10-26 |

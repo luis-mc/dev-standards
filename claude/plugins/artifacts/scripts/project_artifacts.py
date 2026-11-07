@@ -1100,7 +1100,9 @@ def validate_structure(rec):
             f(req, 'registry.json', '%s: %s' % (label, msg))
         ex = t.get('expected')
         if isinstance(ex, str) and isinstance(st, str) and st in statuses:
-            if st in ('Live', 'Built', 'Dropped'):
+            if ex == '' and st in ('To do', 'On hold'):
+                pass                  # R6.6: Expected is optional here; it shows as "Not scheduled"
+            elif st in ('Live', 'Built', 'Dropped'):
                 if not EXPECTED_RE.match(ex):
                     f('R6.7', 'registry.json', '%s: Expected on a %s row must be the date it happened (DD Mon), got "%s"'
                       % (label, st, ex))
@@ -1937,10 +1939,30 @@ def clean_waits_on(text):
     return text
 
 
+EXPECTED_NOTILDE_RE = re.compile(r'^((?:0[1-9]|[12][0-9]|3[01]) (?:' + '|'.join(MONTHS) + r')) ([01][0-9]|2[0-3]):([0-5][0-9])(;.*)?$')
+
+
+def normalise_expected(text):
+    """R6.6: "DD Mon HH:MM" is accepted and stored as "DD Mon ~HH:MM"; the rest is left for `check` rules."""
+    if text is None:
+        return None
+    text = str(text).strip()
+    m = EXPECTED_NOTILDE_RE.match(text)
+    if not m:
+        return text
+    note = m.group(4)
+    return '%s ~%s:%s%s' % (m.group(1), m.group(2), m.group(3), '; ' + note[1:].strip() if note and note[1:].strip() else '')
+
+
 def cmd_task_add(args):
     ctx = make_ctx(args)
     status = require_status(args.status)
+    args.expected = normalise_expected(args.expected)
     expected_given = args.expected is not None
+    phased_release = getattr(args, 'release', False) and args.phase and any(str(x).strip() for x in args.phase)
+    if not expected_given and status in ('To do', 'On hold') and not phased_release:
+        args.expected = ''           # R6.6: Expected is optional here; it shows as "Not scheduled"
+        expected_given = True
     if not expected_given:
         if not (getattr(args, 'release', False) and args.phase and any(str(x).strip() for x in args.phase)):
             raise Fail(1, '--expected is required (only a --release task with --phase may leave it out: Expected is then the end of the last phase)')
@@ -2028,6 +2050,7 @@ def clean_item(text):
 
 def cmd_set_task_status(args):
     status = require_status(args.status)
+    args.expected = normalise_expected(args.expected)
     new_item = clean_item(args.item) if args.item is not None else None
     basis = clean_basis(args.basis) if args.basis is not None else None
     waits_on = clean_waits_on(args.waits_on) if args.waits_on is not None else None
@@ -2053,6 +2076,8 @@ def cmd_set_task_status(args):
             task['expected'] = args.expected
         elif status in ('Live', 'Built', 'Dropped'):
             task['expected'] = now.date          # R6.8
+        if status in ('Running', 'Waiting') and not str(task.get('expected', '')).strip():
+            raise Fail(1, '%s: a %s row needs an Expected (R6.6); add --expected "DD Mon ~HH:MM"' % (args.id, status))
         if status not in OPEN_STATUSES:
             task.pop('expected_basis', None)     # R6.10: only an open row has an estimate to base
             if basis:
@@ -2755,7 +2780,8 @@ def stale_copy_reason(ctx, rec, e):
         return '%s was edited after pending wrote it; run pending --json and publish that copy unedited' % dest
     if meta.get('inputs_sha256') != record_inputs_hash(rec.dir):
         return ('the record changed after the publish copy %s was written (the copy is older than the latest record '
-                'change); run pending --json, publish the fresh copy, then mark-published' % dest)
+                'change). Do these steps in order: 1) run `pending --json --refresh`; 2) publish that copy unedited with the '
+                'Artifact tool; 3) run `mark-published` again' % dest)
     return None
 
 

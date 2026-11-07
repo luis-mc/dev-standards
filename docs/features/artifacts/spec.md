@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-artifacts]
 topics: [artifacts]
 status: live
-version: 0.4.0
+version: 0.4.1
 owner: agents
 type: reference
 code:
@@ -123,6 +123,10 @@ flowchart LR
 **R5.10** — Full Progress is published at least every 60 minutes while work is open (a task is Running, Waiting or Needs you).
 
 **R5.11** — A release's Expected time is the end of its last phase. Without `--expected`, a write sets it from the phases; an `--expected` that differs is refused.
+
+**R5.11b** — `--expected` takes `DD Mon HH:MM` as well as `DD Mon ~HH:MM`, and stores the second form. Expected is optional on a To do or On hold row and shows as `Not scheduled`; Running and Waiting need one.
+
+**R5.11c** — When `mark-published` refuses a stale copy, it names the steps in order: `pending --json --refresh`, publish the copy unedited, `mark-published` again. The end-of-turn hook says to make every status change before running `pending`.
 
 **R5.11a** — A release has a number, `RELEASE-n`. `--release` takes the next one past the delivery ledger and the record; `--release N` sets or corrects it and refuses a number in use. A phase may cross midnight: its end rolls to the next day. When the ledger knows the number of an Item's `RELEASE-n` lead, `check` gives the exact `set-task-status <id> --release <n>` command.
 
@@ -245,6 +249,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.4.1 | 2026-11-07 | RELEASE-59 | The stop hook no longer leaves state temp files behind.<br>The hourly Full Progress publish applies only while work is open (Running, Waiting or Needs you).<br>the mark-published refusal names the steps in order and the hook says to change statuses before pending<br>--expected accepts DD Mon HH:MM and stores DD Mon ~HH:MM<br>Expected is optional on To do and On hold and shows Not scheduled; Running and Waiting need one | AR60, AR61, AR63, AR64, AR65 |
 | 0.4.0 | 2026-11-05 | RELEASE-45 | A UserPromptSubmit hook (hook_turn_start.py) stamps the turn start per session; the Stop hook plan-rows check looks only at reports under docs/work/ changed after that stamp, and falls back to the 2-hour window when there is none.<br>plan_rows_check.py lists plan rows and audit findings that have no task; the task key is `<tag>#<id>` in the task detail; the Stop hook runs the check for a report written in the turn and blocks the end of the turn while rows are untasked.<br>The plan-rows check counts a numbered row only under a heading that starts with Plan, Proposed, Proposals or Findings. | DSY146, DSY99, DU11 |
 | 0.3.1 | 2026-11-04 | RELEASE-42 | Hooks and helpers fixed after the plugin review: deferred publishes are not asked for, queue writes are locked, DD Mon dates take the nearest year, after-command parsing reads quotes and exit codes correctly, merged catch-up respects open PRs, far-past Expected is not overdue, 29 Feb parses. | AR59 |
 | 0.3.0 | 2026-11-04 | RELEASE-41 | A release takes its next number past the delivery ledger; --release N sets or corrects a number; --phase accepts a phase that crosses midnight; the release-label check gives the exact fix when the ledger knows the number. | AR56 |
