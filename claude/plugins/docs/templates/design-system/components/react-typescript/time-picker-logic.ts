@@ -75,7 +75,7 @@ export function from12(h12: number, pm: boolean): number {
   return (h12 % 12) + (pm ? 12 : 0);
 }
 
-/** 24-hour by default; 12-hour when the locale's clock is 12-hour (D51). */
+/** 24-hour by default; 12-hour when the locale's clock is 12-hour. */
 export function hourCycleFor(locale?: string): HourCycle {
   try {
     const cycle = new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions().hourCycle;
