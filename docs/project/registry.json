@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-07T07:56+00:00",
+  "updated": "2026-11-07T08:13+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2197,12 +2197,11 @@
       "id": "DL103",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "pool-plan keeps the owner's pool cap (B14)",
       "detail": "pool-plan read no .env, so it planned 4 GiB/2 CPUs over the owner's 8.5 GiB/4 and could lower .wslconfig; adds pool-refresh for SHA and browsers only",
-      "expected": "07 Nov ~09:00",
-      "changed": "2026-11-07T07:56+00:00",
-      "expected_basis": "code + tests ~40 min, then CI",
+      "expected": "07 Nov",
+      "changed": "2026-11-07T08:13+00:00",
       "rides": "DL104",
       "started": "2026-11-07T07:56+00:00"
     },
@@ -2210,12 +2209,25 @@
       "id": "DL104",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Live",
       "item": "luismc-delivery 1.12.2 (B14)",
       "detail": "Branch, CI, merge, install, smoke and cleanup for the pool cap fix",
-      "expected": "07 Nov ~09:30",
-      "changed": "2026-11-07T07:56+00:00",
-      "release": 62
+      "expected": "07 Nov",
+      "changed": "2026-11-07T08:13+00:00",
+      "release": 62,
+      "phases": [
+        {
+          "name": "ci",
+          "start": "2026-11-07T08:08+00:00",
+          "end": "2026-11-07T08:35+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-07T08:35+00:00",
+          "end": "2026-11-07T08:45+00:00"
+        }
+      ],
+      "started": "2026-11-07T08:08+00:00"
     },
     {
       "id": "DS1",
