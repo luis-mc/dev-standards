@@ -17,3 +17,9 @@
 ## Run command for CI wiring
 `python -I tools/test_artifacts_ar66.py`
 
+## CI
+`gh workflow run spec-lint.yml --ref AR66-release-heading-no-expected -f areas=artifacts` triggered (run 42387887696) for d5f4ff2. The artifacts jobs (renderer, commands and hooks, incl. test_project_artifacts) passed. The `docs check` job failed at the DOCSPEC step, which is the expected G1 stale-decisions finding on a branch; I did not look at the log further.
+
+Branch head SHA: d5f4ff2dfa992118ceb981c63c69feddb3d9a6a0 (this report is committed after it).
+
+NOT READY
