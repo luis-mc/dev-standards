@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-07T15:51+00:00",
+  "updated": "2026-11-07T16:28+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -693,12 +693,11 @@
       "id": "AR66",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "task-add --release with a RELEASE: item (R5.46)",
-      "detail": "An item starting 'RELEASE:' gave a release group label with a trailing space, so R5.46 refused the change",
-      "expected": "07 Nov ~16:28",
-      "changed": "2026-11-07T15:43+00:00",
-      "expected_basis": "cloud agent from 15:43, 45 min",
+      "detail": "An item starting 'RELEASE:' gave a release group label with a trailing space, so R5.46 refused the change. Agent finished 15:50, tests and branch CI artifacts jobs passed; join must map its new test in a doc code: list (M1).",
+      "expected": "07 Nov",
+      "changed": "2026-11-07T16:28+00:00",
       "rides": "DL107",
       "started": "2026-11-07T15:43+00:00"
     },
