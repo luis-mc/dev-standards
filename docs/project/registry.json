@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-07T15:49+00:00",
+  "updated": "2026-11-07T15:51+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2258,12 +2258,11 @@
       "id": "DL106",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Plugin smoke workflow for DL-18",
       "detail": "A post-merge workflow checks the plugins from main (imports, --help, key commands) and is the smoke run DL-18 records here",
-      "expected": "07 Nov ~16:40",
-      "changed": "2026-11-07T15:49+00:00",
-      "expected_basis": "join fix: description-only skill check, config moved local",
+      "expected": "07 Nov",
+      "changed": "2026-11-07T15:51+00:00",
       "rides": "DL107",
       "started": "2026-11-07T15:43+00:00"
     },
