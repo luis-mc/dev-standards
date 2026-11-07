@@ -10,7 +10,9 @@
 - python3 -m unittest test_dl101_pool_browsers: 16 OK
 - test_dl92_pool_fixes: 23 OK; test_runner_pool: 149 OK; test_doctor: 19 OK; test_ci_setup: 29 OK; test_e2e_chromium: 7 OK
 - docs_check.py: G1 (stale decisions, expected) and T2 on test-cost spec (not mine). No W1.
-- Heavy spec-lint run: see below.
+- `gh workflow run spec-lint.yml --ref DL101-pool-browsers -f areas=delivery` (run 42322348822), watched with ci_watch.py: the delivery job (branch gate) passed. The `docs check` job failed at the DOCSPEC step. Locally the only error is G1 (stale decisions.md, expected on a branch). I did not confirm that G1 is the CI cause.
 
 ## Branch head
-see git log
+Code head b3853281fd12a88b625aa7e78fe4d3b287a40043 (this report is committed after it).
+
+NOT READY
