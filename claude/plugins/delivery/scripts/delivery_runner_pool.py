@@ -382,6 +382,39 @@ def cap_cpus(requested, ncpu):
     return max(1, min(requested, int(ncpu) - 1))
 
 
+def env_number(value):
+    """A number from a .env value such as "8.5g" or "4", else None."""
+    try:
+        return float(str(value).strip().rstrip('gG'))
+    except (TypeError, ValueError):
+        return None
+
+
+def keep_owner_cap(cap, pool_env, resize=False, host_cpus=None):
+    """B14: a rerun keeps the cap already in the pool's .env; the owner chose it. The measured cap replaces it only with
+    `resize`, or when the kept cap is under the floor; `reason` then says why. The kept cap sets the WSL values too."""
+    if not cap:
+        return cap
+    env = pool_env or {}
+    mem, cpus = env_number(env.get('POOL_MEM')), env_number(env.get('POOL_CPUS'))
+    if mem is None or cpus is None:
+        return dict(cap, source='measured')
+    if resize:
+        return dict(cap, source='measured', reason='--resize: the measured cap replaces %g GiB and %g CPUs from .env'
+                    % (mem, cpus))
+    if mem < MIN_POOL_GIB or cpus < MIN_POOL_CPUS:
+        return dict(cap, source='measured', reason='the cap in .env (%g GiB, %g CPUs) is under the floor of %g GiB and %g CPUs, '
+                    'so the measured cap replaces it' % (mem, cpus, MIN_POOL_GIB, MIN_POOL_CPUS))
+    procs = int(math.floor(cpus)) + 1
+    if host_cpus:
+        procs = max(1, min(procs, int(host_cpus)))
+    return dict(cap, mem_gib=mem, cpus=cpus, ok=True, message='', source='kept',
+                measured_cap={'mem_gib': cap.get('mem_gib'), 'cpus': cap.get('cpus')},
+                wsl={'memory': int(math.ceil(mem + SIDECAR_GIB + VM_GIB)), 'processors': procs},
+                cpus_text='cap kept from .env (measured now: %s GiB, %s CPUs; --resize uses that)'
+                          % (cap.get('mem_gib'), cap.get('cpus')))
+
+
 # --- sizing (section 6.4) ---------------------------------------------------------------------------------------------
 
 def sizing(total_gib, used_gib, cpus, docker_gib=None, largest_shard_gib=None, sidecar_gib=SIDECAR_GIB, vm_gib=VM_GIB,
@@ -539,6 +572,12 @@ def _wsl_values(found, cap):
     cur = found.get('wsl') or {}
     enough = cur.get('memory') is not None and cur['memory'] >= w['memory'] and \
         cur.get('processors') is not None and cur['processors'] >= w['processors']
+    # B14: the setup never lowers a value already in .wslconfig; lowering it is the owner's own edit.
+    w = dict(w)
+    if cur.get('memory') is not None:
+        w['memory'] = max(w['memory'], int(math.ceil(cur['memory'])))
+    if cur.get('processors'):
+        w['processors'] = max(w['processors'], int(cur['processors']))
     return w, enough
 
 
@@ -810,7 +849,7 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
             cur = found.get('wsl') or {}
             s1 = _step('wslconfig', 'Write %s with the pool ceiling (memory %s -> %sGB, processors %s -> %s; the old file is kept as .bak)' % (
                 cur.get('file'), _gb(cur.get('memory')), w['memory'], cur.get('processors') or 'unset', w['processors']),
-                'wslconfig', cap=cap)
+                'wslconfig', cap=dict(cap, wsl=w))
             if enough:
                 s1['state'] = 'already'
             steps.append(s1)
@@ -825,10 +864,12 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
             print(why)
         pw, pw_source = resolve_playwright(probe, browsers, playwright_version, paths)
         pw_text = ' Playwright %s (%s).' % (pw, pw_source) if pw else ''
-        steps.append(_step('pool-files', 'Write the pool files for "%s" (compose, agents.json, .env: POOL_MEM %s -> %sg, '
-                           'POOL_CPUS %s -> %s, POOL_CPUSET, POOL_CPUS_INT, POOL_BROWSERS %s). %s%s%s' % (
-                               pool, old.get('POOL_MEM') or 'unset', (cap or {}).get('mem_gib', 4),
-                               old.get('POOL_CPUS') or 'unset', (cap or {}).get('cpus', 1), browsers, browsers_note(browsers), pw_text,
+        kept = ' (kept)' if (cap or {}).get('source') == 'kept' else ''
+        steps.append(_step('pool-files', 'Write the pool files for "%s" (compose, agents.json, .env: POOL_MEM %s -> %sg%s, '
+                           'POOL_CPUS %s -> %s%s, POOL_CPUSET, POOL_CPUS_INT, POOL_BROWSERS %s). %s%s%s' % (
+                               pool, old.get('POOL_MEM') or 'unset', (cap or {}).get('mem_gib', 4), kept,
+                               old.get('POOL_CPUS') or 'unset', (cap or {}).get('cpus', 1), kept, browsers,
+                               browsers_note(browsers), pw_text,
                                (' ' + cap['cpus_text'] + '.') if (cap or {}).get('cpus_text') else ''),
                            'pool-files', pool=pool, cap=cap, browsers=browsers, playwright_version=pw))
         steps.append(_step('pool-up', 'Build and start the pool container', 'pool-up', pool=pool))
@@ -1019,6 +1060,49 @@ def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None, 
     return dest
 
 
+def set_env_values(path, values):
+    """Set KEY=value lines in a .env file (LF endings): a key already there is replaced in place, a new one is added at
+    the end. Every other line stays."""
+    try:
+        with open(path, encoding='utf-8') as f:
+            lines = f.read().splitlines()
+    except OSError:
+        lines = []
+    left = dict(values)
+    for i, line in enumerate(lines):
+        k = line.partition('=')[0].strip()
+        if k in left:
+            lines[i] = '%s=%s' % (k, left.pop(k))
+    lines += ['%s=%s' % kv for kv in left.items()]
+    with open(path, 'w', encoding='utf-8', newline='\n') as f:
+        f.write('\n'.join(lines) + '\n')
+
+
+def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version=None):
+    """B14: the narrow pool step. It (re)writes RUNNER_SHA256, POOL_BROWSERS and PLAYWRIGHT_VERSION in the pool's .env
+    and rebuilds; the cap and every other line stay. Returns a dict with `changes` (key -> (old, new)), or `error`."""
+    env = read_pool_env(probe, pool)
+    path = os.path.join(pool_dir(pool), '.env')
+    if not env:
+        return {'pool': pool, 'path': path, 'error': 'no pool .env at %s; run pool-run first' % path, 'changes': {}}
+    version = env.get('RUNNER_VERSION') or RUNNER_VERSION
+    sha = env.get('RUNNER_SHA256') or runner_sha(probe, version)
+    picked, why = pick_browsers(probe, browsers, repo_paths)
+    if browsers not in BROWSERS and env.get('POOL_BROWSERS') == 'chromium':
+        picked, why = 'chromium', None  # kept: only an explicit --browsers none removes it
+    pw, pw_source = resolve_playwright(probe, picked, playwright_version, repo_paths)
+    want = {'POOL_BROWSERS': picked}
+    if sha:
+        want['RUNNER_SHA256'] = sha
+    if pw:
+        want['PLAYWRIGHT_VERSION'] = pw
+    changes = {k: (env.get(k), v) for k, v in want.items() if env.get(k) != v}
+    out = {'pool': pool, 'path': path, 'changes': changes, 'why': why, 'playwright_source': pw_source if pw else None}
+    if not sha:
+        out['error'] = 'could not read the SHA-256 of runner %s; nothing was changed' % version
+    return out
+
+
 def recreate_command(pool):
     return 'docker compose up -d --no-build --force-recreate pool'
 
@@ -1144,7 +1228,7 @@ class Executor:
 
     def apply_cap(self, pool, old, new):
         """DL93: a changed cap in .env reaches the container only when it is recreated. Do it when no job runs; else say how."""
-        if not old.get('POOL_MEM') or all(old.get(k) == new.get(k) for k in ('POOL_MEM', 'POOL_CPUS')):
+        if not old.get('POOL_MEM') or all(env_number(old.get(k)) == env_number(new.get(k)) for k in ('POOL_MEM', 'POOL_CPUS')):
             return ''
         cmd = recreate_command(pool)
         if self.runners_busy():
@@ -1164,6 +1248,10 @@ class Executor:
         sha = read_pool_env(self.probe, step['pool']).get('RUNNER_SHA256') or runner_sha(self.probe, version)
         if not sha:
             return False, 'could not read the SHA-256 of the runner release; the image is not built without it'
+        env_path = os.path.join(pool_dir(step['pool']), '.env')
+        if os.path.isfile(env_path) and not read_pool_env(self.probe, step['pool']).get('RUNNER_SHA256'):
+            # B14: a later `docker compose up --no-build` needs it in .env (compose.yaml requires it).
+            set_env_values(env_path, {'RUNNER_SHA256': sha})
         browsers = read_pool_env(self.probe, step['pool']).get('POOL_BROWSERS') or 'none'
         pw = read_pool_env(self.probe, step['pool']).get('PLAYWRIGHT_VERSION')
         pw = pw if valid_playwright_version(pw) else PLAYWRIGHT_VERSION
@@ -1171,6 +1259,22 @@ class Executor:
         p = subprocess.run(['docker', 'compose', 'up', '-d', '--build'], cwd=pool_dir(step['pool']), env=env,
                            capture_output=True, text=True)
         return p.returncode == 0, 'pool is up' if p.returncode == 0 else (p.stderr.strip()[-300:] or 'docker compose failed')
+
+    def refresh(self, rp):
+        """B14: apply a refresh_plan: write the changed keys, then rebuild the image when no job runs (else say how). It
+        rebuilds with no change too, so an image built before POOL_BROWSERS was set gets the libraries."""
+        if rp.get('error'):
+            return False, rp['error']
+        if rp['changes']:
+            set_env_values(rp['path'], {k: v[1] for k, v in rp['changes'].items()})
+            text = 'wrote %s in %s' % (', '.join(sorted(rp['changes'])), rp['path'])
+        else:
+            text = 'nothing to change in %s' % rp['path']
+        if self.runners_busy():
+            return True, text + ('. A job may run (or the runners cannot be read), so the pool was not rebuilt. '
+                                 'By hand: cd %s && docker compose up -d --build' % pool_dir(rp['pool']))
+        ok, detail = self.do_pool_up({'pool': rp['pool']})
+        return ok, text + '; ' + ('the pool was rebuilt' if ok else 'the rebuild failed: ' + detail)
 
     def do_add_agent(self, step):
         tok = self.probe.gh(['api', '-X', 'POST', 'repos/%s/actions/runners/registration-token' % step['repo'], '--jq', '.token'])
@@ -1331,7 +1435,7 @@ def _browser_checks(add, probe, pool, env_vals, agents, repo_paths):
     users = _served_playwright(probe, agents, repo_paths)
     if not users:
         return
-    fix = 'Set POOL_BROWSERS=chromium in the pool .env, rebuild the image, recreate the pool.'
+    fix = 'Run `delivery_ci_setup.py pool-refresh --yes` to set POOL_BROWSERS=chromium and rebuild the image; the cap stays.'
     if (env_vals.get('POOL_BROWSERS') or 'none').strip() == 'none':
         add('browsers', 'fail', '%s uses Playwright but the pool .env has POOL_BROWSERS=none, so browser tests fail with a missing '
             'shared library. %s' % (', '.join(users), fix))
@@ -1382,7 +1486,8 @@ def doctor_checks(root=None, probe=None, repo_paths=None):
                    if '=' in l and not l.lstrip().startswith('#') and l.split('=', 1)[1].strip()}
         missing = [v for v in compose_required_vars(compose) if v not in env_has]
         add('required-vars', 'fail' if missing else 'ok',
-            ('compose.yaml requires %s but .env has no value for it, so `docker compose up` fails. Run the setup again.'
+            ('compose.yaml requires %s but .env has no value for it, so `docker compose up` fails. Run `delivery_ci_setup.py pool-refresh --yes`; it writes '
+             'RUNNER_SHA256 and keeps the cap.'
              % ', '.join(missing)) if missing else 'every required variable of compose.yaml is in .env')
         has_cap = 'POOL_CPUS=' in env and 'POOL_MEM=' in env
         add('cap', 'ok' if has_cap else 'fail', 'cap set in .env' if has_cap else '.env has no POOL_CPUS and POOL_MEM')
@@ -1397,14 +1502,14 @@ def doctor_checks(root=None, probe=None, repo_paths=None):
         if ratio is not None:
             low = ratio < WARN_GIB_PER_CPU
             add('mem-per-cpu', 'warn' if low else 'ok',
-                ('POOL_MEM %sg over POOL_CPUS %s is %.1f GiB per CPU, under %.1f. Run the setup again to resize the pool.'
+                ('POOL_MEM %sg over POOL_CPUS %s is %.1f GiB per CPU, under %.1f. Run the setup again with --resize to resize the pool.'
                  % (env_vals['POOL_MEM'].strip().rstrip('gG'), env_vals['POOL_CPUS'].strip(), ratio, WARN_GIB_PER_CPU)) if low
                 else '%.1f GiB per CPU' % ratio)
         per_agent = mem_g / len(agents) if (mem_g is not None and agents) else None
         if per_agent is not None:
             low = per_agent < WARN_GIB_PER_AGENT
             add('mem-per-agent', 'warn' if low else 'ok',
-                ('POOL_MEM %sg over %d agents is %.1f GiB each, under %.0f. Raise POOL_MEM by running the setup again on a host '
+                ('POOL_MEM %sg over %d agents is %.1f GiB each, under %.0f. Raise POOL_MEM by running the setup again with --resize on a host '
                  'with room, or use fewer agents per pool.' % (env_vals['POOL_MEM'].strip().rstrip('gG'), len(agents), per_agent,
                                                               WARN_GIB_PER_AGENT)) if low
                 else '%.1f GiB per agent' % per_agent)
@@ -1456,6 +1561,7 @@ def main(argv=None):
     ap.add_argument('--cpus', type=float)
     ap.add_argument('--docker-gib', type=float)
     ap.add_argument('--largest-shard-gib', type=float)
+    ap.add_argument('--resize', action='store_true', help='use the measured cap instead of the one already in the pool .env')
     args = ap.parse_args(argv)
     split = lambda s: [x for x in s.split(',') if x]  # noqa: E731
     if args.action == 'detect':
@@ -1464,6 +1570,7 @@ def main(argv=None):
         found = detect()
         found['pool_env'] = read_pool_env(Probe(), args.pool)
         res = measured_sizing(found, args.total_gib, args.used_gib, args.cpus, args.docker_gib, args.largest_shard_gib)
+        res = keep_owner_cap(res, found['pool_env'], args.resize, (found.get('host') or {}).get('cpus'))
         if args.action == 'sizing':
             if res is None:
                 print('sizing could not measure this machine; give --total-gib and --cpus', file=sys.stderr)
