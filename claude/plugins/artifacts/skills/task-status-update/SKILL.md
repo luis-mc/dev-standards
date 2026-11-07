@@ -54,7 +54,7 @@ exit, read the message, fix the cause and rerun.
    - `--detail`: plain text, at most 600 characters. Use it when what the row
      says changed.
    - `--expected`: a real date from `date` in the project's zone, `DD Mon` or
-     `DD Mon ~HH:MM`, optionally followed by `; ` and a short note. Never
+     `DD Mon ~HH:MM` (`DD Mon HH:MM` is stored with the `~`), optionally followed by `; ` and a short note. Running and Waiting need one. Never
      `today`, `soon`, `tomorrow` or `next` alone. For Live or Built it defaults
      to the current date; do not pass one.
    - `--basis`: when you give an Expected time, give its basis too (what it waits

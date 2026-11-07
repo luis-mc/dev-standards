@@ -66,6 +66,7 @@ exit, read the message, fix the cause and rerun.
    under `Not in a release yet` with the line `ships nothing: REASON`.
 3. **Add it:**
    `task-add --owner <key|project> --item "TEXT" --detail "TEXT" --expected "DD Mon" [--basis "TEXT"] [--app A] [--status S] [--prefix P]`.
+   `--expected` may be left out on a To do or On hold task; it shows as `Not scheduled`.
    For `--owner project`, `--prefix` picks one of the project's prefixes. The
    command registers a new prefix that no feature uses. The command prints the
    new ID, then renders the record and writes it to `docs/artifacts/` in the

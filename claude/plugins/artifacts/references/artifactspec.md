@@ -1349,7 +1349,10 @@ double-click.
   `DD Mon` or `DD Mon ~HH:MM` (a time for work due within a day) in the
   owner's zone, optionally followed by `; ` and a short note. Words such as
   `today`, `soon`, `tomorrow` or `next` alone fail: a relative word goes stale
-  without anyone changing it.
+  without anyone changing it. `task-add` and `set-task-status` also take
+  `DD Mon HH:MM` (no `~`) and store it as `DD Mon ~HH:MM`. On a To do or On
+  hold row Expected may be empty; the page shows `Not scheduled`. A move to
+  Running or Waiting with no Expected, stored or given, is refused.
 - **R6.7** — On a Live or Built row, Expected is the date it happened.
 - **R6.8** — `set-task-status` to Live or Built sets Expected to the current
   date when no `--expected` is given.
@@ -1764,7 +1767,10 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   copy in `.claude/artifacts-publish/<file>.meta.json`). `mark-published`
   refuses, changing nothing, when that copy was edited since, or when the
   registry, content, design or a rendered page changed after it was written:
-  the session runs `pending --json` again and publishes the fresh copy. With
+  the refusal names the steps in order: run `pending --json --refresh`,
+  publish that copy unedited with the Artifact tool, run `mark-published`
+  again. The command never refreshes the copy itself. Make every status change
+  first, then run `pending`, then publish. With
   no recorded copy it behaves as before. Verified by
   `test_pending_records_the_publish_copy_hash_and_time` and
   `test_mark_published_refuses_a_stale_or_edited_copy`.
