@@ -3036,11 +3036,42 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL101",
    "owner": "delivery-speed",
    "app": "luismc-delivery",
-   "status": "To do",
+   "status": "Running",
    "item": "B13 pool browsers follow Playwright use",
    "detail": "Setup sets POOL_BROWSERS=chromium when a repo in the pool runs Playwright; doctor fails when a repo uses Playwright and the image has no browser libs. Reported by a consuming project. Starts after RELEASE-60 merges (same files).",
-   "expected": "",
-   "changed": "2026-11-07T01:00+00:00"
+   "expected": "07 Nov ~01:55",
+   "changed": "2026-11-07T01:05+00:00",
+   "rides": "DL102",
+   "started": "2026-11-07T01:05+00:00"
+  },
+  {
+   "id": "DL102",
+   "owner": "delivery-speed",
+   "app": "luismc-delivery",
+   "status": "Running",
+   "item": "Release B13 fix (luismc-delivery patch)",
+   "detail": "One cloud agent, join, CI, install, cleanup, message the reporting session.",
+   "expected": "07 Nov ~02:20",
+   "changed": "2026-11-07T01:05+00:00",
+   "release": 61,
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-11-07T01:08+00:00",
+     "end": "2026-11-07T01:55+00:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-11-07T01:55+00:00",
+     "end": "2026-11-07T02:00+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-11-07T02:00+00:00",
+     "end": "2026-11-07T02:20+00:00"
+    }
+   ],
+   "started": "2026-11-07T01:05+00:00"
   },
   {
    "id": "DS1",
@@ -6393,6 +6424,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
+<ul>
+<li data-glance-task="DL101"><span class="task-id">DL101</span>B13 pool browsers follow Playwright use <span class="glance-expected">07 Nov ~01:55</span></li>
+<li data-glance-task="DL102"><span class="task-id">DL102</span><span class="release-name">RELEASE-61</span>Release B13 fix (luismc-delivery patch) <span class="glance-expected">07 Nov ~02:20</span></li>
+</ul>
+</details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">25 tasks</span></summary>
 <ul>
 <li data-glance-task="DL91"><span class="task-id">DL91</span><span class="release-name">RELEASE-60</span>Release delivery bug fixes B1-B8 B11 (luismc-delivery)</li>
@@ -6407,11 +6444,26 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">398</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">398</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
+<figure class="release-timeline">
+<figcaption>Next releases (Lisbon)</figcaption>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DL102 (Release B13 fix (luismc-delivery patch)) expected live about 02:20." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">01:00</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">01:30</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">02:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">02:30</text></g>
+<text class="rt-name" x="0" y="60"><title>RELEASE-61 · Release B13 fix (luismc-delivery patch)</title>RELEASE-61 · Release B13…</text>
+<text class="rt-sub" x="0" y="77"><title>DL101</title>DL101</text>
+<rect class="rt-bar agents" x="246.2" y="52" width="271.6" height="22"><title>agents 01:08-01:55</title></rect>
+<rect class="rt-bar join" x="517.8" y="52" width="28.9" height="22"><title>join 01:55-02:00</title></rect>
+<rect class="rt-bar ci" x="546.7" y="52" width="115.6" height="22"><title>PR CI 02:00-02:20</title></rect>
+<polygon class="rt-expected" points="662.2,50 670.2,63 662.2,76 654.2,63"/>
+<text class="rt-live-label" x="662.2" y="92">live ~02:20</text>
+<line class="rt-now" x1="228.9" y1="36" x2="228.9" y2="148"/><text class="rt-now-label" x="228.9" y="161">now 01:05</text>
+</svg></div>
+<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
+</figure>
+<details class="status-fold release-group" data-group="release-61" open><summary><strong>RELEASE-61 · live ~02:20</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL101"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL101</span>B13 pool browsers follow Playwright use</a></td><td data-label="App / service"><code>luismc-delivery</code></td><td data-label="Detail">Setup sets POOL_BROWSERS=chromium when a repo in the pool runs Playwright; doctor fails when a repo uses Playwright and the image has no browser libs. Reported by a consuming project. Starts after RELEASE-60 merges (same files).</td><td data-label="Expected">Not scheduled</td></tr>
+<tr data-task="DL102"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL102</span><span class="release-name">RELEASE-61</span>Release B13 fix (luismc-delivery patch)</a></td><td data-label="App / service"><code>luismc-delivery</code></td><td data-label="Detail">One cloud agent, join, CI, install, cleanup, message the reporting session.</td><td data-label="Expected">07 Nov ~02:20</td></tr>
+<tr data-task="DL101"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL101</span>B13 pool browsers follow Playwright use</a></td><td data-label="App / service"><code>luismc-delivery</code></td><td data-label="Detail">Setup sets POOL_BROWSERS=chromium when a repo in the pool runs Playwright; doctor fails when a repo uses Playwright and the image has no browser libs. Reported by a consuming project. Starts after RELEASE-60 merges (same files).</td><td data-label="Expected">07 Nov ~01:55</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">400 tasks</span></summary>
@@ -6826,7 +6878,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29900225"><time datetime="2026-11-07T01:05+00:00">07 Nov 01:05</time></td><td data-label="Tasks">DL1 to DL101</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29900225"><time datetime="2026-11-07T01:05+00:00">07 Nov 01:05</time></td><td data-label="Tasks">DL1 to DL102</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">2 Running</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>

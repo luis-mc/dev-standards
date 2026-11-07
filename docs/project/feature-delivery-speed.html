@@ -895,6 +895,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
+<ul>
+<li data-glance-task="DL101"><span class="task-id">DL101</span>B13 pool browsers follow Playwright use <span class="glance-expected">07 Nov ~01:55</span></li>
+<li data-glance-task="DL102"><span class="task-id">DL102</span><span class="release-name">RELEASE-61</span>Release B13 fix (luismc-delivery patch) <span class="glance-expected">07 Nov ~02:20</span></li>
+</ul>
+</details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">19 tasks</span></summary>
 <ul>
 <li data-glance-task="DL91"><span class="task-id">DL91</span><span class="release-name">RELEASE-60</span>Release delivery bug fixes B1-B8 B11 (luismc-delivery)</li>
@@ -909,11 +915,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">100</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">100</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL101"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL101</span>B13 pool browsers follow Playwright use</td><td data-label="Detail">Setup sets POOL_BROWSERS=chromium when a repo in the pool runs Playwright; doctor fails when a repo uses Playwright and the image has no browser libs. Reported by a consuming project. Starts after RELEASE-60 merges (same files).</td><td data-label="Expected">Not scheduled</td></tr>
+<tr data-task="DL101"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL101</span>B13 pool browsers follow Playwright use<span class="release-line"><span class="release-name">RELEASE-61</span></span></td><td data-label="Detail">Setup sets POOL_BROWSERS=chromium when a repo in the pool runs Playwright; doctor fails when a repo uses Playwright and the image has no browser libs. Reported by a consuming project. Starts after RELEASE-60 merges (same files).</td><td data-label="Expected">07 Nov ~01:55</td></tr>
+<tr data-task="DL102"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL102</span><span class="release-name">RELEASE-61</span>Release B13 fix (luismc-delivery patch)</td><td data-label="Detail">One cloud agent, join, CI, install, cleanup, message the reporting session.</td><td data-label="Expected">07 Nov ~02:20</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">100 tasks</span></summary>
