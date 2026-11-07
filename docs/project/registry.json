@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-07T16:31+00:00",
+  "updated": "2026-11-07T16:34+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2272,36 +2272,32 @@
       "status": "Running",
       "item": "luismc-delivery and luismc-artifacts patch release",
       "detail": "Join DL105 DL106 AR66, fold notes, CI, merge, install, smoke and cleanup",
-      "expected": "07 Nov ~17:30",
-      "changed": "2026-11-07T15:43+00:00",
+      "expected": "07 Nov ~17:10",
+      "changed": "2026-11-07T16:34+00:00",
       "release": 63,
-      "expected_basis": "3 cloud agents, then join and full CI",
+      "expected_basis": "PR #169 CI started 16:33; full run ~25 min",
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-07T15:41+00:00",
-          "end": "2026-11-07T16:36+00:00"
+          "end": "2026-11-07T16:31+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-07T16:36+00:00",
-          "end": "2026-11-07T16:50+00:00"
+          "start": "2026-11-07T16:31+00:00",
+          "end": "2026-11-07T16:33+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-07T16:50+00:00",
-          "end": "2026-11-07T17:20+00:00"
+          "start": "2026-11-07T16:33+00:00",
+          "end": "2026-11-07T17:00+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-07T17:20+00:00",
-          "end": "2026-11-07T17:30+00:00"
+          "start": "2026-11-07T17:00+00:00",
+          "end": "2026-11-07T17:10+00:00"
         }
       ],
-      "risk": {
-        "label": "+1 fix round",
-        "minutes": 20
-      },
       "started": "2026-11-07T15:43+00:00"
     },
     {
