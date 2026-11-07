@@ -552,7 +552,7 @@ def machine_items(root, cfg):
         items.append(_item("pool", "skip", "delivery_runner_pool is not installed"))
     else:
         try:
-            for r in POOL.doctor_checks(root):
+            for r in POOL.doctor_checks(root, repo_paths=[root]):
                 if isinstance(r, dict) and r.get("id"):
                     items.append(_item(str(r["id"]), r.get("status") if r.get("status") in ("ok", "warn", "fail", "skip")
                                        else "warn", str(r.get("detail") or "")))
