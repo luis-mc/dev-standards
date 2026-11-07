@@ -40,6 +40,12 @@ the deletions it appends the table to the train's GitHub release notes
 (delivery_log.py; --no-delivery-log skips it). Offline, no permission or any error:
 a warning, and the cleanup is unaffected.
 
+--keep-fresh-since EPOCH (local mode; join.py passes its start time): a local branch whose
+first commit outside <remote>/<default> (with none: its tip commit or its creation in the
+reflog) is newer than EPOCH is kept, and so is one a running agent in .delivery/ledger.json
+works on. Each such branch prints one `cleanup: skipped <branch>: <reason>` line. A missing
+ledger skips only the second check.
+
 --pr N considers only the train of that merged pull request (its head branch,
 every branch whose pull request had that head as base, and every JOINED branch:
 a remote or local branch whose tip is an ancestor of the merged pull request's
@@ -460,6 +466,53 @@ def clean_local(ctx: Ctx, branch: str, v: Verdict, trees: list[Worktree], row: R
 
 
 # --------------------------------------------------------------------------
+# fresh branches (DL99)
+# --------------------------------------------------------------------------
+
+def branch_born(ctx: Ctx, branch: str) -> int | None:
+    """When the branch began, in epoch seconds: the commit time of its first commit
+    not on <remote>/<default>; with none, the newer of its tip commit and its creation
+    in the reflog. None when it cannot be told."""
+    base = "refs/remotes/%s/%s" % (ctx.remote, ctx.default)
+    ref = "refs/heads/" + branch
+    if dc.rev(base, ctx.root) is not None:
+        p = ctx.git(["log", "--reverse", "--format=%ct", "%s..%s" % (base, ref)])
+        lines = [x for x in p.stdout.split() if x.isdigit()] if p.returncode == 0 else []
+        if lines:
+            return int(lines[0])
+    times = []
+    p = ctx.git(["log", "-1", "--format=%ct", ref])
+    if p.returncode == 0 and p.stdout.strip().isdigit():
+        times.append(int(p.stdout.strip()))
+    p = ctx.git(["reflog", "show", "--format=%ct", ref])
+    if p.returncode == 0:
+        made = [x for x in p.stdout.split() if x.isdigit()]
+        if made:
+            times.append(int(made[-1]))  # the oldest reflog entry is the creation
+    return max(times) if times else None
+
+
+def running_agent_branches(root: Path) -> set[str]:
+    """Branches of agents the ledger says are running. Read only; a missing or
+    unreadable ledger gives the empty set."""
+    try:
+        led = json.loads((root / ".delivery" / "ledger.json").read_text(encoding="utf-8"))
+        return {a["branch"] for a in led.get("agents", [])
+                if isinstance(a, dict) and a.get("state") == "running" and a.get("branch")}
+    except (OSError, ValueError, AttributeError, TypeError):
+        return set()
+
+
+def fresh_reason(ctx: Ctx, branch: str, since: int, running: set[str]) -> str | None:
+    born = branch_born(ctx, branch)
+    if born is not None and born > since:
+        return "created after the join started"
+    if branch in running:
+        return "a running agent in the ledger works on it"
+    return None
+
+
+# --------------------------------------------------------------------------
 # main
 # --------------------------------------------------------------------------
 
@@ -552,6 +605,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--dry-run", action="store_true", help="say what would be removed; remove nothing")
     ap.add_argument("--json", action="store_true", help="print the rows as JSON")
     ap.add_argument("--no-delivery-log", action="store_true", help="with --pr: do not append the delivery log to the release notes")
+    ap.add_argument("--keep-fresh-since", type=int, metavar="EPOCH",
+                    help="keep a local branch born after EPOCH or with a running agent in the ledger (join passes its start)")
     ap.add_argument("--repo", metavar="OWNER/NAME", help="repository for gh (default: the current one)")
     args = ap.parse_args(argv)
     if args.local and args.remote_only:
@@ -613,6 +668,7 @@ def main(argv: list[str] | None = None) -> int:
             log_info = None
 
     trees = list_worktrees(ctx) if do_local else []
+    running = running_agent_branches(root) if args.keep_fresh_since is not None else set()
     rows: list[Row] = []
     for branch in candidates:
         row = Row(branch)
@@ -660,6 +716,12 @@ def main(argv: list[str] | None = None) -> int:
                             row.removed.append("%d pass record(s)" % n)
                         if perr:
                             dc.eprint("cleanup: warning: pass records of %s not removed: %s" % (branch, perr))
+            if do_local and args.keep_fresh_since is not None and branch in local_branches:
+                fresh = fresh_reason(ctx, branch, args.keep_fresh_since, running)
+                if fresh:
+                    row.status, row.detail = "kept", fresh
+                    dc.eprint("cleanup: skipped %s: %s" % (branch, fresh))
+                    continue
             if do_local:
                 why = clean_local(ctx, branch, v, trees, row)
                 if why:
