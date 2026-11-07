@@ -1,0 +1,4 @@
+{
+  "comment": "The known breaches of the raw-inputs guard (raw-inputs.test.ts, design system UX-56). A RATCHET: the list only shrinks. Each entry: file, type (date, time, datetime-local or number) and count. Remove an entry (or lower its count) when the breach is gone; the guard fails if a listed breach is gone but still listed, and for any breach not listed. Never add an entry or raise a count: use the date picker, the time picker or the number keypad instead.",
+  "entries": []
+}

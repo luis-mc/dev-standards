@@ -18,7 +18,8 @@
   design_system.py components [--only date-picker,time-picker,number-keypad] [--stack react-typescript] [--dest DIR] [--apply]
                                                       opt-in shared component templates: copy the chosen components (code, CSS on
                                                       tokens, tests) to DIR (default src/ui/pickers) and add their sections to
-                                                      next-version/components.md with a CHANGES.md entry; never overwrites
+                                                      next-version/components.md, their words to the Component words table
+                                                      of content.md (no duplicates), and a CHANGES.md entry; never overwrites
   design_system.py brief [--apply]                    write or refresh the UI brief checklist (a marked block) in AGENTS.md
                                                       and .github/pull_request_template.md; safe to run again
   design_system.py styles [--json]                    read-only: list the project's style files and CSS custom properties
@@ -71,6 +72,13 @@ COMPONENT_MARK = "<!-- luismc-docs component: {name} -->"
 SECTION_NUM_RE = re.compile(r"^## (\d+)\.", re.M)
 ADD_HEAD_RE = re.compile(r"^## How to add a component\b", re.M)
 CHANGE_NUM_RE = re.compile(r"^- C(\d+)\b", re.M)
+WORDS_HEAD = "## Component words"
+WORDS_INTRO = ("The words of the shared components (`design_system.py components`). A project changes a word here "
+               "and passes it to the component through its `labels` prop. `{min}`, `{max}`, `{n}`, `{unit}` and "
+               "`{pattern}` are filled in by the component.\n\n| Word | Component |\n|---|---|\n")
+WORDS_PARA_RE = re.compile(r"^### Words \(content\.md\)\s*\n+(.+?)(?:\n\s*\n|\Z)", re.M | re.S)
+QUOTED_RE = re.compile(r'"([^"]+)"')
+TABLE_WORD_RE = re.compile(r"^\|\s*([^|\n]+?)\s*\|", re.M)
 ERR, WARN = "error", "warning"
 CHANGES_HEAD = "# Changes from {name}\n\nOne entry per change, `- C<n>: what changed (file; source)`.\n\n<!-- - C1: what changed (file; source) -->\n"
 
@@ -876,6 +884,33 @@ def components_insert(text: str, name: str, block: str, source: str):
     return text.rstrip("\n") + "\n\n" + section, n
 
 
+def component_words(block: str) -> list:
+    """The quoted words of a component spec block's "Words (content.md)" paragraph, in order. Pure."""
+    m = WORDS_PARA_RE.search(block)
+    return QUOTED_RE.findall(m.group(1)) if m else []
+
+
+def content_words_add(text: str, title: str, words: list):
+    """`text` (content.md) with each word not yet in a table of the file added as a row of the
+    "Component words" table (made at the end when it is not there). Returns (text, added words). Pure."""
+    have = {w.strip() for w in TABLE_WORD_RE.findall(text)}
+    new = []
+    for w in words:
+        if w not in have and w not in new:
+            new.append(w)
+    if not new:
+        return text, []
+    rows = "".join(f"| {w} | {title} |\n" for w in new)
+    m = re.search(r"^" + re.escape(WORDS_HEAD) + r"\s*$", text, re.M)
+    if not m:
+        return text.rstrip("\n") + "\n\n" + WORDS_HEAD + "\n\n" + WORDS_INTRO + rows, new
+    nxt = re.search(r"^#{1,2}\s", text[m.end():], re.M)
+    end = m.end() + nxt.start() if nxt else len(text)
+    section = text[:end].rstrip("\n") + "\n" + rows
+    rest = text[end:]
+    return section + ("\n" + rest if rest else ""), new
+
+
 def changes_add(text: str, line: str) -> str:
     """CHANGES.md with `- C<next>: line` appended. Pure."""
     n = max((int(x) for x in CHANGE_NUM_RE.findall(text)), default=0) + 1
@@ -920,15 +955,35 @@ def cmd_components(root: Path, a) -> int:
                 continue
             added.append(n)
             print(("  write  " if a.apply else "  would  ") + f" {spec.relative_to(root).as_posix()}: section {num}. {COMPONENTS[n][0]}")
+        content = draft / "content.md"
+        wtext = content.read_text(encoding="utf-8") if content.is_file() else ""
+        new_words = []
+        for n in names:
+            block = (src / "spec" / f"{n}.md").read_text(encoding="utf-8")
+            wtext, got = content_words_add(wtext, COMPONENTS[n][0], component_words(block))
+            new_words += got
+        rel_content = content.relative_to(root).as_posix()
+        if new_words:
+            print(("  write  " if a.apply else "  would  ") + f" {rel_content}: {len(new_words)} component words")
+            if a.apply:
+                content.write_text(wtext, encoding="utf-8", newline="\n")
+        else:
+            print(f"  kept    {rel_content}: every component word is there")
         if added and a.apply:
             spec.write_text(text, encoding="utf-8", newline="\n")
             changes = draft / "CHANGES.md"
             ctext = changes.read_text(encoding="utf-8") if changes.is_file() else ""
             words = ", ".join(COMPONENTS[n][0] for n in added)
             changes.write_text(changes_add(ctext, f"Added {words} from the luismc-docs component templates "
-                                                  f"(components.md; design_system.py components)."),
+                                                  f"(components.md, content.md; design_system.py components)."),
                                encoding="utf-8", newline="\n")
             build_visuals(draft)
+        elif new_words and a.apply:
+            changes = draft / "CHANGES.md"
+            ctext = changes.read_text(encoding="utf-8") if changes.is_file() else ""
+            changes.write_text(changes_add(ctext, "Added the shared component words to the Component words table "
+                                                  "(content.md; design_system.py components)."),
+                               encoding="utf-8", newline="\n")
     if not a.apply:
         print("dry run: add --apply")
     else:
