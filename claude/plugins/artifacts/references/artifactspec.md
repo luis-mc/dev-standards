@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.20.0
+**Version:** 1.20.1
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -104,6 +104,12 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.20.1 — 2026-11-07.**
+
+- R8.8: the stop state's temp file is removed when a write fails, stale ones are swept, and a write that cannot finish is skipped with a warning (AR60).
+- R8.18, R9.8, R9.10: the hourly fail-safe applies only while work is open (a task is Running, Waiting or Needs you); a release change is still published at once (AR61, decision D20).
+- R6.6 accepts `DD Mon HH:MM` and an empty Expected on To do and On hold rows. R9.11 names the refresh, publish and mark-published steps.
 
 **1.20.0 — 2026-11-04.**
 
