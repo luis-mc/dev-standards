@@ -2636,7 +2636,7 @@
     },
     {
       "id": "D117",
-      "question": "B13: the pool .env got POOL_BROWSERS=none for a project whose CI runs Playwright, so every browser test failed. How should the setup choose browsers? (Picked overnight under the owner's rules; for morning review.)",
+      "question": "B13: the pool got no browsers for a project whose CI runs Playwright. How should setup pick browsers? (Picked overnight; for morning review.)",
       "asked": "2026-11-07",
       "status": "decided",
       "options": [

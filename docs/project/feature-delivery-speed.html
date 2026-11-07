@@ -888,20 +888,16 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-07T01:00+00:00">07 Nov 01:00</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">07 Nov 00:57</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-07T01:05+00:00">07 Nov 01:05</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">07 Nov 01:01</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">19 tasks</span></summary>
 <ul>
-<li data-glance-task="DL91"><span class="task-id">DL91</span><span class="release-name">RELEASE-60</span>Release delivery bug fixes B1-B8 B11 (luismc-delivery) <span class="glance-expected">07 Nov ~01:35</span></li>
-</ul>
-</details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">9 tasks</span></summary>
-<ul>
+<li data-glance-task="DL91"><span class="task-id">DL91</span><span class="release-name">RELEASE-60</span>Release delivery bug fixes B1-B8 B11 (luismc-delivery)</li>
 <li data-glance-task="DL92"><span class="task-id">DL92</span>B1 pool .env gets RUNNER_SHA256</li>
 <li data-glance-task="DL93"><span class="task-id">DL93</span>B2 pool cap change applied</li>
 <li data-glance-task="DL94"><span class="task-id">DL94</span>B3 pool sizing floor</li>
@@ -909,43 +905,29 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL96"><span class="task-id">DL96</span>B5 one agent, two cloud ids</li>
 <li data-glance-task="DL97"><span class="task-id">DL97</span>B6 DL-31 accepts a person-start ETA</li>
 <li data-glance-task="DL98"><span class="task-id">DL98</span>B7 SessionStart replaces an old watcher</li>
-<li data-glance-task="DL99"><span class="task-id">DL99</span>B8 join.py keeps fresh agent branches</li>
-<li data-glance-task="DL100"><span class="task-id">DL100</span>B11 cloud launch sets no connectors</li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">11 tasks</span></summary>
-<ul>
-<li data-glance-task="DL88"><span class="task-id">DL88</span><span class="release-name">RELEASE-58</span>e2e gate uses a preinstalled Chromium</li>
-<li data-glance-task="DL89"><span class="task-id">DL89</span>DL89: e2e gate skips the Chromium download when one is preinstalled</li>
-<li data-glance-task="DL90"><span class="task-id">DL90</span>DL90: ledger found from a worktree; delivery_ledger link fallback (bug 20)</li>
-<li data-glance-task="DL85"><span class="task-id">DL85</span><span class="release-name">RELEASE-57</span>pool gh and per-job tmp</li>
-<li data-glance-task="DL86"><span class="task-id">DL86</span>DL86: gh CLI in the pool image (bug 17)</li>
-<li data-glance-task="DL87"><span class="task-id">DL87</span>DL87: per-agent TMPDIR and /tmp cleanup (bug 18)</li>
-<li data-glance-task="DL82"><span class="task-id">DL82</span><span class="release-name">RELEASE-56</span>RELEASE: pool parallelism per agent</li>
-<li data-glance-task="DL83"><span class="task-id">DL83</span>Pool: CI_MAX_PARALLEL split across agents; doctor warns on memory per agent</li>
-<li class="glance-more">and 3 more</li>
+<li class="glance-more">and 11 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">90</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">9</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">100</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">2 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL91"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL91</span><span class="release-name">RELEASE-60</span>Release delivery bug fixes B1-B8 B11 (luismc-delivery)</td><td data-label="Detail">PR #165 open 01:03, CI running; merge on green, install, cleanup.</td><td data-label="Expected">07 Nov ~01:35</td></tr>
 <tr data-task="DL101"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL101</span>B13 pool browsers follow Playwright use</td><td data-label="Detail">Setup sets POOL_BROWSERS=chromium when a repo in the pool runs Playwright; doctor fails when a repo uses Playwright and the image has no browser libs. Reported by a consuming project. Starts after RELEASE-60 merges (same files).</td><td data-label="Expected">Not scheduled</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">9 built, 90 live</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">100 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL92"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DL92</span>B1 pool .env gets RUNNER_SHA256<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Setup writes it; doctor fails on any ${VAR:?} in compose.yaml with no value. D109. Local agent (Docker).</td><td data-label="Expected">07 Nov</td></tr>
-<tr data-task="DL93"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DL93</span>B2 pool cap change applied<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Recreate the pool when idle, else print the command; doctor compares docker inspect with .env. D110. Local agent.</td><td data-label="Expected">07 Nov</td></tr>
-<tr data-task="DL94"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DL94</span>B3 pool sizing floor<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Find the 0.5g/1 CPU sizing cause; refuse caps below 4 GiB / 2 CPUs. D111. Local agent.</td><td data-label="Expected">07 Nov</td></tr>
-<tr data-task="DL95"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DL95</span>B4 ci_watch reports memory kills<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Exit 137 or Killed reads as killed for memory with the live cap, not a stale lockfile; same for a 30-min Set up runner. D116. Local agent.</td><td data-label="Expected">07 Nov</td></tr>
-<tr data-task="DL96"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DL96</span>B5 one agent, two cloud ids<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Link cse_ run id under its trig_; eta/done/last_checked on either id apply to both. D115. Cloud agent.</td><td data-label="Expected">07 Nov</td></tr>
-<tr data-task="DL97"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DL97</span>B6 DL-31 accepts a person-start ETA<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Accept ~HH:MM if &lt;action&gt; by HH:MM; past durations not checked. D112. Cloud agent.</td><td data-label="Expected">07 Nov</td></tr>
-<tr data-task="DL98"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DL98</span>B7 SessionStart replaces an old watcher<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Stop a delivery_watch from an older plugin version and start the newest. D116. Cloud agent.</td><td data-label="Expected">07 Nov</td></tr>
-<tr data-task="DL99"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DL99</span>B8 join.py keeps fresh agent branches<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Skip branches newer than the join start or with a running agent; list skipped. D113. Cloud agent.</td><td data-label="Expected">07 Nov</td></tr>
-<tr data-task="DL100"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DL100</span>B11 cloud launch sets no connectors<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Template create body clears connectors; launch hook refuses a create without it unless the brief names connectors. D114. Cloud agent.</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="DL91"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL91</span><span class="release-name">RELEASE-60</span>Release delivery bug fixes B1-B8 B11 (luismc-delivery)</td><td data-label="Detail">RELEASE-60 merged (PR #165, d94be34) 01:03: luismc-delivery 1.12.0, DELIVERYSPEC 1.6.0; installed here and smoke-tested; branches and worktree removed.</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="DL92"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL92</span>B1 pool .env gets RUNNER_SHA256<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Setup writes it; doctor fails on any ${VAR:?} in compose.yaml with no value. D109. Local agent (Docker).</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="DL93"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL93</span>B2 pool cap change applied<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Recreate the pool when idle, else print the command; doctor compares docker inspect with .env. D110. Local agent.</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="DL94"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL94</span>B3 pool sizing floor<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Find the 0.5g/1 CPU sizing cause; refuse caps below 4 GiB / 2 CPUs. D111. Local agent.</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="DL95"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL95</span>B4 ci_watch reports memory kills<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Exit 137 or Killed reads as killed for memory with the live cap, not a stale lockfile; same for a 30-min Set up runner. D116. Local agent.</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="DL96"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL96</span>B5 one agent, two cloud ids<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Link cse_ run id under its trig_; eta/done/last_checked on either id apply to both. D115. Cloud agent.</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="DL97"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL97</span>B6 DL-31 accepts a person-start ETA<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Accept ~HH:MM if &lt;action&gt; by HH:MM; past durations not checked. D112. Cloud agent.</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="DL98"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL98</span>B7 SessionStart replaces an old watcher<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Stop a delivery_watch from an older plugin version and start the newest. D116. Cloud agent.</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="DL99"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL99</span>B8 join.py keeps fresh agent branches<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Skip branches newer than the join start or with a running agent; list skipped. D113. Cloud agent.</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="DL100"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL100</span>B11 cloud launch sets no connectors<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Template create body clears connectors; launch hook refuses a create without it unless the brief names connectors. D114. Cloud agent.</td><td data-label="Expected">07 Nov</td></tr>
 <tr data-task="DL88"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL88</span><span class="release-name">RELEASE-58</span>e2e gate uses a preinstalled Chromium</td><td data-label="Detail">Join DL89, fold notes (luismc-delivery 1.11.0), PR, CI, merge, install, message moobable.</td><td data-label="Expected">06 Nov</td></tr>
 <tr data-task="DL89"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL89</span>DL89: e2e gate skips the Chromium download when one is preinstalled<span class="release-line"><span class="release-name">RELEASE-58</span></span></td><td data-label="Detail">gate.json e2e run/run_full skip playwright install when E2E_CHROMIUM_PATH is an existing file; agent_setup.sh finds a preinstalled Chromium and writes E2E_CHROMIUM_PATH to the session env file. D107.</td><td data-label="Expected">06 Nov</td></tr>
 <tr data-task="DL90"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL90</span>DL90: ledger found from a worktree; delivery_ledger link fallback (bug 20)<span class="release-line"><span class="release-name">RELEASE-58</span></span></td><td data-label="Detail">find_root resolves a git worktree to its main checkout and ignores a .delivery folder without config or ledger (the gate writes gate-result.json in worktrees), so hook records from worktrees reach the main ledger. New: delivery_ledger.py link --pr N [--sha S].</td><td data-label="Expected">06 Nov</td></tr>
@@ -1071,6 +1053,24 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D117">
+<h3 class="decision-head"><span class="decision-id">D117</span> <span class="decision-question">B13: the pool got no browsers for a project whose CI runs Playwright. How should setup pick browsers? (Picked overnight; for morning review.)</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Detect Playwright + doctor check</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">Setup sets POOL_BROWSERS=chromium when a repo in the pool has a Playwright config or dependency; the doctor fails when a repo uses Playwright and the image lacks browser libraries.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Always install Chromium</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Every pool image carries Chromium libraries; larger image, no detection.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ask at setup</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">The setup asks the owner; doctor check only.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D116">
 <h3 class="decision-head"><span class="decision-id">D116</span> <span class="decision-question">B4 and B7: report a memory kill as such in ci_watch.py, and stop an older-version watcher at SessionStart?</span></h3>
 <p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
