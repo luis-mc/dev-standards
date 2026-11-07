@@ -1,0 +1,76 @@
+/* TimePicker (luismc-docs template). Design tokens only. Needs picker-base.css. */
+.ds-timepicker {
+  display: grid;
+  gap: var(--ds-space-3);
+  font-family: var(--ds-font-body);
+  color: var(--ds-color-text);
+}
+.ds-timepicker__header {
+  display: grid;
+  gap: var(--ds-space-1);
+  padding-block-end: var(--ds-space-2);
+  border-block-end: var(--ds-border-medium) solid var(--ds-color-divider);
+}
+.ds-timepicker__value {
+  font-size: var(--ds-size-5);
+  font-weight: var(--ds-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+.ds-timepicker__columns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-space-2);
+}
+.ds-timepicker__column {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-2);
+}
+.ds-timepicker__spin {
+  display: grid;
+  gap: var(--ds-space-1);
+  justify-items: stretch;
+}
+.ds-timepicker__key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-block-end-width: var(--ds-border-thick);
+}
+.ds-timepicker__number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--ds-control-height-large);
+  padding-inline: var(--ds-space-3);
+  font-size: var(--ds-size-6);
+  font-weight: var(--ds-weight-bold);
+  font-variant-numeric: tabular-nums;
+  border-width: var(--ds-border-medium);
+  cursor: default;
+}
+.ds-timepicker__sep {
+  font-size: var(--ds-size-6);
+  font-weight: var(--ds-weight-bold);
+}
+.ds-timepicker__period {
+  display: grid;
+  gap: var(--ds-space-1);
+}
+.ds-timepicker__period-option[aria-pressed='true'],
+.ds-timepicker__chip[aria-pressed='true'] {
+  background: var(--ds-color-primary);
+  color: var(--ds-color-on-primary);
+  border-color: var(--ds-color-primary);
+}
+.ds-timepicker__quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2);
+}
+.ds-timepicker__chip {
+  padding-inline: var(--ds-space-3);
+  border-radius: var(--ds-radius-round);
+  font-variant-numeric: tabular-nums;
+}

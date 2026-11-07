@@ -11,6 +11,11 @@ Cases:
             freeze guards pass (the freeze case diffs against the commit
             that still held v1).
   gap       v1 missing and not archived: the layout guard fails, and only it.
+  components  the opt-in picker templates (design_system.py components --apply): their
+            vitest tests (jsdom) pass and tsc --noEmit is clean (R15.10).
+  raw-inputs  the kit's raw-inputs guard (UX-56) in a project: clean passes; each of
+            type="date", "time", "datetime-local" and "number" in app code fails;
+            a listed entry in raw-inputs.known.json passes.
 
 Run:  python3 tools/test_ds_guard_templates.py
 """
@@ -24,10 +29,16 @@ import tempfile
 from pathlib import Path
 
 VITEST = "3.2.4"
+# The component templates' test stack, exact versions.
+COMPONENT_DEPS = {"vitest": VITEST, "jsdom": "26.1.0", "react": "19.1.0", "react-dom": "19.1.0",
+                  "typescript": "5.8.3", "@types/react": "19.1.8", "@types/react-dom": "19.1.6"}
 ROOT = Path(__file__).resolve().parent.parent
 PLUGIN = ROOT / "claude" / "plugins" / "docs"
 SCRIPT = PLUGIN / "scripts" / "design_system.py"
 TEMPLATES = PLUGIN / "templates" / "design-system" / "guards" / "typescript-vitest"
+KIT = PLUGIN / "templates" / "design-system" / "guards" / "typescript-vitest-kit"
+RAW_INPUT_FILES = ("raw-inputs-scan.ts", "raw-inputs.test.ts", "raw-inputs.known.json")
+RAW_INPUT_TYPES = ("date", "time", "datetime-local", "number")
 ENV_GIT = ["-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false"]
 
 
@@ -119,6 +130,52 @@ def expect(label, result, want_fail: dict[str, str] | None):
     return ok
 
 
+def components_case(tmp: Path) -> bool:
+    proj = tmp / "components"
+    proj.mkdir()
+    run(["git", "init", "-q"], proj)
+    ds(proj, "init", "--apply")
+    ds(proj, "components", "--apply")
+    (proj / "package.json").write_text(json.dumps({
+        "name": "app2", "private": True, "type": "module", "devDependencies": COMPONENT_DEPS}, indent=2))
+    (proj / "tsconfig.json").write_text(json.dumps({"compilerOptions": {
+        "target": "ES2022", "module": "ESNext", "moduleResolution": "bundler", "jsx": "react-jsx",
+        "strict": True, "noEmit": True, "skipLibCheck": True, "types": [],
+        "lib": ["ES2022", "DOM", "DOM.Iterable"]}, "include": ["src"]}, indent=2))
+    install(proj, None)
+    ok = expect("component templates: keyboard, value and limits", vitest(proj), None)
+    tsc = run(["npx", "tsc", "-p", "."], proj, check=False)
+    print(f"{'PASS' if tsc.returncode == 0 else 'FAIL'}: component templates typecheck"
+          + ("" if tsc.returncode == 0 else f"\n{tsc.stdout}{tsc.stderr}"))
+    return ok and tsc.returncode == 0
+
+
+def raw_inputs_case(tmp: Path, cache: Path) -> bool:
+    """The kit's raw-inputs guard (UX-56), run by real vitest on a planted tree."""
+    def project(name: str, app: str, known: list) -> Path:
+        proj = tmp / name
+        (proj / "scripts" / "design").mkdir(parents=True)
+        for f in RAW_INPUT_FILES:
+            shutil.copy(KIT / f, proj / "scripts" / "design" / f)
+        (proj / "scripts" / "design" / "raw-inputs.known.json").write_text(json.dumps({"entries": known}))
+        (proj / "apps" / "web").mkdir(parents=True)
+        (proj / "apps" / "web" / "page.tsx").write_text(app)
+        (proj / "package.json").write_text(json.dumps({
+            "name": name, "private": True, "type": "module", "devDependencies": {"vitest": VITEST}}, indent=2))
+        install(proj, cache)
+        return proj
+    title = "no new native input"
+    ok = expect("raw-inputs: a picker and a text box pass",
+                vitest(project("raw-clean", '<DatePicker /><input type="text" inputMode="numeric" />', [])), None)
+    for t in RAW_INPUT_TYPES:
+        ok &= expect(f'raw-inputs: type="{t}" fails', vitest(project(f"raw-{t}", f'<input type="{t}" />', [])),
+                     {"raw-inputs.test.ts": title})
+    entry = [{"file": "apps/web/page.tsx", "type": "date", "count": 1}]
+    ok &= expect("raw-inputs: a listed entry passes",
+                 vitest(project("raw-listed", '<input type="date" />', entry)), None)
+    return ok
+
+
 def main() -> int:
     if not shutil.which("node") or not shutil.which("npm"):
         print("FAIL: node and npm are required")
@@ -150,6 +207,9 @@ def main() -> int:
         install(gap, clean)
         ok &= expect("v1 missing and not archived fails the layout guard", vitest(gap, "no-such-ref"),
                      {"design-system-layout.test.ts": "holds only version folders"})
+
+        ok &= raw_inputs_case(tmp, clean)
+        ok &= components_case(tmp)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     print("OK" if ok else "NOT OK")

@@ -1,0 +1,88 @@
+/* DatePicker (luismc-docs template). Design tokens only. Needs picker-base.css. */
+.ds-datepicker {
+  display: grid;
+  gap: var(--ds-space-3);
+  max-inline-size: var(--ds-width-field-full);
+  font-family: var(--ds-font-body);
+  color: var(--ds-color-text);
+}
+.ds-datepicker__header {
+  display: grid;
+  gap: var(--ds-space-1);
+  padding-block-end: var(--ds-space-2);
+  border-block-end: var(--ds-border-medium) solid var(--ds-color-divider);
+}
+.ds-datepicker__value {
+  font-size: var(--ds-size-5);
+  font-weight: var(--ds-weight-bold);
+  min-block-size: calc(var(--ds-line-height) * 1em);
+}
+.ds-datepicker__nav {
+  display: flex;
+  gap: var(--ds-space-2);
+  align-items: center;
+}
+.ds-datepicker__select {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  padding-inline: var(--ds-space-2);
+}
+.ds-datepicker__step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ds-datepicker__grid {
+  inline-size: 100%;
+  border-collapse: separate;
+  border-spacing: var(--ds-space-1);
+  table-layout: fixed;
+}
+.ds-datepicker__caption {
+  position: absolute;
+  inline-size: var(--ds-hairline);
+  block-size: var(--ds-hairline);
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.ds-datepicker__grid th {
+  font-size: var(--ds-size-2);
+  font-weight: var(--ds-weight-semibold);
+  color: var(--ds-color-text-muted);
+  padding-block: var(--ds-space-1);
+}
+.ds-datepicker__grid td { padding: var(--ds-space-0); }
+.ds-datepicker__day {
+  inline-size: 100%;
+  font-variant-numeric: tabular-nums;
+}
+.ds-datepicker__day[aria-current='date'] {
+  border-width: var(--ds-border-thick);
+}
+.ds-datepicker__day[data-selected] {
+  background: var(--ds-color-primary);
+  color: var(--ds-color-on-primary);
+  border-color: var(--ds-color-primary);
+  font-weight: var(--ds-weight-bold);
+}
+.ds-datepicker__typed {
+  display: grid;
+  gap: var(--ds-space-1);
+}
+.ds-datepicker__typed-label { font-weight: var(--ds-weight-semibold); }
+.ds-datepicker__hint {
+  font-size: var(--ds-size-2);
+  color: var(--ds-color-text-muted);
+}
+.ds-datepicker__input {
+  max-inline-size: var(--ds-width-field-short);
+  padding-inline: var(--ds-space-3);
+  cursor: text;
+}
+.ds-datepicker__input[aria-invalid='true'] { border-color: var(--ds-color-problem); }
+.ds-datepicker__error {
+  margin: var(--ds-space-0);
+  font-size: var(--ds-size-2);
+  color: var(--ds-color-problem);
+}

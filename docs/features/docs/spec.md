@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 0.9.0
+version: 0.10.0
 owner: agents
 type: reference
 code:
@@ -83,6 +83,10 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.13** — The Stop hook prints a warning, never a block, when mapped code changed without docs. The SessionStart hook adds the docs rule. Both do nothing without `docs/docs.json`. Both fail open on error (DOCSPEC R8.7).
 
+**R5.14** — `design_system.py components` copies the opt-in React and TypeScript templates (`DatePicker`, `TimePicker` with units `h`, `hm` or `hms`, `NumberKeypad`) with their unit tests, never overwrites a file, and adds one numbered section per component to `next-version/components.md` with one `CHANGES.md` entry. It adds each component's words to the "Component words" table of `content.md`, with no duplicates. A rerun adds nothing. The gallery draws the three components. The templates use tokens only, and their tests pass and typecheck in a fresh project (DOCSPEC R15.10).
+
+**R5.15** — The design-system starter has rule UX-56: dates use the date picker, times the time picker, and the number keypad only counts, measures and codes; never a native date, time or number input. The enforcement kit has a raw-inputs guard that fails on `type="date"`, `"time"`, `"datetime-local"` and `"number"` and honours its known list (DOCSPEC R15.11).
+
 ## 6. Non-functional requirements
 
 **R6.1** — The scripts use only the Python standard library and run on Python 3.9 or later (DOCSPEC R12.4).
@@ -126,6 +130,8 @@ Settings live in the project's `docs/docs.json` (DOCSPEC R12.3). The plugin work
 | R5.10, R5.11 | `claude/plugins/docs/tests/test_check.py` |
 | R5.12 | `claude/plugins/docs/tests/test_work.py` |
 | R5.13 | `claude/plugins/docs/tests/test_hooks.py` |
+| R5.14 | `claude/plugins/docs/tests/test_components.py`, `tools/test_ds_guard_templates.py` |
+| R5.15 | `claude/plugins/docs/tests/test_components.py`, `tools/test_ds_guard_templates.py` |
 | R6.1, R6.2 | `claude/plugins/docs/tests/test_lib.py` |
 
 Run: `python3 -I -m unittest discover -s claude/plugins/docs/tests`.
@@ -162,6 +168,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.10.0 | 2026-11-07 | RELEASE-64 | design_system.py components installs the opt-in DatePicker, TimePicker and NumberKeypad templates (React and TypeScript) with their spec sections (R5.14).<br>The design-system starter has rule UX-56 and the enforcement kit a raw-inputs guard (no native date, time or number input); design_system.py components adds the component words to content.md; the gallery draws the date picker, the time picker and the number keypad (R5.14, R5.15). | UXC24, UXC27 |
 | 0.9.0 | 2026-11-05 | RELEASE-47 | The design-system starter has rules UX-49 to UX-55, extended rules, and a wizard state word table.<br>The design-system starter adds a Looks line per component, a change review component, a filter bar, text-on-fill token pairs, more motion tokens, tokens per width, closed border widths and a weight ceiling per type role.<br>The docs scripts accept a lone --; DS4 is information only on a task branch; design_system.py relink accepts link-only edits of an approved version; new drafts show where CHANGES.md entries go; the version README has a section for what the apps do not follow yet.<br>The design-system enforcement kit adds a raw-controls guard (no raw button, input, select or textarea in app code) and a contrast guard (WCAG 2.2 AA for text-on-fill token pairs in every theme), each with a known list that only shrinks.<br>The offline design-system gallery draws the change review component and the list-toolbar filter bar, and shows text-on-fill pairs with contrast, motion, per-width tokens, border widths and type weights. | DU2, DU3, DU4, DU5, DU6 |
 | 0.8.0 | 2026-11-05 | RELEASE-46 | The design-system template has a full Dialog and sheet component and rules UX-43 to UX-48. | DS189 |
 | 0.7.0 | 2026-11-05 | RELEASE-45 | Design-system enforcement kit templates (TypeScript and Vitest only; no app CSS scan, DOM layout checker, wizard harness with ten required states), a UI brief checklist written by design_system.py brief, and R15.9. | DSY99 |

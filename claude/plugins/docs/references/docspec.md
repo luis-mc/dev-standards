@@ -1,7 +1,7 @@
 # DOCSPEC — Documentation Standard
 
 **Status:** Normative
-**Version:** 1.7.0
+**Version:** 1.8.0
 **Applies to:** every project that keeps its documentation with the `luismc-docs` plugin
 **Audience:** Claude Code sessions and people working in those projects, and the implementers of `luismc-docs`
 **Owner:** Luis Carvalho
@@ -445,6 +445,8 @@ These are the owner's choices of 31 October 2026, from the documentation standar
   | R10.2, R10.3 | `test_work.py` |
   | R15.1 to R15.7b | `test_design_system.py` |
   | R15.9 | `tools/test_ds_enforcement.py` |
+  | R15.10 | `test_components.py`, `tools/test_ds_guard_templates.py` |
+  | R15.11 | `test_components.py`, `tools/test_ds_guard_templates.py` |
 - **R13.3** — This specification MUST pass `python3 tools/spec_check.py claude/plugins/docs/references/docspec.md`.
 
 ---
@@ -472,3 +474,5 @@ The design system is the one home of a project's UX rules, tokens, components an
 - **R15.7b** — The docs plugin rebuilds a stale `next-version` gallery by itself: `design_system.py refresh_draft_gallery` runs at SessionStart and at Stop, and rebuilds when the state is missing, source or script. It prints one line that names the reason. It never rebuilds a numbered version, does nothing without `docs/docs.json` or `next-version/ux-rules.md`, fails open, and never commits. Running `design_system.py visuals` by hand still works.
 - **R15.8** — A project moving its design system to `docs/design-system/` from another path rewrites every link and guard path in one task, keeps its numbered folders and their approval lines, and runs `design_system.py check` afterwards. The approval record for versions approved before the move is added to `approvals.json` by hand with the original date and evidence.
 - **R15.9** — The enforcement kit (`design_system.py guards --stack typescript-vitest-kit`: a no-app-CSS scan, a DOM layout check and a wizard behaviour harness, TypeScript and Vitest only) is optional; `design-system-setup` offers it by default to a project that has a numbered version, and the owner may decline. Where it is installed, its known-breach lists only shrink: a change that adds an entry or raises a count outside the change that installs the list MUST fail a guard (DELIVERYSPEC DL-92). The wizard harness requires ten states (loading, first run, planning, ready to review, running, paused, stopped, failed, done, done after reload); a project may add states and MUST NOT drop one. `design_system.py brief` writes the UI brief checklist as a marked block into `AGENTS.md` and the pull request template and refreshes it on a rerun.
+- **R15.10** — Shared component templates are opt-in. `design_system.py components` (stack `react-typescript`: `DatePicker`, `TimePicker` with units `h`, `hm` or `hms`, and `NumberKeypad`) copies the chosen components, their logic, their CSS and their unit tests into the project (default `src/ui/pickers`, never overwriting a file) and adds one numbered section per component to `next-version/components.md`, before "How to add a component", with one `CHANGES.md` entry. It also adds each component's words to a "Component words" table in `next-version/content.md`, skipping a word that is already in a table of that file. A rerun adds nothing. The offline gallery draws each component (the time picker in `h`, `hm` and `hms`). A template is built from design tokens only (no raw colour or size), names every control, works from the keyboard (arrow keys in a grid, Enter, Escape), shows a focus ring on keyboard focus and keeps every touch target at `--ds-target-min` or more. Dates use the date picker and times and durations the time picker; the keypad is for counts, measures and codes. `design-system-setup` offers them only when the owner asks or the project's screens enter dates, times or numbers; the owner may decline.
+- **R15.11** — Dates use the date picker, times use the time picker, and the number keypad is only for counts, measures and codes; an app never uses a native date, time or number input (starter rule UX-56). The enforcement kit's raw-inputs guard (`raw-inputs-scan.ts`, `raw-inputs.test.ts`, `raw-inputs.known.json`) MUST fail on `type="date"`, `type="time"`, `type="datetime-local"` or `type="number"` in the scanned app and shared UI files, test files excepted. Its known list only shrinks, as R15.9 says. Each component template section cites UX-56.
