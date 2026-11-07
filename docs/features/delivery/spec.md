@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.12.1
+version: 0.12.2
 owner: agents
 type: reference
 code:
@@ -383,6 +383,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.12.2 | 2026-11-07 | RELEASE-62 | A pool setup rerun keeps the cap in the pool .env (--resize to change it) and never lowers .wslconfig; pool-refresh rewrites only the runner SHA and the browser settings, then rebuilds (D118). | DL103 |
 | 0.12.1 | 2026-11-07 | RELEASE-61 | Pool setup picks POOL_BROWSERS=chromium when a served repository uses Playwright; the doctor fails when such a repository meets POOL_BROWSERS=none or an image without the browser libraries (D117). | DL101 |
 | 0.12.0 | 2026-11-07 | RELEASE-60 | A cloud create must clear the account's connectors, DL-93 (R5.18).<br>Pool fixes: RUNNER_SHA256 in the pool .env, recreate on a changed cap, doctor checks for required variables and the live cap, a 4 GiB / 2 CPU sizing floor, and memory-kill reporting in ci_watch.<br>Cloud agents: the trig_ and cse_ ids share one ledger entry (R5.15).<br>DL-31 accepts an assumed start named as such and ignores past durations (R5.16).<br>SessionStart stops a watcher from an older plugin version and starts the newest (R5.17).<br>A join no longer deletes the fresh local branches and worktrees of agents being launched: branches born after the join started, or with a running agent in the ledger, are kept and reported. | DL100, DL92, DL96, DL97, DL98, DL99 |
 | 0.11.0 | 2026-11-06 | RELEASE-58 | The e2e step skips the Chromium download when E2E_CHROMIUM_PATH points at an existing browser; agent setup sets it when a sandbox has one preinstalled under /opt/pw-browsers.<br>The ledger lives in the main checkout and is found from a git worktree; delivery_ledger.py link --pr N links a PR to its train by hand. | DL89, DL90 |
