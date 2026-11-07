@@ -23,6 +23,7 @@ Change note docs/architecture/changes/DL92-pool-fixes.md; feature note docs/feat
 ## Not done (not mine)
 - branch_gate.py line ~165 says "A stale lockfile is the usual cause" for any setup failure, and the DL-23 hook text says the same. They should also mention exit 137 / memory.
 
-CI and head SHA: see the bottom section, filled after the run.
+CI: https://github.com/luis-mc/dev-standards/actions/runs/42320700788 (spec-lint.yml, areas=delivery, head 0b0dea8d894de7f4c464506b0c415f0be31aca60). First attempt: the 'branch gate and trust rule' job was cancelled after 2m14s (no code reason found). One rerun of the failed jobs: every delivery job succeeded. Only 'docs check' fails, with G1 (stale decisions.md) and W1 (docs/work report), both expected on a branch. Branch head at the run: 0b0dea8d894de7f4c464506b0c415f0be31aca60 (report commit follows).
 
-NOT READY
+READY
+
