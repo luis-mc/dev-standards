@@ -888,47 +888,33 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-07T01:26+00:00">07 Nov 01:26</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-07T01:30+00:00">07 Nov 01:30</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">07 Nov 01:27</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
-<ul>
-<li data-glance-task="DL102"><span class="task-id">DL102</span><span class="release-name">RELEASE-61</span>Release B13 fix (luismc-delivery patch) <span class="glance-expected">07 Nov ~01:45</span></li>
-</ul>
-</details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">21 tasks</span></summary>
 <ul>
 <li data-glance-task="DL101"><span class="task-id">DL101</span>B13 pool browsers follow Playwright use</li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">19 tasks</span></summary>
-<ul>
+<li data-glance-task="DL102"><span class="task-id">DL102</span><span class="release-name">RELEASE-61</span>Release B13 fix (luismc-delivery patch)</li>
 <li data-glance-task="DL91"><span class="task-id">DL91</span><span class="release-name">RELEASE-60</span>Release delivery bug fixes B1-B8 B11 (luismc-delivery)</li>
 <li data-glance-task="DL92"><span class="task-id">DL92</span>B1 pool .env gets RUNNER_SHA256</li>
 <li data-glance-task="DL93"><span class="task-id">DL93</span>B2 pool cap change applied</li>
 <li data-glance-task="DL94"><span class="task-id">DL94</span>B3 pool sizing floor</li>
 <li data-glance-task="DL95"><span class="task-id">DL95</span>B4 ci_watch reports memory kills</li>
 <li data-glance-task="DL96"><span class="task-id">DL96</span>B5 one agent, two cloud ids</li>
-<li data-glance-task="DL97"><span class="task-id">DL97</span>B6 DL-31 accepts a person-start ETA</li>
-<li data-glance-task="DL98"><span class="task-id">DL98</span>B7 SessionStart replaces an old watcher</li>
-<li class="glance-more">and 11 more</li>
+<li class="glance-more">and 13 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">100</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">102</div><div class="label">tasks live</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">102 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL102"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL102</span><span class="release-name">RELEASE-61</span>Release B13 fix (luismc-delivery patch)</td><td data-label="Detail">PR open 01:28, CI running; merge on green, install, cleanup, message the reporting session.</td><td data-label="Expected">07 Nov ~01:45</td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">1 built, 100 live</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL101"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DL101</span>B13 pool browsers follow Playwright use<span class="release-line"><span class="release-name">RELEASE-61</span></span></td><td data-label="Detail">Setup sets POOL_BROWSERS=chromium when a repo in the pool runs Playwright; doctor fails when a repo uses Playwright and the image has no browser libs. Reported by a consuming project. Starts after RELEASE-60 merges (same files).</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="DL101"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL101</span>B13 pool browsers follow Playwright use<span class="release-line"><span class="release-name">RELEASE-61</span></span></td><td data-label="Detail">Setup sets POOL_BROWSERS=chromium when a repo in the pool runs Playwright; doctor fails when a repo uses Playwright and the image has no browser libs. Reported by a consuming project. Starts after RELEASE-60 merges (same files).</td><td data-label="Expected">07 Nov</td></tr>
+<tr data-task="DL102"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL102</span><span class="release-name">RELEASE-61</span>Release B13 fix (luismc-delivery patch)</td><td data-label="Detail">RELEASE-61 merged (PR #166) 01:30: luismc-delivery 1.12.1; installed here; branches removed.</td><td data-label="Expected">07 Nov</td></tr>
 <tr data-task="DL91"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL91</span><span class="release-name">RELEASE-60</span>Release delivery bug fixes B1-B8 B11 (luismc-delivery)</td><td data-label="Detail">RELEASE-60 merged (PR #165, d94be34) 01:03: luismc-delivery 1.12.0, DELIVERYSPEC 1.6.0; installed here and smoke-tested; branches and worktree removed.</td><td data-label="Expected">07 Nov</td></tr>
 <tr data-task="DL92"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL92</span>B1 pool .env gets RUNNER_SHA256<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Setup writes it; doctor fails on any ${VAR:?} in compose.yaml with no value. D109. Local agent (Docker).</td><td data-label="Expected">07 Nov</td></tr>
 <tr data-task="DL93"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL93</span>B2 pool cap change applied<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Recreate the pool when idle, else print the command; doctor compares docker inspect with .env. D110. Local agent.</td><td data-label="Expected">07 Nov</td></tr>

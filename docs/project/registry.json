@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-07T01:26+00:00",
+  "updated": "2026-11-07T01:30+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2156,11 +2156,11 @@
       "id": "DL101",
       "owner": "delivery-speed",
       "app": "luismc-delivery",
-      "status": "Built",
+      "status": "Live",
       "item": "B13 pool browsers follow Playwright use",
       "detail": "Setup sets POOL_BROWSERS=chromium when a repo in the pool runs Playwright; doctor fails when a repo uses Playwright and the image has no browser libs. Reported by a consuming project. Starts after RELEASE-60 merges (same files).",
       "expected": "07 Nov",
-      "changed": "2026-11-07T01:26+00:00",
+      "changed": "2026-11-07T01:30+00:00",
       "rides": "DL102",
       "started": "2026-11-07T01:05+00:00"
     },
@@ -2168,11 +2168,11 @@
       "id": "DL102",
       "owner": "delivery-speed",
       "app": "luismc-delivery",
-      "status": "Running",
+      "status": "Live",
       "item": "Release B13 fix (luismc-delivery patch)",
-      "detail": "PR open 01:28, CI running; merge on green, install, cleanup, message the reporting session.",
-      "expected": "07 Nov ~01:45",
-      "changed": "2026-11-07T01:26+00:00",
+      "detail": "RELEASE-61 merged (PR #166) 01:30: luismc-delivery 1.12.1; installed here; branches removed.",
+      "expected": "07 Nov",
+      "changed": "2026-11-07T01:30+00:00",
       "release": 61,
       "phases": [
         {
