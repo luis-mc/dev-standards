@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.20.1
+**Version:** 1.20.2
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.20.2 — 2026-11-07.**
+
+- R5.46: a release with no Expected and no timed phases is headed `RELEASE-<n> · not scheduled`.
 
 **1.20.1 — 2026-11-07.**
 
@@ -1191,7 +1195,8 @@ double-click.
   each group omitted when empty:
   1. one group per open release (R5.42), ordered by Expected, ties by number,
      headed `RELEASE-<n> · live ~HH:MM` (the Expected's time; `live DD Mon` when
-     it has no time), with ` · worst ~HH:MM` added when the release has a risk;
+     it has no time; `not scheduled` when it has no Expected and no timed
+     phases), with ` · worst ~HH:MM` added when the release has a risk;
      its rows are the release row first, then every task riding it in the order
      of R6.2 (Running, Waiting, To do, Needs you, Failed, On hold, Built, Live),
      ties by ID;

@@ -59,6 +59,22 @@ def parse_names(value: str | None, valid: list[str], flag: str) -> set[str] | No
     return names
 
 
+MEMORY_SENTENCE = ("setup was killed for memory (exit code 137, or 'Killed' in the log): "
+                   "use a larger pool cap or fewer parallel jobs, not a new lockfile.")
+LOCKFILE_SENTENCE = ("a stale lockfile: regenerate it with the package manager's normal install, "
+                     "commit it, run the gate again. Never install unfrozen.")
+
+
+def setup_failure_lines(exit_code):
+    """Text for a failed setup step. Exit code 137 means killed for memory, so that cause goes first."""
+    first, second = (MEMORY_SENTENCE, LOCKFILE_SENTENCE) if exit_code == 137 else (LOCKFILE_SENTENCE, MEMORY_SENTENCE)
+    return [
+        "\nsetup   : failed, so no other step ran. There are two common causes:",
+        "          1. " + first,
+        "          2. Or " + second[0].lower() + second[1:],
+    ]
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="branch_gate.py", description=__doc__.split("\n\n")[0])
     ap.add_argument("--base-ref", help="branch this one will join (default origin/<default_branch>)")
@@ -162,8 +178,9 @@ def main(argv: list[str] | None = None) -> int:
     print("\n" + dc.summary_table(entries))
     dc.print_failures(entries, root)
     if any(e["name"] == dc.SETUP_STEP and e["outcome"] == "fail" and not timed_out for e in entries):
-        print("\nsetup   : failed, so no other step ran. A stale lockfile is the usual cause:")
-        print("          regenerate it with the package manager's normal install, commit it, run the gate again.")
+        setup_entry = next(e for e in entries if e["name"] == dc.SETUP_STEP)
+        for line in setup_failure_lines(setup_entry.get("exit_code")):
+            print(line)
     if timed_out:
         dc.eprint("error: the gate timed out after %g min; the running step was killed" % minutes)
     print("\nresult  : %s -> %s" % ("PASS" if ok else "FAIL", dc.GATE_RESULT_PATH))

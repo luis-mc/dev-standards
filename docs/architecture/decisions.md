@@ -77,9 +77,19 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D114 | B11: a routine created without mcp_connections gets every connector. What fix? | Template + hook refuses | decided | 2026-11-07 |
 | delivery-speed | D115 | B5: one cloud launch has a trigger id and a run session id. How to track it? | Link, one agent | decided | 2026-11-07 |
 | delivery-speed | D116 | B4 and B7: report a memory kill as such in ci_watch.py, and stop an older-version watcher at SessionStart? | Yes, both as described | decided | 2026-11-07 |
-| delivery-speed | D117 | B13: the pool got no browsers for a project whose CI runs Playwright. How should setup pick browsers? (Picked overnight; for morning review.) | Detect Playwright + doctor check | decided | 2026-11-07 |
-| delivery-speed | D118 | B14: a pool setup rerun planned a lower cap than the owner's .env. When may it change the cap? (Picked overnight; for morning review.) | Keep the .env cap; --resize to change | decided | 2026-11-07 |
+| delivery-speed | D117 | B13: the pool got no browsers for a project whose CI runs Playwright. How should setup pick browsers? (Picked overnight; the owner confirmed it on 7 Nov.) | Detect Playwright + doctor check | decided | 2026-11-07 |
+| delivery-speed | D118 | B14: a pool setup rerun planned a lower cap than the owner's .env. When may it change the cap? (Picked overnight; the owner confirmed it on 7 Nov.) | Keep the .env cap; --resize to change | decided | 2026-11-07 |
+| delivery-speed | D119 | DL-23 and branch_gate.py still blame a failed setup on a stale lockfile only. Name memory (exit 137) too? | Yes, ship it now | decided | 2026-11-07 |
 | delivery-speed | D12 | Merge this release on green CI without asking again? | Merge on green | decided | 2026-10-11 |
+| delivery-speed | D120 | Two pool tests pass only because of the 4 GiB floor. Fix their fixtures? | Yes, with the DL-23 fix | decided | 2026-11-07 |
+| delivery-speed | D121 | 10 delivery pool tests fail on Windows only; CI on Linux is green. Investigate them? | Investigate and fix | decided | 2026-11-07 |
+| delivery-speed | D122 | Three old local branches (DLV1-fold-integration, DS33-fold-integration, pr140). Delete them? | Delete all three | decided | 2026-11-07 |
+| delivery-speed | D123 | DL-18 expects a Production smoke run; dev-standards deploys nothing. What should this repo do? | Add a plugin smoke step | decided | 2026-11-07 |
+| delivery-speed | D124 | While the owner is away, how are today's items and new peer bug reports run? | Overnight rules again | decided | 2026-11-07 |
+| delivery-speed | D125 | Who codes today's items (gate text and pool tests, Windows tests, the R5.46 bug, the smoke step)? | Cloud agents, I join | decided | 2026-11-07 |
+| delivery-speed | D126 | How are today's items grouped into releases? | One release for all | decided | 2026-11-07 |
+| delivery-speed | D127 | Until the restart, the old artifacts hook asks for an hourly publish with nothing open. What to do? | Comply each time | decided | 2026-11-07 |
+| delivery-speed | D128 | Plugin smoke: 6 skills have no name: in front matter (Claude Code uses the folder name). Require it or not? (Picked by me; for owner review.) | Require description only | decided | 2026-11-07 |
 | delivery-speed | D13 | Turn hooks on here (core.hooksPath .githooks), which also activates the pre-commit secret check? | Yes, both hooks | decided | 2026-10-11 |
 | delivery-speed | D14 | How should the runner load gate be reinstalled, now that PowerShell refuses unsigned scripts for the runner's account? | Runner account only | decided | 2026-10-26 |
 | delivery-speed | D15 | Stop train-cleanup creating a GitHub release on every merge to main? | Stop release per merge | decided | 2026-10-26 |
