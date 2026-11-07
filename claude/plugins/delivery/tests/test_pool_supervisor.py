@@ -127,7 +127,8 @@ class PrepareTmpTest(unittest.TestCase):
         lines = env.read_text().splitlines()
         tmp = os.path.join(base, "app1", "tmp")
         self.assertEqual(lines, ["A=1", "TEMP=/old", "DELIVERY_MACHINE_DIR=/machine", "TMPDIR=" + tmp, "TMP=" + tmp])
-        self.assertEqual(os.stat(tmp).st_mode & 0o777, 0o700)
+        if os.name != "nt":  # DL105: POSIX modes do not exist on Windows
+            self.assertEqual(os.stat(tmp).st_mode & 0o777, 0o700)
         self.assertIn(["chown", "r-app1:r-app1", tmp], calls)
 
     def test_missing_folder_does_not_block(self):

@@ -11,6 +11,7 @@ running job can finish. Standard library only.
 import argparse
 import json
 import os
+import posixpath
 import signal
 import subprocess
 import sys
@@ -65,7 +66,7 @@ def ensure_user(agent, base, run=None, exists=_user_exists, group_exists=_group_
     if exists(user):
         return True
     run = run or (lambda argv: subprocess.run(argv, check=False).returncode)
-    folder = os.path.join(base, slug)
+    folder = posixpath.join(base, slug)  # a path inside the Linux container, whatever runs the test
     try:
         st = stat(folder)
     except OSError:

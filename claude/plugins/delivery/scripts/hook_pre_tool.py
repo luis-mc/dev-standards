@@ -134,8 +134,8 @@ def check_merge(root, seg, ledger):
 def check_unfrozen(seg, command, cfg):
     t = [x.lower() for x in H.strip_prefix(seg)]
     if '--no-frozen-lockfile' in t:
-        deny('DL-23 never install without a frozen lockfile. If the gate failed at setup the lockfile is stale: '
-             'regenerate it and commit, then re-run the gate.')
+        deny('DL-23 never install without a frozen lockfile. If the gate failed at setup, the lockfile is stale '
+             '(regenerate it and commit) or the install was killed for memory (exit 137: larger pool cap or fewer parallel jobs).')
     if not t or t[0] not in ('npm', 'pnpm', 'yarn', 'bun'):
         return
     sub = t[1] if len(t) > 1 else ''
@@ -143,7 +143,7 @@ def check_unfrozen(seg, command, cfg):
     if installing and not any(f in t for f in ('--frozen-lockfile', '--immutable', '--ci')):
         if any(m.lower() in command.lower() for m in cfg['gate_markers']):
             deny('DL-23 no unfrozen install in a gate context. Use npm ci / pnpm install --frozen-lockfile; a stale '
-                 'lockfile is regenerated and committed, never installed around.')
+                 'lockfile is regenerated and committed, never installed around; an install killed for memory (exit 137) needs a larger pool cap.')
 
 
 def check_kill(seg, command):
