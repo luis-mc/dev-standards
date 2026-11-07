@@ -1,0 +1,8 @@
+{
+  "name": "luismc-homelink",
+  "description": "Sets up the network side of a product that has a website plus a server in the user's home (design G: tunnel for remote, direct LAN at home, gateway, control plane). `homelink-setup` interviews the owner about the product's home server and install types, then writes the product's HomeLink profile and a task list. Draft: the kit it targets (HOMELINKSPEC) is not built yet.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Luis Carvalho"
+  }
+}
