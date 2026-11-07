@@ -11,3 +11,8 @@
 - `python3 -m unittest` in `claude/plugins/delivery/tests`: test_runner_pool (149 OK), test_pool_supervisor (9 OK), test_dl92_pool_fixes (23 OK), test_dl103_pool_keep_cap (17 OK), test_pre_tool (31 OK), test_dl105_gate_text (2 OK).
 - `run_suite.py delivery-gate setup`: 58 checks, 0 failed (the full gate suite is refused locally by the session guard).
 - `docs_check.py`: G1 expected. M1 for delivery-speed, models, project-setup covered by `Docs: none` in the commit message.
+- CI: `gh workflow run spec-lint.yml --ref DL105-gate-text-portable-tests -f areas=delivery` triggered (run 42387852687) and watched with `ci_watch.py`. The delivery branch gate job passed. The docs check job failed on G1 (stale decisions) and W1 (this report) only, both expected on a branch.
+
+Branch head SHA: see `git rev-parse DL105-gate-text-portable-tests` (the commit before this report update was c41af574c20740a878e2d28ec9b1d7b2094ce116).
+
+READY
