@@ -1,0 +1,55 @@
+/* Shared by the picker templates (luismc-docs). Design tokens only: no raw colour, size or font. */
+.ds-picker-icon {
+  inline-size: var(--ds-icon-size);
+  block-size: var(--ds-icon-size);
+  flex: none;
+}
+.ds-picker-icon[data-dir='left'] { transform: rotate(180deg); }
+.ds-picker-icon[data-dir='up'] { transform: rotate(270deg); }
+.ds-picker-icon[data-dir='down'] { transform: rotate(90deg); }
+
+/* Every pressable part of a picker: at least the touch target (UX-16), a visible focus ring (UX-17). */
+.ds-datepicker button,
+.ds-datepicker select,
+.ds-datepicker input,
+.ds-timepicker button,
+.ds-timepicker [role='spinbutton'],
+.ds-keypad button {
+  min-inline-size: var(--ds-target-min);
+  min-block-size: var(--ds-target-min);
+  font: inherit;
+  color: var(--ds-color-text);
+  background: var(--ds-color-surface);
+  border: var(--ds-border-thin) solid var(--ds-color-border);
+  border-radius: var(--ds-radius-1);
+  cursor: pointer;
+}
+.ds-datepicker :focus-visible,
+.ds-timepicker :focus-visible,
+.ds-keypad :focus-visible {
+  outline: var(--ds-focus-width) solid var(--ds-color-focus);
+  outline-offset: var(--ds-focus-offset);
+}
+.ds-datepicker :focus:not(:focus-visible),
+.ds-timepicker :focus:not(:focus-visible),
+.ds-keypad :focus:not(:focus-visible) {
+  outline: none;
+}
+.ds-datepicker button:disabled,
+.ds-datepicker button[aria-disabled='true'],
+.ds-timepicker button:disabled,
+.ds-keypad button:disabled {
+  color: var(--ds-color-text-muted);
+  border-style: dashed;
+  cursor: not-allowed;
+}
+.ds-datepicker__label,
+.ds-timepicker__label,
+.ds-keypad__label {
+  font-size: var(--ds-size-3);
+  font-weight: var(--ds-weight-semibold);
+  color: var(--ds-color-text);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-datepicker *, .ds-timepicker *, .ds-keypad * { transition: none; }
+}
